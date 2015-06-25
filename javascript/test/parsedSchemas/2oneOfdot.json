@@ -1,0 +1,21 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes": {
+    "http://a.example/IssueShape": {
+      "type": "oneOf",
+      "patterns": [
+        {
+          "type": "tripleConstraint",
+          "predicate": "http://a.example/p1",
+          "value": { "type": "wildcard" }
+        },
+        {
+          "type": "tripleConstraint",
+          "predicate": "http://a.example/p2",
+          "value": { "type": "wildcard" }
+        }
+      ]
+    }
+  }
+}

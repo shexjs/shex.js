@@ -7,6 +7,11 @@ var schemasPath = __dirname + '/../schemas/';
 var parsedSchemasPath = __dirname + '/../test/parsedSchemas/';
 
 describe('A SHEX parser', function () {
+  // var b = function () {  };
+  // it('is a toy', function () {
+  //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
+  // });
+
   var parser = new ShexParser();
 
   // Ensure the same blank node identifiers are used in every test
@@ -16,22 +21,25 @@ describe('A SHEX parser', function () {
   schemas = schemas.map(function (q) { return q.replace(/\.shex$/, ''); });
   schemas.sort();
 
-  schemas.forEach(function (query) {
+  schemas.forEach(function (schema) {
 
-    var parsedQueryFile = parsedSchemasPath + query + '.json';
-    if (!fs.existsSync(parsedQueryFile)) return;
+    var parsedSchemaFile = parsedSchemasPath + schema + '.json';
+    if (!fs.existsSync(parsedSchemaFile)) return;
 
-    it('should correctly parse query "' + query + '"', function () {
-      var parsedQuery = parseJSON(fs.readFileSync(parsedQueryFile, 'utf8'));
+    it('should correctly parse schema "' + schema + '"', function () {
+      var parsedSchema = parseJSON(fs.readFileSync(parsedSchemaFile, 'utf8'));
 
-      query = fs.readFileSync(schemasPath + query + '.shex', 'utf8');
-      expect(parser.parse(query)).to.deep.equal(parsedQuery);
+      console.log(schema);
+      schema = fs.readFileSync(schemasPath + schema + '.shex', 'utf8');
+      console.log("parsed   :"+  JSON.stringify(parser.parse(schema)));
+      console.log("expected :"+JSON.stringify(parsedSchema));
+      expect(parser.parse(schema)).to.deep.equal(parsedSchema);
     });
   });
 
-  it('should throw an error on an invalid query', function () {
-    var query = 'invalid', error = null;
-    try { parser.parse(query); }
+  it('should throw an error on an invalid schema', function () {
+    var schema = 'invalid', error = null;
+    try { parser.parse(schema); }
     catch (e) { error = e; }
 
     expect(error).to.exist;
@@ -44,17 +52,17 @@ describe('A SHEX parser', function () {
     var parser = new ShexParser(prefixes);
 
     it('should use those prefixes', function () {
-      var query = 'SELECT * { a:a b:b "" }';
-      expect(parser.parse(query).where[0].triples[0])
-        .to.deep.equal({subject: 'abc#a', predicate: 'def#b', object: '""'});
+      var schema = 'a:a { b:b .+ }';
+      expect(parser.parse(schema).shapes['abc#a'].predicate)
+        .to.deep.equal('def#b');
     });
 
     it('should allow temporarily overriding prefixes', function () {
-      var query = 'PREFIX a: <xyz#> SELECT * { a:a b:b "" }';
-      expect(parser.parse(query).where[0].triples[0])
-        .to.deep.equal({subject: 'xyz#a', predicate: 'def#b', object: '""'});
-      expect(parser.parse('SELECT * { a:a b:b "" }').where[0].triples[0])
-        .to.deep.equal({subject: 'abc#a', predicate: 'def#b', object: '""'});
+      var schema = 'PREFIX a: <xyz#> a:a { b:b .+ }';
+      expect(parser.parse(schema).shapes['xyz#a'].predicate)
+        .to.deep.equal('def#b');
+      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].predicate)
+        .to.deep.equal('def#b');
     });
 
     it('should not change the original prefixes', function () {
@@ -63,8 +71,8 @@ describe('A SHEX parser', function () {
 
     it('should not take over changes to the original prefixes', function () {
       prefixes.a = 'xyz#';
-      expect(parser.parse('SELECT * { a:a b:b "" }').where[0].triples[0])
-        .to.deep.equal({subject: 'abc#a', predicate: 'def#b', object: '""'});
+      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].predicate)
+        .to.deep.equal('def#b');
     });
   });
 });
