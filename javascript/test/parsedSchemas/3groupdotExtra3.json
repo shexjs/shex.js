@@ -1,0 +1,27 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes": {
+    "http://a.example/IssueShape": {
+      "type": "group",
+      "patterns": [
+        {
+          "type": "tripleConstraint",
+          "predicate": "http://a.example/p1",
+          "value": { "type": "wildcard" }
+        },
+        {
+          "type": "tripleConstraint",
+          "predicate": "http://a.example/p2",
+          "value": { "type": "wildcard" }
+        },
+        {
+          "type": "tripleConstraint",
+          "predicate": "http://a.example/p3",
+          "value": { "type": "wildcard" }
+        }
+      ],
+      "extra": [ "http://a.example/p1", "http://a.example/p2", "http://a.example/p3" ]
+    }
+  }
+}

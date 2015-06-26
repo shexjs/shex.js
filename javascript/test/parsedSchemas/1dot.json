@@ -5,8 +5,7 @@
     "http://a.example/IssueShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "wildcard" },
-      "min": 1
+      "value": { "type": "wildcard" }
     }
   }
 }

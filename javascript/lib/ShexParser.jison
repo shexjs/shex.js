@@ -272,7 +272,7 @@ IT_FRACTIONDIGITS	[Ff][Rr][Aa][Cc][Tt][Ii][Oo][Nn][Dd][Ii][Gg][Ii][Tt][Ss]
 CODE			"%" ([#+A-Z_a-z][#+0-9A-Z_a-z]*)? "{" ([^%] | '\\' '%')* "%" "}"
 LANGTAG			"@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER			([+-])?([0-9])+
-REPEAT_RANGE		"{"({INTEGER})((","(({INTEGER}))?))?"}"
+REPEAT_RANGE		"{"({INTEGER})((","(({INTEGER})|'*')?))?"}"
 DECIMAL			([+-])?([0-9])*"."([0-9])+
 EXPONENT		[Ee]([+-])?([0-9])+
 DOUBLE			([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
@@ -398,7 +398,7 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 shexDoc:
     _Qdirective_E_Star _Q_O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_S_Qstatement_E_Star_C_E_Opt EOF	{
       var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, {shapes: Parser.shapes});
-      Parser.prefixes = null;
+      Parser.prefixes = Parser.shapes = null;
       base = basePath = baseRoot = '';
       return ret;
     };
@@ -446,14 +446,15 @@ directive:
     ;
 
 baseDecl:
-    IT_BASE IRIREF	{
+    IT_BASE IRIREF	{ 
       base = resolveIRI($2)
       basePath = base.replace(/[^\/]*$/, '');
       baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
-    };
+    }
+    ;
 
 prefixDecl:
-    IT_PREFIX PNAME_NS IRIREF	{
+    IT_PREFIX PNAME_NS IRIREF	{ // t: ShexParser-test.js/with pre-defined prefixes
       if (!Parser.prefixes) Parser.prefixes = {};
       $2 = $2.substr(0, $2.length - 1);
       $3 = resolveIRI($3);
@@ -475,7 +476,7 @@ _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C:
 
 shape:
     // _QIT_VIRTUAL_E_Opt 
-      shapeLabel shapeDefinition _QCODE_E_Star	{
+      shapeLabel shapeDefinition _QCODE_E_Star	{ // t: 1dot
         if (!Parser.shapes) Parser.shapes = {};
         Parser.shapes[$1] = $2;
     }
@@ -487,19 +488,27 @@ shape:
 //     | IT_VIRTUAL	;
 
 shapeDefinition:
-    _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{
-        $$ = $3;
+    _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
+      $$ = extend($3, $1);
     };
 
 _O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C:
-      include	
-    | inclPropertySet	
-    | IT_CLOSED	
+      include	-> [ 'inherit', $1 ] // t: 1dotInherit1
+    | inclPropertySet	-> [ 'extra', $1 ] // t: 1dotExtra1
+    | IT_CLOSED	-> [ 'closed', true ] // t: 1dotClosed
     ;
 
 _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
-      
-    | _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C	
+      -> {}
+    | _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C	{
+      if ($2[0] === 'closed') // t: 1dotClosed
+        $1['closed'] = true;
+      else if ($2[0] in $1)
+        $1[$2[0]] = $1[$2[0]].concat([$2[1]]); // t: 1dotInherit3, 3groupdotExtra3
+      else
+        $1[$2[0]] = [$2[1]]; // t: 1dotInherit1
+      $$ = $1;
+    }
     ;
 
 _QoneOfShape_E_Opt:
@@ -508,53 +517,54 @@ _QoneOfShape_E_Opt:
     ;
 
 include:
-    '&' shapeLabel	-> { include: [$2] }
+    '&' shapeLabel	-> $2 // t:, 1dotInherit1
     ;
 
 inclPropertySet:
-    IT_EXTRA _Qpredicate_E_Plus	;
+    IT_EXTRA _Qpredicate_E_Plus	-> $2
+    ;
 
 _Qpredicate_E_Plus:
       predicate	
     | _Qpredicate_E_Plus predicate	;
 
 oneOfShape:
-    someOfShape _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", patterns: [$1].concat($2) } : $1
+    someOfShape _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", patterns: [$1].concat($2) } : $1 // t: 2oneOfdot
     ;
 
 _O_Q_PIPE_E_S_QsomeOfShape_E_C:
-    '|' someOfShape	-> $2
+    '|' someOfShape	-> $2 // t: 2oneOfdot
     ;
 
 _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star:
-      -> []
-    | _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_Q_PIPE_E_S_QsomeOfShape_E_C	-> $1.concat($2)
+      -> [] //  t: 2oneOfdot
+    | _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_Q_PIPE_E_S_QsomeOfShape_E_C	-> $1.concat($2) //  t: 2oneOfdot
     ;
 
 someOfShape:
-    groupShape _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", patterns: [$1].concat($2) } : $1
+    groupShape _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", patterns: [$1].concat($2) } : $1 // t: 2someOfdot
     ;
 
 _O_Q_OR_E_S_QgroupShape_E_C:
-    '||' groupShape	-> $2
+    '||' groupShape	-> $2 // t: 2someOfdot
     ;
 
 _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star:
-      -> []
-    | _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star _O_Q_OR_E_S_QgroupShape_E_C	-> $1.concat($2)
+      -> [] // t: 2someOfdot
+    | _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star _O_Q_OR_E_S_QgroupShape_E_C	-> $1.concat($2) // t: 2someOfdot
     ;
 
 groupShape:
-    unaryShape _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star _Q_COMMA_E_Opt	-> $2.length ? { type: "group", patterns: [$1].concat($2) } : $1
+    unaryShape _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star _Q_COMMA_E_Opt	-> $2.length ? { type: "group", patterns: [$1].concat($2) } : $1 // t: 2groupOfdot
     ;
 
 _O_Q_COMMA_E_S_QunaryShape_E_C:
-    ',' unaryShape	-> $2
+    ',' unaryShape	-> $2 // t: 2groupOfdot
     ;
 
 _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star:
-      -> []
-    | _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star _O_Q_COMMA_E_S_QunaryShape_E_C	-> $1.concat($2)
+      -> [] // t: 2groupOfdot
+    | _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star _O_Q_COMMA_E_S_QunaryShape_E_C	-> $1.concat($2) // t: 2groupOfdot
     ;
 
 _Q_COMMA_E_Opt:
@@ -573,7 +583,7 @@ unaryShape:
 //     | id	;
 
 _Qcardinality_E_Opt:
-      -> {}
+      -> {} // t: 1dot
     | cardinality	
     ;
 
@@ -593,7 +603,7 @@ shapeLabel:
 
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{
+      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{ // t: 1dot
         $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4);
     }
     | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	
@@ -625,7 +635,7 @@ _Q_NOT_E_Opt:
 
 predicate:
       iri	
-    | 'a'	-> RDF_TYPE
+    | 'a'	-> RDF_TYPE // t:@@
     ;
 
 valueClass:
@@ -641,7 +651,7 @@ valueClass:
     | iri	// datatype
     | groupShapeConstr	
     | valueSet	
-    | '.'	-> { type: "wildcard" }
+    | '.'	-> { type: "wildcard" } // t: 1dot
     ;
 
 _QxsFacet_E_Star:
@@ -683,19 +693,19 @@ _Q_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
     ;
 
 shapeOrRef:
-      LANGTAG PNAME_LN	{
+      LANGTAG PNAME_LN	{ // t: ShexParser-test.js/with pre-defined prefixes
         var namePos = $2.indexOf(':'),
             prefix = $2.substr(0, namePos),
             expansion = Parser.prefixes[prefix];
         if (!expansion) throw new Error('Unknown prefix: ' + prefix);
         $$ = resolveIRI(expansion + $2.substr(namePos + 1));
     }
-    | LANGTAG PNAME_NS	{
+    | LANGTAG PNAME_NS	{ // t:@@
         $2 = $2.substr(0, $2.length - 1);
         if (!($2 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $2);
         $$ = resolveIRI(Parser.prefixes[$2]);
     }
-    | '@' shapeLabel	{ $$ = $2; }
+    | '@' shapeLabel	{ $$ = $2; } // t:@@
     | shapeDefinition	
     ;
 
@@ -737,19 +747,27 @@ _O_Qiri_E_Or_Qliteral_E_C:
     ;
 
 cardinality:
-      '*'	-> { min:0 }
-    | '+'	-> { min:1 }
-    | '?'	-> { min:0, max:1 }
-    | REPEAT_RANGE	
+      '*'	-> { min:0 } // t: 1cardStar
+    | '+'	-> { min:1 } // t: 1cardPlus
+    | '?'	-> { min:0, max:1 } // t: 1cardOpt
+    | REPEAT_RANGE	{
+        $1 = $1.substr(1, $1.length-2);
+        var nums = $1.match(/(\d+)/g);
+        $$ = { min: parseInt(nums[0], 10) }; // t: 1card2blank, 1card2Star
+        if (nums.length === 2)
+            $$["max"] = parseInt(nums[1], 10); // t: 1card23
+        else if ($1.indexOf(',') === -1) // t: 1card2
+            $$["max"] = parseInt(nums[0], 10);
+      }
     ;
 
 valueSet:
-    '(' _Qvalue_E_Star ')'	-> { type: "valueSet", values: $2 }
+    '(' _Qvalue_E_Star ')'	-> { type: "valueSet", values: $2 } // t: 1val
     ;
 
 _Qvalue_E_Star:
-      -> []
-    | _Qvalue_E_Star value	-> $1.concat([$2])
+      -> [] // t: 1val
+    | _Qvalue_E_Star value	-> $1.concat([$2]) // t: 1val
     ;
 
 value:
@@ -790,32 +808,32 @@ _Q_KINDA_E_Opt:
 
 literal:
       string	
-    | string LANGTAG	-> $1 + lowercase($2)
-    | string '^^' iri	-> $1 + '^^' + $3
-    | INTEGER	 -> createLiteral($1.substr(1), XSD_INTEGER)
-    | DECIMAL	-> createLiteral($1.substr(1), XSD_DECIMAL)
-    | DOUBLE	createLiteral($1.substr(1).toLowerCase(), XSD_DOUBLE)	
-    | IT_true	-> XSD_TRUE
-    | IT_false	-> XSD_FALSE
+    | string LANGTAG	-> $1 + lowercase($2) // t:@@
+    | string '^^' iri	-> $1 + '^^' + $3 // t:@@
+    | INTEGER	 -> createLiteral($1.substr(1), XSD_INTEGER) // t:@@
+    | DECIMAL	-> createLiteral($1.substr(1), XSD_DECIMAL) // t:@@
+    | DOUBLE	createLiteral($1.substr(1).toLowerCase(), XSD_DOUBLE) // t:@@
+    | IT_true	-> XSD_TRUE // t:@@
+    | IT_false	-> XSD_FALSE // t:@@
     ;
 
 string:
-      STRING_LITERAL1	-> unescapeString($1, 1)
-    | STRING_LITERAL2	-> unescapeString($1, 1)
-    | STRING_LITERAL_LONG1	 -> unescapeString($1, 3)
-    | STRING_LITERAL_LONG2	 -> unescapeString($1, 3)
+      STRING_LITERAL1	-> unescapeString($1, 1) // t:@@
+    | STRING_LITERAL2	-> unescapeString($1, 1) // t:@@
+    | STRING_LITERAL_LONG1	 -> unescapeString($1, 3) // t:@@
+    | STRING_LITERAL_LONG2	 -> unescapeString($1, 3) // t:@@
     ;
 
 iri:
-      IRIREF	-> resolveIRI($1)
-    | PNAME_LN	{
+      IRIREF	-> resolveIRI($1) // t:@@
+    | PNAME_LN	{ // t: ShexParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':'),
             prefix = $1.substr(0, namePos),
             expansion = Parser.prefixes[prefix];
         if (!expansion) throw new Error('Unknown prefix: ' + prefix);
         $$ = resolveIRI(expansion + $1.substr(namePos + 1));
     }
-    | PNAME_NS	{
+    | PNAME_NS	{ // t:@@
         $1 = $1.substr(0, $1.length - 1);
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
         $$ = resolveIRI(Parser.prefixes[$1]);

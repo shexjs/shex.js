@@ -84,70 +84,91 @@ var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
       var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, {shapes: Parser.shapes});
-      Parser.prefixes = null;
+      Parser.prefixes = Parser.shapes = null;
       base = basePath = baseRoot = '';
       return ret;
     
 break;
-case 19:
+case 19: 
       base = resolveIRI($$[$0])
       basePath = base.replace(/[^\/]*$/, '');
       baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
     
 break;
-case 20:
+case 20: // t: ShexParser-test.js/with pre-defined prefixes
       if (!Parser.prefixes) Parser.prefixes = {};
       $$[$0-1] = $$[$0-1].substr(0, $$[$0-1].length - 1);
       $$[$0] = resolveIRI($$[$0]);
       Parser.prefixes[$$[$0-1]] = $$[$0];
     
 break;
-case 26:
+case 26: // t: 1dot
         if (!Parser.shapes) Parser.shapes = {};
         Parser.shapes[$$[$0-2]] = $$[$0-1];
     
 break;
-case 28:
-        this.$ = $$[$0-1];
+case 28: // t: 1dotInherit2
+      this.$ = extend($$[$0-1], $$[$0-3]);
     
 break;
-case 36:this.$ = { include: [$$[$0]] };
+case 29:this.$ = [ 'inherit', $$[$0] ] // t: 1dotInherit1;
 break;
-case 40:this.$ = $$[$0].length ? { type: "oneOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1];
+case 30:this.$ = [ 'extra', $$[$0] ];
 break;
-case 41:this.$ = $$[$0];
+case 31:this.$ = [ 'closed', true ] // t: 1dotClosed;
 break;
-case 42:this.$ = [];
+case 32:this.$ = {};
 break;
-case 43:this.$ = $$[$0-1].concat($$[$0]);
+case 33:
+      if ($$[$0][0] === 'closed') // t: 1dotClosed
+        $$[$0-1]['closed'] = true;
+      else if ($$[$0][0] in $$[$0-1])
+        // $$[$0-1][$$[$0][0]] = [$$[$0][1]].concat($$[$0-1][$$[$0][0]]); // t: 1dotInherit2
+        $$[$0-1][$$[$0][0]] = $$[$0-1][$$[$0][0]].concat([$$[$0][1]]); // t: 1dotInherit2
+      else
+        $$[$0-1][$$[$0][0]] = [$$[$0][1]]; // t: 1dotInherit1
+      this.$ = $$[$0-1];
+    
 break;
-case 44:this.$ = $$[$0].length ? { type: "someOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1];
+case 36:this.$ = $$[$0] // t:@@;
 break;
-case 45:this.$ = $$[$0];
+case 37:this.$ = $$[$0];
 break;
-case 46:this.$ = [];
+case 40:this.$ = $$[$0].length ? { type: "oneOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2oneOfdot;
 break;
-case 47:this.$ = $$[$0-1].concat($$[$0]);
+case 41:this.$ = $$[$0] // t: 2oneOfdot;
 break;
-case 48:this.$ = $$[$0-1].length ? { type: "group", patterns: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2];
+case 42:this.$ = [] //  t: 2oneOfdot;
 break;
-case 49:this.$ = $$[$0];
+case 43:this.$ = $$[$0-1].concat($$[$0]) //  t: 2oneOfdot;
 break;
-case 50:this.$ = [];
+case 44:this.$ = $$[$0].length ? { type: "someOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2someOfdot;
 break;
-case 51:this.$ = $$[$0-1].concat($$[$0]);
+case 45:this.$ = $$[$0] // t: 2someOfdot;
 break;
-case 56:this.$ = {};
+case 46:this.$ = [] // t: 2someOfdot;
 break;
-case 64:
+case 47:this.$ = $$[$0-1].concat($$[$0]) // t: 2someOfdot;
+break;
+case 48:this.$ = $$[$0-1].length ? { type: "group", patterns: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
+break;
+case 49:this.$ = $$[$0] // t: 2groupOfdot;
+break;
+case 50:this.$ = [] // t: 2groupOfdot;
+break;
+case 51:this.$ = $$[$0-1].concat($$[$0]) // t: 2groupOfdot;
+break;
+case 56:this.$ = {} // t: 1dot;
+break;
+case 64: // t: 1dot
         this.$ = extend({ type: "tripleConstraint", predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1]);
     
 break;
-case 75:this.$ = RDF_TYPE;
+case 75:this.$ = RDF_TYPE // t:@@;
 break;
-case 86:this.$ = { type: "wildcard" };
+case 86:this.$ = { type: "wildcard" } // t: 1dot;
 break;
-case 100:
+case 100: // t: ShexParser-test.js/with pre-defined prefixes
         var namePos = $$[$0].indexOf(':'),
             prefix = $$[$0].substr(0, namePos),
             expansion = Parser.prefixes[prefix];
@@ -155,7 +176,7 @@ case 100:
         this.$ = resolveIRI(expansion + $$[$0].substr(namePos + 1));
     
 break;
-case 101:
+case 101: // t:@@
         $$[$0] = $$[$0].substr(0, $$[$0].length - 1);
         if (!($$[$0] in Parser.prefixes)) throw new Error('Unknown prefix: ' + $$[$0]);
         this.$ = resolveIRI(Parser.prefixes[$$[$0]]);
@@ -163,41 +184,51 @@ case 101:
 break;
 case 102: this.$ = $$[$0]; 
 break;
-case 122:this.$ = { min:0 };
+case 122:this.$ = { min:0 } // t: 1cardStar;
 break;
-case 123:this.$ = { min:1 };
+case 123:this.$ = { min:1 } // t: 1cardPlus;
 break;
-case 124:this.$ = { min:0, max:1 };
+case 124:this.$ = { min:0, max:1 } // t: 1cardOpt;
 break;
-case 126:this.$ = { type: "valueSet", values: $$[$0-1] };
+case 125:
+        $$[$0] = $$[$0].substr(1, $$[$0].length-2);
+        var nums = $$[$0].match(/(\d+)/g);
+        this.$ = { min: parseInt(nums[0], 10) }; // t: 1card2blank, 1card2Star
+        if (nums.length === 2)
+            this.$["max"] = parseInt(nums[1], 10); // t: 1card23
+        else if ($$[$0].indexOf(',') === -1) // t: 1card2
+            this.$["max"] = parseInt(nums[0], 10);
+      
 break;
-case 127:this.$ = [];
+case 126:this.$ = { type: "valueSet", values: $$[$0-1] } // t: 1val;
 break;
-case 128:this.$ = $$[$0-1].concat([$$[$0]]);
+case 127:this.$ = [] // t: 1val;
 break;
-case 144:this.$ = $$[$0-1] + lowercase($$[$0]);
+case 128:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val;
 break;
-case 145:this.$ = $$[$0-2] + '^^' + $$[$0];
+case 144:this.$ = $$[$0-1] + lowercase($$[$0]) // t:@@;
 break;
-case 146:this.$ = createLiteral($$[$0].substr(1), XSD_INTEGER);
+case 145:this.$ = $$[$0-2] + '^^' + $$[$0] // t:@@;
 break;
-case 147:this.$ = createLiteral($$[$0].substr(1), XSD_DECIMAL);
+case 146:this.$ = createLiteral($$[$0].substr(1), XSD_INTEGER) // t:@@;
 break;
-case 149:this.$ = XSD_TRUE;
+case 147:this.$ = createLiteral($$[$0].substr(1), XSD_DECIMAL) // t:@@;
 break;
-case 150:this.$ = XSD_FALSE;
+case 149:this.$ = XSD_TRUE // t:@@;
 break;
-case 151:this.$ = unescapeString($$[$0], 1);
+case 150:this.$ = XSD_FALSE // t:@@;
 break;
-case 152:this.$ = unescapeString($$[$0], 1);
+case 151:this.$ = unescapeString($$[$0], 1) // t:@@;
 break;
-case 153:this.$ = unescapeString($$[$0], 3);
+case 152:this.$ = unescapeString($$[$0], 1) // t:@@;
 break;
-case 154:this.$ = unescapeString($$[$0], 3);
+case 153:this.$ = unescapeString($$[$0], 3) // t:@@;
 break;
-case 155:this.$ = resolveIRI($$[$0]);
+case 154:this.$ = unescapeString($$[$0], 3) // t:@@;
 break;
-case 156:
+case 155:this.$ = resolveIRI($$[$0]) // t:@@;
+break;
+case 156: // t: ShexParser-test.js/with pre-defined prefixes
         var namePos = $$[$0].indexOf(':'),
             prefix = $$[$0].substr(0, namePos),
             expansion = Parser.prefixes[prefix];
@@ -205,7 +236,7 @@ case 156:
         this.$ = resolveIRI(expansion + $$[$0].substr(namePos + 1));
     
 break;
-case 157:
+case 157: // t:@@
         $$[$0] = $$[$0].substr(0, $$[$0].length - 1);
         if (!($$[$0] in Parser.prefixes)) throw new Error('Unknown prefix: ' + $$[$0]);
         this.$ = resolveIRI(Parser.prefixes[$$[$0]]);
@@ -1041,7 +1072,7 @@ case 64:return 'invalid character'
 break;
 }
 },
-rules: [/^(?:\s+|((\/\/|#)[^\u000a\u000d]*))/,/^(?:(@([A-Za-z])+((-([0-9A-Za-z])+))*))/,/^(?:@)/,/^(?:(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|:|[0-9]|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))*(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%)))))?)))/,/^(?:([Bb][Aa][Ss][Ee]))/,/^(?:([Pp][Rr][Ee][Ff][Ii][Xx]))/,/^(?:start\b)/,/^(?:([Vv][Ii][Rr][Tt][Uu][Aa][Ll]))/,/^(?:(\{((([+-])?([0-9])+))((,(((([+-])?([0-9])+)))?))?\}))/,/^(?:([Cc][Ll][Oo][Ss][Ee][Dd]))/,/^(?:([Ee][Xx][Tt][Rr][Aa]))/,/^(?:([Ll][Ii][Tt][Ee][Rr][Aa][Ll]))/,/^(?:([Bb][Nn][Oo][Dd][Ee]))/,/^(?:([Ii][Rr][Ii]))/,/^(?:([Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]))/,/^(?:([Pp][Aa][Tt][Tt][Ee][Rr][Nn]))/,/^(?:([Aa][Nn][Dd]))/,/^(?:([Oo][Rr]))/,/^(?:([Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Mm][Aa][Xx][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Ll][Ee][Nn][Gg][Tt][Hh]))/,/^(?:([Mm][Ii][Nn][Ll][Ee][Nn][Gg][Tt][Hh]))/,/^(?:([Mm][Aa][Xx][Ll][Ee][Nn][Gg][Tt][Hh]))/,/^(?:([Tt][Oo][Tt][Aa][Ll][Dd][Ii][Gg][Ii][Tt][Ss]))/,/^(?:([Ff][Rr][Aa][Cc][Tt][Ii][Oo][Nn][Dd][Ii][Gg][Ii][Tt][Ss]))/,/^(?:=)/,/^(?:\{)/,/^(?:\})/,/^(?:&)/,/^(?:\|\|)/,/^(?:\|)/,/^(?:,)/,/^(?:\()/,/^(?:\))/,/^(?:\$)/,/^(?:!)/,/^(?:\^\^)/,/^(?:\^)/,/^(?:\.)/,/^(?:~)/,/^(?:;)/,/^(?:\*)/,/^(?:\+)/,/^(?:\?)/,/^(?:-)/,/^(?:true\b)/,/^(?:false\b)/,/^(?:(%([#+A-Z_a-z][#+0-9A-Z_a-z]*)?\{([^%]|\\%)*%\}))/,/^(?:(([+-])?([0-9])+))/,/^(?:(([+-])?([0-9])*\.([0-9])+))/,/^(?:([Ee]([+-])?([0-9])+))/,/^(?:(([+-])?((([0-9])+\.([0-9])*(([Ee]([+-])?([0-9])+)))|((\.)?([0-9])+(([Ee]([+-])?([0-9])+))))))/,/^(?:(\\\[(((( )|((\\t)|((\\r)|(\\n))))))*\\\]))/,/^(?:(<([^\u0000-\u0020<>\"{}|^`\\]|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*>))/,/^(?:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:))/,/^(?:a\b)/,/^(?:(_:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|[0-9])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?))/,/^(?:('([^\u0027\u005c\u000a\u000d]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*'))/,/^(?:("([^\u0022\u005c\u000a\u000d]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*"))/,/^(?:('''(('|'')?([^\'\\]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*'''))/,/^(?:("""(("|"")?([^\"\\]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*"""))/,/^(?:$)/,/^(?:.)/],
+rules: [/^(?:\s+|((\/\/|#)[^\u000a\u000d]*))/,/^(?:(@([A-Za-z])+((-([0-9A-Za-z])+))*))/,/^(?:@)/,/^(?:(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|:|[0-9]|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))*(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%)))))?)))/,/^(?:([Bb][Aa][Ss][Ee]))/,/^(?:([Pp][Rr][Ee][Ff][Ii][Xx]))/,/^(?:start\b)/,/^(?:([Vv][Ii][Rr][Tt][Uu][Aa][Ll]))/,/^(?:(\{((([+-])?([0-9])+))((,(((([+-])?([0-9])+))|\*)?))?\}))/,/^(?:([Cc][Ll][Oo][Ss][Ee][Dd]))/,/^(?:([Ee][Xx][Tt][Rr][Aa]))/,/^(?:([Ll][Ii][Tt][Ee][Rr][Aa][Ll]))/,/^(?:([Bb][Nn][Oo][Dd][Ee]))/,/^(?:([Ii][Rr][Ii]))/,/^(?:([Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]))/,/^(?:([Pp][Aa][Tt][Tt][Ee][Rr][Nn]))/,/^(?:([Aa][Nn][Dd]))/,/^(?:([Oo][Rr]))/,/^(?:([Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Mm][Aa][Xx][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]))/,/^(?:([Ll][Ee][Nn][Gg][Tt][Hh]))/,/^(?:([Mm][Ii][Nn][Ll][Ee][Nn][Gg][Tt][Hh]))/,/^(?:([Mm][Aa][Xx][Ll][Ee][Nn][Gg][Tt][Hh]))/,/^(?:([Tt][Oo][Tt][Aa][Ll][Dd][Ii][Gg][Ii][Tt][Ss]))/,/^(?:([Ff][Rr][Aa][Cc][Tt][Ii][Oo][Nn][Dd][Ii][Gg][Ii][Tt][Ss]))/,/^(?:=)/,/^(?:\{)/,/^(?:\})/,/^(?:&)/,/^(?:\|\|)/,/^(?:\|)/,/^(?:,)/,/^(?:\()/,/^(?:\))/,/^(?:\$)/,/^(?:!)/,/^(?:\^\^)/,/^(?:\^)/,/^(?:\.)/,/^(?:~)/,/^(?:;)/,/^(?:\*)/,/^(?:\+)/,/^(?:\?)/,/^(?:-)/,/^(?:true\b)/,/^(?:false\b)/,/^(?:(%([#+A-Z_a-z][#+0-9A-Z_a-z]*)?\{([^%]|\\%)*%\}))/,/^(?:(([+-])?([0-9])+))/,/^(?:(([+-])?([0-9])*\.([0-9])+))/,/^(?:([Ee]([+-])?([0-9])+))/,/^(?:(([+-])?((([0-9])+\.([0-9])*(([Ee]([+-])?([0-9])+)))|((\.)?([0-9])+(([Ee]([+-])?([0-9])+))))))/,/^(?:(\\\[(((( )|((\\t)|((\\r)|(\\n))))))*\\\]))/,/^(?:(<([^\u0000-\u0020<>\"{}|^`\\]|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*>))/,/^(?:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:))/,/^(?:a\b)/,/^(?:(_:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|[0-9])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\U00010000-\U000effff])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?))/,/^(?:('([^\u0027\u005c\u000a\u000d]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*'))/,/^(?:("([^\u0022\u005c\u000a\u000d]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*"))/,/^(?:('''(('|'')?([^\'\\]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*'''))/,/^(?:("""(("|"")?([^\"\\]|(\\[\"\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*"""))/,/^(?:$)/,/^(?:.)/],
 conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64],"inclusive":true}}
 };
 return lexer;

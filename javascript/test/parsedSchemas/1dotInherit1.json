@@ -1,0 +1,18 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes":{
+    "http://a.example/PersonShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": { "type": "wildcard" }
+    },
+    "http://a.example/EmployeeShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p2",
+      "value": { "type": "wildcard" },
+      "inherit": [ "http://a.example/PersonShape" ]
+    }
+  }
+}
+
