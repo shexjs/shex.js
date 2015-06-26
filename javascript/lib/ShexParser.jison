@@ -589,7 +589,7 @@ _Qcardinality_E_Opt:
 
 _O_QtripleConstraint_E_Or_Qinclude_E_Or_Q_LPAREN_E_S_QoneOfShape_E_S_Q_RPAREN_E_S_Qcardinality_E_Opt_S_QCODE_E_Star_C:
       tripleConstraint	
-    | include	
+    | include	-> { type: "include", "include": $1 } // t: 2groupInclude1
     | '(' oneOfShape ')' _Qcardinality_E_Opt _QCODE_E_Star	
     ;
 

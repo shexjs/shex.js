@@ -1,0 +1,26 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes":{
+    "http://a.example/PersonShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": { "type": "wildcard" }
+    },
+    "http://a.example/EmployeeShape": {
+      "type": "group",
+      "patterns": [
+        {
+          "type": "include",
+          "include": "http://a.example/PersonShape"
+        },
+        {
+          "type": "tripleConstraint",
+          "predicate": "http://a.example/p2",
+          "value": { "type": "wildcard" }
+        }
+      ]
+    }
+  }
+}
+

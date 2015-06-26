@@ -107,13 +107,13 @@ case 26: // t: 1dot
         Parser.shapes[$$[$0-2]] = $$[$0-1];
     
 break;
-case 28: // t: 1dotInherit2
+case 28: // t: 1dotInherit3
       this.$ = extend($$[$0-1], $$[$0-3]);
     
 break;
 case 29:this.$ = [ 'inherit', $$[$0] ] // t: 1dotInherit1;
 break;
-case 30:this.$ = [ 'extra', $$[$0] ];
+case 30:this.$ = [ 'extra', $$[$0] ] // t: 1dotExtra1;
 break;
 case 31:this.$ = [ 'closed', true ] // t: 1dotClosed;
 break;
@@ -123,14 +123,13 @@ case 33:
       if ($$[$0][0] === 'closed') // t: 1dotClosed
         $$[$0-1]['closed'] = true;
       else if ($$[$0][0] in $$[$0-1])
-        // $$[$0-1][$$[$0][0]] = [$$[$0][1]].concat($$[$0-1][$$[$0][0]]); // t: 1dotInherit2
-        $$[$0-1][$$[$0][0]] = $$[$0-1][$$[$0][0]].concat([$$[$0][1]]); // t: 1dotInherit2
+        $$[$0-1][$$[$0][0]] = $$[$0-1][$$[$0][0]].concat([$$[$0][1]]); // t: 1dotInherit3, 3groupdotExtra3
       else
         $$[$0-1][$$[$0][0]] = [$$[$0][1]]; // t: 1dotInherit1
       this.$ = $$[$0-1];
     
 break;
-case 36:this.$ = $$[$0] // t:@@;
+case 36:this.$ = $$[$0] // t:, 1dotInherit1;
 break;
 case 37:this.$ = $$[$0];
 break;
@@ -159,6 +158,8 @@ break;
 case 51:this.$ = $$[$0-1].concat($$[$0]) // t: 2groupOfdot;
 break;
 case 56:this.$ = {} // t: 1dot;
+break;
+case 59:this.$ = { type: "include", "include": $$[$0] } // t: 2groupInclude1;
 break;
 case 64: // t: 1dot
         this.$ = extend({ type: "tripleConstraint", predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1]);
