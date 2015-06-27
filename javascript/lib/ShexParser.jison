@@ -279,11 +279,11 @@ DOUBLE			([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
 ECHAR			"\\"[\"\\bfnrt]
 WS			(" ")|(("\t")|(("\r")|("\n")))
 ANON			"\["(({WS}))*"\]"
-PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\U00010000-\U000effff]
+PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] // | [\U00010000-\U000effff] /* !!! matches lower characters in jison lexer */
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
-ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
+//ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
 PNAME_NS                {PN_PREFIX}? ':'
 ATPNAME_NS              '@' {PN_PREFIX}? ':'
@@ -295,7 +295,7 @@ STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
 IRIREF			'<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
-ATIRIREF		'@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
+//ATIRIREF		'@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) (({PN_CHARS} | '.' | ':' | {PLX})* ({PN_CHARS} | ':' | {PLX}))?
@@ -306,9 +306,9 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 %%
 
 \s+|{COMMENT} /**/
-// {ATPNAME_LN}		return 'ATPNAME_LN';
+{ATPNAME_LN}		return 'ATPNAME_LN';
 // {ATIRIREF}		return 'ATIRIREF';
-// {ATPNAME_NS}		return 'ATPNAME_NS';
+{ATPNAME_NS}		return 'ATPNAME_NS';
 // {ATBLANK_NODE_LABEL}	return 'ATBLANK_NODE_LABEL';
 {LANGTAG}		return 'LANGTAG';
 "@"			return '@';
@@ -649,7 +649,7 @@ valueClass:
     | IT_BNODE	
     | IT_BNODE groupShapeConstr	
     | iri	// datatype
-    | groupShapeConstr	
+    | groupShapeConstr	-> { type: "reference", reference: $1 } // t: 1dotRef1
     | valueSet	
     | '.'	-> { type: "wildcard" } // t: 1dot
     ;
@@ -693,19 +693,22 @@ _Q_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
     ;
 
 shapeOrRef:
-      LANGTAG PNAME_LN	{ // t: ShexParser-test.js/with pre-defined prefixes
-        var namePos = $2.indexOf(':'),
-            prefix = $2.substr(0, namePos),
+      ATPNAME_LN	{ // t: 1dotRefLNex
+        $1 = $1.substr(1, $1.length-1);
+        var namePos = $1.indexOf(':'),
+            prefix = $1.substr(0, namePos),
             expansion = Parser.prefixes[prefix];
         if (!expansion) throw new Error('Unknown prefix: ' + prefix);
-        $$ = resolveIRI(expansion + $2.substr(namePos + 1));
+        $$ = resolveIRI(expansion + $1.substr(namePos + 1));
     }
-    | LANGTAG PNAME_NS	{ // t:@@
-        $2 = $2.substr(0, $2.length - 1);
-        if (!($2 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $2);
-        $$ = resolveIRI(Parser.prefixes[$2]);
+    | ATPNAME_NS	{ // t: 1dotRefNS1
+console.log($1);
+        $1 = $1.substr(1, $1.length-1);
+        $1 = $1.substr(0, $1.length - 1);
+        if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
+        $$ = resolveIRI(Parser.prefixes[$1]);
     }
-    | '@' shapeLabel	{ $$ = $2; } // t:@@
+    | '@' shapeLabel	{ $$ = $2; } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     | shapeDefinition	
     ;
 
@@ -825,15 +828,15 @@ string:
     ;
 
 iri:
-      IRIREF	-> resolveIRI($1) // t:@@
-    | PNAME_LN	{ // t: ShexParser-test.js/with pre-defined prefixes
+      IRIREF	-> resolveIRI($1) // t: 1dot
+    | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':'),
             prefix = $1.substr(0, namePos),
             expansion = Parser.prefixes[prefix];
         if (!expansion) throw new Error('Unknown prefix: ' + prefix);
         $$ = resolveIRI(expansion + $1.substr(namePos + 1));
     }
-    | PNAME_NS	{ // t:@@
+    | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShexParser-test.js/PNAME_NS with pre-defined prefixes
         $1 = $1.substr(0, $1.length - 1);
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
         $$ = resolveIRI(Parser.prefixes[$1]);
@@ -842,6 +845,6 @@ iri:
 
 blankNode:
       BLANK_NODE_LABEL	
-    | ANON	
+    // | ANON	 -- not used
     ;
 

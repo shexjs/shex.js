@@ -10,8 +10,7 @@
     "http://a.example/EmployeeShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p2",
-      "value": { "type": "wildcard" },
-      "inherit": [ "http://a.example/PersonShape" ]
+      "value": { "type": "reference", "reference": "http://a.example/PersonShape" }
     }
   }
 }

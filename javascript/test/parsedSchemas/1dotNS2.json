@@ -1,0 +1,14 @@
+{
+  "type": "schema",
+  "prefixes": {
+    "IssueShape": "http://a.example/IssueShape",
+    "p1": "http://a.example/p1"
+  },
+  "shapes": {
+    "http://a.example/IssueShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": { "type": "wildcard" }
+    }
+  }
+}
