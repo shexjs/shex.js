@@ -1,0 +1,11 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes":{
+    "http://a.example/IssueShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": { "type": "valueSet", "values": ["\"true\"^^http://www.w3.org/2001/XMLSchema#boolean"] }
+    }
+  }
+}

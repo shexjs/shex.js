@@ -359,10 +359,10 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 "true"			return 'IT_true';
 "false"			return 'IT_false';
 {CODE}			return 'CODE';
-{INTEGER}		return 'INTEGER';
-{DECIMAL}		return 'DECIMAL';
-{EXPONENT}		return 'EXPONENT';
 {DOUBLE}		return 'DOUBLE';
+{DECIMAL}		return 'DECIMAL';
+//{EXPONENT}		return 'EXPONENT';
+{INTEGER}		return 'INTEGER';
 //{ECHAR}		return 'ECHAR';
 //{WS}			return 'WS';
 {ANON}			return 'ANON';
@@ -377,10 +377,10 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 //{HEX}			return 'HEX';
 //{PERCENT}		return 'PERCENT';
 //{UCHAR}		return 'UCHAR';
-{STRING_LITERAL1}	return 'STRING_LITERAL1';
-{STRING_LITERAL2}	return 'STRING_LITERAL2';
 {STRING_LITERAL_LONG1}	return 'STRING_LITERAL_LONG1';
 {STRING_LITERAL_LONG2}	return 'STRING_LITERAL_LONG2';
+{STRING_LITERAL1}	return 'STRING_LITERAL1';
+{STRING_LITERAL2}	return 'STRING_LITERAL2';
 //{PN_LOCAL_ESC}	return 'PN_LOCAL_ESC';
 //{PLX}			return 'PLX';
 //{PN_LOCAL}		return 'PN_LOCAL';
@@ -765,12 +765,12 @@ cardinality:
     ;
 
 valueSet:
-    '(' _Qvalue_E_Star ')'	-> { type: "valueSet", values: $2 } // t: 1val
+    '(' _Qvalue_E_Star ')'	-> { type: "valueSet", values: $2 } // t: 1val1IRIREF
     ;
 
 _Qvalue_E_Star:
-      -> [] // t: 1val
-    | _Qvalue_E_Star value	-> $1.concat([$2]) // t: 1val
+      -> [] // t: 1val1IRIREF
+    | _Qvalue_E_Star value	-> $1.concat([$2]) // t: 1val1IRIREF
     ;
 
 value:
@@ -811,20 +811,20 @@ _Q_KINDA_E_Opt:
 
 literal:
       string	
-    | string LANGTAG	-> $1 + lowercase($2) // t:@@
-    | string '^^' iri	-> $1 + '^^' + $3 // t:@@
-    | INTEGER	 -> createLiteral($1.substr(1), XSD_INTEGER) // t:@@
-    | DECIMAL	-> createLiteral($1.substr(1), XSD_DECIMAL) // t:@@
-    | DOUBLE	createLiteral($1.substr(1).toLowerCase(), XSD_DOUBLE) // t:@@
-    | IT_true	-> XSD_TRUE // t:@@
-    | IT_false	-> XSD_FALSE // t:@@
+    | string LANGTAG	-> $1 + lowercase($2) // t: 1val1LANGTAG
+    | string '^^' iri	-> $1 + '^^' + $3 // t: 1val1Datatype
+    | INTEGER	 -> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
+    | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
+    | DOUBLE	-> createLiteral($1.toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE
+    | IT_true	-> XSD_TRUE // t: 1val1true
+    | IT_false	-> XSD_FALSE // t: 1val1false
     ;
 
 string:
-      STRING_LITERAL1	-> unescapeString($1, 1) // t:@@
-    | STRING_LITERAL2	-> unescapeString($1, 1) // t:@@
-    | STRING_LITERAL_LONG1	 -> unescapeString($1, 3) // t:@@
-    | STRING_LITERAL_LONG2	 -> unescapeString($1, 3) // t:@@
+      STRING_LITERAL1	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL1
+    | STRING_LITERAL2	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL2
+    | STRING_LITERAL_LONG1	 -> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG1
+    | STRING_LITERAL_LONG2	 -> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG2
     ;
 
 iri:
