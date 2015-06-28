@@ -1,0 +1,11 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes": {
+    "http://a.example/IssueShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+      "value": { "type": "valueSet", "values": ["http://www.w3.org/1999/02/22-rdf-syntax-ns#type"] }
+    }
+  }
+}

@@ -635,7 +635,6 @@ _Q_NOT_E_Opt:
 
 predicate:
       iri	
-    | 'a'	-> RDF_TYPE // t:@@
     ;
 
 valueClass:
@@ -841,6 +840,7 @@ iri:
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
         $$ = resolveIRI(Parser.prefixes[$1]);
     }
+    | 'a'	-> RDF_TYPE // t:@@
     ;
 
 blankNode:
