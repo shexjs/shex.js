@@ -4,7 +4,7 @@ var fs = require('fs'),
     expect = require('chai').expect;
 
 var schemasPath = __dirname + '/../schemas/';
-var parsedSchemasPath = __dirname + '/../test/parsedSchemas/';
+var jsonSchemasPath = __dirname + '/../test/parsedSchemas/';
 var negSyntaxTestsPath = __dirname + '/../negativeSyntax/';
 
 describe('A SHEX parser', function () {
@@ -24,17 +24,18 @@ describe('A SHEX parser', function () {
 
   schemas.forEach(function (schema) {
 
-    var parsedSchemaFile = parsedSchemasPath + schema + '.json';
-    if (!fs.existsSync(parsedSchemaFile)) return;
+    var jsonSchemaFile = jsonSchemasPath + schema + '.json';
+    if (!fs.existsSync(jsonSchemaFile)) return;
 
     it('should correctly parse schema "' + schema + '"', function () {
-      var parsedSchema = parseJSON(fs.readFileSync(parsedSchemaFile, 'utf8'));
+      var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, 'utf8'));
 
       console.log(schema);
       schema = fs.readFileSync(schemasPath + schema + '.shex', 'utf8');
-      console.log("parsed   :"+  JSON.stringify(parser.parse(schema)));
-      console.log("expected :"+JSON.stringify(parsedSchema));
-      expect(parser.parse(schema)).to.deep.equal(parsedSchema);
+      var parsedSchema = parser.parse(schema);
+      console.log("parsed   :" + JSON.stringify(parsedSchema));
+      console.log("expected :" + JSON.stringify(jsonSchema));
+      expect(parsedSchema).to.deep.equal(jsonSchema);
     });
   });
 
