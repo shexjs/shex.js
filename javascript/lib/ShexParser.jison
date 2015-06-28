@@ -243,6 +243,13 @@
     });
     return unionAll(objects, otherTriples || [], triples);
   }
+
+  // Return object with p1 key, p2 value
+  function keyInt(key, val) {
+    var ret = {};
+    ret[key] = parseInt(val, 10);
+    return ret;
+  }
 %}
 
 /* lexical grammar */
@@ -638,10 +645,10 @@ predicate:
     ;
 
 valueClass:
-      IT_LITERAL _QxsFacet_E_Star	
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "literal" }, $2) // t: 1literalPattern
 //    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt	
     | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C	
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _O_QIT_PATTERN_E_S_Qstring_E_C	
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _O_QIT_PATTERN_E_S_Qstring_E_C	-> extend({ type: $1 }, $2) // t: 1iriPattern
     | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	
     | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _O_QIT_PATTERN_E_S_Qstring_E_C	
 //    | IT_BNODE _QgroupShapeConstr_E_Opt	
@@ -654,13 +661,13 @@ valueClass:
     ;
 
 _QxsFacet_E_Star:
-      
-    | _QxsFacet_E_Star xsFacet	
+      -> {} // t: 1literalPattern
+    | _QxsFacet_E_Star xsFacet	-> extend($1, $2) // t: 1literalLength
     ;
 
 _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
-      IT_IRI	
-    | IT_NONLITERAL	
+      IT_IRI	-> 'iri' // t: 1iriPattern
+    | IT_NONLITERAL	-> 'nonliteral' // t:@@
     ;
 
 // _QgroupShapeConstr_E_Opt:
@@ -668,12 +675,13 @@ _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
 //     | groupShapeConstr	;
 
 _O_QIT_PATTERN_E_S_Qstring_E_C:
-    IT_PATTERN string	;
-
-_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
-      
-    | _O_QIT_PATTERN_E_S_Qstring_E_C	
+    IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t:@@
     ;
+
+//_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
+//      -> {} // t:@@
+//    | _O_QIT_PATTERN_E_S_Qstring_E_C	
+//    ;
 
 groupShapeConstr:
     shapeOrRef _Q_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	;
@@ -701,7 +709,6 @@ shapeOrRef:
         $$ = resolveIRI(expansion + $1.substr(namePos + 1));
     }
     | ATPNAME_NS	{ // t: 1dotRefNS1
-console.log($1);
         $1 = $1.substr(1, $1.length-1);
         $1 = $1.substr(0, $1.length - 1);
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
@@ -712,32 +719,33 @@ console.log($1);
     ;
 
 xsFacet:
-    _O_QIT_PATTERN_E_Or_Q_KINDA_E_C string	
-    | _O_QIT_MININCLUSIVE_E_Or_QIT_MINEXCLUSIVE_E_Or_QIT_MAXINCLUSIVE_E_Or_QIT_MAXEXCLUSIVE_E_C INTEGER	
-    | _O_QIT_LENGTH_E_Or_QIT_MINLENGTH_E_Or_QIT_MAXLENGTH_E_C INTEGER	
-    | _O_QIT_TOTALDIGITS_E_Or_QIT_FRACTIONDIGITS_E_C INTEGER	;
+    _O_QIT_PATTERN_E_Or_Q_TILDE_E_C string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
+    | _O_QIT_MININCLUSIVE_E_Or_QIT_MINEXCLUSIVE_E_Or_QIT_MAXINCLUSIVE_E_Or_QIT_MAXEXCLUSIVE_E_C INTEGER	-> keyInt($1, $2) // t: 1literalMininclusive
+    | _O_QIT_LENGTH_E_Or_QIT_MINLENGTH_E_Or_QIT_MAXLENGTH_E_C INTEGER	-> keyInt($1, $2) // t: 1literalLength
+    | _O_QIT_TOTALDIGITS_E_Or_QIT_FRACTIONDIGITS_E_C INTEGER	-> keyInt($1, $2) // t: 1literalTotaldigits
+    ;
 
-_O_QIT_PATTERN_E_Or_Q_KINDA_E_C:
+_O_QIT_PATTERN_E_Or_Q_TILDE_E_C:
       IT_PATTERN	
     | '~'	
     ;
 
 _O_QIT_MININCLUSIVE_E_Or_QIT_MINEXCLUSIVE_E_Or_QIT_MAXINCLUSIVE_E_Or_QIT_MAXEXCLUSIVE_E_C:
-      IT_MININCLUSIVE	
-    | IT_MINEXCLUSIVE	
-    | IT_MAXINCLUSIVE	
-    | IT_MAXEXCLUSIVE	
+      IT_MININCLUSIVE	-> "mininclusive" // t: 1literalMininclusive
+    | IT_MINEXCLUSIVE	-> "minexclusive" // t: 1literalMinexclusive
+    | IT_MAXINCLUSIVE	-> "maxinclusive" // t: 1literalMaxinclusive
+    | IT_MAXEXCLUSIVE	-> "maxexclusive" // t: 1literalMaxexclusive
     ;
 
 _O_QIT_LENGTH_E_Or_QIT_MINLENGTH_E_Or_QIT_MAXLENGTH_E_C:
-      IT_LENGTH	
-    | IT_MINLENGTH	
-    | IT_MAXLENGTH	
+      IT_LENGTH	  	-> "length" // t: 1literalLength
+    | IT_MINLENGTH	-> "minlength" // t: 1literalMinlength
+    | IT_MAXLENGTH	-> "maxlength" // t: 1literalMaxlength
     ;
 
 _O_QIT_TOTALDIGITS_E_Or_QIT_FRACTIONDIGITS_E_C:
-      IT_TOTALDIGITS	
-    | IT_FRACTIONDIGITS	
+      IT_TOTALDIGITS	-> "totaldigits" // t: 1literalTotaldigits
+    | IT_FRACTIONDIGITS	-> "fractiondigits" // t: 1literalFractiondigits
     ;
 
 annotation:
@@ -778,7 +786,7 @@ value:
     ;
 
 iriRange:
-      iri _Q_O_Q_KINDA_E_S_Qexclusion_E_Star_C_E_Opt	{
+      iri _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
             type: "stemRange",
@@ -798,13 +806,13 @@ _Qexclusion_E_Star:
     | _Qexclusion_E_Star exclusion	-> $1.concat([$2]) // t: 1val1iriStemMinusiri3
     ;
 
-_O_Q_KINDA_E_S_Qexclusion_E_Star_C:
+_O_Q_TILDE_E_S_Qexclusion_E_Star_C:
     '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
     ;
 
-_Q_O_Q_KINDA_E_S_Qexclusion_E_Star_C_E_Opt:
+_Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
       
-    | _O_Q_KINDA_E_S_Qexclusion_E_Star_C	
+    | _O_Q_TILDE_E_S_Qexclusion_E_Star_C	
     ;
 
 _Qexclusion_E_Plus:
