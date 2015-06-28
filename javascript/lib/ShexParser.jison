@@ -778,17 +778,29 @@ value:
     ;
 
 iriRange:
-      iri _Q_O_Q_KINDA_E_S_Qexclusion_E_Star_C_E_Opt	
-    | '.' _Qexclusion_E_Plus	
+      iri _Q_O_Q_KINDA_E_S_Qexclusion_E_Star_C_E_Opt	{
+        if ($2) {
+          $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
+            type: "stemRange",
+            stem: $1
+          };
+          if ($2.length)
+            $$["exclusions"] = $2; // t: 1val1iriStemMinusiri3
+        } else {
+          $$ = $1; // t: 1val1IRIREF, 1AvalA
+        }
+      }
+    | '.' _Qexclusion_E_Plus	-> { type: "stemRange", stem: { type: "wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 _Qexclusion_E_Star:
-      
-    | _Qexclusion_E_Star exclusion	
+      -> [] // t: 1val1iriStem, 1val1iriStemMinusiri3
+    | _Qexclusion_E_Star exclusion	-> $1.concat([$2]) // t: 1val1iriStemMinusiri3
     ;
 
 _O_Q_KINDA_E_S_Qexclusion_E_Star_C:
-    '~' _Qexclusion_E_Star	;
+    '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
+    ;
 
 _Q_O_Q_KINDA_E_S_Qexclusion_E_Star_C_E_Opt:
       
@@ -796,16 +808,13 @@ _Q_O_Q_KINDA_E_S_Qexclusion_E_Star_C_E_Opt:
     ;
 
 _Qexclusion_E_Plus:
-      exclusion	
-    | _Qexclusion_E_Plus exclusion	
+      exclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _Qexclusion_E_Plus exclusion	-> $1.concat([$2]) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 exclusion:
-    '-' iri _Q_KINDA_E_Opt	;
-
-_Q_KINDA_E_Opt:
-        
-    | '~'	
+      '-' iri	-> $2 // t: 1val1iriStemMinusiri3
+    | '-' iri '~'	-> { type: "stem", stem: $2 } // t: 1val1iriStemMinusiriStem3
     ;
 
 literal:
@@ -840,7 +849,7 @@ iri:
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
         $$ = resolveIRI(Parser.prefixes[$1]);
     }
-    | 'a'	-> RDF_TYPE // t:@@
+    | 'a'	-> RDF_TYPE // t: 1AvalA
     ;
 
 blankNode:
