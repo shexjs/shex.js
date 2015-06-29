@@ -647,8 +647,10 @@ predicate:
 valueClass:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
 //    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt	
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C stringFacet*	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr stringFacet*	-> extend({ type: "valueClass", nodeKind: $1 }, $3) // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $3) // t:@@
 //    | IT_BNODE _QgroupShapeConstr_E_Opt	
     | IT_BNODE	
     | IT_BNODE groupShapeConstr	
@@ -661,6 +663,11 @@ valueClass:
 _QxsFacet_E_Star:
       -> {} // t: 1literalPattern
     | _QxsFacet_E_Star xsFacet	-> extend($1, $2) // t: 1literalLength
+    ;
+
+_QstringFacet_E_Plus:
+      stringFacet // t: 1literalPattern
+    | _QstringFacet_E_Plus stringFacet	-> extend($1, $2) // t: 1literalLength
     ;
 
 _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
@@ -709,7 +716,11 @@ shapeOrRef:
         $$ = resolveIRI(Parser.prefixes[$1]);
     }
     | '@' shapeLabel	{ $$ = $2; } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
-    | shapeDefinition	
+    | shapeDefinition	{ // t: 1dotInline1
+        if (!Parser.shapes) Parser.shapes = {};
+        $$ = blank();
+        Parser.shapes[$$] = $1;
+      }
     ;
 
 xsFacet:
