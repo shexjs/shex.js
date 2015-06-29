@@ -6,7 +6,7 @@
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
       "value": {
-        "type": "valueSet", "values": [
+        "type": "valueClass", "values": [
           { "type": "stemRange",
             "stem": "http://a.example/v",
             "exclusions": [

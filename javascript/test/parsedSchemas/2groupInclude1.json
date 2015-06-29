@@ -5,7 +5,7 @@
     "http://a.example/PersonShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "wildcard" }
+      "value": { "type": "valueClass" }
     },
     "http://a.example/EmployeeShape": {
       "type": "group",
@@ -17,7 +17,7 @@
         {
           "type": "tripleConstraint",
           "predicate": "http://a.example/p2",
-          "value": { "type": "wildcard" }
+          "value": { "type": "valueClass" }
         }
       ]
     }

@@ -5,7 +5,7 @@
     "http://a.example/IssueShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "valueSet", "values": ["\"0.0\"^^http://www.w3.org/2001/XMLSchema#decimal"] }
+      "value": { "type": "valueClass", "values": ["\"0.0\"^^http://www.w3.org/2001/XMLSchema#decimal"] }
     }
   }
 }

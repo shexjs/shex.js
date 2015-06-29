@@ -5,7 +5,10 @@
     "http://a.example/IssueShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass", "values": ["\"false\"^^http://www.w3.org/2001/XMLSchema#boolean"] }
+      "value": { "type": "valueClass",
+                 "nodeKind": "iri",
+                 "maxlength": 20
+               }
     }
   }
 }

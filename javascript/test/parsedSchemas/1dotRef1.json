@@ -5,12 +5,12 @@
     "http://a.example/PersonShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "wildcard" }
+      "value": { "type": "valueClass" }
     },
     "http://a.example/EmployeeShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p2",
-      "value": { "type": "reference", "reference": "http://a.example/PersonShape" }
+      "value": { "type": "valueClass", "reference": "http://a.example/PersonShape" }
     }
   }
 }

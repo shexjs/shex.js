@@ -5,7 +5,8 @@
     "http://a.example/IssueShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "literal",
+      "value": { "type": "valueClass",
+                 "nodeKind": "literal",
                  "minlength": 5
                }
     }

@@ -612,7 +612,7 @@ tripleConstraint:
     // _QsenseFlags_E_Opt 
       predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{ // t: 1dot
         $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4);
-    }
+      }
     | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	
     ;
 
@@ -645,19 +645,17 @@ predicate:
     ;
 
 valueClass:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "literal" }, $2) // t: 1literalPattern
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
 //    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt	
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C	
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _O_QIT_PATTERN_E_S_Qstring_E_C	-> extend({ type: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _O_QIT_PATTERN_E_S_Qstring_E_C	
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C stringFacet*	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr stringFacet*	-> extend({ type: "valueClass", nodeKind: $1 }, $3) // t: 1iriPattern
 //    | IT_BNODE _QgroupShapeConstr_E_Opt	
     | IT_BNODE	
     | IT_BNODE groupShapeConstr	
     | iri	// datatype
-    | groupShapeConstr	-> { type: "reference", reference: $1 } // t: 1dotRef1
-    | valueSet	
-    | '.'	-> { type: "wildcard" } // t: 1dot
+    | groupShapeConstr	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
+    | valueSet	-> { type: "valueClass", values: $1 } // t: 1val1IRIREF
+    | '.'	-> { type: "valueClass" } // t: 1dot
     ;
 
 _QxsFacet_E_Star:
@@ -673,10 +671,6 @@ _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
 // _QgroupShapeConstr_E_Opt:
 //     
 //     | groupShapeConstr	;
-
-_O_QIT_PATTERN_E_S_Qstring_E_C:
-    IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t:@@
-    ;
 
 //_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
 //      -> {} // t:@@
@@ -719,31 +713,35 @@ shapeOrRef:
     ;
 
 xsFacet:
-    _O_QIT_PATTERN_E_Or_Q_TILDE_E_C string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
-    | _O_QIT_MININCLUSIVE_E_Or_QIT_MINEXCLUSIVE_E_Or_QIT_MAXINCLUSIVE_E_Or_QIT_MAXEXCLUSIVE_E_C INTEGER	-> keyInt($1, $2) // t: 1literalMininclusive
-    | _O_QIT_LENGTH_E_Or_QIT_MINLENGTH_E_Or_QIT_MAXLENGTH_E_C INTEGER	-> keyInt($1, $2) // t: 1literalLength
-    | _O_QIT_TOTALDIGITS_E_Or_QIT_FRACTIONDIGITS_E_C INTEGER	-> keyInt($1, $2) // t: 1literalTotaldigits
+      stringFacet
+    | numericFacet
     ;
 
-_O_QIT_PATTERN_E_Or_Q_TILDE_E_C:
-      IT_PATTERN	
-    | '~'	
+stringFacet:
+      IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
+    | '~' string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
+    | stringLength INTEGER	-> keyInt($1, $2) // t: 1literalLength
     ;
 
-_O_QIT_MININCLUSIVE_E_Or_QIT_MINEXCLUSIVE_E_Or_QIT_MAXINCLUSIVE_E_Or_QIT_MAXEXCLUSIVE_E_C:
+numericFacet:
+      numericRange INTEGER	-> keyInt($1, $2) // t: 1literalMininclusive
+    | numericLength INTEGER	-> keyInt($1, $2) // t: 1literalTotaldigits
+    ;
+
+stringLength:
+      IT_LENGTH	  	-> "length" // t: 1literalLength
+    | IT_MINLENGTH	-> "minlength" // t: 1literalMinlength
+    | IT_MAXLENGTH	-> "maxlength" // t: 1literalMaxlength
+    ;
+
+numericRange:
       IT_MININCLUSIVE	-> "mininclusive" // t: 1literalMininclusive
     | IT_MINEXCLUSIVE	-> "minexclusive" // t: 1literalMinexclusive
     | IT_MAXINCLUSIVE	-> "maxinclusive" // t: 1literalMaxinclusive
     | IT_MAXEXCLUSIVE	-> "maxexclusive" // t: 1literalMaxexclusive
     ;
 
-_O_QIT_LENGTH_E_Or_QIT_MINLENGTH_E_Or_QIT_MAXLENGTH_E_C:
-      IT_LENGTH	  	-> "length" // t: 1literalLength
-    | IT_MINLENGTH	-> "minlength" // t: 1literalMinlength
-    | IT_MAXLENGTH	-> "maxlength" // t: 1literalMaxlength
-    ;
-
-_O_QIT_TOTALDIGITS_E_Or_QIT_FRACTIONDIGITS_E_C:
+numericLength:
       IT_TOTALDIGITS	-> "totaldigits" // t: 1literalTotaldigits
     | IT_FRACTIONDIGITS	-> "fractiondigits" // t: 1literalFractiondigits
     ;
@@ -772,7 +770,7 @@ cardinality:
     ;
 
 valueSet:
-    '(' _Qvalue_E_Star ')'	-> { type: "valueSet", values: $2 } // t: 1val1IRIREF
+    '(' _Qvalue_E_Star ')'	-> $2 // t: 1val1IRIREF
     ;
 
 _Qvalue_E_Star:

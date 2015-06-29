@@ -8,17 +8,17 @@
         {
           "type": "tripleConstraint",
           "predicate": "http://a.example/p1",
-          "value": { "type": "wildcard" }
+          "value": { "type": "valueClass" }
         },
         {
           "type": "tripleConstraint",
           "predicate": "http://a.example/p2",
-          "value": { "type": "wildcard" }
+          "value": { "type": "valueClass" }
         },
         {
           "type": "tripleConstraint",
           "predicate": "http://a.example/p3",
-          "value": { "type": "wildcard" }
+          "value": { "type": "valueClass" }
         }
       ],
       "extra": [ "http://a.example/p1", "http://a.example/p2", "http://a.example/p3" ]

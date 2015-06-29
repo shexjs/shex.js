@@ -5,7 +5,7 @@
     "http://a.example/IssueShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "valueSet", "values": ["http://a.example/v1"] }
+      "value": { "type": "valueClass", "values": ["http://a.example/v1"] }
     }
   }
 }

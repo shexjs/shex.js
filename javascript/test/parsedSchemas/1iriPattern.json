@@ -5,7 +5,8 @@
     "http://a.example/IssueShape": {
       "type": "tripleConstraint",
       "predicate": "http://a.example/p1",
-      "value": { "type": "iri",
+      "value": { "type": "valueClass",
+                 "nodeKind": "iri",
                  "pattern": "^ab$"
                }
     }
