@@ -1,3 +1,5 @@
+var VERBOSE = "VERBOSE" in process.env;
+
 var ShexParser = require('../shex').Parser;
 
 var fs = require('fs'),
@@ -30,11 +32,11 @@ describe('A SHEX parser', function () {
     it('should correctly parse schema "' + schema + '"', function () {
       var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, 'utf8'));
 
-      console.log(schema);
+      if (VERBOSE) console.log(schema);
       schema = fs.readFileSync(schemasPath + schema + '.shex', 'utf8');
       var parsedSchema = parser.parse(schema);
-      console.log("parsed   :" + JSON.stringify(parsedSchema));
-      console.log("expected :" + JSON.stringify(jsonSchema));
+      if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
+      if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
       expect(parsedSchema).to.deep.equal(jsonSchema);
     });
   });
@@ -59,7 +61,7 @@ describe('A SHEX parser', function () {
   negSyntaxTests.forEach(function (schema) {
 
     it('should correctly parse schema "' + schema + '"', function () {
-      console.log(schema);
+      if (VERBOSE) console.log(schema);
       schema = fs.readFileSync(negSyntaxTestsPath + schema + '.err', 'utf8');
       try { parser.parse(schema); }
       catch (e) { error = e; }
