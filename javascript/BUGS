@@ -1,0 +1,7 @@
+Deviations from yacker ShEx2:
+
++ '*' in 2nd pos of REPEAT_RANGE
++ ATPNAME_NS, ATPNAME_LN terminals
+~ a is an iri (not just for predicates)
+- ANON terminal (not referenced)
+~ groupShapeConstr can only have ORs (no ANDs)
