@@ -1,0 +1,42 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes": {
+    "http://a.example/PersonShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": {
+        "type": "valueClass"
+      }
+    },
+    "http://a.example/PlaceShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": {
+        "type": "valueClass"
+      }
+    },
+    "http://a.example/ThingShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": {
+        "type": "valueClass"
+      }
+    },
+    "http://a.example/EmployeeShape": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p2",
+      "value": {
+        "type": "valueClass",
+        "reference": {
+          "type": "or",
+          "conjuncts": [
+            "http://a.example/PersonShape",
+            "http://a.example/PlaceShape",
+            "http://a.example/ThingShape"
+          ]
+        }
+      }
+    }
+  }
+}

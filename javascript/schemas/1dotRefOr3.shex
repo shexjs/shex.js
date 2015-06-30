@@ -1,0 +1,18 @@
+<http://a.example/PersonShape> {
+   <http://a.example/p1> .
+}
+
+<http://a.example/PlaceShape> {
+   <http://a.example/p1> .
+}
+
+<http://a.example/ThingShape> {
+   <http://a.example/p1> .
+}
+
+<http://a.example/EmployeeShape> {
+   <http://a.example/p2> @<http://a.example/PersonShape>
+                      OR @<http://a.example/PlaceShape>
+                      OR @<http://a.example/ThingShape>
+}
+

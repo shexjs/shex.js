@@ -680,24 +680,21 @@ _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
 //     | groupShapeConstr	;
 
 //_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
-//      -> {} // t:@@
+//      
 //    | _O_QIT_PATTERN_E_S_Qstring_E_C	
 //    ;
 
 groupShapeConstr:
-    shapeOrRef _Q_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	;
-
-_O_QIT_AND_E_Or_QIT_OR_E_C:
-      IT_AND	
-    | IT_OR	
+    shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", conjuncts: [$1].concat($2) } : $1 // t: 1dotRefOr3/1dotRef1
     ;
 
-_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C:
-    _O_QIT_AND_E_Or_QIT_OR_E_C shapeOrRef	;
+_O_QIT_OR_E_S_QshapeOrRef_E_C:
+    IT_OR shapeOrRef	-> $2 // t: 1dotRefOr3
+    ;
 
-_Q_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
-      
-    | _Q_O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C_E_Star _O_QIT_AND_E_Or_QIT_OR_E_S_QshapeOrRef_E_C	
+_Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
+      -> [] // t: 1dotRefOr3
+    | _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star _O_QIT_OR_E_S_QshapeOrRef_E_C	-> $1.concat([$2]) // t: 1dotRefOr3
     ;
 
 shapeOrRef:
@@ -708,13 +705,13 @@ shapeOrRef:
             expansion = Parser.prefixes[prefix];
         if (!expansion) throw new Error('Unknown prefix: ' + prefix);
         $$ = resolveIRI(expansion + $1.substr(namePos + 1));
-    }
+      }
     | ATPNAME_NS	{ // t: 1dotRefNS1
         $1 = $1.substr(1, $1.length-1);
         $1 = $1.substr(0, $1.length - 1);
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
         $$ = resolveIRI(Parser.prefixes[$1]);
-    }
+      }
     | '@' shapeLabel	{ $$ = $2; } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     | shapeDefinition	{ // t: 1dotInline1
         if (!Parser.shapes) Parser.shapes = {};
