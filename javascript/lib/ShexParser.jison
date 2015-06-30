@@ -623,8 +623,8 @@ tripleConstraint:
 //     | senseFlags	;
 
 _Qannotation_E_Star:
-      -> [] // t:@@
-    | _Qannotation_E_Star annotation	-> $1.concat([$2]) // t:@@
+      -> [] // t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> $1.concat([$2]) // t: 1dotAnnot3
     ;
 
 senseFlags:

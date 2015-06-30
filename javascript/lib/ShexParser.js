@@ -167,9 +167,9 @@ case 64: // t: 1dot
           this.$['annotations'] = $$[$0-2];
       
 break;
-case 66:this.$ = [] // t:@@;
+case 66:this.$ = [] // t: 1dot, 1dotAnnot3;
 break;
-case 67:this.$ = $$[$0-1].concat([$$[$0]]) // t:@@;
+case 67:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotAnnot3;
 break;
 case 75:this.$ = extend({ type: "valueClass", nodeKind: "literal" }, $$[$0]) // t: 1literalPattern;
 break;
