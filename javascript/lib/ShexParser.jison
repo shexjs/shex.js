@@ -610,12 +610,16 @@ shapeLabel:
 
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{ // t: 1dot
-        $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4);
+      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{
+        $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4); // t: 1dot
         if ($3.length)
-          $$['annotations'] = $3;
+          $$['annotations'] = $3; // t: 1dotAnnot3
       }
-    | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	
+    | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{
+        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2, value: $3 }, $5); // t: 1inversedot, 1negatedinversedot
+        if ($4.length)
+          $$['annotations'] = $4; // t: 1inversedotAnnot3
+      }
     ;
 
 // _QsenseFlags_E_Opt:
@@ -628,18 +632,10 @@ _Qannotation_E_Star:
     ;
 
 senseFlags:
-      '!' _Q_CARROT_E_Opt	
-    | '^' _Q_NOT_E_Opt	
-    ;
-
-_Q_CARROT_E_Opt:
-      
-    | '^'	
-    ;
-
-_Q_NOT_E_Opt:
-      
-    | '!'	
+      '^'	-> { inverse: true } // t: 1inversedot
+    | '^' '!'	-> { inverse: true, negated: true } // t: 1negatedinversedot
+    | '!'	-> { negated: true } // t: 1negateddot
+    | '!' '^'	-> { inverse: true, negated: true } // t: 1inversenegateddot
     ;
 
 predicate:
