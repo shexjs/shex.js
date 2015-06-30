@@ -163,7 +163,13 @@ case 59:this.$ = { type: "include", "include": $$[$0] } // t: 2groupInclude1;
 break;
 case 64: // t: 1dot
         this.$ = extend({ type: "tripleConstraint", predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1]);
+        if ($$[$0-2].length)
+          this.$['annotations'] = $$[$0-2];
       
+break;
+case 66:this.$ = [] // t:@@;
+break;
+case 67:this.$ = $$[$0-1].concat([$$[$0]]) // t:@@;
 break;
 case 75:this.$ = extend({ type: "valueClass", nodeKind: "literal" }, $$[$0]) // t: 1literalPattern;
 break;
@@ -250,6 +256,8 @@ break;
 case 114:this.$ = "totaldigits" // t: 1literalTotaldigits;
 break;
 case 115:this.$ = "fractiondigits" // t: 1literalFractiondigits;
+break;
+case 116:this.$ = [$$[$0-1], $$[$0]];
 break;
 case 119:this.$ = { min:0 } // t: 1cardStar;
 break;

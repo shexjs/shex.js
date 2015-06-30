@@ -612,6 +612,8 @@ tripleConstraint:
     // _QsenseFlags_E_Opt 
       predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{ // t: 1dot
         $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4);
+        if ($3.length)
+          $$['annotations'] = $3;
       }
     | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	
     ;
@@ -621,8 +623,8 @@ tripleConstraint:
 //     | senseFlags	;
 
 _Qannotation_E_Star:
-      
-    | _Qannotation_E_Star annotation	
+      -> [] // t:@@
+    | _Qannotation_E_Star annotation	-> $1.concat([$2]) // t:@@
     ;
 
 senseFlags:
@@ -755,7 +757,8 @@ numericLength:
     ;
 
 annotation:
-    ';' iri _O_Qiri_E_Or_Qliteral_E_C	;
+    ';' iri _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3]
+    ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
       iri	
