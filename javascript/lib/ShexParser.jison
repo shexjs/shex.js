@@ -404,8 +404,11 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 
 shexDoc:
     _Qdirective_E_Star _Q_O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_S_Qstatement_E_Star_C_E_Opt EOF	{
-      var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, {shapes: Parser.shapes});
-      Parser.prefixes = Parser.shapes = null;
+      var startObj = Parser.start ? { start: Parser.start } : {};           // Build return object from   
+      var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // components in parser state 
+                       startObj,                                            // maintaining intuitve order.
+                       {shapes: Parser.shapes});
+      Parser.prefixes = Parser.shapes = Parser.start = null;                // Reset state.
       base = basePath = baseRoot = '';
       return ret;
     };
@@ -469,7 +472,10 @@ prefixDecl:
     };
 
 start:
-    IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C	;
+      IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C	{
+        Parser.start = $3;
+      }
+    ;
 
 _QCODE_E_Star:
       
@@ -478,7 +484,11 @@ _QCODE_E_Star:
 
 _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C:
       shapeLabel	
-    | shapeDefinition _QCODE_E_Star	
+    | shapeDefinition _QCODE_E_Star	{ // t: startInline
+        if (!Parser.shapes) Parser.shapes = {};
+        $$ = blank();
+        Parser.shapes[$$] = $1;
+    }
     ;
 
 shape:
@@ -508,8 +518,8 @@ _O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C:
 _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       -> {}
     | _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C	{
-      if ($2[0] === 'closed') // t: 1dotClosed
-        $1['closed'] = true;
+      if ($2[0] === 'closed')
+        $1['closed'] = true; // t: 1dotClosed
       else if ($2[0] in $1)
         $1[$2[0]] = $1[$2[0]].concat($2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
       else

@@ -83,8 +83,11 @@ performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* actio
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
-      var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, {shapes: Parser.shapes});
-      Parser.prefixes = Parser.shapes = null;
+      var startObj = Parser.start ? { start: Parser.start } : {};           // Build return object from   
+      var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // components in parser state 
+                       startObj,                                            // maintaining intuitve order.
+                       {shapes: Parser.shapes});
+      Parser.prefixes = Parser.shapes = Parser.start = null;                // Reset state.
       base = basePath = baseRoot = '';
       return ret;
     
@@ -100,6 +103,16 @@ case 20: // t: ShexParser-test.js/with pre-defined prefixes
       $$[$0-1] = $$[$0-1].substr(0, $$[$0-1].length - 1);
       $$[$0] = resolveIRI($$[$0]);
       Parser.prefixes[$$[$0-1]] = $$[$0];
+    
+break;
+case 21:
+        Parser.start = $$[$0];
+      
+break;
+case 25: // t: startInline
+        if (!Parser.shapes) Parser.shapes = {};
+        this.$ = blank();
+        Parser.shapes[this.$] = $$[$0-1];
     
 break;
 case 26: // t: 1dot
@@ -120,8 +133,8 @@ break;
 case 32:this.$ = {};
 break;
 case 33:
-      if ($$[$0][0] === 'closed') // t: 1dotClosed
-        $$[$0-1]['closed'] = true;
+      if ($$[$0][0] === 'closed')
+        $$[$0-1]['closed'] = true; // t: 1dotClosed
       else if ($$[$0][0] in $$[$0-1])
         $$[$0-1][$$[$0][0]] = $$[$0-1][$$[$0][0]].concat($$[$0][1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
       else

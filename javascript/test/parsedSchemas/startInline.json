@@ -1,0 +1,12 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "start": "_:b0",
+  "shapes": {
+    "_:b0": {
+      "type": "tripleConstraint",
+      "predicate": "http://a.example/p1",
+      "value": { "type": "valueClass" }
+    }
+  }
+}
