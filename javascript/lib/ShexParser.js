@@ -120,6 +120,11 @@ case 26: // t: 1dot
         Parser.shapes[$$[$0-2]] = $$[$0-1];
     
 break;
+case 27: // t: 1dotVirtual
+        if (!Parser.shapes) Parser.shapes = {};
+        Parser.shapes[$$[$0-2]] = extend({type: null, virtual: true}, $$[$0-1]); // sneak 'virtual' in after 'type'
+    
+break;
 case 28: // t: 1dotInherit3
       this.$ = extend($$[$0-1], $$[$0-3]);
     

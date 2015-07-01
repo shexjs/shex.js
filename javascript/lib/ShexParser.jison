@@ -497,7 +497,11 @@ shape:
         if (!Parser.shapes) Parser.shapes = {};
         Parser.shapes[$1] = $2;
     }
-    | IT_VIRTUAL shapeLabel shapeDefinition _QCODE_E_Star	
+    | IT_VIRTUAL shapeLabel shapeDefinition _QCODE_E_Star	{ // t: 1dotVirtual
+        if (!Parser.shapes) Parser.shapes = {};
+        Parser.shapes[$2] = extend({type: null, virtual: true}, $3); // sneak 'virtual' in after 'type'
+                                                                     // Type will be overwritten.
+    }
     ;
 
 // _QIT_VIRTUAL_E_Opt:
