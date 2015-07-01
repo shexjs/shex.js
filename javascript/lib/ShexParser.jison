@@ -244,10 +244,17 @@
     return unionAll(objects, otherTriples || [], triples);
   }
 
-  // Return object with p1 key, p2 value
+  // Return object with p1 key, p2 integer value
   function keyInt(key, val) {
     var ret = {};
     ret[key] = parseInt(val, 10);
+    return ret;
+  }
+
+  // Return object with p1 key, p2 string value
+  function keyString(key, val) {
+    var ret = {};
+    ret[key] = val;
     return ret;
   }
 %}
@@ -276,7 +283,8 @@ IT_MINLENGTH		[Mm][Ii][Nn][Ll][Ee][Nn][Gg][Tt][Hh]
 IT_MAXLENGTH		[Mm][Aa][Xx][Ll][Ee][Nn][Gg][Tt][Hh]
 IT_TOTALDIGITS		[Tt][Oo][Tt][Aa][Ll][Dd][Ii][Gg][Ii][Tt][Ss]
 IT_FRACTIONDIGITS	[Ff][Rr][Aa][Cc][Tt][Ii][Oo][Nn][Dd][Ii][Gg][Ii][Tt][Ss]
-CODE			"%" ([#+A-Z_a-z][#+0-9A-Z_a-z]*)? "{" ([^%] | '\\' '%')* "%" "}"
+//CODE			"%" ([#+A-Z_a-z][#+0-9A-Z_a-z]*)? "{" ([^%] | '\\' '%')* "%" "}"
+CODE			"{" ([^%] | '\\' '%')* "%}"
 LANGTAG			"@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER			([+-])?([0-9])+
 REPEAT_RANGE		"{"({INTEGER})((","(({INTEGER})|'*')?))?"}"
@@ -313,6 +321,7 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 %%
 
 \s+|{COMMENT} /**/
+{CODE}			return 'CODE';
 {ATPNAME_LN}		return 'ATPNAME_LN';
 // {ATIRIREF}		return 'ATIRIREF';
 {ATPNAME_NS}		return 'ATPNAME_NS';
@@ -363,9 +372,9 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 "+"			return '+';
 "?"			return '?';
 "-"			return '-';
+"%"			return '%';
 "true"			return 'IT_true';
 "false"			return 'IT_false';
-{CODE}			return 'CODE';
 {DOUBLE}		return 'DOUBLE';
 {DECIMAL}		return 'DECIMAL';
 //{EXPONENT}		return 'EXPONENT';
@@ -403,30 +412,34 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 %% /* language grammar */
 
 shexDoc:
-    _Qdirective_E_Star _Q_O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_S_Qstatement_E_Star_C_E_Opt EOF	{
-      var startObj = Parser.start ? { start: Parser.start } : {};           // Build return object from   
-      var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // components in parser state 
-                       startObj,                                            // maintaining intuitve order.
-                       {shapes: Parser.shapes});
-      Parser.prefixes = Parser.shapes = Parser.start = null;                // Reset state.
-      base = basePath = baseRoot = '';
-      return ret;
-    };
+      _Qdirective_E_Star _Q_O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_S_Qstatement_E_Star_C_E_Opt EOF	{
+        var startObj = Parser.start ? { start: Parser.start } : {};           // Build return object from
+        var startCodes = Parser.startCodes ? { startCodes: Parser.startCodes } : {};
+        var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // components in parser state
+                         startCodes, startObj,                                // maintaining intuitve order.
+                         {shapes: Parser.shapes});
+        Parser.prefixes = Parser.shapes = Parser.start = null;                // Reset state.
+        base = basePath = baseRoot = '';
+        return ret;
+      }
+    ;
 
 _Qdirective_E_Star:
       
     | _Qdirective_E_Star directive	
     ;
 
-_QCODE_E_Plus:
-      CODE	
-    | _QCODE_E_Plus CODE	
+_QcodeDecl_E_Plus:
+      codeDecl	
+    | _QcodeDecl_E_Plus codeDecl	-> extend($1, $2) // t:@@
     ;
 
-_O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_C:
-      shape	
-    | start	
-    | _QCODE_E_Plus	
+_O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_C:
+      start	
+    | shape	
+    | _QcodeDecl_E_Plus	{
+        Parser.startCodes = $1; // t:@@
+      }
     ;
 
 _Qstatement_E_Star:
@@ -434,15 +447,14 @@ _Qstatement_E_Star:
     | _Qstatement_E_Star statement	
     ;
 
-_O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_S_Qstatement_E_Star_C:
-    _O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_C _Qstatement_E_Star	;
-
-_Q_O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_S_Qstatement_E_Star_C_E_Opt:
-      
-    | _O_Qshape_E_Or_Qstart_E_Or_QCODE_E_Plus_S_Qstatement_E_Star_C	
+_O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_S_Qstatement_E_Star_C:
+      _O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_C _Qstatement_E_Star	
     ;
 
-
+_Q_O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_S_Qstatement_E_Star_C_E_Opt:
+      
+    | _O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_S_Qstatement_E_Star_C	
+    ;
 
 statement:
       directive	
@@ -456,35 +468,36 @@ directive:
     ;
 
 baseDecl:
-    IT_BASE IRIREF	{ 
-      base = resolveIRI($2)
-      basePath = base.replace(/[^\/]*$/, '');
-      baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
-    }
-    ;
-
-prefixDecl:
-    IT_PREFIX PNAME_NS IRIREF	{ // t: ShexParser-test.js/with pre-defined prefixes
-      if (!Parser.prefixes) Parser.prefixes = {};
-      $2 = $2.substr(0, $2.length - 1);
-      $3 = resolveIRI($3);
-      Parser.prefixes[$2] = $3;
-    };
-
-start:
-      IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C	{
-        Parser.start = $3;
+      IT_BASE IRIREF	{
+        base = resolveIRI($2)
+        basePath = base.replace(/[^\/]*$/, '');
+        baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
       }
     ;
 
-_QCODE_E_Star:
-      
-    | _QCODE_E_Star CODE	
+prefixDecl:
+      IT_PREFIX PNAME_NS IRIREF	{ // t: ShexParser-test.js/with pre-defined prefixes
+        if (!Parser.prefixes) Parser.prefixes = {};
+        $2 = $2.substr(0, $2.length - 1);
+        $3 = resolveIRI($3);
+        Parser.prefixes[$2] = $3;
+      }
     ;
 
-_O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C:
+start:
+      IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QcodeDecl_E_Star_C	{
+        Parser.start = $3; // t: startInline
+      }
+    ;
+
+_QcodeDecl_E_Star:
+      -> {}
+    | _QcodeDecl_E_Star codeDecl	-> extend($1, $2) // t: 1dotCode1
+    ;
+
+_O_QshapeLabel_E_Or_QshapeDefinition_E_S_QcodeDecl_E_Star_C:
       shapeLabel	
-    | shapeDefinition _QCODE_E_Star	{ // t: startInline
+    | shapeDefinition _QcodeDecl_E_Star	{ // t: startInline
         if (!Parser.shapes) Parser.shapes = {};
         $$ = blank();
         Parser.shapes[$$] = $1;
@@ -493,11 +506,11 @@ _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QCODE_E_Star_C:
 
 shape:
     // _QIT_VIRTUAL_E_Opt 
-      shapeLabel shapeDefinition _QCODE_E_Star	{ // t: 1dot
+      shapeLabel shapeDefinition _QcodeDecl_E_Star	{ // t: 1dot
         if (!Parser.shapes) Parser.shapes = {};
         Parser.shapes[$1] = $2;
     }
-    | IT_VIRTUAL shapeLabel shapeDefinition _QCODE_E_Star	{ // t: 1dotVirtual
+    | IT_VIRTUAL shapeLabel shapeDefinition _QcodeDecl_E_Star	{ // t: 1dotVirtual
         if (!Parser.shapes) Parser.shapes = {};
         Parser.shapes[$2] = extend({type: null, virtual: true}, $3); // sneak 'virtual' in after 'type'
                                                                      // Type will be overwritten.
@@ -509,9 +522,10 @@ shape:
 //     | IT_VIRTUAL	;
 
 shapeDefinition:
-    _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
-      $$ = extend($3, $1);
-    };
+      _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
+        $$ = extend($3, $1);
+      }
+    ;
 
 _O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C:
       includeSet	-> [ 'inherit', $1 ] // t: 1dotInherit1
@@ -538,7 +552,7 @@ _QoneOfShape_E_Opt:
     ;
 
 includeSet:
-    '&' _QshapeLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      '&' _QshapeLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
     ;
 
 _QshapeLabel_E_Plus:
@@ -547,7 +561,7 @@ _QshapeLabel_E_Plus:
     ;
 
 inclPropertySet:
-    IT_EXTRA _Qpredicate_E_Plus	-> $2 // t: 1dotExtra1, 3groupdot3Extra
+      IT_EXTRA _Qpredicate_E_Plus	-> $2 // t: 1dotExtra1, 3groupdot3Extra
     ;
 
 _Qpredicate_E_Plus:
@@ -556,53 +570,53 @@ _Qpredicate_E_Plus:
     ;
 
 oneOfShape:
-    someOfShape _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", patterns: [$1].concat($2) } : $1 // t: 2oneOfdot
+      someOfShape _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", patterns: [$1].concat($2) } : $1 // t: 2oneOfdot
     ;
 
-_O_Q_PIPE_E_S_QsomeOfShape_E_C:
-    '|' someOfShape	-> $2 // t: 2oneOfdot
+_O_QGT_PIPE_E_S_QsomeOfShape_E_C:
+      '|' someOfShape	-> $2 // t: 2oneOfdot
     ;
 
-_Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star:
+_Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star:
       -> [] //  t: 2oneOfdot
-    | _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_Q_PIPE_E_S_QsomeOfShape_E_C	-> $1.concat($2) //  t: 2oneOfdot
+    | _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_QGT_PIPE_E_S_QsomeOfShape_E_C	-> $1.concat($2) //  t: 2oneOfdot
     ;
 
 someOfShape:
-    groupShape _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", patterns: [$1].concat($2) } : $1 // t: 2someOfdot
+      groupShape _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", patterns: [$1].concat($2) } : $1 // t: 2someOfdot
     ;
 
-_O_Q_OR_E_S_QgroupShape_E_C:
-    '||' groupShape	-> $2 // t: 2someOfdot
+_O_QGT_OR_E_S_QgroupShape_E_C:
+      '||' groupShape	-> $2 // t: 2someOfdot
     ;
 
-_Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star:
+_Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star:
       -> [] // t: 2someOfdot
-    | _Q_O_Q_OR_E_S_QgroupShape_E_C_E_Star _O_Q_OR_E_S_QgroupShape_E_C	-> $1.concat($2) // t: 2someOfdot
+    | _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star _O_QGT_OR_E_S_QgroupShape_E_C	-> $1.concat($2) // t: 2someOfdot
     ;
 
 groupShape:
-    unaryShape _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star _Q_COMMA_E_Opt	-> $2.length ? { type: "group", patterns: [$1].concat($2) } : $1 // t: 2groupOfdot
+      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _QGT_COMMA_E_Opt	-> $2.length ? { type: "group", patterns: [$1].concat($2) } : $1 // t: 2groupOfdot
     ;
 
-_O_Q_COMMA_E_S_QunaryShape_E_C:
-    ',' unaryShape	-> $2 // t: 2groupOfdot
+_O_QGT_COMMA_E_S_QunaryShape_E_C:
+      ',' unaryShape	-> $2 // t: 2groupOfdot
     ;
 
-_Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star:
+_Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star:
       -> [] // t: 2groupOfdot
-    | _Q_O_Q_COMMA_E_S_QunaryShape_E_C_E_Star _O_Q_COMMA_E_S_QunaryShape_E_C	-> $1.concat($2) // t: 2groupOfdot
+    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _O_QGT_COMMA_E_S_QunaryShape_E_C	-> $1.concat($2) // t: 2groupOfdot
     ;
 
-_Q_COMMA_E_Opt:
+_QGT_COMMA_E_Opt:
       
     | ','	
     ;
 
 unaryShape:
     // _Qid_E_Opt 
-      _O_QtripleConstraint_E_Or_Qinclude_E_Or_Q_LPAREN_E_S_QoneOfShape_E_S_Q_RPAREN_E_S_Qcardinality_E_Opt_S_QCODE_E_Star_C	
-    | id _O_QtripleConstraint_E_Or_Qinclude_E_Or_Q_LPAREN_E_S_QoneOfShape_E_S_Q_RPAREN_E_S_Qcardinality_E_Opt_S_QCODE_E_Star_C	
+      _O_QtripleConstraint_E_Or_Qinclude_E_Or_QGT_LPAREN_E_S_QoneOfShape_E_S_QGT_RPAREN_E_S_Qcardinality_E_Opt_S_QcodeDecl_E_Star_C	
+    | id _O_QtripleConstraint_E_Or_Qinclude_E_Or_QGT_LPAREN_E_S_QoneOfShape_E_S_QGT_RPAREN_E_S_Qcardinality_E_Opt_S_QcodeDecl_E_Star_C	
     ;
 
 // _Qid_E_Opt:
@@ -614,10 +628,14 @@ _Qcardinality_E_Opt:
     | cardinality	
     ;
 
-_O_QtripleConstraint_E_Or_Qinclude_E_Or_Q_LPAREN_E_S_QoneOfShape_E_S_Q_RPAREN_E_S_Qcardinality_E_Opt_S_QCODE_E_Star_C:
+_O_QtripleConstraint_E_Or_Qinclude_E_Or_QGT_LPAREN_E_S_QoneOfShape_E_S_QGT_RPAREN_E_S_Qcardinality_E_Opt_S_QcodeDecl_E_Star_C:
       tripleConstraint	
-    | '&' shapeLabel	-> { type: "include", "include": $2 } // t: 2groupInclude1
-    | '(' oneOfShape ')' _Qcardinality_E_Opt _QCODE_E_Star	
+    | include
+    | '(' oneOfShape ')' _Qcardinality_E_Opt _QcodeDecl_E_Star	
+    ;
+
+include:
+      '&' shapeLabel	-> { type: "include", "include": $2 } // t: 2groupInclude1
     ;
 
 id:
@@ -630,12 +648,14 @@ shapeLabel:
 
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{
+      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QcodeDecl_E_Star	{
         $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4); // t: 1dot
         if ($3.length)
           $$['annotations'] = $3; // t: 1dotAnnot3
+        if (Object.keys($5).length)
+          $$['semAct'] = $5; // t: 1dotCode1
       }
-    | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QCODE_E_Star	{
+    | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt _QcodeDecl_E_Star	{
         $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2, value: $3 }, $5); // t: 1inversedot, 1negatedinversedot
         if ($4.length)
           $$['annotations'] = $4; // t: 1inversedotAnnot3
@@ -664,7 +684,7 @@ predicate:
 
 valueClass:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
-//    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt	
+//    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _QstringFacet_E_Star	
     | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
     | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
     | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
@@ -683,11 +703,6 @@ _QxsFacet_E_Star:
     | _QxsFacet_E_Star xsFacet	-> extend($1, $2) // t: 1literalLength
     ;
 
-_QstringFacet_E_Plus:
-      stringFacet // t: 1literalPattern
-    | _QstringFacet_E_Plus stringFacet	-> extend($1, $2) // t: 1literalLength
-    ;
-
 _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
       IT_IRI	-> 'iri' // t: 1iriPattern
     | IT_NONLITERAL	-> 'nonliteral' // t:@@
@@ -702,12 +717,17 @@ _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
 //    | _O_QIT_PATTERN_E_S_Qstring_E_C	
 //    ;
 
+_QstringFacet_E_Plus:
+      stringFacet // t: 1literalPattern
+    | _QstringFacet_E_Plus stringFacet	-> extend($1, $2) // t: 1literalLength
+    ;
+
 groupShapeConstr:
-    shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", conjuncts: [$1].concat($2) } : $1 // t: 1dotRefOr3/1dotRef1
+      shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", conjuncts: [$1].concat($2) } : $1 // t: 1dotRefOr3/1dotRef1
     ;
 
 _O_QIT_OR_E_S_QshapeOrRef_E_C:
-    IT_OR shapeOrRef	-> $2 // t: 1dotRefOr3
+      IT_OR shapeOrRef	-> $2 // t: 1dotRefOr3
     ;
 
 _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
@@ -739,8 +759,8 @@ shapeOrRef:
     ;
 
 xsFacet:
-      stringFacet
-    | numericFacet
+      stringFacet	
+    | numericFacet	
     ;
 
 stringFacet:
@@ -749,15 +769,15 @@ stringFacet:
     | stringLength INTEGER	-> keyInt($1, $2) // t: 1literalLength
     ;
 
-numericFacet:
-      numericRange INTEGER	-> keyInt($1, $2) // t: 1literalMininclusive
-    | numericLength INTEGER	-> keyInt($1, $2) // t: 1literalTotaldigits
-    ;
-
 stringLength:
       IT_LENGTH	  	-> "length" // t: 1literalLength
     | IT_MINLENGTH	-> "minlength" // t: 1literalMinlength
     | IT_MAXLENGTH	-> "maxlength" // t: 1literalMaxlength
+    ;
+
+numericFacet:
+      numericRange INTEGER	-> keyInt($1, $2) // t: 1literalMininclusive
+    | numericLength INTEGER	-> keyInt($1, $2) // t: 1literalTotaldigits
     ;
 
 numericRange:
@@ -888,5 +908,10 @@ iri:
 blankNode:
       BLANK_NODE_LABEL	
     // | ANON	 -- not used
+    ;
+
+codeDecl:
+      '%' CODE	-> keyString('', $2.substr(1, $2.length - 3)) // t:@@
+    | '%' iri CODE	-> keyString($2, $3.substr(1, $3.length - 3)) // t: 1dotCode1
     ;
 
