@@ -495,25 +495,25 @@ shape:
 //     | IT_VIRTUAL	;
 
 shapeDefinition:
-    _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
+    _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
       $$ = extend($3, $1);
     };
 
-_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C:
-      include	-> [ 'inherit', $1 ] // t: 1dotInherit1
-    | inclPropertySet	-> [ 'extra', $1 ] // t: 1dotExtra1
+_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C:
+      includeSet	-> [ 'inherit', $1 ] // t: 1dotInherit1
+    | inclPropertySet	-> [ 'extra', $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ 'closed', true ] // t: 1dotClosed
     ;
 
-_Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
+_Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       -> {}
-    | _Q_O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qinclude_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C	{
+    | _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C	{
       if ($2[0] === 'closed') // t: 1dotClosed
         $1['closed'] = true;
       else if ($2[0] in $1)
-        $1[$2[0]] = $1[$2[0]].concat([$2[1]]); // t: 1dotInherit3, 3groupdotExtra3
+        $1[$2[0]] = $1[$2[0]].concat($2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
       else
-        $1[$2[0]] = [$2[1]]; // t: 1dotInherit1
+        $1[$2[0]] = $2[1]; // t: 1dotInherit1
       $$ = $1;
     }
     ;
@@ -523,17 +523,23 @@ _QoneOfShape_E_Opt:
     | oneOfShape	
     ;
 
-include:
-    '&' shapeLabel	-> $2 // t:, 1dotInherit1
+includeSet:
+    '&' _QshapeLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+    ;
+
+_QshapeLabel_E_Plus:
+      shapeLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+    | _QshapeLabel_E_Plus shapeLabel	-> $1.concat([$2]) // t: 1dotInherit3
     ;
 
 inclPropertySet:
-    IT_EXTRA _Qpredicate_E_Plus	-> $2
+    IT_EXTRA _Qpredicate_E_Plus	-> $2 // t: 1dotExtra1, 3groupdot3Extra
     ;
 
 _Qpredicate_E_Plus:
-      predicate	
-    | _Qpredicate_E_Plus predicate	;
+      predicate	-> [$1] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
+    | _Qpredicate_E_Plus predicate	-> $1.concat([$2]) // t: 3groupdotExtra3
+    ;
 
 oneOfShape:
     someOfShape _Q_O_Q_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", patterns: [$1].concat($2) } : $1 // t: 2oneOfdot
@@ -596,7 +602,7 @@ _Qcardinality_E_Opt:
 
 _O_QtripleConstraint_E_Or_Qinclude_E_Or_Q_LPAREN_E_S_QoneOfShape_E_S_Q_RPAREN_E_S_Qcardinality_E_Opt_S_QCODE_E_Star_C:
       tripleConstraint	
-    | include	-> { type: "include", "include": $1 } // t: 2groupInclude1
+    | '&' shapeLabel	-> { type: "include", "include": $2 } // t: 2groupInclude1
     | '(' oneOfShape ')' _Qcardinality_E_Opt _QCODE_E_Star	
     ;
 

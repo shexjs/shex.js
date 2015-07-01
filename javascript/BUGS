@@ -5,3 +5,4 @@ Deviations from yacker ShEx2:
 ~ a is an iri (not just for predicates)
 - ANON terminal (not referenced)
 ~ groupShapeConstr can only have ORs (no ANDs)
++ includeSet parallels inclPropertySet (&<A><B><C>)

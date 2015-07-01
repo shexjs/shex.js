@@ -10,7 +10,7 @@
    <http://a.example/p3> .
 }
 
-<http://a.example/EmployeeShape> &<http://a.example/PersonShape> <http://a.example/MemberShape> <http://a.example/ManagedShape> {
+<http://a.example/EmployeeShape> &<http://a.example/PersonShape> &<http://a.example/MemberShape> &<http://a.example/ManagedShape> {
    <http://a.example/p4> .
 }
 
