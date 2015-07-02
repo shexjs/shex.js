@@ -74,9 +74,9 @@
 var ShexParser = (function(){
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"shexDoc":3,"Qdirective_E_Star":4,"Q_O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_S_Qstatement_E_Star_C_E_Opt":5,"EOF":6,"directive":7,"QcodeDecl_E_Plus":8,"codeDecl":9,"O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_C":10,"start":11,"shape":12,"Qstatement_E_Star":13,"statement":14,"O_Qstart_E_Or_Qshape_E_Or_QcodeDecl_E_Plus_S_Qstatement_E_Star_C":15,"baseDecl":16,"prefixDecl":17,"IT_BASE":18,"IRIREF":19,"IT_PREFIX":20,"PNAME_NS":21,"IT_start":22,"=":23,"O_QshapeLabel_E_Or_QshapeDefinition_E_S_QcodeDecl_E_Star_C":24,"QcodeDecl_E_Star":25,"shapeLabel":26,"shapeDefinition":27,"IT_VIRTUAL":28,"Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star":29,"{":30,"QoneOfShape_E_Opt":31,"}":32,"O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C":33,"includeSet":34,"inclPropertySet":35,"IT_CLOSED":36,"oneOfShape":37,"&":38,"QshapeLabel_E_Plus":39,"IT_EXTRA":40,"Qpredicate_E_Plus":41,"predicate":42,"someOfShape":43,"Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star":44,"O_QGT_PIPE_E_S_QsomeOfShape_E_C":45,"|":46,"groupShape":47,"Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star":48,"O_QGT_OR_E_S_QgroupShape_E_C":49,"||":50,"unaryShape":51,"Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star":52,"QGT_COMMA_E_Opt":53,"O_QGT_COMMA_E_S_QunaryShape_E_C":54,",":55,"O_QtripleConstraint_E_Or_Qinclude_E_Or_QGT_LPAREN_E_S_QoneOfShape_E_S_QGT_RPAREN_E_S_Qcardinality_E_Opt_S_QcodeDecl_E_Star_C":56,"id":57,"Qcardinality_E_Opt":58,"cardinality":59,"tripleConstraint":60,"include":61,"(":62,")":63,"$":64,"iri":65,"blankNode":66,"valueClass":67,"Qannotation_E_Star":68,"senseFlags":69,"annotation":70,"^":71,"!":72,"IT_LITERAL":73,"QxsFacet_E_Star":74,"O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C":75,"QstringFacet_E_Plus":76,"groupShapeConstr":77,"IT_BNODE":78,"valueSet":79,".":80,"xsFacet":81,"IT_IRI":82,"IT_NONLITERAL":83,"stringFacet":84,"shapeOrRef":85,"Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star":86,"O_QIT_OR_E_S_QshapeOrRef_E_C":87,"IT_OR":88,"ATPNAME_LN":89,"ATPNAME_NS":90,"@":91,"numericFacet":92,"IT_PATTERN":93,"string":94,"~":95,"stringLength":96,"INTEGER":97,"IT_LENGTH":98,"IT_MINLENGTH":99,"IT_MAXLENGTH":100,"numericRange":101,"numericLength":102,"IT_MININCLUSIVE":103,"IT_MINEXCLUSIVE":104,"IT_MAXINCLUSIVE":105,"IT_MAXEXCLUSIVE":106,"IT_TOTALDIGITS":107,"IT_FRACTIONDIGITS":108,";":109,"O_Qiri_E_Or_Qliteral_E_C":110,"literal":111,"*":112,"+":113,"?":114,"REPEAT_RANGE":115,"Qvalue_E_Star":116,"value":117,"iriRange":118,"Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt":119,"Qexclusion_E_Plus":120,"Qexclusion_E_Star":121,"exclusion":122,"O_Q_TILDE_E_S_Qexclusion_E_Star_C":123,"-":124,"LANGTAG":125,"^^":126,"DECIMAL":127,"DOUBLE":128,"IT_true":129,"IT_false":130,"STRING_LITERAL1":131,"STRING_LITERAL2":132,"STRING_LITERAL_LONG1":133,"STRING_LITERAL_LONG2":134,"PNAME_LN":135,"a":136,"BLANK_NODE_LABEL":137,"%":138,"CODE":139,"$accept":0,"$end":1},
-terminals_: {2:"error",6:"EOF",18:"IT_BASE",19:"IRIREF",20:"IT_PREFIX",21:"PNAME_NS",22:"IT_start",23:"=",28:"IT_VIRTUAL",30:"{",32:"}",36:"IT_CLOSED",38:"&",40:"IT_EXTRA",46:"|",50:"||",55:",",62:"(",63:")",64:"$",71:"^",72:"!",73:"IT_LITERAL",78:"IT_BNODE",80:".",82:"IT_IRI",83:"IT_NONLITERAL",88:"IT_OR",89:"ATPNAME_LN",90:"ATPNAME_NS",91:"@",93:"IT_PATTERN",95:"~",97:"INTEGER",98:"IT_LENGTH",99:"IT_MINLENGTH",100:"IT_MAXLENGTH",103:"IT_MININCLUSIVE",104:"IT_MINEXCLUSIVE",105:"IT_MAXINCLUSIVE",106:"IT_MAXEXCLUSIVE",107:"IT_TOTALDIGITS",108:"IT_FRACTIONDIGITS",109:";",112:"*",113:"+",114:"?",115:"REPEAT_RANGE",124:"-",125:"LANGTAG",126:"^^",127:"DECIMAL",128:"DOUBLE",129:"IT_true",130:"IT_false",131:"STRING_LITERAL1",132:"STRING_LITERAL2",133:"STRING_LITERAL_LONG1",134:"STRING_LITERAL_LONG2",135:"PNAME_LN",136:"a",137:"BLANK_NODE_LABEL",138:"%",139:"CODE"},
-productions_: [0,[3,3],[4,0],[4,2],[8,1],[8,2],[10,1],[10,1],[10,1],[13,0],[13,2],[15,2],[5,0],[5,1],[14,1],[14,1],[14,1],[7,1],[7,1],[16,2],[17,3],[11,3],[25,0],[25,2],[24,1],[24,2],[12,3],[12,4],[27,4],[33,1],[33,1],[33,1],[29,0],[29,2],[31,0],[31,1],[34,2],[39,1],[39,2],[35,2],[41,1],[41,2],[37,2],[45,2],[44,0],[44,2],[43,2],[49,2],[48,0],[48,2],[47,3],[54,2],[52,0],[52,2],[53,0],[53,1],[51,1],[51,2],[58,0],[58,1],[56,1],[56,1],[56,5],[61,2],[57,2],[26,1],[26,1],[60,5],[60,6],[68,0],[68,2],[69,1],[69,2],[69,1],[69,2],[42,1],[67,2],[67,1],[67,2],[67,2],[67,3],[67,1],[67,2],[67,1],[67,1],[67,1],[67,1],[74,0],[74,2],[75,1],[75,1],[76,1],[76,2],[77,2],[87,2],[86,0],[86,2],[85,1],[85,1],[85,2],[85,1],[81,1],[81,1],[84,2],[84,2],[84,2],[96,1],[96,1],[96,1],[92,2],[92,2],[101,1],[101,1],[101,1],[101,1],[102,1],[102,1],[70,3],[110,1],[110,1],[59,1],[59,1],[59,1],[59,1],[79,3],[116,0],[116,2],[117,1],[117,1],[118,2],[118,2],[121,0],[121,2],[123,2],[119,0],[119,1],[120,1],[120,2],[122,2],[122,3],[111,1],[111,2],[111,3],[111,1],[111,1],[111,1],[111,1],[111,1],[94,1],[94,1],[94,1],[94,1],[65,1],[65,1],[65,1],[65,1],[66,1],[9,2],[9,3]],
+symbols_: {"error":2,"shexDoc":3,"Qdirective_E_Star":4,"Q_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt":5,"EOF":6,"directive":7,"O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_C":8,"start":9,"shape":10,"startActions":11,"Qstatement_E_Star":12,"statement":13,"O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C":14,"baseDecl":15,"prefixDecl":16,"IT_BASE":17,"IRIREF":18,"IT_PREFIX":19,"PNAME_NS":20,"IT_start":21,"=":22,"O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C":23,"shapeLabel":24,"shapeDefinition":25,"semanticActions":26,"IT_VIRTUAL":27,"Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star":28,"{":29,"QoneOfShape_E_Opt":30,"}":31,"O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C":32,"includeSet":33,"inclPropertySet":34,"IT_CLOSED":35,"oneOfShape":36,"&":37,"QshapeLabel_E_Plus":38,"IT_EXTRA":39,"Qpredicate_E_Plus":40,"predicate":41,"someOfShape":42,"Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star":43,"O_QGT_PIPE_E_S_QsomeOfShape_E_C":44,"|":45,"groupShape":46,"Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star":47,"O_QGT_OR_E_S_QgroupShape_E_C":48,"||":49,"unaryShape":50,"Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star":51,"QGT_COMMA_E_Opt":52,"O_QGT_COMMA_E_S_QunaryShape_E_C":53,",":54,"unaryShape_right":55,"id":56,"Qcardinality_E_Opt":57,"cardinality":58,"tripleConstraint":59,"include":60,"(":61,")":62,"$":63,"iri":64,"blankNode":65,"valueClass":66,"Qannotation_E_Star":67,"senseFlags":68,"annotation":69,"^":70,"!":71,"IT_LITERAL":72,"QxsFacet_E_Star":73,"O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C":74,"QstringFacet_E_Plus":75,"groupShapeConstr":76,"IT_BNODE":77,"valueSet":78,".":79,"xsFacet":80,"IT_IRI":81,"IT_NONLITERAL":82,"stringFacet":83,"shapeOrRef":84,"Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star":85,"O_QIT_OR_E_S_QshapeOrRef_E_C":86,"IT_OR":87,"ATPNAME_LN":88,"ATPNAME_NS":89,"@":90,"numericFacet":91,"IT_PATTERN":92,"string":93,"~":94,"stringLength":95,"INTEGER":96,"IT_LENGTH":97,"IT_MINLENGTH":98,"IT_MAXLENGTH":99,"numericRange":100,"numericLength":101,"IT_MININCLUSIVE":102,"IT_MINEXCLUSIVE":103,"IT_MAXINCLUSIVE":104,"IT_MAXEXCLUSIVE":105,"IT_TOTALDIGITS":106,"IT_FRACTIONDIGITS":107,";":108,"O_Qiri_E_Or_Qliteral_E_C":109,"literal":110,"*":111,"+":112,"?":113,"REPEAT_RANGE":114,"Qvalue_E_Star":115,"value":116,"iriRange":117,"Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt":118,"Qexclusion_E_Plus":119,"Qexclusion_E_Star":120,"exclusion":121,"O_Q_TILDE_E_S_Qexclusion_E_Star_C":122,"-":123,"LANGTAG":124,"^^":125,"DECIMAL":126,"DOUBLE":127,"IT_true":128,"IT_false":129,"STRING_LITERAL1":130,"STRING_LITERAL2":131,"STRING_LITERAL_LONG1":132,"STRING_LITERAL_LONG2":133,"PNAME_LN":134,"a":135,"BLANK_NODE_LABEL":136,"codeDecl":137,"%":138,"CODE":139,"QcodeDecl_E_Plus":140,"QcodeDecl_E_Star":141,"$accept":0,"$end":1},
+terminals_: {2:"error",6:"EOF",17:"IT_BASE",18:"IRIREF",19:"IT_PREFIX",20:"PNAME_NS",21:"IT_start",22:"=",27:"IT_VIRTUAL",29:"{",31:"}",35:"IT_CLOSED",37:"&",39:"IT_EXTRA",45:"|",49:"||",54:",",61:"(",62:")",63:"$",70:"^",71:"!",72:"IT_LITERAL",77:"IT_BNODE",79:".",81:"IT_IRI",82:"IT_NONLITERAL",87:"IT_OR",88:"ATPNAME_LN",89:"ATPNAME_NS",90:"@",92:"IT_PATTERN",94:"~",96:"INTEGER",97:"IT_LENGTH",98:"IT_MINLENGTH",99:"IT_MAXLENGTH",102:"IT_MININCLUSIVE",103:"IT_MINEXCLUSIVE",104:"IT_MAXINCLUSIVE",105:"IT_MAXEXCLUSIVE",106:"IT_TOTALDIGITS",107:"IT_FRACTIONDIGITS",108:";",111:"*",112:"+",113:"?",114:"REPEAT_RANGE",123:"-",124:"LANGTAG",125:"^^",126:"DECIMAL",127:"DOUBLE",128:"IT_true",129:"IT_false",130:"STRING_LITERAL1",131:"STRING_LITERAL2",132:"STRING_LITERAL_LONG1",133:"STRING_LITERAL_LONG2",134:"PNAME_LN",135:"a",136:"BLANK_NODE_LABEL",138:"%",139:"CODE"},
+productions_: [0,[3,3],[4,0],[4,2],[8,1],[8,1],[8,1],[12,0],[12,2],[14,2],[5,0],[5,1],[13,1],[13,1],[13,1],[7,1],[7,1],[15,2],[16,3],[9,3],[23,1],[23,2],[10,3],[10,4],[25,4],[32,1],[32,1],[32,1],[28,0],[28,2],[30,0],[30,1],[33,2],[38,1],[38,2],[34,2],[40,1],[40,2],[36,2],[44,2],[43,0],[43,2],[42,2],[48,2],[47,0],[47,2],[46,3],[53,2],[51,0],[51,2],[52,0],[52,1],[50,1],[50,2],[57,0],[57,1],[55,1],[55,1],[55,5],[60,2],[56,2],[24,1],[24,1],[59,5],[59,6],[67,0],[67,2],[68,1],[68,2],[68,1],[68,2],[41,1],[66,2],[66,1],[66,2],[66,2],[66,3],[66,1],[66,2],[66,1],[66,1],[66,1],[66,1],[73,0],[73,2],[74,1],[74,1],[75,1],[75,2],[76,2],[86,2],[85,0],[85,2],[84,1],[84,1],[84,2],[84,1],[80,1],[80,1],[83,2],[83,2],[83,2],[95,1],[95,1],[95,1],[91,2],[91,2],[100,1],[100,1],[100,1],[100,1],[101,1],[101,1],[69,3],[109,1],[109,1],[58,1],[58,1],[58,1],[58,1],[78,3],[115,0],[115,2],[116,1],[116,1],[117,2],[117,2],[120,0],[120,2],[122,2],[118,0],[118,1],[119,1],[119,2],[121,2],[121,3],[110,1],[110,2],[110,3],[110,1],[110,1],[110,1],[110,1],[110,1],[93,1],[93,1],[93,1],[93,1],[64,1],[64,1],[64,1],[64,1],[65,1],[137,2],[137,3],[11,1],[140,1],[140,2],[26,1],[141,0],[141,2]],
 performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* action[1] */, $$ /* vstack */, _$ /* lstack */) {
 /* this == yyval */
 
@@ -84,72 +84,65 @@ var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
         var startObj = Parser.start ? { start: Parser.start } : {};           // Build return object from
-        var startCodes = Parser.startCodes ? { startCodes: Parser.startCodes } : {};
+        var startAct = Parser.startAct ? { startAct: Parser.startAct } : {};
         var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // components in parser state
-                         startCodes, startObj,                                // maintaining intuitve order.
+                         startAct, startObj,                                  // maintaining intuitve order.
                          {shapes: Parser.shapes});
-        Parser.prefixes = Parser.shapes = Parser.start = null;                // Reset state.
+        Parser.prefixes = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
         base = basePath = baseRoot = '';
         return ret;
       
 break;
-case 5:this.$ = extend($$[$0-1], $$[$0]) // t:@@;
-break;
-case 8:
-        Parser.startCodes = $$[$0]; // t:@@
-      
-break;
-case 19:
+case 17:
         base = resolveIRI($$[$0])
         basePath = base.replace(/[^\/]*$/, '');
         baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
       
 break;
-case 20: // t: ShexParser-test.js/with pre-defined prefixes
+case 18: // t: ShexParser-test.js/with pre-defined prefixes
         if (!Parser.prefixes) Parser.prefixes = {};
         $$[$0-1] = $$[$0-1].substr(0, $$[$0-1].length - 1);
         $$[$0] = resolveIRI($$[$0]);
         Parser.prefixes[$$[$0-1]] = $$[$0];
       
 break;
-case 21:
+case 19:
         Parser.start = $$[$0]; // t: startInline
       
 break;
-case 22:this.$ = {};
-break;
-case 23:this.$ = extend($$[$0-1], $$[$0]) // t: 1dotCode1;
-break;
-case 25: // t: startInline
+case 21: // t: startInline
         if (!Parser.shapes) Parser.shapes = {};
         this.$ = blank();
-        Parser.shapes[this.$] = $$[$0-1];
+        // $$[$0]: t: startInline
+        Parser.shapes[this.$] = extend($$[$0-1], $$[$0]);
     
 break;
-case 26: // t: 1dot
+case 22: // t: 1dot
         if (!Parser.shapes) Parser.shapes = {};
-        Parser.shapes[$$[$0-2]] = $$[$0-1];
+        // $$[$0]: t:@@
+        Parser.shapes[$$[$0-2]] = extend($$[$0-1], $$[$0]);
     
 break;
-case 27: // t: 1dotVirtual
+case 23: // t: 1dotVirtual
         if (!Parser.shapes) Parser.shapes = {};
-        Parser.shapes[$$[$0-2]] = extend({type: null, virtual: true}, $$[$0-1]); // sneak 'virtual' in after 'type'
-                                                                     // Type will be overwritten.
+        // $$[$0]: t:@@
+        Parser.shapes[$$[$0-2]] = extend({type: null, virtual: true}, $$[$0-1], $$[$0]); // sneak 'virtual' in after 'type'
+                                                                         // Type will be overwritten.
     
 break;
-case 28: // t: 1dotInherit3
+case 24: // t: 1dotInherit3
         this.$ = extend($$[$0-1], $$[$0-3]);
       
 break;
-case 29:this.$ = [ 'inherit', $$[$0] ] // t: 1dotInherit1;
+case 25:this.$ = [ 'inherit', $$[$0] ] // t: 1dotInherit1;
 break;
-case 30:this.$ = [ 'extra', $$[$0] ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3;
+case 26:this.$ = [ 'extra', $$[$0] ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3;
 break;
-case 31:this.$ = [ 'closed', true ] // t: 1dotClosed;
+case 27:this.$ = [ 'closed', true ] // t: 1dotClosed;
 break;
-case 32:this.$ = {};
+case 28:this.$ = {};
 break;
-case 33:
+case 29:
       if ($$[$0][0] === 'closed')
         $$[$0-1]['closed'] = true; // t: 1dotClosed
       else if ($$[$0][0] in $$[$0-1])
@@ -159,107 +152,131 @@ case 33:
       this.$ = $$[$0-1];
     
 break;
-case 36:this.$ = $$[$0] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
+case 32:this.$ = $$[$0] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
 break;
-case 37:this.$ = [$$[$0]] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
+case 33:this.$ = [$$[$0]] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
 break;
-case 38:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotInherit3;
+case 34:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotInherit3;
 break;
-case 39:this.$ = $$[$0] // t: 1dotExtra1, 3groupdot3Extra;
+case 35:this.$ = $$[$0] // t: 1dotExtra1, 3groupdot3Extra;
 break;
-case 40:this.$ = [$$[$0]] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3;
+case 36:this.$ = [$$[$0]] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3;
 break;
-case 41:this.$ = $$[$0-1].concat([$$[$0]]) // t: 3groupdotExtra3;
+case 37:this.$ = $$[$0-1].concat([$$[$0]]) // t: 3groupdotExtra3;
 break;
-case 42:this.$ = $$[$0].length ? { type: "oneOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2oneOfdot;
+case 38:this.$ = $$[$0].length ? { type: "oneOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2oneOfdot;
 break;
-case 43:this.$ = $$[$0] // t: 2oneOfdot;
+case 39:this.$ = $$[$0] // t: 2oneOfdot;
 break;
-case 44:this.$ = [] //  t: 2oneOfdot;
+case 40:this.$ = [] //  t: 2oneOfdot;
 break;
-case 45:this.$ = $$[$0-1].concat($$[$0]) //  t: 2oneOfdot;
+case 41:this.$ = $$[$0-1].concat($$[$0]) //  t: 2oneOfdot;
 break;
-case 46:this.$ = $$[$0].length ? { type: "someOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2someOfdot;
+case 42:this.$ = $$[$0].length ? { type: "someOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2someOfdot;
 break;
-case 47:this.$ = $$[$0] // t: 2someOfdot;
+case 43:this.$ = $$[$0] // t: 2someOfdot;
 break;
-case 48:this.$ = [] // t: 2someOfdot;
+case 44:this.$ = [] // t: 2someOfdot;
 break;
-case 49:this.$ = $$[$0-1].concat($$[$0]) // t: 2someOfdot;
+case 45:this.$ = $$[$0-1].concat($$[$0]) // t: 2someOfdot;
 break;
-case 50:this.$ = $$[$0-1].length ? { type: "group", patterns: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
+case 46:this.$ = $$[$0-1].length ? { type: "group", patterns: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
 break;
-case 51:this.$ = $$[$0] // t: 2groupOfdot;
+case 47:this.$ = $$[$0] // t: 2groupOfdot;
 break;
-case 52:this.$ = [] // t: 2groupOfdot;
+case 48:this.$ = [] // t: 2groupOfdot;
 break;
-case 53:this.$ = $$[$0-1].concat($$[$0]) // t: 2groupOfdot;
+case 49:this.$ = $$[$0-1].concat($$[$0]) // t: 2groupOfdot;
 break;
-case 58:this.$ = {} // t: 1dot;
+case 53:this.$ = extend({ type: "", id: $$[$0-1] }, $$[$0]);
 break;
-case 63:this.$ = { type: "include", "include": $$[$0] } // t: 2groupInclude1;
+case 54:this.$ = {} // t: 1dot;
 break;
-case 67:
-        this.$ = extend({ type: "tripleConstraint", predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1]); // t: 1dot
-        if ($$[$0-2].length)
-          this.$['annotations'] = $$[$0-2]; // t: 1dotAnnot3
-        if (Object.keys($$[$0]).length)
-          this.$['semAct'] = $$[$0]; // t: 1dotCode1
+case 58:
+        var hasCard = Object.keys($$[$0-1]).length;
+        if ($$[$0-3].type === 'group') {
+          if (hasCard && ('min' in $$[$0-3] || 'max' in $$[$0-3])
+              || $$[$0] && 'semAct' in $$[$0-3]) {
+            this.$ = extend({ type: "group" }, $$[$0-1], { patterns: [$$[$0-3]] }, $$[$0]); // t:@@
+          } else {
+            this.$ = extend($$[$0-3], $$[$0-1], $$[$0]); // t: open3groupdotclose
+          }
+        } else if (hasCard || $$[$0]) {
+          this.$ = extend({ type: "group" }, $$[$0-1], { patterns: [$$[$0-3]] }, $$[$0]); // t: open1dotcloseCode1
+        } else {
+          this.$ = $$[$0-3]; // t: open1dotclose
+        }
       
 break;
-case 68:
-        this.$ = extend({ type: "tripleConstraint" }, $$[$0-5], { predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1]); // t: 1inversedot, 1negatedinversedot
+case 59:this.$ = { type: "include", "include": $$[$0] } // t: 2groupInclude1;
+break;
+case 60:this.$ = $$[$0] // t:@@;
+break;
+case 63:
+        // $$[$0]: t: 1dotCode1
+        this.$ = extend({ type: "tripleConstraint", predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1], $$[$0]); // t: 1dot
+        if ($$[$0-2].length)
+          this.$['annotations'] = $$[$0-2]; // t: 1dotAnnot3
+      
+break;
+case 64:
+        // %6: t: 1inversedotCode1
+        this.$ = extend({ type: "tripleConstraint" }, $$[$0-5], { predicate: $$[$0-4], value: $$[$0-3] }, $$[$0-1], $$[$0]); // t: 1inversedot, 1negatedinversedot
         if ($$[$0-2].length)
           this.$['annotations'] = $$[$0-2]; // t: 1inversedotAnnot3
       
 break;
-case 69:this.$ = [] // t: 1dot, 1dotAnnot3;
+case 65:this.$ = [] // t: 1dot, 1dotAnnot3;
 break;
-case 70:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotAnnot3;
+case 66:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotAnnot3;
 break;
-case 71:this.$ = { inverse: true } // t: 1inversedot;
+case 67:this.$ = { inverse: true } // t: 1inversedot;
 break;
-case 72:this.$ = { inverse: true, negated: true } // t: 1negatedinversedot;
+case 68:this.$ = { inverse: true, negated: true } // t: 1negatedinversedot;
 break;
-case 73:this.$ = { negated: true } // t: 1negateddot;
+case 69:this.$ = { negated: true } // t: 1negateddot;
 break;
-case 74:this.$ = { inverse: true, negated: true } // t: 1inversenegateddot;
+case 70:this.$ = { inverse: true, negated: true } // t: 1inversenegateddot;
 break;
-case 76:this.$ = extend({ type: "valueClass", nodeKind: "literal" }, $$[$0]) // t: 1literalPattern;
+case 72:this.$ = extend({ type: "valueClass", nodeKind: "literal" }, $$[$0]) // t: 1literalPattern;
 break;
-case 77:this.$ = { type: "valueClass", nodeKind: $$[$0] } // t: 1iriPattern;
+case 73:this.$ = { type: "valueClass", nodeKind: $$[$0] } // t: 1iriPattern;
 break;
-case 78:this.$ = extend({ type: "valueClass", nodeKind: $$[$0-1] }, $$[$0]) // t: 1iriPattern;
+case 74:this.$ = extend({ type: "valueClass", nodeKind: $$[$0-1] }, $$[$0]) // t: 1iriPattern;
 break;
-case 79:this.$ = { type: "valueClass", nodeKind: $$[$0-1], reference: $$[$0] } // t:@@;
+case 75:this.$ = { type: "valueClass", nodeKind: $$[$0-1], reference: $$[$0] } // t:@@;
 break;
-case 80:this.$ = extend({ type: "valueClass", nodeKind: $$[$0-2] }, $$[$0]) // t:@@;
+case 76:this.$ = extend({ type: "valueClass", nodeKind: $$[$0-2] }, $$[$0]) // t:@@;
 break;
-case 84:this.$ = { type: "valueClass", reference: $$[$0] } // t: 1dotRef1;
+case 77:this.$ = { type: "valueClass", nodeKind: $$[$0] } // t:@@;
 break;
-case 85:this.$ = { type: "valueClass", values: $$[$0] } // t: 1val1IRIREF;
+case 78:this.$ = { type: "valueClass", nodeKind: $$[$0-1], reference: $$[$0] } // t:@@;
 break;
-case 86:this.$ = { type: "valueClass" } // t: 1dot;
+case 80:this.$ = { type: "valueClass", reference: $$[$0] } // t: 1dotRef1;
 break;
-case 87:this.$ = {} // t: 1literalPattern;
+case 81:this.$ = { type: "valueClass", values: $$[$0] } // t: 1val1IRIREF;
+break;
+case 82:this.$ = { type: "valueClass" } // t: 1dot;
+break;
+case 83:this.$ = {} // t: 1literalPattern;
+break;
+case 84:this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength;
+break;
+case 85:this.$ = 'iri' // t: 1iriPattern;
+break;
+case 86:this.$ = 'nonliteral' // t:@@;
 break;
 case 88:this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength;
 break;
-case 89:this.$ = 'iri' // t: 1iriPattern;
+case 89:this.$ = $$[$0].length ? { type: "or", conjuncts: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 1dotRefOr3/1dotRef1;
 break;
-case 90:this.$ = 'nonliteral' // t:@@;
+case 90:this.$ = $$[$0] // t: 1dotRefOr3;
 break;
-case 92:this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength;
+case 91:this.$ = [] // t: 1dotRefOr3;
 break;
-case 93:this.$ = $$[$0].length ? { type: "or", conjuncts: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 1dotRefOr3/1dotRef1;
+case 92:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotRefOr3;
 break;
-case 94:this.$ = $$[$0] // t: 1dotRefOr3;
-break;
-case 95:this.$ = [] // t: 1dotRefOr3;
-break;
-case 96:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotRefOr3;
-break;
-case 97: // t: 1dotRefLNex
+case 93: // t: 1dotRefLNex
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         var namePos = $$[$0].indexOf(':'),
             prefix = $$[$0].substr(0, namePos),
@@ -268,58 +285,58 @@ case 97: // t: 1dotRefLNex
         this.$ = resolveIRI(expansion + $$[$0].substr(namePos + 1));
       
 break;
-case 98: // t: 1dotRefNS1
+case 94: // t: 1dotRefNS1
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         $$[$0] = $$[$0].substr(0, $$[$0].length - 1);
         if (!($$[$0] in Parser.prefixes)) throw new Error('Unknown prefix: ' + $$[$0]);
         this.$ = resolveIRI(Parser.prefixes[$$[$0]]);
       
 break;
-case 99: this.$ = $$[$0]; 
+case 95: this.$ = $$[$0]; 
 break;
-case 100: // t: 1dotInline1
+case 96: // t: 1dotInline1
         if (!Parser.shapes) Parser.shapes = {};
         this.$ = blank();
         Parser.shapes[this.$] = $$[$0];
       
 break;
-case 103:this.$ = { pattern: $$[$0].substr(1, $$[$0].length-2) } // t: 1literalPattern;
+case 99:this.$ = { pattern: $$[$0].substr(1, $$[$0].length-2) } // t: 1literalPattern;
 break;
-case 104:this.$ = { pattern: $$[$0].substr(1, $$[$0].length-2) } // t: 1literalPattern;
+case 100:this.$ = { pattern: $$[$0].substr(1, $$[$0].length-2) } // t: 1literalPattern;
 break;
-case 105:this.$ = keyInt($$[$0-1], $$[$0]) // t: 1literalLength;
+case 101:this.$ = keyInt($$[$0-1], $$[$0]) // t: 1literalLength;
 break;
-case 106:this.$ = "length" // t: 1literalLength;
+case 102:this.$ = "length" // t: 1literalLength;
 break;
-case 107:this.$ = "minlength" // t: 1literalMinlength;
+case 103:this.$ = "minlength" // t: 1literalMinlength;
 break;
-case 108:this.$ = "maxlength" // t: 1literalMaxlength;
+case 104:this.$ = "maxlength" // t: 1literalMaxlength;
 break;
-case 109:this.$ = keyInt($$[$0-1], $$[$0]) // t: 1literalMininclusive;
+case 105:this.$ = keyInt($$[$0-1], $$[$0]) // t: 1literalMininclusive;
 break;
-case 110:this.$ = keyInt($$[$0-1], $$[$0]) // t: 1literalTotaldigits;
+case 106:this.$ = keyInt($$[$0-1], $$[$0]) // t: 1literalTotaldigits;
 break;
-case 111:this.$ = "mininclusive" // t: 1literalMininclusive;
+case 107:this.$ = "mininclusive" // t: 1literalMininclusive;
 break;
-case 112:this.$ = "minexclusive" // t: 1literalMinexclusive;
+case 108:this.$ = "minexclusive" // t: 1literalMinexclusive;
 break;
-case 113:this.$ = "maxinclusive" // t: 1literalMaxinclusive;
+case 109:this.$ = "maxinclusive" // t: 1literalMaxinclusive;
 break;
-case 114:this.$ = "maxexclusive" // t: 1literalMaxexclusive;
+case 110:this.$ = "maxexclusive" // t: 1literalMaxexclusive;
 break;
-case 115:this.$ = "totaldigits" // t: 1literalTotaldigits;
+case 111:this.$ = "totaldigits" // t: 1literalTotaldigits;
 break;
-case 116:this.$ = "fractiondigits" // t: 1literalFractiondigits;
+case 112:this.$ = "fractiondigits" // t: 1literalFractiondigits;
 break;
-case 117:this.$ = [$$[$0-1], $$[$0]];
+case 113:this.$ = [$$[$0-1], $$[$0]];
 break;
-case 120:this.$ = { min:0 } // t: 1cardStar;
+case 116:this.$ = { min:0 } // t: 1cardStar;
 break;
-case 121:this.$ = { min:1 } // t: 1cardPlus;
+case 117:this.$ = { min:1 } // t: 1cardPlus;
 break;
-case 122:this.$ = { min:0, max:1 } // t: 1cardOpt;
+case 118:this.$ = { min:0, max:1 } // t: 1cardOpt;
 break;
-case 123:
+case 119:
         $$[$0] = $$[$0].substr(1, $$[$0].length-2);
         var nums = $$[$0].match(/(\d+)/g);
         this.$ = { min: parseInt(nums[0], 10) }; // t: 1card2blank, 1card2Star
@@ -329,13 +346,13 @@ case 123:
             this.$["max"] = parseInt(nums[0], 10);
       
 break;
-case 124:this.$ = $$[$0-1] // t: 1val1IRIREF;
+case 120:this.$ = $$[$0-1] // t: 1val1IRIREF;
 break;
-case 125:this.$ = [] // t: 1val1IRIREF;
+case 121:this.$ = [] // t: 1val1IRIREF;
 break;
-case 126:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val1IRIREF;
+case 122:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val1IRIREF;
 break;
-case 129:
+case 125:
         if ($$[$0]) {
           this.$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
             type: "stemRange",
@@ -348,47 +365,47 @@ case 129:
         }
       
 break;
-case 130:this.$ = { type: "stemRange", stem: { type: "wildcard" }, exclusions: $$[$0] } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
+case 126:this.$ = { type: "stemRange", stem: { type: "wildcard" }, exclusions: $$[$0] } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
 break;
-case 131:this.$ = [] // t: 1val1iriStem, 1val1iriStemMinusiri3;
+case 127:this.$ = [] // t: 1val1iriStem, 1val1iriStemMinusiri3;
 break;
-case 132:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val1iriStemMinusiri3;
+case 128:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val1iriStemMinusiri3;
 break;
-case 133:this.$ = $$[$0] // t: 1val1iriStemMinusiri3;
+case 129:this.$ = $$[$0] // t: 1val1iriStemMinusiri3;
 break;
-case 136:this.$ = [$$[$0]] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
+case 132:this.$ = [$$[$0]] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
 break;
-case 137:this.$ = $$[$0-1].concat([$$[$0]]) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
+case 133:this.$ = $$[$0-1].concat([$$[$0]]) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
 break;
-case 138:this.$ = $$[$0] // t: 1val1iriStemMinusiri3;
+case 134:this.$ = $$[$0] // t: 1val1iriStemMinusiri3;
 break;
-case 139:this.$ = { type: "stem", stem: $$[$0-1] } // t: 1val1iriStemMinusiriStem3;
+case 135:this.$ = { type: "stem", stem: $$[$0-1] } // t: 1val1iriStemMinusiriStem3;
 break;
-case 141:this.$ = $$[$0-1] + lowercase($$[$0]) // t: 1val1LANGTAG;
+case 137:this.$ = $$[$0-1] + lowercase($$[$0]) // t: 1val1LANGTAG;
 break;
-case 142:this.$ = $$[$0-2] + '^^' + $$[$0] // t: 1val1Datatype;
+case 138:this.$ = $$[$0-2] + '^^' + $$[$0] // t: 1val1Datatype;
 break;
-case 143:this.$ = createLiteral($$[$0], XSD_INTEGER) // t: 1val1INTEGER;
+case 139:this.$ = createLiteral($$[$0], XSD_INTEGER) // t: 1val1INTEGER;
 break;
-case 144:this.$ = createLiteral($$[$0], XSD_DECIMAL) // t: 1val1DECIMAL;
+case 140:this.$ = createLiteral($$[$0], XSD_DECIMAL) // t: 1val1DECIMAL;
 break;
-case 145:this.$ = createLiteral($$[$0].toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE;
+case 141:this.$ = createLiteral($$[$0].toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE;
 break;
-case 146:this.$ = XSD_TRUE // t: 1val1true;
+case 142:this.$ = XSD_TRUE // t: 1val1true;
 break;
-case 147:this.$ = XSD_FALSE // t: 1val1false;
+case 143:this.$ = XSD_FALSE // t: 1val1false;
 break;
-case 148:this.$ = unescapeString($$[$0], 1) // t: 1val1STRING_LITERAL1;
+case 144:this.$ = unescapeString($$[$0], 1) // t: 1val1STRING_LITERAL1;
 break;
-case 149:this.$ = unescapeString($$[$0], 1) // t: 1val1STRING_LITERAL2;
+case 145:this.$ = unescapeString($$[$0], 1) // t: 1val1STRING_LITERAL2;
 break;
-case 150:this.$ = unescapeString($$[$0], 3) // t: 1val1STRING_LITERAL_LONG1;
+case 146:this.$ = unescapeString($$[$0], 3) // t: 1val1STRING_LITERAL_LONG1;
 break;
-case 151:this.$ = unescapeString($$[$0], 3) // t: 1val1STRING_LITERAL_LONG2;
+case 147:this.$ = unescapeString($$[$0], 3) // t: 1val1STRING_LITERAL_LONG2;
 break;
-case 152:this.$ = resolveIRI($$[$0]) // t: 1dot;
+case 148:this.$ = resolveIRI($$[$0]) // t: 1dot;
 break;
-case 153: // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined prefixes
+case 149: // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined prefixes
         var namePos = $$[$0].indexOf(':'),
             prefix = $$[$0].substr(0, namePos),
             expansion = Parser.prefixes[prefix];
@@ -396,22 +413,34 @@ case 153: // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined pref
         this.$ = resolveIRI(expansion + $$[$0].substr(namePos + 1));
     
 break;
-case 154: // t: 1dotNS2, 1dotNSdefault, ShexParser-test.js/PNAME_NS with pre-defined prefixes
+case 150: // t: 1dotNS2, 1dotNSdefault, ShexParser-test.js/PNAME_NS with pre-defined prefixes
         $$[$0] = $$[$0].substr(0, $$[$0].length - 1);
         if (!($$[$0] in Parser.prefixes)) throw new Error('Unknown prefix: ' + $$[$0]);
         this.$ = resolveIRI(Parser.prefixes[$$[$0]]);
     
 break;
-case 155:this.$ = RDF_TYPE // t: 1AvalA;
+case 151:this.$ = RDF_TYPE // t: 1AvalA;
 break;
-case 157:this.$ = keyString('', $$[$0].substr(1, $$[$0].length - 3)) // t:@@;
+case 153:this.$ = keyString('', $$[$0].substr(1, $$[$0].length - 3)) // t:@@;
 break;
-case 158:this.$ = keyString($$[$0-1], $$[$0].substr(1, $$[$0].length - 3)) // t: 1dotCode1;
+case 154:this.$ = keyString($$[$0-1], $$[$0].substr(1, $$[$0].length - 3)) // t: 1dotCode1;
+break;
+case 155:
+        Parser.startAct = $$[$0]; // t: startCode1
+      
+break;
+case 157:this.$ = extend($$[$0-1], $$[$0]) // t: startCode3;
+break;
+case 158:this.$ = Object.keys($$[$0]).length ? { semAct: $$[$0] } : null;;
+break;
+case 159:this.$ = {};
+break;
+case 160:this.$ = extend($$[$0-1], $$[$0]) // t: 1dotCode1;
 break;
 }
 },
-table: [{3:1,4:2,6:[2,2],18:[2,2],19:[2,2],20:[2,2],21:[2,2],22:[2,2],28:[2,2],135:[2,2],136:[2,2],137:[2,2],138:[2,2]},{1:[3]},{5:3,6:[2,12],7:4,8:13,9:17,10:8,11:11,12:12,15:5,16:6,17:7,18:[1,9],19:[1,21],20:[1,10],21:[1,23],22:[1,14],26:15,28:[1,16],65:18,66:19,135:[1,22],136:[1,24],137:[1,25],138:[1,20]},{6:[1,26]},{6:[2,3],18:[2,3],19:[2,3],20:[2,3],21:[2,3],22:[2,3],28:[2,3],135:[2,3],136:[2,3],137:[2,3],138:[2,3]},{6:[2,13]},{6:[2,17],18:[2,17],19:[2,17],20:[2,17],21:[2,17],22:[2,17],28:[2,17],135:[2,17],136:[2,17],137:[2,17],138:[2,17]},{6:[2,18],18:[2,18],19:[2,18],20:[2,18],21:[2,18],22:[2,18],28:[2,18],135:[2,18],136:[2,18],137:[2,18],138:[2,18]},{6:[2,9],13:27,18:[2,9],19:[2,9],20:[2,9],21:[2,9],22:[2,9],28:[2,9],135:[2,9],136:[2,9],137:[2,9]},{19:[1,28]},{21:[1,29]},{6:[2,6],18:[2,6],19:[2,6],20:[2,6],21:[2,6],22:[2,6],28:[2,6],135:[2,6],136:[2,6],137:[2,6]},{6:[2,7],18:[2,7],19:[2,7],20:[2,7],21:[2,7],22:[2,7],28:[2,7],135:[2,7],136:[2,7],137:[2,7]},{6:[2,8],9:30,18:[2,8],19:[2,8],20:[2,8],21:[2,8],22:[2,8],28:[2,8],135:[2,8],136:[2,8],137:[2,8],138:[1,20]},{23:[1,31]},{27:32,29:33,30:[2,32],36:[2,32],38:[2,32],40:[2,32]},{19:[1,21],21:[1,23],26:34,65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{6:[2,4],18:[2,4],19:[2,4],20:[2,4],21:[2,4],22:[2,4],28:[2,4],135:[2,4],136:[2,4],137:[2,4],138:[2,4]},{6:[2,65],18:[2,65],19:[2,65],20:[2,65],21:[2,65],22:[2,65],28:[2,65],30:[2,65],32:[2,65],36:[2,65],38:[2,65],40:[2,65],46:[2,65],50:[2,65],55:[2,65],62:[2,65],63:[2,65],71:[2,65],72:[2,65],88:[2,65],93:[2,65],95:[2,65],98:[2,65],99:[2,65],100:[2,65],109:[2,65],112:[2,65],113:[2,65],114:[2,65],115:[2,65],135:[2,65],136:[2,65],137:[2,65],138:[2,65]},{6:[2,66],18:[2,66],19:[2,66],20:[2,66],21:[2,66],22:[2,66],28:[2,66],30:[2,66],32:[2,66],36:[2,66],38:[2,66],40:[2,66],46:[2,66],50:[2,66],55:[2,66],62:[2,66],63:[2,66],71:[2,66],72:[2,66],88:[2,66],93:[2,66],95:[2,66],98:[2,66],99:[2,66],100:[2,66],109:[2,66],112:[2,66],113:[2,66],114:[2,66],115:[2,66],135:[2,66],136:[2,66],137:[2,66],138:[2,66]},{19:[1,21],21:[1,23],65:36,135:[1,22],136:[1,24],139:[1,35]},{6:[2,152],18:[2,152],19:[2,152],20:[2,152],21:[2,152],22:[2,152],28:[2,152],30:[2,152],32:[2,152],36:[2,152],38:[2,152],40:[2,152],46:[2,152],50:[2,152],55:[2,152],62:[2,152],63:[2,152],71:[2,152],72:[2,152],73:[2,152],78:[2,152],80:[2,152],82:[2,152],83:[2,152],88:[2,152],89:[2,152],90:[2,152],91:[2,152],93:[2,152],95:[2,152],97:[2,152],98:[2,152],99:[2,152],100:[2,152],109:[2,152],112:[2,152],113:[2,152],114:[2,152],115:[2,152],124:[2,152],127:[2,152],128:[2,152],129:[2,152],130:[2,152],131:[2,152],132:[2,152],133:[2,152],134:[2,152],135:[2,152],136:[2,152],137:[2,152],138:[2,152],139:[2,152]},{6:[2,153],18:[2,153],19:[2,153],20:[2,153],21:[2,153],22:[2,153],28:[2,153],30:[2,153],32:[2,153],36:[2,153],38:[2,153],40:[2,153],46:[2,153],50:[2,153],55:[2,153],62:[2,153],63:[2,153],71:[2,153],72:[2,153],73:[2,153],78:[2,153],80:[2,153],82:[2,153],83:[2,153],88:[2,153],89:[2,153],90:[2,153],91:[2,153],93:[2,153],95:[2,153],97:[2,153],98:[2,153],99:[2,153],100:[2,153],109:[2,153],112:[2,153],113:[2,153],114:[2,153],115:[2,153],124:[2,153],127:[2,153],128:[2,153],129:[2,153],130:[2,153],131:[2,153],132:[2,153],133:[2,153],134:[2,153],135:[2,153],136:[2,153],137:[2,153],138:[2,153],139:[2,153]},{6:[2,154],18:[2,154],19:[2,154],20:[2,154],21:[2,154],22:[2,154],28:[2,154],30:[2,154],32:[2,154],36:[2,154],38:[2,154],40:[2,154],46:[2,154],50:[2,154],55:[2,154],62:[2,154],63:[2,154],71:[2,154],72:[2,154],73:[2,154],78:[2,154],80:[2,154],82:[2,154],83:[2,154],88:[2,154],89:[2,154],90:[2,154],91:[2,154],93:[2,154],95:[2,154],97:[2,154],98:[2,154],99:[2,154],100:[2,154],109:[2,154],112:[2,154],113:[2,154],114:[2,154],115:[2,154],124:[2,154],127:[2,154],128:[2,154],129:[2,154],130:[2,154],131:[2,154],132:[2,154],133:[2,154],134:[2,154],135:[2,154],136:[2,154],137:[2,154],138:[2,154],139:[2,154]},{6:[2,155],18:[2,155],19:[2,155],20:[2,155],21:[2,155],22:[2,155],28:[2,155],30:[2,155],32:[2,155],36:[2,155],38:[2,155],40:[2,155],46:[2,155],50:[2,155],55:[2,155],62:[2,155],63:[2,155],71:[2,155],72:[2,155],73:[2,155],78:[2,155],80:[2,155],82:[2,155],83:[2,155],88:[2,155],89:[2,155],90:[2,155],91:[2,155],93:[2,155],95:[2,155],97:[2,155],98:[2,155],99:[2,155],100:[2,155],109:[2,155],112:[2,155],113:[2,155],114:[2,155],115:[2,155],124:[2,155],127:[2,155],128:[2,155],129:[2,155],130:[2,155],131:[2,155],132:[2,155],133:[2,155],134:[2,155],135:[2,155],136:[2,155],137:[2,155],138:[2,155],139:[2,155]},{6:[2,156],18:[2,156],19:[2,156],20:[2,156],21:[2,156],22:[2,156],28:[2,156],30:[2,156],32:[2,156],36:[2,156],38:[2,156],40:[2,156],46:[2,156],50:[2,156],55:[2,156],62:[2,156],63:[2,156],71:[2,156],72:[2,156],88:[2,156],93:[2,156],95:[2,156],98:[2,156],99:[2,156],100:[2,156],109:[2,156],112:[2,156],113:[2,156],114:[2,156],115:[2,156],135:[2,156],136:[2,156],137:[2,156],138:[2,156]},{1:[2,1]},{6:[2,11],7:38,11:39,12:40,14:37,16:6,17:7,18:[1,9],19:[1,21],20:[1,10],21:[1,23],22:[1,14],26:15,28:[1,16],65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{6:[2,19],18:[2,19],19:[2,19],20:[2,19],21:[2,19],22:[2,19],28:[2,19],135:[2,19],136:[2,19],137:[2,19],138:[2,19]},{19:[1,41]},{6:[2,5],18:[2,5],19:[2,5],20:[2,5],21:[2,5],22:[2,5],28:[2,5],135:[2,5],136:[2,5],137:[2,5],138:[2,5]},{19:[1,21],21:[1,23],24:42,26:43,27:44,29:33,30:[2,32],36:[2,32],38:[2,32],40:[2,32],65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{6:[2,22],18:[2,22],19:[2,22],20:[2,22],21:[2,22],22:[2,22],25:45,28:[2,22],135:[2,22],136:[2,22],137:[2,22],138:[2,22]},{30:[1,46],33:47,34:48,35:49,36:[1,50],38:[1,51],40:[1,52]},{27:53,29:33,30:[2,32],36:[2,32],38:[2,32],40:[2,32]},{6:[2,157],18:[2,157],19:[2,157],20:[2,157],21:[2,157],22:[2,157],28:[2,157],32:[2,157],46:[2,157],50:[2,157],55:[2,157],63:[2,157],135:[2,157],136:[2,157],137:[2,157],138:[2,157]},{139:[1,54]},{6:[2,10],18:[2,10],19:[2,10],20:[2,10],21:[2,10],22:[2,10],28:[2,10],135:[2,10],136:[2,10],137:[2,10]},{6:[2,14],18:[2,14],19:[2,14],20:[2,14],21:[2,14],22:[2,14],28:[2,14],135:[2,14],136:[2,14],137:[2,14]},{6:[2,15],18:[2,15],19:[2,15],20:[2,15],21:[2,15],22:[2,15],28:[2,15],135:[2,15],136:[2,15],137:[2,15]},{6:[2,16],18:[2,16],19:[2,16],20:[2,16],21:[2,16],22:[2,16],28:[2,16],135:[2,16],136:[2,16],137:[2,16]},{6:[2,20],18:[2,20],19:[2,20],20:[2,20],21:[2,20],22:[2,20],28:[2,20],135:[2,20],136:[2,20],137:[2,20],138:[2,20]},{6:[2,21],18:[2,21],19:[2,21],20:[2,21],21:[2,21],22:[2,21],28:[2,21],135:[2,21],136:[2,21],137:[2,21]},{6:[2,24],18:[2,24],19:[2,24],20:[2,24],21:[2,24],22:[2,24],28:[2,24],135:[2,24],136:[2,24],137:[2,24]},{6:[2,22],18:[2,22],19:[2,22],20:[2,22],21:[2,22],22:[2,22],25:55,28:[2,22],135:[2,22],136:[2,22],137:[2,22],138:[2,22]},{6:[2,26],9:56,18:[2,26],19:[2,26],20:[2,26],21:[2,26],22:[2,26],28:[2,26],135:[2,26],136:[2,26],137:[2,26],138:[1,20]},{19:[1,21],21:[1,23],31:57,32:[2,34],37:58,38:[1,70],42:68,43:59,47:60,51:61,56:62,57:63,60:64,61:65,62:[1,66],64:[1,67],65:71,69:69,71:[1,72],72:[1,73],135:[1,22],136:[1,24]},{30:[2,33],36:[2,33],38:[2,33],40:[2,33]},{30:[2,29],36:[2,29],38:[2,29],40:[2,29]},{30:[2,30],36:[2,30],38:[2,30],40:[2,30]},{30:[2,31],36:[2,31],38:[2,31],40:[2,31]},{19:[1,21],21:[1,23],26:75,39:74,65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{19:[1,21],21:[1,23],41:76,42:77,65:71,135:[1,22],136:[1,24]},{6:[2,22],18:[2,22],19:[2,22],20:[2,22],21:[2,22],22:[2,22],25:78,28:[2,22],135:[2,22],136:[2,22],137:[2,22],138:[2,22]},{6:[2,158],18:[2,158],19:[2,158],20:[2,158],21:[2,158],22:[2,158],28:[2,158],32:[2,158],46:[2,158],50:[2,158],55:[2,158],63:[2,158],135:[2,158],136:[2,158],137:[2,158],138:[2,158]},{6:[2,25],9:56,18:[2,25],19:[2,25],20:[2,25],21:[2,25],22:[2,25],28:[2,25],135:[2,25],136:[2,25],137:[2,25],138:[1,20]},{6:[2,23],18:[2,23],19:[2,23],20:[2,23],21:[2,23],22:[2,23],28:[2,23],32:[2,23],46:[2,23],50:[2,23],55:[2,23],63:[2,23],135:[2,23],136:[2,23],137:[2,23],138:[2,23]},{32:[1,79]},{32:[2,35]},{32:[2,44],44:80,46:[2,44],63:[2,44]},{32:[2,48],46:[2,48],48:81,50:[2,48],63:[2,48]},{32:[2,52],46:[2,52],50:[2,52],52:82,55:[2,52],63:[2,52]},{32:[2,56],46:[2,56],50:[2,56],55:[2,56],63:[2,56]},{19:[1,21],21:[1,23],38:[1,70],42:68,56:83,60:64,61:65,62:[1,66],65:71,69:69,71:[1,72],72:[1,73],135:[1,22],136:[1,24]},{32:[2,60],46:[2,60],50:[2,60],55:[2,60],63:[2,60]},{32:[2,61],46:[2,61],50:[2,61],55:[2,61],63:[2,61]},{19:[1,21],21:[1,23],37:84,38:[1,70],42:68,43:59,47:60,51:61,56:62,57:63,60:64,61:65,62:[1,66],64:[1,67],65:71,69:69,71:[1,72],72:[1,73],135:[1,22],136:[1,24]},{19:[1,21],21:[1,23],26:85,65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{19:[1,21],21:[1,23],27:101,29:33,30:[2,32],36:[2,32],38:[2,32],40:[2,32],62:[1,97],65:90,67:86,73:[1,87],75:88,77:91,78:[1,89],79:92,80:[1,93],82:[1,94],83:[1,95],85:96,89:[1,98],90:[1,99],91:[1,100],135:[1,22],136:[1,24]},{19:[1,21],21:[1,23],42:102,65:71,135:[1,22],136:[1,24]},{19:[1,21],21:[1,23],26:103,65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{19:[2,75],21:[2,75],30:[2,75],36:[2,75],38:[2,75],40:[2,75],62:[2,75],73:[2,75],78:[2,75],80:[2,75],82:[2,75],83:[2,75],89:[2,75],90:[2,75],91:[2,75],135:[2,75],136:[2,75]},{19:[2,71],21:[2,71],72:[1,104],135:[2,71],136:[2,71]},{19:[2,73],21:[2,73],71:[1,105],135:[2,73],136:[2,73]},{19:[1,21],21:[1,23],26:106,30:[2,36],36:[2,36],38:[2,36],40:[2,36],65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{19:[2,37],21:[2,37],30:[2,37],36:[2,37],38:[2,37],40:[2,37],135:[2,37],136:[2,37],137:[2,37]},{19:[1,21],21:[1,23],30:[2,39],36:[2,39],38:[2,39],40:[2,39],42:107,65:71,135:[1,22],136:[1,24]},{19:[2,40],21:[2,40],30:[2,40],36:[2,40],38:[2,40],40:[2,40],135:[2,40],136:[2,40]},{6:[2,27],9:56,18:[2,27],19:[2,27],20:[2,27],21:[2,27],22:[2,27],28:[2,27],135:[2,27],136:[2,27],137:[2,27],138:[1,20]},{6:[2,28],18:[2,28],19:[2,28],20:[2,28],21:[2,28],22:[2,28],28:[2,28],32:[2,28],46:[2,28],50:[2,28],55:[2,28],63:[2,28],88:[2,28],93:[2,28],95:[2,28],98:[2,28],99:[2,28],100:[2,28],109:[2,28],112:[2,28],113:[2,28],114:[2,28],115:[2,28],135:[2,28],136:[2,28],137:[2,28],138:[2,28]},{32:[2,42],45:108,46:[1,109],63:[2,42]},{32:[2,46],46:[2,46],49:110,50:[1,111],63:[2,46]},{32:[2,54],46:[2,54],50:[2,54],53:112,54:113,55:[1,114],63:[2,54]},{32:[2,57],46:[2,57],50:[2,57],55:[2,57],63:[2,57]},{63:[1,115]},{19:[2,64],21:[2,64],38:[2,64],62:[2,64],71:[2,64],72:[2,64],135:[2,64],136:[2,64]},{32:[2,69],46:[2,69],50:[2,69],55:[2,69],63:[2,69],68:116,109:[2,69],112:[2,69],113:[2,69],114:[2,69],115:[2,69],138:[2,69]},{32:[2,87],46:[2,87],50:[2,87],55:[2,87],63:[2,87],74:117,93:[2,87],95:[2,87],98:[2,87],99:[2,87],100:[2,87],103:[2,87],104:[2,87],105:[2,87],106:[2,87],107:[2,87],108:[2,87],109:[2,87],112:[2,87],113:[2,87],114:[2,87],115:[2,87],138:[2,87]},{27:101,29:33,30:[2,32],32:[2,77],36:[2,32],38:[2,32],40:[2,32],46:[2,77],50:[2,77],55:[2,77],63:[2,77],76:118,77:119,84:120,85:96,89:[1,98],90:[1,99],91:[1,100],93:[1,121],95:[1,122],96:123,98:[1,124],99:[1,125],100:[1,126],109:[2,77],112:[2,77],113:[2,77],114:[2,77],115:[2,77],138:[2,77]},{27:101,29:33,30:[2,32],32:[2,81],36:[2,32],38:[2,32],40:[2,32],46:[2,81],50:[2,81],55:[2,81],63:[2,81],77:127,85:96,89:[1,98],90:[1,99],91:[1,100],109:[2,81],112:[2,81],113:[2,81],114:[2,81],115:[2,81],138:[2,81]},{32:[2,83],46:[2,83],50:[2,83],55:[2,83],63:[2,83],109:[2,83],112:[2,83],113:[2,83],114:[2,83],115:[2,83],138:[2,83]},{32:[2,84],46:[2,84],50:[2,84],55:[2,84],63:[2,84],109:[2,84],112:[2,84],113:[2,84],114:[2,84],115:[2,84],138:[2,84]},{32:[2,85],46:[2,85],50:[2,85],55:[2,85],63:[2,85],109:[2,85],112:[2,85],113:[2,85],114:[2,85],115:[2,85],138:[2,85]},{32:[2,86],46:[2,86],50:[2,86],55:[2,86],63:[2,86],109:[2,86],112:[2,86],113:[2,86],114:[2,86],115:[2,86],138:[2,86]},{30:[2,89],32:[2,89],36:[2,89],38:[2,89],40:[2,89],46:[2,89],50:[2,89],55:[2,89],63:[2,89],89:[2,89],90:[2,89],91:[2,89],93:[2,89],95:[2,89],98:[2,89],99:[2,89],100:[2,89],109:[2,89],112:[2,89],113:[2,89],114:[2,89],115:[2,89],138:[2,89]},{30:[2,90],32:[2,90],36:[2,90],38:[2,90],40:[2,90],46:[2,90],50:[2,90],55:[2,90],63:[2,90],89:[2,90],90:[2,90],91:[2,90],93:[2,90],95:[2,90],98:[2,90],99:[2,90],100:[2,90],109:[2,90],112:[2,90],113:[2,90],114:[2,90],115:[2,90],138:[2,90]},{32:[2,95],46:[2,95],50:[2,95],55:[2,95],63:[2,95],86:128,88:[2,95],93:[2,95],95:[2,95],98:[2,95],99:[2,95],100:[2,95],109:[2,95],112:[2,95],113:[2,95],114:[2,95],115:[2,95],138:[2,95]},{19:[2,125],21:[2,125],63:[2,125],80:[2,125],97:[2,125],116:129,127:[2,125],128:[2,125],129:[2,125],130:[2,125],131:[2,125],132:[2,125],133:[2,125],134:[2,125],135:[2,125],136:[2,125]},{32:[2,97],46:[2,97],50:[2,97],55:[2,97],63:[2,97],88:[2,97],93:[2,97],95:[2,97],98:[2,97],99:[2,97],100:[2,97],109:[2,97],112:[2,97],113:[2,97],114:[2,97],115:[2,97],138:[2,97]},{32:[2,98],46:[2,98],50:[2,98],55:[2,98],63:[2,98],88:[2,98],93:[2,98],95:[2,98],98:[2,98],99:[2,98],100:[2,98],109:[2,98],112:[2,98],113:[2,98],114:[2,98],115:[2,98],138:[2,98]},{19:[1,21],21:[1,23],26:130,65:18,66:19,135:[1,22],136:[1,24],137:[1,25]},{32:[2,100],46:[2,100],50:[2,100],55:[2,100],63:[2,100],88:[2,100],93:[2,100],95:[2,100],98:[2,100],99:[2,100],100:[2,100],109:[2,100],112:[2,100],113:[2,100],114:[2,100],115:[2,100],138:[2,100]},{19:[1,21],21:[1,23],27:101,29:33,30:[2,32],36:[2,32],38:[2,32],40:[2,32],62:[1,97],65:90,67:131,73:[1,87],75:88,77:91,78:[1,89],79:92,80:[1,93],82:[1,94],83:[1,95],85:96,89:[1,98],90:[1,99],91:[1,100],135:[1,22],136:[1,24]},{32:[2,63],46:[2,63],50:[2,63],55:[2,63],63:[2,63]},{19:[2,72],21:[2,72],135:[2,72],136:[2,72]},{19:[2,74],21:[2,74],135:[2,74],136:[2,74]},{19:[2,38],21:[2,38],30:[2,38],36:[2,38],38:[2,38],40:[2,38],135:[2,38],136:[2,38],137:[2,38]},{19:[2,41],21:[2,41],30:[2,41],36:[2,41],38:[2,41],40:[2,41],135:[2,41],136:[2,41]},{32:[2,45],46:[2,45],63:[2,45]},{19:[1,21],21:[1,23],38:[1,70],42:68,43:132,47:60,51:61,56:62,57:63,60:64,61:65,62:[1,66],64:[1,67],65:71,69:69,71:[1,72],72:[1,73],135:[1,22],136:[1,24]},{32:[2,49],46:[2,49],50:[2,49],63:[2,49]},{19:[1,21],21:[1,23],38:[1,70],42:68,47:133,51:61,56:62,57:63,60:64,61:65,62:[1,66],64:[1,67],65:71,69:69,71:[1,72],72:[1,73],135:[1,22],136:[1,24]},{32:[2,50],46:[2,50],50:[2,50],63:[2,50]},{32:[2,53],46:[2,53],50:[2,53],55:[2,53],63:[2,53]},{19:[1,21],21:[1,23],32:[2,55],38:[1,70],42:68,46:[2,55],50:[2,55],51:134,56:62,57:63,60:64,61:65,62:[1,66],63:[2,55],64:[1,67],65:71,69:69,71:[1,72],72:[1,73],135:[1,22],136:[1,24]},{32:[2,58],46:[2,58],50:[2,58],55:[2,58],58:135,59:136,63:[2,58],112:[1,137],113:[1,138],114:[1,139],115:[1,140],138:[2,58]},{32:[2,58],46:[2,58],50:[2,58],55:[2,58],58:141,59:136,63:[2,58],70:142,109:[1,143],112:[1,137],113:[1,138],114:[1,139],115:[1,140],138:[2,58]},{32:[2,76],46:[2,76],50:[2,76],55:[2,76],63:[2,76],81:144,84:145,92:146,93:[1,121],95:[1,122],96:123,98:[1,124],99:[1,125],100:[1,126],101:147,102:148,103:[1,149],104:[1,150],105:[1,151],106:[1,152],107:[1,153],108:[1,154],109:[2,76],112:[2,76],113:[2,76],114:[2,76],115:[2,76],138:[2,76]},{32:[2,78],46:[2,78],50:[2,78],55:[2,78],63:[2,78],84:155,93:[1,121],95:[1,122],96:123,98:[1,124],99:[1,125],100:[1,126],109:[2,78],112:[2,78],113:[2,78],114:[2,78],115:[2,78],138:[2,78]},{32:[2,79],46:[2,79],50:[2,79],55:[2,79],63:[2,79],76:156,84:120,93:[1,121],95:[1,122],96:123,98:[1,124],99:[1,125],100:[1,126],109:[2,79],112:[2,79],113:[2,79],114:[2,79],115:[2,79],138:[2,79]},{32:[2,91],46:[2,91],50:[2,91],55:[2,91],63:[2,91],93:[2,91],95:[2,91],98:[2,91],99:[2,91],100:[2,91],109:[2,91],112:[2,91],113:[2,91],114:[2,91],115:[2,91],138:[2,91]},{94:157,131:[1,158],132:[1,159],133:[1,160],134:[1,161]},{94:162,131:[1,158],132:[1,159],133:[1,160],134:[1,161]},{97:[1,163]},{97:[2,106]},{97:[2,107]},{97:[2,108]},{32:[2,82],46:[2,82],50:[2,82],55:[2,82],63:[2,82],109:[2,82],112:[2,82],113:[2,82],114:[2,82],115:[2,82],138:[2,82]},{32:[2,93],46:[2,93],50:[2,93],55:[2,93],63:[2,93],87:164,88:[1,165],93:[2,93],95:[2,93],98:[2,93],99:[2,93],100:[2,93],109:[2,93],112:[2,93],113:[2,93],114:[2,93],115:[2,93],138:[2,93]},{19:[1,21],21:[1,23],63:[1,166],65:170,80:[1,171],94:172,97:[1,173],111:169,117:167,118:168,127:[1,174],128:[1,175],129:[1,176],130:[1,177],131:[1,158],132:[1,159],133:[1,160],134:[1,161],135:[1,22],136:[1,24]},{32:[2,99],46:[2,99],50:[2,99],55:[2,99],63:[2,99],88:[2,99],93:[2,99],95:[2,99],98:[2,99],99:[2,99],100:[2,99],109:[2,99],112:[2,99],113:[2,99],114:[2,99],115:[2,99],138:[2,99]},{32:[2,69],46:[2,69],50:[2,69],55:[2,69],63:[2,69],68:178,109:[2,69],112:[2,69],113:[2,69],114:[2,69],115:[2,69],138:[2,69]},{32:[2,43],46:[2,43],63:[2,43]},{32:[2,47],46:[2,47],50:[2,47],63:[2,47]},{32:[2,51],46:[2,51],50:[2,51],55:[2,51],63:[2,51]},{25:179,32:[2,22],46:[2,22],50:[2,22],55:[2,22],63:[2,22],138:[2,22]},{32:[2,59],46:[2,59],50:[2,59],55:[2,59],63:[2,59],138:[2,59]},{32:[2,120],46:[2,120],50:[2,120],55:[2,120],63:[2,120],138:[2,120]},{32:[2,121],46:[2,121],50:[2,121],55:[2,121],63:[2,121],138:[2,121]},{32:[2,122],46:[2,122],50:[2,122],55:[2,122],63:[2,122],138:[2,122]},{32:[2,123],46:[2,123],50:[2,123],55:[2,123],63:[2,123],138:[2,123]},{25:180,32:[2,22],46:[2,22],50:[2,22],55:[2,22],63:[2,22],138:[2,22]},{32:[2,70],46:[2,70],50:[2,70],55:[2,70],63:[2,70],109:[2,70],112:[2,70],113:[2,70],114:[2,70],115:[2,70],138:[2,70]},{19:[1,21],21:[1,23],65:181,135:[1,22],136:[1,24]},{32:[2,88],46:[2,88],50:[2,88],55:[2,88],63:[2,88],93:[2,88],95:[2,88],98:[2,88],99:[2,88],100:[2,88],103:[2,88],104:[2,88],105:[2,88],106:[2,88],107:[2,88],108:[2,88],109:[2,88],112:[2,88],113:[2,88],114:[2,88],115:[2,88],138:[2,88]},{32:[2,101],46:[2,101],50:[2,101],55:[2,101],63:[2,101],93:[2,101],95:[2,101],98:[2,101],99:[2,101],100:[2,101],103:[2,101],104:[2,101],105:[2,101],106:[2,101],107:[2,101],108:[2,101],109:[2,101],112:[2,101],113:[2,101],114:[2,101],115:[2,101],138:[2,101]},{32:[2,102],46:[2,102],50:[2,102],55:[2,102],63:[2,102],93:[2,102],95:[2,102],98:[2,102],99:[2,102],100:[2,102],103:[2,102],104:[2,102],105:[2,102],106:[2,102],107:[2,102],108:[2,102],109:[2,102],112:[2,102],113:[2,102],114:[2,102],115:[2,102],138:[2,102]},{97:[1,182]},{97:[1,183]},{97:[2,111]},{97:[2,112]},{97:[2,113]},{97:[2,114]},{97:[2,115]},{97:[2,116]},{32:[2,92],46:[2,92],50:[2,92],55:[2,92],63:[2,92],93:[2,92],95:[2,92],98:[2,92],99:[2,92],100:[2,92],109:[2,92],112:[2,92],113:[2,92],114:[2,92],115:[2,92],138:[2,92]},{32:[2,80],46:[2,80],50:[2,80],55:[2,80],63:[2,80],84:155,93:[1,121],95:[1,122],96:123,98:[1,124],99:[1,125],100:[1,126],109:[2,80],112:[2,80],113:[2,80],114:[2,80],115:[2,80],138:[2,80]},{32:[2,103],46:[2,103],50:[2,103],55:[2,103],63:[2,103],93:[2,103],95:[2,103],98:[2,103],99:[2,103],100:[2,103],103:[2,103],104:[2,103],105:[2,103],106:[2,103],107:[2,103],108:[2,103],109:[2,103],112:[2,103],113:[2,103],114:[2,103],115:[2,103],138:[2,103]},{19:[2,148],21:[2,148],32:[2,148],46:[2,148],50:[2,148],55:[2,148],63:[2,148],80:[2,148],93:[2,148],95:[2,148],97:[2,148],98:[2,148],99:[2,148],100:[2,148],103:[2,148],104:[2,148],105:[2,148],106:[2,148],107:[2,148],108:[2,148],109:[2,148],112:[2,148],113:[2,148],114:[2,148],115:[2,148],125:[2,148],126:[2,148],127:[2,148],128:[2,148],129:[2,148],130:[2,148],131:[2,148],132:[2,148],133:[2,148],134:[2,148],135:[2,148],136:[2,148],138:[2,148]},{19:[2,149],21:[2,149],32:[2,149],46:[2,149],50:[2,149],55:[2,149],63:[2,149],80:[2,149],93:[2,149],95:[2,149],97:[2,149],98:[2,149],99:[2,149],100:[2,149],103:[2,149],104:[2,149],105:[2,149],106:[2,149],107:[2,149],108:[2,149],109:[2,149],112:[2,149],113:[2,149],114:[2,149],115:[2,149],125:[2,149],126:[2,149],127:[2,149],128:[2,149],129:[2,149],130:[2,149],131:[2,149],132:[2,149],133:[2,149],134:[2,149],135:[2,149],136:[2,149],138:[2,149]},{19:[2,150],21:[2,150],32:[2,150],46:[2,150],50:[2,150],55:[2,150],63:[2,150],80:[2,150],93:[2,150],95:[2,150],97:[2,150],98:[2,150],99:[2,150],100:[2,150],103:[2,150],104:[2,150],105:[2,150],106:[2,150],107:[2,150],108:[2,150],109:[2,150],112:[2,150],113:[2,150],114:[2,150],115:[2,150],125:[2,150],126:[2,150],127:[2,150],128:[2,150],129:[2,150],130:[2,150],131:[2,150],132:[2,150],133:[2,150],134:[2,150],135:[2,150],136:[2,150],138:[2,150]},{19:[2,151],21:[2,151],32:[2,151],46:[2,151],50:[2,151],55:[2,151],63:[2,151],80:[2,151],93:[2,151],95:[2,151],97:[2,151],98:[2,151],99:[2,151],100:[2,151],103:[2,151],104:[2,151],105:[2,151],106:[2,151],107:[2,151],108:[2,151],109:[2,151],112:[2,151],113:[2,151],114:[2,151],115:[2,151],125:[2,151],126:[2,151],127:[2,151],128:[2,151],129:[2,151],130:[2,151],131:[2,151],132:[2,151],133:[2,151],134:[2,151],135:[2,151],136:[2,151],138:[2,151]},{32:[2,104],46:[2,104],50:[2,104],55:[2,104],63:[2,104],93:[2,104],95:[2,104],98:[2,104],99:[2,104],100:[2,104],103:[2,104],104:[2,104],105:[2,104],106:[2,104],107:[2,104],108:[2,104],109:[2,104],112:[2,104],113:[2,104],114:[2,104],115:[2,104],138:[2,104]},{32:[2,105],46:[2,105],50:[2,105],55:[2,105],63:[2,105],93:[2,105],95:[2,105],98:[2,105],99:[2,105],100:[2,105],103:[2,105],104:[2,105],105:[2,105],106:[2,105],107:[2,105],108:[2,105],109:[2,105],112:[2,105],113:[2,105],114:[2,105],115:[2,105],138:[2,105]},{32:[2,96],46:[2,96],50:[2,96],55:[2,96],63:[2,96],88:[2,96],93:[2,96],95:[2,96],98:[2,96],99:[2,96],100:[2,96],109:[2,96],112:[2,96],113:[2,96],114:[2,96],115:[2,96],138:[2,96]},{27:101,29:33,30:[2,32],36:[2,32],38:[2,32],40:[2,32],85:184,89:[1,98],90:[1,99],91:[1,100]},{32:[2,124],46:[2,124],50:[2,124],55:[2,124],63:[2,124],109:[2,124],112:[2,124],113:[2,124],114:[2,124],115:[2,124],138:[2,124]},{19:[2,126],21:[2,126],63:[2,126],80:[2,126],97:[2,126],127:[2,126],128:[2,126],129:[2,126],130:[2,126],131:[2,126],132:[2,126],133:[2,126],134:[2,126],135:[2,126],136:[2,126]},{19:[2,127],21:[2,127],63:[2,127],80:[2,127],97:[2,127],127:[2,127],128:[2,127],129:[2,127],130:[2,127],131:[2,127],132:[2,127],133:[2,127],134:[2,127],135:[2,127],136:[2,127]},{19:[2,128],21:[2,128],63:[2,128],80:[2,128],97:[2,128],127:[2,128],128:[2,128],129:[2,128],130:[2,128],131:[2,128],132:[2,128],133:[2,128],134:[2,128],135:[2,128],136:[2,128]},{19:[2,134],21:[2,134],63:[2,134],80:[2,134],95:[1,187],97:[2,134],119:185,123:186,127:[2,134],128:[2,134],129:[2,134],130:[2,134],131:[2,134],132:[2,134],133:[2,134],134:[2,134],135:[2,134],136:[2,134]},{120:188,122:189,124:[1,190]},{19:[2,140],21:[2,140],32:[2,140],46:[2,140],50:[2,140],55:[2,140],63:[2,140],80:[2,140],97:[2,140],109:[2,140],112:[2,140],113:[2,140],114:[2,140],115:[2,140],125:[1,191],126:[1,192],127:[2,140],128:[2,140],129:[2,140],130:[2,140],131:[2,140],132:[2,140],133:[2,140],134:[2,140],135:[2,140],136:[2,140],138:[2,140]},{19:[2,143],21:[2,143],32:[2,143],46:[2,143],50:[2,143],55:[2,143],63:[2,143],80:[2,143],97:[2,143],109:[2,143],112:[2,143],113:[2,143],114:[2,143],115:[2,143],127:[2,143],128:[2,143],129:[2,143],130:[2,143],131:[2,143],132:[2,143],133:[2,143],134:[2,143],135:[2,143],136:[2,143],138:[2,143]},{19:[2,144],21:[2,144],32:[2,144],46:[2,144],50:[2,144],55:[2,144],63:[2,144],80:[2,144],97:[2,144],109:[2,144],112:[2,144],113:[2,144],114:[2,144],115:[2,144],127:[2,144],128:[2,144],129:[2,144],130:[2,144],131:[2,144],132:[2,144],133:[2,144],134:[2,144],135:[2,144],136:[2,144],138:[2,144]},{19:[2,145],21:[2,145],32:[2,145],46:[2,145],50:[2,145],55:[2,145],63:[2,145],80:[2,145],97:[2,145],109:[2,145],112:[2,145],113:[2,145],114:[2,145],115:[2,145],127:[2,145],128:[2,145],129:[2,145],130:[2,145],131:[2,145],132:[2,145],133:[2,145],134:[2,145],135:[2,145],136:[2,145],138:[2,145]},{19:[2,146],21:[2,146],32:[2,146],46:[2,146],50:[2,146],55:[2,146],63:[2,146],80:[2,146],97:[2,146],109:[2,146],112:[2,146],113:[2,146],114:[2,146],115:[2,146],127:[2,146],128:[2,146],129:[2,146],130:[2,146],131:[2,146],132:[2,146],133:[2,146],134:[2,146],135:[2,146],136:[2,146],138:[2,146]},{19:[2,147],21:[2,147],32:[2,147],46:[2,147],50:[2,147],55:[2,147],63:[2,147],80:[2,147],97:[2,147],109:[2,147],112:[2,147],113:[2,147],114:[2,147],115:[2,147],127:[2,147],128:[2,147],129:[2,147],130:[2,147],131:[2,147],132:[2,147],133:[2,147],134:[2,147],135:[2,147],136:[2,147],138:[2,147]},{32:[2,58],46:[2,58],50:[2,58],55:[2,58],58:193,59:136,63:[2,58],70:142,109:[1,143],112:[1,137],113:[1,138],114:[1,139],115:[1,140],138:[2,58]},{9:56,32:[2,62],46:[2,62],50:[2,62],55:[2,62],63:[2,62],138:[1,20]},{9:56,32:[2,67],46:[2,67],50:[2,67],55:[2,67],63:[2,67],138:[1,20]},{19:[1,21],21:[1,23],65:195,94:172,97:[1,173],110:194,111:196,127:[1,174],128:[1,175],129:[1,176],130:[1,177],131:[1,158],132:[1,159],133:[1,160],134:[1,161],135:[1,22],136:[1,24]},{32:[2,109],46:[2,109],50:[2,109],55:[2,109],63:[2,109],93:[2,109],95:[2,109],98:[2,109],99:[2,109],100:[2,109],103:[2,109],104:[2,109],105:[2,109],106:[2,109],107:[2,109],108:[2,109],109:[2,109],112:[2,109],113:[2,109],114:[2,109],115:[2,109],138:[2,109]},{32:[2,110],46:[2,110],50:[2,110],55:[2,110],63:[2,110],93:[2,110],95:[2,110],98:[2,110],99:[2,110],100:[2,110],103:[2,110],104:[2,110],105:[2,110],106:[2,110],107:[2,110],108:[2,110],109:[2,110],112:[2,110],113:[2,110],114:[2,110],115:[2,110],138:[2,110]},{32:[2,94],46:[2,94],50:[2,94],55:[2,94],63:[2,94],88:[2,94],93:[2,94],95:[2,94],98:[2,94],99:[2,94],100:[2,94],109:[2,94],112:[2,94],113:[2,94],114:[2,94],115:[2,94],138:[2,94]},{19:[2,129],21:[2,129],63:[2,129],80:[2,129],97:[2,129],127:[2,129],128:[2,129],129:[2,129],130:[2,129],131:[2,129],132:[2,129],133:[2,129],134:[2,129],135:[2,129],136:[2,129]},{19:[2,135],21:[2,135],63:[2,135],80:[2,135],97:[2,135],127:[2,135],128:[2,135],129:[2,135],130:[2,135],131:[2,135],132:[2,135],133:[2,135],134:[2,135],135:[2,135],136:[2,135]},{19:[2,131],21:[2,131],63:[2,131],80:[2,131],97:[2,131],121:197,124:[2,131],127:[2,131],128:[2,131],129:[2,131],130:[2,131],131:[2,131],132:[2,131],133:[2,131],134:[2,131],135:[2,131],136:[2,131]},{19:[2,130],21:[2,130],63:[2,130],80:[2,130],97:[2,130],122:198,124:[1,190],127:[2,130],128:[2,130],129:[2,130],130:[2,130],131:[2,130],132:[2,130],133:[2,130],134:[2,130],135:[2,130],136:[2,130]},{19:[2,136],21:[2,136],63:[2,136],80:[2,136],97:[2,136],124:[2,136],127:[2,136],128:[2,136],129:[2,136],130:[2,136],131:[2,136],132:[2,136],133:[2,136],134:[2,136],135:[2,136],136:[2,136]},{19:[1,21],21:[1,23],65:199,135:[1,22],136:[1,24]},{19:[2,141],21:[2,141],32:[2,141],46:[2,141],50:[2,141],55:[2,141],63:[2,141],80:[2,141],97:[2,141],109:[2,141],112:[2,141],113:[2,141],114:[2,141],115:[2,141],127:[2,141],128:[2,141],129:[2,141],130:[2,141],131:[2,141],132:[2,141],133:[2,141],134:[2,141],135:[2,141],136:[2,141],138:[2,141]},{19:[1,21],21:[1,23],65:200,135:[1,22],136:[1,24]},{25:201,32:[2,22],46:[2,22],50:[2,22],55:[2,22],63:[2,22],138:[2,22]},{32:[2,117],46:[2,117],50:[2,117],55:[2,117],63:[2,117],109:[2,117],112:[2,117],113:[2,117],114:[2,117],115:[2,117],138:[2,117]},{32:[2,118],46:[2,118],50:[2,118],55:[2,118],63:[2,118],109:[2,118],112:[2,118],113:[2,118],114:[2,118],115:[2,118],138:[2,118]},{32:[2,119],46:[2,119],50:[2,119],55:[2,119],63:[2,119],109:[2,119],112:[2,119],113:[2,119],114:[2,119],115:[2,119],138:[2,119]},{19:[2,133],21:[2,133],63:[2,133],80:[2,133],97:[2,133],122:202,124:[1,190],127:[2,133],128:[2,133],129:[2,133],130:[2,133],131:[2,133],132:[2,133],133:[2,133],134:[2,133],135:[2,133],136:[2,133]},{19:[2,137],21:[2,137],63:[2,137],80:[2,137],97:[2,137],124:[2,137],127:[2,137],128:[2,137],129:[2,137],130:[2,137],131:[2,137],132:[2,137],133:[2,137],134:[2,137],135:[2,137],136:[2,137]},{19:[2,138],21:[2,138],63:[2,138],80:[2,138],95:[1,203],97:[2,138],124:[2,138],127:[2,138],128:[2,138],129:[2,138],130:[2,138],131:[2,138],132:[2,138],133:[2,138],134:[2,138],135:[2,138],136:[2,138]},{19:[2,142],21:[2,142],32:[2,142],46:[2,142],50:[2,142],55:[2,142],63:[2,142],80:[2,142],97:[2,142],109:[2,142],112:[2,142],113:[2,142],114:[2,142],115:[2,142],127:[2,142],128:[2,142],129:[2,142],130:[2,142],131:[2,142],132:[2,142],133:[2,142],134:[2,142],135:[2,142],136:[2,142],138:[2,142]},{9:56,32:[2,68],46:[2,68],50:[2,68],55:[2,68],63:[2,68],138:[1,20]},{19:[2,132],21:[2,132],63:[2,132],80:[2,132],97:[2,132],124:[2,132],127:[2,132],128:[2,132],129:[2,132],130:[2,132],131:[2,132],132:[2,132],133:[2,132],134:[2,132],135:[2,132],136:[2,132]},{19:[2,139],21:[2,139],63:[2,139],80:[2,139],97:[2,139],124:[2,139],127:[2,139],128:[2,139],129:[2,139],130:[2,139],131:[2,139],132:[2,139],133:[2,139],134:[2,139],135:[2,139],136:[2,139]}],
-defaultActions: {5:[2,13],26:[2,1],58:[2,35],124:[2,106],125:[2,107],126:[2,108],149:[2,111],150:[2,112],151:[2,113],152:[2,114],153:[2,115],154:[2,116]},
+table: [{3:1,4:2,6:[2,2],17:[2,2],18:[2,2],19:[2,2],20:[2,2],21:[2,2],27:[2,2],134:[2,2],135:[2,2],136:[2,2],138:[2,2]},{1:[3]},{5:3,6:[2,10],7:4,8:8,9:11,10:12,11:13,14:5,15:6,16:7,17:[1,9],18:[1,21],19:[1,10],20:[1,23],21:[1,14],24:15,27:[1,16],64:18,65:19,134:[1,22],135:[1,24],136:[1,25],137:20,138:[1,26],140:17},{6:[1,27]},{6:[2,3],17:[2,3],18:[2,3],19:[2,3],20:[2,3],21:[2,3],27:[2,3],134:[2,3],135:[2,3],136:[2,3],138:[2,3]},{6:[2,11]},{6:[2,15],17:[2,15],18:[2,15],19:[2,15],20:[2,15],21:[2,15],27:[2,15],134:[2,15],135:[2,15],136:[2,15],138:[2,15]},{6:[2,16],17:[2,16],18:[2,16],19:[2,16],20:[2,16],21:[2,16],27:[2,16],134:[2,16],135:[2,16],136:[2,16],138:[2,16]},{6:[2,7],12:28,17:[2,7],18:[2,7],19:[2,7],20:[2,7],21:[2,7],27:[2,7],134:[2,7],135:[2,7],136:[2,7]},{18:[1,29]},{20:[1,30]},{6:[2,4],17:[2,4],18:[2,4],19:[2,4],20:[2,4],21:[2,4],27:[2,4],134:[2,4],135:[2,4],136:[2,4]},{6:[2,5],17:[2,5],18:[2,5],19:[2,5],20:[2,5],21:[2,5],27:[2,5],134:[2,5],135:[2,5],136:[2,5]},{6:[2,6],17:[2,6],18:[2,6],19:[2,6],20:[2,6],21:[2,6],27:[2,6],134:[2,6],135:[2,6],136:[2,6]},{22:[1,31]},{25:32,28:33,29:[2,28],35:[2,28],37:[2,28],39:[2,28]},{18:[1,21],20:[1,23],24:34,64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{6:[2,155],17:[2,155],18:[2,155],19:[2,155],20:[2,155],21:[2,155],27:[2,155],134:[2,155],135:[2,155],136:[2,155],137:35,138:[1,26]},{6:[2,61],17:[2,61],18:[2,61],19:[2,61],20:[2,61],21:[2,61],27:[2,61],29:[2,61],31:[2,61],35:[2,61],37:[2,61],39:[2,61],45:[2,61],49:[2,61],54:[2,61],61:[2,61],62:[2,61],70:[2,61],71:[2,61],87:[2,61],92:[2,61],94:[2,61],97:[2,61],98:[2,61],99:[2,61],108:[2,61],111:[2,61],112:[2,61],113:[2,61],114:[2,61],134:[2,61],135:[2,61],136:[2,61],138:[2,61]},{6:[2,62],17:[2,62],18:[2,62],19:[2,62],20:[2,62],21:[2,62],27:[2,62],29:[2,62],31:[2,62],35:[2,62],37:[2,62],39:[2,62],45:[2,62],49:[2,62],54:[2,62],61:[2,62],62:[2,62],70:[2,62],71:[2,62],87:[2,62],92:[2,62],94:[2,62],97:[2,62],98:[2,62],99:[2,62],108:[2,62],111:[2,62],112:[2,62],113:[2,62],114:[2,62],134:[2,62],135:[2,62],136:[2,62],138:[2,62]},{6:[2,156],17:[2,156],18:[2,156],19:[2,156],20:[2,156],21:[2,156],27:[2,156],134:[2,156],135:[2,156],136:[2,156],138:[2,156]},{6:[2,148],17:[2,148],18:[2,148],19:[2,148],20:[2,148],21:[2,148],27:[2,148],29:[2,148],31:[2,148],35:[2,148],37:[2,148],39:[2,148],45:[2,148],49:[2,148],54:[2,148],61:[2,148],62:[2,148],70:[2,148],71:[2,148],72:[2,148],77:[2,148],79:[2,148],81:[2,148],82:[2,148],87:[2,148],88:[2,148],89:[2,148],90:[2,148],92:[2,148],94:[2,148],96:[2,148],97:[2,148],98:[2,148],99:[2,148],108:[2,148],111:[2,148],112:[2,148],113:[2,148],114:[2,148],123:[2,148],126:[2,148],127:[2,148],128:[2,148],129:[2,148],130:[2,148],131:[2,148],132:[2,148],133:[2,148],134:[2,148],135:[2,148],136:[2,148],138:[2,148],139:[2,148]},{6:[2,149],17:[2,149],18:[2,149],19:[2,149],20:[2,149],21:[2,149],27:[2,149],29:[2,149],31:[2,149],35:[2,149],37:[2,149],39:[2,149],45:[2,149],49:[2,149],54:[2,149],61:[2,149],62:[2,149],70:[2,149],71:[2,149],72:[2,149],77:[2,149],79:[2,149],81:[2,149],82:[2,149],87:[2,149],88:[2,149],89:[2,149],90:[2,149],92:[2,149],94:[2,149],96:[2,149],97:[2,149],98:[2,149],99:[2,149],108:[2,149],111:[2,149],112:[2,149],113:[2,149],114:[2,149],123:[2,149],126:[2,149],127:[2,149],128:[2,149],129:[2,149],130:[2,149],131:[2,149],132:[2,149],133:[2,149],134:[2,149],135:[2,149],136:[2,149],138:[2,149],139:[2,149]},{6:[2,150],17:[2,150],18:[2,150],19:[2,150],20:[2,150],21:[2,150],27:[2,150],29:[2,150],31:[2,150],35:[2,150],37:[2,150],39:[2,150],45:[2,150],49:[2,150],54:[2,150],61:[2,150],62:[2,150],70:[2,150],71:[2,150],72:[2,150],77:[2,150],79:[2,150],81:[2,150],82:[2,150],87:[2,150],88:[2,150],89:[2,150],90:[2,150],92:[2,150],94:[2,150],96:[2,150],97:[2,150],98:[2,150],99:[2,150],108:[2,150],111:[2,150],112:[2,150],113:[2,150],114:[2,150],123:[2,150],126:[2,150],127:[2,150],128:[2,150],129:[2,150],130:[2,150],131:[2,150],132:[2,150],133:[2,150],134:[2,150],135:[2,150],136:[2,150],138:[2,150],139:[2,150]},{6:[2,151],17:[2,151],18:[2,151],19:[2,151],20:[2,151],21:[2,151],27:[2,151],29:[2,151],31:[2,151],35:[2,151],37:[2,151],39:[2,151],45:[2,151],49:[2,151],54:[2,151],61:[2,151],62:[2,151],70:[2,151],71:[2,151],72:[2,151],77:[2,151],79:[2,151],81:[2,151],82:[2,151],87:[2,151],88:[2,151],89:[2,151],90:[2,151],92:[2,151],94:[2,151],96:[2,151],97:[2,151],98:[2,151],99:[2,151],108:[2,151],111:[2,151],112:[2,151],113:[2,151],114:[2,151],123:[2,151],126:[2,151],127:[2,151],128:[2,151],129:[2,151],130:[2,151],131:[2,151],132:[2,151],133:[2,151],134:[2,151],135:[2,151],136:[2,151],138:[2,151],139:[2,151]},{6:[2,152],17:[2,152],18:[2,152],19:[2,152],20:[2,152],21:[2,152],27:[2,152],29:[2,152],31:[2,152],35:[2,152],37:[2,152],39:[2,152],45:[2,152],49:[2,152],54:[2,152],61:[2,152],62:[2,152],70:[2,152],71:[2,152],87:[2,152],92:[2,152],94:[2,152],97:[2,152],98:[2,152],99:[2,152],108:[2,152],111:[2,152],112:[2,152],113:[2,152],114:[2,152],134:[2,152],135:[2,152],136:[2,152],138:[2,152]},{18:[1,21],20:[1,23],64:37,134:[1,22],135:[1,24],139:[1,36]},{1:[2,1]},{6:[2,9],7:39,9:40,10:41,13:38,15:6,16:7,17:[1,9],18:[1,21],19:[1,10],20:[1,23],21:[1,14],24:15,27:[1,16],64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{6:[2,17],17:[2,17],18:[2,17],19:[2,17],20:[2,17],21:[2,17],27:[2,17],134:[2,17],135:[2,17],136:[2,17],138:[2,17]},{18:[1,42]},{18:[1,21],20:[1,23],23:43,24:44,25:45,28:33,29:[2,28],35:[2,28],37:[2,28],39:[2,28],64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{6:[2,159],17:[2,159],18:[2,159],19:[2,159],20:[2,159],21:[2,159],26:46,27:[2,159],134:[2,159],135:[2,159],136:[2,159],138:[2,159],141:47},{29:[1,48],32:49,33:50,34:51,35:[1,52],37:[1,53],39:[1,54]},{25:55,28:33,29:[2,28],35:[2,28],37:[2,28],39:[2,28]},{6:[2,157],17:[2,157],18:[2,157],19:[2,157],20:[2,157],21:[2,157],27:[2,157],134:[2,157],135:[2,157],136:[2,157],138:[2,157]},{6:[2,153],17:[2,153],18:[2,153],19:[2,153],20:[2,153],21:[2,153],27:[2,153],31:[2,153],45:[2,153],49:[2,153],54:[2,153],62:[2,153],134:[2,153],135:[2,153],136:[2,153],138:[2,153]},{139:[1,56]},{6:[2,8],17:[2,8],18:[2,8],19:[2,8],20:[2,8],21:[2,8],27:[2,8],134:[2,8],135:[2,8],136:[2,8]},{6:[2,12],17:[2,12],18:[2,12],19:[2,12],20:[2,12],21:[2,12],27:[2,12],134:[2,12],135:[2,12],136:[2,12]},{6:[2,13],17:[2,13],18:[2,13],19:[2,13],20:[2,13],21:[2,13],27:[2,13],134:[2,13],135:[2,13],136:[2,13]},{6:[2,14],17:[2,14],18:[2,14],19:[2,14],20:[2,14],21:[2,14],27:[2,14],134:[2,14],135:[2,14],136:[2,14]},{6:[2,18],17:[2,18],18:[2,18],19:[2,18],20:[2,18],21:[2,18],27:[2,18],134:[2,18],135:[2,18],136:[2,18],138:[2,18]},{6:[2,19],17:[2,19],18:[2,19],19:[2,19],20:[2,19],21:[2,19],27:[2,19],134:[2,19],135:[2,19],136:[2,19]},{6:[2,20],17:[2,20],18:[2,20],19:[2,20],20:[2,20],21:[2,20],27:[2,20],134:[2,20],135:[2,20],136:[2,20]},{6:[2,159],17:[2,159],18:[2,159],19:[2,159],20:[2,159],21:[2,159],26:57,27:[2,159],134:[2,159],135:[2,159],136:[2,159],138:[2,159],141:47},{6:[2,22],17:[2,22],18:[2,22],19:[2,22],20:[2,22],21:[2,22],27:[2,22],134:[2,22],135:[2,22],136:[2,22]},{6:[2,158],17:[2,158],18:[2,158],19:[2,158],20:[2,158],21:[2,158],27:[2,158],31:[2,158],45:[2,158],49:[2,158],54:[2,158],62:[2,158],134:[2,158],135:[2,158],136:[2,158],137:58,138:[1,26]},{18:[1,21],20:[1,23],30:59,31:[2,30],36:60,37:[1,72],41:70,42:61,46:62,50:63,55:64,56:65,59:66,60:67,61:[1,68],63:[1,69],64:73,68:71,70:[1,74],71:[1,75],134:[1,22],135:[1,24]},{29:[2,29],35:[2,29],37:[2,29],39:[2,29]},{29:[2,25],35:[2,25],37:[2,25],39:[2,25]},{29:[2,26],35:[2,26],37:[2,26],39:[2,26]},{29:[2,27],35:[2,27],37:[2,27],39:[2,27]},{18:[1,21],20:[1,23],24:77,38:76,64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{18:[1,21],20:[1,23],40:78,41:79,64:73,134:[1,22],135:[1,24]},{6:[2,159],17:[2,159],18:[2,159],19:[2,159],20:[2,159],21:[2,159],26:80,27:[2,159],134:[2,159],135:[2,159],136:[2,159],138:[2,159],141:47},{6:[2,154],17:[2,154],18:[2,154],19:[2,154],20:[2,154],21:[2,154],27:[2,154],31:[2,154],45:[2,154],49:[2,154],54:[2,154],62:[2,154],134:[2,154],135:[2,154],136:[2,154],138:[2,154]},{6:[2,21],17:[2,21],18:[2,21],19:[2,21],20:[2,21],21:[2,21],27:[2,21],134:[2,21],135:[2,21],136:[2,21]},{6:[2,160],17:[2,160],18:[2,160],19:[2,160],20:[2,160],21:[2,160],27:[2,160],31:[2,160],45:[2,160],49:[2,160],54:[2,160],62:[2,160],134:[2,160],135:[2,160],136:[2,160],138:[2,160]},{31:[1,81]},{31:[2,31]},{31:[2,40],43:82,45:[2,40],62:[2,40]},{31:[2,44],45:[2,44],47:83,49:[2,44],62:[2,44]},{31:[2,48],45:[2,48],49:[2,48],51:84,54:[2,48],62:[2,48]},{31:[2,52],45:[2,52],49:[2,52],54:[2,52],62:[2,52]},{18:[1,21],20:[1,23],37:[1,72],41:70,55:85,59:66,60:67,61:[1,68],64:73,68:71,70:[1,74],71:[1,75],134:[1,22],135:[1,24]},{31:[2,56],45:[2,56],49:[2,56],54:[2,56],62:[2,56]},{31:[2,57],45:[2,57],49:[2,57],54:[2,57],62:[2,57]},{18:[1,21],20:[1,23],36:86,37:[1,72],41:70,42:61,46:62,50:63,55:64,56:65,59:66,60:67,61:[1,68],63:[1,69],64:73,68:71,70:[1,74],71:[1,75],134:[1,22],135:[1,24]},{18:[1,21],20:[1,23],24:87,64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{18:[1,21],20:[1,23],25:103,28:33,29:[2,28],35:[2,28],37:[2,28],39:[2,28],61:[1,99],64:92,66:88,72:[1,89],74:90,76:93,77:[1,91],78:94,79:[1,95],81:[1,96],82:[1,97],84:98,88:[1,100],89:[1,101],90:[1,102],134:[1,22],135:[1,24]},{18:[1,21],20:[1,23],41:104,64:73,134:[1,22],135:[1,24]},{18:[1,21],20:[1,23],24:105,64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{18:[2,71],20:[2,71],29:[2,71],35:[2,71],37:[2,71],39:[2,71],61:[2,71],72:[2,71],77:[2,71],79:[2,71],81:[2,71],82:[2,71],88:[2,71],89:[2,71],90:[2,71],134:[2,71],135:[2,71]},{18:[2,67],20:[2,67],71:[1,106],134:[2,67],135:[2,67]},{18:[2,69],20:[2,69],70:[1,107],134:[2,69],135:[2,69]},{18:[1,21],20:[1,23],24:108,29:[2,32],35:[2,32],37:[2,32],39:[2,32],64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{18:[2,33],20:[2,33],29:[2,33],35:[2,33],37:[2,33],39:[2,33],134:[2,33],135:[2,33],136:[2,33]},{18:[1,21],20:[1,23],29:[2,35],35:[2,35],37:[2,35],39:[2,35],41:109,64:73,134:[1,22],135:[1,24]},{18:[2,36],20:[2,36],29:[2,36],35:[2,36],37:[2,36],39:[2,36],134:[2,36],135:[2,36]},{6:[2,23],17:[2,23],18:[2,23],19:[2,23],20:[2,23],21:[2,23],27:[2,23],134:[2,23],135:[2,23],136:[2,23]},{6:[2,24],17:[2,24],18:[2,24],19:[2,24],20:[2,24],21:[2,24],27:[2,24],31:[2,24],45:[2,24],49:[2,24],54:[2,24],62:[2,24],87:[2,24],92:[2,24],94:[2,24],97:[2,24],98:[2,24],99:[2,24],108:[2,24],111:[2,24],112:[2,24],113:[2,24],114:[2,24],134:[2,24],135:[2,24],136:[2,24],138:[2,24]},{31:[2,38],44:110,45:[1,111],62:[2,38]},{31:[2,42],45:[2,42],48:112,49:[1,113],62:[2,42]},{31:[2,50],45:[2,50],49:[2,50],52:114,53:115,54:[1,116],62:[2,50]},{31:[2,53],45:[2,53],49:[2,53],54:[2,53],62:[2,53]},{62:[1,117]},{18:[2,60],20:[2,60],37:[2,60],61:[2,60],70:[2,60],71:[2,60],134:[2,60],135:[2,60]},{31:[2,65],45:[2,65],49:[2,65],54:[2,65],62:[2,65],67:118,108:[2,65],111:[2,65],112:[2,65],113:[2,65],114:[2,65],138:[2,65]},{31:[2,83],45:[2,83],49:[2,83],54:[2,83],62:[2,83],73:119,92:[2,83],94:[2,83],97:[2,83],98:[2,83],99:[2,83],102:[2,83],103:[2,83],104:[2,83],105:[2,83],106:[2,83],107:[2,83],108:[2,83],111:[2,83],112:[2,83],113:[2,83],114:[2,83],138:[2,83]},{25:103,28:33,29:[2,28],31:[2,73],35:[2,28],37:[2,28],39:[2,28],45:[2,73],49:[2,73],54:[2,73],62:[2,73],75:120,76:121,83:122,84:98,88:[1,100],89:[1,101],90:[1,102],92:[1,123],94:[1,124],95:125,97:[1,126],98:[1,127],99:[1,128],108:[2,73],111:[2,73],112:[2,73],113:[2,73],114:[2,73],138:[2,73]},{25:103,28:33,29:[2,28],31:[2,77],35:[2,28],37:[2,28],39:[2,28],45:[2,77],49:[2,77],54:[2,77],62:[2,77],76:129,84:98,88:[1,100],89:[1,101],90:[1,102],108:[2,77],111:[2,77],112:[2,77],113:[2,77],114:[2,77],138:[2,77]},{31:[2,79],45:[2,79],49:[2,79],54:[2,79],62:[2,79],108:[2,79],111:[2,79],112:[2,79],113:[2,79],114:[2,79],138:[2,79]},{31:[2,80],45:[2,80],49:[2,80],54:[2,80],62:[2,80],108:[2,80],111:[2,80],112:[2,80],113:[2,80],114:[2,80],138:[2,80]},{31:[2,81],45:[2,81],49:[2,81],54:[2,81],62:[2,81],108:[2,81],111:[2,81],112:[2,81],113:[2,81],114:[2,81],138:[2,81]},{31:[2,82],45:[2,82],49:[2,82],54:[2,82],62:[2,82],108:[2,82],111:[2,82],112:[2,82],113:[2,82],114:[2,82],138:[2,82]},{29:[2,85],31:[2,85],35:[2,85],37:[2,85],39:[2,85],45:[2,85],49:[2,85],54:[2,85],62:[2,85],88:[2,85],89:[2,85],90:[2,85],92:[2,85],94:[2,85],97:[2,85],98:[2,85],99:[2,85],108:[2,85],111:[2,85],112:[2,85],113:[2,85],114:[2,85],138:[2,85]},{29:[2,86],31:[2,86],35:[2,86],37:[2,86],39:[2,86],45:[2,86],49:[2,86],54:[2,86],62:[2,86],88:[2,86],89:[2,86],90:[2,86],92:[2,86],94:[2,86],97:[2,86],98:[2,86],99:[2,86],108:[2,86],111:[2,86],112:[2,86],113:[2,86],114:[2,86],138:[2,86]},{31:[2,91],45:[2,91],49:[2,91],54:[2,91],62:[2,91],85:130,87:[2,91],92:[2,91],94:[2,91],97:[2,91],98:[2,91],99:[2,91],108:[2,91],111:[2,91],112:[2,91],113:[2,91],114:[2,91],138:[2,91]},{18:[2,121],20:[2,121],62:[2,121],79:[2,121],96:[2,121],115:131,126:[2,121],127:[2,121],128:[2,121],129:[2,121],130:[2,121],131:[2,121],132:[2,121],133:[2,121],134:[2,121],135:[2,121]},{31:[2,93],45:[2,93],49:[2,93],54:[2,93],62:[2,93],87:[2,93],92:[2,93],94:[2,93],97:[2,93],98:[2,93],99:[2,93],108:[2,93],111:[2,93],112:[2,93],113:[2,93],114:[2,93],138:[2,93]},{31:[2,94],45:[2,94],49:[2,94],54:[2,94],62:[2,94],87:[2,94],92:[2,94],94:[2,94],97:[2,94],98:[2,94],99:[2,94],108:[2,94],111:[2,94],112:[2,94],113:[2,94],114:[2,94],138:[2,94]},{18:[1,21],20:[1,23],24:132,64:18,65:19,134:[1,22],135:[1,24],136:[1,25]},{31:[2,96],45:[2,96],49:[2,96],54:[2,96],62:[2,96],87:[2,96],92:[2,96],94:[2,96],97:[2,96],98:[2,96],99:[2,96],108:[2,96],111:[2,96],112:[2,96],113:[2,96],114:[2,96],138:[2,96]},{18:[1,21],20:[1,23],25:103,28:33,29:[2,28],35:[2,28],37:[2,28],39:[2,28],61:[1,99],64:92,66:133,72:[1,89],74:90,76:93,77:[1,91],78:94,79:[1,95],81:[1,96],82:[1,97],84:98,88:[1,100],89:[1,101],90:[1,102],134:[1,22],135:[1,24]},{31:[2,59],45:[2,59],49:[2,59],54:[2,59],62:[2,59]},{18:[2,68],20:[2,68],134:[2,68],135:[2,68]},{18:[2,70],20:[2,70],134:[2,70],135:[2,70]},{18:[2,34],20:[2,34],29:[2,34],35:[2,34],37:[2,34],39:[2,34],134:[2,34],135:[2,34],136:[2,34]},{18:[2,37],20:[2,37],29:[2,37],35:[2,37],37:[2,37],39:[2,37],134:[2,37],135:[2,37]},{31:[2,41],45:[2,41],62:[2,41]},{18:[1,21],20:[1,23],37:[1,72],41:70,42:134,46:62,50:63,55:64,56:65,59:66,60:67,61:[1,68],63:[1,69],64:73,68:71,70:[1,74],71:[1,75],134:[1,22],135:[1,24]},{31:[2,45],45:[2,45],49:[2,45],62:[2,45]},{18:[1,21],20:[1,23],37:[1,72],41:70,46:135,50:63,55:64,56:65,59:66,60:67,61:[1,68],63:[1,69],64:73,68:71,70:[1,74],71:[1,75],134:[1,22],135:[1,24]},{31:[2,46],45:[2,46],49:[2,46],62:[2,46]},{31:[2,49],45:[2,49],49:[2,49],54:[2,49],62:[2,49]},{18:[1,21],20:[1,23],31:[2,51],37:[1,72],41:70,45:[2,51],49:[2,51],50:136,55:64,56:65,59:66,60:67,61:[1,68],62:[2,51],63:[1,69],64:73,68:71,70:[1,74],71:[1,75],134:[1,22],135:[1,24]},{31:[2,54],45:[2,54],49:[2,54],54:[2,54],57:137,58:138,62:[2,54],111:[1,139],112:[1,140],113:[1,141],114:[1,142],138:[2,54]},{31:[2,54],45:[2,54],49:[2,54],54:[2,54],57:143,58:138,62:[2,54],69:144,108:[1,145],111:[1,139],112:[1,140],113:[1,141],114:[1,142],138:[2,54]},{31:[2,72],45:[2,72],49:[2,72],54:[2,72],62:[2,72],80:146,83:147,91:148,92:[1,123],94:[1,124],95:125,97:[1,126],98:[1,127],99:[1,128],100:149,101:150,102:[1,151],103:[1,152],104:[1,153],105:[1,154],106:[1,155],107:[1,156],108:[2,72],111:[2,72],112:[2,72],113:[2,72],114:[2,72],138:[2,72]},{31:[2,74],45:[2,74],49:[2,74],54:[2,74],62:[2,74],83:157,92:[1,123],94:[1,124],95:125,97:[1,126],98:[1,127],99:[1,128],108:[2,74],111:[2,74],112:[2,74],113:[2,74],114:[2,74],138:[2,74]},{31:[2,75],45:[2,75],49:[2,75],54:[2,75],62:[2,75],75:158,83:122,92:[1,123],94:[1,124],95:125,97:[1,126],98:[1,127],99:[1,128],108:[2,75],111:[2,75],112:[2,75],113:[2,75],114:[2,75],138:[2,75]},{31:[2,87],45:[2,87],49:[2,87],54:[2,87],62:[2,87],92:[2,87],94:[2,87],97:[2,87],98:[2,87],99:[2,87],108:[2,87],111:[2,87],112:[2,87],113:[2,87],114:[2,87],138:[2,87]},{93:159,130:[1,160],131:[1,161],132:[1,162],133:[1,163]},{93:164,130:[1,160],131:[1,161],132:[1,162],133:[1,163]},{96:[1,165]},{96:[2,102]},{96:[2,103]},{96:[2,104]},{31:[2,78],45:[2,78],49:[2,78],54:[2,78],62:[2,78],108:[2,78],111:[2,78],112:[2,78],113:[2,78],114:[2,78],138:[2,78]},{31:[2,89],45:[2,89],49:[2,89],54:[2,89],62:[2,89],86:166,87:[1,167],92:[2,89],94:[2,89],97:[2,89],98:[2,89],99:[2,89],108:[2,89],111:[2,89],112:[2,89],113:[2,89],114:[2,89],138:[2,89]},{18:[1,21],20:[1,23],62:[1,168],64:172,79:[1,173],93:174,96:[1,175],110:171,116:169,117:170,126:[1,176],127:[1,177],128:[1,178],129:[1,179],130:[1,160],131:[1,161],132:[1,162],133:[1,163],134:[1,22],135:[1,24]},{31:[2,95],45:[2,95],49:[2,95],54:[2,95],62:[2,95],87:[2,95],92:[2,95],94:[2,95],97:[2,95],98:[2,95],99:[2,95],108:[2,95],111:[2,95],112:[2,95],113:[2,95],114:[2,95],138:[2,95]},{31:[2,65],45:[2,65],49:[2,65],54:[2,65],62:[2,65],67:180,108:[2,65],111:[2,65],112:[2,65],113:[2,65],114:[2,65],138:[2,65]},{31:[2,39],45:[2,39],62:[2,39]},{31:[2,43],45:[2,43],49:[2,43],62:[2,43]},{31:[2,47],45:[2,47],49:[2,47],54:[2,47],62:[2,47]},{26:181,31:[2,159],45:[2,159],49:[2,159],54:[2,159],62:[2,159],138:[2,159],141:47},{31:[2,55],45:[2,55],49:[2,55],54:[2,55],62:[2,55],138:[2,55]},{31:[2,116],45:[2,116],49:[2,116],54:[2,116],62:[2,116],138:[2,116]},{31:[2,117],45:[2,117],49:[2,117],54:[2,117],62:[2,117],138:[2,117]},{31:[2,118],45:[2,118],49:[2,118],54:[2,118],62:[2,118],138:[2,118]},{31:[2,119],45:[2,119],49:[2,119],54:[2,119],62:[2,119],138:[2,119]},{26:182,31:[2,159],45:[2,159],49:[2,159],54:[2,159],62:[2,159],138:[2,159],141:47},{31:[2,66],45:[2,66],49:[2,66],54:[2,66],62:[2,66],108:[2,66],111:[2,66],112:[2,66],113:[2,66],114:[2,66],138:[2,66]},{18:[1,21],20:[1,23],64:183,134:[1,22],135:[1,24]},{31:[2,84],45:[2,84],49:[2,84],54:[2,84],62:[2,84],92:[2,84],94:[2,84],97:[2,84],98:[2,84],99:[2,84],102:[2,84],103:[2,84],104:[2,84],105:[2,84],106:[2,84],107:[2,84],108:[2,84],111:[2,84],112:[2,84],113:[2,84],114:[2,84],138:[2,84]},{31:[2,97],45:[2,97],49:[2,97],54:[2,97],62:[2,97],92:[2,97],94:[2,97],97:[2,97],98:[2,97],99:[2,97],102:[2,97],103:[2,97],104:[2,97],105:[2,97],106:[2,97],107:[2,97],108:[2,97],111:[2,97],112:[2,97],113:[2,97],114:[2,97],138:[2,97]},{31:[2,98],45:[2,98],49:[2,98],54:[2,98],62:[2,98],92:[2,98],94:[2,98],97:[2,98],98:[2,98],99:[2,98],102:[2,98],103:[2,98],104:[2,98],105:[2,98],106:[2,98],107:[2,98],108:[2,98],111:[2,98],112:[2,98],113:[2,98],114:[2,98],138:[2,98]},{96:[1,184]},{96:[1,185]},{96:[2,107]},{96:[2,108]},{96:[2,109]},{96:[2,110]},{96:[2,111]},{96:[2,112]},{31:[2,88],45:[2,88],49:[2,88],54:[2,88],62:[2,88],92:[2,88],94:[2,88],97:[2,88],98:[2,88],99:[2,88],108:[2,88],111:[2,88],112:[2,88],113:[2,88],114:[2,88],138:[2,88]},{31:[2,76],45:[2,76],49:[2,76],54:[2,76],62:[2,76],83:157,92:[1,123],94:[1,124],95:125,97:[1,126],98:[1,127],99:[1,128],108:[2,76],111:[2,76],112:[2,76],113:[2,76],114:[2,76],138:[2,76]},{31:[2,99],45:[2,99],49:[2,99],54:[2,99],62:[2,99],92:[2,99],94:[2,99],97:[2,99],98:[2,99],99:[2,99],102:[2,99],103:[2,99],104:[2,99],105:[2,99],106:[2,99],107:[2,99],108:[2,99],111:[2,99],112:[2,99],113:[2,99],114:[2,99],138:[2,99]},{18:[2,144],20:[2,144],31:[2,144],45:[2,144],49:[2,144],54:[2,144],62:[2,144],79:[2,144],92:[2,144],94:[2,144],96:[2,144],97:[2,144],98:[2,144],99:[2,144],102:[2,144],103:[2,144],104:[2,144],105:[2,144],106:[2,144],107:[2,144],108:[2,144],111:[2,144],112:[2,144],113:[2,144],114:[2,144],124:[2,144],125:[2,144],126:[2,144],127:[2,144],128:[2,144],129:[2,144],130:[2,144],131:[2,144],132:[2,144],133:[2,144],134:[2,144],135:[2,144],138:[2,144]},{18:[2,145],20:[2,145],31:[2,145],45:[2,145],49:[2,145],54:[2,145],62:[2,145],79:[2,145],92:[2,145],94:[2,145],96:[2,145],97:[2,145],98:[2,145],99:[2,145],102:[2,145],103:[2,145],104:[2,145],105:[2,145],106:[2,145],107:[2,145],108:[2,145],111:[2,145],112:[2,145],113:[2,145],114:[2,145],124:[2,145],125:[2,145],126:[2,145],127:[2,145],128:[2,145],129:[2,145],130:[2,145],131:[2,145],132:[2,145],133:[2,145],134:[2,145],135:[2,145],138:[2,145]},{18:[2,146],20:[2,146],31:[2,146],45:[2,146],49:[2,146],54:[2,146],62:[2,146],79:[2,146],92:[2,146],94:[2,146],96:[2,146],97:[2,146],98:[2,146],99:[2,146],102:[2,146],103:[2,146],104:[2,146],105:[2,146],106:[2,146],107:[2,146],108:[2,146],111:[2,146],112:[2,146],113:[2,146],114:[2,146],124:[2,146],125:[2,146],126:[2,146],127:[2,146],128:[2,146],129:[2,146],130:[2,146],131:[2,146],132:[2,146],133:[2,146],134:[2,146],135:[2,146],138:[2,146]},{18:[2,147],20:[2,147],31:[2,147],45:[2,147],49:[2,147],54:[2,147],62:[2,147],79:[2,147],92:[2,147],94:[2,147],96:[2,147],97:[2,147],98:[2,147],99:[2,147],102:[2,147],103:[2,147],104:[2,147],105:[2,147],106:[2,147],107:[2,147],108:[2,147],111:[2,147],112:[2,147],113:[2,147],114:[2,147],124:[2,147],125:[2,147],126:[2,147],127:[2,147],128:[2,147],129:[2,147],130:[2,147],131:[2,147],132:[2,147],133:[2,147],134:[2,147],135:[2,147],138:[2,147]},{31:[2,100],45:[2,100],49:[2,100],54:[2,100],62:[2,100],92:[2,100],94:[2,100],97:[2,100],98:[2,100],99:[2,100],102:[2,100],103:[2,100],104:[2,100],105:[2,100],106:[2,100],107:[2,100],108:[2,100],111:[2,100],112:[2,100],113:[2,100],114:[2,100],138:[2,100]},{31:[2,101],45:[2,101],49:[2,101],54:[2,101],62:[2,101],92:[2,101],94:[2,101],97:[2,101],98:[2,101],99:[2,101],102:[2,101],103:[2,101],104:[2,101],105:[2,101],106:[2,101],107:[2,101],108:[2,101],111:[2,101],112:[2,101],113:[2,101],114:[2,101],138:[2,101]},{31:[2,92],45:[2,92],49:[2,92],54:[2,92],62:[2,92],87:[2,92],92:[2,92],94:[2,92],97:[2,92],98:[2,92],99:[2,92],108:[2,92],111:[2,92],112:[2,92],113:[2,92],114:[2,92],138:[2,92]},{25:103,28:33,29:[2,28],35:[2,28],37:[2,28],39:[2,28],84:186,88:[1,100],89:[1,101],90:[1,102]},{31:[2,120],45:[2,120],49:[2,120],54:[2,120],62:[2,120],108:[2,120],111:[2,120],112:[2,120],113:[2,120],114:[2,120],138:[2,120]},{18:[2,122],20:[2,122],62:[2,122],79:[2,122],96:[2,122],126:[2,122],127:[2,122],128:[2,122],129:[2,122],130:[2,122],131:[2,122],132:[2,122],133:[2,122],134:[2,122],135:[2,122]},{18:[2,123],20:[2,123],62:[2,123],79:[2,123],96:[2,123],126:[2,123],127:[2,123],128:[2,123],129:[2,123],130:[2,123],131:[2,123],132:[2,123],133:[2,123],134:[2,123],135:[2,123]},{18:[2,124],20:[2,124],62:[2,124],79:[2,124],96:[2,124],126:[2,124],127:[2,124],128:[2,124],129:[2,124],130:[2,124],131:[2,124],132:[2,124],133:[2,124],134:[2,124],135:[2,124]},{18:[2,130],20:[2,130],62:[2,130],79:[2,130],94:[1,189],96:[2,130],118:187,122:188,126:[2,130],127:[2,130],128:[2,130],129:[2,130],130:[2,130],131:[2,130],132:[2,130],133:[2,130],134:[2,130],135:[2,130]},{119:190,121:191,123:[1,192]},{18:[2,136],20:[2,136],31:[2,136],45:[2,136],49:[2,136],54:[2,136],62:[2,136],79:[2,136],96:[2,136],108:[2,136],111:[2,136],112:[2,136],113:[2,136],114:[2,136],124:[1,193],125:[1,194],126:[2,136],127:[2,136],128:[2,136],129:[2,136],130:[2,136],131:[2,136],132:[2,136],133:[2,136],134:[2,136],135:[2,136],138:[2,136]},{18:[2,139],20:[2,139],31:[2,139],45:[2,139],49:[2,139],54:[2,139],62:[2,139],79:[2,139],96:[2,139],108:[2,139],111:[2,139],112:[2,139],113:[2,139],114:[2,139],126:[2,139],127:[2,139],128:[2,139],129:[2,139],130:[2,139],131:[2,139],132:[2,139],133:[2,139],134:[2,139],135:[2,139],138:[2,139]},{18:[2,140],20:[2,140],31:[2,140],45:[2,140],49:[2,140],54:[2,140],62:[2,140],79:[2,140],96:[2,140],108:[2,140],111:[2,140],112:[2,140],113:[2,140],114:[2,140],126:[2,140],127:[2,140],128:[2,140],129:[2,140],130:[2,140],131:[2,140],132:[2,140],133:[2,140],134:[2,140],135:[2,140],138:[2,140]},{18:[2,141],20:[2,141],31:[2,141],45:[2,141],49:[2,141],54:[2,141],62:[2,141],79:[2,141],96:[2,141],108:[2,141],111:[2,141],112:[2,141],113:[2,141],114:[2,141],126:[2,141],127:[2,141],128:[2,141],129:[2,141],130:[2,141],131:[2,141],132:[2,141],133:[2,141],134:[2,141],135:[2,141],138:[2,141]},{18:[2,142],20:[2,142],31:[2,142],45:[2,142],49:[2,142],54:[2,142],62:[2,142],79:[2,142],96:[2,142],108:[2,142],111:[2,142],112:[2,142],113:[2,142],114:[2,142],126:[2,142],127:[2,142],128:[2,142],129:[2,142],130:[2,142],131:[2,142],132:[2,142],133:[2,142],134:[2,142],135:[2,142],138:[2,142]},{18:[2,143],20:[2,143],31:[2,143],45:[2,143],49:[2,143],54:[2,143],62:[2,143],79:[2,143],96:[2,143],108:[2,143],111:[2,143],112:[2,143],113:[2,143],114:[2,143],126:[2,143],127:[2,143],128:[2,143],129:[2,143],130:[2,143],131:[2,143],132:[2,143],133:[2,143],134:[2,143],135:[2,143],138:[2,143]},{31:[2,54],45:[2,54],49:[2,54],54:[2,54],57:195,58:138,62:[2,54],69:144,108:[1,145],111:[1,139],112:[1,140],113:[1,141],114:[1,142],138:[2,54]},{31:[2,58],45:[2,58],49:[2,58],54:[2,58],62:[2,58]},{31:[2,63],45:[2,63],49:[2,63],54:[2,63],62:[2,63]},{18:[1,21],20:[1,23],64:197,93:174,96:[1,175],109:196,110:198,126:[1,176],127:[1,177],128:[1,178],129:[1,179],130:[1,160],131:[1,161],132:[1,162],133:[1,163],134:[1,22],135:[1,24]},{31:[2,105],45:[2,105],49:[2,105],54:[2,105],62:[2,105],92:[2,105],94:[2,105],97:[2,105],98:[2,105],99:[2,105],102:[2,105],103:[2,105],104:[2,105],105:[2,105],106:[2,105],107:[2,105],108:[2,105],111:[2,105],112:[2,105],113:[2,105],114:[2,105],138:[2,105]},{31:[2,106],45:[2,106],49:[2,106],54:[2,106],62:[2,106],92:[2,106],94:[2,106],97:[2,106],98:[2,106],99:[2,106],102:[2,106],103:[2,106],104:[2,106],105:[2,106],106:[2,106],107:[2,106],108:[2,106],111:[2,106],112:[2,106],113:[2,106],114:[2,106],138:[2,106]},{31:[2,90],45:[2,90],49:[2,90],54:[2,90],62:[2,90],87:[2,90],92:[2,90],94:[2,90],97:[2,90],98:[2,90],99:[2,90],108:[2,90],111:[2,90],112:[2,90],113:[2,90],114:[2,90],138:[2,90]},{18:[2,125],20:[2,125],62:[2,125],79:[2,125],96:[2,125],126:[2,125],127:[2,125],128:[2,125],129:[2,125],130:[2,125],131:[2,125],132:[2,125],133:[2,125],134:[2,125],135:[2,125]},{18:[2,131],20:[2,131],62:[2,131],79:[2,131],96:[2,131],126:[2,131],127:[2,131],128:[2,131],129:[2,131],130:[2,131],131:[2,131],132:[2,131],133:[2,131],134:[2,131],135:[2,131]},{18:[2,127],20:[2,127],62:[2,127],79:[2,127],96:[2,127],120:199,123:[2,127],126:[2,127],127:[2,127],128:[2,127],129:[2,127],130:[2,127],131:[2,127],132:[2,127],133:[2,127],134:[2,127],135:[2,127]},{18:[2,126],20:[2,126],62:[2,126],79:[2,126],96:[2,126],121:200,123:[1,192],126:[2,126],127:[2,126],128:[2,126],129:[2,126],130:[2,126],131:[2,126],132:[2,126],133:[2,126],134:[2,126],135:[2,126]},{18:[2,132],20:[2,132],62:[2,132],79:[2,132],96:[2,132],123:[2,132],126:[2,132],127:[2,132],128:[2,132],129:[2,132],130:[2,132],131:[2,132],132:[2,132],133:[2,132],134:[2,132],135:[2,132]},{18:[1,21],20:[1,23],64:201,134:[1,22],135:[1,24]},{18:[2,137],20:[2,137],31:[2,137],45:[2,137],49:[2,137],54:[2,137],62:[2,137],79:[2,137],96:[2,137],108:[2,137],111:[2,137],112:[2,137],113:[2,137],114:[2,137],126:[2,137],127:[2,137],128:[2,137],129:[2,137],130:[2,137],131:[2,137],132:[2,137],133:[2,137],134:[2,137],135:[2,137],138:[2,137]},{18:[1,21],20:[1,23],64:202,134:[1,22],135:[1,24]},{26:203,31:[2,159],45:[2,159],49:[2,159],54:[2,159],62:[2,159],138:[2,159],141:47},{31:[2,113],45:[2,113],49:[2,113],54:[2,113],62:[2,113],108:[2,113],111:[2,113],112:[2,113],113:[2,113],114:[2,113],138:[2,113]},{31:[2,114],45:[2,114],49:[2,114],54:[2,114],62:[2,114],108:[2,114],111:[2,114],112:[2,114],113:[2,114],114:[2,114],138:[2,114]},{31:[2,115],45:[2,115],49:[2,115],54:[2,115],62:[2,115],108:[2,115],111:[2,115],112:[2,115],113:[2,115],114:[2,115],138:[2,115]},{18:[2,129],20:[2,129],62:[2,129],79:[2,129],96:[2,129],121:204,123:[1,192],126:[2,129],127:[2,129],128:[2,129],129:[2,129],130:[2,129],131:[2,129],132:[2,129],133:[2,129],134:[2,129],135:[2,129]},{18:[2,133],20:[2,133],62:[2,133],79:[2,133],96:[2,133],123:[2,133],126:[2,133],127:[2,133],128:[2,133],129:[2,133],130:[2,133],131:[2,133],132:[2,133],133:[2,133],134:[2,133],135:[2,133]},{18:[2,134],20:[2,134],62:[2,134],79:[2,134],94:[1,205],96:[2,134],123:[2,134],126:[2,134],127:[2,134],128:[2,134],129:[2,134],130:[2,134],131:[2,134],132:[2,134],133:[2,134],134:[2,134],135:[2,134]},{18:[2,138],20:[2,138],31:[2,138],45:[2,138],49:[2,138],54:[2,138],62:[2,138],79:[2,138],96:[2,138],108:[2,138],111:[2,138],112:[2,138],113:[2,138],114:[2,138],126:[2,138],127:[2,138],128:[2,138],129:[2,138],130:[2,138],131:[2,138],132:[2,138],133:[2,138],134:[2,138],135:[2,138],138:[2,138]},{31:[2,64],45:[2,64],49:[2,64],54:[2,64],62:[2,64]},{18:[2,128],20:[2,128],62:[2,128],79:[2,128],96:[2,128],123:[2,128],126:[2,128],127:[2,128],128:[2,128],129:[2,128],130:[2,128],131:[2,128],132:[2,128],133:[2,128],134:[2,128],135:[2,128]},{18:[2,135],20:[2,135],62:[2,135],79:[2,135],96:[2,135],123:[2,135],126:[2,135],127:[2,135],128:[2,135],129:[2,135],130:[2,135],131:[2,135],132:[2,135],133:[2,135],134:[2,135],135:[2,135]}],
+defaultActions: {5:[2,11],27:[2,1],60:[2,31],126:[2,102],127:[2,103],128:[2,104],151:[2,107],152:[2,108],153:[2,109],154:[2,110],155:[2,111],156:[2,112]},
 parseError: function parseError(str, hash) {
     if (hash.recoverable) {
         this.trace(str);
@@ -1124,131 +1153,131 @@ case 0:/**/
 break;
 case 1:return 139;
 break;
-case 2:return 89;
+case 2:return 88;
 break;
-case 3:return 90;
+case 3:return 89;
 break;
-case 4:return 125;
+case 4:return 124;
 break;
-case 5:return 91;
+case 5:return 90;
 break;
-case 6:return 135;
+case 6:return 134;
 break;
-case 7:return 18;
+case 7:return 17;
 break;
-case 8:return 20;
+case 8:return 19;
 break;
-case 9:return 22;
+case 9:return 21;
 break;
-case 10:return 28;
+case 10:return 27;
 break;
-case 11:return 115;
+case 11:return 114;
 break;
-case 12:return 36;
+case 12:return 35;
 break;
-case 13:return 40;
+case 13:return 39;
 break;
-case 14:return 73;
+case 14:return 72;
 break;
-case 15:return 78;
+case 15:return 77;
 break;
-case 16:return 82;
+case 16:return 81;
 break;
-case 17:return 83;
+case 17:return 82;
 break;
-case 18:return 93;
+case 18:return 92;
 break;
 case 19:return 'IT_AND';
 break;
-case 20:return 88;
+case 20:return 87;
 break;
-case 21:return 103;
+case 21:return 102;
 break;
-case 22:return 104;
+case 22:return 103;
 break;
-case 23:return 105;
+case 23:return 104;
 break;
-case 24:return 106;
+case 24:return 105;
 break;
-case 25:return 98;
+case 25:return 97;
 break;
-case 26:return 99;
+case 26:return 98;
 break;
-case 27:return 100;
+case 27:return 99;
 break;
-case 28:return 107;
+case 28:return 106;
 break;
-case 29:return 108;
+case 29:return 107;
 break;
-case 30:return 23;
+case 30:return 22;
 break;
-case 31:return 30;
+case 31:return 29;
 break;
-case 32:return 32;
+case 32:return 31;
 break;
-case 33:return 38;
+case 33:return 37;
 break;
-case 34:return 50;
+case 34:return 49;
 break;
-case 35:return 46;
+case 35:return 45;
 break;
-case 36:return 55;
+case 36:return 54;
 break;
-case 37:return 62;
+case 37:return 61;
 break;
-case 38:return 63;
+case 38:return 62;
 break;
-case 39:return 64;
+case 39:return 63;
 break;
-case 40:return 72;
+case 40:return 71;
 break;
-case 41:return 126;
+case 41:return 125;
 break;
-case 42:return 71;
+case 42:return 70;
 break;
-case 43:return 80;
+case 43:return 79;
 break;
-case 44:return 95;
+case 44:return 94;
 break;
-case 45:return 109;
+case 45:return 108;
 break;
-case 46:return 112;
+case 46:return 111;
 break;
-case 47:return 113;
+case 47:return 112;
 break;
-case 48:return 114;
+case 48:return 113;
 break;
-case 49:return 124;
+case 49:return 123;
 break;
 case 50:return 138;
 break;
-case 51:return 129;
+case 51:return 128;
 break;
-case 52:return 130;
+case 52:return 129;
 break;
-case 53:return 128;
+case 53:return 127;
 break;
-case 54:return 127;
+case 54:return 126;
 break;
-case 55:return 97;
+case 55:return 96;
 break;
 case 56:return 'ANON';
 break;
-case 57:return 19;
+case 57:return 18;
 break;
-case 58:return 21;
+case 58:return 20;
 break;
-case 59:return 136;
+case 59:return 135;
 break;
-case 60:return 137;
+case 60:return 136;
 break;
-case 61:return 133;
+case 61:return 132;
 break;
-case 62:return 134;
+case 62:return 133;
 break;
-case 63:return 131;
+case 63:return 130;
 break;
-case 64:return 132;
+case 64:return 131;
 break;
 case 65:return 6
 break;

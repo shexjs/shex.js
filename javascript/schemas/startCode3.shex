@@ -1,0 +1,6 @@
+%<http://a.example/semAct1>{ code1 %}
+%<http://a.example/semAct2>{ code2 %}
+%<http://a.example/semAct3>{ code3 %}
+<http://a.example/IssueShape> {
+   <http://a.example/p1> .
+}
