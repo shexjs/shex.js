@@ -7,10 +7,8 @@
       "expression": {
         "type": "tripleConstraint",
         "predicate": "http://a.example/p1",
-        "value": { "type": "valueClass",
-                   "nodeKind": "literal",
-                   "minlength": 5
-                 }
+        "value": { "type": "valueClass" },
+        "semAct": { "": " code1 " }
       }
     }
   }

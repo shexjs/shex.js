@@ -4,9 +4,12 @@
   "startAct": { "http://a.example/semAct1": " code1 " },
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
     }
   }
 }

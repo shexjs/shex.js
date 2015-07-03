@@ -3,19 +3,22 @@
   "prefixes": {},
   "shapes": {
     "http://a.example/IssueShape": {
-      "type": "someOf",
-      "patterns": [
-        {
-          "type": "tripleConstraint",
-          "predicate": "http://a.example/p1",
-          "value": { "type": "valueClass" }
-        },
-        {
-          "type": "tripleConstraint",
-          "predicate": "http://a.example/p2",
-          "value": { "type": "valueClass" }
-        }
-      ]
+      "type": "shape",
+      "expression": {
+        "type": "someOf",
+        "expressions": [
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://a.example/p1",
+            "value": { "type": "valueClass" }
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://a.example/p2",
+            "value": { "type": "valueClass" }
+          }
+        ]
+      }
     }
   }
 }

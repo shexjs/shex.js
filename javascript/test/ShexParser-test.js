@@ -80,15 +80,15 @@ describe('A SHEX parser', function () {
 
     it('should use those prefixes', function () {
       var schema = 'a:a { b:b .+ }';
-      expect(parser.parse(schema).shapes['abc#a'].predicate)
+      expect(parser.parse(schema).shapes['abc#a'].expression.predicate)
         .to.deep.equal('def#b');
     });
 
     it('should allow temporarily overriding prefixes', function () {
       var schema = 'PREFIX a: <xyz#> a:a { b:b .+ }';
-      expect(parser.parse(schema).shapes['xyz#a'].predicate)
+      expect(parser.parse(schema).shapes['xyz#a'].expression.predicate)
         .to.deep.equal('def#b');
-      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].predicate)
+      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
         .to.deep.equal('def#b');
     });
 
@@ -98,7 +98,7 @@ describe('A SHEX parser', function () {
 
     it('should not take over changes to the original prefixes', function () {
       prefixes.a = 'xyz#';
-      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].predicate)
+      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
         .to.deep.equal('def#b');
     });
   });
@@ -109,15 +109,15 @@ describe('A SHEX parser', function () {
 
     it('should use those prefixes', function () {
       var schema = 'a: { b: .+ }';
-      expect(parser.parse(schema).shapes['abc#'].predicate)
+      expect(parser.parse(schema).shapes['abc#'].expression.predicate)
         .to.deep.equal('def#');
     });
 
     it('should allow temporarily overriding prefixes', function () {
       var schema = 'PREFIX a: <xyz#> a: { b: .+ }';
-      expect(parser.parse(schema).shapes['xyz#'].predicate)
+      expect(parser.parse(schema).shapes['xyz#'].expression.predicate)
         .to.deep.equal('def#');
-      expect(parser.parse('a: { b: .+ }').shapes['abc#'].predicate)
+      expect(parser.parse('a: { b: .+ }').shapes['abc#'].expression.predicate)
         .to.deep.equal('def#');
     });
 

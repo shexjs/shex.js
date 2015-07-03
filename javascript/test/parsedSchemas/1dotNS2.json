@@ -6,9 +6,12 @@
   },
   "shapes": {
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
     }
   }
 }

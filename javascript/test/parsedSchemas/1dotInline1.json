@@ -3,14 +3,20 @@
   "prefixes": {},
   "shapes": {
     "_:b0": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
     },
     "http://a.example/EmployeeShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p2",
-      "value": { "type": "valueClass", "reference": "_:b0" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p2",
+        "value": { "type": "valueClass", "reference": "_:b0" }
+      }
     }
   }
 }

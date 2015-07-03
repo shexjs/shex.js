@@ -3,9 +3,12 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass", "values": ["\"true\"^^http://www.w3.org/2001/XMLSchema#boolean"] }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass", "values": ["\"true\"^^http://www.w3.org/2001/XMLSchema#boolean"] }
+      }
     }
   }
 }

@@ -3,15 +3,18 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "group",
-      "patterns": [
-        {
-          "type": "tripleConstraint",
-          "predicate": "http://a.example/p1",
-          "value": { "type": "valueClass" }
-        }
-      ],
-      "semAct": { "http://a.example/semAct1": " code1 " }
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://a.example/p1",
+            "value": { "type": "valueClass" }
+          }
+        ],
+        "semAct": { "http://a.example/semAct1": " code1 " }
+      }
     }
   }
 }

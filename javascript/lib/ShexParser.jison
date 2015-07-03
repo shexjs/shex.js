@@ -497,12 +497,12 @@ shape:
     // _QIT_VIRTUAL_E_Opt 
       shapeLabel shapeDefinition semanticActions	{ // t: 1dot
         if (!Parser.shapes) Parser.shapes = {};
-        // $3: t:@@
+        // $3: t: 1dotShapeCode1
         Parser.shapes[$1] = extend($2, $3);
     }
     | IT_VIRTUAL shapeLabel shapeDefinition semanticActions	{ // t: 1dotVirtual
         if (!Parser.shapes) Parser.shapes = {};
-        // $4: t:@@
+        // $4: t: 1dotVirtualShapeCode1
         Parser.shapes[$2] = extend({type: null, virtual: true}, $3, $4); // sneak 'virtual' in after 'type'
                                                                          // Type will be overwritten.
     }
@@ -514,7 +514,7 @@ shape:
 
 shapeDefinition:
       _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
-        $$ = extend($3, $1);
+        $$ = extend({ type: "shape", expression: $3}, $1);
       }
     ;
 
@@ -561,7 +561,7 @@ _Qpredicate_E_Plus:
     ;
 
 oneOfShape:
-      someOfShape _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", patterns: [$1].concat($2) } : $1 // t: 2oneOfdot
+      someOfShape _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", expressions: [$1].concat($2) } : $1 // t: 2oneOfdot
     ;
 
 _O_QGT_PIPE_E_S_QsomeOfShape_E_C:
@@ -574,7 +574,7 @@ _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star:
     ;
 
 someOfShape:
-      groupShape _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", patterns: [$1].concat($2) } : $1 // t: 2someOfdot
+      groupShape _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", expressions: [$1].concat($2) } : $1 // t: 2someOfdot
     ;
 
 _O_QGT_OR_E_S_QgroupShape_E_C:
@@ -587,7 +587,7 @@ _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star:
     ;
 
 groupShape:
-      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _QGT_COMMA_E_Opt	-> $2.length ? { type: "group", patterns: [$1].concat($2) } : $1 // t: 2groupOfdot
+      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _QGT_COMMA_E_Opt	-> $2.length ? { type: "group", expressions: [$1].concat($2) } : $1 // t: 2groupOfdot
     ;
 
 _O_QGT_COMMA_E_S_QunaryShape_E_C:
@@ -627,12 +627,12 @@ unaryShape_right:
         if ($2.type === 'group') {
           if (hasCard && ('min' in $2 || 'max' in $2)
               || $5 && 'semAct' in $2) {
-            $$ = extend({ type: "group" }, $4, { patterns: [$2] }, $5); // t:@@
+            $$ = extend({ type: "group" }, $4, { expressions: [$2] }, $5); // t: openopen1dotcloseCode1closeCode2
           } else {
             $$ = extend($2, $4, $5); // t: open3groupdotclose
           }
         } else if (hasCard || $5) {
-          $$ = extend({ type: "group" }, $4, { patterns: [$2] }, $5); // t: open1dotcloseCode1
+          $$ = extend({ type: "group" }, $4, { expressions: [$2] }, $5); // t: open1dotcloseCode1
         } else {
           $$ = $2; // t: open1dotclose
         }
@@ -917,7 +917,7 @@ blankNode:
     ;
 
 codeDecl:
-      '%' CODE	-> keyString('', $2.substr(1, $2.length - 3)) // t:@@
+      '%' CODE	-> keyString('', $2.substr(1, $2.length - 3)) // t: 1dotUnlabeledCode1
     | '%' iri CODE	-> keyString($2, $3.substr(1, $3.length - 3)) // t: 1dotCode1
     ;
 

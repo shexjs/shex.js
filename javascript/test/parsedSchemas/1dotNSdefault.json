@@ -5,9 +5,12 @@
   },
   "shapes": {
     "http://a.example/": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/",
+        "value": { "type": "valueClass" }
+      }
     }
   }
 }

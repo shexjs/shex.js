@@ -3,14 +3,17 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" },
-      "annotations": [
-         [ "http://a.example/annot1", "\"1\"" ],
-         [ "http://a.example/annot2", "\"2\"" ],
-         [ "http://a.example/annot3", "\"3\"" ]
-      ]
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" },
+        "annotations": [
+           [ "http://a.example/annot1", "\"1\"" ],
+           [ "http://a.example/annot2", "\"2\"" ],
+           [ "http://a.example/annot3", "\"3\"" ]
+        ]
+      }
     }
   }
 }

@@ -1,0 +1,3 @@
+VIRTUAL <http://a.example/IssueShape> {
+   <http://a.example/p1> .
+} %<http://a.example/semAct1>{ code1 %}

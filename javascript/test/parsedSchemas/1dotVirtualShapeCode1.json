@@ -4,14 +4,13 @@
   "shapes":{
     "http://a.example/IssueShape": {
       "type": "shape",
+      "virtual": true,
       "expression": {
         "type": "tripleConstraint",
         "predicate": "http://a.example/p1",
-        "value": { "type": "valueClass",
-                   "nodeKind": "literal",
-                   "minlength": 5
-                 }
-      }
+        "value": { "type": "valueClass" }
+      },
+      "semAct": { "http://a.example/semAct1": " code1 " }
     }
   }
 }

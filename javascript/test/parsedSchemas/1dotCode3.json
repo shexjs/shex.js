@@ -3,13 +3,16 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" },
-      "semAct": { "http://a.example/semAct1": " code1 ",
-                  "http://a.example/semAct2": " code2 ",
-                  "http://a.example/semAct3": " code3 "
-                }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" },
+        "semAct": { "http://a.example/semAct1": " code1 ",
+                    "http://a.example/semAct2": " code2 ",
+                    "http://a.example/semAct3": " code3 "
+                  }
+      }
     }
   }
 }

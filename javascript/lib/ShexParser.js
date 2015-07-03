@@ -119,19 +119,19 @@ case 21: // t: startInline
 break;
 case 22: // t: 1dot
         if (!Parser.shapes) Parser.shapes = {};
-        // $$[$0]: t:@@
+        // $$[$0]: t: 1dotShapeCode1
         Parser.shapes[$$[$0-2]] = extend($$[$0-1], $$[$0]);
     
 break;
 case 23: // t: 1dotVirtual
         if (!Parser.shapes) Parser.shapes = {};
-        // $$[$0]: t:@@
+        // $$[$0]: t: 1dotVirtualShapeCode1
         Parser.shapes[$$[$0-2]] = extend({type: null, virtual: true}, $$[$0-1], $$[$0]); // sneak 'virtual' in after 'type'
                                                                          // Type will be overwritten.
     
 break;
 case 24: // t: 1dotInherit3
-        this.$ = extend($$[$0-1], $$[$0-3]);
+        this.$ = extend({ type: "shape", expression: $$[$0-1]}, $$[$0-3]);
       
 break;
 case 25:this.$ = [ 'inherit', $$[$0] ] // t: 1dotInherit1;
@@ -164,7 +164,7 @@ case 36:this.$ = [$$[$0]] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3;
 break;
 case 37:this.$ = $$[$0-1].concat([$$[$0]]) // t: 3groupdotExtra3;
 break;
-case 38:this.$ = $$[$0].length ? { type: "oneOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2oneOfdot;
+case 38:this.$ = $$[$0].length ? { type: "oneOf", expressions: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2oneOfdot;
 break;
 case 39:this.$ = $$[$0] // t: 2oneOfdot;
 break;
@@ -172,7 +172,7 @@ case 40:this.$ = [] //  t: 2oneOfdot;
 break;
 case 41:this.$ = $$[$0-1].concat($$[$0]) //  t: 2oneOfdot;
 break;
-case 42:this.$ = $$[$0].length ? { type: "someOf", patterns: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2someOfdot;
+case 42:this.$ = $$[$0].length ? { type: "someOf", expressions: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2someOfdot;
 break;
 case 43:this.$ = $$[$0] // t: 2someOfdot;
 break;
@@ -180,7 +180,7 @@ case 44:this.$ = [] // t: 2someOfdot;
 break;
 case 45:this.$ = $$[$0-1].concat($$[$0]) // t: 2someOfdot;
 break;
-case 46:this.$ = $$[$0-1].length ? { type: "group", patterns: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
+case 46:this.$ = $$[$0-1].length ? { type: "group", expressions: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
 break;
 case 47:this.$ = $$[$0] // t: 2groupOfdot;
 break;
@@ -197,12 +197,12 @@ case 58:
         if ($$[$0-3].type === 'group') {
           if (hasCard && ('min' in $$[$0-3] || 'max' in $$[$0-3])
               || $$[$0] && 'semAct' in $$[$0-3]) {
-            this.$ = extend({ type: "group" }, $$[$0-1], { patterns: [$$[$0-3]] }, $$[$0]); // t:@@
+            this.$ = extend({ type: "group" }, $$[$0-1], { expressions: [$$[$0-3]] }, $$[$0]); // t: openopen1dotcloseCode1closeCode2
           } else {
             this.$ = extend($$[$0-3], $$[$0-1], $$[$0]); // t: open3groupdotclose
           }
         } else if (hasCard || $$[$0]) {
-          this.$ = extend({ type: "group" }, $$[$0-1], { patterns: [$$[$0-3]] }, $$[$0]); // t: open1dotcloseCode1
+          this.$ = extend({ type: "group" }, $$[$0-1], { expressions: [$$[$0-3]] }, $$[$0]); // t: open1dotcloseCode1
         } else {
           this.$ = $$[$0-3]; // t: open1dotclose
         }

@@ -3,10 +3,13 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
+      "type": "shape",
       "virtual": true,
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" }
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
     }
   }
 }

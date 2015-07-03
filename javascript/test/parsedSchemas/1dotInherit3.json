@@ -3,24 +3,36 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/PersonShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
     },
     "http://a.example/MemberShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p2",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p2",
+        "value": { "type": "valueClass" }
+      }
     },
     "http://a.example/ManagedShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p3",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p3",
+        "value": { "type": "valueClass" }
+      }
     },
     "http://a.example/EmployeeShape": {
-      "type": "tripleConstraint",
-      "predicate": "http://a.example/p4",
-      "value": { "type": "valueClass" },
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p4",
+        "value": { "type": "valueClass" }
+      },
       "inherit": [ "http://a.example/PersonShape", "http://a.example/MemberShape", "http://a.example/ManagedShape" ]
     }
   }

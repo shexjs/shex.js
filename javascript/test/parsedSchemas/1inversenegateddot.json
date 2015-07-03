@@ -3,11 +3,14 @@
   "prefixes": {},
   "shapes":{
     "http://a.example/IssueShape": {
-      "type": "tripleConstraint",
-      "inverse": true,
-      "negated": true,
-      "predicate": "http://a.example/p1",
-      "value": { "type": "valueClass" }
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "inverse": true,
+        "negated": true,
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
     }
   }
 }
