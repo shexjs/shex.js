@@ -607,7 +607,7 @@ _QGT_COMMA_E_Opt:
 unaryShape:
     // _Qid_E_Opt 
       unaryShape_right	
-    | id unaryShape_right	-> extend({ type: "", id: $1 }, $2)
+    | id unaryShape_right	-> extend({ id: $1 }, $2)
     ;
 
 // _Qid_E_Opt:
@@ -644,7 +644,7 @@ include:
     ;
 
 id:
-      '$' shapeLabel	-> $2 // t:@@
+      '$' shapeLabel	-> $2 // t: 1iddot
     ;
 
 shapeLabel:
@@ -693,11 +693,8 @@ valueClass:
 //    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _QstringFacet_E_Star	
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $3) // t:@@
-/////    | IT_BNODE _QgroupShapeConstr_E_Opt	
-///    | IT_BNODE	-> { type: "valueClass", nodeKind: $1 } // t:@@
-///    | IT_BNODE groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
     | iri	// datatype
     | groupShapeConstr	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
     | valueSet	-> { type: "valueClass", values: $1 } // t: 1val1IRIREF
@@ -711,8 +708,8 @@ _QxsFacet_E_Star:
 
 _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
       IT_IRI	-> 'iri' // t: 1iriPattern
-    | IT_BNODE	-> 'bnode' // t:@@
-    | IT_NONLITERAL	-> 'nonliteral' // t:@@
+    | IT_BNODE	-> 'bnode' // t: 1bnodeLength
+    | IT_NONLITERAL	-> 'nonliteral' // t: 1nonliteralLength
     ;
 
 // _QgroupShapeConstr_E_Opt:

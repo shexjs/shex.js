@@ -1,0 +1,15 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes":{
+    "http://a.example/IssueShape": {
+      "type": "shape",
+      "expression": {
+        "id": "http://a.example/id1",
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
+    }
+  }
+}
