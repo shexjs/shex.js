@@ -3,15 +3,20 @@
   http://www.w3.org/2005/01/yacker/uploads/ShEx2
 
   Process:
-    Start with yacker perl output.
-    Make """{PNAME_LN} return 'PNAME_LN';""" lexer actions for refereneced terminals.
-    Fold X_Opt back in to calling productions to eliminate conflicts.
+    Started with yacker perl output.
+    Made """{PNAME_LN} return 'PNAME_LN';""" lexer actions for refereneced terminals.
+    Folded X_Opt back in to calling productions to eliminate conflicts.
       (X? didn't seem to accept null input during testing.)
     Stole as much as possible from sparql.jison
       https://github.com/RubenVerborgh/SPARQL.js
+    including functions in the header. Some can be directly mapped to javascript
+    functions:
+      appendTo(A, B) === A.concat([B])
+      unionAll(A, B) === A.concat(B)
 
-  Todo:
-    Eliminate X_Star and X_Plus where possible as indicated by testing.
+  Mysteries:
+    jison accepts X* but I wasn't able to eliminate eliminate X_Star because it
+    wouldn't accept the next symbol.
 */
 
 %{
@@ -530,7 +535,7 @@ _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       if ($2[0] === 'closed')
         $1['closed'] = true; // t: 1dotClosed
       else if ($2[0] in $1)
-        $1[$2[0]] = $1[$2[0]].concat($2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
+        $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
       else
         $1[$2[0]] = $2[1]; // t: 1dotInherit1
       $$ = $1;
@@ -548,7 +553,7 @@ includeSet:
 
 _QshapeLabel_E_Plus:
       shapeLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
-    | _QshapeLabel_E_Plus shapeLabel	-> $1.concat([$2]) // t: 1dotInherit3
+    | _QshapeLabel_E_Plus shapeLabel	-> appendTo($1, $2) // t: 1dotInherit3
     ;
 
 inclPropertySet:
@@ -557,11 +562,11 @@ inclPropertySet:
 
 _Qpredicate_E_Plus:
       predicate	-> [$1] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
-    | _Qpredicate_E_Plus predicate	-> $1.concat([$2]) // t: 3groupdotExtra3
+    | _Qpredicate_E_Plus predicate	-> appendTo($1, $2) // t: 3groupdotExtra3
     ;
 
 oneOfShape:
-      someOfShape _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", expressions: [$1].concat($2) } : $1 // t: 2oneOfdot
+      someOfShape _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", expressions: unionAll([$1], $2) } : $1 // t: 2oneOfdot
     ;
 
 _O_QGT_PIPE_E_S_QsomeOfShape_E_C:
@@ -570,11 +575,11 @@ _O_QGT_PIPE_E_S_QsomeOfShape_E_C:
 
 _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star:
       -> [] //  t: 2oneOfdot
-    | _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_QGT_PIPE_E_S_QsomeOfShape_E_C	-> $1.concat($2) //  t: 2oneOfdot
+    | _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_QGT_PIPE_E_S_QsomeOfShape_E_C	-> appendTo($1, $2) //  t: 2oneOfdot
     ;
 
 someOfShape:
-      groupShape _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", expressions: [$1].concat($2) } : $1 // t: 2someOfdot
+      groupShape _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", expressions: unionAll([$1], $2) } : $1 // t: 2someOfdot
     ;
 
 _O_QGT_OR_E_S_QgroupShape_E_C:
@@ -583,11 +588,11 @@ _O_QGT_OR_E_S_QgroupShape_E_C:
 
 _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star:
       -> [] // t: 2someOfdot
-    | _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star _O_QGT_OR_E_S_QgroupShape_E_C	-> $1.concat($2) // t: 2someOfdot
+    | _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star _O_QGT_OR_E_S_QgroupShape_E_C	-> appendTo($1, $2) // t: 2someOfdot
     ;
 
 groupShape:
-      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _QGT_COMMA_E_Opt	-> $2.length ? { type: "group", expressions: [$1].concat($2) } : $1 // t: 2groupOfdot
+      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _QGT_COMMA_E_Opt	-> $2.length ? { type: "group", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
     ;
 
 _O_QGT_COMMA_E_S_QunaryShape_E_C:
@@ -596,7 +601,7 @@ _O_QGT_COMMA_E_S_QunaryShape_E_C:
 
 _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star:
       -> [] // t: 2groupOfdot
-    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _O_QGT_COMMA_E_S_QunaryShape_E_C	-> $1.concat($2) // t: 2groupOfdot
+    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _O_QGT_COMMA_E_S_QunaryShape_E_C	-> appendTo($1, $2) // t: 2groupOfdot
     ;
 
 _QGT_COMMA_E_Opt:
@@ -674,7 +679,7 @@ tripleConstraint:
 
 _Qannotation_E_Star:
       -> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> $1.concat([$2]) // t: 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 senseFlags:
@@ -727,7 +732,7 @@ _QstringFacet_E_Plus:
     ;
 
 groupShapeConstr:
-      shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", conjuncts: [$1].concat($2) } : $1 // t: 1dotRefOr3/1dotRef1
+      shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", conjuncts: unionAll([$1], $2) } : $1 // t: 1dotRefOr3/1dotRef1
     ;
 
 _O_QIT_OR_E_S_QshapeOrRef_E_C:
@@ -736,7 +741,7 @@ _O_QIT_OR_E_S_QshapeOrRef_E_C:
 
 _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
       -> [] // t: 1dotRefOr3
-    | _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star _O_QIT_OR_E_S_QshapeOrRef_E_C	-> $1.concat([$2]) // t: 1dotRefOr3
+    | _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star _O_QIT_OR_E_S_QshapeOrRef_E_C	-> appendTo($1, $2) // t: 1dotRefOr3
     ;
 
 shapeOrRef:
@@ -826,7 +831,7 @@ valueSet:
 
 _Qvalue_E_Star:
       -> [] // t: 1val1IRIREF
-    | _Qvalue_E_Star value	-> $1.concat([$2]) // t: 1val1IRIREF
+    | _Qvalue_E_Star value	-> appendTo($1, $2) // t: 1val1IRIREF
     ;
 
 value:
@@ -852,7 +857,7 @@ iriRange:
 
 _Qexclusion_E_Star:
       -> [] // t: 1val1iriStem, 1val1iriStemMinusiri3
-    | _Qexclusion_E_Star exclusion	-> $1.concat([$2]) // t: 1val1iriStemMinusiri3
+    | _Qexclusion_E_Star exclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
     ;
 
 _O_Q_TILDE_E_S_Qexclusion_E_Star_C:
@@ -866,7 +871,7 @@ _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
 
 _Qexclusion_E_Plus:
       exclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | _Qexclusion_E_Plus exclusion	-> $1.concat([$2]) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _Qexclusion_E_Plus exclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 exclusion:

@@ -146,7 +146,7 @@ case 29:
       if ($$[$0][0] === 'closed')
         $$[$0-1]['closed'] = true; // t: 1dotClosed
       else if ($$[$0][0] in $$[$0-1])
-        $$[$0-1][$$[$0][0]] = $$[$0-1][$$[$0][0]].concat($$[$0][1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
+        $$[$0-1][$$[$0][0]] = unionAll($$[$0-1][$$[$0][0]], $$[$0][1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
       else
         $$[$0-1][$$[$0][0]] = $$[$0][1]; // t: 1dotInherit1
       this.$ = $$[$0-1];
@@ -156,37 +156,37 @@ case 32:this.$ = $$[$0] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
 break;
 case 33:this.$ = [$$[$0]] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
 break;
-case 34:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotInherit3;
+case 34:this.$ = appendTo($$[$0-1], $$[$0]) // t: 1dotInherit3;
 break;
 case 35:this.$ = $$[$0] // t: 1dotExtra1, 3groupdot3Extra;
 break;
 case 36:this.$ = [$$[$0]] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3;
 break;
-case 37:this.$ = $$[$0-1].concat([$$[$0]]) // t: 3groupdotExtra3;
+case 37:this.$ = appendTo($$[$0-1], $$[$0]) // t: 3groupdotExtra3;
 break;
-case 38:this.$ = $$[$0].length ? { type: "oneOf", expressions: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2oneOfdot;
+case 38:this.$ = $$[$0].length ? { type: "oneOf", expressions: unionAll([$$[$0-1]], $$[$0]) } : $$[$0-1] // t: 2oneOfdot;
 break;
 case 39:this.$ = $$[$0] // t: 2oneOfdot;
 break;
 case 40:this.$ = [] //  t: 2oneOfdot;
 break;
-case 41:this.$ = $$[$0-1].concat($$[$0]) //  t: 2oneOfdot;
+case 41:this.$ = appendTo($$[$0-1], $$[$0]) //  t: 2oneOfdot;
 break;
-case 42:this.$ = $$[$0].length ? { type: "someOf", expressions: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 2someOfdot;
+case 42:this.$ = $$[$0].length ? { type: "someOf", expressions: unionAll([$$[$0-1]], $$[$0]) } : $$[$0-1] // t: 2someOfdot;
 break;
 case 43:this.$ = $$[$0] // t: 2someOfdot;
 break;
 case 44:this.$ = [] // t: 2someOfdot;
 break;
-case 45:this.$ = $$[$0-1].concat($$[$0]) // t: 2someOfdot;
+case 45:this.$ = appendTo($$[$0-1], $$[$0]) // t: 2someOfdot;
 break;
-case 46:this.$ = $$[$0-1].length ? { type: "group", expressions: [$$[$0-2]].concat($$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
+case 46:this.$ = $$[$0-1].length ? { type: "group", expressions: unionAll([$$[$0-2]], $$[$0-1]) } : $$[$0-2] // t: 2groupOfdot;
 break;
 case 47:this.$ = $$[$0] // t: 2groupOfdot;
 break;
 case 48:this.$ = [] // t: 2groupOfdot;
 break;
-case 49:this.$ = $$[$0-1].concat($$[$0]) // t: 2groupOfdot;
+case 49:this.$ = appendTo($$[$0-1], $$[$0]) // t: 2groupOfdot;
 break;
 case 53:this.$ = extend({ id: $$[$0-1] }, $$[$0]);
 break;
@@ -228,7 +228,7 @@ case 64:
 break;
 case 65:this.$ = [] // t: 1dot, 1dotAnnot3;
 break;
-case 66:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotAnnot3;
+case 66:this.$ = appendTo($$[$0-1], $$[$0]) // t: 1dotAnnot3;
 break;
 case 67:this.$ = { inverse: true } // t: 1inversedot;
 break;
@@ -266,13 +266,13 @@ case 85:this.$ = 'nonliteral' // t: 1nonliteralLength;
 break;
 case 87:this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength;
 break;
-case 88:this.$ = $$[$0].length ? { type: "or", conjuncts: [$$[$0-1]].concat($$[$0]) } : $$[$0-1] // t: 1dotRefOr3/1dotRef1;
+case 88:this.$ = $$[$0].length ? { type: "or", conjuncts: unionAll([$$[$0-1]], $$[$0]) } : $$[$0-1] // t: 1dotRefOr3/1dotRef1;
 break;
 case 89:this.$ = $$[$0] // t: 1dotRefOr3;
 break;
 case 90:this.$ = [] // t: 1dotRefOr3;
 break;
-case 91:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1dotRefOr3;
+case 91:this.$ = appendTo($$[$0-1], $$[$0]) // t: 1dotRefOr3;
 break;
 case 92: // t: 1dotRefLNex
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
@@ -348,7 +348,7 @@ case 119:this.$ = $$[$0-1] // t: 1val1IRIREF;
 break;
 case 120:this.$ = [] // t: 1val1IRIREF;
 break;
-case 121:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val1IRIREF;
+case 121:this.$ = appendTo($$[$0-1], $$[$0]) // t: 1val1IRIREF;
 break;
 case 124:
         if ($$[$0]) {
@@ -367,13 +367,13 @@ case 125:this.$ = { type: "stemRange", stem: { type: "wildcard" }, exclusions: $
 break;
 case 126:this.$ = [] // t: 1val1iriStem, 1val1iriStemMinusiri3;
 break;
-case 127:this.$ = $$[$0-1].concat([$$[$0]]) // t: 1val1iriStemMinusiri3;
+case 127:this.$ = appendTo($$[$0-1], $$[$0]) // t: 1val1iriStemMinusiri3;
 break;
 case 128:this.$ = $$[$0] // t: 1val1iriStemMinusiri3;
 break;
 case 131:this.$ = [$$[$0]] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
 break;
-case 132:this.$ = $$[$0-1].concat([$$[$0]]) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
+case 132:this.$ = appendTo($$[$0-1], $$[$0]) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
 break;
 case 133:this.$ = $$[$0] // t: 1val1iriStemMinusiri3;
 break;
