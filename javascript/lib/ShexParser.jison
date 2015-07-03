@@ -107,21 +107,6 @@
     }
   }
 
-  // If the item is a variable, ensures it starts with a question mark
-  function toVar(variable) {
-    if (variable) {
-      var first = variable[0];
-      if (first === '?') return variable;
-      if (first === '$') return '?' + variable.substr(1);
-    }
-    return variable;
-  }
-
-  // Creates an operation with the given name and arguments
-  function operation(operatorName, args) {
-    return { type: 'operation', operator: operatorName, args: args || [] };
-  }
-
   // Creates an expression with the given type and attributes
   function expression(expr, attr) {
     var expression = { expression: expr };
@@ -136,43 +121,9 @@
     return { type: 'path', pathType: type, items: items };
   }
 
-  // Transforms a list of operations types and arguments into a tree of operations
-  function createOperationTree(initialExpression, operationList) {
-    for (var i = 0, l = operationList.length, item; i < l && (item = operationList[i]); i++)
-      initialExpression = operation(item[0], [initialExpression, item[1]]);
-    return initialExpression;
-  }
-
-  // Group datasets by default and named
-  function groupDatasets(fromClauses) {
-    var defaults = [], named = [], l = fromClauses.length, fromClause;
-    for (var i = 0; i < l && (fromClause = fromClauses[i]); i++)
-      (fromClause.named ? named : defaults).push(fromClause.iri);
-    return l ? { from: { default: defaults, named: named } } : null;
-  }
-
-  // Converts the number to a string
-  function toInt(string) {
-    return parseInt(string, 10);
-  }
-
-  // Transforms a possibly single group into its patterns
-  function degroupSingle(group) {
-    return group.type === 'group' && group.patterns.length === 1 ? group.patterns[0] : group;
-  }
-
   // Creates a literal with the given value and type
   function createLiteral(value, type) {
     return '"' + value + '"^^' + type;
-  }
-
-  // Creates a triple with the given subject, predicate, and object
-  function triple(subject, predicate, object) {
-    var triple = {};
-    if (subject   != null) triple.subject   = subject;
-    if (predicate != null) triple.predicate = predicate;
-    if (object    != null) triple.object    = object;
-    return triple;
   }
 
   // Creates a new blank node identifier
@@ -214,39 +165,6 @@
     }
     catch (error) { return ''; }
     return '"' + string + '"';
-  }
-
-  // Creates a list, collecting its (possibly blank) items and triples associated with those items
-  function createList(objects) {
-    var list = blank(), head = list, listItems = [], listTriples, triples = [];
-    objects.forEach(function (o) { listItems.push(o.entity); appendAllTo(triples, o.triples); });
-
-    // Build an RDF list out of the items
-    for (var i = 0, j = 0, l = listItems.length, listTriples = Array(l * 2); i < l;)
-      listTriples[j++] = triple(head, RDF_FIRST, listItems[i]),
-      listTriples[j++] = triple(head, RDF_REST,  head = ++i < l ? blank() : RDF_NIL);
-
-    // Return the list's identifier, its triples, and the triples associated with its items
-    return { entity: list, triples: appendAllTo(listTriples, triples) };
-  }
-
-  // Creates a blank node identifier, collecting triples with that blank node as subject
-  function createAnonymousObject(propertyList) {
-    var entity = blank();
-    return {
-      entity: entity,
-      triples: propertyList.map(function (t) { return extend(triple(entity), t); })
-    };
-  }
-
-  // Collects all (possibly blank) objects, and triples that have them as subject
-  function objectListToTriples(predicate, objectList, otherTriples) {
-    var objects = [], triples = [];
-    objectList.forEach(function (l) {
-      objects.push(triple(null, predicate, l.entity));
-      appendAllTo(triples, l.triples);
-    });
-    return unionAll(objects, otherTriples || [], triples);
   }
 
   // Return object with p1 key, p2 integer value
