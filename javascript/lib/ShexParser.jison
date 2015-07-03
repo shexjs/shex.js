@@ -690,14 +690,14 @@ predicate:
 
 valueClass:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
-//    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _QstringFacet_E_Star	
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
-    | _O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $3) // t:@@
-//    | IT_BNODE _QgroupShapeConstr_E_Opt	
-    | IT_BNODE	-> { type: "valueClass", nodeKind: $1 } // t:@@
-    | IT_BNODE groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
+//    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _QstringFacet_E_Star	
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $3) // t:@@
+/////    | IT_BNODE _QgroupShapeConstr_E_Opt	
+///    | IT_BNODE	-> { type: "valueClass", nodeKind: $1 } // t:@@
+///    | IT_BNODE groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t:@@
     | iri	// datatype
     | groupShapeConstr	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
     | valueSet	-> { type: "valueClass", values: $1 } // t: 1val1IRIREF
@@ -709,8 +709,9 @@ _QxsFacet_E_Star:
     | _QxsFacet_E_Star xsFacet	-> extend($1, $2) // t: 1literalLength
     ;
 
-_O_QIT_IRI_E_Or_QIT_NONLITERAL_E_C:
+_O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
       IT_IRI	-> 'iri' // t: 1iriPattern
+    | IT_BNODE	-> 'bnode' // t:@@
     | IT_NONLITERAL	-> 'nonliteral' // t:@@
     ;
 
