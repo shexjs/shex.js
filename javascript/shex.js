@@ -1,4 +1,4 @@
-var Parser = require('./lib/ShexParser').Parser;
+var Parser = require('./lib/ShExParser').Parser;
 
 module.exports = {
   // Creates a ShEx parser with the given pre-defined prefixes

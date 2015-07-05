@@ -1,6 +1,6 @@
-shExDoc.js: shExDoc.jison
+./lib/ShExParser.js: ./lib/ShExParser.jison
 	jison $^ -o $@ -p lalr
 
-js: shExDoc.js kitchenSink.shex
-	node shex_parser_node.js kitchenSink.shex
+test: ./lib/ShExParser.js
+	(cd test && mocha -C ShExParser-test.js)
 

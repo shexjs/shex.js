@@ -392,7 +392,7 @@ baseDecl:
     ;
 
 prefixDecl:
-      IT_PREFIX PNAME_NS IRIREF	{ // t: ShexParser-test.js/with pre-defined prefixes
+      IT_PREFIX PNAME_NS IRIREF	{ // t: ShExParser-test.js/with pre-defined prefixes
         if (!Parser.prefixes) Parser.prefixes = {};
         $2 = $2.substr(0, $2.length - 1);
         $3 = resolveIRI($3);
@@ -817,14 +817,14 @@ string:
 
 iri:
       IRIREF	-> resolveIRI($1) // t: 1dot
-    | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined prefixes
+    | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':'),
             prefix = $1.substr(0, namePos),
             expansion = Parser.prefixes[prefix];
         if (!expansion) throw new Error('Unknown prefix: ' + prefix);
         $$ = resolveIRI(expansion + $1.substr(namePos + 1));
     }
-    | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShexParser-test.js/PNAME_NS with pre-defined prefixes
+    | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $1 = $1.substr(0, $1.length - 1);
         if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
         $$ = resolveIRI(Parser.prefixes[$1]);

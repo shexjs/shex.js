@@ -1,6 +1,6 @@
 var VERBOSE = "VERBOSE" in process.env;
 
-var ShexParser = require('../shex').Parser;
+var ShExParser = require('../shex').Parser;
 
 var fs = require('fs'),
     expect = require('chai').expect;
@@ -15,7 +15,7 @@ describe('A SHEX parser', function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
 
-  var parser = new ShexParser();
+  var parser = new ShExParser();
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
@@ -76,7 +76,7 @@ describe('A SHEX parser', function () {
 
   describe('with pre-defined prefixes', function () {
     var prefixes = { a: 'abc#', b: 'def#' };
-    var parser = new ShexParser(prefixes);
+    var parser = new ShExParser(prefixes);
 
     it('should use those prefixes', function () {
       var schema = 'a:a { b:b .+ }';
@@ -105,7 +105,7 @@ describe('A SHEX parser', function () {
 
   describe('PNAME_NS with pre-defined prefixes', function () {
     var prefixes = { a: 'abc#', b: 'def#' };
-    var parser = new ShexParser(prefixes);
+    var parser = new ShExParser(prefixes);
 
     it('should use those prefixes', function () {
       var schema = 'a: { b: .+ }';

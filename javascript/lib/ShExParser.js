@@ -71,7 +71,7 @@
     recoverable: (boolean: TRUE when the parser has a error recovery rule available for this particular error)
   }
 */
-var ShexParser = (function(){
+var ShExParser = (function(){
 var parser = {trace: function trace() { },
 yy: {},
 symbols_: {"error":2,"shexDoc":3,"Qdirective_E_Star":4,"Q_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt":5,"EOF":6,"directive":7,"O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_C":8,"start":9,"shape":10,"startActions":11,"Qstatement_E_Star":12,"statement":13,"O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C":14,"baseDecl":15,"prefixDecl":16,"IT_BASE":17,"IRIREF":18,"IT_PREFIX":19,"PNAME_NS":20,"IT_start":21,"=":22,"O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C":23,"shapeLabel":24,"shapeDefinition":25,"semanticActions":26,"IT_VIRTUAL":27,"Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star":28,"{":29,"QoneOfShape_E_Opt":30,"}":31,"O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C":32,"includeSet":33,"inclPropertySet":34,"IT_CLOSED":35,"oneOfShape":36,"&":37,"QshapeLabel_E_Plus":38,"IT_EXTRA":39,"Qpredicate_E_Plus":40,"predicate":41,"someOfShape":42,"Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star":43,"O_QGT_PIPE_E_S_QsomeOfShape_E_C":44,"|":45,"groupShape":46,"Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star":47,"O_QGT_OR_E_S_QgroupShape_E_C":48,"||":49,"unaryShape":50,"Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star":51,"QGT_COMMA_E_Opt":52,"O_QGT_COMMA_E_S_QunaryShape_E_C":53,",":54,"unaryShape_right":55,"id":56,"Qcardinality_E_Opt":57,"cardinality":58,"tripleConstraint":59,"include":60,"(":61,")":62,"$":63,"iri":64,"blankNode":65,"valueClass":66,"Qannotation_E_Star":67,"senseFlags":68,"annotation":69,"^":70,"!":71,"IT_LITERAL":72,"QxsFacet_E_Star":73,"O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C":74,"QstringFacet_E_Plus":75,"groupShapeConstr":76,"valueSet":77,".":78,"xsFacet":79,"IT_IRI":80,"IT_BNODE":81,"IT_NONLITERAL":82,"stringFacet":83,"shapeOrRef":84,"Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star":85,"O_QIT_OR_E_S_QshapeOrRef_E_C":86,"IT_OR":87,"ATPNAME_LN":88,"ATPNAME_NS":89,"@":90,"numericFacet":91,"IT_PATTERN":92,"string":93,"~":94,"stringLength":95,"INTEGER":96,"IT_LENGTH":97,"IT_MINLENGTH":98,"IT_MAXLENGTH":99,"numericRange":100,"numericLength":101,"IT_MININCLUSIVE":102,"IT_MINEXCLUSIVE":103,"IT_MAXINCLUSIVE":104,"IT_MAXEXCLUSIVE":105,"IT_TOTALDIGITS":106,"IT_FRACTIONDIGITS":107,";":108,"O_Qiri_E_Or_Qliteral_E_C":109,"literal":110,"*":111,"+":112,"?":113,"REPEAT_RANGE":114,"Qvalue_E_Star":115,"value":116,"iriRange":117,"Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt":118,"Qexclusion_E_Plus":119,"Qexclusion_E_Star":120,"exclusion":121,"O_Q_TILDE_E_S_Qexclusion_E_Star_C":122,"-":123,"LANGTAG":124,"^^":125,"DECIMAL":126,"DOUBLE":127,"IT_true":128,"IT_false":129,"STRING_LITERAL1":130,"STRING_LITERAL2":131,"STRING_LITERAL_LONG1":132,"STRING_LITERAL_LONG2":133,"PNAME_LN":134,"a":135,"BLANK_NODE_LABEL":136,"codeDecl":137,"%":138,"CODE":139,"QcodeDecl_E_Plus":140,"QcodeDecl_E_Star":141,"$accept":0,"$end":1},
@@ -99,7 +99,7 @@ case 17:
         baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
       
 break;
-case 18: // t: ShexParser-test.js/with pre-defined prefixes
+case 18: // t: ShExParser-test.js/with pre-defined prefixes
         if (!Parser.prefixes) Parser.prefixes = {};
         $$[$0-1] = $$[$0-1].substr(0, $$[$0-1].length - 1);
         $$[$0] = resolveIRI($$[$0]);
@@ -403,7 +403,7 @@ case 146:this.$ = unescapeString($$[$0], 3) // t: 1val1STRING_LITERAL_LONG2;
 break;
 case 147:this.$ = resolveIRI($$[$0]) // t: 1dot;
 break;
-case 148: // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined prefixes
+case 148: // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $$[$0].indexOf(':'),
             prefix = $$[$0].substr(0, namePos),
             expansion = Parser.prefixes[prefix];
@@ -411,7 +411,7 @@ case 148: // t:1dotPNex, 1dotPNdefault, ShexParser-test.js/with pre-defined pref
         this.$ = resolveIRI(expansion + $$[$0].substr(namePos + 1));
     
 break;
-case 149: // t: 1dotNS2, 1dotNSdefault, ShexParser-test.js/PNAME_NS with pre-defined prefixes
+case 149: // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$[$0] = $$[$0].substr(0, $$[$0].length - 1);
         if (!($$[$0] in Parser.prefixes)) throw new Error('Unknown prefix: ' + $$[$0]);
         this.$ = resolveIRI(Parser.prefixes[$$[$0]]);
@@ -1216,9 +1216,9 @@ return new Parser;
 
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
-exports.parser = ShexParser;
-exports.Parser = ShexParser.Parser;
-exports.parse = function () { return ShexParser.parse.apply(ShexParser, arguments); };
+exports.parser = ShExParser;
+exports.Parser = ShExParser.Parser;
+exports.parse = function () { return ShExParser.parse.apply(ShExParser, arguments); };
 exports.main = function commonjsMain(args) {
     if (!args[1]) {
         console.log('Usage: '+args[0]+' FILE');

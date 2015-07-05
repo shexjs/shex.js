@@ -8,9 +8,9 @@ if (args.length < 1) {
 }
 
 var fs = require('fs'),
-    ShexParser = require('../shex').Parser;
+    ShExParser = require('../shex').Parser;
 
 // Parse and display the query
 var query = fs.readFileSync(args[0]).toString(),
-    parseTree = new ShexParser().parse(query);
+    parseTree = new ShExParser().parse(query);
 console.log('%s', JSON.stringify(parseTree, null, '  '));
