@@ -1,0 +1,72 @@
+#!/usr/bin/env node
+/* build-browser-versions.js builds a browserify version and a minimal browser version */
+var fs = require('fs'),
+    path = require('path'),
+    spawn = require('child_process').spawn;
+
+// Modules to be included in the minimal browser version
+var submodules = [
+  'Util',
+  'Parser',
+  'Writer',
+];
+
+
+/* Set up paths */
+var rootPath = path.join(__dirname, '../'),
+    sourcePath = path.join(rootPath, 'lib/'),
+    destinationPath = path.join(rootPath, 'browser/'),
+    uglifyjsPath = path.join(rootPath, 'node_modules/uglify-js/bin/uglifyjs'),
+    browserifyPath = path.join(rootPath, 'node_modules/browserify/bin/cmd.js');
+
+if (!fs.existsSync(destinationPath))
+  fs.mkdirSync(destinationPath);
+
+
+/* Create minimal browser version */
+
+var scriptFile = destinationPath + 'n3-browser.js',
+    minifiedFile = destinationPath + 'n3-browser.min.js',
+    script = fs.createWriteStream(scriptFile, { encoding: 'utf8' });
+
+// Add license information
+var package = JSON.parse(fs.readFileSync(path.join(rootPath, 'package.json')));
+script.write('/** @license MIT - ShEx.js ' + package.version +
+             ' (browser build) - ©Ruben Verborgh */\n');
+
+// Start main wrapping function
+script.write('(function (ShEx) {\n');
+
+// Add modules
+submodules.forEach(function (name) {
+  var submodule = fs.readFileSync(sourcePath + 'ShEx' + name + '.js', { encoding: 'utf8' });
+  // Remove imports
+  submodule = submodule.replace(/require\(['"]\.\/ShEx([^'"]+)['"]\)/g, 'ShEx.$1');
+  // Replace exports by assignments on the ShEx object
+  submodule = submodule.replace(/module.exports/g, '\nShEx.' + name);
+  script.write('(function () {\n' + submodule + '\n})();\n');
+});
+
+// End and execute main wrapping function
+script.write('})(typeof exports !== "undefined" ? exports : this.ShEx = {});\n');
+script.end(function () {
+  console.log('minimal browser version written to', scriptFile);
+  // Write minified file
+  var minifier = spawn('node',
+                       [ uglifyjsPath, scriptFile, '--comments', '-m', '-c', '-o', minifiedFile ],
+                       { stdio: 'inherit' });
+  minifier.on('exit', function () {
+    console.log('minimal browser version (minified) written to', minifiedFile);
+  });
+});
+
+
+/* Build browserify version */
+
+var browserifiedFile = destinationPath + 'n3-browserify.js',
+    browserify = spawn('node',
+                       [ browserifyPath, rootPath + 'ShEx.js', '-s', 'ShEx', '-o', browserifiedFile ],
+                       { stdio: 'inherit' });
+browserify.on('exit', function () {
+  console.log('browserify version written to', browserifiedFile);
+});
