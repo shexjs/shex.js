@@ -1,6 +1,6 @@
 var VERBOSE = "VERBOSE" in process.env;
 
-var ShExParser = require('../shex').Parser;
+var ShExParser = require('../lib/ShExParser').Parser;
 
 var fs = require('fs'),
     expect = require('chai').expect;

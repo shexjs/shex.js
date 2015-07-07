@@ -1,5 +1,5 @@
-../lib/ShExParser.js: ../lib/ShExParser.jison
+../lib/ShExJison.js: ../lib/ShExJison.jison
 	jison $^ -o $@ -p lalr
 
-test: ../lib/ShExParser.js
+test: ../lib/ShExJison.js
 	mocha -C ShExParser-test.js

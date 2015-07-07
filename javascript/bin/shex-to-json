@@ -8,7 +8,7 @@ if (args.length < 1) {
 }
 
 var fs = require('fs'),
-    ShExParser = require('../shex').Parser;
+    ShExParser = require('../lib/ShExParser').Parser;
 
 // Parse and display the query
 var query = fs.readFileSync(args[0]).toString(),
