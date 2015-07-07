@@ -1,0 +1,330 @@
+{
+  "type": "schema",
+  "prefixes": {
+    "ex": "http://ex.example/#",
+    "UserShape": "http://ex.example/#UserShape",
+    "": "http://ex.example/#",
+    "foaf": "http://xmlns.com/foaf/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schem#"
+  },
+  "startAct": {
+    "http://ex.example/#foo": " initializer for ignored extension "
+  },
+  "start": "http://ex.example/IssueShape",
+  "shapes": {
+    "http://ex.example/IssueShape": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+            "value": {
+              "type": "valueClass",
+              "values": [
+                "http://ex.example/#Issue"
+              ]
+            },
+            "min": 0,
+            "max": 1
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://ex.example/#state",
+            "value": {
+              "type": "valueClass",
+              "values": [
+                {
+                  "type": "stemRange",
+                  "stem": "http://ex.example/#state",
+                  "exclusions": [
+                    "http://ex.example/#state_resolved"
+                  ]
+                }
+              ]
+            },
+            "annotations": [
+              [
+                "http://www.w3.org/2000/01/rdf-schem#label",
+                "\"State\""
+              ],
+              [
+                "http://www.w3.org/2000/01/rdf-schem#description",
+                "\"the sit\""
+              ]
+            ]
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://ex.example/#reportedBy",
+            "value": {
+              "type": "valueClass",
+              "nodeKind": "iri",
+              "reference": "http://ex.example/#UserShape"
+            }
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://ex.example/#reportedOn",
+            "value": "http://www.w3.org/2001/XMLSchema#dateTime"
+          },
+          {
+            "type": "group",
+            "expressions": [
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#reproducedBy",
+                "value": {
+                  "type": "valueClass",
+                  "nodeKind": "nonliteral",
+                  "reference": "http://ex.example/#EmployeeShape"
+                }
+              },
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#reproducedOn",
+                "value": "http://www.w3.org/2001/XMLSchema#dateTime"
+              }
+            ],
+            "min": 0,
+            "max": 1,
+            "semAct": {
+              "http://ex.example/#foo": " asdfasdf "
+            }
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://ex.example/#related",
+            "value": {
+              "type": "valueClass",
+              "reference": "http://ex.example/IssueShape"
+            },
+            "min": 0
+          }
+        ]
+      }
+    },
+    "http://ex.example/#UserShape": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+          {
+            "id": "http://ex.example/name",
+            "type": "oneOf",
+            "expressions": [
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://xmlns.com/foaf/name",
+                "value": "http://www.w3.org/2001/XMLSchema#string"
+              },
+              {
+                "type": "group",
+                "expressions": [
+                  {
+                    "type": "tripleConstraint",
+                    "predicate": "http://xmlns.com/foaf/givenName",
+                    "value": "http://www.w3.org/2001/XMLSchema#string",
+                    "min": 1
+                  },
+                  {
+                    "type": "tripleConstraint",
+                    "predicate": "http://xmlns.com/foaf/familyName",
+                    "value": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://xmlns.com/foaf/mbox",
+            "value": {
+              "type": "valueClass",
+              "nodeKind": "iri",
+              "pattern": "^mailto:"
+            }
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://ex.example/#id",
+            "value": {
+              "type": "valueClass",
+              "nodeKind": "bnode",
+              "reference": "_:IDshape"
+            }
+          }
+        ]
+      }
+    },
+    "http://ex.example/#EmployeeShape": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://xmlns.com/foaf/givenName",
+            "value": "http://www.w3.org/2001/XMLSchema#string",
+            "min": 1
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://xmlns.com/foaf/familyName",
+            "value": "http://www.w3.org/2001/XMLSchema#string"
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://xmlns.com/foaf/phone",
+            "value": {
+              "type": "valueClass",
+              "nodeKind": "iri"
+            },
+            "min": 0
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://xmlns.com/foaf/mbox",
+            "value": {
+              "type": "valueClass",
+              "nodeKind": "iri"
+            },
+            "min": 0,
+            "max": 1
+          }
+        ]
+      }
+    },
+    "_:IDshape": {
+      "type": "shape",
+      "virtual": true,
+      "expression": {
+        "type": "someOf",
+        "expressions": [
+          {
+            "type": "group",
+            "expressions": [
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#code",
+                "value": {
+                  "type": "valueClass",
+                  "nodeKind": "literal"
+                }
+              },
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#system",
+                "value": {
+                  "type": "valueClass",
+                  "nodeKind": "iri"
+                }
+              },
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#literal",
+                "value": {
+                  "type": "valueClass",
+                  "values": [
+                    "\"a\"",
+                    "\"b\"^^http://ex.example/#c",
+                    "\"c\"@en",
+                    "\"d\"@en-fr"
+                  ]
+                },
+                "min": 2,
+                "max": 3
+              },
+              {
+                "type": "tripleConstraint",
+                "negated": true,
+                "predicate": "http://ex.example/#misc",
+                "value": {
+                  "type": "valueClass",
+                  "nodeKind": "bnode"
+                },
+                "semAct": {
+                  "http://ex.example/#foo": " ignored ",
+                  "http://ex.example/#bar": " also ignored "
+                }
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "expressions": [
+              {
+                "type": "group",
+                "expressions": [
+                  {
+                    "type": "tripleConstraint",
+                    "inverse": true,
+                    "predicate": "http://ex.example/#ref",
+                    "value": {
+                      "type": "valueClass",
+                      "values": [
+                        "\"true\"^^http://www.w3.org/2001/XMLSchema#boolean",
+                        "\"false\"^^http://www.w3.org/2001/XMLSchema#boolean"
+                      ]
+                    }
+                  },
+                  {
+                    "type": "tripleConstraint",
+                    "inverse": true,
+                    "negated": true,
+                    "predicate": "http://ex.example/#miscRef",
+                    "value": {
+                      "type": "valueClass"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#issues",
+                "value": {
+                  "type": "valueClass",
+                  "reference": "http://ex.example/#IssueShape"
+                },
+                "min": 0
+              },
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#seeAlso",
+                "value": {
+                  "type": "valueClass",
+                  "reference": "http://ex.example/#IssueShape"
+                },
+                "min": 0
+              },
+              {
+                "type": "tripleConstraint",
+                "predicate": "http://ex.example/#says",
+                "value": {
+                  "type": "valueClass",
+                  "reference": "http://ex.example/#EmployeeShape"
+                },
+                "min": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "http://ex.example/#FooID": {
+      "type": "shape",
+      "closed": true,
+      "inherit": [
+        "_:IDshape"
+      ],
+      "extra": [
+        "http://ex.example/#code",
+        "http://ex.example/#system"
+      ]
+    }
+  }
+}
+
