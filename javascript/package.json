@@ -1,0 +1,52 @@
+{
+  "name": "shex",
+  "version": "0.1.0",
+  "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
+  "author": {"name":"Eric Prud'hommeaux","email":"eric@w3.org","url":"http://www.w3.org/People/Eric/"},
+  "keywords": [
+    "shex", "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "main": "./ShEx.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "devDependencies": {
+    "jison": "0.4.x",
+    "mocha": "1.21.x",
+    "chai": "1.9.x",
+    "pre-commit": "~0.0.9",
+
+    "browserify": "~3.x",
+    "eslint": "~0.19.0",
+    "uglify-js": "~2.4.3"
+  },
+  "scripts": {
+    "test": "mocha",
+    "lint": "eslint lib perf test spec",
+    "browser": "node browser/build-browser-versions",
+    "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexSpec/grammar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "testling": {
+    "files": "test/*.js",
+    "harness": "mocha",
+    "browsers": [
+      "firefox/24..latest",
+      "chrome/29..latest"
+    ]
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ]
+}
