@@ -76,7 +76,7 @@
   }
 
   // Creates an array that contains all items of the given arrays
-  function unionAll() { debugger;
+  function unionAll() {
     var union = [];
     for (var i = 0, l = arguments.length; i < l; i++)
       union = union.concat.apply(union, arguments[i]);
@@ -216,7 +216,7 @@ EXPONENT		[Ee]([+-])?([0-9])+
 DOUBLE			([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
 ECHAR			"\\"[\"\\bfnrt]
 WS			(" ")|(("\t")|(("\r")|("\n")))
-ANON			"\["(({WS}))*"\]"
+//ANON			"\["(({WS}))*"\]"
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] // | [\U00010000-\U000effff] /* !!! matches lower characters in jison lexer */
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
