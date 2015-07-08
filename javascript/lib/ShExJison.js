@@ -248,6 +248,8 @@ case 75:this.$ = { type: "valueClass", nodeKind: $$[$0-1], reference: $$[$0] } /
 break;
 case 76:this.$ = extend({ type: "valueClass", nodeKind: $$[$0-2], reference: $$[$0-1] }, $$[$0]) // t: 1iriRefLength1;
 break;
+case 77:this.$ = { type: "valueClass", datatype: $$[$0] } // t: 1datatype;
+break;
 case 78:this.$ = { type: "valueClass", reference: $$[$0] } // t: 1dotRef1;
 break;
 case 79:this.$ = { type: "valueClass", values: $$[$0] } // t: 1val1IRIREF;
