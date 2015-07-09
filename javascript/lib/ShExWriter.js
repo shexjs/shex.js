@@ -136,13 +136,12 @@ ShExWriter.prototype = {
 	    if (v.datatype && v.values) _ShExWriter._error("found both datatype and values in "+expr);
 
 	    if (v.reference) {
-	      pieces.push("&");
 	      try { // !! How do i distinguish an object from a string?
-		pieces.push(v.conjuncts.map(function (c) {
-		  return _ShExWriter._encodeShapeName(c);
+		pieces.push(v.reference.conjuncts.map(function (c) {
+		  return "@"+_ShExWriter._encodeShapeName(c);
 		}).join(" OR "));
 	      } catch (e) {
-		pieces.push(_ShExWriter._encodeShapeName(v.reference));
+		pieces.push("@"+_ShExWriter._encodeShapeName(v.reference));
 	      }
 	    }
 
