@@ -2,7 +2,9 @@
 (function (test) {
 (function () {
 
+var element = null;
 var classes = { };
+var count = 0;
 
 // function extend(base) {
 //   if (!base) base = {};
@@ -12,15 +14,15 @@ var classes = { };
 //   return base;
 // }
 
-function TestInterface(classParm) {
+function TestInterface(elementParm, classParm) {
   if (!(this instanceof TestInterface))
-    return new TestInterface(classes);
+    return new TestInterface(elementParm, classParm);
 
+  element = elementParm;
   if (classParm)
     classes = classParm;
 }
 
-var output = [];
 function render (files) { // FileList object (or array).
   // files is a FileList of File objects. List some properties.
   // Array.prototype.slice.call(files).forEach(function (f) {
@@ -28,17 +30,62 @@ function render (files) { // FileList object (or array).
     var f = files[i];
     var fr = new FileReader();
     fr.onload = function (evt) {
-      output.push('<li id="'+f.name+'"><strong>', encodeURIComponent(f.name), '</strong> (', f.type || 'n/a', ') - ',
-                  f.size, ' bytes, last modified: ',
-                  f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
-                  '<pre class="json">', evt.target.result, '</pre>\n',
-                  '</li>');
-  document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+      var src = evt.target.result;
+      var append = [];
+      function open (name, clss, id) {
+        var elem = "<"+name;
+        if (clss) elem += " class=\""+clss+"\"";
+        if (id) elem += " id=\""+id+"\"";
+        elem += ">";
+        append.push(elem);
+      }
+      function close (name) {
+        append.push("</"+name+">");
+      }
+
+      open("div", classes.itemClass, f.name);
+      open("span", classes.titleClass); append.push(encodeURIComponent(f.name)); close("span");
+      open("div");
+      open("pre", classes.sourceClass, 'source_'+f.name); append.push(src); close("pre");
+      var w = "failed to write";
+      try {
+        var writer = ShExWriter();
+        writer.writeSchema(JSON.parse(src), function (error, text, prefixes) {
+          if (error) throw error;
+          else w = text;
+        });
+      } catch (e) {
+        w = e;
+      }
+      function escape (s) {
+        return s.replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+      open("pre", classes.writerClass, 'writer_'+f.name); append.push(escape(w)); close("pre");
+      var g = "failed to parse";
+      try {
+        debugger;
+        var parser = new ShExParser();
+        g = JSON.stringify(parser.parse(w));
+      } catch (e) {
+        try {
+          g = e.stack;
+        } catch (x) {
+          g = ""+e;
+        }
+      }
+      open("pre", classes.genr8dClass, 'genr8d_'+f.name); append.push(escape(g)); close("pre");
+      open("div", classes.clearClass); append.push(''); close("div");
+      close("div");
+      element.innerHTML += append.join('');
+      ++count;
     }
     fr.readAsText(f);
   // });
   }
-  document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }
 
 TestInterface.prototype = {
@@ -47,7 +94,7 @@ TestInterface.prototype = {
   // ### `size` how many segments are pending.
   get size() {
     // Return the triple count if if was cached.
-    return output.length;
+    return count;
   },
 
   // ## Private methods
@@ -89,8 +136,8 @@ TestInterface.prototype = {
     evt.dataTransfer.dropEffect = 'copy';
   },
   clearFileSelect: function(evt) {
-    output = [];
-    render([]); // add nothing
+    element.innerHTML = "";
+    count = 0;
   },
 };
 

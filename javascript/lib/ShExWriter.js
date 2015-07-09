@@ -54,7 +54,17 @@ ShExWriter.prototype = {
     this._outputStream.write(string, 'utf8', callback);
   },
 
-    // ### `_writeShape` writes the shape to the output stream
+  // ### `_writeSchema` writes the shape to the output stream
+  _writeSchema: function (schema, done) {
+    this._expect(schema, 'type', 'schema');
+    var _ShExWriter = this;
+    Object.keys(schema.shapes).forEach(function (label) {
+      _ShExWriter._write(_ShExWriter._encodeShapeName(label, false)+" ", done);
+      _ShExWriter._writeShape(schema.shapes[label]);
+    })
+  },
+
+  // ### `_writeShape` writes the shape to the output stream
   _writeShape: function (shape, done) {
     var _ShExWriter = this;
     try {
@@ -239,6 +249,11 @@ ShExWriter.prototype = {
   // ### `_blockedWrite` replaces `_write` after the writer has been closed
   _blockedWrite: function () {
     throw new Error('Cannot write because the writer has been closed.');
+  },
+
+  writeSchema: function (shape, done) {
+    this._writeSchema(shape, done);
+    this.end(done);
   },
 
   // ### `addShape` adds the shape to the output stream
