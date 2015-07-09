@@ -1,8 +1,8 @@
-var ShExJison = null;
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   ShExJison = require('./ShExJison').Parser; // node environment
-else
-  ShExJison = window.ShExJison; // browser environment
+else {
+  ShExJison = ShExJison.Parser; // browser environment
+}
 
 // Creates a ShEx parser with the given pre-defined prefixes
 var prepareParser = function (prefixes) {
@@ -24,3 +24,5 @@ var prepareParser = function (prefixes) {
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = { Parser: prepareParser }; // node environment
+else
+  ShExParser = prepareParser;
