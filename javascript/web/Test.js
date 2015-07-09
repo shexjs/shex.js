@@ -23,14 +23,14 @@ function TestInterface(elementParm, classParm) {
     classes = classParm;
 }
 
-function render (files) { // FileList object (or array).
-  // files is a FileList of File objects. List some properties.
-  // Array.prototype.slice.call(files).forEach(function (f) {
-  for (var i = 0; i < files.length; i++) {
-    var f = files[i];
+/** render: run test and add to element
+  @files: a FileList
+*/
+function render (files) {
+
+  function processFile (f) {
     var fr = new FileReader();
     fr.onload = function (evt) {
-      var src = evt.target.result;
       var append = [];
       function open (name, clss, id) {
         var elem = "<"+name;
@@ -43,20 +43,6 @@ function render (files) { // FileList object (or array).
         append.push("</"+name+">");
       }
 
-      open("div", classes.itemClass, f.name);
-      open("span", classes.titleClass); append.push(encodeURIComponent(f.name)); close("span");
-      open("div");
-      open("pre", classes.sourceClass, 'source_'+f.name); append.push(src); close("pre");
-      var w = "failed to write";
-      try {
-        var writer = ShExWriter();
-        writer.writeSchema(JSON.parse(src), function (error, text, prefixes) {
-          if (error) throw error;
-          else w = text;
-        });
-      } catch (e) {
-        w = e;
-      }
       function escape (s) {
         return s.replace(/&/g, '&amp;')
           .replace(/"/g, '&quot;')
@@ -64,28 +50,64 @@ function render (files) { // FileList object (or array).
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
       }
-      open("pre", classes.writerClass, 'writer_'+f.name); append.push(escape(w)); close("pre");
-      var g = "failed to parse";
-      try {
-        debugger;
-        var parser = new ShExParser();
-        g = JSON.stringify(parser.parse(w));
-      } catch (e) {
-        try {
-          g = e.stack;
-        } catch (x) {
-          g = ""+e;
-        }
+      function spaces () {
+        var ret = [];
+        for (var i = 0; i < arguments.length; ++i)
+          if (arguments[i])
+            ret.push(arguments[i]);
+        return ret.join(" ");
       }
-      open("pre", classes.genr8dClass, 'genr8d_'+f.name); append.push(escape(g)); close("pre");
-      open("div", classes.clearClass); append.push(''); close("div");
-      close("div");
+      function renderResult (id, className, f) {
+        var text;
+        var ret;
+        try {
+          text = f();
+          ret = true;
+        } catch (e) {
+          className = spaces(className, classes.errorClass);
+          try {
+            text = e.stack;
+          } catch (x) {
+            text = ""+e;
+          }
+          ret = false;
+        }
+        open("pre", className, id); append.push(escape(text)); close("pre");
+        return ret;
+      }
+
+      var src = evt.target.result;
+
+      open("div", classes.itemClass, f.name); {
+        open("span", classes.titleClass); append.push(encodeURIComponent(f.name)); close("span");
+        open("div"); {
+
+          var w;
+          renderResult('source_'+f.name, classes.sourceClass, function () {
+            return src;
+          }) &&
+            renderResult('writer_'+f.name, classes.writerClass, function () {
+              ShExWriter().writeSchema(JSON.parse(src), function (error, text, prefixes) {
+                if (error) throw error;
+                else w = text;
+              });
+              return w;
+            }) &&
+            renderResult('genr8d_'+f.name, classes.genr8dClass, function () {
+              return JSON.stringify(ShExParser().parse(w), null, "  ");
+            });
+
+          open("div", classes.clearClass); append.push(''); close("div");
+        } close("div");
+      } close("div");
       element.innerHTML += append.join('');
       ++count;
     }
     fr.readAsText(f);
-  // });
   }
+
+  for (var i = 0; i < files.length; i++)
+    processFile(files[i]);
 }
 
 TestInterface.prototype = {
@@ -100,7 +122,7 @@ TestInterface.prototype = {
   // ## Private methods
 
   // ### `_addToIndex` adds a triple to a three-layered index.
-  play: function () {
+  play999: function () {
     var writer = ShExWriter();
     writer.addShape({
       "type": "shape",

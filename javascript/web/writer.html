@@ -18,6 +18,7 @@
 .shex  { float:left; border: thin solid #6bb; margin-left: 1em; }
 .round { float:left; border: thin solid #b6b; margin-left: 1em; }
 .clear { clear:both; }
+.error { color: red; }
 
     </style>
     <script src="../lib/ShExWriter.js"></script>
@@ -34,9 +35,7 @@
     <div id="list"></div>
 
     <script>
-      var tester = Test.Interface(document.getElementById('list'), {itemClass: 'item', titleClass: 'title', sourceClass: 'json', writerClass: 'shex', genr8dClass: 'round', clearClass: 'clear'});
-//       debugger;
-//       tester.play();
+      var tester = Test.Interface(document.getElementById('list'), {itemClass: 'item', titleClass: 'title', sourceClass: 'json', writerClass: 'shex', genr8dClass: 'round', clearClass: 'clear', errorClass: 'error'});
       var l = document.getElementById('list');
       l.addEventListener('dragover', tester.handleDragOver, false);
       l.addEventListener('drop', tester.handleDragSelect, false);
