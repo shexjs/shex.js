@@ -4,30 +4,37 @@
     <meta name="generator" content="emacs" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
-    <title>ShEx Toy</title>
+    <title>Test Framework</title>
     <!-- link rel="stylesheet" href="local.css" type="text/css" / -->
     <style type="text/css">
-      .req { color:red; }
-      h2 { margin-bottom: -1ex; }
-      p { margin-top: 1ex; }
-      .req { display:none; }
+#list {
+  border: thin solid #676;
+  border-radius: 5px;
+  padding: 25px 0px;
+}
     </style>
     <script src="../lib/ShExWriter.js"></script>
-    <script src="toy.js"></script>
+    <script src="../lib/ShExParser.js"></script>
+    <script src="Test.js"></script>
   </head>
 
   <body>
-    <h1>ShEx Toy</h1>
-    <p>
-      before
-    </p>
+    <h1>Test Framework</h1>
     <script>
-      debugger;
-      var store = Toy.Store();
-      store.play();
+      var tester = Test.Interface({itemClass: 'source'});
+//       debugger;
+//       tester.play();
     </script>
-    <p>
-      after
-    </p>
+    <input type="file" id="add" name="files[]" multiple="multiple"/> <input type="submit" id="clr" value="clear"/>
+    <div id="list"></div>
+
+    <script>
+      var l = document.getElementById('list');
+      l.addEventListener('dragover', tester.handleDragOver, false);
+      l.addEventListener('drop', tester.handleDragSelect, false);
+      document.getElementById('add').addEventListener('change', tester.handleFileSelect, false);
+      document.getElementById('clr').addEventListener('click',  tester.clearFileSelect, false);
+    </script>
+
   </body>
 </html>

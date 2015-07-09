@@ -344,6 +344,5 @@ function noop () {}
 // ## Exports
 
 // Export the `ShExWriter` class as a whole.
-try {
-module.exports = ShExWriter;
-} catch (e) {}
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = ShExWriter; // node environment
