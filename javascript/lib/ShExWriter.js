@@ -59,13 +59,12 @@ ShExWriter.prototype = {
     this._expect(schema, 'type', 'schema');
     var _ShExWriter = this;
     Object.keys(schema.shapes).forEach(function (label) {
-      _ShExWriter._write(_ShExWriter._encodeShapeName(label, false)+" ", done);
-      _ShExWriter._writeShape(schema.shapes[label]);
+      _ShExWriter._writeShape(schema.shapes[label], label, done);
     })
   },
 
   // ### `_writeShape` writes the shape to the output stream
-  _writeShape: function (shape, done) {
+  _writeShape: function (shape, label, done) {
     var _ShExWriter = this;
     try {
       // Don't repeat the subject if it's the same
@@ -73,6 +72,9 @@ ShExWriter.prototype = {
       this._expect(shape, 'type', 'shape');
 
       if (shape.virtual) pieces.push("VIRTUAL ");
+
+      pieces.push(_ShExWriter._encodeShapeName(label, false)+" ");
+
       if (shape.closed) pieces.push("CLOSED ");
 
       if (shape.inherit && shape.inherit.length > 0) {
@@ -131,16 +133,16 @@ ShExWriter.prototype = {
 	    if (v.nodeKind in nodeKinds)       pieces.push(nodeKinds[v.nodeKind], " ");
 	    else if (v.nodeKind !== undefined) _ShExWriter._error("unexpected nodeKind: " + v.nodeKind);
 
-	    if (v.reference && v.values) _ShExWriter._error("found both reference and values in "+expr);
+	    if (v.reference && v.values  ) _ShExWriter._error("found both reference and values in "  +expr);
 	    if (v.reference && v.datatype) _ShExWriter._error("found both reference and datatype in "+expr);
-	    if (v.datatype && v.values) _ShExWriter._error("found both datatype and values in "+expr);
+	    if (v.datatype  && v.values  ) _ShExWriter._error("found both datatype and values in "   +expr);
 
 	    if (v.reference) {
-	      try { // !! How do i distinguish an object from a string?
+	      if (typeof(v.reference) === "object") {
 		pieces.push(v.reference.conjuncts.map(function (c) {
 		  return "@"+_ShExWriter._encodeShapeName(c);
 		}).join(" OR "));
-	      } catch (e) {
+	      } else {
 		pieces.push("@"+_ShExWriter._encodeShapeName(v.reference));
 	      }
 	    }
@@ -152,13 +154,26 @@ ShExWriter.prototype = {
 		if (ord > 1)
 		  pieces.push(" ");
 
-		try { // !! How do i distinguish an object from a string?
-		  // expect(v, 'type', 'stemRange');
-		  pieces.push(_ShExWriter._encodeValue(t.stem));
-		  t.exclusions.forEach(function (c) {
-		    pieces.push(" - "+_ShExWriter._encodeShapeName(c));
-		  });
-		} catch (e) {
+		if (typeof t === "object") {
+		  expect(t, 'type', 'stemRange');
+                  if (typeof t.stem === "object") {
+		    expect(t.stem, 'type', 'wildcard');
+                    pieces.push(".");
+                  } else {
+		    pieces.push(_ShExWriter._encodeValue(t.stem)+"~");
+                  }
+                  if (t.exclusions) {
+		    t.exclusions.forEach(function (c) {
+                      pieces.push(" - ");
+                      if (typeof c === "object") {
+		        expect(c, 'type', 'stem');
+		        pieces.push(_ShExWriter._encodeValue(c.stem));
+                      } else {
+		        pieces.push(_ShExWriter._encodeValue(c));
+                      }
+		    });
+                  }
+		} else {
 		  pieces.push(_ShExWriter._encodeValue(t));
 		}
 	      });
@@ -168,7 +183,7 @@ ShExWriter.prototype = {
 	  }
 
 	  if ('pattern' in v)
-	    pieces.push("~", _ShExWriter._encodeValue(v.pattern), " ");
+	    pieces.push("~", _ShExWriter._encodeValue("\""+v.pattern+"\""), " ");
 	  ['length', 'minlength', 'maxlength',
 	   'mininclusive', 'minexclusive', 'maxinclusive', 'maxexclusive',
 	   'totaldigits', 'fractiondigits'
@@ -256,8 +271,8 @@ ShExWriter.prototype = {
   },
 
   // ### `addShape` adds the shape to the output stream
-  addShape: function (shape, done) {
-    this._writeShape(shape, done);
+  addShape: function (shape, name, done) {
+    this._writeShape(shape, name, done);
   },
 
   // ### `addShapes` adds the shapes to the output stream
