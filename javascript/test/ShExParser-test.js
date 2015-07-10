@@ -1,6 +1,7 @@
 var VERBOSE = "VERBOSE" in process.env;
 
 var ShExParser = require('../lib/ShExParser').Parser;
+var ShExWriter = require('../lib/ShExWriter');
 
 var fs = require('fs'),
     expect = require('chai').expect;
@@ -38,6 +39,13 @@ describe('A SHEX parser', function () {
       if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
       expect(parsedSchema).to.deep.equal(jsonSchema);
+      var w;
+      new ShExWriter().writeSchema(jsonSchema, function (error, text, prefixes) {
+        if (error) throw error;
+        else w = text;
+      });
+      var parsed2 = parser.parse(w);
+      expect(parsed2).to.deep.equal(jsonSchema);
     });
   });
 

@@ -56,8 +56,18 @@ ShExWriter.prototype = {
 
   // ### `_writeSchema` writes the shape to the output stream
   _writeSchema: function (schema, done) {
-    this._expect(schema, 'type', 'schema');
+    debugger;
     var _ShExWriter = this;
+    this._expect(schema, 'type', 'schema');
+    _ShExWriter.addPrefixes(schema.prefixes);
+    if (schema.start)
+      _ShExWriter._write("start = " + _ShExWriter._encodeShapeName(schema.start, false) + "\n")
+    if (schema.startAct)
+      Object.keys(schema.startAct).forEach(function (k) {
+	_ShExWriter._write(" %"+
+			   _ShExWriter._encodePredicate(k)+
+			   "{"+schema.startAct[k]+"%"+"}");
+      });
     Object.keys(schema.shapes).forEach(function (label) {
       _ShExWriter._writeShape(schema.shapes[label], label, done);
     })
@@ -108,20 +118,26 @@ ShExWriter.prototype = {
       function _writeCardinality (min, max) {
 	if      (min === 0 && max === 1)         pieces.push("?");
 	else if (min === 0 && max === undefined) pieces.push("*");
-	else if (min === 1 && max === 1)                         ;
+	else if (min === undefined && max === undefined)                         ;
 	else if (min === 1 && max === undefined) pieces.push("+");
 	else
 	  pieces.push("{", min, ",", (max === undefined ? "*" : max), "}");
       }
 
       function _writeExpression (expr, indent, precedent) {
+	if (expr.id)
+	  pieces.push("$"+_ShExWriter._encodeShapeName(expr.id));
 	if (expr.type === 'tripleConstraint') {
+	  if (expr.inverse)
+	    pieces.push("^");
+	  if (expr.negated)
+	    pieces.push("!");
 	  pieces.push(indent,
 		      _ShExWriter._encodePredicate(expr.predicate),
 		      " ");
 	  var v = expr.value;
 	  expect(v, 'type', 'valueClass');
-	  if (!v.reference && !v.nodeKind && !v.values)
+	  if (!v.reference && !v.nodeKind && !v.values && !v.datatype)
 	    pieces.push(". ");
 	  else {
 	    var nodeKinds = {
@@ -147,6 +163,10 @@ ShExWriter.prototype = {
 	      }
 	    }
 
+	    if (v.datatype) {
+	      pieces.push(_ShExWriter._encodeShapeName(v.datatype));
+	    }
+
 	    if (v.values) {
 	      pieces.push("(");
 
@@ -167,7 +187,7 @@ ShExWriter.prototype = {
                       pieces.push(" - ");
                       if (typeof c === "object") {
 		        expect(c, 'type', 'stem');
-		        pieces.push(_ShExWriter._encodeValue(c.stem));
+		        pieces.push(_ShExWriter._encodeValue(c.stem)+"~");
                       } else {
 		        pieces.push(_ShExWriter._encodeValue(c));
                       }
@@ -191,9 +211,62 @@ ShExWriter.prototype = {
 	    if (v[a])
 	      pieces.push(a, " ", v[a]);
 	  });
+	  _writeCardinality(expr.min, expr.max);
+
+          if (expr.annotations) {
+	    expr.annotations.forEach(function (a) {
+              pieces.push(";\n"+indent+"   ");
+	      pieces.push(_ShExWriter._encodeValue(a[0]));
+              pieces.push(" ");
+	      pieces.push(_ShExWriter._encodeValue(a[1]));
+	    });
+          }
+
+          if (expr.semAct) {
+	    for (var lang in expr.semAct) {
+              pieces.push("\n"+indent+"   %");
+	      pieces.push(_ShExWriter._encodeValue(lang));
+              pieces.push("{"+expr.semAct[lang]+"%"+"}"); // !! escape
+	    };
+          }
 	}
+
+	else if (expr.type === 'oneOf') {
+	  pieces.push("(");
+	  expr.expressions.forEach(function (nested, ord) {
+	    _writeExpression(nested, indent+"  ", 1)
+	    if (ord < expr.expressions.length - 1)
+	      pieces.push(" |\n");
+	  });
+	  pieces.push(")");
+	}
+
+	else if (expr.type === 'someOf') {
+	  pieces.push("(");
+	  expr.expressions.forEach(function (nested, ord) {
+	    _writeExpression(nested, indent+"  ", 1)
+	    if (ord < expr.expressions.length - 1)
+	      pieces.push(" ||\n");
+	  });
+	  pieces.push(")");
+	}
+
 	else if (expr.type === 'group') {
+	  pieces.push("(");
+	  expr.expressions.forEach(function (nested, ord) {
+	    _writeExpression(nested, indent+"  ", 1)
+	    if (ord < expr.expressions.length - 1)
+	      pieces.push(",\n");
+	  });
+	  pieces.push(")");
 	}
+
+	else if (expr.type === 'include') {
+	  pieces.push("&");
+	  pieces.push(_ShExWriter._encodeShapeName(expr.include, false));
+	}
+
+	else throw Error("unexpected expr type: " + expr.type);
       }
 
       _writeExpression(shape.expression, "  ", 4);
@@ -295,11 +368,12 @@ ShExWriter.prototype = {
     for (var prefix in prefixes) {
       // Verify whether the prefix can be used and does not exist yet
       var iri = prefixes[prefix];
-      if (/[#\/]$/.test(iri) && prefixIRIs[iri] !== (prefix += ':')) {
+      if (// /[#\/]$/.test(iri) && !! what was that?
+	  prefixIRIs[iri] !== (prefix += ':')) {
         hasPrefixes = true;
         prefixIRIs[iri] = prefix;
         // Write prefix
-        this._write('@prefix ' + prefix + ' <' + iri + '>.\n');
+        this._write('PREFIX ' + prefix + ' <' + iri + '>\n');
       }
     }
     // Recreate the prefix matcher
