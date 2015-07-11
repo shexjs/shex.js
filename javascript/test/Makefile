@@ -2,4 +2,4 @@
 	jison $^ -o $@ -p lalr
 
 test: ../lib/ShExJison.js
-	mocha -C ShExParser-test.js
+	mocha -C Parser-Writer-test.js

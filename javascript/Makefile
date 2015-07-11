@@ -2,7 +2,7 @@
 	jison $^ -o $@ -p lalr
 
 test: ./lib/ShExJison.js
-	(cd test && mocha -C ShExParser-test.js)
+	(cd test && mocha -C Parser-Writer-test.js)
 
 publish-npm: ./lib/ShExJison.js
 	npm publish

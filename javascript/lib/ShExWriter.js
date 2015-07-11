@@ -125,6 +125,26 @@ ShExWriter.prototype = {
       }
 
       function _writeExpression (expr, indent, precedent) {
+	function _semanticActions (semActs) {
+          if (semActs) {
+	    for (var lang in semActs) {
+              pieces.push("\n"+indent+"   %");
+	      pieces.push(_ShExWriter._encodeValue(lang));
+              pieces.push("{"+semActs[lang]+"%"+"}"); // !! escape
+	    };
+          }
+        }
+
+	function _exprGroup (exprs, separator) {
+	  pieces.push(indent + "(");
+	  exprs.forEach(function (nested, ord) {
+	    _writeExpression(nested, indent+"  ", 1)
+	    if (ord < exprs.length - 1)
+	      pieces.push(separator);
+	  });
+	  pieces.push(")");
+	}
+
 	if (expr.id)
 	  pieces.push("$"+_ShExWriter._encodeShapeName(expr.id));
 	if (expr.type === 'tripleConstraint') {
@@ -222,43 +242,20 @@ ShExWriter.prototype = {
 	    });
           }
 
-          if (expr.semAct) {
-	    for (var lang in expr.semAct) {
-              pieces.push("\n"+indent+"   %");
-	      pieces.push(_ShExWriter._encodeValue(lang));
-              pieces.push("{"+expr.semAct[lang]+"%"+"}"); // !! escape
-	    };
-          }
+	  _semanticActions(expr.semAct);
 	}
 
 	else if (expr.type === 'oneOf') {
-	  pieces.push("(");
-	  expr.expressions.forEach(function (nested, ord) {
-	    _writeExpression(nested, indent+"  ", 1)
-	    if (ord < expr.expressions.length - 1)
-	      pieces.push(" |\n");
-	  });
-	  pieces.push(")");
+	  _exprGroup(expr.expressions, "\n"+indent+"| ");
 	}
 
 	else if (expr.type === 'someOf') {
-	  pieces.push("(");
-	  expr.expressions.forEach(function (nested, ord) {
-	    _writeExpression(nested, indent+"  ", 1)
-	    if (ord < expr.expressions.length - 1)
-	      pieces.push(" ||\n");
-	  });
-	  pieces.push(")");
+	  _exprGroup(expr.expressions, "\n"+indent+"|| ");
 	}
 
 	else if (expr.type === 'group') {
-	  pieces.push("(");
-	  expr.expressions.forEach(function (nested, ord) {
-	    _writeExpression(nested, indent+"  ", 1)
-	    if (ord < expr.expressions.length - 1)
-	      pieces.push(",\n");
-	  });
-	  pieces.push(")");
+	  _exprGroup(expr.expressions, ",\n"+indent);
+	  _semanticActions(expr.semAct);
 	}
 
 	else if (expr.type === 'include') {
