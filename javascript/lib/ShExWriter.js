@@ -56,7 +56,6 @@ ShExWriter.prototype = {
 
   // ### `_writeSchema` writes the shape to the output stream
   _writeSchema: function (schema, done) {
-    debugger;
     var _ShExWriter = this;
     this._expect(schema, 'type', 'schema');
     _ShExWriter.addPrefixes(schema.prefixes);
@@ -77,7 +76,6 @@ ShExWriter.prototype = {
   _writeShape: function (shape, label, done) {
     var _ShExWriter = this;
     try {
-      // Don't repeat the subject if it's the same
       var pieces = []; // guessing push/join is faster than concat
       this._expect(shape, 'type', 'shape');
 
