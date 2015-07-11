@@ -3,14 +3,14 @@
 // Parse arguments
 var args = process.argv.slice(2);
 if (args.length < 1) {
-  console.error('usage: shex-to-json query.shex');
+  console.error('usage: shex-to-json schema.shex');
   return process.exit(1);
 }
 
-var fs = require('fs'),
-    ShExParser = require('../lib/ShExParser').Parser;
+var fs = require('fs');
+var ShExParser = require('../lib/ShExParser').Parser;
 
-// Parse and display the query
-var query = fs.readFileSync(args[0]).toString(),
-    parseTree = new ShExParser().parse(query);
+// Parse and display the schema
+var shex = fs.readFileSync(args[0]).toString();
+var parseTree = new ShExParser().parse(shex);
 console.log('%s', JSON.stringify(parseTree, null, '  '));

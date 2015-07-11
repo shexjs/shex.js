@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+
+// Parse arguments
+var args = process.argv.slice(2);
+if (args.length < 1) {
+  console.error('usage: json-to-shex schema.json');
+  return process.exit(1);
+}
+
+var fs = require('fs');
+var ShExWriter = require('../lib/ShExWriter');
+
+// Parse and display the schema
+var json = fs.readFileSync(args[0]).toString();
+var parseTree = new ShExWriter().
+  writeSchema(JSON.parse(json),
+	      function (error, text, prefixes) {
+		if (error) throw error;
+		else if (text) console.log(text);
+	      });
