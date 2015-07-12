@@ -5,27 +5,57 @@ var ShExUtil = {
     return "0.1.0";
   },
 
-  getDependencies: function (schema) {
-    // Expect property p with value v in object o
-    function expect (o, p, v) {
-      if (!(p in o))
-	this._error("expected "+o+" to have a ."+p);
-      if (arguments.length > 2 && o[p] !== v)
-	this._error("expected "+o[o]+" to equal ."+v);
-    }
-
-    var ret = {
+  BiDiClosure: function () {
+    return {
       needs: {},
       neededBy: {},
+      test: function () {
+	function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
+        // this.add(1, 2); expect(this.needs, { 1:[2]                     }); expect(this.neededBy, { 2:[1]                     });
+        // this.add(3, 4); expect(this.needs, { 1:[2], 3:[4]              }); expect(this.neededBy, { 2:[1], 4:[3]              });
+        // this.add(2, 3); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1] });
+
+        this.add(2, 3); expect(this.needs, { 2:[3]                     }); expect(this.neededBy, { 3:[2]                     });
+        this.add(1, 2); expect(this.needs, { 1:[2,3], 2:[3]            }); expect(this.neededBy, { 3:[2,1], 2:[1]            });
+        this.add(1, 3); expect(this.needs, { 1:[2,3], 2:[3]            }); expect(this.neededBy, { 3:[2,1], 2:[1]            });
+        this.add(3, 4); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(6, 7); expect(this.needs, { 6:[7]                    , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6]                    , 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(5, 6); expect(this.needs, { 5:[6,7], 6:[7]           , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5]           , 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(5, 7); expect(this.needs, { 5:[6,7], 6:[7]           , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5]           , 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(7, 8); expect(this.needs, { 5:[6,7,8], 6:[7,8], 7:[8], 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5], 8:[7,6,5], 3:[2,1], 2:[1], 4:[3,2,1] });
+	this.add(4, 5);
+	expect(this.needs,    { 1:[2,3,4,5,6,7,8], 2:[3,4,5,6,7,8], 3:[4,5,6,7,8], 4:[5,6,7,8], 5:[6,7,8], 6:[7,8], 7:[8] });
+	expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1], 5:[4,3,2,1], 6:[5,4,3,2,1], 7:[6,5,4,3,2,1], 8:[7,6,5,4,3,2,1] });
+      },
       add: function (needer, needie) {
-	if (!(needer in this.needs))
-	  this.needs[needer] = [];
-	if (!(needie in this.neededBy))
-	  this.neededBy[needie] = [];
-	
+	var r = this;
+	if (!(needer in r.needs))
+	  r.needs[needer] = [];
+	if (!(needie in r.neededBy))
+	  r.neededBy[needie] = [];
+
+	// // [].concat.apply(r.needs[needer], [needie], r.needs[needie]). emitted only last element
+	r.needs[needer] = r.needs[needer].concat([needie], r.needs[needie]).
+	  filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+	// // [].concat.apply(r.neededBy[needie], [needer], r.neededBy[needer]). emitted only last element
+	r.neededBy[needie] = r.neededBy[needie].concat([needer], r.neededBy[needer]).
+	  filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+
+	if (needer in this.neededBy) this.neededBy[needer].forEach(function (e) {
+	  r.needs[e] = r.needs[e].concat([needie], r.needs[needie]).
+	    filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+	});
+
+	if (needie in this.needs) this.needs[needie].forEach(function (e) {
+	  r.neededBy[e] = r.neededBy[e].concat([needer], r.neededBy[needer]).
+	    filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; })
+	});
+	// this.neededBy[needie].push(needer);
+
       },
       trim: function () {
 	function _trim (a) {
+	  // filter(function (el, ord, l) { return l.indexOf(el) === ord; })
 	  for (var i = a.length-1; i > -1; --i)
 	    if (a.indexOf(a[i]) < i)
 	      a.splice(i, i+1);
@@ -35,13 +65,23 @@ var ShExUtil = {
 	for (k in this.neededBy)
 	  _trim(this.neededBy[k]);
       }
-    };
+    }
+  },
+
+  getDependencies: function (schema, ret) {
+    debugger;
+    // Expect property p with value v in object o
+    function expect (o, p, v) {
+      if (!(p in o))
+	this._error("expected "+o+" to have a ."+p);
+      if (arguments.length > 2 && o[p] !== v)
+	this._error("expected "+o[o]+" to equal ."+v);
+    }
+
+    ret = ret || this.BiDiClosure();
     Object.keys(schema.shapes).forEach(function (label) {
       var shape = schema.shapes[label];
       expect(shape, 'type', 'shape');
-      if (!(label in ret))
-	ret[label] = [];
-      var s = ret[label];
       if (shape.inherit && shape.inherit.length > 0)
 	shape.inherit.forEach(function (i) {
 	  ret.add(label, i);
