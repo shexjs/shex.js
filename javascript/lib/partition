@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// time ./lib/partition ~/checkouts/hcls/hcls-fhir-rdf/generic/fhir-shapes.shex MedicationPrescriptionShape
+
 // Parse arguments
 var args = process.argv.slice(2);
 if (args.length < 1) {
@@ -7,12 +9,79 @@ if (args.length < 1) {
   return process.exit(1);
 }
 
-var fs = require('fs');
+var FS = require('fs');
 var ShExParser = require('../lib/ShExParser').Parser;
 var ShExUtil = require('../lib/ShExUtil');
+var ShExWriter = require('../lib/ShExWriter');
+
+function usage () {
+    console.warn("Usage: " + process.argv[2] + "<ShEx file> <shape name>+");
+    return 1;
+}
+
+function CannotRead (file, e) {
+    this.name = 'CannotRead';
+    this.file = file;
+    this.message = "Can't read " + this.file;
+    this.stack = e ? e.stack : (new Error()).stack;
+};
+CannotRead.prototype = new Error();
+CannotRead.prototype.constructor = CannotRead;
+
+
+if (process.argv.length < 4) // guessing we're invoked like `node partition in.shex <Shape1> <Shape2>`
+    process.exit(usage());
+
+var schemaFile = process.argv[2];
+var includes = process.argv.slice(3); // which shapes to include
 
 // Parse and display the schema
-var shex = fs.readFileSync(args[0]).toString();
-var parseTree = new ShExParser().parse(shex);
-var deps = ShExUtil.getDependencies(parseTree);
-console.log('%s', JSON.stringify(deps, null, '  '));
+try {
+  var shex;
+  try {
+    console.warn("parsing " + schemaFile);
+    shex = FS.readFileSync(schemaFile, 'utf8');
+  } catch (e) {
+    throw new CannotRead(schemaFile, e); // @@ console.error and exit after transplanting exception intel.
+  }
+
+  var parseTree = new ShExParser().parse(shex);
+  console.warn("calculating dependencies for " + schemaFile);
+  var deps = ShExUtil.getDependencies(parseTree);
+  // console.log('%s', JSON.stringify(deps, null, '  '));
+  console.warn("partitioning " + schemaFile);
+  var partition = {};
+  for (var k in parseTree)
+    partition[k] = k === 'shapes' ? {} : parseTree[k];
+  includes.forEach(function (i) {
+    if (i in parseTree.shapes) {
+      partition.shapes[i] = parseTree.shapes[i];
+      if (i in deps.needs)
+	deps.needs[i].forEach(function (n) {
+	  if (n in parseTree.shapes)
+	    partition.shapes[n] = parseTree.shapes[n];
+	  else
+	    console.warn("can't find shape "+i+" dependency "+n);
+	});
+    } else {
+      console.warn("can't find shape "+i);
+    }
+  });
+  new ShExWriter().
+    writeSchema(partition,
+		function (error, text, prefixes) {
+		  if (error) throw error;
+		  else if (text) console.log(text);
+		});
+} catch (e) {
+  if (e instanceof CannotRead) {
+        console.error("unable to read ShEx file \"" + e.file + "\":\n" + e.stack);
+        process.exit(2);
+    } else if (e.name === "SyntaxError") {
+	console.error(schemaFile+":"+e.line+":"+e.column+": (offset: "+e.offset+"): error: "+e.message);
+	process.exit(4);
+    } else {
+	console.error(e.stack);
+	process.exit(4);
+    }
+}
