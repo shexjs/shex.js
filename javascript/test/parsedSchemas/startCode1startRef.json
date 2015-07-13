@@ -1,13 +1,15 @@
 {
   "type": "schema",
   "prefixes": {},
+  "startAct": { "http://a.example/semAct1": " code1 " },
+  "start": "http://a.example/IssueShape",
   "shapes":{
     "http://a.example/IssueShape": {
       "type": "shape",
       "expression": {
         "type": "tripleConstraint",
         "predicate": "http://a.example/p1",
-        "value": { "type": "valueClass", "datatype": "http://a.example/dt1" }
+        "value": { "type": "valueClass" }
       }
     }
   }

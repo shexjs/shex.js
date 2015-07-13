@@ -131,7 +131,8 @@ case 23: // t: 1dotVirtual
     
 break;
 case 24: // t: 1dotInherit3
-        this.$ = extend({ type: "shape", expression: $$[$0-1]}, $$[$0-3]);
+	var exprObj = $$[$0-1] ? { expression: $$[$0-1] } : {}; // t: 0, 0Inherit1
+        this.$ = extend({ type: "shape"}, exprObj, $$[$0-3]);
       
 break;
 case 25:this.$ = [ 'inherit', $$[$0] ] // t: 1dotInherit1;

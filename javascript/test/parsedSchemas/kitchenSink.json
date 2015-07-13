@@ -69,7 +69,10 @@
           {
             "type": "tripleConstraint",
             "predicate": "http://ex.example/#reportedOn",
-            "value": "http://www.w3.org/2001/XMLSchema#dateTime"
+            "value": {
+              "type": "valueClass",
+              "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
+            }
           },
           {
             "type": "group",
@@ -86,7 +89,10 @@
               {
                 "type": "tripleConstraint",
                 "predicate": "http://ex.example/#reproducedOn",
-                "value": "http://www.w3.org/2001/XMLSchema#dateTime"
+                "value": {
+                  "type": "valueClass",
+                  "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
+                }
               }
             ],
             "min": 0,
@@ -119,7 +125,10 @@
               {
                 "type": "tripleConstraint",
                 "predicate": "http://xmlns.com/foaf/name",
-                "value": "http://www.w3.org/2001/XMLSchema#string"
+                "value": {
+                  "type": "valueClass",
+                  "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                }
               },
               {
                 "type": "group",
@@ -127,13 +136,19 @@
                   {
                     "type": "tripleConstraint",
                     "predicate": "http://xmlns.com/foaf/givenName",
-                    "value": "http://www.w3.org/2001/XMLSchema#string",
+                    "value": {
+                      "type": "valueClass",
+                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                    },
                     "min": 1
                   },
                   {
                     "type": "tripleConstraint",
                     "predicate": "http://xmlns.com/foaf/familyName",
-                    "value": "http://www.w3.org/2001/XMLSchema#string"
+                    "value": {
+                      "type": "valueClass",
+                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                    }
                   }
                 ]
               }
@@ -168,13 +183,19 @@
           {
             "type": "tripleConstraint",
             "predicate": "http://xmlns.com/foaf/givenName",
-            "value": "http://www.w3.org/2001/XMLSchema#string",
+            "value": {
+              "type": "valueClass",
+              "datatype": "http://www.w3.org/2001/XMLSchema#string"
+            },
             "min": 1
           },
           {
             "type": "tripleConstraint",
             "predicate": "http://xmlns.com/foaf/familyName",
-            "value": "http://www.w3.org/2001/XMLSchema#string"
+            "value": {
+              "type": "valueClass",
+              "datatype": "http://www.w3.org/2001/XMLSchema#string"
+            }
           },
           {
             "type": "tripleConstraint",
@@ -327,4 +348,3 @@
     }
   }
 }
-

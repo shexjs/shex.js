@@ -59,14 +59,14 @@ ShExWriter.prototype = {
     var _ShExWriter = this;
     this._expect(schema, 'type', 'schema');
     _ShExWriter.addPrefixes(schema.prefixes);
-    if (schema.start)
-      _ShExWriter._write("start = " + _ShExWriter._encodeShapeName(schema.start, false) + "\n")
     if (schema.startAct)
       Object.keys(schema.startAct).forEach(function (k) {
 	_ShExWriter._write(" %"+
 			   _ShExWriter._encodePredicate(k)+
 			   "{"+schema.startAct[k]+"%"+"}");
       });
+    if (schema.start)
+      _ShExWriter._write("start = " + _ShExWriter._encodeShapeName(schema.start, false) + "\n")
     Object.keys(schema.shapes).forEach(function (label) {
       _ShExWriter._writeShape(schema.shapes[label], label, done);
     })
@@ -94,9 +94,9 @@ ShExWriter.prototype = {
       }
 
       if (shape.extra && shape.extra.length > 0) {
-	pieces.push("EXTRA");
+	pieces.push("EXTRA ");
 	shape.extra.forEach(function (i, ord) {
-	  pieces.push(_ShExWriter._encodeShapeName(i, ord > 0));
+	  pieces.push(_ShExWriter._encodeShapeName(i, false)+" ");
 	});
 	pieces.push(" ");
       }
@@ -253,6 +253,7 @@ ShExWriter.prototype = {
 
 	else if (expr.type === 'group') {
 	  _exprGroup(expr.expressions, ",\n"+indent);
+	  _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
 	  _semanticActions(expr.semAct);
 	}
 
@@ -264,7 +265,8 @@ ShExWriter.prototype = {
 	else throw Error("unexpected expr type: " + expr.type);
       }
 
-      _writeExpression(shape.expression, "  ", 4);
+      if (shape.expression) // t: 0, 0Inherit1
+	_writeExpression(shape.expression, "  ", 4);
       pieces.push("}");
       _writeSemActs(shape.semAct);
       pieces.push("\n");

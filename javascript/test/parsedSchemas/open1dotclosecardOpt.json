@@ -1,0 +1,20 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes":{
+    "http://a.example/IssueShape": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://a.example/p1",
+            "value": { "type": "valueClass" }
+          }
+        ],
+        "min": 0, "max": 1
+      }
+    }
+  }
+}

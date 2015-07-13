@@ -437,7 +437,8 @@ shape:
 
 shapeDefinition:
       _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
-        $$ = extend({ type: "shape", expression: $3}, $1);
+	var exprObj = $3 ? { expression: $3 } : {}; // t: 0, 0Inherit1
+        $$ = extend({ type: "shape"}, exprObj, $1);
       }
     ;
 
