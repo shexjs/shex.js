@@ -195,7 +195,7 @@ IT_BNODE		[Bb][Nn][Oo][Dd][Ee]
 IT_IRI			[Ii][Rr][Ii]
 IT_NONLITERAL		[Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_PATTERN		[Pp][Aa][Tt][Tt][Ee][Rr][Nn]
-IT_AND			[Aa][Nn][Dd]
+//IT_AND			[Aa][Nn][Dd]
 IT_OR			[Oo][Rr]
 IT_MININCLUSIVE		[Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE		[Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -252,11 +252,36 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 {LANGTAG}		return 'LANGTAG';
 "@"			return '@';
 {PNAME_LN}		return 'PNAME_LN';
+{REPEAT_RANGE}		return 'REPEAT_RANGE';
+{DOUBLE}		return 'DOUBLE';
+{DECIMAL}		return 'DECIMAL';
+//{EXPONENT}		return 'EXPONENT';
+{INTEGER}		return 'INTEGER';
+//{ECHAR}		return 'ECHAR';
+//{WS}			return 'WS';
+{ANON}			return 'ANON';
+{IRIREF}		return 'IRIREF';
+{PNAME_NS}		return 'PNAME_NS';
+"a"			return 'a';
+//{PN_CHARS_BASE}	return 'PN_CHARS_BASE';
+//{PN_CHARS_U}		return 'PN_CHARS_U';
+//{PN_CHARS}		return 'PN_CHARS';
+{BLANK_NODE_LABEL}	return 'BLANK_NODE_LABEL';
+//{PN_PREFIX}		return 'PN_PREFIX';
+//{HEX}			return 'HEX';
+//{PERCENT}		return 'PERCENT';
+//{UCHAR}		return 'UCHAR';
+{STRING_LITERAL_LONG1}	return 'STRING_LITERAL_LONG1';
+{STRING_LITERAL_LONG2}	return 'STRING_LITERAL_LONG2';
+{STRING_LITERAL1}	return 'STRING_LITERAL1';
+{STRING_LITERAL2}	return 'STRING_LITERAL2';
+//{PN_LOCAL_ESC}	return 'PN_LOCAL_ESC';
+//{PLX}			return 'PLX';
+//{PN_LOCAL}		return 'PN_LOCAL';
 {IT_BASE}		return 'IT_BASE';
 {IT_PREFIX}		return 'IT_PREFIX';
 "start"			return 'IT_start';
 {IT_VIRTUAL}		return 'IT_VIRTUAL';
-{REPEAT_RANGE}		return 'REPEAT_RANGE';
 {IT_CLOSED}		return 'IT_CLOSED';
 {IT_EXTRA}		return 'IT_EXTRA';
 {IT_LITERAL}		return 'IT_LITERAL';
@@ -264,7 +289,7 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 {IT_IRI}		return 'IT_IRI';
 {IT_NONLITERAL}		return 'IT_NONLITERAL';
 {IT_PATTERN}		return 'IT_PATTERN';
-{IT_AND}		return 'IT_AND';
+//{IT_AND}		return 'IT_AND';
 {IT_OR}			return 'IT_OR';
 {IT_MININCLUSIVE}	return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}	return 'IT_MINEXCLUSIVE';
@@ -298,31 +323,6 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 "%"			return '%';
 "true"			return 'IT_true';
 "false"			return 'IT_false';
-{DOUBLE}		return 'DOUBLE';
-{DECIMAL}		return 'DECIMAL';
-//{EXPONENT}		return 'EXPONENT';
-{INTEGER}		return 'INTEGER';
-//{ECHAR}		return 'ECHAR';
-//{WS}			return 'WS';
-{ANON}			return 'ANON';
-{IRIREF}		return 'IRIREF';
-{PNAME_NS}		return 'PNAME_NS';
-"a"			return 'a';
-//{PN_CHARS_BASE}	return 'PN_CHARS_BASE';
-//{PN_CHARS_U}		return 'PN_CHARS_U';
-//{PN_CHARS}		return 'PN_CHARS';
-{BLANK_NODE_LABEL}	return 'BLANK_NODE_LABEL';
-//{PN_PREFIX}		return 'PN_PREFIX';
-//{HEX}			return 'HEX';
-//{PERCENT}		return 'PERCENT';
-//{UCHAR}		return 'UCHAR';
-{STRING_LITERAL_LONG1}	return 'STRING_LITERAL_LONG1';
-{STRING_LITERAL_LONG2}	return 'STRING_LITERAL_LONG2';
-{STRING_LITERAL1}	return 'STRING_LITERAL1';
-{STRING_LITERAL2}	return 'STRING_LITERAL2';
-//{PN_LOCAL_ESC}	return 'PN_LOCAL_ESC';
-//{PLX}			return 'PLX';
-//{PN_LOCAL}		return 'PN_LOCAL';
 <<EOF>>			return 'EOF'
 .			return 'invalid character'
 

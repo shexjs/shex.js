@@ -1,0 +1,45 @@
+PREFIX prefix1: <http://all.example/>
+
+<http://all.example/S1> EXTRA <http://all.example/p1> <http://all.example/p2> <http://all.example/p3> {
+   <http://all.example/p1> .,
+   <http://all.example/p2> .,
+   <http://all.example/p3> .
+}
+
+prefix1:S2 EXTRA prefix1:p1 prefix1:p2 prefix1:p3 {
+   prefix1:p1 .,
+   prefix1:p2 .,
+   prefix1:p3 .
+}
+
+PREFIX a: <http://all.example/>
+PREFIX prefix: <http://all.example/>
+PREFIX base: <http://all.example/>
+PREFIX PREFIX: <http://all.example/>
+PREFIX BaSe: <http://all.example/>
+PREFIX virtual: <http://all.example/>
+PREFIX closed: <http://all.example/>
+PREFIX extra: <http://all.example/>
+PREFIX iri: <http://all.example/>
+PREFIX bnode: <http://all.example/>
+PREFIX literal: <http://all.example/>
+PREFIX nonliteral: <http://all.example/>
+PREFIX or: <http://all.example/>
+PREFIX pattern: <http://all.example/>
+
+prefix1:S2 EXTRA a:a prefix:prefix base:base &a:S1 {
+   a:a .,
+   prefix:prefix .,
+   base:base .,
+   PREFIX:PREFIX .,
+   BaSe:BaSe .,
+   virtual:virtual .,
+   closed:closed .,
+   extra:extra .,
+   iri:iri .,
+   bnode:bnode .,
+   literal:literal .,
+   nonliteral:nonliteral .,
+   or:or .,
+   pattern:pattern .
+}

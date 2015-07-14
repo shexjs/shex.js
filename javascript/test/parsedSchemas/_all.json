@@ -1,0 +1,70 @@
+{
+  "type": "schema",
+  "prefixes": {
+    "prefix1": "http://all.example/",
+    "a": "http://all.example/",
+    "prefix": "http://all.example/",
+    "base": "http://all.example/",
+    "PREFIX": "http://all.example/",
+    "BaSe": "http://all.example/",
+    "virtual": "http://all.example/",
+    "closed": "http://all.example/",
+    "extra": "http://all.example/",
+    "iri": "http://all.example/",
+    "bnode": "http://all.example/",
+    "literal": "http://all.example/",
+    "nonliteral": "http://all.example/",
+    "or": "http://all.example/",
+    "pattern": "http://all.example/"
+  },
+  "shapes": {
+    "http://all.example/S1": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://all.example/p1",
+            "value": { "type": "valueClass" }
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://all.example/p2",
+            "value": { "type": "valueClass" }
+          },
+          {
+            "type": "tripleConstraint",
+            "predicate": "http://all.example/p3",
+            "value": { "type": "valueClass" }
+          }
+        ]
+      },
+      "extra": [ "http://all.example/p1", "http://all.example/p2", "http://all.example/p3" ]
+    },
+    "http://all.example/S2": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
+	  { "type": "tripleConstraint", "predicate": "http://all.example/a", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/prefix", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/BaSe", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/virtual", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/extra", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/iri", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/bnode", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/literal", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/nonliteral", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/or", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/pattern", "value": { "type": "valueClass" } }
+	]
+      },
+      "extra": [ "http://all.example/a", "http://all.example/prefix", "http://all.example/base" ],
+      "inherit": [ "http://all.example/S1" ]
+    }
+  }
+}
