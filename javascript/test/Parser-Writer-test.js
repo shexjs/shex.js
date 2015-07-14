@@ -1,4 +1,5 @@
 var VERBOSE = "VERBOSE" in process.env;
+var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
 var ShExParser = require('../lib/ShExParser').Parser;
 var ShExWriter = require('../lib/ShExWriter');
@@ -22,7 +23,9 @@ describe('A SHEX parser', function () {
   beforeEach(function () { parser._resetBlanks(); });
 
   var schemas = fs.readdirSync(schemasPath);
-  schemas = schemas.map(function (q) { return q.replace(/\.shex$/, ''); });
+  schemas = schemas.map(function (s) { return s.replace(/\.shex$/, ''); });
+  if (TESTS)
+    schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
   schemas.sort();
 
   schemas.forEach(function (schema) {
@@ -64,6 +67,8 @@ describe('A SHEX parser', function () {
   // negative syntax tests
   var negSyntaxTests = fs.readdirSync(negSyntaxTestsPath);
   negSyntaxTests = negSyntaxTests.map(function (q) { return q.replace(/\.err$/, ''); });
+  if (TESTS)
+    negSyntaxTests = negSyntaxTests.filter(function (s) { return TESTS.indexOf(s) !== -1; });
   negSyntaxTests.sort();
 
   negSyntaxTests.forEach(function (schema) {
