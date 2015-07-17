@@ -15,6 +15,41 @@
       "from": "1dotRefOr3",
       "include": ["http://a.example/PersonShape", "http://a.example/ThingShape"],
       "expect": "1dotRefOr3_PersonShape_ThingShape"
+    },
+    {
+      "from": "2groupInclude1",
+      "include": ["http://a.example/PersonShape"],
+      "expect": "2groupInclude1_PersonShape"
+    },
+    {
+      "from": "2groupInclude1",
+      "include": ["http://a.example/EmployeeShape"],
+      "expect": "2groupInclude1_EmployeeShape"
+    },
+    {
+      "from": "2groupInclude1",
+      "include": ["http://a.example/PersonShape", "http://a.example/EmployeeShape"],
+      "expect": "2groupInclude1_PersonShape_EmployeeShape"
+    },
+    {
+      "from": "1dotInherit3",
+      "include": ["http://a.example/PersonShape"],
+      "expect": "1dotInherit3_PersonShape"
+    },
+    {
+      "from": "1dotInherit3",
+      "include": ["http://a.example/PersonShape", "http://a.example/ManagedShape"],
+      "expect": "1dotInherit3_PersonShape_ManagedShape"
+    },
+    {
+      "from": "1dotInherit3",
+      "include": ["http://a.example/ManagedShape", "http://a.example/EmployeeShape"],
+      "expect": "1dotInherit3_ManagedShape_EmployeeShape"
+    },
+    {
+      "from": "1dotInherit3",
+      "include": ["http://a.example/PersonShape", "http://a.example/ManagedShape", "http://a.example/EmployeeShape"],
+      "expect": "1dotInherit3_PersonShape_ManagedShape_EmployeeShape"
     }
   ]
 }

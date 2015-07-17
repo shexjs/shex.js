@@ -1,0 +1,9 @@
+<http://a.example/PersonShape> {
+   <http://a.example/p1> .
+}
+
+<http://a.example/EmployeeShape> {
+    &<http://a.example/PersonShape>,
+   <http://a.example/p2> .
+}
+
