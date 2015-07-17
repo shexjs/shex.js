@@ -1,6 +1,6 @@
 {
   "name": "shex",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
   "author": {"name":"Eric Prud'hommeaux","email":"eric@w3.org","url":"http://www.w3.org/People/Eric/"},
   "keywords": [
@@ -24,6 +24,7 @@
     "eslint": "~0.19.0",
     "uglify-js": "~2.4.3"
   },
+  "bin": ["bin/json-to-shex", "bin/sparql-to-json", "bin/partition"],
   "scripts": {
     "test": "mocha",
     "lint": "eslint lib perf test spec",
