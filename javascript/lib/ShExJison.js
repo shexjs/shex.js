@@ -93,7 +93,7 @@ case 1:
         return ret;
       
 break;
-case 17:
+case 17: // t: @@
         base = resolveIRI($$[$0])
         basePath = base.replace(/[^\/]*$/, '');
         baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
@@ -189,7 +189,7 @@ case 48:this.$ = [] // t: 2groupOfdot;
 break;
 case 49:this.$ = appendTo($$[$0-1], $$[$0]) // t: 2groupOfdot;
 break;
-case 53:this.$ = extend({ id: $$[$0-1] }, $$[$0]);
+case 53:this.$ = extend({ id: $$[$0-1] }, $$[$0]) // t: 1iddot;
 break;
 case 54:this.$ = {} // t: 1dot;
 break;
@@ -329,7 +329,7 @@ case 110:this.$ = "totaldigits" // t: 1literalTotaldigits;
 break;
 case 111:this.$ = "fractiondigits" // t: 1literalFractiondigits;
 break;
-case 112:this.$ = [$$[$0-1], $$[$0]];
+case 112:this.$ = [$$[$0-1], $$[$0]] // t: 1dotAnnotIRIREF;
 break;
 case 115:this.$ = { min:0 } // t: 1cardStar;
 break;
@@ -432,9 +432,9 @@ case 154:
 break;
 case 156:this.$ = extend($$[$0-1], $$[$0]) // t: startCode3;
 break;
-case 157:this.$ = Object.keys($$[$0]).length ? { semAct: $$[$0] } : null;;
+case 157:this.$ = Object.keys($$[$0]).length ? { semAct: $$[$0] } : null; // t: 1dotCode1/2oneOfDot;
 break;
-case 158:this.$ = {};
+case 158:this.$ = {} // t: 1dot, 1dotCode1;
 break;
 case 159:this.$ = extend($$[$0-1], $$[$0]) // t: 1dotCode1;
 break;

@@ -364,27 +364,27 @@ _Qstatement_E_Star:
     ;
 
 _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
-      _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_C _Qstatement_E_Star	
+      _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_C _Qstatement_E_Star	// t: 1dot
     ;
 
 _Q_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
-      
-    | _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C	
+      // t: @@
+    | _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
     ;
 
 statement:
-      directive	
-    | start	
-    | shape	
+      directive	// t: open1dotclose
+    | start	// t: startCode1startRef
+    | shape	// t: 1iriRef1
     ;
 
 directive:
-      baseDecl	
-    | prefixDecl	
+      baseDecl	// t: @@
+    | prefixDecl	// t: 1dotLNex
     ;
 
 baseDecl:
-      IT_BASE IRIREF	{
+      IT_BASE IRIREF	{ // t: @@
         base = resolveIRI($2)
         basePath = base.replace(/[^\/]*$/, '');
         baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
@@ -407,7 +407,7 @@ start:
     ;
 
 _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
-      shapeLabel	
+      shapeLabel	// t: startRef
     | shapeDefinition semanticActions	{ // t: startInline
         if (!Parser.shapes) Parser.shapes = {};
         $$ = blank();
@@ -462,8 +462,8 @@ _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
     ;
 
 _QoneOfShape_E_Opt:
-      
-    | oneOfShape	
+      	// t: 0
+    | oneOfShape	// t: 1dot
     ;
 
 includeSet:
@@ -524,14 +524,14 @@ _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star:
     ;
 
 _QGT_COMMA_E_Opt:
-      
-    | ','	
+      	// t: 1dot
+    | ','	// t: 1dotComma
     ;
 
 unaryShape:
     // _Qid_E_Opt 
-      unaryShape_right	
-    | id unaryShape_right	-> extend({ id: $1 }, $2)
+      unaryShape_right	// t: 1dot
+    | id unaryShape_right	-> extend({ id: $1 }, $2) // t: 1iddot
     ;
 
 // _Qid_E_Opt:
@@ -540,7 +540,7 @@ unaryShape:
 
 _Qcardinality_E_Opt:
       -> {} // t: 1dot
-    | cardinality	
+    | cardinality	// t: 1cardOpt
     ;
 
 unaryShape_right:
@@ -572,8 +572,8 @@ id:
     ;
 
 shapeLabel:
-      iri	
-    | blankNode	
+      iri	// t: 1dot
+    | blankNode	// t: 1dotInline1
     ;
 
 tripleConstraint:
@@ -609,7 +609,7 @@ senseFlags:
     ;
 
 predicate:
-      iri	
+      iri	// t: 1dot
     ;
 
 valueClass:
@@ -687,8 +687,8 @@ shapeOrRef:
     ;
 
 xsFacet:
-      stringFacet	
-    | numericFacet	
+      stringFacet	// t: 1literalLength
+    | numericFacet	// t: 1literalTotaldigits
     ;
 
 stringFacet:
@@ -721,12 +721,12 @@ numericLength:
     ;
 
 annotation:
-    ';' iri _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3]
+    ';' iri _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3] // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
-      iri	
-    | literal	
+      iri	// t: 1dotAnnotIRIREF
+    | literal	// t: 1dotAnnotSTRING_LITERAL1
     ;
 
 cardinality:
@@ -754,8 +754,8 @@ _Qvalue_E_Star:
     ;
 
 value:
-      iriRange	
-    | literal	
+      iriRange	// t: 1val1IRIREF
+    | literal	// t: 1val1DECIMAL
     ;
 
 iriRange:
@@ -784,8 +784,8 @@ _O_Q_TILDE_E_S_Qexclusion_E_Star_C:
     ;
 
 _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
-      
-    | _O_Q_TILDE_E_S_Qexclusion_E_Star_C	
+      // t: 1val1IRIREF
+    | _O_Q_TILDE_E_S_Qexclusion_E_Star_C	// t: 1val1iriStemMinusiri3
     ;
 
 _Qexclusion_E_Plus:
@@ -799,7 +799,7 @@ exclusion:
     ;
 
 literal:
-      string	
+      string	// t: 1val1STRING_LITERAL1
     | string LANGTAG	-> $1 + lowercase($2) // t: 1val1LANGTAG
     | string '^^' iri	-> $1 + '^^' + $3 // t: 1val1Datatype
     | INTEGER	 -> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
@@ -834,7 +834,7 @@ iri:
     ;
 
 blankNode:
-      BLANK_NODE_LABEL	
+      BLANK_NODE_LABEL	// t: 1dotInline1
     // | ANON	 -- not used
     ;
 
@@ -850,17 +850,17 @@ startActions:
     ;
 
 _QcodeDecl_E_Plus:
-      codeDecl	
+      codeDecl	// t: startCode1
     | _QcodeDecl_E_Plus codeDecl	-> extend($1, $2) // t: startCode3
     ;
 
 semanticActions:
-      _QcodeDecl_E_Star	-> Object.keys($1).length ? { semAct: $1 } : null;
+      _QcodeDecl_E_Star	-> Object.keys($1).length ? { semAct: $1 } : null; // t: 1dotCode1/2oneOfDot
 
     ;
 
 _QcodeDecl_E_Star:
-      -> {}
+      -> {} // t: 1dot, 1dotCode1
     | _QcodeDecl_E_Star codeDecl	-> extend($1, $2) // t: 1dotCode1
     ;
 
