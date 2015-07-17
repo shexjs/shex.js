@@ -19,8 +19,8 @@ describe('Partitioning', function () {
   beforeEach(function () { parser._resetBlanks(); });
   var manifest = parseJSON(fs.readFileSync(manifestFile, 'utf8'));
   if (TESTS)
-    schemas.tests = schemas.tests.filter(function (t) {
-      return TESTS.indexOf(s.from) !== -1 || TESTS.indexOf(s.expect) !== -1;
+    manifest.tests = manifest.tests.filter(function (t) {
+      return TESTS.indexOf(t.from) !== -1 || TESTS.indexOf(t.expect) !== -1;
     });
 
   manifest.tests.forEach(function (test) {
