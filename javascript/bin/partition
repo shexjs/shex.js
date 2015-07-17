@@ -50,23 +50,14 @@ try {
   var deps = ShExUtil.getDependencies(parseTree);
   // console.log('%s', JSON.stringify(deps, null, '  '));
   console.warn("partitioning " + schemaFile);
-  var partition = {};
-  for (var k in parseTree)
-    partition[k] = k === 'shapes' ? {} : parseTree[k];
-  includes.forEach(function (i) {
-    if (i in parseTree.shapes) {
-      partition.shapes[i] = parseTree.shapes[i];
-      if (i in deps.needs)
-	deps.needs[i].forEach(function (n) {
-	  if (n in parseTree.shapes)
-	    partition.shapes[n] = parseTree.shapes[n];
-	  else
-	    console.warn("can't find shape "+i+" dependency "+n);
-	});
-    } else {
-      console.warn("can't find shape "+i);
-    }
-  });
+  partition = ShExUtil.partition(parseTree, includes, deps,
+				 // avoid throwing Error
+				 function (what, why) {
+				   console.warn("Warning: can't find shape "+
+						(why ?
+						 why + " dependency " + what :
+						 what));
+				 });
   new ShExWriter().
     writeSchema(partition,
 		function (error, text, prefixes) {

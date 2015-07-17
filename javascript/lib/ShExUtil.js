@@ -69,7 +69,6 @@ var ShExUtil = {
   },
 
   getDependencies: function (schema, ret) {
-    debugger;
     // Expect property p with value v in object o
     function expect (o, p, v) {
       if (!(p in o))
@@ -130,7 +129,43 @@ var ShExUtil = {
       _walkExpression(shape.expression, "  ", 4);
     });
     return ret;
-  }
+  },
+
+  /** partion: create subset of a schema with only desired shapes and
+   * their dependencies.
+   *
+   * @schema: input schema
+   * @partition: shape name or array of desired shape names
+   * @deps: (optional) dependency tree from getDependencies.
+   */
+  partition: function (schema, includes, deps, cantFind) {
+    includes = includes instanceof Array ? includes : [includes];
+    deps = deps || this.getDependencies(schema);
+    cantFind = cantFind || function (what, why) {
+      throw new Error("Error: can't find shape "+
+		      (why ?
+		       why + " dependency " + what :
+		       what));
+    };
+    var partition = {};
+    for (var k in schema)
+      partition[k] = k === 'shapes' ? {} : schema[k];
+    includes.forEach(function (i) {
+      if (i in schema.shapes) {
+	partition.shapes[i] = schema.shapes[i];
+	if (i in deps.needs)
+	  deps.needs[i].forEach(function (n) {
+	    if (n in schema.shapes)
+	      partition.shapes[n] = schema.shapes[n];
+	    else
+	      cantFind(n, i);
+	  });
+      } else {
+	cantFind(i);
+      }
+    });
+    return partition;
+  },
 };
 
 // Add the ShExUtil functions to the given object or its prototype
