@@ -1,0 +1,17 @@
+<http://a.example/EntityShape> {
+   <http://a.example/p1> .,
+   <http://a.example/p2> @<http://a.example/EmployeeShape>?
+}
+
+<http://a.example/PersonShape> {
+   <http://a.example/p3> @<http://a.example/EntityShape>
+}
+
+<http://a.example/OtherShape> {
+   <http://a.example/p4> .
+}
+
+<http://a.example/EmployeeShape> {
+   <http://a.example/p5> @<http://a.example/PersonShape>
+}
+

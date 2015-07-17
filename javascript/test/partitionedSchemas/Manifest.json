@@ -50,6 +50,21 @@
       "from": "1dotInherit3",
       "include": ["http://a.example/PersonShape", "http://a.example/ManagedShape", "http://a.example/EmployeeShape"],
       "expect": "1dotInherit3_PersonShape_ManagedShape_EmployeeShape"
+    },
+    {
+      "from": "3circularRef1",
+      "include": ["http://a.example/EmployeeShape"],
+      "expect": "3circularRef1_EmployeeShape"
+    },
+    {
+      "from": "3circularRef1",
+      "include": ["http://a.example/OtherShape"],
+      "expect": "3circularRef1_OtherShape"
+    },
+    {
+      "from": "3circularRef1",
+      "include": ["http://a.example/EntityShape", "http://a.example/PersonShape", "http://a.example/OtherShape", "http://a.example/EmployeeShape"],
+      "expect": "3circularRef1_EntityShape_PersonShape_OtherShape_EmployeeShape"
     }
   ]
 }
