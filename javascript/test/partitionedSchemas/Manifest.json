@@ -1,0 +1,20 @@
+{
+  "description": "collection of partition tests",
+  "tests": [
+    {
+      "from": "1dotRefOr3",
+      "include": ["http://a.example/EmployeeShape"],
+      "expect": "1dotRefOr3_EmployeeShape"
+    },
+    {
+      "from": "1dotRefOr3",
+      "include": ["http://a.example/ThingShape"],
+      "expect": "1dotRefOr3_ThingShape"
+    },
+    {
+      "from": "1dotRefOr3",
+      "include": ["http://a.example/PersonShape", "http://a.example/ThingShape"],
+      "expect": "1dotRefOr3_PersonShape_ThingShape"
+    }
+  ]
+}

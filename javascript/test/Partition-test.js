@@ -1,0 +1,51 @@
+var VERBOSE = "VERBOSE" in process.env;
+var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
+
+var ShExParser = require('../lib/ShExParser').Parser;
+var ShExUtil = require('../lib/ShExUtil');
+var ShExWriter = require('../lib/ShExWriter');
+
+var fs = require('fs');
+var expect = require('chai').expect;
+
+var schemasPath = __dirname + '/../schemas/';
+var partitionedSchemasPath = __dirname + '/../test/partitionedSchemas/';
+var manifestFile = __dirname + '/../test/partitionedSchemas/Manifest.json';
+
+describe('Partitioning', function () {
+  var parser = new ShExParser();
+
+  // Ensure the same blank node identifiers are used in every test
+  beforeEach(function () { parser._resetBlanks(); });
+  var manifest = parseJSON(fs.readFileSync(manifestFile, 'utf8'));
+  if (TESTS)
+    schemas.tests = schemas.tests.filter(function (t) {
+      return TESTS.indexOf(s.from) !== -1 || TESTS.indexOf(s.expect) !== -1;
+    });
+
+  manifest.tests.forEach(function (test) {
+
+    var schemaFile = schemasPath + test.from + ".shex";
+    var expectedFile = partitionedSchemasPath + test.expect + ".shex";
+    var schema = parser.parse(fs.readFileSync(schemaFile, 'utf8')); parser._resetBlanks();
+    var partition = ShExUtil.partition(schema, test.include);
+    var expected = parser.parse(fs.readFileSync(expectedFile, 'utf8')); parser._resetBlanks();
+
+    it((VERBOSE ? schemaFile : test.from) + 
+       ' for ' + test.include.join(', ') + ' should match ' + 
+       (VERBOSE ? expectedFile : test.expect), function () {
+      if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
+      if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
+      if (VERBOSE) console.log("partition: ", JSON.stringify(partition));
+      if (VERBOSE) console.log("expect: ", JSON.stringify(expected));
+      expect(partition).to.deep.equal(expected);
+    });
+  });
+});
+
+// Parses a JSON object, restoring `undefined` values
+function parseJSON(string) {
+  var object = JSON.parse(string);
+  return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+}
+
