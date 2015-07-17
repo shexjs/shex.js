@@ -4,14 +4,14 @@ var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 var ShExParser = require('../lib/ShExParser').Parser;
 var ShExWriter = require('../lib/ShExWriter');
 
-var fs = require('fs'),
-    expect = require('chai').expect;
+var fs = require('fs');
+var expect = require('chai').expect;
 
 var schemasPath = __dirname + '/../schemas/';
 var jsonSchemasPath = __dirname + '/../test/parsedSchemas/';
 var negSyntaxTestsPath = __dirname + '/../negativeSyntax/';
 
-describe('A SHEX parser', function () {
+describe('A ShEx parser', function () {
   // var b = function () {  };
   // it('is a toy', function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
