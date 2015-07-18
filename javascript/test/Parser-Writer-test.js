@@ -22,6 +22,21 @@ describe('A ShEx parser', function () {
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
 
+
+  if (!TESTS)
+    // make sure errors are reported
+    it('should throw an error on an invalid schema', function () {
+      var schema = 'invalid', error = null;
+      try { parser.parse(schema); }
+      catch (e) { error = e; }
+
+      expect(error).to.exist;
+      expect(error).to.be.an.instanceof(Error);
+      expect(error.message).to.include('Parse error on line 1');
+    });
+
+
+  // positive transformation tests
   var schemas = fs.readdirSync(schemasPath);
   schemas = schemas.map(function (s) { return s.replace(/\.shex$/, ''); });
   if (TESTS)
@@ -52,17 +67,6 @@ describe('A ShEx parser', function () {
     });
   });
 
-  // make sure errors are reported
-  it('should throw an error on an invalid schema', function () {
-    var schema = 'invalid', error = null;
-    try { parser.parse(schema); }
-    catch (e) { error = e; }
-
-    expect(error).to.exist;
-    expect(error).to.be.an.instanceof(Error);
-    expect(error.message).to.include('Parse error on line 1');
-  });
-
 
   // negative syntax tests
   var negSyntaxTests = fs.readdirSync(negSyntaxTestsPath);
@@ -86,55 +90,56 @@ describe('A ShEx parser', function () {
   });
 
 
+  if (!TESTS || TESTS.indexOf("prefix") !== -1) {
+    describe('with pre-defined prefixes', function () {
+      var prefixes = { a: 'abc#', b: 'def#' };
+      var parser = new ShExParser(prefixes);
 
-  describe('with pre-defined prefixes', function () {
-    var prefixes = { a: 'abc#', b: 'def#' };
-    var parser = new ShExParser(prefixes);
+      it('should use those prefixes', function () {
+	var schema = 'a:a { b:b .+ }';
+	expect(parser.parse(schema).shapes['abc#a'].expression.predicate)
+          .to.deep.equal('def#b');
+      });
 
-    it('should use those prefixes', function () {
-      var schema = 'a:a { b:b .+ }';
-      expect(parser.parse(schema).shapes['abc#a'].expression.predicate)
-        .to.deep.equal('def#b');
+      it('should allow temporarily overriding prefixes', function () {
+	var schema = 'PREFIX a: <xyz#> a:a { b:b .+ }';
+	expect(parser.parse(schema).shapes['xyz#a'].expression.predicate)
+          .to.deep.equal('def#b');
+	expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
+          .to.deep.equal('def#b');
+      });
+
+      it('should not change the original prefixes', function () {
+	expect(prefixes).to.deep.equal({ a: 'abc#', b: 'def#' });
+      });
+
+      it('should not take over changes to the original prefixes', function () {
+	prefixes.a = 'xyz#';
+	expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
+          .to.deep.equal('def#b');
+      });
     });
 
-    it('should allow temporarily overriding prefixes', function () {
-      var schema = 'PREFIX a: <xyz#> a:a { b:b .+ }';
-      expect(parser.parse(schema).shapes['xyz#a'].expression.predicate)
-        .to.deep.equal('def#b');
-      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
-        .to.deep.equal('def#b');
+    describe('PNAME_NS with pre-defined prefixes', function () {
+      var prefixes = { a: 'abc#', b: 'def#' };
+      var parser = new ShExParser(prefixes);
+
+      it('should use those prefixes', function () {
+	var schema = 'a: { b: .+ }';
+	expect(parser.parse(schema).shapes['abc#'].expression.predicate)
+          .to.deep.equal('def#');
+      });
+
+      it('should allow temporarily overriding prefixes', function () {
+	var schema = 'PREFIX a: <xyz#> a: { b: .+ }';
+	expect(parser.parse(schema).shapes['xyz#'].expression.predicate)
+          .to.deep.equal('def#');
+	expect(parser.parse('a: { b: .+ }').shapes['abc#'].expression.predicate)
+          .to.deep.equal('def#');
+      });
+
     });
-
-    it('should not change the original prefixes', function () {
-      expect(prefixes).to.deep.equal({ a: 'abc#', b: 'def#' });
-    });
-
-    it('should not take over changes to the original prefixes', function () {
-      prefixes.a = 'xyz#';
-      expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
-        .to.deep.equal('def#b');
-    });
-  });
-
-  describe('PNAME_NS with pre-defined prefixes', function () {
-    var prefixes = { a: 'abc#', b: 'def#' };
-    var parser = new ShExParser(prefixes);
-
-    it('should use those prefixes', function () {
-      var schema = 'a: { b: .+ }';
-      expect(parser.parse(schema).shapes['abc#'].expression.predicate)
-        .to.deep.equal('def#');
-    });
-
-    it('should allow temporarily overriding prefixes', function () {
-      var schema = 'PREFIX a: <xyz#> a: { b: .+ }';
-      expect(parser.parse(schema).shapes['xyz#'].expression.predicate)
-        .to.deep.equal('def#');
-      expect(parser.parse('a: { b: .+ }').shapes['abc#'].expression.predicate)
-        .to.deep.equal('def#');
-    });
-
-  });
+  }
 });
 
 // Parses a JSON object, restoring `undefined` values
