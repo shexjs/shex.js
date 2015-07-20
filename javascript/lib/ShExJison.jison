@@ -180,6 +180,13 @@
     ret[key] = val;
     return ret;
   }
+
+  // Expand declared prefix or throw Error
+  function expandPrefix (prefix) {
+    if (!(prefix in Parser.prefixes))
+      throw new Error('Parse error; unknown prefix: ' + prefix);
+    return Parser.prefixes[prefix];
+  }
 %}
 
 /* lexical grammar */
@@ -666,17 +673,12 @@ _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
 shapeOrRef:
       ATPNAME_LN	{ // t: 1dotRefLNex
         $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':'),
-            prefix = $1.substr(0, namePos),
-            expansion = Parser.prefixes[prefix];
-        if (!expansion) throw new Error('Unknown prefix: ' + prefix);
-        $$ = resolveIRI(expansion + $1.substr(namePos + 1));
+        var namePos = $1.indexOf(':');
+        $$ = resolveIRI(expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1));
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1
         $1 = $1.substr(1, $1.length-1);
-        $1 = $1.substr(0, $1.length - 1);
-        if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
-        $$ = resolveIRI(Parser.prefixes[$1]);
+        $$ = resolveIRI(expandPrefix($1.substr(0, $1.length - 1)));
       }
     | '@' shapeLabel	{ $$ = $2; } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     | shapeDefinition	{ // t: 1dotInline1
@@ -819,16 +821,11 @@ string:
 iri:
       IRIREF	-> resolveIRI($1) // t: 1dot
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
-        var namePos = $1.indexOf(':'),
-            prefix = $1.substr(0, namePos),
-            expansion = Parser.prefixes[prefix];
-        if (!expansion) throw new Error('Unknown prefix: ' + prefix);
-        $$ = resolveIRI(expansion + $1.substr(namePos + 1));
+        var namePos = $1.indexOf(':');
+        $$ = resolveIRI(expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1));
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
-        $1 = $1.substr(0, $1.length - 1);
-        if (!($1 in Parser.prefixes)) throw new Error('Unknown prefix: ' + $1);
-        $$ = resolveIRI(Parser.prefixes[$1]);
+        $$ = resolveIRI(expandPrefix($1.substr(0, $1.length - 1)));
     }
     | 'a'	-> RDF_TYPE // t: 1AvalA
     ;

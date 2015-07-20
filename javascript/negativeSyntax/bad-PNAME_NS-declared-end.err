@@ -1,5 +1,5 @@
 # PN_PREFIX with declared FULL STOP in last character
-# source: turtle-syntax-bad-missing-ns-dot-end.ttl
+# source: turtle-syntax-bad-ns-dot-end.ttl
 PREFIX valid: <http://a.example/ns/valid#>
 PREFIX invalid.: <http://a.example/ns/invalid#>
 
