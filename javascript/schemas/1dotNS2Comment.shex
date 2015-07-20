@@ -1,0 +1,9 @@
+# source: comment_following_PNAME_NS.ttl
+
+PREFIX IssueShape: <http://a.example/IssueShape>
+PREFIX p1: <http://a.example/p1>
+
+IssueShape: {
+   p1:#comment
+     .
+}

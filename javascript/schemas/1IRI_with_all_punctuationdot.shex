@@ -1,0 +1,5 @@
+# source: IRI_with_all_punctuation.ttl
+
+<http://a.example/IssueShape> {
+   <scheme:!$%25&amp;'()*+,-./0123456789:/@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~?#> .
+}

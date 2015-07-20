@@ -1,0 +1,14 @@
+{
+  "type": "schema",
+  "prefixes": {},
+  "shapes":{
+    "http://a.example/IssueShape": {
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "scheme:!$%25&amp;'()*+,-./0123456789:/@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~?#",
+        "value": { "type": "valueClass" }
+      }
+    }
+  }
+}
