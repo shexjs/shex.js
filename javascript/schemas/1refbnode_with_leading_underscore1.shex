@@ -1,0 +1,9 @@
+# source: labeled_blank_node_with_leading_underscore.ttl
+_:_ {
+   <http://a.example/p1> .
+}
+
+<http://a.example/EmployeeShape> {
+   <http://a.example/p2> @_:_
+}
+

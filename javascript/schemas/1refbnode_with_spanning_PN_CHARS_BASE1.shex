@@ -1,0 +1,9 @@
+# source: labeled_blank_node_with_PN_CHARS_BASE_character_boundaries.ttl
+_:AZazÀÖØöø˿ͰͽͿ῿‌‍⁰↏Ⰰ⿯、퟿豈﷏ﷰ�𐀀󯿽 {
+   <http://a.example/p1> .
+}
+
+<http://a.example/EmployeeShape> {
+   <http://a.example/p2> @_:AZazÀÖØöø˿ͰͽͿ῿‌‍⁰↏Ⰰ⿯、퟿豈﷏ﷰ�𐀀󯿽
+}
+

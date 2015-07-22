@@ -1,3 +1,4 @@
+# source: labeled_blank_node_subject.ttl
 _:PersonShape {
    <http://a.example/p1> .
 }
