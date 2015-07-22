@@ -1,0 +1,4 @@
+# source: LITERAL1_all_punctuation.ttl
+<http://a.example/IssueShape> {
+   <http://a.example/p1> (' !"#$%&():;<=>?@[]^_`{|}~')
+}
