@@ -186,11 +186,26 @@
     return ret;
   }
 
+  function error (msg) {
+    Parser.prefixes = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
+    base = basePath = baseRoot = '';
+    throw new Error(msg);
+  }
+
   // Expand declared prefix or throw Error
   function expandPrefix (prefix) {
     if (!(prefix in Parser.prefixes))
-      throw new Error('Parse error; unknown prefix: ' + prefix);
+      error('Parse error; unknown prefix: ' + prefix);
     return Parser.prefixes[prefix];
+  }
+
+  // Add a shape to the map
+  function addShape (label, shape) {
+    if (!Parser.shapes)
+      Parser.shapes = {};
+    else if (label in Parser.shapes)
+      error("Parse error: "+label+" alread defined");
+    Parser.shapes[label] = shape;
   }
 %}
 
@@ -414,32 +429,28 @@ prefixDecl:
 
 start:
       IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C	{
+        if (Parser.start)
+	  error("Parse error: start alread defined as " + Parser.start);
         Parser.start = $3; // t: startInline
       }
     ;
 
 _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
       shapeLabel	// t: startRef
-    | shapeDefinition semanticActions	{ // t: startInline
-        if (!Parser.shapes) Parser.shapes = {};
-        $$ = blank();
-        // $2: t: startInline
-        Parser.shapes[$$] = extend($1, $2);
+    | shapeDefinition semanticActions	{ // t: startInline / startInline
+        addShape($$ = blank(), extend($1, $2));
     }
     ;
 
 shape:
     // _QIT_VIRTUAL_E_Opt 
       shapeLabel shapeDefinition semanticActions	{ // t: 1dot
-        if (!Parser.shapes) Parser.shapes = {};
-        // $3: t: 1dotShapeCode1
-        Parser.shapes[$1] = extend($2, $3);
+	addShape($1, extend($2, $3));
     }
     | IT_VIRTUAL shapeLabel shapeDefinition semanticActions	{ // t: 1dotVirtual
-        if (!Parser.shapes) Parser.shapes = {};
-        // $4: t: 1dotVirtualShapeCode1
-        Parser.shapes[$2] = extend({type: null, virtual: true}, $3, $4); // sneak 'virtual' in after 'type'
-                                                                         // Type will be overwritten.
+        // sneak 'virtual' in after 'type'
+        // Type will be overwritten.
+        addShape($2, extend({type: null, virtual: true}, $3, $4)) // $4: t: 1dotVirtualShapeCode1
     }
     ;
 
@@ -687,9 +698,7 @@ shapeOrRef:
       }
     | '@' shapeLabel	{ $$ = $2; } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     | shapeDefinition	{ // t: 1dotInline1
-        if (!Parser.shapes) Parser.shapes = {};
-        $$ = blank();
-        Parser.shapes[$$] = $1;
+        addShape($$ = blank(), $1);
       }
     ;
 
