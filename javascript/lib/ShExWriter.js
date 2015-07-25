@@ -88,6 +88,8 @@ ShExWriter.prototype = {
       if (shape.inherit && shape.inherit.length > 0) {
 	pieces.push("&");
 	shape.inherit.forEach(function (i, ord) {
+	  if (ord)
+	    pieces.push(" ")
 	  pieces.push(_ShExWriter._encodeShapeName(i, ord > 0));
 	});
 	pieces.push(" ");

@@ -1,0 +1,18 @@
+PREFIX ex: <http://a.example/>
+
+ex:PersonShape {
+   ex:p1 .
+}
+
+ex:MemberShape {
+   ex:p2 .
+}
+
+ex:ManagedShape {
+   ex:p3 .
+}
+
+ex:EmployeeShape &ex:PersonShape &ex:MemberShape &ex:ManagedShape {
+   ex:p4 .
+}
+

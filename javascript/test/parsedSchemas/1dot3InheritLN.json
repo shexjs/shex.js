@@ -1,0 +1,42 @@
+{
+  "type": "schema",
+  "prefixes": {
+    "ex": "http://a.example/"
+  },
+  "shapes":{
+    "http://a.example/PersonShape": {
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p1",
+        "value": { "type": "valueClass" }
+      }
+    },
+    "http://a.example/MemberShape": {
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p2",
+        "value": { "type": "valueClass" }
+      }
+    },
+    "http://a.example/ManagedShape": {
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p3",
+        "value": { "type": "valueClass" }
+      }
+    },
+    "http://a.example/EmployeeShape": {
+      "type": "shape",
+      "expression": {
+        "type": "tripleConstraint",
+        "predicate": "http://a.example/p4",
+        "value": { "type": "valueClass" }
+      },
+      "inherit": [ "http://a.example/PersonShape", "http://a.example/MemberShape", "http://a.example/ManagedShape" ]
+    }
+  }
+}
+
