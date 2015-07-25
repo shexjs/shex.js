@@ -47,6 +47,18 @@
       "expression": {
         "type": "group",
         "expressions": [
+	  { "type": "tripleConstraint", "predicate": "http://all.example/p1", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/p2", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/p3", "value": { "type": "valueClass" } }
+	]
+      },
+      "extra": [ "http://all.example/p1", "http://all.example/p2", "http://all.example/p3" ]
+    },
+    "http://all.example/S3": {
+      "type": "shape",
+      "expression": {
+        "type": "group",
+        "expressions": [
 	  { "type": "tripleConstraint", "predicate": "http://all.example/a", "value": { "type": "valueClass" } },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/prefix", "value": { "type": "valueClass" } },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass" } },

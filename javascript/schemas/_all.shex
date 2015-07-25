@@ -27,7 +27,7 @@ PREFIX nonliteral: <http://all.example/>
 PREFIX or: <http://all.example/>
 PREFIX pattern: <http://all.example/>
 
-prefix1:S2 EXTRA a:a prefix:prefix base:base &a:S1 {
+prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
    a:a .,
    prefix:prefix .,
    base:base .,
@@ -43,3 +43,4 @@ prefix1:S2 EXTRA a:a prefix:prefix base:base &a:S1 {
    or:or .,
    pattern:pattern .
 }
+
