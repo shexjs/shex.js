@@ -1,5 +1,8 @@
 PREFIX prefix1: <http://all.example/>
 
+%prefix1:act1{ START1 %}
+%prefix1:act2{ START2 %}
+
 <http://all.example/S1> EXTRA <http://all.example/p1> <http://all.example/p2> <http://all.example/p3> {
    <http://all.example/p1> .,
    <http://all.example/p2> .,
@@ -25,9 +28,13 @@ PREFIX bnode: <http://all.example/>
 PREFIX literal: <http://all.example/>
 PREFIX nonliteral: <http://all.example/>
 PREFIX or: <http://all.example/>
-PREFIX pattern: <http://all.example/>
+prefix pattern: <http://all.example/>
 
-prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
+PREfIX prefix1: <http://all.example/S>
+stArt = prefix1:3
+PREFIX prefix1: <http://all.example/>
+
+VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
    a:a .,
    prefix:prefix .,
    base:base .,
@@ -44,3 +51,5 @@ prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
    pattern:pattern .
 }
 
+prefix1:S4 CLOSED &prefix1:S4 &prefix1:S2 {
+}

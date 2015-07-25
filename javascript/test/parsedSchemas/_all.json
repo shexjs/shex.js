@@ -17,6 +17,11 @@
     "or": "http://all.example/",
     "pattern": "http://all.example/"
   },
+  "startAct": {
+    "http://all.example/act1": " START1 ",
+    "http://all.example/act2": " START2 "
+  },
+  "start": "http://all.example/S3",
   "shapes": {
     "http://all.example/S1": {
       "type": "shape",
@@ -56,6 +61,7 @@
     },
     "http://all.example/S3": {
       "type": "shape",
+      "virtual": true,
       "expression": {
         "type": "group",
         "expressions": [
@@ -77,6 +83,11 @@
       },
       "extra": [ "http://all.example/a", "http://all.example/prefix", "http://all.example/base" ],
       "inherit": [ "http://all.example/S1" ]
+    },
+    "http://all.example/S4": {
+      "type": "shape",
+      "closed": true,
+      "inherit": [ "http://all.example/S4", "http://all.example/S2" ]
     }
   }
 }

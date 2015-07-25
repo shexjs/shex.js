@@ -62,6 +62,7 @@ describe('A ShEx parser', function () {
         if (error) throw error;
         else w = text;
       });
+      if (VERBOSE) console.log("written  :" + w);
       var parsed2 = parser.parse(w);
       expect(parsed2).to.deep.equal(jsonSchema);
     });
