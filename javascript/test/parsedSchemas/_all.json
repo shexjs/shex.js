@@ -67,16 +67,44 @@
         "expressions": [
 	  { "type": "tripleConstraint", "predicate": "http://all.example/a", "value": { "type": "valueClass" } },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/prefix", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/BaSe", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/virtual", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/extra", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/iri", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/bnode", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/literal", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/nonliteral", "value": { "type": "valueClass" } },
+	  { "type": "oneOf",
+	    "expressions": [
+	      { "type": "someOf",
+		"expressions": [
+		  { "type": "group",
+		    "expressions": [
+		      { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass" } },
+		      { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass" } },
+		      { "type": "tripleConstraint", "predicate": "http://all.example/BaSe", "value": { "type": "valueClass" } }
+		      ]
+		  },
+		  { "type": "tripleConstraint", "predicate": "http://all.example/virtual", "value": { "type": "valueClass" } }
+		]
+	      },
+	      { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass" } },
+	      { "type": "group",
+		"expressions": [
+		  { "type": "oneOf",
+		    "expressions": [
+		      { "type": "group",
+			"expressions": [
+			  { "type": "tripleConstraint", "predicate": "http://all.example/extra", "value": { "type": "valueClass" } },
+			  { "type": "tripleConstraint", "predicate": "http://all.example/iri", "value": { "type": "valueClass" } }
+			]
+		      },
+		      { "type": "group",
+			"expressions": [
+			  { "type": "tripleConstraint", "predicate": "http://all.example/bnode", "value": { "type": "valueClass" } },
+			  { "type": "tripleConstraint", "predicate": "http://all.example/literal", "value": { "type": "valueClass" } }
+			]
+		      }
+		    ]
+		  },
+		  { "type": "tripleConstraint", "predicate": "http://all.example/nonliteral", "value": { "type": "valueClass" } }
+		]
+	      }
+	    ]
+	  },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/or", "value": { "type": "valueClass" } },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/pattern", "value": { "type": "valueClass" } }
 	]

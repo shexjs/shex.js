@@ -37,16 +37,18 @@ PREFIX prefix1: <http://all.example/>
 VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
    a:a .,
    prefix:prefix .,
-   base:base .,
-   PREFIX:PREFIX .,
-   BaSe:BaSe .,
-   virtual:virtual .,
-   closed:closed .,
-   extra:extra .,
-   iri:iri .,
-   bnode:bnode .,
-   literal:literal .,
-   nonliteral:nonliteral .,
+   (  base:base .,
+      PREFIX:PREFIX .,
+      BaSe:BaSe .,
+    ||virtual:virtual .,
+    | closed:closed .,
+    | (  extra:extra .,
+         iri:iri .,
+       | bnode:bnode .,
+         literal:literal .
+      ),
+      nonliteral:nonliteral .
+   ),
    or:or .,
    pattern:pattern .
 }
