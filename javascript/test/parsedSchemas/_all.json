@@ -66,22 +66,22 @@
         "type": "group",
         "expressions": [
 	  { "type": "tripleConstraint", "predicate": "http://all.example/a", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/prefix", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/prefix", "value": { "type": "valueClass" }, "min":0, "max":1 },
 	  { "type": "oneOf",
 	    "expressions": [
 	      { "type": "someOf",
 		"expressions": [
 		  { "type": "group",
 		    "expressions": [
-		      { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass" } },
-		      { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass" } },
-		      { "type": "tripleConstraint", "predicate": "http://all.example/BaSe", "value": { "type": "valueClass" } }
+		      { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass" }, "min":0 },
+		      { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass" }, "min":1 },
+		      { "id": "http://all.example/id1", "type": "tripleConstraint", "predicate": "http://all.example/BaSe", "value": { "type": "valueClass" }, "min":2, "max":2 }
 		      ]
 		  },
-		  { "type": "tripleConstraint", "predicate": "http://all.example/virtual", "value": { "type": "valueClass" } }
+		  { "type": "tripleConstraint", "predicate": "http://all.example/virtual", "value": { "type": "valueClass" }, "min":2 }
 		]
 	      },
-	      { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass" } },
+	      { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass" }, "min":2 },
 	      { "type": "group",
 		"expressions": [
 		  { "type": "oneOf",
@@ -106,7 +106,17 @@
 	    ]
 	  },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/or", "value": { "type": "valueClass" } },
-	  { "type": "tripleConstraint", "predicate": "http://all.example/pattern", "value": { "type": "valueClass" } }
+	  { "type": "group",
+	    "expressions": [
+	      { "type": "group",
+		"expressions": [
+		  { "type": "tripleConstraint", "predicate": "http://all.example/pattern", "value": { "type": "valueClass" } }
+		],
+		"semAct": { "http://all.example/act1": " code1 " }
+	      }
+	    ],
+	    "semAct": { "http://all.example/act2": " code2 " }
+	  }
 	]
       },
       "extra": [ "http://all.example/a", "http://all.example/prefix", "http://all.example/base" ],
