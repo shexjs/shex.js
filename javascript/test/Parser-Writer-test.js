@@ -78,7 +78,7 @@ describe('A ShEx parser', function () {
 
   negSyntaxTests.forEach(function (schema) {
 
-    it('should correctly parse schema "' + schema + '"', function () {
+    it('should not parse schema "' + schema + '"', function () {
       if (VERBOSE) console.log(schema);
       schema = fs.readFileSync(negSyntaxTestsPath + schema + '.err', 'utf8');
       try { parser.parse(schema); }

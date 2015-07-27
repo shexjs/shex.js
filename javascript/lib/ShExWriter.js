@@ -229,7 +229,7 @@ ShExWriter.prototype = {
 	   'totaldigits', 'fractiondigits'
 	  ].forEach(function (a) {
 	    if (v[a])
-	      pieces.push(a, " ", v[a]);
+	      pieces.push(" ", a, " ", v[a]);
 	  });
 	  _writeCardinality(expr.min, expr.max);
 
