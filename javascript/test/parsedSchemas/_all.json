@@ -88,14 +88,27 @@
 		    "expressions": [
 		      { "type": "group",
 			"expressions": [
-			  { "type": "tripleConstraint", "predicate": "http://all.example/extra", "value": { "type": "valueClass" } },
-			  { "type": "tripleConstraint", "predicate": "http://all.example/iri", "value": { "type": "valueClass" } }
+			  { "type": "tripleConstraint", "inverse": true, "predicate": "http://all.example/extra", "value": { "type": "valueClass" },
+			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
+			  },
+			  { "type": "tripleConstraint", "negated": true, "predicate": "http://all.example/iri", "value": { "type": "valueClass" },
+                            "annotations": [
+                              [ "http://a.example/annot1", "\"1\"" ],
+                              [ "http://a.example/annot2", "\"2\"" ],
+                              [ "http://a.example/annot3", "\"3\"" ]
+                            ],
+			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
+			  }
 			]
 		      },
 		      { "type": "group",
 			"expressions": [
-			  { "type": "tripleConstraint", "predicate": "http://all.example/bnode", "value": { "type": "valueClass" } },
-			  { "type": "tripleConstraint", "predicate": "http://all.example/literal", "value": { "type": "valueClass" } }
+			  { "type": "tripleConstraint", "inverse": true, "negated": true, "predicate": "http://all.example/bnode", "value": { "type": "valueClass" },
+			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
+			  },
+			  { "type": "tripleConstraint", "inverse": true, "negated": true, "predicate": "http://all.example/literal", "value": { "type": "valueClass" },
+			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
+			  }
 			]
 		      }
 		    ]
@@ -126,6 +139,13 @@
       "type": "shape",
       "closed": true,
       "inherit": [ "http://all.example/S4", "http://all.example/S2" ]
+    },
+    "http://all.example/S5": {
+      "type": "shape",
+      "expression": {
+        "include": "http://all.example/S4",
+        "type": "include"
+      }
     }
   }
 }

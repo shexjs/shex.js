@@ -608,11 +608,11 @@ tripleConstraint:
         if ($3.length)
           $$['annotations'] = $3; // t: 1dotAnnot3
       }
-    | senseFlags predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt semanticActions	{
+    | senseFlags predicate valueClass _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2, value: $3 }, $5, $6); // t: 1inversedot, 1negatedinversedot
-        if ($4.length)
-          $$['annotations'] = $4; // t: 1inversedotAnnot3
+        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2, value: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
+        if ($5.length)
+          $$['annotations'] = $5; // t: 1inversedotAnnot3
       }
     ;
 

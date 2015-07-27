@@ -42,10 +42,13 @@ VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
       $<http://all.example/id1> BaSe:BaSe .{2},
     ||virtual:virtual .{2,},
     | closed:closed .{2,*},
-    | (  extra:extra .,
-         iri:iri .,
-       | bnode:bnode .,
-         literal:literal .
+    | (  ^extra:extra .+ %prefix1:act1{ code1 %},
+         !iri:iri .+ ;
+      <http://a.example/annot1> "1" ;
+      <http://a.example/annot2> "2" ;
+      <http://a.example/annot3> "3" %prefix1:act1{ code1 %},
+       | ^!bnode:bnode .+ %prefix1:act1{ code1 %},
+         !^literal:literal .+ %prefix1:act1{ code1 %}
       ),
       nonliteral:nonliteral .
    ),
@@ -55,3 +58,8 @@ VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
 
 prefix1:S4 CLOSED &prefix1:S4 &prefix1:S2 {
 }
+
+prefix1:S5 {
+   &prefix1:S4
+}
+
