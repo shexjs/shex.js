@@ -6,6 +6,7 @@
     "prefix": "http://all.example/",
     "base": "http://all.example/",
     "PREFIX": "http://all.example/",
+    "S5": "http://all.example/S5",
     "BaSe": "http://all.example/",
     "virtual": "http://all.example/",
     "closed": "http://all.example/",
@@ -15,7 +16,8 @@
     "literal": "http://all.example/",
     "nonliteral": "http://all.example/",
     "or": "http://all.example/",
-    "pattern": "http://all.example/"
+    "pattern": "http://all.example/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "startAct": {
     "http://all.example/act1": " START1 ",
@@ -23,6 +25,16 @@
   },
   "start": "http://all.example/S3",
   "shapes": {
+    "_:b0": {
+      "type": "shape",
+      "expression": {
+        "predicate": "http://all.example/p1",
+        "type": "tripleConstraint",
+        "value": {
+          "type": "valueClass"
+        }
+      }
+    },
     "http://all.example/S1": {
       "type": "shape",
       "expression": {
@@ -74,21 +86,21 @@
 		  { "type": "group",
 		    "expressions": [
 		      { "type": "tripleConstraint", "predicate": "http://all.example/base", "value": { "type": "valueClass", "nodeKind": "iri" }, "min":0 },
-		      { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass", "nodeKind": "iri", "pattern": "^http://" }, "min":1 },
+		      { "type": "tripleConstraint", "predicate": "http://all.example/PREFIX", "value": { "type": "valueClass", "nodeKind": "iri", "pattern": "^http://", "length": 5 }, "min":1 },
 		      { "id": "http://all.example/id1", "type": "tripleConstraint", "predicate": "http://all.example/BaSe", "value": { "type": "valueClass", "reference": "http://all.example/S5" }, "min":2, "max":2 }
 		      ]
 		  },
 		  { "type": "tripleConstraint", "predicate": "http://all.example/virtual", "value": { "type": "valueClass", "nodeKind": "nonliteral", "reference": "http://all.example/S5" }, "min":2 }
 		]
 	      },
-	      { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass", "nodeKind": "bnode", "reference": "http://all.example/S5", "length": 2 }, "min":2 },
+	      { "type": "tripleConstraint", "predicate": "http://all.example/closed", "value": { "type": "valueClass", "nodeKind": "bnode", "reference": { "type": "or", "disjuncts": ["http://all.example/S5", "http://all.example/S5"]}, "minlength": 2, "maxlength": 4 }, "min":2 },
 	      { "type": "group",
 		"expressions": [
 		  { "type": "oneOf",
 		    "expressions": [
 		      { "type": "group",
 			"expressions": [
-			  { "type": "tripleConstraint", "inverse": true, "predicate": "http://all.example/extra", "value": { "type": "valueClass" },
+			  { "type": "tripleConstraint", "inverse": true, "predicate": "http://all.example/extra", "value": { "type": "valueClass", "reference": "_:b0" },
 			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
 			  },
 			  { "type": "tripleConstraint", "negated": true, "predicate": "http://all.example/iri", "value": { "type": "valueClass", "nodeKind": "literal" },
@@ -113,19 +125,36 @@
 		      }
 		    ]
 		  },
-		  { "type": "tripleConstraint", "predicate": "http://all.example/nonliteral", "value": { "type": "valueClass" } }
+		  { "type": "tripleConstraint", "predicate": "http://all.example/nonliteral", "value": { "type": "valueClass", "datatype": "http://www.w3.org/2001/XMLSchema#integer", "mininclusive": 5, "maxinclusive": 5, "totaldigits": 1, "fractiondigits": 1 } }
 		]
 	      }
 	    ]
 	  },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/or", "value": { "type": "valueClass", "values": [
-	    "A"
+	    "http://a.example/a1",
+            {
+              "type": "stemRange",
+              "stem": "http://all.example/",
+              "exclusions": [
+		{ "stem": "http://all.example/a", "type": "stem" },
+		"http://all.example/b"
+              ]
+            }
 	  ] } },
 	  { "type": "group",
 	    "expressions": [
 	      { "type": "group",
 		"expressions": [
-		  { "type": "tripleConstraint", "predicate": "http://all.example/pattern", "value": { "type": "valueClass" } }
+		  { "type": "tripleConstraint", "predicate": "http://all.example/pattern", "value": { "type": "valueClass", "values": [
+		    {
+		      "type": "stemRange",
+		      "stem": { "type": "wildcard" },
+		      "exclusions": [
+			{ "stem": "http://all.example/a", "type": "stem" },
+			"http://all.example/b"
+		      ]
+		    }
+		  ] } }
 		],
 		"semAct": { "http://all.example/act1": " code1 " }
 	      }

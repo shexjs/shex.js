@@ -33,16 +33,18 @@ prefix pattern: <http://all.example/>
 PREfIX prefix1: <http://all.example/S>
 stArt = prefix1:3
 PREFIX prefix1: <http://all.example/>
+PREFIX S5: <http://all.example/S5>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
    a:a .,
    prefix:prefix prefix:dt LENGTH 2?,
    (  base:base IRI*,
-      PREFIX:PREFIX IRI ~ "^http://"+,
+      PREFIX:PREFIX IRI ~ "^http://" LENGTH 5 +,
       $<http://all.example/id1> BaSe:BaSe @prefix1:S5{2},
     ||virtual:virtual NONLITERAL @prefix1:S5{2,},
-    | closed:closed  BNODE @prefix1:S5 LENGTH 2 {2,*},
-    | (  ^extra:extra .+ %prefix1:act1{ code1 %},
+    | closed:closed  BNODE @S5: OR @<http://all.example/S5> MINLENGTH 2 MAXLENGTH 4 {2,*},
+    | (  ^extra:extra { prefix1:p1 . }+ %prefix1:act1{ code1 %},
          !iri:iri LITERAL+ ;
       <http://a.example/annot1> "1" ;
       <http://a.example/annot2> "2" ;
@@ -50,10 +52,10 @@ VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
        | ^!bnode:bnode .+ %prefix1:act1{ code1 %},
          !^literal:literal .+ %prefix1:act1{ code1 %}
       ),
-      nonliteral:nonliteral .
+      nonliteral:nonliteral xsd:integer MININCLUSIVE 5 MAXINCLUSIVE 5 TOTALDIGITS 1 FRACTIONDIGITS 1
    ),
-   or:or (<A>),
-   ((pattern:pattern .) %prefix1:act1{ code1 %}) %prefix1:act2{ code2 %}
+   or:or (<http://a.example/a1> prefix:~ - prefix:a~ - prefix:b),
+   ((pattern:pattern (. - prefix:a~ - prefix:b)) %prefix1:act1{ code1 %}) %prefix1:act2{ code2 %}
 }
 
 prefix1:S4 CLOSED &prefix1:S4 &prefix1:S2 {
