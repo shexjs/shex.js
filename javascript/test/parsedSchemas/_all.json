@@ -1,6 +1,7 @@
 {
   "type": "schema",
   "prefixes": {
+    "": "http://all.example/",
     "prefix1": "http://all.example/",
     "a": "http://all.example/",
     "prefix": "http://all.example/",
@@ -31,8 +32,23 @@
         "predicate": "http://all.example/p1",
         "type": "tripleConstraint",
         "value": {
-          "type": "valueClass"
-        }
+          "type": "valueClass",
+	  "values": [
+	    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+	    "\"ab\"",
+	    "\"ab\"@en",
+	    "http://all.example/",
+	    "http://all.example/val1",
+	    "http://all.example/",
+	    "scheme:!$%25&amp;'()*+,-./0123456789:/@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~?#",
+	    "http://a.example/p1",
+	    "\"0.0\"^^http://www.w3.org/2001/XMLSchema#decimal",
+	    "\"0e0\"^^http://www.w3.org/2001/XMLSchema#double",
+	    "\"0e0\"^^http://www.w3.org/2001/XMLSchema#double",
+	    "\"false\"^^http://www.w3.org/2001/XMLSchema#boolean",
+	    "\"0\"^^http://www.w3.org/2001/XMLSchema#integer"
+          ]
+	}
       }
     },
     "http://all.example/S1": {
@@ -64,7 +80,7 @@
       "expression": {
         "type": "group",
         "expressions": [
-	  { "type": "tripleConstraint", "predicate": "http://all.example/p1", "value": { "type": "valueClass" } },
+	  { "type": "tripleConstraint", "predicate": "http://all.example/p1-", "value": { "type": "valueClass" } },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/p2", "value": { "type": "valueClass" } },
 	  { "type": "tripleConstraint", "predicate": "http://all.example/p3", "value": { "type": "valueClass" } }
 	]
@@ -101,13 +117,13 @@
 		      { "type": "group",
 			"expressions": [
 			  { "type": "tripleConstraint", "inverse": true, "predicate": "http://all.example/extra", "value": { "type": "valueClass", "reference": "_:b0" },
-			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
+			    "semAct": { "http://all.example/act1": " code1 " }, "min":2, "max":3
 			  },
 			  { "type": "tripleConstraint", "negated": true, "predicate": "http://all.example/iri", "value": { "type": "valueClass", "nodeKind": "literal" },
                             "annotations": [
-                              [ "http://a.example/annot1", "\"1\"" ],
-                              [ "http://a.example/annot2", "\"2\"" ],
-                              [ "http://a.example/annot3", "\"3\"" ]
+                              [ "http://a.example/annot1", "http://a.example/IRIREF" ],
+                              [ "http://a.example/annot2", "\"STRING_LITERAL2\"" ],
+                              [ "http://a.example/annot3", "\"3\"^^http://www.w3.org/2001/XMLSchema#integer" ]
                             ],
 			    "semAct": { "http://all.example/act1": " code1 " }, "min":1
 			  }
@@ -166,15 +182,15 @@
       "extra": [ "http://all.example/a", "http://all.example/prefix", "http://all.example/base" ],
       "inherit": [ "http://all.example/S1" ]
     },
-    "http://all.example/S4": {
+    "_:a·̀ͯ‿.⁀": {
       "type": "shape",
       "closed": true,
-      "inherit": [ "http://all.example/S4", "http://all.example/S2" ]
+      "inherit": [ "_:a·̀ͯ‿.⁀", "http://all.example/S2" ]
     },
-    "http://all.example/S5": {
+    "_:AZazÀÖØöø˿ͰͽͿ῿‌‍⁰↏Ⰰ⿯、퟿豈﷏ﷰ�𐀀󯿽": {
       "type": "shape",
       "expression": {
-        "include": "http://all.example/S4",
+        "include": "_:a·̀ͯ‿.⁀",
         "type": "include"
       }
     }
