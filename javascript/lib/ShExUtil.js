@@ -98,7 +98,7 @@ var ShExUtil = {
 	  expect(v, 'type', 'valueClass');
 	  if (v.reference) {
 	    if (typeof(v.reference) === "object") {
-	      v.reference.conjuncts.forEach(function (c) {
+	      v.reference.disjuncts.forEach(function (c) {
 		ret.add(label, c);
 	      });
 	    } else {

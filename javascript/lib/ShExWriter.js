@@ -175,7 +175,7 @@ ShExWriter.prototype = {
 
 	    if (v.reference) {
 	      if (typeof(v.reference) === "object") {
-		pieces.push(v.reference.conjuncts.map(function (c) {
+		pieces.push(v.reference.disjuncts.map(function (c) {
 		  return "@"+_ShExWriter._encodeShapeName(c);
 		}).join(" OR "));
 	      } else {
