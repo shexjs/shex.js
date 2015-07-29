@@ -35,7 +35,7 @@
           "type": "valueClass",
           "reference": {
             "type": "or",
-            "conjuncts": [
+            "disjuncts": [
               "http://a.example/PersonShape",
               "http://a.example/PlaceShape",
               "http://a.example/ThingShape"

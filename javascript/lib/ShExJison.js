@@ -330,7 +330,7 @@ case 85:
 this.$ = 'nonliteral' // t: 1nonliteralLength;
 break;
 case 88:
-this.$ = $$[$0].length ? { type: "or", conjuncts: unionAll([$$[$0-1]], $$[$0]) } : $$[$0-1] // t: 1dotRefOr3/1dotRef1;
+this.$ = $$[$0].length ? { type: "or", disjuncts: unionAll([$$[$0-1]], $$[$0]) } : $$[$0-1] // t: 1dotRefOr3/1dotRef1;
 break;
 case 89:
 this.$ = $$[$0] // t: 1dotRefOr3;

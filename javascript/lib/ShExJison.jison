@@ -706,7 +706,7 @@ _QstringFacet_E_Plus:
     ;
 
 groupShapeConstr:
-      shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", conjuncts: unionAll([$1], $2) } : $1 // t: 1dotRefOr3/1dotRef1
+      shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", disjuncts: unionAll([$1], $2) } : $1 // t: 1dotRefOr3/1dotRef1
     ;
 
 _O_QIT_OR_E_S_QshapeOrRef_E_C:
