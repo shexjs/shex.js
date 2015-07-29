@@ -35,8 +35,8 @@
           "type": "valueClass",
 	  "values": [
 	    "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-	    "\"ab\"",
-	    "\"ab\"@en",
+	    "\"STRING_LITERAL2\"",
+	    "\"STRING_LITERAL2\"@en-uk",
 	    "http://all.example/",
 	    "http://all.example/val1",
 	    "http://all.example/",
@@ -46,7 +46,12 @@
 	    "\"0e0\"^^http://www.w3.org/2001/XMLSchema#double",
 	    "\"0e0\"^^http://www.w3.org/2001/XMLSchema#double",
 	    "\"false\"^^http://www.w3.org/2001/XMLSchema#boolean",
-	    "\"0\"^^http://www.w3.org/2001/XMLSchema#integer"
+	    "\"0\"^^http://www.w3.org/2001/XMLSchema#integer",
+	    "\"ab\"^^http://all.example/bloodType",
+	    "\"o+\"^^http://all.example/bloodType",
+	    "\" !\"#$%&():;<=>?@[]^_`{|}~\"",
+	    "\"\u0000\t\u000B\u000C\u000E&([]\"",
+	    "\"\u0080߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽\""
           ]
 	}
       }
