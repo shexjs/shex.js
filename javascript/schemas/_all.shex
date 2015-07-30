@@ -64,6 +64,7 @@ VIRTUAL prefix1:S3 EXTRA a:a prefix:prefix base:base &a:S1 {
 	      '	&([]' # Eliding \u0000 because it confuses UTF-8 detectors.
 	      '߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽'
 	      "\"\\"
+	      "𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡" # outside of BMP
 	      """STRING_LITERAL_LONG2"""@en-UK
             ) }{2,3} %prefix1:act1{ code1 %},
          !iri:iri LITERAL+ ;
