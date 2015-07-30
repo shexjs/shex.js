@@ -160,11 +160,12 @@
   // Regular expression and replacement strings to escape strings
   var stringEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g,
       irirefEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})/g,
-      escapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+      stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                              't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
+      semactEscapeReplacements = { '\\': '\\', '%': '%' },
       fromCharCode = String.fromCharCode;
 
-  function unescape(string, regex) {
+  function unescape(string, regex, replacements) {
     try {
       string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
         var charCode;
@@ -180,7 +181,7 @@
           return fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
         }
         else {
-          var replacement = escapeReplacements[escapedChar];
+          var replacement = replacements[escapedChar];
           if (!replacement) throw new Error();
           return replacement;
         }
@@ -193,7 +194,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return '"' + unescape(string, stringEscapeSequence) + '"';
+    return '"' + unescape(string, stringEscapeSequence, stringEscapeReplacements) + '"';
   }
 
   // Return object with p1 key, p2 integer value
@@ -204,9 +205,10 @@
   }
 
   // Return object with p1 key, p2 string value
-  function keyString(key, val) {
+  function unescapeSemanticAction(key, string) {
     var ret = {};
-    ret[key] = val;
+    string = string.substring(1, string.length - 2);
+    ret[key] = unescape(string, stringEscapeSequence, semactEscapeReplacements);
     return ret;
   }
 
@@ -258,8 +260,6 @@ IT_MINLENGTH		[Mm][Ii][Nn][Ll][Ee][Nn][Gg][Tt][Hh]
 IT_MAXLENGTH		[Mm][Aa][Xx][Ll][Ee][Nn][Gg][Tt][Hh]
 IT_TOTALDIGITS		[Tt][Oo][Tt][Aa][Ll][Dd][Ii][Gg][Ii][Tt][Ss]
 IT_FRACTIONDIGITS	[Ff][Rr][Aa][Cc][Tt][Ii][Oo][Nn][Dd][Ii][Gg][Ii][Tt][Ss]
-//CODE			"%" ([#+A-Z_a-z][#+0-9A-Z_a-z]*)? "{" ([^%] | '\\' '%')* "%" "}"
-CODE			"{" ([^%] | '\\' '%')* "%}"
 LANGTAG			"@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER			([+-])?([0-9])+
 REPEAT_RANGE		"{"({INTEGER})((","(({INTEGER})|'*')?))?"}"
@@ -280,6 +280,7 @@ ATPNAME_NS              '@' {PN_PREFIX}? ':'
 HEX                     [0-9] | [A-F] | [a-f]
 PERCENT                 '%' {HEX} {HEX}
 UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX}
+CODE			"{" ([^%\\] | "\\"[%\\] | {UCHAR})* "%}"
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
@@ -296,7 +297,6 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 %%
 
 \s+|{COMMENT} /**/
-{CODE}			return 'CODE';
 {ATPNAME_LN}		return 'ATPNAME_LN';
 // {ATIRIREF}		return 'ATIRIREF';
 {ATPNAME_NS}		return 'ATPNAME_NS';
@@ -323,6 +323,7 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 //{HEX}			return 'HEX';
 //{PERCENT}		return 'PERCENT';
 //{UCHAR}		return 'UCHAR';
+{CODE}			return 'CODE';
 {STRING_LITERAL_LONG1}	return 'STRING_LITERAL_LONG1';
 {STRING_LITERAL_LONG2}	return 'STRING_LITERAL_LONG2';
 {STRING_LITERAL1}	return 'STRING_LITERAL1';
@@ -882,8 +883,8 @@ blankNode:
     ;
 
 codeDecl:
-      '%' CODE	-> keyString('', $2.substr(1, $2.length - 3)) // t: 1dotUnlabeledCode1
-    | '%' iri CODE	-> keyString($2, $3.substr(1, $3.length - 3)) // t: 1dotCode1
+      '%' CODE	-> unescapeSemanticAction('', $2) // t: 1dotUnlabeledCode1
+    | '%' iri CODE	-> unescapeSemanticAction($2, $3) // t: 1dotCode1
     ;
 
 startActions:

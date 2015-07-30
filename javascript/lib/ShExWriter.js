@@ -130,7 +130,7 @@ ShExWriter.prototype = {
 	    for (var lang in semActs) {
               pieces.push("\n"+indent+"   %");
 	      pieces.push(_ShExWriter._encodeValue(lang));
-              pieces.push("{"+semActs[lang]+"%"+"}"); // !! escape
+              pieces.push("{"+semActs[lang].replace(/\\/g, "\\\\").replace(/%/g, "\\%")+"%"+"}");
 	    };
           }
         }
