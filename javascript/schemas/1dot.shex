@@ -1,5 +1,0 @@
-# source: IRI_subject.ttl
-
-<http://a.example/IssueShape> {
-   <http://a.example/p1> .
-}

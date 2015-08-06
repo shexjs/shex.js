@@ -1,4 +1,0 @@
-# source: langtagged_non_LONG.nt
-<http://a.example/IssueShape> {
-   <http://a.example/p1> ("STRING_LITERAL2"@en)
-}

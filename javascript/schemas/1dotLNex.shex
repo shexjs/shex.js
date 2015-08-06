@@ -1,5 +1,0 @@
-PREFIX ex: <http://a.example/>
-
-ex:IssueShape {
-   ex:p1 .
-}

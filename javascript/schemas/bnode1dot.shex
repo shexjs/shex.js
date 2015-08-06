@@ -1,4 +1,0 @@
-# source: labeled_blank_node_subject.ttl
-_:IssueShape {
-   <http://a.example/p1> .
-}

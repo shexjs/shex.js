@@ -7,9 +7,9 @@ var ShExWriter = require('../lib/ShExWriter');
 var fs = require('fs');
 var expect = require('chai').expect;
 
-var schemasPath = __dirname + '/../schemas/';
-var jsonSchemasPath = __dirname + '/../test/parsedSchemas/';
-var negSyntaxTestsPath = __dirname + '/../negativeSyntax/';
+var schemasPath = __dirname + '/../../../shexTest/schemas/';
+var jsonSchemasPath = __dirname + '/../../../shexTest/test/parsedSchemas/';
+var negSyntaxTestsPath = __dirname + '/../../../shexTest/negativeSyntax/';
 
 describe('A ShEx parser', function () {
   // var b = function () {  };
