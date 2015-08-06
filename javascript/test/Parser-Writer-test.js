@@ -11,6 +11,11 @@ var schemasPath = __dirname + '/../../../shexTest/schemas/';
 var jsonSchemasPath = __dirname + '/../../../shexTest/test/parsedSchemas/';
 var negSyntaxTestsPath = __dirname + '/../../../shexTest/negativeSyntax/';
 
+if (!fs.existsSync(schemasPath)) {
+  console.warn(schemasPath + " not found. Please (cd .. && git clone git@github.com:shexSpec/shexTest.git) .");
+  process.exit(-1);
+}
+
 describe('A ShEx parser', function () {
   // var b = function () {  };
   // it('is a toy', function () {
@@ -34,7 +39,6 @@ describe('A ShEx parser', function () {
       expect(error).to.be.an.instanceof(Error);
       expect(error.message).to.include('Parse error on line 1');
     });
-
 
   // positive transformation tests
   var schemas = fs.readdirSync(schemasPath);
