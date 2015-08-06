@@ -6,15 +6,11 @@ var ShExWriter = require('../lib/ShExWriter');
 
 var fs = require('fs');
 var expect = require('chai').expect;
+var findPath = require('./findPath.js');
 
-var schemasPath = __dirname + '/../../shexTest/schemas/';
-var jsonSchemasPath = __dirname + '/../../shexTest/test/parsedSchemas/';
-var negSyntaxTestsPath = __dirname + '/../../shexTest/negativeSyntax/';
-
-if (!fs.existsSync(schemasPath)) {
-  console.warn(schemasPath + " not found. Please (cd .. && git clone git@github.com:shexSpec/shexTest.git) .");
-  process.exit(-1);
-}
+var schemasPath = findPath('schemas');
+var jsonSchemasPath = findPath('parsedSchemas');
+var negSyntaxTestsPath = findPath('negativeSyntax');
 
 describe('A ShEx parser', function () {
   // var b = function () {  };

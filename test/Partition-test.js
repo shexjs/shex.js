@@ -7,8 +7,9 @@ var ShExWriter = require('../lib/ShExWriter');
 
 var fs = require('fs');
 var expect = require('chai').expect;
+var findPath = require('./findPath.js');
 
-var schemasPath = __dirname + '/../../shexTest/schemas/';
+var schemasPath = findPath('schemas');
 var partitionedSchemasPath = __dirname + '/../test/partitionedSchemas/';
 var manifestFile = __dirname + '/../test/partitionedSchemas/Manifest.json';
 
