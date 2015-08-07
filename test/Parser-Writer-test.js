@@ -121,7 +121,7 @@ describe('A ShEx parser', function () {
       });
     });
 
-    describe('PNAME_NS with pre-defined prefixes', function () {
+    describe('with pre-defined PNAME_NS prefixes', function () {
       var prefixes = { a: 'abc#', b: 'def#' };
       var parser = new ShExParser(prefixes);
 

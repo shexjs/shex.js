@@ -284,7 +284,9 @@ CODE			"{" ([^%\\] | "\\"[%\\] | {UCHAR})* "%}"
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
+NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
+NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
 IRIREF			'<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 //ATIRIREF		'@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
@@ -325,7 +327,9 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 //{UCHAR}		return 'UCHAR';
 {CODE}			return 'CODE';
 {STRING_LITERAL_LONG1}	return 'STRING_LITERAL_LONG1';
+{NON_TERMINATED_STRING_LITERAL_LONG1}	return 'NON_TERMINATED_STRING_LITERAL_LONG2';
 {STRING_LITERAL_LONG2}	return 'STRING_LITERAL_LONG2';
+{NON_TERMINATED_STRING_LITERAL_LONG2}	return 'NON_TERMINATED_STRING_LITERAL_LONG2';
 {STRING_LITERAL1}	return 'STRING_LITERAL1';
 {STRING_LITERAL2}	return 'STRING_LITERAL2';
 //{PN_LOCAL_ESC}	return 'PN_LOCAL_ESC';
@@ -659,6 +663,7 @@ senseFlags:
 
 predicate:
       iri	// t: 1dot
+    | 'a'	-> RDF_TYPE // t: 1AvalA
     ;
 
 valueClass:
@@ -770,7 +775,7 @@ numericLength:
     ;
 
 annotation:
-    ';' iri _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3] // t: 1dotAnnotIRIREF
+    ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3] // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
@@ -874,7 +879,6 @@ iri:
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = resolveIRI(expandPrefix($1.substr(0, $1.length - 1)));
     }
-    | 'a'	-> RDF_TYPE // t: 1AvalA
     ;
 
 blankNode:
