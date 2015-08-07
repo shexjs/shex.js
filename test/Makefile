@@ -1,5 +1,7 @@
+JISON?=../node_modules/jison/lib/cli.js
+
 ../lib/ShExJison.js: ../lib/ShExJison.jison
-	jison $^ -o $@ -p lalr
+	$(JISON) $^ -o $@ -p lalr
 
 Parser-Writer-test: ../lib/ShExJison.js Parser-Writer-test.js
 	mocha -C -R dot Parser-Writer-test.js
