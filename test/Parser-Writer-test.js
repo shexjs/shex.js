@@ -1,20 +1,21 @@
+//  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
-var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
-var ShExParser = require('../lib/ShExParser').Parser;
-var ShExWriter = require('../lib/ShExWriter');
+var ShExParser = require("../lib/ShExParser").Parser;
+var ShExWriter = require("../lib/ShExWriter");
 
-var fs = require('fs');
-var expect = require('chai').expect;
-var findPath = require('./findPath.js');
+var fs = require("fs");
+var expect = require("chai").expect;
+var findPath = require("./findPath.js");
 
-var schemasPath = findPath('schemas');
-var jsonSchemasPath = findPath('parsedSchemas');
-var negSyntaxTestsPath = findPath('negativeSyntax');
+var schemasPath = findPath("schemas");
+var jsonSchemasPath = findPath("parsedSchemas");
+var negSyntaxTestsPath = findPath("negativeSyntax");
 
-describe('A ShEx parser', function () {
+describe("A ShEx parser", function () {
   // var b = function () {  };
-  // it('is a toy', function () {
+  // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
 
@@ -26,33 +27,34 @@ describe('A ShEx parser', function () {
 
   if (!TESTS)
     // make sure errors are reported
-    it('should throw an error on an invalid schema', function () {
-      var schema = 'invalid', error = null;
+    it("should throw an error on an invalid schema", function () {
+      var schema = "invalid", error = null;
       try { parser.parse(schema); }
       catch (e) { error = e; }
 
       expect(error).to.exist;
       expect(error).to.be.an.instanceof(Error);
-      expect(error.message).to.include('Parse error on line 1');
+      expect(error.message).to.include("Parse error on line 1");
     });
 
   // positive transformation tests
   var schemas = fs.readdirSync(schemasPath);
-  schemas = schemas.map(function (s) { return s.replace(/\.shex$/, ''); });
+  schemas = schemas.map(function (s) { return s.replace(/\.shex$/, ""); });
   if (TESTS)
     schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
   schemas.sort();
 
   schemas.forEach(function (schema) {
 
-    var jsonSchemaFile = jsonSchemasPath + schema + '.json';
+    var jsonSchemaFile = jsonSchemasPath + schema + ".json";
     if (!fs.existsSync(jsonSchemaFile)) return;
+    var shexSchemaFile = schemasPath + schema + ".shex"
 
-    it('should correctly parse schema "' + schema + '"', function () {
-      var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, 'utf8'));
+    it("should correctly parse schema '" + shexSchemaFile + "' as '" + jsonSchemaFile + "'." , function () {
+      var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
 
       if (VERBOSE) console.log(schema);
-      schema = fs.readFileSync(schemasPath + schema + '.shex', 'utf8');
+      schema = fs.readFileSync(shexSchemaFile, "utf8");
       var parsedSchema = parser.parse(schema);
       if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
@@ -68,75 +70,81 @@ describe('A ShEx parser', function () {
     });
   });
 
-
   // negative syntax tests
   var negSyntaxTests = fs.readdirSync(negSyntaxTestsPath);
-  negSyntaxTests = negSyntaxTests.map(function (q) { return q.replace(/\.err$/, ''); });
+  negSyntaxTests = negSyntaxTests.map(function (q) { return q.replace(/\.err$/, ""); });
   if (TESTS)
     negSyntaxTests = negSyntaxTests.filter(function (s) { return TESTS.indexOf(s) !== -1; });
   negSyntaxTests.sort();
 
-  negSyntaxTests.forEach(function (schema) {
-
-    it('should not parse schema "' + schema + '"', function () {
-      if (VERBOSE) console.log(schema);
-      schema = fs.readFileSync(negSyntaxTestsPath + schema + '.err', 'utf8');
-      try { parser.parse(schema); }
-      catch (e) { error = e; }
+  negSyntaxTests.forEach(function (schemaFile) {
+    var path = negSyntaxTestsPath + schemaFile + ".err";
+    it("should not parse schema '" + path + "'", function () {
+      if (VERBOSE) console.log(schemaFile);
+      var schemaText = fs.readFileSync(path, "utf8");
+      var error = null, schema = null;
+      try {
+	schema = parser.parse(schemaText)
+	// console.warn(JSON.stringify(schema));
+      }
+      catch (e) {
+	error = e;
+	// console.warn(e);
+      }
       
       expect(error).to.exist;
       expect(error).to.be.an.instanceof(Error);
-      expect(error.message).to.include('Parse error');
+      expect(error.message).to.include("Parse error");
     });
   });
 
 
   if (!TESTS || TESTS.indexOf("prefix") !== -1) {
-    describe('with pre-defined prefixes', function () {
-      var prefixes = { a: 'abc#', b: 'def#' };
+    describe("with pre-defined prefixes", function () {
+      var prefixes = { a: "abc#", b: "def#" };
       var parser = new ShExParser(prefixes);
 
-      it('should use those prefixes', function () {
-	var schema = 'a:a { b:b .+ }';
-	expect(parser.parse(schema).shapes['abc#a'].expression.predicate)
-          .to.deep.equal('def#b');
+      it("should use those prefixes", function () {
+	var schema = "a:a { b:b .+ }";
+	expect(parser.parse(schema).shapes["abc#a"].expression.predicate)
+          .to.deep.equal("def#b");
       });
 
-      it('should allow temporarily overriding prefixes', function () {
-	var schema = 'PREFIX a: <xyz#> a:a { b:b .+ }';
-	expect(parser.parse(schema).shapes['xyz#a'].expression.predicate)
-          .to.deep.equal('def#b');
-	expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
-          .to.deep.equal('def#b');
+      it("should allow temporarily overriding prefixes", function () {
+	var schema = "PREFIX a: <xyz#> a:a { b:b .+ }";
+	expect(parser.parse(schema).shapes["xyz#a"].expression.predicate)
+          .to.deep.equal("def#b");
+	expect(parser.parse("a:a { b:b .+ }").shapes["abc#a"].expression.predicate)
+          .to.deep.equal("def#b");
       });
 
-      it('should not change the original prefixes', function () {
-	expect(prefixes).to.deep.equal({ a: 'abc#', b: 'def#' });
+      it("should not change the original prefixes", function () {
+	expect(prefixes).to.deep.equal({ a: "abc#", b: "def#" });
       });
 
-      it('should not take over changes to the original prefixes', function () {
-	prefixes.a = 'xyz#';
-	expect(parser.parse('a:a { b:b .+ }').shapes['abc#a'].expression.predicate)
-          .to.deep.equal('def#b');
+      it("should not take over changes to the original prefixes", function () {
+	prefixes.a = "xyz#";
+	expect(parser.parse("a:a { b:b .+ }").shapes["abc#a"].expression.predicate)
+          .to.deep.equal("def#b");
       });
     });
 
-    describe('with pre-defined PNAME_NS prefixes', function () {
-      var prefixes = { a: 'abc#', b: 'def#' };
+    describe("with pre-defined PNAME_NS prefixes", function () {
+      var prefixes = { a: "abc#", b: "def#" };
       var parser = new ShExParser(prefixes);
 
-      it('should use those prefixes', function () {
-	var schema = 'a: { b: .+ }';
-	expect(parser.parse(schema).shapes['abc#'].expression.predicate)
-          .to.deep.equal('def#');
+      it("should use those prefixes", function () {
+	var schema = "a: { b: .+ }";
+	expect(parser.parse(schema).shapes["abc#"].expression.predicate)
+          .to.deep.equal("def#");
       });
 
-      it('should allow temporarily overriding prefixes', function () {
-	var schema = 'PREFIX a: <xyz#> a: { b: .+ }';
-	expect(parser.parse(schema).shapes['xyz#'].expression.predicate)
-          .to.deep.equal('def#');
-	expect(parser.parse('a: { b: .+ }').shapes['abc#'].expression.predicate)
-          .to.deep.equal('def#');
+      it("should allow temporarily overriding prefixes", function () {
+	var schema = "PREFIX a: <xyz#> a: { b: .+ }";
+	expect(parser.parse(schema).shapes["xyz#"].expression.predicate)
+          .to.deep.equal("def#");
+	expect(parser.parse("a: { b: .+ }").shapes["abc#"].expression.predicate)
+          .to.deep.equal("def#");
       });
 
     });
@@ -153,9 +161,9 @@ function parseJSON(string) {
 function restoreUndefined(object) {
   for (var key in object) {
     var item = object[key];
-    if (typeof item === 'object')
+    if (typeof item === "object")
       object[key] = restoreUndefined(item);
-    else if (item === '{undefined}')
+    else if (item === "{undefined}")
       object[key] = undefined;
   }
   return object;

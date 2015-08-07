@@ -27,8 +27,8 @@
   },
   "bin": ["bin/json-to-shex", "bin/shex-to-json", "bin/partition"],
   "scripts": {
-    "test": "mocha",
-    "lint": "eslint lib perf test spec",
+    "test": "mocha -R dot",
+    "lint": "eslint test/findPath.js",
     "browser": "node browser/build-browser-versions",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100"
   },
@@ -50,5 +50,16 @@
   "pre-commit": [
     "lint",
     "test"
-  ]
+  ],
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "node": true
+    },
+    "globals": {
+      "it": true,
+      "should": true,
+      "describe": true
+    }
+  }
 }
