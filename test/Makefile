@@ -9,5 +9,8 @@ Parser-Writer-test: ../lib/ShExJison.js Parser-Writer-test.js
 Partition-test: ../lib/ShExJison.js Partition-test.js
 	mocha -C -R dot Partition-test.js
 
-test: Parser-Writer-test Partition-test
+Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js ../lib/ShExResults.js Validation-test.js
+	mocha -C -R dot Validation-test.js
+
+test: Parser-Writer-test Partition-test Validation-test
 
