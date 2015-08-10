@@ -1,4 +1,4 @@
-# Yackerx grammer for (Sh)ape (Ex)pressions (C)ompact language
+# Yacker grammer for (Sh)ape (Ex)pressions (C)ompact language
 # 
 # http://www.w3.org/2005/01/yacker/uploads/ShEx3/bnf
 # 
@@ -19,7 +19,7 @@
 # ~ tripleConstraint: swapped position of annotations and cardinality (EGP 20150727)
 # + valueClass: add xsFacet* to datatype (EGP 20150727)
 # + escapes (\\, \uxxxx, \Uxxxxxxxx) in CODE (EGP 20150730)
-# ~ moved | RDF_TYPE from iri: to predicate: (disables e.g. %a{ ... %} (EGP 20150807)
+# ~ moved | RDF_TYPE from iri: to predicate: (disables e.g. %a{ ... %}) (EGP 20150807)
 # + tried to intercept non-terminated STRING_LITERAL_LONG{1,2} (EGP 20150807)
 
 # Notation:
