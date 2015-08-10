@@ -41,33 +41,33 @@ describe("A ShEx validator", function () {
     var dataFile = path.join(validationsPath, test.data);
     var resultsFile = path.join(validationsPath, test.result);
     var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+    var validator = ShExValidator(schema);
+    var referenceResult = parseJSON(fs.readFileSync(resultsFile, "utf8"));
+    // var start = schema.start;
+    // if (start === undefined && Object.keys(schema.shapes).length === 1)
+    //   start = Object.keys(schema.shapes)[0];
 
-    function done () {
-      var referenceResult = parseJSON(fs.readFileSync(resultsFile, "utf8"));
-
-      // var start = schema.start;
-      // if (start === undefined && Object.keys(schema.shapes).length === 1)
-      //   start = Object.keys(schema.shapes)[0];
-
-      var validator = ShExValidator(schema);
-
-      var validationResult = validator.validate(store, test.node, test.shape);
-      if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
-      if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
-      expect(validationResult).to.deep.equal(referenceResult);
-    }
-
-    it("should validate data '" + (VERBOSE ? dataFile : test.schema) +
+    it("should validate data '" + (VERBOSE ? dataFile : test.schema) + // test title
        "' against schema '" + (VERBOSE ? schemaFile : test.data) +
-       "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." , function (done) {
-	 
-	 turtleParser.parse(fs.readFileSync(dataFile, "utf8"),
-			    function (error, triple, prefixes) {
-			      if (triple)
-				store.addTriple(triple)
-			      else { debugger;
-				done();}
-			    });
+       "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
+       function (report) {                                             // test action
+         turtleParser.parse(
+           fs.readFileSync(dataFile, "utf8"),
+           function (error, triple, prefixes) {
+             if (triple)
+               store.addTriple(triple)
+             else {
+               try {
+                 var validationResult = validator.validate(store, test.node, test.shape);
+                 if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
+                 if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
+                 expect(validationResult).to.deep.equal(referenceResult);
+                 report();
+               } catch (e) {
+                 report(e);
+               }
+             }
+           });
        });
   });
 });
