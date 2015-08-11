@@ -688,7 +688,12 @@ valueClass:
 
 _QxsFacet_E_Star:
       -> {} // t: 1literalPattern
-    | _QxsFacet_E_Star xsFacet	-> extend($1, $2) // t: 1literalLength
+    | _QxsFacet_E_Star xsFacet	{
+        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
+          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+        }
+        $$ = extend($1, $2) // t: 1literalLength
+      }
     ;
 
 _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
@@ -708,7 +713,12 @@ _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
 
 _QstringFacet_E_Plus:
       stringFacet // t: 1literalPattern
-    | _QstringFacet_E_Plus stringFacet	-> extend($1, $2) // t: 1literalLength
+    | _QstringFacet_E_Plus stringFacet	{
+        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
+          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+        }
+        $$ = extend($1, $2)
+      }
     ;
 
 groupShapeConstr:
