@@ -7,7 +7,6 @@ var ShExValidator = require("../lib/ShExValidator");
 
 var N3 = require("n3");
 var turtleParser = N3.Parser();
-var store = N3.Store();
 var fs = require("fs");
 var path = require("path");
 var expect = require("chai").expect;
@@ -47,10 +46,11 @@ describe("A ShEx validator", function () {
     // if (start === undefined && Object.keys(schema.shapes).length === 1)
     //   start = Object.keys(schema.shapes)[0];
 
-    it("should validate data '" + (VERBOSE ? dataFile : test.schema) + // test title
-       "' against schema '" + (VERBOSE ? schemaFile : test.data) +
+    it("should validate data '" + (VERBOSE ? dataFile : test.data) + // test title
+       "' against schema '" + (VERBOSE ? schemaFile : test.schema) +
        "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
        function (report) {                                             // test action
+         var store = N3.Store();
          turtleParser.parse(
            fs.readFileSync(dataFile, "utf8"),
            function (error, triple, prefixes) {
