@@ -511,7 +511,7 @@ shape:
 //     | IT_VIRTUAL	;
 
 shapeDefinition:
-      _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QoneOfShape_E_Opt '}'	{ // t: 1dotInherit3
+      _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfShape_E_Opt '}'	{ // t: 1dotInherit3
 	var exprObj = $3 ? { expression: $3 } : {}; // t: 0, 0Inherit1
         $$ = extend({ type: "shape"}, exprObj, $1);
       }
@@ -536,9 +536,9 @@ _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
     }
     ;
 
-_QoneOfShape_E_Opt:
+_QsomeOfShape_E_Opt:
       	// t: 0
-    | oneOfShape	// t: 1dot
+    | someOfShape	// t: 1dot
     ;
 
 includeSet:
@@ -559,30 +559,17 @@ _Qpredicate_E_Plus:
     | _Qpredicate_E_Plus predicate	-> appendTo($1, $2) // t: 3groupdotExtra3
     ;
 
-oneOfShape:
-      someOfShape _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star	-> $2.length ? { type: "oneOf", expressions: unionAll([$1], $2) } : $1 // t: 2oneOfdot
-    ;
-
-_O_QGT_PIPE_E_S_QsomeOfShape_E_C:
-      '|' someOfShape	-> $2 // t: 2oneOfdot
-    ;
-
-_Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star:
-      -> [] //  t: 2oneOfdot
-    | _Q_O_QGT_PIPE_E_S_QsomeOfShape_E_C_E_Star _O_QGT_PIPE_E_S_QsomeOfShape_E_C	-> appendTo($1, $2) //  t: 2oneOfdot
-    ;
-
 someOfShape:
-      groupShape _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", expressions: unionAll([$1], $2) } : $1 // t: 2someOfdot
+      groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", expressions: unionAll([$1], $2) } : $1 // t: 2someOfdot
     ;
 
-_O_QGT_OR_E_S_QgroupShape_E_C:
-      '||' groupShape	-> $2 // t: 2someOfdot
+_O_QGT_PIPE_E_S_QgroupShape_E_C:
+      '|' groupShape	-> $2 // t: 2someOfdot
     ;
 
-_Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star:
+_Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Star:
       -> [] // t: 2someOfdot
-    | _Q_O_QGT_OR_E_S_QgroupShape_E_C_E_Star _O_QGT_OR_E_S_QgroupShape_E_C	-> appendTo($1, $2) // t: 2someOfdot
+    | _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Star _O_QGT_PIPE_E_S_QgroupShape_E_C	-> appendTo($1, $2) // t: 2someOfdot
     ;
 
 groupShape:
@@ -606,7 +593,7 @@ _QGT_COMMA_E_Opt:
 unaryShape:
       tripleConstraint	
     | include
-    | '(' oneOfShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+    | '(' someOfShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         var hasCard = Object.keys($4).length;
         var annot = $5.length ? { annotations: $5 } : {}; // t: open3groupdotcloseAnnot3
         if ($2.type === 'group') {
