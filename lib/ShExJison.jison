@@ -213,7 +213,7 @@
   }
 
   function error (msg) {
-    Parser.prefixes = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
+    Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
     base = basePath = baseRoot = '';
     throw new Error(msg);
   }
@@ -392,13 +392,14 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 %% /* language grammar */
 
 shexDoc:
-      _Qdirective_E_Star _Q_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        var startObj = Parser.start ? { start: Parser.start } : {};           // Build return object from
+      _Qdirective_E_Star _Q_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
+        var valueClasses = Parser.valueClasses ? { valueClasses: Parser.valueClasses } : {};
+        var startObj = Parser.start ? { start: Parser.start } : {};
         var startAct = Parser.startAct ? { startAct: Parser.startAct } : {};
-        var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // components in parser state
-                         startAct, startObj,                                  // maintaining intuitve order.
-                         {shapes: Parser.shapes});
-        Parser.prefixes = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
+        var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // Build return object from
+                         valueClasses, startAct, startObj,                    // components in parser state
+                         {shapes: Parser.shapes});                            // maintaining intuitve order.
+        Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
         base = basePath = baseRoot = '';
         return ret;
       }
@@ -409,9 +410,10 @@ _Qdirective_E_Star:
     | _Qdirective_E_Star directive	
     ;
 
-_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_C:
+_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_C:
       start	
     | shape	
+    | valueClassDefinition	// t: 1val1vsMinusiri3
     | startActions	
     ;
 
@@ -420,24 +422,42 @@ _Qstatement_E_Star:
     | _Qstatement_E_Star statement	
     ;
 
-_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
-      _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_C _Qstatement_E_Star	// t: 1dot
+_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
+      _O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_C _Qstatement_E_Star	// t: 1dot
     ;
 
-_Q_O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
+_Q_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
       // t: @@
-    | _O_Qstart_E_Or_Qshape_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
+    | _O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
     ;
 
 statement:
       directive	// t: open1dotclose
     | start	// t: startCode1startRef
     | shape	// t: 1iriRef1
+    | valueClassDefinition	// t: @@
     ;
 
 directive:
       baseDecl	// t: @@
     | prefixDecl	// t: 1dotLNex
+    ;
+
+valueClassDefinition:
+      valueClassLabel '=' valueClass semanticActions	{ // t: 1val1vsMinusiri3
+        if (Parser.valueClasses === null || Parser.valueClasses === undefined)
+          Parser.valueClasses = {  };
+        Parser.valueClasses[$1] = $3;
+      }
+    | valueClassLabel 'EXTERN'	{ // t: @@
+        if (Parser.valueClasses === null || Parser.valueClasses === undefined)
+          Parser.valueClasses = {  };
+        Parser.valueClasses[$1] = null;
+      }
+    ;
+
+valueClassLabel:
+      '$' iri	-> $2 // t: 1val1vsMinusiri3
     ;
 
 baseDecl:
@@ -582,46 +602,41 @@ _QGT_COMMA_E_Opt:
     ;
 
 unaryShape:
-    // _Qid_E_Opt 
-      unaryShape_right	// t: 1dot
-    | id unaryShape_right	-> extend({ id: $1 }, $2) // t: 1iddot
+      tripleConstraint	
+    | include
+    | '(' oneOfShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        var hasCard = Object.keys($4).length;
+        var annot = $5.length ? { annotations: $5 } : {}; // t: open3groupdotcloseAnnot3
+        if ($2.type === 'group') {
+          if (hasCard && ('min' in $2 || 'max' in $2)
+              || $6 && 'semAct' in $2) {
+            $$ = extend({ type: "group" }, $4, { expressions: [$2] }, annot, $6); // t: openopen1dotcloseCode1closeCode2
+          } else {
+            $$ = extend($2, $4, annot, $6); // t: open3groupdotclose
+          }
+        // simplifying } else if ($2.type !== 'tripleConstraint' && (hasCard || $5.length || $6)) {
+        } else if (hasCard || $5.length || $6) {
+          $$ = extend({ type: "group" }, $4, { expressions: [$2] }, annot, $6); // t: open1dotcloseCode1
+        } else {
+          $$ = $2; // t: open1dotclose
+          if ($5.length) // !!! when does this happen?
+            $$['annotations'] = $5; // t: @@
+        }
+     }
     ;
-
-// _Qid_E_Opt:
-//     
-//     | id	;
 
 _Qcardinality_E_Opt:
       -> {} // t: 1dot
     | cardinality	// t: 1cardOpt
     ;
 
-unaryShape_right:
-      tripleConstraint	
-    | include
-    | '(' oneOfShape ')' _Qcardinality_E_Opt semanticActions	{
-        var hasCard = Object.keys($4).length;
-        if ($2.type === 'group') {
-          if (hasCard && ('min' in $2 || 'max' in $2)
-              || $5 && 'semAct' in $2) {
-            $$ = extend({ type: "group" }, $4, { expressions: [$2] }, $5); // t: openopen1dotcloseCode1closeCode2
-          } else {
-            $$ = extend($2, $4, $5); // t: open3groupdotclose
-          }
-        } else if (hasCard || $5) {
-          $$ = extend({ type: "group" }, $4, { expressions: [$2] }, $5); // t: open1dotcloseCode1
-        } else {
-          $$ = $2; // t: open1dotclose
-        }
-      }
+_Qannotation_E_Star:
+      -> [] // t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 include:
       '&' shapeLabel	-> { type: "include", "include": $2 } // t: 2groupInclude1
-    ;
-
-id:
-      '$' shapeLabel	-> $2 // t: 1iddot
     ;
 
 shapeLabel:
@@ -631,15 +646,15 @@ shapeLabel:
 
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate valueClass _Qannotation_E_Star _Qcardinality_E_Opt semanticActions	{
+      predicate valueClassOrRef _Qannotation_E_Star _Qcardinality_E_Opt semanticActions	{
         // $5: t: 1dotCode1
-        $$ = extend({ type: "tripleConstraint", predicate: $1, value: $2 }, $4, $5); // t: 1dot
+        $$ = extend({ type: "tripleConstraint", predicate: $1}, $2, $4, $5); // t: 1dot
         if ($3.length)
           $$['annotations'] = $3; // t: 1dotAnnot3
       }
-    | senseFlags predicate valueClass _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+    | senseFlags predicate valueClassOrRef _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2, value: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, $3, $4, $6); // t: 1inversedot, 1negatedinversedot
         if ($5.length)
           $$['annotations'] = $5; // t: 1inversedotAnnot3
       }
@@ -648,11 +663,6 @@ tripleConstraint:
 // _QsenseFlags_E_Opt:
 //     
 //     | senseFlags	;
-
-_Qannotation_E_Star:
-      -> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
-    ;
 
 senseFlags:
       '^'	-> { inverse: true } // t: 1inversedot
@@ -664,6 +674,11 @@ senseFlags:
 predicate:
       iri	// t: 1dot
     | 'a'	-> RDF_TYPE // t: 1AvalA
+    ;
+
+valueClassOrRef:
+      valueClass	-> { value: $1 } // t: 1dot
+    | valueClassLabel	-> { valueClassRef: $1 } // t: 1val1vsMinusiri3
     ;
 
 valueClass:
