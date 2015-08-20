@@ -392,7 +392,7 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 %% /* language grammar */
 
 shexDoc:
-      _Qdirective_E_Star _Q_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
+      _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
         var valueClasses = Parser.valueClasses ? { valueClasses: Parser.valueClasses } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startAct = Parser.startAct ? { startAct: Parser.startAct } : {};
@@ -410,10 +410,8 @@ _Qdirective_E_Star:
     | _Qdirective_E_Star directive	
     ;
 
-_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_C:
-      start	
-    | shape	
-    | valueClassDefinition	// t: 1val1vsMinusiri3
+_O_QnotStartAction_E_Or_QstartActions_E_C:
+      notStartAction
     | startActions	
     ;
 
@@ -422,20 +420,24 @@ _Qstatement_E_Star:
     | _Qstatement_E_Star statement	
     ;
 
-_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
-      _O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_C _Qstatement_E_Star	// t: 1dot
+_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
+      _O_QnotStartAction_E_Or_QstartActions_E_C _Qstatement_E_Star	// t: 1dot
     ;
 
-_Q_O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
+_Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
       // t: @@
-    | _O_Qstart_E_Or_Qshape_E_Or_QvalueClassDefinition_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
+    | _O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
     ;
 
 statement:
       directive	// t: open1dotclose
-    | start	// t: startCode1startRef
-    | shape	// t: 1iriRef1
-    | valueClassDefinition	// t: @@
+    | notStartAction	// t: @@
+    ;
+
+notStartAction:
+      start	// t: startCode1startRef	
+    | shape	// t: 1iriRef1	
+    | valueClassDefinition	// t: 1val1vsMinusiri3
     ;
 
 directive:
@@ -771,9 +773,9 @@ xsFacet:
     ;
 
 stringFacet:
-      IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
+      stringLength INTEGER	-> keyInt($1, $2) // t: 1literalLength
+    | IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
     | '~' string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
-    | stringLength INTEGER	-> keyInt($1, $2) // t: 1literalLength
     ;
 
 stringLength:
