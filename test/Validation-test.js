@@ -24,15 +24,19 @@ describe("A ShEx validator", function () {
   // });
 
   var shexParser = new ShExParser();
-  var validator = new ShExValidator();
-
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () {
     shexParser._resetBlanks();
-    validator.reset();
   });
 
   var tests = parseJSON(fs.readFileSync(manifestFile, "utf8")).tests;
+
+  if (TESTS)
+    tests = tests.filter(function (t) {
+      return TESTS.indexOf(t.schema) !== -1 ||
+        TESTS.indexOf(t.data) !== -1 ||
+        TESTS.indexOf(t.result) !== -1;
+    });
 
   tests.forEach(function (test) {
 
