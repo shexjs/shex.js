@@ -44,7 +44,6 @@ describe("A ShEx validator", function () {
     var dataFile = path.join(validationsPath, test.data);
     var resultsFile = path.join(validationsPath, test.result);
     var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-    var validator = ShExValidator(schema);
     var referenceResult = parseJSON(fs.readFileSync(resultsFile, "utf8"));
     // var start = schema.start;
     // if (start === undefined && Object.keys(schema.shapes).length === 1)
@@ -55,6 +54,7 @@ describe("A ShEx validator", function () {
        "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
        function (report) {                                             // test action
          var store = N3.Store();
+         var validator = ShExValidator(schema);  // @@ Why does this fail when outside it()?!
          turtleParser.parse(
            fs.readFileSync(dataFile, "utf8"),
            function (error, triple, prefixes) {
