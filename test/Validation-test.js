@@ -54,7 +54,7 @@ describe("A ShEx validator", function () {
        "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
        function (report) {                                             // test action
          var store = N3.Store();
-         var validator = ShExValidator(schema);  // @@ Why does this fail when outside it()?!
+         var validator = ShExValidator(schema);  // @@ Why does a validator fail when constructed outside the call to it()?!
          turtleParser.parse(
            fs.readFileSync(dataFile, "utf8"),
            function (error, triple, prefixes) {
