@@ -3,7 +3,6 @@ var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
 var ShExParser = require('../lib/ShExParser').Parser;
 var ShExUtil = require('../lib/ShExUtil');
-var ShExWriter = require('../lib/ShExWriter');
 
 var fs = require('fs');
 var expect = require('chai').expect;
