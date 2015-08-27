@@ -2,7 +2,7 @@
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
-var ShExUtil = require('../lib/ShExUtil');
+var ShExValidator = require('../lib/ShExValidator');
 
 var fs = require("fs");
 var expect = require("chai").expect;
@@ -32,7 +32,7 @@ describe("A ShEx AST", function () {
 
       if (VERBOSE) console.log(schemaName);
       var schema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
-      var compiledAST = ShExUtil.compile(schema);
+      var compiledAST = ShExValidator(schema).getAST();
       if (VERBOSE) console.log("compiled :" + JSON.stringify(compiledAST));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonAST));
       expect(compiledAST).to.deep.equal(jsonAST);
