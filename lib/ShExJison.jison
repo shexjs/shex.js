@@ -798,8 +798,8 @@ _O_Qiri_E_Or_Qliteral_E_C:
     ;
 
 cardinality:
-      '*'	-> { min:0 } // t: 1cardStar
-    | '+'	-> { min:1 } // t: 1cardPlus
+      '*'	-> { min:0, max:"*" } // t: 1cardStar
+    | '+'	-> { min:1, max:"*" } // t: 1cardPlus
     | '?'	-> { min:0, max:1 } // t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
@@ -809,6 +809,8 @@ cardinality:
             $$["max"] = parseInt(nums[1], 10); // t: 1card23
         else if ($1.indexOf(',') === -1) // t: 1card2
             $$["max"] = parseInt(nums[0], 10);
+        else
+            $$["max"] = "*";
       }
     ;
 
