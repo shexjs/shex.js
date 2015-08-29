@@ -594,24 +594,22 @@ unaryShape:
       tripleConstraint	
     | include
     | '(' someOfShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
-        var hasCard = Object.keys($4).length;
-        var annot = $5.length ? { annotations: $5 } : {}; // t: open3groupdotcloseAnnot3
-        if ($2.type === 'group') {
-          if (hasCard && ('min' in $2 || 'max' in $2)
-              || $6 && 'semAct' in $2) {
-            $$ = extend({ type: "group" }, $4, { expressions: [$2] }, annot, $6); // t: openopen1dotcloseCode1closeCode2
-          } else {
-            $$ = extend($2, $4, annot, $6); // t: open3groupdotclose
-          }
-        // simplifying } else if ($2.type !== 'tripleConstraint' && (hasCard || $5.length || $6)) {
-        } else if (hasCard || $5.length || $6) {
-          $$ = extend({ type: "group" }, $4, { expressions: [$2] }, annot, $6); // t: open1dotcloseCode1
+        if ("min" in $4 && "min" in $2 ||
+            "max" in $4 && "max" in $2 || // not strictly necessary as min and max always assigned together.
+            $5.length && "annotations" in $2 ||
+            $6 && "semAct" in $2) { // create a group to capture enveloping semantics
+          // Create an encapsulating group objec with one expression.
+          var annot = $5.length ? { annotations: $5 } : {}; // t: open3groupdotcloseAnnot3
+          $$ = extend({ type: "wrapper" }, $4, { expression: $2 }, annot, $6); // t: openopen1dotcloseCode1closeCode2
         } else {
-          $$ = $2; // t: open1dotclose
-          if ($5.length) // !!! when does this happen?
-            $$['annotations'] = $5; // t: @@
+          $$ = $2;
+          // Copy all of the new attributes into the someOfShape.
+          if ("min" in $4) { $$.min = $4.min; }
+          if ("max" in $4) { $$.max = $4.max; }
+          if ($5.length) { $$.annotations = $5; }
+          if ($6) { $$.semAct = $6.semAct; }
         }
-     }
+      }
     ;
 
 _Qcardinality_E_Opt:

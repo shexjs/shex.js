@@ -52,7 +52,8 @@ describe("A ShEx parser", function () {
     if (!fs.existsSync(jsonSchemaFile)) return;
     var shexSchemaFile = schemasPath + schema + ".shex"
 
-    it("should correctly parse schema '" + shexSchemaFile + "' as '" + jsonSchemaFile + "'." , function () {
+    it("should correctly parse schema '" + shexSchemaFile +
+       "' as '" + jsonSchemaFile + "'." , function () {
       var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
 
       if (VERBOSE) console.log(schema);
@@ -61,14 +62,24 @@ describe("A ShEx parser", function () {
       if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
       expect(parsedSchema).to.deep.equal(jsonSchema);
+
       var w;
-      new ShExWriter().writeSchema(jsonSchema, function (error, text, prefixes) {
-        if (error) throw error;
-        else w = text;
-      });
+      new ShExWriter({simplifyParentheses: false }).
+        writeSchema(jsonSchema, function (error, text, prefixes) {
+          if (error) throw error;
+          else w = text;
+        });
       if (VERBOSE) console.log("written  :" + w);
       var parsed2 = parser.parse(w);
       expect(parsed2).to.deep.equal(jsonSchema);
+
+      new ShExWriter({simplifyParentheses: true }).
+        writeSchema(jsonSchema, function (error, text, prefixes) {
+          if (error) throw error;
+          else w = text;
+        });
+      if (VERBOSE) console.log("simple   :" + w);
+      var parsed3 = parser.parse(w); // test that simplified also parses
     });
   });
 
