@@ -29,7 +29,7 @@ describe("A ShEx validator", function () {
     shexParser._resetBlanks();
   });
 
-  var tests = parseJSON(fs.readFileSync(manifestFile, "utf8")).tests;
+  var tests = parseJSONFile(manifestFile).tests;
 
   if (TESTS)
     tests = tests.filter(function (t) {
@@ -44,7 +44,7 @@ describe("A ShEx validator", function () {
     var dataFile = path.join(validationsPath, test.data);
     var resultsFile = path.join(validationsPath, test.result);
     var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-    var referenceResult = parseJSON(fs.readFileSync(resultsFile, "utf8"));
+    var referenceResult = parseJSONFile(resultsFile);
     // var start = schema.start;
     // if (start === undefined && Object.keys(schema.shapes).length === 1)
     //   start = Object.keys(schema.shapes)[0];
@@ -77,9 +77,14 @@ describe("A ShEx validator", function () {
 });
 
 // Parses a JSON object, restoring `undefined` values
-function parseJSON(string) {
-  var object = JSON.parse(string);
-  return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+function parseJSONFile(filename) {
+  try {
+    var string = fs.readFileSync(filename, "utf8");
+    var object = JSON.parse(string);
+    return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+  } catch (e) {
+    throw new Error("error reading " + filename + ": " + e);
+  }
 }
 
 // Recursively replace values of "{undefined}" by `undefined`
