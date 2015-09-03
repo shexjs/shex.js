@@ -10,7 +10,7 @@ module.exports = function (dirName) {
     return fromPath;
   }
   try {
-    var fromPackage = require("shex-test999")[dirName];
+    var fromPackage = require("shex-test")[dirName];
     if (fromPackage !== undefined) {
       return fromPackage;
     }
