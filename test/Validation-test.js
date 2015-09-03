@@ -14,7 +14,7 @@ var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var validationsPath = findPath("validations");
-var manifestFile = validationsPath+"manifest.json";
+var manifestFile = validationsPath+"manifest.jsonld";
 var negSyntaxTestsPath = findPath("negativeSyntax");
 
 describe("A ShEx validator", function () {
@@ -29,7 +29,14 @@ describe("A ShEx validator", function () {
     shexParser._resetBlanks();
   });
 
-  var tests = parseJSONFile(manifestFile).tests;
+  var outerManifestStructure = parseJSONFile(manifestFile)["@graph"]; debugger;
+  var testStructures = outerManifestStructure.slice(1).reduce(function (r, o) {
+    r[o["@id"]] = o;
+    return r;
+  }, {});
+  var tests = outerManifestStructure.slice(0, 1)[0]["mf:entries"].map(function (n) {
+    return testStructures[n];
+  });
 
   if (TESTS)
     tests = tests.filter(function (t) {
