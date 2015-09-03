@@ -29,14 +29,7 @@ describe("A ShEx validator", function () {
     shexParser._resetBlanks();
   });
 
-  var outerManifestStructure = parseJSONFile(manifestFile)["@graph"]; debugger;
-  var testStructures = outerManifestStructure.slice(1).reduce(function (r, o) {
-    r[o["@id"]] = o;
-    return r;
-  }, {});
-  var tests = outerManifestStructure.slice(0, 1)[0]["mf:entries"].map(function (n) {
-    return testStructures[n];
-  });
+  var tests = parseJSONFile(manifestFile)["@graph"][0]["mf:entries"];
 
   if (TESTS)
     tests = tests.filter(function (t) {
@@ -69,7 +62,7 @@ describe("A ShEx validator", function () {
                store.addTriple(triple)
              else {
                try {
-                 var validationResult = validator.validate(store, test.node, test.shape);
+                 var validationResult = validator.validate(store, test.focus, test.shape);
                  if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
                  if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
                  expect(validationResult).to.deep.equal(referenceResult);
