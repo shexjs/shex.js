@@ -2,6 +2,10 @@
 
 JISON?=../node_modules/jison/lib/cli.js
 MOCHA?=mocha
+TESTDIR?=../../shexTest/ # needs trailing '/'
+GENJSON?=../../test-suite/tests/genJSON.js
+
+ValidationManifest=$(join $(TESTDIR), validations/manifest.jsonld) # isn't there an easier way to construct filenames?
 
 ../lib/ShExJison.js: ../lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lalr
@@ -15,7 +19,11 @@ Partition-test: ../lib/ShExJison.js Partition-test.js
 Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R dot Compilation-test.js
 
-Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js ../lib/ShExResults.js Validation-test.js
+
+$(ValidationManifest): $(join $(TESTDIR), validations/manifest.ttl) $(GENJSON)
+	$(GENJSON) $< > $@
+
+Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js ../lib/ShExResults.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R dot Validation-test.js
 
 test: Parser-Writer-test Partition-test Compilation-test Validation-test
