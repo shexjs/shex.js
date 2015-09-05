@@ -33,7 +33,9 @@ describe("A ShEx validator", function () {
 
   if (TESTS)
     tests = tests.filter(function (t) {
-      return TESTS.indexOf(t.schema) !== -1 ||
+      return TESTS.indexOf(t["@id"]) !== -1 ||
+        TESTS.indexOf(t["@id"].substr(1)) !== -1 ||
+        TESTS.indexOf(t.schema) !== -1 ||
         TESTS.indexOf(t.data) !== -1 ||
         TESTS.indexOf(t.result) !== -1;
     });
