@@ -10,6 +10,7 @@ var turtleParser = N3.Parser();
 var fs = require("fs");
 var path = require("path");
 var expect = require("chai").expect;
+var assert = require("chai").assert;
 var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
@@ -41,12 +42,14 @@ describe("A ShEx validator", function () {
     });
 
   tests.forEach(function (test) {
-
+// try {
     var schemaFile = path.join(schemasPath, test.schema);
     var dataFile = path.join(validationsPath, test.data);
-    var resultsFile = path.join(validationsPath, test.result);
+    var resultsFile = test.result ? path.join(validationsPath, test.result) : null;
     var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-    var referenceResult = parseJSONFile(resultsFile);
+    var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
+
+    assert(referenceResult !== null || test["@type"] === "shext:ValidationFailure");
     // var start = schema.start;
     // if (start === undefined && Object.keys(schema.shapes).length === 1)
     //   start = Object.keys(schema.shapes)[0];
@@ -75,6 +78,9 @@ describe("A ShEx validator", function () {
              }
            });
        });
+// } catch (e) {
+//   throw new Error("in "+test["@id"]+" "+e);
+// }
   });
 });
 
