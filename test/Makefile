@@ -12,13 +12,13 @@ ValidationManifest=$(join $(TESTDIR), validations/manifest.jsonld) # isn't there
 	$(JISON) $^ -o $@ -p lalr
 
 Parser-Writer-test: ../lib/ShExJison.js Parser-Writer-test.js
-	$(MOCHA) -C -R $(REPORT) Parser-Writer-test.js
+	$(MOCHA) -C -R $(REPORTER) Parser-Writer-test.js
 
 Partition-test: ../lib/ShExJison.js Partition-test.js
-	$(MOCHA) -C -R $(REPORT) Partition-test.js
+	$(MOCHA) -C -R $(REPORTER) Partition-test.js
 
 Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
-	$(MOCHA) -C -R $(REPORT) Compilation-test.js
+	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
 
 $(ValidationManifest): $(join $(TESTDIR), validations/manifest.ttl) $(GENJSON)
