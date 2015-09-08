@@ -63,9 +63,11 @@ describe("A ShEx validator", function () {
          turtleParser.parse(
            fs.readFileSync(dataFile, "utf8"),
            function (error, triple, prefixes) {
-             if (triple)
+             if (error) {
+               report("error parsing " + dataFile + ": " + error);
+             } else if (triple) {
                store.addTriple(triple)
-             else {
+             } else {
                try {
                  var validationResult = validator.validate(store, test.focus, test.shape);
                  if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
