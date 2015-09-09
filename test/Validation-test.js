@@ -49,7 +49,7 @@ describe("A ShEx validator", function () {
     var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
     var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
 
-    assert(referenceResult !== null || test["@type"] === "shext:ValidationFailure");
+    assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure");
     // var start = schema.start;
     // if (start === undefined && Object.keys(schema.shapes).length === 1)
     //   start = Object.keys(schema.shapes)[0];
