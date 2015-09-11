@@ -1,6 +1,6 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
 
 var ShExParser = require("../lib/ShExParser").Parser;
 var ShExValidator = require("../lib/ShExValidator");
@@ -42,47 +42,47 @@ describe("A ShEx validator", function () {
     });
 
   tests.forEach(function (test) {
-// try {
-    var schemaFile = path.join(schemasPath, test.schema);
-    var dataFile = path.join(validationsPath, test.data);
-    var resultsFile = test.result ? path.join(validationsPath, test.result) : null;
-    var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-    var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
+    try {
+      var schemaFile = path.join(schemasPath, test.schema);
+      var dataFile = path.join(validationsPath, test.data);
+      var resultsFile = test.result ? path.join(validationsPath, test.result) : null;
+      var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+      var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
 
-    assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure");
-    // var start = schema.start;
-    // if (start === undefined && Object.keys(schema.shapes).length === 1)
-    //   start = Object.keys(schema.shapes)[0];
+      assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure");
+      // var start = schema.start;
+      // if (start === undefined && Object.keys(schema.shapes).length === 1)
+      //   start = Object.keys(schema.shapes)[0];
 
-    it("should validate data '" + (VERBOSE ? dataFile : test.data) + // test title
-       "' against schema '" + (VERBOSE ? schemaFile : test.schema) +
-       "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
-       function (report) {                                             // test action
-         var store = N3.Store();
-         var validator = ShExValidator(schema);  // @@ Why does a validator fail when constructed outside the call to it()?!
-         turtleParser.parse(
-           fs.readFileSync(dataFile, "utf8"),
-           function (error, triple, prefixes) {
-             if (error) {
-               report("error parsing " + dataFile + ": " + error);
-             } else if (triple) {
-               store.addTriple(triple)
-             } else {
-               try {
-                 var validationResult = validator.validate(store, test.focus, test.shape);
-                 if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
-                 if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
-                 expect(validationResult).to.deep.equal(referenceResult);
-                 report();
-               } catch (e) {
-                 report(e);
+      it("should validate data '" + (VERBOSE ? dataFile : test.data) + // test title
+         "' against schema '" + (VERBOSE ? schemaFile : test.schema) +
+         "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
+         function (report) {                                             // test action
+           var store = N3.Store();
+           var validator = ShExValidator(schema);  // @@ Why does a validator fail when constructed outside the call to it()?!
+           turtleParser.parse(
+             fs.readFileSync(dataFile, "utf8"),
+             function (error, triple, prefixes) {
+               if (error) {
+                 report("error parsing " + dataFile + ": " + error);
+               } else if (triple) {
+                 store.addTriple(triple)
+               } else {
+                 try {
+                   var validationResult = validator.validate(store, test.focus, test.shape);
+                   if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
+                   if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
+                   expect(validationResult).to.deep.equal(referenceResult);
+                   report();
+                 } catch (e) {
+                   report(e);
+                 }
                }
-             }
-           });
-       });
-// } catch (e) {
-//   throw new Error("in "+test["@id"]+" "+e);
-// }
+             });
+         });
+    } catch (e) {
+      throw new Error("in "+test["@id"]+" "+e);
+    }
   });
 });
 
