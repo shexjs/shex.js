@@ -1,10 +1,15 @@
 {
   "name": "shex",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
-  "author": {"name":"Eric Prud'hommeaux","email":"eric@w3.org","url":"http://www.w3.org/People/Eric/"},
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
   "keywords": [
-    "shex", "shape expressions",
+    "shex",
+    "shape expressions",
     "rdf",
     "query",
     "parser"
@@ -13,6 +18,12 @@
   "main": "./shex.js",
   "engines": {
     "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "command-line-args": "1.0.0",
+    "n3": "0.4.3",
+    "promise": "^7.0.4",
+    "request-promise": "0.4.3"
   },
   "devDependencies": {
     "shex-test": "0.5.1",
@@ -25,7 +36,12 @@
     "eslint": "~0.19.0",
     "uglify-js": "~2.4.3"
   },
-  "bin": ["bin/json-to-shex", "bin/shex-to-json", "bin/partition"],
+  "bin": [
+    "bin/json-to-shex",
+    "bin/shex-to-json",
+    "bin/validate",
+    "bin/partition"
+  ],
   "scripts": {
     "test": "mocha -R dot",
     "lint": "eslint test/findPath.js",
