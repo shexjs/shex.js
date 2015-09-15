@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "command-line-args": "1.0.0",
+    "eslint": "^1.4.1",
     "n3": "0.4.3",
     "promise": "^7.0.4",
     "request-promise": "0.4.3"
@@ -33,7 +34,6 @@
     "pre-commit": "~0.0.9",
     "n3": "0.4.3",
     "browserify": "~3.x",
-    "eslint": "~0.19.0",
     "uglify-js": "~2.4.3"
   },
   "bin": [
@@ -68,10 +68,21 @@
     "test"
   ],
   "eslintConfig": {
-    "env": {
-      "browser": true,
-      "node": true
+    "rules": {
+      "indent": [ 2, 2 ],
+      "quotes": [ 2, "double" ],
+      "linebreak-style": [ 2, "unix" ],
+      "semi": [ 2, "always" ],
+
+      "strict": [2, "never"],
+      "no-multi-spaces": 0,
+      "key-spacing": 0
     },
+    "env": {
+      "node": true,
+      "browser": true
+    },
+    "extends": "eslint:recommended",
     "globals": {
       "it": true,
       "should": true,
