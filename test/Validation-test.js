@@ -54,12 +54,12 @@ describe("A ShEx validator", function () {
       // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
       //   start = Object.keys(schema.action.shapes)[0];
 
+      var validator = new ShExValidator(schema, { diagnose: true });
       it("should validate data '" + (VERBOSE ? dataFile : test.action.data) + // test title
          "' against schema '" + (VERBOSE ? schemaFile : test.action.schema) +
          "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
          function (report) {                                             // test action
-           var store = N3.Store();
-           var validator = ShExValidator(schema, {diagnose:true});  // @@ Why does a validator fail when constructed outside the call to it()?!
+           var store = new N3.Store();
            turtleParser.parse(
              fs.readFileSync(dataFile, "utf8"),
              function (error, triple, prefixes) {
