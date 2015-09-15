@@ -36,30 +36,30 @@ describe("A ShEx validator", function () {
     tests = tests.filter(function (t) {
       return TESTS.indexOf(t["@id"]) !== -1 ||
         TESTS.indexOf(t["@id"].substr(1)) !== -1 ||
-        TESTS.indexOf(t.schema) !== -1 ||
-        TESTS.indexOf(t.data) !== -1 ||
+        TESTS.indexOf(t.action.schema) !== -1 ||
+        TESTS.indexOf(t.action.data) !== -1 ||
         TESTS.indexOf(t.result) !== -1;
     });
 
   tests.forEach(function (test) {
     try {
-      var schemaFile = path.join(schemasPath, test.schema);
-      var dataFile = path.join(validationsPath, test.data);
+      var schemaFile = path.join(schemasPath, test.action.schema);
+      var dataFile = path.join(validationsPath, test.action.data);
       var resultsFile = test.result ? path.join(validationsPath, test.result) : null;
       var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
       var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
 
       assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure");
       // var start = schema.start;
-      // if (start === undefined && Object.keys(schema.shapes).length === 1)
-      //   start = Object.keys(schema.shapes)[0];
+      // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
+      //   start = Object.keys(schema.action.shapes)[0];
 
-      it("should validate data '" + (VERBOSE ? dataFile : test.data) + // test title
-         "' against schema '" + (VERBOSE ? schemaFile : test.schema) +
+      it("should validate data '" + (VERBOSE ? dataFile : test.action.data) + // test title
+         "' against schema '" + (VERBOSE ? schemaFile : test.action.schema) +
          "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
          function (report) {                                             // test action
            var store = N3.Store();
-           var validator = ShExValidator(schema);  // @@ Why does a validator fail when constructed outside the call to it()?!
+           var validator = ShExValidator(schema, {diagnose:true});  // @@ Why does a validator fail when constructed outside the call to it()?!
            turtleParser.parse(
              fs.readFileSync(dataFile, "utf8"),
              function (error, triple, prefixes) {
@@ -69,7 +69,7 @@ describe("A ShEx validator", function () {
                  store.addTriple(triple)
                } else {
                  try {
-                   var validationResult = validator.validate(store, test.focus, test.shape);
+                   var validationResult = validator.validate(store, test.action.focus, test.action.shape);
                    if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
                    if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
                    expect(validationResult).to.deep.equal(referenceResult);
