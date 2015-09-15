@@ -6,33 +6,30 @@ var ShExParser = require("../lib/ShExParser").Parser;
 var ShExValidator = require("../lib/ShExValidator");
 
 var N3 = require("n3");
-var turtleParser = N3.Parser();
+var turtleParser = new N3.Parser();
 var fs = require("fs");
 var path = require("path");
-var expect = require("chai").expect;
-var assert = require("chai").assert;
+var chai = require("chai");
+var expect = chai.expect;
+var assert = chai.assert;
 var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var validationsPath = findPath("validations");
-var manifestFile = validationsPath+"manifest.jsonld";
-var negSyntaxTestsPath = findPath("negativeSyntax");
+var manifestFile = validationsPath + "manifest.jsonld";
 
 describe("A ShEx validator", function () {
-  // var b = function () {  };
-  // it("is a toy", function () {
-  //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
-  // });
+  "use strict";
 
   var shexParser = new ShExParser();
   // Ensure the same blank node identifiers are used in every test
-  beforeEach(function () {
-    shexParser._resetBlanks();
-  });
+  // beforeEach(function () {
+  //   shexParser._resetBlanks();
+  // });
 
   var tests = parseJSONFile(manifestFile)["@graph"][0]["mf:entries"];
 
-  if (TESTS)
+  if (TESTS) {
     tests = tests.filter(function (t) {
       return TESTS.indexOf(t["@id"]) !== -1 ||
         TESTS.indexOf(t["@id"].substr(1)) !== -1 ||
@@ -40,6 +37,7 @@ describe("A ShEx validator", function () {
         TESTS.indexOf(t.action.data) !== -1 ||
         TESTS.indexOf(t.result) !== -1;
     });
+  }
 
   tests.forEach(function (test) {
     try {
@@ -57,7 +55,7 @@ describe("A ShEx validator", function () {
       var validator = new ShExValidator(schema, { diagnose: true });
       it("should validate data '" + (VERBOSE ? dataFile : test.action.data) + // test title
          "' against schema '" + (VERBOSE ? schemaFile : test.action.schema) +
-         "' and get '" + (VERBOSE ? resultsFile : test.result) + "'." ,
+         "' and get '" + (VERBOSE ? resultsFile : test.result) + "'.",
          function (report) {                                             // test action
            var store = new N3.Store();
            turtleParser.parse(
@@ -66,13 +64,13 @@ describe("A ShEx validator", function () {
                if (error) {
                  report("error parsing " + dataFile + ": " + error);
                } else if (triple) {
-                 store.addTriple(triple)
+                 store.addTriple(triple);
                } else {
                  try {
                    var validationResult = validator.validate(store, test.action.focus, test.action.shape);
-                   if (VERBOSE) console.log("result   :" + JSON.stringify(validationResult));
-                   if (VERBOSE) console.log("expected :" + JSON.stringify(referenceResult));
-                   expect(validationResult).to.deep.equal(referenceResult);
+                   if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
+                   if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
+                   expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                    report();
                  } catch (e) {
                    report(e);
@@ -81,13 +79,16 @@ describe("A ShEx validator", function () {
              });
          });
     } catch (e) {
-      throw new Error("in "+test["@id"]+" "+e);
+      var throwMe = new Error("in " + test["@id"] + " " + e);
+      throwMe.stack = e.stack;
+      throw throwMe;
     }
   });
 });
 
 // Parses a JSON object, restoring `undefined` values
 function parseJSONFile(filename) {
+  "use strict";
   try {
     var string = fs.readFileSync(filename, "utf8");
     var object = JSON.parse(string);
@@ -99,12 +100,14 @@ function parseJSONFile(filename) {
 
 // Recursively replace values of "{undefined}" by `undefined`
 function restoreUndefined(object) {
+  "use strict";
   for (var key in object) {
     var item = object[key];
-    if (typeof item === "object")
+    if (typeof item === "object") {
       object[key] = restoreUndefined(item);
-    else if (item === "{undefined}")
+    } else if (item === "{undefined}") {
       object[key] = undefined;
+    }
   }
   return object;
 }
