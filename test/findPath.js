@@ -3,7 +3,6 @@ var TESTSDIR = "TESTSDIR" in process.env ? process.env.TESTSDIR : "../../shexTes
 var fs = require("fs");
 var path = require("path");
 module.exports = function (dirName) {
-  "use strict";
   // var fromPath = __dirname + "/" + TESTSDIR + "/" + dirName + "/";
   var fromPath = path.join(__dirname, TESTSDIR, dirName) + "/";
   if (fs.existsSync(fromPath)) {
