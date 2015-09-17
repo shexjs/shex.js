@@ -197,10 +197,10 @@
     return '"' + unescape(string, stringEscapeSequence, stringEscapeReplacements) + '"';
   }
 
-  // Return object with p1 key, p2 integer value
-  function keyInt(key, val) {
+  // Convenience function to return object with p1 key, value p2
+  function keyValObject(key, val) {
     var ret = {};
-    ret[key] = parseInt(val, 10);
+    ret[key] = val;
     return ret;
   }
 
@@ -758,7 +758,7 @@ xsFacet:
     ;
 
 stringFacet:
-      stringLength INTEGER	-> keyInt($1, $2) // t: 1literalLength
+      stringLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalLength
     | IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
     | '~' string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
     ;
@@ -770,8 +770,14 @@ stringLength:
     ;
 
 numericFacet:
-      numericRange INTEGER	-> keyInt($1, $2) // t: 1literalMininclusive
-    | numericLength INTEGER	-> keyInt($1, $2) // t: 1literalTotaldigits
+      numericRange rawNumeric	-> keyValObject($1, $2) // t: 1literalMininclusive
+    | numericLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalTotaldigits
+    ;
+
+rawNumeric:
+      INTEGER	-> parseInt($1, 10);
+    | DECIMAL	-> parseFloat($1);
+    | DOUBLE	-> parseFloat($1);
     ;
 
 numericRange:
@@ -870,11 +876,15 @@ literal:
       string	// t: 1val1STRING_LITERAL1
     | string LANGTAG	-> $1 + lowercase($2) // t: 1val1LANGTAG
     | string '^^' iri	-> $1 + '^^' + $3 // t: 1val1Datatype
-    | INTEGER	 -> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
-    | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
-    | DOUBLE	-> createLiteral($1.toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE
+    | numericLiteral
     | IT_true	-> XSD_TRUE // t: 1val1true
     | IT_false	-> XSD_FALSE // t: 1val1false
+    ;
+
+numericLiteral:
+      INTEGER	 -> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
+    | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
+    | DOUBLE	-> createLiteral($1.toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE
     ;
 
 string:

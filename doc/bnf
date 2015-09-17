@@ -25,10 +25,13 @@
 # + escapes (\\, \uxxxx, \Uxxxxxxxx) in CODE (EGP 20150730)
 # ~ moved | RDF_TYPE from iri: to predicate: (disables e.g. %a{ ... %}) (EGP 20150807)
 # + tried to intercept non-terminated STRING_LITERAL_LONG{1,2} (EGP 20150807)
-# - unaryShape: id (EGP 201500818)
-# + unaryShape: annotation* (EGP 201500818)
-# + valueClassLabel, valueClassDefinition, valueClassExpr, valueClassOrRef (EGP 201500818)
-# + factored out notStartAction (EGP 201500818)
+# - unaryShape: id (EGP 20150818)
+# + unaryShape: annotation* (EGP 20150818)
+# + valueClassLabel, valueClassDefinition, valueClassExpr, valueClassOrRef (EGP 20150818)
+# + factored out notStartAction (EGP 20150818)
+# - oneOf (EGP 20150820)
+# ~ split out encapsulatedShape (EGP 20150831)
+# - numericRange takes a numericLiteral, was INTEGER (EGP 20150917)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -44,13 +47,13 @@
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
 [4]     start                 ::= "start" '=' ( shapeLabel | shapeDefinition semanticActions )
 [5]     shape                 ::= "VIRTUAL"? shapeLabel shapeDefinition semanticActions
-[6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' oneOfShape? '}'
+[6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
 [7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+
-[9]     oneOfShape            ::= someOfShape ( '|' someOfShape )*
-[10]    someOfShape           ::= groupShape ( '||' groupShape )*
+[10]    someOfShape           ::= groupShape ( '|' groupShape )*
 [11]    groupShape            ::= unaryShape ( ',' unaryShape )* ','?
-[12]    unaryShape            ::= tripleConstraint | include | '(' oneOfShape ')' cardinality? annotation* semanticActions
+[12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape
+[13]    encapsulatedShape     ::= '(' someOfShape ')' cardinality? annotation* semanticActions
 [7]     include               ::= '&' shapeLabel
 [14]    shapeLabel            ::= iri | blankNode
 [15]    tripleConstraint      ::= senseFlags? predicate valueClassOrRef cardinality? annotation* semanticActions
@@ -73,7 +76,7 @@
                                 | "PATTERN" string
                                 | '~' string  # shortcut for "PATTERN"
 [21]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[21]    numericFacet          ::= numericRange INTEGER
+[21]    numericFacet          ::= numericRange numericLiteral
                                 | numericLength INTEGER
 [21]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [21]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
