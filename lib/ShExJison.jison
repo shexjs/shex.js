@@ -156,6 +156,10 @@
   };
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
+  Parser.reset = function () {
+    Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+  }
+
 
   // Regular expression and replacement strings to escape strings
   var stringEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g,
