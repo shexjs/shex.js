@@ -206,14 +206,15 @@
 
   // Return object with p1 key, p2 string value
   function unescapeSemanticAction(key, string) {
-    var ret = {};
     string = string.substring(1, string.length - 2);
-    ret[key] = unescape(string, stringEscapeSequence, semactEscapeReplacements);
-    return ret;
+    return {
+      name: key,
+      contents: unescape(string, stringEscapeSequence, semactEscapeReplacements)
+    };
   }
 
   function error (msg) {
-    Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
+    Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
     base = basePath = baseRoot = '';
     throw new Error(msg);
   }
@@ -395,11 +396,11 @@ shexDoc:
       _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
         var valueClasses = Parser.valueClasses ? { valueClasses: Parser.valueClasses } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
-        var startAct = Parser.startAct ? { startAct: Parser.startAct } : {};
+        var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
         var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // Build return object from
-                         valueClasses, startAct, startObj,                    // components in parser state
+                         valueClasses, startActs, startObj,                    // components in parser state
                          {shapes: Parser.shapes});                            // maintaining intuitve order.
-        Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startAct = null; // Reset state.
+        Parser.reset();
         base = basePath = baseRoot = '';
         return ret;
       }
@@ -560,29 +561,35 @@ _Qpredicate_E_Plus:
     ;
 
 someOfShape:
-      groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Star	-> $2.length ? { type: "someOf", expressions: unionAll([$1], $2) } : $1 // t: 2someOfdot
+      groupShape	
+    | multiElementSomeOf	;
+
+multiElementSomeOf:
+    groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus	-> { type: "someOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
     ;
 
 _O_QGT_PIPE_E_S_QgroupShape_E_C:
       '|' groupShape	-> $2 // t: 2someOfdot
     ;
 
-_Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Star:
-      -> [] // t: 2someOfdot
-    | _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Star _O_QGT_PIPE_E_S_QgroupShape_E_C	-> appendTo($1, $2) // t: 2someOfdot
+_Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus:
+      _O_QGT_PIPE_E_S_QgroupShape_E_C	-> [$1] // t: 2someOfdot
+    | _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupShape_E_C	-> appendTo($1, $2) // t: 2someOfdot
+    ;
+
+innerShape:
+      multiElementGroup	
+    | multiElementSomeOf	
     ;
 
 groupShape:
-      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _QGT_COMMA_E_Opt	-> $2.length ? { type: "group", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
+      unaryShape groupShape_right	-> $2 ? { type: "group", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
     ;
 
-_O_QGT_COMMA_E_S_QunaryShape_E_C:
-      ',' unaryShape	-> $2 // t: 2groupOfdot
-    ;
-
-_Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star:
-      -> [] // t: 2groupOfdot
-    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Star _O_QGT_COMMA_E_S_QunaryShape_E_C	-> appendTo($1, $2) // t: 2groupOfdot
+groupShape_right:
+      -> null
+    | ','	-> null
+    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> $1
     ;
 
 _QGT_COMMA_E_Opt:
@@ -590,25 +597,33 @@ _QGT_COMMA_E_Opt:
     | ','	// t: 1dotComma
     ;
 
+multiElementGroup:
+      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "group", expressions: unionAll([$1], $2) } // t: 2groupOfdot
+    ;
+
+_O_QGT_COMMA_E_S_QunaryShape_E_C:
+      ',' unaryShape	-> $2 // t: 2groupOfdot
+    ;
+
+_Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
+      _O_QGT_COMMA_E_S_QunaryShape_E_C	-> [$1] // t: 2groupOfdot
+    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _O_QGT_COMMA_E_S_QunaryShape_E_C	-> appendTo($1, $2) // t: 2groupOfdot
+    ;
+
 unaryShape:
       tripleConstraint	
     | include
-    | '(' someOfShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
-        if ("min" in $4 && "min" in $2 ||
-            "max" in $4 && "max" in $2 || // not strictly necessary as min and max always assigned together.
-            $5.length && "annotations" in $2 ||
-            $6 && "semAct" in $2) { // create a group to capture enveloping semantics
-          // Create an encapsulating group objec with one expression.
-          var annot = $5.length ? { annotations: $5 } : {}; // t: open3groupdotcloseAnnot3
-          $$ = extend({ type: "wrapper" }, $4, { expression: $2 }, annot, $6); // t: openopen1dotcloseCode1closeCode2
-        } else {
-          $$ = $2;
-          // Copy all of the new attributes into the someOfShape.
-          if ("min" in $4) { $$.min = $4.min; }
-          if ("max" in $4) { $$.max = $4.max; }
-          if ($5.length) { $$.annotations = $5; }
-          if ($6) { $$.semAct = $6.semAct; }
-        }
+    | encapsulatedShape
+    ;
+
+encapsulatedShape:
+      '(' innerShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        $$ = $2;
+        // Copy all of the new attributes into the encapsulated shape.
+        if ("min" in $4) { $$.min = $4.min; }
+        if ("max" in $4) { $$.max = $4.max; }
+        if ($5.length) { $$.annotations = $5; }
+        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; }
       }
     ;
 
@@ -917,22 +932,22 @@ codeDecl:
 
 startActions:
       _QcodeDecl_E_Plus	{
-        Parser.startAct = $1; // t: startCode1
+        Parser.startActs = $1; // t: startCode1
       }
     ;
 
 _QcodeDecl_E_Plus:
-      codeDecl	// t: startCode1
-    | _QcodeDecl_E_Plus codeDecl	-> extend($1, $2) // t: startCode3
+      codeDecl	-> [$1] // t: startCode1
+    | _QcodeDecl_E_Plus codeDecl	-> appendTo($1, $2) // t: startCode3
     ;
 
 semanticActions:
-      _QcodeDecl_E_Star	-> Object.keys($1).length ? { semAct: $1 } : null; // t: 1dotCode1/2oneOfDot
+      _QcodeDecl_E_Star	-> $1.length ? { semActs: $1 } : null; // t: 1dotCode1/2oneOfDot
 
     ;
 
 _QcodeDecl_E_Star:
-      -> {} // t: 1dot, 1dotCode1
-    | _QcodeDecl_E_Star codeDecl	-> extend($1, $2) // t: 1dotCode1
+      -> [] // t: 1dot, 1dotCode1
+    | _QcodeDecl_E_Star codeDecl	-> appendTo($1, $2) // t: 1dotCode1
     ;
 

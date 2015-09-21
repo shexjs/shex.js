@@ -58,6 +58,7 @@ describe("A ShEx parser", function () {
 
       if (VERBOSE) console.log(schema);
       schema = fs.readFileSync(shexSchemaFile, "utf8");
+    try {
       var parsedSchema = parser.parse(schema);
       if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
@@ -80,6 +81,10 @@ describe("A ShEx parser", function () {
         });
       if (VERBOSE) console.log("simple   :" + w);
       var parsed3 = parser.parse(w); // test that simplified also parses
+      } catch (e) {
+        parser.reset();
+        throw(e);
+      }
     });
   });
 
