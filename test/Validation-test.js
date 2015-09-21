@@ -27,7 +27,7 @@ describe("A ShEx validator", function () {
   //   shexParser._resetBlanks();
   // });
 
-  var tests = parseJSONFile(manifestFile)["@graph"][0]["mf:entries"];
+  var tests = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 
   if (TESTS) {
     tests = tests.filter(function (t) {
