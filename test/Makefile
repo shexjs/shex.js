@@ -24,7 +24,7 @@ Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 $(ValidationManifest): $(join $(TESTDIR), validations/manifest.ttl) $(GENJSON)
 	$(GENJSON) $< > $@
 
-Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js ../lib/ShExResults.js Validation-test.js $(ValidationManifest)
+Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
 test: Parser-Writer-test Partition-test Compilation-test Validation-test
