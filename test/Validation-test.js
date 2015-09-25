@@ -52,7 +52,7 @@ describe("A ShEx validator", function () {
       // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
       //   start = Object.keys(schema.action.shapes)[0];
 
-      var validator = new ShExValidator(schema, { diagnose: true });
+      var validator = new ShExValidator(schema, { diagnose: resultsFile === null ? false : true });
       it("should validate data '" + (VERBOSE ? dataFile : test.action.data) + // test title
          "' against schema '" + (VERBOSE ? schemaFile : test.action.schema) +
          "' and get '" + (VERBOSE ? resultsFile : test.result) + "'.",
