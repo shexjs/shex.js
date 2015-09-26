@@ -76,7 +76,7 @@ Promise.all([].
             // gather all the potentially remote inputs
             concat(load(cmds.shex, function (text, url) {
               try {
-                var s = (new ShExParser()).parse(text);
+                var s = (new ShExParser(url)).parse(text);
                 Schema = ShExUtil.merge(Schema, s, true);
                 return Promise.resolve(["text/shex", url]);
               } catch (e) {
@@ -94,7 +94,7 @@ Promise.all([].
             })).
             concat(load(cmds.data, function (text, url) {
                 return new Promise(function (resolve, reject) {
-                  N3.Parser().parse(text,
+                  N3.Parser({documentIRI: url}).parse(text,
                                     function (error, triple, prefixes) {
                                       if (error) {
                                         reject("error parsing " + url + ": " + error);

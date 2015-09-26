@@ -73,8 +73,6 @@
   var numericFacets = ["mininclusive", "minexclusive",
 		       "maxinclusive", "maxexclusive"];
 
-  var base = '', basePath = '', baseRoot = '';
-
   // Returns a lowercase version of the given string
   function lowercase(string) {
     return string.toLowerCase();
@@ -115,19 +113,19 @@
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
     case undefined:
-      return base;
+      return Parser.base;
     // Resolve relative fragment IRIs against the base IRI
     case '#':
-      return base + iri;
+      return Parser.base + iri;
     // Resolve relative query string IRIs by replacing the query string
     case '?':
-      return base.replace(/(?:\?.*)?$/, iri);
+      return Parser.base.replace(/(?:\?.*)?$/, iri);
     // Resolve root relative IRIs at the root of the base IRI
     case '/':
-      return baseRoot + iri;
+      return Parser.baseRoot + iri;
     // Resolve all other IRIs at the base IRI's path
     default:
-      return /^[a-z]+:/.test(iri) ? iri : basePath + iri;
+      return /^[a-z]+:/.test(iri) ? iri : Parser.basePath + iri;
     }
   }
 
@@ -158,6 +156,7 @@
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
     Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser.base = Parser.basePath = Parser.baseRoot = '';
   }
 
 
@@ -219,7 +218,7 @@
 
   function error (msg) {
     Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
-    base = basePath = baseRoot = '';
+    Parser.base = Parser.basePath = Parser.baseRoot = '';
     throw new Error(msg);
   }
 
@@ -405,7 +404,6 @@ shexDoc:
                          valueClasses, startActs, startObj,                    // components in parser state
                          {shapes: Parser.shapes});                            // maintaining intuitve order.
         Parser.reset();
-        base = basePath = baseRoot = '';
         return ret;
       }
     ;
@@ -469,9 +467,9 @@ valueClassLabel:
 
 baseDecl:
       IT_BASE IRIREF	{ // t: @@
-        base = resolveIRI($2)
-        basePath = base.replace(/[^\/]*$/, '');
-        baseRoot = base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
+        Parser.base = resolveIRI($2)
+        Parser.basePath = Parser.base.replace(/[^\/]*$/, '');
+        Parser.baseRoot = Parser.base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
       }
     ;
 
