@@ -2,55 +2,51 @@
 
 // time ./lib/partition ~/checkouts/hcls/hcls-fhir-rdf/generic/fhir-shapes.shex MedicationPrescriptionShape
 
-// Parse arguments
-var args = process.argv.slice(2);
-if (args.length < 1) {
-  console.error('usage: partition schema.shex');
-  return process.exit(1);
-}
-
-var FS = require('fs');
-var ShExParser = require('../lib/ShExParser').Parser;
+var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExUtil = require('../lib/ShExUtil');
 var ShExWriter = require('../lib/ShExWriter');
 
-function usage () {
-    console.warn("Usage: " + process.argv[2] + "<ShEx file> <shape name>+");
-    return 1;
-}
+// Generate command line interface
+var CLI = require("command-line-args")([
+    { name: "help",  alias: "h", type: Boolean },
+    { name: "shex"    ,  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "json"    ,  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "includes",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
+]);
 
-function CannotRead (file, e) {
-    this.name = 'CannotRead';
-    this.file = file;
-    this.message = "Can't read " + this.file;
-    this.stack = e ? e.stack : (new Error()).stack;
-};
-CannotRead.prototype = new Error();
-CannotRead.prototype.constructor = CannotRead;
-
-
-if (process.argv.length < 4) // guessing we're invoked like `node partition in.shex <Shape1> <Shape2>`
-    process.exit(usage());
-
-var schemaFile = process.argv[2];
 var includes = process.argv.slice(3); // which shapes to include
 
-// Parse and display the schema
-try {
-  var shex;
-  try {
-    console.warn("parsing " + schemaFile);
-    shex = FS.readFileSync(schemaFile, 'utf8');
-  } catch (e) {
-    throw new CannotRead(schemaFile, e); // @@ console.error and exit after transplanting exception intel.
-  }
+function abort (msg) {
+  console.error(msg);
+  console.error(CLI.getUsage({
+    title: "shex-to-json",
+    description: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex",
+    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
+  }));
+  process.exit(1);
+}
 
-  var parseTree = new ShExParser().parse(shex);
-  console.warn("calculating dependencies for " + schemaFile);
-  var deps = ShExUtil.getDependencies(parseTree);
+// Extract user commands
+var cmds = CLI.parse();
+if (cmds.help)
+    abort("");
+if (cmds.shex.length > 1 && cmds.includes.length === 0) {
+  cmds.includes = cmds.shex.splice(1); // push all but one into includes
+}
+if (cmds.json.length > 1 && cmds.includes.length === 0) {
+  cmds.includes = cmds.json.splice(1); // push all but one into includes
+}
+if (cmds.includes.length === 0) abort("no includes specified");
+if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
+var input = cmds.shex.concat(cmds.json).join(", ");
+
+
+ShExLoader(cmds.shex, cmds.json, []).then(function (loaded) {
+  console.warn("calculating dependencies for " + input);
+  var deps = ShExUtil.getDependencies(loaded.schema);
   // console.log('%s', JSON.stringify(deps, null, '  '));
-  console.warn("partitioning " + schemaFile);
-  partition = ShExUtil.partition(parseTree, includes, deps,
+  console.warn("partitioning " + input);
+  partition = ShExUtil.partition(loaded.schema, cmds.includes, deps,
 				 // avoid throwing Error
 				 function (what, why) {
 				   console.warn("Warning: can't find shape "+
@@ -64,15 +60,9 @@ try {
 		  if (error) throw error;
 		  else if (text) console.log(text);
 		});
-} catch (e) {
-  if (e instanceof CannotRead) {
-        console.error("unable to read ShEx file \"" + e.file + "\":\n" + e.stack);
-        process.exit(2);
-    } else if (e.name === "SyntaxError") {
-	console.error(schemaFile+":"+e.line+":"+e.column+": (offset: "+e.offset+"): error: "+e.message);
-	process.exit(4);
-    } else {
-	console.error(e.stack);
-	process.exit(4);
-    }
-}
+}).catch(function (e) {
+  console.error("aborting:", e);
+  // if (e.name === "SyntaxError")
+  //   console.error(input+":"+e.line+":"+e.column+": (offset: "+e.offset+"): error: "+e.message);
+})
+
