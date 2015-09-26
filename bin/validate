@@ -54,7 +54,11 @@ var Schema = ShExUtil.emptySchema();
 // Helper function to read from filesystem or web.
 function load (list, cb) {
   return list.map(function (f, ord) {
-    return (FS.existsSync(f)) ?
+    return (f.match("^[a-z]+://.")) ?
+      // Read from http or whatever Request handles.
+      Request(f).then(function (text) {
+        return cb(text, f);
+      }) :
       // Read from filesystem
       new Promise(function (fulfill, reject) {
         FS.readFile(f, "utf8", function (error, text) {
@@ -64,10 +68,6 @@ function load (list, cb) {
             fulfill(cb(text, f));
           }
         })
-      }) :
-      // Read from http or whatever Request handles.
-      Request(f).then(function (text) {
-        return cb(text, f);
       });
   });
 }
