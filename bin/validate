@@ -3,15 +3,9 @@
 // validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex
 // Validate node in data as shape in schema.
 
-var FS = require('fs');
-var N3 = require('n3');
-var turtleParser = N3.Parser();
-var ShExUtil = require("../lib/ShExUtil");
-var ShExParser = require("../lib/ShExParser").Parser;
+var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
-var Request = require('request-promise'); 
-var Promise = require('promise');
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -48,87 +42,31 @@ if (cmds.data.length === 0) abort("no data specified");
 if (cmds.shex.length === 0) abort("no shex specified");
 if (cmds.node === undefined) abort("no starting node specified");
 
-var Data = N3.Store();
-var Schema = ShExUtil.emptySchema();
 
-// Helper function to read from filesystem or web.
-function load (list, cb) {
-  return list.map(function (f, ord) {
-    return (f.match("^[a-z]+://.")) ?
-      // Read from http or whatever Request handles.
-      Request(f).then(function (text) {
-        return cb(text, f);
-      }) :
-      // Read from filesystem
-      new Promise(function (fulfill, reject) {
-        FS.readFile(f, "utf8", function (error, text) {
-          if (error) {
-            reject(error)
-          } else {
-            fulfill(cb(text, f));
-          }
-        })
+ShExLoader(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
+
+  // Make sure we have a start node.
+  if (cmds.shape === undefined && !("start" in loaded.schema))
+    abort("no shape specified on command line or in shex");
+  
+  if (cmds.verbose) {
+    var w;
+    new ShExWriter({simplifyParentheses: false }).
+      writeSchema(loaded.schema, function (error, text, prefixes) {
+        if (error) throw error;
+        else w = text;
       });
-  });
-}
+    var shapeIn = cmds.shape ? cmds.shape + " in" : "";
+    console.log("validating", cmds.node, "in", loaded.data.size, "triples against", shapeIn, w);
+  }
 
-Promise.all([].
-            // gather all the potentially remote inputs
-            concat(load(cmds.shex, function (text, url) {
-              try {
-                var s = (new ShExParser(url)).parse(text);
-                Schema = ShExUtil.merge(Schema, s, true);
-                return Promise.resolve(["text/shex", url]);
-              } catch (e) {
-                return Promise.reject("error parsing ShEx " + url + ": " + e);
-              }
-            })).
-            concat(load(cmds.json, function (text, url) {
-              try {
-                var s = JSON.parse(text);
-                Schema = ShExUtil.merge(Schema, s, true);
-                return Promise.resolve(["text/json", url]);
-              } catch (e) {
-                return Promise.reject("error parsing JSON " + url + ": " + e);
-              }
-            })).
-            concat(load(cmds.data, function (text, url) {
-                return new Promise(function (resolve, reject) {
-                  N3.Parser({documentIRI: url}).parse(text,
-                                    function (error, triple, prefixes) {
-                                      if (error) {
-                                        reject("error parsing " + url + ": " + error);
-                                      } else if (triple) {
-                                        Data.addTriple(triple)
-                                      } else {
-                                        resolve(["text/turtle", url]);
-                                      }
-                                    });
-                });
-              }))
-           ).then(function (t) {
-             // Make sure we have a start node.
-             if (cmds.shape === undefined && !("start" in Schema))
-               abort("no shape specified on command line or in shex");
+  // validate
+  var res = ShExValidator(loaded.schema).validate(loaded.data, cmds.node, cmds.shape);
+  if (!cmds.quiet)
+    console.log(JSON.stringify(res, null, "  "));
 
-             if (cmds.verbose) {
-               var w;
-               new ShExWriter({simplifyParentheses: false }).
-                 writeSchema(Schema, function (error, text, prefixes) {
-                   if (error) throw error;
-                   else w = text;
-                 });
-               var shapeIn = cmds.shape ? cmds.shape + " in" : "";
-               console.log("validating", cmds.node, "in", Data.size, "triples against", shapeIn, w);
-             }
-
-             // validate
-             var res = ShExValidator(Schema).validate(Data, cmds.node, cmds.shape);
-             if (!cmds.quiet)
-               console.log(JSON.stringify(res, null, "  "));
-
-             // Exit status 2 means no dice.
-             process.exit(res === null ? 2 : 0);
-           }).catch(function (e) {
-             console.error("aborting:", e);
-           });
+  // Exit status 2 means no dice.
+  process.exit(res === null ? 2 : 0);
+}).catch(function (e) {
+  console.error("aborting:", e);
+})
