@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-// validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex
-// Validate node in data as shape in schema.
+// json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json
 
 var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require('../lib/ShExWriter');
