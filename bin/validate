@@ -17,6 +17,7 @@ var Promise = require('promise');
 var CLI = require("command-line-args")([
     { name: "verbose", alias: "v", type: Boolean },
     { name: "quiet", alias: "q", type: Boolean },
+    { name: "help",  alias: "h", type: Boolean },
     { name: "node",  alias: "n", type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
@@ -27,7 +28,7 @@ function abort (msg) {
   console.error(msg);
   console.error(CLI.getUsage({
     title: "validate",
-    description: "validate Turtle files with respect to ShEx schemas, ex:\nvalidate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex",
+    description: "validate Turtle files with respect to ShEx schemas, for example:\n    validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex",
     footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
   }));
   process.exit(1);
@@ -35,6 +36,8 @@ function abort (msg) {
 
 // Extract user commands
 var cmds = CLI.parse();
+if (cmds.help)
+    abort("");
 if (cmds.shex.length > 1 && cmds.data.length === 0) {
   cmds.data = cmds.shex.splice(1); // push all but one into data
 }
