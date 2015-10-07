@@ -211,8 +211,9 @@
   function unescapeSemanticAction(key, string) {
     string = string.substring(1, string.length - 2);
     return {
+      type: "semAct",
       name: key,
-      contents: unescape(string, stringEscapeSequence, semactEscapeReplacements)
+      code: unescape(string, stringEscapeSequence, semactEscapeReplacements)
     };
   }
 
@@ -640,7 +641,7 @@ _Qannotation_E_Star:
     ;
 
 include:
-      '&' shapeLabel	-> { type: "include", "include": $2 } // t: 2groupInclude1
+      '&' shapeLabel	-> { type: "inclusion", "include": $2 } // t: 2groupInclude1
     ;
 
 shapeLabel:
