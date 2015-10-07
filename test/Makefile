@@ -3,7 +3,7 @@
 JISON?=../node_modules/jison/lib/cli.js
 MOCHA?=mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
-GENJSON?=../../test-suite/tests/genJSON.js
+GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
 REPORTER?=dot
 
 ValidationManifest=$(join $(TESTDIR), validations/manifest.jsonld) # isn't there an easier way to construct filenames?
