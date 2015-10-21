@@ -1,20 +1,41 @@
 #!/usr/bin/env node
 
-// Parse arguments
-var args = process.argv.slice(2);
-if (args.length < 1) {
-  console.error('usage: json-to-shex schema.json');
-  return process.exit(1);
-}
+// json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json
 
-var fs = require('fs');
+var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require('../lib/ShExWriter');
 
-// Parse and display the schema
-var json = fs.readFileSync(args[0]).toString();
-var parseTree = new ShExWriter().
-  writeSchema(JSON.parse(json),
-	      function (error, text, prefixes) {
-		if (error) throw error;
-		else if (text) console.log(text);
-	      });
+// Generate command line interface
+var CLI = require("command-line-args")([
+    { name: "help",  alias: "h", type: Boolean },
+    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
+]);
+function abort (msg) {
+  console.error(msg);
+  console.error(CLI.getUsage({
+    title: "json-to-shex",
+    description: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    shex-to-json https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json",
+    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
+  }));
+  process.exit(1);
+}
+
+// Extract user commands
+var cmds = CLI.parse();
+if (cmds.help)
+    abort("");
+if (cmds.json.length === 0 && cmds.shex.length === 0) abort("no shex specified");
+
+
+ShExLoader(cmds.shex, cmds.json, []).then(function (loaded) {
+  new ShExWriter().
+    writeSchema(loaded.schema,
+                function (error, text, prefixes) {
+                  if (error) throw error;
+                  else if (text) console.log(text);
+                });
+}).catch(function (e) {
+  console.error("aborting:", e);
+})
+

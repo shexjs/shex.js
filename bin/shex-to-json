@@ -1,16 +1,34 @@
 #!/usr/bin/env node
 
-// Parse arguments
-var args = process.argv.slice(2);
-if (args.length < 1) {
-  console.error('usage: shex-to-json schema.shex');
-  return process.exit(1);
+// shex-to-json http://tracker.example/schemas/Issue.shex
+
+var ShExLoader = require("../lib/ShExLoader"); // for verbose output
+
+// Generate command line interface
+var CLI = require("command-line-args")([
+    { name: "help",  alias: "h", type: Boolean },
+    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
+]);
+function abort (msg) {
+  console.error(msg);
+  console.error(CLI.getUsage({
+    title: "shex-to-json",
+    description: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex",
+    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
+  }));
+  process.exit(1);
 }
 
-var fs = require('fs');
-var ShExParser = require('../lib/ShExParser').Parser;
+// Extract user commands
+var cmds = CLI.parse();
+if (cmds.help)
+    abort("");
+if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
 
-// Parse and display the schema
-var shex = fs.readFileSync(args[0]).toString();
-var parseTree = new ShExParser().parse(shex);
-console.log('%s', JSON.stringify(parseTree, null, '  '));
+
+ShExLoader(cmds.shex, cmds.json, []).then(function (loaded) {
+  console.log('%s', JSON.stringify(loaded.schema, null, '  '));
+}).catch(function (e) {
+  console.error("aborting:", e);
+})
