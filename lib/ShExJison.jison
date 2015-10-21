@@ -653,11 +653,11 @@ shapeLabel:
 
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate valueClassOrRef _Qannotation_E_Star _Qcardinality_E_Opt semanticActions	{
+      predicate valueClassOrRef _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $5: t: 1dotCode1
-        $$ = extend({ type: "tripleConstraint", predicate: $1}, $2, $4, $5); // t: 1dot
-        if ($3.length)
-          $$['annotations'] = $3; // t: 1dotAnnot3
+        $$ = extend({ type: "tripleConstraint", predicate: $1}, $2, $3, $5); // t: 1dot
+        if ($4.length)
+          $$['annotations'] = $4; // t: 1dotAnnot3
       }
     | senseFlags predicate valueClassOrRef _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
