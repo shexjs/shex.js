@@ -415,7 +415,7 @@ _Qdirective_E_Star:
     ;
 
 _O_QnotStartAction_E_Or_QstartActions_E_C:
-      notStartAction
+      notStartAction	
     | startActions	
     ;
 
@@ -455,7 +455,7 @@ valueClassDefinition:
           Parser.valueClasses = {  };
         Parser.valueClasses[$1] = $3;
       }
-    | valueClassLabel 'EXTERN'	{ // t: @@
+    | valueClassLabel 'EXTERNAL'	{ // t: @@
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
           Parser.valueClasses = {  };
         Parser.valueClasses[$1] = null;
@@ -568,7 +568,7 @@ someOfShape:
     | multiElementSomeOf	;
 
 multiElementSomeOf:
-    groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus	-> { type: "someOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
+      groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus	-> { type: "someOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
     ;
 
 _O_QGT_PIPE_E_S_QgroupShape_E_C:
@@ -615,8 +615,8 @@ _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
 
 unaryShape:
       tripleConstraint	
-    | include
-    | encapsulatedShape
+    | include	
+    | encapsulatedShape	
     ;
 
 encapsulatedShape:
