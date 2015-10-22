@@ -693,7 +693,7 @@ valueClass:
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
-    | iri _QxsFacet_E_Star	{
+    | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $2)
@@ -788,11 +788,11 @@ stringLength:
     ;
 
 numericFacet:
-      numericRange rawNumeric	-> keyValObject($1, $2) // t: 1literalMininclusive
+      numericRange _rawNumeric	-> keyValObject($1, $2) // t: 1literalMininclusive
     | numericLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalTotaldigits
     ;
 
-rawNumeric:
+_rawNumeric: // like numericLiteral but doesn't parse as RDF literal
       INTEGER	-> parseInt($1, 10);
     | DECIMAL	-> parseFloat($1);
     | DOUBLE	-> parseFloat($1);
@@ -810,8 +810,11 @@ numericLength:
     | IT_FRACTIONDIGITS	-> "fractiondigits" // t: 1literalFractiondigits
     ;
 
+datatype:
+      iri	;
+
 annotation:
-    ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3] // t: 1dotAnnotIRIREF
+      ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3] // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
@@ -837,7 +840,7 @@ cardinality:
     ;
 
 valueSet:
-    '(' _Qvalue_E_Star ')'	-> $2 // t: 1val1IRIREF
+      '(' _Qvalue_E_Star ')'	-> $2 // t: 1val1IRIREF
     ;
 
 _Qvalue_E_Star:
@@ -872,7 +875,7 @@ _Qexclusion_E_Star:
     ;
 
 _O_Q_TILDE_E_S_Qexclusion_E_Star_C:
-    '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
+      '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
     ;
 
 _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
@@ -893,14 +896,14 @@ exclusion:
 literal:
       string	// t: 1val1STRING_LITERAL1
     | string LANGTAG	-> $1 + lowercase($2) // t: 1val1LANGTAG
-    | string '^^' iri	-> $1 + '^^' + $3 // t: 1val1Datatype
+    | string '^^' datatype	-> $1 + '^^' + $3 // t: 1val1Datatype
     | numericLiteral
     | IT_true	-> XSD_TRUE // t: 1val1true
     | IT_false	-> XSD_FALSE // t: 1val1false
     ;
 
 numericLiteral:
-      INTEGER	 -> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
+      INTEGER	-> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
     | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
     | DOUBLE	-> createLiteral($1.toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE
     ;
@@ -908,8 +911,8 @@ numericLiteral:
 string:
       STRING_LITERAL1	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL1
     | STRING_LITERAL2	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL2
-    | STRING_LITERAL_LONG1	 -> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG1
-    | STRING_LITERAL_LONG2	 -> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG2
+    | STRING_LITERAL_LONG1	-> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG1
+    | STRING_LITERAL_LONG2	-> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG2
     ;
 
 iri:
