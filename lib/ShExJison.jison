@@ -158,7 +158,8 @@
     Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
     Parser.base = Parser.basePath = Parser.baseRoot = '';
   }
-
+  var _fileName; // for debugging
+  Parser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
   var stringEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g,
@@ -450,10 +451,10 @@ directive:
     ;
 
 valueClassDefinition:
-      valueClassLabel '=' valueClass semanticActions	{ // t: 1val1vsMinusiri3
+      valueClassLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
           Parser.valueClasses = {  };
-        Parser.valueClasses[$1] = $3;
+        Parser.valueClasses[$1] = extend({type: "valueClassDefn"}, $3);
       }
     | valueClassLabel 'EXTERNAL'	{ // t: @@
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
@@ -461,6 +462,16 @@ valueClassDefinition:
         Parser.valueClasses[$1] = null;
       }
     ;
+
+valueClassExpr:
+      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	;
+
+_O_QIT_AND_E_S_QvalueClass_E_C:
+      'AND' valueClass	;
+
+_Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star:
+      
+    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star _O_QIT_AND_E_S_QvalueClass_E_C	;
 
 valueClassLabel:
       '$' iri	-> $2 // t: 1val1vsMinusiri3
@@ -621,12 +632,13 @@ unaryShape:
 
 encapsulatedShape:
       '(' innerShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
-        if ("min" in $4) { $$.min = $4.min; }
-        if ("max" in $4) { $$.max = $4.max; }
-        if ($5.length) { $$.annotations = $5; }
-        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; }
+        if ("min" in $4) { $$.min = $4.min; } // t: open3groupdotclosecard23Annot3Code2
+        if ("max" in $4) { $$.max = $4.max; } // t: open3groupdotclosecard23Annot3Code2
+        if ($5.length) { $$.annotations = $5; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
@@ -651,13 +663,13 @@ shapeLabel:
 
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate valueClassOrRef _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $5: t: 1dotCode1
         $$ = extend({ type: "tripleConstraint", predicate: $1}, $2, $3, $5); // t: 1dot
         if ($4.length)
           $$['annotations'] = $4; // t: 1dotAnnot3
       }
-    | senseFlags predicate valueClassOrRef _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+    | senseFlags predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
         $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, $3, $4, $6); // t: 1inversedot, 1negatedinversedot
         if ($5.length)
@@ -681,12 +693,17 @@ predicate:
     | 'a'	-> RDF_TYPE // t: 1AvalA
     ;
 
-valueClassOrRef:
-      valueClass	-> { value: $1 } // t: 1dot
+valueClass:
+      negatableValueClass	
+    | '!' negatableValueClass	-> extend({ negated: true}, $2)
+    ;
+
+negatableValueClass:
+      valueClass1	-> { value: $1 } // t: 1dot
     | valueClassLabel	-> { valueClassRef: $1 } // t: 1val1vsMinusiri3
     ;
 
-valueClass:
+valueClass1:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
 //    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _QstringFacet_E_Star	
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern

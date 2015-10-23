@@ -59,6 +59,7 @@ describe("A ShEx parser", function () {
       if (VERBOSE) console.log(schema);
       schema = fs.readFileSync(shexSchemaFile, "utf8");
     try {
+      parser._setFileName(shexSchemaFile);
       var parsedSchema = parser.parse(schema);
       if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
@@ -71,6 +72,7 @@ describe("A ShEx parser", function () {
           else w = text;
         });
       if (VERBOSE) console.log("written  :" + w);
+      parser._setFileName(shexSchemaFile + " (generated)");
       var parsed2 = parser.parse(w);
       expect(parsed2).to.deep.equal(jsonSchema);
 
@@ -80,6 +82,7 @@ describe("A ShEx parser", function () {
           else w = text;
         });
       if (VERBOSE) console.log("simple   :" + w);
+      parser._setFileName(shexSchemaFile + " (simplified)");
       var parsed3 = parser.parse(w); // test that simplified also parses
       } catch (e) {
         parser.reset();
