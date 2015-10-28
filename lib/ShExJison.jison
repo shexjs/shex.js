@@ -255,7 +255,7 @@ IT_BNODE		[Bb][Nn][Oo][Dd][Ee]
 IT_IRI			[Ii][Rr][Ii]
 IT_NONLITERAL		[Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_PATTERN		[Pp][Aa][Tt][Tt][Ee][Rr][Nn]
-//IT_AND			[Aa][Nn][Dd]
+IT_AND			[Aa][Nn][Dd]
 IT_OR			[Oo][Rr]
 IT_MININCLUSIVE		[Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE		[Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -352,7 +352,7 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 {IT_IRI}		return 'IT_IRI';
 {IT_NONLITERAL}		return 'IT_NONLITERAL';
 {IT_PATTERN}		return 'IT_PATTERN';
-//{IT_AND}		return 'IT_AND';
+{IT_AND}		return 'IT_AND';
 {IT_OR}			return 'IT_OR';
 {IT_MININCLUSIVE}	return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}	return 'IT_MINEXCLUSIVE';
@@ -467,7 +467,7 @@ valueClassExpr:
       valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	;
 
 _O_QIT_AND_E_S_QvalueClass_E_C:
-      'AND' valueClass	;
+      IT_AND valueClass	;
 
 _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star:
       
