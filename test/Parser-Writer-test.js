@@ -51,20 +51,26 @@ describe("A ShEx parser", function () {
     var jsonSchemaFile = jsonSchemasPath + schema + ".json";
     if (!fs.existsSync(jsonSchemaFile)) return;
     var shexSchemaFile = schemasPath + schema + ".shex"
+    var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
 
     it("should correctly parse schema '" + shexSchemaFile +
        "' as '" + jsonSchemaFile + "'." , function () {
-      var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
 
       if (VERBOSE) console.log(schema);
       schema = fs.readFileSync(shexSchemaFile, "utf8");
-    try {
+      try {
       parser._setFileName(shexSchemaFile);
       var parsedSchema = parser.parse(schema);
       if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
       expect(parsedSchema).to.deep.equal(jsonSchema);
+      } catch (e) {
+        parser.reset();
+        throw(e);
+      }
+    });
 
+    it("should write '" + jsonSchemaFile + "' and parse to the same strcuture.", function () {
       var w;
       new ShExWriter({simplifyParentheses: false }).
         writeSchema(jsonSchema, function (error, text, prefixes) {
@@ -73,9 +79,17 @@ describe("A ShEx parser", function () {
         });
       if (VERBOSE) console.log("written  :" + w);
       parser._setFileName(shexSchemaFile + " (generated)");
+      try {
       var parsed2 = parser.parse(w);
       expect(parsed2).to.deep.equal(jsonSchema);
+      } catch (e) {
+        parser.reset();
+        throw(e);
+      }
+    });
 
+    it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
+      var w;
       new ShExWriter({simplifyParentheses: true }).
         writeSchema(jsonSchema, function (error, text, prefixes) {
           if (error) throw error;
@@ -83,6 +97,7 @@ describe("A ShEx parser", function () {
         });
       if (VERBOSE) console.log("simple   :" + w);
       parser._setFileName(shexSchemaFile + " (simplified)");
+      try {
       var parsed3 = parser.parse(w); // test that simplified also parses
       } catch (e) {
         parser.reset();
