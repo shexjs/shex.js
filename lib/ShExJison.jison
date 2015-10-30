@@ -464,14 +464,17 @@ valueClassDefinition:
     ;
 
 valueClassExpr:
-      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	;
+      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { value: { type: "vcand", valueClasses: [$1].concat($2) } } : $1
+    ;
 
 _O_QIT_AND_E_S_QvalueClass_E_C:
-      IT_AND valueClass	;
+      IT_AND valueClass	-> $2
+    ;
 
 _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star:
-      
-    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star _O_QIT_AND_E_S_QvalueClass_E_C	;
+      -> []
+    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star _O_QIT_AND_E_S_QvalueClass_E_C	-> $1.concat($2);
+    ;
 
 valueClassLabel:
       '$' iri	-> $2 // t: 1val1vsMinusiri3
