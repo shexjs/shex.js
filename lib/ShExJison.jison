@@ -454,7 +454,7 @@ valueClassDefinition:
       valueClassLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
           Parser.valueClasses = {  };
-        Parser.valueClasses[$1] = extend({type: "valueClassDefn"}, $3);
+        Parser.valueClasses[$1] = { type: "valueClassDefn", "value": $3 }; // !!! valueExpr:
       }
     | valueClassLabel 'EXTERNAL'	{ // t: @@
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
@@ -464,7 +464,7 @@ valueClassDefinition:
     ;
 
 valueClassExpr:
-      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { value: { type: "vcand", valueClasses: [$1].concat($2) } } : $1
+      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { type: "vcand", valueClasses: [$1].concat($2) } : $1
     ;
 
 _O_QIT_AND_E_S_QvalueClass_E_C:
@@ -668,13 +668,13 @@ tripleConstraint:
     // _QsenseFlags_E_Opt 
       predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $5: t: 1dotCode1
-        $$ = extend({ type: "tripleConstraint", predicate: $1}, $2, $3, $5); // t: 1dot
+        $$ = extend({ type: "tripleConstraint", predicate: $1}, { value: $2 }, $3, $5); // t: 1dot
         if ($4.length)
           $$['annotations'] = $4; // t: 1dotAnnot3
       }
     | senseFlags predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, $3, $4, $6); // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, { value: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
         if ($5.length)
           $$['annotations'] = $5; // t: 1inversedotAnnot3
       }
@@ -702,8 +702,8 @@ valueClass:
     ;
 
 negatableValueClass:
-      valueClass1	-> { value: $1 } // t: 1dot
-    | valueClassLabel	-> { value: { type: "vcref", valueClassRef: $1 } } // t: 1val1vsMinusiri3
+      valueClass1	// t: 1dot
+    | valueClassLabel	-> { type: "vcref", valueClassRef: $1 } // t: 1val1vsMinusiri3
     ;
 
 valueClass1:
