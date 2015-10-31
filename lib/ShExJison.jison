@@ -454,7 +454,7 @@ valueClassDefinition:
       valueClassLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
           Parser.valueClasses = {  };
-        Parser.valueClasses[$1] = { type: "valueClassDefn", "value": $3 }; // !!! valueExpr:
+        Parser.valueClasses[$1] = { type: "valueClassDefn", "valueExpr": $3 };
       }
     | valueClassLabel 'EXTERNAL'	{ // t: @@
         if (Parser.valueClasses === null || Parser.valueClasses === undefined)
@@ -668,13 +668,13 @@ tripleConstraint:
     // _QsenseFlags_E_Opt 
       predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $5: t: 1dotCode1
-        $$ = extend({ type: "tripleConstraint", predicate: $1}, { value: $2 }, $3, $5); // t: 1dot
+        $$ = extend({ type: "tripleConstraint", predicate: $1}, { valueExpr: $2 }, $3, $5); // t: 1dot
         if ($4.length)
           $$['annotations'] = $4; // t: 1dotAnnot3
       }
     | senseFlags predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, { value: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, { valueExpr: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
         if ($5.length)
           $$['annotations'] = $5; // t: 1inversedotAnnot3
       }
