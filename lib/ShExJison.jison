@@ -155,7 +155,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser.prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
     Parser.base = Parser.basePath = Parser.baseRoot = '';
   }
   var _fileName; // for debugging
@@ -219,7 +219,7 @@
   }
 
   function error (msg) {
-    Parser.prefixes = Parser.valueClasses = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser.prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
     Parser.base = Parser.basePath = Parser.baseRoot = '';
     throw new Error(msg);
   }
@@ -399,11 +399,11 @@ COMMENT			('//'|'#') [^\u000a\u000d]*
 
 shexDoc:
       _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        var valueClasses = Parser.valueClasses ? { valueClasses: Parser.valueClasses } : {};
+        var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
         var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // Build return object from
-                         valueClasses, startActs, startObj,                    // components in parser state
+                         valueExprDefns, startActs, startObj,                    // components in parser state
                          {shapes: Parser.shapes});                            // maintaining intuitve order.
         Parser.reset();
         return ret;
@@ -452,19 +452,19 @@ directive:
 
 valueClassDefinition:
       valueClassLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
-        if (Parser.valueClasses === null || Parser.valueClasses === undefined)
-          Parser.valueClasses = {  };
-        Parser.valueClasses[$1] = { type: "valueClassDefn", "valueExpr": $3 };
+        if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
+          Parser.valueExprDefns = {  };
+        Parser.valueExprDefns[$1] = { type: "valueExprDefn", "valueExpr": $3 };
       }
     | valueClassLabel 'EXTERNAL'	{ // t: @@
-        if (Parser.valueClasses === null || Parser.valueClasses === undefined)
-          Parser.valueClasses = {  };
-        Parser.valueClasses[$1] = null;
+        if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
+          Parser.valueExprDefns = {  };
+        Parser.valueExprDefns[$1] = null;
       }
     ;
 
 valueClassExpr:
-      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { type: "vcand", valueClasses: [$1].concat($2) } : $1
+      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { type: "vcand", valueExprs: [$1].concat($2) } : $1
     ;
 
 _O_QIT_AND_E_S_QvalueClass_E_C:
@@ -703,7 +703,7 @@ valueClass:
 
 negatableValueClass:
       valueClass1	// t: 1dot
-    | valueClassLabel	-> { type: "vcref", valueClassRef: $1 } // t: 1val1vsMinusiri3
+    | valueClassLabel	-> { type: "vcref", valueExprRef: $1 } // t: 1val1vsMinusiri3
     ;
 
 valueClass1:
