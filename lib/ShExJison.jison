@@ -703,7 +703,7 @@ valueClass:
 
 negatableValueClass:
       valueClass1	-> { value: $1 } // t: 1dot
-    | valueClassLabel	-> { valueClassRef: $1 } // t: 1val1vsMinusiri3
+    | valueClassLabel	-> { value: { type: "vcref", valueClassRef: $1 } } // t: 1val1vsMinusiri3
     ;
 
 valueClass1:
