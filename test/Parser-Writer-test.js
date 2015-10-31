@@ -4,6 +4,7 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 var ShExParser = require("../lib/ShExParser").Parser;
 var ShExWriter = require("../lib/ShExWriter");
+var ShExUtil = require("../lib/ShExUtil");
 
 var fs = require("fs");
 var expect = require("chai").expect;
@@ -68,6 +69,10 @@ describe("A ShEx parser", function () {
         parser.reset();
         throw(e);
       }
+    });
+
+    it("should duplicate '" + jsonSchemaFile + "' and produce the same strcuture.", function () {
+      expect(ShExUtil.Visitor().visitSchema(jsonSchema)).to.deep.equal(jsonSchema);
     });
 
     it("should write '" + jsonSchemaFile + "' and parse to the same strcuture.", function () {
