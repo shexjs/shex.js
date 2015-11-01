@@ -34,8 +34,9 @@
 # - numericRange takes a numericLiteral, was INTEGER (EGP 20150917)
 # + innerShape ::= multiElementGroup | multiElementSomeOf (EGP 20151022)
 # ~ annotation ::= ';' predicate (iri | literal) -- was iri (EGP 20151022)
-# ~ valueClassExpr uses "AND" for conjuncts (EGP 20151023)
-# + not ('!') on value class expression conjuncts (EGP 20151023)
+# + generalized AND/OR expressions on valueClasses (EGP 20151031)
+# - groupShapeConstr (shapeOrRef (OR shapeOrRef)*) (EGP 20151031)
+# + stringFacet* on negatableValueClass ::= shapeOrRef (EGP 20151101)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -44,8 +45,9 @@
 [2]     statement             ::= directive | notStartAction
 [2b]    notStartAction        ::= start | shape | valueClassDefinition
 [3]     directive             ::= baseDecl | prefixDecl
-[3a]    valueClassDefinition  ::= valueClassLabel ('=' valueClassExpr semanticActions | "EXTERNAL")
-[3a]    valueClassExpr        ::= valueClass ( "AND" valueClass)*
+[3a]    valueClassDefinition  ::= valueClassLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
+[3a]    valueClassExpr        ::= valueClassAnd ( "OR" valueClassAnd )*
+[3a]    valueClassAnd         ::= valueClass ( "AND" valueClass )*
 [3a]    valueClassLabel       ::= '$' iri
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
@@ -68,15 +70,15 @@
 [16]    senseFlags            ::= '!' '^'?
                                 | '^' '!'?  # inverse not
 [17]    predicate             ::= iri | RDF_TYPE
-[18]    valueClass            ::= '!'? negatbleValueClass
+[18]    valueClass            ::= '!'? negatableValueClass
 [18a]   negatableValueClass   ::= "LITERAL" xsFacet*
-                                | ("IRI" | "BNODE" | "NONLITERAL") groupShapeConstr? stringFacet*
+                                | ("IRI" | "BNODE" | "NONLITERAL") shapeOrRef? stringFacet*
                                 | datatype xsFacet*
-                                | groupShapeConstr
+                                | shapeOrRef stringFacet*
                                 | valueSet
                                 | valueClassLabel
+                                | '[' valueClassExpr ']'
                                 | '.'  # no constraint
-[19]    groupShapeConstr      ::= shapeOrRef ("OR" shapeOrRef)*
 [20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
 [21]    xsFacet               ::= stringFacet
                                 | numericFacet

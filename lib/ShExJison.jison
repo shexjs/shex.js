@@ -464,6 +464,19 @@ valueClassDefinition:
     ;
 
 valueClassExpr:
+      valueClassAnd _Q_O_QIT_OR_E_S_QvalueClassAnd_E_C_E_Star	-> $2.length > 0 ? { type: "vcor", valueExprs: [$1].concat($2) } : $1
+    ;
+
+_O_QIT_OR_E_S_QvalueClassAnd_E_C:
+      IT_OR valueClassAnd	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QvalueClassAnd_E_C_E_Star:
+      -> []
+    | _Q_O_QIT_OR_E_S_QvalueClassAnd_E_C_E_Star _O_QIT_OR_E_S_QvalueClassAnd_E_C	-> $1.concat($2);
+    ;
+
+valueClassAnd:
       valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { type: "vcand", valueExprs: [$1].concat($2) } : $1
     ;
 
@@ -708,11 +721,11 @@ negatableValueClass:
 
 valueClass1:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
-//    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QgroupShapeConstr_E_Opt _QstringFacet_E_Star	
+//    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QshapeOrRef_E_Opt _QstringFacet_E_Star	
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
     | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C groupShapeConstr _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
@@ -721,8 +734,10 @@ valueClass1:
 	  });
         $$ = extend({ type: "valueClass", datatype: $1 }, $2) // t: 1datatype
       }
-    | groupShapeConstr	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
+    | shapeOrRef	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
+    | shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "valueClass", reference: $1 }, $2) // t: 1dotRef1
     | valueSet	-> { type: "valueClass", values: $1 } // t: 1val1IRIREF
+    | '[' valueClassExpr ']'	-> $2
     | '.'	-> { type: "valueClass" } // t: 1dot
     ;
 
@@ -742,9 +757,9 @@ _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
     | IT_NONLITERAL	-> 'nonliteral' // t: 1nonliteralLength
     ;
 
-// _QgroupShapeConstr_E_Opt:
+// _QshapeOrRef_E_Opt:
 //     
-//     | groupShapeConstr	;
+//     | shapeOrRef	;
 
 //_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
 //      
@@ -759,19 +774,6 @@ _QstringFacet_E_Plus:
         }
         $$ = extend($1, $2)
       }
-    ;
-
-groupShapeConstr:
-      shapeOrRef _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star	-> $2.length ? { type: "or", disjuncts: unionAll([$1], $2) } : $1 // t: 1dotRefOr3/1dotRef1
-    ;
-
-_O_QIT_OR_E_S_QshapeOrRef_E_C:
-      IT_OR shapeOrRef	-> $2 // t: 1dotRefOr3
-    ;
-
-_Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star:
-      -> [] // t: 1dotRefOr3
-    | _Q_O_QIT_OR_E_S_QshapeOrRef_E_C_E_Star _O_QIT_OR_E_S_QshapeOrRef_E_C	-> appendTo($1, $2) // t: 1dotRefOr3
     ;
 
 shapeOrRef:
