@@ -600,7 +600,7 @@ innerShape:
     ;
 
 groupShape:
-      unaryShape groupShape_right	-> $2 ? { type: "group", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
+      unaryShape groupShape_right	-> $2 ? { type: "eachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
     ;
 
 groupShape_right:
@@ -615,7 +615,7 @@ _QGT_COMMA_E_Opt:
     ;
 
 multiElementGroup:
-      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "group", expressions: unionAll([$1], $2) } // t: 2groupOfdot
+      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "eachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
     ;
 
 _O_QGT_COMMA_E_S_QunaryShape_E_C:

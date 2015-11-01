@@ -1,6 +1,6 @@
 {
   "name": "shex",
-  "version": "0.2.6",
+  "version": "0.5.3",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
   "author": {
     "name": "Eric Prud'hommeaux",
