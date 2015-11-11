@@ -737,7 +737,7 @@ valueClass1:
     | shapeOrRef	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
     | shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "valueClass", reference: $1 }, $2) // t: 1dotRef1
     | valueSet	-> { type: "valueClass", values: $1 } // t: 1val1IRIREF
-    | '[' valueClassExpr ']'	-> $2
+//    | '[' valueClassExpr ']'	-> $2 -- disabled for now due to algebraic complexity
     | '.'	-> { type: "valueClass" } // t: 1dot
     ;
 
@@ -836,7 +836,7 @@ datatype:
       iri	;
 
 annotation:
-      ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> [$2, $3] // t: 1dotAnnotIRIREF
+      ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
