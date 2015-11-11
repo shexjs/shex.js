@@ -51,7 +51,7 @@ describe("A ShEx parser", function () {
 
     var jsonSchemaFile = jsonSchemasPath + schema + ".json";
     if (!fs.existsSync(jsonSchemaFile)) return;
-    var shexSchemaFile = schemasPath + schema + ".shex"
+    var shexSchemaFile = schemasPath + schema + ".shex";
     var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
 
     it("should correctly parse schema '" + shexSchemaFile +
