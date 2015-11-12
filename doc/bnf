@@ -37,6 +37,7 @@
 # + generalized AND/OR expressions on valueClasses (EGP 20151031)
 # - groupShapeConstr (shapeOrRef (OR shapeOrRef)*) (EGP 20151031)
 # + stringFacet* on negatableValueClass ::= shapeOrRef (EGP 20151101)
+# ~ vcand and vcor are mutually exclusive (i.e. not recursive) (EGP 20151111)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
