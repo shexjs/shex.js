@@ -464,29 +464,35 @@ valueClassDefinition:
     ;
 
 valueClassExpr:
-      valueClassAnd _Q_O_QIT_OR_E_S_QvalueClassAnd_E_C_E_Star	-> $2.length > 0 ? { type: "vcor", valueExprs: [$1].concat($2) } : $1
+      valueClass _QvalueClassJuncts_E_Opt	-> $2 ? { type: $2[0], valueExprs: [$1].concat($2[1]) } : $1
     ;
 
-_O_QIT_OR_E_S_QvalueClassAnd_E_C:
-      IT_OR valueClassAnd	-> $2
+_QvalueClassJuncts_E_Opt:
+      	-> undefined
+    | valueClassJuncts	
     ;
 
-_Q_O_QIT_OR_E_S_QvalueClassAnd_E_C_E_Star:
-      -> []
-    | _Q_O_QIT_OR_E_S_QvalueClassAnd_E_C_E_Star _O_QIT_OR_E_S_QvalueClassAnd_E_C	-> $1.concat($2);
+valueClassJuncts:
+      _Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus	-> [ "vcor", $1 ]
+    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus	-> [ "vcand", $1 ];
     ;
 
-valueClassAnd:
-      valueClass _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star	-> $2.length > 0 ? { type: "vcand", valueExprs: [$1].concat($2) } : $1
+_O_QIT_OR_E_S_QvalueClass_E_C:
+      IT_OR valueClass	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus:
+      _O_QIT_OR_E_S_QvalueClass_E_C	-> [$1]
+    | _Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus _O_QIT_OR_E_S_QvalueClass_E_C	-> $1.concat([$2])
     ;
 
 _O_QIT_AND_E_S_QvalueClass_E_C:
       IT_AND valueClass	-> $2
     ;
 
-_Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star:
-      -> []
-    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Star _O_QIT_AND_E_S_QvalueClass_E_C	-> $1.concat($2);
+_Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus:
+      _O_QIT_AND_E_S_QvalueClass_E_C	-> [$1]
+    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus _O_QIT_AND_E_S_QvalueClass_E_C	-> $1.concat([$2])
     ;
 
 valueClassLabel:
