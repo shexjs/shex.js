@@ -46,8 +46,8 @@
 [2b]    notStartAction        ::= start | shape | valueClassDefinition
 [3]     directive             ::= baseDecl | prefixDecl
 [3a]    valueClassDefinition  ::= valueClassLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
-[3a]    valueClassExpr        ::= valueClassAnd ( "OR" valueClassAnd )*
-[3a]    valueClassAnd         ::= valueClass ( "AND" valueClass )*
+[3a]    valueClassExpr        ::= valueClass valueClassJuncts?
+[3a]    valueClassJuncts      ::= ( "OR" valueClass )+ | ( "AND" valueClass )+
 [3a]    valueClassLabel       ::= '$' iri
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
@@ -77,8 +77,8 @@
                                 | shapeOrRef stringFacet*
                                 | valueSet
                                 | valueClassLabel
-                                | '[' valueClassExpr ']'
                                 | '.'  # no constraint
+#                                | '[' valueClassExpr ']'
 [20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
 [21]    xsFacet               ::= stringFacet
                                 | numericFacet
