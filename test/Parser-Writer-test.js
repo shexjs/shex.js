@@ -41,8 +41,10 @@ describe("A ShEx parser", function () {
 
 
   // positive transformation tests
-  var schemas = fs.readdirSync(schemasPath);
-  schemas = schemas.map(function (s) { return s.replace(/\.shex$/, ""); });
+  var schemas = fs.
+    readdirSync(schemasPath).
+    filter(function (s) { return s.indexOf(".shex") !== -1; }).
+    map(function (s) { return s.replace(/\.shex$/, ""); });
   if (TESTS)
     schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
   schemas.sort();
