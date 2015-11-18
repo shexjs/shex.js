@@ -20,6 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "shex-test": "0.5.3",
     "command-line-args": "1.0.0",
     "eslint": "^1.4.1",
     "n3": "0.4.3",
@@ -27,7 +28,6 @@
     "request-promise": "0.4.3"
   },
   "devDependencies": {
-    "shex-test": "0.5.1",
     "jison": "0.4.x",
     "mocha": "1.21.x",
     "chai": "1.9.x",
