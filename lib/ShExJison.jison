@@ -496,7 +496,8 @@ _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus:
     ;
 
 valueClassLabel:
-      '$' iri	-> $2 // t: 1val1vsMinusiri3
+      '$' iri	-> $2 // t: 1val1vcrefIRIREF
+    | '$' blankNode	-> $2 // t: 1val1vcrefbnode
     ;
 
 baseDecl:
