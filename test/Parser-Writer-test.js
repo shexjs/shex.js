@@ -116,19 +116,24 @@ describe("A ShEx parser", function () {
 
   // negative syntax tests
   var negSyntaxTests = fs.readdirSync(negSyntaxTestsPath);
-  negSyntaxTests = negSyntaxTests.map(function (q) { return q.replace(/\.err$/, ""); });
   if (TESTS)
-    negSyntaxTests = negSyntaxTests.filter(function (s) { return TESTS.indexOf(s) !== -1; });
+    negSyntaxTests = negSyntaxTests.filter(function (s) {
+      return TESTS.indexOf(s) !== -1 ||
+        TESTS.indexOf(s.replace(/\.shex$/, "")) !== -1 ||
+        TESTS.indexOf(s.replace(/\.json$/, "")) !== -1;
+    });
   negSyntaxTests.sort();
 
   negSyntaxTests.forEach(function (schemaFile) {
-    var path = negSyntaxTestsPath + schemaFile + ".err";
+    var path = negSyntaxTestsPath + schemaFile;
     it("should not parse schema '" + path + "'", function () {
       if (VERBOSE) console.log(schemaFile);
       var schemaText = fs.readFileSync(path, "utf8");
       var error = null, schema = null;
       try {
-        schema = parser.parse(schemaText)
+        schema =
+          schemaFile.match(/\.shex$/) ? parser.parse(schemaText) :
+          ShExUtil.validateSchema(JSON.parse(schemaText));
         // console.warn(JSON.stringify(schema));
       }
       catch (e) {
