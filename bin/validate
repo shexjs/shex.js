@@ -38,16 +38,34 @@ if (cmds.shex.length > 1 && cmds.data.length === 0) {
 if (cmds.json.length > 1 && cmds.data.length === 0) {
   cmds.data = cmds.json.splice(1); // push all but one into data
 }
-if (cmds.data.length === 0) abort("no data specified");
-if (cmds.shex.length === 0) abort("no shex specified");
-if (cmds.node === undefined) abort("no starting node specified");
+if (cmds.data.length === 0) abort("No data specified");
+if (cmds.shex.length === 0 && cmds.json.length === 0) abort("No shex specified");
 
 
 ShExLoader(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
 
-  // Make sure we have a start node.
-  if (cmds.shape === undefined && !("start" in loaded.schema))
-    abort("no shape specified on command line or in shex");
+  if (cmds.node === undefined || (cmds.shape === undefined && !("start" in loaded.schema))) {
+    var msgs = [];
+    if (cmds.node === undefined) {
+      var subjectNodes = loaded.data.count() < 50 ? Object.keys(loaded.data.findByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
+      msgs.push("No starting node specified" +
+                (subjectNodes.length ?
+                 "; try -n with one of: " + subjectNodes.join(", ") :
+                 "")
+               );
+    }
+    // Make sure we have a start node.
+    if (cmds.shape === undefined && !("start" in loaded.schema)) {
+      var schemaKeys = Object.keys(loaded.schema.shapes);
+      schemaKeys.join(", ")
+      msgs.push("No shape specified on command line or in shex" +
+                (schemaKeys.length < 50 ?
+                 "; try -n with one of: " + schemaKeys.join(", ") :
+                 "")
+               );
+      }
+    abort(msgs.join("\n"));
+  }
   
   if (cmds.verbose) {
     var w;
