@@ -442,7 +442,7 @@ statement:
 notStartAction:
       start	// t: startCode1startRef	
     | shape	// t: 1iriRef1	
-    | valueClassDefinition	// t: 1val1vsMinusiri3
+    | valueExprDefinition	// t: 1val1vsMinusiri3
     ;
 
 directive:
@@ -450,13 +450,13 @@ directive:
     | prefixDecl	// t: 1dotLNex
     ;
 
-valueClassDefinition:
-      valueClassLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
+valueExprDefinition:
+      valueExprLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
         if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
           Parser.valueExprDefns = {  };
         Parser.valueExprDefns[$1] = { type: "valueExprDefn", "valueExpr": $3 };
       }
-    | valueClassLabel 'EXTERNAL'	{ // t: @@
+    | valueExprLabel 'EXTERNAL'	{ // t: @@
         if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
           Parser.valueExprDefns = {  };
         Parser.valueExprDefns[$1] = null;
@@ -495,7 +495,7 @@ _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus:
     | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus _O_QIT_AND_E_S_QvalueClass_E_C	-> $1.concat([$2])
     ;
 
-valueClassLabel:
+valueExprLabel:
       '$' iri	-> $2 // t: 1val1vcrefIRIREF
     | '$' blankNode	-> $2 // t: 1val1vcrefbnode
     ;

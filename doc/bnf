@@ -38,18 +38,20 @@
 # - groupShapeConstr (shapeOrRef (OR shapeOrRef)*) (EGP 20151031)
 # + stringFacet* on negatableValueClass ::= shapeOrRef (EGP 20151101)
 # ~ vcand and vcor are mutually exclusive (i.e. not recursive) (EGP 20151111)
+# ~ s/valueClassDefinition/valueExprDefinition/ (EGP 20151120)
+# ~ s/valueClassLabel/valueExprLabel/ (EGP 20151120)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
 
 [1]     shexDoc               ::= directive* ((notStartAction | startActions) statement*)? # leading CODE
 [2]     statement             ::= directive | notStartAction
-[2b]    notStartAction        ::= start | shape | valueClassDefinition
+[2b]    notStartAction        ::= start | shape | valueExprDefinition
 [3]     directive             ::= baseDecl | prefixDecl
-[3a]    valueClassDefinition  ::= valueClassLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
+[3a]    valueExprDefinition   ::= valueExprLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
 [3a]    valueClassExpr        ::= valueClass valueClassJuncts?
 [3a]    valueClassJuncts      ::= ( "OR" valueClass )+ | ( "AND" valueClass )+
-[3a]    valueClassLabel       ::= '$' iri
+[3a]    valueExprLabel       ::= '$' (iri | blankNode)
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
 [4]     start                 ::= "start" '=' ( shapeLabel | shapeDefinition semanticActions )
@@ -77,7 +79,7 @@
                                 | datatype xsFacet*
                                 | shapeOrRef stringFacet*
                                 | valueSet
-                                | valueClassLabel
+                                | valueExprLabel
                                 | '.'  # no constraint
 #                                | '[' valueClassExpr ']'
 [20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
