@@ -6,7 +6,7 @@ TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
 REPORTER?=dot
 
-ValidationManifest=$(join $(TESTDIR), validations/manifest.jsonld) # isn't there an easier way to construct filenames?
+ValidationManifest=$(join $(TESTDIR), validation/manifest.jsonld) # isn't there an easier way to construct filenames?
 
 ../lib/ShExJison.js: ../lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lalr
@@ -21,7 +21,7 @@ Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
 
-$(ValidationManifest): $(join $(TESTDIR), validations/manifest.ttl) $(GENJSON)
+$(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
 	$(GENJSON) $< > $@
 
 Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)

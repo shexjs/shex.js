@@ -15,8 +15,8 @@ var assert = chai.assert;
 var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
-var validationsPath = findPath("validations");
-var manifestFile = validationsPath + "manifest.jsonld";
+var validationPath = findPath("validation");
+var manifestFile = validationPath + "manifest.jsonld";
 
 describe("A ShEx validator", function () {
   "use strict";
@@ -42,8 +42,8 @@ describe("A ShEx validator", function () {
   tests.forEach(function (test) {
     try {
       var schemaFile = path.join(schemasPath, test.action.schema);
-      var dataFile = path.join(validationsPath, test.action.data);
-      var resultsFile = test.result ? path.join(validationsPath, test.result) : null;
+      var dataFile = path.join(validationPath, test.action.data);
+      var resultsFile = test.result ? path.join(validationPath, test.result) : null;
       var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
       var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
 
