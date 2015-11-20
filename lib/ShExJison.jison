@@ -212,7 +212,7 @@
   function unescapeSemanticAction(key, string) {
     string = string.substring(1, string.length - 2);
     return {
-      type: "semAct",
+      type: "SemAct",
       name: key,
       code: unescape(string, stringEscapeSequence, semactEscapeReplacements)
     };
@@ -402,7 +402,7 @@ shexDoc:
         var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        var ret = extend({ type: 'schema', prefixes: Parser.prefixes || {} }, // Build return object from
+        var ret = extend({ type: "Schema", prefixes: Parser.prefixes || {} }, // Build return object from
                          valueExprDefns, startActs, startObj,                    // components in parser state
                          {shapes: Parser.shapes});                            // maintaining intuitve order.
         Parser.reset();
@@ -454,7 +454,7 @@ valueExprDefinition:
       valueExprLabel '=' valueClassExpr _Qannotation_E_Star semanticActions	{ // t: 1val1vsMinusiri3
         if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
           Parser.valueExprDefns = {  };
-        Parser.valueExprDefns[$1] = { type: "valueExprDefn", "valueExpr": $3 };
+        Parser.valueExprDefns[$1] = { type: "ValueExprDefn", "valueExpr": $3 };
       }
     | valueExprLabel 'EXTERNAL'	{ // t: @@
         if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
@@ -473,8 +473,8 @@ _QvalueClassJuncts_E_Opt:
     ;
 
 valueClassJuncts:
-      _Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus	-> [ "valueOr", $1 ]
-    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus	-> [ "valueAnd", $1 ];
+      _Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus	-> [ "ValueOr", $1 ]
+    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus	-> [ "ValueAnd", $1 ];
     ;
 
 _O_QIT_OR_E_S_QvalueClass_E_C:
@@ -538,7 +538,7 @@ shape:
 	addShape($1, extend($2, $3));
     }
     | IT_VIRTUAL shapeLabel shapeDefinition semanticActions	{ // t: 1dotVirtual
-        // sneak 'virtual' in after 'type'
+        // sneak "virtual" in after "type"
         // Type will be overwritten.
         addShape($2, extend({type: null, virtual: true}, $3, $4)) // $4: t: 1dotVirtualShapeCode1
     }
@@ -551,21 +551,21 @@ shape:
 shapeDefinition:
       _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfShape_E_Opt '}'	{ // t: 1dotInherit3
 	var exprObj = $3 ? { expression: $3 } : {}; // t: 0, 0Inherit1
-        $$ = extend({ type: "shape"}, exprObj, $1);
+        $$ = extend({ type: "Shape"}, exprObj, $1);
       }
     ;
 
 _O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C:
-      includeSet	-> [ 'inherit', $1 ] // t: 1dotInherit1
-    | inclPropertySet	-> [ 'extra', $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
-    | IT_CLOSED	-> [ 'closed', true ] // t: 1dotClosed
+      includeSet	-> [ "inherit", $1 ] // t: 1dotInherit1
+    | inclPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
+    | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
 
 _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       -> {}
     | _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C	{
-      if ($2[0] === 'closed')
-        $1['closed'] = true; // t: 1dotClosed
+      if ($2[0] === "closed")
+        $1["closed"] = true; // t: 1dotClosed
       else if ($2[0] in $1)
         $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
       else
@@ -602,7 +602,7 @@ someOfShape:
     | multiElementSomeOf	;
 
 multiElementSomeOf:
-      groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus	-> { type: "someOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
+      groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus	-> { type: "SomeOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
     ;
 
 _O_QGT_PIPE_E_S_QgroupShape_E_C:
@@ -620,7 +620,7 @@ innerShape:
     ;
 
 groupShape:
-      unaryShape groupShape_right	-> $2 ? { type: "eachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
+      unaryShape groupShape_right	-> $2 ? { type: "EachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
     ;
 
 groupShape_right:
@@ -635,7 +635,7 @@ _QGT_COMMA_E_Opt:
     ;
 
 multiElementGroup:
-      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "eachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
+      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
     ;
 
 _O_QGT_COMMA_E_S_QunaryShape_E_C:
@@ -676,7 +676,7 @@ _Qannotation_E_Star:
     ;
 
 include:
-      '&' shapeLabel	-> { type: "inclusion", "include": $2 } // t: 2groupInclude1
+      '&' shapeLabel	-> { type: "Inclusion", "include": $2 } // t: 2groupInclude1
     ;
 
 shapeLabel:
@@ -688,15 +688,15 @@ tripleConstraint:
     // _QsenseFlags_E_Opt 
       predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $5: t: 1dotCode1
-        $$ = extend({ type: "tripleConstraint", predicate: $1}, { valueExpr: $2 }, $3, $5); // t: 1dot
+        $$ = extend({ type: "TripleConstraint", predicate: $1}, { valueExpr: $2 }, $3, $5); // t: 1dot
         if ($4.length)
-          $$['annotations'] = $4; // t: 1dotAnnot3
+          $$["annotations"] = $4; // t: 1dotAnnot3
       }
     | senseFlags predicate valueClassExpr _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "tripleConstraint" }, $1, { predicate: $2 }, { valueExpr: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, { valueExpr: $3 }, $4, $6); // t: 1inversedot, 1negatedinversedot
         if ($5.length)
-          $$['annotations'] = $5; // t: 1inversedotAnnot3
+          $$["annotations"] = $5; // t: 1inversedotAnnot3
       }
     ;
 
@@ -723,29 +723,29 @@ valueClass:
 
 negatableValueClass:
       valueClass1	// t: 1dot
-    | valueExprLabel	-> { type: "valueRef", valueExprRef: $1 } // t: 1val1vsMinusiri3
+    | valueExprLabel	-> { type: "ValueRef", valueExprRef: $1 } // t: 1val1vsMinusiri3
     ;
 
 valueClass1:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "valueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "ValueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
 //    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QshapeOrRef_E_Opt _QstringFacet_E_Star	
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C	-> { type: "valueClass", nodeKind: $1 } // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef	-> { type: "valueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "valueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C	-> { type: "ValueClass", nodeKind: $1 } // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus	-> extend({ type: "ValueClass", nodeKind: $1 }, $2) // t: 1iriPattern
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef	-> { type: "ValueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
+    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "ValueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $2)
 	      error("Parse error: facet "+facet+" not allowed for unknown datatype " + $1);
 	  });
-        $$ = extend({ type: "valueClass", datatype: $1 }, $2) // t: 1datatype
+        $$ = extend({ type: "ValueClass", datatype: $1 }, $2) // t: 1datatype
       }
-    | shapeOrRef	-> { type: "valueClass", reference: $1 } // t: 1dotRef1
-    | shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "valueClass", reference: $1 }, $2) // t: 1dotRef1
-    | valueSet	-> { type: "valueClass", values: $1 } // t: 1val1IRIREF
+    | shapeOrRef	-> { type: "ValueClass", reference: $1 } // t: 1dotRef1
+    | shapeOrRef _QstringFacet_E_Plus	-> extend({ type: "ValueClass", reference: $1 }, $2) // t: 1dotRef1
+    | valueSet	-> { type: "ValueClass", values: $1 } // t: 1val1IRIREF
 //    | '[' valueClassExpr ']'	-> $2 -- disabled for now due to algebraic complexity
-    | '.'	-> { type: "valueClass" } // t: 1dot
+    | '.'	-> { type: "ValueClass" } // t: 1dot
     ;
 
 _QxsFacet_E_Star:
@@ -759,9 +759,9 @@ _QxsFacet_E_Star:
     ;
 
 _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
-      IT_IRI	-> 'iri' // t: 1iriPattern
-    | IT_BNODE	-> 'bnode' // t: 1bnodeLength
-    | IT_NONLITERAL	-> 'nonliteral' // t: 1nonliteralLength
+      IT_IRI	-> "iri" // t: 1iriPattern
+    | IT_BNODE	-> "bnode" // t: 1bnodeLength
+    | IT_NONLITERAL	-> "nonliteral" // t: 1nonliteralLength
     ;
 
 // _QshapeOrRef_E_Opt:
@@ -843,7 +843,7 @@ datatype:
       iri	;
 
 annotation:
-      ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
+      ';' predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
@@ -886,7 +886,7 @@ iriRange:
       iri _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "stemRange",
+            type: "StemRange",
             stem: $1
           };
           if ($2.length)
@@ -895,7 +895,7 @@ iriRange:
           $$ = $1; // t: 1val1IRIREF, 1AvalA
         }
       }
-    | '.' _Qexclusion_E_Plus	-> { type: "stemRange", stem: { type: "wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | '.' _Qexclusion_E_Plus	-> { type: "StemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 _Qexclusion_E_Star:
@@ -919,7 +919,7 @@ _Qexclusion_E_Plus:
 
 exclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
-    | '-' iri '~'	-> { type: "stem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    | '-' iri '~'	-> { type: "Stem", stem: $2 } // t: 1val1iriStemMinusiriStem3
     ;
 
 literal:
