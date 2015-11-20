@@ -473,8 +473,8 @@ _QvalueClassJuncts_E_Opt:
     ;
 
 valueClassJuncts:
-      _Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus	-> [ "vcor", $1 ]
-    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus	-> [ "vcand", $1 ];
+      _Q_O_QIT_OR_E_S_QvalueClass_E_C_E_Plus	-> [ "valueOr", $1 ]
+    | _Q_O_QIT_AND_E_S_QvalueClass_E_C_E_Plus	-> [ "valueAnd", $1 ];
     ;
 
 _O_QIT_OR_E_S_QvalueClass_E_C:
@@ -723,7 +723,7 @@ valueClass:
 
 negatableValueClass:
       valueClass1	// t: 1dot
-    | valueClassLabel	-> { type: "vcref", valueExprRef: $1 } // t: 1val1vsMinusiri3
+    | valueExprLabel	-> { type: "valueRef", valueExprRef: $1 } // t: 1val1vsMinusiri3
     ;
 
 valueClass1:
