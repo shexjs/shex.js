@@ -10,8 +10,7 @@ npm install --save shex
 ## test
 
 ```
-cd node_modules/shex
-npm test
+(cd node_modules/shex && npm test) # assumming it was installed in ./node_nodules
 ```
 
 This runs `mocha -R dot` because there are around one thousand tests.
@@ -83,7 +82,7 @@ function validateWhenEverythingsLoaded () {
 // loaded the schema
 GET(shexc, function (b) {
   // callback parses the schema and tries to validate.
-  Schema = shex.Parser.Parser(shexc).parse(b)
+  Schema = shex.Parser(shexc).parse(b)
   validateWhenEverythingsLoaded();
 });
 
