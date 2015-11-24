@@ -43,7 +43,7 @@
     "bin/partition"
   ],
   "scripts": {
-    "test": "mocha -R dot",
+    "test": "mocha -C -R dot",
     "lint": "eslint test/findPath.js",
     "browser": "node browser/build-browser-versions",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100"
