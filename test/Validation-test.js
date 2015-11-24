@@ -1,5 +1,6 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
+var TERSE = false;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
 
 var ShExParser = require("../lib/ShExParser").Parser;
@@ -53,9 +54,9 @@ describe("A ShEx validator", function () {
       //   start = Object.keys(schema.action.shapes)[0];
 
       var validator = new ShExValidator(schema, { diagnose: true });
-      it("should validate data '" + (VERBOSE ? dataFile : test.action.data) + // test title
-         "' against schema '" + (VERBOSE ? schemaFile : test.action.schema) +
-         "' and get '" + (VERBOSE ? resultsFile : test.result) + "'.",
+      it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+         "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
+         "' and get '" + (TERSE ? test.result : resultsFile) + "'.",
          function (report) {                                             // test action
            var store = new N3.Store();
            turtleParser.parse(
