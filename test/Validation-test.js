@@ -1,6 +1,6 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
-var TERSE = false;
+var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
 
 var ShExParser = require("../lib/ShExParser").Parser;
