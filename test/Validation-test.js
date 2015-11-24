@@ -72,6 +72,15 @@ describe("A ShEx validator", function () {
                    if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                    if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                    expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                   var TestExt = "http://shex.io/extensions/Test/";
+                   var xr = test.extensionResults.filter(function (x) {
+                     return x.extension === TestExt;
+                   }).map(function (x) {
+                     return x.prints;
+                   });
+                   if (xr.length) {
+                     expect(validator.semActHandler.results[TestExt]).to.deep.equal(xr);
+                   }
                    report();
                  } catch (e) {
                    report(e);
