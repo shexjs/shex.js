@@ -28,7 +28,7 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
-var TestExtension = require("../extensions/shex:Test.js");
+var TestExt = "http://shex.io/extensions/Test/";
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -64,8 +64,7 @@ if (cmds.json.length > 1 && cmds.data.length === 0) {
 if (cmds.data.length === 0) abort("No data specified");
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("No shex specified");
 
-
-ShExLoader(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
+ShExLoader.load(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
 
   if (cmds.node === undefined || (cmds.shape === undefined && !("start" in loaded.schema))) {
     var msgs = [];
@@ -101,13 +100,20 @@ ShExLoader(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
     console.log("validating", cmds.node, "in", loaded.data.size, "triples against", shapeIn, w);
   }
 
-  // validate
+  // prepare validator
   var validator = ShExValidator(loaded.schema);
-  var testResults = TestExtension.register(validator)
+  var extensions = ShExLoader.loadExtensions();
+  Object.keys(extensions).forEach(function (ext) {
+    extensions[ext].register(validator);
+  });
+
+  // run validator
   var res = validator.validate(loaded.data, cmds.node, cmds.shape);
+
+  // display results
   if (!cmds.quiet) {
-    if (testResults.length) {
-      res.semActResults = { extension: TestExtension.url, effects: testResults };
+    if (Object.keys(validator.semActHandler.results).length) {
+      res.semActResults = validator.semActHandler.results;
     }
     console.log(JSON.stringify(res, null, "  "));
   }
