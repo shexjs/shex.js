@@ -1,11 +1,34 @@
 #!/usr/bin/env node
 
-// validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex
-// Validate node in data as shape in schema.
+/*
+validate -n <node> -d <data> -s <shape> -x <schema>
+Validate node in data as shape in schema.
+
+example invocations:
+ from teh interwebs:
+  validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex
+
+ from shex.js co with neighboring shexTest:
+  ./bin/validate -x ../shexTest/schemas/1dotCode3.shex -s http://a.example/S1 -d ../shexTest/validation/IIssue1_Ip1_Io1.ttl -n http://a.example/Issue1
+
+
+Extensions are loaded from ../extensions/*.js .
+Running the test extension <http://shex.io/extensions/Test/> adorns the results with:
+  "semActResults": {
+    "extension": "http://shex.io/extensions/Test/",
+    "effects": [
+      "http://a.example/Issue1",
+      "http://a.example/p1",
+      "http://a.example/o1"
+    ]
+  }
+
+*/
 
 var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
+var TestExtension = require("../extensions/shex:Test.js");
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -79,10 +102,15 @@ ShExLoader(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
   }
 
   // validate
-  var res = ShExValidator(loaded.schema).validate(loaded.data, cmds.node, cmds.shape);
-  if (!cmds.quiet)
+  var validator = ShExValidator(loaded.schema);
+  var testResults = TestExtension.register(validator)
+  var res = validator.validate(loaded.data, cmds.node, cmds.shape);
+  if (!cmds.quiet) {
+    if (testResults.length) {
+      res.semActResults = { extension: TestExtension.url, effects: testResults };
+    }
     console.log(JSON.stringify(res, null, "  "));
-
+  }
   // Exit status 2 means no dice.
   process.exit(res === null ? 2 : 0);
 }).catch(function (e) {

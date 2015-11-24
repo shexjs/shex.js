@@ -5,6 +5,7 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
 
 var ShExParser = require("../lib/ShExParser").Parser;
 var ShExValidator = require("../lib/ShExValidator");
+var TestExtension = require("../extensions/shex:Test.js");
 
 var N3 = require("n3");
 var turtleParser = new N3.Parser();
@@ -54,6 +55,7 @@ describe("A ShEx validator", function () {
       //   start = Object.keys(schema.action.shapes)[0];
 
       var validator = new ShExValidator(schema, { diagnose: true });
+      var testResults = TestExtension.register(validator);
       it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
          "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
          "' and get '" + (TERSE ? test.result : resultsFile) + "'.",
@@ -72,14 +74,13 @@ describe("A ShEx validator", function () {
                    if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                    if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                    expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
-                   var TestExt = "http://shex.io/extensions/Test/";
                    var xr = test.extensionResults.filter(function (x) {
-                     return x.extension === TestExt;
+                     return x.extension === TestExtension.url;
                    }).map(function (x) {
                      return x.prints;
                    });
                    if (xr.length) {
-                     expect(validator.semActHandler.results[TestExt]).to.deep.equal(xr);
+                     expect(testResults).to.deep.equal(xr);
                    }
                    report();
                  } catch (e) {
