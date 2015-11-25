@@ -28,7 +28,6 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
-var TestExt = "http://shex.io/extensions/Test/";
 
 // Generate command line interface
 var CLI = require("command-line-args")([
