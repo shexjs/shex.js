@@ -38,7 +38,8 @@ var CLI = require("command-line-args")([
     { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
+    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true }
 ]);
 function abort (msg) {
   console.error(msg);
@@ -110,14 +111,30 @@ ShExLoader.load(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
   var res = validator.validate(loaded.data, cmds.node, cmds.shape);
 
   // display results
-  if (!cmds.quiet) {
-    if (Object.keys(validator.semActHandler.results).length) {
-      res.semActResults = validator.semActHandler.results;
+  if (cmds.exec) {
+    /* example usage:
+./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
+require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+  then(function (loaded) {
+    var db = require("../extensions/shex:Map").materializer(loaded.schema).
+      materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
+      find(null, null, null);
+    var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
+    w.addTriples(db); w.end(function (error, result) { console.log(result); });
+  });'
+     */
+    eval("function ex (validator) {\n" + cmds.exec + "}");
+    ex(validator);
+  } else {
+    if (!cmds.quiet) {
+      if (Object.keys(validator.semActHandler.results).length) {
+        res.semActResults = validator.semActHandler.results;
+      }
+      console.log(JSON.stringify(res, null, "  "));
     }
-    console.log(JSON.stringify(res, null, "  "));
+    // Exit status 2 means no dice.
+    process.exit(res === null ? 2 : 0);
   }
-  // Exit status 2 means no dice.
-  process.exit(res === null ? 2 : 0);
 }).catch(function (e) {
   console.error("aborting:", e);
 })
