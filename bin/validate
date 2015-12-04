@@ -25,7 +25,7 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 
 */
 
-var ShExLoader = require("../lib/ShExLoader"); // for verbose output
+var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
 
@@ -39,7 +39,9 @@ var CLI = require("command-line-args")([
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true }
+    { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
+    { name: "test",  alias: "t", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "manifest", alias: "m", type: String, multiple: false, defaultValue: null, defaultOption:  true },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -51,25 +53,62 @@ function abort (msg) {
   process.exit(1);
 }
 
+function loadCLI (opts) {
+  if (opts.help)
+    abort("");
+  if (opts.shex.length > 1 && opts.data.length === 0) {
+    opts.data = opts.shex.splice(1); // push all but one into data
+  }
+  if (opts.json.length > 1 && opts.data.length === 0) {
+    opts.data = opts.json.splice(1); // push all but one into data
+  }
+  if (opts.data.length === 0) abort("No data specified");
+  if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
+
+  ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
+    runValidator(loaded.data, opts.node, loaded.schema, opts.shape);
+  }).catch(function (e) {
+    console.error("aborting:", e);
+  })
+}
+
 // Extract user commands
 var cmds = CLI.parse();
-if (cmds.help)
-    abort("");
-if (cmds.shex.length > 1 && cmds.data.length === 0) {
-  cmds.data = cmds.shex.splice(1); // push all but one into data
-}
-if (cmds.json.length > 1 && cmds.data.length === 0) {
-  cmds.data = cmds.json.splice(1); // push all but one into data
-}
-if (cmds.data.length === 0) abort("No data specified");
-if (cmds.shex.length === 0 && cmds.json.length === 0) abort("No shex specified");
+if (cmds.manifest) {
+  var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
+  var sht = "http://www.w3.org/ns/shacl/test-suite#";
+  ShExLoader.load([], [], [cmds.manifest]).then(function (loaded) {
 
-ShExLoader.load(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
+    var tests = [];
+    cmds.test.forEach(function (testName) {
+      tests = tests.concat(loaded.data.find(null, mf+"name", null).filter(function (triple) {
+        return triple.subject.indexOf(testName) !== -1 || triple.object.indexOf(testName) !== -1;
+      }).map(function (triple) {
+        var action = loaded.data.find(triple.subject, mf+"action", null)[0].object;
+        return {
+          shex: [loaded.data.find(action, sht+"schema", null)[0].object],
+          json: [],
+          shape: loaded.data.find(action, sht+"shape", null)[0].object,
+          data: [loaded.data.find(action, sht+"data", null)[0].object],
+          node: loaded.data.find(action, sht+"focus", null)[0].object
+        }
+      }));
+    });
+    tests.forEach(function (test) {
+      loadCLI(test);
+    });
+  }).catch(function (e) {
+    console.error("failed to load manifest file \"" + cmds.manifest + "\":", e, e.stack);
+  })
+} else {
+  loadCLI(cmds);
+}
 
-  if (cmds.node === undefined || (cmds.shape === undefined && !("start" in loaded.schema))) {
+function runValidator (graph, focusNode, schema, shape) {
+  if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
     var msgs = [];
-    if (cmds.node === undefined) {
-      var subjectNodes = loaded.data.count() < 50 ? Object.keys(loaded.data.findByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
+    if (focusNode === undefined) {
+      var subjectNodes = graph.count() < 50 ? Object.keys(graph.findByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
       msgs.push("No starting node specified" +
                 (subjectNodes.length ?
                  "; try -n with one of: " + subjectNodes.join(", ") :
@@ -77,8 +116,8 @@ ShExLoader.load(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
                );
     }
     // Make sure we have a start node.
-    if (cmds.shape === undefined && !("start" in loaded.schema)) {
-      var schemaKeys = Object.keys(loaded.schema.shapes);
+    if (shape === undefined && !("start" in schema)) {
+      var schemaKeys = Object.keys(schema.shapes);
       schemaKeys.join(", ")
       msgs.push("No shape specified on command line or in shex" +
                 (schemaKeys.length < 50 ?
@@ -92,23 +131,23 @@ ShExLoader.load(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
   if (cmds.verbose) {
     var w;
     new ShExWriter({simplifyParentheses: false }).
-      writeSchema(loaded.schema, function (error, text, prefixes) {
+      writeSchema(schema, function (error, text, prefixes) {
         if (error) throw error;
         else w = text;
       });
-    var shapeIn = cmds.shape ? cmds.shape + " in" : "";
-    console.log("validating", cmds.node, "in", loaded.data.size, "triples against", shapeIn, w);
+    var shapeIn = shape ? shape + " in" : "";
+    console.log("validating", focusNode, "in", graph.size, "triples against", shapeIn, w);
   }
 
   // prepare validator
-  var validator = ShExValidator(loaded.schema);
+  var validator = ShExValidator(schema);
   var extensions = ShExLoader.loadExtensions();
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
 
   // run validator
-  var res = validator.validate(loaded.data, cmds.node, cmds.shape);
+  var res = validator.validate(graph, focusNode, shape);
 
   // display results
   if (cmds.exec) {
@@ -116,7 +155,7 @@ ShExLoader.load(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
 ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
 require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
   then(function (loaded) {
-    var db = require("../extensions/shex:Map").materializer(loaded.schema).
+    var db = require("../extensions/shex:Map").materializer(schema).
       materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
       find(null, null, null);
     var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
@@ -127,7 +166,7 @@ require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
     ex(validator);
   } else {
     if (!cmds.quiet) {
-      if (Object.keys(validator.semActHandler.results).length) {
+      if (res && Object.keys(validator.semActHandler.results).length) {
         res.semActResults = validator.semActHandler.results;
       }
       console.log(JSON.stringify(res, null, "  "));
@@ -135,6 +174,5 @@ require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
     // Exit status 2 means no dice.
     process.exit(res === null ? 2 : 0);
   }
-}).catch(function (e) {
-  console.error("aborting:", e);
-})
+}
+
