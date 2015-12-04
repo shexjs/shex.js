@@ -65,8 +65,8 @@ function loadCLI (opts) {
   if (opts.data.length === 0) abort("No data specified");
   if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
 
-  ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
-    runValidator(loaded.data, opts.node, loaded.schema, opts.shape);
+  return ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
+    return runValidator(loaded.data, opts.node, loaded.schema, opts.shape);
   }).catch(function (e) {
     console.error("aborting:", e);
   })
@@ -94,17 +94,24 @@ if (cmds.manifest) {
         }
       }));
     });
-    tests.forEach(function (test) {
-      loadCLI(test);
+    Promise.all(tests.map(function (test) {
+      // run each test and return the result (0 or 2, so far)
+      return loadCLI(test);
+    })).then(function (results) {
+      // exit with a 0 if all returned 0, else a failure code.
+      process.exit(tests.reduce(function (soFar, result) {
+        return soFar ? soFar : result;
+      }, 0));
     });
   }).catch(function (e) {
     console.error("failed to load manifest file \"" + cmds.manifest + "\":", e, e.stack);
-  })
+  });
 } else {
-  loadCLI(cmds);
+  loadCLI(cmds).then(function (ret) { process.exit(ret) });
 }
 
 function runValidator (graph, focusNode, schema, shape) {
+  // console.log("runValidator ("+graph+", "+focusNode+", "+schema+", "+shape+")");
   if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
     var msgs = [];
     if (focusNode === undefined) {
@@ -171,8 +178,8 @@ require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
       }
       console.log(JSON.stringify(res, null, "  "));
     }
-    // Exit status 2 means no dice.
-    process.exit(res === null ? 2 : 0);
   }
+  // Exit status 2 means validation failure.
+  return (res === null ? 2 : 0);
 }
 
