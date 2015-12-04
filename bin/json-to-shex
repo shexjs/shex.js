@@ -28,7 +28,7 @@ if (cmds.help)
 if (cmds.json.length === 0 && cmds.shex.length === 0) abort("no shex specified");
 
 
-ShExLoader(cmds.shex, cmds.json, []).then(function (loaded) {
+ShExLoader.load(cmds.shex, cmds.json, []).then(function (loaded) {
   new ShExWriter().
     writeSchema(loaded.schema,
                 function (error, text, prefixes) {
