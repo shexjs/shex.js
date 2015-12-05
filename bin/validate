@@ -77,8 +77,8 @@ function loadSchemaAndData (opts) {
 
   return ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    var node = resolveRelativeIRI(loaded.dataSources[0].url, opts.node);
-    var shape = resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape);
+    var node = loaded.dataSources.length && opts.node ? resolveRelativeIRI(loaded.dataSources[0].url, opts.node) : null;
+    var shape = loaded.schemaSources.length && opts.shape ? resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape) : null;
     return runValidator(loaded.data, node, loaded.schema, shape);
   }).catch(function (e) {
     console.error("aborting:", e);
