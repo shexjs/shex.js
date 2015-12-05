@@ -48,6 +48,21 @@ The result is a JSON structure which tells you exactly how the data matched the 
 Had we gotten a `null`, we'd know that the document was invalid with respect to the schema.
 See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validation and the [ShExJ specification](http://shex.io/primer/ShExJ) for more details about the results format.
 
+####  relative resolution
+
+`validate`'s -n and -s arguemtns are evaluated as IRIs relative to the (first) data and schema sources respectively.
+The above invocation validates the node `<Issue1>` in `http://shex.io/examples/Issue1.ttl`.
+This and the shape can be written as relative IRIs:
+
+```
+./node_modules/shex/bin/validate \
+    -x http://shex.io/examples/Issue.shex \
+    -d http://shex.io/examples/Issue1.ttl \
+    -s IssueShape \
+    -n Issue1
+```
+
+
 ### validation library
 
 Parsing from the old interwebs involves a painful mix of asynchronous callbacks for getting the schema and the data and parsing the data (shorter path below):
