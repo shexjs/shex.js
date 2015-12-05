@@ -122,7 +122,7 @@ if (cmds.manifest) {
   });
 } else {
   // from the command line directly
-  loadSchemaAndData(cmds).then(function (ret) { process.exit(ret) });
+  loadSchemaAndData(cmds).then(function (ret) { process.exit(ret); });
 }
 
 function runValidator (graph, focusNode, schema, shape) {
@@ -175,9 +175,9 @@ function runValidator (graph, focusNode, schema, shape) {
   if (cmds.exec) {
     /* example usage:
 ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
-require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
   then(function (loaded) {
-    var db = require("../extensions/shex:Map").materializer(schema).
+    var db = require("../extensions/shex:Map").materializer(loaded.schema).
       materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
       find(null, null, null);
     var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
@@ -185,7 +185,7 @@ require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
   });'
      */
     eval("function ex (validator) {\n" + cmds.exec + "}");
-    ex(validator);
+    return ex(validator);
   } else {
     if (!cmds.quiet) {
       if (res && Object.keys(validator.semActHandler.results).length) {
@@ -195,6 +195,6 @@ require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
     }
   }
   // Exit status 2 means validation failure.
-  return (res === null ? 2 : 0);
+  return Promise.resolve(res === null ? 2 : 0);
 }
 
