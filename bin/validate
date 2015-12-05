@@ -53,7 +53,17 @@ function abort (msg) {
   process.exit(1);
 }
 
-function loadCLI (opts) {
+/* Leverage n3.js's relative IRI parsing.
+ * !! requires intimate (so intimate it makes me blush) knowledge of n3.
+ */
+var N3 = require("n3");
+function resolveRelativeIRI (baseIri, relativeIri) {
+  var p = N3.Parser({ documentIRI: baseIri });
+  p._readSubject({type: "IRI", value: relativeIri});
+  return p._subject;
+}
+
+function loadSchemaAndData (opts) {
   if (opts.help)
     abort("");
   if (opts.shex.length > 1 && opts.data.length === 0) {
@@ -66,7 +76,10 @@ function loadCLI (opts) {
   if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
 
   return ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
-    return runValidator(loaded.data, opts.node, loaded.schema, opts.shape);
+    // resolve relative shape and focus node names against the first schema and data source respectively.
+    var node = resolveRelativeIRI(loaded.dataSources[0].url, opts.node);
+    var shape = resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape);
+    return runValidator(loaded.data, node, loaded.schema, shape);
   }).catch(function (e) {
     console.error("aborting:", e);
   })
@@ -75,6 +88,7 @@ function loadCLI (opts) {
 // Extract user commands
 var cmds = CLI.parse();
 if (cmds.manifest) {
+  // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
   ShExLoader.load([], [], [cmds.manifest]).then(function (loaded) {
@@ -96,7 +110,7 @@ if (cmds.manifest) {
     });
     Promise.all(tests.map(function (test) {
       // run each test and return the result (0 or 2, so far)
-      return loadCLI(test);
+      return loadSchemaAndData(test);
     })).then(function (results) {
       // exit with a 0 if all returned 0, else a failure code.
       process.exit(tests.reduce(function (soFar, result) {
@@ -107,7 +121,8 @@ if (cmds.manifest) {
     console.error("failed to load manifest file \"" + cmds.manifest + "\":", e, e.stack);
   });
 } else {
-  loadCLI(cmds).then(function (ret) { process.exit(ret) });
+  // from the command line directly
+  loadSchemaAndData(cmds).then(function (ret) { process.exit(ret) });
 }
 
 function runValidator (graph, focusNode, schema, shape) {
