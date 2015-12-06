@@ -8,7 +8,7 @@ var ShExValidator = require("../lib/ShExValidator");
 var TestExtension = require("../extensions/shex:Test.js");
 
 var N3 = require("n3");
-var turtleParser = new N3.Parser();
+var N3Util = N3.Util;
 var fs = require("fs");
 var path = require("path");
 var chai = require("chai");
@@ -44,10 +44,13 @@ describe("A ShEx validator", function () {
   tests.forEach(function (test) {
     try {
       var schemaFile = path.join(schemasPath, test.action.schema);
+      var schemaURL = "file://" + schemaFile;
       var dataFile = path.join(validationPath, test.action.data);
+      var dataURL = "file://" + dataFile;
       var resultsFile = test.result ? path.join(validationPath, test.result) : null;
+      shexParser._setBase(schemaURL);
       var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-      var referenceResult = resultsFile ? parseJSONFile(resultsFile) : null;
+      var referenceResult = resultsFile ? parseJSONFile(resultsFile, schemaURL, dataURL) : null;
 
       assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure");
       // var start = schema.start;
@@ -61,6 +64,7 @@ describe("A ShEx validator", function () {
          "' and get '" + (TERSE ? test.result : resultsFile) + "'.",
          function (report) {                                             // test action
            var store = new N3.Store();
+           var turtleParser = new N3.Parser({documentIRI: dataURL});
            turtleParser.parse(
              fs.readFileSync(dataFile, "utf8"),
              function (error, triple, prefixes) {
@@ -70,7 +74,9 @@ describe("A ShEx validator", function () {
                  store.addTriple(triple);
                } else {
                  try {
-                   var validationResult = validator.validate(store, test.action.focus, test.action.shape);
+                   var focus = test.action.focus ? resolveRelativeIRI(dataURL, test.action.focus) : null;
+                   var shape = test.action.shape ? resolveRelativeIRI(schemaURL, test.action.shape) : null;
+                   var validationResult = validator.validate(store, focus, shape);
                    if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                    if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                    expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
@@ -97,12 +103,32 @@ describe("A ShEx validator", function () {
   });
 });
 
+/* Leverage n3.js's relative IRI parsing.
+ * !! requires intimate (so intimate it makes me blush) knowledge of n3.
+ */
+function resolveRelativeIRI (baseIri, relativeIri) {
+  var p = N3.Parser({ documentIRI: baseIri });
+  p._readSubject({type: "IRI", value: relativeIri});
+  return p._subject;
+}
+
 // Parses a JSON object, restoring `undefined` values
-function parseJSONFile(filename) {
+function parseJSONFile(filename, schemaURL, dataURL) {
   "use strict";
   try {
     var string = fs.readFileSync(filename, "utf8");
-    var object = JSON.parse(string);
+    var object = JSON.parse(string); debugger;
+    function resolveRelativeURLs (obj) {
+      Object.keys(obj).forEach(function (k) {
+        if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+           N3Util.isIRI(obj[k])) {
+          obj[k] = resolveRelativeIRI(["shape", "reference"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+        } else if (typeof obj[k] === "object") {
+          resolveRelativeURLs(obj[k]);
+        }
+      });
+    }
+    resolveRelativeURLs(object);
     return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
   } catch (e) {
     throw new Error("error reading " + filename + ": " + e);

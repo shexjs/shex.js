@@ -179,7 +179,7 @@ describe("A ShEx parser", function () {
 
   if (!TESTS || TESTS.indexOf("prefix") !== -1) {
     describe("with pre-defined prefixes", function () {
-      var prefixes = { a: "abc#", b: "def#" };
+      var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
       var parser = new ShExParser("http://a.example/", prefixes);
 
       it("should use those prefixes", function () {
@@ -189,7 +189,7 @@ describe("A ShEx parser", function () {
       });
 
       it("should allow temporarily overriding prefixes", function () {
-        var schema = "PREFIX a: <xyz#> a:a { b:b .+ }";
+        var schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
         expect(parser.parse(schema).shapes["http://a.example/xyz#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
         expect(parser.parse("a:a { b:b .+ }").shapes["http://a.example/abc#a"].expression.predicate)
@@ -197,18 +197,21 @@ describe("A ShEx parser", function () {
       });
 
       it("should not change the original prefixes", function () {
-        expect(prefixes).to.deep.equal({ a: "abc#", b: "def#" });
+        expect(prefixes).to.deep.equal({ a: "http://a.example/abc#", b: "http://a.example/def#" });
       });
 
       it("should not take over changes to the original prefixes", function () {
-        prefixes.a = "xyz#";
+        prefixes.a = "http://a.example/xyz#";
         expect(parser.parse("a:a { b:b .+ }").shapes["http://a.example/abc#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
+
+      // new ShExParser(); // !!! horrible hack to reset no documentIRI
+      // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
 
     describe("with pre-defined PNAME_NS prefixes", function () {
-      var prefixes = { a: "abc#", b: "def#" };
+      var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
       var parser = new ShExParser("http://a.example/", prefixes);
 
       it("should use those prefixes", function () {
@@ -218,7 +221,7 @@ describe("A ShEx parser", function () {
       });
 
       it("should allow temporarily overriding prefixes", function () {
-        var schema = "PREFIX a: <xyz#> a: { b: .+ }";
+        var schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
         expect(parser.parse(schema).shapes["http://a.example/xyz#"].expression.predicate)
           .to.deep.equal("http://a.example/def#");
         expect(parser.parse("a: { b: .+ }").shapes["http://a.example/abc#"].expression.predicate)

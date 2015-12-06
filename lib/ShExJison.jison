@@ -21,7 +21,7 @@
 
 %{
   /*
-    SPARQL parser in the Jison parser generator format.
+    ShEx parser in the Jison parser generator format.
   */
 
   // Common namespaces and entities
@@ -70,6 +70,10 @@
       XSD + "positiveInteger"
   ];
 
+  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
+    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
+
   var numericFacets = ["mininclusive", "minexclusive",
 		       "maxinclusive", "maxexclusive"];
 
@@ -105,28 +109,107 @@
     return union;
   }
 
-  // Resolves an IRI against a base path
-  function resolveIRI(iri) {
-    // Strip off possible angular brackets
-    if (iri[0] === '<')
-      iri = iri.substring(1, iri.length - 1);
+  // N3.js:lib/N3Parser.js<0.4.5>:58 with
+  //   s/this\./Parser./g
+  // ### `_setBase` sets the base IRI to resolve relative IRIs.
+  Parser._setBase = function (baseIRI) {
+    if (!baseIRI)
+      baseIRI = null;
+    else if (baseIRI.indexOf('#') >= 0)
+      { } // !!! throw new Error('Invalid base IRI ' + baseIRI);
+    // Set base IRI and its components
+    if (Parser._base = baseIRI) {
+      Parser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
+      baseIRI = baseIRI.match(schemeAuthority);
+      Parser._baseRoot   = baseIRI[0];
+      Parser._baseScheme = baseIRI[1];
+    }
+  }
+
+  // N3.js:lib/N3Parser.js<0.4.5>:576 with
+  //   s/this\./Parser./g
+  //   s/token/iri/
+  // ### `_resolveIRI` resolves a relative IRI token against the base path,
+  // assuming that a base path has been set and that the IRI is indeed relative.
+  function _resolveIRI (iri) {
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
-    case undefined:
-      return Parser.base;
+    case undefined: return Parser._base;
     // Resolve relative fragment IRIs against the base IRI
-    case '#':
-      return Parser.base + iri;
+    case '#': return Parser._base + iri;
     // Resolve relative query string IRIs by replacing the query string
-    case '?':
-      return Parser.base.replace(/(?:\?.*)?$/, iri);
-    // Resolve root relative IRIs at the root of the base IRI
+    case '?': return Parser._base.replace(/(?:\?.*)?$/, iri);
+    // Resolve root-relative IRIs at the root of the base IRI
     case '/':
-      return Parser.baseRoot + iri;
+      // Resolve scheme-relative IRIs to the scheme
+      return (iri[1] === '/' ? Parser._baseScheme : Parser._baseRoot) + _removeDotSegments(iri);
     // Resolve all other IRIs at the base IRI's path
-    default:
-      return /^[a-z]+:/.test(iri) ? iri : Parser.basePath + iri;
+    default: {
+      return _removeDotSegments(Parser._basePath + iri);
     }
+    }
+  }
+
+  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
+  function _removeDotSegments (iri) {
+    // Don't modify the IRI if it does not contain any dot segments
+    if (!dotSegments.test(iri))
+      return iri;
+
+    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
+    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+
+    while (i < length) {
+      switch (next) {
+      // The path starts with the first slash after the authority
+      case ':':
+        if (pathStart < 0) {
+          // Skip two slashes before the authority
+          if (iri[++i] === '/' && iri[++i] === '/')
+            // Skip to slash after the authority
+            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
+              i = pathStart;
+        }
+        break;
+      // Don't modify a query string or fragment
+      case '?':
+      case '#':
+        i = length;
+        break;
+      // Handle '/.' or '/..' path segments
+      case '/':
+        if (iri[i + 1] === '.') {
+          next = iri[++i + 1];
+          switch (next) {
+          // Remove a '/.' segment
+          case '/':
+            result += iri.substring(segmentStart, i - 1);
+            segmentStart = i + 1;
+            break;
+          // Remove a trailing '/.' segment
+          case undefined:
+          case '?':
+          case '#':
+            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
+          // Remove a '/..' segment
+          case '.':
+            next = iri[++i + 1];
+            if (next === undefined || next === '/' || next === '?' || next === '#') {
+              result += iri.substring(segmentStart, i - 2);
+              // Try to remove the parent path from result
+              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
+                result = result.substr(0, segmentStart);
+              // Remove a trailing '/..' segment
+              if (next !== '/')
+                return result + '/' + iri.substr(i + 1);
+              segmentStart = i + 1;
+            }
+          }
+        }
+      }
+      next = iri[++i];
+    }
+    return result + iri.substring(segmentStart);
   }
 
   // Creates an expression with the given type and attributes
@@ -155,8 +238,8 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser.prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
-    Parser.base = Parser.basePath = Parser.baseRoot = '';
+    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
   }
   var _fileName; // for debugging
   Parser._setFileName = function (fn) { _fileName = fn; }
@@ -213,22 +296,22 @@
     string = string.substring(1, string.length - 2);
     return {
       type: "SemAct",
-      name: key,
+      name: key ? key : "",
       code: unescape(string, stringEscapeSequence, semactEscapeReplacements)
     };
   }
 
   function error (msg) {
-    Parser.prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
-    Parser.base = Parser.basePath = Parser.baseRoot = '';
+    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
     throw new Error(msg);
   }
 
   // Expand declared prefix or throw Error
   function expandPrefix (prefix) {
-    if (!(prefix in Parser.prefixes))
+    if (!(prefix in Parser._prefixes))
       error('Parse error; unknown prefix: ' + prefix);
-    return Parser.prefixes[prefix];
+    return Parser._prefixes[prefix];
   }
 
   // Add a shape to the map
@@ -402,7 +485,7 @@ shexDoc:
         var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        var ret = extend({ type: "Schema", prefixes: Parser.prefixes || {} }, // Build return object from
+        var ret = extend({ type: "Schema", prefixes: Parser._prefixes || {} }, // Build return object from
                          valueExprDefns, startActs, startObj,                    // components in parser state
                          {shapes: Parser.shapes});                            // maintaining intuitve order.
         Parser.reset();
@@ -502,18 +585,19 @@ valueExprLabel:
 
 baseDecl:
       IT_BASE IRIREF	{ // t: @@
-        Parser.base = resolveIRI($2)
-        Parser.basePath = Parser.base.replace(/[^\/]*$/, '');
-        Parser.baseRoot = Parser.base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
+        Parser._setBase(Parser._base === null ||
+                    absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : _resolveIRI($2.slice(1, -1)));
       }
     ;
 
 prefixDecl:
       IT_PREFIX PNAME_NS IRIREF	{ // t: ShExParser-test.js/with pre-defined prefixes
-        if (!Parser.prefixes) Parser.prefixes = {};
-        $2 = $2.substr(0, $2.length - 1);
-        $3 = resolveIRI($3);
-        Parser.prefixes[$2] = $3;
+        var prefixIRI;
+        if (this._base === null || absoluteIRI.test($3.slice(1, -1)))
+          prefixIRI = $3.slice(1, -1);
+        else
+          prefixIRI = _resolveIRI($3.slice(1, -1));
+        Parser._prefixes[$2.slice(0, -1)] = prefixIRI;
       }
     ;
 
@@ -787,11 +871,11 @@ shapeOrRef:
       ATPNAME_LN	{ // t: 1dotRefLNex
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
-        $$ = resolveIRI(expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1));
+        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1
         $1 = $1.substr(1, $1.length-1);
-        $$ = resolveIRI(expandPrefix($1.substr(0, $1.length - 1)));
+        $$ = expandPrefix($1.substr(0, $1.length - 1));
       }
     | '@' shapeLabel	{ $$ = $2; } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     | shapeDefinition	{ // t: 1dotInline1
@@ -945,13 +1029,13 @@ string:
     ;
 
 iri:
-      IRIREF	-> resolveIRI(unescape($1, irirefEscapeSequence)) // t: 1dot
+      IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? unescape($1.slice(1,-1), irirefEscapeSequence) : _resolveIRI(unescape($1.slice(1,-1), irirefEscapeSequence)) // t: 1dot
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
-        $$ = resolveIRI(expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1));
+        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
-        $$ = resolveIRI(expandPrefix($1.substr(0, $1.length - 1)));
+        $$ = expandPrefix($1.substr(0, $1.length - 1));
     }
     ;
 
@@ -961,7 +1045,7 @@ blankNode:
     ;
 
 codeDecl:
-      '%' CODE	-> unescapeSemanticAction('', $2) // t: 1dotUnlabeledCode1
+      '%' CODE	-> unescapeSemanticAction("", $2) // t: 1dotUnlabeledCode1
     | '%' iri CODE	-> unescapeSemanticAction($2, $3) // t: 1dotCode1
     ;
 
