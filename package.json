@@ -20,12 +20,12 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "shex-test": "0.5.5",
     "command-line-args": "1.0.0",
     "eslint": "^1.4.1",
-    "n3": "0.4.3",
+    "n3": "^0.x",
     "promise": "^7.0.4",
-    "request-promise": "0.4.3"
+    "request-promise": "0.4.3",
+    "shex-test": "0.5.7"
   },
   "devDependencies": {
     "jison": "0.4.x",
@@ -69,12 +69,26 @@
   ],
   "eslintConfig": {
     "rules": {
-      "indent": [ 2, 2 ],
-      "quotes": [ 2, "double" ],
-      "linebreak-style": [ 2, "unix" ],
-      "semi": [ 2, "always" ],
-
-      "strict": [2, "never"],
+      "indent": [
+        2,
+        2
+      ],
+      "quotes": [
+        2,
+        "double"
+      ],
+      "linebreak-style": [
+        2,
+        "unix"
+      ],
+      "semi": [
+        2,
+        "always"
+      ],
+      "strict": [
+        2,
+        "never"
+      ],
       "no-multi-spaces": 0,
       "key-spacing": 0
     },
