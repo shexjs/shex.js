@@ -52,7 +52,7 @@ describe("A ShEx validator", function () {
       var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
       var referenceResult = resultsFile ? parseJSONFile(resultsFile, schemaURL, dataURL) : null;
 
-      assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure");
+      assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
       // var start = schema.start;
       // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
       //   start = Object.keys(schema.action.shapes)[0];
@@ -61,7 +61,8 @@ describe("A ShEx validator", function () {
       var testResults = TestExtension.register(validator);
       it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
          "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
-         "' and get '" + (TERSE ? test.result : resultsFile) + "'.",
+         "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
+	 " in test '" + test["@id"] + "'.",
          function (report) {                                             // test action
            var store = new N3.Store();
            var turtleParser = new N3.Parser({documentIRI: dataURL});
@@ -117,7 +118,7 @@ function parseJSONFile(filename, schemaURL, dataURL) {
   "use strict";
   try {
     var string = fs.readFileSync(filename, "utf8");
-    var object = JSON.parse(string); debugger;
+    var object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
         if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
