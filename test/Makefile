@@ -22,7 +22,7 @@ Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 
 
 $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
-	$(GENJSON) $< > $@
+	$(GENJSON) $< -w > $@
 
 Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
