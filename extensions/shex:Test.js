@@ -1,6 +1,6 @@
 var TestExt = "http://shex.io/extensions/Test/";
 function register (validator) {
-  var pattern = /^ *(fail|print) *\( *(?:(\"(?:[^\\"]|\\")*\")|([spo])) *\) *$/;
+  var pattern = /^ *(fail|print) *\( *(?:(\"(?:[^\\"]|\\\\|\\")*\")|([spo])) *\) *$/;
 
   validator.semActHandler.results[TestExt] = [];
   validator.semActHandler.register(
