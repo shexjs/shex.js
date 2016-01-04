@@ -28,6 +28,7 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
+var path = require("path");
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -42,6 +43,7 @@ var CLI = require("command-line-args")([
     { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
     { name: "test",  alias: "t", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "manifest", alias: "m", type: String, multiple: false, defaultValue: null, defaultOption:  true },
+    { name: "invocation", alias: "i", type: Boolean },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -86,6 +88,7 @@ function loadSchemaAndData (opts) {
 }
 
 // Extract user commands
+var arg0 = process.argv[1];
 var cmds = CLI.parse();
 if (cmds.manifest) {
   // from a manifest supplied on the command line
@@ -110,10 +113,13 @@ if (cmds.manifest) {
     });
     Promise.all(tests.map(function (test) {
       // run each test and return the result (0 or 2, so far)
+      if (cmds.invocation) {
+	console.log(getInvocation(test));
+      }
       return loadSchemaAndData(test);
     })).then(function (results) {
       // exit with a 0 if all returned 0, else a failure code.
-      process.exit(tests.reduce(function (soFar, result) {
+      process.exit(results.reduce(function (soFar, result) {
         return soFar ? soFar : result;
       }, 0));
     });
@@ -122,7 +128,29 @@ if (cmds.manifest) {
   });
 } else {
   // from the command line directly
+  if (cmds.invocation) {
+    console.log(getInvocation(cmds));
+  }
   loadSchemaAndData(cmds).then(function (ret) { process.exit(ret); });
+}
+
+function getInvocation (parms) {
+  function shortenFile (u) {
+    var m = u.match(/file:\/\/(\/.*)$/);
+    if (m)
+      u = path.relative(process.cwd(), m[1])
+    return "'"+u+"'";
+  }
+  function shexFileArg (u) { return "-x "+shortenFile(u); }
+  function jsonFileArg (u) { return "-j "+shortenFile(u); }
+  function dataFileArg (u) { return "-d "+shortenFile(u); }
+  return [path.relative(process.cwd(), arg0),
+	  parms.shex.map(shexFileArg).join(' '),
+	  parms.json.map(jsonFileArg).join(' '),
+	  parms.data.map(dataFileArg).join(' '),
+	  "-s " + parms.shape,
+	  "-n " + parms.node
+	 ].join(' ');
 }
 
 function runValidator (graph, focusNode, schema, shape) {
