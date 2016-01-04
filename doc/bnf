@@ -42,6 +42,7 @@
 # ~ vcand and vcor are mutually exclusive (i.e. not recursive) (EGP 20151111)
 # ~ s/valueClassDefinition/valueExprDefinition/ (EGP 20151120)
 # ~ s/valueClassLabel/valueExprLabel/ (EGP 20151120)
+# ~ change valueSet delimiters from ()s to []s (EGP 20160104)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -99,7 +100,7 @@
 [22]    datatype              ::= iri
 [23]    annotation            ::= ';' predicate (iri | literal)
 [24]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
-[25]    valueSet              ::= '(' value* ')'
+[25]    valueSet              ::= '[' value* ']'
 [26]    value                 ::= iriRange | literal
 [27]    iriRange              ::= iri ('~' exclusion*)? | '.' exclusion+
 [28]    exclusion             ::= '-' iri '~'?

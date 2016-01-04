@@ -456,6 +456,8 @@ COMMENT                 ('//'|'#') [^\u000a\u000d]*
 ","                     return ',';
 "("                     return '(';
 ")"                     return ')';
+"["                     return '[';
+"]"                     return ']';
 "$"                     return '$';
 "!"                     return '!';
 "^^"                    return '^^';
@@ -963,7 +965,7 @@ cardinality:
     ;
 
 valueSet:
-      '(' _Qvalue_E_Star ')'    -> $2 // t: 1val1IRIREF
+      '[' _Qvalue_E_Star ']'    -> $2 // t: 1val1IRIREF
     ;
 
 _Qvalue_E_Star:
