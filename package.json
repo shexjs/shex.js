@@ -32,7 +32,6 @@
     "mocha": "1.21.x",
     "chai": "1.9.x",
     "pre-commit": "~0.0.9",
-    "n3": "0.4.3",
     "browserify": "~3.x",
     "uglify-js": "~2.4.3"
   },
