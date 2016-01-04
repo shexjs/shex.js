@@ -1,6 +1,8 @@
 # Yacker grammer for (Sh)ape (Ex)pressions (C)ompact language
 # 
-# http://www.w3.org/2005/01/yacker/uploads/ShEx3/bnf
+# Copyright 2015, Eric Prud'hommeax, Harold Solbrig, Iovka Boneva, Jose Labra Gayo
+# All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
+# http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
 # 
 # TODO:
 #   annotations on shapes
@@ -90,7 +92,7 @@
                                 | "PATTERN" string
                                 | '~' string  # shortcut for "PATTERN"
 [21]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[21]    numericFacet          ::= numericRange numericLiteral
+[21]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
                                 | numericLength INTEGER
 [21]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [21]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
