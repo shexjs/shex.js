@@ -20,9 +20,8 @@ Partition-test: ../lib/ShExJison.js Partition-test.js
 Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
-
 $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
-	$(GENJSON) $< -w > $@
+	$(GENJSON) $< -o $@ -e # suppress output if there are errors
 
 Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
