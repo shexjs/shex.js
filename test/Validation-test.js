@@ -97,8 +97,8 @@ describe("A ShEx validator", function () {
              });
          });
     } catch (e) {
-      var throwMe = new Error("in " + test["@id"] + " " + e);
-      throwMe.stack = e.stack;
+      var throwMe = new Error("in " + test["@id"] + " " + e); // why doesn't this change the error message?
+      throwMe.stack = "in " + test["@id"] + " " + e.stack;
       throw throwMe;
     }
   });
