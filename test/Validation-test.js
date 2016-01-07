@@ -65,7 +65,7 @@ describe("A ShEx validator", function () {
 	 " in test '" + test["@id"] + "'.",
          function (report) {                                             // test action
            var store = new N3.Store();
-           var turtleParser = new N3.Parser({documentIRI: dataURL});
+           var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
            turtleParser.parse(
              fs.readFileSync(dataFile, "utf8"),
              function (error, triple, prefixes) {
