@@ -58,7 +58,12 @@ describe("A ShEx validator", function () {
 	   var validator = new ShExValidator(schema, { diagnose: true });
 	   var testResults = TestExtension.register(validator);
 
-	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, schemaURL, dataURL) : null;
+	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
+	     // resolve relative URLs in results file
+	     if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+		 N3Util.isIRI(obj[k])) {
+               obj[k] = resolveRelativeIRI(["shape", "reference"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+             }}) : null;
 
 	   assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
 	   // var start = schema.start;
@@ -115,19 +120,19 @@ function resolveRelativeIRI (baseIri, relativeIri) {
 }
 
 // Parses a JSON object, restoring `undefined` values
-function parseJSONFile(filename, schemaURL, dataURL) {
+function parseJSONFile(filename, mapFunction) {
   "use strict";
   try {
     var string = fs.readFileSync(filename, "utf8");
     var object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
-        if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-           N3Util.isIRI(obj[k])) {
-          obj[k] = resolveRelativeIRI(["shape", "reference"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-        } else if (typeof obj[k] === "object") {
+	if (typeof obj[k] === "object") {
           resolveRelativeURLs(obj[k]);
         }
+	if (mapFunction) {
+	  mapFunction(k, obj);
+	}
       });
     }
     resolveRelativeURLs(object);
@@ -137,6 +142,10 @@ function parseJSONFile(filename, schemaURL, dataURL) {
   }
 }
 
+// Not sure this is needed when everything's working but I have hunch it makes
+// error handling a little more graceful.
+
+// Stolen from Ruben Verborgh's SPARQL.js tests:
 // Recursively replace values of "{undefined}" by `undefined`
 function restoreUndefined(object) {
   "use strict";
