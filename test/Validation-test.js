@@ -24,10 +24,10 @@ describe("A ShEx validator", function () {
   "use strict";
 
   var shexParser = new ShExParser();
-  // Ensure the same blank node identifiers are used in every test
-  // beforeEach(function () {
-  //   shexParser._resetBlanks();
-  // });
+  /*
+    Note that the tests.forEach will run before any of the it() functions.
+    shexParser._setBase() must execute before shexParser.parse().
+   */
 
   var tests = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 
@@ -48,22 +48,23 @@ describe("A ShEx validator", function () {
       var dataFile = path.join(validationPath, test.action.data);
       var dataURL = "file://" + dataFile;
       var resultsFile = test.result ? path.join(validationPath, test.result) : null;
-      shexParser._setBase(schemaURL);
-      var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-      var referenceResult = resultsFile ? parseJSONFile(resultsFile, schemaURL, dataURL) : null;
-
-      assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
-      // var start = schema.start;
-      // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
-      //   start = Object.keys(schema.action.shapes)[0];
-
-      var validator = new ShExValidator(schema, { diagnose: true });
-      var testResults = TestExtension.register(validator);
       it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
          "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
          "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
 	 " in test '" + test["@id"] + "'.",
          function (report) {                                             // test action
+	   shexParser._setBase(schemaURL);
+	   var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+	   var validator = new ShExValidator(schema, { diagnose: true });
+	   var testResults = TestExtension.register(validator);
+
+	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, schemaURL, dataURL) : null;
+
+	   assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
+	   // var start = schema.start;
+	   // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
+	   //   start = Object.keys(schema.action.shapes)[0];
+
            var store = new N3.Store();
            var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
            turtleParser.parse(
