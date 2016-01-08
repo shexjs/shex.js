@@ -102,19 +102,24 @@ if (cmds.manifest) {
         return triple.subject.indexOf(testName) !== -1 || triple.object.indexOf(testName) !== -1;
       }).map(function (triple) {
         var action = loaded.data.find(triple.subject, mf+"action", null)[0].object;
-        return {
-          shex: [loaded.data.find(action, sht+"schema", null)[0].object],
-          json: [],
-          shape: loaded.data.find(action, sht+"shape", null)[0].object,
-          data: [loaded.data.find(action, sht+"data", null)[0].object],
-          node: loaded.data.find(action, sht+"focus", null)[0].object
-        }
+
+        return [["shex" , "schema", true ],
+                ["shape", "shape" , false],
+                ["data" , "data"  , true ],
+                ["node" , "focus" , false]].reduce(function (ret, elt) {
+                  var m = loaded.data.find(action, sht+elt[1], null);
+                  if (m.length > 0) {
+                    var v = m[0].object;
+                    ret[elt[0]] = elt[2] ? [v] : v;
+                  }
+                  return ret;
+                }, {json: []});
       }));
     });
     Promise.all(tests.map(function (test) {
       // run each test and return the result (0 or 2, so far)
       if (cmds.invocation) {
-	console.log(getInvocation(test));
+        console.log(getInvocation(test));
       }
       return loadSchemaAndData(test);
     })).then(function (results) {
@@ -145,12 +150,12 @@ function getInvocation (parms) {
   function jsonFileArg (u) { return "-j "+shortenFile(u); }
   function dataFileArg (u) { return "-d "+shortenFile(u); }
   return [path.relative(process.cwd(), arg0),
-	  parms.shex.map(shexFileArg).join(' '),
-	  parms.json.map(jsonFileArg).join(' '),
-	  parms.data.map(dataFileArg).join(' '),
-	  "-s " + parms.shape,
-	  "-n " + parms.node
-	 ].join(' ');
+          parms.shex.map(shexFileArg).join(' '),
+          parms.json.map(jsonFileArg).join(' '),
+          parms.data.map(dataFileArg).join(' '),
+          "-s " + parms.shape,
+          "-n " + parms.node
+         ].join(' ');
 }
 
 function runValidator (graph, focusNode, schema, shape) {
