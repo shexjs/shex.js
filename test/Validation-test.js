@@ -24,6 +24,7 @@ describe("A ShEx validator", function () {
   "use strict";
 
   var shexParser = new ShExParser();
+  beforeEach(shexParser._resetBlanks);
   /*
     Note that the tests.forEach will run before any of the it() functions.
     shexParser._setBase() must execute before shexParser.parse().
@@ -54,7 +55,6 @@ describe("A ShEx validator", function () {
 	 " in test '" + test["@id"] + "'.",
          function (report) {                                             // test action
 	   shexParser._setBase(schemaURL);
-	   shexParser._resetBlanks();
 	   var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
 	   var validator = new ShExValidator(schema, { diagnose: true });
 	   var testResults = TestExtension.register(validator);
