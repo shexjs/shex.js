@@ -82,8 +82,13 @@ describe("A ShEx validator", function () {
                  store.addTriple(triple);
                } else {
                  try {
-                   var focus = test.action.focus ? resolveRelativeIRI(dataURL, test.action.focus) : null;
-                   var shape = test.action.shape ? resolveRelativeIRI(schemaURL, test.action.shape) : null;
+		   function maybeGetTerm (base, s) {
+		     return s === undefined ? null :
+		       s.substr(0, 2) === "_:" ? s :
+		       resolveRelativeIRI(base, s);
+		   }
+                   var focus = maybeGetTerm(dataURL, test.action.focus);
+                   var shape = maybeGetTerm(schemaURL, test.action.shape);
                    var validationResult = validator.validate(store, focus, shape);
                    if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                    if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
