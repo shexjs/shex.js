@@ -26,7 +26,7 @@ var Harness = {
           loads[0].data.toString = loads[1].data.toString = graphToString;
 
           // prepare validator
-          var validator = ShExValidator(loads[0].schema);
+          var validator = ShExValidator.construct(loads[0].schema);
           Mapper.register(validator);
 
           // run validator

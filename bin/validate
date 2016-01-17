@@ -29,6 +29,7 @@ var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
 var path = require("path");
+var ValidatorOptions = {};
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -42,6 +43,7 @@ var CLI = require("command-line-args")([
     { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
     { name: "test",  alias: "t", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "or",                type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "manifest", alias: "m", type: String, multiple: false, defaultValue: null, defaultOption:  true },
     { name: "invocation", alias: "i", type: Boolean },
 ]);
@@ -90,6 +92,13 @@ function loadSchemaAndData (opts) {
 // Extract user commands
 var arg0 = process.argv[1];
 var cmds = CLI.parse();
+
+if (cmds.or) {
+  if (!(cmds.or in ShExValidator.options.or))
+    throw Error("unknown or option \"" + cmds.or + "\" - expected one of " + Object.keys(ShExValidator.options.or).join(", ") + "\".");
+  ValidatorOptions.or = cmds.or;
+}
+
 if (cmds.manifest) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
@@ -195,7 +204,7 @@ function runValidator (graph, focusNode, schema, shape) {
   }
 
   // prepare validator
-  var validator = ShExValidator(schema);
+  var validator = ShExValidator.construct(schema, ValidatorOptions);
   var extensions = ShExLoader.loadExtensions();
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);

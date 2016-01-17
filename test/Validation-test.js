@@ -56,7 +56,12 @@ describe("A ShEx validator", function () {
          function (report) {                                             // test action
 	   shexParser._setBase(schemaURL);
 	   var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-	   var validator = new ShExValidator(schema, { diagnose: true });
+	   var validator = ShExValidator.construct(schema, { diagnose: true,
+                                                             or:
+                                                             "trait" in test &&
+                                                             test.trait.indexOf("OneOf") !== -1 ?
+                                                             "oneOf" :
+                                                             "someOf" });
 	   var testResults = TestExtension.register(validator);
 
 	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
