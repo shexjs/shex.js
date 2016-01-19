@@ -66,9 +66,9 @@ describe("A ShEx validator", function () {
 
 	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
 	     // resolve relative URLs in results file
-	     if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+	     if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
 		 N3Util.isIRI(obj[k])) {
-               obj[k] = resolveRelativeIRI(["shape", "reference"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+               obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
              }}) : null;
 
 	   assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
