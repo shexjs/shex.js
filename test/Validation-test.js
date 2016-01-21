@@ -61,7 +61,12 @@ describe("A ShEx validator", function () {
                                                              "trait" in test &&
                                                              test.trait.indexOf("OneOf") !== -1 ?
                                                              "oneOf" :
-                                                             "someOf" });
+                                                             "someOf",
+                                                             partition:
+                                                             "trait" in test &&
+                                                             test.trait.indexOf("Exhaustive") !== -1 ?
+                                                             "exhaustive" :
+                                                             "greedy" });
 	   var testResults = TestExtension.register(validator);
 
 	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
@@ -97,6 +102,8 @@ describe("A ShEx validator", function () {
                    var validationResult = validator.validate(store, focus, shape);
                    if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                    if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
+		   assert(test["@type"] === "sht:ValidationFailure" ^ !!validationResult,
+			  "test expected to " + (test["@type"] === "sht:ValidationFailure" ? "fail" : "succeed"));
                    expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                    var xr = test.extensionResults.filter(function (x) {
                      return x.extension === TestExtension.url;
