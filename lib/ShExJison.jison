@@ -297,7 +297,7 @@
     string = string.substring(1, string.length - 2);
     return {
       type: "SemAct",
-      name: key ? key : "",
+      name: key,
       code: unescape(string, stringEscapeSequence, semactEscapeReplacements)
     };
   }
@@ -1057,8 +1057,9 @@ blankNode:
     ;
 
 codeDecl:
-      '%' CODE  -> unescapeSemanticAction("", $2) // t: 1dotUnlabeledCode1
-    | '%' iri CODE      -> unescapeSemanticAction($2, $3) // t: 1dotCode1
+     // XXX '%' CODE  -> unescapeSemanticAction("", $2) // t: 1dotUnlabeledCode1
+      '%' iri CODE      -> unescapeSemanticAction($2, $3) // t: 1dotCode1
+    | '%' iri '%'      -> { type: "SemAct", name: $2 } // t: @@
     ;
 
 startActions:

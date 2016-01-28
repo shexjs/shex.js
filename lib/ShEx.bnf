@@ -1,6 +1,12 @@
 # Yacker grammer for (Sh)ape (Ex)pressions (C)ompact language
 # 
-# http://www.w3.org/2005/01/yacker/uploads/ShEx3/bnf
+# Copyright 2015, Eric Prud'hommeax, Harold Solbrig, Iovka Boneva, Jose Labra Gayo
+# All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
+# http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
+# 
+# TODO:
+#   annotations on shapes
+#   look hard at EXTERNAL valueClassDefinitions
 # 
 # Changes from yacker ShEx2:
 # 
@@ -21,52 +27,80 @@
 # + escapes (\\, \uxxxx, \Uxxxxxxxx) in CODE (EGP 20150730)
 # ~ moved | RDF_TYPE from iri: to predicate: (disables e.g. %a{ ... %}) (EGP 20150807)
 # + tried to intercept non-terminated STRING_LITERAL_LONG{1,2} (EGP 20150807)
+# - unaryShape: id (EGP 20150818)
+# + unaryShape: annotation* (EGP 20150818)
+# + valueClassLabel, valueClassDefinition, valueClassExpr, valueClassOrRef (EGP 20150818)
+# + factored out notStartAction (EGP 20150818)
+# - oneOf (EGP 20150820)
+# ~ split out encapsulatedShape (EGP 20150831)
+# - numericRange takes a numericLiteral, was INTEGER (EGP 20150917)
+# + innerShape ::= multiElementGroup | multiElementSomeOf (EGP 20151022)
+# ~ annotation ::= ';' predicate (iri | literal) -- was iri (EGP 20151022)
+# + generalized AND/OR expressions on valueClasses (EGP 20151031)
+# - groupShapeConstr (shapeOrRef (OR shapeOrRef)*) (EGP 20151031)
+# + stringFacet* on negatableValueClass ::= shapeOrRef (EGP 20151101)
+# ~ vcand and vcor are mutually exclusive (i.e. not recursive) (EGP 20151111)
+# ~ s/valueClassDefinition/valueExprDefinition/ (EGP 20151120)
+# ~ s/valueClassLabel/valueExprLabel/ (EGP 20151120)
+# ~ change valueSet delimiters from ()s to []s (EGP 20160104)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
 
-[1]     shexDoc               ::= directive* ((start | shape | startActions) statement*)? # leading CODE
-[2]     statement             ::= directive | start | shape
+[1]     shexDoc               ::= directive* ((notStartAction | startActions) statement*)? # leading CODE
+[2]     statement             ::= directive | notStartAction
+[2b]    notStartAction        ::= start | shape | valueExprDefinition
 [3]     directive             ::= baseDecl | prefixDecl
+[3a]    valueExprDefinition   ::= valueExprLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
+[3a]    valueClassExpr        ::= valueClass valueClassJuncts?
+[3a]    valueClassJuncts      ::= ( "OR" valueClass )+ | ( "AND" valueClass )+
+[3a]    valueExprLabel       ::= '$' (iri | blankNode)
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
-[4]     start                 ::= 'start' '=' ( shapeLabel | shapeDefinition semanticActions )
+[4]     start                 ::= "start" '=' ( shapeLabel | shapeDefinition semanticActions )
 [5]     shape                 ::= "VIRTUAL"? shapeLabel shapeDefinition semanticActions
-[6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' oneOfShape? '}'
+[6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
 [7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+
-[9]     oneOfShape            ::= someOfShape ( '|' someOfShape )*
-[10]    someOfShape           ::= groupShape ( '||' groupShape )*
-[11]    groupShape            ::= unaryShape ( ',' unaryShape )* ','?
-[12]    unaryShape            ::= id? ( tripleConstraint | include | '(' oneOfShape ')' cardinality? semanticActions )
+[10]    someOfShape           ::= groupShape | multiElementSomeOf
+[10a]   multiElementSomeOf    ::= groupShape ('|' groupShape)+
+[10b]   innerShape            ::= multiElementGroup | multiElementSomeOf
+[11]    groupShape            ::= singleElementGroup | multiElementGroup
+[11]    singleElementGroup    ::= unaryShape ','?
+[11a]   multiElementGroup     ::= unaryShape ( ',' unaryShape )+ ','?
+[12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape
+[13]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
 [7]     include               ::= '&' shapeLabel
-[13]    id                    ::= '$' shapeLabel
 [14]    shapeLabel            ::= iri | blankNode
-[15]    tripleConstraint      ::= senseFlags? predicate valueClass cardinality? annotation* semanticActions
+[15]    tripleConstraint      ::= senseFlags? predicate valueClassExpr cardinality? annotation* semanticActions
 [16]    senseFlags            ::= '!' '^'?
-                                | '^' '!'?
+                                | '^' '!'?  # inverse not
 [17]    predicate             ::= iri | RDF_TYPE
-[18]    valueClass            ::= "LITERAL" xsFacet*
-                                | ("IRI" | "BNODE" | "NONLITERAL") groupShapeConstr? stringFacet*
+[18]    valueClass            ::= '!'? negatableValueClass
+[18a]   negatableValueClass   ::= "LITERAL" xsFacet*
+                                | ("IRI" | "BNODE" | "NONLITERAL") shapeOrRef? stringFacet*
                                 | datatype xsFacet*
-                                | groupShapeConstr | valueSet | '.'
-[19]    groupShapeConstr      ::= shapeOrRef ("OR" shapeOrRef)*
+                                | shapeOrRef stringFacet*
+                                | valueSet
+                                | valueExprLabel
+                                | '.'  # no constraint
+#                                | '[' valueClassExpr ']'
 [20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
 [21]    xsFacet               ::= stringFacet
                                 | numericFacet
 
-[21]    stringFacet           ::= "PATTERN" string
-                                | '~' string
-                                | stringLength INTEGER
+[21]    stringFacet           ::= stringLength INTEGER
+                                | "PATTERN" string
+                                | '~' string  # shortcut for "PATTERN"
 [21]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[21]    numericFacet          ::= numericRange INTEGER
+[21]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
                                 | numericLength INTEGER
 [21]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [21]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
 [22]    datatype              ::= iri
-[23]    annotation            ::= ';' iri (iri | literal)
+[23]    annotation            ::= ';' predicate (iri | literal)
 [24]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
-[25]    valueSet              ::= '(' value* ')'
+[25]    valueSet              ::= '[' value* ']'
 [26]    value                 ::= iriRange | literal
 [27]    iriRange              ::= iri ('~' exclusion*)? | '.' exclusion+
 [28]    exclusion             ::= '-' iri '~'?
@@ -78,7 +112,7 @@
 [136s]  iri                   ::= IRIREF | prefixedName
 [137s]  prefixedName          ::= PNAME_LN | PNAME_NS
 [138s]  blankNode             ::= BLANK_NODE_LABEL
-[0]     codeDecl              ::= '%' iri? CODE
+[0]     codeDecl              ::= '%' iri (CODE | "%")
 [0]     startActions          ::= codeDecl+
 [0]     semanticActions       ::= codeDecl*
 
