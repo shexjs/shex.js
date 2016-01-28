@@ -46,6 +46,8 @@ describe("A ShEx validator", function () {
     try {
       var schemaFile = path.join(schemasPath, test.action.schema);
       var schemaURL = "file://" + schemaFile;
+      var semActsFile = "semActs" in test.action ? path.join(schemasPath, test.action.semActs) : null;
+      var semActsURL = "file://" + semActsFile;
       var dataFile = path.join(validationPath, test.action.data);
       var dataURL = "file://" + dataFile;
       var resultsFile = test.result ? path.join(validationPath, test.result) : null;
@@ -54,6 +56,15 @@ describe("A ShEx validator", function () {
          "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
 	 " in test '" + test["@id"] + "'.",
          function (report) {                                             // test action
+	   var semActs;
+	   if (semActsFile) {
+	     shexParser._setBase(semActsURL);
+	     semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
+	       startActs.reduce(function (ret, a) {
+		 ret[a.name] = a.code;
+		 return ret;
+	       }, {});
+	   }
 	   shexParser._setBase(schemaURL);
 	   var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
 	   var validator = ShExValidator.construct(schema, { diagnose: true,
@@ -66,7 +77,8 @@ describe("A ShEx validator", function () {
                                                              "trait" in test &&
                                                              test.trait.indexOf("Exhaustive") !== -1 ?
                                                              "exhaustive" :
-                                                             "greedy" });
+                                                             "greedy",
+                                                             semActs: semActs });
 	   var testResults = TestExtension.register(validator);
 
 	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
