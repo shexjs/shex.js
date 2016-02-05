@@ -1,8 +1,0 @@
-<http://a.example/PersonShape> {
-   <http://a.example/p1> .
-}
-
-<http://a.example/ManagedShape> {
-   <http://a.example/p3> .
-}
-

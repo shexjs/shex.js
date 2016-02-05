@@ -3,12 +3,28 @@ var TESTSDIR = "TESTSDIR" in process.env ? process.env.TESTSDIR : "../../shexTes
 var fs = require("fs");
 var path = require("path");
 module.exports = function (dirName) {
-  // var fromPath = __dirname + "/" + TESTSDIR + "/" + dirName + "/";
+
+  // try relative path to package.json
+  var packageName = path.join(__dirname, TESTSDIR, "package.json");
+  if (fs.existsSync(packageName)) {
+    try {
+      var pkg = require(path.join(__dirname, TESTSDIR, JSON.parse(fs.readFileSync(packageName, "utf8")).main))[dirName];
+      if (pkg !== undefined) {
+        return pkg;
+      }
+    } catch (e) {
+      // fall through
+    }
+  }
+
+  // try relative path directly to test directories
   var fromPath = path.join(__dirname, TESTSDIR, dirName) + "/";
   if (fs.existsSync(fromPath)) {
     return fromPath;
   }
+
   try {
+    // try npm-installed module
     var fromPackage = require("shex-test")[dirName];
     if (fromPackage !== undefined) {
       return fromPackage;

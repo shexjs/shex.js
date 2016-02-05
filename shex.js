@@ -1,21 +1,7 @@
-// Replace local require by a lazy loader
-var globalRequire = require;
-require = function () {};
-
-// Expose submodules
-var exports = module.exports = {
-  Parser:       require('./lib/ShExParser'),
+module.exports = {
+  Parser:       require('./lib/ShExParser').Parser,
   Util:         require('./lib/ShExUtil'),
+  Validator:    require('./lib/ShExValidator'),
+  Loader:       require('./lib/ShExLoader'),
+  Writer:       require('./lib/ShExWriter')
 };
-
-// Load submodules on first access
-Object.keys(exports).forEach(function (submodule) {
-  Object.defineProperty(exports, submodule, {
-    configurable: true,
-    enumerable: true,
-    get: function () {
-      delete exports[submodule];
-      return exports[submodule] = globalRequire('./lib/ShEx' + submodule);
-    },
-  });
-});

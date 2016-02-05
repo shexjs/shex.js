@@ -1,6 +1,6 @@
 {
   "name": "shex",
-  "version": "0.2.6",
+  "version": "0.5.5",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -22,17 +22,16 @@
   "dependencies": {
     "command-line-args": "1.0.0",
     "eslint": "^1.4.1",
-    "n3": "0.4.3",
+    "n3": "^0.x",
     "promise": "^7.0.4",
-    "request-promise": "0.4.3"
+    "request-promise": "0.4.3",
+    "shex-test": "0.5.7"
   },
   "devDependencies": {
-    "shex-test": "0.5.1",
     "jison": "0.4.x",
     "mocha": "1.21.x",
     "chai": "1.9.x",
     "pre-commit": "~0.0.9",
-    "n3": "0.4.3",
     "browserify": "~3.x",
     "uglify-js": "~2.4.3"
   },
@@ -43,7 +42,7 @@
     "bin/partition"
   ],
   "scripts": {
-    "test": "mocha -R dot",
+    "test": "mocha -C -R dot",
     "lint": "eslint test/findPath.js",
     "browser": "node browser/build-browser-versions",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100"
@@ -69,12 +68,26 @@
   ],
   "eslintConfig": {
     "rules": {
-      "indent": [ 2, 2 ],
-      "quotes": [ 2, "double" ],
-      "linebreak-style": [ 2, "unix" ],
-      "semi": [ 2, "always" ],
-
-      "strict": [2, "never"],
+      "indent": [
+        2,
+        2
+      ],
+      "quotes": [
+        2,
+        "double"
+      ],
+      "linebreak-style": [
+        2,
+        "unix"
+      ],
+      "semi": [
+        2,
+        "always"
+      ],
+      "strict": [
+        2,
+        "never"
+      ],
       "no-multi-spaces": 0,
       "key-spacing": 0
     },

@@ -3,10 +3,10 @@
 JISON?=../node_modules/jison/lib/cli.js
 MOCHA?=mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
-GENJSON?=../../test-suite/tests/genJSON.js
+GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
 REPORTER?=dot
 
-ValidationManifest=$(join $(TESTDIR), validations/manifest.jsonld) # isn't there an easier way to construct filenames?
+ValidationManifest=$(join $(TESTDIR), validation/manifest.jsonld) # isn't there an easier way to construct filenames?
 
 ../lib/ShExJison.js: ../lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lalr
@@ -20,12 +20,14 @@ Partition-test: ../lib/ShExJison.js Partition-test.js
 Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
-
-$(ValidationManifest): $(join $(TESTDIR), validations/manifest.ttl) $(GENJSON)
-	$(GENJSON) $< > $@
+$(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
+	$(GENJSON) $< -o $@ -e # suppress output if there are errors
 
 Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
-test: Parser-Writer-test Partition-test Compilation-test Validation-test
+Map-test: ../lib/ShExJison.js Map-test.js
+	(cd .. && $(MOCHA) -C -R $(REPORTER) test/Map-test.js)
+
+test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test
 

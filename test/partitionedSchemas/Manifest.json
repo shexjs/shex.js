@@ -3,68 +3,68 @@
   "tests": [
     {
       "from": "1dotRefOr3",
-      "include": ["http://a.example/EmployeeShape"],
-      "expect": "1dotRefOr3_EmployeeShape"
+      "include": ["http://a.example/S1"],
+      "expect": "1dotRefOr3_S1"
     },
     {
       "from": "1dotRefOr3",
-      "include": ["http://a.example/ThingShape"],
-      "expect": "1dotRefOr3_ThingShape"
+      "include": ["http://a.example/S4"],
+      "expect": "1dotRefOr3_S4"
     },
     {
       "from": "1dotRefOr3",
-      "include": ["http://a.example/PersonShape", "http://a.example/ThingShape"],
-      "expect": "1dotRefOr3_PersonShape_ThingShape"
+      "include": ["http://a.example/S2", "http://a.example/S4"],
+      "expect": "1dotRefOr3_S2_S4"
     },
     {
-      "from": "2groupInclude1",
-      "include": ["http://a.example/PersonShape"],
-      "expect": "2groupInclude1_PersonShape"
+      "from": "2eachInclude1",
+      "include": ["http://a.example/S2"],
+      "expect": "2eachInclude1_S2"
     },
     {
-      "from": "2groupInclude1",
-      "include": ["http://a.example/EmployeeShape"],
-      "expect": "2groupInclude1_EmployeeShape"
+      "from": "2eachInclude1",
+      "include": ["http://a.example/S1"],
+      "expect": "2eachInclude1_S1"
     },
     {
-      "from": "2groupInclude1",
-      "include": ["http://a.example/PersonShape", "http://a.example/EmployeeShape"],
-      "expect": "2groupInclude1_PersonShape_EmployeeShape"
-    },
-    {
-      "from": "1dotInherit3",
-      "include": ["http://a.example/PersonShape"],
-      "expect": "1dotInherit3_PersonShape"
+      "from": "2eachInclude1",
+      "include": ["http://a.example/S2", "http://a.example/S1"],
+      "expect": "2eachInclude1_S2_S1"
     },
     {
       "from": "1dotInherit3",
-      "include": ["http://a.example/PersonShape", "http://a.example/ManagedShape"],
-      "expect": "1dotInherit3_PersonShape_ManagedShape"
+      "include": ["http://a.example/S1"],
+      "expect": "1dotInherit3_S1"
     },
     {
       "from": "1dotInherit3",
-      "include": ["http://a.example/ManagedShape", "http://a.example/EmployeeShape"],
-      "expect": "1dotInherit3_ManagedShape_EmployeeShape"
+      "include": ["http://a.example/S1", "http://a.example/S3"],
+      "expect": "1dotInherit3_S1_S3"
     },
     {
       "from": "1dotInherit3",
-      "include": ["http://a.example/PersonShape", "http://a.example/ManagedShape", "http://a.example/EmployeeShape"],
-      "expect": "1dotInherit3_PersonShape_ManagedShape_EmployeeShape"
+      "include": ["http://a.example/S3", "http://a.example/S4"],
+      "expect": "1dotInherit3_S3_S4"
+    },
+    {
+      "from": "1dotInherit3",
+      "include": ["http://a.example/S1", "http://a.example/S3", "http://a.example/S4"],
+      "expect": "1dotInherit3_S1_S3_S4"
     },
     {
       "from": "3circularRef1",
-      "include": ["http://a.example/EmployeeShape"],
-      "expect": "3circularRef1_EmployeeShape"
+      "include": ["http://a.example/S2"],
+      "expect": "3circularRef1_S2"
     },
     {
       "from": "3circularRef1",
-      "include": ["http://a.example/OtherShape"],
-      "expect": "3circularRef1_OtherShape"
+      "include": ["http://a.example/S4"],
+      "expect": "3circularRef1_S4"
     },
     {
       "from": "3circularRef1",
-      "include": ["http://a.example/EntityShape", "http://a.example/PersonShape", "http://a.example/OtherShape", "http://a.example/EmployeeShape"],
-      "expect": "3circularRef1_EntityShape_PersonShape_OtherShape_EmployeeShape"
+      "include": ["http://a.example/S1", "http://a.example/S3", "http://a.example/S4", "http://a.example/S2"],
+      "expect": "3circularRef1_S1_S3_S4_S2"
     }
   ]
 }

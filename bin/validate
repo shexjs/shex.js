@@ -1,11 +1,35 @@
 #!/usr/bin/env node
 
-// validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex
-// Validate node in data as shape in schema.
+/*
+validate -n <node> -d <data> -s <shape> -x <schema>
+Validate node in data as shape in schema.
 
-var ShExLoader = require("../lib/ShExLoader"); // for verbose output
+example invocations:
+ from teh interwebs:
+  validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex
+
+ from shex.js co with neighboring shexTest:
+  ./bin/validate -x ../shexTest/schemas/1dotCode3.shex -s http://a.example/S1 -d ../shexTest/validation/IIssue1_Ip1_Io1.ttl -n http://a.example/Issue1
+
+
+Extensions are loaded from ../extensions/*.js .
+Running the test extension <http://shex.io/extensions/Test/> adorns the results with:
+  "semActResults": {
+    "extension": "http://shex.io/extensions/Test/",
+    "effects": [
+      "http://a.example/Issue1",
+      "http://a.example/p1",
+      "http://a.example/o1"
+    ]
+  }
+
+*/
+
+var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
+var path = require("path");
+var ValidatorOptions = {};
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -16,7 +40,12 @@ var CLI = require("command-line-args")([
     { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
+    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
+    { name: "test",  alias: "t", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "or",                type: String, multiple: false, defaultValue: null, defaultOption: false },
+    { name: "manifest", alias: "m", type: String, multiple: false, defaultValue: null, defaultOption:  true },
+    { name: "invocation", alias: "i", type: Boolean },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -28,45 +57,185 @@ function abort (msg) {
   process.exit(1);
 }
 
-// Extract user commands
-var cmds = CLI.parse();
-if (cmds.help)
+/* Leverage n3.js's relative IRI parsing.
+ * !! requires intimate (so intimate it makes me blush) knowledge of n3.
+ */
+var N3 = require("n3");
+function resolveRelativeIRI (baseIri, relativeIri) {
+  var p = N3.Parser({ documentIRI: baseIri });
+  p._readSubject({type: "IRI", value: relativeIri});
+  return p._subject;
+}
+
+function loadSchemaAndData (opts) {
+  if (opts.help)
     abort("");
-if (cmds.shex.length > 1 && cmds.data.length === 0) {
-  cmds.data = cmds.shex.splice(1); // push all but one into data
+  if (opts.shex.length > 1 && opts.data.length === 0) {
+    opts.data = opts.shex.splice(1); // push all but one into data
+  }
+  if (opts.json.length > 1 && opts.data.length === 0) {
+    opts.data = opts.json.splice(1); // push all but one into data
+  }
+  if (opts.data.length === 0) abort("No data specified");
+  if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
+
+  return ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
+    // resolve relative shape and focus node names against the first schema and data source respectively.
+    var node = loaded.dataSources.length && opts.node ? resolveRelativeIRI(loaded.dataSources[0].url, opts.node) : null;
+    var shape = loaded.schemaSources.length && opts.shape ? resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape) : null;
+    return runValidator(loaded.data, node, loaded.schema, shape);
+  }).catch(function (e) {
+    console.error("aborting:", e);
+  })
 }
-if (cmds.json.length > 1 && cmds.data.length === 0) {
-  cmds.data = cmds.json.splice(1); // push all but one into data
+
+// Extract user commands
+var arg0 = process.argv[1];
+var cmds = CLI.parse();
+if (cmds.or) {
+  if (!(cmds.or in ShExValidator.options.or))
+    throw Error("unknown or option \"" + cmds.or + "\" - expected one of " + Object.keys(ShExValidator.options.or).join(", ") + "\".");
+  ValidatorOptions.or = cmds.or;
 }
-if (cmds.data.length === 0) abort("no data specified");
-if (cmds.shex.length === 0) abort("no shex specified");
-if (cmds.node === undefined) abort("no starting node specified");
 
+if (cmds.manifest) {
+  // from a manifest supplied on the command line
+  var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
+  var sht = "http://www.w3.org/ns/shacl/test-suite#";
+  ShExLoader.load([], [], [cmds.manifest]).then(function (loaded) {
 
-ShExLoader(cmds.shex, cmds.json, cmds.data).then(function (loaded) {
+    var tests = [];
+    cmds.test.forEach(function (testName) {
+      tests = tests.concat(loaded.data.find(null, mf+"name", null).filter(function (triple) {
+        return triple.subject.indexOf(testName) !== -1 || triple.object.indexOf(testName) !== -1;
+      }).map(function (triple) {
+        var action = loaded.data.find(triple.subject, mf+"action", null)[0].object;
 
-  // Make sure we have a start node.
-  if (cmds.shape === undefined && !("start" in loaded.schema))
-    abort("no shape specified on command line or in shex");
+        return [["shex" , "schema", true ],
+                ["shape", "shape" , false],
+                ["data" , "data"  , true ],
+                ["node" , "focus" , false]].reduce(function (ret, elt) {
+                  var m = loaded.data.find(action, sht+elt[1], null);
+                  if (m.length > 0) {
+                    var v = m[0].object;
+                    ret[elt[0]] = elt[2] ? [v] : v;
+                  }
+                  return ret;
+                }, {json: []});
+      }));
+    });
+    Promise.all(tests.map(function (test) {
+      // run each test and return the result (0 or 2, so far)
+      if (cmds.invocation) {
+        console.log(getInvocation(test));
+      }
+      return loadSchemaAndData(test);
+    })).then(function (results) {
+      // exit with a 0 if all returned 0, else a failure code.
+      process.exit(results.reduce(function (soFar, result) {
+        return soFar ? soFar : result;
+      }, 0));
+    });
+  }).catch(function (e) {
+    console.error("failed to load manifest file \"" + cmds.manifest + "\":", e, e.stack);
+  });
+} else {
+  // from the command line directly
+  if (cmds.invocation) {
+    console.log(getInvocation(cmds));
+  }
+  loadSchemaAndData(cmds).then(function (ret) { process.exit(ret); });
+}
+
+function getInvocation (parms) {
+  function shortenFile (u) {
+    var m = u.match(/file:\/\/(\/.*)$/);
+    if (m)
+      u = path.relative(process.cwd(), m[1])
+    return "'"+u+"'";
+  }
+  function shexFileArg (u) { return "-x "+shortenFile(u); }
+  function jsonFileArg (u) { return "-j "+shortenFile(u); }
+  function dataFileArg (u) { return "-d "+shortenFile(u); }
+  return [path.relative(process.cwd(), arg0),
+          parms.shex.map(shexFileArg).join(' '),
+          parms.json.map(jsonFileArg).join(' '),
+          parms.data.map(dataFileArg).join(' '),
+          "-s " + parms.shape,
+          "-n " + parms.node
+         ].join(' ');
+}
+
+function runValidator (graph, focusNode, schema, shape) {
+  // console.log("runValidator ("+graph+", "+focusNode+", "+schema+", "+shape+")");
+  if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
+    var msgs = [];
+    if (focusNode === undefined) {
+      var subjectNodes = graph.count() < 50 ? Object.keys(graph.findByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
+      msgs.push("No starting node specified" +
+                (subjectNodes.length ?
+                 "; try -n with one of: " + subjectNodes.join(", ") :
+                 "")
+               );
+    }
+    // Make sure we have a start node.
+    if (shape === undefined && !("start" in schema)) {
+      var schemaKeys = Object.keys(schema.shapes);
+      schemaKeys.join(", ")
+      msgs.push("No shape specified on command line or in shex" +
+                (schemaKeys.length < 50 ?
+                 "; try -n with one of: " + schemaKeys.join(", ") :
+                 "")
+               );
+      }
+    abort(msgs.join("\n"));
+  }
   
   if (cmds.verbose) {
     var w;
     new ShExWriter({simplifyParentheses: false }).
-      writeSchema(loaded.schema, function (error, text, prefixes) {
+      writeSchema(schema, function (error, text, prefixes) {
         if (error) throw error;
         else w = text;
       });
-    var shapeIn = cmds.shape ? cmds.shape + " in" : "";
-    console.log("validating", cmds.node, "in", loaded.data.size, "triples against", shapeIn, w);
+    var shapeIn = shape ? shape + " in" : "";
+    console.log("validating", focusNode, "in", graph.size, "triples against", shapeIn, w);
   }
 
-  // validate
-  var res = ShExValidator(loaded.schema).validate(loaded.data, cmds.node, cmds.shape);
-  if (!cmds.quiet)
-    console.log(JSON.stringify(res, null, "  "));
+  // prepare validator
+  var validator = ShExValidator.construct(schema, ValidatorOptions);
+  var extensions = ShExLoader.loadExtensions();
+  Object.keys(extensions).forEach(function (ext) {
+    extensions[ext].register(validator);
+  });
 
-  // Exit status 2 means no dice.
-  process.exit(res === null ? 2 : 0);
-}).catch(function (e) {
-  console.error("aborting:", e);
-})
+  // run validator
+  var res = validator.validate(graph, focusNode, shape);
+
+  // display results
+  if (cmds.exec) {
+    /* example usage:
+./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
+return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+  then(function (loaded) {
+    var db = require("../extensions/shex:Map").materializer(loaded.schema).
+      materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
+      find(null, null, null);
+    var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
+    w.addTriples(db); w.end(function (error, result) { console.log(result); });
+  });'
+     */
+    eval("function ex (validator) {\n" + cmds.exec + "}");
+    return ex(validator);
+  } else {
+    if (!cmds.quiet) {
+      if (res && Object.keys(validator.semActHandler.results).length) {
+        res.semActResults = validator.semActHandler.results;
+      }
+      console.log(JSON.stringify(res, null, "  "));
+    }
+  }
+  // Exit status 2 means validation failure.
+  return Promise.resolve(res === null ? 2 : 0);
+}
+
