@@ -29,7 +29,7 @@ var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
 var path = require("path");
-var ValidatorOptions = {};
+var ValidatorOptions = { diagnose: true };
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -208,6 +208,23 @@ function runValidator (graph, focusNode, schema, shape) {
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
+
+
+  function optsStr (key, dict) {
+    var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
+    var opts = Object.keys(dict).reduce(function (ret, k) {
+      if (k.match(r))
+	ret.push(k);
+      return ret;
+    }, []);
+    return opts.length === 0 ? "" :
+      opts.length === 1 ? ": try " + opts[0] :
+      ": try one of " + opts.join(" , ");
+  }
+  if (!(shape in validator._shapeCompilationByLabel))
+    throw Error("shape " + shape + " not defined" + optsStr(shape, validator._shapeCompilationByLabel));
+  if (!(focusNode in graph._entities))
+    throw Error("node " + focusNode + " not defined" + optsStr(focusNode, graph._entities));
 
   // run validator
   var res = validator.validate(graph, focusNode, shape);
