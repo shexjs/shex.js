@@ -44,6 +44,7 @@ var CLI = require("command-line-args")([
     { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
     { name: "test",  alias: "t", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "or",                type: String, multiple: false, defaultValue: null, defaultOption: false },
+    { name: "partition",         type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "manifest", alias: "m", type: String, multiple: false, defaultValue: null, defaultOption:  true },
     { name: "invocation", alias: "i", type: Boolean },
 ]);
@@ -67,7 +68,7 @@ function resolveRelativeIRI (baseIri, relativeIri) {
   return p._subject;
 }
 
-function loadSchemaAndData (opts) {
+function loadSchemaAndData (opts, options) {
   if (opts.help)
     abort("");
   if (opts.shex.length > 1 && opts.data.length === 0) {
@@ -83,7 +84,7 @@ function loadSchemaAndData (opts) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
     var node = loaded.dataSources.length && opts.node ? resolveRelativeIRI(loaded.dataSources[0].url, opts.node) : null;
     var shape = loaded.schemaSources.length && opts.shape ? resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape) : null;
-    return runValidator(loaded.data, node, loaded.schema, shape);
+    return runValidator(loaded.data, node, loaded.schema, shape, options);
   }).catch(function (e) {
     console.error("aborting:", e);
   })
@@ -98,10 +99,17 @@ if (cmds.or) {
   ValidatorOptions.or = cmds.or;
 }
 
+if (cmds.partition) {
+  if (!(cmds.partition in ShExValidator.options.partition))
+    throw Error("unknown partition option \"" + cmds.partition + "\" - expected one of " + Object.keys(ShExValidator.options.partition).join(", ") + "\".");
+  ValidatorOptions.partition = cmds.partition;
+}
+
 if (cmds.manifest) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
+  var opts = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
   ShExLoader.load([], [], [cmds.manifest]).then(function (loaded) {
 
     var tests = [];
@@ -110,6 +118,14 @@ if (cmds.manifest) {
         return triple.subject.indexOf(testName) !== -1 || triple.object.indexOf(testName) !== -1;
       }).map(function (triple) {
         var action = loaded.data.find(triple.subject, mf+"action", null)[0].object;
+        var options = Object.assign({}, ValidatorOptions);
+        var traits = loaded.data.find(triple.subject, sht+"trait", null);
+        traits.forEach(function (t) {
+          var tStr = t.object.substr(sht.length);
+          tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
+          if (tStr in opts)
+            options[opts[tStr]] = tStr;
+        });
 
         return [["shex" , "schema", true ],
                 ["shape", "shape" , false],
@@ -121,7 +137,7 @@ if (cmds.manifest) {
                     ret[elt[0]] = elt[2] ? [v] : v;
                   }
                   return ret;
-                }, {json: []});
+                }, {json: [], options: options});
       }));
     });
     Promise.all(tests.map(function (test) {
@@ -129,7 +145,7 @@ if (cmds.manifest) {
       if (cmds.invocation) {
         console.log(getInvocation(test));
       }
-      return loadSchemaAndData(test);
+      return loadSchemaAndData(test, test.options);
     })).then(function (results) {
       // exit with a 0 if all returned 0, else a failure code.
       process.exit(results.reduce(function (soFar, result) {
@@ -144,7 +160,7 @@ if (cmds.manifest) {
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }
-  loadSchemaAndData(cmds).then(function (ret) { process.exit(ret); });
+  loadSchemaAndData(cmds, ValidatorOptions).then(function (ret) { process.exit(ret); });
 }
 
 function getInvocation (parms) {
@@ -166,7 +182,7 @@ function getInvocation (parms) {
          ].join(' ');
 }
 
-function runValidator (graph, focusNode, schema, shape) {
+function runValidator (graph, focusNode, schema, shape, options) {
   // console.log("runValidator ("+graph+", "+focusNode+", "+schema+", "+shape+")");
   if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
     var msgs = [];
@@ -203,7 +219,7 @@ function runValidator (graph, focusNode, schema, shape) {
   }
 
   // prepare validator
-  var validator = ShExValidator.construct(schema, ValidatorOptions);
+  var validator = ShExValidator.construct(schema, options);
   var extensions = ShExLoader.loadExtensions();
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
