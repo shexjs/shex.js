@@ -54,20 +54,20 @@ describe("A ShEx validator", function () {
       it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
          "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
          "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
-	 " in test '" + test["@id"] + "'.",
+         " in test '" + test["@id"] + "'.",
          function (report) {                                             // test action
-	   var semActs;
-	   if (semActsFile) {
-	     shexParser._setBase(semActsURL);
-	     semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
-	       startActs.reduce(function (ret, a) {
-		 ret[a.name] = a.code;
-		 return ret;
-	       }, {});
-	   }
-	   shexParser._setBase(schemaURL);
-	   var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-	   var validator = ShExValidator.construct(schema, { diagnose: true,
+           var semActs;
+           if (semActsFile) {
+             shexParser._setBase(semActsURL);
+             semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
+               startActs.reduce(function (ret, a) {
+                 ret[a.name] = a.code;
+                 return ret;
+               }, {});
+           }
+           shexParser._setBase(schemaURL);
+           var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+           var validator = ShExValidator.construct(schema, { diagnose: true,
                                                              or:
                                                              "trait" in test &&
                                                              test.trait.indexOf("OneOf") !== -1 ?
@@ -79,19 +79,19 @@ describe("A ShEx validator", function () {
                                                              "exhaustive" :
                                                              "greedy",
                                                              semActs: semActs });
-	   var testResults = TestExtension.register(validator);
+           var testResults = TestExtension.register(validator);
 
-	   var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
-	     // resolve relative URLs in results file
-	     if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-		 N3Util.isIRI(obj[k])) {
+           var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
+             // resolve relative URLs in results file
+             if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+                 N3Util.isIRI(obj[k])) {
                obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
              }}) : null;
 
-	   assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
-	   // var start = schema.start;
-	   // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
-	   //   start = Object.keys(schema.action.shapes)[0];
+           assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
+           // var start = schema.start;
+           // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
+           //   start = Object.keys(schema.action.shapes)[0];
 
            var store = new N3.Store();
            var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
@@ -104,11 +104,11 @@ describe("A ShEx validator", function () {
                  store.addTriple(triple);
                } else {
                  try {
-		   function maybeGetTerm (base, s) {
-		     return s === undefined ? null :
-		       s.substr(0, 2) === "_:" ? s :
-		       resolveRelativeIRI(base, s);
-		   }
+                   function maybeGetTerm (base, s) {
+                     return s === undefined ? null :
+                       s.substr(0, 2) === "_:" ? s :
+                       resolveRelativeIRI(base, s);
+                   }
                    var focus = maybeGetTerm(dataURL, test.action.focus);
                    var shape = maybeGetTerm(schemaURL, test.action.shape);
                    var validationResult = validator.validate(store, focus, shape);
@@ -157,12 +157,12 @@ function parseJSONFile(filename, mapFunction) {
     var object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
-	if (typeof obj[k] === "object") {
+        if (typeof obj[k] === "object") {
           resolveRelativeURLs(obj[k]);
         }
-	if (mapFunction) {
-	  mapFunction(k, obj);
-	}
+        if (mapFunction) {
+          mapFunction(k, obj);
+        }
       });
     }
     resolveRelativeURLs(object);
