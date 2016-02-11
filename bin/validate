@@ -148,9 +148,9 @@ if (cmds.manifest) {
       return loadSchemaAndData(test, test.options);
     })).then(function (results) {
       // exit with a 0 if all returned 0, else a failure code.
-      process.exit(results.reduce(function (soFar, result) {
+      process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
         return soFar ? soFar : result;
-      }, 0));
+      }, 0)); });
     });
   }).catch(function (e) {
     console.error("failed to load manifest file \"" + cmds.manifest + "\":", e, e.stack);
@@ -160,7 +160,9 @@ if (cmds.manifest) {
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }
-  loadSchemaAndData(cmds, ValidatorOptions).then(function (ret) { process.exit(ret); });
+  loadSchemaAndData(cmds, ValidatorOptions).then(function (ret) { 
+    process.on('exit', function() { process.exit(ret); });
+  });
 }
 
 function getInvocation (parms) {
