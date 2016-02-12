@@ -42,10 +42,12 @@ var CLI = require("command-line-args")([
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
-    { name: "test",  alias: "t", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "or",                type: String, multiple: false, defaultValue: null, defaultOption: false },
-    { name: "partition",         type: String, multiple: false, defaultValue: null, defaultOption: false },
-    { name: "manifest", alias: "m", type: String, multiple: false, defaultValue: null, defaultOption:  true },
+    { name: "partition",         type: String, multiple:  true, defaultValue: null, defaultOption: false },
+    { name: "json-manifest",     type: String, multiple: false, defaultValue: null, defaultOption:  true },
+    { name: "turtle-manifest",   type: String, multiple:  true, defaultValue: null, defaultOption:  true },
+    { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue: null, defaultOption:  true },
+    { name: "test-name",         type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "invocation", alias: "i", type: Boolean },
 ]);
 function abort (msg) {
@@ -80,19 +82,20 @@ function loadSchemaAndData (opts, options) {
   if (opts.data.length === 0) abort("No data specified");
   if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
 
-  return ShExLoader.load(opts.shex, opts.json, opts.data).then(function (loaded) {
+  return ShExLoader.load(opts.shex, opts.json, opts.data, []).then(function (loaded) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
     var node = loaded.dataSources.length && opts.node ? resolveRelativeIRI(loaded.dataSources[0].url, opts.node) : null;
     var shape = loaded.schemaSources.length && opts.shape ? resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape) : null;
     return runValidator(loaded.data, node, loaded.schema, shape, options);
   }).catch(function (e) {
-    console.error("aborting:", e);
+    console.error("aborting:", e, e.stack);
   })
 }
 
 // Extract user commands
 var arg0 = process.argv[1];
 var cmds = CLI.parse();
+
 if (cmds.or) {
   if (!(cmds.or in ShExValidator.options.or))
     throw Error("unknown or option \"" + cmds.or + "\" - expected one of " + Object.keys(ShExValidator.options.or).join(", ") + "\".");
@@ -105,15 +108,20 @@ if (cmds.partition) {
   ValidatorOptions.partition = cmds.partition;
 }
 
-if (cmds.manifest) {
+if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
   var opts = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
-  ShExLoader.load([], [], [cmds.manifest]).then(function (loaded) {
+  ShExLoader.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || []).then(function (loaded) {
 
     var tests = [];
-    cmds.test.forEach(function (testName) {
+    var testNames = cmds["test-name"].length ?
+      cmds["test-name"] :
+      loaded.data.find(null, mf+"action", null).map(function (t) {
+        return t.subject;
+      });
+    testNames.forEach(function (testName) {
       tests = tests.concat(loaded.data.find(null, mf+"name", null).filter(function (triple) {
         return triple.subject.indexOf(testName) !== -1 || triple.object.indexOf(testName) !== -1;
       }).map(function (triple) {
@@ -140,20 +148,54 @@ if (cmds.manifest) {
                 }, {json: [], options: options});
       }));
     });
-    Promise.all(tests.map(function (test) {
-      // run each test and return the result (0 or 2, so far)
-      if (cmds.invocation) {
-        console.log(getInvocation(test));
-      }
-      return loadSchemaAndData(test, test.options);
-    })).then(function (results) {
-      // exit with a 0 if all returned 0, else a failure code.
-      process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
-        return soFar ? soFar : result;
-      }, 0)); });
-    });
+    queueTests(tests, cmds);
   }).catch(function (e) {
-    console.error("failed to load manifest file \"" + cmds.manifest + "\":", e, e.stack);
+    console.error("failed to load manifest file \"" +
+                  ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
+                  "\":", e, e.stack);
+  });
+} else if (cmds["json-manifest"]) {
+  ShExLoader.GET(cmds["json-manifest"]).then(function (p) {
+    try {
+      var d = JSON.parse(p.text);
+
+      // normalize the input
+      if (d.constructor !== Array) {
+        if ("@graph" in d) // Extract from the JSON-LD manifest format.
+          d = d["@graph"][0].entries.map(function (t) {
+            return {
+              name: t.name,
+              shex: t.action.schema,
+              shape: t.action.shape,
+              data: t.action.data,
+              node: t.action.focus
+            };
+          })
+        else // Hopefully an object like { shex: "t.shex" , shape: "S", data: "t.ttl", "node": "s" }
+          d = [d];
+      }
+      if (cmds["test-name"].length) // Include only tests listed in --test-name.
+        d = d.filter(function (elt) {
+          return cmds["test-name"].reduce(function (ret, n) {
+            return ret || ("name" in elt && elt.name.indexOf(n) !== -1);
+          }, false);
+        });
+      d.forEach(function (elt) {
+        ["shex", "json", "data"].forEach(function (attr) {
+          if (!(attr in elt))
+            elt[attr] = [];
+          else if (elt[attr].constructor !== Array)
+            elt[attr] = [elt[attr]];
+          elt[attr] = elt[attr].map(function (url) {
+            return resolveRelativeIRI(p.url, url);
+          });
+          // Emit lists of URLs relative to the manifest file.
+        });
+      });
+      queueTests(d, cmds);
+    } catch (e) {
+      console.error("failed to load json file: " + (e.stack || e));
+    }
   });
 } else {
   // from the command line directly
@@ -162,6 +204,30 @@ if (cmds.manifest) {
   }
   loadSchemaAndData(cmds, ValidatorOptions).then(function (ret) { 
     process.on('exit', function() { process.exit(ret); });
+  });
+}
+
+/* queueTests - take a structure like
+[ { json: [],
+    options: {},
+    shex: [ 'file:///tmp/t/t.shex' ],
+    shape: 'http://www.w3.org/fhir-rdf-shapes/MedicationOrder',
+    data: [ 'file:///tmp/t/t.ttl' ],
+    node: 'file:///tmp/t/MedicationOrder/12345-67' } ]
+and some constructor args like {or: "someOf", partition: "exhaustive"}
+*/
+function queueTests (tests, cmds) {
+  Promise.all(tests.map(function (test) {
+    // run each test and return the result (0 or 2, so far)
+    if (cmds.invocation) {
+      console.log(getInvocation(test));
+    }
+    return loadSchemaAndData(test, test.options);
+  })).then(function (results) {
+    // exit with a 0 if all returned 0, else a failure code.
+    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
+      return soFar ? soFar : result;
+    }, 0)); });
   });
 }
 
