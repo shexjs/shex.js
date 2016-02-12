@@ -167,11 +167,7 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
           elt[attr] = elt[attr].map(function (url) {
             return resolveRelativeIRI(p.url, url);
           });
-          // emit list of relative URLs
-        });
-        ["shape", "node"].forEach(function (attr) {
-          elt[attr] = resolveRelativeIRI(p.url, elt[attr]);
-          // relative URL
+          // Emit lists of URLs relative to the manifest file.
         });
       });
       queueTests(d, cmds);
