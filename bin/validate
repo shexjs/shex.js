@@ -108,11 +108,11 @@ if (cmds.partition) {
   ValidatorOptions.partition = cmds.partition;
 }
 
+var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
 if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
-  var opts = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
   ShExLoader.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || []).then(function (loaded) {
 
     var tests = [];
@@ -131,8 +131,8 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
         traits.forEach(function (t) {
           var tStr = t.object.substr(sht.length);
           tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
-          if (tStr in opts)
-            options[opts[tStr]] = tStr;
+          if (tStr in TraitToOption)
+            options[TraitToOption[tStr]] = tStr;
         });
 
         return [["shex" , "schema", true ],
@@ -163,12 +163,19 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
       if (d.constructor !== Array) {
         if ("@graph" in d) // Extract from the JSON-LD manifest format.
           d = d["@graph"][0].entries.map(function (t) {
+            var options = Object.assign({}, ValidatorOptions);
+            t.trait.forEach(function (tStr) {
+              tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
+              if (tStr in TraitToOption)
+                options[TraitToOption[tStr]] = tStr;
+            });
             return {
               name: t.name,
               shex: t.action.schema,
               shape: t.action.shape,
               data: t.action.data,
-              node: t.action.focus
+              node: t.action.focus,
+              options: options
             };
           })
         else // Hopefully an object like { shex: "t.shex" , shape: "S", data: "t.ttl", "node": "s" }
@@ -181,6 +188,7 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
           }, false);
         });
       d.forEach(function (elt) {
+        // FileURL parameters are lists of URLs relative to the manifest file.
         ["shex", "json", "data"].forEach(function (attr) {
           if (!(attr in elt))
             elt[attr] = [];
@@ -189,7 +197,8 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
           elt[attr] = elt[attr].map(function (url) {
             return resolveRelativeIRI(p.url, url);
           });
-          // Emit lists of URLs relative to the manifest file.
+          if (!("options" in elt))
+            elt.options = ValidatorOptions;
         });
       });
       queueTests(d, cmds);
