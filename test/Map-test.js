@@ -20,8 +20,8 @@ var Harness = {
     it('('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF, function (done) {
 
       // Lean on ShExLoader to load all the schemas and data graphs.
-      Promise.all([ShExLoader.load(srcSchemas, [], [inputData]),
-                   ShExLoader.load(targetSchemas, [], [expectedRDF])]).
+      Promise.all([ShExLoader.load(srcSchemas, [], [inputData], []),
+                   ShExLoader.load(targetSchemas, [], [expectedRDF], [])]).
         then(function (loads) {
           loads[0].data.toString = loads[1].data.toString = graphToString;
 
