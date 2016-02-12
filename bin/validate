@@ -44,6 +44,7 @@ var CLI = require("command-line-args")([
     { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
     { name: "or",                type: String, multiple: false, defaultValue: null, defaultOption: false },
     { name: "partition",         type: String, multiple:  true, defaultValue: null, defaultOption: false },
+    { name: "json-manifest",     type: String, multiple: false, defaultValue: null, defaultOption:  true },
     { name: "turtle-manifest",   type: String, multiple:  true, defaultValue: null, defaultOption:  true },
     { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue: null, defaultOption:  true },
     { name: "test-name",         type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
@@ -142,11 +143,41 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
                 }, {json: [], options: options});
       }));
     });
+    console.dir(tests);
     queueTests(tests, cmds);
   }).catch(function (e) {
     console.error("failed to load manifest file \"" +
                   ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
                   "\":", e, e.stack);
+  });
+} else if (cmds["json-manifest"]) {
+  ShExLoader.GET(cmds["json-manifest"]).then(function (p) {
+    try {
+      var d = JSON.parse(p.text);
+
+      // normalize the input
+      if (d.constructor !== Array)
+        d = [d];
+      d.forEach(function (elt) {
+        ["shex", "json", "data"].forEach(function (attr) {
+          if (!(attr in elt))
+            elt[attr] = [];
+          else if (elt[attr].constructor !== Array)
+            elt[attr] = [elt[attr]];
+          elt[attr] = elt[attr].map(function (url) {
+            return resolveRelativeIRI(p.url, url);
+          });
+          // emit list of relative URLs
+        });
+        ["shape", "node"].forEach(function (attr) {
+          elt[attr] = resolveRelativeIRI(p.url, elt[attr]);
+          // relative URL
+        });
+      });
+      queueTests(d, cmds);
+    } catch (e) {
+      console.error("failed to load json file: " + (e.stack || e));
+    }
   });
 } else {
   // from the command line directly
