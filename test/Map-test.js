@@ -2,7 +2,7 @@
 
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
@@ -59,10 +59,17 @@ var Harness = {
 };
 
 describe('A ShEx Mapper', function () {
-  Harness.prepare(["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAM.shex"], "test/Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "test/Map/BPunitsDAM.ttl");
-  Harness.prepare(["test/Map/BPunitsDAM.shex"], ["test/Map/BPFHIR.shex"], "test/Map/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "test/Map/BPFHIR.ttl");
-
-  // Harness.prepare(["test/Map/BPFHIRsys.shex", "test/Map/BPFHIRdia.shex"], ["test/Map/BPunitsDAM.shex"], "test/Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "test/Map/BPunitsDAM.ttl");
+  var tests = [
+    ["there", ["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAM.shex"], "test/Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "test/Map/BPunitsDAM.ttl"],
+    ["back" , ["test/Map/BPunitsDAM.shex"], ["test/Map/BPFHIR.shex"], "test/Map/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "test/Map/BPFHIR.ttl"],
+//    ["bifer", ["test/Map/BPFHIRsys.shex", "test/Map/BPFHIRdia.shex"], ["test/Map/BPunitsDAM.shex"], "test/Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "test/Map/BPunitsDAM.ttl"]
+//    ["bifb" , ["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAMsys.shex", "test/Map/BPunitsDAMdia.shex"], "test/Map/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "test/Map/BPunitsDAM.ttl"]
+  ];
+  if (TESTS)
+    tests = tests.filter(function (t) { return TESTS.indexOf(t[0]) !== -1; });
+  tests.forEach(function (test) {
+    debugger; Harness.prepare.apply(null, test.slice(1));
+  });
 
 /*
   Harness.prepare(["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAMsys.shex", "test/Map/BPunitsDAMdia.shex"], "test/Map/BPFHIR.ttl", null, "test/Map/BPunitsDAM.ttl");
@@ -100,141 +107,196 @@ function graphToString () {
   return "{\n" + output + "\n}";
 }
 
-function graphEquals (right) {
+/** graphEquals: test if two graphs are isomorphic through some bnode mapping.
+ *
+ * this: one of the graphs to test, referred to as "left" below.
+ * right: the other graph to test.
+ * m: (optional) writable mapping from left bnodes to write bnodes.
+ * returns: true or false
+ * side effects: m is populated with a working mapping.
+ */
+function graphEquals (right, m) {
 
   if (this.size !== right.size)
     return false;
 
-  var m = {};
+  m = m || {};                                    // Left→right mappings (optional argument).
+  var back = Object.keys(m).reduce(function (ret, from) { // Right→left mappings
+    ret[m[from]] = from;                                  //  populated if m was passed in.
+    return ret;
+  }, {});
   function match (g) {
-    function val (term) {
+    function val (term, mapping) {
+      mapping = mapping || m;                     // Mostly used for left→right mappings.
       if (n3.Util.isBlank(term))
-        return (term in m) ? m[term] : null
+        return (term in mapping) ? mapping[term] : null // Bnodes get current binding or null.
       else
-        return term;
+        return term;                              // Other terms evaluate to themselves.
     }
 
-    if (g.length == 0)
+    if (g.length == 0)                            // Success if there's nothing left to match.
       return true;
-    var t = g.pop(), s = val(t.subject), o = val(t.object);
-    var tm = right.findByIRI(s, t.predicate, o);
+    var t = g.pop(), s = val(t.subject), o = val(t.object); // Take the first triple in left.
+    var tm = right.findByIRI(s, t.predicate, o);  // Find candidates in right.
 
-    var r = tm.reduce(function (ret, triple) {
-      var adds = [];
-      function add (term, to) {
-        if (val(term) === null) {
-          adds.push(term);
-          m[term] = to;
+    var r = tm.reduce(function (ret, triple) {    // Walk through candidates in right.
+      if (ret) return true;                       // Only examine first successful mapping.
+      var adds = [];                              // List of candidate mappings.
+      function add (from, to) {
+        if (val(from) === null) {                   // If there's no binding from tₗ to tᵣ,
+          if (val(to, back) === null) {                // If we can bind to to the object
+            adds.push(from);                           //  add a candidate binding.
+            m[from] = to;
+            back[to] = from;
+            return true;
+          } else {                                     // Otherwise,
+            return false;                              //  it's not a viable mapping.
+          }
+        } else {                                    // Otherwise,
+          return true;                                 //  there's no new binding.
         }
       }
-      add(t.subject, triple.subject);
-      add(t.object, triple.object);
-      ret = match(g);
-      if (!ret)
-        adds.forEach(function (added) {
+      if (!add(t.subject, triple.subject) ||     // If the bindings for tₗ.s→tᵣ.s fail
+          !add(t.object, triple.object) ||       // or the bindings for tₗ.o→tᵣ.o fail
+          !match(g)) {                           // of the remaining triples fail,
+        adds.forEach(function (added) {             // remove each added binding.
           delete m[added];
         });
-      return ret;
-    }, false);
+        return false;
+      } else
+        return true;
+    }, false);                                    // Empty tm returns failure.
     if (!r) {
-      g.push(t);
+      g.push(t);                                  // No binding for t in cancidate mapping.
     }
     return r;
   }
-  return match(this.find(null, null, null));
+  return match(this.find(null, null, null));     // Start with all triples.
 }
 
-var GraphEquiv = {
-  testEquiv: function (name, g1, g2, equalsSign) {
-    it("should test " + name + " to be " + equalsSign, function () {
+  function testEquiv (name, g1, g2, equals, mapping) {
+    it("should test " + name + " to be " + equals, function () {
       var l = n3.Store(); l.toString = graphToString; l.equals = graphEquals;
       var r = n3.Store(); r.toString = graphToString;
       g1.forEach(function (triple) { l.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
       g2.forEach(function (triple) { r.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
-      expect(l.equals(r)).to.equal(equalsSign === "=");
+      var m = {};
+      var ret = l.equals(r, m);
+      expect(ret).to.equal(equals, m);
+      if (mapping) {
+        if (mapping.constructor === Array) {
+          var found = 0;
+          mapping.forEach(function (thisMap) {
+            try {
+              expect(m).to.deep.equal(thisMap);
+              ++found;
+            } catch (e) {
+            }
+          });
+          if (found !== 1) // slightly misleading error, but adequate.
+            expect(m).to.deep.equal(mapping);
+        } else {
+          expect(m).to.deep.equal(mapping);
+        }
+      }
     });
   }
-}
 
 describe("Graph equivalence", function () {
-  [
-    {name:"spo123=spo123", p:"=", 
+  var p12Permute = [
+    {"_:l1": "_:r1", "_:l2": "_:r2"},
+    {"_:l1": "_:r2", "_:l2": "_:r1"}];
+  var p123Permute = [ // note intentional _:r3 on left side
+    {"_:l1": "_:r1", "_:l2": "_:r2", "_:r3": "_:r3"},
+    {"_:l1": "_:r1", "_:l2": "_:r3", "_:r3": "_:r2"},
+    {"_:l1": "_:r2", "_:l2": "_:r1", "_:r3": "_:r3"},
+    {"_:l1": "_:r2", "_:l2": "_:r3", "_:r3": "_:r1"},
+    {"_:l1": "_:r3", "_:l2": "_:r1", "_:r3": "_:r2"},
+    {"_:l1": "_:r3", "_:l2": "_:r2", "_:r3": "_:r1"}];
+  var tests = [
+    {name:"spo123=spo123", p:true, m:{},
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
-    {name:"spo123!=sPo123", p:"!=", 
+    {name:"spo123!=sPo123", p:false, m:{},
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "P", "o2"], ["s", "P", "o3"], ["s", "P", "o1"]]},
-    {name:"l<r", p:"!=", 
+    {name:"l<r", p:false, m:null,
      l:[["s", "p", "o1"], ["s", "p", "o2"]],
      r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
-    {name:"r<l", p:"!=", 
+    {name:"r<l", p:false, m:null,
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"1-bnode-no-rewrite", p:"=", 
+    {name:"1-bnode-no-rewrite", p:true, m:{"_:x1": "_:x1"},
      l:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"1-bnode-rewrite", p:"=", 
+    {name:"1-bnode-rewrite", p:true, m:{"_:l1": "_:r1"},
      l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"tall3", p:"=", 
+    {name:"tall3", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
      l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
      r:[["s", "p1", "_:r1"], ["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"]]},
-    {name:"tall3-rotated1", p:"=", 
+    {name:"tall3-rotated1", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
      l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
      r:[["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"], ["s", "p1", "_:r1"]]},
-    {name:"s p _:l1, o2 != s p _:r1, _:r2", p:"!=", 
+    {name:"s p _:l1, o2 != s p _:r1, _:r2", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "o2"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"]]},
-    {name:"s p _:l1, o2, p3 != s p _:r1, _:r2, o3", p:"!=", 
+    {name:"s p _:l1, o2, p3 != s p _:r1, _:r2, o3", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
-    {name:"s p _:l1, o2, p3 != s p _:r1, _:r1, o3", p:"!=", 
+    {name:"s p _:l1, o2, p3 != s p _:r1, _:r1, o3", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
-    {name:"s p _:l1, _:l2, o3 != s p _:r1, _:r1, o3", p:"!=", 
+    {name:"s p _:l1, _:l2, o3 != s p _:r1, _:r1, o3", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
-    {name:"s p _:l1, _:l2, o3 = s p _:r1, _:r2, o3", p:"=", 
+    {name:"s p _:l1, _:l2, o3 = s p _:r1, _:r2, o3", p:true, m:
+     [{"_:l1": "_:r1", "_:l2": "_:r2"}, {"_:l1": "_:r2", "_:l2": "_:r1"}],
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
-    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3", p:"=", 
+    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3",
+     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
      l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p2", "_:r2"], ["s", "p2", "o3"]]},
-    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated1", p:"=", 
+    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated1",
+     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
      l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
      r:[["s", "p2", "o3"], ["s", "p", "_:r1"], ["s", "p2", "_:r2"]]},
-    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated2", p:"=", 
+    {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated2",
+     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
      l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
      r:[["s", "p2", "_:r2"], ["s", "p2", "o3"], ["s", "p", "_:r1"]]},
-    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3", p:"=", 
+    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3", p:true, m:p123Permute,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "_:r3"]]},
-    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated1", p:"=", 
+    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated1", p:true, m:p123Permute,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
      r:[["s", "p", "_:r3"], ["s", "p", "_:r1"], ["s", "p", "_:r2"]]},
-    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated2", p:"=", 
+    {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3 - rotated2", p:true, m:p123Permute,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "_:r3"]],
      r:[["s", "p", "_:r2"], ["s", "p", "_:r3"], ["s", "p", "_:r1"]]},
     // literals
-    {name:"s p _:l1, _:l2, 'o3' = s p _:r1, _:r2, 'o3'", p:"=", 
+    {name:"s p _:l1, _:l2, 'o3' = s p _:r1, _:r2, 'o3'", p:true, m:p12Permute,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\""]]},
-    {name:"s p _:l1, _:l2, 'o3' != s p _:r1, _:r2, 'o4'", p:"!=", 
+    {name:"s p _:l1, _:l2, 'o3' != s p _:r1, _:r2, 'o4'", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o4\""]]},
-    {name:"s p _:l1, _:l2, 'o3'@fr = s p _:r1, _:r2, 'o3'@fr", p:"=", 
+    {name:"s p _:l1, _:l2, 'o3'@fr = s p _:r1, _:r2, 'o3'@fr", p:true, m:p12Permute,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@fr"]]},
-    {name:"s p _:l1, _:l2, 'o3'@fr != s p _:r1, _:r2, 'o3'@en-FR", p:"!=", 
+    {name:"s p _:l1, _:l2, 'o3'@fr != s p _:r1, _:r2, 'o3'@en-FR", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@en-FR"]]},
-    {name:"s p _:l1, _:l2, 'o3'^^dt1 = s p _:r1, _:r2, 'o3'^^dt1", p:"=", 
+    {name:"s p _:l1, _:l2, 'o3'^^dt1 = s p _:r1, _:r2, 'o3'^^dt1", p:true, m:p12Permute,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt1"]]},
-    {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:"!=", 
+    {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt2"]]},
-
-  ].forEach(function (test) { GraphEquiv.testEquiv(test.name, test.l, test.r, test.p); });
+  ];
+  if (TESTS)
+    tests = tests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
+  tests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
 });
 
