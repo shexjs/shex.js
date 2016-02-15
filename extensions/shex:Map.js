@@ -59,6 +59,8 @@ function materializer (schema) {
             var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
             add(curSubject, expr.predicate, bindings[arg]);
           });
+        } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
+          add(curSubject, expr.predicate, expr.valueExpr.values[0]);
         } else {
           var oldSubject = curSubject;
           curSubject = B();
