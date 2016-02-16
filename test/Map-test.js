@@ -10,6 +10,7 @@ var ShExValidator = require("../lib/ShExValidator");
 var Mapper = require("../extensions/shex:Map");
 var Promise = require("promise");
 var expect = require("chai").expect;
+var Path = require("path");
 var n3 = require("n3");
 
 var maybeLog = VERBOSE ? console.log : function () {};
@@ -19,6 +20,10 @@ var Harness = {
     var mapstr = srcSchemas + " -> " + targetSchemas.join(',');
     it('('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF, function (done) {
 
+      srcSchemas = srcSchemas.map(function (p) { return Path.resolve(__dirname, p); });
+      targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
+      inputData = Path.resolve(__dirname, inputData);
+      expectedRDF = Path.resolve(__dirname, expectedRDF);
       // Lean on ShExLoader to load all the schemas and data graphs.
       Promise.all([ShExLoader.load(srcSchemas, [], [inputData], []),
                    ShExLoader.load(targetSchemas, [], [expectedRDF], [])]).
@@ -60,19 +65,19 @@ var Harness = {
 
 describe('A ShEx Mapper', function () {
   var tests = [
-    ["there", ["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAM.shex"], "test/Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "test/Map/BPunitsDAM.ttl"],
-    ["back" , ["test/Map/BPunitsDAM.shex"], ["test/Map/BPFHIR.shex"], "test/Map/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "test/Map/BPFHIR.ttl"],
-//    ["bifer", ["test/Map/BPFHIRsys.shex", "test/Map/BPFHIRdia.shex"], ["test/Map/BPunitsDAM.shex"], "test/Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "test/Map/BPunitsDAM.ttl"]
-//    ["bifb" , ["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAMsys.shex", "test/Map/BPunitsDAMdia.shex"], "test/Map/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "test/Map/BPunitsDAM.ttl"]
+    ["there", ["Map/BPFHIR.shex"], ["Map/BPunitsDAM.shex"], "Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPunitsDAM.ttl"],
+    ["back" , ["Map/BPunitsDAM.shex"], ["Map/BPFHIR.shex"], "Map/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPFHIR.ttl"],
+//    ["bifer", ["Map/BPFHIRsys.shex", "Map/BPFHIRdia.shex"], ["Map/BPunitsDAM.shex"], "Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPunitsDAM.ttl"]
+//    ["bifb" , ["Map/BPFHIR.shex"], ["Map/BPunitsDAMsys.shex", "Map/BPunitsDAMdia.shex"], "Map/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPunitsDAM.ttl"]
   ];
   if (TESTS)
     tests = tests.filter(function (t) { return TESTS.indexOf(t[0]) !== -1; });
   tests.forEach(function (test) {
-    debugger; Harness.prepare.apply(null, test.slice(1));
+    Harness.prepare.apply(null, test.slice(1));
   });
 
 /*
-  Harness.prepare(["test/Map/BPFHIR.shex"], ["test/Map/BPunitsDAMsys.shex", "test/Map/BPunitsDAMdia.shex"], "test/Map/BPFHIR.ttl", null, "test/Map/BPunitsDAM.ttl");
+  Harness.prepare(["Map/BPFHIR.shex"], ["Map/BPunitsDAMsys.shex", "Map/BPunitsDAMdia.shex"], "Map/BPFHIR.ttl", null, "Map/BPunitsDAM.ttl");
 
   emits:
     _:0 bpudam:systolic [
