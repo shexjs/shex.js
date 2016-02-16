@@ -3,6 +3,7 @@ var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
+// var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser").Parser;
 var ShExValidator = require("../lib/ShExValidator");
 var TestExtension = require("../extensions/shex:Test.js");
@@ -86,7 +87,7 @@ describe("A ShEx validator", function () {
              if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                  N3Util.isIRI(obj[k])) {
                obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-             }}) : null;
+             }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
 
            assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
            // var start = schema.start;
