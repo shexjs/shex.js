@@ -24,7 +24,13 @@ function register (validator) {
   return validator.semActHandler.results[TestExt];
 }
 
+function done (validator) {
+  if (validator.semActHandler.results[TestExt].length === 0)
+    delete validator.semActHandler.results[TestExt];
+}
+
 module.exports = {
   register: register,
+  done: done,
   url: TestExt
 };
