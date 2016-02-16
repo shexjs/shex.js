@@ -25,11 +25,13 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 
 */
 
+var ShExUtil = require("../lib/ShExUtil");
 var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
-var path = require("path");
-var ValidatorOptions = {};
+var Path = require("path");
+var ValidatorOptions = {  };
+// var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -60,8 +62,8 @@ function abort (msg) {
   process.exit(1);
 }
 
-/* Leverage n3.js's relative IRI parsing.
- * !! requires intimate (so intimate it makes me blush) knowledge of n3.
+/* Leverage N3.js's relative IRI parsing.
+ * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
  */
 var N3 = require("n3");
 function resolveRelativeIRI (baseIri, relativeIri) {
@@ -81,12 +83,19 @@ function loadSchemaAndData (opts, options) {
   }
   if (opts.data.length === 0) abort("No data specified");
   if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
-
-  return ShExLoader.load(opts.shex, opts.json, opts.data, []).then(function (loaded) {
+  return Promise.all([
+    ShExLoader.load(opts.shex, opts.json, opts.data, []),
+    !("result" in opts) ? Promise.resolve(undefined) :
+      opts.result === null ? Promise.resolve(null) :
+      ShExLoader.GET(opts.result).then(function (body) { 
+        return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
+      })
+  ]).then(function (both) {
+    var loaded = both[0];
     // resolve relative shape and focus node names against the first schema and data source respectively.
     var node = loaded.dataSources.length && opts.node ? resolveRelativeIRI(loaded.dataSources[0].url, opts.node) : null;
     var shape = loaded.schemaSources.length && opts.shape ? resolveRelativeIRI(loaded.schemaSources[0].url, opts.shape) : null;
-    return runValidator(loaded.data, node, loaded.schema, shape, options);
+    return runValidator(loaded.data, node, loaded.schema, shape, options, both[1]);
   }).catch(function (e) {
     console.error("aborting:", e, e.stack);
   })
@@ -197,21 +206,25 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
           elt[attr] = elt[attr].map(function (url) {
             return resolveRelativeIRI(p.url, url);
           });
-          if (!("options" in elt))
-            elt.options = ValidatorOptions;
         });
+        if (!("options" in elt))
+          elt.options = ValidatorOptions;
+        if ("result" in elt && elt.result !== null)
+          elt.result = resolveRelativeIRI(p.url, elt.result);
       });
       queueTests(d, cmds);
     } catch (e) {
       console.error("failed to load json file: " + (e.stack || e));
     }
+  }).catch(function (e) {
+    console.error("failed to load json manifest: ", e.stack || e);
   });
 } else {
   // from the command line directly
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }
-  loadSchemaAndData(cmds, ValidatorOptions).then(function (ret) { 
+  loadSchemaAndData(cmds, ValidatorOptions).then(function (ret) {
     process.on('exit', function() { process.exit(ret); });
   });
 }
@@ -244,13 +257,13 @@ function getInvocation (parms) {
   function shortenFile (u) {
     var m = u.match(/file:\/\/(\/.*)$/);
     if (m)
-      u = path.relative(process.cwd(), m[1])
+      u = Path.relative(process.cwd(), m[1])
     return "'"+u+"'";
   }
   function shexFileArg (u) { return "-x "+shortenFile(u); }
   function jsonFileArg (u) { return "-j "+shortenFile(u); }
   function dataFileArg (u) { return "-d "+shortenFile(u); }
-  return [path.relative(process.cwd(), arg0),
+  return [Path.relative(process.cwd(), arg0),
           parms.shex.map(shexFileArg).join(' '),
           parms.json.map(jsonFileArg).join(' '),
           parms.data.map(dataFileArg).join(' '),
@@ -259,7 +272,7 @@ function getInvocation (parms) {
          ].join(' ');
 }
 
-function runValidator (graph, focusNode, schema, shape, options) {
+function runValidator (graph, focusNode, schema, shape, options, results) {
   // console.log("runValidator ("+graph+", "+focusNode+", "+schema+", "+shape+")");
   if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
     var msgs = [];
@@ -318,14 +331,16 @@ return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
     w.addTriples(db); w.end(function (error, result) { console.log(result); });
   });'
      */
-    eval("function ex (validator) {\n" + cmds.exec + "}");
-    return ex(validator);
+    return eval("function (validator) {\n" + cmds.exec + "}")(validator);
   } else {
     if (!cmds.quiet) {
       if (res && Object.keys(validator.semActHandler.results).length) {
         res.semActResults = validator.semActHandler.results;
       }
-      console.log(JSON.stringify(res, null, "  "));
+      if (results !== undefined)
+        console.log(JSON.stringify(results) == JSON.stringify(res));
+      else
+        console.log(JSON.stringify(res, null, "  "));
     }
   }
   // Exit status 2 means validation failure.
