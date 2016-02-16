@@ -25,6 +25,11 @@ function register (validator) {
   return validator.semActHandler.results[MapExt];
 }
 
+function done (validator) {
+  if (Object.keys(validator.semActHandler.results[MapExt]).length === 0)
+    delete validator.semActHandler.results[MapExt];
+}
+
 function materializer (schema) {
   return {
     materialize: function (bindings, createRoot) {
@@ -80,6 +85,7 @@ function materializer (schema) {
 
 module.exports = {
   register: register,
+  done: done,
   materializer: materializer,
   url: MapExt
 };
