@@ -18,7 +18,7 @@ var manifestFile = "cli/manifest.json";
 var AllTests = {
   "validator": [
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
-    { name: "garbage" , args: ["--garbage"], resultMatch: "Invalid option", status: 1 },
+    { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },

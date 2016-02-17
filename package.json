@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "command-line-args": "1.0.0",
+    "command-line-args": "2.1.6",
     "eslint": "^1.4.1",
     "jsonld": "^0.4.5",
     "n3": "^0.x",

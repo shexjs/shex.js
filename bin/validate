@@ -38,18 +38,18 @@ var CLI = require("command-line-args")([
     { name: "verbose", alias: "v", type: Boolean },
     { name: "quiet", alias: "q", type: Boolean },
     { name: "help",  alias: "h", type: Boolean },
-    { name: "node",  alias: "n", type: String, multiple: false, defaultValue: null, defaultOption: false },
-    { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null, defaultOption: false },
-    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "exec",  alias: "e", type: String,                  defaultValue: null, defaultOption:  true },
-    { name: "or",                type: String, multiple: false, defaultValue: null, defaultOption: false },
-    { name: "partition",         type: String, multiple:  true, defaultValue: null, defaultOption: false },
-    { name: "json-manifest",     type: String, multiple: false, defaultValue: null, defaultOption:  true },
-    { name: "turtle-manifest",   type: String, multiple:  true, defaultValue: null, defaultOption:  true },
-    { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue: null, defaultOption:  true },
-    { name: "test-name",         type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "node",  alias: "n", type: String, multiple: false, defaultValue: null },
+    { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null },
+    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
+    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
+    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [] },
+    { name: "exec",  alias: "e", type: String,                  defaultValue: null },
+    { name: "or",                type: String, multiple: false, defaultValue: null },
+    { name: "partition",         type: String, multiple: false, defaultValue: null },
+    { name: "json-manifest",     type: String, multiple:  true, defaultValue:   [] },
+    { name: "turtle-manifest",   type: String, multiple:  true, defaultValue:   [] },
+    { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue:   [] },
+    { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
     { name: "invocation", alias: "i", type: Boolean },
 ]);
 function abort (msg) {
@@ -118,7 +118,7 @@ if (cmds.partition) {
 }
 
 var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
-if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
+if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
@@ -163,8 +163,9 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
                   ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
                   "\":", e, e.stack);
   });
-} else if (cmds["json-manifest"]) {
-  ShExLoader.GET(cmds["json-manifest"]).then(function (p) {
+} else if (cmds["json-manifest"].length) {
+  cmds["json-manifest"].forEach(function (jm) {
+  ShExLoader.GET(jm).then(function (p) {
     try {
       var d = JSON.parse(p.text);
 
@@ -218,6 +219,7 @@ if (cmds["turtle-manifest"] || cmds["jsonld-manifest"]) {
     }
   }).catch(function (e) {
     console.error("failed to load json manifest: ", e.stack || e);
+  });
   });
 } else {
   // from the command line directly
