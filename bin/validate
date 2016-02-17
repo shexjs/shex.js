@@ -318,6 +318,10 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
   // run validator
   var res = validator.validate(graph, focusNode, shape);
 
+  Object.keys(extensions).forEach(function (ext) {
+    extensions[ext].done(validator);
+  });
+
   // display results
   if (cmds.exec) {
     /* example usage:
