@@ -1,6 +1,7 @@
 // Test shex.js command line scripts.
 
 "use strict";
+var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set.
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
@@ -41,20 +42,24 @@ var AllTests = {
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
-  ],
+    { name: "simple" , args: [httpTest + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 }, 
+ ],
   "json-to-shex": [
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
+    { name: "simple" , args: [httpTest + "cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
   ]
 };
 
+if (SLOW)
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
   describe("The " + script + " script", function () {
     "use strict";
 
+    this.timeout(3000);
     if (TESTS)
       tests = tests.filter(function (t) {
         return TESTS.indexOf(t.name) !== -1;
