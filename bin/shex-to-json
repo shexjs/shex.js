@@ -8,7 +8,7 @@ var ShExLoader = require("../lib/ShExLoader");
 var CLI = require("command-line-args")([
     { name: "help",  alias: "h", type: Boolean },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
+    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] }
 ]);
 function abort (msg) {
   console.error(msg);
@@ -27,7 +27,7 @@ if (cmds.help)
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
 
 
-ShExLoader.load(cmds.shex, cmds.json, []).then(function (loaded) {
+ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
   console.log('%s', JSON.stringify(loaded.schema, null, '  '));
 }).catch(function (e) {
   console.error("aborting:", e);
