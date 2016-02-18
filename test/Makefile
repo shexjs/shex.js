@@ -29,5 +29,8 @@ Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js 
 Map-test: ../lib/ShExJison.js Map-test.js
 	(cd .. && $(MOCHA) -C -R $(REPORTER) test/Map-test.js)
 
-test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test
+cli-test: ../lib/ShExJison.js cli-test.js
+	$(MOCHA) -C -R $(REPORTER) cli-test.js
+
+test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test
 

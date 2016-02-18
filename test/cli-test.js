@@ -14,17 +14,38 @@ var should = chai.should;
 var fs = require("fs");
 
 var manifestFile = "cli/manifest.json";
+var httpTest = "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/";
 
 var AllTests = {
-  "validator": [
+  "validate": [
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
+
+    // local file access
     { name: "simple" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle" , args: ["--turtle-manifest", "cli/manifest-simple.ttl"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\n", status: 2 }
+    { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\n", status: 2 },
+
+    // HTTP access via raw.githubusercontent.com
+    { name: "simple-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-json-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.json"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-jsonld-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-as-turtle-http" , args: ["--turtle-manifest", httpTest + "cli/manifest-simple.ttl"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\n", status: 2 }
+  ],
+  "shex-to-json": [
+    { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
+    { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
+    { name: "simple" , args: ["cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
+  ],
+  "json-to-shex": [
+    { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
+    { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
+    { name: "simple" , args: ["cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
   ]
 };
 
@@ -44,18 +65,21 @@ Object.keys(AllTests).forEach(function (script) {
         it("should execute $(" + test.args.join(" ") + ")"+
            ( "resultMatch" in test ?
              (" and match /" + test.resultMatch) + "/" :
-             (" and get " + ("resultText" in test ? JSON.stringify(test.resultText) : test.result))
+             (" and get " +
+              ("resultText" in test ? JSON.stringify(test.resultText) :
+               "resultNoSpace" in test ? JSON.stringify(test.resultNoSpace) : test.result))
            ) +
            " in test '" + test.name + "'.",
            function (done) {
              var ref = 
-               "resultText" in test ? Promise.resolve(test.resultText) :
-               "resultMatch" in test ? Promise.resolve(RegExp(test.resultMatch)) :
-               ShExLoader.GET(test.result);
+               "resultText" in test ? Promise.resolve({ resultText: test.resultText }) :
+               "resultNoSpace" in test ? ShExLoader.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
+               "resultMatch" in test ? Promise.resolve({ resultMatch: RegExp(test.resultMatch) }) :
+               ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
              ref.then(function (loaded) {
                process.chdir(__dirname); // the above paths are relative to this directory
 
-               var program = child_process.spawn("../bin/validate", test.args);
+               var program = child_process.spawn("../bin/" + script, test.args);
                var stdout = "", stderr = "";
                
                program.stdout.on("data", function(data) { stdout += data; });
@@ -68,15 +92,18 @@ Object.keys(AllTests).forEach(function (script) {
 
                  expect(exitCode).to.equal(test.status);
 
-                 if (loaded instanceof RegExp)
-                   expect(stderr).to.match(loaded);
-                 else if (typeof(loaded) === "string")
-                   expect(stdout).to.equal(loaded);
-                 else
+                 if ("resultMatch" in loaded)
+                   expect(stderr).to.match(loaded.resultMatch);
+                 else if ("resultText" in loaded)
+                   expect(stdout).to.equal(loaded.resultText);
+                 else if ("resultNoSpace" in loaded)
+                   expect(stdout.replace(/[ \n]/g, "")).to.equal(loaded.resultNoSpace.text.replace(/[ \n]/g, ""));
+                 else if ("result" in loaded)
                    expect(JSON.parse(stdout)).to.deep.equal(
                      ShExUtil.absolutizeResults(
-                       JSON.parse(loaded.text), loaded.url));
-
+                       JSON.parse(loaded.result.text), loaded.result.url));
+                 else
+                   throw Error("unknown test criteria in " + JSON.stringify(loaded));
                  done();
                });
 
