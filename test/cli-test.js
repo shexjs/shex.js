@@ -80,7 +80,7 @@ var AllTests = {
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
     { name: "simple-http" , args: [httpTest + "cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
-    { name: "simple-bad=file" , args: ["cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
+    { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
     { name: "simple-bad-http" , args: [httpTest + "cli/1dotOr2dot.json999"], resultMatch: "Not Found", status: 1 },
   ]
 };
