@@ -1,7 +1,7 @@
 // Test shex.js command line scripts.
 
 "use strict";
-var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set.
+var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
@@ -92,7 +92,8 @@ Object.keys(AllTests).forEach(function (script) {
   describe("The " + script + " script", function () {
     "use strict";
 
-    this.timeout(3000);
+    var setSlow = parseInt(process.env.SLOW); // SLOW=4000 will run tests with timout of 4s
+    this.timeout(setSlow && setSlow !== 1 ? setSlow : 3000);
     if (TESTS)
       tests = tests.filter(function (t) {
         return TESTS.indexOf(t.name) !== -1;
