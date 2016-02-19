@@ -73,8 +73,6 @@ function resolveRelativeIRI (baseIri, relativeIri) {
 }
 
 function loadSchemaAndData (opts, options) {
-  if (opts.help)
-    abort("");
   if (opts.shex.length > 1 && opts.data.length === 0) {
     opts.data = opts.shex.splice(1); // push all but one into data
   }
@@ -98,12 +96,16 @@ function loadSchemaAndData (opts, options) {
     return runValidator(loaded.data, node, loaded.schema, shape, options, both[1]);
   }).catch(function (e) {
     console.error("aborting:", e, e.stack);
+    return 1;
   })
 }
 
 // Extract user commands
 var arg0 = process.argv[1];
 var cmds = CLI.parse();
+
+if (cmds.help)
+  abort("");
 
 if (cmds.or) {
   if (!(cmds.or in ShExValidator.options.or))
@@ -157,15 +159,17 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
                 }, {json: [], options: options});
       }));
     });
-    queueTests(tests, cmds);
+    queueTests(tests, cmds).then(function (exitCode) {
+      process.on('exit', function() { process.exit(exitCode); });
+    });
   }).catch(function (e) {
     console.error("failed to load manifest file \"" +
                   ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
                   "\":", e, e.stack);
   });
 } else if (cmds["json-manifest"].length) {
-  cmds["json-manifest"].forEach(function (jm) {
-  ShExLoader.GET(jm).then(function (p) {
+  var pz = cmds["json-manifest"].map(function (jm) {
+    return ShExLoader.GET(jm).then(function (p) {
     try {
       var d = JSON.parse(p.text);
 
@@ -213,13 +217,21 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
         if ("result" in elt && elt.result !== null)
           elt.result = resolveRelativeIRI(p.url, elt.result);
       });
-      queueTests(d, cmds);
+      return queueTests(d, cmds);
     } catch (e) {
-      console.error("failed to load json file: " + (e.stack || e));
+      console.error("failed to process json manifest: " + (e.stack || e));
+      return 1;
     }
   }).catch(function (e) {
     console.error("failed to load json manifest: ", e.stack || e);
+    return 1;
   });
+  });
+  Promise.all(pz).then(function (results) {
+    // exit with a 0 if all returned 0, else a failure code.
+    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
+      return soFar ? soFar : result;
+    }, 0)); });
   });
 } else {
   // from the command line directly
@@ -241,7 +253,7 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
 and some constructor args like {or: "someOf", partition: "exhaustive"}
 */
 function queueTests (tests, cmds) {
-  Promise.all(tests.map(function (test) {
+  return Promise.all(tests.map(function (test) {
     // run each test and return the result (0 or 2, so far)
     if (cmds.invocation) {
       console.log(getInvocation(test));
@@ -249,9 +261,9 @@ function queueTests (tests, cmds) {
     return loadSchemaAndData(test, test.options);
   })).then(function (results) {
     // exit with a 0 if all returned 0, else a failure code.
-    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
+    return results.reduce(function (soFar, result) {
       return soFar ? soFar : result;
-    }, 0)); });
+    }, 0);
   });
 }
 

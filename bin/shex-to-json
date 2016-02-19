@@ -30,5 +30,6 @@ if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified")
 ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
   console.log('%s', JSON.stringify(loaded.schema, null, '  '));
 }).catch(function (e) {
-  console.error("aborting:", e);
+  console.error("aborting:", e.stack || e);
+  process.exit(1);
 })
