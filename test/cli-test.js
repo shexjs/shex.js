@@ -63,7 +63,7 @@ var AllTests = {
     { name: "simple-jsonld-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle-http" , args: ["--turtle-manifest", httpTest + "cli/manifest-simple.ttl"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\n", status: 2 }
+    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 2 }
   ],
 
   "shex-to-json": [
