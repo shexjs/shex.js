@@ -47,7 +47,7 @@ var AllTests = {
     { name: "simple-bad-data-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
     { name: "simple-bad-json-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.json999"], resultMatch: "Not Found", status: 1 },
     { name: "simple-bad-shex-mixed", args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
-    { name: "simple-bad-data-mised", args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-data-missed", args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
 
     // local file access
     { name: "simple" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -85,7 +85,44 @@ var AllTests = {
   ]
 };
 
-if (SLOW)
+if (!SLOW)
+  process.exit(0);
+
+Object.keys(AllTests).forEach(function (script) {
+  var tests = AllTests[script];
+
+  if (TESTS)
+    tests = tests.filter(function (t) {
+      return TESTS.indexOf(t.name) !== -1;
+    });
+
+  tests.forEach(function (test) {
+    try {
+      test.ref =
+        "resultText" in test ? Promise.resolve({ resultText: test.resultText }) :
+      "resultNoSpace" in test ? ShExLoader.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
+      "resultMatch" in test ? Promise.resolve({ resultMatch: RegExp(test.resultMatch) }) :
+      ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
+
+      test.exec = new Promise(function (resolve, reject) {
+        process.chdir(__dirname); // the above paths are relative to this directory
+
+        var program = child_process.spawn("../bin/" + script, test.args);
+        var stdout = "", stderr = ""
+
+        program.stdout.on("data", function(data) { stdout += data; });
+        program.stderr.on("data", function(data) { stderr += data; });
+        program.on("exit", function(exitCode) { resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}); });
+        program.on("error", function(err) { reject(err); });
+      });
+    } catch (e) {
+      var throwMe = new Error("Error setting up test " + test.name + " " + e);
+      throwMe.stack = "Error setting up test " + test.name + " " + e.stack;
+      throw throwMe;
+    }
+  });
+});
+
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -100,66 +137,44 @@ Object.keys(AllTests).forEach(function (script) {
       });
 
     tests.forEach(function (test) {
-      try {
-        it("should execute $(" + test.args.join(" ") + ")"+
-           ( "resultMatch" in test ?
-             (" and match /" + test.resultMatch) + "/" :
-             (" and get " +
-              ("resultText" in test ? JSON.stringify(test.resultText) :
-               "resultNoSpace" in test ? JSON.stringify(test.resultNoSpace) : test.result))
-           ) +
-           " in test '" + test.name + "'.",
-           function (done) {
-             var ref = 
-               "resultText" in test ? Promise.resolve({ resultText: test.resultText }) :
-               "resultNoSpace" in test ? ShExLoader.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
-               "resultMatch" in test ? Promise.resolve({ resultMatch: RegExp(test.resultMatch) }) :
-               ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
-             ref.then(function (loaded) {
-               process.chdir(__dirname); // the above paths are relative to this directory
+      it("should execute $(" + test.args.join(" ") + ")"+
+         ( "resultMatch" in test ?
+           (" and match /" + test.resultMatch) + "/" :
+           (" and get " +
+            ("resultText" in test ? JSON.stringify(test.resultText) :
+             "resultNoSpace" in test ? JSON.stringify(test.resultNoSpace) : test.result))
+         ) +
+         " in test '" + test.name + "'.",
+         function (done) {
+           Promise.all([test.ref, test.exec]).then(function (both) {
+             var ref = both[0];
+             var exec = both[1];
+             var testText = "";
 
-               var program = child_process.spawn("../bin/" + script, test.args);
-               var stdout = "", stderr = "", testText = "";
+             if (test.status === 0) {      // Keep this test before exitCode in order to
+               expect(exec.stderr).to.be.empty; // print errors from spawn.
+               testText = exec.stdout;
+             } else {
+               testText = exec.stderr;
+             }
 
-               program.stdout.on("data", function(data) { stdout += data; });
-               program.stderr.on("data", function(data) { stderr += data; });
+             expect(exec.exitCode).to.equal(test.status);
 
-               program.on("exit", function(exitCode) {
-
-                 if (test.status === 0) {      // Keep this test before exitCode in order to
-                   expect(stderr).to.be.empty; // print errors from spawn.
-                   testText = stdout;
-                 } else {
-                   testText = stderr;
-                 }
-
-                 expect(exitCode).to.equal(test.status);
-
-                 if ("resultMatch" in loaded)
-                   expect(testText).to.match(loaded.resultMatch);
-                 else if ("resultText" in loaded)
-                   expect(testText).to.equal(loaded.resultText);
-                 else if ("resultNoSpace" in loaded)
-                   expect(testText.replace(/[ \n]/g, "")).to.equal(loaded.resultNoSpace.text.replace(/[ \n]/g, ""));
-                 else if ("result" in loaded)
-                   expect(JSON.parse(testText)).to.deep.equal(
-                     ShExUtil.absolutizeResults(
-                       JSON.parse(loaded.result.text), loaded.result.url));
-                 else
-                   throw Error("unknown test criteria in " + JSON.stringify(loaded));
-                 done();
-               });
-
-               program.on("error", function(err) {
-                 done(err);
-               });
-             }).catch(function (e) { done(e); });
-           });
-      } catch (e) {
-        var throwMe = new Error("Error setting up test " + test.name + " " + e);
-        throwMe.stack = "Error setting up test " + test.name + " " + e.stack;
-        throw throwMe;
-      }
+             if ("resultMatch" in ref)
+               expect(testText).to.match(ref.resultMatch);
+             else if ("resultText" in ref)
+               expect(testText).to.equal(ref.resultText);
+             else if ("resultNoSpace" in ref)
+               expect(testText.replace(/[ \n]/g, "")).to.equal(ref.resultNoSpace.text.replace(/[ \n]/g, ""));
+             else if ("result" in ref)
+               expect(JSON.parse(testText)).to.deep.equal(
+                 ShExUtil.absolutizeResults(
+                   JSON.parse(ref.result.text), ref.result.url));
+             else
+               throw Error("unknown test criteria in " + JSON.stringify(ref));
+             done();
+           }).catch(function (e) { done(e); });
+         });
     });
   });
 });
