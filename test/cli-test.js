@@ -55,7 +55,7 @@ var AllTests = {
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle" , args: ["--turtle-manifest", "cli/manifest-simple.ttl"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 2 },
+    { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
 
     // HTTP access via raw.githubusercontent.com
     { name: "simple-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -63,7 +63,7 @@ var AllTests = {
     { name: "simple-jsonld-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle-http" , args: ["--turtle-manifest", httpTest + "cli/manifest-simple.ttl"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 2 }
+    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 }
   ],
 
   "shex-to-json": [
@@ -119,26 +119,30 @@ Object.keys(AllTests).forEach(function (script) {
                process.chdir(__dirname); // the above paths are relative to this directory
 
                var program = child_process.spawn("../bin/" + script, test.args);
-               var stdout = "", stderr = "";
-               
+               var stdout = "", stderr = "", testText = "";
+
                program.stdout.on("data", function(data) { stdout += data; });
                program.stderr.on("data", function(data) { stderr += data; });
 
                program.on("exit", function(exitCode) {
 
-                 if (test.status === 0)        // Keep this test before exitCode
+                 if (test.status === 0) {      // Keep this test before exitCode in order to
                    expect(stderr).to.be.empty; // print errors from spawn.
+                   testText = stdout;
+                 } else {
+                   testText = stderr;
+                 }
 
                  expect(exitCode).to.equal(test.status);
 
                  if ("resultMatch" in loaded)
-                   expect(stderr).to.match(loaded.resultMatch);
+                   expect(testText).to.match(loaded.resultMatch);
                  else if ("resultText" in loaded)
-                   expect(stdout).to.equal(loaded.resultText);
+                   expect(testText).to.equal(loaded.resultText);
                  else if ("resultNoSpace" in loaded)
-                   expect(stdout.replace(/[ \n]/g, "")).to.equal(loaded.resultNoSpace.text.replace(/[ \n]/g, ""));
+                   expect(testText.replace(/[ \n]/g, "")).to.equal(loaded.resultNoSpace.text.replace(/[ \n]/g, ""));
                  else if ("result" in loaded)
-                   expect(JSON.parse(stdout)).to.deep.equal(
+                   expect(JSON.parse(testText)).to.deep.equal(
                      ShExUtil.absolutizeResults(
                        JSON.parse(loaded.result.text), loaded.result.url));
                  else

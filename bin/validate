@@ -355,13 +355,17 @@ return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
       if (res && Object.keys(validator.semActHandler.results).length) {
         res.semActResults = validator.semActHandler.results;
       }
-      if (results !== undefined)
-        console.log(JSON.stringify(results) == JSON.stringify(res));
-      else
+      if (results !== undefined) {
+        var match = JSON.stringify(results) == JSON.stringify(res);
+        console.log(match);
+        // Exit status 3 means match failure.
+        return Promise.resolve(match ? 0 : 3);
+      } else {
         console.log(JSON.stringify(res, null, "  "));
+        // Exit status 2 means validation failure.
+        return Promise.resolve(res === null ? 2 : 0);
+      }
     }
   }
-  // Exit status 2 means validation failure.
-  return Promise.resolve(res === null ? 2 : 0);
 }
 
