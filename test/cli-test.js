@@ -2,8 +2,7 @@
 
 "use strict";
 var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
-var VERBOSE = "VERBOSE" in process.env;
-var TERSE = VERBOSE;
+var TIME = "TIME" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 var ShExLoader = require("../lib/ShExLoader");
@@ -88,6 +87,14 @@ var AllTests = {
 if (!SLOW)
   process.exit(0);
 
+var last = new Date();
+var stamp = TIME ? function (s) {
+  var t = new Date();
+  var delta = t - last;
+  last = t;
+  console.warn(delta, s);
+} : function () {};
+
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -99,9 +106,9 @@ Object.keys(AllTests).forEach(function (script) {
   tests.forEach(function (test) {
     try {
       test.ref =
-        "resultText" in test ? Promise.resolve({ resultText: test.resultText }) :
+        "resultText" in test ? { resultText: test.resultText } :
       "resultNoSpace" in test ? ShExLoader.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
-      "resultMatch" in test ? Promise.resolve({ resultMatch: RegExp(test.resultMatch) }) :
+      "resultMatch" in test ? { resultMatch: RegExp(test.resultMatch) } :
       ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
 
       test.exec = new Promise(function (resolve, reject) {
@@ -123,6 +130,7 @@ Object.keys(AllTests).forEach(function (script) {
   });
 });
 
+stamp("setup");
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -130,7 +138,7 @@ Object.keys(AllTests).forEach(function (script) {
     "use strict";
 
     var setSlow = parseInt(process.env.SLOW); // SLOW=4000 will run tests with timout of 4s
-    this.timeout(setSlow && setSlow !== 1 ? setSlow : 3000);
+    this.timeout(setSlow && setSlow !== 1 ? setSlow : 5000);
     if (TESTS)
       tests = tests.filter(function (t) {
         return TESTS.indexOf(t.name) !== -1;
@@ -146,6 +154,7 @@ Object.keys(AllTests).forEach(function (script) {
          ) +
          " in test '" + test.name + "'.",
          function (done) {
+           stamp(script+"/"+test.name);
            Promise.all([test.ref, test.exec]).then(function (both) {
              var ref = both[0];
              var exec = both[1];
@@ -178,4 +187,5 @@ Object.keys(AllTests).forEach(function (script) {
     });
   });
 });
+
 
