@@ -1,3 +1,9 @@
+/*
+ * TODO
+ *   templates: @<foo> %map:{ my:specimen.container.code=.1.code, my:specimen.container.disp=.1.display %}
+ *   node identifiers: @foo> %map:{ foo.id=substr(20) %}
+ *   multiplicity: ...
+ */
 var N3 = require("n3");
 var N3Util = N3.Util;
 var ShExUtil = require("../lib/ShExUtil");
@@ -30,17 +36,20 @@ function done (validator) {
     delete validator.semActHandler.results[MapExt];
 }
 
-function materializer (schema) {
+function materializer (schema, nextBNode) {
+  var blankNodeCount = 0;
+  nextBNode = nextBNode || function () {
+    return '_:b' + blankNodeCount++;
+  };
   return {
     materialize: function (bindings, createRoot, target) {
       target = target || N3.Store();
-      var blankNodeCount = 0;
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
-      function B () { return '_:b' + blankNodeCount++; }
+      function B () { return nextBNode(); }
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: o }); return s; }
 
       var curSubject = createRoot || B();
