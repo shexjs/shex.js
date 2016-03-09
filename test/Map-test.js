@@ -4,8 +4,7 @@ var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
-var ShExLoader = require("../lib/ShExLoader"); // for verbose output
-var ShExWriter = require("../lib/ShExWriter"); // for verbose output
+var ShExLoader = require("../lib/ShExLoader");
 var ShExValidator = require("../lib/ShExValidator");
 var Mapper = require("../extensions/shex:Map");
 var Promise = require("promise");
