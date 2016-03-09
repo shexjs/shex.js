@@ -52,6 +52,7 @@ var CLI = require("command-line-args")([
     { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue:   [] },
     { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
     { name: "invocation", alias: "i", type: Boolean },
+    { name: "dry-run",           type: Boolean },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -113,12 +114,12 @@ function getInvocation (parms) {
   function shexFileArg (u) { return "-x "+shortenFile(u); }
   function jsonFileArg (u) { return "-j "+shortenFile(u); }
   function dataFileArg (u) { return "-d "+shortenFile(u); }
-  function jsldFileArg (u) { return "-d "+shortenFile(u); }
+  function jsonldFileArg (u) { return "-l "+shortenFile(u); }
   return [Path.relative(process.cwd(), arg0),
           parms.shex.map(shexFileArg).join(' '),
           parms.json.map(jsonFileArg).join(' '),
           parms.data.map(dataFileArg).join(' '),
-          parms.jsld.map(jsldFileArg).join(' '),
+          parms.jsonld.map(jsonldFileArg).join(' '),
           "-s " + parms.shape,
           "-n " + parms.node
          ].join(' ');
@@ -225,6 +226,9 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
+
+  if (cmds["dry-run"])
+    return;
 
   // run validator
   var res = validator.validate(graph, focusNode, shape);
@@ -351,7 +355,7 @@ function loadJSONmanifest (jsonManifests) {
           });
         d.forEach(function (elt) {
           // FileURL parameters are lists of URLs relative to the manifest file.
-          ["shex", "json", "data"].forEach(function (attr) {
+          ["shex", "json", "data", "jsonld"].forEach(function (attr) {
             if (!(attr in elt))
               elt[attr] = [];
             else if (elt[attr].constructor !== Array)
