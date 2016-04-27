@@ -96,8 +96,7 @@ var AllTests = {
   ]
 };
 
-if (!SLOW)
-  process.exit(0);
+if (SLOW) {
 
 var last = new Date();
 var stamp = TIME ? function (s) {
@@ -107,6 +106,8 @@ var stamp = TIME ? function (s) {
   console.warn(delta, s);
 } : function () {};
 
+/* set up IO promises
+ */
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -141,8 +142,10 @@ Object.keys(AllTests).forEach(function (script) {
     }
   });
 });
-
 stamp("setup");
+
+/* test results
+ */
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -200,4 +203,5 @@ Object.keys(AllTests).forEach(function (script) {
   });
 });
 
+}
 

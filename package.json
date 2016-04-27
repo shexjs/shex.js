@@ -1,6 +1,6 @@
 {
   "name": "shex",
-  "version": "0.5.5",
+  "version": "0.5.9",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,17 +20,17 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "command-line-args": "2.1.6",
-    "eslint": "^1.4.1",
-    "jsonld": "^0.4.5",
-    "n3": "^0.x",
-    "promise": "^7.0.4",
+    "command-line-args": "^2.1.6",
+    "eslint": "^1.10.3",
+    "jsonld": "^0.4.11",
+    "n3": "^0.4.5",
+    "promise": "^7.1.1",
     "request-promise": "0.4.3",
-    "shex-test": "0.5.7"
+    "shex-test": "^0.5.8"
   },
   "devDependencies": {
     "jison": "0.4.x",
-    "mocha": "1.21.x",
+    "mocha": "2.4.5",
     "chai": "1.9.x",
     "pre-commit": "~0.0.9",
     "browserify": "~3.x",
