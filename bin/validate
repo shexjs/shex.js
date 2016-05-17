@@ -52,6 +52,7 @@ var CLI = require("command-line-args")([
     { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue:   [] },
     { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
     { name: "invocation", alias: "i", type: Boolean },
+    { name: "dry-run",           type: Boolean },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -113,12 +114,12 @@ function getInvocation (parms) {
   function shexFileArg (u) { return "-x "+shortenFile(u); }
   function jsonFileArg (u) { return "-j "+shortenFile(u); }
   function dataFileArg (u) { return "-d "+shortenFile(u); }
-  function jsldFileArg (u) { return "-d "+shortenFile(u); }
+  function jsonldFileArg (u) { return "-l "+shortenFile(u); }
   return [Path.relative(process.cwd(), arg0),
           parms.shex.map(shexFileArg).join(' '),
           parms.json.map(jsonFileArg).join(' '),
           parms.data.map(dataFileArg).join(' '),
-          parms.jsld.map(jsldFileArg).join(' '),
+          parms.jsonld.map(jsonldFileArg).join(' '),
           "-s " + parms.shape,
           "-n " + parms.node
          ].join(' ');
@@ -226,7 +227,6 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
     extensions[ext].register(validator);
   });
 
-
   function optsStr (key, dict) {
     var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
     var opts = Object.keys(dict).reduce(function (ret, k) {
@@ -242,6 +242,9 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
     throw Error("shape " + shape + " not defined" + optsStr(shape, validator._shapeCompilationByLabel));
   if (!(focusNode in graph._entities))
     throw Error("node " + focusNode + " not defined" + optsStr(focusNode, graph._entities));
+
+  if (cmds["dry-run"])
+    return;
 
   // run validator
   var res = validator.validate(graph, focusNode, shape);
@@ -368,7 +371,7 @@ function loadJSONmanifest (jsonManifests) {
           });
         d.forEach(function (elt) {
           // FileURL parameters are lists of URLs relative to the manifest file.
-          ["shex", "json", "data"].forEach(function (attr) {
+          ["shex", "json", "data", "jsonld"].forEach(function (attr) {
             if (!(attr in elt))
               elt[attr] = [];
             else if (elt[attr].constructor !== Array)

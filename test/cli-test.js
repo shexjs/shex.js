@@ -40,6 +40,10 @@ var AllTests = {
     { name: "simple-bad-shex-file" , args: ["-x", "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], resultMatch: "ENOENT", status: 1 },
     { name: "simple-bad-data-file" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl999", "-n", "x"], resultMatch: "ENOENT", status: 1 },
     { name: "simple-bad-json-file" , args: ["--json-manifest", "cli/manifest-simple.json999"], resultMatch: "ENOENT", status: 1 },
+    { name: "results-missing-file", args: ["--json-manifest", "cli/manifest-results-missing.json"], resultMatch: "ENOENT", status: 1 },
+    //  --dry-run
+    { name: "simple-bad-shex-file" , args: ["-x", "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x", "--dry-run"], resultMatch: "ENOENT", status: 1 },
+    { name: "results-missing-file-dry", args: ["--json-manifest", "cli/manifest-results-missing.json", "--dry-run"], resultMatch: "ENOENT", status: 1 },
 
     // missing web resources
     { name: "simple-bad-shex-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
@@ -47,6 +51,10 @@ var AllTests = {
     { name: "simple-bad-json-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.json999"], resultMatch: "Not Found", status: 1 },
     { name: "simple-bad-shex-mixed", args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
     { name: "simple-bad-data-missed", args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
+    { name: "results-missing-http", args: ["--json-manifest", httpTest + "cli/manifest-results-missing.json"], resultMatch: "Not Found", status: 1 },
+    //  --dry-run
+    { name: "simple-bad-shex-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x", "--dry-run"], resultMatch: "Not Found", status: 1 },
+    { name: "results-missing-http-dry", args: ["--json-manifest", httpTest + "cli/manifest-results-missing.json", "--dry-run"], resultMatch: "Not Found", status: 1 },
 
     // local file access
     { name: "simple" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -55,6 +63,10 @@ var AllTests = {
     { name: "simple-as-jsonld" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle" , args: ["--turtle-manifest", "cli/manifest-simple.ttl"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
+    //  --dry-run
+    { name: "simple-dry" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x", "--dry-run"], resultText: "", status: 0 },
+    { name: "simple-as-jsonld-dry" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run"], resultText: "", status: 0 },
+    { name: "simple-as-jsonld-dry-inv" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run", "--invocation"], resultMatch: "../bin/validate", status: 0 },
 
     // HTTP access via raw.githubusercontent.com
     { name: "simple-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -84,8 +96,7 @@ var AllTests = {
   ]
 };
 
-if (!SLOW)
-  process.exit(0);
+if (SLOW) {
 
 var last = new Date();
 var stamp = TIME ? function (s) {
@@ -95,6 +106,8 @@ var stamp = TIME ? function (s) {
   console.warn(delta, s);
 } : function () {};
 
+/* set up IO promises
+ */
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -129,8 +142,10 @@ Object.keys(AllTests).forEach(function (script) {
     }
   });
 });
-
 stamp("setup");
+
+/* test results
+ */
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -138,7 +153,7 @@ Object.keys(AllTests).forEach(function (script) {
     "use strict";
 
     var setSlow = parseInt(process.env.SLOW); // SLOW=4000 will run tests with timout of 4s
-    this.timeout(setSlow && setSlow !== 1 ? setSlow : 5000);
+    this.timeout(setSlow && setSlow !== 1 ? setSlow : 6000);
     if (TESTS)
       tests = tests.filter(function (t) {
         return TESTS.indexOf(t.name) !== -1;
@@ -188,4 +203,5 @@ Object.keys(AllTests).forEach(function (script) {
   });
 });
 
+}
 
