@@ -73,11 +73,11 @@ describe("A ShEx parser", function () {
       }
     });
 
-    it("should duplicate '" + jsonSchemaFile + "' and produce the same strcuture.", function () {
+    it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
       expect(ShExUtil.Visitor().visitSchema(jsonSchema)).to.deep.equal(jsonSchema);
     });
 
-    it("should write '" + jsonSchemaFile + "' and parse to the same strcuture.", function () {
+    it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
       var w;
       new ShExWriter({simplifyParentheses: false }).
         writeSchema(jsonSchema, function (error, text, prefixes) {
