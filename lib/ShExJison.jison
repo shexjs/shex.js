@@ -541,6 +541,10 @@ valueExprDefinition:
         if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
           Parser.valueExprDefns = {  };
         Parser.valueExprDefns[$1] = { type: "ValueExprDefn", "valueExpr": $3 };
+        if ($5)
+          Parser.valueExprDefns[$1].semActs = $5.semActs;
+        if ($4.length)
+          Parser.valueExprDefns[$1].annotations = $4;
       }
     | valueExprLabel 'EXTERNAL' { // t: @@
         if (Parser.valueExprDefns === null || Parser.valueExprDefns === undefined)
