@@ -6,8 +6,26 @@ var log     = console.log,
     fs      = require('fs'),
     ShExValidator = require("../lib/ShExValidator"),
     ShExLoader = require("../lib/ShExLoader"),
-    N3      = require("n3");
+    N3      = require("n3"),
+    NotSupplied = "-- not supplied --",
+    RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
+
+function resolveRelativeIRI (baseIri, relativeIri) {
+  if (!N3.Util.isIRI(relativeIri))
+    return relativeIri; // not really an IRI
+  var p = N3.Parser({ documentIRI: baseIri });
+  p._readSubject({type: "IRI", value: relativeIri});
+  return p._subject;
+}
+
+function parsePassedNode (passedValue, baseIri, deflt) {
+  if (passedValue.length === 0)
+    return deflt ? deflt(baseIri) : NotSupplied;
+  if (passedValue[0] === "<" && passedValue[passedValue.length-1] === ">")
+    passedValue = passedValue.substr(1, passedValue.length-2);
+  return resolveRelativeIRI(baseIri, passedValue);
+}
 
 app.
   use(koaBody({
@@ -18,44 +36,67 @@ app.
     }
   })).
   use(function *(next) {
-    console.log(this.originalUrl);
     switch (this.originalUrl) {
     case "/":
       this.body = fs.readFileSync("./index.html", "utf-8");
       break;
     case "/validate":
-      var schemaName, schemaFile, start, dataName, dataFile, focus;
+      var parms = {
+        schemaName:null, schemaFile:null, start:null,
+        dataName:null,   dataFile:null,   focus:null, focusType:null
+      };
       if (this.request.method == 'POST') {
         var body = this.request.body;
-        schemaName = this.request.body.files.schema.name;
-        schemaFile = this.request.body.files.schema.path;
-        start = this.request.body.fields.start;
-        dataName = this.request.body.files.data.name;
-        dataFile = this.request.body.files.data.path;
-        focus = this.request.body.fields.focus;
+        parms.schemaName = body.files.schema.name;
+        parms.schemaFile = body.files.schema.path;
+        parms.start      = body.fields.start;
+        parms.dataName   = body.files.data.name;
+        parms.dataFile   = body.files.data.path;
+        parms.focus      = body.fields.focus;
+        parms.focusType  = body.fields.focusType;
       } else {
-	this.throw(500, "only supports POST now");
+        this.throw(500, "only supports POST now");
       }
 
       var _this = this;
-      var ret = ShExLoader.load([schemaFile], [], [dataFile], []).then(function (loaded) {
-        var validator = ShExValidator.construct(loaded.schema, {});
-        var result = validator.validate(loaded.data, focus, start);
-        if (body.fields.output === "html") {
-	  _this.body = fs.readFileSync("./validate.template", "utf-8").
-	    replace(/\[schema\]/, schemaName).
-	    replace(/\[start\]/, start).
-	    replace(/\[data\]/, dataName).
-	    replace(/\[focus\]/, focus).
-	    replace(/\[result\]/, JSON.stringify(result, null, 2));
-        } else {
-          _this.body = JSON.stringify(result, null, 2);
-        }
-        fs.unlink(schemaFile);
-        fs.unlink(dataFile);
-      });
-      console.log(ret);
-      yield ret;
+      yield ShExLoader
+        .load([parms.schemaFile], [], [parms.dataFile], [])
+        .then(function (loaded) {
+          function someShape (baseIri) {
+            var rel = resolveRelativeIRI(baseIri, "");
+            if (rel in loaded.schema.shapes)
+              return rel;
+            return Object.keys(loaded.schema.shapes)[0];
+          }
+          function someIRInode (baseIri) {
+            var triples = loaded.data.find(null, null, null)
+            for (var i = 0; i < triples.length; ++i)
+              if (N3.Util.isIRI(triples[i].subject))
+                return triples[i].subject;
+            return triples.length > 0 ? triples[0].subject : NotSupplied;
+          };
+          function someNodeWithType (type) {
+            var triples = loaded.data.find(null, RDF_TYPE, type)
+            return triples.length > 0 ? triples[0].subject : NotSupplied;
+          };
+          parms.start = parsePassedNode(parms.start, loaded.schemaSources[0].url, someShape);
+          parms.focus = parms.focusType ?
+            someNodeWithType(parsePassedNode(parms.focusType, loaded.dataSources[0].url, null)) :
+            parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode);
+          var validator = ShExValidator.construct(loaded.schema, {});
+          var result = parms.focus === NotSupplied ? {} : validator.validate(loaded.data, parms.focus, parms.start);
+          if (body.fields.output === "html") {
+            _this.body = Object.keys(parms).reduce((r, p) => {
+              return r.replace("["+p+"]", parms[p]);
+            }, fs.readFileSync("./validate.template", "utf-8")).
+              replace(/\[result\]/, JSON.stringify(result, null, 2));
+          } else {
+            _this.body = JSON.stringify(result, null, 2);
+          }
+          fs.unlink(parms.schemaFile);
+          fs.unlink(parms.dataFile);
+          return next;
+        });
       break;
     default:
       this.throw(404, "whazzat?");
