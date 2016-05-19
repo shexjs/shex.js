@@ -8,6 +8,7 @@ var log     = console.log,
     ShExLoader = require("../lib/ShExLoader"),
     N3      = require("n3"),
     NotSupplied = "-- not supplied --",
+    UnknownIRI = "-- not found --",
     RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
 
@@ -19,12 +20,29 @@ function resolveRelativeIRI (baseIri, relativeIri) {
   return p._subject;
 }
 
-function parsePassedNode (passedValue, baseIri, deflt) {
+function resolvePrefixedIRI (prefixedIri, prefixes) {
+  var colon = prefixedIri.indexOf(":");
+  if (colon === -1)
+    return null;
+  var prefix = prefixes[prefixedIri.substr(0, colon)];
+  return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
+}
+
+function parsePassedNode (passedValue, baseIri, deflt, known, prefixes) {
   if (passedValue.length === 0)
-    return deflt ? deflt(baseIri) : NotSupplied;
-  if (passedValue[0] === "<" && passedValue[passedValue.length-1] === ">")
+    return known && known(baseIri) ? baseIri : deflt ? deflt(baseIri) : NotSupplied;
+  var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
+  if (relIRI)
     passedValue = passedValue.substr(1, passedValue.length-2);
-  return resolveRelativeIRI(baseIri, passedValue);
+  var t = resolveRelativeIRI(baseIri, passedValue);
+  if (known(t))
+    return t;
+  if (!relIRI) {
+    t = resolvePrefixedIRI(passedValue, prefixes);
+    if (known(t))
+      return t;
+  }
+  return UnknownIri;
 }
 
 app.
@@ -62,14 +80,21 @@ app.
       yield ShExLoader
         .load([parms.schemaFile], [], [parms.dataFile], [])
         .then(function (loaded) {
+          function knownShape (label) {
+            return label in loaded.schema.shapes;
+          }
           function someShape (baseIri) {
-            var rel = resolveRelativeIRI(baseIri, "");
-            if (rel in loaded.schema.shapes)
-              return rel;
             return Object.keys(loaded.schema.shapes)[0];
           }
+          function knownNode (label) {
+            return (loaded.data.find(label, null, null).length > 0 ||
+                    loaded.data.find(null, null, label).length > 0);
+          }
+          function knownType (label) {
+            return (loaded.data.find(null, RDF_TYPE, label).length > 0);
+          }
           function someIRInode (baseIri) {
-            var triples = loaded.data.find(null, null, null)
+            var triples = loaded.data.find(null, null, null);
             for (var i = 0; i < triples.length; ++i)
               if (N3.Util.isIRI(triples[i].subject))
                 return triples[i].subject;
@@ -79,10 +104,10 @@ app.
             var triples = loaded.data.find(null, RDF_TYPE, type)
             return triples.length > 0 ? triples[0].subject : NotSupplied;
           };
-          parms.start = parsePassedNode(parms.start, loaded.schemaSources[0].url, someShape);
+          parms.start = parsePassedNode(parms.start, loaded.schemaSources[0].url, someShape, knownShape, loaded.schema.prefixes);
           parms.focus = parms.focusType ?
-            someNodeWithType(parsePassedNode(parms.focusType, loaded.dataSources[0].url, null)) :
-            parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode);
+            someNodeWithType(parsePassedNode(parms.focusType, loaded.dataSources[0].url, null, knownNode, loaded.data._prefixes)) :
+            parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode, knownType, loaded._data.prefixes);
           var validator = ShExValidator.construct(loaded.schema, {});
           var result = parms.focus === NotSupplied ? {} : validator.validate(loaded.data, parms.focus, parms.start);
           if (body.fields.output === "html") {
