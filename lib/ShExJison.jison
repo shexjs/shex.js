@@ -555,6 +555,7 @@ valueExprDefinition:
 
 valueClassExpr:
       valueClass _QvalueClassJuncts_E_Opt       -> $2 ? { type: $2[0], valueExprs: [$1].concat($2[1]) } : $1
+    | "(" valueClass _QvalueClassJuncts_E_Opt ")"       -> $3 ? { type: $3[0], valueExprs: [$2].concat($3[1]) } : $2
     ;
 
 _QvalueClassJuncts_E_Opt:
@@ -666,7 +667,7 @@ _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
     ;
 
 _QsomeOfShape_E_Opt:
-        // t: 0
+      // t: 0
     | someOfShape       // t: 1dot
     ;
 
