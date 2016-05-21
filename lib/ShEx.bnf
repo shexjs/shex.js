@@ -43,6 +43,7 @@
 # ~ s/valueClassDefinition/valueExprDefinition/ (EGP 20151120)
 # ~ s/valueClassLabel/valueExprLabel/ (EGP 20151120)
 # ~ change valueSet delimiters from ()s to []s (EGP 20160104)
+# ~ codeDecls can have no code (implies code ref) (EGP 20160128)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
