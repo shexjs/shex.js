@@ -43,6 +43,12 @@
 # ~ s/valueClassDefinition/valueExprDefinition/ (EGP 20151120)
 # ~ s/valueClassLabel/valueExprLabel/ (EGP 20151120)
 # ~ change valueSet delimiters from ()s to []s (EGP 20160104)
+# ~ codeDecls can have no code (implies code ref) (EGP 20160128)
+# + ()s around valueExprs (EGP 20160520)
+# + shapeDefinition += nonLiteralKind? stringFacet* (EGP 20160520)
+# - shape == "VIRTUAL"? (EGP 20160520)
+# + ';' separator for groups
+# ~ s{;}{//} for annotations
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -53,12 +59,14 @@
 [3]     directive             ::= baseDecl | prefixDecl
 [3a]    valueExprDefinition   ::= valueExprLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
 [3a]    valueClassExpr        ::= valueClass valueClassJuncts?
+                                | "(" valueClass valueClassJuncts? ")"
 [3a]    valueClassJuncts      ::= ( "OR" valueClass )+ | ( "AND" valueClass )+
 [3a]    valueExprLabel       ::= '$' (iri | blankNode)
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
 [4]     start                 ::= "start" '=' ( shapeLabel | shapeDefinition semanticActions )
-[5]     shape                 ::= "VIRTUAL"? shapeLabel shapeDefinition semanticActions
+[5]     shape                 ::= shapeLabel nonLiteralKind? stringFacet* shapeDefinition semanticActions
+#[5]     shape                 ::= "VIRTUAL"? shapeLabel nonLiteralKind? stringFacet* shapeDefinition semanticActions
 [6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
 [7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+
@@ -66,8 +74,8 @@
 [10a]   multiElementSomeOf    ::= groupShape ('|' groupShape)+
 [10b]   innerShape            ::= multiElementGroup | multiElementSomeOf
 [11]    groupShape            ::= singleElementGroup | multiElementGroup
-[11]    singleElementGroup    ::= unaryShape ','?
-[11a]   multiElementGroup     ::= unaryShape ( ',' unaryShape )+ ','?
+[11]    singleElementGroup    ::= unaryShape (',' | ';')?
+[11a]   multiElementGroup     ::= unaryShape ( (','|';') unaryShape )+ (','|';')?
 [12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape
 [13]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
 [7]     include               ::= '&' shapeLabel
@@ -78,13 +86,13 @@
 [17]    predicate             ::= iri | RDF_TYPE
 [18]    valueClass            ::= '!'? negatableValueClass
 [18a]   negatableValueClass   ::= "LITERAL" xsFacet*
-                                | ("IRI" | "BNODE" | "NONLITERAL") shapeOrRef? stringFacet*
+                                | nonLiteralKind shapeOrRef? stringFacet*
                                 | datatype xsFacet*
                                 | shapeOrRef stringFacet*
                                 | valueSet
                                 | valueExprLabel
                                 | '.'  # no constraint
-#                                | '[' valueClassExpr ']'
+[18b]   nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
 [20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
 [21]    xsFacet               ::= stringFacet
                                 | numericFacet
@@ -98,7 +106,7 @@
 [21]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [21]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
 [22]    datatype              ::= iri
-[23]    annotation            ::= ';' predicate (iri | literal)
+[23]    annotation            ::= '//' predicate (iri | literal)
 [24]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
 [25]    valueSet              ::= '[' value* ']'
 [26]    value                 ::= iriRange | literal
@@ -112,7 +120,7 @@
 [136s]  iri                   ::= IRIREF | prefixedName
 [137s]  prefixedName          ::= PNAME_LN | PNAME_NS
 [138s]  blankNode             ::= BLANK_NODE_LABEL
-[0]     codeDecl              ::= '%' iri? CODE
+[0]     codeDecl              ::= '%' iri (CODE | "%")
 [0]     startActions          ::= codeDecl+
 [0]     semanticActions       ::= codeDecl*
 
