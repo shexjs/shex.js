@@ -384,7 +384,7 @@ PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) (({PN_CHARS} | '.' | ':' | {PLX})* ({PN_CHARS} | ':' | {PLX}))?
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_NS} {PN_LOCAL}
-COMMENT                 ('//'|'#') [^\u000a\u000d]*
+COMMENT                 '#' [^\u000a\u000d]*
 
 %%
 
@@ -448,6 +448,7 @@ COMMENT                 ('//'|'#') [^\u000a\u000d]*
 {IT_TOTALDIGITS}        return 'IT_TOTALDIGITS';
 {IT_FRACTIONDIGITS}     return 'IT_FRACTIONDIGITS';
 "="                     return '=';
+"//"                    return '//';
 "{"                     return '{';
 "}"                     return '}';
 "&"                     return '&';
@@ -735,12 +736,14 @@ groupShape:
 groupShape_right:
       -> null
     | ','       -> null
+    | ';'       -> null
     | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt        -> $1
     ;
 
 _QGT_COMMA_E_Opt:
         // t: 1dot
     | ','       // t: 1dotComma
+    | ';'       // t: 1dotComma
     ;
 
 multiElementGroup:
@@ -749,6 +752,7 @@ multiElementGroup:
 
 _O_QGT_COMMA_E_S_QunaryShape_E_C:
       ',' unaryShape    -> $2 // t: 2groupOfdot
+    | ';' unaryShape    -> $2 // t: 2groupOfdot
     ;
 
 _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
@@ -961,7 +965,7 @@ datatype:
       iri       ;
 
 annotation:
-      ';' predicate _O_Qiri_E_Or_Qliteral_E_C   -> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
+      '//' predicate _O_Qiri_E_Or_Qliteral_E_C   -> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
