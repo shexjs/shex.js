@@ -625,15 +625,32 @@ _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
     ;
 
 shape:
-    // _QIT_VIRTUAL_E_Opt 
-      shapeLabel shapeDefinition semanticActions        { // t: 1dot
-        addShape($1, extend($2, $3));
+    shapeLabel _QnonLiteralKind_E_Opt _QstringFacet_E_Star shapeDefinition semanticActions        { // t: 1dot
+        addShape($1,  extend(extend(extend($2 ? {nodeKind: $2} : {}, $3), $4), $5));
     }
-    | IT_VIRTUAL shapeLabel shapeDefinition semanticActions     { // t: 1dotVirtual
-        // sneak "virtual" in after "type"
-        // Type will be overwritten.
-        addShape($2, extend({type: null, virtual: true}, $3, $4)) // $4: t: 1dotVirtualShapeCode1
-    }
+    // // _QIT_VIRTUAL_E_Opt 
+    // shapeLabel shapeDefinition semanticActions        { // t: 1dot
+    //     addShape($1, extend($2, $3));
+    // }
+    // | IT_VIRTUAL shapeLabel shapeDefinition semanticActions     { // t: 1dotVirtual
+    //     // sneak "virtual" in after "type"
+    //     // Type will be overwritten.
+    //     addShape($2, extend({type: null, virtual: true}, $3, $4)) // $4: t: 1dotVirtualShapeCode1
+    // }
+    ;
+
+_QnonLiteralKind_E_Opt:
+    
+    | nonLiteralKind;
+
+_QstringFacet_E_Star:
+      -> {}
+    | _QstringFacet_E_Star stringFacet {
+        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
+          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+        }
+        $$ = extend($1, $2)
+      }
     ;
 
 // _QIT_VIRTUAL_E_Opt:
@@ -820,11 +837,11 @@ negatableValueClass:
 
 valueClass1:
       IT_LITERAL _QxsFacet_E_Star       -> extend({ type: "ValueClass", nodeKind: "literal" }, $2) // t: 1literalPattern
-//    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QshapeOrRef_E_Opt _QstringFacet_E_Star       
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C -> { type: "ValueClass", nodeKind: $1 } // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C _QstringFacet_E_Plus    -> extend({ type: "ValueClass", nodeKind: $1 }, $2) // t: 1iriPattern
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef      -> { type: "ValueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
-    | _O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C shapeOrRef _QstringFacet_E_Plus -> extend({ type: "ValueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
+//    | nonLiteralKind _QshapeOrRef_E_Opt _QstringFacet_E_Star       
+    | nonLiteralKind -> { type: "ValueClass", nodeKind: $1 } // t: 1iriPattern
+    | nonLiteralKind _QstringFacet_E_Plus    -> extend({ type: "ValueClass", nodeKind: $1 }, $2) // t: 1iriPattern
+    | nonLiteralKind shapeOrRef      -> { type: "ValueClass", nodeKind: $1, reference: $2 } // t: 1iriRef1
+    | nonLiteralKind shapeOrRef _QstringFacet_E_Plus -> extend({ type: "ValueClass", nodeKind: $1, reference: $2 }, $3) // t: 1iriRefLength1
     | datatype _QxsFacet_E_Star {
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
@@ -850,7 +867,7 @@ _QxsFacet_E_Star:
       }
     ;
 
-_O_QIT_IRI_E_Or_QIT_BNODE_E_Or_QIT_NONLITERAL_E_C:
+nonLiteralKind:
       IT_IRI    -> "iri" // t: 1iriPattern
     | IT_BNODE  -> "bnode" // t: 1bnodeLength
     | IT_NONLITERAL     -> "nonliteral" // t: 1nonliteralLength
