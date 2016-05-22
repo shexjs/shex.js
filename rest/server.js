@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var log     = console.log,
     app     = require('koa')(),
     koaBody = require('koa-body'),
@@ -42,7 +44,7 @@ function parsePassedNode (passedValue, baseIri, deflt, known, prefixes) {
     if (known(t))
       return t;
   }
-  return UnknownIri;
+  return UnknownIRI;
 }
 
 app.
@@ -107,7 +109,7 @@ app.
           parms.start = parsePassedNode(parms.start, loaded.schemaSources[0].url, someShape, knownShape, loaded.schema.prefixes);
           parms.focus = parms.focusType ?
             someNodeWithType(parsePassedNode(parms.focusType, loaded.dataSources[0].url, null, knownNode, loaded.data._prefixes)) :
-            parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode, knownType, loaded._data.prefixes);
+            parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode, knownType, loaded.data._prefixes);
           var validator = ShExValidator.construct(loaded.schema, {});
           var result = parms.focus === NotSupplied ? {} : validator.validate(loaded.data, parms.focus, parms.start);
           if (body.fields.output === "html") {
