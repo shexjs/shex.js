@@ -107,7 +107,7 @@ app.
             return triples.length > 0 ? triples[0].subject : NotSupplied;
           };
           parms.start = parsePassedNode(parms.start, loaded.schemaSources[0].url, someShape, knownShape, loaded.schema.prefixes);
-          parms.focus = parms.focusType ?
+          parms.focusType = parms.focusType ?
             someNodeWithType(parsePassedNode(parms.focusType, loaded.dataSources[0].url, null, knownNode, loaded.data._prefixes)) :
             parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode, knownType, loaded.data._prefixes);
           var validator = ShExValidator.construct(loaded.schema, {});
