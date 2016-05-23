@@ -30,17 +30,17 @@ function resolvePrefixedIRI (prefixedIri, prefixes) {
   return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
 }
 
-function parsePassedNode (passedValue, baseIri, deflt, known, prefixes) {
+function parsePassedNode (passedValue, meta, deflt, known, prefixes) {
   if (passedValue.length === 0)
-    return known && known(baseIri) ? baseIri : deflt ? deflt(baseIri) : NotSupplied;
+    return known && known(meta.base) ? meta.base : deflt ? deflt() : NotSupplied;
   var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
   if (relIRI)
     passedValue = passedValue.substr(1, passedValue.length-2);
-  var t = resolveRelativeIRI(baseIri, passedValue);
+  var t = resolveRelativeIRI(meta.base, passedValue);
   if (known(t))
     return t;
   if (!relIRI) {
-    t = resolvePrefixedIRI(passedValue, prefixes);
+    t = resolvePrefixedIRI(passedValue, meta.prefixes);
     if (known(t))
       return t;
   }
@@ -85,33 +85,43 @@ app.
           function knownShape (label) {
             return label in loaded.schema.shapes;
           }
-          function someShape (baseIri) {
+          function someShape () {
             return Object.keys(loaded.schema.shapes)[0];
           }
           function knownNode (label) {
-            return (loaded.data.find(label, null, null).length > 0 ||
-                    loaded.data.find(null, null, label).length > 0);
+            return (loaded.data.findByIRI(label, null, null).length > 0 ||
+                    loaded.data.findByIRI(null, null, label).length > 0);
           }
           function knownType (label) {
-            return (loaded.data.find(null, RDF_TYPE, label).length > 0);
+            return (loaded.data.findByIRI(null, RDF_TYPE, label).length > 0);
           }
-          function someIRInode (baseIri) {
-            var triples = loaded.data.find(null, null, null);
+          function someIRInode () {
+            var triples = loaded.data.findByIRI(null, null, null);
             for (var i = 0; i < triples.length; ++i)
               if (N3.Util.isIRI(triples[i].subject))
                 return triples[i].subject;
             return triples.length > 0 ? triples[0].subject : NotSupplied;
           };
           function someNodeWithType (type) {
-            var triples = loaded.data.find(null, RDF_TYPE, type)
+            var triples = loaded.data.findByIRI(null, RDF_TYPE, type)
             return triples.length > 0 ? triples[0].subject : NotSupplied;
           };
-          parms.start = parsePassedNode(parms.start, loaded.schemaSources[0].url, someShape, knownShape, loaded.schema.prefixes);
-          parms.focusType = parms.focusType ?
-            someNodeWithType(parsePassedNode(parms.focusType, loaded.dataSources[0].url, null, knownNode, loaded.data._prefixes)) :
-            parsePassedNode(parms.focus, loaded.dataSources[0].url, someIRInode, knownType, loaded.data._prefixes);
+          if (!parms.start && loaded.schema.start)
+            parms.start = loaded.schema.start
+          else
+            parms.start = parsePassedNode(parms.start, loaded.schemaMeta[0],
+                                          someShape, knownShape, loaded.schema.prefixes);
+          parms.focus = parms.focusType ?
+            someNodeWithType(parsePassedNode(parms.focusType, loaded.dataMeta[0],
+                                             null, knownType, loaded.data._prefixes)) :
+            parsePassedNode(parms.focus, loaded.dataMeta[0], someIRInode,
+                            knownNode, loaded.data._prefixes);
           var validator = ShExValidator.construct(loaded.schema, {});
-          var result = parms.focus === NotSupplied ? {} : validator.validate(loaded.data, parms.focus, parms.start);
+          var result =
+              parms.focus === NotSupplied || parms.focus === UnknownIRI ||
+              parms.start === NotSupplied || parms.start === UnknownIRI ?
+              { focus: parms.focus, start: parms.start } :
+              validator.validate(loaded.data, parms.focus, parms.start);
           if (body.fields.output === "html") {
             _this.body = Object.keys(parms).reduce((r, p) => {
               return r.replace("["+p+"]", parms[p]);
