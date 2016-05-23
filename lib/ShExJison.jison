@@ -117,7 +117,7 @@
     if (!baseIRI)
       baseIRI = null;
     else if (baseIRI.indexOf('#') >= 0)
-      { } // !!! throw new Error('Invalid base IRI ' + baseIRI);
+      throw new Error('Invalid base IRI ' + baseIRI);
     // Set base IRI and its components
     if (Parser._base = baseIRI) {
       Parser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
@@ -240,7 +240,7 @@
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
     Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
-    Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
+    Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
   Parser._setFileName = function (fn) { _fileName = fn; }
@@ -304,7 +304,7 @@
 
   function error (msg) {
     Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
-    Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
+    Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
     throw new Error(msg);
   }
 
@@ -492,6 +492,8 @@ shexDoc:
         var ret = extend({ type: "Schema", prefixes: Parser._prefixes || {} }, // Build return object from
                          valueExprDefns, startActs, startObj,                    // components in parser state
                          {shapes: Parser.shapes});                            // maintaining intuitve order.
+        if (Parser._base !== null)
+          ret.base = Parser._base;
         Parser.reset();
         return ret;
       }
