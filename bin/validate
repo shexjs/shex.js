@@ -95,8 +95,8 @@ function loadSchemaAndData (opts, options) {
   ]).then(function (both) {
     var loaded = both[0];
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    var node = loaded.dataMeta.sources.length && opts.node ? resolveRelativeIRI(loaded.dataMeta.sources[0].url, opts.node) : null;
-    var shape = loaded.schemaMeta.sources.length && opts.shape ? resolveRelativeIRI(loaded.schemaMeta.sources[0].url, opts.shape) : null;
+    var node = loaded.dataMeta.length && opts.node ? resolveRelativeIRI(loaded.dataMeta[0].url, opts.node) : null;
+    var shape = loaded.schemaMeta.length && opts.shape ? resolveRelativeIRI(loaded.schemaMeta[0].url, opts.shape) : null;
     return runValidator(loaded.data, node, loaded.schema, shape, options, both[1]);
   }).catch(function (e) {
     console.error("aborting:", e, e.stack);

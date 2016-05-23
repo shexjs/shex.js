@@ -206,7 +206,7 @@ describe("A ShEx parser", function () {
           .to.deep.equal("http://a.example/def#b");
       });
 
-      // new ShExParser(); // !!! horrible hack to reset no documentIRI
+      new ShExParser(); // !!! horrible hack to reset no documentIRI
       // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
 
@@ -228,6 +228,8 @@ describe("A ShEx parser", function () {
           .to.deep.equal("http://a.example/def#");
       });
 
+      new ShExParser(); // !!! horrible hack to reset no documentIRI
+      // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
   }
 });
