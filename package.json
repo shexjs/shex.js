@@ -23,13 +23,15 @@
     "command-line-args": "^2.1.6",
     "eslint": "^1.10.3",
     "jsonld": "^0.4.11",
+    "koa": "^1.2.0",
+    "koa-body": "^1.4.0",
     "n3": "^0.4.5",
     "promise": "^7.1.1",
     "request-promise": "0.4.3",
     "shex-test": "^0.5.8"
   },
   "devDependencies": {
-    "jison": "0.4.x",
+    "jison": "0.4.16",
     "mocha": "2.4.5",
     "chai": "1.9.x",
     "pre-commit": "~0.0.9",

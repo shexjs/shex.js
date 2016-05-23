@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title>validator</title>
+  </head>
+  <body>
+    <h1>validator</h1>
+    <table border="1" cellspacing="0">
+      <tr><th align="left"><tt>schema</tt></th><td><i>[schemaName]</i></td></tr>
+      <tr><th align="left"><tt>start </tt></th><td><i>[start]</i></td></tr>
+      <tr><th align="left"><tt>data  </tt></th><td><i>[dataName]</i></td></tr>
+      <tr><th align="left"><tt>focus </tt></th><td><i>[focus]</i></td></tr>
+    </table>
+    <pre>Result [result]</pre>
+  </body>
+</html>
