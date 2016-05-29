@@ -627,6 +627,9 @@ _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
     }
     ;
 
+// TODO shape:
+//     shapeLabel _QnonLiteralKind_E_Opt _QstringFacet_E_Star shapeDefinition _Q_O_QIT_AND_E_S_QshapeDefinition_E_C_E_Star semanticActions	;
+
 shape:
     shapeLabel _QnonLiteralKind_E_Opt _QstringFacet_E_Star shapeDefinition semanticActions        { // t: 1dot
         addShape($1,  extend(extend(extend($2 ? {nodeKind: $2} : {}, $3), $4), $5));
@@ -659,6 +662,13 @@ _QstringFacet_E_Star:
 // _QIT_VIRTUAL_E_Opt:
 //     
 //     | IT_VIRTUAL     ;
+
+// TODO _O_QIT_AND_E_S_QshapeDefinition_E_C:
+//     IT_AND shapeDefinition	;
+
+// _Q_O_QIT_AND_E_S_QshapeDefinition_E_C_E_Star:
+
+//     | _Q_O_QIT_AND_E_S_QshapeDefinition_E_C_E_Star _O_QIT_AND_E_S_QshapeDefinition_E_C	;
 
 shapeDefinition:
       _Q_O_QincludeSet_E_Or_QinclPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfShape_E_Opt '}'     { // t: 1dotInherit3
