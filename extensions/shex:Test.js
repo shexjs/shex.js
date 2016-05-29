@@ -17,7 +17,7 @@ function register (validator) {
           m[3] === "o" ? ctx.object :
           "???";
         validator.semActHandler.results[TestExt].push(arg);
-        return m[1] === "print";
+        return m[1] !== "fail"; // "fail" => false, "print" => true
       }
     }
   );
