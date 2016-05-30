@@ -31,7 +31,7 @@ function resolvePrefixedIRI (prefixedIri, prefixes) {
 }
 
 function parsePassedNode (passedValue, meta, deflt, known, prefixes) {
-  if (passedValue.length === 0)
+  if (passedValue === undefined || passedValue.length === 0)
     return known && known(meta.base) ? meta.base : deflt ? deflt() : NotSupplied;
   var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
   if (relIRI)
@@ -41,7 +41,7 @@ function parsePassedNode (passedValue, meta, deflt, known, prefixes) {
     return t;
   if (!relIRI) {
     t = resolvePrefixedIRI(passedValue, meta.prefixes);
-    if (known(t))
+    if (t !== null && known(t))
       return t;
   }
   return UnknownIRI;
@@ -116,7 +116,7 @@ app.
                                              null, knownType, loaded.data._prefixes)) :
             parsePassedNode(parms.focus, loaded.dataMeta[0], someIRInode,
                             knownNode, loaded.data._prefixes);
-          var validator = ShExValidator.construct(loaded.schema, {});
+          var validator = ShExValidator.construct(loaded.schema, {diagnose:true});
           var result =
               parms.focus === NotSupplied || parms.focus === UnknownIRI ||
               parms.start === NotSupplied || parms.start === UnknownIRI ?
@@ -128,7 +128,7 @@ app.
             }, fs.readFileSync("./validate.template", "utf-8")).
               replace(/\[result\]/, JSON.stringify(result, null, 2));
           } else {
-            _this.body = JSON.stringify(result, null, 2);
+            _this.body = JSON.stringify(result, null, 2)+"\n";
           }
           fs.unlink(parms.schemaFile);
           fs.unlink(parms.dataFile);
@@ -145,6 +145,7 @@ app.
 log('Visit %s:%s/ in browser.', host, port);
 log();
 log('Test with executing this commands:');
-log('curl -i %s:%s/validate -F "schema=@../test/cli/1dotOr2dot.shex" -F "start=http://a.example/S1" -F "data=@../test/cli/p2p3.ttl" -F "focus=http://a.example/x"', host, port);
+log('curl -i %s:%s/validate -F "schema=@../test/cli/1dotOr2dot.shex" -F "start=http://a.example/S1" -F "data=@../test/cli/p2p3.ttl" -F "focus=x"', host, port);
+log('Note that start and focus can be relative or prefixed URLs.');
 log();
 log('Press CTRL+C to stop...');
