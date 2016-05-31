@@ -135,7 +135,7 @@ app.
           return next;
         }).catch(e => {
           _this.body = {
-            type: "InvocationError",
+            type: "ParsingError",
             errors: [e]
           };
         })
