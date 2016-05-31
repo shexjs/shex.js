@@ -133,7 +133,12 @@ app.
           fs.unlink(parms.schemaFile);
           fs.unlink(parms.dataFile);
           return next;
-        });
+        }).catch(e => {
+          _this.body = {
+            type: "InvocationError",
+            errors: [e]
+          };
+        })
       break;
     default:
       this.throw(404, "whazzat?");
