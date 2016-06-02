@@ -370,7 +370,8 @@ function loadJSONmanifest (jsonManifests) {
         if (cmds["test-name"].length) // Include only tests listed in --test-name.
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
-              return ret || ("name" in elt && elt.name.indexOf(n) !== -1);
+	      var pattern = RegExp(n);
+              return ret || ("name" in elt && elt.name.match(pattern) !== -1);
             }, false);
           });
         d.forEach(function (elt) {
