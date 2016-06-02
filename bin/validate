@@ -299,7 +299,7 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
 	cmds["test-name"].reduce((ret, testName) => {
 	  var pattern = RegExp(testName);
 	  loaded.data.find(null, mf+"name", null).filter(function (triple) {
-	    if (triple.subject.match(pattern))
+	    if (N3.Util.getLiteralValue(triple.object).match(pattern))
 	      ret.push(triple.subject);
 	  })
 	  return ret;
