@@ -295,38 +295,40 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
   return ShExLoader.load([], [], turtleManifests || [], jsonldManifests || []).then(function (loaded) {
 
-    var tests = [];
-    var testNames = cmds["test-name"].length ?
-      cmds["test-name"] :
-      loaded.data.find(null, mf+"action", null).map(function (t) {
-        return t.subject;
+    var testNodes = cmds["test-name"].length ?
+	cmds["test-name"].reduce((ret, testName) => {
+	  var pattern = RegExp(testName);
+	  loaded.data.find(null, mf+"name", null).filter(function (triple) {
+	    if (triple.subject.match(pattern))
+	      ret.push(triple.subject);
+	  })
+	  return ret;
+	}, []) :
+	loaded.data.find(null, mf+"action", null).map(function (t) {
+          return t.subject;
+	});
+    var tests = testNodes.map(function (subject) {
+      var action = loaded.data.find(subject, mf+"action", null)[0].object;
+      var options = Object.assign({}, ValidatorOptions);
+      var traits = loaded.data.find(subject, sht+"trait", null);
+      traits.forEach(function (t) {
+        var tStr = t.object.substr(sht.length);
+        tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
+        if (tStr in TraitToOption)
+          options[TraitToOption[tStr]] = tStr;
       });
-    testNames.forEach(function (testName) {
-      tests = tests.concat(loaded.data.find(null, mf+"name", null).filter(function (triple) {
-        return triple.subject.indexOf(testName) !== -1 || triple.object.indexOf(testName) !== -1;
-      }).map(function (triple) {
-        var action = loaded.data.find(triple.subject, mf+"action", null)[0].object;
-        var options = Object.assign({}, ValidatorOptions);
-        var traits = loaded.data.find(triple.subject, sht+"trait", null);
-        traits.forEach(function (t) {
-          var tStr = t.object.substr(sht.length);
-          tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
-          if (tStr in TraitToOption)
-            options[TraitToOption[tStr]] = tStr;
-        });
 
-        return [["shex" , "schema", true ],
-                ["shape", "shape" , false],
-                ["data" , "data"  , true ],
-                ["node" , "focus" , false]].reduce(function (ret, elt) {
-                  var m = loaded.data.find(action, sht+elt[1], null);
-                  if (m.length > 0) {
-                    var v = m[0].object;
-                    ret[elt[0]] = elt[2] ? [v] : v;
-                  }
-                  return ret;
-                }, {json: [], jsonld: [], options: options}); // @@ no way to specify jsonld in manifest
-      }));
+      return [["shex" , "schema", true ],
+              ["shape", "shape" , false],
+              ["data" , "data"  , true ],
+              ["node" , "focus" , false]].reduce(function (ret, elt) {
+                var m = loaded.data.find(action, sht+elt[1], null);
+                if (m.length > 0) {
+                  var v = m[0].object;
+                  ret[elt[0]] = elt[2] ? [v] : v;
+                }
+                return ret;
+              }, {json: [], jsonld: [], options: options}); // @@ no way to specify jsonld in manifest
     });
     return queueTests(tests, cmds);
   }).catch(function (e) {
