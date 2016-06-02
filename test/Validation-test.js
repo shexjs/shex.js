@@ -22,13 +22,8 @@ var validationPath = findPath("validation");
 var manifestFile = validationPath + "manifest.jsonld";
 
 TODO = [
-  // all accounted for
-  "1dotOr2dot-someOf_pass_p1p2p3",
-  "open4Ordotclosecard23_fail-p1p2p3p4",
-  "open3Ordotclosecard2_fail-p1p2p3",
-  // longest match
-  //"open3Ordotclosecard23_pass-p1p2p3"
-]; // !!! make these work!
+  // delightfully empty (for now)
+];
 
 describe("A ShEx validator", function () {
   "use strict";
