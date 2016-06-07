@@ -52,7 +52,7 @@ var CLI = require("command-line-args")([
     { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue:   [] },
     { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
     { name: "invocation", alias: "i", type: Boolean },
-    { name: "dry-run",           type: Boolean },
+    { name: "dry-run", alias: "N", type: Boolean },
 ]);
 function abort (msg) {
   console.error(msg);
