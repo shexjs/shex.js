@@ -99,7 +99,7 @@ function loadSchemaAndData (opts, options) {
     var shape = loaded.schemaMeta.length && opts.shape ? resolveRelativeIRI(loaded.schemaMeta[0].url, opts.shape) : null;
     return runValidator(loaded.data, node, loaded.schema, shape, options, both[1]);
   }).catch(function (e) {
-    console.error("aborting:", e, e.stack);
+    console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
     return 1;
   })
 }
