@@ -20,6 +20,10 @@ var findPath = require("./findPath.js");
 var schemasPath = findPath("schemas");
 var validationPath = findPath("validation");
 var manifestFile = validationPath + "manifest.jsonld";
+var regexModules = [
+  require("../lib/regex/nfax-val-1err"),
+  require("../lib/regex/threaded-val-nerr")
+];
 
 TODO = [
   // delightfully empty (for now)
@@ -52,106 +56,109 @@ describe("A ShEx validator", function () {
       TODO.indexOf(test.name) === -1;
   });
 
-  tests.forEach(function (test) {
-    try {
-      var schemaFile = path.join(schemasPath, test.action.schema);
-      var schemaURL = "file://" + schemaFile;
-      var semActsFile = "semActs" in test.action ? path.join(schemasPath, test.action.semActs) : null;
-      var semActsURL = "file://" + semActsFile;
-      var dataFile = path.join(validationPath, test.action.data);
-      var dataURL = "file://" + dataFile;
-      var resultsFile = test.result ? path.join(validationPath, test.result) : null;
-      it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
-         "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
-         "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
-         " in test '" + test["@id"] + "'.",
-         function (report) {                                             // test action
-           var semActs;
-           if (semActsFile) {
-             shexParser._setBase(semActsURL);
-             semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
-               startActs.reduce(function (ret, a) {
-                 ret[a.name] = a.code;
-                 return ret;
-               }, {});
-           }
-           shexParser._setBase(schemaURL);
-           var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-           var validator = ShExValidator.construct(schema, { diagnose: true,
-                                                             or:
-                                                             "trait" in test &&
-                                                             test.trait.indexOf("OneOf") !== -1 ?
-                                                             "oneOf" :
-                                                             "someOf",
-                                                             partition:
-                                                             "trait" in test &&
-                                                             test.trait.indexOf("Exhaustive") !== -1 ?
-                                                             "exhaustive" :
-                                                             "greedy",
-                                                             semActs: semActs });
-           var testResults = TestExtension.register(validator);
+  regexModules.forEach(regexModule => {
+    tests.forEach(function (test) {
+      try {
+        var schemaFile = path.join(schemasPath, test.action.schema);
+        var schemaURL = "file://" + schemaFile;
+        var semActsFile = "semActs" in test.action ? path.join(schemasPath, test.action.semActs) : null;
+        var semActsURL = "file://" + semActsFile;
+        var dataFile = path.join(validationPath, test.action.data);
+        var dataURL = "file://" + dataFile;
+        var resultsFile = test.result ? path.join(validationPath, test.result) : null;
+        it("should use " + regexModule.name + " validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+           "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
+           "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
+           " in test '" + test["@id"] + "'.",
+           function (report) {                                             // test action
+             var semActs;
+             if (semActsFile) {
+               shexParser._setBase(semActsURL);
+               semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
+                 startActs.reduce(function (ret, a) {
+                   ret[a.name] = a.code;
+                   return ret;
+                 }, {});
+             }
+             shexParser._setBase(schemaURL);
+             var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+             var validator = ShExValidator.construct(schema, { regexModule: regexModule,
+                                                               diagnose: true,
+                                                               or:
+                                                               "trait" in test &&
+                                                               test.trait.indexOf("OneOf") !== -1 ?
+                                                               "oneOf" :
+                                                               "someOf",
+                                                               partition:
+                                                               "trait" in test &&
+                                                               test.trait.indexOf("Exhaustive") !== -1 ?
+                                                               "exhaustive" :
+                                                               "greedy",
+                                                               semActs: semActs });
+             var testResults = TestExtension.register(validator);
 
-           var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
-             // resolve relative URLs in results file
-             if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-                 N3Util.isIRI(obj[k])) {
-               obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-             }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
+             var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
+               // resolve relative URLs in results file
+               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+                   N3Util.isIRI(obj[k])) {
+                 obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+               }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
 
-           assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
-           // var start = schema.start;
-           // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
-           //   start = Object.keys(schema.action.shapes)[0];
+             assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
+             // var start = schema.start;
+             // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
+             //   start = Object.keys(schema.action.shapes)[0];
 
-           var store = new N3.Store();
-           var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
-           turtleParser.parse(
-             fs.readFileSync(dataFile, "utf8"),
-             function (error, triple, prefixes) {
-               if (error) {
-                 report("error parsing " + dataFile + ": " + error);
-               } else if (triple) {
-                 store.addTriple(triple);
-               } else {
-                 try {
-                   function maybeGetTerm (base, s) {
-                     return s === undefined ? null :
-                       s.substr(0, 2) === "_:" ? s :
-                       resolveRelativeIRI(base, s);
-                   }
-                   var focus = maybeGetTerm(dataURL, test.action.focus);
-                   var shape = maybeGetTerm(schemaURL, test.action.shape);
-                   var validationResult = validator.validate(store, focus, shape);
-                   if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
-                   if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
-                   if (test["@type"] === "sht:ValidationFailure") {
-                     assert(!validationResult || "errors" in validationResult, "test expected to fail");
-                     if (referenceResult)
+             var store = new N3.Store();
+             var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
+             turtleParser.parse(
+               fs.readFileSync(dataFile, "utf8"),
+               function (error, triple, prefixes) {
+                 if (error) {
+                   report("error parsing " + dataFile + ": " + error);
+                 } else if (triple) {
+                   store.addTriple(triple);
+                 } else {
+                   try {
+                     function maybeGetTerm (base, s) {
+                       return s === undefined ? null :
+                         s.substr(0, 2) === "_:" ? s :
+                         resolveRelativeIRI(base, s);
+                     }
+                     var focus = maybeGetTerm(dataURL, test.action.focus);
+                     var shape = maybeGetTerm(schemaURL, test.action.shape);
+                     var validationResult = validator.validate(store, focus, shape);
+                     if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
+                     if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
+                     if (test["@type"] === "sht:ValidationFailure") {
+                       assert(!validationResult || "errors" in validationResult, "test expected to fail");
+                       if (referenceResult)
+                         expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                     } else {
+                       assert(validationResult && !("errors" in validationResult), "test expected to succeed");
                        expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
-                   } else {
-                     assert(validationResult && !("errors" in validationResult), "test expected to succeed");
-                     expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                     }
+                     var xr = test.extensionResults.filter(function (x) {
+                       return x.extension === TestExtension.url;
+                     }).map(function (x) {
+                       return x.prints;
+                     });
+                     if (xr.length) {
+                       expect(testResults).to.deep.equal(xr);
+                     }
+                     report();
+                   } catch (e) {
+                     report(e);
                    }
-                   var xr = test.extensionResults.filter(function (x) {
-                     return x.extension === TestExtension.url;
-                   }).map(function (x) {
-                     return x.prints;
-                   });
-                   if (xr.length) {
-                     expect(testResults).to.deep.equal(xr);
-                   }
-                   report();
-                 } catch (e) {
-                   report(e);
                  }
-               }
-             });
-         });
-    } catch (e) {
-      var throwMe = new Error("in " + test["@id"] + " " + e); // why doesn't this change the error message?
-      throwMe.stack = "in " + test["@id"] + " " + e.stack;
-      throw throwMe;
-    }
+               });
+           });
+      } catch (e) {
+        var throwMe = new Error("in " + test["@id"] + " " + e); // why doesn't this change the error message?
+        throwMe.stack = "in " + test["@id"] + " " + e.stack;
+        throw throwMe;
+      }
+    });
   });
 });
 
