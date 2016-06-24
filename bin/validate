@@ -23,6 +23,17 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
     ]
   }
 
+The regular expression engine is loaded from either:
+  absolute path, e.g. if you git cloned shex.js into /tmp:
+    --regexModule /tmp/shex.js/lib/regex/nfax-val-1err
+    --regexModule /tmp/shex.js/lib/regex/threaded-val-nerr
+  or relative path to bin/validate directory:
+    --regexModule ../lib/regex/nfax-val-1err
+    --regexModule ../lib/regex/threaded-val-nerr
+  or a module name in lib/regex:
+    --regexModule nfax-val-1err
+    --regexModule threaded-val-nerr
+
 */
 
 var ShExUtil = require("../lib/ShExUtil");
@@ -53,6 +64,7 @@ var CLI = require("command-line-args")([
     { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
     { name: "invocation", alias: "i", type: Boolean },
     { name: "dry-run", alias: "N", type: Boolean },
+    { name: "regexModule", type: String },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -144,6 +156,9 @@ if (cmds.partition) {
   ValidatorOptions.partition = cmds.partition;
 }
 
+if (cmds.regexModule)
+  ValidatorOptions.regexModule = cmds.regexModule;
+
 var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
 if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   loadRDFmanifest(cmds["turtle-manifest"], cmds["jsonld-manifest"]).then(function (exitCode) {
@@ -223,6 +238,17 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
   }
 
   // prepare validator
+  if ("regexModule" in options) {
+    try {
+      options.regexModule = require(options.regexModule);
+    } catch (e1) {
+      try {
+	options.regexModule = require("../lib/regex/" + options.regexModule);
+      } catch (e2) {
+	throw e1;
+      }
+    }
+  }
   var validator = ShExValidator.construct(schema, options);
   var extensions = ShExLoader.loadExtensions();
   Object.keys(extensions).forEach(function (ext) {
