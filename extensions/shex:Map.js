@@ -17,13 +17,24 @@ function register (validator) {
   validator.semActHandler.register(
     MapExt,
     {
-      dispatch: function (code, ctx) {
+      /**
+       * Callback for extension invocation.
+       *
+       * @param {string} code - text of the semantic action.
+       * @param {object} ctx - matched triple or results subset.
+       * @param {object} extensionStorage - place where the extension writes into the result structure.
+       * @return {bool} false if the extension failed or did not accept the ctx object.
+       */
+      dispatch: function (code, ctx, extensionStorage) {
         var m = code.match(pattern);
         if (!m) {
           throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
         }
         var arg = m[1] ? m[1] : prefixes[m[2]] + m[3];
         validator.semActHandler.results[MapExt][arg] = ctx.object;
+        if (!(arg in extensionStorage))
+          extensionStorage[arg] = [];
+        extensionStorage[arg].push(ctx.object);
         return true;
       }
     }

@@ -6,7 +6,15 @@ function register (validator) {
   validator.semActHandler.register(
     TestExt,
     {
-      dispatch: function (code, ctx) {
+      /**
+       * Callback for extension invocation.
+       *
+       * @param {string} code - text of the semantic action.
+       * @param {object} ctx - matched triple or results subset.
+       * @param {object} extensionStorage - place where the extension writes into the result structure.
+       * @return {bool} false if the extension failed or did not accept the ctx object.
+       */
+      dispatch: function (code, ctx, extensionStorage) {
         var m = code.match(pattern);
         if (!m) {
           throw Error("Invocation error: " + TestExt + " code \"" + code + "\" didn't match " + pattern);
