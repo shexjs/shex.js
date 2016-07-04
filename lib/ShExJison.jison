@@ -485,7 +485,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 %% /* language grammar */
 
 shexDoc:
-      _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF      {
+      _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF      {
         var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
@@ -497,6 +497,10 @@ shexDoc:
         Parser.reset();
         return ret;
       }
+    ;
+
+_initParser: // I don't know how else to get ahold of the lexer.
+      { yy.parser.yy = { lexer: yy.lexer} ; } // parser.yy is user API space.
     ;
 
 _Qdirective_E_Star:
