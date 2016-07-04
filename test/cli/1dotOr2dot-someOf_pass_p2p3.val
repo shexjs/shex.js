@@ -9,21 +9,6 @@
         "type": "someOfSolution",
         "expressions": [
           {
-            "type": "tripleConstraintSolutions",
-            "predicate": "http://a.example/p1",
-            "valueExpr": {
-              "type": "ValueClass"
-            },
-            "solutions": [
-              {
-                "type": "testedTriple",
-                "subject": "x",
-                "predicate": "http://a.example/p1",
-                "object": "\"p1-0\""
-              }
-            ]
-          },
-          {
             "type": "eachOfSolutions",
             "solutions": [
               {

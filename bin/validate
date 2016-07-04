@@ -100,15 +100,15 @@ function loadSchemaAndData (opts, options) {
   return Promise.all([
     ShExLoader.load(opts.shex, opts.json, opts.data, opts.jsonld),
     !("result" in opts) ? Promise.resolve(undefined) :
-      opts.result === null ? Promise.resolve(null) :
+      typeof opts.result === "boolean" ? Promise.resolve(opts.result) :
       ShExLoader.GET(opts.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       })
   ]).then(function (both) {
     var loaded = both[0];
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    var node = loaded.dataMeta.length && opts.node ? resolveRelativeIRI(loaded.dataMeta[0].url, opts.node) : null;
-    var shape = loaded.schemaMeta.length && opts.shape ? resolveRelativeIRI(loaded.schemaMeta[0].url, opts.shape) : null;
+    var node = loaded.dataMeta.length && opts.node ? resolveRelativeIRI(loaded.dataMeta[0].url, opts.node) : undefined;
+    var shape = loaded.schemaMeta.length && opts.shape ? resolveRelativeIRI(loaded.schemaMeta[0].url, opts.shape) : undefined;
     return runValidator(loaded.data, node, loaded.schema, shape, options, both[1]);
   }).catch(function (e) {
     console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
@@ -266,8 +266,10 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
       opts.length === 1 ? ": try " + opts[0] :
       ": try one of " + opts.join(" , ");
   }
-  if (!(shape in validator._shapeCompilationByLabel))
-    throw Error("shape " + shape + " not defined" + optsStr(shape, validator._shapeCompilationByLabel));
+  if (shape === undefined)
+    shape = validator.schema.start;
+  if (!(shape in validator.schema.shapes))
+    throw Error("shape " + shape + " not defined" + optsStr(shape, validator.schema.shapes));
   if (!(focusNode in graph._entities))
     console.warn(Error("node " + focusNode + " not defined" + optsStr(focusNode, graph._entities)));
 
@@ -296,20 +298,24 @@ return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
      */
     return eval("function (validator) {\n" + cmds.exec + "}")(validator);
   } else {
-    if (!cmds.quiet) {
-      if (res && Object.keys(validator.semActHandler.results).length) {
+    if (!cmds.quiet)
+      if ("errors" in res && Object.keys(validator.semActHandler.results).length) {
         res.semActResults = validator.semActHandler.results;
       }
-      if (results !== undefined) {
-        var match = JSON.stringify(results) == JSON.stringify(res);
+    if (results !== undefined) {
+      var match =
+          typeof results === "boolean" && results !== "errors" in res ||
+          JSON.stringify(results) == JSON.stringify(res);
+      if (!match) { debugger; }
+      if (!cmds.quiet)
         console.log(match);
         // Exit status 3 means match failure.
-        return Promise.resolve(match ? 0 : 3);
-      } else {
+      return Promise.resolve(match ? 0 : 3);
+    } else {
+      if (!cmds.quiet)
         console.log(JSON.stringify(res, null, "  "));
-        // Exit status 2 means validation failure.
-        return Promise.resolve(res === null ? 2 : 0);
-      }
+      // Exit status 2 means validation failure.
+      return Promise.resolve("errors" in res ? 2 : 0);
     }
   }
 }
