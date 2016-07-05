@@ -3,7 +3,12 @@
 "use strict";
 var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
 var TIME = "TIME" in process.env;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var TESTS = "TESTS" in process.env ?
+    process.env.TESTS.split(/,/) :
+    null;
+var HTTPTEST = "HTTPTEST" in process.env ?
+    process.env.HTTPTEST :
+    "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
 
 var ShExLoader = require("../lib/ShExLoader");
 var child_process = require('child_process');
@@ -14,7 +19,6 @@ var should = chai.should;
 var fs = require("fs");
 
 var manifestFile = "cli/manifest.json";
-var httpTest = "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/";
 
 var AllTests = {
   "validate": [
@@ -46,15 +50,15 @@ var AllTests = {
     { name: "results-missing-file-dry", args: ["--json-manifest", "cli/manifest-results-missing.json", "--dry-run"], resultMatch: "ENOENT", status: 1 },
 
     // missing web resources
-    { name: "simple-bad-shex-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
-    { name: "simple-bad-data-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
-    { name: "simple-bad-json-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.json999"], resultMatch: "Not Found", status: 1 },
-    { name: "simple-bad-shex-mixed", args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
-    { name: "simple-bad-data-missed", args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
-    { name: "results-missing-http", args: ["--json-manifest", httpTest + "cli/manifest-results-missing.json"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-shex-http" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", HTTPTEST + "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-data-http" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", HTTPTEST + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-json-http" , args: ["--json-manifest", HTTPTEST + "cli/manifest-simple.json999"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-shex-mixed", args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-data-missed", args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", HTTPTEST + "cli/p1.ttl999", "-n", "x"], resultMatch: "Not Found", status: 1 },
+    { name: "results-missing-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results-missing.json"], resultMatch: "Not Found", status: 1 },
     //  --dry-run
-    { name: "simple-bad-shex-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x", "--dry-run"], resultMatch: "Not Found", status: 1 },
-    { name: "results-missing-http-dry", args: ["--json-manifest", httpTest + "cli/manifest-results-missing.json", "--dry-run"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-shex-http" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex999", "-s", "http://a.example/S1", "-d", HTTPTEST + "cli/p1.ttl", "-n", "x", "--dry-run"], resultMatch: "Not Found", status: 1 },
+    { name: "results-missing-http-dry", args: ["--json-manifest", HTTPTEST + "cli/manifest-results-missing.json", "--dry-run"], resultMatch: "Not Found", status: 1 },
 
     // local file access
     { name: "simple" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -69,30 +73,30 @@ var AllTests = {
     { name: "simple-as-jsonld-dry-inv" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run", "--invocation"], resultMatch: "../bin/validate", status: 0 },
 
     // HTTP access via raw.githubusercontent.com
-    { name: "simple-http" , args: ["-x", httpTest + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", httpTest + "cli/p1.ttl", "-n", "x"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "simple-json-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.json"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "simple-jsonld-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "simple-as-turtle-http" , args: ["--turtle-manifest", httpTest + "cli/manifest-simple.ttl"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 }
+    { name: "simple-http" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", HTTPTEST + "cli/p1.ttl", "-n", "x"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-json-http" , args: ["--json-manifest", HTTPTEST + "cli/manifest-simple.json"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-jsonld-http" , args: ["--json-manifest", HTTPTEST + "cli/manifest-simple.jsonld"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", HTTPTEST + "cli/manifest-simple.jsonld"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "simple-as-turtle-http" , args: ["--turtle-manifest", HTTPTEST + "cli/manifest-simple.ttl"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "results-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 }
   ],
 
   "shex-to-json": [
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
-    { name: "simple-http" , args: [httpTest + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
+    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
     { name: "simple-bad-file" , args: ["cli/1dotOr2dot.shex999"], resultMatch: "ENOENT", status: 1 },
-    { name: "simple-bad-http" , args: [httpTest + "cli/1dotOr2dot.shex999"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex999"], resultMatch: "Not Found", status: 1 },
   ],
 
   "json-to-shex": [
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
-    { name: "simple-http" , args: [httpTest + "cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
+    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
     { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
-    { name: "simple-bad-http" , args: [httpTest + "cli/1dotOr2dot.json999"], resultMatch: "Not Found", status: 1 },
+    { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], resultMatch: "Not Found", status: 1 },
   ]
 };
 
