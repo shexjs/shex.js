@@ -103,8 +103,53 @@ function materializer (schema, nextBNode) {
   };
 }
 
+function extractBindings (soln, min, max, depth) {
+  if ("min" in soln && soln.min < min)
+    min = soln.min
+  var myMax = "max" in soln ?
+      (soln.max === "*" ?
+       Infinity :
+       soln.max) :
+      1;
+  if (myMax > max)
+    max = myMax
+
+  function walkExpressions (s) {
+    return s.expressions.reduce((inner, e) => {
+      return inner.concat(extractBindings(e, min, max, depth+1));
+    }, []);
+  }
+
+  function walkTriple (s) {
+    var fromTriple = "extensions" in s && MapExt in s.extensions ?
+        [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
+        [];
+    return "referenced" in s ?
+      fromTriple.concat(extractBindings(s.referenced.solution, min, max, depth+1)) :
+      fromTriple;
+  }
+
+  function structuralError (msg) { throw Error(msg); }
+
+  var walk = // function to explore each solution
+      soln.type === "someOfSolutions" ||
+      soln.type === "eachOfSolutions" ? walkExpressions :
+      soln.type === "tripleConstraintSolutions" ? walkTriple :
+      structuralError("unknown type: " + soln.type);
+
+  if (myMax > 1) // preserve important associations:
+    // map: e.g. [[1,2],[3,4]]
+    // [walk(soln.solutions[0]), walk(soln.solutions[1]),...]
+    return soln.solutions.map(walk);
+  else // hide unimportant nesting:
+    // flatmap: e.g. [1,2,3,4]
+    // [].concat(walk(soln.solutions[0])).concat(walk(soln.solutions[1]))...
+    return [].concat.apply([], soln.solutions.map(walk));
+}
+
 module.exports = {
   register: register,
+  extractBindings: extractBindings,
   done: done,
   materializer: materializer,
   url: MapExt
