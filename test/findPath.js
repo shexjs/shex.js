@@ -5,10 +5,10 @@ var path = require("path");
 module.exports = function (dirName) {
 
   // try relative path to package.json
-  var packageName = path.join(__dirname, TESTSDIR, "package.json");
+  var packageName = path.resolve(__dirname, TESTSDIR, "package.json");
   if (fs.existsSync(packageName)) {
     try {
-      var pkg = require(path.join(__dirname, TESTSDIR, JSON.parse(fs.readFileSync(packageName, "utf8")).main))[dirName];
+      var pkg = require(path.resolve(__dirname, TESTSDIR, JSON.parse(fs.readFileSync(packageName, "utf8")).main))[dirName];
       if (pkg !== undefined) {
         return pkg;
       }
@@ -18,7 +18,7 @@ module.exports = function (dirName) {
   }
 
   // try relative path directly to test directories
-  var fromPath = path.join(__dirname, TESTSDIR, dirName) + "/";
+  var fromPath = path.resolve(__dirname, TESTSDIR, dirName) + "/";
   if (fs.existsSync(fromPath)) {
     return fromPath;
   }
