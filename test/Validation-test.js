@@ -54,13 +54,13 @@ describe("A ShEx validator", function () {
 
   tests.forEach(function (test) {
     try {
-      var schemaFile = path.join(schemasPath, test.action.schema);
+      var schemaFile = path.resolve(schemasPath, test.action.schema);
       var schemaURL = "file://" + schemaFile;
-      var semActsFile = "semActs" in test.action ? path.join(schemasPath, test.action.semActs) : null;
+      var semActsFile = "semActs" in test.action ? path.resolve(schemasPath, test.action.semActs) : null;
       var semActsURL = "file://" + semActsFile;
-      var dataFile = path.join(validationPath, test.action.data);
+      var dataFile = path.resolve(validationPath, test.action.data);
       var dataURL = "file://" + dataFile;
-      var resultsFile = test.result ? path.join(validationPath, test.result) : null;
+      var resultsFile = test.result ? path.resolve(validationPath, test.result) : null;
       it("should validate data '" + (TERSE ? test.action.data : dataFile) + // test title
          "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
          "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
