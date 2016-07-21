@@ -2,19 +2,19 @@
   "description": "collection of partition tests",
   "tests": [
     {
-      "from": "1dotRefOr3",
+      "from": "1dotRefOR3",
       "include": ["http://a.example/S1"],
-      "expect": "1dotRefOr3_S1"
+      "expect": "1dotRefOR3_S1"
     },
     {
-      "from": "1dotRefOr3",
+      "from": "1dotRefOR3",
       "include": ["http://a.example/S4"],
-      "expect": "1dotRefOr3_S4"
+      "expect": "1dotRefOR3_S4"
     },
     {
-      "from": "1dotRefOr3",
+      "from": "1dotRefOR3",
       "include": ["http://a.example/S2", "http://a.example/S4"],
-      "expect": "1dotRefOr3_S2_S4"
+      "expect": "1dotRefOR3_S2_S4"
     },
     {
       "from": "2eachInclude1",
