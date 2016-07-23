@@ -12,7 +12,10 @@ var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var jsonSchemasPath = findPath("parsedSchemas");
-var negSyntaxTestsPath = findPath("negativeSyntax");
+var negativeTests = [
+  {path: findPath("negativeSyntax"), include: "Parse error"},
+  {path: findPath("negativeStructure"), include: "Structural error"}
+];
 var illDefinedTestsPath = findPath("illDefined");
 
 describe("A ShEx parser", function () {
@@ -114,65 +117,38 @@ describe("A ShEx parser", function () {
   });
 
 
-  // negative syntax tests
-  var negSyntaxTests = fs.readdirSync(negSyntaxTestsPath);
-  if (TESTS)
-    negSyntaxTests = negSyntaxTests.filter(function (s) {
-      return TESTS.indexOf(s) !== -1 ||
-        TESTS.indexOf(s.replace(/\.shex$/, "")) !== -1 ||
-        TESTS.indexOf(s.replace(/\.json$/, "")) !== -1;
-    });
-  negSyntaxTests.sort();
+  negativeTests.forEach(testSet => {
+    // negative syntax tests
+    var negSyntaxTests = fs.readdirSync(testSet.path);
+    if (TESTS)
+      negSyntaxTests = negSyntaxTests.filter(function (s) {
+        return TESTS.indexOf(s) !== -1 ||
+          TESTS.indexOf(s.replace(/\.shex$/, "")) !== -1 ||
+          TESTS.indexOf(s.replace(/\.json$/, "")) !== -1;
+      });
+    negSyntaxTests.sort();
 
-  negSyntaxTests.forEach(function (schemaFile) {
-    var path = negSyntaxTestsPath + schemaFile;
-    it("should not parse schema '" + path + "'", function () {
-      if (VERBOSE) console.log(schemaFile);
-      var schemaText = fs.readFileSync(path, "utf8");
-      var error = null, schema = null;
-      try {
-        schema =
-          schemaFile.match(/\.shex$/) ? parser.parse(schemaText) :
-          ShExUtil.validateSchema(JSON.parse(schemaText));
-        // console.warn(JSON.stringify(schema));
-      }
-      catch (e) {
-        error = e;
-        // console.warn(e);
-      }
-      
-      expect(error).to.exist;
-      expect(error).to.be.an.instanceof(Error);
-      expect(error.message).to.include("Parse error");
-    });
-  });
-
-
-  // ill-defined tests
-  var illDefinedTests = fs.readdirSync(illDefinedTestsPath);
-  illDefinedTests = illDefinedTests.map(function (q) { return q.replace(/\.err$/, ""); });
-  if (TESTS)
-    illDefinedTests = illDefinedTests.filter(function (s) { return TESTS.indexOf(s) !== -1; });
-  illDefinedTests.sort();
-
-  illDefinedTests.forEach(function (schemaFile) {
-    var path = illDefinedTestsPath + schemaFile + ".err";
-    it("should not accept schema '" + path + "'", function () {
-      if (VERBOSE) console.log(schemaFile);
-      var schemaText = fs.readFileSync(path, "utf8");
-      var error = null, schema = null;
-      try {
-        schema = parser.parse(schemaText)
-        // console.warn(JSON.stringify(schema));
-      }
-      catch (e) {
-        error = e;
-        // console.warn(e);
-      }
-
-      expect(error).to.exist;
-      expect(error).to.be.an.instanceof(Error);
-      expect(error.message).to.include("Structural error");
+    negSyntaxTests.forEach(function (schemaFile) {
+      var path = testSet.path + schemaFile;
+      it("should not parse schema '" + path + "'", function () {
+        if (VERBOSE) console.log(schemaFile);
+        var schemaText = fs.readFileSync(path, "utf8");
+        var error = null, schema = null;
+        try {debugger;
+             schema =
+             schemaFile.match(/\.shex$/) ? parser.parse(schemaText) :
+             ShExUtil.validateSchema(JSON.parse(schemaText));
+             // console.warn(JSON.stringify(schema));
+            }
+        catch (e) {
+          error = e;
+          // console.warn(e);
+        }
+        
+        expect(error).to.exist;
+        expect(error).to.be.an.instanceof(Error);
+        expect(error.message).to.include(testSet.include);
+      });
     });
   });
 
