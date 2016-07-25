@@ -17,19 +17,19 @@
       "expect": "1dotRefOR3_S2_S4"
     },
     {
-      "from": "2eachInclude1",
+      "from": "2EachInclude1",
       "include": ["http://a.example/S2"],
-      "expect": "2eachInclude1_S2"
+      "expect": "2EachInclude1_S2"
     },
     {
-      "from": "2eachInclude1",
+      "from": "2EachInclude1",
       "include": ["http://a.example/S1"],
-      "expect": "2eachInclude1_S1"
+      "expect": "2EachInclude1_S1"
     },
     {
-      "from": "2eachInclude1",
+      "from": "2EachInclude1",
       "include": ["http://a.example/S2", "http://a.example/S1"],
-      "expect": "2eachInclude1_S2_S1"
+      "expect": "2EachInclude1_S2_S1"
     },
     {
       "from": "3circularRef1",
