@@ -492,7 +492,8 @@ shexDoc:
         var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        var ret = extend({ type: "Schema", prefixes: Parser._prefixes || {} }, // Build return object from
+        var ret = extend({ type: "Schema"},
+                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Build return object from
                          valueExprDefns, startActs, startObj,                  // components in parser state
                          Parser.shapes ? {shapes: Parser.shapes} : {});        // maintaining intuitve order.
         if (Parser._base !== null)
