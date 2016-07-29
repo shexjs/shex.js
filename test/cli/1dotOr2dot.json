@@ -5,7 +5,7 @@
   },
   "shapes": {
     "http://a.example/S1": {
-      "type": "Shape",
+      "type": "NodeConstraint",
       "expression": {
         "type": "SomeOf",
         "expressions": [

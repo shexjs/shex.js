@@ -325,7 +325,7 @@
   }
 
   var EmptyObject = {  };
-  var EmptyShape = { type: "Shape" };
+  var EmptyShape = { type: "NodeConstraint" };
 %}
 
 /* lexical grammar */
@@ -655,7 +655,7 @@ shapeDefinition:
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
-	  extend({ type: "Shape" }, exprObj, $1);
+	  extend({ type: "NodeConstraint" }, exprObj, $1);
       }
     ;
 
@@ -831,29 +831,29 @@ predicate:
     ;
 
 shapeAtom:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "Shape", nodeKind: "literal" }, $2) // t: 1literalPattern
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
 //    | nonLiteralKind _QshapeOrRef_E_Opt _QstringFacet_E_Star	
-    | nonLiteralKind	-> extend({ type: "Shape" }, $1) // t: 1iriPattern
-    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "Shape"}, $1, $2) // t: 1iriPattern
-//    | nonLiteralKind shapeOrRef	-> $2 === EmptyShape ? { type: "Shape", nodeKind: $1 } : { type: "ShapeAnd", shapeExprs: [ { type: "Shape", nodeKind: $1 }, $2 ] } // extend({nodeKind: $1 }, $2) // { type: "Shape", nodeKind: $1, reference999: $2 } // t: 1iriRef1
+    | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
+    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
+//    | nonLiteralKind shapeOrRef	-> $2 === EmptyShape ? { type: "NodeConstraint", nodeKind: $1 } : { type: "ShapeAnd", shapeExprs: [ { type: "NodeConstraint", nodeKind: $1 }, $2 ] } // extend({nodeKind: $1 }, $2) // { type: "NodeConstraint", nodeKind: $1, reference999: $2 } // t: 1iriRef1
     | nonLiteralKind shapeOrRef	{
       $$ = $2 === EmptyShape ?
-        extend({ type: "Shape"}, $1) :
-      $2.type === "Shape" ?
-        extend({ type: "Shape" }, $1, $2) :
-      { type: "ShapeAnd", shapeExprs: [ extend({ type: "Shape" }, $1), $2 ] }
+        extend({ type: "NodeConstraint"}, $1) :
+      $2.type === "NodeConstraint" ?
+        extend({ type: "NodeConstraint" }, $1, $2) :
+      { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       // extend({nodeKind: $1 }, $2)
-      // { type: "Shape", nodeKind: $1, reference: $2 }
+      // { type: "NodeConstraint", nodeKind: $1, reference: $2 }
       // t: 1iriRef1
     }
     | nonLiteralKind _QstringFacet_E_Plus shapeOrRef	{
       $$ = $3 === EmptyShape ?
-        extend({ type: "Shape" }, $1, $2) :
-      $3.type === "Shape" ?
-        extend({ type: "Shape" }, $1, $2, $3) :
-      { type: "ShapeAnd", shapeExprs: [ extend({ type: "Shape" }, $1, $2), $3 ] }
+        extend({ type: "NodeConstraint" }, $1, $2) :
+      $3.type === "NodeConstraint" ?
+        extend({ type: "NodeConstraint" }, $1, $2, $3) :
+      { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1, $2), $3 ] }
       // extend({nodeKind: $1 }, $2, $3)
-      // extend({ type: "Shape", nodeKind: $1, reference: $2 }, $3)
+      // extend({ type: "NodeConstraint", nodeKind: $1, reference: $2 }, $3)
       // t: 1iriRefLength1
     }
     | datatype _QxsFacet_E_Star	{
@@ -862,11 +862,11 @@ shapeAtom:
             if (facet in $2)
               error("Parse error: facet "+facet+" not allowed for unknown datatype " + $1);
           });
-        $$ = extend({ type: "Shape", datatype: $1 }, $2) // t: 1datatype
+        $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | shapeOrRef	// t: 1dotRef1
-    | shapeOrRef _QstringFacet_E_Plus	-> { type: "ShapeAnd", shapeExprs: [ $1, extend({ type: "Shape" }, $2) ] } // t: 1bnodeRefOrRefMinlength
-    | valueSet	-> { type: "Shape", values: $1 } // t: 1val1IRIREF
+    | shapeOrRef _QstringFacet_E_Plus	-> { type: "ShapeAnd", shapeExprs: [ $1, extend({ type: "NodeConstraint" }, $2) ] } // t: 1bnodeRefOrRefMinlength
+    | valueSet	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
     | GT_LPAREN shapeExpression GT_RPAREN	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
