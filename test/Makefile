@@ -4,10 +4,14 @@ JISON?=../node_modules/jison/lib/cli.js
 MOCHA?=mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
+GENCorpus?=$(join $(TESTDIR), bin/genCorpus.js)
 REPORTER?=dot
 HTTP_CLI_TEMPLATE?="http://raw.githubusercontent.com/shexSpec/shex.js/BRANCH/test/"
 
 ValidationManifest=$(join $(TESTDIR), validation/manifest.jsonld) # isn't there an easier way to construct filenames?
+ValidationCorpus=$(join $(TESTDIR), schemas/corpus.json) # isn't there an easier way to construct filenames?
+SHEXSCHEMAS = $(wildcard $(join $(TESTDIR), schemas/*.shex))
+JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 
 ../lib/ShExJison.js: ../lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lalr
@@ -23,6 +27,9 @@ Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
 
 $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
 	$(GENJSON) $< -o $@ -e # suppress output if there are errors
+
+$(ValidationCorpus): $(GENCorpus) $(JSONSCHEMAS)
+	$(GENCorpus) $< -d $(join $(TESTDIR), schemas/) -o $@ -e # suppress output if there are errors
 
 Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
