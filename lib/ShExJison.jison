@@ -324,8 +324,19 @@
     Parser.shapes[label] = shape;
   }
 
+  function shapeJunction (type, container, elts) {
+    if (elts.length === 0) {
+      return container;
+    } else if (container.type === type) {
+      container.shapeExprs = container.shapeExprs.concat(elts);
+      return container;
+    } else {
+      return { type: type, shapeExprs: [container].concat(elts) };
+    }
+  }
+
   var EmptyObject = {  };
-  var EmptyShape = { type: "NodeConstraint" };
+  var EmptyShape = { type: "Shape" };
 %}
 
 /* lexical grammar */
@@ -551,7 +562,7 @@ shapeExpression:
     ;
 
 shapeDisjunction:
-      shapeConjunction _Q_O_QIT_OR_E_S_QshapeConjunction_E_C_E_Star	-> $2.length > 0 ? { type: "ShapeOr", "shapeExprs": [$1].concat($2) } : $1
+      shapeConjunction _Q_O_QIT_OR_E_S_QshapeConjunction_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
     ;
 
 _O_QIT_OR_E_S_QshapeConjunction_E_C:
@@ -564,7 +575,7 @@ _Q_O_QIT_OR_E_S_QshapeConjunction_E_C_E_Star:
     ;
 
 shapeConjunction:
-      negShapeAtom _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star	-> $2.length > 0 ? { type: "ShapeAnd", "shapeExprs": [$1].concat($2) } : $1
+      negShapeAtom _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
     ;
 
 _O_QIT_AND_E_S_QnegShapeAtom_E_C:
@@ -642,7 +653,16 @@ _QstringFacet_E_Star:
     ;
 
 _O_QstringFacet_E_Star_S_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
-      _QstringFacet_E_Star shapeExpression	-> extend($1, $2)
+      _QstringFacet_E_Star shapeExpression	{
+        if (Object.keys($1).length === 0) { $$ = $2; }
+        // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
+        else { $$ = { type: "ShapeAnd",
+                      shapeExprs: [
+                        extend({ type: "NodeConstraint" }, $1),
+                        $2 ]
+                    };
+             }
+      }
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
 
@@ -655,7 +675,7 @@ shapeDefinition:
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
-	  extend({ type: "NodeConstraint" }, exprObj, $1);
+	  extend({ type: "Shape" }, exprObj, $1);
       }
     ;
 
@@ -837,30 +857,30 @@ shapeAtom:
     | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
 //    | nonLiteralKind shapeOrRef	-> $2 === EmptyShape ? { type: "NodeConstraint", nodeKind: $1 } : { type: "ShapeAnd", shapeExprs: [ { type: "NodeConstraint", nodeKind: $1 }, $2 ] } // extend({nodeKind: $1 }, $2) // { type: "NodeConstraint", nodeKind: $1, reference999: $2 } // t: 1iriRef1
     | nonLiteralKind shapeOrRef	{
-      $$ = $2 === EmptyShape ?
-        extend({ type: "NodeConstraint"}, $1) :
-      $2.type === "NodeConstraint" ?
-        extend({ type: "NodeConstraint" }, $1, $2) :
-      { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      // extend({nodeKind: $1 }, $2)
-      // { type: "NodeConstraint", nodeKind: $1, reference: $2 }
-      // t: 1iriRef1
-    }
+        $$ = $2 === EmptyShape ?
+          extend({ type: "NodeConstraint"}, $1) :
+        // $2.type === "Shape" ?
+        //   extend({ type: "NodeConstraint" }, $1, $2) :
+        { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+        // extend({nodeKind: $1 }, $2)
+        // { type: "NodeConstraint", nodeKind: $1, reference: $2 }
+        // t: 1iriRef1
+      }
     | nonLiteralKind _QstringFacet_E_Plus shapeOrRef	{
-      $$ = $3 === EmptyShape ?
-        extend({ type: "NodeConstraint" }, $1, $2) :
-      $3.type === "NodeConstraint" ?
-        extend({ type: "NodeConstraint" }, $1, $2, $3) :
-      { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1, $2), $3 ] }
-      // extend({nodeKind: $1 }, $2, $3)
-      // extend({ type: "NodeConstraint", nodeKind: $1, reference: $2 }, $3)
-      // t: 1iriRefLength1
-    }
+        $$ = $3 === EmptyShape ?
+          extend({ type: "NodeConstraint" }, $1, $2) :
+        // $3.type === "Shape" ?
+        //   extend({ type: "NodeConstraint" }, $1, $2, $3) :
+        { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1, $2), $3 ] }
+        // extend({nodeKind: $1 }, $2, $3)
+        // extend({ type: "NodeConstraint", nodeKind: $1, reference: $2 }, $3)
+        // t: 1iriRefLength1
+      }
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $2)
-              error("Parse error: facet "+facet+" not allowed for unknown datatype " + $1);
+              error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1);
           });
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }

@@ -68,7 +68,7 @@ function materializer (schema, nextBNode) {
       var v = ShExUtil.Visitor();
 
       v.visitReference = function (r) {
-        this.visitNodeConstraint(schema.shapes[r], r);
+        this.visitShape(schema.shapes[r], r);
         return this._visitValue(r);
       };
 
@@ -97,7 +97,7 @@ function materializer (schema, nextBNode) {
         }
       };
 
-      v.visitNodeConstraint(schema.shapes[schema.start], schema.start);
+      v.visitShape(schema.shapes[schema.start], schema.start);
       return target;
     }
   };
