@@ -355,6 +355,7 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_PATTERN              [Pp][Aa][Tt][Tt][Ee][Rr][Nn]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
+IT_NOT                  [No][Oo][Tt]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE         [Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MAXINCLUSIVE         [Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -452,6 +453,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_PATTERN}            return 'IT_PATTERN';
 {IT_AND}                return 'IT_AND';
 {IT_OR}                 return 'IT_OR';
+{IT_NOT}                return 'IT_NOT';
 {IT_MININCLUSIVE}       return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}       return 'IT_MINEXCLUSIVE';
 {IT_MAXINCLUSIVE}       return 'IT_MAXINCLUSIVE';
@@ -589,8 +591,8 @@ _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star:
 
 negShapeAtom:
       shapeAtom	
-    | '!' shapeAtom	-> extend({ negated: true}, $2)
-    | 'NOT' shapeAtom	-> extend({ negated: true}, $2)
+    | '!' shapeAtom	-> { type: "ShapeNot", "shape": $2 }
+    | IT_NOT shapeAtom	-> { type: "ShapeNot", "shape": $2 }
     ;
 
 baseDecl:
