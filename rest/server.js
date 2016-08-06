@@ -1,18 +1,51 @@
 #!/usr/bin/env node
 
-var log     = console.log,
-    app     = require('koa')(),
-    koaBody = require('koa-body'),
-    port    = process.env.PORT || 4290,
-    host    = 'http://localhost',
-    fs      = require('fs'),
-    ShExValidator = require("../lib/ShExValidator"),
-    ShExLoader = require("../lib/ShExLoader"),
-    N3      = require("n3"),
-    NotSupplied = "-- not supplied --",
-    UnknownIRI = "-- not found --",
-    RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+var log              = console.log,
+    app              = require('koa')(),
+    koaBody          = require('koa-body'),
+    port             = process.env.PORT || 4290,
+    host             = 'http://localhost',
+    fs               = require('fs'),
+    ShExValidator    = require("../lib/ShExValidator"),
+    ShExLoader       = require("../lib/ShExLoader"),
+    N3               = require("n3"),
+    NotSupplied      = "-- not supplied --",
+    UnknownIRI       = "-- not found --",
+    RDF_TYPE         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+    ValidatorOptions = { diagnose: true };
 
+var CLI = require("command-line-args")([
+    { name: "help",  alias: "h", type: Boolean },
+    { name: "regex-module", type: String },
+]);
+
+var cmds = CLI.parse();
+
+function abort (msg, output) {
+  output = output || console.error;
+  output(msg);
+  output(CLI.getUsage({
+    title: "validate",
+    description: "validate Turtle files with respect to ShEx schemas, for example:\n    validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex",
+    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
+  }));
+  process.exit(1);
+}
+
+if (cmds.help)
+  abort("", console.log);
+
+if ("regex-module" in cmds) {
+  try {
+    ValidatorOptions.regexModule = require(cmds["regex-module"]);
+  } catch (e1) {
+    try {
+      ValidatorOptions.regexModule = require("../lib/regex/" + cmds["regex-module"]);
+    } catch (e2) {
+      abort(e1, console.error);
+    }
+  }
+}
 
 function resolveRelativeIRI (baseIri, relativeIri) {
   if (!N3.Util.isIRI(relativeIri))
@@ -116,7 +149,7 @@ app.
                                              null, knownType, loaded.data._prefixes)) :
             parsePassedNode(parms.focus, loaded.dataMeta[0], someIRInode,
                             knownNode, loaded.data._prefixes);
-          var validator = ShExValidator.construct(loaded.schema, {diagnose:true});
+          var validator = ShExValidator.construct(loaded.schema, ValidatorOptions);
           var result =
               parms.focus === NotSupplied || parms.focus === UnknownIRI ||
               parms.start === NotSupplied || parms.start === UnknownIRI ?
