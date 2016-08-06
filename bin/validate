@@ -25,14 +25,14 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 
 The regular expression engine is loaded from either:
   absolute path, e.g. if you git cloned shex.js into /tmp:
-    --regexModule /tmp/shex.js/lib/regex/nfax-val-1err
-    --regexModule /tmp/shex.js/lib/regex/threaded-val-nerr
+    --regex-module /tmp/shex.js/lib/regex/nfax-val-1err
+    --regex-module /tmp/shex.js/lib/regex/threaded-val-nerr
   or relative path to bin/validate directory:
-    --regexModule ../lib/regex/nfax-val-1err
-    --regexModule ../lib/regex/threaded-val-nerr
+    --regex-module ../lib/regex/nfax-val-1err
+    --regex-module ../lib/regex/threaded-val-nerr
   or a module name in lib/regex:
-    --regexModule nfax-val-1err
-    --regexModule threaded-val-nerr
+    --regex-module nfax-val-1err
+    --regex-module threaded-val-nerr
 
 */
 
@@ -64,7 +64,7 @@ var CLI = require("command-line-args")([
     { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
     { name: "invocation", alias: "i", type: Boolean },
     { name: "dry-run", alias: "N", type: Boolean },
-    { name: "regexModule", type: String },
+    { name: "regex-module", type: String },
 ]);
 function abort (msg) {
   console.error(msg);
@@ -156,8 +156,8 @@ if (cmds.partition) {
   ValidatorOptions.partition = cmds.partition;
 }
 
-if (cmds.regexModule)
-  ValidatorOptions.regexModule = cmds.regexModule;
+if ("regex-module" in cmds)
+  ValidatorOptions.regexModule = cmds["regex-module"];
 
 var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
 if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
