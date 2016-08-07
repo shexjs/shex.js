@@ -867,7 +867,7 @@ shapeAtom:
     | shapeOrRef	// t: 1dotRef1
     | shapeOrRef _QstringFacet_E_Plus	-> { type: "ShapeAnd", shapeExprs: [ $1, extend({ type: "Shape" }, $2) ] } // t: 1bnodeRefOrRefMinlength
     | valueSet	-> { type: "Shape", values: $1 } // t: 1val1IRIREF
-    | GT_LPAREN shapeExpression GT_RPAREN	-> $2 // t: 1val1vsMinusiri3
+    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
