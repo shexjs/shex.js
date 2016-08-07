@@ -66,10 +66,11 @@ function materializer (schema, nextBNode) {
       var curSubject = createRoot || B();
 
       var v = ShExUtil.Visitor();
+      var oldVisitShapeRef = v.visitShapeRef;
 
-      v.visitReference = function (r) {
-        this.visitShape(schema.shapes[r], r);
-        return this._visitValue(r);
+      v.visitShapeRef = function (shapeRef) {
+        this.visitShape(schema.shapes[shapeRef.reference], shapeRef.reference);
+        return oldVisitShapeRef.call(v, shapeRef);
       };
 
       v.visitTripleConstraint = function (expr) {
