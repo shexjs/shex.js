@@ -11,27 +11,18 @@
         "expressions": [
           {
             "type": "TripleConstraint",
-            "predicate": "http://a.example/p1",
-            "valueExpr": {
-              "type": "ValueClass"
-            }
+            "predicate": "http://a.example/p1"
           },
           {
             "type": "EachOf",
             "expressions": [
               {
                 "type": "TripleConstraint",
-                "predicate": "http://a.example/p2",
-                "valueExpr": {
-                  "type": "ValueClass"
-                }
+                "predicate": "http://a.example/p2"
               },
               {
                 "type": "TripleConstraint",
-                "predicate": "http://a.example/p3",
-                "valueExpr": {
-                  "type": "ValueClass"
-                }
+                "predicate": "http://a.example/p3"
               }
             ]
           }
