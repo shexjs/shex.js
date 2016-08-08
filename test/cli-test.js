@@ -62,7 +62,7 @@ var AllTests = {
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle" , args: ["--turtle-manifest", "cli/manifest-simple.ttl"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
+    { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\n", status: 0 },
     //  --dry-run
     { name: "simple-dry" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x", "--dry-run"], resultText: "", status: 0 },
     { name: "simple-as-jsonld-dry" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run"], resultText: "", status: 0 },
@@ -74,7 +74,7 @@ var AllTests = {
     { name: "simple-jsonld-http" , args: ["--json-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", httpTest + "cli/manifest-simple.jsonld"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle-http" , args: ["--turtle-manifest", httpTest + "cli/manifest-simple.ttl"], result: httpTest + "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 }
+    { name: "results-http", args: ["--json-manifest", httpTest + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\n", status: 0 }
   ],
 
   "shex-to-json": [
