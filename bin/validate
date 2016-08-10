@@ -50,11 +50,13 @@ var CLI = require("command-line-args")([
     { name: "quiet", alias: "q", type: Boolean },
     { name: "help",  alias: "h", type: Boolean },
     { name: "node",  alias: "n", type: String, multiple: false, defaultValue: null },
+    { name: "node-type", alias: "t", type: String, multiple: false, defaultValue: null },
     { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
     { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption: true },
     { name: "jsonld",alias: "l", type: String, multiple:  true, defaultValue:   [] },
+    { name: "serve", alias: "S", type: String, multiple: false, defaultValue: null },
     { name: "exec",  alias: "e", type: String,                  defaultValue: null },
     { name: "or",                type: String, multiple: false, defaultValue: null },
     { name: "partition",         type: String, multiple: false, defaultValue: null },
@@ -88,28 +90,124 @@ function resolveRelativeIRI (baseIri, relativeIri) {
   return p._subject;
 }
 
-function loadSchemaAndData (opts, options) {
+function resolvePrefixedIRI (prefixedIri, prefixes) {
+  var colon = prefixedIri.indexOf(":");
+  if (colon === -1)
+    return null;
+  var prefix = prefixes[prefixedIri.substr(0, colon)];
+  return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
+}
+
+function parsePassedNode (passedValue, meta, deflt, known) {
+  if (!meta)
+    return known(passedValue) ? passedValue : UnknownIRI;
+  if (passedValue === undefined || passedValue.length === 0)
+    return known && known(meta.base) ? meta.base : deflt ? deflt() : NotSupplied;
+  var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
+  if (relIRI)
+    passedValue = passedValue.substr(1, passedValue.length-2);
+  var t = resolveRelativeIRI(meta.base, passedValue);
+  if (known(t))
+    return t;
+  if (!relIRI) {
+    t = resolvePrefixedIRI(passedValue, meta.prefixes);
+    if (t !== null && known(t))
+      return t;
+  }
+  return UnknownIRI;
+}
+
+var NotSupplied = "-- not supplied --",
+    UnknownIRI = "-- not found --";
+
+function findNodesAndValidate (loaded, parms, options) {
+  function knownShape (label) {
+    return label in loaded.schema.shapes;
+  }
+  function someShape () {
+    return Object.keys(loaded.schema.shapes)[0];
+  }
+  function knownNode (label) {
+    return (loaded.data.findByIRI(label, null, null).length > 0 ||
+            loaded.data.findByIRI(null, null, label).length > 0);
+  }
+  function knownType (label) {
+    return (loaded.data.findByIRI(null, RDF_TYPE, label).length > 0);
+  }
+  function someIRInode () {
+    var triples = loaded.data.findByIRI(null, null, null);
+    for (var i = 0; i < triples.length; ++i)
+      if (N3.Util.isIRI(triples[i].subject))
+        return triples[i].subject;
+    return triples.length > 0 ? triples[0].subject : NotSupplied;
+  };
+  function someNodeWithType (type) {
+    var triples = loaded.data.findByIRI(null, RDF_TYPE, type)
+    return triples.length > 0 ? triples[0].subject : NotSupplied;
+  };
+
+  // resolve relative shape and focus node names against the first schema and data source respectively.
+  var node = parms["node-type"] ?
+      someNodeWithType(parsePassedNode(parms["node-type"], loaded.dataMeta[0],
+                                       null, knownType, loaded.data.prefixes)) :
+      parsePassedNode(parms.node, loaded.dataMeta[0], someIRInode,
+                      knownNode, loaded.data.prefixes);
+  var shape = (!parms.shape && loaded.schema.start) ?
+      loaded.schema.start :
+      parsePassedNode(parms.shape, loaded.schemaMeta[0],
+                      someShape, knownShape, loaded.schema.prefixes);
+  var ret = {
+    node: node, shape: shape
+  };
+  if (node !== NotSupplied && node !== UnknownIRI &&
+      shape !== NotSupplied && shape !== UnknownIRI)
+    ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
+  return ret;
+}
+
+function loadSchemaAndData (opts, options) { // @@@ valParms
   if (opts.shex.length > 1 && opts.data.length === 0) {
     opts.data = opts.shex.splice(1); // push all but one into data
   }
   if (opts.json.length > 1 && opts.data.length === 0) {
     opts.data = opts.json.splice(1); // push all but one into data
   }
-  if (opts.data.length === 0 && opts.jsonld.length === 0) abort("No data specified");
+  if (opts.data.length === 0 && opts.jsonld.length === 0 && opts.serve === 0) abort("No data specified");
   if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
   return Promise.all([
+    // Loaded schema and data.
     ShExLoader.load(opts.shex, opts.json, opts.data, opts.jsonld),
+
+    // Expected results if provided.
     !("result" in opts) ? Promise.resolve(undefined) :
       typeof opts.result === "boolean" ? Promise.resolve(opts.result) :
       ShExLoader.GET(opts.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       })
-  ]).then(function (both) {
-    var loaded = both[0];
-    // resolve relative shape and focus node names against the first schema and data source respectively.
-    var node = loaded.dataMeta.length && opts.node ? resolveRelativeIRI(loaded.dataMeta[0].url, opts.node) : undefined;
-    var shape = loaded.schemaMeta.length && opts.shape ? resolveRelativeIRI(loaded.schemaMeta[0].url, opts.shape) : undefined;
-    return runValidator(loaded.data, node, loaded.schema, shape, options, both[1]);
+  ]).then(function (both) { // @@@ loadedAndResults
+    if (opts.serve)
+      runServer(both[0], opts, options)
+    else {
+      var res = findNodesAndValidate(both[0], opts, options).results;
+      if (cmds["dry-run"])
+        return res;
+      var expectedResults = both[1];
+      // display results
+      if (!opts.quiet) {
+        if (expectedResults !== undefined) {
+          var match =
+              typeof expectedResults === "boolean" && expectedResults !== "errors" in res ||
+              JSON.stringify(expectedResults) == JSON.stringify(res);
+          console.log(match);
+          // Exit status 3 means match failure.
+          return Promise.resolve(match ? 0 : 3);
+        } else {
+          console.log(JSON.stringify(res, null, "  "));
+          // Exit status 2 means validation failure.
+          return Promise.resolve(res === null ? 2 : 0);
+        }
+      }
+    }
   }).catch(function (e) {
     console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
     return 1;
@@ -201,7 +299,7 @@ function queueTests (tests, cmds) {
   });
 }
 
-function runValidator (graph, focusNode, schema, shape, options, results) {
+function runValidator (graph, focusNode, schema, shape, options) {
   // console.log("runValidator ("+graph+", "+focusNode+", "+schema+", "+shape+")");
   if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
     var msgs = [];
@@ -259,7 +357,7 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
     var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
     var opts = Object.keys(dict).reduce(function (ret, k) {
       if (k.match(r))
-	ret.push(k);
+        ret.push(k);
       return ret;
     }, []);
     return opts.length === 0 ? "" :
@@ -270,11 +368,11 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
     shape = validator.schema.start;
   if (!(shape in validator.schema.shapes))
     throw Error("shape " + shape + " not defined" + optsStr(shape, validator.schema.shapes));
-  if (!(focusNode in graph._entities))
+  if (!(focusNode in graph._entities) && !("serve" in cmds))
     console.warn(Error("node " + focusNode + " not defined" + optsStr(focusNode, graph._entities)));
 
   if (cmds["dry-run"])
-    return;
+    return 0;
 
   // run validator
   var res = validator.validate(graph, focusNode, shape);
@@ -286,37 +384,23 @@ function runValidator (graph, focusNode, schema, shape, options, results) {
   // display results
   if (cmds.exec) {
     /* example usage:
-./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
-return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
-  then(function (loaded) {
-    var db = require("../extensions/shex:Map").materializer(loaded.schema).
-      materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
-      find(null, null, null);
-    var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
-    w.addTriples(db); w.end(function (error, result) { console.log(result); });
-  });'
-     */
+       ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
+       return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+       then(function (loaded) {
+       var db = require("../extensions/shex:Map").materializer(loaded.schema).
+       materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
+       find(null, null, null);
+       var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
+       w.addTriples(db); w.end(function (error, result) { console.log(result); });
+       });'
+    */
     return eval("function (validator) {\n" + cmds.exec + "}")(validator);
   } else {
     if (!cmds.quiet)
       if ("errors" in res && Object.keys(validator.semActHandler.results).length) {
         res.semActResults = validator.semActHandler.results;
       }
-    if (results !== undefined) {
-      var match =
-          typeof results === "boolean" && results !== "errors" in res ||
-          JSON.stringify(results) == JSON.stringify(res);
-      if (!match) { debugger; }
-      if (!cmds.quiet)
-        console.log(match);
-        // Exit status 3 means match failure.
-      return Promise.resolve(match ? 0 : 3);
-    } else {
-      if (!cmds.quiet)
-        console.log(JSON.stringify(res, null, "  "));
-      // Exit status 2 means validation failure.
-      return Promise.resolve("errors" in res ? 2 : 0);
-    }
+    return res;
   }
 }
 
@@ -328,17 +412,17 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
   return ShExLoader.load([], [], turtleManifests || [], jsonldManifests || []).then(function (loaded) {
 
     var testNodes = cmds["test-name"].length ?
-	cmds["test-name"].reduce((ret, testName) => {
-	  var pattern = RegExp(testName);
-	  loaded.data.find(null, mf+"name", null).filter(function (triple) {
-	    if (N3.Util.getLiteralValue(triple.object).match(pattern))
-	      ret.push(triple.subject);
-	  })
-	  return ret;
-	}, []) :
-	loaded.data.find(null, mf+"action", null).map(function (t) {
+        cmds["test-name"].reduce((ret, testName) => {
+          var pattern = RegExp(testName);
+          loaded.data.find(null, mf+"name", null).filter(function (triple) {
+            if (N3.Util.getLiteralValue(triple.object).match(pattern))
+              ret.push(triple.subject);
+          })
+          return ret;
+        }, []) :
+        loaded.data.find(null, mf+"action", null).map(function (t) {
           return t.subject;
-	});
+        });
     var tests = testNodes.map(function (subject) {
       var action = loaded.data.find(subject, mf+"action", null)[0].object;
       var options = Object.assign({}, ValidatorOptions);
@@ -402,7 +486,7 @@ function loadJSONmanifest (jsonManifests) {
         if (cmds["test-name"].length) // Include only tests listed in --test-name.
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
-	      var pattern = RegExp(n);
+              var pattern = RegExp(n);
               return ret || ("name" in elt && elt.name.match(pattern) !== -1);
             }, false);
           });
@@ -414,7 +498,7 @@ function loadJSONmanifest (jsonManifests) {
             else if (elt[attr].constructor !== Array)
               elt[attr] = [elt[attr]];
             elt[attr] = elt[attr].map(function (url) {
-              return resolveRelativeIRI(p.url, url);
+              return resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
             });
           });
           if (!("options" in elt))
@@ -442,3 +526,109 @@ function loadCommandLine (cmds) {
   }
   return loadSchemaAndData(cmds, ValidatorOptions);
 }
+
+function runServer (serverLoaded, serverParms, serverOptions) {
+  var match = serverParms.serve.match(/^(?:http:\/\/)?([a-zA-Z0-9.]+)(?::([0-9]+))?(\/.*)/);
+  if (!match)
+    throw Error("server parameter expected to be a URL");
+
+  var log     = console.log,
+      app     = require("koa")(),
+      koaBody = require("koa-body"),
+      port    = match[2] || 80,
+      host    = "http://" + match[1],
+      fs      = require("fs"),
+      RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+
+  app.
+    use(koaBody({
+      multipart: true,
+      formLimit: 15,
+      formidable: {
+        uploadDir: Path.resolve(__dirname, "../rest/uploads")
+      }
+    })).
+    use(function *(next) {
+      switch (this.originalUrl) {
+      case match[3]:
+        var parms = {
+          schemaName:null, schemaFile:null, shape:null,
+          dataName:null,   dataFile:null,   node:null, nodeType:null
+        };
+        if (this.request.method !== "POST")
+          this.throw(500, "only supports POST now");
+        var body = this.request.body;
+        function makeArray (key) {
+          if (!(key in body.files))
+            return [];
+          return (body.files[key].constructor === Array ?
+                  body.files[key] :
+                  [body.files[key]]
+                 ).map(pair => {
+                   return pair.path; // should ShExLoader accept [.name, .path]?
+                 });
+        }
+        var schemaFiles = makeArray("schema");
+        parms.shape      = body.fields.shape;
+        var dataFiles = makeArray("data");
+        parms.node      = body.fields.node;
+        parms["node-type"] = body.fields.nodeType;
+
+        var _this = this;
+        yield ShExLoader
+          .load(schemaFiles, [], dataFiles, [])
+          .then(function (loaded) {
+            // add server-loaded (meta)data
+            serverLoaded.data.find().forEach(t => { loaded.data.addTriple(t); });
+            loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
+
+            // add server-loaded schema
+            ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
+            loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
+
+            var result = findNodesAndValidate(loaded, parms, {diagnose:true});
+            if ("results" in result)
+              result = result.results; // otherwise just report the invoked parms.
+            if (body.fields.output === "html") {
+              _this.body = Object.keys(parms).reduce((r, p) => {
+                return r.replace("["+p+"]", parms[p]);
+              }, fs.readFileSync("./validate.template", "utf-8")).
+                replace(/\[result\]/, JSON.stringify(result, null, 2));
+            } else {
+              _this.body = JSON.stringify(result, null, 2)+"\n";
+            }
+            schemaFiles.forEach(path => { fs.unlink(path) });
+            dataFiles.forEach(path => { fs.unlink(path) });
+            return next;
+          }).catch(e => {
+            var stack = typeof e === "object" && "stack" in e ? e.stack : e;
+            var msg = typeof e === "object" && "message" in e ? e.message : e;
+            console.warn(stack);
+            _this.body = {
+              type: "ParsingError",
+              errors: [msg]
+            };
+          })
+            break;
+      case "/":
+        this.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
+        break;
+      default:
+        this.throw(404, "whazzat?");
+      }
+    }).
+    listen(port);
+
+  log('Visit %s:%s/ in browser.', host, port);
+  log();
+  log('Test with executing this commands:');
+  log('  curl -i %s:%s/validate -F "schema=@../test/cli/1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@../test/cli/p2p3.ttl" -F "node=x"', host, port);
+  log('or preload schema:');
+  log("  " + Path.relative("", process.argv[1]) + " -x cli/1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
+  log('and pass only the data parameters:');
+  log('  curl -i %s:%s/validate -F "data=@../test/cli/p2p3.ttl" -F "node=x"', host, port);
+  log('Note that shape and node can be relative or prefixed URLs.');
+  log();
+  log('Press CTRL+C to stop...');
+}
+
