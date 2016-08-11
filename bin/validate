@@ -165,35 +165,35 @@ function findNodesAndValidate (loaded, parms, options) {
   return ret;
 }
 
-function loadSchemaAndData (opts, options) { // @@@ valParms
-  if (opts.shex.length > 1 && opts.data.length === 0) {
-    opts.data = opts.shex.splice(1); // push all but one into data
+function loadSchemaAndData (valParms, options) {
+  if (valParms.shex.length > 1 && valParms.data.length === 0) {
+    valParms.data = valParms.shex.splice(1); // push all but one into data
   }
-  if (opts.json.length > 1 && opts.data.length === 0) {
-    opts.data = opts.json.splice(1); // push all but one into data
+  if (valParms.json.length > 1 && valParms.data.length === 0) {
+    valParms.data = valParms.json.splice(1); // push all but one into data
   }
-  if (opts.data.length === 0 && opts.jsonld.length === 0 && opts.serve === 0) abort("No data specified");
-  if (opts.shex.length === 0 && opts.json.length === 0) abort("No shex specified");
+  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve) abort("No data specified");
+  if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified");
   return Promise.all([
     // Loaded schema and data.
-    ShExLoader.load(opts.shex, opts.json, opts.data, opts.jsonld),
+    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld),
 
     // Expected results if provided.
-    !("result" in opts) ? Promise.resolve(undefined) :
-      typeof opts.result === "boolean" ? Promise.resolve(opts.result) :
-      ShExLoader.GET(opts.result).then(function (body) { 
+    !("result" in valParms) ? Promise.resolve(undefined) :
+      typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
+      ShExLoader.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       })
-  ]).then(function (both) { // @@@ loadedAndResults
-    if (opts.serve)
-      runServer(both[0], opts, options)
+  ]).then(function (loadedAndResults) {
+    if (valParms.serve)
+      runServer(loadedAndResults[0], valParms, options)
     else {
-      var res = findNodesAndValidate(both[0], opts, options).results;
+      var res = findNodesAndValidate(loadedAndResults[0], valParms, options).results;
       if (cmds["dry-run"])
         return res;
-      var expectedResults = both[1];
+      var expectedResults = loadedAndResults[1];
       // display results
-      if (!opts.quiet) {
+      if (!valParms.quiet) {
         if (expectedResults !== undefined) {
           var match =
               typeof expectedResults === "boolean" && expectedResults !== "errors" in res ||
