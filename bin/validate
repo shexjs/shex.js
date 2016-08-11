@@ -160,8 +160,8 @@ function loadSchemaAndData (valParms, options) {
   if (valParms.json.length > 1 && valParms.data.length === 0) {
     valParms.data = valParms.json.splice(1); // push all but one into data
   }
-  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && valParms.serve === 0) abort("No data specified");
-  if (valParms.shex.length === 0 && valParms.json.length === 0) abort("No shex specified");
+  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve) abort("No data specified");
+  if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified");
   return Promise.all([
     // Loaded schema and data.
     ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld),
