@@ -614,19 +614,24 @@ prefixDecl:
     ;
 
 start:
-      IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C	{
+      // IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C	{
+      //   if (Parser.start)
+      //     error("Parse error: start alread defined as " + Parser.start);
+      //   Parser.start = $3; // t: startInline
+      // }
+      IT_start '=' shapeExpression semanticActions	{ // !!! fix start semanticActions
         if (Parser.start)
           error("Parse error: start alread defined as " + Parser.start);
         Parser.start = $3; // t: startInline
       }
     ;
 
-_O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
-      shapeLabel	// t: startRef
-    | shapeDefinition semanticActions	{ // t: startInline / startInline
-        addShape($$ = blank(), extend($1, $2));
-    }
-    ;
+// _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
+//       shapeLabel	// t: startRef
+//     | shapeDefinition semanticActions	{ // t: startInline / startInline
+//         addShape($$ = blank(), extend($1, $2));
+//     }
+//     ;
 
 shape:
     shapeLabel _O_QstringFacet_E_Star_S_QshapeExpression_E_Or_QIT_EXTERNAL_E_C semanticActions	{ // t: 1dot 1val1vsMinusiri3??

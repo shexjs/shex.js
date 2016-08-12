@@ -73,6 +73,11 @@ function materializer (schema, nextBNode) {
         return oldVisitShapeRef.call(v, shapeRef);
       };
 
+      v.visitValueRef = function (r) {
+        this.visitShape(schema.shapes[r.reference], r.reference);
+        return this._visitValue(r);
+      };
+
       v.visitTripleConstraint = function (expr) {
         var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
         if (mapExts.length) {
@@ -98,7 +103,7 @@ function materializer (schema, nextBNode) {
         }
       };
 
-      v.visitShape(schema.shapes[schema.start], schema.start);
+      v.visitShapeExpr(schema.start, "_: -start-");
       return target;
     }
   };
