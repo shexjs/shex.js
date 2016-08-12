@@ -3,7 +3,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
 
-start = <BPunitsDAM>
+start = @<BPunitsDAM>
 
 <BPunitsDAM> {
     :systolic {
