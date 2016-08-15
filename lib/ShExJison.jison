@@ -591,8 +591,8 @@ _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star:
 
 negShapeAtom:
       shapeAtom	
-    | '!' shapeAtom	-> { type: "ShapeNot", "shape": $2 }
-    | IT_NOT shapeAtom	-> { type: "ShapeNot", "shape": $2 }
+    | '!' shapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
+    | IT_NOT shapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
     ;
 
 baseDecl:
