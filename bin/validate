@@ -590,14 +590,15 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     }).
     listen(port);
 
+  var cli = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
   log('Visit %s:%s/ in browser.', host, port);
   log();
   log('Test with executing this commands:');
-  log('  curl -i %s:%s/validate -F "schema=@../test/cli/1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@../test/cli/p2p3.ttl" -F "node=x"', host, port);
+  log('  curl -i %s:%s/validate -F "schema=@' + cli + '1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port);
   log('or preload schema:');
-  log("  " + Path.relative("", process.argv[1]) + " -x cli/1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
+  log("  " + Path.relative("", process.argv[1]) + " -x "+ cli +"1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
   log('and pass only the data parameters:');
-  log('  curl -i %s:%s/validate -F "data=@../test/cli/p2p3.ttl" -F "node=x"', host, port);
+  log('  curl -i %s:%s/validate -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port);
   log('Note that shape and node can be relative or prefixed URLs.');
   log();
   log('Press CTRL+C to stop...');
