@@ -624,7 +624,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
   log('Visit %s:%s/ in browser.', host, port);
   log();
   log('Test with executing this commands:');
-  log('  curl -i %s:%s/validate -F "schema=@' + cli + '1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port);
+  log('  curl -i %s:%s%s -F "schema=@' + cli + '1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port, srvpath);
   log('or preload schema:');
   log("  " + Path.relative("", process.argv[1]) + " -x "+ cli +"1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
   log('and pass only the data parameters:');
