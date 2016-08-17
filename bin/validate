@@ -537,6 +537,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       koaBody = require("koa-body"),
       port    = match[2] || 80,
       host    = "http://" + match[1],
+      srvpath = match[3],
       fs      = require("fs"),
       RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
@@ -550,7 +551,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     })).
     use(function *(next) {
       switch (this.originalUrl) {
-      case match[3]:
+      case srvpath:
         var parms = {
           schemaName:null, schemaFile:null, shape:null,
           dataName:null,   dataFile:null,   node:null, nodeType:null
@@ -627,7 +628,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
   log('or preload schema:');
   log("  " + Path.relative("", process.argv[1]) + " -x "+ cli +"1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
   log('and pass only the data parameters:');
-  log('  curl -i %s:%s/validate -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port);
+  log('  curl -i %s:%s%s -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port, srvpath);
   log('Note that shape and node can be relative or prefixed URLs.');
   log();
   log('Press CTRL+C to stop...');
