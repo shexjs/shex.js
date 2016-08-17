@@ -324,6 +324,17 @@
     Parser.shapes[label] = shape;
   }
 
+  function shapeJunction (type, container, elts) {
+    if (elts.length === 0) {
+      return container;
+    } else if (container.type === type) {
+      container.shapeExprs = container.shapeExprs.concat(elts);
+      return container;
+    } else {
+      return { type: type, shapeExprs: [container].concat(elts) };
+    }
+  }
+
   var EmptyObject = {  };
   var EmptyShape = { type: "Shape" };
 %}
@@ -344,6 +355,7 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_PATTERN              [Pp][Aa][Tt][Tt][Ee][Rr][Nn]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
+IT_NOT                  [No][Oo][Tt]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE         [Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MAXINCLUSIVE         [Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -441,6 +453,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_PATTERN}            return 'IT_PATTERN';
 {IT_AND}                return 'IT_AND';
 {IT_OR}                 return 'IT_OR';
+{IT_NOT}                return 'IT_NOT';
 {IT_MININCLUSIVE}       return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}       return 'IT_MINEXCLUSIVE';
 {IT_MAXINCLUSIVE}       return 'IT_MAXINCLUSIVE';
@@ -551,7 +564,7 @@ shapeExpression:
     ;
 
 shapeDisjunction:
-      shapeConjunction _Q_O_QIT_OR_E_S_QshapeConjunction_E_C_E_Star	-> $2.length > 0 ? { type: "ShapeOr", "shapeExprs": [$1].concat($2) } : $1
+      shapeConjunction _Q_O_QIT_OR_E_S_QshapeConjunction_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
     ;
 
 _O_QIT_OR_E_S_QshapeConjunction_E_C:
@@ -564,7 +577,7 @@ _Q_O_QIT_OR_E_S_QshapeConjunction_E_C_E_Star:
     ;
 
 shapeConjunction:
-      negShapeAtom _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star	-> $2.length > 0 ? { type: "ShapeAnd", "shapeExprs": [$1].concat($2) } : $1
+      negShapeAtom _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
     ;
 
 _O_QIT_AND_E_S_QnegShapeAtom_E_C:
@@ -578,8 +591,8 @@ _Q_O_QIT_AND_E_S_QnegShapeAtom_E_C_E_Star:
 
 negShapeAtom:
       shapeAtom	
-    | '!' shapeAtom	-> extend({ negated: true}, $2)
-    | 'NOT' shapeAtom	-> extend({ negated: true}, $2)
+    | '!' shapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
+    | IT_NOT shapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
     ;
 
 baseDecl:
@@ -647,7 +660,16 @@ _QstringFacet_E_Star:
     ;
 
 _O_QstringFacet_E_Star_S_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
-      _QstringFacet_E_Star shapeExpression	-> extend($1, $2)
+      _QstringFacet_E_Star shapeExpression	{
+        if (Object.keys($1).length === 0) { $$ = $2; }
+        // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
+        else { $$ = { type: "ShapeAnd",
+                      shapeExprs: [
+                        extend({ type: "NodeConstraint" }, $1),
+                        $2 ]
+                    };
+             }
+      }
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
 
@@ -836,42 +858,42 @@ predicate:
     ;
 
 shapeAtom:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "Shape", nodeKind: "literal" }, $2) // t: 1literalPattern
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
 //    | nonLiteralKind _QshapeOrRef_E_Opt _QstringFacet_E_Star	
-    | nonLiteralKind	-> extend({ type: "Shape" }, $1) // t: 1iriPattern
-    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "Shape"}, $1, $2) // t: 1iriPattern
-//    | nonLiteralKind shapeOrRef	-> $2 === EmptyShape ? { type: "Shape", nodeKind: $1 } : { type: "ShapeAnd", shapeExprs: [ { type: "Shape", nodeKind: $1 }, $2 ] } // extend({nodeKind: $1 }, $2) // { type: "Shape", nodeKind: $1, reference999: $2 } // t: 1iriRef1
+    | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
+    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
+//    | nonLiteralKind shapeOrRef	-> $2 === EmptyShape ? { type: "NodeConstraint", nodeKind: $1 } : { type: "ShapeAnd", shapeExprs: [ { type: "NodeConstraint", nodeKind: $1 }, $2 ] } // extend({nodeKind: $1 }, $2) // { type: "NodeConstraint", nodeKind: $1, reference999: $2 } // t: 1iriRef1
     | nonLiteralKind shapeOrRef	{
-      $$ = $2 === EmptyShape ?
-        extend({ type: "Shape"}, $1) :
-      $2.type === "Shape" ?
-        extend({ type: "Shape" }, $1, $2) :
-      { type: "ShapeAnd", shapeExprs: [ extend({ type: "Shape" }, $1), $2 ] }
-      // extend({nodeKind: $1 }, $2)
-      // { type: "Shape", nodeKind: $1, reference: $2 }
-      // t: 1iriRef1
-    }
+        $$ = $2 === EmptyShape ?
+          extend({ type: "NodeConstraint"}, $1) :
+        // $2.type === "Shape" ?
+        //   extend({ type: "NodeConstraint" }, $1, $2) :
+        { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+        // extend({nodeKind: $1 }, $2)
+        // { type: "NodeConstraint", nodeKind: $1, reference: $2 }
+        // t: 1iriRef1
+      }
     | nonLiteralKind _QstringFacet_E_Plus shapeOrRef	{
-      $$ = $3 === EmptyShape ?
-        extend({ type: "Shape" }, $1, $2) :
-      $3.type === "Shape" ?
-        extend({ type: "Shape" }, $1, $2, $3) :
-      { type: "ShapeAnd", shapeExprs: [ extend({ type: "Shape" }, $1, $2), $3 ] }
-      // extend({nodeKind: $1 }, $2, $3)
-      // extend({ type: "Shape", nodeKind: $1, reference: $2 }, $3)
-      // t: 1iriRefLength1
-    }
+        $$ = $3 === EmptyShape ?
+          extend({ type: "NodeConstraint" }, $1, $2) :
+        // $3.type === "Shape" ?
+        //   extend({ type: "NodeConstraint" }, $1, $2, $3) :
+        { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1, $2), $3 ] }
+        // extend({nodeKind: $1 }, $2, $3)
+        // extend({ type: "NodeConstraint", nodeKind: $1, reference: $2 }, $3)
+        // t: 1iriRefLength1
+      }
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $2)
-              error("Parse error: facet "+facet+" not allowed for unknown datatype " + $1);
+              error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1);
           });
-        $$ = extend({ type: "Shape", datatype: $1 }, $2) // t: 1datatype
+        $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | shapeOrRef	// t: 1dotRef1
-    | shapeOrRef _QstringFacet_E_Plus	-> { type: "ShapeAnd", shapeExprs: [ $1, extend({ type: "Shape" }, $2) ] } // t: 1bnodeRefOrRefMinlength
-    | valueSet	-> { type: "Shape", values: $1 } // t: 1val1IRIREF
+    | shapeOrRef _QstringFacet_E_Plus	-> { type: "ShapeAnd", shapeExprs: [ $1, extend({ type: "NodeConstraint" }, $2) ] } // t: 1bnodeRefOrRefMinlength
+    | valueSet	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
