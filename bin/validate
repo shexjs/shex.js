@@ -49,17 +49,17 @@ var CLI = require("command-line-args")([
     { name: "verbose", alias: "v", type: Boolean },
     { name: "quiet", alias: "q", type: Boolean },
     { name: "help",  alias: "h", type: Boolean },
-    { name: "node",  alias: "n", type: String, multiple: false, defaultValue: null },
-    { name: "node-type", alias: "t", type: String, multiple: false, defaultValue: null },
-    { name: "shape", alias: "s", type: String, multiple: false, defaultValue: null },
+    { name: "node",  alias: "n", type: String, multiple: false, defaultValue: undefined },
+    { name: "node-type", alias: "t", type: String, multiple: false, defaultValue: undefined },
+    { name: "shape", alias: "s", type: String, multiple: false, defaultValue: undefined },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
     { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption: true },
     { name: "jsonld",alias: "l", type: String, multiple:  true, defaultValue:   [] },
-    { name: "serve", alias: "S", type: String, multiple: false, defaultValue: null },
-    { name: "exec",  alias: "e", type: String,                  defaultValue: null },
-    { name: "or",                type: String, multiple: false, defaultValue: null },
-    { name: "partition",         type: String, multiple: false, defaultValue: null },
+    { name: "serve", alias: "S", type: String, multiple: false, defaultValue: undefined },
+    { name: "exec",  alias: "e", type: String,                  defaultValue: undefined },
+    { name: "or",                type: String, multiple: false, defaultValue: undefined },
+    { name: "partition",         type: String, multiple: false, defaultValue: undefined },
     { name: "json-manifest",     type: String, multiple:  true, defaultValue:   [] },
     { name: "turtle-manifest",   type: String, multiple:  true, defaultValue:   [] },
     { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue:   [] },
@@ -152,16 +152,41 @@ function findNodesAndValidate (loaded, parms, options) {
                                        null, knownType, loaded.data.prefixes)) :
       parsePassedNode(parms.node, loaded.dataMeta[0], someIRInode,
                       knownNode, loaded.data.prefixes);
-  var shape = (!parms.shape && loaded.schema.start) ?
-      loaded.schema.start :
-      parsePassedNode(parms.shape, loaded.schemaMeta[0],
-                      someShape, knownShape, loaded.schema.prefixes);
-  var ret = {
-    node: node, shape: shape
-  };
-  if (node !== NotSupplied && node !== UnknownIRI &&
-      shape !== NotSupplied && shape !== UnknownIRI)
+  var shape, shapeLabel;
+  var ret = { node: node };
+  if (!parms.shape && loaded.schema.start) {
+    shape = loaded.schema.start;
+    shapeLabel = "- start -";
+    ret.shape = shapeLabel;
+  } else {
+    var found = parsePassedNode(parms.shape, loaded.schemaMeta[0],
+                                someShape, knownShape, loaded.schema.prefixes)
+    if (found === NotSupplied || found === UnknownIRI)
+      throw Error("shape " + parms.shape + " not defined" + optsStr(parms.shape, loaded.schema.shapes));
+    // shape = { type: "ShapeRef", reference: found };
+
+    shape = found;
+    shapeLabel = parms.shape;
+    if (parms.shape === undefined)
+      console.log("Guessing shape " + found);
+  }
+  if (node == NotSupplied || node === UnknownIRI)
+    throw Error(Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities)));
+  else {
     ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
+  }
+
+  function optsStr (key, dict) {
+    var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
+    var opts = Object.keys(dict).reduce(function (ret, k) {
+      if (k.match(r))
+        ret.push(k);
+      return ret;
+    }, []);
+    return opts.length === 0 ? "" :
+      opts.length === 1 ? ": try " + opts[0] :
+      ": try one of " + opts.join(" , ");
+  }
   return ret;
 }
 
@@ -185,9 +210,18 @@ function loadSchemaAndData (valParms, options) {
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       })
   ]).then(function (loadedAndResults) {
-    if (valParms.serve)
+    if (valParms.serve) {
+      if (valParms.shape) {
+        function knownShape (label) {
+          return label in loadedAndResults[0].schema.shapes;
+        }
+        var found = parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
+                                    null, knownShape, loadedAndResults[0].schema.prefixes);
+        if (found === UnknownIRI)
+          console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
+      }
       runServer(loadedAndResults[0], valParms, options)
-    else {
+    } else {
       var res = findNodesAndValidate(loadedAndResults[0], valParms, options).results;
       if (cmds["dry-run"])
         return res;
@@ -341,9 +375,9 @@ function runValidator (graph, focusNode, schema, shape, options) {
       options.regexModule = require(options.regexModule);
     } catch (e1) {
       try {
-	options.regexModule = require("../lib/regex/" + options.regexModule);
+        options.regexModule = require("../lib/regex/" + options.regexModule);
       } catch (e2) {
-	throw e1;
+        throw e1;
       }
     }
   }
@@ -353,29 +387,11 @@ function runValidator (graph, focusNode, schema, shape, options) {
     extensions[ext].register(validator);
   });
 
-  function optsStr (key, dict) {
-    var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
-    var opts = Object.keys(dict).reduce(function (ret, k) {
-      if (k.match(r))
-        ret.push(k);
-      return ret;
-    }, []);
-    return opts.length === 0 ? "" :
-      opts.length === 1 ? ": try " + opts[0] :
-      ": try one of " + opts.join(" , ");
-  }
-  if (shape === undefined)
-    shape = validator.schema.start;
-  if (!(shape in validator.schema.shapes))
-    throw Error("shape " + shape + " not defined" + optsStr(shape, validator.schema.shapes));
-  if (!(focusNode in graph._entities) && !("serve" in cmds))
-    console.warn(Error("node " + focusNode + " not defined" + optsStr(focusNode, graph._entities)));
-
   if (cmds["dry-run"])
     return 0;
 
   // run validator
-  var res = validator.validate(graph, focusNode, shape);
+  var res =  validator.validate(graph, focusNode, shape);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -553,8 +569,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       switch (this.originalUrl) {
       case srvpath:
         var parms = {
-          schemaName:null, schemaFile:null, shape:null,
-          dataName:null,   dataFile:null,   node:null, nodeType:null
+          schemaName:undefined, schemaFile:undefined, shape:undefined,
+          dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
         };
         if (this.request.method !== "POST")
           this.throw(500, "only supports POST now");
@@ -574,7 +590,10 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         var dataFiles = makeArray("data");
         parms.node      = body.fields.node;
         parms["node-type"] = body.fields.nodeType;
-
+        Object.keys(parms).forEach(k => {
+          if (parms[k] === undefined && k in serverParms)
+            parms[k] = serverParms[k];
+        });
         var _this = this;
         yield ShExLoader
           .load(schemaFiles, [], dataFiles, [])
