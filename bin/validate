@@ -140,21 +140,24 @@ function findNodesAndValidate (loaded, parms, options) {
                                        null, knownType, loaded.data.prefixes)) :
       parsePassedNode(parms.node, loaded.dataMeta[0], someIRInode,
                       knownNode, loaded.data.prefixes);
-  var shape, shapeLabel;debugger;
+  var shape, shapeLabel;
+  var ret = { node: node };
   if (!parms.shape && loaded.schema.start) {
     shape = loaded.schema.start;
     shapeLabel = "- start -";
+    ret.shape = shapeLabel;
   } else {
     var found = parsePassedNode(parms.shape, loaded.schemaMeta[0],
                                 someShape, knownShape, loaded.schema.prefixes)
     if (found === NotSupplied || found === UnknownIRI)
       throw Error("shape " + parms.shape + " not defined" + optsStr(parms.shape, loaded.schema.shapes));
+    // shape = { type: "ShapeRef", reference: found };
+
     shape = found;
     shapeLabel = parms.shape;
+    if (parms.shape === undefined)
+      console.log("Guessing shape " + found);
   }
-  var ret = {
-    node: node, shape: shapeLabel
-  };
   if (node == NotSupplied || node === UnknownIRI)
     throw Error(Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities)));
   else {
@@ -194,7 +197,7 @@ function loadSchemaAndData (valParms, options) {
       ShExLoader.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       })
-  ]).then(function (loadedAndResults) {debugger;
+  ]).then(function (loadedAndResults) {
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
@@ -350,6 +353,17 @@ function runValidator (graph, focusNode, schema, shape, options) {
   }
 
   // prepare validator
+  if ("regexModule" in options) {
+    try {
+      options.regexModule = require(options.regexModule);
+    } catch (e1) {
+      try {
+        options.regexModule = require("../lib/regex/" + options.regexModule);
+      } catch (e2) {
+        throw e1;
+      }
+    }
+  }
   var validator = ShExValidator.construct(schema, options);
   var extensions = ShExLoader.loadExtensions();
   Object.keys(extensions).forEach(function (ext) {
@@ -360,8 +374,7 @@ function runValidator (graph, focusNode, schema, shape, options) {
     return 0;
 
   // run validator
-  var res =
-      validator.validate(graph, focusNode, shape);
+  var res =  validator.validate(graph, focusNode, shape);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -560,7 +573,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         parms.shape      = body.fields.shape;
         var dataFiles = makeArray("data");
         parms.node      = body.fields.node;
-        parms["node-type"] = body.fields.nodeType; debugger;
+        parms["node-type"] = body.fields.nodeType;
         Object.keys(parms).forEach(k => {
           if (parms[k] === undefined && k in serverParms)
             parms[k] = serverParms[k];
