@@ -43,6 +43,7 @@ var ShExValidator = require("../lib/ShExValidator");
 var Path = require("path");
 var ValidatorOptions = { diagnose: true };
 // var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
+const REGEX_MODULES = "../lib/regex/";
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -288,9 +289,6 @@ if (cmds.partition) {
   ValidatorOptions.partition = cmds.partition;
 }
 
-if ("regex-module" in cmds)
-  ValidatorOptions.regexModule = cmds["regex-module"];
-
 var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
 if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   loadRDFmanifest(cmds["turtle-manifest"], cmds["jsonld-manifest"]).then(function (exitCode) {
@@ -324,6 +322,8 @@ function queueTests (tests, cmds) {
     if (cmds.invocation) {
       console.log(getInvocation(test));
     }
+    if ("regexModule" in test.options)
+      test.options.regexModule = getRegexModule(cmds["regexModule"]);
     return loadSchemaAndData(test, test.options);
   })).then(function (results) {
     // exit with a 0 if all returned 0, else a failure code.
@@ -370,17 +370,6 @@ function runValidator (graph, focusNode, schema, shape, options) {
   }
 
   // prepare validator
-  if ("regexModule" in options) {
-    try {
-      options.regexModule = require(options.regexModule);
-    } catch (e1) {
-      try {
-        options.regexModule = require("../lib/regex/" + options.regexModule);
-      } catch (e2) {
-        throw e1;
-      }
-    }
-  }
   var validator = ShExValidator.construct(schema, options);
   var extensions = ShExLoader.loadExtensions();
   Object.keys(extensions).forEach(function (ext) {
@@ -391,7 +380,7 @@ function runValidator (graph, focusNode, schema, shape, options) {
     return 0;
 
   // run validator
-  var res =  validator.validate(graph, focusNode, shape);
+  var res = validator.validate(graph, focusNode, shape);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -540,6 +529,8 @@ function loadCommandLine (cmds) {
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }
+  if ("regex-module" in cmds)
+    ValidatorOptions.regexModule = getRegexModule(cmds["regex-module"]);
   return loadSchemaAndData(cmds, ValidatorOptions);
 }
 
@@ -590,11 +581,19 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         var dataFiles = makeArray("data");
         parms.node      = body.fields.node;
         parms["node-type"] = body.fields.nodeType;
+
+        // Default to serverParms
         Object.keys(parms).forEach(k => {
           if (parms[k] === undefined && k in serverParms)
             parms[k] = serverParms[k];
         });
-        var _this = this;
+        var options = serverOptions;
+        if ("regex-module" in parms)
+          options = extend(options, {
+            regexModule: require(REGEX_MODULES + parms["regex-module"])
+          });
+
+        var httpResponse = this;
         yield ShExLoader
           .load(schemaFiles, [], dataFiles, [])
           .then(function (loaded) {
@@ -606,29 +605,32 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
             loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
 
-            var result = findNodesAndValidate(loaded, parms, {diagnose:true});
+            var result = findNodesAndValidate(loaded, parms, options);
             if ("results" in result)
               result = result.results; // otherwise just report the invoked parms.
             if (body.fields.output === "html") {
-              _this.body = Object.keys(parms).reduce((r, p) => {
+              httpResponse.body = Object.keys(parms).reduce((r, p) => {
                 return r.replace("["+p+"]", parms[p]);
               }, fs.readFileSync("./validate.template", "utf-8")).
                 replace(/\[result\]/, JSON.stringify(result, null, 2));
             } else {
-              _this.body = JSON.stringify(result, null, 2)+"\n";
+              httpResponse.body = JSON.stringify(result, null, 2)+"\n";
             }
-            schemaFiles.forEach(path => { fs.unlink(path) });
-            dataFiles.forEach(path => { fs.unlink(path) });
-            return next;
           }).catch(e => {
             var stack = typeof e === "object" && "stack" in e ? e.stack : e;
             var msg = typeof e === "object" && "message" in e ? e.message : e;
             console.warn(stack);
-            _this.body = {
+            httpResponse.body = {
               type: "ParsingError",
               errors: [msg]
             };
-          })
+            schemaFiles.forEach(path => { fs.unlink(path) });
+            dataFiles.forEach(path => { fs.unlink(path) });
+          }).then(function () {
+            schemaFiles.forEach(path => { fs.unlink(path) });
+            dataFiles.forEach(path => { fs.unlink(path) });
+            return next;
+          });
             break;
       case "/":
         this.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
@@ -653,3 +655,24 @@ function runServer (serverLoaded, serverParms, serverOptions) {
   log('Press CTRL+C to stop...');
 }
 
+function getRegexModule (module) {
+  if (module) {
+    try {
+      return require(module);
+    } catch (e1) {
+      try {
+        return require(REGEX_MODULES + module);
+      } catch (e2) {
+        throw e1;
+      }
+    }
+  }
+}
+
+function extend (base) {
+  if (!base) base = {};
+  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+    for (var name in arg)
+      base[name] = arg[name];
+  return base;
+}
