@@ -174,7 +174,7 @@ function findNodesAndValidate (loaded, parms, options) {
       console.log("Guessing shape " + found);
   }
   if (node == NotSupplied || node === UnknownIRI)
-    throw Error(Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities)));
+    throw Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities));
   else {
     ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
   }
@@ -275,6 +275,8 @@ function getInvocation (parms) {
 }
 
 var cmds = CLI.parse();
+if (cmds.node === null)
+  cmds.node = undefined; // which is the default value
 
 if (cmds.help)
   abort("");
