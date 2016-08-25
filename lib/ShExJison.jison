@@ -369,6 +369,10 @@ IT_MINLENGTH            [Mm][Ii][Nn][Ll][Ee][Nn][Gg][Tt][Hh]
 IT_MAXLENGTH            [Mm][Aa][Xx][Ll][Ee][Nn][Gg][Tt][Hh]
 IT_TOTALDIGITS          [Tt][Oo][Tt][Aa][Ll][Dd][Ii][Gg][Ii][Tt][Ss]
 IT_FRACTIONDIGITS       [Ff][Rr][Aa][Cc][Tt][Ii][Oo][Nn][Dd][Ii][Gg][Ii][Tt][Ss]
+IT_UNIQUE               [Uu][Nn][Ii][Qq][Uu][Ee]
+IT_FOCUS                [Ff][Oo][Cc][Uu][Ss]
+IT_DATATYPE             [Dd][Aa][Tt][Aa][Tt][Yy][Pp][Ee]
+IT_LANGTAG              [Ll][Aa][Nn][Gg][Tt][Aa][Gg]
 LANGTAG                 "@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER                 ([+-])?([0-9])+
 REPEAT_RANGE            "{"({INTEGER})((","(({INTEGER})|'*')?))?"}"
@@ -467,7 +471,14 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_MAXLENGTH}          return 'IT_MAXLENGTH';
 {IT_TOTALDIGITS}        return 'IT_TOTALDIGITS';
 {IT_FRACTIONDIGITS}     return 'IT_FRACTIONDIGITS';
+{IT_UNIQUE}             return 'IT_UNIQUE';
+{IT_FOCUS}              return 'IT_FOCUS';
+{IT_DATATYPE}           return 'IT_DATATYPE';
+{IT_LANGTAG}            return 'IT_LANGTAG';
+"<"                     return '<';
 "="                     return '=';
+">"                     return '>';
+"!="                    return '!=';
 "//"                    return '//';
 "{"                     return '{';
 "}"                     return '}';
@@ -787,10 +798,54 @@ _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
     | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _O_QGT_COMMA_E_S_QunaryShape_E_C	-> appendTo($1, $2) // t: 2groupOfdot
     ;
 
+valueConstraint:
+    IT_UNIQUE '(' _Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt accessor _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star ')'	{
+        $$ = { type: "Unique", focus: $3, uniques: [$4].concat($5) };
+      }
+//    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
+    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
+        $$ = { type: "ValueComparison", left: $1, comparator: $2, right: $3 };
+      }
+    ;
+
+_O_QIT_FOCUS_E_S_QGT_COMMA_E_C:
+    IT_FOCUS ','	
+    ;
+
+_Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt:
+    	-> false
+    | _O_QIT_FOCUS_E_S_QGT_COMMA_E_C	-> true
+    ;
+
+_O_QGT_COMMA_E_S_Qaccessor_E_C:
+    ',' accessor	-> $2
+    ;
+
+_Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star:
+    	-> []
+    | _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star _O_QGT_COMMA_E_S_Qaccessor_E_C	-> $1.concat($2)
+    ;
+
+_O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C:
+      "<"	
+    | "="	
+    | "!="	
+    | ">"	
+    ;
+
+accessor:
+    productionLabel	
+    | IT_LANGTAG '(' productionLabel ')'	-> { type: "LangtagAccessor", name: $3 }
+    | IT_DATATYPE '(' productionLabel ')'	-> { type: "DatatypeAccessor", name: $3 }
+    ;
+
 unaryShape:
-      tripleConstraint	
+      productionLabel tripleConstraint	-> extend({ name: $1 }, $2)
+    | tripleConstraint	
     | include	
+    | productionLabel encapsulatedShape	-> extend({ name: $1 }, $2)
     | encapsulatedShape	
+    | valueConstraint	
     ;
 
 encapsulatedShape:
