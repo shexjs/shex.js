@@ -45,6 +45,7 @@
     "bin/partition"
   ],
   "scripts": {
+    "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
     "lint": "eslint test/findPath.js",
     "browser": "node browser/build-browser-versions",
