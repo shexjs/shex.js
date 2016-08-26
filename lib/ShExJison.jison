@@ -349,6 +349,7 @@
 IT_BASE                 [Bb][Aa][Ss][Ee]
 IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
 IT_START                [sS][tT][aA][rR][tT]
+IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
 IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
@@ -447,6 +448,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_BASE}               return 'IT_BASE';
 {IT_PREFIX}             return 'IT_PREFIX';
 {IT_START}              return 'IT_start';
+{IT_EXTERNAL}           return 'IT_EXTERNAL';
 {IT_VIRTUAL}            return 'IT_VIRTUAL';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
