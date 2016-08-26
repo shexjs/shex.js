@@ -809,7 +809,7 @@ valueConstraint:
     ;
 
 _O_QIT_FOCUS_E_S_QGT_COMMA_E_C:
-    IT_FOCUS ','	
+      IT_FOCUS ','	
     ;
 
 _Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt:
@@ -818,7 +818,7 @@ _Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt:
     ;
 
 _O_QGT_COMMA_E_S_Qaccessor_E_C:
-    ',' accessor	-> $2
+      ',' accessor	-> $2
     ;
 
 _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star:
@@ -834,7 +834,7 @@ _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C:
     ;
 
 accessor:
-    productionLabel	
+      productionLabel	-> { type: "TermAccessor", name: $1 }
     | IT_LANGTAG '(' productionLabel ')'	-> { type: "LangtagAccessor", name: $3 }
     | IT_DATATYPE '(' productionLabel ')'	-> { type: "DatatypeAccessor", name: $3 }
     ;
