@@ -42,6 +42,7 @@ var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
 var Path = require("path");
 var ValidatorOptions = { diagnose: true };
+var SchemaOptions = { duplicateShape: "abort" };
 // var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 
@@ -59,6 +60,7 @@ var CLI = require("command-line-args")([
     { name: "jsonld",alias: "l", type: String, multiple:  true, defaultValue:   [] },
     { name: "serve", alias: "S", type: String, multiple: false, defaultValue: undefined },
     { name: "exec",  alias: "e", type: String,                  defaultValue: undefined },
+    { name: "duplicate-shape",   type: String, multiple: false, defaultValue: undefined }, // [abort], replace, ignore
     { name: "or",                type: String, multiple: false, defaultValue: undefined },
     { name: "partition",         type: String, multiple: false, defaultValue: undefined },
     { name: "json-manifest",     type: String, multiple:  true, defaultValue:   [] },
@@ -172,7 +174,7 @@ function findNodesAndValidate (loaded, parms, options) {
       console.log("Guessing shape " + found);
   }
   if (node == NotSupplied || node === UnknownIRI)
-    throw Error(Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities)));
+    throw Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities));
   else {
     ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
   }
@@ -191,7 +193,7 @@ function findNodesAndValidate (loaded, parms, options) {
   return ret;
 }
 
-function loadSchemaAndData (valParms, options) {
+function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.shex.length > 1 && valParms.data.length === 0) {
     valParms.data = valParms.shex.splice(1); // push all but one into data
   }
@@ -202,7 +204,7 @@ function loadSchemaAndData (valParms, options) {
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified");
   return Promise.all([
     // Loaded schema and data.
-    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld),
+    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
 
     // Expected results if provided.
     !("result" in valParms) ? Promise.resolve(undefined) :
@@ -221,9 +223,9 @@ function loadSchemaAndData (valParms, options) {
         if (found === UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
-      runServer(loadedAndResults[0], valParms, options)
+      runServer(loadedAndResults[0], valParms, validatorOptions, schemaOptions)
     } else {
-      var res = findNodesAndValidate(loadedAndResults[0], valParms, options).results;
+      var res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
       if (cmds["dry-run"])
         return res;
       var expectedResults = loadedAndResults[1];
@@ -273,9 +275,14 @@ function getInvocation (parms) {
 }
 
 var cmds = CLI.parse();
+if (cmds.node === null)
+  cmds.node = undefined; // which is the default value
 
 if (cmds.help)
   abort("");
+
+if ("duplicate-shape" in cmds)
+  SchemaOptions.duplicateShape = cmds["duplicate-shape"];
 
 if (cmds.or) {
   if (!(cmds.or in ShExValidator.options.or))
@@ -324,7 +331,7 @@ function queueTests (tests, cmds) {
     }
     if ("regexModule" in test.options)
       test.options.regexModule = getRegexModule(cmds["regexModule"]);
-    return loadSchemaAndData(test, test.options);
+    return loadSchemaAndData(test, test.options, SchemaOptions);
   })).then(function (results) {
     // exit with a 0 if all returned 0, else a failure code.
     return results.reduce(function (soFar, result) {
@@ -414,7 +421,7 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExLoader.load([], [], turtleManifests || [], jsonldManifests || []).then(function (loaded) {
+  return ShExLoader.load([], [], turtleManifests || [], jsonldManifests || [], SchemaOptions, undefined).then(function (loaded) {
 
     var testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
@@ -531,7 +538,7 @@ function loadCommandLine (cmds) {
   }
   if ("regex-module" in cmds)
     ValidatorOptions.regexModule = getRegexModule(cmds["regex-module"]);
-  return loadSchemaAndData(cmds, ValidatorOptions);
+  return loadSchemaAndData(cmds, ValidatorOptions, SchemaOptions);
 }
 
 function runServer (serverLoaded, serverParms, serverOptions) {
@@ -595,7 +602,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
 
         var httpResponse = this;
         yield ShExLoader
-          .load(schemaFiles, [], dataFiles, [])
+          .load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined)
           .then(function (loaded) {
             // add server-loaded (meta)data
             serverLoaded.data.find().forEach(t => { loaded.data.addTriple(t); });
