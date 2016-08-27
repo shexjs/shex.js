@@ -601,9 +601,9 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           });
 
         var httpResponse = this;
-        yield ShExLoader
-          .load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined)
-          .then(function (loaded) {
+        yield ShExLoader.
+          load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
+          then(function (loaded) {
             // add server-loaded (meta)data
             serverLoaded.data.find().forEach(t => { loaded.data.addTriple(t); });
             loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
@@ -623,6 +623,10 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             } else {
               httpResponse.body = JSON.stringify(result, null, 2)+"\n";
             }
+          }).then(function () {
+            schemaFiles.forEach(path => { fs.unlink(path) });
+            dataFiles.forEach(path => { fs.unlink(path) });
+            return next;
           }).catch(e => {
             var stack = typeof e === "object" && "stack" in e ? e.stack : e;
             var msg = typeof e === "object" && "message" in e ? e.message : e;
@@ -633,12 +637,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             };
             schemaFiles.forEach(path => { fs.unlink(path) });
             dataFiles.forEach(path => { fs.unlink(path) });
-          }).then(function () {
-            schemaFiles.forEach(path => { fs.unlink(path) });
-            dataFiles.forEach(path => { fs.unlink(path) });
-            return next;
           });
-            break;
+        break;
       case "/":
         this.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
         break;
