@@ -63,6 +63,8 @@ describe("A ShEx validator", function () {
         var schemaURL = "file://" + schemaFile;
         var semActsFile = "semActs" in test.action ? path.resolve(schemasPath, test.action.semActs) : null;
         var semActsURL = "file://" + semActsFile;
+        var shapeExternsFile = "shapeExterns" in test.action ? path.resolve(schemasPath, test.action.shapeExterns) : null;
+        var shapeExternsURL = "file://" + shapeExternsFile;
         var dataFile = path.resolve(validationPath, test.action.data);
         var dataURL = "file://" + dataFile;
         var resultsFile = test.result ? path.resolve(validationPath, test.result) : null;
@@ -71,7 +73,7 @@ describe("A ShEx validator", function () {
            "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
            " in test '" + test["@id"] + "'.",
            function (report) {                                             // test action
-             var semActs;
+             var semActs, shapeExterns;
              if (semActsFile) {
                shexParser._setBase(semActsURL);
                semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
@@ -80,21 +82,32 @@ describe("A ShEx validator", function () {
                    return ret;
                  }, {});
              }
+             if (shapeExternsFile) {
+               shexParser._setBase(shapeExternsURL);
+               shapeExterns = shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8")).
+                 shapes;
+             }
              shexParser._setBase(schemaURL);
              var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-             var validator = ShExValidator.construct(schema, { regexModule: regexModule,
-                                                               diagnose: true,
-                                                               or:
-                                                               "trait" in test &&
-                                                               test.trait.indexOf("OneOf") !== -1 ?
-                                                               "oneOf" :
-                                                               "someOf",
-                                                               partition:
-                                                               "trait" in test &&
-                                                               test.trait.indexOf("Exhaustive") !== -1 ?
-                                                               "exhaustive" :
-                                                               "greedy",
-                                                               semActs: semActs });
+             var validator = ShExValidator.construct(schema, {
+               regexModule: regexModule,
+               diagnose: true,
+               or:
+               "trait" in test &&
+                 test.trait.indexOf("OneOf") !== -1 ?
+                 "oneOf" :
+                 "someOf",
+               partition:
+               "trait" in test &&
+                 test.trait.indexOf("Exhaustive") !== -1 ?
+                 "exhaustive" :
+                 "greedy",
+               semActs: semActs,
+               validateExtern: function (db, point, shapeLabel, depth, seen) {
+                 return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
+                                                     shapeLabel, depth, seen);
+               }
+             });
              var testResults = TestExtension.register(validator);
 
              var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
@@ -135,7 +148,7 @@ describe("A ShEx validator", function () {
                        if (referenceResult)
                          expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                      } else {
-                       assert(validationResult && !("errors" in validationResult), "test expected to succeed");
+                       assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
                        expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                      }
                      var xr = test.extensionResults.filter(function (x) {
