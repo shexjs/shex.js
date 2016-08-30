@@ -652,9 +652,9 @@ function runServer (serverLoaded, serverParms, serverOptions) {
   var cli = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
   log('Visit %s:%s/ in browser.', host, port);
   log();
-  log('Test with executing this commands:');
+  log('Test with a supplied schema and data:');
   log('  curl -i %s:%s%s -F "schema=@' + cli + '1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port, srvpath);
-  log('or preload schema:');
+  log('or preload the schema and just supply the data:');
   log("  " + Path.relative("", process.argv[1]) + " -x "+ cli +"1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
   log('and pass only the data parameters:');
   log('  curl -i %s:%s%s -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port, srvpath);
