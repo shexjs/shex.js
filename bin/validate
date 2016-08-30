@@ -635,6 +635,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
               type: "ParsingError",
               errors: [msg]
             };
+            httpResponse.status = 500;
             schemaFiles.forEach(path => { fs.unlink(path) });
             dataFiles.forEach(path => { fs.unlink(path) });
           });

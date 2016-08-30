@@ -68,7 +68,7 @@ describe("A ShEx validator", function () {
         var dataFile = path.resolve(validationPath, test.action.data);
         var dataURL = "file://" + dataFile;
         var resultsFile = test.result ? path.resolve(validationPath, test.result) : null;
-        it("should use " + regexModule.name + " validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+        it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
            "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
            "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
            " in test '" + test["@id"] + "'.",
