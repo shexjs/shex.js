@@ -30,37 +30,59 @@ var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
 var Path = require("path");
+var Util = require("util");
 var ValidatorOptions = { diagnose: true };
 // var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
+var orChoices = Object.keys(ShExValidator.options.or).join("|");
+var parChoices = Object.keys(ShExValidator.options.partition).join("|");
 
 // Generate command line interface
 var CLI = require("command-line-args")([
-    { name: "verbose", alias: "v", type: Boolean },
-    { name: "quiet", alias: "q", type: Boolean },
-    { name: "help",  alias: "h", type: Boolean },
-    { name: "node",  alias: "n", type: String, multiple: false, defaultValue: undefined },
-    { name: "node-type", alias: "t", type: String, multiple: false, defaultValue: undefined },
-    { name: "shape", alias: "s", type: String, multiple: false, defaultValue: undefined },
-    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
-    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
-    { name: "data",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption: true },
-    { name: "jsonld",alias: "l", type: String, multiple:  true, defaultValue:   [] },
-    { name: "serve", alias: "S", type: String, multiple: false, defaultValue: undefined },
-    { name: "exec",  alias: "e", type: String,                  defaultValue: undefined },
-    { name: "or",                type: String, multiple: false, defaultValue: undefined },
-    { name: "partition",         type: String, multiple: false, defaultValue: undefined },
-    { name: "json-manifest",     type: String, multiple:  true, defaultValue:   [] },
-    { name: "turtle-manifest",   type: String, multiple:  true, defaultValue:   [] },
-    { name: "jsonld-manifest",   type: String, multiple:  true, defaultValue:   [] },
-    { name: "test-name",         type: String, multiple:  true, defaultValue:   [] },
-    { name: "invocation", alias: "i", type: Boolean },
-    { name: "dry-run", alias: "N", type: Boolean },
+  { name: "verbose",   alias: "v", type: Boolean },
+  { name: "quiet",     alias: "q", type: Boolean },
+  { name: "help",      alias: "h", type: Boolean },
+  { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
+  { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
+  { name: "shape",     alias: "s", type: String, typeLabel: "IRI|Bnode", multiple: false, defaultValue: undefined, description: "shape to validate" },
+  { name: "shex",      alias: "x", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExC schema" },
+  { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
+  { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
+  { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
+  { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
+  { name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
+  { name: "partition",             type: String, typeLabel: parChoices,  multiple: false, defaultValue: undefined, description: "how to explore a partion of triples into constraints" },
+  { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
+  { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
+  { name: "jsonld-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD manifest" },
+  { name: "test-name",             type: String, typeLabel: "IRI",       multiple:  true, defaultValue:        [], description: "what tests to run in the manifest" },
+  { name: "invocation",alias: "i", type: Boolean, desc: "show invocation" },
+  { name: "dry-run",   alias: "N", type: Boolean, desc: "prepare validation but don't execute" },
 ]);
+var Argv1 = Path.relative("", process.argv[1]);
+var CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
+
 function abort (msg) {
   console.error(msg);
   console.error(CLI.getUsage({
     title: "validate",
-    description: "validate Turtle files with respect to ShEx schemas, for example:\n    validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex",
+    description: "validate nodes in RDF graphs with respect to ShEx schemas.",
+    synopsis: [
+      "validate (-x <ShExC> | -j <ShExJ>) -s <start shape> (-d <Turtle> | -l <JSON-LD>) -n <start node>",
+      "validate (-x |-j)? (-s)? (-d|-l)? (-n)? -S http://localhost:8088/validate"
+    ],
+    examples: [
+      "validate local files:",
+      Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir),
+      "validate web resources:",
+      "  validate -x http://shex.io/examples/Issue.shex -s IssueShape -d http://shex.io/examples/Issue1.ttl -n Issue1",
+      "run as a server:",
+      Util.format('  validate -x http://localhost:8088/validate', CliDir),
+      Util.format('  curl -i http://localhost:8088/validate -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', CliDir, CliDir),
+      "run as a preloaded server:",
+      Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -S http://localhost:8088/validate', CliDir),
+      Util.format('  curl -i http://localhost:8088/validate -F "data=@%sp2p3.ttl" -F "node=x"', CliDir)
+    ],
     footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
   }));
   process.exit(1);
@@ -623,15 +645,14 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     }).
     listen(port);
 
-  var cli = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
   log('Visit %s:%s/ in browser.', host, port);
   log();
   log('Test with a supplied schema and data:');
-  log('  curl -i %s:%s%s -F "schema=@' + cli + '1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port, srvpath);
+  log('  curl -i %s:%s%s -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir, CliDir);
   log('or preload the schema and just supply the data:');
-  log("  " + Path.relative("", process.argv[1]) + " -x "+ cli +"1dotOr2dot.shex -s http://a.example/S1 -S " + serverParms.serve);
+  log('  %s -x %s1dotOr2dot.shex -s http://a.example/S1 -S ', Argv1, CliDir, serverParms.serve);
   log('and pass only the data parameters:');
-  log('  curl -i %s:%s%s -F "data=@' + cli + 'p2p3.ttl" -F "node=x"', host, port, srvpath);
+  log('  curl -i %s:%s%s -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir);
   log('Note that shape and node can be relative or prefixed URLs.');
   log();
   log('Press CTRL+C to stop...');
