@@ -48,7 +48,7 @@ var SchemaOptions = { duplicateShape: "abort" };
 const REGEX_MODULES = "../lib/regex/";
 var orChoices = Object.keys(ShExValidator.options.or).join("|");
 var parChoices = Object.keys(ShExValidator.options.partition).join("|");
-var dupChoices =  ["abort", "replace", "ignore"];
+var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
 // Generate command line interface
 var CLI = require("command-line-args")([
