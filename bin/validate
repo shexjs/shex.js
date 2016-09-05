@@ -180,11 +180,13 @@ function findNodesAndValidate (loaded, parms, options) {
     if (parms.shape === undefined)
       console.log("Guessing shape " + found);
   }
-  if (node == NotSupplied || node === UnknownIRI)
-    throw Error(Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities)));
-  else {
-    ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
+  if (node == NotSupplied)
+    throw Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities));
+  if (node === UnknownIRI) {
+    console.warn("node " + parms.node + " not found in data" + optsStr(parms.node, loaded.data._entities));
+    node = parms.node;
   }
+  ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
 
   function optsStr (key, dict) {
     var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
@@ -279,7 +281,14 @@ function getInvocation (parms) {
          ].join(' ');
 }
 
-var cmds = CLI.parse();
+var cmds = (function () {
+  try {
+    return CLI.parse();
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
+})();
 
 if (cmds.help)
   abort("");
