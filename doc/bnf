@@ -80,11 +80,7 @@
 [11]    groupShape            ::= singleElementGroup | multiElementGroup
 [11]    singleElementGroup    ::= unaryShape ';'?
 [11a]   multiElementGroup     ::= unaryShape (';' unaryShape)+ ';'?
-# [3f]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
-#                                 | accessor ("<" | "=" | "!=" | ">") accessor
-# [3g]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
-# [12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape | valueConstraint
-[12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape
+[12]    unaryShape            ::= productionLabel? tripleConstraint | include | productionLabel? encapsulatedShape
 [13]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
 [7]     include               ::= '&' shapeLabel
 [14]    shapeLabel            ::= iri | blankNode
@@ -129,7 +125,7 @@
 [138s]  blankNode             ::= BLANK_NODE_LABEL
 [0]     codeDecl              ::= '%' iri (CODE | "%")
 [0]     startActions          ::= codeDecl+
-[0]     semanticActions       ::= (codeDecl|productionLabel)*
+[0]     semanticActions       ::= codeDecl*
 [0]     productionLabel       ::= '$' (iri | blankNode)
 
 @terminals
