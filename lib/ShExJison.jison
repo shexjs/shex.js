@@ -790,9 +790,12 @@ _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
     ;
 
 unaryShape:
-      tripleConstraint	
+      productionLabel tripleConstraint	-> extend({ name: $1 }, $2)
+    | tripleConstraint	
     | include	
+    | productionLabel encapsulatedShape	-> extend({ name: $1 }, $2)
     | encapsulatedShape	
+    | valueConstraint	
     ;
 
 encapsulatedShape:
