@@ -3,7 +3,10 @@
 # Copyright 2015, Eric Prud'hommeax, Harold Solbrig, Iovka Boneva, Jose Labra Gayo
 # All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
 # http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
-# 
+#
+# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx3?lang=perl
+# repo: https://github.com/shexSpec/shexTest/
+# branch: TEisSE
 # TODO:
 #   annotations on shapes
 #   look hard at EXTERNAL valueClassDefinitions
@@ -47,26 +50,27 @@
 # + ()s around valueExprs (EGP 20160520)
 # + shapeDefinition += nonLiteralKind? stringFacet* (EGP 20160520)
 # - shape == "VIRTUAL"? (EGP 20160520)
-# + ';' separator for groups
-# ~ s{;}{//} for annotations
+# + ';' separator for groups (EGP 20160524)
+# ~ s{;}{//} for annotations (EGP 20160524)
+# + ("AND" shapeDefinition)* (EGP 20160524)
+# + ("OR" shapeDefinition)* (EGP 20160615)
+# ~ generalized shapeExpression to include valueExprDefinition (EGP 20160708)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
 
 [1]     shexDoc               ::= directive* ((notStartAction | startActions) statement*)? # leading CODE
 [2]     statement             ::= directive | notStartAction
-[2b]    notStartAction        ::= start | shape | valueExprDefinition
+[2b]    notStartAction        ::= start | shape
 [3]     directive             ::= baseDecl | prefixDecl
-[3a]    valueExprDefinition   ::= valueExprLabel ( '=' valueClassExpr semanticActions | "EXTERNAL" )
-[3a]    valueClassExpr        ::= valueClass valueClassJuncts?
-                                | "(" valueClass valueClassJuncts? ")"
-[3a]    valueClassJuncts      ::= ( "OR" valueClass )+ | ( "AND" valueClass )+
-[3a]    valueExprLabel       ::= '$' (iri | blankNode)
+[3b]    shapeExpression       ::= shapeDisjunction
+[3c]    shapeDisjunction      ::= shapeConjunction ("OR" shapeConjunction)*
+[3d]    shapeConjunction      ::= negShapeAtom ("AND" negShapeAtom)*
+[3e]    negShapeAtom          ::= ("NOT"|"!")? shapeAtom
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
-[4]     start                 ::= "start" '=' ( shapeLabel | shapeDefinition semanticActions )
-[5]     shape                 ::= shapeLabel nonLiteralKind? stringFacet* shapeDefinition semanticActions
-#[5]     shape                 ::= "VIRTUAL"? shapeLabel nonLiteralKind? stringFacet* shapeDefinition semanticActions
+[4]     start                 ::= "start" '=' shapeExpression semanticActions
+[5]     shape                 ::= shapeLabel (stringFacet* shapeExpression|"EXTERNAL") semanticActions
 [6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
 [7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+
@@ -74,23 +78,26 @@
 [10a]   multiElementSomeOf    ::= groupShape ('|' groupShape)+
 [10b]   innerShape            ::= multiElementGroup | multiElementSomeOf
 [11]    groupShape            ::= singleElementGroup | multiElementGroup
-[11]    singleElementGroup    ::= unaryShape (',' | ';')?
-[11a]   multiElementGroup     ::= unaryShape ( (','|';') unaryShape )+ (','|';')?
+[11]    singleElementGroup    ::= unaryShape ';'?
+[11a]   multiElementGroup     ::= unaryShape (';' unaryShape)+ ';'?
+# [3f]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
+#                                 | accessor ("<" | "=" | "!=" | ">") accessor
+# [3g]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
+# [12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape | valueConstraint
 [12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape
 [13]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
 [7]     include               ::= '&' shapeLabel
 [14]    shapeLabel            ::= iri | blankNode
-[15]    tripleConstraint      ::= senseFlags? predicate valueClassExpr cardinality? annotation* semanticActions
+[15]    tripleConstraint      ::= senseFlags? predicate shapeExpression cardinality? annotation* semanticActions
 [16]    senseFlags            ::= '!' '^'?
                                 | '^' '!'?  # inverse not
 [17]    predicate             ::= iri | RDF_TYPE
-[18]    valueClass            ::= '!'? negatableValueClass
-[18a]   negatableValueClass   ::= "LITERAL" xsFacet*
-                                | nonLiteralKind shapeOrRef? stringFacet*
+[18a]   shapeAtom             ::= "LITERAL" xsFacet*
+                                | nonLiteralKind stringFacet* shapeOrRef?
                                 | datatype xsFacet*
                                 | shapeOrRef stringFacet*
                                 | valueSet
-                                | valueExprLabel
+				| "(" shapeExpression ")"
                                 | '.'  # no constraint
 [18b]   nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
 [20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
@@ -122,7 +129,8 @@
 [138s]  blankNode             ::= BLANK_NODE_LABEL
 [0]     codeDecl              ::= '%' iri (CODE | "%")
 [0]     startActions          ::= codeDecl+
-[0]     semanticActions       ::= codeDecl*
+[0]     semanticActions       ::= (codeDecl|productionLabel)*
+[0]     productionLabel       ::= '$' (iri | blankNode)
 
 @terminals
 
