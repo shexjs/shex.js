@@ -836,16 +836,16 @@ _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C:
     ;
 
 accessor:
-      productionLabel	-> { type: "TermAccessor", name: $1 }
+      productionLabel	-> { type: "TermAccessor", productionLabel: $1 }
     | IT_LANGTAG '(' productionLabel ')'	-> { type: "LangtagAccessor", name: $3 }
     | IT_DATATYPE '(' productionLabel ')'	-> { type: "DatatypeAccessor", name: $3 }
     ;
 
 unaryShape:
-      productionLabel tripleConstraint	-> extend({ name: $1 }, $2)
+      productionLabel tripleConstraint	-> extend({ productionLabel: $1 }, $2)
     | tripleConstraint	
     | include	
-    | productionLabel encapsulatedShape	-> extend({ name: $1 }, $2)
+    | productionLabel encapsulatedShape	-> extend({ productionLabel: $1 }, $2)
     | encapsulatedShape	
     | valueConstraint	
     ;
