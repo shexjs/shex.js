@@ -3,10 +3,10 @@
 # Copyright 2015, Eric Prud'hommeax, Harold Solbrig, Iovka Boneva, Jose Labra Gayo
 # All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
 # http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
-#
-# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx3?lang=perl
+# 
+# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx3toy?lang=perl
 # repo: https://github.com/shexSpec/shexTest/
-# branch: TEisSE
+# branch: accessors
 # TODO:
 #   annotations on shapes
 #   look hard at EXTERNAL valueClassDefinitions
@@ -80,11 +80,10 @@
 [11]    groupShape            ::= singleElementGroup | multiElementGroup
 [11]    singleElementGroup    ::= unaryShape ';'?
 [11a]   multiElementGroup     ::= unaryShape (';' unaryShape)+ ';'?
-# [3f]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
-#                                 | accessor ("<" | "=" | "!=" | ">") accessor
-# [3g]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
-# [12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape | valueConstraint
-[12]    unaryShape            ::= tripleConstraint | include | encapsulatedShape
+[3f]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
+                                | accessor ("<" | "=" | "!=" | ">") accessor
+[3g]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
+[12]    unaryShape            ::= productionLabel? tripleConstraint | include | productionLabel? encapsulatedShape | valueConstraint
 [13]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
 [7]     include               ::= '&' shapeLabel
 [14]    shapeLabel            ::= iri | blankNode
@@ -129,7 +128,7 @@
 [138s]  blankNode             ::= BLANK_NODE_LABEL
 [0]     codeDecl              ::= '%' iri (CODE | "%")
 [0]     startActions          ::= codeDecl+
-[0]     semanticActions       ::= (codeDecl|productionLabel)*
+[0]     semanticActions       ::= codeDecl*
 [0]     productionLabel       ::= '$' (iri | blankNode)
 
 @terminals
