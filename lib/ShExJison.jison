@@ -634,15 +634,18 @@ _QstringFacet_E_Star:
     ;
 
 _O_QstringFacet_E_Star_S_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
-      _QstringFacet_E_Star shapeExpression	{
-        if (Object.keys($1).length === 0) { $$ = $2; }
-        // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
-        else { $$ = { type: "ShapeAnd",
-                      shapeExprs: [
-                        extend({ type: "NodeConstraint" }, $1),
-                        $2 ]
-                    };
-             }
+      // _QstringFacet_E_Star shapeExpression	{
+      //   if (Object.keys($1).length === 0) { $$ = $2; }
+      //   // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
+      //   else { $$ = { type: "ShapeAnd",
+      //                 shapeExprs: [
+      //                   extend({ type: "NodeConstraint" }, $1),
+      //                   $2 ]
+      //               };
+      //        }
+      // }
+      shapeExpression	{
+        $$ = $1;
       }
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
@@ -857,7 +860,7 @@ shapeAtom:
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | shapeOrRef	// t: 1dotRef1
-    | shapeOrRef _QstringFacet_E_Plus	-> { type: "ShapeAnd", shapeExprs: [ $1, extend({ type: "NodeConstraint" }, $2) ] } // t: 1bnodeRefOrRefMinlength
+  | _QstringFacet_E_Plus shapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
     | valueSet	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
