@@ -26,15 +26,27 @@ function register (validator) {
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
       dispatch: function (code, ctx, extensionStorage) {
+        var transform = function (val) { return val; }
+        var func = code.match(/^ *toISO\((.*?)\) *$/);
+        if (func) {
+          code = func[1];
+          transform = function (val) {
+            var d = val.match(/^"(1?[0-9])\/([1-3]?[0-9])\/([0-9]{4}) ([1-2]?[0-9]):([1-5]?[0-9])"$/);
+            return `"${d[3]}-${d[1]}-${d[2]}T${d[4]}:${d[5]}"^^http://www.w3.org/2001/XMLSchema#`;
+          }
+        }
         var m = code.match(pattern);
         if (!m) {
           throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
         }
-        var arg = m[1] ? m[1] : prefixes[m[2]] + m[3];
+        function fail (msg) { var e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+        var arg = m[1] ? m[1] :
+            m[2] in prefixes ? (prefixes[m[2]] + m[3]) :
+            fail("unknown prefix " + m[2] + " in \"" + code + "\".");
         validator.semActHandler.results[MapExt][arg] = ctx.object;
         if (!(arg in extensionStorage))
           extensionStorage[arg] = [];
-        extensionStorage[arg].push(ctx.object);
+        extensionStorage[arg].push(transform(ctx.object));
         return true;
       }
     }
@@ -87,7 +99,7 @@ function materializer (schema, nextBNode) {
             if (!m) {
               throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
             }
-            var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
+            var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); if (!(arg in bindings)) console.warn(arg); 
             add(curSubject, expr.predicate, bindings[arg]);
           });
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
