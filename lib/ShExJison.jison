@@ -860,7 +860,7 @@ shapeAtom:
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | shapeOrRef	// t: 1dotRef1
-  | _QstringFacet_E_Plus shapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
+    | _QstringFacet_E_Plus shapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
     | valueSet	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
@@ -983,12 +983,12 @@ senseFlags:
     ;
 
 valueSet:
-      '[' _Qvalue_E_Star ']'	-> $2 // t: 1val1IRIREF
+      '[' _QvalueSetValue_E_Star ']'	-> $2 // t: 1val1IRIREF
     ;
 
-_Qvalue_E_Star:
+_QvalueSetValue_E_Star:
       	-> [] // t: 1val1IRIREF
-    | _Qvalue_E_Star valueSetValue	-> appendTo($1, $2) // t: 1val1IRIREF
+    | _QvalueSetValue_E_Star valueSetValue	-> appendTo($1, $2) // t: 1val1IRIREF
     ;
 
 valueSetValue:
