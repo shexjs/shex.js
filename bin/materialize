@@ -1,0 +1,68 @@
+#!/usr/bin/env node
+
+/** ShExMap serializer -- used in conjunction with validator's .val output, e.g.
+ *
+ * ~/tmp/checkouts/shexSpec/shex.js/bin/validate -d data.ttl -x sourceSchema.shex -s StartShape -n startNode \
+ *   | ~/tmp/checkouts/shexSpec/shex.js/bin/materialize targetSchema.shex [vars.json]
+ *
+ */
+
+
+var FS = require("fs");
+var N3 = require("n3");
+var ShExLoader = require("../lib/ShExLoader");
+var ShExValidator = require("../lib/ShExValidator");
+var Mapper = require("../extensions/shex:Map");
+
+Promise.all([ShExLoader.load([process.argv[2]], [], [], []),
+             new Promise((resolve, reject) => {
+               var inputChunks = [];
+               process.stdin.resume();
+               process.stdin.setEncoding("utf8");       
+       
+               process.stdin.on("data", function (chunk) {
+                 inputChunks.push(chunk);
+               });
+
+               process.stdin.on("end", function () {
+                 resolve(JSON.parse(inputChunks.join()));
+               });
+             }),
+             new Promise((resolve, reject) => {
+               process.argv[3] ?
+                 FS.readFile(process.argv[3], "utf8", function (err, data) {
+                   if (err) reject(err);
+                   if (data) resolve(JSON.parse(data));
+                 }) :
+               {};
+             })
+            ]).
+  then(loads => {
+    var schema = loads[0].schema;
+    var val = loads[1];
+    var resultBindings = loads[2];
+    var map = Mapper.materializer(schema);
+
+    function findBindings (object) {
+      for (var key in object) {
+        var item = object[key];
+        if (typeof item === 'object') {
+          if (Mapper.url in item)
+            Object.keys(item[Mapper.url]).forEach(k => {
+              resultBindings[k] = item[Mapper.url][k];
+            })
+          else
+            object[key] = findBindings(item);
+        }
+      }
+      return object;
+    }
+    findBindings(val);
+
+    var outputGraph = map.materialize(resultBindings, "tag:eric@w3.org/2016/root");
+    var writer = N3.Writer({ prefixes: {} });
+    outputGraph.find().forEach(t => { writer.addTriple(t); });
+    writer.end(function (error, result) { console.log(result); });
+  }).catch(e => { console.error(e); });
+
+
