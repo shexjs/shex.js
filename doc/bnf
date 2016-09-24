@@ -55,6 +55,12 @@
 # + ("AND" shapeDefinition)* (EGP 20160524)
 # + ("OR" shapeDefinition)* (EGP 20160615)
 # ~ generalized shapeExpression to include valueExprDefinition (EGP 20160708)
+# ~ reordered (EGP 20160913)
+# ~ s/ShapeDisjunction/shapeOr/ (EGP 20160913)
+# ~ s/shapeConjunction/shapeAnd/ (EGP 20160913)
+# ~ s/negShapeAtom/shapeNot/ (EGP 20160913)
+# ~ s/inclPropertySet/extraPropertySet/ (EGP 20160913)
+# ~ s/value/valueSetValue/ (EGP 20160913)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -71,13 +77,13 @@
 [2]     statement             ::= directive | notStartAction
 
 [5]     shape                 ::= shapeLabel (stringFacet* shapeExpression|"EXTERNAL") semanticActions
-[3b]    shapeExpression       ::= shapeDisjunction
-[3c]    shapeDisjunction      ::= shapeConjunction ("OR" shapeConjunction)*
-[3d]    shapeConjunction      ::= negShapeAtom ("AND" negShapeAtom)*
-[3e]    negShapeAtom          ::= ("NOT"|"!")? shapeAtom
+[3b]    shapeExpression       ::= shapeOr
+[3c]    shapeOr               ::= shapeAnd ("OR" shapeAnd)*
+[3d]    shapeAnd              ::= shapeNot ("AND" shapeNot)*
+[3e]    shapeNot              ::= ("NOT"|"!")? shapeAtom
 
-[6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
-[8]     inclPropertySet       ::= "EXTRA" predicate+
+[6]     shapeDefinition       ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}'
+[8]     extraPropertySet      ::= "EXTRA" predicate+
 
 [10]    someOfShape           ::= groupShape | multiElementSomeOf
 [10a]   multiElementSomeOf    ::= groupShape ('|' groupShape)+
@@ -110,9 +116,9 @@
 [15]    tripleConstraint      ::= senseFlags? predicate shapeExpression cardinality? annotation* semanticActions
 [16]    senseFlags            ::= '!' '^'?
                                 | '^' '!'?  # inverse not
-[25]    valueSet              ::= '[' value* ']'
+[25]    valueSet              ::= '[' valueSetValue* ']'
 
-[26]    value                 ::= iriRange | literal
+[26]    valueSetValue         ::= iriRange | literal
 [27]    iriRange              ::= iri ('~' exclusion*)? | '.' exclusion+
 [28]    exclusion             ::= '-' iri '~'?
 [13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
