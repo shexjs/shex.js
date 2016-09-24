@@ -73,19 +73,25 @@
 [3]     baseDecl              ::= "BASE" IRIREF
 [4]     prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
 
-[5]     notStartAction        ::= start | shape
-[6]     start                 ::= "start" '=' shapeExpression semanticActions
+[5]     notStartAction        ::= start | shapeExprDecl
+[6]     start                 ::= "start" '=' shapeExpression
 [7]     startActions          ::= codeDecl+
 
 [8]     statement             ::= directive | notStartAction
 
-[9]     shape                 ::= shapeLabel (stringFacet* shapeExpression|"EXTERNAL") semanticActions
+[9]     shapeExprDecl         ::= shapeLabel (shapeExpression|"EXTERNAL")
 [10]    shapeExpression       ::= shapeOr
 [11]    shapeOr               ::= shapeAnd ("OR" shapeAnd)*
 [12]    shapeAnd              ::= shapeNot ("AND" shapeNot)*
 [13]    shapeNot              ::= ("NOT"|"!")? shapeAtom
 
-[14]    shapeDefinition       ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}'
+[10]    inlineShapeExpression ::= inlineShapeOr
+[11]    inlineShapeOr         ::= inlineShapeAnd ("OR" inlineShapeAnd)*
+[12]    inlineShapeAnd        ::= inlineShapeNot ("AND" inlineShapeNot)*
+[13]    inlineShapeNot        ::= ("NOT"|"!")? inlineShapeAtom
+
+[14]    shapeDefinition       ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}' annotation* semanticActions
+[14]    inlineShapeDefinition ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}'
 [15]    extraPropertySet      ::= "EXTRA" predicate+
 
 [16]    someOfShape           ::= groupShape | multiElementSomeOf
@@ -116,7 +122,7 @@
 [30]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [31]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
 
-[32]    tripleConstraint      ::= senseFlags? predicate shapeExpression cardinality? annotation* semanticActions
+[32]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions
 [33]    senseFlags            ::= '!' '^'?
                                 | '^' '!'?  # inverse not
 [34]    valueSet              ::= '[' valueSetValue* ']'
@@ -127,6 +133,7 @@
 [13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
 
 [38]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
+[38]    inlineShapeOrRef      ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | inlineShapeDefinition
 
 [39]    include               ::= '&' shapeLabel
 
