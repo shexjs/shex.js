@@ -60,20 +60,25 @@
 #   in-line terminals in ""s are case-insensitive
 
 [1]     shexDoc               ::= directive* ((notStartAction | startActions) statement*)? # leading CODE
-[2]     statement             ::= directive | notStartAction
-[2b]    notStartAction        ::= start | shape
 [3]     directive             ::= baseDecl | prefixDecl
+[5s]    baseDecl              ::= "BASE" IRIREF
+[6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
+
+[2b]    notStartAction        ::= start | shape
+[4]     start                 ::= "start" '=' shapeExpression semanticActions
+[0]     startActions          ::= codeDecl+
+
+[2]     statement             ::= directive | notStartAction
+
+[5]     shape                 ::= shapeLabel (stringFacet* shapeExpression|"EXTERNAL") semanticActions
 [3b]    shapeExpression       ::= shapeDisjunction
 [3c]    shapeDisjunction      ::= shapeConjunction ("OR" shapeConjunction)*
 [3d]    shapeConjunction      ::= negShapeAtom ("AND" negShapeAtom)*
 [3e]    negShapeAtom          ::= ("NOT"|"!")? shapeAtom
-[5s]    baseDecl              ::= "BASE" IRIREF
-[6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
-[4]     start                 ::= "start" '=' shapeExpression semanticActions
-[5]     shape                 ::= shapeLabel (stringFacet* shapeExpression|"EXTERNAL") semanticActions
+
 [6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
-[7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+
+
 [10]    someOfShape           ::= groupShape | multiElementSomeOf
 [10a]   multiElementSomeOf    ::= groupShape ('|' groupShape)+
 [10b]   innerShape            ::= multiElementGroup | multiElementSomeOf
@@ -82,12 +87,7 @@
 [11a]   multiElementGroup     ::= unaryShape (';' unaryShape)+ ';'?
 [12]    unaryShape            ::= productionLabel? tripleConstraint | include | productionLabel? encapsulatedShape
 [13]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
-[7]     include               ::= '&' shapeLabel
-[14]    shapeLabel            ::= iri | blankNode
-[15]    tripleConstraint      ::= senseFlags? predicate shapeExpression cardinality? annotation* semanticActions
-[16]    senseFlags            ::= '!' '^'?
-                                | '^' '!'?  # inverse not
-[17]    predicate             ::= iri | RDF_TYPE
+
 [18a]   shapeAtom             ::= "LITERAL" xsFacet*
                                 | nonLiteralKind stringFacet* shapeOrRef?
                                 | datatype xsFacet*
@@ -96,10 +96,8 @@
 				| "(" shapeExpression ")"
                                 | '.'  # no constraint
 [18b]   nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
-[20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
 [21]    xsFacet               ::= stringFacet
                                 | numericFacet
-
 [21]    stringFacet           ::= stringLength INTEGER
                                 | "PATTERN" string
                                 | '~' string  # shortcut for "PATTERN"
@@ -108,14 +106,28 @@
                                 | numericLength INTEGER
 [21]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [21]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
-[22]    datatype              ::= iri
-[23]    annotation            ::= '//' predicate (iri | literal)
-[24]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
+
+[15]    tripleConstraint      ::= senseFlags? predicate shapeExpression cardinality? annotation* semanticActions
+[16]    senseFlags            ::= '!' '^'?
+                                | '^' '!'?  # inverse not
 [25]    valueSet              ::= '[' value* ']'
+
 [26]    value                 ::= iriRange | literal
 [27]    iriRange              ::= iri ('~' exclusion*)? | '.' exclusion+
 [28]    exclusion             ::= '-' iri '~'?
 [13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
+
+[20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
+
+[7]     include               ::= '&' shapeLabel
+
+[0]     semanticActions       ::= codeDecl*
+[23]    annotation            ::= '//' predicate (iri | literal)
+
+[17]    predicate             ::= iri | RDF_TYPE
+[22]    datatype              ::= iri
+[24]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
+[14]    shapeLabel            ::= iri | blankNode
 [16t]   numericLiteral        ::= INTEGER | DECIMAL | DOUBLE
 [129s]  rdfLiteral            ::= string (LANGTAG | '^^' datatype)?
 [134s]  booleanLiteral        ::= 'true' | 'false'
@@ -124,9 +136,10 @@
 [137s]  prefixedName          ::= PNAME_LN | PNAME_NS
 [138s]  blankNode             ::= BLANK_NODE_LABEL
 [0]     codeDecl              ::= '%' iri (CODE | "%")
-[0]     startActions          ::= codeDecl+
-[0]     semanticActions       ::= codeDecl*
 [0]     productionLabel       ::= '$' (iri | blankNode)
+
+# Reserved for future use
+[7]     includeSet            ::= '&' shapeLabel+
 
 @terminals
 
