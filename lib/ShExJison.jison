@@ -915,6 +915,7 @@ _Qcardinality_E_Opt:
     ;
 
 shapeAtom:
+//    nodeConstraint _QshapeOrRef_E_Opt	
       nodeConstraint
     | nodeConstraint shapeOrRef	{
         $$ = $2 === EmptyShape ?
@@ -931,6 +932,7 @@ shapeAtom:
 //     | shapeOrRef     ;
 
 inlineShapeAtom:
+//    nodeConstraint _QinlineShapeOrRef_E_Opt	
       nodeConstraint
     | nodeConstraint inlineShapeOrRef	{
         $$ = $2 === EmptyShape ?
@@ -942,12 +944,17 @@ inlineShapeAtom:
     | '.'	-> EmptyShape // t: 1dot
     ;
 
+// _QinlineShapeOrRef_E_Opt:
+//     
+//     | inlineShapeOrRef	;
+
 _QnodeConstraint_E_Opt:
       	
     | nodeConstraint     ;
 
 nodeConstraint:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
+//  | nonLiteralKind _QstringFacet_E_Star	
     | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
     | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
     | datatype _QxsFacet_E_Star	{
