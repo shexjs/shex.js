@@ -870,7 +870,6 @@ shapeAtom:
           { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       }
     | shapeOrRef	// t: 1dotRef1
-    | _QstringFacet_E_Plus shapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -887,7 +886,6 @@ inlineShapeAtom:
           { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       }
     | inlineShapeOrRef _QnodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
-    | _QstringFacet_E_Plus inlineShapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -909,7 +907,7 @@ nodeConstraint:
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
-//    | _QxsFacet_E_Plus
+    | _QxsFacet_E_Plus
     ;
 
 _QxsFacet_E_Star:
