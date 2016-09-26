@@ -115,6 +115,7 @@
                                 | nonLiteralKind stringFacet*
                                 | datatype xsFacet*
                                 | valueSet xsFacet*
+                                | xsFacet+
 [25]    nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
 [26]    xsFacet               ::= stringFacet
                                 | numericFacet
