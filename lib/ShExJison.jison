@@ -847,47 +847,6 @@ _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
     | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _O_QGT_COMMA_E_S_QunaryShape_E_C	-> appendTo($1, $2) // t: 2groupOfdot
     ;
 
-valueConstraint:
-    IT_UNIQUE '(' _Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt accessor _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star ')'	{
-        $$ = { type: "Unique", focus: $3, uniques: [$4].concat($5) };
-      }
-//    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
-    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
-        $$ = { type: "ValueComparison", left: $1, comparator: $2, right: $3 };
-      }
-    ;
-
-_O_QIT_FOCUS_E_S_QGT_COMMA_E_C:
-      IT_FOCUS ','	
-    ;
-
-_Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt:
-    	-> false
-    | _O_QIT_FOCUS_E_S_QGT_COMMA_E_C	-> true
-    ;
-
-_O_QGT_COMMA_E_S_Qaccessor_E_C:
-      ',' accessor	-> $2
-    ;
-
-_Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star:
-    	-> []
-    | _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star _O_QGT_COMMA_E_S_Qaccessor_E_C	-> $1.concat($2)
-    ;
-
-_O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C:
-      "<"	
-    | "="	
-    | "!="	
-    | ">"	
-    ;
-
-accessor:
-      productionLabel	-> { type: "TermAccessor", productionLabel: $1 }
-    | IT_LANGTAG '(' productionLabel ')'	-> { type: "LangtagAccessor", name: $3 }
-    | IT_DATATYPE '(' productionLabel ')'	-> { type: "DatatypeAccessor", name: $3 }
-    ;
-
 unaryShape:
       productionLabel tripleConstraint	-> extend({ productionLabel: $1 }, $2)
     | tripleConstraint	
@@ -1162,6 +1121,47 @@ literal:
     | numericLiteral
     | IT_true	-> XSD_TRUE // t: 1val1true
     | IT_false	-> XSD_FALSE // t: 1val1false
+    ;
+
+valueConstraint:
+    IT_UNIQUE '(' _Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt accessor _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star ')'	{
+        $$ = { type: "Unique", focus: $3, uniques: [$4].concat($5) };
+      }
+//    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
+    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
+        $$ = { type: "ValueComparison", left: $1, comparator: $2, right: $3 };
+      }
+    ;
+
+_O_QIT_FOCUS_E_S_QGT_COMMA_E_C:
+      IT_FOCUS ','	
+    ;
+
+_Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt:
+    	-> false
+    | _O_QIT_FOCUS_E_S_QGT_COMMA_E_C	-> true
+    ;
+
+_O_QGT_COMMA_E_S_Qaccessor_E_C:
+      ',' accessor	-> $2
+    ;
+
+_Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star:
+    	-> []
+    | _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star _O_QGT_COMMA_E_S_Qaccessor_E_C	-> $1.concat($2)
+    ;
+
+_O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C:
+      "<"	
+    | "="	
+    | "!="	
+    | ">"	
+    ;
+
+accessor:
+      productionLabel	-> { type: "TermAccessor", productionLabel: $1 }
+    | IT_LANGTAG '(' productionLabel ')'	-> { type: "LangtagAccessor", name: $3 }
+    | IT_DATATYPE '(' productionLabel ')'	-> { type: "DatatypeAccessor", name: $3 }
     ;
 
 shapeOrRef:

@@ -138,9 +138,9 @@
 [37]    exclusion             ::= '-' iri '~'?
 [13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
 
-[3f]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
+[00]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
                                 | accessor ("<" | "=" | "!=" | ">") accessor
-[3g]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
+[00]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
 
 [38]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
 [38]    inlineShapeOrRef      ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | inlineShapeDefinition
