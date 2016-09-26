@@ -863,7 +863,7 @@ _Qcardinality_E_Opt:
     ;
 
 shapeAtom:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
+      nodeConstraint
 //    | nonLiteralKind _QshapeOrRef_E_Opt _QstringFacet_E_Star	
     | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
     | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
@@ -888,17 +888,8 @@ shapeAtom:
         // extend({ type: "NodeConstraint", nodeKind: $1, reference: $2 }, $3)
         // t: 1iriRefLength1
       }
-    | datatype _QxsFacet_E_Star	{
-        if (numericDatatypes.indexOf($1) === -1)
-          numericFacets.forEach(function (facet) {
-            if (facet in $2)
-              error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1);
-          });
-        $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
-      }
     | shapeOrRef	// t: 1dotRef1
     | _QstringFacet_E_Plus shapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
-    | valueSet	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -908,7 +899,7 @@ shapeAtom:
 //     | shapeOrRef     ;
 
 inlineShapeAtom:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
+      nodeConstraint
 //    | nonLiteralKind _QshapeOrRef_E_Opt _QstringFacet_E_Star	
     | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
     | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
@@ -933,6 +924,18 @@ inlineShapeAtom:
         // extend({ type: "NodeConstraint", nodeKind: $1, reference: $2 }, $3)
         // t: 1iriRefLength1
       }
+    | inlineShapeOrRef _QnodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
+    | _QstringFacet_E_Plus inlineShapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
+    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | '.'	-> EmptyShape // t: 1dot
+    ;
+
+_QnodeConstraint_E_Opt:
+      	
+    | nodeConstraint     ;
+
+nodeConstraint:
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
@@ -941,11 +944,8 @@ inlineShapeAtom:
           });
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
-    | inlineShapeOrRef	// t: 1dotRef1
-    | _QstringFacet_E_Plus inlineShapeOrRef	-> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } // t: 1bnodeRefOrRefMinlength
-    | valueSet	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+    | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
+//    | _QxsFacet_E_Plus
     ;
 
 _QxsFacet_E_Star:
@@ -965,6 +965,16 @@ _QstringFacet_E_Star:
           error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
         }
         $$ = extend($1, $2)
+      }
+    ;
+
+_QxsFacet_E_Plus:
+      xsFacet	// t: !! look to 1literalPattern
+    | _QxsFacet_E_Plus xsFacet	{
+        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
+          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+        }
+        $$ = extend($1, $2) // t: !! look to 1literalLength
       }
     ;
 
