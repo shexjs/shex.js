@@ -103,17 +103,16 @@
 [22]    unaryShape            ::= productionLabel? (tripleConstraint | encapsulatedShape) | include | valueConstraint
 [23]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
 
-[24]    shapeAtom             ::= nodeConstraint
-                                | nonLiteralKind stringFacet* shapeOrRef?
+[24]    shapeAtom             ::= nodeConstraint shapeOrRef?
                                 | shapeOrRef
 				| "(" shapeExpression ")"
                                 | '.'  # no constraint
-[24]    inlineShapeAtom       ::= nodeConstraint
-                                | nonLiteralKind stringFacet* inlineShapeOrRef?
+[24]    inlineShapeAtom       ::= nodeConstraint inlineShapeOrRef?
                                 | inlineShapeOrRef nodeConstraint?
 				| "(" shapeExpression ")"
                                 | '.'  # no constraint
 [18a]   nodeConstraint        ::= "LITERAL" xsFacet*
+                                | nonLiteralKind stringFacet*
                                 | datatype xsFacet*
                                 | valueSet xsFacet*
 [25]    nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
