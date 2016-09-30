@@ -905,7 +905,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfTripleExpr_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -936,9 +936,9 @@ _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
     }
     ;
 
-_QsomeOfTripleExpr_E_Opt:
+_QtripleExpression_E_Opt:
       // t: 0
-    | someOfTripleExpr	// t: 1dot
+    | tripleExpression	// t: 1dot
     ;
 
 _Qannotation_E_Star:
@@ -947,7 +947,7 @@ _Qannotation_E_Star:
     ;
 
 inlineShapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfTripleExpr_E_Opt '}'	{ // t: 1dotInherit3
+      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -963,6 +963,9 @@ _Qpredicate_E_Plus:
       predicate	-> [$1] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | _Qpredicate_E_Plus predicate	-> appendTo($1, $2) // t: 3groupdotExtra3
     ;
+
+tripleExpression:
+    someOfTripleExpr	;
 
 someOfTripleExpr:
       groupTripleExpr	
