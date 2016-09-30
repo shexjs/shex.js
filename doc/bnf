@@ -62,6 +62,7 @@
 # ~ s/inclPropertySet/extraPropertySet/ (EGP 20160913)
 # ~ s/value/valueSetValue/ (EGP 20160913)
 # ~ updated production labels (EGP 20160913)
+# ~ reorder to align with spec (EGP 20160930)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -81,14 +82,40 @@
 
 [9]     shapeExprDecl         ::= shapeLabel (shapeExpression|"EXTERNAL")
 [10]    shapeExpression       ::= shapeOr
-[11]    shapeOr               ::= shapeAnd ("OR" shapeAnd)*
-[12]    shapeAnd              ::= shapeNot ("AND" shapeNot)*
-[13]    shapeNot              ::= ("NOT"|"!")? shapeAtom
-
 [10]    inlineShapeExpression ::= inlineShapeOr
+[11]    shapeOr               ::= shapeAnd ("OR" shapeAnd)*
 [11]    inlineShapeOr         ::= inlineShapeAnd ("OR" inlineShapeAnd)*
+[12]    shapeAnd              ::= shapeNot ("AND" shapeNot)*
 [12]    inlineShapeAnd        ::= inlineShapeNot ("AND" inlineShapeNot)*
-[13]    inlineShapeNot        ::= ("NOT"|"!")? inlineShapeAtom
+[13]    shapeNot              ::= "NOT"? shapeAtom
+[13]    inlineShapeNot        ::= "NOT"? inlineShapeAtom
+[24]    shapeAtom             ::= nodeConstraint shapeOrRef?
+                                | shapeOrRef
+				| "(" shapeExpression ")"
+                                | '.'  # no constraint
+[24]    inlineShapeAtom       ::= nodeConstraint inlineShapeOrRef?
+                                | inlineShapeOrRef nodeConstraint?
+				| "(" shapeExpression ")"
+                                | '.'  # no constraint
+
+[38]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
+[38]    inlineShapeOrRef      ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | inlineShapeDefinition
+
+[18a]   nodeConstraint        ::= "LITERAL" xsFacet*
+                                | nonLiteralKind stringFacet*
+                                | datatype xsFacet*
+                                | valueSet xsFacet*
+                                | xsFacet+
+[25]    nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
+[26]    xsFacet               ::= stringFacet | numericFacet
+[27]    stringFacet           ::= stringLength INTEGER
+                                | "PATTERN" string
+                                | '~' string  # shortcut for "PATTERN"
+[28]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
+[29]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
+                                | numericLength INTEGER
+[30]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
+[31]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
 
 [14]    shapeDefinition       ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}' annotation* semanticActions
 [14]    inlineShapeDefinition ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}'
@@ -102,33 +129,10 @@
 [21]    multiElementGroup     ::= unaryShape (';' unaryShape)+ ';'?
 [22]    unaryShape            ::= productionLabel? (tripleConstraint | encapsulatedShape) | include
 [23]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
-
-[24]    shapeAtom             ::= nodeConstraint shapeOrRef?
-                                | shapeOrRef
-				| "(" shapeExpression ")"
-                                | '.'  # no constraint
-[24]    inlineShapeAtom       ::= nodeConstraint inlineShapeOrRef?
-                                | inlineShapeOrRef nodeConstraint?
-				| "(" shapeExpression ")"
-                                | '.'  # no constraint
-[18a]   nodeConstraint        ::= "LITERAL" xsFacet*
-                                | nonLiteralKind stringFacet*
-                                | datatype xsFacet*
-                                | valueSet xsFacet*
-                                | xsFacet+
-[25]    nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
-[26]    xsFacet               ::= stringFacet
-                                | numericFacet
-[27]    stringFacet           ::= stringLength INTEGER
-                                | "PATTERN" string
-                                | '~' string  # shortcut for "PATTERN"
-[28]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[29]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
-                                | numericLength INTEGER
-[30]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
-[31]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
+[47]    productionLabel       ::= '$' (iri | blankNode)
 
 [32]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions
+[44]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
 [33]    senseFlags            ::= '!' '^'?
                                 | '^' '!'?  # inverse not
 [34]    valueSet              ::= '[' valueSetValue* ']'
@@ -136,29 +140,25 @@
 [35]    valueSetValue         ::= iriRange | literal
 [36]    iriRange              ::= iri ('~' exclusion*)? | '.' exclusion+
 [37]    exclusion             ::= '-' iri '~'?
-[13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
-
-[38]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
-[38]    inlineShapeOrRef      ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | inlineShapeDefinition
 
 [39]    include               ::= '&' shapeLabel
 
-[40]    semanticActions       ::= codeDecl*
 [41]    annotation            ::= '//' predicate (iri | literal)
+[40]    semanticActions       ::= codeDecl*
+[46]    codeDecl              ::= '%' iri (CODE | "%")
 
+[13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
 [42]    predicate             ::= iri | RDF_TYPE
 [43]    datatype              ::= iri
-[44]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
 [45]    shapeLabel            ::= iri | blankNode
 [16t]   numericLiteral        ::= INTEGER | DECIMAL | DOUBLE
 [129s]  rdfLiteral            ::= string (LANGTAG | '^^' datatype)?
 [134s]  booleanLiteral        ::= 'true' | 'false'
-[135s]  string                ::= STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2
+[135s]  string                ::= STRING_LITERAL1 | STRING_LITERAL_LONG1
+                                | STRING_LITERAL2 | STRING_LITERAL_LONG2
 [136s]  iri                   ::= IRIREF | prefixedName
 [137s]  prefixedName          ::= PNAME_LN | PNAME_NS
 [138s]  blankNode             ::= BLANK_NODE_LABEL
-[46]    codeDecl              ::= '%' iri (CODE | "%")
-[47]    productionLabel       ::= '$' (iri | blankNode)
 
 # Reserved for future use
 [48]    includeSet            ::= '&' shapeLabel+
@@ -183,16 +183,19 @@
 [156s]  STRING_LITERAL1       ::= "'" ([^#x27#x5C#xA#xD] | ECHAR | UCHAR)* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 [157s]  STRING_LITERAL2       ::= '"' ([^#x22#x5C#xA#xD] | ECHAR | UCHAR)* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 [158s]  STRING_LITERAL_LONG1  ::= "'''" (("'" | "''")? ([^\'\\] | ECHAR | UCHAR))* "'''"
-[52]    STRING_LITERAL_LONG1X ::= "'''" # This is *supposed* to disable non-terminated LONG1.
 [159s]  STRING_LITERAL_LONG2  ::= '"""' (('"' | '""')? ([^\"\\] | ECHAR | UCHAR))* '"""'
-[53]    STRING_LITERAL_LONG2X ::= '"""' # This is *supposed* to disable non-terminated LONG2.
-[26t]   UCHAR                 ::= '\\u' HEX HEX HEX HEX | '\\U' HEX HEX HEX HEX HEX HEX HEX HEX
+[26t]   UCHAR                 ::= '\\u' HEX HEX HEX HEX
+                                | '\\U' HEX HEX HEX HEX HEX HEX HEX HEX
 [160s]  ECHAR                 ::= '\\' [tbnrf\\\"\']
-[162s]  WS                    ::= #x20 | #x9 | #xD | #xA /* #x20=space #x9=character tabulation #xD=carriage return #xA=new line */
-[163s]  ANON                  ::= '[' WS* ']'
-[164s]  PN_CHARS_BASE         ::= [A-Z] | [a-z] | [#x00C0-#x00D6] | [#x00D8-#x00F6] | [#x00F8-#x02FF] | [#x0370-#x037D] | [#x037F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
+[164s]  PN_CHARS_BASE         ::= [A-Z] | [a-z]
+                                | [#x00C0-#x00D6] | [#x00D8-#x00F6] | [#x00F8-#x02FF]
+                                | [#x0370-#x037D] | [#x037F-#x1FFF]
+                                | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF]
+                                | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD]
+                                | [#x10000-#xEFFFF]
 [165s]  PN_CHARS_U            ::= PN_CHARS_BASE | '_'
-[167s]  PN_CHARS              ::= PN_CHARS_U | '-' | [0-9] | [#x00B7] | [#x0300-#x036F] | [#x203F-#x2040]
+[167s]  PN_CHARS              ::= PN_CHARS_U | '-' | [0-9]
+                                | [#x00B7] | [#x0300-#x036F] | [#x203F-#x2040]
 [168s]  PN_PREFIX             ::= PN_CHARS_BASE ((PN_CHARS | '.')* PN_CHARS)?
 [169s]  PN_LOCAL              ::= (PN_CHARS_U | ':' | [0-9] | PLX) ((PN_CHARS | '.' | ':' | PLX)* (PN_CHARS | ':' | PLX))?
 [170s]  PLX                   ::= PERCENT | PN_LOCAL_ESC
@@ -201,4 +204,4 @@
 [173s]  PN_LOCAL_ESC          ::= '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
 
 @pass ::= [ \t\r\n]+
- | "#" [^\r\n]* 
+        | "#" [^\r\n]* 
