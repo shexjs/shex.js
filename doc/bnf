@@ -63,6 +63,11 @@
 # ~ s/value/valueSetValue/ (EGP 20160913)
 # ~ updated production labels (EGP 20160913)
 # ~ reorder to align with spec (EGP 20160930)
+# ~ s/someOfShape/someOfTripleExpr/ (EGP 20160930)
+# ~ s/innerShape/innerTripleExpr/ (EGP 20160930)
+# ~ s/groupShape/groupTripleExpr/ (EGP 20160930)
+# ~ s/unaryShape/unaryTripleExpr/ (EGP 20160930)
+# ~ s/encapsulatedShape/bracketedTripleExpr/ (EGP 20160930)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -117,18 +122,18 @@
 [30]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [31]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
 
-[14]    shapeDefinition       ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}' annotation* semanticActions
-[14]    inlineShapeDefinition ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfShape? '}'
+[14]    shapeDefinition       ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfTripleExpr? '}' annotation* semanticActions
+[14]    inlineShapeDefinition ::= (includeSet | extraPropertySet | "CLOSED")* '{' someOfTripleExpr? '}'
 [15]    extraPropertySet      ::= "EXTRA" predicate+
 
-[16]    someOfShape           ::= groupShape | multiElementSomeOf
-[17]    multiElementSomeOf    ::= groupShape ('|' groupShape)+
-[18]    innerShape            ::= multiElementGroup | multiElementSomeOf
-[19]    groupShape            ::= singleElementGroup | multiElementGroup
-[20]    singleElementGroup    ::= unaryShape ';'?
-[21]    multiElementGroup     ::= unaryShape (';' unaryShape)+ ';'?
-[22]    unaryShape            ::= productionLabel? (tripleConstraint | encapsulatedShape) | include
-[23]    encapsulatedShape     ::= '(' innerShape ')' cardinality? annotation* semanticActions
+[16]    someOfTripleExpr      ::= groupTripleExpr | multiElementSomeOf
+[17]    multiElementSomeOf    ::= groupTripleExpr ('|' groupTripleExpr)+
+[18]    innerTripleExpr       ::= multiElementGroup | multiElementSomeOf
+[19]    groupTripleExpr       ::= singleElementGroup | multiElementGroup
+[20]    singleElementGroup    ::= unaryTripleExpr ';'?
+[21]    multiElementGroup     ::= unaryTripleExpr (';' unaryTripleExpr)+ ';'?
+[22]    unaryTripleExpr       ::= productionLabel? (tripleConstraint | bracketedTripleExpr) | include
+[23]    bracketedTripleExpr   ::= '(' innerTripleExpr ')' cardinality? annotation* semanticActions
 [47]    productionLabel       ::= '$' (iri | blankNode)
 
 [32]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions

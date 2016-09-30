@@ -905,7 +905,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfShape_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfTripleExpr_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -936,9 +936,9 @@ _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
     }
     ;
 
-_QsomeOfShape_E_Opt:
+_QsomeOfTripleExpr_E_Opt:
       // t: 0
-    | someOfShape	// t: 1dot
+    | someOfTripleExpr	// t: 1dot
     ;
 
 _Qannotation_E_Star:
@@ -947,7 +947,7 @@ _Qannotation_E_Star:
     ;
 
 inlineShapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfShape_E_Opt '}'	{ // t: 1dotInherit3
+      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QsomeOfTripleExpr_E_Opt '}'	{ // t: 1dotInherit3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -964,37 +964,37 @@ _Qpredicate_E_Plus:
     | _Qpredicate_E_Plus predicate	-> appendTo($1, $2) // t: 3groupdotExtra3
     ;
 
-someOfShape:
-      groupShape	
+someOfTripleExpr:
+      groupTripleExpr	
     | multiElementSomeOf        ;
 
 multiElementSomeOf:
-      groupShape _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus	-> { type: "SomeOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
+      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "SomeOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
     ;
 
-_O_QGT_PIPE_E_S_QgroupShape_E_C:
-      '|' groupShape	-> $2 // t: 2someOfdot
+_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C:
+      '|' groupTripleExpr	-> $2 // t: 2someOfdot
     ;
 
-_Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus:
-      _O_QGT_PIPE_E_S_QgroupShape_E_C	-> [$1] // t: 2someOfdot
-    | _Q_O_QGT_PIPE_E_S_QgroupShape_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupShape_E_C	-> appendTo($1, $2) // t: 2someOfdot
+_Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus:
+      _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> [$1] // t: 2someOfdot
+    | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2) // t: 2someOfdot
     ;
 
-innerShape:
+innerTripleExpr:
       multiElementGroup	
     | multiElementSomeOf	
     ;
 
-groupShape:
-      unaryShape groupShape_right	-> $2 ? { type: "EachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
+groupTripleExpr:
+      unaryTripleExpr groupTripleExpr_right	-> $2 ? { type: "EachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
     ;
 
-groupShape_right:
+groupTripleExpr_right:
       	-> null
     | ','	-> null
     | ';'	-> null
-    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> $1
+    | _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_COMMA_E_Opt	-> $1
     ;
 
 _QGT_COMMA_E_Opt:
@@ -1004,20 +1004,20 @@ _QGT_COMMA_E_Opt:
     ;
 
 multiElementGroup:
-      unaryShape _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
+      unaryTripleExpr _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
     ;
 
-_O_QGT_COMMA_E_S_QunaryShape_E_C:
-      ',' unaryShape	-> $2 // t: 2groupOfdot
-    | ';' unaryShape	-> $2 // t: 2groupOfdot
+_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C:
+      ',' unaryTripleExpr	-> $2 // t: 2groupOfdot
+    | ';' unaryTripleExpr	-> $2 // t: 2groupOfdot
     ;
 
-_Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus:
-      _O_QGT_COMMA_E_S_QunaryShape_E_C	-> [$1] // t: 2groupOfdot
-    | _Q_O_QGT_COMMA_E_S_QunaryShape_E_C_E_Plus _O_QGT_COMMA_E_S_QunaryShape_E_C	-> appendTo($1, $2) // t: 2groupOfdot
+_Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus:
+      _O_QGT_COMMA_E_S_QunaryTripleExpr_E_C	-> [$1] // t: 2groupOfdot
+    | _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_COMMA_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2) // t: 2groupOfdot
     ;
 
-unaryShape:
+unaryTripleExpr:
       productionLabel tripleConstraint	-> extend({ productionLabel: $1 }, $2)
     | tripleConstraint	
     | productionLabel bracketedTripleExpr	-> extend({ productionLabel: $1 }, $2)
@@ -1027,7 +1027,7 @@ unaryShape:
     ;
 
 bracketedTripleExpr:
-      '(' innerShape ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' innerTripleExpr ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
