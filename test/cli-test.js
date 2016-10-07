@@ -186,8 +186,6 @@ Object.keys(AllTests).forEach(function (script) {
                testText = exec.stderr;
              }
 
-             expect(exec.exitCode).to.equal(test.status);
-
              if ("resultMatch" in ref)
                expect(testText).to.match(ref.resultMatch);
              else if ("resultText" in ref)
@@ -200,6 +198,8 @@ Object.keys(AllTests).forEach(function (script) {
                    JSON.parse(ref.result.text), ref.result.url));
              else
                throw Error("unknown test criteria in " + JSON.stringify(ref));
+
+             expect(exec.exitCode).to.equal(test.status);
              done();
            }).catch(function (e) { done(e); });
          });

@@ -62,6 +62,7 @@ var CLI = require("command-line-args")([
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
   { name: "duplicate-shape",       type: String, typeLabel: dupChoices,  multiple: false, defaultValue: undefined, description: "what to do with duplicate shapes" },
@@ -289,14 +290,26 @@ function getInvocation (parms) {
   function jsonFileArg (u) { return "-j "+shortenFile(u); }
   function dataFileArg (u) { return "-d "+shortenFile(u); }
   function jsonldFileArg (u) { return "-l "+shortenFile(u); }
-  return [Path.relative(process.cwd(), arg0),
-          parms.shex.map(shexFileArg).join(' '),
-          parms.json.map(jsonFileArg).join(' '),
-          parms.data.map(dataFileArg).join(' '),
-          parms.jsonld.map(jsonldFileArg).join(' '),
-          "-s " + parms.shape,
-          "-n " + parms.node
-         ].join(' ');
+  var res = [Path.relative(process.cwd(), arg0),
+             parms.shex.map(shexFileArg).join(' '),
+             parms.json.map(jsonFileArg).join(' '),
+             parms.data.map(dataFileArg).join(' '),
+             parms.jsonld.map(jsonldFileArg).join(' '),
+             "-s " + parms.shape,
+             "-n " + parms.node
+            ];
+  if ("options" in parms)
+    Object.keys(parms.options).forEach(k => { // e.g. --regex-module nfax-val-1err
+      res.push("--" + k.replace(/([A-Z])/g, function (c) {
+	return "-" + c.toLowerCase();
+      }) + " " + parms.options[k]);
+    });
+  if ("result" in parms)
+    res.push("--result " + // results are booleans or filenames
+	     (typeof parms.result === "string" ?
+	      shortenFile(parms.result) :
+	      parms.result));
+  return res.join(' ');
 }
 
 var cmds = (function () {
@@ -563,6 +576,12 @@ function loadJSONmanifest (jsonManifests) {
 
 function loadCommandLine (cmds) {
   // from the command line directly
+
+  // coerce booleans (no files called "true" or "false", please).
+  if ("result" in cmds) {
+    if (cmds.result === "true") cmds.result = true;
+    else if (cmds.result === "false") cmds.result = false;
+  }
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }
