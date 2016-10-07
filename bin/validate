@@ -299,13 +299,13 @@ function getInvocation (parms) {
              "-n " + parms.node
             ];
   if ("options" in parms)
-    Object.keys(parms.options).forEach(k => { // regex
+    Object.keys(parms.options).forEach(k => { // e.g. --regex-module nfax-val-1err
       res.push("--" + k.replace(/([A-Z])/g, function (c) {
 	return "-" + c.toLowerCase();
       }) + " " + parms.options[k]);
     });
   if ("result" in parms)
-    res.push("--result " +
+    res.push("--result " + // results are booleans or filenames
 	     (typeof parms.result === "string" ?
 	      shortenFile(parms.result) :
 	      parms.result));
