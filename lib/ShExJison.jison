@@ -801,7 +801,7 @@ nodeConstraint:
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
-    | _QxsFacet_E_Plus
+    | _QxsFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
     ;
 
 _QxsFacet_E_Star:
