@@ -1,0 +1,227 @@
+#!/usr/bin/env node
+
+// shex-to-shacl http://tracker.example/schemas/Issue.shex
+
+var ShExLoader = require("../lib/ShExLoader");
+var ShExUtil = require("../lib/ShExUtil");
+var N3 = require("n3");
+var N3Store = N3.Store;
+var N3Writer = N3.Writer();
+
+// The next ID for new blank nodes
+var blankNodePrefix = 0, blankNodeCount = 0;
+function bnode () { return '_:b' + blankNodePrefix++ }
+
+var Rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+var firstP = Rdf+"first";
+var restP = Rdf+"rest";
+var nilP = Rdf+"nil";
+
+var Sh = "http://www.w3.org/ns/shacl#";
+var propertyP = Sh+"property";
+var predicateP = Sh+"predicate";
+var shapeP = Sh+"shape";
+var inP = Sh+"in";
+var stemP = Sh+"stem";
+var andP = Sh+"and";
+var orP = Sh+"or";
+var notP = Sh+"not";
+
+// Generate command line interface
+var CLI = require("command-line-args")([
+    { name: "help",  alias: "h", type: Boolean },
+    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
+    { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] }
+]);
+function abort (msg) {
+  console.error(msg);
+  console.error(CLI.getUsage({
+    title: "shex-to-json",
+    description: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex",
+    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
+  }));
+  process.exit(1);
+}
+
+// Extract user commands
+var cmds = CLI.parse();
+if (cmds.help)
+    abort("");
+if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
+
+
+ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
+  var db = N3Store();//     [1,2,3].forEach(i => { db.addTriple("http://a.example/S", "http://a.example/p", "\""+i+"\""); }); 
+  var ignored = [];
+  function remove (ob, attr) {
+    var ret = ob[attr];
+    delete ob[attr];
+    return ret;
+  }
+  function ignore (ob, attr) {
+    if (attr in ob)
+      ignored.push({type:ob.type, attr:attr, value:ob[attr]});
+    delete ob[attr];
+  }
+  function empty (ob) {
+    if (ob.constructor === Array) {
+      if (Object.keys(ob).length !== 0)
+        throw Error("array not empty: " + JSON.stringify(ob));
+    } else {
+      if (Object.keys(ob).length !== 1 || !("type" in ob))
+        throw Error("object not empty: " + JSON.stringify(ob));
+    }
+  }
+  function byX (obj, key, name) {
+    var args = Array.prototype.slice.call(arguments);
+    args[0] = obj[key];
+    args.splice(1, 2); // remove key, name
+    var ret = eval(name() + ".apply(null, args)");
+    empty(obj[key]);
+    delete obj[key];
+    return ret;
+  }
+  function byType (obj, key) {
+    var args = Array.prototype.slice.call(arguments);
+    args.splice(2, 0, function () { return obj[key].type; });
+    return byX.apply(null, args);
+  }
+  function byAttr (obj, key) {
+    var args = Array.prototype.slice.call(arguments);
+    args.splice(2, 0, function () { return key; });
+    return byX.apply(null, args);
+  }
+
+  function Schema (shapes) {
+    Object.keys(shapes).forEach(key => {
+      var label = byType(shapes, key, key);
+      // db.addTriple("http://a.example/Schema", "hasShape", label);
+    });
+  }
+  function Shape (shapeExpr, label) {
+    var expr = byType(shapeExpr, "expression");
+    db.addTriple(label, propertyP, expr);
+    return label;
+  }
+  function TripleConstraint (tripleExpr) {
+    var propN = bnode();
+    db.addTriple(propN, predicateP, remove(tripleExpr, "predicate"));
+    var r = byType(tripleExpr, "valueExpr", propN);
+    return propN;
+  }
+  function list (l) {
+    if (l.length === 0)
+      return nilP;
+    var tail = bnode(), head = tail, dirty = false;
+    l.forEach(i => {
+      if (dirty) {
+        var n = bnode();
+        db.addTriple(tail, restP, n);
+        tail = n;
+      }
+      db.addTriple(tail, firstP, i);
+      dirty = true;
+    });
+    db.addTriple(tail, restP, nilP);
+    return head;
+  }
+  function NodeConstraint (nodeExpr, propN) {
+    //    db.addTriple(propN, predicateP, remove(nodeExpr, "predicate"));
+    var ors = [];
+    //    db.addNode(propN, shapeP, shN);
+    ["values"].map(attr => {
+      if (attr in nodeExpr) {
+        byAttr(nodeExpr, attr, propN, ors);
+        remove(nodeExpr, attr);
+      }
+    });
+    if (ors.length === 1)
+      db.addTriple(propN, shapeP, ors[0]);
+    else if (ors.length > 1) {
+      var or = bnode();
+      db.addTriple(propN, shapeP, or);
+      db.addTriple(or, orP, list(ors));
+    }
+    return ors;
+  }
+  function values (obj, propN, ors) {
+    var l = obj.splice(0, obj.length);
+    var stemRanges = l.filter(ent => {
+      return typeof ent !== "string" && ent.type === "StemRange";
+    });
+    function inOrStem (t) {
+      var ret = [];
+      var ins = t.filter(ent => {
+        return typeof ent === "string";
+      });
+      var stems = t.filter(ent => {
+        return typeof ent !== "string" && ent.type === "Stem";
+      });
+      if (ins.length > 0) {
+        var cN = bnode(), inN = bnode();
+        db.addTriple(cN, inP, list(ins));
+        ret.push(cN)
+        
+      }
+      if (stems.length > 0) {
+        var cN = bnode();
+        ret.push(cN);
+        stems.forEach(n => {
+          db.addTriple(cN, stemP, n.stem);
+        });
+      }
+      return ret;
+    }
+    inOrStem(l).forEach(b => {
+      ors.push(b);
+    });
+    if (stemRanges.length > 0) {
+      cN = bnode(), inN = bnode();
+      ors.push(cN)
+      stemRanges.forEach(n => {
+        var excls = ("exclusions" in n) ? remove(n, "exclusions") : [];
+        excls = excls.map(ex => {
+          console.warn("ex:", ex);
+          var not = bnode();
+          if (typeof ex === "string") {
+            var stin = bnode(); //, list = bnode();
+            db.addTriple(not, notP, stin);
+            db.addTriple(stin, inP, list([ex]));
+          } else {
+            db.addTriple(not, notP, inOrStem([ex])[0]);
+          }
+          return not;
+        });
+        if (excls.length) {
+          var andN = bnode(), st = bnode();
+          ors.push(andN);
+          db.addTriple(andN, andP, list([st].concat(excls)));
+          db.addTriple(st, stemP, n.stem);
+        } else {
+          db.addTriple(cN, stemP, n.stem);
+        }
+      });
+    }
+    return ors;
+  }
+
+  var schema = loaded.schema;
+  ignore(schema, "base"); ignore(schema, "prefixes"); ignore(schema, "semActs"); ignore(schema, "start");
+  Schema(loaded.schema.shapes);
+  remove(schema, "shapes");
+  empty(schema);
+  var tz = db.find();
+  var w = require("n3").Writer({ prefixes: {
+    my: "http://a.example/",
+    sh: "http://www.w3.org/ns/shacl#"
+  } });
+  w.addTriples(tz);
+  w.end(function (error, result) {
+    console.log(result);
+  });
+}).catch(function (e) {
+  console.error("aborting:",
+                 e.stack ||
+                e);
+  process.exit(1);
+})
