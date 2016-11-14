@@ -149,12 +149,12 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
     var stemRanges = l.filter(ent => {
       return typeof ent !== "string" && ent.type === "StemRange";
     });
-    function inOrStem (t) {
+    function inOrStem (tz) {
       var ret = [];
-      var ins = t.filter(ent => {
+      var ins = tz.filter(ent => {
         return typeof ent === "string";
       });
-      var stems = t.filter(ent => {
+      var stems = tz.filter(ent => {
         return typeof ent !== "string" && ent.type === "Stem";
       });
       if (ins.length > 0) {
@@ -172,32 +172,35 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
       }
       return ret;
     }
-    inOrStem(l).forEach(b => {
-      ors.push(b);
-    });
+    ors.push(inOrStem(l));
     if (stemRanges.length > 0) {
-      cN = bnode(), inN = bnode();
-      ors.push(cN)
       stemRanges.forEach(n => {
         var excls = ("exclusions" in n) ? remove(n, "exclusions") : [];
-        excls = excls.map(ex => {
-          console.warn("ex:", ex);
-          var not = bnode();
+        var lst2 = excls.reduce((lst, ex) => {
           if (typeof ex === "string") {
-            var stin = bnode(); //, list = bnode();
-            db.addTriple(not, notP, stin);
-            db.addTriple(stin, inP, list([ex]));
+            lst.ins.push(ex);
           } else {
+            var not = bnode();
             db.addTriple(not, notP, inOrStem([ex])[0]);
+            lst.excls.push(not);
           }
-          return not;
-        });
-        if (excls.length) {
+          return lst;
+        }, {ins:[], excls:[]});
+        if (lst2.ins.length > 0) {
+          var not = bnode();
+          var stin = bnode(); //, list = bnode();
+          db.addTriple(not, notP, stin);
+          db.addTriple(stin, inP, list(lst2.ins));
+          lst2.excls.push(not);
+        }
+        if (lst2.excls.length) {
           var andN = bnode(), st = bnode();
           ors.push(andN);
-          db.addTriple(andN, andP, list([st].concat(excls)));
+          db.addTriple(andN, andP, list([st].concat(lst2.excls)));
           db.addTriple(st, stemP, n.stem);
         } else {
+          var cN = bnode();
+          ors.push(cN)
           db.addTriple(cN, stemP, n.stem);
         }
       });
