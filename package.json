@@ -24,6 +24,7 @@
     "jsonld": "^0.4.11",
     "koa": "^1.2.0",
     "koa-body": "^1.4.0",
+    "mocha": "^3.1.2",
     "n3": "^0.4.5",
     "promise": "^7.1.1",
     "request-promise": "0.4.3",
@@ -46,7 +47,7 @@
   ],
   "scripts": {
     "make": "(cd test/ && make test)",
-    "test": "mocha -C -R dot",
+    "test": "./node_modules/.bin/mocha -C -R dot",
     "lint": "eslint test/findPath.js",
     "browser": "node browser/build-browser-versions",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100"

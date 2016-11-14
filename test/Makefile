@@ -1,7 +1,7 @@
 # debugging: MOCHA='mocha --debug-brk'
 
-JISON?=../node_modules/jison/lib/cli.js
-MOCHA?=mocha
+JISON?=../node_modules/.bin/jison
+MOCHA?=../node_modules/.bin/mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
 GENCorpus?=$(join $(TESTDIR), bin/genCorpus.js)
@@ -35,7 +35,7 @@ Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js 
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
 Map-test: ../lib/ShExJison.js Map-test.js
-	(cd .. && $(MOCHA) -C -R $(REPORTER) test/Map-test.js)
+	$(MOCHA) -C -R $(REPORTER) Map-test.js
 
 cli-test: ../lib/ShExJison.js cli-test.js
 	HTTPTEST=$(subst BRANCH,$(shell git rev-parse --abbrev-ref HEAD),$(HTTP_CLI_TEMPLATE)) \
