@@ -585,8 +585,27 @@ function loadCommandLine (cmds) {
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }
-  if ("regex-module" in cmds)
-    ValidatorOptions.regexModule = getRegexModule(cmds["regex-module"]);
+  if ("regex-module" in cmds) {
+    if (cmds["regex-module"] === "?") {
+      // "--regex-module ?" lists the known regular expression modules.
+      return new Promise(function (resolve, reject) {
+	require('fs').readdir(Path.join(__dirname, REGEX_MODULES), (err, fns) => {
+	  if (err) throw Error(err);
+	  fns.forEach(fn => {
+	    if (fn.endsWith(".js")) {
+	      try {
+		var m = require(REGEX_MODULES + fn);
+		console.log("  --regex-module " + m.name + " -- " + m.description);
+	      } catch (e) {  }
+	    }
+	  });
+	  resolve(0);
+	});
+      });
+    } else {
+      ValidatorOptions.regexModule = getRegexModule(cmds["regex-module"]);
+    }
+  }
   return loadSchemaAndData(cmds, ValidatorOptions, SchemaOptions);
 }
 
