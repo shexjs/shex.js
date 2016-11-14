@@ -254,21 +254,22 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       var res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
       if (cmds["dry-run"])
         return res;
+      var passed = !("errors" in res);
       var expectedResults = loadedAndResults[1];
-      // display results
-      if (!valParms.quiet) {
-        if (expectedResults !== undefined) {
-          var match =
-              typeof expectedResults === "boolean" && expectedResults !== "errors" in res ||
-              JSON.stringify(expectedResults) == JSON.stringify(res);
+      // display results and return error codes
+      if (expectedResults !== undefined) {
+        var match =
+            typeof expectedResults === "boolean" && expectedResults !== !passed ||
+            JSON.stringify(expectedResults) == JSON.stringify(res);
+        if (!valParms.quiet)
           console.log(match);
-          // Exit status 3 means match failure.
-          return Promise.resolve(match ? 0 : 3);
-        } else {
+        // Exit status 3 means match failure.
+        return Promise.resolve(match ? 0 : 3);
+      } else {
+        if (!valParms.quiet)
           console.log(JSON.stringify(res, null, "  "));
-          // Exit status 2 means validation failure.
-          return Promise.resolve(res === null ? 2 : 0);
-        }
+        // Exit status 2 means validation failure.
+        return Promise.resolve(passed ? 0 : 2);
       }
     }
   }).catch(function (e) {
