@@ -139,8 +139,7 @@
 
 [43]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions
 [44]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
-[45]    senseFlags            ::= '!' '^'?
-                                | '^' '!'?  # inverse not
+[45]    senseFlags            ::= '!' # inverse not
 [46]    valueSet              ::= '[' valueSetValue* ']'
 
 [47]    valueSetValue         ::= iriRange | literal
