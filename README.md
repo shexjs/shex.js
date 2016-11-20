@@ -17,7 +17,7 @@ This runs `mocha -R dot` because there are around one thousand tests.
 
 ## validation
 
-You can validate RDF data using the executable `bin/validate` or the `lib/ShExValidation` library described below.
+You can validate RDF data using the `bin/validate` executable or the `lib/ShExValidation` library described below.
 
 ###  validation executable
 
