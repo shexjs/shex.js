@@ -1069,7 +1069,7 @@ tripleConstraint:
       }
     | senseFlags predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1inversedot
         if ($5.length)
           $$["annotations"] = $5; // t: 1inversedotAnnot3
       }
@@ -1098,9 +1098,6 @@ cardinality:
 
 senseFlags:
       '^'	-> { inverse: true } // t: 1inversedot
-    | '^' '!'	-> { inverse: true, negated: true } // t: 1negatedinversedot
-    | '!'	-> { negated: true } // t: 1negateddot
-    | '!' '^'	-> { inverse: true, negated: true } // t: 1inversenegateddot
     ;
 
 valueSet:
