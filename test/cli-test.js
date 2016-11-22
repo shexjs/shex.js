@@ -16,7 +16,9 @@ var chai = require("chai");
 var expect = chai.expect;
 var assert = chai.assert;
 var should = chai.should;
+
 var fs = require("fs");
+var _ = require("underscore");
 
 var manifestFile = "cli/manifest.json";
 
@@ -97,10 +99,24 @@ var AllTests = {
     { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
     { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], resultMatch: "Not Found", status: 1 },
+  ],
+
+  "materialize": [
+    // pleas for help
+    { name: "help", args: ["--help"], resultMatch: "Examples", status: 1 },
+    { name: "garbage", args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
+    { name: "no-target-file-specified", args: ["--jsonvars vars.json"], resultMatch: "No ShEx target schema file specified.", status: 1 },
+    { name: "no-target-file", args: ["--target", "cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
+    { name: "no-jsonvars-file", args: ["--target", "cli/target.shex", "--jsonvars", "cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
+    { name: "target-file", args: ["--target", "cli/target.shex", "--jsonvars", "cli/vars.json" ], stdin: "cli/problem.val", resultMatch: "b15", status: 0 },
+    { name: "target-file", args: ["--target", "cli/target.shex", "--jsonvars", "cli/vars.json", "--root", "http://hl7.org/fhir/shape/Problem"], stdin: "cli/problem.val", resultMatch: "Problem", status: 0 }
   ]
 };
 
-if (SLOW) {
+if (!SLOW) {
+  console.warn("Skipping cli-tests; to activate these tests, set environment variable SLOW=6000");
+
+} else {
 
 var last = new Date();
 var stamp = TIME ? function (s) {
@@ -132,6 +148,12 @@ Object.keys(AllTests).forEach(function (script) {
         process.chdir(__dirname); // the above paths are relative to this directory
 
         var program = child_process.spawn("../bin/" + script, test.args);
+
+        if (!_.isUndefined(test.stdin)){  
+          // redirecting stdin for this test
+          fs.createReadStream(test.stdin).pipe(program.stdin)
+        }
+
         var stdout = "", stderr = ""
 
         program.stdout.on("data", function(data) { stdout += data; });
