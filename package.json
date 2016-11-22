@@ -27,7 +27,8 @@
     "n3": "^0.4.5",
     "promise": "^7.1.1",
     "request-promise": "0.4.3",
-    "shex-test": "^0.8.2"
+    "shex-test": "^0.8.2",
+    "underscore": "~1.8.3"
   },
   "devDependencies": {
     "eslint": "^3.x",

@@ -209,3 +209,40 @@ and use it to validate the Issue1.ttl as we did above:
 Of course the data file can be local as well.
 
 Happy validating!
+
+## materialize
+
+Materialize is used to transform from a source schema to a target schema after validation is done. 
+
+The syntax is: 
+```
+materialize `-t <target schema>`|-h [-j `<JSON Vars File>`] [-r `<RDF root IRI>`] 
+```
+Materialize reads the output from the validate tool from STDIN and maps it to the specified target schema.  
+
+If supplied, a JSON vars file will be referenced to fill in constant values not specified from the source.  
+This is useful in assigning default fields to the target when there is no equivalent value in the source schema 
+and source data.
+
+Here is an example of a simple JSON vars file: 
+```
+{
+  "urn:local:Demographics:constSys": "System",
+}
+```
+If this vars file content is used, then any time a variable in the target file with 
+value "urn:local:Demographics:constSys" is seen, the value "System will be substituted.
+
+The RDF root IRI specifies the root node from which all nodes in the schema will descend.  
+The default root if none is specified is: ` tag:eric@w3.org/2016/root `
+
+Here are some examples: 
+```
+materialize -h
+```
+```
+validate -x source_schema.shex -l data.jsonld -s ProblemShape | materialize -t target_schema.shex -j vars.json
+```
+```
+cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.org/fhir/shape/problem
+```
