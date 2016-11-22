@@ -107,9 +107,9 @@ var AllTests = {
     { name: "garbage", args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "no-target-file-specified", args: ["--jsonvars vars.json"], resultMatch: "No ShEx target schema file specified.", status: 1 },
     { name: "no-target-file", args: ["--target", "cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
-    { name: "no-jsonvars-file", args: ["--target", "cli/target.shex", "--jsonvars", "cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
-    { name: "target-file", args: ["--target", "cli/target.shex", "--jsonvars", "cli/vars.json" ], stdin: "cli/problem.val", resultMatch: "b15", status: 0 },
-    { name: "target-file", args: ["--target", "cli/target.shex", "--jsonvars", "cli/vars.json", "--root", "http://hl7.org/fhir/shape/Problem"], stdin: "cli/problem.val", resultMatch: "Problem", status: 0 }
+    { name: "no-jsonvars-file", args: ["--target", "Map/problem-CMUMPS-FHIR/FHIRConditionCompact.shex", "--jsonvars", "cli/1dotOr2dot.json999"], resultMatch: "ENOENT", status: 1 },
+    { name: "target-file", args: ["--target", "Map/problem-CMUMPS-FHIR/FHIRConditionCompact.shex", "--jsonvars", "Map/problem-CMUMPS-FHIR/vars.json" ], stdin: "Map/problem-CMUMPS-FHIR/vprPatient-vprSchema.val", resultMatch: "b15", status: 0 },
+    { name: "target-file", args: ["--target", "Map/problem-CMUMPS-FHIR/FHIRConditionCompact.shex", "--jsonvars", "Map/problem-CMUMPS-FHIR/vars.json", "--root", "http://hl7.org/fhir/shape/Problem"], stdin: "Map/problem-CMUMPS-FHIR/vprPatient-vprSchema.val", resultMatch: "Problem", status: 0 }
   ]
 };
 
