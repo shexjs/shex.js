@@ -64,10 +64,10 @@ var Harness = {
 
 describe('A ShEx Mapper', function () {
   var tests = [
-    ["there", ["Map/BPFHIR.shex"], ["Map/BPunitsDAM.shex"], "Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPunitsDAM.ttl"],
-    ["back" , ["Map/BPunitsDAM.shex"], ["Map/BPFHIR.shex"], "Map/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPFHIR.ttl"],
-//    ["bifer", ["Map/BPFHIRsys.shex", "Map/BPFHIRdia.shex"], ["Map/BPunitsDAM.shex"], "Map/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPunitsDAM.ttl"]
-//    ["bifb" , ["Map/BPFHIR.shex"], ["Map/BPunitsDAMsys.shex", "Map/BPunitsDAMdia.shex"], "Map/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPunitsDAM.ttl"]
+    ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"],
+    ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl"],
+//    ["bifer", ["Map/BPDAMFHIR/BPFHIRsys.shex", "Map/BPDAMFHIR/BPFHIRdia.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
+//    ["bifb" , ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
   ];
   if (TESTS)
     tests = tests.filter(function (t) { return TESTS.indexOf(t[0]) !== -1; });
@@ -76,7 +76,7 @@ describe('A ShEx Mapper', function () {
   });
 
 /*
-  Harness.prepare(["Map/BPFHIR.shex"], ["Map/BPunitsDAMsys.shex", "Map/BPunitsDAMdia.shex"], "Map/BPFHIR.ttl", null, "Map/BPunitsDAM.ttl");
+  Harness.prepare(["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", null, "Map/BPDAMFHIR/BPunitsDAM.ttl");
 
   emits:
     _:0 bpudam:systolic [
