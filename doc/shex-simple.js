@@ -2,6 +2,8 @@
 // Copyright 2016 Eric Prud'hommeux
 // Release under MIT License.
 
+const START_SHAPE_LABEL = "- start -";
+
 function sum (s) { // cheap way to identify identical strings
   return s.replace(/\s/g, "").split("").reduce(function (a,b){
     a = ((a<<5) - a) + b.charCodeAt(0);
@@ -49,13 +51,14 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#data .status").text(" ");
     $("#data .passes, #data .fails").show();
     $("#data .passes p:first").text("Passing:");
-    load("#data .passes ul", schemaTest.passes, pickData, listItems, "data", function (o) { return o; });
+    load("#data .passes ul", schemaTest.passes, pickData, listItems, "data", function (o) { return o.data; });
     $("#data .fails p:first").text("Failing:");
-    load("#data .fails ul", schemaTest.fails, pickData, listItems, "data", function (o) { return o; });
+    load("#data .fails ul", schemaTest.fails, pickData, listItems, "data", function (o) { return o.data; });
 
     $("#results").text("").removeClass("passes fails error");
     $("#schema li.selected").removeClass("selected");
     $(elt).addClass("selected");
+    $("input.schema").val(getSchemaShapes()[0]);
   }
 }
 
@@ -64,23 +67,32 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    $("#data textarea").val(dataTest);
+    $("#data textarea").val(dataTest.data);
     $("#data .status").text(name);
     $("#data li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    validate();
+    //    $("input.data").val(getDataNodes()[0]);
+    $("input.shape").val(dataTest.shape);
+    $("input.data").val(dataTest.focus);
+
+    // validate();
   }
 }
 
+var Base = "http://a.example/"; // window.location.href;
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
-    var schema = ShExValidator.construct(ShExParser(window.location.href).parse(schemaText));
+    var schema = ShExValidator.construct(ShExParser(Base).parse(schemaText));
     var dataText = $("#data textarea").val();
     if (dataText) {
       var data = N3Store();
-      data.addTriples(N3Parser().parse(dataText));
-      var ret = schema.validate(data);
+      data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+      var focus = $("input.data").val();
+      var shape = $("input.schema").val();
+      if (shape === START_SHAPE_LABEL)
+	shape = undefined;
+      var ret = schema.validate(data, focus, shape);
       if ("errors" in ret)
         $("#results").text(JSON.stringify(ret, null, "  ")).
         removeClass("passes error").addClass("fails");
@@ -97,6 +109,22 @@ function validate () {
   }
 }
 
+function getSchemaShapes (entry) {
+  var schemaText = $("#schema textarea").val();
+  var schema = ShExParser(Base).parse(schemaText);
+  return ("start" in schema ? [START_SHAPE_LABEL] : []).
+    concat(Object.keys(schema.shapes));
+}
+
+function getDataNodes () {
+  var dataText = $("#data textarea").val();
+  var data = N3Store();
+  data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+  return data.find().map(t => {
+    return t.subject;
+  });
+}
+
 $("#data .passes, #data .fails").hide();
 $("#data .passes ul, #data .fails ul").empty();
 $("#validate").on("click", validate);
@@ -109,14 +137,26 @@ function prepareDemos () {
     "clinical observation": {
       schema: clinicalObs,
       passes: {
-        "with birthdate": clinicalObs_with_birthdate,
-        "without birthdate": clinicalObs_without_birthdate,
-        "no subject name": clinicalObs_no_subject_name
+        "with birthdate": { data: clinicalObs_with_birthdate,
+			    focus: "http://a.example/Obs1",
+			    shape: "- start -"},
+        "without birthdate": { data: clinicalObs_without_birthdate,
+			       focus: "http://a.example/Obs1",
+			       shape: "- start -" },
+        "no subject name": { data: clinicalObs_no_subject_name,
+			     focus: "http://a.example/Obs1",
+			     shape: "- start -" }
       },
       fails: {
-        "bad status": clinicalObs_bad_status, 
-        "no subject": clinicalObs_no_subject,
-        "wrong birthdate datatype": clinicalObs_birthdate_datatype
+        "bad status": { data: clinicalObs_bad_status,
+			focus: "http://a.example/Obs1",
+			shape: "- start -" },
+        "no subject": { data: clinicalObs_no_subject,
+			focus: "http://a.example/Obs1",
+			shape: "- start -" },
+        "wrong birthdate datatype": { data: clinicalObs_birthdate_datatype,
+				      focus: "http://a.example/Obs1",
+				      shape: "- start -" }
       }
     }
   };
@@ -138,16 +178,40 @@ function prepareDemos () {
         listItems[side][curSum].addClass("selected");
     }, 250);
   }
-  $("body").keyup(function (e) {
+  $("body").keydown(function (e) { // keydown because we need to preventDefault
     var code = e.keyCode || e.charCode;
-    if(e.ctrlKey && (code === 10 || code === 13)) // standards anyone?
+    if (e.ctrlKey && (code === 10 || code === 13)) { // standards anyone?
       $("#validate").click();
+      return false; // same as e.preventDefault();
+    }
   });
-  $("#schema textarea").keyup(function (e) {
+  $("#schema textarea").keyup(function (e) { // keyup to capture backspace
     later(e.target, "schema");
   });
   $("#data textarea").keyup(function (e) {
     later(e.target, "data");
+  });
+  [ { selector: ".schema",
+      getItems: getSchemaShapes },
+    { selector: ".data",
+      schema: { "S1": {}, "S2": {} },
+      getItems: getDataNodes }
+  ].forEach(entry => {
+    $.contextMenu({
+      selector: entry.selector,
+      callback: function(key, options) {
+        $("input" + options.selector).val(key);
+      },
+      build: function (elt, e) {
+	return {
+	  items:
+	  entry.getItems(entry).reduce((ret, opt) => {
+	    ret[opt] = { name: opt };
+	    return ret;
+	  }, {})
+	};
+      }
+    });
   });
 }
 
