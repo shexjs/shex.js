@@ -80,8 +80,6 @@ function validate () {
     if (dataText) {
       var data = N3Store();
       data.addTriples(N3Parser().parse(dataText));
-      console.log(data.find());
-
       var ret = schema.validate(data);
       if ("errors" in ret)
         $("#results").text(JSON.stringify(ret, null, "  ")).

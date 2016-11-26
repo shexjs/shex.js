@@ -34,7 +34,6 @@ var require = function (s) {
   if (s in modules)
     return modules[s];
   else {
-    debugger;
     console.trace("no def for:", s, "in:", modules);
   }
 }
