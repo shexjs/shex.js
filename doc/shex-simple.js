@@ -108,14 +108,14 @@ function validate () {
       if (schemaIsJSON)
         new ShExWriter({simplifyParentheses: false}).writeSchema(schema, (error, text) => {
           if (error)
-            $("#results").text("unwritable JSON schema:\n" + error).
+            $("#results").text("unwritable ShExJ schema:\n" + error).
             removeClass("passes").addClass("fails error");
           else
-            $("#results").text("valid JSON schema:\n" + text).
+            $("#results").text("valid ShExJ schema:\n" + text).
             removeClass("fails error").addClass("passes");
         });
       else
-        $("#results").text("valid schema:\n" + JSON.stringify(schema, null, "  ")).
+        $("#results").text("valid ShExC schema:\n" + JSON.stringify(schema, null, "  ")).
         removeClass("fails error").addClass("passes");
     }
   } catch (e) {
