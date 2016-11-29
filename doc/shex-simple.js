@@ -83,7 +83,11 @@ var Base = "http://a.example/"; // window.location.href;
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
-    var schema = ShExValidator.construct(ShExParser(Base).parse(schemaText));
+    var schemaIsJSON = schemaText.match(/^\S*\{/m);
+    var schema = schemaIsJSON ?
+        JSON.parse(schemaText) :
+        ShExParser(Base).parse(schemaText);
+    var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
     if (dataText) {
       var data = N3Store();
@@ -91,8 +95,8 @@ function validate () {
       var focus = $("input.data").val();
       var shape = $("input.schema").val();
       if (shape === START_SHAPE_LABEL)
-	shape = undefined;
-      var ret = schema.validate(data, focus, shape);
+        shape = undefined;
+      var ret = validator.validate(data, focus, shape);
       if ("errors" in ret)
         $("#results").text(JSON.stringify(ret, null, "  ")).
         removeClass("passes error").addClass("fails");
@@ -100,7 +104,18 @@ function validate () {
         $("#results").text(JSON.stringify(ret, null, "  ")).
         removeClass("fails error").addClass("passes");
     } else {
-      $("#results").text("valid schema").
+      var parsedSchema;
+      if (schemaIsJSON)
+        new ShExWriter({simplifyParentheses: false}).writeSchema(schema, (error, text) => {
+          if (error)
+            $("#results").text("unwritable JSON schema:\n" + error).
+            removeClass("passes").addClass("fails error");
+          else
+            $("#results").text("valid JSON schema:\n" + text).
+            removeClass("fails error").addClass("passes");
+        });
+      else
+        $("#results").text("valid schema:\n" + JSON.stringify(schema, null, "  ")).
         removeClass("fails error").addClass("passes");
     }
   } catch (e) {
@@ -138,25 +153,25 @@ function prepareDemos () {
       schema: clinicalObs,
       passes: {
         "with birthdate": { data: clinicalObs_with_birthdate,
-			    focus: "http://a.example/Obs1",
-			    shape: "- start -"},
+                            focus: "http://a.example/Obs1",
+                            shape: "- start -"},
         "without birthdate": { data: clinicalObs_without_birthdate,
-			       focus: "http://a.example/Obs1",
-			       shape: "- start -" },
+                               focus: "http://a.example/Obs1",
+                               shape: "- start -" },
         "no subject name": { data: clinicalObs_no_subject_name,
-			     focus: "http://a.example/Obs1",
-			     shape: "- start -" }
+                             focus: "http://a.example/Obs1",
+                             shape: "- start -" }
       },
       fails: {
         "bad status": { data: clinicalObs_bad_status,
-			focus: "http://a.example/Obs1",
-			shape: "- start -" },
+                        focus: "http://a.example/Obs1",
+                        shape: "- start -" },
         "no subject": { data: clinicalObs_no_subject,
-			focus: "http://a.example/Obs1",
-			shape: "- start -" },
+                        focus: "http://a.example/Obs1",
+                        shape: "- start -" },
         "wrong birthdate datatype": { data: clinicalObs_birthdate_datatype,
-				      focus: "http://a.example/Obs1",
-				      shape: "- start -" }
+                                      focus: "http://a.example/Obs1",
+                                      shape: "- start -" }
       }
     }
   };
@@ -203,13 +218,13 @@ function prepareDemos () {
         $("input" + options.selector).val(key);
       },
       build: function (elt, e) {
-	return {
-	  items:
-	  entry.getItems(entry).reduce((ret, opt) => {
-	    ret[opt] = { name: opt };
-	    return ret;
-	  }, {})
-	};
+        return {
+          items:
+          entry.getItems(entry).reduce((ret, opt) => {
+            ret[opt] = { name: opt };
+            return ret;
+          }, {})
+        };
       }
     });
   });
