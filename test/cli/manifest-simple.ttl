@@ -17,7 +17,7 @@
 
 <#1dotOr2dot_pass_p1> a sht:ValidationTest ;
     mf:name "1dotOr2dot_pass_p1" ;
-    sht:trait sht:SomeOf , sht:EachOf-unvisited ;
+    sht:trait sht:OneOf , sht:EachOf-unvisited ;
     rdfs:comment ":S1 {:p1 .|:p2 .,:p3 .} / { :s1 :p1 \"p1-0\" . }" ;
     mf:status mf:proposed ;
     mf:action [
