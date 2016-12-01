@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ShEx2 Simple Online Validator</title>
+    <meta name="description" content="simple ShEx2 demo" />
+    <style>
+      h1 { font-size: 1.3em; }
+      h1, p, ul { margin: 0; }
+      .passes { margin-right: 1em; }
+      .passes { padding-left: .1em; border-left: thick solid green; }
+      .fails  { padding-left: .1em; border-left: thick solid orange; }
+      .error  { padding-left: .1em; border-left: thick solid red; }
+      #schema textarea, .schema { background-color: #f4f4ff; }
+      #schema li.selected a { background-color: #e8e8ff; }
+      #data textarea, .data { background-color: #f4fff4; }
+      #data li.selected { background-color: #e8ffe8; }
+      .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
+      #navlist li {
+        display: inline;
+        list-style-type: none;
+        padding-right: 10px;
+      }
+      #actions {
+        float:right;
+        margin-right: .1em;
+        height: 2.6ex;
+      }
+      /* #actions input { height: 1.5ex; }  */
+      /* #actions button { height: 2.5ex; } */
+    </style>
+
+    <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+    <script src="https://www.w3.org/scripts/jquery/2.1/jquery.min.js"></script>
+    <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+  </head>
+
+  <body>
+
+    <div>
+      <h1 style="float:left;">ShEx2 Simple Online Validator</h1>
+      <ul id="navlist" style="float:left; padding-left: 1em;">
+	      <li>‣ source: <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
+	      <li>‣ <a href="https://github.com/shexSpec/shex.js">project</a></li>
+        <li>‣ <a href="https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html">rawgit</a></li>
+      </ul>
+      <div style="clear: both;"></div>
+    </div>
+
+    <div style="width: 100%;">
+      <div id="schema" style="float:left; width: 49%;">
+        <p class="status"> </p>
+        <textarea rows="25" style="width: 100%"></textarea>
+        <div>
+          <div style="float:left">
+            <p>Examples:</p>
+          </div>
+          <div id="actions" style="float:right; margin-right: .1em;">
+            <button id="validate">validate (ctl-enter)</button> <input id="focus" type="text" value="" class="data"/> as  <input id="shape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
+          </div>
+          <div class="examples" style="clear:both;">
+            <ul>
+              <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
+            </ul>
+          </div>
+        </div>
+            </div>
+      <div style="float:left; width: 1.5%;"><p> </p>
+      </div>
+      <div id="data" style="float:left; width: 49%;">
+        <p class="status"> </p>
+        <textarea rows="25" style="width: 100%"></textarea>
+        <div style="margin-left: .1em;">
+          <div class="passes" style="float:left">
+            <p></p>
+            <ul>
+              <li>This demo is no fun without javascript.</li>
+            </ul>
+          </div>
+          <div class="fails" style="float:left">
+            <p></p>
+            <ul>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <pre id="results" style="clear:both;">
+      </pre>
+    </div>
+    <script src="require.js"></script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["./N3Lexer"] = N3Lexer = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>N3Parser = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>N3Store = module.exports;</script>
+    <script src="../lib/ShExUtil.js"     ></script><script></script>
+    <script src="../lib/ShExJison.js"    ></script><script></script>
+    <script src="../lib/ShExParser.js"   ></script><script></script>
+    <script src="../lib/ShExWriter.js"   ></script><script></script>
+    <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
+    <script src="./shex-simple.js"></script>
+  </body>
+</html>

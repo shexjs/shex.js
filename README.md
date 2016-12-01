@@ -1,5 +1,5 @@
 # shex.js
-shex.js javascript implementation of Shape Expressions
+shex.js javascript implementation of Shape Expressions ([try online](https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html))
 
 ## install
 
