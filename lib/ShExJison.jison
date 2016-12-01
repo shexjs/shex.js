@@ -774,7 +774,8 @@ _QnodeConstraint_E_Opt:
     | nodeConstraint     ;
 
 shapeOrRef:
-      ATPNAME_LN	{ // t: 1dotRefLNex
+      shapeDefinition	// t: 1dotInline1
+    | ATPNAME_LN	{ // t: 1dotRefLNex
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
@@ -784,11 +785,11 @@ shapeOrRef:
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
       }
     | '@' shapeLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
-    | shapeDefinition	// t: 1dotInline1
     ;
 
 inlineShapeOrRef:
-      ATPNAME_LN	{ // t: 1dotRefLNex
+      inlineShapeDefinition	// t: 1dotInline1
+    | ATPNAME_LN	{ // t: 1dotRefLNex
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
@@ -798,7 +799,6 @@ inlineShapeOrRef:
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
       }
     | '@' shapeLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
-    | inlineShapeDefinition	// t: 1dotInline1
     ;
 
 nodeConstraint:

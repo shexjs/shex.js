@@ -1,0 +1,39 @@
+/* require.js - a collection of horrible hacks to enable loading
+ * node.js libraries into a web browser environment.
+
+ * The general usage is:
+     <script src="require.js"></script>
+     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script>
+     <script>modules["./N3Util"] = N3Util = module.exports;</script>
+ * This idiom loads the module and assigns the current assignment of
+ * module.exports to a global. Some libraries include an index library
+ * which provides access to the individual libraries. This can be hacked
+ * with:
+     <script>modules["n3"]["Util"] = modules["./N3Util"];</script>
+ */
+
+function require (module) {
+  return { inspect: JSON.stringify };
+}
+if (typeof Error.captureStackTrace === "undefined")
+  Error.captureStackTrace = function (err, lookFor) {
+    // do nothing
+  }
+process = { env: {} };
+module = { exports: 5 };
+modules = {
+  util: {
+    inspect: function (o) { return "util.inspect(s):"+JSON.stringify(o); }
+  },
+  n3: { },
+  fs: { }, path: { }, jsonld: { },
+  promise: Promise
+};
+modules["request-promise"] = {};
+var require = function (s) {
+  if (s in modules)
+    return modules[s];
+  else {
+    console.trace("no def for:", s, "in:", modules);
+  }
+}
