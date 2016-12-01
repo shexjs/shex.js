@@ -972,10 +972,10 @@ tripleExpression:
 
 someOfTripleExpr:
       groupTripleExpr	
-    | multiElementSomeOf        ;
+    | multiElementOneOf        ;
 
-multiElementSomeOf:
-      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "SomeOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
+multiElementOneOf:
+      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "OneOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
     ;
 
 _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C:
@@ -989,7 +989,7 @@ _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus:
 
 innerTripleExpr:
       multiElementGroup	
-    | multiElementSomeOf	
+    | multiElementOneOf	
     ;
 
 groupTripleExpr:

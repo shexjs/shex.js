@@ -63,9 +63,9 @@
 [6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
 [7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+
-[10]    someOfShape           ::= groupShape | multiElementSomeOf
-[10a]   multiElementSomeOf    ::= groupShape ('|' groupShape)+
-[10b]   innerShape            ::= multiElementGroup | multiElementSomeOf
+[10]    someOfShape           ::= groupShape | multiElementOneOf
+[10a]   multiElementOneOf     ::= groupShape ('|' groupShape)+
+[10b]   innerShape            ::= multiElementGroup | multiElementOneOf
 [11]    groupShape            ::= singleElementGroup | multiElementGroup
 [11]    singleElementGroup    ::= unaryShape ','?
 [11a]   multiElementGroup     ::= unaryShape ( ',' unaryShape )+ ','?
