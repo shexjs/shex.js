@@ -3,10 +3,10 @@
   "node": "x",
   "shape": "http://a.example/S1",
   "solution": {
-    "type": "SomeOfSolutions",
+    "type": "OneOfSolutions",
     "solutions": [
       {
-        "type": "SomeOfSolution",
+        "type": "OneOfSolution",
         "expressions": [
           {
             "type": "TripleConstraintSolutions",

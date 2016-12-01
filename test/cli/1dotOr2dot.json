@@ -7,7 +7,7 @@
     "http://a.example/S1": {
       "type": "Shape",
       "expression": {
-        "type": "SomeOf",
+        "type": "OneOf",
         "expressions": [
           {
             "type": "TripleConstraint",

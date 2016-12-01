@@ -68,6 +68,7 @@
 # ~ s/groupShape/groupTripleExpr/ (EGP 20160930)
 # ~ s/unaryShape/unaryTripleExpr/ (EGP 20160930)
 # ~ s/encapsulatedShape/bracketedTripleExpr/ (EGP 20160930)
+# ~ s/SomeOf/OneOf/g (EGP 20161201)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -127,9 +128,9 @@
 [32]    extraPropertySet      ::= "EXTRA" predicate+
 
 [33]    tripleExpression      ::= someOfTripleExpr
-[34]    someOfTripleExpr      ::= groupTripleExpr | multiElementSomeOf
-[35]    multiElementSomeOf    ::= groupTripleExpr ('|' groupTripleExpr)+
-[36]    innerTripleExpr       ::= multiElementGroup | multiElementSomeOf
+[34]    someOfTripleExpr      ::= groupTripleExpr | multiElementOneOf
+[35]    multiElementOneOf     ::= groupTripleExpr ('|' groupTripleExpr)+
+[36]    innerTripleExpr       ::= multiElementGroup | multiElementOneOf
 [37]    groupTripleExpr       ::= singleElementGroup | multiElementGroup
 [38]    singleElementGroup    ::= unaryTripleExpr ';'?
 [39]    multiElementGroup     ::= unaryTripleExpr (';' unaryTripleExpr)+ ';'?
