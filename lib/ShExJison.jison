@@ -1208,7 +1208,7 @@ shapeLabel:
 numericLiteral:
       INTEGER	-> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
     | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
-    | DOUBLE	-> createLiteral($1.toLowerCase(), XSD_DOUBLE) // t: 1val1DOUBLE
+    | DOUBLE	-> createLiteral($1, XSD_DOUBLE) // t: 1val1DOUBLE
     ;
 
 string:
