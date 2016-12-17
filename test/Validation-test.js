@@ -136,6 +136,7 @@ describe("A ShEx validator", function () {
                      function maybeGetTerm (base, s) {
                        return s === undefined ? null :
                          s.substr(0, 2) === "_:" ? s :
+                         s.substr(0, 1) === "\"" ? s :
                          resolveRelativeIRI(base, s);
                      }
                      var focus = maybeGetTerm(dataURL, test.action.focus);
