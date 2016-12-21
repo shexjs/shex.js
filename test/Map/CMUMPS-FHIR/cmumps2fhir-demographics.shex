@@ -1,0 +1,563 @@
+﻿PREFIX fhir: <http://hl7.org/fhir/> 
+PREFIX fhirvs: <http://hl7.org/fhir/ValueSet/>
+PREFIX Map: <http://shex.io/extensions/Map/#>
+PREFIX dem: <urn:local:Demographics:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> 
+BASE <http://hl7.org/fhir/shape/>
+
+start=@<Patient>                         # AND {fhir:nodeRole [fhir:treeRoot]}
+
+# Information about an individual or animal receiving health care services
+<Patient> CLOSED {
+
+    a [fhir:Patient];
+    fhir:nodeRole [fhir:treeRoot]?;
+
+    # fhir:Resource.id @<id>?;                # Logical id of this artifact
+    # fhir:Resource.meta @<Meta>?;            # Metadata about the resource
+    # fhir:Resource.implicitRules @<uri>?;    # A set of rules under which this 
+                                              # content was created 
+    # fhir:Resource.language @<code>?;        # Language of the resource content
+    # fhir:DomainResource.text @<Narrative>?; # Text summary of the resource, for 
+                                              # human interpretation 
+    # fhir:DomainResource.contained @<Resource>*;  # Contained, inline Resources
+    # fhir:extension @<Extension>*;           # Additional Content defined by 
+                                              # implementations 
+    # fhir:modifierExtension @<Extension>*;   # Extensions that cannot be ignored
+
+    fhir:Patient.identifier  {               # An identifier for this patient
+      a [fhir:Identifier]?;
+      fhir:Identifier.system    { fhir:value IRI %Map:{ dem:constIdentifierSys %} };
+      fhir:Identifier.value     { fhir:value xsd:string  %Map:{ dem:id %} };
+    };
+
+    # fhir:Patient.active @<boolean>?;        # Whether this patient's record is
+                                            # in active use
+
+    fhir:Patient.name { 
+       # fhir:HumanName.use    { fhir:value xsd:string? %Map:{ dem:constNameUse %} };
+       fhir:HumanName.text   { fhir:value xsd:string? %Map:{ dem:patient_label %} };
+       # fhir:HumanName.given { fhir:value xsd:string? %Map:{ regex(dem:name,/[\\w|'-]+(?:-\\w+)?,(.*)/) %} };
+       # fhir:HumanName.family { fhir:value xsd:string? %Map:{ regex(dem:name,/([\\w|'-]+(?:-\\w+)?),/) %} };
+    }; 
+
+    fhir:Patient.telecom { 
+      fhir:ContactPoint.value { fhir:value xsd:string? %Map:{ dem:phone %} };
+    };
+
+    # fhir:Patient.gender xsd:string? %Map:{ hashmap(dem:sex_label,'{"MALE":"male","FEMALE":"female"}') %};
+
+    # fhir:Patient.birthDate xsd:date? %Map:{ toISO(dem:dob) %};
+
+    fhir:Patient.address  {
+       fhir:Address.line        { fhir:value xsd:string? %Map:{ dem:street_address %} };
+       fhir:Address.city        { fhir:value xsd:string? %Map:{ dem:city %} };
+       fhir:Address.state       { fhir:value xsd:string? %Map:{ dem:state %} };
+       fhir:Address.postalCode  { fhir:value xsd:string? %Map:{ dem:zipcode %} };
+       # fhir:Address.type      { fhir:value xsd:string %Map:{ dem:constAddrPostal %} };
+    };
+
+    # fhir:Patient.maritalStatus @<CodeableConcept>?;  # Marital (civil) status of a patient
+    # (                                       # Whether patient is part of a 
+                                              # multiple birth 
+        # fhir:Patient.multipleBirthBoolean @<boolean>  |
+        # fhir:Patient.multipleBirthInteger @<integer> 
+    # )?;
+    # fhir:Patient.photo @<Attachment>*;      # Image of the patient
+
+    # fhir:Patient.contact {
+      # fhir:Patient.contact.relationship {
+        # fhir:Element.id { fhir:valid xsd:string %Map:{ dem:erelationship_id %} };
+        # fhir:CodeableConcept.coding {
+          # fhir:Coding.system  { fhir:value xsd:string %Map:{ dem:constCmumpsSys %} };
+          # fhir:Coding.version { fhir:value xsd:string %Map:{ dem:constCmumpsVersion %} };
+          # fhir:Coding.display { fhir:value xsd:string %Map:{ dem:erelationship_label %} };
+        # };
+      # };
+      # fhir:Patient.contact.name { 
+        # fhir:HumanName.use  { fhir:value xsd:string? %Map:{ dem:constNameUse %} };
+        # fhir:HumanName.text { fhir:value xsd:string? %Map:{ dem:emergency_contact %} };
+      # };
+      # fhir:Patient.contact.address { 
+        # fhir:Address.line       { fhir:value xsd:string? %Map:{ dem:estreet_address_1 %} };
+        # fhir:Address.city       { fhir:value xsd:string? %Map:{ dem:ecity %} };
+        # fhir:Address.postalCode { fhir:value xsd:string? %Map:{ dem:ezip %} };
+        # fhir:Address.type       { fhir:value xsd:string %Map:{ dem:constAddrPostal %} };
+      # };
+      # fhir:Patient.contact.telecom { 
+        # fhir:ContactPoint.system { fhir:value xsd:string %Map:{ dem:constCmumpsEphone %} };
+        # fhir:ContactPoint.value { fhir:value xsd:string? %Map:{ dem:ephone %} };
+      # };
+    # };
+  
+    # fhir:Patient.communication @<Patient.communication>*;  # A list of Languages which may be
+    #                                                        # used to communicate with the
+    #                                                        # patient about his or her health
+    #    fhir:Patient.generalPractitioner                    # Patient's nominated primary care
+    #                                                        # provider
+    #    (   @<OrganizationReference> OR
+    #        @<PractitionerReference>
+    #    )*;
+    #    fhir:Patient.managingOrganization @<Reference>?;  # Organization that is the custodian
+    #                                                      # of the patient record
+    #    fhir:Patient.link @<Patient.link>*;               # Link to another patient resource
+    #                                                      # that concerns the same actual
+    #                                                      # person
+    #    fhir:index xsd:integer?                           # Relative position in a list
+}
+
+# Link to another patient resource that concerns the same actual person
+<Patient.link> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:modifierExtension @<Extension>*;   # Extensions that cannot be ignored
+    fhir:Patient.link.other                 # The other patient or related 
+                                            # person resource that the link 
+                                            # refers to 
+    (   @<PatientReference> OR
+        @<RelatedPersonReference>
+    );
+    fhir:Patient.link.type @<code> AND
+    	{fhir:value @fhirvs:link-type};  # replace | refer | seealso - type 
+                                            # of link 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# This patient is known to be an animal (non-human)
+<Patient.animal> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:modifierExtension @<Extension>*;   # Extensions that cannot be ignored
+    fhir:Patient.animal.species @<CodeableConcept>;  # E.g. Dog, Cow
+    fhir:Patient.animal.breed @<CodeableConcept>?;  # E.g. Poodle, Angus
+    fhir:Patient.animal.genderStatus @<CodeableConcept>?;  # E.g. Neutered, Intact
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# A contact party (e.g. guardian, partner, friend) for the patient
+<Patient.contact> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:modifierExtension @<Extension>*;   # Extensions that cannot be ignored
+    fhir:Patient.contact.relationship @<CodeableConcept>*;  # The kind of relationship
+    fhir:Patient.contact.name @<HumanName>?;  # A name associated with the contact 
+                                            # person 
+    fhir:Patient.contact.telecom @<ContactPoint>*;  # A contact detail for the person
+    fhir:Patient.contact.address @<Address>?;  # Address for the contact person
+    fhir:Patient.contact.gender @<code> AND
+    	{fhir:value @fhirvs:administrative-gender}?;  # male | female | other | unknown
+    fhir:Patient.contact.organization @<Reference>?;  # Organization that is associated 
+                                            # with the contact 
+    fhir:Patient.contact.period @<Period>?;  # The period during which this 
+                                            # contact person or organization is 
+                                            # valid to be contacted relating to 
+                                            # this patient 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# A list of Languages which may be used to communicate with the patient about his or her health
+<Patient.communication> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:modifierExtension @<Extension>*;   # Extensions that cannot be ignored
+    fhir:Patient.communication.language @<CodeableConcept>;  # The language which can be used to 
+                                            # communicate with the patient about 
+                                            # his or her health 
+    fhir:Patient.communication.preferred @<boolean>?;  # Language preference indicator
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+#---------------------- Data Types -------------------
+
+# Primitive Type date
+<date> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:gYear OR xsd:gYearMonth OR xsd:date?;  # Primitive value for date
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type dateTime
+<dateTime> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:gYear OR xsd:gYearMonth OR xsd:date OR xsd:dateTime?;  # Primitive value for dateTime
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Metadata about a resource
+<Meta> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Meta.versionId @<id>?;             # Version specific identifier
+    fhir:Meta.lastUpdated @<instant>?;      # When the resource version last 
+                                            # changed 
+    fhir:Meta.profile @<uri>*;              # Profiles this resource claims to 
+                                            # conform to 
+    fhir:Meta.security @<Coding>*;          # Security Labels applied to this 
+                                            # resource 
+    fhir:Meta.tag @<Coding>*;               # Tags applied to this resource
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type code
+<code> CLOSED {
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:string?;                 # Primitive value for code
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# An address expressed using postal conventions (as opposed to GPS or other location definition formats)
+<Address> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Address.use @<code> AND
+    	{fhir:value @fhirvs:address-use}?;  # home | work | temp | old - purpose 
+                                            # of this address 
+    fhir:Address.type @<code> AND
+    	{fhir:value @fhirvs:address-type}?;  # postal | physical | both
+    fhir:Address.text @<string>?;           # Text representation of the address
+    fhir:Address.line @<string>*;           # Street name, number, direction & 
+                                            # P.O. Box etc. 
+    fhir:Address.city @<string>?;           # Name of city, town etc.
+    fhir:Address.district @<string>?;       # District name (aka county)
+    fhir:Address.state @<string>?;          # Sub-unit of country (abbreviations 
+                                            # ok) 
+    fhir:Address.postalCode @<string>?;     # Postal code for area
+    fhir:Address.country @<string>?;        # Country (can be ISO 3166 3 letter 
+                                            # code) 
+    fhir:Address.period @<Period>?;         # Time period when address was/is in 
+                                            # use 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type string
+<string> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:string MAXLENGTH 1048576?;  # Primitive value for string
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# A reference from one resource to another
+<Reference> CLOSED {
+    fhir:link IRI?;
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Reference.reference @<string>?;    # Literal reference, Relative, 
+                                            # internal or absolute URL 
+    fhir:Reference.identifier @<Identifier>?;  # Logical reference, when literal 
+                                            # reference is not known 
+    fhir:Reference.display @<string>?;      # Text alternative for the resource
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Base Resource
+<Resource> {a .+;
+    fhir:Resource.id @<id>?;                # Logical id of this artifact
+    fhir:Resource.meta @<Meta>?;            # Metadata about the resource
+    fhir:Resource.implicitRules @<uri>?;    # A set of rules under which this 
+                                            # content was created 
+    fhir:Resource.language @<code>?;        # Language of the resource content
+    fhir:index xsd:integer?
+}
+
+# Time range defined by start and end date/time
+<Period> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Period.start @<dateTime>?;         # Starting time with inclusive 
+                                            # boundary 
+    fhir:Period.end @<dateTime>?;           # End time with inclusive boundary, 
+                                            # if not ongoing 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Content in a format defined elsewhere
+<Attachment> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Attachment.contentType @<code>?;   # Mime type of the content, with 
+                                            # charset etc. 
+    fhir:Attachment.language @<code>?;      # Human language of the content 
+                                            # (BCP-47) 
+    fhir:Attachment.data @<base64Binary>?;  # Data inline, base64ed
+    fhir:Attachment.url @<uri>?;            # Uri where the data can be found
+    fhir:Attachment.size @<unsignedInt>?;   # Number of bytes of content (if url 
+                                            # provided) 
+    fhir:Attachment.hash @<base64Binary>?;  # Hash of the data (sha-1, base64ed)
+    fhir:Attachment.title @<string>?;       # Label to display in place of the 
+                                            # data 
+    fhir:Attachment.creation @<dateTime>?;  # Date attachment was first created
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type integer
+<integer> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:int MININCLUSIVE "-2147483648"^^xsd:int MAXINCLUSIVE "2147483647"^^xsd:int?;  # Primitive value for integer
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type uri
+<uri> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:string?;                 # Primitive value for uri
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+<Extension> {fhir:extension @<Extension>*;
+    fhir:index xsd:integer?
+}
+
+# Name of a human - parts and usage
+<HumanName> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:HumanName.use @<code> AND
+    	{fhir:value @fhirvs:name-use}?;  # usual | official | temp | nickname 
+                                            # | anonymous | old | maiden 
+    fhir:HumanName.text @<string>?;         # Text representation of the full 
+                                            # name 
+    fhir:HumanName.family @<string>*;       # Family name (often called 
+                                            # 'Surname') 
+    fhir:HumanName.given @<string>*;        # Given names (not always 'first'). 
+                                            # Includes middle names 
+    fhir:HumanName.prefix @<string>*;       # Parts that come before the name
+    fhir:HumanName.suffix @<string>*;       # Parts that come after the name
+    fhir:HumanName.period @<Period>?;       # Time period when name was/is in use
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Details of a Technology mediated contact point (phone, fax, email, etc.)
+<ContactPoint> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:ContactPoint.system @<code> AND
+    	{fhir:value @fhirvs:contact-point-system}?;  # phone | fax | email | pager | other
+    fhir:ContactPoint.value @<string>?;     # The actual contact point details
+    fhir:ContactPoint.use @<code> AND
+    	{fhir:value @fhirvs:contact-point-use}?;  # home | work | temp | old | mobile 
+                                            # - purpose of this contact point 
+    fhir:ContactPoint.rank @<positiveInt>?;  # Specify preferred order of use (1 
+                                            # = highest) 
+    fhir:ContactPoint.period @<Period>?;    # Time period when the contact point 
+                                            # was/is in use 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# An identifier intended for computation
+<Identifier> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Identifier.use @<code> AND
+    	{fhir:value @fhirvs:identifier-use}?;  # usual | official | temp | 
+                                            # secondary (If known) 
+    fhir:Identifier.type @<CodeableConcept>?;  # Description of identifier
+    fhir:Identifier.system @<uri>?;         # The namespace for the identifier
+    fhir:Identifier.value @<string>?;       # The value that is unique
+    fhir:Identifier.period @<Period>?;      # Time period when id is/was valid 
+                                            # for use 
+    fhir:Identifier.assigner @<Reference>?;  # Organization that issued id (may 
+                                            # be just text) 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type boolean
+<boolean> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:boolean?;                # Primitive value for boolean
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# A human-readable formatted text, including images
+<Narrative> CLOSED {
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Narrative.status @<code> AND
+    	{fhir:value @fhirvs:narrative-status};  # generated | extensions | 
+                                            # additional | empty 
+    fhir:Narrative.div xsd:string;          # Limited xhtml content
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type id
+<id> CLOSED {
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:string?;                 # Primitive value for id
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Concept - reference to a terminology or just  text
+<CodeableConcept> CLOSED {
+    fhir:concept IRI*;
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:CodeableConcept.coding @<Coding>*;  # Code defined by a terminology 
+                                            # system 
+    fhir:CodeableConcept.text @<string>?;   # Plain text representation of the 
+                                            # concept 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type instant
+<instant> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:dateTime?;               # Primitive value for instant
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# A reference to a code defined by a terminology system
+<Coding> CLOSED {
+    fhir:concept IRI?;
+    fhir:Element.id @<string>?;             # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:Coding.system @<uri>?;             # Identity of the terminology system
+    fhir:Coding.version @<string>?;         # Version of the system - if relevant
+    fhir:Coding.code @<code>?;              # Symbol in syntax defined by the 
+                                            # system 
+    fhir:Coding.display @<string>?;         # Representation defined by the 
+                                            # system 
+    fhir:Coding.userSelected @<boolean>?;   # If this coding was chosen directly 
+                                            # by the user 
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type positiveInt
+<positiveInt> CLOSED {
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:positiveInteger?;        # Primitive value for positiveInt
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type base64Binary
+<base64Binary> CLOSED {
+    fhir:Element.id @<id>?;                 # xml:id (or equivalent in JSON)
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:base64Binary?;           # Primitive value for base64Binary
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+# Primitive Type unsignedInt
+<unsignedInt> CLOSED {
+    fhir:extension @<Extension>*;           # Additional Content defined by 
+                                            # implementations 
+    fhir:value xsd:nonNegativeInteger?;     # Primitive value for unsignedInt
+    fhir:index xsd:integer?                 # Relative position in a list
+}
+
+#---------------------- Reference Types -------------------
+
+<PractitionerReference> CLOSED {
+    fhir:Element.id @<id>?;
+    fhir:extension @<Extension>*;
+    fhir:link @<Practitioner> OR CLOSED {a fhir:Practitioner}?;
+    fhir:Reference.reference @<string>?;
+    fhir:Reference.display @<string>?;
+    fhir:index xsd:integer?
+}
+
+<Practitioner> {
+    a [fhir:Practitioner];
+    fhir:nodeRole [fhir:treeRoot]?
+}
+
+<OrganizationReference> CLOSED {
+    fhir:Element.id @<id>?;
+    fhir:extension @<Extension>*;
+    fhir:link @<Organization> OR CLOSED {a fhir:Organization}?;
+    fhir:Reference.reference @<string>?;
+    fhir:Reference.display @<string>?;
+    fhir:index xsd:integer?
+}
+
+<Organization> {
+    a [fhir:Organization];
+    fhir:nodeRole [fhir:treeRoot]?
+}
+
+<PatientReference> CLOSED {
+    fhir:Element.id @<id>?;
+    fhir:extension @<Extension>*;
+    fhir:link @<Patient> OR CLOSED {a fhir:Patient}?;
+    fhir:Reference.reference @<string>?;
+    fhir:Reference.display @<string>?;
+    fhir:index xsd:integer?
+}
+
+<RelatedPersonReference> CLOSED {
+    fhir:Element.id @<id>?;
+    fhir:extension @<Extension>*;
+    fhir:link @<RelatedPerson> OR CLOSED {a fhir:RelatedPerson}?;
+    fhir:Reference.reference @<string>?;
+    fhir:Reference.display @<string>?;
+    fhir:index xsd:integer?
+}
+
+<RelatedPerson> {
+    a [fhir:RelatedPerson];
+    fhir:nodeRole [fhir:treeRoot]?
+}
+
+#---------------------- Value Sets ------------------------
+
+# The gender of a person used for administrative purposes.
+fhirvs:administrative-gender ["male" "female" "other" "unknown"]
+
+# The use of a human name
+fhirvs:name-use ["usual" "official" "temp" "nickname" "anonymous" "old" "maiden"]
+
+# The use of an address
+fhirvs:address-use ["home" "work" "temp" "old"]
+
+# Identifies the purpose for this identifier, if known .
+fhirvs:identifier-use ["usual" "official" "temp" "secondary"]
+
+# The type of link between this patient resource and another patient resource.
+fhirvs:link-type ["replace" "refer" "seealso"]
+
+# The type of an address (physical / postal)
+fhirvs:address-type ["postal" "physical" "both"]
+
+# Use of contact point
+fhirvs:contact-point-use ["home" "work" "temp" "old" "mobile"]
+
+# The status of a resource narrative
+fhirvs:narrative-status ["generated" "extensions" "additional" "empty"]
+
+# This value set defines the set of codes that can be used to indicate the marital status of a person.
+fhirvs:marital-status ["A" "D" "I" "L" "M" "P" "S" "T" "U" "W" "UNK"]
+
+# Telecommunications form for contact point
+fhirvs:contact-point-system ["phone" "fax" "email" "pager" "other"]
+
