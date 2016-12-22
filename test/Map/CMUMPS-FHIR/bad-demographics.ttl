@@ -1,0 +1,23 @@
+<http://hokukahu.com/patient-1> a <http://hl7.org/fhir/Patient>;
+    <http://hl7.org/fhir/nodeRole> <http://hl7.org/fhir/treeRoot>;
+    <http://hl7.org/fhir/Patient.identifier> _:b0;
+    <http://hl7.org/fhir/Patient.name> _:b3;
+    <http://hl7.org/fhir/Patient.telecom> _:b5;
+    <http://hl7.org/fhir/Patient.address> _:b7.
+    <http://hl7.org/fhir/Identifier.system> _:b1;
+    <http://hl7.org/fhir/Identifier.value> _:b2.
+_:b1 <http://hl7.org/fhir/value> <http://hokukahu.com/patients/>.
+_:b2 <http://hl7.org/fhir/value> "2-000007".
+_:b3 <http://hl7.org/fhir/HumanName.text> _:b4.
+_:b4 <http://hl7.org/fhir/value> "BUNNY,BUGS".
+_:b5 <http://hl7.org/fhir/ContactPoint.value> _:b6.
+_:b6 <http://hl7.org/fhir/value> "555 555 5555".
+_:b7 <http://hl7.org/fhir/Address.line> _:b8;
+    <http://hl7.org/fhir/Address.city> _:b9;
+    <http://hl7.org/fhir/Address.state> _:b10;
+    <http://hl7.org/fhir/Address.postalCode> _:b11.
+_:b8 <http://hl7.org/fhir/value> "100 MAIN ST".
+_:b9 <http://hl7.org/fhir/value> "ANYTOWN".
+_:b10 <http://hl7.org/fhir/value> "NEW YORK".
+_:b11 <http://hl7.org/fhir/value> "60040".
+
