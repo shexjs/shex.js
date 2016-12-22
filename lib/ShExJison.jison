@@ -968,23 +968,23 @@ _Qpredicate_E_Plus:
     ;
 
 tripleExpression:
-    someOfTripleExpr	;
+    oneOfTripleExpr	;
 
-someOfTripleExpr:
+oneOfTripleExpr:
       groupTripleExpr	
     | multiElementOneOf        ;
 
 multiElementOneOf:
-      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "OneOf", expressions: unionAll([$1], $2) } // t: 2someOfdot
+      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "OneOf", expressions: unionAll([$1], $2) } // t: 2oneOfdot
     ;
 
 _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C:
-      '|' groupTripleExpr	-> $2 // t: 2someOfdot
+      '|' groupTripleExpr	-> $2 // t: 2oneOfdot
     ;
 
 _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus:
-      _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> [$1] // t: 2someOfdot
-    | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2) // t: 2someOfdot
+      _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> [$1] // t: 2oneOfdot
+    | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2) // t: 2oneOfdot
     ;
 
 innerTripleExpr:
