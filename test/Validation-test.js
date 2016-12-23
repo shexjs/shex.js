@@ -6,7 +6,7 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 // var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser").Parser;
 var ShExValidator = require("../lib/ShExValidator");
-var TestExtension = require("../extensions/shex:Test.js");
+var TestExtension = require("../extensions/shex:Test/module");
 
 var N3 = require("n3");
 var N3Util = N3.Util;
