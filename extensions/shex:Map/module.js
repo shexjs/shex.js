@@ -6,7 +6,7 @@
  */
 var N3 = require("n3");
 var N3Util = N3.Util;
-var ShExUtil = require("../lib/ShExUtil");
+var ShExUtil = require("../../lib/ShExUtil");
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
