@@ -216,6 +216,10 @@
     return result + iri.substring(segmentStart);
   }
 
+  Parser._setTermResolver = function (res) {
+    Parser._termResolver = res;
+  }
+
   // Creates an expression with the given type and attributes
   function expression(expr, attr) {
     var expression = { expression: expr };
@@ -242,7 +246,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._termResolver = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -306,7 +310,7 @@
   }
 
   function error (msg) {
-    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._termResolver = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
     throw new Error(msg);
   }
@@ -351,6 +355,7 @@
 
 IT_BASE                 [Bb][Aa][Ss][Ee]
 IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
+IT_LABEL                [Ll][Aa][Bb][Ee][Ll]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
 IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
@@ -397,9 +402,10 @@ CODE                    "{" ([^%\\] | "\\"[%\\] | {UCHAR})* "%}"
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
-NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
+//NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
-NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
+//NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
+STRING_GRAVE            '`' ([^\u0060\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '`' /* #x60=` #x5C=\ #xA=new line #xD=carriage return */
 IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 //ATIRIREF              '@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
@@ -445,11 +451,13 @@ COMMENT                 '#' [^\u000a\u000d]*
 {NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
 {STRING_LITERAL1}       return 'STRING_LITERAL1';
 {STRING_LITERAL2}       return 'STRING_LITERAL2';
+{STRING_GRAVE}          return 'STRING_GRAVE';
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
 //{PLX}                 return 'PLX';
 //{PN_LOCAL}            return 'PN_LOCAL';
 {IT_BASE}               return 'IT_BASE';
 {IT_PREFIX}             return 'IT_PREFIX';
+{IT_LABEL}              return 'IT_LABEL';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
 {IT_VIRTUAL}            return 'IT_VIRTUAL';
@@ -556,6 +564,7 @@ _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
 directive:
       baseDecl	// t: @@
     | prefixDecl	// t: 1dotLNex
+    | labelDecl	// t: @@
     ;
 
 baseDecl:
@@ -574,6 +583,24 @@ prefixDecl:
           prefixIRI = _resolveIRI($3.slice(1, -1));
         Parser._prefixes[$2.slice(0, -1)] = prefixIRI;
       }
+    ;
+
+labelDecl:
+    IT_LABEL _O_Qiri_E_Or_QGT_LBRACKET_E_S_Qiri_E_Star_S_QGT_RBRACKET_E_C	{
+        $2.forEach(function (elt) {
+	  Parser._termResolver.add(elt);
+        });
+      }
+    ;
+
+_Qiri_E_Star:
+      	-> []
+    | _Qiri_E_Star iri	-> $1.concat($2)
+    ;
+
+_O_Qiri_E_Or_QGT_LBRACKET_E_S_Qiri_E_Star_S_QGT_RBRACKET_E_C:
+      iri	-> [$1]
+    | '[' _Qiri_E_Star ']'	-> $2
     ;
 
 notStartAction:
@@ -673,7 +700,7 @@ _O_QIT_OR_E_S_QinlineShapeAnd_E_C:
     ;
 
 _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star:
-      -> []
+      	-> []
     | _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QinlineShapeAnd_E_C	-> $1.concat($2)
     ;
 
@@ -1111,6 +1138,7 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
+    | STRING_GRAVE	-> Parser._termResolver.resolve(unescapeString($1, 1))
     | literal	// t: 1val1DECIMAL
     ;
 
@@ -1159,11 +1187,11 @@ include:
     ;
 
 annotation:
-      '//' predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
+      '//' predicate _O_QiriOrLabel_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
     ;
 
-_O_Qiri_E_Or_Qliteral_E_C:
-      iri	// t: 1dotAnnotIRIREF
+_O_QiriOrLabel_E_Or_Qliteral_E_C:
+      iriOrLabel	// t: 1dotAnnotIRIREF
     | literal	// t: 1dotAnnotSTRING_LITERAL1
     ;
 
@@ -1193,12 +1221,12 @@ literal:
     ;
 
 predicate:
-      iri	// t: 1dot
+      iriOrLabel	// t: 1dot
     | 'a'	-> RDF_TYPE // t: 1AvalA
     ;
 
 datatype:
-      iri       ;
+      iriOrLabel       ;
 
 shapeLabel:
       iri	// t: 1dot
@@ -1226,6 +1254,20 @@ iri:
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1));
+    }
+    ;
+
+iriOrLabel:
+      IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? unescape($1.slice(1,-1), irirefEscapeSequence) : _resolveIRI(unescape($1.slice(1,-1), irirefEscapeSequence)) // t: 1dot
+    | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
+        var namePos = $1.indexOf(':');
+        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
+    }
+    | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
+        $$ = expandPrefix($1.substr(0, $1.length - 1));
+    }
+    | STRING_GRAVE {
+        $$ = Parser._termResolver.resolve(unescapeString($1, 1));
     }
     ;
 

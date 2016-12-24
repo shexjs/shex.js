@@ -47,6 +47,8 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#schema textarea").val(schemaTest.schema);
     $("#schema .status").text(name);
 
+    $("#meta textarea").val(schemaTest.meta);
+
     $("#data textarea").val("");
     $("#data .status").text(" ");
     $("#data .passes, #data .fails").show();
@@ -80,13 +82,44 @@ function pickData (name, dataTest, elt, listItems, side) {
 }
 
 var Base = "http://a.example/"; // window.location.href;
+var shexParser = new ShExParser(Base);
+
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
     var schemaIsJSON = schemaText.match(/^\S*\{/m);
+    var resolverText = $("#meta textarea").val();
+    if (resolverText) {
+      var resolverStore = N3Store();
+      resolverStore.addTriples(N3Parser({documentIRI:Base}).parse(resolverText));
+      shexParser._setTermResolver({
+        _db: resolverStore,
+        _lookFor: [],
+        add: function (iri) {
+          this._lookFor.push(iri);
+        },
+        resolve: function (label) {
+          for (var i = 0; i < this._lookFor.length; ++i) {
+            var found = this._db.find(null, this._lookFor[i], label);
+            if (found.length)
+              return found[0].subject;
+          }
+          throw Error("no term found for `" + label + "`");
+        }
+      });
+    } else {
+      shexParser._setTermResolver({
+        add: function (iri) {
+          throw Error("no term resolver to accept <" + iri + ">");
+        },
+        resolve: function (label) {
+          throw Error("no term resolver to resolve `" + label + "`");
+        }
+      });
+    }
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
-        ShExParser(Base).parse(schemaText);
+        shexParser.parse(schemaText);
     var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
     if (dataText) {
@@ -126,7 +159,13 @@ function validate () {
 
 function getSchemaShapes (entry) {
   var schemaText = $("#schema textarea").val();
-  var schema = ShExParser(Base).parse(schemaText);
+  shexParser._setTermResolver({
+    add: function (iri) {  },
+    resolve: function (label) {
+      return "http://a.example/vapidPredicate"
+    }
+  });
+  var schema = shexParser.parse(schemaText);
   return ("start" in schema ? [START_SHAPE_LABEL] : []).
     concat(Object.keys(schema.shapes));
 }
@@ -152,26 +191,52 @@ function prepareDemos () {
     "clinical observation": {
       schema: clinicalObs,
       passes: {
-        "with birthdate": { data: clinicalObs_with_birthdate,
-                            focus: "http://a.example/Obs1",
-                            shape: "- start -"},
-        "without birthdate": { data: clinicalObs_without_birthdate,
-                               focus: "http://a.example/Obs1",
-                               shape: "- start -" },
-        "no subject name": { data: clinicalObs_no_subject_name,
-                             focus: "http://a.example/Obs1",
-                             shape: "- start -" }
+        "with birthdate": {
+          data: clinicalObs_with_birthdate,
+          focus: "http://a.example/Obs1",
+          shape: "- start -"},
+        "without birthdate": {
+          data: clinicalObs_without_birthdate,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "no subject name": {
+          data: clinicalObs_no_subject_name,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
       },
       fails: {
-        "bad status": { data: clinicalObs_bad_status,
-                        focus: "http://a.example/Obs1",
-                        shape: "- start -" },
-        "no subject": { data: clinicalObs_no_subject,
-                        focus: "http://a.example/Obs1",
-                        shape: "- start -" },
-        "wrong birthdate datatype": { data: clinicalObs_birthdate_datatype,
-                                      focus: "http://a.example/Obs1",
-                                      shape: "- start -" }
+        "bad status": {
+          data: clinicalObs_bad_status,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "no subject": {
+          data: clinicalObs_no_subject,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "wrong birthdate datatype": {
+          data: clinicalObs_birthdate_datatype,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
+      }
+    },
+    "protein record": {
+      schema: proteinRecord,
+      meta: proteinRecord_meta,
+      passes: {
+        "good": {
+          data: proteinRecord_good,
+          focus: "http://a.example/Obs1",
+          shape: "- start -"}
+      },
+      fails: {
+        "bad label": {
+          data: proteinRecord_badLabel,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "bad datatype": {
+          data: proteinRecord_badDatatype,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
       }
     }
   };
@@ -206,11 +271,17 @@ function prepareDemos () {
   $("#data textarea").keyup(function (e) {
     later(e.target, "data");
   });
+  $("#meta textarea").keyup(function (e) {
+    later(e.target, "meta");
+  });
   [ { selector: ".schema",
       getItems: getSchemaShapes },
     { selector: ".data",
       schema: { "S1": {}, "S2": {} },
-      getItems: getDataNodes }
+      getItems: getDataNodes },
+    { selector: ".meta",
+      schema: { "S1": {}, "S2": {} },
+      getItems: function () { return []; } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.selector,
@@ -308,9 +379,47 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
 
-perAddrSchema = ``;
+proteinRecord = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+LABEL [ rdfs:label skos:label ]
+<S> {
+  \`protein name\` LITERAL;
+  \`protein type\` [ \`signaling\` \`regulatory\` \`transport\` ];
+  \`protein width\` \`ucum microns\`
+}`;
+proteinRecord_meta = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX ex: <http://a.example/>
 
-shexjSchema = ``; // '
+ex:protName rdfs:label "protein name" .
+ex:protType skos:label "protein type" .
+ex:Signaling rdfs:label "signaling" .
+ex:Regulatory skos:label "regulatory" .
+ex:Transport rdfs:label "transport" ; skos:label "transport" .
+ex:protWidth rdfs:label "protein width" ; skos:label "protein width" .
+ex:microns rdfs:label "ucum microns" .
+`;
+proteinRecord_good = `PREFIX ex: <http://a.example/>
+
+<s>
+  ex:protName "Dracula" ;
+  ex:protType ex:Regulatory ;
+  ex:protWidth "30"^^ex:microns .
+`;
+proteinRecord_badLabel = `PREFIX ex: <http://a.example/>
+
+<s>
+  ex:protName999 "Dracula" ;
+  ex:protType ex:Regulatory ;
+  ex:protWidth "30"^^ex:microns .
+`;
+proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
+
+<s>
+  ex:protName "Dracula" ;
+  ex:protType ex:Regulatory ;
+  ex:protWidth "30"^^ex:microns999 .
+`;
 
 prepareDemos();
 

@@ -59,6 +59,7 @@ var CLI = require("command-line-args")([
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
   { name: "shape",     alias: "s", type: String, typeLabel: "IRI|Bnode", multiple: false, defaultValue: undefined, description: "shape to validate" },
   { name: "shex",      alias: "x", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExC schema" },
+  { name: "term-resolver",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "description resolver" }, // @@ add URL
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
@@ -373,9 +374,10 @@ function queueTests (tests, cmds) {
     if (cmds.invocation) {
       console.log(getInvocation(test));
     }
-    if ("regexModule" in test.options)
-      test.options.regexModule = getRegexModule(cmds["regexModule"]);
-    return loadSchemaAndData(test, test.options, SchemaOptions);
+    if ("regexModule" in test.validatorOptions)
+      test.validatorOptions.regexModule = getRegexModule(cmds["regexModule"]);
+    var schemaOptions = Object.assign({}, SchemaOptions, test.schemaOptions || {});
+    return loadSchemaAndData(test, test.validatorOptions, schemaOptions);
   })).then(function (results) {
     // exit with a 0 if all returned 0, else a failure code.
     return results.reduce(function (soFar, result) {
@@ -481,14 +483,18 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
         });
     var tests = testNodes.map(function (subject) {
       var action = loaded.data.find(subject, mf+"action", null)[0].object;
-      var options = Object.assign({}, ValidatorOptions);
+      var validatorOptions = Object.assign({}, ValidatorOptions);
+      var schemaOptions = Object.assign({}, SchemaOptions);
       var traits = loaded.data.find(subject, sht+"trait", null);
       traits.forEach(function (t) {
         var tStr = t.object.substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
         if (tStr in TraitToOption)
-          options[TraitToOption[tStr]] = tStr;
+          validatorOptions[TraitToOption[tStr]] = tStr;
       });
+      var resolver = loaded.data.find(action, sht+"termResolver", null);
+      if (resolver.length)
+	schemaOptions["termResolver"] = resolver.map(function (t) { return t.object });
 
       return [["shex" , "schema", true ],
               ["shape", "shape" , false],
@@ -500,7 +506,9 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
                   ret[elt[0]] = elt[2] ? [v] : v;
                 }
                 return ret;
-              }, {json: [], jsonld: [], options: options}); // @@ no way to specify jsonld in manifest
+              }, {json: [], jsonld: [],
+		  validatorOptions: validatorOptions,
+		  schemaOptions: schemaOptions}); // @@ no way to specify jsonld in manifest
     });
     return queueTests(tests, cmds);
   }).catch(function (e) {
@@ -531,6 +539,7 @@ function loadJSONmanifest (jsonManifests) {
                 name: t.name,
                 shex: t.action.schema,
                 shape: t.action.shape,
+                termResolver: t.action.termResolver,
                 data: t.action.data,
                 node: t.action.focus,
                 options: options
@@ -557,8 +566,16 @@ function loadJSONmanifest (jsonManifests) {
               return resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
             });
           });
-          if (!("options" in elt))
-            elt.options = ValidatorOptions;
+	  elt.schemaOptions = Object.assign({}, SchemaOptions);
+	  if ("termResolver" in elt && elt.termResolver) {
+	    elt.schemaOptions.termResolver = [resolveRelativeIRI(p.url, elt.termResolver)];
+	    delete elt.termResolver;
+	  }
+          if ("options" in elt) {
+            elt.validatorOptions = elt.options;
+	    delete elt.options;
+          } else
+            elt.validatorOptions = ValidatorOptions;
           if ("result" in elt && elt.result !== null)
             elt.result = resolveRelativeIRI(p.url, elt.result);
           elt.jsonld = []; // @@ no way to specify jsonld in manifest
@@ -585,6 +602,9 @@ function loadCommandLine (cmds) {
   }
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
+  }
+  if (cmds["term-resolver"].length) {
+    SchemaOptions.termResolver = cmds["term-resolver"];
   }
   if ("regex-module" in cmds) {
     if (cmds["regex-module"] === "?") {
@@ -664,6 +684,10 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             parms[k] = serverParms[k];
         });
         var options = serverOptions;
+        if ("term-resolver" in parms)
+          options = extend(options, {
+            termResolver: parms["term-resolver"]
+          });
         if ("regex-module" in parms)
           options = extend(options, {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
