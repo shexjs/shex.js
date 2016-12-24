@@ -101,7 +101,7 @@ var AllTests = {
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], resultMatch: "Not Found", status: 1 },
   ],
 
-  "materialize": [
+  "../extensions/shex:Map/bin/materialize": [
     { name: "help", args: ["--help"], resultMatch: "Examples", status: 1 },
     { name: "garbage", args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "no-target-file-specified", args: ["--jsonvars vars.json"], resultMatch: "No ShEx target schema file specified.", status: 1 },
