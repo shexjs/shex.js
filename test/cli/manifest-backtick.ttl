@@ -1,0 +1,31 @@
+# -*- mode: n3; outline-regexp: "[#]+ "; -*-
+
+# prefixes
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
+@prefix sht:     <http://www.w3.org/ns/shacl/test-suite#> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+
+# entries
+<> a mf:Manifest ;
+    rdfs:comment "ShEx validation tests" ;
+    mf:entries
+    (
+        <#3backtick_pass>
+    ) .
+
+<#3backtick_pass> a sht:ValidationTest ;
+    mf:name "3backtick_pass" ;
+    sht:trait sht:Backtick ;
+    rdfs:comment ":S1 {:p1 .|:p2 .,:p3 .} / { :s1 :p1 \"p1-0\" . }" ;
+    mf:status mf:proposed ;
+    mf:action [
+      sht:schema <3backtick.shex> ;
+      sht:shape <http://a.example/S> ;
+      sht:termResolver <backtick.owl> ;
+      sht:data <backtick.ttl> ;
+      sht:focus <http://a.example/s>
+    ] ;
+    mf:result <3backtick_pass.val>
+    .

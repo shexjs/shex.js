@@ -1,0 +1,67 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/s",
+  "shape": "http://a.example/S",
+  "solution": {
+    "type": "EachOfSolutions",
+    "solutions": [
+      {
+        "type": "EachOfSolution",
+        "expressions": [
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/protName",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s",
+                "predicate": "http://a.example/protName",
+                "object": "\"Dracula\""
+              }
+            ],
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "literal"
+            }
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/protType",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s",
+                "predicate": "http://a.example/protType",
+                "object": "http://a.example/Regulatory"
+              }
+            ],
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "values": [
+                "http://a.example/Signaling",
+                "http://a.example/Regulatory",
+                "http://a.example/Transport"
+              ]
+            }
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://a.example/protWidth",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s",
+                "predicate": "http://a.example/protWidth",
+                "object": "\"30\"^^http://a.example/microns"
+              }
+            ],
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "datatype": "http://a.example/microns"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
