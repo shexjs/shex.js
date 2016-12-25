@@ -80,13 +80,15 @@ function pickData (name, dataTest, elt, listItems, side) {
 }
 
 var Base = "http://a.example/"; // window.location.href;
+var shexParser = new ShExParser(Base);
+
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
     var schemaIsJSON = schemaText.match(/^\S*\{/m);
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
-        ShExParser(Base).parse(schemaText);
+        shexParser.parse(schemaText);
     var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
     if (dataText) {
@@ -126,7 +128,7 @@ function validate () {
 
 function getSchemaShapes (entry) {
   var schemaText = $("#schema textarea").val();
-  var schema = ShExParser(Base).parse(schemaText);
+  var schema = shexParser.parse(schemaText);
   return ("start" in schema ? [START_SHAPE_LABEL] : []).
     concat(Object.keys(schema.shapes));
 }
@@ -313,10 +315,6 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <Patient2>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
-
-perAddrSchema = ``;
-
-shexjSchema = ``; // '
 
 prepareDemos();
 
