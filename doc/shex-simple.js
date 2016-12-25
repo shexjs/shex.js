@@ -80,7 +80,7 @@ function pickData (name, dataTest, elt, listItems, side) {
 }
 
 var Base = "http://a.example/"; // window.location.href;
-var shexParser = new ShExParser(Base);
+var shexParser = ShExParser.construct(Base);
 
 function validate () {
   try {
