@@ -104,8 +104,10 @@
 				| "(" shapeExpression ")"
                                 | '.'  # no constraint
 
-[20]    shapeOrRef            ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | shapeDefinition
-[21]    inlineShapeOrRef      ::= ATPNAME_LN | ATPNAME_NS | '@' shapeLabel | inlineShapeDefinition
+[20]    shapeOrRef            ::= shapeDefinition
+                                | ATPNAME_LN | ATPNAME_NS | '@' shapeLabel
+[21]    inlineShapeOrRef      ::= inlineShapeDefinition
+                                | ATPNAME_LN | ATPNAME_NS | '@' shapeLabel
 
 [22]    nodeConstraint        ::= "LITERAL" xsFacet*
                                 | nonLiteralKind stringFacet*
@@ -127,8 +129,8 @@
 [31]    inlineShapeDefinition ::= (includeSet | extraPropertySet | "CLOSED")* '{' tripleExpression? '}'
 [32]    extraPropertySet      ::= "EXTRA" predicate+
 
-[33]    tripleExpression      ::= someOfTripleExpr
-[34]    someOfTripleExpr      ::= groupTripleExpr | multiElementOneOf
+[33]    tripleExpression      ::= oneOfTripleExpr
+[34]    oneOfTripleExpr       ::= groupTripleExpr | multiElementOneOf
 [35]    multiElementOneOf     ::= groupTripleExpr ('|' groupTripleExpr)+
 [36]    innerTripleExpr       ::= multiElementGroup | multiElementOneOf
 [37]    groupTripleExpr       ::= singleElementGroup | multiElementGroup
@@ -211,4 +213,4 @@
 [173s]  PN_LOCAL_ESC          ::= '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
 
 @pass ::= [ \t\r\n]+
-        | "#" [^\r\n]* 
+        | "#" [^\r\n]*

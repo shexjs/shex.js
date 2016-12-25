@@ -1,0 +1,311 @@
+#!/usr/bin/env node
+
+// Converts an RDF file to JSON or JSON-LD. 
+
+var _ = require('underscore');
+var cmdlineArgs = require('command-line-args')
+var fs = require('fs');
+var path = require('path');
+var Promise = require('promise');
+var rdfstore = require('rdfstore');
+var jsonld = require('jsonld').promises;
+
+/**
+ * Converts the given graph object into a JSON LD Graph object using an optional
+ * frame on the corresponding Component.
+ *
+ * @param input RDF JS Interface Graph object
+ * @param frame JSON-LD Frame object
+ *
+ * @see http://json-ld.org/spec/latest/json-ld-framing/
+ */
+function rdfToJsonLd(input, frame) {
+
+    return buildJSON(input).then(function(json) {
+
+        if (frame) {
+            return new Promise(function(resolve) { 
+                var framedJson = jsonld.frame(json, frame);
+                resolve(framedJson); 
+            }).then(framedJson => { 
+                return framedJson; 
+            }).catch(function(e) {
+                console.error("Unable to process JSONLD frame!");
+                console.error(e);
+                process.exit(1);
+            });
+
+       } else if (json.length == 1) {
+          return json[0];
+       }
+
+       return json;
+    });
+}
+
+/**
+ * Promise of JSON-LD array of objects for the given graph.
+ *
+ * @param graph RDF JS Interface Graph object
+ */
+function buildJSON(graph) {
+
+    return new Promise(function(resolve) {
+        var jsonGraph = []
+        var subject = indexedSubject.bind(this, {}, jsonGraph);
+        graph.forEach(function(triple) {
+            var subj = subject(triple.subject);
+            var pred = triple.predicate.nominalValue;
+            var obj = objectValue(triple.object);
+            pushTriple(subj, pred, obj);
+        });
+        resolve(jsonGraph);
+    });
+}
+
+/**
+ * Returns a JSON-LD object for the given subject using existing subjects where
+ * possible.
+ *
+ * @param subjects hash of existing subjects by their nominal value to their position in jsonGraph
+ * @param jsonGraph array of existing subject objects
+ * @param subject an RDF term implementing RDF JS Interface
+ */
+function indexedSubject(subjects, jsonGraph, subject) {
+
+    var value = subject.nominalValue;
+    if (typeof subjects[value] === 'undefined') {
+        if (subject.interfaceName === 'BlankNode') {
+            jsonGraph.push({
+                '@id': subject.toString()
+            });
+        } else {
+            jsonGraph.push({
+                '@id': value
+            });
+        }
+
+        subjects[value] = jsonGraph.length - 1;
+    }
+
+    return jsonGraph[subjects[value]];
+}
+
+/**
+ * Converts the RDF term into a JSON-LD object
+ *
+ * @param object an RDF term implementing RDF JS Interface
+ */
+function objectValue(object) {
+
+    var value = object.nominalValue;
+    if (object.interfaceName === 'NamedNode') {
+        return {
+            '@id': value
+        };
+    } else if (object.interfaceName === 'BlankNode') {
+        return {
+            '@id': object.toString()
+        };
+    } else if (object.language) {
+        return {
+            '@language': object.language,
+            '@value': value
+        };
+    } else if (object.datatype && object.datatype.toString() != 'http://www.w3.org/2001/XMLSchema#string') {
+        return {
+            '@type': object.datatype.toString(),
+            '@value': value
+        };
+    } else {
+        return value;
+    }
+}
+
+/**
+ * Adds the key value to the given JSON-LD object.
+ *
+ * @param object JSON-LD object
+ * @param key the nominal value of the predicate
+ * @param value the object value of the property as a JSON-LD object
+ */
+function pushTriple(object, key, value) {
+
+    if (key === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
+        if (typeof object['@type'] === 'undefined') {
+            object['@type'] = [];
+        }
+        object['@type'].push(value['@id']);
+    } else {
+        if (typeof object[key] === 'undefined') {
+            object[key] = value;
+        } else {
+            if (!Array.isArray(object[key])) {
+                object[key] = [object[key]];
+            }
+            object[key].push(value);
+        }
+    }
+}
+
+/**
+ * Loads data into a RDF JS Interface Graph object
+ *
+ * @param media Media type (application/json, text/n3...) of the data to be parsed or the value 'remote' if a URI for the data is passed instead
+ * @param input RDF data to be parsed and loaded or an URI where the data will be retrieved after performing content negotiation
+ *
+ * @see https://www.w3.org/TR/rdf-interfaces/#graphs
+ */
+function rdfLoad(media, input) {
+
+    var type = media ? media :
+        _.isString(input) ? 'remote' :
+        _.isObject(input) ? 'application/json' : undefined;
+
+    return denodeify(rdfstore, 'create', {}).then(function(store){
+        return Promise.resolve().then(function(){
+            if (type) {
+                return denodeify(store, 'load', type, input, {});
+            }
+        }).then(function(){
+                return denodeify(store, 'graph');
+        }).then(function(graph){
+            graph.rdfstore = store;
+            return graph;
+        });
+    }).catch(function(e) {
+      console.error("Error processing RDF!");
+      console.error(e);
+      process.exit(1);
+    });
+}
+
+/**
+ * Converts cb style async functions to promise style functions
+ * Could be rewritten to avoid using non-standard Promisejs using callbacks 
+ */
+function denodeify(object, functionName /* arguments */) {
+    var args = _.toArray(arguments).slice(2);
+    return Promise.denodeify(object[functionName]).apply(object, args);
+}
+
+function help() {
+    console.log(
+        cli.getUsage({
+            title:"rdf-to-json",
+            description:"convert an RDF file to JSON, or to JSONLD if a frame is given.",
+            synopsis: [
+              "rdf-to-json -r <RDF File> [-f <Frame File>][-m <media>]"
+            ],
+            examples: [
+              "   rdf-to-json -r rdf-file.ttl",
+              "   rdf-to-json -r rdf-file.ttl -f myFrame.frame",
+              "   rdf-to-json -r rdf-file.ttl -f myFrame.frame -m \"text/turtle\""
+            ],
+            footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
+          }));
+}
+
+/**
+ * Read a file 
+ *
+ * @param filename File name 
+ * @param encoding Character encoding
+ */
+function readFile(filename, encoding) {
+
+    return new Promise(function(resolve, reject){
+        return fs.readFile(filename, encoding || 'utf-8', function(err, content){
+            if (err) {
+              console.error(err.message);
+              reject(err);
+            }
+            else resolve(content);
+        });
+    });
+}
+
+/**
+ * Verify file exists
+ *
+ * @param filename File name 
+ */
+function fileExists(filename) {
+    if (! fs.existsSync(filename)) {
+        console.error("File "+filename+" does not exist!");
+        help();
+        process.exit(1);
+    }
+}
+
+// Define the command line args and parse to see what we got
+var cli = cmdlineArgs([
+  { name: "help", alias: "h", type: Boolean },
+  { name: "frame", alias: "f", type: String, description: "JSON-LD frame file" },
+  { name: "media", alias: "m", type: String, defaultValue: "text/turtle", description: "RDF media type, e.g., text/turtle"},
+  { name: "rdffile", alias: "r", type: String, description: "RDF file to be processed" }
+]);
+
+try { 
+   var cmds = cli.parse() || {};
+} catch(e) { 
+   console.error(e.message);
+   help();
+   process.exit(1);
+}
+
+if (cmds.help) {
+  help();
+  process.exit(0);
+}
+
+// Verify we got the required RDF file - can't do anything without it
+if ((_.isUndefined(cmds.rdffile) || _.isNull(cmds.rdffile))) {
+    console.error("An RDF file argument is required!");
+    help();
+    process.exit(1);
+}
+fileExists(cmds.rdffile); 
+
+// If a frame was specified, make sure we got a file name and it exists
+if (!_.isUndefined(cmds.frame)) {
+   if (_.isNull(cmds.frame)) {
+       console.error("-f argument requires a frame file!");
+       help();
+       process.exit(1);
+   } else {
+       fileExists(cmds.frame);
+   }
+}
+
+// Prepare to read the RDF & frame files in parallel
+var filenames = _.isUndefined(cmds.frame) ? [cmds.rdffile] : [cmds.rdffile, cmds.frame];
+var readFiles = filenames.map(function(filename) {
+  return readFile(filename, 'utf8');
+});
+
+Promise.all(readFiles).then(fileContent => { 
+  var rdfText = fileContent[0];
+  var frameText = undefined;
+  if (fileContent.length > 1) {
+      try {
+          frameText = JSON.parse(fileContent[1]);
+      } catch(e) { 
+          console.error("Unable to parse frame JSON!");
+          console.error(e);
+          process.exit(1);
+      }
+  }
+
+  // Load the RDF text into an RDF graph
+  return new Promise(function(resolve) {
+
+     var graph = rdfLoad(cmds.media, rdfText);
+     resolve(graph);
+
+  }).then(function(graph) { 
+    rdfToJsonLd(graph, frameText).then(json => { 
+      console.log(JSON.stringify(json)); 
+    });
+  });
+});
