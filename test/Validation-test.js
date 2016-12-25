@@ -88,8 +88,7 @@ describe("A ShEx validator", function () {
                  shapes;
              }
              shexParser._setBase(schemaURL);
-             var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-             var validator = ShExValidator.construct(schema, {
+             var schemaOptions = {
                regexModule: regexModule,
                diagnose: true,
                or:
@@ -107,7 +106,10 @@ describe("A ShEx validator", function () {
                  return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
                                                      shapeLabel, depth, seen);
                }
-             });
+             };
+
+             var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+             var validator = ShExValidator.construct(schema, schemaOptions);
              var testResults = TestExtension.register(validator);
 
              var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
