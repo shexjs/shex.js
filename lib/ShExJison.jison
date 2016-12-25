@@ -673,7 +673,7 @@ _O_QIT_OR_E_S_QinlineShapeAnd_E_C:
     ;
 
 _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star:
-      -> []
+      	-> []
     | _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QinlineShapeAnd_E_C	-> $1.concat($2)
     ;
 
