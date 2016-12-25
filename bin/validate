@@ -361,7 +361,7 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
 
 /* queueTests - take a structure like
 [ { json: [],
-    options: {},
+    validatorOptions: {},
     shex: [ 'file:///tmp/t/t.shex' ],
     shape: 'http://www.w3.org/fhir-rdf-shapes/MedicationOrder',
     data: [ 'file:///tmp/t/t.ttl' ],
@@ -494,7 +494,7 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
       });
       var resolver = loaded.data.find(action, sht+"termResolver", null);
       if (resolver.length)
-	schemaOptions["termResolver"] = resolver.map(function (t) { return t.object });
+        schemaOptions["termResolver"] = resolver.map(function (t) { return t.object });
 
       return [["shex" , "schema", true ],
               ["shape", "shape" , false],
@@ -507,8 +507,8 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
                 }
                 return ret;
               }, {json: [], jsonld: [],
-		  validatorOptions: validatorOptions,
-		  schemaOptions: schemaOptions}); // @@ no way to specify jsonld in manifest
+                  validatorOptions: validatorOptions,
+                  schemaOptions: schemaOptions}); // @@ no way to specify jsonld in manifest
     });
     return queueTests(tests, cmds);
   }).catch(function (e) {
@@ -566,14 +566,14 @@ function loadJSONmanifest (jsonManifests) {
               return resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
             });
           });
-	  elt.schemaOptions = Object.assign({}, SchemaOptions);
-	  if ("termResolver" in elt && elt.termResolver) {
-	    elt.schemaOptions.termResolver = [resolveRelativeIRI(p.url, elt.termResolver)];
-	    delete elt.termResolver;
-	  }
+          elt.schemaOptions = Object.assign({}, SchemaOptions);
+          if ("termResolver" in elt && elt.termResolver) {
+            elt.schemaOptions.termResolver = [resolveRelativeIRI(p.url, elt.termResolver)];
+            delete elt.termResolver;
+          }
           if ("options" in elt) {
             elt.validatorOptions = elt.options;
-	    delete elt.options;
+            delete elt.options;
           } else
             elt.validatorOptions = ValidatorOptions;
           if ("result" in elt && elt.result !== null)
