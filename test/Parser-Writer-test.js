@@ -2,7 +2,7 @@
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
-var ShExParser = require("../lib/ShExParser").Parser;
+var ShExParser = require("../lib/ShExParser");
 var ShExWriter = require("../lib/ShExWriter");
 var ShExUtil = require("../lib/ShExUtil");
 
@@ -24,7 +24,7 @@ describe("A ShEx parser", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
 
-  var parser = new ShExParser();
+  var parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
@@ -162,7 +162,7 @@ describe("A ShEx parser", function () {
   if (!TESTS || TESTS.indexOf("prefix") !== -1) {
     describe("with pre-defined prefixes", function () {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = new ShExParser("http://a.example/", prefixes);
+      var parser = ShExParser.construct("http://a.example/", prefixes);
 
       it("should use those prefixes", function () {
         var schema = "a:a { b:b .+ }";
@@ -188,13 +188,13 @@ describe("A ShEx parser", function () {
           .to.deep.equal("http://a.example/def#b");
       });
 
-      new ShExParser(); // !!! horrible hack to reset no documentIRI
+      ShExParser.construct(); // !!! horrible hack to reset no documentIRI
       // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
 
     describe("with pre-defined PNAME_NS prefixes", function () {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = new ShExParser("http://a.example/", prefixes);
+      var parser = ShExParser.construct("http://a.example/", prefixes);
 
       it("should use those prefixes", function () {
         var schema = "a: { b: .+ }";
@@ -210,7 +210,7 @@ describe("A ShEx parser", function () {
           .to.deep.equal("http://a.example/def#");
       });
 
-      new ShExParser(); // !!! horrible hack to reset no documentIRI
+      ShExParser.construct(); // !!! horrible hack to reset no documentIRI
       // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
   }
