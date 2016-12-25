@@ -1,0 +1,15 @@
+{
+   "@context": "https://raw.githubusercontent.com/rdf-pipeline/translators/master/data/fake_cmumps/patient-7/context.jsonld",
+
+   "@graph": [
+     {
+       "identifier": "2-000007",
+       "street_address-2": "100 MAIN ST",
+       "city-2": "ANYTOWN",
+       "zip_code-2": "60040",
+       "state-2": "NEW YORK",
+       "label": "BUNNY,BUGS",
+       "phone-2" : "555 555 5555"
+    }
+  ]
+}
