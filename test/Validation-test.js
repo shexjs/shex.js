@@ -138,8 +138,8 @@ describe("A ShEx validator", function () {
                                                      shapeLabel, depth, seen);
                }
              }, resolverOptions);
-
              shexParser._setTermResolver(resolverOptions);
+
              var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
              var validator = ShExValidator.construct(schema, schemaOptions);
              var testResults = TestExtension.register(validator);
