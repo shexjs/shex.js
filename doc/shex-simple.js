@@ -91,32 +91,12 @@ function validate () {
     var resolverText = $("#meta textarea").val();
     if (resolverText) {
       var resolverStore = N3Store();
+      shexParser._setTermResolver(ShExParser.dbTermResolver(resolverStore));
       resolverStore.addTriples(N3Parser({documentIRI:Base}).parse(resolverText));
-      shexParser._setTermResolver({
-        _db: resolverStore,
-        _lookFor: [],
-        add: function (iri) {
-          this._lookFor.push(iri);
-        },
-        resolve: function (label) {
-          for (var i = 0; i < this._lookFor.length; ++i) {
-            var found = this._db.find(null, this._lookFor[i], label);
-            if (found.length)
-              return found[0].subject;
-          }
-          throw Error("no term found for `" + label + "`");
-        }
-      });
     } else {
-      shexParser._setTermResolver({
-        add: function (iri) {
-          throw Error("no term resolver to accept <" + iri + ">");
-        },
-        resolve: function (label) {
-          throw Error("no term resolver to resolve `" + label + "`");
-        }
-      });
+      shexParser._setTermResolver(ShExParser.disabledTermResolver());
     }
+
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
         shexParser.parse(schemaText);

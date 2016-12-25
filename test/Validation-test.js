@@ -87,14 +87,7 @@ describe("A ShEx validator", function () {
                shapeExterns = shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8")).
                  shapes;
              }
-             var resolverOptions = {
-               add: function (iri) {
-                 throw Error("no term resolver to accept <" + iri + ">");
-               },
-               resolve: function (label) {
-                 throw Error("no term resolver to resolve `" + label + "`");
-               }
-             };
+             var resolverOptions = ShExParser.disabledTermResolver();
              if ("termResolver" in test.action) {
                var resolverFile = path.resolve(validationPath, test.action.termResolver);
                var resolverURL = "file://" + resolverFile;
@@ -102,21 +95,7 @@ describe("A ShEx validator", function () {
                var resolverStore = new N3.Store();
                var resolverText = fs.readFileSync(resolverFile, "utf8");
                resolverStore.addTriples(N3.Parser({documentIRI: resolverURL, blankNodePrefix: ""}).parse(fs.readFileSync(resolverFile, "utf8")));
-               resolverOptions = {
-                 _db: resolverStore,
-                 _lookFor: [],
-                 add: function (iri) {
-                   this._lookFor.push(iri);
-                 },
-                 resolve: function (label) {
-                   for (var i = 0; i < this._lookFor.length; ++i) {
-                     var found = this._db.find(null, this._lookFor[i], label);
-                     if (found.length)
-                       return found[0].subject;
-                   }
-                   throw Error("no term found for `" + label + "`");
-                 }
-               };
+               resolverOptions = ShExParser.dbTermResolver(resolverStore);
              }
              shexParser._setBase(schemaURL);
              var schemaOptions = Object.assign({
