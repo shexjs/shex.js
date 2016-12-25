@@ -4,7 +4,7 @@ var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 // var ShExUtil = require("../lib/ShExUtil");
-var ShExParser = require("../lib/ShExParser").Parser;
+var ShExParser = require("../lib/ShExParser");
 var ShExValidator = require("../lib/ShExValidator");
 var TestExtension = require("../extensions/shex:Test/module");
 
@@ -32,7 +32,7 @@ TODO = [
 describe("A ShEx validator", function () {
   "use strict";
 
-  var shexParser = new ShExParser();
+  var shexParser = ShExParser.construct();
   beforeEach(shexParser._resetBlanks);
   /*
     Note that the tests.forEach will run before any of the it() functions.

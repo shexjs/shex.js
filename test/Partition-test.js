@@ -1,7 +1,7 @@
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
-var ShExParser = require('../lib/ShExParser').Parser;
+var ShExParser = require('../lib/ShExParser');
 var ShExUtil = require('../lib/ShExUtil');
 
 var fs = require('fs');
@@ -13,7 +13,7 @@ var partitionedSchemasPath = __dirname + '/../test/partitionedSchemas/';
 var manifestFile = __dirname + '/../test/partitionedSchemas/Manifest.json';
 
 describe('Partitioning', function () {
-  var parser = new ShExParser();
+  var parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });

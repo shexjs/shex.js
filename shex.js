@@ -1,5 +1,5 @@
 module.exports = {
-  Parser:       require('./lib/ShExParser').Parser,
+  Parser:       require('./lib/ShExParser'),
   Util:         require('./lib/ShExUtil'),
   Validator:    require('./lib/ShExValidator'),
   Loader:       require('./lib/ShExLoader'),
