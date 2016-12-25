@@ -191,26 +191,32 @@ function prepareDemos () {
     "clinical observation": {
       schema: clinicalObs,
       passes: {
-        "with birthdate": { data: clinicalObs_with_birthdate,
-                            focus: "http://a.example/Obs1",
-                            shape: "- start -"},
-        "without birthdate": { data: clinicalObs_without_birthdate,
-                               focus: "http://a.example/Obs1",
-                               shape: "- start -" },
-        "no subject name": { data: clinicalObs_no_subject_name,
-                             focus: "http://a.example/Obs1",
-                             shape: "- start -" }
+        "with birthdate": {
+          data: clinicalObs_with_birthdate,
+          focus: "http://a.example/Obs1",
+          shape: "- start -"},
+        "without birthdate": {
+          data: clinicalObs_without_birthdate,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "no subject name": {
+          data: clinicalObs_no_subject_name,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
       },
       fails: {
-        "bad status": { data: clinicalObs_bad_status,
-                        focus: "http://a.example/Obs1",
-                        shape: "- start -" },
-        "no subject": { data: clinicalObs_no_subject,
-                        focus: "http://a.example/Obs1",
-                        shape: "- start -" },
-        "wrong birthdate datatype": { data: clinicalObs_birthdate_datatype,
-                                      focus: "http://a.example/Obs1",
-                                      shape: "- start -" }
+        "bad status": {
+          data: clinicalObs_bad_status,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "no subject": {
+          data: clinicalObs_no_subject,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "wrong birthdate datatype": {
+          data: clinicalObs_birthdate_datatype,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
       }
     },
     "protein record": {
