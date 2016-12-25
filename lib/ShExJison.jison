@@ -397,9 +397,9 @@ CODE                    "{" ([^%\\] | "\\"[%\\] | {UCHAR})* "%}"
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
-NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
+//NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
-NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
+//NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
 IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 //ATIRIREF              '@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
@@ -440,9 +440,9 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{UCHAR}               return 'UCHAR';
 {CODE}                  return 'CODE';
 {STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
-{NON_TERMINATED_STRING_LITERAL_LONG1}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
+//{NON_TERMINATED_STRING_LITERAL_LONG1}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
 {STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
-{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
+//{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
 {STRING_LITERAL1}       return 'STRING_LITERAL1';
 {STRING_LITERAL2}       return 'STRING_LITERAL2';
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
