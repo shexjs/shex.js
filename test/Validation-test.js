@@ -88,14 +88,14 @@ describe("A ShEx validator", function () {
                  shapes;
              }
              var resolverOptions = {
-	       add: function (iri) {
-		 throw Error("no term resolver to accept <" + iri + ">");
-	       },
-	       resolve: function (label) {
-		 throw Error("no term resolver to resolve `" + label + "`");
-	       }
-	     };
-	     if ("termResolver" in test.action) {
+               add: function (iri) {
+                 throw Error("no term resolver to accept <" + iri + ">");
+               },
+               resolve: function (label) {
+                 throw Error("no term resolver to resolve `" + label + "`");
+               }
+             };
+             if ("termResolver" in test.action) {
                var resolverFile = path.resolve(validationPath, test.action.termResolver);
                var resolverURL = "file://" + resolverFile;
 
@@ -103,53 +103,53 @@ describe("A ShEx validator", function () {
                var resolverText = fs.readFileSync(resolverFile, "utf8");
                resolverStore.addTriples(N3.Parser({documentIRI: resolverURL, blankNodePrefix: ""}).parse(fs.readFileSync(resolverFile, "utf8")));
                resolverOptions = {
-		 _db: resolverStore,
-		 _lookFor: [],
-		 add: function (iri) {
-		   this._lookFor.push(iri);
-		 },
-		 resolve: function (label) {
-		   for (var i = 0; i < this._lookFor.length; ++i) {
-		     var found = this._db.find(null, this._lookFor[i], label);
-		     if (found.length)
-		       return found[0].subject;
-		   }
-		   throw Error("no term found for `" + label + "`");
-		 }
-	       };
-	     }
+                 _db: resolverStore,
+                 _lookFor: [],
+                 add: function (iri) {
+                   this._lookFor.push(iri);
+                 },
+                 resolve: function (label) {
+                   for (var i = 0; i < this._lookFor.length; ++i) {
+                     var found = this._db.find(null, this._lookFor[i], label);
+                     if (found.length)
+                       return found[0].subject;
+                   }
+                   throw Error("no term found for `" + label + "`");
+                 }
+               };
+             }
              shexParser._setBase(schemaURL);
-	     var schemaOptions = Object.assign({
-	       regexModule: regexModule,
-	       diagnose: true,
-	       or:
-	       "trait" in test &&
+             var schemaOptions = Object.assign({
+               regexModule: regexModule,
+               diagnose: true,
+               or:
+               "trait" in test &&
                  test.trait.indexOf("OneOf") !== -1 ?
                  "oneOf" :
                  "someOf",
-	       partition:
-	       "trait" in test &&
+               partition:
+               "trait" in test &&
                  test.trait.indexOf("Exhaustive") !== -1 ?
                  "exhaustive" :
                  "greedy",
-	       semActs: semActs,
-	       validateExtern: function (db, point, shapeLabel, depth, seen) {
+               semActs: semActs,
+               validateExtern: function (db, point, shapeLabel, depth, seen) {
                  return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
                                                      shapeLabel, depth, seen);
-	       }
+               }
              }, resolverOptions);
 
-	     shexParser._setTermResolver(resolverOptions);
+             shexParser._setTermResolver(resolverOptions);
              var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
              var validator = ShExValidator.construct(schema, schemaOptions);
              var testResults = TestExtension.register(validator);
 
              var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
-	       // resolve relative URLs in results file
-	       if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+               // resolve relative URLs in results file
+               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    N3Util.isIRI(obj[k])) {
                  obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-	       }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
+               }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
 
              assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
              // var start = schema.start;
@@ -159,8 +159,8 @@ describe("A ShEx validator", function () {
              var store = new N3.Store();
              var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
              turtleParser.parse(
-	       fs.readFileSync(dataFile, "utf8"),
-	       function (error, triple, prefixes) {
+               fs.readFileSync(dataFile, "utf8"),
+               function (error, triple, prefixes) {
                  if (error) {
                    report("error parsing " + dataFile + ": " + error);
                  } else if (triple) {
@@ -179,27 +179,27 @@ describe("A ShEx validator", function () {
                      if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                      if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                      if (test["@type"] === "sht:ValidationFailure") {
-		       assert(!validationResult || "errors" in validationResult, "test expected to fail");
-		       if (referenceResult)
+                       assert(!validationResult || "errors" in validationResult, "test expected to fail");
+                       if (referenceResult)
                          expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                      } else {
-		       assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-		       expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                       assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
+                       expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                      }
                      var xr = test.extensionResults.filter(function (x) {
-		       return x.extension === TestExtension.url;
+                       return x.extension === TestExtension.url;
                      }).map(function (x) {
-		       return x.prints;
+                       return x.prints;
                      });
                      if (xr.length) {
-		       expect(testResults).to.deep.equal(xr);
+                       expect(testResults).to.deep.equal(xr);
                      }
                      report();
                    } catch (e) {
                      report(e);
                    }
                  }
-	       });
+               });
            });
       } catch (e) {
         var throwMe = new Error("in " + test["@id"] + " " + e); // why doesn't this change the error message?
