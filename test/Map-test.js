@@ -6,7 +6,7 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 var ShExLoader = require("../lib/ShExLoader");
 var ShExValidator = require("../lib/ShExValidator");
-var Mapper = require("../extensions/shex:Map");
+var Mapper = require("../extensions/shex:Map/module");
 var Promise = require("promise");
 var expect = require("chai").expect;
 var Path = require("path");

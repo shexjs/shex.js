@@ -90,7 +90,7 @@ var Schema = null; // will be loaded and compiled asynchronously
 var Triples = null; // will be loaded and parsed asynchronously
 function validateWhenEverythingsLoaded () {
   if (Schema !== null && Triples !== null) {
-    console.log(shex.Validator(Schema).validate(Triples, node, shape));
+    console.log(shex.Validator.construct(Schema).validate(Triples, node, shape));
   }
 }
 
@@ -129,8 +129,8 @@ var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
 
 var shex = require("shex");
-shex.Loader([shexc], [], [data]).then(function (loaded) {
-    console.log(shex.Validator(loaded.schema).validate(loaded.data, node, shape));
+shex.Loader([shexc], [], [data], []).then(function (loaded) {
+    console.log(shex.Validator.construct(loaded.schema).validate(loaded.data, node, shape));    
 });
 ```
 
@@ -182,7 +182,7 @@ As with validation, the ShExLoader wrapes callbacks and simplifies parsing the l
 var shexc = "http://shex.io/examples/Issue.shex";
 
 var shex = require("shex");
-shex.Loader([shexc], [], []).then(function (loaded) {
+shex.Loader.load([shexc], [], [], []).then(function (loaded) {
     console.log(JSON.stringify(loaded.schema, null, "  "));
 });
 ```

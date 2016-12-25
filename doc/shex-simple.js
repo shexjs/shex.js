@@ -80,13 +80,15 @@ function pickData (name, dataTest, elt, listItems, side) {
 }
 
 var Base = "http://a.example/"; // window.location.href;
+var shexParser = new ShExParser(Base);
+
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
     var schemaIsJSON = schemaText.match(/^\S*\{/m);
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
-        ShExParser(Base).parse(schemaText);
+        shexParser.parse(schemaText);
     var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
     if (dataText) {
@@ -126,7 +128,7 @@ function validate () {
 
 function getSchemaShapes (entry) {
   var schemaText = $("#schema textarea").val();
-  var schema = ShExParser(Base).parse(schemaText);
+  var schema = shexParser.parse(schemaText);
   return ("start" in schema ? [START_SHAPE_LABEL] : []).
     concat(Object.keys(schema.shapes));
 }
@@ -152,26 +154,32 @@ function prepareDemos () {
     "clinical observation": {
       schema: clinicalObs,
       passes: {
-        "with birthdate": { data: clinicalObs_with_birthdate,
-                            focus: "http://a.example/Obs1",
-                            shape: "- start -"},
-        "without birthdate": { data: clinicalObs_without_birthdate,
-                               focus: "http://a.example/Obs1",
-                               shape: "- start -" },
-        "no subject name": { data: clinicalObs_no_subject_name,
-                             focus: "http://a.example/Obs1",
-                             shape: "- start -" }
+        "with birthdate": {
+          data: clinicalObs_with_birthdate,
+          focus: "http://a.example/Obs1",
+          shape: "- start -"},
+        "without birthdate": {
+          data: clinicalObs_without_birthdate,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "no subject name": {
+          data: clinicalObs_no_subject_name,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
       },
       fails: {
-        "bad status": { data: clinicalObs_bad_status,
-                        focus: "http://a.example/Obs1",
-                        shape: "- start -" },
-        "no subject": { data: clinicalObs_no_subject,
-                        focus: "http://a.example/Obs1",
-                        shape: "- start -" },
-        "wrong birthdate datatype": { data: clinicalObs_birthdate_datatype,
-                                      focus: "http://a.example/Obs1",
-                                      shape: "- start -" }
+        "bad status": {
+          data: clinicalObs_bad_status,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "no subject": {
+          data: clinicalObs_no_subject,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" },
+        "wrong birthdate datatype": {
+          data: clinicalObs_birthdate_datatype,
+          focus: "http://a.example/Obs1",
+          shape: "- start -" }
       }
     }
   };
@@ -307,10 +315,6 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <Patient2>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
-
-perAddrSchema = ``;
-
-shexjSchema = ``; // '
 
 prepareDemos();
 

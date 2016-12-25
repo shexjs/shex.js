@@ -6,7 +6,7 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 // var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser").Parser;
 var ShExValidator = require("../lib/ShExValidator");
-var TestExtension = require("../extensions/shex:Test.js");
+var TestExtension = require("../extensions/shex:Test/module");
 
 var N3 = require("n3");
 var N3Util = N3.Util;
@@ -88,8 +88,7 @@ describe("A ShEx validator", function () {
                  shapes;
              }
              shexParser._setBase(schemaURL);
-             var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
-             var validator = ShExValidator.construct(schema, {
+             var schemaOptions = {
                regexModule: regexModule,
                diagnose: true,
                or:
@@ -107,7 +106,10 @@ describe("A ShEx validator", function () {
                  return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
                                                      shapeLabel, depth, seen, uniques);
                }
-             });
+             };
+
+             var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+             var validator = ShExValidator.construct(schema, schemaOptions);
              var testResults = TestExtension.register(validator);
 
              var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
@@ -135,6 +137,7 @@ describe("A ShEx validator", function () {
                    try {
                      function maybeGetTerm (base, s) {
                        return s === undefined ? null :
+                         typeof(s) === "object" ? s["@value"] :
                          s.substr(0, 2) === "_:" ? s :
                          resolveRelativeIRI(base, s);
                      }

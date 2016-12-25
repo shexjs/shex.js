@@ -12,9 +12,9 @@ var _ = require("underscore");
 var FS = require("fs");
 var N3 = require("n3");
 
-var ShExLoader = require("../lib/ShExLoader");
-var ShExValidator = require("../lib/ShExValidator");
-var Mapper = require("../extensions/shex:Map");
+var ShExLoader = require("../../../lib/ShExLoader");
+var ShExValidator = require("../../../lib/ShExValidator");
+var Mapper = require("../module");
 
 var CLI = require("command-line-args")([
   { name: "help", alias: "h", type: Boolean },
