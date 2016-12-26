@@ -11,3 +11,6 @@ test: build
 publish-npm: ./lib/ShExJison.js
 	npm publish
 
+earl: ./bin/_genEARL.js
+	$^ > doc/earl.ttl
+

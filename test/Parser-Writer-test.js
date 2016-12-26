@@ -1,6 +1,7 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var EARL = "EARL" in process.env; // We're generation an EARL report.
 
 var ShExParser = require("../lib/ShExParser");
 var ShExWriter = require("../lib/ShExWriter");
@@ -30,7 +31,7 @@ describe("A ShEx parser", function () {
   beforeEach(function () { parser._resetBlanks(); });
 
 
-  if (!TESTS)
+  if (!EARL && !TESTS)
     // make sure errors are reported
     it("should throw an error on an invalid schema", function () {
       var schema = "invalid", error = null;
@@ -77,44 +78,46 @@ describe("A ShEx parser", function () {
            }
          });
 
-      it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
-        expect(ShExUtil.Visitor().visitSchema(jsonSchema)).to.deep.equal(jsonSchema);
-      });
+      if (!EARL) {
+        it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
+          expect(ShExUtil.Visitor().visitSchema(jsonSchema)).to.deep.equal(jsonSchema);
+        });
 
-      it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
-        var w;
-        new ShExWriter({simplifyParentheses: false }).
-          writeSchema(jsonSchema, function (error, text, prefixes) {
-            if (error) throw error;
-            else w = text;
-          });
-        if (VERBOSE) console.log("written  :" + w);
-        parser._setFileName(shexSchemaFile + " (generated)");
-        try {
-          var parsed2 = parser.parse(w);
-          expect(parsed2).to.deep.equal(jsonSchema);
-        } catch (e) {
-          parser.reset();
-          throw(e);
-        }
-      });
+        it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
+          var w;
+          new ShExWriter({simplifyParentheses: false }).
+            writeSchema(jsonSchema, function (error, text, prefixes) {
+              if (error) throw error;
+              else w = text;
+            });
+          if (VERBOSE) console.log("written  :" + w);
+          parser._setFileName(shexSchemaFile + " (generated)");
+          try {
+            var parsed2 = parser.parse(w);
+            expect(parsed2).to.deep.equal(jsonSchema);
+          } catch (e) {
+            parser.reset();
+            throw(e);
+          }
+        });
 
-      it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
-        var w;
-        new ShExWriter({simplifyParentheses: true }).
-          writeSchema(jsonSchema, function (error, text, prefixes) {
-            if (error) throw error;
-            else w = text;
-          });
-        if (VERBOSE) console.log("simple   :" + w);
-        parser._setFileName(shexSchemaFile + " (simplified)");
-        try {
-          var parsed3 = parser.parse(w); // test that simplified also parses
-        } catch (e) {
-          parser.reset();
-          throw(e);
-        }
-      });
+        it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
+          var w;
+          new ShExWriter({simplifyParentheses: true }).
+            writeSchema(jsonSchema, function (error, text, prefixes) {
+              if (error) throw error;
+              else w = text;
+            });
+          if (VERBOSE) console.log("simple   :" + w);
+          parser._setFileName(shexSchemaFile + " (simplified)");
+          try {
+            var parsed3 = parser.parse(w); // test that simplified also parses
+          } catch (e) {
+            parser.reset();
+            throw(e);
+          }
+        });
+      }
     } catch (e) {
       var e2 = Error("Error in (" + jsonSchemaFile + "): " + e.message);
       e2.stack = "Error in (" + jsonSchemaFile + "): " + e.stack;
@@ -159,7 +162,7 @@ describe("A ShEx parser", function () {
   });
 
 
-  if (!TESTS || TESTS.indexOf("prefix") !== -1) {
+  if (!EARL && (!TESTS || TESTS.indexOf("prefix") !== -1)) {
     describe("with pre-defined prefixes", function () {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
       var parser = ShExParser.construct("http://a.example/", prefixes);

@@ -2,6 +2,7 @@
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var EARL = "EARL" in process.env;
 
 // var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser");
@@ -24,6 +25,8 @@ var regexModules = [
   require("../lib/regex/nfax-val-1err"),
   require("../lib/regex/threaded-val-nerr")
 ];
+if (EARL)
+  regexModules = regexModules.slice(1);
 
 TODO = [
   // delightfully empty (for now)
