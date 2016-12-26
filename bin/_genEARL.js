@@ -42,7 +42,7 @@ process.env["EARL"] = "true"; // inelegant way to signal EARL mode to tests
         var res = s.patterns.reduce((matched, p) => {
           if (matched) return matched;
           var m = title.match(RegExp(p.pattern));
-          return m ? {type: p.type, name: m[1], passed: test.state } : null;
+          return m ? {type: p.type, name: m[1], state: test.state } : null;
         }, null);
         if (res)
           report(res);
@@ -105,6 +105,15 @@ function header () {
   dc:date            "${When.substr(0, 10)}"^^xsd:date ;
   dc:creator         <${AssertedBy}> ;
   dc:isPartOf        <https://github.com/RubenVerborgh/N3.js> .
+
+<> foaf:primaryTopic <https://github.com/shexSpec/shex.js> ;
+  dc:issued "${When}"^^xsd:dateTime ;
+  foaf:maker <${AssertedBy}> .
+
+<${AssertedBy}> a foaf:Person, earl:Assertor;
+  foaf:name "Eric Prud'hommeaux";
+  foaf:title "Implementor";
+  foaf:homepage <http://www.w3.org/People/Eric/> .
 
 `
              );
