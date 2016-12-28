@@ -128,7 +128,8 @@ describe("A ShEx parser", function () {
 
   negativeTests.forEach(testSet => {
     // negative syntax tests
-    var negSyntaxTests = fs.readdirSync(testSet.path);
+    var negSyntaxTests = fs.readdirSync(testSet.path).
+        filter(function (s) { return s.indexOf(".shex") !== -1; });
     if (TESTS)
       negSyntaxTests = negSyntaxTests.filter(function (s) {
         return TESTS.indexOf(s) !== -1 ||
