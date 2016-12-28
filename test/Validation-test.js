@@ -140,7 +140,11 @@ describe("A ShEx validator", function () {
                    try {
                      function maybeGetTerm (base, s) {
                        return s === undefined ? null :
-                         typeof(s) === "object" ? s["@value"] :
+                         typeof(s) === "object" ? "\""+s["@value"]+"\""+(
+                           "@type" in s ? "^^"+s["@type"] :
+                             "@language" in s ? "@"+s["@language"] :
+                             ""
+                         ):
                          s.substr(0, 2) === "_:" ? s :
                          resolveRelativeIRI(base, s);
                      }
