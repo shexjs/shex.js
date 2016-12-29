@@ -28,6 +28,28 @@
       }
       /* #actions input { height: 1.5ex; }  */
       /* #actions button { height: 2.5ex; } */
+      /* http://stackoverflow.com/questions/686905/labeling-file-upload-button#answer-35767488 */
+      .inputfile {
+        /* visibility: hidden etc. wont work */
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;
+      }
+      .inputfile:focus + label {
+        /* keyboard navigation */
+        outline: 1px dotted #000;
+        outline: -webkit-focus-ring-color auto 5px;
+      }
+      .inputfile + label * {
+        pointer-events: none;
+      }
+      label {
+        border: thin solid black;
+        padding: 0 .3em;
+      }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -43,6 +65,7 @@
 	      <li>‣ source: <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
 	      <li>‣ <a href="https://github.com/shexSpec/shex.js">project</a></li>
         <li>‣ <a href="https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html">rawgit</a></li>
+        <li>‣ upload: <input type="file" id="schema-upload" class="inputfile" data-target="#schema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#data textarea"/> <label for="data-upload" class="data">RDF data</label></li>
       </ul>
       <div style="clear: both;"></div>
     </div>

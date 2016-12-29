@@ -149,6 +149,24 @@ $("#clear").on("click", clearAll);
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs;
 
+$("input.inputfile").each((idx, elt) => {
+  $(elt).on("change", function (evt) {
+    if(!window.FileReader) return; // Browser is not compatible
+    var reader = new FileReader();
+
+    reader.onload = function(evt) {
+      if(evt.target.readyState != 2) return;
+      if(evt.target.error) {
+        alert('Error while reading file');
+        return;
+      }
+      $($(elt).attr("data-target")).val(evt.target.result);
+    };
+
+    reader.readAsText(evt.target.files[0]);
+  });
+});
+
 function prepareDemos () {
   var demos = {
     "clinical observation": {
