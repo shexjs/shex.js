@@ -13,10 +13,12 @@
       .error  { padding-left: .1em; border-left: thick solid red; }
       #schema textarea, .schema { background-color: #f4f4ff; }
       #schema li.selected a { background-color: #e8e8ff; }
+      #meta textarea, .meta { background-color: #fffff4; }
+      #meta li.selected { background-color: #ffffe8; }
       #data textarea, .data { background-color: #f4fff4; }
       #data li.selected { background-color: #e8ffe8; }
-      #schema textarea, #data textarea { border: .25em dashed #ddd; }
-      #schema textarea.hover, #data textarea.hover, body.hover { border: .25em dashed #0c0; }
+      #schema textarea, #meta textarea, #data textarea { border: .25em dashed #ddd; }
+      #schema textarea.hover, #meta textarea.hover, #data textarea.hover, body.hover { border: .25em dashed #0c0; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -67,7 +69,7 @@
     <div>
       <h1 style="float:left;">ShEx2 Simple Online Validator</h1>
       <ul id="navlist" style="float:left; padding-left: 1em;">
-        <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#schema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#data textarea"/> <label for="data-upload" class="data">RDF data</label></li>
+        <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#schema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#data textarea"/> <label for="data-upload" class="data">RDF data</label></li>
         <li>‣ <span class="heading">controls:</span> <input type="checkbox" id="append"/><label for="append">drop appends</label> | <label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select> </li>
         <li>‣ <span class="heading">source</span>: <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
         <li>‣ <a href="https://github.com/shexSpec/shex.js">project</a></li>

@@ -230,10 +230,13 @@ $("input.inputfile").each((idx, elt) => {
 (function () {
   var _scma = $("#schema textarea");
   var _data = $("#data textarea");
+  var _meta = $("#meta textarea");
   var _body = $("body");
   [{dropElt: _scma, targets: [{ext: "", target: _scma}]},
+   {dropElt: _meta, targets: [{ext: "", target: _meta}]},
    {dropElt: _data, targets: [{ext: "", target: _data}]},
    {dropElt: _body, targets: [{ext: ".shex", target: _scma},
+                              {ext: ".owl", target: _meta},
                               {ext: ".ttl", target: _data}]}].
     forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
