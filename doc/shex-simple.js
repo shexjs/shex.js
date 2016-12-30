@@ -84,10 +84,51 @@ function pickData (name, dataTest, elt, listItems, side) {
 var Base = "http://a.example/"; // window.location.href;
 var shexParser = ShExParser.construct(Base);
 
+// <n3.js-specific>
+function termToLex (node) {
+  return node[0] === "_" && node[1] === ":" ? node : "<" + node + ">";
+}
+function lexToTerm (lex) {
+  return lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
+}
+// </n3.js-specific>
+
+// Guess the starting shape.
+function guessStartingShape (shape) {
+  if (shape === "") {
+    var candidates = getSchemaShapes();
+    if (candidates.length > 0) {
+      $("input.schema").val(candidates[0]);
+      if (shape === START_SHAPE_LABEL)
+        return undefined;
+      else
+        return lexToTerm(candidates[0]);
+    } else
+      throw Error("no possible starting shape");
+  } else if (shape === START_SHAPE_LABEL)
+    return undefined;
+  else
+    return lexToTerm(shape);
+}
+
+// Guess the starting focus.
+function guessStartingNode (focus) {
+  if (focus === "") {
+    var candidates = getDataNodes();
+    if (candidates.length > 0) {
+      $("input.data").val(candidates[0]);
+      return lexToTerm(candidates[0]);
+    } else
+      throw Error("no possible starting focus node");
+  } else
+    return lexToTerm(focus);
+}
+
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
     var schemaIsJSON = schemaText.match(/^\S*\{/m);
+    shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var resolverText = $("#meta textarea").val();
     if (resolverText) {
       var resolverStore = N3Store();
@@ -102,13 +143,12 @@ function validate () {
         shexParser.parse(schemaText);
     var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
-    if (dataText) {
+    if (dataText || $("#focus").val()) {
       var data = N3Store();
       data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
-      var focus = $("input.data").val();
-      var shape = $("input.schema").val();
-      if (shape === START_SHAPE_LABEL)
-        shape = undefined;
+      var shape = guessStartingShape($("input.schema").val());
+      var focus = guessStartingNode($("input.data").val());
+
       var ret = validator.validate(data, focus, shape);
       if ("errors" in ret)
         $("#results").text(JSON.stringify(ret, null, "  ")).
@@ -137,7 +177,7 @@ function validate () {
   }
 }
 
-function getSchemaShapes (entry) {
+function getSchemaShapes () {
   var schemaText = $("#schema textarea").val();
   shexParser._setTermResolver({
     add: function (iri) {  },
@@ -146,8 +186,9 @@ function getSchemaShapes (entry) {
     }
   });
   var schema = shexParser.parse(schemaText);
-  return ("start" in schema ? [START_SHAPE_LABEL] : []).
-    concat(Object.keys(schema.shapes));
+  var start = "start" in schema ? [START_SHAPE_LABEL] : [];
+  var rest = "shapes" in schema ? Object.keys(schema.shapes).map(termToLex) : [];
+  return start.concat(rest);
 }
 
 function getDataNodes () {
@@ -155,7 +196,7 @@ function getDataNodes () {
   var data = N3Store();
   data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
   return data.find().map(t => {
-    return t.subject;
+    return termToLex(t.subject);
   });
 }
 
@@ -165,6 +206,83 @@ $("#validate").on("click", validate);
 $("#clear").on("click", clearAll);
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs;
+
+// Prepare file uploads
+$("input.inputfile").each((idx, elt) => {
+  $(elt).on("change", function (evt) {
+    var reader = new FileReader();
+
+    reader.onload = function(evt) {
+      if(evt.target.readyState != 2) return;
+      if(evt.target.error) {
+        alert('Error while reading file');
+        return;
+      }
+      $($(elt).attr("data-target")).val(evt.target.result);
+    };
+
+    reader.readAsText(evt.target.files[0]);
+  });
+});
+
+// Prepare drag and drop into text areas
+// (hiding variables in their own function scope).
+(function () {
+  var _scma = $("#schema textarea");
+  var _data = $("#data textarea");
+  var _body = $("body");
+  [{dropElt: _scma, targets: [{ext: "", target: _scma}]},
+   {dropElt: _data, targets: [{ext: "", target: _data}]},
+   {dropElt: _body, targets: [{ext: ".shex", target: _scma},
+                              {ext: ".ttl", target: _data}]}].
+    forEach(desc => {
+      // kudos to http://html5demos.com/dnd-upload
+      desc.dropElt.
+        on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }).
+        on("dragover dragenter", (e) => {
+          desc.dropElt.addClass("hover");
+        }).
+        on("dragend dragleave drop", (e) => {
+          desc.dropElt.removeClass("hover");
+        }).
+        on("drop", (e) => {
+          readfiles(e.originalEvent.dataTransfer.files, desc.targets);
+        });
+    });
+})();
+
+function readfiles(files, targets) {
+  var formData = new FormData();
+
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i], name = file.name;
+    var target = targets.reduce((ret, elt) => {
+      return ret ? ret :
+        name.endsWith(elt.ext) ? elt.target :
+        null;
+    }, null);
+    if (target) {
+      formData.append('file', file);
+      var reader = new FileReader();
+      reader.onload = (function (target) {
+        return function (event) {
+          var appendTo = $("#append").is(":checked") ? target.val() : "";
+          target.val(appendTo + event.target.result);
+        };
+      })(target);
+      reader.readAsText(file);
+    } else {
+      $("#results").append("don't know what to do with " + name + "\n");
+    }
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/devnull.php'); // One must ignore these errors, sorry!
+  xhr.send(formData);
+}
 
 function prepareDemos () {
   var demos = {
@@ -265,7 +383,7 @@ function prepareDemos () {
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.selector,
-      callback: function(key, options) {
+      callback: function (key, options) {
         $("input" + options.selector).val(key);
       },
       build: function (elt, e) {
