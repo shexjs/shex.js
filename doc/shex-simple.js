@@ -210,33 +210,71 @@ $("input.inputfile").each((idx, elt) => {
 
 // Prepare drag and drop into text areas.
 // kudos to http://html5demos.com/dnd-upload
-$("#schema textarea, #data textarea").each((idx, elt) => {
-  var holder = $(elt);
-  function readfiles(files) {
-    var formData = new FormData();
-
-    for (var i = 0; i < files.length; i++) {
-      formData.append('file', files[i]);
-      var reader = new FileReader();
-      reader.onload = function (event) {
-        var appendTo = $("#append").is(":checked") ? holder.val() : "";
-        holder.val(appendTo + event.target.result);
-      };
-      reader.readAsText(files[i]);
-    }
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/devnull.php'); // One must ignore these errors, sorry!
-    xhr.send(formData);
-  }
-  holder.
-    on("dragover dragenter", () => { holder.addClass("hover"); }).
-    on("dragend dragleave drop", () => { holder.removeClass("hover"); }).
-    on("drop", (e) => {
+var dropTargets = $("#schema textarea, #data textarea");
+dropTargets.each((idx, elt) => {
+  var target = $(elt);
+  target.
+    on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
       e.preventDefault();
-      readfiles(e.originalEvent.dataTransfer.files);
+      e.stopPropagation();
+    }).
+    on("dragover dragenter", (e) => {
+      target.addClass("hover");
+    }).
+    on("dragend dragleave drop", (e) => {
+      target.removeClass("hover");
+    }).
+    on("drop", (e) => {
+      readfiles(e.originalEvent.dataTransfer.files, [{ext:"", target:target}]);
     });
 });
+
+var uploads = $("body");
+uploads.
+  on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }).
+  on("dragover dragenter", () => {
+    uploads.addClass("hover");
+  }).
+  on("dragend dragleave drop", () => {
+    uploads.removeClass("hover");
+  }).
+  on("drop", (e) => {
+    readfiles(e.originalEvent.dataTransfer.files, [{ext:".shex", target:$("#schema textarea")},
+                                                   {ext:".ttl", target:$("#data textarea")}]);
+  });
+
+function readfiles(files, targets) {
+  var formData = new FormData();
+
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i], name = file.name;
+    var target = targets.reduce((ret, elt) => {
+      return ret ? ret :
+        name.endsWith(elt.ext) ? elt.target :
+        null;
+    }, null);
+    if (target) {
+      formData.append('file', file);
+      var reader = new FileReader();
+      reader.onload = (function (target) {
+        return function (event) {
+          var appendTo = $("#append").is(":checked") ? target.val() : "";
+          target.val(appendTo + event.target.result);
+        };
+      })(target);
+      reader.readAsText(file);
+    } else {
+      $("#results").append("don't know what to do with " + name + "\n");
+    }
+  }
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/devnull.php'); // One must ignore these errors, sorry!
+  xhr.send(formData);
+}
 
 function prepareDemos () {
   var demos = {
