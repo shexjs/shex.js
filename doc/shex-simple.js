@@ -82,6 +82,46 @@ function pickData (name, dataTest, elt, listItems, side) {
 var Base = "http://a.example/"; // window.location.href;
 var shexParser = ShExParser.construct(Base);
 
+// <n3.js-specific>
+function termToLex (node) {
+  return node[0] === "_" && node[1] === ":" ? node : "<" + node + ">";
+}
+function lexToTerm (lex) {
+  return lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
+}
+// </n3.js-specific>
+
+// Guess the starting shape.
+function guessStartingShape (shape) {
+  if (shape === "") {
+    var candidates = getSchemaShapes();
+    if (candidates.length > 0) {
+      $("input.schema").val(candidates[0]);
+      if (shape === START_SHAPE_LABEL)
+        return undefined;
+      else
+        return lexToTerm(candidates[0]);
+    } else
+      throw Error("no possible starting shape");
+  } else if (shape === START_SHAPE_LABEL)
+    return undefined;
+  else
+    return lexToTerm(shape);
+}
+
+// Guess the starting focus.
+function guessStartingNode (focus) {
+  if (focus === "") {
+    var candidates = getDataNodes();
+    if (candidates.length > 0) {
+      $("input.data").val(candidates[0]);
+      return lexToTerm(candidates[0]);
+    } else
+      throw Error("no possible starting focus node");
+  } else
+    return lexToTerm(focus);
+}
+
 function validate () {
   try {
     var schemaText = $("#schema textarea").val();
@@ -92,13 +132,12 @@ function validate () {
         shexParser.parse(schemaText);
     var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
-    if (dataText) {
+    if (dataText || $("#focus").val()) {
       var data = N3Store();
       data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
-      var focus = $("input.data").val();
-      var shape = $("input.schema").val();
-      if (shape === START_SHAPE_LABEL)
-        shape = undefined;
+      var shape = guessStartingShape($("input.schema").val());
+      var focus = guessStartingNode($("input.data").val());
+
       var ret = validator.validate(data, focus, shape);
       if ("errors" in ret)
         $("#results").text(JSON.stringify(ret, null, "  ")).
@@ -127,11 +166,12 @@ function validate () {
   }
 }
 
-function getSchemaShapes (entry) {
+function getSchemaShapes () {
   var schemaText = $("#schema textarea").val();
   var schema = shexParser.parse(schemaText);
-  return ("start" in schema ? [START_SHAPE_LABEL] : []).
-    concat(Object.keys(schema.shapes));
+  var start = "start" in schema ? [START_SHAPE_LABEL] : [];
+  var rest = "shapes" in schema ? Object.keys(schema.shapes).map(termToLex) : [];
+  return start.concat(rest);
 }
 
 function getDataNodes () {
@@ -139,7 +179,7 @@ function getDataNodes () {
   var data = N3Store();
   data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
   return data.find().map(t => {
-    return t.subject;
+    return termToLex(t.subject);
   });
 }
 
@@ -190,10 +230,9 @@ $("#schema textarea, #data textarea").each((idx, elt) => {
     xhr.send(formData);
   }
   holder.
-    on("dragover", () => { holder.addClass("hover"); return false; }).
-    on("dragend", () => { holder.removeClass("hover"); return false; }).
+    on("dragover dragenter", () => { holder.addClass("hover"); }).
+    on("dragend dragleave drop", () => { holder.removeClass("hover"); }).
     on("drop", (e) => {
-      holder.removeClass("hover");
       e.preventDefault();
       readfiles(e.originalEvent.dataTransfer.files);
     });
@@ -272,7 +311,7 @@ function prepareDemos () {
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.selector,
-      callback: function(key, options) {
+      callback: function (key, options) {
         $("input" + options.selector).val(key);
       },
       build: function (elt, e) {
