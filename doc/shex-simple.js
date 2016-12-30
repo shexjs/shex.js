@@ -86,6 +86,7 @@ function validate () {
   try {
     var schemaText = $("#schema textarea").val();
     var schemaIsJSON = schemaText.match(/^\S*\{/m);
+    shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
         shexParser.parse(schemaText);
@@ -149,9 +150,9 @@ $("#clear").on("click", clearAll);
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs;
 
+// Prepare file uploads
 $("input.inputfile").each((idx, elt) => {
   $(elt).on("change", function (evt) {
-    if(!window.FileReader) return; // Browser is not compatible
     var reader = new FileReader();
 
     reader.onload = function(evt) {
@@ -167,20 +168,25 @@ $("input.inputfile").each((idx, elt) => {
   });
 });
 
+// Prepare drag and drop into text areas.
+// kudos to http://html5demos.com/dnd-upload
 $("#schema textarea, #data textarea").each((idx, elt) => {
   var holder = $(elt);
   function readfiles(files) {
     var formData = new FormData();
+
     for (var i = 0; i < files.length; i++) {
       formData.append('file', files[i]);
       var reader = new FileReader();
       reader.onload = function (event) {
-        holder.append(document.createTextNode(event.target.result));
+        var appendTo = $("#append").is(":checked") ? holder.val() : "";
+        holder.val(appendTo + event.target.result);
       };
       reader.readAsText(files[i]);
     }
+
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/devnull.php');
+    xhr.open('POST', '/devnull.php'); // One must ignore these errors, sorry!
     xhr.send(formData);
   }
   holder.
