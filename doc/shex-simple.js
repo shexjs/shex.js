@@ -208,43 +208,34 @@ $("input.inputfile").each((idx, elt) => {
   });
 });
 
-// Prepare drag and drop into text areas.
-// kudos to http://html5demos.com/dnd-upload
-var dropTargets = $("#schema textarea, #data textarea");
-dropTargets.each((idx, elt) => {
-  var target = $(elt);
-  target.
-    on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }).
-    on("dragover dragenter", (e) => {
-      target.addClass("hover");
-    }).
-    on("dragend dragleave drop", (e) => {
-      target.removeClass("hover");
-    }).
-    on("drop", (e) => {
-      readfiles(e.originalEvent.dataTransfer.files, [{ext:"", target:target}]);
+// Prepare drag and drop into text areas
+// (hiding variables in their own function scope).
+(function () {
+  var _scma = $("#schema textarea");
+  var _data = $("#data textarea");
+  var _body = $("body");
+  [{dropElt: _scma, targets: [{ext: "", target: _scma}]},
+   {dropElt: _data, targets: [{ext: "", target: _data}]},
+   {dropElt: _body, targets: [{ext: ".shex", target: _scma},
+                              {ext: ".ttl", target: _data}]}].
+    forEach(desc => {
+      // kudos to http://html5demos.com/dnd-upload
+      desc.dropElt.
+        on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }).
+        on("dragover dragenter", (e) => {
+          desc.dropElt.addClass("hover");
+        }).
+        on("dragend dragleave drop", (e) => {
+          desc.dropElt.removeClass("hover");
+        }).
+        on("drop", (e) => {
+          readfiles(e.originalEvent.dataTransfer.files, desc.targets);
+        });
     });
-});
-
-var uploads = $("body");
-uploads.
-  on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }).
-  on("dragover dragenter", () => {
-    uploads.addClass("hover");
-  }).
-  on("dragend dragleave drop", () => {
-    uploads.removeClass("hover");
-  }).
-  on("drop", (e) => {
-    readfiles(e.originalEvent.dataTransfer.files, [{ext:".shex", target:$("#schema textarea")},
-                                                   {ext:".ttl", target:$("#data textarea")}]);
-  });
+})();
 
 function readfiles(files, targets) {
   var formData = new FormData();
