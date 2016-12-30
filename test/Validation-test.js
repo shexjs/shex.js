@@ -7,7 +7,7 @@ var EARL = "EARL" in process.env;
 // var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser");
 var ShExValidator = require("../lib/ShExValidator");
-var TestExtension = require("../extensions/shex:Test/module");
+var TestExtension = require("../extensions/shex-test/module");
 
 var N3 = require("n3");
 var N3Util = N3.Util;

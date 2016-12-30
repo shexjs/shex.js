@@ -444,7 +444,7 @@ function runValidator (graph, focusNode, schema, shape, options) {
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
        return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("../extensions/shex:Map").materializer(loaded.schema).
+       var db = require("../extensions/shex-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
        find(null, null, null);
        var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
