@@ -167,6 +167,32 @@ $("input.inputfile").each((idx, elt) => {
   });
 });
 
+$("#schema textarea, #data textarea").each((idx, elt) => {
+  var holder = $(elt);
+  function readfiles(files) {
+    var formData = new FormData();
+    for (var i = 0; i < files.length; i++) {
+      formData.append('file', files[i]);
+      var reader = new FileReader();
+      reader.onload = function (event) {
+        holder.append(document.createTextNode(event.target.result));
+      };
+      reader.readAsText(files[i]);
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/devnull.php');
+    xhr.send(formData);
+  }
+  holder.
+    on("dragover", () => { holder.addClass("hover"); return false; }).
+    on("dragend", () => { holder.removeClass("hover"); return false; }).
+    on("drop", (e) => {
+      holder.removeClass("hover");
+      e.preventDefault();
+      readfiles(e.originalEvent.dataTransfer.files);
+    });
+});
+
 function prepareDemos () {
   var demos = {
     "clinical observation": {
