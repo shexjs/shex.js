@@ -6,6 +6,8 @@ var _ = require('underscore');
 var cmdlineArgs = require('command-line-args')
 var fs = require('fs');
 var path = require('path');
+var util = require('util');
+
 var Promise = require('promise');
 var rdfstore = require('rdfstore');
 var jsonld = require('jsonld').promises;
@@ -28,6 +30,10 @@ function rdfToJsonLd(input, frame) {
                 var framedJson = jsonld.frame(json, frame);
                 resolve(framedJson); 
             }).then(framedJson => { 
+                _.map(framedJson['@graph'], function(graph) {
+                   filterBNodes(graph);
+                });
+
                 return framedJson; 
             }).catch(function(e) {
                 console.error("Unable to process JSONLD frame!");
@@ -43,6 +49,18 @@ function rdfToJsonLd(input, frame) {
     });
 }
 
+function filterBNodes(graph) { 
+    _.mapObject(graph, function(val, key) { 
+       if (_.isObject(val)) { 
+          filterBNodes(val);
+       } else { 
+           if (key === 'id' && val.startsWith('_:')) {
+               delete graph[key];
+           }
+       }
+  });
+}
+
 /**
  * Promise of JSON-LD array of objects for the given graph.
  *
@@ -51,12 +69,15 @@ function rdfToJsonLd(input, frame) {
 function buildJSON(graph) {
 
     return new Promise(function(resolve) {
-        var jsonGraph = []
+        var jsonGraph = [];
+        var blankNodes = {};
+        var blankNodeName;
         var subject = indexedSubject.bind(this, {}, jsonGraph);
+        var subj, pred, obj;
         graph.forEach(function(triple) {
-            var subj = subject(triple.subject);
-            var pred = triple.predicate.nominalValue;
-            var obj = objectValue(triple.object);
+            subj = subject(triple.subject);
+            pred = triple.predicate.nominalValue;
+            obj = objectValue(triple.object);
             pushTriple(subj, pred, obj);
         });
         resolve(jsonGraph);
@@ -305,7 +326,7 @@ Promise.all(readFiles).then(fileContent => {
 
   }).then(function(graph) { 
     rdfToJsonLd(graph, frameText).then(json => { 
-      console.log(JSON.stringify(json)); 
+      console.log(JSON.stringify(json, null, 2)); 
     });
   });
 });
