@@ -306,8 +306,7 @@
   }
 
   function error (msg) {
-    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
-    Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = '';
+    Parser.reset();
     throw new Error(msg);
   }
 
@@ -589,7 +588,7 @@ start:
       // }
       IT_start '=' shapeExpression	{
         if (Parser.start)
-          error("Parse error: start alread defined as " + Parser.start);
+          error("Parse error: start alread defined");
         Parser.start = $3; // t: startInline
       }
     ;
