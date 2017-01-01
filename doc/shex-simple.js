@@ -23,7 +23,7 @@ function load (selector, obj, func, listItems, side, str) {
   });
 }
 
-function clearData () {debugger;
+function clearData () {
   $("#data textarea").val("");
   $("#data .status").text(" ");
   $("#results").text("").removeClass("passes fails error");
@@ -123,6 +123,7 @@ function guessStartingNode (focus) {
 }
 
 function validate () {
+  var parsing = "schema";
   try {
     var schemaText = $("#schema textarea").val();
     var schemaIsJSON = schemaText.match(/^\S*\{/m);
@@ -133,6 +134,7 @@ function validate () {
     var validator = ShExValidator.construct(schema);
     var dataText = $("#data textarea").val();
     if (dataText || $("#focus").val()) {
+      parsing = "data";
       var data = N3Store();
       data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
       var shape = guessStartingShape($("input.schema").val());
@@ -161,7 +163,7 @@ function validate () {
         removeClass("fails error").addClass("passes");
     }
   } catch (e) {
-    $("#results").text(e).
+    $("#results").text("error parsing " + parsing + ":\n" + e).
       removeClass("passes fails").addClass("error");
   }
 }
@@ -198,7 +200,7 @@ $("input.inputfile").each((idx, elt) => {
     reader.onload = function(evt) {
       if(evt.target.readyState != 2) return;
       if(evt.target.error) {
-        alert('Error while reading file');
+        alert("Error while reading file");
         return;
       }
       $($(elt).attr("data-target")).val(evt.target.result);
@@ -221,7 +223,7 @@ $("input.inputfile").each((idx, elt) => {
     forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
       desc.dropElt.
-        on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
+        on("drag dragstart dragend dragover dragenter dragleave drop", function (e) {
           e.preventDefault();
           e.stopPropagation();
         }).
@@ -248,7 +250,7 @@ function readfiles(files, targets) {
         null;
     }, null);
     if (target) {
-      formData.append('file', file);
+      formData.append("file", file);
       var reader = new FileReader();
       reader.onload = (function (target) {
         return function (event) {
@@ -263,7 +265,7 @@ function readfiles(files, targets) {
   }
 
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', '/devnull.php'); // One must ignore these errors, sorry!
+  xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
   xhr.send(formData);
 }
 
