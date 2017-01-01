@@ -8,15 +8,17 @@
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; }
       .passes { margin-right: 1em; }
-      .passes { padding-left: .1em; border-left: thick solid #bfb; }
-      .fails  { padding-left: .1em; border-left: thick solid #fbb; }
-      .error  { padding-left: .1em; border-left: thick solid #b00; }
+      .passes, #results.passes { padding-left: .1em; border-left: thick solid #bfb; }
+      .fails , #results.fails  { padding-left: .1em; border-left: thick solid #fbb; }
+      .error , #results.error  { padding-left: .1em; border-left: thick solid #b00; }
       #schema textarea, .schema { background-color: #f4f4ff; }
       #schema li.selected a { background-color: #e8e8ff; }
       #data textarea, .data { background-color: #f4fff4; }
       #data li.selected { background-color: #e8ffe8; }
       #schema textarea, #data textarea { border: .25em dashed #ddd; }
       #schema textarea.hover, #data textarea.hover, body.hover { border: .25em dashed #0c0; }
+      #results:disabled { background-color: #fff; }
+      #results { width: 99%; border: none; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -113,9 +115,10 @@
           </div>
         </div>
       </div>
-      <pre id="results" style="clear:both;">
-      </pre>
+      <br style="clear:both;"/>
+      <textarea id="results" disabled="disabled"></textarea>
     </div>
+    <script src='https://rawgit.com/jackmoore/autosize/master/dist/autosize.js'></script>
     <script src="require.js"></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["./N3Lexer"] = N3Lexer = module.exports;</script>

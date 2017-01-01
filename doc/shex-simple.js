@@ -26,7 +26,7 @@ function load (selector, obj, func, listItems, side, str) {
 function clearData () {
   $("#data textarea").val("");
   $("#data .status").text(" ");
-  $("#results").text("").removeClass("passes fails error");
+  results.clear().removeClass("passes fails error");
 }
 
 function clearAll () {
@@ -55,7 +55,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#data .fails p:first").text("Failing:");
     load("#data .fails ul", schemaTest.fails, pickData, listItems, "data", function (o) { return o.data; });
 
-    $("#results").text("").removeClass("passes fails error");
+    results.clear().removeClass("passes fails error");
     $("#schema li.selected").removeClass("selected");
     $(elt).addClass("selected");
     $("input.schema").val(getSchemaShapes()[0]);
@@ -122,6 +122,38 @@ function guessStartingNode (focus) {
     return lexToTerm(focus);
 }
 
+var results = (function () {
+  var resultsElt = autosize(document.querySelector("#results"));
+  var resultsSel = $("#results");
+  function resize () {
+    var evt = document.createEvent("Event");
+    evt.initEvent("autosize:update", true, false);
+    resultsElt.dispatchEvent(evt);
+  }
+  return {
+    replace: function (text) {
+      var ret = resultsSel.text(text);
+      resize();
+      return ret;
+    },
+    append: function (text) {
+      var ret = resultsSel.append(text);
+      resize();
+      return ret;
+    },
+    clear: function () {
+      var ret = resultsSel.text("");
+      resize();
+      return ret;
+    },
+    rattle: function () {
+      var height = resultsSel.height();
+      resultsSel.height(1);
+      resultsSel.animate({height:height}, 100);
+    }
+  };
+})();
+
 function validate () {
   var parsing = "schema";
   try {
@@ -141,31 +173,32 @@ function validate () {
       var focus = guessStartingNode($("input.data").val());
 
       var ret = validator.validate(data, focus, shape);
+      // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
+      var res = results.replace(JSON.stringify(ret, null, "  "));
       if ("errors" in ret)
-        $("#results").text(JSON.stringify(ret, null, "  ")).
-        removeClass("passes error").addClass("fails");
+        res.removeClass("passes error").addClass("fails");
       else
-        $("#results").text(JSON.stringify(ret, null, "  ")).
-        removeClass("fails error").addClass("passes");
+        res.removeClass("fails error").addClass("passes");
     } else {
       var parsedSchema;
       if (schemaIsJSON)
         new ShExWriter({simplifyParentheses: false}).writeSchema(schema, (error, text) => {
           if (error)
-            $("#results").text("unwritable ShExJ schema:\n" + error).
+            results.replace("unwritable ShExJ schema:\n" + error).
             removeClass("passes").addClass("fails error");
           else
-            $("#results").text("valid ShExJ schema:\n" + text).
+            results.replace("valid ShExJ schema:\n" + text).
             removeClass("fails error").addClass("passes");
         });
       else
-        $("#results").text("valid ShExC schema:\n" + JSON.stringify(schema, null, "  ")).
+        results.replace("valid ShExC schema:\n" + JSON.stringify(schema, null, "  ")).
         removeClass("fails error").addClass("passes");
     }
   } catch (e) {
-    $("#results").text("error parsing " + parsing + ":\n" + e).
+    results.replace("error parsing " + parsing + ":\n" + e).
       removeClass("passes fails").addClass("error");
   }
+  results.rattle();
 }
 
 function getSchemaShapes () {
@@ -260,7 +293,7 @@ function readfiles(files, targets) {
       })(target);
       reader.readAsText(file);
     } else {
-      $("#results").append("don't know what to do with " + name + "\n");
+      results.append("don't know what to do with " + name + "\n");
     }
   }
 
