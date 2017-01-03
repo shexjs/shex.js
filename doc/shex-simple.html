@@ -19,6 +19,9 @@
       #schema textarea.hover, #data textarea.hover, body.hover { border: .25em dashed #0c0; }
       #results:disabled { background-color: #fff; }
       #results { width: 99%; border: none; }
+      #results:disabled.passes { color: #373; }
+      #results:disabled.fails  { color: #733; }
+      #results:disabled.error  { color: #300; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -95,8 +98,8 @@
             </ul>
           </div>
         </div>
-            </div>
-      <div style="float:left; width: 1.5%;"><p> </p>
+      </div>
+      <div style="float:left; width: 1em;"><p> </p>
       </div>
       <div id="data" style="float:left; width: 49%;">
         <p class="status"> </p>
@@ -118,7 +121,7 @@
       <br style="clear:both;"/>
       <textarea id="results" disabled="disabled"></textarea>
     </div>
-    <script src='https://rawgit.com/jackmoore/autosize/master/dist/autosize.js'></script>
+    <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
     <script src="require.js"></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["./N3Lexer"] = N3Lexer = module.exports;</script>
