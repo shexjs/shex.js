@@ -88,7 +88,7 @@ function header () {
   doap:license       <http://creativecommons.org/licenses/publicdomain/> ;
   doap:shortdesc     "ShEx is a Shape Expression engine for javascript."@en ;
   doap:description   "ShEx.js is an Shape Expression engine for N3.js."@en ;
-  doap:created       "2016-12-09"^^xsd:date ;
+  doap:created       "${When.substr(0, 10)}"^^xsd:date ;
   doap:programming-language "JavaScript" ;
   doap:implements    <https://shexspec.github.io/spec/> ;
   doap:category      <http://dbpedia.org/resource/Resource_Description_Framework> ;
