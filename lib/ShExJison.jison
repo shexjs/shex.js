@@ -232,7 +232,7 @@
 
   // Creates a literal with the given value and type
   function createLiteral(value, type) {
-    return '"' + value + '"^^' + type;
+    return { value: value, datatype: type };
   }
 
   // Creates a new blank node identifier
@@ -285,7 +285,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return '"' + unescape(string, stringEscapeSequence, stringEscapeReplacements) + '"';
+    return unescape(string, stringEscapeSequence, stringEscapeReplacements);
   }
 
   // Convenience function to return object with p1 key, value p2
@@ -864,8 +864,8 @@ xsFacet:
 
 stringFacet:
       stringLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalLength
-    | IT_PATTERN string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
-    | '~' string	-> { pattern: $2.substr(1, $2.length-2) } // t: 1literalPattern
+    | IT_PATTERN string	-> { pattern: $2 } // t: 1literalPattern
+    | '~' string	-> { pattern: $2 } // t: 1literalPattern
     ;
 
 stringLength:
@@ -884,7 +884,6 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
     | DECIMAL	-> parseFloat($1);
     | DOUBLE	-> parseFloat($1);
     | string '^^' datatype	{
-        $1 = $1.substr(1, $1.length - 2);
         if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
           $$ = parseFloat($1);
         else if (numericDatatypes.indexOf($3) !== -1)
@@ -1183,12 +1182,12 @@ codeDecl:
     ;
 
 literal:
-      string	// t: 1val1STRING_LITERAL1
-    | string LANGTAG	-> $1 + lowercase($2) // t: 1val1LANGTAG
-    | string '^^' datatype	-> $1 + '^^' + $3 // t: 1val1Datatype
+      string	-> { value: $1 } // t: 1val1STRING_LITERAL1
+    | string LANGTAG	-> { value: $1, language: lowercase($2.substr(1)) } // t: 1val1LANGTAG
+    | string '^^' datatype	-> { value: $1, datatype: $3 } // t: 1val1Datatype
     | numericLiteral
-    | IT_true	-> XSD_TRUE // t: 1val1true
-    | IT_false	-> XSD_FALSE // t: 1val1false
+    | IT_true	-> { value: "true", datatype: XSD_BOOLEAN } // t: 1val1true
+    | IT_false	-> { value: "false", datatype: XSD_BOOLEAN } // t: 1val1false
     ;
 
 predicate:
