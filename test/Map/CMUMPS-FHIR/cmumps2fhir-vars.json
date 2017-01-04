@@ -1,0 +1,8 @@
+{
+  "urn:local:Demographics:constAddrPostal": "postal",
+  "urn:local:Demographics:constCmumpsDefLang": "English",
+  "urn:local:Demographics:constCmumpsEphone": "phone",
+  "urn:local:Demographics:constCmumpsPhone": "phone",
+  "urn:local:Demographics:constCmumpsSys": "cmumps",
+  "urn:local:Demographics:constCmumpsVersion": "0.0.1"
+}

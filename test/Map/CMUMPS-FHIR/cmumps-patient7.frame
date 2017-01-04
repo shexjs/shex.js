@@ -1,0 +1,4 @@
+{
+   "@context": "https://raw.githubusercontent.com/rdf-pipeline/translators/master/data/fake_cmumps/patient-7/context.jsonld",
+   "@graph": [{"@id": "http://hokukahu.com/patient-1"}]
+}

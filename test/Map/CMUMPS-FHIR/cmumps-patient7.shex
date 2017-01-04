@@ -1,0 +1,18 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX Map: <http://shex.io/extensions/Map/#>
+PREFIX dem: <urn:local:Demographics:>
+PREFIX cmumpss: <http://hokukahu.com/schema/cmumpss#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+BASE <http://hl7.org/fhir/shape/>
+
+start=@<http://hokukahu.com/patient-1>
+
+<http://hokukahu.com/patient-1> {
+    cmumpss:phone-2                         xsd:string?    %Map:{ dem:phone %};
+    cmumpss:street_address-2                xsd:string    %Map:{ dem:street_address %};
+    cmumpss:city-2                          xsd:string    %Map:{ dem:city %};
+    cmumpss:state-2                         xsd:string    %Map:{ dem:state %};
+    cmumpss:zip_code-2                      xsd:string    %Map:{ dem:zipcode %};
+    rdfs:label                              xsd:string    %Map:{ dem:patient_label %};
+}
+
