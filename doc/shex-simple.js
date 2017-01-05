@@ -125,25 +125,20 @@ function guessStartingNode (focus) {
 var results = (function () {
   var resultsElt = autosize(document.querySelector("#results"));
   var resultsSel = $("#results");
-  function resize () {
-    var evt = document.createEvent("Event");
-    evt.initEvent("autosize:update", true, false);
-    resultsElt.dispatchEvent(evt);
-  }
   return {
     replace: function (text) {
       var ret = resultsSel.text(text);
-      resize();
+      autosize.update(resultsElt);
       return ret;
     },
     append: function (text) {
       var ret = resultsSel.append(text);
-      resize();
+      autosize.update(resultsElt);
       return ret;
     },
     clear: function () {
       var ret = resultsSel.text("");
-      resize();
+      autosize.update(resultsElt);
       return ret;
     },
     rattle: function () {
@@ -158,7 +153,7 @@ function validate () {
   var parsing = "schema";
   try {
     var schemaText = $("#schema textarea").val();
-    var schemaIsJSON = schemaText.match(/^\S*\{/m);
+    var schemaIsJSON = schemaText.match(/^\s*\{/m);
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
