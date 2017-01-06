@@ -153,7 +153,7 @@ function validate () {
   var parsing = "schema";
   try {
     var schemaText = $("#schema textarea").val();
-    var schemaIsJSON = schemaText.match(/^\s*\{/m);
+    var schemaIsJSON = schemaText.match(/^\s*\{/);
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var schema = schemaIsJSON ?
         JSON.parse(schemaText) :
