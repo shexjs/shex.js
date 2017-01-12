@@ -46,6 +46,7 @@ var ValidatorOptions = { diagnose: true };
 var SchemaOptions = { duplicateShape: "abort" };
 // var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
+const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 var orChoices = Object.keys(ShExValidator.options.or).join("|");
 var parChoices = Object.keys(ShExValidator.options.partition).join("|");
 var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
@@ -197,10 +198,15 @@ function findNodesAndValidate (loaded, parms, options) {
     if (parms.shape === undefined)
       console.log("Guessing shape " + found);
   }
-  if (node == NotSupplied)
-    throw Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities));
+
+  if (node === NotSupplied)
+    throw Error("node not defined and no default found" +
+                ("node-type" in parms ?
+                 " looking for type " + parms["node-type"] :
+                 ""));
   if (node === UnknownIRI) {
-    console.warn("node " + parms.node + " not found in data" + optsStr(parms.node, loaded.data._entities));
+    console.warn("node " + parms.node + " not found in data" +
+                 optsStr("node" in parms ? parms.node : node, loaded.data._entities));
     node = parms.node;
   }
   ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
@@ -629,8 +635,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       port    = match[2] || 80,
       host    = "http://" + match[1],
       srvpath = match[3],
-      fs      = require("fs"),
-      RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+      fs      = require("fs");
 
   app.
     use(koaBody({
