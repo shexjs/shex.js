@@ -97,7 +97,7 @@ function guessStartingShape (shape) {
     var candidates = getSchemaShapes();
     if (candidates.length > 0) {
       $("input.schema").val(candidates[0]);
-      if (shape === START_SHAPE_LABEL)
+      if (candidates[0] === START_SHAPE_LABEL)
         return undefined;
       else
         return lexToTerm(candidates[0]);
