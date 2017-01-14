@@ -7,6 +7,7 @@
 var _ = require('underscore');
 
 // Known extensions
+var hashmap_extension = require('./hashmap_extension');
 var regex_extension = require('./regex_extension');
 
 var utils = require('./extension-utils');
@@ -38,6 +39,9 @@ function extensionDef(mapDirective) {
 function lift(mapDirective, input, prefixes) {
     var extDef = extensionDef(mapDirective);
     switch (extDef.name) {
+        case 'hashmap': 
+          return hashmap_extension.lift(mapDirective, input, prefixes, extDef.args);
+
         case 'regex': 
           return regex_extension.lift(mapDirective, input, prefixes, extDef.args);
 
@@ -52,6 +56,9 @@ function lift(mapDirective, input, prefixes) {
 function lower(mapDirective, bindings, prefixes) {
     var extDef = extensionDef(mapDirective);
     switch (extDef.name) {
+        case 'hashmap': 
+          return hashmap_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+
         case 'regex': 
           return regex_extension.lower(mapDirective, bindings, prefixes, extDef.args);
 

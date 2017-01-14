@@ -15,37 +15,8 @@ describe('Map extension utils', function() {
 
     it('should have the expected API', function() {
         mapExtUtils.should.be.an('object');
-        mapExtUtils.applyPrefix.should.be.a('function');
-        mapExtUtils.buildExpandedVars.should.be.a('function');
         mapExtUtils.collapseSpaces.should.be.a('function');
         mapExtUtils.unescapeMetaChars.should.be.a('function');
-    });
-
-    describe('#applyPrefix', function() {
-        it('should throw an error if given a variable name not in format prefix:name', function() {
-            var prefixes = {test: 'urn:local:test:'};
-            expect(mapExtUtils.applyPrefix.bind(this, 'badtestvar', prefixes)).to.throw(Error,
-                /variable "badtestvar" didn't match expected pattern!/);
-        });
-
-        it('should throw an error if cannot file prefix', function() {
-            expect(mapExtUtils.applyPrefix.bind(this, 'test:string', {})).to.throw(Error,
-                /Unknown prefix test in "test:string"!/);
-        });
-
-        it('should gracefully handle a non-prefixed variable name', function() {
-            expect(mapExtUtils.applyPrefix('<testname>', {})).to.equal('testname');
-        });
-
-        it('should apply a prefix to expand a variable name', function() {
-            var prefixes = {test: 'urn:local:test:'};
-            expect(mapExtUtils.applyPrefix('test:string', prefixes)).to.equal('urn:local:test:string');
-        });
-
-        it('should apply a prefix to expand a variable name with an explicit URL', function() {
-            var prefixes = {test: 'http://a.example/simple#'};
-            expect(mapExtUtils.applyPrefix('test:string', prefixes)).to.equal('http://a.example/simple#string');
-        });
     });
 
     describe('#collapseSpaces', function() {
@@ -58,28 +29,43 @@ describe('Map extension utils', function() {
         });
     });
 
-    describe('#buildExpandedVars', function() {
+    describe('#trimQuotes', function() {
 
-        it('should throw an error if given a non-conforming variable name', function() {
-            expect(mapExtUtils.buildExpandedVars.bind(this, 
-                '?<string>', [], { test:'urn:local:test#' })).to.throw(Error,
-                    'variable "string" didn\'t match expected pattern!');
+        it('should return an undefined string with no change', function() { 
+            expect( 
+                mapExtUtils.trimQuotes(undefined)
+            ).to.be.undefined;
         });
 
-        it('should get a complete, long urn variable name', function() {
-            var vars = [];
-            expect(mapExtUtils.buildExpandedVars('?<test:string>', vars, { test:'urn:local:test#' })).to.equal('urn:local:test#string');
-            vars.should.deep.equal([ 'urn:local:test#string' ]);
+        it('should return an empty string with no change', function() { 
+            expect( 
+                mapExtUtils.trimQuotes('')
+            ).to.equal('');
         });
 
-        it('should get a complete, long IRI variable name', function() {
-            var vars= [];
-            var prefixes = { testurn:'urn:local:test#',
-                             testuri: 'http:\/\/a.example\/simple#' };
-            expect(mapExtUtils.buildExpandedVars('?<testuri:string>', vars, prefixes)).to.equal('http://a.example/simple#string');
-            vars.should.deep.equal([ 'http://a.example/simple#string' ]);
+        it('should remove starting and trailing double quotes', function() {
+            expect( 
+                mapExtUtils.trimQuotes('"Test"')
+            ).to.equal('Test');
         });
 
+        it('should remove starting and trailing single quotes', function() {
+            expect( 
+                mapExtUtils.trimQuotes("'Test'")
+            ).to.equal('Test');
+        });
+
+        it('should not remove mismatched quotes', function() {
+            expect( 
+                mapExtUtils.trimQuotes("'Test\"")
+            ).to.equal("'Test\"");
+        });
+
+        it('should not remove non-leading and non-trailing quotes', function() {
+            expect( 
+                mapExtUtils.trimQuotes("'Testing \"123\" for you'")
+            ).to.equal("Testing \"123\" for you");
+        });
     });
 
     describe('#unescapeMetaChars', function() {
