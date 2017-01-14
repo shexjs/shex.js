@@ -1,4 +1,4 @@
-// shex-simple - Simple ShEx2 validator for HTML.
+// shexmap-simple - Simple ShEx2 validator for HTML.
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
@@ -243,9 +243,15 @@ $("input.inputfile").each((idx, elt) => {
 (function () {
   var _scma = $("#inputSchema textarea");
   var _data = $("#inputData textarea");
+  var _bnds = $("#bindings textarea");
+  var _outs = $("#outputSchema textarea");
+  var _vars = $("#staticVars textarea");
   var _body = $("body");
   [{dropElt: _scma, targets: [{ext: "", target: _scma}]},
    {dropElt: _data, targets: [{ext: "", target: _data}]},
+   {dropElt: _bnds, targets: [{ext: "", target: _bnds}]},
+   {dropElt: _outs, targets: [{ext: "", target: _outs}]},
+   {dropElt: _vars, targets: [{ext: "", target: _vars}]},
    {dropElt: _body, targets: [{ext: ".shex", target: _scma},
                               {ext: ".ttl", target: _data}]}].
     forEach(desc => {
