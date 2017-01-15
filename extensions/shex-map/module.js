@@ -200,10 +200,15 @@ function extractBindings (soln, min, max, depth) {
     return [].concat.apply([], soln.solutions.map(walk));
 }
 
-module.exports = {
+var iface = {
   register: register,
   extractBindings: extractBindings,
   done: done,
   materializer: materializer,
   url: MapExt
 };
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = iface;
+else
+  ShExMap = iface;
