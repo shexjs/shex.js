@@ -421,16 +421,16 @@ function prepareDemos () {
   $("#inputData textarea").keyup(function (e) {
     later(e.target, "inputData");
   });
-  [ { selector: "#actions .schema",
+  [ { selector: "#inputShape",
       getItems: getSchemaShapes },
-    { selector: "#actions .data",
+    { selector: "#focus",
       schema: { "S1": {}, "S2": {} },
       getItems: getDataNodes }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.selector,
       callback: function (key, options) {
-        $("input" + options.selector).val(key);
+        $(options.selector).val(key);
       },
       build: function (elt, e) {
         return {
