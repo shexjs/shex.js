@@ -372,7 +372,7 @@ function prepareDemos () {
           inputShape: "- start -",
           outputSchema: BPunitsDAM.schema,
           outputShape: "BPunitsDAM",
-          staticVars: {},
+          staticVars: BPunitsDAM.constants,
           createRoot: "tag:b0"}
       },
       fails: {
@@ -382,7 +382,7 @@ function prepareDemos () {
           inputShape: "- start -",
           outputSchema: BPunitsDAM.schema,
           outputShape: "BPunitsDAM",
-          staticVars: {},
+          staticVars: BPunitsDAM.constants,
           createRoot: "tag:b0"}
       },
     }
@@ -548,15 +548,18 @@ start = @<BPunitsDAM>
 
 <BPunitsDAM> {
     :systolic {
-        :value xsd:float %Map:{ bp:sysVal %},
+        :value xsd:float %Map:{ bp:sysVal %};
         :units xsd:string %Map:{ bp:sysUnits %}
-    },
+    };
     :diastolic {
-        :value xsd:float %Map:{ bp:diaVal %},
+        :value xsd:float %Map:{ bp:diaVal %};
         :units xsd:string %Map:{ bp:diaUnits %}
-    }
+    };
+    :someConstProp xsd:string %Map:{ <http://abc.example/someConstant> %}
 }
 `;
+
+BPunitsDAM.constants = {"http://abc.example/someConstant": "123-456"};
 
 BPunitsDAM.simple = `<tag:b0>
   <http://shex.io/extensions/Map/#BPunitsDAM-systolic> [
