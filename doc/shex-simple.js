@@ -70,10 +70,10 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData textarea").val(dataTest.data);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
-    $(elt).addClass("selected");
+    $(elt).addClass("selected");console.log(dataTest);
     //    $("input.data").val(getDataNodes()[0]);
-    $("input.shape").val(dataTest.shape);
-    $("input.data").val(dataTest.focus);
+    $("#inputShape").val(dataTest.inputShape); // srcSchema.start in Map-test
+    $("#focus").val(dataTest.focus); // inputNode in Map-test
 
     // validate();
   }
@@ -96,7 +96,7 @@ function guessStartingShape (shape) {
   if (shape === "") {
     var candidates = getSchemaShapes();
     if (candidates.length > 0) {
-      $("input.schema").val(candidates[0]);
+      $("#inputShape").val(candidates[0]);
       if (candidates[0] === START_SHAPE_LABEL)
         return undefined;
       else
@@ -114,7 +114,7 @@ function guessStartingNode (focus) {
   if (focus === "") {
     var candidates = getDataNodes();
     if (candidates.length > 0) {
-      $("input.data").val(candidates[0]);
+      $("#focus").val(candidates[0]);
       return lexToTerm(candidates[0]);
     } else
       throw Error("no possible starting focus node");
@@ -152,31 +152,32 @@ var results = (function () {
 function validate () {
   var parsing = "input schema";
   try {
-    var schemaText = $("#inputSchema textarea").val();
-    var schemaIsJSON = schemaText.match(/^\s*\{/);
+    var inputSchemaText = $("#inputSchema textarea").val();
+    var inputSchemaIsJSON = inputSchemaText.match(/^\s*\{/);
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
-    var inputSchema = schemaIsJSON ?
-        JSON.parse(schemaText) :
-        shexParser.parse(schemaText);
+    var inputSchema = inputSchemaIsJSON ?
+          JSON.parse(inputSchemaText) :
+          shexParser.parse(inputSchemaText);
     var validator = ShExValidator.construct(inputSchema);
     var dataText = $("#inputData textarea").val();
     if (dataText || $("#focus").val()) {
-      parsing = "data";
-      var data = N3Store();
-      data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
-      var shape = guessStartingShape($("input.schema").val());
-      var focus = guessStartingNode($("input.data").val());
+      parsing = "input data";
+      var inputData = N3Store();
+      inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+      var inputShape = guessStartingShape($("#inputShape").val());
+      var focus = guessStartingNode($("#focus").val());
 
-      var ret = validator.validate(data, focus, shape);
+      var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       var res = results.replace(JSON.stringify(ret, null, "  "));
-      if ("errors" in ret)
+      if ("errors" in ret) {
         res.removeClass("passes error").addClass("fails");
-      else
+      } else {
         res.removeClass("fails error").addClass("passes");
+      }
     } else {
       var parsedSchema;
-      if (schemaIsJSON)
+      if (inputSchemaIsJSON)
         new ShExWriter({simplifyParentheses: false}).writeSchema(inputSchema, (error, text) => {
           if (error)
             results.replace("unwritable ShExJ schema:\n" + error).
@@ -217,8 +218,6 @@ $("#inputData .passes, #inputData .fails").hide();
 $("#inputData .passes ul, #inputData .fails ul").empty();
 $("#validate").on("click", validate);
 $("#clear").on("click", clearAll);
-// prepareDemos() is invoked after these variables are assigned:
-var clinicalObs;
 
 // Prepare file uploads
 $("input.inputfile").each((idx, elt) => {
@@ -297,37 +296,39 @@ function readfiles(files, targets) {
   xhr.send(formData);
 }
 
+// prepareDemos() is invoked after these variables are assigned:
+var clinicalObs = {};
 function prepareDemos () {
   var demos = {
     "clinical observation": {
-      schema: clinicalObs,
+      schema: clinicalObs.schema,
       passes: {
         "with birthdate": {
-          data: clinicalObs_with_birthdate,
+          data: clinicalObs.with_birthdate,
           focus: "http://a.example/Obs1",
-          shape: "- start -"},
+          inputShape: "- start -"},
         "without birthdate": {
-          data: clinicalObs_without_birthdate,
+          data: clinicalObs.without_birthdate,
           focus: "http://a.example/Obs1",
-          shape: "- start -" },
+          inputShape: "- start -" },
         "no subject name": {
-          data: clinicalObs_no_subject_name,
+          data: clinicalObs.no_subject_name,
           focus: "http://a.example/Obs1",
-          shape: "- start -" }
+          inputShape: "- start -" }
       },
       fails: {
         "bad status": {
-          data: clinicalObs_bad_status,
+          data: clinicalObs.bad_status,
           focus: "http://a.example/Obs1",
-          shape: "- start -" },
+          inputShape: "- start -" },
         "no subject": {
-          data: clinicalObs_no_subject,
+          data: clinicalObs.no_subject,
           focus: "http://a.example/Obs1",
-          shape: "- start -" },
+          inputShape: "- start -" },
         "wrong birthdate datatype": {
-          data: clinicalObs_birthdate_datatype,
+          data: clinicalObs.birthdate_datatype,
           focus: "http://a.example/Obs1",
-          shape: "- start -" }
+          inputShape: "- start -" }
       }
     }
   };
@@ -350,8 +351,8 @@ function prepareDemos () {
     }, 250);
   }
   $("body").keydown(function (e) { // keydown because we need to preventDefault
-    var code = e.keyCode || e.charCode;
-    if (e.ctrlKey && (code === 10 || code === 13)) { // standards anyone?
+    var code = e.keyCode || e.charCode; // standards anyone?
+    if (e.ctrlKey && (code === 10 || code === 13)) {
       $("#validate").click();
       return false; // same as e.preventDefault();
     }
@@ -387,7 +388,7 @@ function prepareDemos () {
 }
 
 // Large constants with demo data which break syntax highlighting:
-clinicalObs = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.schema = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 start = @<ObservationShape>
@@ -402,7 +403,7 @@ start = @<ObservationShape>
  :birthdate xsd:date?              #   and an optional birthdate.
 }
 `;
-clinicalObs_with_birthdate = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.with_birthdate = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Obs1>
@@ -412,7 +413,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <Patient2>
   :name "Bob" ;
   :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs_no_subject_name = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.no_subject_name = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Obs1>
@@ -421,7 +422,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Patient2>
   :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs_without_birthdate = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.without_birthdate = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Obs1>
@@ -430,7 +431,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Patient2>
   :name "Bob" .`;
-clinicalObs_bad_status = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.bad_status = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Obs1>
@@ -442,7 +443,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :birthdate "1999-12-31"^^xsd:date .
 
 `;
-clinicalObs_no_subject = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.no_subject = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Obs1>
@@ -453,7 +454,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :birthdate "1999-12-31"^^xsd:date .
 
 `;
-clinicalObs_birthdate_datatype = `PREFIX : <http://hl7.org/fhir/>
+clinicalObs.birthdate_datatype = `PREFIX : <http://hl7.org/fhir/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <Obs1>

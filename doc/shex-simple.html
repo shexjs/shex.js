@@ -98,7 +98,7 @@
             <p>Examples:</p>
           </div>
           <div id="actions" style="float:right; margin-right: .1em;">
-            <button id="validate">validate (ctl-enter)</button> <input id="focus" type="text" value="" class="data"/> as <input id="shape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
+            <button id="validate">validate (ctl-enter)</button> <input id="focus" type="text" value="" class="data"/> as <input id="inputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
           </div>
           <div class="examples" style="clear:both;">
             <ul>
@@ -129,10 +129,10 @@
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
     <script src="require.js"></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["./N3Lexer"] = N3Lexer = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>N3Parser = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>N3Store = module.exports;</script>
-    <script src="../lib/ShExUtil.js"     ></script><script></script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
+    <script src="../lib/ShExUtil.js"     ></script><script>modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script src="../lib/ShExJison.js"    ></script><script></script>
     <script src="../lib/ShExParser.js"   ></script><script></script>
     <script src="../lib/ShExWriter.js"   ></script><script></script>
