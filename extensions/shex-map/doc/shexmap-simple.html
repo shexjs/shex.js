@@ -100,7 +100,7 @@
             <p>Examples:</p>
           </div>
           <div id="actions" style="float:right; margin-right: .1em;">
-            <button id="validate">validate (ctl-enter)</button> <input id="focus" type="text" value="" class="data"/> as <input id="shape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
+            <button id="validate">validate (ctl-enter)</button> <input id="focus" type="text" value="" class="data"/> as <input id="inputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
           </div>
           <div class="examples" style="clear:both;">
             <ul>
@@ -131,7 +131,7 @@
         <textarea rows="25" class="bindings droparea" style="width: 100%"></textarea>
         <div>
           <div id="outactions" style="float:right; margin-right: .1em;">
-            <button id="materialize">materialize (ctl-enter)</button> <input id="root" type="text" value="" class="data"/> as <input id="outshape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
+            <button id="materialize">materialize (ctl-\)</button> <input id="outputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/> from <input id="createRoot" type="text" value="" class="data"/>
           </div>
         </div>
       </div>
@@ -148,17 +148,24 @@
     </div>
     <textarea id="results" disabled="disabled"></textarea>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
-    <script src="../../../doc/require.js"></script>
+    <script src="../../../doc/require.js"      ></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["./N3Lexer"] = N3Lexer = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>N3Parser = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>N3Store = module.exports;</script>
-    <script src="../../../lib/ShExUtil.js"     ></script><script></script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
+    <script src="http://underscorejs.org/underscore-min.js"></script><script>modules["underscore"] = _;</script>
+    <script src="../../../lib/ShExUtil.js"     ></script><script>modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script src="../../../lib/ShExJison.js"    ></script><script></script>
     <script src="../../../lib/ShExParser.js"   ></script><script></script>
     <script src="../../../lib/ShExWriter.js"   ></script><script></script>
     <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../../../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
-    <script src="./shexmap-simple.js"></script>
+    <script src="../lib/extension-utils"       ></script><script>modules["./extension-utils"] = module.exports;</script>
+    <script src="../lib/regex_extension"       ></script><script>modules["./regex_extension"] = module.exports;</script>
+    <script src="../lib/extensions"            ></script><script>modules["./lib/extensions"] = module.exports;</script>
+
+    <script src="../module.js"                 ></script><script>ShExMap = module.exports;</script>
+    <script src="./shexmap-simple.js"          ></script>
   </body>
 </html>
