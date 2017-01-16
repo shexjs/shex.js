@@ -30,7 +30,7 @@ var Harness = {
           loads[0].data.toString = loads[1].data.toString = graphToString;
 
           // prepare validator
-          var validator = ShExValidator.construct(loads[0].schema);
+          var validator = ShExValidator.construct(loads[0].schema, { noCache: true });
           Mapper.register(validator);
 
           // run validator
@@ -52,6 +52,7 @@ var Harness = {
           maybeLog(outputGraph.toString());
           maybeLog("expect:");
           maybeLog(loads[1].data.toString());
+          // console.log(outputGraph.find(), "\n--\n", loads[1].data.find());
           expect(outputGraph.equals(loads[1].data)).to.be.true;
           done();
         }).catch(function (error) {
