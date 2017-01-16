@@ -244,7 +244,9 @@ function materialize () {
     var writer = N3.Writer({ prefixes: {} });
     outputGraph.find().forEach(t => { writer.addTriple(t); });
     writer.end(function (error, result) {
-      results.replace(JSON.stringify(result, null, "  "));
+      results.replace(JSON.stringify(result, null, "  ").
+                      replace(/\\n/g, "\n").
+                      replace(/\\"/g, "\""));
     });
   } catch (e) {
     results.replace("error parsing " + parsing + ":\n" + e).
