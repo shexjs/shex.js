@@ -232,7 +232,7 @@
 
   // Creates a literal with the given value and type
   function createLiteral(value, type) {
-    return { value: value, datatype: type };
+    return { value: value, type: type };
   }
 
   // Creates a new blank node identifier
@@ -1184,10 +1184,10 @@ codeDecl:
 literal:
       string	-> { value: $1 } // t: 1val1STRING_LITERAL1
     | string LANGTAG	-> { value: $1, language: lowercase($2.substr(1)) } // t: 1val1LANGTAG
-    | string '^^' datatype	-> { value: $1, datatype: $3 } // t: 1val1Datatype
+    | string '^^' datatype	-> { value: $1, type: $3 } // t: 1val1Datatype
     | numericLiteral
-    | IT_true	-> { value: "true", datatype: XSD_BOOLEAN } // t: 1val1true
-    | IT_false	-> { value: "false", datatype: XSD_BOOLEAN } // t: 1val1false
+    | IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
+    | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
     ;
 
 predicate:

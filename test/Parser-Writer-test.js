@@ -59,7 +59,7 @@ describe("A ShEx parser", function () {
     if (!fs.existsSync(jsonSchemaFile)) return;
     var shexSchemaFile = schemasPath + schema + ".shex";
     try {
-      var jsonSchema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
+      var jsonSchema = parseShExJ(fs.readFileSync(jsonSchemaFile, "utf8"));
 
       it("should correctly parse schema '" + shexSchemaFile +
          "' as '" + jsonSchemaFile + "'." , function () {
@@ -69,9 +69,12 @@ describe("A ShEx parser", function () {
            try {
              parser._setFileName(shexSchemaFile);
              var parsedSchema = parser.parse(schema);
-             if (VERBOSE) console.log("parsed   :" + JSON.stringify(parsedSchema));
+             var trimmedSchema = Object.assign({}, parsedSchema);
+             delete trimmedSchema.prefixes;
+             delete trimmedSchema.base;
+             if (VERBOSE) console.log("parsed   :" + JSON.stringify(trimmedSchema));
              if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
-             expect(parsedSchema).to.deep.equal(jsonSchema);
+             expect(trimmedSchema).to.deep.equal(jsonSchema);
            } catch (e) {
              parser.reset();
              throw(e);
@@ -220,20 +223,43 @@ describe("A ShEx parser", function () {
   }
 });
 
-// Parses a JSON object, restoring `undefined` values
-function parseJSON(string) {
-  var object = JSON.parse(string);
-  return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+function parseShExJ (schemaText) {
+  var schema = JSON.parse(schemaText);
+  delete schema["@context"];
+  if ("start" in schema) {
+    simplifyJSON(schema.start);
+  }
+  if ("shapes" in schema) {
+    var newShapes = {}
+    schema.shapes.forEach(sh => {
+      var label = sh.label;
+      delete sh.label;
+      simplifyJSON(sh);
+      newShapes[label] = sh;
+    });
+    schema.shapes = newShapes;
+  }
+  return schema;
+
+  function simplifyJSON (object) {
+    for (var key in object) {
+      var item = object[key];
+      if (typeof item === 'object') {
+        if ("uri" in item) {
+          object[key] = item.uri;
+          // } else if ("value" in item) {
+          //   var val = "\""+item.value+"\"";
+          //   if ("type" in item) {
+          //     val += "^^" + item.type;
+          //   } else if ("language" in item) {
+          //     val += "@" + item.language;
+          //   }
+          //   object[key] = val;
+        } else {
+          simplifyJSON(item);
+        }
+      }
+    }
+  }
 }
 
-// Recursively replace values of "{undefined}" by `undefined`
-function restoreUndefined(object) {
-  for (var key in object) {
-    var item = object[key];
-    if (typeof item === "object")
-      object[key] = restoreUndefined(item);
-    else if (item === "{undefined}")
-      object[key] = undefined;
-  }
-  return object;
-}

@@ -433,7 +433,7 @@
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/Onset": [
-                      { "value": "1996-8-31T12:30", "datatype": "http://www.w3.org/2001/XMLSchema#" }
+                      { "value": "1996-8-31T12:30", "type": "http://www.w3.org/2001/XMLSchema#" }
                     ]
                   }
                 }
@@ -463,7 +463,7 @@
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/Entered": [
-                      { "value": "1996-9-1T12:30", "datatype": "http://www.w3.org/2001/XMLSchema#" }
+                      { "value": "1996-9-1T12:30", "type": "http://www.w3.org/2001/XMLSchema#" }
                     ]
                   }
                 }
