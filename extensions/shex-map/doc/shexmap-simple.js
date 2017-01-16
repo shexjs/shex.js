@@ -58,7 +58,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     results.clear().removeClass("passes fails error");
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.schema").val(getSchemaShapes()[0]);
+    $("input.schema").val(getSchemaShapes("#inputSchema textarea")[0]);
   }
 }
 
@@ -100,11 +100,12 @@ function lexToTerm (lex) {
 // </n3.js-specific>
 
 // Guess the starting shape.
-function guessStartingShape (shape) {
+function guessStartingShape (inputSelector, parseSelector) {
+  var shape = $(inputSelector).val();
   if (shape === "") {
-    var candidates = getSchemaShapes();
+    var candidates = getSchemaShapes(parseSelector);
     if (candidates.length > 0) {
-      $("#inputShape").val(candidates[0]);
+      $(inputSelector).val(candidates[0]);
       if (candidates[0] === START_SHAPE_LABEL)
         return undefined;
       else
@@ -118,11 +119,12 @@ function guessStartingShape (shape) {
 }
 
 // Guess the starting focus.
-function guessStartingNode (focus) {
+function guessStartingNode (inputSelector, parseSelector) {
+  var focus = $(inputSelector).val();
   if (focus === "") {
-    var candidates = getDataNodes();
+    var candidates = getDataNodes(parseSelector);
     if (candidates.length > 0) {
-      $("#focus").val(candidates[0]);
+      $(inputSelector).val(candidates[0]);
       return lexToTerm(candidates[0]);
     } else
       throw Error("no possible starting focus node");
@@ -173,8 +175,8 @@ function validate () {
       parsing = "input data";
       var inputData = N3Store();
       inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
-      var inputShape = guessStartingShape($("#inputShape").val());
-      var focus = guessStartingNode($("#focus").val());
+      var inputShape = guessStartingShape("#inputShape", "#inputSchema textarea");
+      var focus = guessStartingNode("#focus");
 
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
@@ -238,9 +240,10 @@ function materialize () {
       JSON.parse($("#staticVars textarea").val()),
       JSON.parse($("#bindings1 textarea").val())
     );
-    // $("#outputShape").val() ? is just targetSchema.start in Map-test
-    var map = ShExMap.materializer(outputSchema);
-    var outputGraph = map.materialize(resultBindings, $("#createRoot").val());
+    var mapper = ShExMap.materializer(outputSchema);
+    var outputShape = guessStartingShape("#outputShape", "#outputSchema textarea");
+
+    var outputGraph = mapper.materialize(resultBindings, lexToTerm($("#createRoot").val()), outputShape);
     var writer = N3.Writer({ prefixes: {} });
     outputGraph.find().forEach(t => { writer.addTriple(t); });
     writer.end(function (error, result) {
@@ -255,16 +258,16 @@ function materialize () {
   results.rattle();
 }
 
-function getSchemaShapes () {
-  var schemaText = $("#inputSchema textarea").val();
+function getSchemaShapes (parseSelector) {
+  var schemaText = $(parseSelector).val();
   var inputSchema = shexParser.parse(schemaText);
   var start = "start" in inputSchema ? [START_SHAPE_LABEL] : [];
   var rest = "shapes" in inputSchema ? Object.keys(inputSchema.shapes).map(termToLex) : [];
   return start.concat(rest);
 }
 
-function getDataNodes () {
-  var dataText = $("#inputData textarea").val();
+function getDataNodes (parseSelector) {
+  var dataText = $(parseSelector).val();
   var data = N3Store();
   data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
   return data.find().map(t => {
@@ -373,9 +376,9 @@ function prepareDemos () {
           focus: "tag:BPfhir123",
           inputShape: "- start -",
           outputSchema: BPunitsDAM.schema,
-          outputShape: "BPunitsDAM",
+          outputShape: "- start -",
           staticVars: BPunitsDAM.constants,
-          createRoot: "tag:b0"}
+          createRoot: "<tag:b0>"}
       },
       fails: {
         "bad code": {
@@ -383,9 +386,9 @@ function prepareDemos () {
           focus: "tag:BPfhir123",
           inputShape: "- start -",
           outputSchema: BPunitsDAM.schema,
-          outputShape: "BPunitsDAM",
+          outputShape: "- start -",
           staticVars: BPunitsDAM.constants,
-          createRoot: "tag:b0"}
+          createRoot: "<tag:b0>"}
       },
     }
   };
@@ -423,21 +426,23 @@ function prepareDemos () {
   $("#inputData textarea").keyup(function (e) {
     later(e.target, "inputData");
   });
-  [ { selector: "#inputShape",
+  [ { inputSelector: "#inputShape", parseSelector: "#inputSchema textarea",
       getItems: getSchemaShapes },
-    { selector: "#focus",
+    { inputSelector: "#focus", parseSelector: "#inputData textarea",
       schema: { "S1": {}, "S2": {} },
-      getItems: getDataNodes }
+      getItems: getDataNodes },
+    { inputSelector: "#outputShape", parseSelector: "#outputSchema textarea",
+      getItems: getSchemaShapes }
   ].forEach(entry => {
     $.contextMenu({
-      selector: entry.selector,
+      selector: entry.inputSelector,
       callback: function (key, options) {
         $(options.selector).val(key);
       },
       build: function (elt, e) {
         return {
           items:
-          entry.getItems(entry).reduce((ret, opt) => {
+          entry.getItems(entry.parseSelector).reduce((ret, opt) => {
             ret[opt] = { name: opt };
             return ret;
           }, {})

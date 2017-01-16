@@ -86,7 +86,8 @@ function materializer (schema, nextBNode) {
     return '_:b' + blankNodeCount++;
   };
   return {
-    materialize: function (bindings, createRoot, target) {
+    materialize: function (bindings, createRoot, shape, target) {
+      shape = shape || schema.start;
       target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
@@ -150,7 +151,7 @@ function materializer (schema, nextBNode) {
         }
       };
 
-      v.visitShapeExpr(schema.start, "_: -start-");
+      v.visitShapeExpr(shape, "_: -start-");
       return target;
     }
   };
