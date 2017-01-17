@@ -226,40 +226,15 @@ describe("A ShEx parser", function () {
 function parseShExJ (schemaText) {
   var schema = JSON.parse(schemaText);
   delete schema["@context"];
-  if ("start" in schema) {
-    simplifyJSON(schema.start);
-  }
   if ("shapes" in schema) {
     var newShapes = {}
     schema.shapes.forEach(sh => {
       var label = sh.label;
       delete sh.label;
-      simplifyJSON(sh);
       newShapes[label] = sh;
     });
     schema.shapes = newShapes;
   }
   return schema;
-
-  function simplifyJSON (object) {
-    for (var key in object) {
-      var item = object[key];
-      if (typeof item === 'object') {
-        if ("uri" in item) {
-          object[key] = item.uri;
-          // } else if ("value" in item) {
-          //   var val = "\""+item.value+"\"";
-          //   if ("type" in item) {
-          //     val += "^^" + item.type;
-          //   } else if ("language" in item) {
-          //     val += "@" + item.language;
-          //   }
-          //   object[key] = val;
-        } else {
-          simplifyJSON(item);
-        }
-      }
-    }
-  }
 }
 
