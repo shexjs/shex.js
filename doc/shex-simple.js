@@ -70,7 +70,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData textarea").val(dataTest.data);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
-    $(elt).addClass("selected");console.log(dataTest);
+    $(elt).addClass("selected");
     //    $("input.data").val(getDataNodes()[0]);
     $("#inputShape").val(dataTest.inputShape); // srcSchema.start in Map-test
     $("#focus").val(dataTest.focus); // inputNode in Map-test
@@ -163,6 +163,7 @@ function validate () {
     if (dataText || $("#focus").val()) {
       parsing = "input data";
       var inputData = N3Store();
+      N3Parser._resetBlankNodeIds();
       inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
       var inputShape = guessStartingShape($("#inputShape").val());
       var focus = guessStartingNode($("#focus").val());
@@ -208,6 +209,7 @@ function getSchemaShapes () {
 function getDataNodes () {
   var dataText = $("#inputData textarea").val();
   var data = N3Store();
+  N3Parser._resetBlankNodeIds();
   data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
   return data.find().map(t => {
     return termToLex(t.subject);
