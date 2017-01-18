@@ -172,6 +172,7 @@ function validate () {
     if (dataText || $("#focus").val()) {
       parsing = "input data";
       var inputData = N3Store();
+      N3Parser._resetBlankNodeIds();
       inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
       var inputShape = guessStartingShape($("#inputShape").val());
       var focus = guessStartingNode($("#focus").val());
@@ -266,6 +267,7 @@ function getSchemaShapes () {
 function getDataNodes () {
   var dataText = $("#inputData textarea").val();
   var data = N3Store();
+  N3Parser._resetBlankNodeIds();
   data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
   return data.find().map(t => {
     return termToLex(t.subject);
