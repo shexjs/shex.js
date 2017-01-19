@@ -6,6 +6,9 @@ var EARL = "EARL" in process.env; // We're generation an EARL report.
 var ShExParser = require("../lib/ShExParser");
 var ShExWriter = require("../lib/ShExWriter");
 var ShExUtil = require("../lib/ShExUtil");
+var ShExValidator = require("../lib/ShExValidator");
+
+var N3 = require("n3");
 
 var fs = require("fs");
 var expect = require("chai").expect;
@@ -13,6 +16,7 @@ var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var jsonSchemasPath = findPath("parsedSchemas");
+var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
 var negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
   {path: findPath("negativeStructure"), include: "Structural error"}
@@ -57,17 +61,18 @@ describe("A ShEx parser", function () {
 
     var jsonSchemaFile = jsonSchemasPath + schema + ".json";
     if (!fs.existsSync(jsonSchemaFile)) return;
-    var shexSchemaFile = schemasPath + schema + ".shex";
     try {
-      var jsonSchema = parseShExJ(fs.readFileSync(jsonSchemaFile, "utf8"));
+      var jsonSchema = shexJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
+      var shexCFile = schemasPath + schema + ".shex";
+      var shexRFile = schemasPath + schema + ".ttl";
 
-      it("should correctly parse schema '" + shexSchemaFile +
+      it("should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           schema = fs.readFileSync(shexSchemaFile, "utf8");
+           var schema = fs.readFileSync(shexCFile, "utf8");
            try {
-             parser._setFileName(shexSchemaFile);
+             parser._setFileName(shexCFile);
              var parsedSchema = parser.parse(schema);
              var trimmedSchema = Object.assign({}, parsedSchema);
              delete trimmedSchema.prefixes;
@@ -75,6 +80,32 @@ describe("A ShEx parser", function () {
              if (VERBOSE) console.log("parsed   :" + JSON.stringify(trimmedSchema));
              if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
              expect(trimmedSchema).to.deep.equal(jsonSchema);
+           } catch (e) {
+             parser.reset();
+             throw(e);
+           }
+         });
+
+      it("should correctly parse ShExR schema '" + shexRFile +
+         "' as '" + jsonSchemaFile + "'." , function () {
+
+           if (VERBOSE) console.log(schema);
+           var schema = fs.readFileSync(shexRFile, "utf8");
+           try {
+             var schemaGraph = N3.Store();
+             schemaGraph.addTriples(N3.Parser({documentIRI:shexRFile, blankNodePrefix: ""}).parse(schema));
+             // console.log(schemaGraph.find());
+             var schemaRoot = schemaGraph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
+             parser._setFileName(ShExRSchemaFile);
+             var graphParser = ShExValidator.construct(
+               parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8")),
+               {}
+             );
+             var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
+             var parsedSchema = shexJtoAS(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)));
+             if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
+             if (VERBOSE) console.log("expected   :" + JSON.stringify(jsonSchema));
+             expect(canonicalize(parsedSchema)).to.deep.equal(canonicalize(jsonSchema));
            } catch (e) {
              parser.reset();
              throw(e);
@@ -94,7 +125,7 @@ describe("A ShEx parser", function () {
               else w = text;
             });
           if (VERBOSE) console.log("written  :" + w);
-          parser._setFileName(shexSchemaFile + " (generated)");
+          parser._setFileName(shexCFile + " (generated)");
           try {
             var parsed2 = parser.parse(w);
             expect(parsed2).to.deep.equal(jsonSchema);
@@ -112,7 +143,7 @@ describe("A ShEx parser", function () {
               else w = text;
             });
           if (VERBOSE) console.log("simple   :" + w);
-          parser._setFileName(shexSchemaFile + " (simplified)");
+          parser._setFileName(shexCFile + " (simplified)");
           try {
             var parsed3 = parser.parse(w); // test that simplified also parses
           } catch (e) {
@@ -223,8 +254,7 @@ describe("A ShEx parser", function () {
   }
 });
 
-function parseShExJ (schemaText) {
-  var schema = JSON.parse(schemaText);
+function shexJtoAS (schema) {
   delete schema["@context"];
   if ("shapes" in schema) {
     var newShapes = {}
@@ -232,9 +262,22 @@ function parseShExJ (schemaText) {
       var label = sh.label;
       delete sh.label;
       newShapes[label] = sh;
+
+      // if ("extra" in sh)
+      //   sh.extra.sort();
     });
     schema.shapes = newShapes;
   }
   return schema;
 }
 
+function canonicalize (schema) {
+  var ret = JSON.parse(JSON.stringify(schema));
+  if ("shapes" in schema) {
+    Object.keys(ret.shapes).forEach(k => {
+      if ("extra" in ret.shapes[k])
+        ret.shapes[k].extra.sort();
+    });
+  }
+  return ret;
+}

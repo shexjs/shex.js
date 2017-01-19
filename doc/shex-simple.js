@@ -149,8 +149,7 @@ var results = (function () {
   };
 })();
 
-function parseShExJ (schemaText) {
-  var schema = JSON.parse(schemaText);
+function shexJtoAS (schema) {
   var newShapes = {}
   schema.shapes.forEach(sh => {
     var label = sh.label;
@@ -168,15 +167,15 @@ function validate () {
     var inputSchemaIsJSON = inputSchemaText.match(/^\s*\{/);
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var inputSchema = inputSchemaIsJSON ?
-          parseShExJ(inputSchemaText) :
-          shexParser.parse(inputSchemaText);
+        shexJtoAS(JSON.parse(inputSchemaText)) :
+        shexParser.parse(inputSchemaText);
     var validator = ShExValidator.construct(inputSchema);
     var dataText = $("#inputData textarea").val();
     if (dataText || $("#focus").val()) {
       parsing = "input data";
       var inputData = N3Store();
       N3Parser._resetBlankNodeIds();
-      inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+      inputData.addTriples(N3Parser({documentIRI: Base, blankNodePrefix: ""}).parse(dataText));
       var inputShape = guessStartingShape($("#inputShape").val());
       var focus = guessStartingNode($("#focus").val());
 
@@ -222,7 +221,7 @@ function getDataNodes () {
   var dataText = $("#inputData textarea").val();
   var data = N3Store();
   N3Parser._resetBlankNodeIds();
-  data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+  data.addTriples(N3Parser({documentIRI: Base, blankNodePrefix: ""}).parse(dataText));
   return data.find().map(t => {
     return termToLex(t.subject);
   });
