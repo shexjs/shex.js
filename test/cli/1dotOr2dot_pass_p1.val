@@ -16,7 +16,7 @@
                 "type": "TestedTriple",
                 "subject": "x",
                 "predicate": "http://a.example/p1",
-                "object": "\"p1-0\""
+                "object": { "value": "p1-0" }
               }
             ]
           }

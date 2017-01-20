@@ -80,6 +80,17 @@ function done (validator) {
     delete validator.semActHandler.results[MapExt];
 }
 
+function n3ify (ldterm) {
+  if (typeof ldterm !== "object")
+    return ldterm;
+  var ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
 function materializer (schema, nextBNode) {
   var blankNodeCount = 0;
   nextBNode = nextBNode || function () {
@@ -95,7 +106,7 @@ function materializer (schema, nextBNode) {
       function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
-      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: o }); return s; }
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
       var curSubject = createRoot || B();
 

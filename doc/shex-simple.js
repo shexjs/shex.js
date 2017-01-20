@@ -149,6 +149,17 @@ var results = (function () {
   };
 })();
 
+function shexJtoAS (schema) {
+  var newShapes = {}
+  schema.shapes.forEach(sh => {
+    var label = sh.label;
+    delete sh.label;
+    newShapes[label] = sh;
+  });
+  schema.shapes = newShapes;
+  return schema;
+}
+
 function validate () {
   var parsing = "input schema";
   try {
@@ -156,21 +167,31 @@ function validate () {
     var inputSchemaIsJSON = inputSchemaText.match(/^\s*\{/);
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var inputSchema = inputSchemaIsJSON ?
-          JSON.parse(inputSchemaText) :
-          shexParser.parse(inputSchemaText);
+        shexJtoAS(JSON.parse(inputSchemaText)) :
+        shexParser.parse(inputSchemaText);
     var validator = ShExValidator.construct(inputSchema);
     var dataText = $("#inputData textarea").val();
     if (dataText || $("#focus").val()) {
       parsing = "input data";
       var inputData = N3Store();
       N3Parser._resetBlankNodeIds();
-      inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+      inputData.addTriples(N3Parser({documentIRI: Base, blankNodePrefix: ""}).parse(dataText));
       var inputShape = guessStartingShape($("#inputShape").val());
       var focus = guessStartingNode($("#focus").val());
 
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       var res = results.replace(JSON.stringify(ret, null, "  "));
+      // for debugging values and schema formats:
+      // try {
+      //   var x = ShExUtil.valToValues(ret);
+      //   // var x = shexJtoAS(valuesToSchema(valToValues(ret)));
+      //   res = results.replace(JSON.stringify(x, null, "  "));
+      //   var y = ShExUtil.valuesToSchema(x);
+      //   res = results.append(JSON.stringify(y, null, "  "));
+      // } catch (e) {
+      //   console.dir(e);
+      // }
       if ("errors" in ret) {
         res.removeClass("passes error").addClass("fails");
       } else {
@@ -210,7 +231,7 @@ function getDataNodes () {
   var dataText = $("#inputData textarea").val();
   var data = N3Store();
   N3Parser._resetBlankNodeIds();
-  data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
+  data.addTriples(N3Parser({documentIRI: Base, blankNodePrefix: ""}).parse(dataText));
   return data.find().map(t => {
     return termToLex(t.subject);
   });
