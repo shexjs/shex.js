@@ -182,6 +182,16 @@ function validate () {
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       var res = results.replace(JSON.stringify(ret, null, "  "));
+      // for debugging values and schema formats:
+      // try {
+      //   var x = ShExUtil.valToValues(ret);
+      //   // var x = shexJtoAS(valuesToSchema(valToValues(ret)));
+      //   res = results.replace(JSON.stringify(x, null, "  "));
+      //   var y = ShExUtil.valuesToSchema(x);
+      //   res = results.append(JSON.stringify(y, null, "  "));
+      // } catch (e) {
+      //   console.dir(e);
+      // }
       if ("errors" in ret) {
         res.removeClass("passes error").addClass("fails");
       } else {
