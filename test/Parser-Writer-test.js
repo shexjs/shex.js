@@ -1,4 +1,5 @@
 //  "use strict";
+var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
@@ -22,6 +23,9 @@ var negativeTests = [
   {path: findPath("negativeStructure"), include: "Structural error"}
 ];
 var illDefinedTestsPath = findPath("illDefined");
+
+if (!SLOW)
+  console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
 
 describe("A ShEx parser", function () {
   // var b = function () {  };
@@ -86,6 +90,7 @@ describe("A ShEx parser", function () {
            }
          });
 
+    if (SLOW) {
       it("should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
@@ -111,6 +116,7 @@ describe("A ShEx parser", function () {
              throw(e);
            }
          });
+    }
 
       if (!EARL) {
         it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
