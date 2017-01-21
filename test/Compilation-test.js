@@ -28,10 +28,10 @@ describe("A ShEx AST", function () {
     var jsonSchemaFile = schemasPath + schemaName + ".json"
 
     it("should translate JSON schema '" + jsonSchemaFile + "' to '" + jsonASTFile + "'." , function () {
-      var jsonAST = parseJSON(fs.readFileSync(jsonASTFile, "utf8"));
+      var jsonAST = JSON.parse(fs.readFileSync(jsonASTFile, "utf8"));
 
       if (VERBOSE) console.log(schemaName);
-      var schema = parseJSON(fs.readFileSync(jsonSchemaFile, "utf8"));
+      var schema = parseShExJ(fs.readFileSync(jsonSchemaFile, "utf8"));
       var compiledAST = ShExValidator.construct(schema).getAST();
       if (VERBOSE) console.log("compiled :" + JSON.stringify(compiledAST));
       if (VERBOSE) console.log("expected :" + JSON.stringify(jsonAST));
@@ -40,20 +40,18 @@ describe("A ShEx AST", function () {
   });
 });
 
-// Parses a JSON object, restoring `undefined` values
-function parseJSON(string) {
-  var object = JSON.parse(string);
-  return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+function parseShExJ (schemaText) {
+  var schema = JSON.parse(schemaText);
+  delete schema["@context"];
+  if ("shapes" in schema) {
+    var newShapes = {}
+    schema.shapes.forEach(sh => {
+      var label = sh.label;
+      delete sh.label;
+      newShapes[label] = sh;
+    });
+    schema.shapes = newShapes;
+  }
+  return schema;
 }
 
-// Recursively replace values of "{undefined}" by `undefined`
-function restoreUndefined(object) {
-  for (var key in object) {
-    var item = object[key];
-    if (typeof item === "object")
-      object[key] = restoreUndefined(item);
-    else if (item === "{undefined}")
-      object[key] = undefined;
-  }
-  return object;
-}

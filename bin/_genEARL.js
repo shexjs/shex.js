@@ -82,17 +82,16 @@ function header () {
 @prefix ex:   <http://example.org/> .
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
-<https://github.com/shexSpec/shex.js> a doap:Project, earl:TestSubject, earl:Software ;
-  doap:name          "ShEx" ;
+<https://www.npmjs.com/package/shex> a doap:Project, earl:TestSubject, earl:Software ;
+  doap:name          "ShEx.js" ;
   doap:homepage      <https://github.com/shexSpec/shex.js> ;
   doap:license       <http://creativecommons.org/licenses/publicdomain/> ;
   doap:shortdesc     "ShEx is a Shape Expression engine for javascript."@en ;
   doap:description   "ShEx.js is an Shape Expression engine for N3.js."@en ;
-  doap:created       "2016-12-09"^^xsd:date ;
-  doap:programming-language "Ruby" ;
+  doap:created       "${When.substr(0, 10)}"^^xsd:date ;
+  doap:programming-language "JavaScript" ;
   doap:implements    <https://shexspec.github.io/spec/> ;
-  doap:category      <http://dbpedia.org/resource/Resource_Description_Framework>,
-                     <http://dbpedia.org/resource/Ruby_(programming_language)> ;
+  doap:category      <http://dbpedia.org/resource/Resource_Description_Framework> ;
   doap:download-page <https://www.npmjs.com/package/shex> ;
   doap:mailing-list  <http://lists.w3.org/Archives/Public/public-shex-dev/> ;
   doap:bug-database  <http://github.com/shexSpec/shex.js/issues> ;
@@ -106,7 +105,7 @@ function header () {
   dc:creator         <${AssertedBy}> ;
   dc:isPartOf        <https://github.com/RubenVerborgh/N3.js> .
 
-<> foaf:primaryTopic <https://github.com/shexSpec/shex.js> ;
+<> foaf:primaryTopic <https://www.npmjs.com/package/shex> ;
   dc:issued "${When}"^^xsd:dateTime ;
   foaf:maker <${AssertedBy}> .
 

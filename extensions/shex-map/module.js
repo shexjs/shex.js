@@ -6,10 +6,15 @@
  */
 var N3 = require("n3");
 var N3Util = N3.Util;
+
+var _ = require('underscore');
+
 var ShExUtil = require("../../lib/ShExUtil");
+var extensions = require("./lib/extensions");
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
+
 function register (validator) {
   var prefixes = validator.schema.prefixes;
 
@@ -26,27 +31,43 @@ function register (validator) {
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
       dispatch: function (code, ctx, extensionStorage) {
-        var transform = function (val) { return val; }
-        var func = code.match(/^ *toISO\((.*?)\) *$/);
-        if (func) {
-          code = func[1];
-          transform = function (val) {
-            var d = val.match(/^"(1?[0-9])\/([1-3]?[0-9])\/([0-9]{4}) ([1-2]?[0-9]):([1-5]?[0-9])"$/);
-            return `"${d[3]}-${d[1]}-${d[2]}T${d[4]}:${d[5]}"^^http://www.w3.org/2001/XMLSchema#`;
-          }
-        }
-        var m = code.match(pattern);
-        if (!m) {
-          throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
-        }
         function fail (msg) { var e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
-        var arg = m[1] ? m[1] :
-            m[2] in prefixes ? (prefixes[m[2]] + m[3]) :
-            fail("unknown prefix " + m[2] + " in \"" + code + "\".");
-        validator.semActHandler.results[MapExt][arg] = ctx.object;
-        if (!(arg in extensionStorage))
-          extensionStorage[arg] = [];
-        extensionStorage[arg].push(transform(ctx.object));
+        function getPrefixedName(bindingName) {
+           // already have the fully prefixed binding name ready to go
+           if (_.isString(bindingName)) return bindingName;
+
+           // bindingName is from a pattern match - need to get & expand it with prefix
+            var prefixedName = bindingName[1] ? bindingName[1] :
+                bindingName[2] in prefixes ? (prefixes[bindingName[2]] + bindingName[3]) :
+                fail("unknown prefix " + bindingName[2] + " in \"" + code + "\".");
+            return prefixedName;
+        }
+
+        var update = function(bindingName, value) {
+
+            if (!bindingName) {
+               throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
+            }
+
+            var prefixedName = getPrefixedName(bindingName);
+            var quotedValue = _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
+
+            validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
+            extensionStorage[prefixedName] = quotedValue;
+        };
+
+        // Do we have a map extension function?
+        if (/.*[(].*[)].*$/.test(code)) {
+
+            var results = extensions.lift(code, ctx.object, prefixes);
+            _.mapObject(results, function(val, key) {
+                update(key, val);
+            });
+        } else {
+          var bindingName = code.match(pattern);
+          update(bindingName, ctx.object);
+        }
+
         return true;
       }
     }
@@ -59,13 +80,25 @@ function done (validator) {
     delete validator.semActHandler.results[MapExt];
 }
 
+function n3ify (ldterm) {
+  if (typeof ldterm !== "object")
+    return ldterm;
+  var ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
 function materializer (schema, nextBNode) {
   var blankNodeCount = 0;
   nextBNode = nextBNode || function () {
     return '_:b' + blankNodeCount++;
   };
   return {
-    materialize: function (bindings, createRoot, target) {
+    materialize: function (bindings, createRoot, shape, target) {
+      shape = shape || schema.start;
       target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
@@ -73,7 +106,7 @@ function materializer (schema, nextBNode) {
       function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
-      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: o }); return s; }
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
       var curSubject = createRoot || B();
 
@@ -96,14 +129,28 @@ function materializer (schema, nextBNode) {
           mapExts.forEach(function (ext) {
             var code = ext.code;
             var m = code.match(pattern);
-            if (!m) {
-              throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
+
+            var tripleObject;
+            if (m) { 
+              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
+              if (!_.isUndefined(bindings[arg])) {
+                tripleObject = bindings[arg];
+              }
             }
-            var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); if (!(arg in bindings)) console.warn(arg); 
-            add(curSubject, expr.predicate, bindings[arg]);
+
+            // Is the arg a function? Check if it has parentheses and ends with a closing one
+            if (_.isUndefined(tripleObject)) {
+              if (/[ a-zA-Z0-9]+\(/.test(code)) 
+                  tripleObject = extensions.lower(code, bindings, schema.prefixes);
+            }
+
+            if (_.isUndefined(tripleObject)) console.warn('Not in bindings: ',code);
+            add(curSubject, expr.predicate, tripleObject);
           });
+
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
           add(curSubject, expr.predicate, expr.valueExpr.values[0]);
+
         } else {
           var oldSubject = curSubject;
           curSubject = B();
@@ -115,7 +162,7 @@ function materializer (schema, nextBNode) {
         }
       };
 
-      v.visitShapeExpr(schema.start, "_: -start-");
+      v.visitShapeExpr(shape, "_: -start-");
       return target;
     }
   };
@@ -165,10 +212,15 @@ function extractBindings (soln, min, max, depth) {
     return [].concat.apply([], soln.solutions.map(walk));
 }
 
-module.exports = {
+var iface = {
   register: register,
   extractBindings: extractBindings,
   done: done,
   materializer: materializer,
   url: MapExt
 };
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = iface;
+else
+  ShExMap = iface;
