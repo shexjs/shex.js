@@ -50,7 +50,7 @@ function register (validator) {
             }
 
             var prefixedName = getPrefixedName(bindingName);
-            var quotedValue = _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
+            var quotedValue = value; // _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
