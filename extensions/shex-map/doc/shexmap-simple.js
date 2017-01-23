@@ -487,28 +487,28 @@ PREFIX Map: <http://shex.io/extensions/Map/#>
 start = @<BPfhir>
 
 <BPfhir> {
-    a [fhir:Observation]?,
-    fhir:coding { fhir:code [sct:Blood_Pressure] },
-    fhir:related { fhir:type ["has-component"], fhir:target @<sysBP> },
-    fhir:related { fhir:type ["has-component"], fhir:target @<diaBP> }
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Blood_Pressure] };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
 }
 <sysBP> {
-    a [fhir:Observation]?,
-    fhir:coding { fhir:code [sct:Systolic_Blood_Pressure] },
-    fhir:valueQuantity {
-        a [fhir:Quantity]?,
-        fhir:value xsd:float %Map:{ bp:sysVal %},
-        fhir:units xsd:string %Map:{ bp:sysUnits %}
-    },
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Systolic_Blood_Pressure] };
+  fhir:valueQuantity {
+    a [fhir:Quantity]?;
+    fhir:value xsd:float %Map:{ bp:sysVal %};
+    fhir:units xsd:string %Map:{ bp:sysUnits %}
+  }
 }
 <diaBP> {
-    a [fhir:Observation]?,
-    fhir:coding { fhir:code [sct:Diastolic_Blood_Pressure] },
-    fhir:valueQuantity {
-        a [fhir:Quantity]?,
-        fhir:value xsd:float %Map:{ bp:diaVal %},
-        fhir:units xsd:string %Map:{ bp:diaUnits %}
-    },
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Diastolic_Blood_Pressure] };
+  fhir:valueQuantity {
+    a [fhir:Quantity]?;
+    fhir:value xsd:float %Map:{ bp:diaVal %};
+    fhir:units xsd:string %Map:{ bp:diaUnits %}
+  }
 }
 `;
 BPFHIR.simple = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
@@ -516,28 +516,28 @@ PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <tag:BPfhir123>
-    a fhir:Observation;
-    fhir:coding [ fhir:code sct:Blood_Pressure ];
-    fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
-    fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Blood_Pressure ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
 .
 _:sysBP123
-    a fhir:Observation;
-    fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
-    fhir:valueQuantity [
-        a fhir:Quantity;
-        fhir:value "110"^^xsd:float;
-        fhir:units "mmHg"
-    ]
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "110"^^xsd:float;
+    fhir:units "mmHg"
+  ]
 .
 _:diaBP123
-    a fhir:Observation;
-    fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure ];
-    fhir:valueQuantity [
-        a fhir:Quantity;
-        fhir:value "70"^^xsd:float;
-        fhir:units "mmHg"
-    ]
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "70"^^xsd:float;
+    fhir:units "mmHg"
+  ]
 .
 `;
 
@@ -546,32 +546,32 @@ PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <tag:BPfhir123>
-    a fhir:Observation;
-    fhir:coding [ fhir:code sct:Blood_Pressure ];
-    fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
-    fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Blood_Pressure ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
 .
 _:sysBP123
-    a fhir:Observation;
-    fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
-    fhir:valueQuantity [
-        a fhir:Quantity;
-        fhir:value "110"^^xsd:float;
-        fhir:units "mmHg"
-    ]
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "110"^^xsd:float;
+    fhir:units "mmHg"
+  ]
 .
 _:diaBP123
-    a fhir:Observation;
-    fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure999 ];
-    fhir:valueQuantity [
-        a fhir:Quantity;
-        fhir:value "70"^^xsd:float;
-        fhir:units "mmHg"
-    ]
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure999 ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "70"^^xsd:float;
+    fhir:units "mmHg"
+  ]
 .
 `;
 
-BPunitsDAM.schema = `PREFIX    : <http://shex.io/extensions/Map/#BPunitsDAM->
+BPunitsDAM.schema = `PREFIX  : <http://shex.io/extensions/Map/#BPunitsDAM->
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
@@ -579,15 +579,15 @@ PREFIX Map: <http://shex.io/extensions/Map/#>
 start = @<BPunitsDAM>
 
 <BPunitsDAM> {
-    :systolic {
-        :value xsd:float %Map:{ bp:sysVal %};
-        :units xsd:string %Map:{ bp:sysUnits %}
-    };
-    :diastolic {
-        :value xsd:float %Map:{ bp:diaVal %};
-        :units xsd:string %Map:{ bp:diaUnits %}
-    };
-    :someConstProp xsd:string %Map:{ <http://abc.example/someConstant> %}
+  :systolic {
+    :value xsd:float %Map:{ bp:sysVal %};
+    :units xsd:string %Map:{ bp:sysUnits %}
+  };
+  :diastolic {
+    :value xsd:float %Map:{ bp:diaVal %};
+    :units xsd:string %Map:{ bp:diaUnits %}
+  };
+  :someConstProp xsd:string %Map:{ <http://abc.example/someConstant> %}
 }
 `;
 
@@ -595,11 +595,11 @@ BPunitsDAM.constants = {"http://abc.example/someConstant": "123-456"};
 
 BPunitsDAM.simple = `<tag:b0>
   <http://shex.io/extensions/Map/#BPunitsDAM-systolic> [
-    <http://shex.io/extensions/Map/#BPunitsDAM-value> "110"^^<http://www.w3.org/2001/XMLSchema#float> ;
-    <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ] ;
+  <http://shex.io/extensions/Map/#BPunitsDAM-value> "110"^^<http://www.w3.org/2001/XMLSchema#float> ;
+  <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ] ;
   <http://shex.io/extensions/Map/#BPunitsDAM-diastolic> [
-    <http://shex.io/extensions/Map/#BPunitsDAM-value> "70"^^<http://www.w3.org/2001/XMLSchema#float> ;
-    <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ].
+  <http://shex.io/extensions/Map/#BPunitsDAM-value> "70"^^<http://www.w3.org/2001/XMLSchema#float> ;
+  <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ].
 `;
 
 SchemaConcert.schema = `PREFIX    : <http://a.example/>
