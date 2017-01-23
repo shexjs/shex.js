@@ -367,7 +367,7 @@ function readfiles(files, targets) {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-var BPFHIR = {}, BPunitsDAM = {};
+var BPFHIR = {}, BPunitsDAM = {}; SchemaConcert = {};
 function prepareDemos () {
   var demos = {
     "BP": {
@@ -392,6 +392,29 @@ function prepareDemos () {
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
       },
+    },
+    "symmetric": {
+      schema: SchemaConcert.schema,
+      passes: {
+        "BBKing": {
+          data: SchemaConcert.BBKing,
+          focus: "_:b0",
+          inputShape: "- start -",
+          outputSchema: SchemaConcert.schema,
+          outputShape: "- start -",
+          staticVars: {},
+          createRoot: "_:b0"}
+      },
+      fails: {
+        "Non-IRI": {
+          data: SchemaConcert.nonIRI,
+          focus: "_:b0",
+          inputShape: "- start -",
+          outputSchema: SchemaConcert.schema,
+          outputShape: "- start -",
+          staticVars: {},
+          createRoot: "_:b0"}
+      }
     }
   };
   var listItems = {inputSchema:{}, inputData:{}};
@@ -578,6 +601,44 @@ BPunitsDAM.simple = `<tag:b0>
     <http://shex.io/extensions/Map/#BPunitsDAM-value> "70"^^<http://www.w3.org/2001/XMLSchema#float> ;
     <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ].
 `;
+
+SchemaConcert.schema = `PREFIX    : <http://a.example/>
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX Map: <http://shex.io/extensions/Map/#>
+
+start=@<Concert>
+
+<Concert> {
+  schema:bandName xsd:string %Map:{ :Name %} ;
+  schema:tix IRI %Map:{ :TicketUrl %} ;
+  schema:venue @<Venue>
+}
+<Venue> {
+  schema:location xsd:string %Map:{ :LocationName %} ;
+  schema:address  xsd:string %Map:{ :LocationAddress %}
+}
+`;
+
+SchemaConcert.BBKing = `PREFIX schema: <http://schema.org/>
+
+[] schema:bandName "B.B. King";
+  schema:tix <https://www.etix.com/ticket/1771656>;
+  schema:venue [
+    schema:location "Lupo’s Heartbreak Hotel";
+    schema:address "79 Washington St...."
+  ] .
+`
+
+SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
+
+[] schema:bandName "B.B. King";
+  schema:tix "https://www.etix.com/ticket/1771656";
+  schema:venue [
+    schema:location "Lupo’s Heartbreak Hotel";
+    schema:address "79 Washington St...."
+  ] .
+`
 
 prepareDemos();
 
