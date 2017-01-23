@@ -177,7 +177,7 @@ function validate () {
       N3Parser._resetBlankNodeIds();
       inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
       var inputShape = guessStartingShape("#inputShape", "#inputSchema textarea");
-      var focus = guessStartingNode("#focus");
+      var focus = guessStartingNode("#focus", "#inputData textarea");
 
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
