@@ -242,7 +242,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -319,6 +319,8 @@
 
   // Add a shape to the map
   function addShape (label, shape) {
+    if (Parser.productions && label in Parser.productions)
+      error("Structural error: "+label+" is a shape");
     if (!Parser.shapes)
       Parser.shapes = {};
     if (label in Parser.shapes) {
@@ -328,6 +330,21 @@
         error("Parse error: "+label+" alread defined");
     } else
       Parser.shapes[label] = shape;
+  }
+
+  // Add a production to the map
+  function addProduction (label, production) {
+    if (Parser.shapes && label in Parser.shapes)
+      error("Structural error: "+label+" is a shape");
+    if (!Parser.productions)
+      Parser.productions = {};
+    if (label in Parser.productions) {
+      if (Parser.options.duplicateShape === "replace")
+        Parser.productions[label] = production;
+      else if (Parser.options.duplicateShape !== "ignore")
+        error("Parse error: "+label+" alread defined");
+    } else
+      Parser.productions[label] = production;
   }
 
   function shapeJunction (type, container, elts) {
@@ -516,7 +533,8 @@ shexDoc:
         var ret = extend({ type: "Schema"},
                          Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Build return object from
                          valueExprDefns, startActs, startObj,                  // components in parser state
-                         Parser.shapes ? {shapes: Parser.shapes} : {});        // maintaining intuitve order.
+                         Parser.shapes ? {shapes: Parser.shapes} : {},         // maintaining intuitve order.
+                         Parser.productions ? {productions: Parser.productions} : {});
         if (Parser._base !== null)
           ret.base = Parser._base;
         Parser.reset();
@@ -1022,9 +1040,15 @@ _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus:
     ;
 
 unaryTripleExpr:
-      productionLabel tripleConstraint	-> extend({ productionLabel: $1 }, $2)
+      productionLabel tripleConstraint	{
+        $$ = extend({ id: $1 }, $2);
+        addProduction($1,  $$);
+      }
     | tripleConstraint	
-    | productionLabel bracketedTripleExpr	-> extend({ productionLabel: $1 }, $2)
+    | productionLabel bracketedTripleExpr	{
+        $$ = extend({ id: $1 }, $2);
+        addProduction($1,  $$);
+      }
     | bracketedTripleExpr	
     | valueConstraint	
     | include	
