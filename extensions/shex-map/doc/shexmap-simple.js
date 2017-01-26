@@ -248,7 +248,7 @@ function materialize () {
     var writer = N3.Writer({ prefixes: {} });
     outputGraph.find().forEach(t => { writer.addTriple(t); });
     writer.end(function (error, result) {
-      results.replace(JSON.stringify(result, null, "  ").
+      results.replace(result.
                       replace(/\\n/g, "\n").
                       replace(/\\"/g, "\""));
     });
@@ -393,7 +393,7 @@ function prepareDemos () {
           createRoot: "<tag:b0>"}
       },
     },
-    "BP back": {
+    "BP-back": {
       schema: BPunitsDAM.schema,
       passes: {
         "simple": {
@@ -407,8 +407,31 @@ function prepareDemos () {
       },
       fails: {
         "bad code": {
-          data: BPunitsDAM.badCode,
+          data: BPunitsDAM.badBP,
           focus: "<tag:b0>",
+          inputShape: "- start -",
+          outputSchema: BPFHIR.schema,
+          outputShape: "- start -",
+          staticVars: BPFHIR.constants,
+          createRoot: "tag:BPfhir123"}
+      },
+    },
+    "BPPatient multi-bindings": {
+      schema: BPunitsDAM.schema_Patient,
+      passes: {
+        "simple": {
+          data: BPunitsDAM.simplePatient,
+          focus: "<http://a.example/PatientX>",
+          inputShape: "- start -",
+          outputSchema: BPFHIR.schema,
+          outputShape: "- start -",
+          staticVars: BPFHIR.constants,
+          createRoot: "tag:BPfhir123"}
+      },
+      fails: {
+        "bad code": {
+          data: BPunitsDAM.badPatient,
+          focus: "<http://a.example/PatientX>",
           inputShape: "- start -",
           outputSchema: BPFHIR.schema,
           outputShape: "- start -",
@@ -567,42 +590,15 @@ _:diaBP123
 .
 `;
 
-BPFHIR.badCode = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
-PREFIX sct: <http://snomed.info/sct/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+BPFHIR.badCode = BPFHIR.simple.replace(/sct:Diastolic_Blood_Pressure/, "sct:Diastolic_Blood_Pressure999");
 
-<tag:BPfhir123>
-  a fhir:Observation;
-  fhir:coding [ fhir:code sct:Blood_Pressure ];
-  fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
-  fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
-.
-_:sysBP123
-  a fhir:Observation;
-  fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
-  fhir:valueQuantity [
-    a fhir:Quantity;
-    fhir:value "110"^^xsd:float;
-    fhir:units "mmHg"
-  ]
-.
-_:diaBP123
-  a fhir:Observation;
-  fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure999 ];
-  fhir:valueQuantity [
-    a fhir:Quantity;
-    fhir:value "70"^^xsd:float;
-    fhir:units "mmHg"
-  ]
-.
-`;
-
-BPunitsDAM.schema = `PREFIX  : <http://shex.io/extensions/Map/#BPunitsDAM->
+BPunitsDAM.schemaPrefixes = `PREFIX  : <http://dam.example/med#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
 
-start = @<BPunitsDAM>
+`;
+BPunitsDAM.BPschema = `
 
 <BPunitsDAM> {
   :systolic {
@@ -616,17 +612,48 @@ start = @<BPunitsDAM>
   :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}
 }
 `;
+BPunitsDAM.schema = BPunitsDAM.schemaPrefixes + "start = @<BPunitsDAM>" + BPunitsDAM.BPschema;
 
-BPunitsDAM.constants = {"http://abc.example/someConstant": "123-456"};
+BPunitsDAM.PatientSchema = `
 
-BPunitsDAM.simple = `<tag:b0>
-  <http://shex.io/extensions/Map/#BPunitsDAM-systolic> [
-  <http://shex.io/extensions/Map/#BPunitsDAM-value> "110"^^<http://www.w3.org/2001/XMLSchema#float> ;
-  <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ] ;
-  <http://shex.io/extensions/Map/#BPunitsDAM-diastolic> [
-  <http://shex.io/extensions/Map/#BPunitsDAM-value> "70"^^<http://www.w3.org/2001/XMLSchema#float> ;
-  <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ].
+<PatientDAM> {
+  :name LITERAL %Map:{ bp:name %};
+  :vitals @<BPunitsDAM>*
+}`;
+
+BPunitsDAM.schema_Patient = BPunitsDAM.schemaPrefixes + "start = @<PatientDAM>" + BPunitsDAM.PatientSchema + BPunitsDAM.BPschema;
+
+BPunitsDAM.constants = {"http://abc.example/someConstant": "\"123-456\""};
+
+BPunitsDAM.simplePrefixes = `PREFIX med: <http://dam.example/med#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
 `;
+BPunitsDAM.simpleBP0 = `<tag:b0>
+    med:systolic [
+      med:value "110"^^xsd:float ;
+      med:units "mmHg"
+    ] ;
+    med:diastolic [
+      med:value "70"^^xsd:float ;
+      med:units "mmHg"
+    ] .
+`;
+BPunitsDAM.simpleBP1 = BPunitsDAM.simpleBP0.replace(/0/g, "1");
+
+BPunitsDAM.simple = BPunitsDAM.simplePrefixes + BPunitsDAM.simpleBP0;
+
+BPunitsDAM.patient = `<PatientX>
+    med:name "Sue" ;
+    med:vitals <tag:b0>, <tag:b1> .
+
+`;
+
+BPunitsDAM.simplePatient = BPunitsDAM.simplePrefixes + BPunitsDAM.patient + BPunitsDAM.simpleBP0 + BPunitsDAM.simpleBP1;
+
+BPunitsDAM.badBP = BPunitsDAM.simple.replace(/BPunitsDAM-systolic/, "BPunitsDAM-systolic999");
+
+BPunitsDAM.badPatient = BPunitsDAM.simplePatient.replace(/BPunitsDAM-systolic/, "BPunitsDAM-systolic999");
 
 SchemaConcert.schema = `PREFIX    : <http://a.example/>
 PREFIX schema: <http://schema.org/>
