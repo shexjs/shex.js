@@ -151,17 +151,6 @@ var results = (function () {
   };
 })();
 
-function shexJtoAS (schema) {
-  var newShapes = {}
-  schema.shapes.forEach(sh => {
-    var label = sh.label;
-    delete sh.label;
-    newShapes[label] = sh;
-  });
-  schema.shapes = newShapes;
-  return schema;
-}
-
 function validate () {
   var parsing = "input schema";
   try {
@@ -169,7 +158,7 @@ function validate () {
     var inputSchemaIsJSON = inputSchemaText.match(/^\s*\{/);
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var inputSchema = inputSchemaIsJSON ?
-          shexJtoAS(JSON.parse(inputSchemaText)) :
+          ShExUtil.ShExJtoAS(JSON.parse(inputSchemaText)) :
           shexParser.parse(inputSchemaText);
     var validator = ShExValidator.construct(inputSchema);
     var dataText = $("#inputData textarea").val();
@@ -187,7 +176,7 @@ function validate () {
       // for debugging values and schema formats:
       // try {
       //   var x = ShExUtil.valToValues(ret);
-      //   // var x = shexJtoAS(valuesToSchema(valToValues(ret)));
+      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
       //   res = results.replace(JSON.stringify(x, null, "  "));
       //   var y = ShExUtil.valuesToSchema(x);
       //   res = results.append(JSON.stringify(y, null, "  "));
@@ -211,7 +200,7 @@ function validate () {
             removeClass("fails error").addClass("passes");
         });
       else
-        results.replace("valid ShExC schema:\n" + JSON.stringify(inputSchema, null, "  ")).
+        results.replace("valid ShExC schema:\n" + JSON.stringify(ShExUtil.AStoShExJ(inputSchema), null, "  ")).
         removeClass("fails error").addClass("passes");
     }
   } catch (e) {
