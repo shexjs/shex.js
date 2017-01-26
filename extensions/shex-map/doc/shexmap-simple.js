@@ -423,7 +423,7 @@ function prepareDemos () {
           data: BPunitsDAM.simplePatient,
           focus: "<http://a.example/PatientX>",
           inputShape: "- start -",
-          outputSchema: BPFHIR.schema,
+          outputSchema: BPFHIR.schema_Patient,
           outputShape: "- start -",
           staticVars: BPFHIR.constants,
           createRoot: "tag:BPfhir123"}
@@ -433,7 +433,7 @@ function prepareDemos () {
           data: BPunitsDAM.badPatient,
           focus: "<http://a.example/PatientX>",
           inputShape: "- start -",
-          outputSchema: BPFHIR.schema,
+          outputSchema: BPFHIR.schema_Patient,
           outputShape: "- start -",
           staticVars: BPFHIR.constants,
           createRoot: "tag:BPfhir123"}
@@ -524,13 +524,15 @@ function prepareDemos () {
 }
 
 // Large constants with demo data which break syntax highlighting:
-BPFHIR.schema = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
+BPFHIR.schemaPrefixes = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
 PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
 PREFIX Map: <http://shex.io/extensions/Map/#>
 
-start = @<BPfhir>
+`;
+
+BPFHIR.BPschema = `
 
 <BPfhir> {
   a [fhir:Observation]?;
@@ -557,6 +559,17 @@ start = @<BPfhir>
   }
 }
 `;
+
+BPFHIR.PatientSchema = `
+
+<Patient> {
+  fhir:Patient.name LITERAL %Map:{ bp:name %};
+ ^fhir:subject @<BPfhir>*
+}`;
+
+BPFHIR.schema = BPFHIR.schemaPrefixes + "start = @<BPunitsDAM>" + BPFHIR.BPschema;
+
+BPFHIR.schema_Patient = BPFHIR.schemaPrefixes + "start = @<Patient>" + BPFHIR.PatientSchema + BPFHIR.BPschema;
 
 BPFHIR.constants = {"http://abc.example/anotherConstant": "abc-def"};
 
