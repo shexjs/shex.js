@@ -393,6 +393,29 @@ function prepareDemos () {
           createRoot: "<tag:b0>"}
       },
     },
+    "BP back": {
+      schema: BPunitsDAM.schema,
+      passes: {
+        "simple": {
+          data: BPunitsDAM.simple,
+          focus: "<tag:b0>",
+          inputShape: "- start -",
+          outputSchema: BPFHIR.schema,
+          outputShape: "- start -",
+          staticVars: BPFHIR.constants,
+          createRoot: "tag:BPfhir123"}
+      },
+      fails: {
+        "bad code": {
+          data: BPunitsDAM.badCode,
+          focus: "<tag:b0>",
+          inputShape: "- start -",
+          outputSchema: BPFHIR.schema,
+          outputShape: "- start -",
+          staticVars: BPFHIR.constants,
+          createRoot: "tag:BPfhir123"}
+      },
+    },
     "symmetric": {
       schema: SchemaConcert.schema,
       passes: {
@@ -511,6 +534,9 @@ start = @<BPfhir>
   }
 }
 `;
+
+BPFHIR.constants = {"http://abc.example/anotherConstant": "abc-def"};
+
 BPFHIR.simple = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
 PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -587,7 +613,7 @@ start = @<BPunitsDAM>
     :value xsd:float %Map:{ bp:diaVal %};
     :units xsd:string %Map:{ bp:diaUnits %}
   };
-  :someConstProp xsd:string %Map:{ <http://abc.example/someConstant> %}
+  :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}
 }
 `;
 
