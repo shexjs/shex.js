@@ -203,6 +203,7 @@ function validate () {
           return object;
         }
         findBindings(ret);
+        // resultBindings = ShExUtil.valToExtension(ret, "http://shex.io/extensions/Map/#");
         $("#bindings1 textarea").val(JSON.stringify(resultBindings, null, "  "));
        }
     } else {
@@ -631,7 +632,7 @@ BPunitsDAM.PatientSchema = `
 
 <PatientDAM> {
   :name LITERAL %Map:{ bp:name %};
-  :vitals @<BPunitsDAM>*
+  :vitals @<BPunitsDAM>* %Map:{ bp:XXX %}
 }`;
 
 BPunitsDAM.schema_Patient = BPunitsDAM.schemaPrefixes + "start = @<PatientDAM>" + BPunitsDAM.PatientSchema + BPunitsDAM.BPschema;
