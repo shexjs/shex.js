@@ -60,13 +60,12 @@ describe("A ShEx parser", function () {
   if (TESTS)
     schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
   schemas.sort();
-
   schemas.forEach(function (schema) {
 
     var jsonSchemaFile = jsonSchemasPath + schema + ".json";
     if (!fs.existsSync(jsonSchemaFile)) return;
     try {
-      var jsonSchema = shexJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
+      var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
       var shexCFile = schemasPath + schema + ".shex";
       var shexRFile = schemasPath + schema + ".ttl";
 
@@ -78,12 +77,11 @@ describe("A ShEx parser", function () {
            try {
              parser._setFileName(shexCFile);
              var parsedSchema = parser.parse(schema);
-             var trimmedSchema = Object.assign({}, parsedSchema);
-             delete trimmedSchema.prefixes;
-             delete trimmedSchema.base;
-             if (VERBOSE) console.log("parsed   :" + JSON.stringify(trimmedSchema));
-             if (VERBOSE) console.log("expected :" + JSON.stringify(jsonSchema));
-             expect(trimmedSchema).to.deep.equal(jsonSchema);
+             var canonParsed = ShExUtil.canonicalize(parsedSchema)
+             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+             if (VERBOSE) console.log("parsed   :" + JSON.stringify(canonParsed));
+             if (VERBOSE) console.log("expected :" + JSON.stringify(canonAbstractSyntax));
+             expect(canonParsed).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
              throw(e);
@@ -107,10 +105,11 @@ describe("A ShEx parser", function () {
                {}
              );
              var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
-             var parsedSchema = shexJtoAS(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)));
+             var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
+             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
-             if (VERBOSE) console.log("expected   :" + JSON.stringify(jsonSchema));
-             expect(canonicalize(parsedSchema)).to.deep.equal(canonicalize(jsonSchema));
+             if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
+             expect(parsedSchema).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
              throw(e);
@@ -120,13 +119,13 @@ describe("A ShEx parser", function () {
 
       if (!EARL) {
         it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
-          expect(ShExUtil.Visitor().visitSchema(jsonSchema)).to.deep.equal(jsonSchema);
+          expect(ShExUtil.Visitor().visitSchema(abstractSyntax)).to.deep.equal(abstractSyntax);
         });
 
         it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
           var w;
           new ShExWriter({simplifyParentheses: false }).
-            writeSchema(jsonSchema, function (error, text, prefixes) {
+            writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
               else w = text;
             });
@@ -134,7 +133,7 @@ describe("A ShEx parser", function () {
           parser._setFileName(shexCFile + " (generated)");
           try {
             var parsed2 = parser.parse(w);
-            expect(parsed2).to.deep.equal(jsonSchema);
+            expect(parsed2).to.deep.equal(abstractSyntax);
           } catch (e) {
             parser.reset();
             throw(e);
@@ -144,7 +143,7 @@ describe("A ShEx parser", function () {
         it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
           var w;
           new ShExWriter({simplifyParentheses: true }).
-            writeSchema(jsonSchema, function (error, text, prefixes) {
+            writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
               else w = text;
             });
@@ -260,30 +259,3 @@ describe("A ShEx parser", function () {
   }
 });
 
-function shexJtoAS (schema) {
-  delete schema["@context"];
-  if ("shapes" in schema) {
-    var newShapes = {}
-    schema.shapes.forEach(sh => {
-      var label = sh.label;
-      delete sh.label;
-      newShapes[label] = sh;
-
-      // if ("extra" in sh)
-      //   sh.extra.sort();
-    });
-    schema.shapes = newShapes;
-  }
-  return schema;
-}
-
-function canonicalize (schema) {
-  var ret = JSON.parse(JSON.stringify(schema));
-  if ("shapes" in schema) {
-    Object.keys(ret.shapes).forEach(k => {
-      if ("extra" in ret.shapes[k])
-        ret.shapes[k].extra.sort();
-    });
-  }
-  return ret;
-}

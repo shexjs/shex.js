@@ -8,9 +8,9 @@
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; }
       .passes { margin-right: 1em; }
-      .passes, #results.passes { padding-left: .1em; border-left: thick solid #bfb; }
-      .fails , #results.fails  { padding-left: .1em; border-left: thick solid #fbb; }
-      .error , #results.error  { padding-left: .1em; border-left: thick solid #b00; }
+      .passes, #results textarea.passes { padding-left: .1em; border-left: thick solid #bfb; }
+      .fails , #results textarea.fails  { padding-left: .1em; border-left: thick solid #fbb; }
+      .error , #results textarea.error  { padding-left: .1em; border-left: thick solid #b00; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
       .schema.textarea, .schema { background-color: #f4f4ff; }
@@ -19,11 +19,12 @@
       #inputData li.selected { background-color: #e8ffe8; }
       .droparea { border: .25em dashed #ddd; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
-      #results:disabled { background-color: #fff; }
-      #results { width: 99%; border: none; }
-      #results:disabled.passes { color: #373; }
-      #results:disabled.fails  { color: #733; }
-      #results:disabled.error  { color: #300; }
+      #results textarea:disabled { background-color: #fff; }
+      #results textarea { width: 99%; border: none; }
+      #results textarea.running { color: #337; }
+      #results textarea:disabled.passes { color: #373; }
+      #results textarea:disabled.fails  { color: #733; }
+      #results textarea:disabled.error  { color: #300; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -125,7 +126,10 @@
         </div>
       </div>
     </div>
-    <textarea id="results" disabled="disabled"></textarea>
+    <div id="results">
+      <p class="status"> </p>
+      <textarea disabled="disabled"></textarea>
+    </div>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
     <script src="require.js"></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>

@@ -125,8 +125,8 @@ function guessStartingNode (inputSelector, parseSelector) {
 }
 
 var results = (function () {
-  var resultsElt = autosize(document.querySelector("#results"));
-  var resultsSel = $("#results");
+  var resultsElt = autosize(document.querySelector("#results textarea"));
+  var resultsSel = $("#results textarea");
   return {
     replace: function (text) {
       var ret = resultsSel.text(text);
@@ -143,7 +143,11 @@ var results = (function () {
       autosize.update(resultsElt);
       return ret;
     },
-    rattle: function () {
+    start: function () {
+      $("#results").addClass("running");
+    },
+    finish: function () {
+      $("#results").removeClass("running");
       var height = resultsSel.height();
       resultsSel.height(1);
       resultsSel.animate({height:height}, 100);
@@ -151,26 +155,46 @@ var results = (function () {
   };
 })();
 
-function shexJtoAS (schema) {
-  var newShapes = {}
-  schema.shapes.forEach(sh => {
-    var label = sh.label;
-    delete sh.label;
-    newShapes[label] = sh;
-  });
-  schema.shapes = newShapes;
-  return schema;
+function tryN3 (text) {
+  try {
+    var inputData = N3Store();
+    N3Parser._resetBlankNodeIds();
+    inputData.addTriples(N3Parser({documentIRI:Base}).parse(text));
+    return inputData;
+  } catch (e) {
+    return null;
+  }
+}
+
+var ShExRSchema;
+
+function parseShExR (schemaGraph) {
+  var graphParser = ShExValidator.construct(
+    shexParser.parse(ShExRSchema),
+    {}
+  );
+  var schemaRoot = schemaGraph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
+  var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
+  return ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
 }
 
 function validate () {
+  results.start();
+  $("#results .status").hide();
   var parsing = "input schema";
   try {
     var inputSchemaText = $("#inputSchema textarea").val();
     var inputSchemaIsJSON = inputSchemaText.match(/^\s*\{/);
+    var schemaGraph = inputSchemaIsJSON ? null : tryN3(inputSchemaText);
+    var inputLanguage =
+        inputSchemaIsJSON ? "JSON" :
+        schemaGraph ? "ShExR" :
+        "ShExC";
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
-    var inputSchema = inputSchemaIsJSON ?
-          shexJtoAS(JSON.parse(inputSchemaText)) :
-          shexParser.parse(inputSchemaText);
+    var inputSchema =
+        inputSchemaIsJSON ? ShExUtil.ShExJtoAS(JSON.parse(inputSchemaText)) :
+        schemaGraph ? parseShExR(schemaGraph) :
+        shexParser.parse(inputSchemaText);
     var validator = ShExValidator.construct(inputSchema);
     var dataText = $("#inputData textarea").val();
     if (dataText || $("#focus").val()) {
@@ -187,7 +211,7 @@ function validate () {
       // for debugging values and schema formats:
       // try {
       //   var x = ShExUtil.valToValues(ret);
-      //   // var x = shexJtoAS(valuesToSchema(valToValues(ret)));
+      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
       //   res = results.replace(JSON.stringify(x, null, "  "));
       //   var y = ShExUtil.valuesToSchema(x);
       //   res = results.append(JSON.stringify(y, null, "  "));
@@ -200,25 +224,28 @@ function validate () {
         res.removeClass("fails error").addClass("passes");
       }
     } else {
+      $("#results .status").text("valid "+inputLanguage+" schema:").show();
       var parsedSchema;
-      if (inputSchemaIsJSON)
+      if (inputSchemaIsJSON) {
         new ShExWriter({simplifyParentheses: false}).writeSchema(inputSchema, (error, text) => {
-          if (error)
-            results.replace("unwritable ShExJ schema:\n" + error).
-            removeClass("passes").addClass("fails error");
-          else
-            results.replace("valid ShExJ schema:\n" + text).
-            removeClass("fails error").addClass("passes");
+          if (error) {
+            $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
+            res.removeClass("passes").addClass("fails error");
+          } else {
+            results.replace(text).
+              removeClass("fails error").addClass("passes");
+          }
         });
-      else
-        results.replace("valid ShExC schema:\n" + JSON.stringify(inputSchema, null, "  ")).
-        removeClass("fails error").addClass("passes");
+      } else {
+        results.replace(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(inputSchema)), null, "  ")).
+          removeClass("fails error").addClass("passes");
+      }
     }
   } catch (e) {
     results.replace("error parsing " + parsing + ":\n" + e).
       removeClass("passes fails").addClass("error");
   }
-  results.rattle();
+  results.finish();
 }
 
 function getSchemaShapes (parseSelector) {
@@ -491,4 +518,159 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
 
 prepareDemos();
+
+ShExRSchema = `PREFIX sx: <http://shex.io/ns/shex#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+BASE <http://shex.io/ns/ShExR#>
+start=@<Schema>
+
+<Schema> CLOSED {
+  a [sx:Schema] ;
+  sx:startActs @<SemActList1Plus>? ;
+  sx:start @<shapeExpr>?;
+  sx:shapes @<shapeExpr>*
+}
+
+<shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
+
+<ShapeOr> CLOSED {
+  a [sx:ShapeOr] ;
+  sx:shapeExprs @<shapeExprList2Plus>
+}
+
+<ShapeAnd> CLOSED {
+  a [sx:ShapeAnd] ;
+  sx:shapeExprs @<shapeExprList2Plus>
+}
+
+<ShapeNot> CLOSED {
+  a [sx:ShapeNot] ;
+  sx:shapeExpr @<shapeExpr>
+}
+
+<NodeConstraint> CLOSED {
+  a [sx:NodeConstraint] ;
+  (  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]
+   | sx:datatype IRI
+#   | &<xsFacet>
+   | &<stringFacet>
+   | &<numericFacet>
+   | sx:values @<valueSetValueList1Plus>)+
+}
+
+<Shape> CLOSED {
+  a [sx:Shape] ;
+  sx:closed [true false]? ;
+  sx:extra IRI* ;
+  sx:expression @<tripleExpression>? ;
+  sx:semActs @<SemActList1Plus>? ;
+}
+
+<ShapeExternal> CLOSED {
+  a [sx:ShapeExternal] ;
+}
+
+<SemAct> CLOSED {
+  a [sx:SemAct] ;
+  sx:name IRI ;
+  sx:code xsd:string?
+}
+
+<Annotation> CLOSED {
+  a [sx:Annotation] ;
+  sx:predicate IRI ;
+  sx:object @<objectValue>
+}
+
+# <xsFacet> @<stringFacet> OR @<numericFacet>
+<facet_holder> { # hold labeled productions
+  $<stringFacet> (
+      sx:length xsd:integer
+    | sx:minlength xsd:integer
+    | sx:maxlength xsd:integer
+    | sx:pattern xsd:string
+  );
+  $<numericFacet> (
+      sx:mininclusive   @<numericLiteral>
+    | sx:minexclusive   @<numericLiteral>
+    | sx:maxinclusive   @<numericLiteral>
+    | sx:maxexclusive   @<numericLiteral>
+    | sx:totaldigits    xsd:integer
+    | sx:fractiondigits xsd:integer
+  )
+}
+<numericLiteral> xsd:integer OR xsd:decimal OR xsd:double
+
+<valueSetValue> @<objectValue> OR @<Stem> OR @<StemRange>
+<objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
+<Stem> CLOSED { a [sx:Stem]; sx:stem xsd:anyUri }
+<StemRange> CLOSED {
+  a [sx:StemRange];
+  sx:stem xsd:anyUri OR @<Wildcard>;
+  sx:exclusion @<objectValue> OR @<Stem>*
+}
+<Wildcard> BNODE CLOSED {
+  a [sx:Wildcard]
+}
+
+<tripleExpression> @<TripleConstraint> OR @<OneOf> OR @<EachOf>
+
+<OneOf> CLOSED {
+  a [sx:OneOf] ;
+  sx:min xsd:integer? ;
+  sx:max xsd:integer OR ["*"]? ;
+  sx:expressions @<tripleExpressionList2Plus> ;
+  sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>*
+}
+
+<EachOf> CLOSED {
+  a [sx:EachOf] ;
+  sx:min xsd:integer? ;
+  sx:max xsd:integer OR ["*"]? ;
+  sx:expressions @<tripleExpressionList2Plus> ;
+  sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>*
+}
+
+<tripleExpressionList2Plus> CLOSED {
+  rdf:first @<tripleExpression> ;
+  rdf:rest @<tripleExpressionList1Plus>
+}
+<tripleExpressionList1Plus> CLOSED {
+  rdf:first @<tripleExpression> ;
+  rdf:rest  [rdf:nil] OR @<tripleExpressionList1Plus>
+}
+
+<TripleConstraint> CLOSED {
+  a [sx:TripleConstraint] ;
+  sx:inverse [true false]? ;
+  sx:negated [true false]? ;
+  sx:min xsd:integer? ;
+  sx:max xsd:integer OR ["*"]? ;
+  sx:predicate IRI ;
+  sx:valueExpr @<shapeExpr>? ;
+  sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>*
+}
+
+<SemActList1Plus> CLOSED {
+  rdf:first @<SemAct> ;
+  rdf:rest  [rdf:nil] OR @<SemActList1Plus>
+}
+
+<shapeExprList2Plus> CLOSED {
+  rdf:first @<shapeExpr> ;
+  rdf:rest  @<shapeExprList1Plus>
+}
+<shapeExprList1Plus> CLOSED {
+  rdf:first @<shapeExpr> ;
+  rdf:rest  [rdf:nil] OR @<shapeExprList1Plus>
+}
+
+<valueSetValueList1Plus> CLOSED {
+  rdf:first @<valueSetValue> ;
+  rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
+}`;
 
