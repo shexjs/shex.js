@@ -237,7 +237,7 @@ function validate () {
           }
         });
       } else {
-        results.replace(JSON.stringify(ShExUtil.AStoShExJ(inputSchema), null, "  ")).
+        results.replace(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(inputSchema)), null, "  ")).
           removeClass("fails error").addClass("passes");
       }
     }
