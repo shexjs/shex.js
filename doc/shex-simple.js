@@ -26,7 +26,7 @@ function load (selector, obj, func, listItems, side, str) {
 function clearData () {
   $("#inputData textarea").val("");
   $("#inputData .status").text(" ");
-  results.clear().removeClass("passes fails error");
+  results.clear();
 }
 
 function clearAll () {
@@ -55,7 +55,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#inputData .fails p:first").text("Failing:");
     load("#inputData .fails ul", schemaTest.fails, pickData, listItems, "inputData", function (o) { return o.data; });
 
-    results.clear().removeClass("passes fails error");
+    results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
     $("input.schema").val(getSchemaShapes("#inputSchema textarea")[0]);
@@ -139,11 +139,13 @@ var results = (function () {
       return ret;
     },
     clear: function () {
+      resultsSel.removeClass("passes fails error");
       var ret = resultsSel.text("");
       autosize.update(resultsElt);
       return ret;
     },
     start: function () {
+      resultsSel.removeClass("passes fails error");
       $("#results").addClass("running");
     },
     finish: function () {
@@ -178,8 +180,15 @@ function parseShExR (schemaGraph) {
   return ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
 }
 
-function validate () {
+function disableResultsAndValidate () {
   results.start();
+  setTimeout(function () {
+    validate();
+    results.finish();
+  }, 0);
+}
+
+function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
   try {
@@ -219,9 +228,9 @@ function validate () {
       //   console.dir(e);
       // }
       if ("errors" in ret) {
-        res.removeClass("passes error").addClass("fails");
+        res.addClass("fails");
       } else {
-        res.removeClass("fails error").addClass("passes");
+        res.addClass("passes");
       }
     } else {
       $("#results .status").text("valid "+inputLanguage+" schema:").show();
@@ -230,22 +239,18 @@ function validate () {
         new ShExWriter({simplifyParentheses: false}).writeSchema(inputSchema, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
-            res.removeClass("passes").addClass("fails error");
+            res.addClass("error");
           } else {
-            results.replace(text).
-              removeClass("fails error").addClass("passes");
+            results.replace(text).addClass("passes");
           }
         });
       } else {
-        results.replace(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(inputSchema)), null, "  ")).
-          removeClass("fails error").addClass("passes");
+        results.replace(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(inputSchema)), null, "  ")).addClass("passes");
       }
     }
   } catch (e) {
-    results.replace("error parsing " + parsing + ":\n" + e).
-      removeClass("passes fails").addClass("error");
+    results.replace("error parsing " + parsing + ":\n" + e).addClass("error");
   }
-  results.finish();
 }
 
 function getSchemaShapes (parseSelector) {
@@ -268,7 +273,7 @@ function getDataNodes (parseSelector) {
 
 $("#inputData .passes, #inputData .fails").hide();
 $("#inputData .passes ul, #inputData .fails ul").empty();
-$("#validate").on("click", validate);
+$("#validate").on("click", disableResultsAndValidate);
 $("#clear").on("click", clearAll);
 
 // Prepare file uploads
