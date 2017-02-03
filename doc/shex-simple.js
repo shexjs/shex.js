@@ -199,6 +199,7 @@ function validate () {
         inputSchemaIsJSON ? "JSON" :
         schemaGraph ? "ShExR" :
         "ShExC";
+    $("#results .status").text("parsing "+inputLanguage+" schema...").show();
     shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
     var inputSchema =
         inputSchemaIsJSON ? ShExUtil.ShExJtoAS(JSON.parse(inputSchemaText)) :
@@ -208,6 +209,7 @@ function validate () {
     var dataText = $("#inputData textarea").val();
     if (dataText || $("#focus").val()) {
       parsing = "input data";
+      $("#results .status").text("parsing data...").show();
       var inputData = N3Store();
       N3Parser._resetBlankNodeIds();
       inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
@@ -216,7 +218,9 @@ function validate () {
 
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
+      $("#results .status").text("rendering results...").show();
       var res = results.replace(JSON.stringify(ret, null, "  "));
+      $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
       //   var x = ShExUtil.valToValues(ret);
@@ -233,7 +237,16 @@ function validate () {
         res.addClass("passes");
       }
     } else {
-      $("#results .status").text("valid "+inputLanguage+" schema:").show();
+      var outputLanguage = inputSchemaIsJSON ? "ShExC" : "ShExJ";
+      $("#results .status").
+        text("parsed "+inputLanguage+" schema, generated "+outputLanguage+" ").
+        append($("<button>(copy to input)</button>").
+               css("border-radius", ".5em").
+               on("click", function () {
+                 $("#inputSchema textarea").val($("#results textarea").val());
+               })).
+        append(":").
+        show();
       var parsedSchema;
       if (inputSchemaIsJSON) {
         new ShExWriter({simplifyParentheses: false}).writeSchema(inputSchema, (error, text) => {
