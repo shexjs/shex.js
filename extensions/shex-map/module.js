@@ -16,7 +16,9 @@ var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 
 function register (validator) {
-  var prefixes = validator.schema.prefixes;
+  var prefixes = "prefixes" in validator.schema ?
+      validator.schema.prefixes :
+      {};
 
   validator.semActHandler.results[MapExt] = {};
   validator.semActHandler.register(

@@ -1,10 +1,12 @@
 {
-  "type": "Schema",
+  "@context": "https://shexspec.github.io/context.jsonld",
   "prefixes": {
     "": "http://a.example/"
   },
-  "shapes": {
-    "http://a.example/S1": {
+  "type": "Schema",
+  "shapes": [
+    {
+      "id": "http://a.example/S1",
       "type": "Shape",
       "expression": {
         "type": "OneOf",
@@ -29,5 +31,6 @@
         ]
       }
     }
-  }
+  ]
 }
+

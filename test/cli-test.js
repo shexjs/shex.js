@@ -86,8 +86,8 @@ var AllTests = {
   "shex-to-json": [
     { name: "help" , args: ["--help"], resultMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], resultMatch: "(Invalid|Unknown) option", status: 1 },
-    { name: "simple" , args: ["cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
-    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
+    { name: "simple" , args: ["-a", "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
+    { name: "simple-http" , args: ["-a", HTTPTEST + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
     { name: "simple-bad-file" , args: ["cli/1dotOr2dot.shex999"], resultMatch: "ENOENT", status: 1 },
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex999"], resultMatch: "Not Found", status: 1 },
   ],

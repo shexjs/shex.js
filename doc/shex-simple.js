@@ -3,6 +3,25 @@
 // Release under MIT License.
 
 const START_SHAPE_LABEL = "- start -";
+var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
+var InputSchema = makeSchemaCache("#inputSchema textarea");
+var InputData = makeTurtleCache("#inputData textarea");
+var ShExRSchema; // defined below
+
+
+// utility functions
+function parseTurtle (text) {
+  var ret = N3Store();
+  N3Parser._resetBlankNodeIds();
+  ret.addTriples(N3Parser({documentIRI:Base}).parse(text));
+  return ret;
+}
+
+var shexParser = ShExParser.construct(Base);
+function parseShEx (text) {
+  shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  return shexParser.parse(text);
+}
 
 function sum (s) { // cheap way to identify identical strings
   return s.replace(/\s/g, "").split("").reduce(function (a,b){
@@ -11,6 +30,109 @@ function sum (s) { // cheap way to identify identical strings
   },0);
 }
 
+// <n3.js-specific>
+function termToLex (node) {
+  return node[0] === "_" && node[1] === ":" ? node : "<" + node + ">";
+}
+function lexToTerm (lex) {
+  return lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
+}
+// </n3.js-specific>
+
+
+// caches for textarea parsers
+function _makeCache (parseSelector) {
+  var _dirty = true;
+  return {
+    parseSelector: parseSelector,
+    parsed: null,
+    dirty: function (newVal) {
+      var ret = _dirty;
+      _dirty = newVal;
+      return ret;
+    },
+    get: function () {
+      return $(parseSelector).val();
+    },
+    set: function (text) {
+      _dirty = true;
+      $(parseSelector).val(text);
+    },
+    refresh: function () {
+      if (!_dirty)
+        return this.parsed;
+      this.parsed = this.parse($(parseSelector).val());
+      _dirty = false;
+      return this.parsed;
+    }
+  };
+}
+
+function makeSchemaCache (parseSelector) {
+  var ret = _makeCache(parseSelector);
+  ret.parse = function (text) {
+    return parseTurtle(text);
+  };
+  var graph = null;
+  ret.language = null;
+  ret.parse = function (text) {
+    var isJSON = text.match(/^\s*\{/);
+    graph = isJSON ? null : tryN3(text);
+    this.language =
+      isJSON ? "ShExJ" :
+      graph ? "ShExR" :
+      "ShExC";
+    $("#results .status").text("parsing "+this.language+" schema...").show();
+    var ret =
+        isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
+        graph ? parseShExR() :
+        parseShEx(text);
+    $("#results .status").hide();
+    return ret;
+
+    function tryN3 (text) {
+      try {
+        return text.match(/^\s*$/) ? null : parseTurtle (text); // interpret empty schema as ShExC
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function parseShExR () {
+      var graphParser = ShExValidator.construct(
+        parseShEx(ShExRSchema),
+        {}
+      );
+      var schemaRoot = graph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
+      var val = graphParser.validate(graph, schemaRoot); // start shape
+      return ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
+    }
+  };
+  ret.getShapes = function () {
+    var obj = this.refresh();
+    var start = "start" in obj ? [START_SHAPE_LABEL] : [];
+    var rest = "shapes" in obj ? Object.keys(obj.shapes).map(termToLex) : [];
+    return start.concat(rest);
+  }
+  return ret;
+}
+
+function makeTurtleCache(parseSelector) {
+  var ret = _makeCache(parseSelector);
+  ret.parse = function (text) {
+    return parseTurtle(text);
+  };
+  ret.getNodes = function () {
+    var data = this.refresh();
+    return data.find().map(t => {
+      return termToLex(t.subject);
+    });
+  };
+  return ret;
+}
+
+
+// controls for example links
 function load (selector, obj, func, listItems, side, str) {
   $(selector).empty();
   Object.keys(obj).forEach(k => {
@@ -24,13 +146,16 @@ function load (selector, obj, func, listItems, side, str) {
 }
 
 function clearData () {
-  $("#inputData textarea").val("");
+  InputData.set("");
+  $("#focus").val("");
   $("#inputData .status").text(" ");
-  results.clear().removeClass("passes fails error");
+  results.clear();
 }
 
 function clearAll () {
-  $("#inputSchema textarea").val("");
+  $("#results .status").hide();
+  InputSchema.set("");
+  $("#inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
   clearData();
@@ -44,10 +169,10 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    $("#inputSchema textarea").val(schemaTest.schema);
+    InputSchema.set(schemaTest.schema);
     $("#inputSchema .status").text(name);
 
-    $("#inputData textarea").val("");
+    InputData.set("");
     $("#inputData .status").text(" ");
     $("#inputData .passes, #inputData .fails").show();
     $("#inputData .passes p:first").text("Passing:");
@@ -55,10 +180,10 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#inputData .fails p:first").text("Failing:");
     load("#inputData .fails ul", schemaTest.fails, pickData, listItems, "inputData", function (o) { return o.data; });
 
-    results.clear().removeClass("passes fails error");
+    results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.schema").val(getSchemaShapes("#inputSchema textarea")[0]);
+    $("input.schema").val(InputSchema.getShapes()[0]);
   }
 }
 
@@ -67,7 +192,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    $("#inputData textarea").val(dataTest.data);
+    InputData.set(dataTest.data);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -79,23 +204,12 @@ function pickData (name, dataTest, elt, listItems, side) {
   }
 }
 
-var Base = "http://a.example/"; // window.location.href;
-var shexParser = ShExParser.construct(Base);
-
-// <n3.js-specific>
-function termToLex (node) {
-  return node[0] === "_" && node[1] === ":" ? node : "<" + node + ">";
-}
-function lexToTerm (lex) {
-  return lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
-}
-// </n3.js-specific>
 
 // Guess the starting shape.
-function guessStartingShape (inputSelector, parseSelector) {
+function guessStartingShape (inputSelector, cache) {
   var shape = $(inputSelector).val();
   if (shape === "") {
-    var candidates = getSchemaShapes(parseSelector);
+    var candidates = cache.getShapes();
     if (candidates.length > 0) {
       $(inputSelector).val(candidates[0]);
       if (candidates[0] === START_SHAPE_LABEL)
@@ -110,11 +224,12 @@ function guessStartingShape (inputSelector, parseSelector) {
     return lexToTerm(shape);
 }
 
+
 // Guess the starting focus.
-function guessStartingNode (inputSelector, parseSelector) {
+function guessStartingNode (inputSelector, cache) {
   var focus = $(inputSelector).val();
   if (focus === "") {
-    var candidates = getDataNodes(parseSelector);
+    var candidates = cache.getNodes();;
     if (candidates.length > 0) {
       $(inputSelector).val(candidates[0]);
       return lexToTerm(candidates[0]);
@@ -124,9 +239,11 @@ function guessStartingNode (inputSelector, parseSelector) {
     return lexToTerm(focus);
 }
 
+
+// Control results area content.
 var results = (function () {
-  var resultsElt = autosize(document.querySelector("#results"));
-  var resultsSel = $("#results");
+  var resultsElt = autosize(document.querySelector("#results textarea"));
+  var resultsSel = $("#results textarea");
   return {
     replace: function (text) {
       var ret = resultsSel.text(text);
@@ -139,11 +256,17 @@ var results = (function () {
       return ret;
     },
     clear: function () {
+      resultsSel.removeClass("passes fails error");
       var ret = resultsSel.text("");
       autosize.update(resultsElt);
       return ret;
     },
-    rattle: function () {
+    start: function () {
+      resultsSel.removeClass("passes fails error");
+      $("#results").addClass("running");
+    },
+    finish: function () {
+      $("#results").removeClass("running");
       var height = resultsSel.height();
       resultsSel.height(1);
       resultsSel.animate({height:height}, 100);
@@ -151,28 +274,34 @@ var results = (function () {
   };
 })();
 
+
+// Validation UI
+function disableResultsAndValidate () {
+  results.start();
+  setTimeout(function () {
+    validate();
+    results.finish();
+  }, 0);
+}
+
 function validate () {
+  $("#results .status").hide();
   var parsing = "input schema";
   try {
-    var inputSchemaText = $("#inputSchema textarea").val();
-    var inputSchemaIsJSON = inputSchemaText.match(/^\s*\{/);
-    shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
-    var inputSchema = inputSchemaIsJSON ?
-          ShExUtil.ShExJtoAS(JSON.parse(inputSchemaText)) :
-          shexParser.parse(inputSchemaText);
-    var validator = ShExValidator.construct(inputSchema);
-    var dataText = $("#inputData textarea").val();
+    var validator = ShExValidator.construct(InputSchema.refresh());
+    var dataText = InputData.get();
     if (dataText || $("#focus").val()) {
       parsing = "input data";
-      var inputData = N3Store();
-      N3Parser._resetBlankNodeIds();
-      inputData.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
-      var inputShape = guessStartingShape("#inputShape", "#inputSchema textarea");
-      var focus = guessStartingNode("#focus", "#inputData textarea");
+      $("#results .status").text("parsing data...").show();
+      var inputData = InputData.refresh();
+      var inputShape = guessStartingShape("#inputShape", InputSchema);
+      var focus = guessStartingNode("#focus", InputData);
 
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
+      $("#results .status").text("rendering results...").show();
       var res = results.replace(JSON.stringify(ret, null, "  "));
+      $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
       //   var x = ShExUtil.valToValues(ret);
@@ -184,53 +313,43 @@ function validate () {
       //   console.dir(e);
       // }
       if ("errors" in ret) {
-        res.removeClass("passes error").addClass("fails");
+        res.addClass("fails");
       } else {
-        res.removeClass("fails error").addClass("passes");
+        res.addClass("passes");
       }
     } else {
+      var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
+      $("#results .status").
+        text("parsed "+InputSchema.language+" schema, generated "+outputLanguage+" ").
+        append($("<button>(copy to input)</button>").
+               css("border-radius", ".5em").
+               on("click", function () {
+                 InputSchema.set($("#results textarea").val());
+               })).
+        append(":").
+        show();
       var parsedSchema;
-      if (inputSchemaIsJSON)
-        new ShExWriter({simplifyParentheses: false}).writeSchema(inputSchema, (error, text) => {
-          if (error)
-            results.replace("unwritable ShExJ schema:\n" + error).
-            removeClass("passes").addClass("fails error");
-          else
-            results.replace("valid ShExJ schema:\n" + text).
-            removeClass("fails error").addClass("passes");
+      if (InputSchema.language === "ShExJ") {
+        new ShExWriter({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
+          if (error) {
+            $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
+            res.addClass("error");
+          } else {
+            results.replace(text).addClass("passes");
+          }
         });
-      else
-        results.replace("valid ShExC schema:\n" + JSON.stringify(ShExUtil.AStoShExJ(inputSchema), null, "  ")).
-        removeClass("fails error").addClass("passes");
+      } else {
+        results.replace(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(InputSchema.parsed)), null, "  ")).addClass("passes");
+      }
     }
   } catch (e) {
-    results.replace("error parsing " + parsing + ":\n" + e).
-      removeClass("passes fails").addClass("error");
+    results.replace("error parsing " + parsing + ":\n" + e).addClass("error");
   }
-  results.rattle();
-}
-
-function getSchemaShapes (parseSelector) {
-  var schemaText = $(parseSelector).val();
-  var inputSchema = shexParser.parse(schemaText);
-  var start = "start" in inputSchema ? [START_SHAPE_LABEL] : [];
-  var rest = "shapes" in inputSchema ? Object.keys(inputSchema.shapes).map(termToLex) : [];
-  return start.concat(rest);
-}
-
-function getDataNodes (parseSelector) {
-  var dataText = $(parseSelector).val();
-  var data = N3Store();
-  N3Parser._resetBlankNodeIds();
-  data.addTriples(N3Parser({documentIRI:Base}).parse(dataText));
-  return data.find().map(t => {
-    return termToLex(t.subject);
-  });
 }
 
 $("#inputData .passes, #inputData .fails").hide();
 $("#inputData .passes ul, #inputData .fails ul").empty();
-$("#validate").on("click", validate);
+$("#validate").on("click", disableResultsAndValidate);
 $("#clear").on("click", clearAll);
 
 // Prepare file uploads
@@ -257,10 +376,10 @@ $("input.inputfile").each((idx, elt) => {
   var _scma = $("#inputSchema textarea");
   var _data = $("#inputData textarea");
   var _body = $("body");
-  [{dropElt: _scma, targets: [{ext: "", target: _scma}]},
-   {dropElt: _data, targets: [{ext: "", target: _data}]},
-   {dropElt: _body, targets: [{ext: ".shex", target: _scma},
-                              {ext: ".ttl", target: _data}]}].
+  [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
+   {dropElt: _data, targets: [{ext: "", target: InputData}]},
+   {dropElt: _body, targets: [{ext: ".shex", target: InputSchema},
+                              {ext: ".ttl", target: InputData}]}].
     forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
       desc.dropElt.
@@ -295,8 +414,8 @@ function readfiles(files, targets) {
       var reader = new FileReader();
       reader.onload = (function (target) {
         return function (event) {
-          var appendTo = $("#append").is(":checked") ? target.val() : "";
-          target.val(appendTo + event.target.result);
+          var appendTo = $("#append").is(":checked") ? target.get() : "";
+          target.set(appendTo + event.target.result);
         };
       })(target);
       reader.readAsText(file);
@@ -319,29 +438,29 @@ function prepareDemos () {
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          focus: "http://a.example/Obs1",
+          focus: "<http://a.example/Obs1>",
           inputShape: "- start -"},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
-          focus: "http://a.example/Obs1",
+          focus: "<http://a.example/Obs1>",
           inputShape: "- start -" },
         "no subject name": {
           data: clinicalObs.no_subject_name,
-          focus: "http://a.example/Obs1",
+          focus: "<http://a.example/Obs1>",
           inputShape: "- start -" }
       },
       fails: {
         "bad status": {
           data: clinicalObs.bad_status,
-          focus: "http://a.example/Obs1",
+          focus: "<http://a.example/Obs1>",
           inputShape: "- start -" },
         "no subject": {
           data: clinicalObs.no_subject,
-          focus: "http://a.example/Obs1",
+          focus: "<http://a.example/Obs1>",
           inputShape: "- start -" },
         "wrong birthdate datatype": {
           data: clinicalObs.birthdate_datatype,
-          focus: "http://a.example/Obs1",
+          focus: "<http://a.example/Obs1>",
           inputShape: "- start -" }
       }
     }
@@ -352,7 +471,8 @@ function prepareDemos () {
          return o.schema;
        });
   var timeouts = { inputSchema: undefined, inputData: undefined };
-  function later (target, side) {
+  function later (target, side, cache) {
+    cache.dirty(true);
     if (timeouts[side])
       clearTimeout(timeouts[side]);
 
@@ -372,16 +492,20 @@ function prepareDemos () {
     }
   });
   $("#inputSchema textarea").keyup(function (e) { // keyup to capture backspace
-    later(e.target, "inputSchema");
+    var code = e.keyCode || e.charCode;
+    if (!(e.ctrlKey && (code === 10 || code === 13)))
+      later(e.target, "inputSchema", InputSchema);
   });
   $("#inputData textarea").keyup(function (e) {
-    later(e.target, "inputData");
+    var code = e.keyCode || e.charCode;
+    if (!(e.ctrlKey && (code === 10 || code === 13)))
+      later(e.target, "inputData", InputData);
   });
-  [ { inputSelector: "#inputShape", parseSelector: "#inputSchema textarea",
-      getItems: getSchemaShapes },
-    { inputSelector: "#focus", parseSelector: "#inputData textarea",
+  [ { inputSelector: "#inputShape",
+      getItems: function () { return InputSchema.getShapes(); } },
+    { inputSelector: "#focus",
       schema: { "S1": {}, "S2": {} },
-      getItems: getDataNodes }
+      getItems: function () { return InputData.getNodes(); } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.inputSelector,
@@ -391,7 +515,7 @@ function prepareDemos () {
       build: function (elt, e) {
         return {
           items:
-          entry.getItems(entry.parseSelector).reduce((ret, opt) => {
+          entry.getItems().reduce((ret, opt) => {
             ret[opt] = { name: opt };
             return ret;
           }, {})
@@ -480,4 +604,159 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
 
 prepareDemos();
+
+ShExRSchema = `PREFIX sx: <http://shex.io/ns/shex#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+BASE <http://shex.io/ns/ShExR#>
+start=@<Schema>
+
+<Schema> CLOSED {
+  a [sx:Schema] ;
+  sx:startActs @<SemActList1Plus>? ;
+  sx:start @<shapeExpr>?;
+  sx:shapes @<shapeExpr>*
+}
+
+<shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
+
+<ShapeOr> CLOSED {
+  a [sx:ShapeOr] ;
+  sx:shapeExprs @<shapeExprList2Plus>
+}
+
+<ShapeAnd> CLOSED {
+  a [sx:ShapeAnd] ;
+  sx:shapeExprs @<shapeExprList2Plus>
+}
+
+<ShapeNot> CLOSED {
+  a [sx:ShapeNot] ;
+  sx:shapeExpr @<shapeExpr>
+}
+
+<NodeConstraint> CLOSED {
+  a [sx:NodeConstraint] ;
+  (  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]
+   | sx:datatype IRI
+#   | &<xsFacet>
+   | &<stringFacet>
+   | &<numericFacet>
+   | sx:values @<valueSetValueList1Plus>)+
+}
+
+<Shape> CLOSED {
+  a [sx:Shape] ;
+  sx:closed [true false]? ;
+  sx:extra IRI* ;
+  sx:expression @<tripleExpression>? ;
+  sx:semActs @<SemActList1Plus>? ;
+}
+
+<ShapeExternal> CLOSED {
+  a [sx:ShapeExternal] ;
+}
+
+<SemAct> CLOSED {
+  a [sx:SemAct] ;
+  sx:name IRI ;
+  sx:code xsd:string?
+}
+
+<Annotation> CLOSED {
+  a [sx:Annotation] ;
+  sx:predicate IRI ;
+  sx:object @<objectValue>
+}
+
+# <xsFacet> @<stringFacet> OR @<numericFacet>
+<facet_holder> { # hold labeled productions
+  $<stringFacet> (
+      sx:length xsd:integer
+    | sx:minlength xsd:integer
+    | sx:maxlength xsd:integer
+    | sx:pattern xsd:string
+  );
+  $<numericFacet> (
+      sx:mininclusive   @<numericLiteral>
+    | sx:minexclusive   @<numericLiteral>
+    | sx:maxinclusive   @<numericLiteral>
+    | sx:maxexclusive   @<numericLiteral>
+    | sx:totaldigits    xsd:integer
+    | sx:fractiondigits xsd:integer
+  )
+}
+<numericLiteral> xsd:integer OR xsd:decimal OR xsd:double
+
+<valueSetValue> @<objectValue> OR @<Stem> OR @<StemRange>
+<objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
+<Stem> CLOSED { a [sx:Stem]; sx:stem xsd:anyUri }
+<StemRange> CLOSED {
+  a [sx:StemRange];
+  sx:stem xsd:anyUri OR @<Wildcard>;
+  sx:exclusion @<objectValue> OR @<Stem>*
+}
+<Wildcard> BNODE CLOSED {
+  a [sx:Wildcard]
+}
+
+<tripleExpression> @<TripleConstraint> OR @<OneOf> OR @<EachOf>
+
+<OneOf> CLOSED {
+  a [sx:OneOf] ;
+  sx:min xsd:integer? ;
+  sx:max xsd:integer OR ["*"]? ;
+  sx:expressions @<tripleExpressionList2Plus> ;
+  sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>*
+}
+
+<EachOf> CLOSED {
+  a [sx:EachOf] ;
+  sx:min xsd:integer? ;
+  sx:max xsd:integer OR ["*"]? ;
+  sx:expressions @<tripleExpressionList2Plus> ;
+  sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>*
+}
+
+<tripleExpressionList2Plus> CLOSED {
+  rdf:first @<tripleExpression> ;
+  rdf:rest @<tripleExpressionList1Plus>
+}
+<tripleExpressionList1Plus> CLOSED {
+  rdf:first @<tripleExpression> ;
+  rdf:rest  [rdf:nil] OR @<tripleExpressionList1Plus>
+}
+
+<TripleConstraint> CLOSED {
+  a [sx:TripleConstraint] ;
+  sx:inverse [true false]? ;
+  sx:negated [true false]? ;
+  sx:min xsd:integer? ;
+  sx:max xsd:integer OR ["*"]? ;
+  sx:predicate IRI ;
+  sx:valueExpr @<shapeExpr>? ;
+  sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>*
+}
+
+<SemActList1Plus> CLOSED {
+  rdf:first @<SemAct> ;
+  rdf:rest  [rdf:nil] OR @<SemActList1Plus>
+}
+
+<shapeExprList2Plus> CLOSED {
+  rdf:first @<shapeExpr> ;
+  rdf:rest  @<shapeExprList1Plus>
+}
+<shapeExprList1Plus> CLOSED {
+  rdf:first @<shapeExpr> ;
+  rdf:rest  [rdf:nil] OR @<shapeExprList1Plus>
+}
+
+<valueSetValueList1Plus> CLOSED {
+  rdf:first @<valueSetValue> ;
+  rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
+}`;
 
