@@ -343,7 +343,7 @@ function validate () {
           return object;
         }
         findBindings(ret);
-        // resultBindings = ShExUtil.valToExtension(ret, "http://shex.io/extensions/Map/#");
+        // resultBindings = ShExUtil.valToExtension(ret, ShExMap.url);
         Bindings.set(JSON.stringify(resultBindings, null, "  "));
        }
     } else {
