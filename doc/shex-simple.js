@@ -288,7 +288,8 @@ function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
   try {
-    var validator = ShExValidator.construct(InputSchema.refresh());
+    var validator = ShExValidator.construct(InputSchema.refresh()
+                    /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     var dataText = InputData.get();
     if (dataText || $("#focus").val()) {
       parsing = "input data";
