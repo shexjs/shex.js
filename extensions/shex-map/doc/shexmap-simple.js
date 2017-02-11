@@ -398,10 +398,13 @@ function materialize () {
 
     var binder = ShExMap.binder(resultBindings);
     var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
+    binder = ShExMap.binder(resultBindings);
     try {
       var mapper2 = ShExMaterializer.construct(outputSchema);
       var res = mapper2.validate(binder, lexToTerm($("#createRoot").val()), outputShape);
-      // populate outputGraph from res//[type=TestedTriple]
+      // console.log("g:", ShExUtil.valToTurtle(res));
+      outputGraph = N3Store();
+      outputGraph.addTriples(ShExUtil.valToN3js(res));
     } catch (e) {
       console.dir(e);
     }

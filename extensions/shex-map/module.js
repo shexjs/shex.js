@@ -224,6 +224,8 @@ function binder (tree) {
   //
   function getter (v) {
     // work with copy of stack while trying to grok this problem...
+    if (stack === null)
+      return undefined;
     var nextStack = stack.slice();
     var next = diveIntoObj(nextStack); // no effect if in obj
     while (!(v in next)) {
@@ -231,6 +233,10 @@ function binder (tree) {
       while(next.constructor !== Array) {
         last = nextStack.pop();
         next = getObj(nextStack);
+      }
+      if (next.length === last+1) {
+        stack = null;
+        return undefined;
       }
       nextStack.push(last+1);
       next = diveIntoObj(nextStack);
