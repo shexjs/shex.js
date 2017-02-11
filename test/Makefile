@@ -41,5 +41,14 @@ Map-test: ../lib/ShExJison.js Map-test.js
 cli-test: ../lib/ShExJison.js cli-test.js
 	$(MOCHA) -C -R $(REPORTER) cli-test.js
 
-test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test
+map-extensions-test: ../lib/ShExJison.js map-extensions-test.js
+	$(MOCHA) -C -R $(REPORTER) map-extensions-test.js
+
+hashmap-extension-test: ../lib/ShExJison.js hashmap-extension-test.js
+	$(MOCHA) -C -R $(REPORTER) hashmap-extension-test.js
+
+regex-extension-test: ../lib/ShExJison.js regex-extension-test.js
+	$(MOCHA) -C -R $(REPORTER) regex-extension-test.js
+
+test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test map-extensions-test hashmap-extension-test regex-extension-test.js
 
