@@ -104,28 +104,39 @@ function materializer (schema, nextBNode) {
       target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
-      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
-      function B () { return nextBNode(); }
-      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
-
       var curSubject = createRoot || B();
+      var curSubjectx = {cs: curSubject};
 
       var v = ShExUtil.Visitor();
       var oldVisitShapeRef = v.visitShapeRef;
 
       v.visitShapeRef = function (shapeRef) {
-        this.visitShape(schema.shapes[shapeRef.reference], shapeRef.reference);
+        this.visitShapeExpr(schema.shapes[shapeRef.reference], shapeRef.reference);
         return oldVisitShapeRef.call(v, shapeRef);
       };
 
       v.visitValueRef = function (r) {
-        this.visitShape(schema.shapes[r.reference], r.reference);
+        this.visitExpression(schema.shapes[r.reference], r.reference);
         return this._visitValue(r);
       };
 
       v.visitTripleConstraint = function (expr) {
+        myvisitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
+      };
+
+      v.visitShapeExpr(shape, "_: -start-");
+      return target;
+    }
+  };
+}
+
+function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings) {
+      function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
+
         var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
         if (mapExts.length) {
           mapExts.forEach(function (ext) {
@@ -134,9 +145,10 @@ function materializer (schema, nextBNode) {
 
             var tripleObject;
             if (m) { 
-              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
-              if (!_.isUndefined(bindings[arg])) {
-                tripleObject = bindings[arg];
+              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
+              var val = bindings.get(arg);
+              if (!_.isUndefined(val)) {
+                tripleObject = val;
               }
             }
 
@@ -147,30 +159,23 @@ function materializer (schema, nextBNode) {
             }
 
             if (_.isUndefined(tripleObject)) console.warn('Not in bindings: ',code);
-            add(curSubject, expr.predicate, tripleObject);
+            add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
-          add(curSubject, expr.predicate, expr.valueExpr.values[0]);
+          add(curSubjectx.cs, expr.predicate, expr.valueExpr.values[0]);
 
         } else {
-          var oldSubject = curSubject;
-          curSubject = B();
-          add(oldSubject, expr.predicate, curSubject);
-          this._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
-                         ["inverse", "negated", "predicate", "valueExprRef", "valueExpr",
+          var oldSubject = curSubjectx.cs;
+          curSubjectx.cs = B();
+          add(oldSubject, expr.predicate, curSubjectx.cs);
+          visitor._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
+                         ["inverse", "negated", "predicate", "valueExpr",
                           "min", "max", "annotations", "semActs"])
-          curSubject = oldSubject;
+          curSubjectx.cs = oldSubject;
         }
-      };
-
-      v.visitShapeExpr(shape, "_: -start-");
-      return target;
-    }
-  };
-}
-
-function extractBindings (soln, min, max, depth) {
+      }
+function extractBindingsDelMe (soln, min, max, depth) {
   if ("min" in soln && soln.min < min)
     min = soln.min
   var myMax = "max" in soln ?
@@ -183,7 +188,7 @@ function extractBindings (soln, min, max, depth) {
 
   function walkExpressions (s) {
     return s.expressions.reduce((inner, e) => {
-      return inner.concat(extractBindings(e, min, max, depth+1));
+      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
     }, []);
   }
 
@@ -192,7 +197,7 @@ function extractBindings (soln, min, max, depth) {
         [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
         [];
     return "referenced" in s ?
-      fromTriple.concat(extractBindings(s.referenced.solution, min, max, depth+1)) :
+      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
       fromTriple;
   }
 
@@ -214,12 +219,48 @@ function extractBindings (soln, min, max, depth) {
     return [].concat.apply([], soln.solutions.map(walk));
 }
 
+function binder (tree) {
+  var stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
+  //
+  function getter (v) {
+    // work with copy of stack while trying to grok this problem...
+    var nextStack = stack.slice();
+    var next = diveIntoObj(nextStack); // no effect if in obj
+    while (!(v in next)) {
+      var last;
+      while(next.constructor !== Array) {
+        last = nextStack.pop();
+        next = getObj(nextStack);
+      }
+      nextStack.push(last+1);
+      next = diveIntoObj(nextStack);
+      // throw Error ("can't advance to find " + v + " in " + JSON.stringify(next));
+    }
+    stack = nextStack.slice();
+    return next[v];
+
+    function getObj (s) {
+      return s.reduce(function (res, elt) {
+        return res[elt];
+      }, tree);
+    }
+
+    function diveIntoObj (s) {
+      while (getObj(s).constructor === Array)
+        s.push(0);
+      return getObj(s);
+    }
+  };
+  return {get: getter};
+}
+
 var iface = {
   register: register,
-  extractBindings: extractBindings,
   done: done,
   materializer: materializer,
-  url: MapExt
+  binder: binder,
+  url: MapExt,
+  visitTripleConstraint: myvisitTripleConstraint
 };
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')

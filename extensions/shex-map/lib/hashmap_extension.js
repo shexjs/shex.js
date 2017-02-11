@@ -114,7 +114,7 @@ function lower(mapDirective, bindings, prefixes, args) {
     // Get the expanded var name if it was prefixed
     var expandedName = expandedVarName(mapArgs.varName, prefixes);
 
-    var mappedValue = extUtils.trimQuotes( bindings[expandedName] );
+    var mappedValue = extUtils.trimQuotes( bindings.get(expandedName) );
     if (_.isUndefined(mappedValue)) throw Error('Unable to find mapped value for ' + mapArgs.varName);
 
     // Now use the mapped Value to find the original value and clean it up if we get something

@@ -343,7 +343,7 @@ function validate () {
           return object;
         }
         findBindings(ret);
-        // resultBindings = ShExUtil.valToExtension(ret, ShExMap.url);
+        resultBindings = ShExUtil.valToExtension(ret, ShExMap.url);
         Bindings.set(JSON.stringify(resultBindings, null, "  "));
        }
     } else {
@@ -384,14 +384,27 @@ function materialize () {
     var outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
     var outputSchema = OutputSchema.refresh();
 
-    var resultBindings = Object.assign(
-      Statics.refresh(),
-      Bindings.refresh()
-    );
+    function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
+
+    var resultBindings = _dup(Bindings.refresh());
+    var _t = Statics.refresh();
+    if (_t) {
+      if (resultBindings.constructor !== Array)
+        resultBindings = [resultBindings];
+      resultBindings.unshift(_t);
+    }
     var mapper = ShExMap.materializer(outputSchema);
     var outputShape = guessStartingShape("#outputShape", OutputSchema);
 
-    var outputGraph = mapper.materialize(resultBindings, lexToTerm($("#createRoot").val()), outputShape);
+    var binder = ShExMap.binder(resultBindings);
+    var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
+    try {
+      var mapper2 = ShExMaterializer.construct(outputSchema);
+      var res = mapper2.validate(binder, lexToTerm($("#createRoot").val()), outputShape);
+      // populate outputGraph from res//[type=TestedTriple]
+    } catch (e) {
+      console.dir(e);
+    }
     var writer = N3.Writer({ prefixes: {} });
     outputGraph.find().forEach(t => { writer.addTriple(t); });
     writer.end(function (error, result) {

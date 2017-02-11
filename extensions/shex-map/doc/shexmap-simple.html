@@ -167,12 +167,14 @@
     <script src="../../../lib/ShExWriter.js"   ></script><script></script>
     <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../../../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
+    <script src="../../../lib/regex/nfax-val-1err-materializer.js"></script><script>modules["../lib/regex/nfax-val-1err-materializer.js"] = module.exports;</script>
     <script src="../lib/extension-utils"       ></script><script>modules["./extension-utils"] = module.exports;</script>
     <script src="../lib/regex_extension"       ></script><script>modules["./regex_extension"] = module.exports;</script>
     <script src="../lib/hashmap_extension"     ></script><script>modules["./hashmap_extension"] = module.exports;</script>
     <script src="../lib/extensions"            ></script><script>modules["./lib/extensions"] = module.exports;</script>
 
-    <script src="../module.js"                 ></script><script>ShExMap = module.exports;</script>
+    <script src="../module.js"                 ></script><script>modules["../extensions/shex-map/module"] = ShExMap = module.exports;</script>
+    <script src="../../../lib/ShExMaterializer.js"></script><script>ShExMaterializer = module.exports;</script>
     <script src="./shexmap-simple.js"          ></script>
   </body>
 </html>
