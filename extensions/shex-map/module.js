@@ -15,6 +15,8 @@ var extensions = require("./lib/extensions");
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 
+const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
+
 function register (validator) {
   var prefixes = "prefixes" in validator.schema ?
       validator.schema.prefixes :
@@ -130,7 +132,7 @@ function materializer (schema, nextBNode) {
   };
 }
 
-function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings) {
+function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
       function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
@@ -158,17 +160,36 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
                   tripleObject = extensions.lower(code, bindings, schema.prefixes);
             }
 
-            if (_.isUndefined(tripleObject)) console.warn('Not in bindings: ',code);
-            add(curSubjectx.cs, expr.predicate, tripleObject);
+            if (_.isUndefined(tripleObject))
+              console.warn('Not in bindings: ',code);
+            else if (expr.inverse)
+              add(tripleObject, expr.predicate, curSubjectx.cs);
+            else
+              add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
-          add(curSubjectx.cs, expr.predicate, expr.valueExpr.values[0]);
+          if (expr.inverse)
+            add(expr.valueExpr.values[0], expr.predicate, curSubjectx.cs);
+          else
+            add(curSubjectx.cs, expr.predicate, expr.valueExpr.values[0]);
 
         } else {
           var oldSubject = curSubjectx.cs;
-          curSubjectx.cs = B();
-          add(oldSubject, expr.predicate, curSubjectx.cs);
+          var maxAdd = "max" in expr ? expr.max === "*" ? Infinity : expr.max : 1;
+          if (maxAdd > MAX_MAX_CARD)
+            maxAdd = MAX_MAX_CARD;
+          for (var repetition = 0; repetition < maxAdd; ++repetition) {
+            curSubjectx.cs = B();
+            // if (recurse)
+            var res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+            if ("errors" in res)
+              break;
+            if (expr.inverse)
+              add(curSubjectx.cs, expr.predicate, oldSubject);
+            else
+              add(oldSubject, expr.predicate, curSubjectx.cs);
+          }
           visitor._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
                          ["inverse", "negated", "predicate", "valueExpr",
                           "min", "max", "annotations", "semActs"])
@@ -222,10 +243,26 @@ function extractBindingsDelMe (soln, min, max, depth) {
 function binder (tree) {
   var stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
   //
+  var removables = [];
+  var globals = tree.reduce((r, e, idx) => {
+    if (e.constructor !== Array) {
+      Object.keys(e).forEach(k => {
+        r[k] = e[k];
+      });
+      removables.unshift(idx); // higher indexes at the left
+    }
+    return r;
+  }, {});
+  removables.forEach(rm => {
+    tree.splice(rm, 1);
+  });
+
   function getter (v) {
     // work with copy of stack while trying to grok this problem...
     if (stack === null)
       return undefined;
+    if (v in globals)
+      return globals[v];
     var nextStack = stack.slice();
     var next = diveIntoObj(nextStack); // no effect if in obj
     while (!(v in next)) {
@@ -240,10 +277,13 @@ function binder (tree) {
       }
       nextStack.push(last+1);
       next = diveIntoObj(nextStack);
+      console.log("advanced to " + nextStack);
       // throw Error ("can't advance to find " + v + " in " + JSON.stringify(next));
     }
     stack = nextStack.slice();
-    return next[v];
+    var ret = next[v];
+    delete next[v];
+    return ret;
 
     function getObj (s) {
       return s.reduce(function (res, elt) {

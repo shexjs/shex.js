@@ -397,8 +397,8 @@ function materialize () {
     var outputShape = guessStartingShape("#outputShape", OutputSchema);
 
     var binder = ShExMap.binder(resultBindings);
-    var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
-    binder = ShExMap.binder(resultBindings);
+    // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
+    // binder = ShExMap.binder(resultBindings);
     try {
       var mapper2 = ShExMaterializer.construct(outputSchema);
       var res = mapper2.validate(binder, lexToTerm($("#createRoot").val()), outputShape);
@@ -684,8 +684,13 @@ PREFIX Map: <http://shex.io/extensions/Map/#>
 
 BPFHIR.BPschema = `
 
+<collector> {
+  fhir:item @<BPfhir>*
+}
+
 <BPfhir> {
   a [fhir:Observation]?;
+  fhir:subject @<Patient>;
   fhir:coding { fhir:code [sct:Blood_Pressure] };
   fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
   fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
@@ -714,12 +719,11 @@ BPFHIR.PatientSchema = `
 
 <Patient> {
   fhir:Patient.name LITERAL %Map:{ bp:name %};
- ^fhir:subject @<BPfhir>*
 }`;
 
 BPFHIR.schema = BPFHIR.schemaPrefixes + "start = @<BPunitsDAM>" + BPFHIR.BPschema;
 
-BPFHIR.schema_Patient = BPFHIR.schemaPrefixes + "start = @<Patient>" + BPFHIR.PatientSchema + BPFHIR.BPschema;
+BPFHIR.schema_Patient = BPFHIR.schemaPrefixes + "start = @<collector>" + BPFHIR.PatientSchema + BPFHIR.BPschema;
 
 BPFHIR.constants = {"http://abc.example/anotherConstant": "abc-def"};
 
