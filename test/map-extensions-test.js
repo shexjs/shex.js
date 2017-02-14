@@ -140,7 +140,7 @@ describe('Map extensions', function() {
             expect(
                 mapExtensions.lower(
                     'hashmap(test:string, {"alpha": "beta"})',
-                    mapper.binder({"urn:local:test:string": "beta"}),
+                    mapper.binder([{"urn:local:test:string": "beta"}]),
                     {"test": "urn:local:test:"}))
             .to.equal('alpha');
         });
@@ -149,7 +149,7 @@ describe('Map extensions', function() {
             expect(
                 mapExtensions.lower(
                     "regex(/(?<dem:test>^[a-zA-Z]+)/)", 
-                    mapper.binder({ 'http://a.example/dem#test': 'Testing' }), 
+                    mapper.binder([{ 'http://a.example/dem#test': 'Testing' }]), 
                     {"dem": "http://a.example/dem#"})
             ).to.equal('Testing');
         });

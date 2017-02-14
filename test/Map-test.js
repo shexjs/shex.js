@@ -44,7 +44,7 @@ var Harness = {
           }
 
           var map = Mapper.materializer(loads[1].schema);
-          var binder = Mapper.binder(resultBindings);
+          var binder = Mapper.binder([resultBindings]);
           var outputGraph = map.materialize(binder, createRoot);
           outputGraph.equals = graphEquals; // hotpatch with graph isomorphism function.
           outputGraph.toString = graphToString;

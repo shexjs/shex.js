@@ -179,12 +179,15 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
           var maxAdd = "max" in expr ? expr.max === "*" ? Infinity : expr.max : 1;
           if (maxAdd > MAX_MAX_CARD)
             maxAdd = MAX_MAX_CARD;
+          if (!recurse)
+            maxAdd = 1; // no grounds to know how much to repeat.
           for (var repetition = 0; repetition < maxAdd; ++repetition) {
             curSubjectx.cs = B();
-            // if (recurse)
-            var res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
-            if ("errors" in res)
-              break;
+            if (recurse) {
+              var res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+              if ("errors" in res)
+                break;
+            }
             if (expr.inverse)
               add(curSubjectx.cs, expr.predicate, oldSubject);
             else
