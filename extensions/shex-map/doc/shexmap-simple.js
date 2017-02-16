@@ -512,7 +512,7 @@ function readfiles(files, targets) {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-var BPFHIR = {}, BPunitsDAM = {}; SchemaConcert = {};
+var BPFHIR = {}, BPunitsDAM = {}; SchemaConcert = {}, BPunitsNested = {}, BPFHIRNested = {};
 function prepareDemos () {
   var demos = {
     "BP": {
@@ -582,7 +582,21 @@ function prepareDemos () {
           outputShape: "- start -",
           staticVars: BPFHIR.constants,
           createRoot: "tag:BPfhir123"}
+      }
+    },
+    "BPPatient 2 levels": {
+      schema: BPunitsNested.schema,
+      passes: {
+        "simple": {
+          data: BPunitsNested.simple,
+          focus: "<http://a.example/PatientX>",
+          inputShape: "- start -",
+          outputSchema: BPFHIRNested.schema,
+          outputShape: "- start -",
+          staticVars: {},
+          createRoot: "tag:BPfhir123"}
       },
+      fails: { }
     },
     "symmetric": {
       schema: SchemaConcert.schema,
@@ -859,6 +873,141 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
     schema:address "79 Washington St...."
   ] .
 `
+
+BPunitsNested.schema = `PREFIX  : <http://dam.example/med#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
+PREFIX Map: <http://shex.io/extensions/Map/#>
+
+start = @<PatientDAM>
+
+<PatientDAM> {
+  :name LITERAL %Map:{ bp:name %};
+  :reports @<ReportsDAM>* %Map:{ bp:reports %}
+}
+
+<ReportsDAM> {
+  :reportNo LITERAL %Map:{ bp:reportNo %};
+  :results @<BPunitsDAM>* %Map:{ bp:bp %}
+}
+
+<BPunitsDAM> {
+  :systolic {
+    :value xsd:float %Map:{ bp:sysVal %};
+    :units xsd:string %Map:{ bp:sysUnits %}
+  };
+  :diastolic {
+    :value xsd:float %Map:{ bp:diaVal %};
+    :units xsd:string %Map:{ bp:diaUnits %}
+  };
+  :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}
+}
+`;
+
+BPunitsNested.simple = `PREFIX med: <http://dam.example/med#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<PatientX>
+    med:name "Sue" ;
+    med:reports <Report1>, <Report2> .
+
+<Report1>
+    med:reportNo "two" ;
+    med:results <Res00>, <Res01> .
+
+<Res00>
+    med:systolic [
+      med:value "100"^^xsd:float ;
+      med:units "mmHg"
+    ] ;
+    med:diastolic [
+      med:value "60"^^xsd:float ;
+      med:units "mmHg"
+    ] .
+<Res01>
+    med:systolic [
+      med:value "101"^^xsd:float ;
+      med:units "mmHg"
+    ] ;
+    med:diastolic [
+      med:value "61"^^xsd:float ;
+      med:units "mmHg"
+    ] .
+
+<Report2>
+    med:reportNo "two" ;
+    med:results <Res10>, <Res11> .
+
+<Res10>
+    med:systolic [
+      med:value "110"^^xsd:float ;
+      med:units "mmHg"
+    ] ;
+    med:diastolic [
+      med:value "70"^^xsd:float ;
+      med:units "mmHg"
+    ] .
+<Res11>
+    med:systolic [
+      med:value "111"^^xsd:float ;
+      med:units "mmHg"
+    ] ;
+    med:diastolic [
+      med:value "71"^^xsd:float ;
+      med:units "mmHg"
+    ] .
+`;
+
+BPFHIRNested.schema = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
+PREFIX sct: <http://snomed.info/sct/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
+PREFIX Map: <http://shex.io/extensions/Map/#>
+
+start = @<collector>
+
+<Patient> {
+  fhir:Patient.name LITERAL %Map:{ bp:name %};
+}
+
+<collector> {
+  fhir:item @<BPreport>*
+}
+
+<BPreport> {
+  a [fhir:DiagnosticReport]?;
+  fhir:status ["final"];
+  fhir:subject @<Patient>;
+  fhir:coding { fhir:code [sct:Blood_Pressure] };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+}
+<BPfhir> {
+  a [fhir:Observation]?;
+  fhir:subject @<Patient>;
+  fhir:coding { fhir:code [sct:Blood_Pressure] };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
+}
+<sysBP> {
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Systolic_Blood_Pressure] };
+  fhir:valueQuantity {
+    a [fhir:Quantity]?;
+    fhir:value xsd:float %Map:{ bp:sysVal %};
+    fhir:units xsd:string %Map:{ bp:sysUnits %}
+  }
+}
+<diaBP> {
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Diastolic_Blood_Pressure] };
+  fhir:valueQuantity {
+    a [fhir:Quantity]?;
+    fhir:value xsd:float %Map:{ bp:diaVal %};
+    fhir:units xsd:string %Map:{ bp:diaUnits %}
+  }
+}
+`;
 
 prepareDemos();
 
