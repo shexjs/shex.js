@@ -392,11 +392,9 @@ function materialize () {
 
     var outputGraph = mapper.materialize(resultBindings, lexToTerm($("#createRoot").val()), outputShape);
     var writer = N3.Writer({ prefixes: {} });
-    outputGraph.find().forEach(t => { writer.addTriple(t); });
+    writer.addTriples(outputGraph.find());
     writer.end(function (error, result) {
-      results.replace(JSON.stringify(result, null, "  ").
-                      replace(/\\n/g, "\n").
-                      replace(/\\"/g, "\""));
+      results.replace(result);
     });
   } catch (e) {
     results.replace("error parsing " + parsing + ":\n" + e).
