@@ -388,7 +388,7 @@ function materialize () {
 
     var resultBindings = _dup(Bindings.refresh());
     var _t = Statics.refresh();
-    if (_t) {
+    if (_t && Object.keys(_t) > 0) {
       if (resultBindings.constructor !== Array)
         resultBindings = [resultBindings];
       resultBindings.unshift(_t);
@@ -397,7 +397,8 @@ function materialize () {
     var outputShape = guessStartingShape("#outputShape", OutputSchema);
 
     var binder = ShExMap.binder(resultBindings);
-    // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
+    Bindings.set(JSON.stringify(resultBindings, null, "  "));
+      // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = ShExMap.binder(resultBindings);
     try {
       var mapper2 = ShExMaterializer.construct(outputSchema);

@@ -245,20 +245,89 @@ function extractBindingsDelMe (soln, min, max, depth) {
 
 function binder (tree) {
   var stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
+  var globals = {}; // !! delme
   //
-  var removables = [];
-  var globals = tree.reduce((r, e, idx) => {
-    if (e.constructor !== Array) {
-      Object.keys(e).forEach(k => {
-        r[k] = e[k];
+
+  /**
+   * returns: { var->count }
+   */
+  function _mults (obj) {
+    var rays = [];
+    var objs = [];
+    var counts = Object.keys(obj).reduce((r, k) => {
+      var toAdd = null;
+      if (typeof obj[k] === "object") {
+        toAdd = _mults(obj[k]);
+        if (obj[k].constructor === Array)
+          rays.push(k);
+        else
+          objs.push(k);
+      } else {
+        // variable name.
+        toAdd = _make(k, 1);
+      }
+      return _add(r, toAdd);
+    }, {});
+    if (rays.length > 0) {
+      objs.forEach(i => {
+        var novel = Object.keys(obj[i]).filter(k => {
+          return counts[k] === 1;
+        });
+        if (novel.length) {
+          var n2 = novel.reduce((r, k) => {
+            r[k] = obj[i][k];
+            return r;
+          }, {});
+          rays.forEach(l => {
+            _cross(obj[l], n2);
+          });
+        }
       });
-      removables.unshift(idx); // higher indexes at the left
+      objs.reverse();
+      objs.forEach(i => {
+        obj.splice(i, 1); // remove object from tree
+      });
     }
-    return r;
-  }, {});
-  removables.forEach(rm => {
-    tree.splice(rm, 1);
-  });
+    return counts;
+  }
+  function _add (l, r) {
+    var ret = Object.assign({}, l);
+    return Object.keys(r).reduce((ret, k) => {
+      var add = k in r ? r[k] : 1;
+      ret[k] = k in ret ? ret[k] + add : add;
+      return ret;
+    }, ret);
+  }
+  function _make (k, v) {
+    var ret = {};
+    ret[k] = v;
+    return ret;
+  }
+  function _cross (list, map) {
+    for (var listIndex in list) {
+      if (list[listIndex].constructor === Array) {
+        _cross(list[listIndex], map);
+      } else {
+        Object.keys(map).forEach(mapKey => {
+          if (mapKey in list[listIndex])
+            throw Error("unexpected duplicate key: " + mapKey + " in " + JSON.stringify(list[listIndex]));
+          list[listIndex][mapKey] = map[mapKey];
+        });
+      }
+    };
+  }
+  var m = _mults(tree);
+  console.log("HERE:", JSON.stringify(tree, null, 2));
+
+  // var globals = tree.reduce((r, e, idx) => {
+  //   if (e.constructor !== Array) {
+  //     Object.keys(e).forEach(k => {
+  //       r[k] = e[k];
+  //     });
+  //     removables.unshift(idx); // higher indexes at the left
+  //   }
+  //   return r;
+  // }, {});
 
   function getter (v) {
     // work with copy of stack while trying to grok this problem...
