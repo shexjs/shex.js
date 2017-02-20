@@ -316,7 +316,18 @@ function binder (tree) {
       }
     };
   }
-  var m = _mults(tree);
+  _mults(tree);
+  function _simplify (list) {
+    var ret = list.reduce((r, elt) => {
+      return r.concat(
+        elt.constructor === Array ?
+          _simplify(elt) :
+          elt
+      );
+    }, []);
+    return ret.length === 1 ? ret[0] : ret;
+  }
+  tree = _simplify(tree);
   console.log("HERE:", JSON.stringify(tree, null, 2));
 
   // var globals = tree.reduce((r, e, idx) => {
