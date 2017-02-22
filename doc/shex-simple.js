@@ -204,47 +204,6 @@ function pickData (name, dataTest, elt, listItems, side) {
   }
 }
 
-/**
- *
- * location.search: e.g. "?schema=asdf&data=qwer&inputShapeMap=ab%5Ecd%5E%5E_ef%5Egh"
- */
-var parseQueryString = function(query) {
-  if (query[0]==='?') query=query.substr(1); // optional leading '?'
-  var map   = {};
-  query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, function(match, key, value) {
-    key=decodeURIComponent(key);value=decodeURIComponent(value);
-    (map[key] = map[key] || []).push(value);
-  });
-  return map;
-};
-var iface = parseQueryString(location.search);
-if ("inputShapeMap" in iface)
-  iface.inputShapeMap = iface.inputShapeMap.reduce(
-    (r, b) => {
-      b.split(/\^\^/).forEach(pair => {
-        var p = pair.split(/\^/);
-        r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
-      });
-      return r;
-    }, {});
-var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                   {queryStringParm: "data", location: $("#inputData textarea")}];
-QueryParams.forEach(input => {
-   var parm = input.queryStringParm;
-   if (parm in iface)
-     iface[parm].forEach(text => {
-       input.location.val(input.location.val() + text);
-     });
- });
-$("h1").on("click", () => {
-  var s = QueryParams.map(input => {
-    var parm = input.queryStringParm;
-    return parm + "=" + encodeURIComponent(input.location.val());
-  }).join("&");
-
-  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
-});
-
 // Guess the starting shape.
 function guessStartingShape (inputSelector, cache) {
   var shape = $(inputSelector).val();
@@ -330,6 +289,7 @@ function validate () {
   try {
     var validator = ShExValidator.construct(InputSchema.refresh()
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
+    $("#dialect").text(InputSchema.language);
     var dataText = InputData.get();
     if (dataText || $("#focus").val()) {
       parsing = "input data";
@@ -409,6 +369,71 @@ $("input.inputfile").each((idx, elt) => {
 
     reader.readAsText(evt.target.files[0]);
   });
+});
+
+/**
+ *
+ * location.search: e.g. "?schema=asdf&data=qwer&shapeMap=ab%5Ecd%5E%5E_ef%5Egh"
+ */
+var parseQueryString = function(query) {
+  if (query[0]==='?') query=query.substr(1); // optional leading '?'
+  var map   = {};
+  query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, function(match, key, value) {
+    key=decodeURIComponent(key);value=decodeURIComponent(value);
+    (map[key] = map[key] || []).push(value);
+  });
+  return map;
+};
+var iface = parseQueryString(location.search);
+if ("shapeMap" in iface) {
+  var first = true;
+  iface.shapeMap = iface.shapeMap.reduce(
+    (r, b) => {
+      b.split(/\^\^/).forEach(pair => {
+        var p = pair.split(/\^/);
+        r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
+        if (first) {
+          $("#focus").val(p[0]);
+          $("#inputShape").val(p[1]);
+          first = false;
+        }
+      });
+      return r;
+    }, {});
+}
+var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
+                   {queryStringParm: "data", location: $("#inputData textarea")}];
+QueryParams.forEach(input => {
+   var parm = input.queryStringParm;
+   if (parm in iface)
+     iface[parm].forEach(text => {
+       input.location.val(input.location.val() + text);
+     });
+});
+if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
+  $("#title").hide();
+  $("#inputSchema .status").html("schema (<span id=\"dialect\">ShEx</span>):").show();
+  $("#inputData .status").text("data (Turtle):").show();
+  $("#actions").parent().hide();
+  // $("#results .status").text("results:").show();
+}
+if (iface.schema) {
+  validate();
+}
+// $("#actions").prev()
+$("#title, #inputSchema textarea").prev().on("click", () => {
+  var parms = QueryParams.map(input => {
+    var parm = input.queryStringParm;
+    return parm + "=" + encodeURIComponent(input.location.val());
+  })
+  if ($("#focus").val() && $("#inputShape").val())
+    parms.push("shapeMap=" + encodeURIComponent(
+      $("#focus").val() + "^" + $("#inputShape").val()
+    ));
+  if (iface.interface)
+    parms.push("interface="+iface.interface[0]);
+  var s = parms.join("&");
+  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
 });
 
 // Prepare drag and drop into text areas
