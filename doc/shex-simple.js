@@ -204,6 +204,46 @@ function pickData (name, dataTest, elt, listItems, side) {
   }
 }
 
+/**
+ *
+ * location.search: e.g. "?schema=asdf&data=qwer&inputShapeMap=ab%5Ecd%5E%5E_ef%5Egh"
+ */
+var parseQueryString = function(query) {
+  if (query[0]==='?') query=query.substr(1); // optional leading '?'
+  var map   = {};
+  query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, function(match, key, value) {
+    key=decodeURIComponent(key);value=decodeURIComponent(value);
+    (map[key] = map[key] || []).push(value);
+  });
+  return map;
+};
+var iface = parseQueryString(location.search);
+if ("inputShapeMap" in iface)
+  iface.inputShapeMap = iface.inputShapeMap.reduce(
+    (r, b) => {
+      b.split(/\^\^/).forEach(pair => {
+        var p = pair.split(/\^/);
+        r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
+      });
+      return r;
+    }, {});
+var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
+                   {queryStringParm: "data", location: $("#inputData textarea")}];
+QueryParams.forEach(input => {
+   var parm = input.queryStringParm;
+   if (parm in iface)
+     iface[parm].forEach(text => {
+       input.location.val(input.location.val() + text);
+     });
+ });
+$("h1").on("click", () => {
+  var s = QueryParams.map(input => {
+    var parm = input.queryStringParm;
+    return parm + "=" + encodeURIComponent(input.location.val());
+  }).join("&");
+
+  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+});
 
 // Guess the starting shape.
 function guessStartingShape (inputSelector, cache) {
