@@ -301,7 +301,13 @@ function validate () {
       var ret = validator.validate(inputData, focus, inputShape);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
-      var res = results.replace(JSON.stringify(ret, null, "  "));
+      var text =
+            "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
+            ("errors" in ret ?
+             ShExUtil.errsToSimple(ret) :
+             JSON.stringify(ShExUtil.valToSimple(ret), null, 2)) :
+          JSON.stringify(ret, null, "  ");
+      var res = results.replace(text);
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
