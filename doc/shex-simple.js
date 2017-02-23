@@ -390,6 +390,25 @@ var parseQueryString = function(query) {
   });
   return map;
 };
+
+/**
+ * update location with a current values of some inputs
+ */
+function updateURL () {
+  var parms = QueryParams.map(input => {
+    var parm = input.queryStringParm;
+    return parm + "=" + encodeURIComponent(input.location.val());
+  });
+  if ($("#focus").val() && $("#inputShape").val())
+    parms.push("shapeMap=" + encodeURIComponent(
+      $("#focus").val() + "^" + $("#inputShape").val()
+    ));
+  if (iface.interface)
+    parms.push("interface="+iface.interface[0]);
+  var s = parms.join("&");
+  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+}
+
 var iface = parseQueryString(location.search);
 if ("shapeMap" in iface) {
   var first = true;
@@ -418,33 +437,22 @@ QueryParams.forEach(input => {
 });
 if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
   $("#title").hide();
-  $("#inputSchema .status").html("schema (<span id=\"dialect\">ShEx</span>):").show();
-  $("#inputData .status").text("data (Turtle):").show();
-  $("#actions").parent().hide();
+  $("#inputSchema .status").html("schema (<span id=\"dialect\">ShEx</span>)").show();
+  $("#inputData .status").text("data (Turtle:").show();
+  $("#actions").parent().children().not("#actions").hide();
+  // $("#actions").parent().hide();
   // $("#results .status").text("results:").show();
 }
-if (iface.schema) {
+if (iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
   validate();
 }
-// $("#actions").prev()
-$("#title, #inputSchema textarea").prev().on("click", () => {
-  var parms = QueryParams.map(input => {
-    var parm = input.queryStringParm;
-    return parm + "=" + encodeURIComponent(input.location.val());
-  })
-  if ($("#focus").val() && $("#inputShape").val())
-    parms.push("shapeMap=" + encodeURIComponent(
-      $("#focus").val() + "^" + $("#inputShape").val()
-    ));
-  if (iface.interface)
-    parms.push("interface="+iface.interface[0]);
-  var s = parms.join("&");
-  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
-});
+$("#inputSchema textarea").prev().add("#title").on("click", updateURL);
 
-// Prepare drag and drop into text areas
-// (hiding variables in their own function scope).
-(function () {
+
+/**
+ * Prepare drag and drop into text areas
+ */
+function prepareDragAndDrop () {
   var _scma = $("#inputSchema textarea");
   var _data = $("#inputData textarea");
   var _body = $("body");
@@ -469,37 +477,37 @@ $("#title, #inputSchema textarea").prev().on("click", () => {
           readfiles(e.originalEvent.dataTransfer.files, desc.targets);
         });
     });
-})();
+  function readfiles(files, targets) {
+    var formData = new FormData();
 
-function readfiles(files, targets) {
-  var formData = new FormData();
-
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i], name = file.name;
-    var target = targets.reduce((ret, elt) => {
-      return ret ? ret :
-        name.endsWith(elt.ext) ? elt.target :
-        null;
-    }, null);
-    if (target) {
-      formData.append("file", file);
-      var reader = new FileReader();
-      reader.onload = (function (target) {
-        return function (event) {
-          var appendTo = $("#append").is(":checked") ? target.get() : "";
-          target.set(appendTo + event.target.result);
-        };
-      })(target);
-      reader.readAsText(file);
-    } else {
-      results.append("don't know what to do with " + name + "\n");
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i], name = file.name;
+      var target = targets.reduce((ret, elt) => {
+        return ret ? ret :
+          name.endsWith(elt.ext) ? elt.target :
+          null;
+      }, null);
+      if (target) {
+        formData.append("file", file);
+        var reader = new FileReader();
+        reader.onload = (function (target) {
+          return function (event) {
+            var appendTo = $("#append").is(":checked") ? target.get() : "";
+            target.set(appendTo + event.target.result);
+          };
+        })(target);
+        reader.readAsText(file);
+      } else {
+        results.append("don't know what to do with " + name + "\n");
+      }
     }
-  }
 
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
-  xhr.send(formData);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
+    xhr.send(formData);
+  }
 }
+prepareDragAndDrop();
 
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs = {};
