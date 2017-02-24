@@ -361,6 +361,7 @@ function addNodeShapePair (evt) {
     "' type='text' class='data'/> as <input id='inputShape"+id+
     "' type='text' class='schema context-menu-one btn btn-neutral'/></span>"
            );
+  addContextMenus("#focus"+id, "#inputShape"+id);
   Removables.push(t);
   t.insertBefore($("#removePair"));
   if (id === 1)
@@ -607,11 +608,13 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
-  [ { inputSelector: "#inputShape",
-      getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: "#focus",
-      schema: { "S1": {}, "S2": {} },
-      getItems: function () { return InputData.getNodes(); } }
+  addContextMenus("#focus", "#inputShape");
+}
+function addContextMenus (nodeSelector, shapeSelector) {
+  [ { inputSelector: nodeSelector,
+      getItems: function () { return InputData.getNodes(); } },
+    { inputSelector: shapeSelector,
+      getItems: function () { return InputSchema.getShapes(); } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.inputSelector,
