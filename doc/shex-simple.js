@@ -357,7 +357,10 @@ function validate () {
 function addNodeShapePair (evt) {
   var id = $("#addPair").data("nextId");
   $("#addPair").data("nextId", id+1);
-  $("<br/><input id='focus"+id+"' type='text' value='focus"+id+"' class='data'/> as <input id='inputShape"+id+"' type='text' value='shape"+id+"' class='schema context-menu-one btn btn-neutral'/>").insertBefore(evt.target);
+  $("<br/><input id='focus"+id+
+    "' type='text' class='data'/> as <input id='inputShape"+id+
+    "' type='text' class='schema context-menu-one btn btn-neutral'/>"
+   ).insertBefore(evt.target);
   return false;
 }
 
