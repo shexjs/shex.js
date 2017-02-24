@@ -443,7 +443,9 @@ if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
   // $("#actions").parent().hide();
   // $("#results .status").text("results:").show();
 }
-if (iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
+if ("schema" in iface && iface.schema.reduce((r, elt) => {
+  return r+elt.length;
+}, 0)) {
   validate();
 }
 $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
