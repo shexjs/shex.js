@@ -354,13 +354,25 @@ function validate () {
   }
 }
 
+var Removables = [];
 function addNodeShapePair (evt) {
-  var id = $("#addPair").data("nextId");
-  $("#addPair").data("nextId", id+1);
-  $("<br/><input id='focus"+id+
+  var id = Removables.length+1;
+  var t = $("<span><br/><input id='focus"+id+
     "' type='text' class='data'/> as <input id='inputShape"+id+
-    "' type='text' class='schema context-menu-one btn btn-neutral'/>"
-   ).insertBefore(evt.target);
+    "' type='text' class='schema context-menu-one btn btn-neutral'/></span>"
+           );
+  Removables.push(t);
+  t.insertBefore($("#removePair"));
+  if (id === 1)
+    $("#removePair").css("visibility", "visible");
+  return false;
+}
+
+function removeNodeShapePair (evt) {
+  var id = Removables.length;
+  Removables.pop().remove();
+  if (id === 1)
+    $("#removePair").css("visibility", "hidden");
   return false;
 }
 
@@ -368,7 +380,8 @@ $("#inputData .passes, #inputData .fails").hide();
 $("#inputData .passes ul, #inputData .fails ul").empty();
 $("#validate").on("click", disableResultsAndValidate);
 $("#clear").on("click", clearAll);
-$("#addPair").data("nextId", 1).on("click", addNodeShapePair);
+$("#addPair").on("click", addNodeShapePair);
+$("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
 
 // Prepare file uploads
 $("input.inputfile").each((idx, elt) => {
