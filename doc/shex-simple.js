@@ -147,7 +147,7 @@ function load (selector, obj, func, listItems, side, str) {
 
 function clearData () {
   InputData.set("");
-  $("#focus").val("");
+  $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
 }
@@ -155,7 +155,7 @@ function clearData () {
 function clearAll () {
   $("#results .status").hide();
   InputSchema.set("");
-  $("#inputShape").val("");
+  $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
   clearData();
@@ -197,45 +197,43 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
     //    $("input.data").val(getDataNodes()[0]);
-    $("#inputShape").val(dataTest.inputShape); // srcSchema.start in Map-test
-    $("#focus").val(dataTest.focus); // inputNode in Map-test
-
+    // hard-code the first node/shape pair
+    $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
+    $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
+    removeNodeShapePair(null, Infinity);
+    addNodeShapePair(null, dataTest.inputShapeMap.slice(1)); // catch the rest of the shapeMap.
     // validate();
   }
 }
 
 // Guess the starting shape.
-function guessStartingShape (inputSelector, cache) {
-  var shape = $(inputSelector).val();
+function guessStartingShape (inputSelection, cache) {
+  var shape = inputSelection.val();
   if (shape === "") {
     var candidates = cache.getShapes();
     if (candidates.length > 0) {
-      $(inputSelector).val(candidates[0]);
-      if (candidates[0] === START_SHAPE_LABEL)
-        return undefined;
-      else
-        return lexToTerm(candidates[0]);
+      inputSelection.val(candidates[0]);
+      return candidates[0];
     } else
       throw Error("no possible starting shape");
-  } else if (shape === START_SHAPE_LABEL)
-    return undefined;
-  else
-    return lexToTerm(shape);
+  } else {
+    return shape;
+  }
 }
 
 
 // Guess the starting focus.
-function guessStartingNode (inputSelector, cache) {
-  var focus = $(inputSelector).val();
+function guessStartingNode (inputSelection, cache) {
+  var focus = inputSelection.val();
   if (focus === "") {
     var candidates = cache.getNodes();;
     if (candidates.length > 0) {
-      $(inputSelector).val(candidates[0]);
-      return lexToTerm(candidates[0]);
+      inputSelection.val(candidates[0]);
+      return candidates[0];
     } else
       throw Error("no possible starting focus node");
   } else
-    return lexToTerm(focus);
+    return focus;
 }
 
 
@@ -289,22 +287,23 @@ function validate () {
   try {
     var validator = ShExValidator.construct(InputSchema.refresh()
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
-    $("#dialect").text(InputSchema.language);
+    $("#schemaDialect").text(InputSchema.language);
     var dataText = InputData.get();
-    if (dataText || $("#focus").val()) {
+    var shapeMap = getShapeMap().map(pair => {
+      return {node: lexToTerm(pair.node), shape: lexToTerm(pair.shape)};
+    });
+    if (dataText || shapeMap.length) {
       parsing = "input data";
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
-      var inputShape = guessStartingShape("#inputShape", InputSchema);
-      var focus = guessStartingNode("#focus", InputData);
 
-      var ret = validator.validate(inputData, focus, inputShape);
+      var ret = validator.validate(inputData, shapeMap);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
       var text =
             "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
             ("errors" in ret ?
-             ShExUtil.errsToSimple(ret) :
+             ShExUtil.errsToSimple(ret).join("\n") :
              JSON.stringify(ShExUtil.valToSimple(ret), null, 2)) :
           JSON.stringify(ret, null, "  ");
       var res = results.replace(text);
@@ -355,25 +354,37 @@ function validate () {
 }
 
 var Removables = [];
-function addNodeShapePair (evt) {
-  var id = Removables.length+1;
-  var t = $("<span><br/><input id='focus"+id+
-    "' type='text' class='data'/> as <input id='inputShape"+id+
-    "' type='text' class='schema context-menu-one btn btn-neutral'/></span>"
-           );
-  addContextMenus("#focus"+id, "#inputShape"+id);
-  Removables.push(t);
-  t.insertBefore($("#removePair"));
-  if (id === 1)
-    $("#removePair").css("visibility", "visible");
+function addNodeShapePair (evt, pairs) {
+  if (pairs === undefined)
+    pairs = [{node: "", shape: ""}];
+  pairs.forEach(pair => {
+    var id = Removables.length+1;
+    var t = $("<span><br/><input id='focus"+id+
+              "' type='text' value='"+pair.node+
+              "' class='data focus'/> as <input id='inputShape"+id+
+              "' type='text' value='"+pair.shape+
+              "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
+             );
+    addContextMenus("#focus"+id, "#inputShape"+id);
+    Removables.push(t);
+    t.insertBefore($("#removePair"));
+    if (id === 1)
+      $("#removePair").css("visibility", "visible");
+  });
   return false;
 }
 
-function removeNodeShapePair (evt) {
-  var id = Removables.length;
-  Removables.pop().remove();
-  if (id === 1)
-    $("#removePair").css("visibility", "hidden");
+function removeNodeShapePair (evt, howMany) {
+  if (howMany === undefined)
+    howMany = 1;
+  for (var i = 0; i < howMany; ++i) {
+    var id = Removables.length;
+    if (id === 0)
+      break;
+    Removables.pop().remove();
+    if (id === 1)
+      $("#removePair").css("visibility", "hidden");
+  }
   return false;
 }
 
@@ -424,14 +435,26 @@ function updateURL () {
     var parm = input.queryStringParm;
     return parm + "=" + encodeURIComponent(input.location.val());
   });
-  if ($("#focus").val() && $("#inputShape").val())
-    parms.push("shapeMap=" + encodeURIComponent(
-      $("#focus").val() + "^" + $("#inputShape").val()
-    ));
+  var shapeMap = getShapeMap();
+  if (shapeMap.length)
+    parms.push("shapeMap=" + shapeMap.reduce((ret, p) => {
+      return ret.concat([encodeURIComponent(p.node + "^" + p.shape)]);
+    }, []).join(encodeURIComponent("^^")));
   if (iface.interface)
     parms.push("interface="+iface.interface[0]);
   var s = parms.join("&");
   window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+}
+
+function getShapeMap () {
+  var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  return nodes.get().reduce((ret, n, i) => {
+    var inputShape = guessStartingShape($(shapes[i]), InputSchema);
+    var focus = guessStartingNode($(n), InputData);
+    return ret.concat({node: focus, shape: inputShape});
+    // return n.val() && shapes[i].val() ? ret.concat({node: n.val(), shape: shapes[i].val()}) : ret;
+  }, []);
 }
 
 var iface = parseQueryString(location.search);
@@ -443,9 +466,11 @@ if ("shapeMap" in iface) {
         var p = pair.split(/\^/);
         r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
         if (first) {
-          $("#focus").val(p[0]);
-          $("#inputShape").val(p[1]);
+          $("#focus0").val(p[0]);
+          $("#inputShape0").val(p[1]);
           first = false;
+        } else {
+          addNodeShapePair(null, [{node: p[0], shape: p[1]}]);
         }
       });
       return r;
@@ -462,8 +487,8 @@ QueryParams.forEach(input => {
 });
 if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
   $("#title").hide();
-  $("#inputSchema .status").html("schema (<span id=\"dialect\">ShEx</span>)").show();
-  $("#inputData .status").text("data (Turtle:").show();
+  $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
+  $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
   $("#actions").parent().children().not("#actions").hide();
   // $("#actions").parent().hide();
   // $("#results .status").text("results:").show();
@@ -545,30 +570,36 @@ function prepareDemos () {
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -"},
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -"}]},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" },
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]},
         "no subject name": {
           data: clinicalObs.no_subject_name,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" }
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]}
       },
       fails: {
         "bad status": {
           data: clinicalObs.bad_status,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" },
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]},
         "no subject": {
           data: clinicalObs.no_subject,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" },
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]},
         "wrong birthdate datatype": {
           data: clinicalObs.birthdate_datatype,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" }
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]}
       }
     }
   };
@@ -608,7 +639,7 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
-  addContextMenus("#focus", "#inputShape");
+  addContextMenus("#focus0", "#inputShape0");
 }
 function addContextMenus (nodeSelector, shapeSelector) {
   [ { inputSelector: nodeSelector,

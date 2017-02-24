@@ -70,6 +70,7 @@
       }
       h2.status { margin: 0; }
       #addPair, #removePair { text-decoration: none; }
+      #schemaDialect, #dataDialect { font-size: .7em; }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -108,7 +109,7 @@
             <div>
             <button id="validate" style="float:left">validate (ctl-enter)</button>
             <div style="float:left">
-              <input id="focus" type="text" value="" class="data"/> as <input id="inputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/><a id="removePair" href=""> -</a> <a id="addPair" href="">+</a>
+              <input id="focus0" type="text" value="" class="data focus"/> as <input id="inputShape0" type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><a id="removePair" href="" title="remove last node/shape pair"> -</a><a id="addPair" href="" title="add a node/shape pair"> +</a>
             </div>
             </div>
           </div>
