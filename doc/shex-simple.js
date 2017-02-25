@@ -215,7 +215,7 @@ function guessStartingShape (inputSelection, cache) {
       inputSelection.val(candidates[0]);
       return candidates[0];
     } else
-      throw Error("no possible starting shape");
+      return undefined;
   } else {
     return shape;
   }
@@ -231,7 +231,7 @@ function guessStartingNode (inputSelection, cache) {
       inputSelection.val(candidates[0]);
       return candidates[0];
     } else
-      throw Error("no possible starting focus node");
+      return undefined;
   } else
     return focus;
 }
@@ -451,12 +451,22 @@ function updateURL () {
 function getShapeMap () {
   var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  return nodes.get().reduce((ret, n, i) => {
-    var inputShape = guessStartingShape($(shapes[i]), InputSchema);
-    var focus = guessStartingNode($(n), InputData);
-    return ret.concat({node: focus, shape: inputShape});
-    // return n.val() && shapes[i].val() ? ret.concat({node: n.val(), shape: shapes[i].val()}) : ret;
-  }, []);
+  var mapAndErrors = nodes.get().reduce((ret, n, i) => {
+    var node = guessStartingNode($(n), InputData);
+    if (!node)
+      ret.errors.push("node not found: " + $(n).val());
+    var shape = guessStartingShape($(shapes[i]), InputSchema);
+    if (!shape)
+      ret.errors.push("shape not found: " + $(shapes[i]).val());
+    if (node && shape)
+      ret.shapeMap.push({node: node, shape: shape});
+    return ret;
+  }, {shapeMap: [], errors: []});
+  if (mapAndErrors.shapeMap.length > 0)
+    return mapAndErrors.shapeMap;
+  if (mapAndErrors.errors.length) // !! overwritten immediately
+    results.append(mapAndErrors.errors.join("\n"));
+  return [];
 }
 
 function prepareInterface () {
