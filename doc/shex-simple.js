@@ -147,7 +147,7 @@ function load (selector, obj, func, listItems, side, str) {
 
 function clearData () {
   InputData.set("");
-  $("#focus").val("");
+  $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
 }
@@ -155,7 +155,7 @@ function clearData () {
 function clearAll () {
   $("#results .status").hide();
   InputSchema.set("");
-  $("#inputShape").val("");
+  $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
   clearData();
@@ -197,46 +197,43 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
     //    $("input.data").val(getDataNodes()[0]);
-    $("#inputShape").val(dataTest.inputShape); // srcSchema.start in Map-test
-    $("#focus").val(dataTest.focus); // inputNode in Map-test
-
+    // hard-code the first node/shape pair
+    $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
+    $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
+    removeNodeShapePair(null, Infinity);
+    addNodeShapePair(null, dataTest.inputShapeMap.slice(1)); // catch the rest of the shapeMap.
     // validate();
   }
 }
 
-
 // Guess the starting shape.
-function guessStartingShape (inputSelector, cache) {
-  var shape = $(inputSelector).val();
+function guessStartingShape (inputSelection, cache) {
+  var shape = inputSelection.val();
   if (shape === "") {
     var candidates = cache.getShapes();
     if (candidates.length > 0) {
-      $(inputSelector).val(candidates[0]);
-      if (candidates[0] === START_SHAPE_LABEL)
-        return undefined;
-      else
-        return lexToTerm(candidates[0]);
+      inputSelection.val(candidates[0]);
+      return candidates[0];
     } else
       throw Error("no possible starting shape");
-  } else if (shape === START_SHAPE_LABEL)
-    return undefined;
-  else
-    return lexToTerm(shape);
+  } else {
+    return shape;
+  }
 }
 
 
 // Guess the starting focus.
-function guessStartingNode (inputSelector, cache) {
-  var focus = $(inputSelector).val();
+function guessStartingNode (inputSelection, cache) {
+  var focus = inputSelection.val();
   if (focus === "") {
     var candidates = cache.getNodes();;
     if (candidates.length > 0) {
-      $(inputSelector).val(candidates[0]);
-      return lexToTerm(candidates[0]);
+      inputSelection.val(candidates[0]);
+      return candidates[0];
     } else
       throw Error("no possible starting focus node");
   } else
-    return lexToTerm(focus);
+    return focus;
 }
 
 
@@ -288,19 +285,28 @@ function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
   try {
-    var validator = ShExValidator.construct(InputSchema.refresh());
+    var validator = ShExValidator.construct(InputSchema.refresh()
+                    /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
+    $("#schemaDialect").text(InputSchema.language);
     var dataText = InputData.get();
-    if (dataText || $("#focus").val()) {
+    var shapeMap = getShapeMap().map(pair => {
+      return {node: lexToTerm(pair.node), shape: lexToTerm(pair.shape)};
+    });
+    if (dataText || shapeMap.length) {
       parsing = "input data";
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
-      var inputShape = guessStartingShape("#inputShape", InputSchema);
-      var focus = guessStartingNode("#focus", InputData);
 
-      var ret = validator.validate(inputData, focus, inputShape);
+      var ret = validator.validate(inputData, shapeMap);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
-      var res = results.replace(JSON.stringify(ret, null, "  "));
+      var text =
+            "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
+            ("errors" in ret ?
+             ShExUtil.errsToSimple(ret).join("\n") :
+             JSON.stringify(ShExUtil.valToSimple(ret), null, 2)) :
+          JSON.stringify(ret, null, "  ");
+      var res = results.replace(text);
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
@@ -347,32 +353,162 @@ function validate () {
   }
 }
 
-$("#inputData .passes, #inputData .fails").hide();
-$("#inputData .passes ul, #inputData .fails ul").empty();
-$("#validate").on("click", disableResultsAndValidate);
-$("#clear").on("click", clearAll);
-
-// Prepare file uploads
-$("input.inputfile").each((idx, elt) => {
-  $(elt).on("change", function (evt) {
-    var reader = new FileReader();
-
-    reader.onload = function(evt) {
-      if(evt.target.readyState != 2) return;
-      if(evt.target.error) {
-        alert("Error while reading file");
-        return;
-      }
-      $($(elt).attr("data-target")).val(evt.target.result);
-    };
-
-    reader.readAsText(evt.target.files[0]);
+var Removables = [];
+function addNodeShapePair (evt, pairs) {
+  if (pairs === undefined)
+    pairs = [{node: "", shape: ""}];
+  pairs.forEach(pair => {
+    var id = Removables.length+1;
+    var t = $("<span><br/><input id='focus"+id+
+              "' type='text' value='"+pair.node+
+              "' class='data focus'/> as <input id='inputShape"+id+
+              "' type='text' value='"+pair.shape+
+              "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
+             );
+    addContextMenus("#focus"+id, "#inputShape"+id);
+    Removables.push(t);
+    t.insertBefore($("#removePair"));
+    if (id === 1)
+      $("#removePair").css("visibility", "visible");
   });
-});
+  return false;
+}
 
-// Prepare drag and drop into text areas
-// (hiding variables in their own function scope).
-(function () {
+function removeNodeShapePair (evt, howMany) {
+  if (howMany === undefined)
+    howMany = 1;
+  for (var i = 0; i < howMany; ++i) {
+    var id = Removables.length;
+    if (id === 0)
+      break;
+    Removables.pop().remove();
+    if (id === 1)
+      $("#removePair").css("visibility", "hidden");
+  }
+  return false;
+}
+
+function prepareConstrols () {
+  $("#inputData .passes, #inputData .fails").hide();
+  $("#inputData .passes ul, #inputData .fails ul").empty();
+  $("#validate").on("click", disableResultsAndValidate);
+  $("#clear").on("click", clearAll);
+  $("#addPair").on("click", addNodeShapePair);
+  $("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
+
+  // Prepare file uploads
+  $("input.inputfile").each((idx, elt) => {
+    $(elt).on("change", function (evt) {
+      var reader = new FileReader();
+
+      reader.onload = function(evt) {
+        if(evt.target.readyState != 2) return;
+        if(evt.target.error) {
+          alert("Error while reading file");
+          return;
+        }
+        $($(elt).attr("data-target")).val(evt.target.result);
+      };
+
+      reader.readAsText(evt.target.files[0]);
+    });
+  });
+}
+
+/**
+ *
+ * location.search: e.g. "?schema=asdf&data=qwer&shapeMap=ab%5Ecd%5E%5E_ef%5Egh"
+ */
+var parseQueryString = function(query) {
+  if (query[0]==='?') query=query.substr(1); // optional leading '?'
+  var map   = {};
+  query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, function(match, key, value) {
+    key=decodeURIComponent(key);value=decodeURIComponent(value);
+    (map[key] = map[key] || []).push(value);
+  });
+  return map;
+};
+
+/**
+ * update location with a current values of some inputs
+ */
+function updateURL () {
+  var parms = QueryParams.map(input => {
+    var parm = input.queryStringParm;
+    return parm + "=" + encodeURIComponent(input.location.val());
+  });
+  var shapeMap = getShapeMap();
+  if (shapeMap.length)
+    parms.push("shapeMap=" + shapeMap.reduce((ret, p) => {
+      return ret.concat([encodeURIComponent(p.node + "^" + p.shape)]);
+    }, []).join(encodeURIComponent("^^")));
+  if (iface.interface)
+    parms.push("interface="+iface.interface[0]);
+  var s = parms.join("&");
+  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+}
+
+function getShapeMap () {
+  var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  return nodes.get().reduce((ret, n, i) => {
+    var inputShape = guessStartingShape($(shapes[i]), InputSchema);
+    var focus = guessStartingNode($(n), InputData);
+    return ret.concat({node: focus, shape: inputShape});
+    // return n.val() && shapes[i].val() ? ret.concat({node: n.val(), shape: shapes[i].val()}) : ret;
+  }, []);
+}
+
+function prepareInterface () {
+  var iface = parseQueryString(location.search);
+  if ("shapeMap" in iface) {
+    var first = true;
+    iface.shapeMap = iface.shapeMap.reduce(
+      (r, b) => {
+        b.split(/\^\^/).forEach(pair => {
+          var p = pair.split(/\^/);
+          r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
+          if (first) {
+            $("#focus0").val(p[0]);
+            $("#inputShape0").val(p[1]);
+            first = false;
+          } else {
+            addNodeShapePair(null, [{node: p[0], shape: p[1]}]);
+          }
+        });
+        return r;
+      }, {});
+  }
+  var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
+                     {queryStringParm: "data", location: $("#inputData textarea")}];
+  QueryParams.forEach(input => {
+    var parm = input.queryStringParm;
+    if (parm in iface)
+      iface[parm].forEach(text => {
+        input.location.val(input.location.val() + text);
+      });
+  });
+  if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
+    $("#title").hide();
+    $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
+    $("#actions").parent().children().not("#actions").hide();
+    // $("#actions").parent().hide();
+    // $("#results .status").text("results:").show();
+  }
+  if ("schema" in iface && iface.schema.reduce((r, elt) => {
+    return r+elt.length;
+  }, 0)) {
+    validate();
+  }
+  $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
+  return iface;
+}
+
+/**
+ * Prepare drag and drop into text areas
+ */
+function prepareDragAndDrop () {
   var _scma = $("#inputSchema textarea");
   var _data = $("#inputData textarea");
   var _body = $("body");
@@ -397,36 +533,35 @@ $("input.inputfile").each((idx, elt) => {
           readfiles(e.originalEvent.dataTransfer.files, desc.targets);
         });
     });
-})();
+  function readfiles(files, targets) {
+    var formData = new FormData();
 
-function readfiles(files, targets) {
-  var formData = new FormData();
-
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i], name = file.name;
-    var target = targets.reduce((ret, elt) => {
-      return ret ? ret :
-        name.endsWith(elt.ext) ? elt.target :
-        null;
-    }, null);
-    if (target) {
-      formData.append("file", file);
-      var reader = new FileReader();
-      reader.onload = (function (target) {
-        return function (event) {
-          var appendTo = $("#append").is(":checked") ? target.get() : "";
-          target.set(appendTo + event.target.result);
-        };
-      })(target);
-      reader.readAsText(file);
-    } else {
-      results.append("don't know what to do with " + name + "\n");
+    for (var i = 0; i < files.length; i++) {
+      var file = files[i], name = file.name;
+      var target = targets.reduce((ret, elt) => {
+        return ret ? ret :
+          name.endsWith(elt.ext) ? elt.target :
+          null;
+      }, null);
+      if (target) {
+        formData.append("file", file);
+        var reader = new FileReader();
+        reader.onload = (function (target) {
+          return function (event) {
+            var appendTo = $("#append").is(":checked") ? target.get() : "";
+            target.set(appendTo + event.target.result);
+          };
+        })(target);
+        reader.readAsText(file);
+      } else {
+        results.append("don't know what to do with " + name + "\n");
+      }
     }
-  }
 
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
-  xhr.send(formData);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
+    xhr.send(formData);
+  }
 }
 
 // prepareDemos() is invoked after these variables are assigned:
@@ -438,30 +573,36 @@ function prepareDemos () {
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -"},
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -"}]},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" },
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]},
         "no subject name": {
           data: clinicalObs.no_subject_name,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" }
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]}
       },
       fails: {
         "bad status": {
           data: clinicalObs.bad_status,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" },
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]},
         "no subject": {
           data: clinicalObs.no_subject,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" },
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]},
         "wrong birthdate datatype": {
           data: clinicalObs.birthdate_datatype,
-          focus: "<http://a.example/Obs1>",
-          inputShape: "- start -" }
+          inputShapeMap: [{
+            node: "<http://a.example/Obs1>",
+            shape: "- start -" }]}
       }
     }
   };
@@ -501,11 +642,13 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
-  [ { inputSelector: "#inputShape",
-      getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: "#focus",
-      schema: { "S1": {}, "S2": {} },
-      getItems: function () { return InputData.getNodes(); } }
+  addContextMenus("#focus0", "#inputShape0");
+}
+function addContextMenus (nodeSelector, shapeSelector) {
+  [ { inputSelector: nodeSelector,
+      getItems: function () { return InputData.getNodes(); } },
+    { inputSelector: shapeSelector,
+      getItems: function () { return InputSchema.getShapes(); } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.inputSelector,
@@ -602,8 +745,6 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <Patient2>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
-
-prepareDemos();
 
 ShExRSchema = `PREFIX sx: <http://shex.io/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -759,4 +900,9 @@ start=@<Schema>
   rdf:first @<valueSetValue> ;
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
+
+prepareConstrols();
+var iface = prepareInterface();
+prepareDragAndDrop();
+prepareDemos();
 

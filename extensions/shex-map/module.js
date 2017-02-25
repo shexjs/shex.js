@@ -102,7 +102,7 @@ function materializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = shape || schema.start;
+      shape = shape && shape !== "- start -"? { type: "ShapeRef", reference: shape } : schema.start;
       target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
