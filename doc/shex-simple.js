@@ -388,30 +388,32 @@ function removeNodeShapePair (evt, howMany) {
   return false;
 }
 
-$("#inputData .passes, #inputData .fails").hide();
-$("#inputData .passes ul, #inputData .fails ul").empty();
-$("#validate").on("click", disableResultsAndValidate);
-$("#clear").on("click", clearAll);
-$("#addPair").on("click", addNodeShapePair);
-$("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
+function prepareConstrols () {
+  $("#inputData .passes, #inputData .fails").hide();
+  $("#inputData .passes ul, #inputData .fails ul").empty();
+  $("#validate").on("click", disableResultsAndValidate);
+  $("#clear").on("click", clearAll);
+  $("#addPair").on("click", addNodeShapePair);
+  $("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
 
-// Prepare file uploads
-$("input.inputfile").each((idx, elt) => {
-  $(elt).on("change", function (evt) {
-    var reader = new FileReader();
+  // Prepare file uploads
+  $("input.inputfile").each((idx, elt) => {
+    $(elt).on("change", function (evt) {
+      var reader = new FileReader();
 
-    reader.onload = function(evt) {
-      if(evt.target.readyState != 2) return;
-      if(evt.target.error) {
-        alert("Error while reading file");
-        return;
-      }
-      $($(elt).attr("data-target")).val(evt.target.result);
-    };
+      reader.onload = function(evt) {
+        if(evt.target.readyState != 2) return;
+        if(evt.target.error) {
+          alert("Error while reading file");
+          return;
+        }
+        $($(elt).attr("data-target")).val(evt.target.result);
+      };
 
-    reader.readAsText(evt.target.files[0]);
+      reader.readAsText(evt.target.files[0]);
+    });
   });
-});
+}
 
 /**
  *
@@ -457,49 +459,51 @@ function getShapeMap () {
   }, []);
 }
 
-var iface = parseQueryString(location.search);
-if ("shapeMap" in iface) {
-  var first = true;
-  iface.shapeMap = iface.shapeMap.reduce(
-    (r, b) => {
-      b.split(/\^\^/).forEach(pair => {
-        var p = pair.split(/\^/);
-        r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
-        if (first) {
-          $("#focus0").val(p[0]);
-          $("#inputShape0").val(p[1]);
-          first = false;
-        } else {
-          addNodeShapePair(null, [{node: p[0], shape: p[1]}]);
-        }
+function prepareInterface () {
+  var iface = parseQueryString(location.search);
+  if ("shapeMap" in iface) {
+    var first = true;
+    iface.shapeMap = iface.shapeMap.reduce(
+      (r, b) => {
+        b.split(/\^\^/).forEach(pair => {
+          var p = pair.split(/\^/);
+          r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
+          if (first) {
+            $("#focus0").val(p[0]);
+            $("#inputShape0").val(p[1]);
+            first = false;
+          } else {
+            addNodeShapePair(null, [{node: p[0], shape: p[1]}]);
+          }
+        });
+        return r;
+      }, {});
+  }
+  var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
+                     {queryStringParm: "data", location: $("#inputData textarea")}];
+  QueryParams.forEach(input => {
+    var parm = input.queryStringParm;
+    if (parm in iface)
+      iface[parm].forEach(text => {
+        input.location.val(input.location.val() + text);
       });
-      return r;
-    }, {});
+  });
+  if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
+    $("#title").hide();
+    $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
+    $("#actions").parent().children().not("#actions").hide();
+    // $("#actions").parent().hide();
+    // $("#results .status").text("results:").show();
+  }
+  if ("schema" in iface && iface.schema.reduce((r, elt) => {
+    return r+elt.length;
+  }, 0)) {
+    validate();
+  }
+  $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
+  return iface;
 }
-var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                   {queryStringParm: "data", location: $("#inputData textarea")}];
-QueryParams.forEach(input => {
-   var parm = input.queryStringParm;
-   if (parm in iface)
-     iface[parm].forEach(text => {
-       input.location.val(input.location.val() + text);
-     });
-});
-if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
-  $("#title").hide();
-  $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
-  $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
-  $("#actions").parent().children().not("#actions").hide();
-  // $("#actions").parent().hide();
-  // $("#results .status").text("results:").show();
-}
-if ("schema" in iface && iface.schema.reduce((r, elt) => {
-  return r+elt.length;
-}, 0)) {
-  validate();
-}
-$("#inputSchema textarea").prev().add("#title").on("click", updateURL);
-
 
 /**
  * Prepare drag and drop into text areas
@@ -559,7 +563,6 @@ function prepareDragAndDrop () {
     xhr.send(formData);
   }
 }
-prepareDragAndDrop();
 
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs = {};
@@ -743,8 +746,6 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
 
-prepareDemos();
-
 ShExRSchema = `PREFIX sx: <http://shex.io/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -899,4 +900,9 @@ start=@<Schema>
   rdf:first @<valueSetValue> ;
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
+
+prepareConstrols();
+var iface = prepareInterface();
+prepareDragAndDrop();
+prepareDemos();
 
