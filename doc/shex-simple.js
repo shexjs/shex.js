@@ -429,25 +429,6 @@ var parseQueryString = function(query) {
   return map;
 };
 
-/**
- * update location with a current values of some inputs
- */
-function updateURL () {
-  var parms = QueryParams.map(input => {
-    var parm = input.queryStringParm;
-    return parm + "=" + encodeURIComponent(input.location.val());
-  });
-  var shapeMap = getShapeMap();
-  if (shapeMap.length)
-    parms.push("shapeMap=" + shapeMap.reduce((ret, p) => {
-      return ret.concat([encodeURIComponent(p.node + "^" + p.shape)]);
-    }, []).join(encodeURIComponent("^^")));
-  if (iface.interface)
-    parms.push("interface="+iface.interface[0]);
-  var s = parms.join("&");
-  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
-}
-
 function getShapeMap () {
   var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
@@ -511,6 +492,26 @@ function prepareInterface () {
   }
   $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
   return iface;
+
+  /**
+   * update location with a current values of some inputs
+   */
+  function updateURL () {
+    var parms = QueryParams.map(input => {
+      var parm = input.queryStringParm;
+      return parm + "=" + encodeURIComponent(input.location.val());
+    });
+    var shapeMap = getShapeMap();
+    if (shapeMap.length)
+      parms.push("shapeMap=" + shapeMap.reduce((ret, p) => {
+        return ret.concat([encodeURIComponent(p.node + "^" + p.shape)]);
+      }, []).join(encodeURIComponent("^^")));
+    if (iface.interface)
+      parms.push("interface="+iface.interface[0]);
+    var s = parms.join("&");
+    window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+  }
+
 }
 
 /**
