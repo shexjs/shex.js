@@ -448,7 +448,14 @@ function getShapeMap () {
   return mapAndErrors.shapeMap;
 }
 
+/**
+ * Load URL search parameters
+ */
 function prepareInterface () {
+  // don't overwrite if we arrived here from going back for forth in history
+  if ($("#inputSchema textarea").val() !== "" || $("#inputData textarea").val() !== "")
+    return;
+
   var iface = parseQueryString(location.search);
   if ("shapeMap" in iface) {
     var first = true;
@@ -468,6 +475,7 @@ function prepareInterface () {
         return r;
       }, {});
   }
+
   var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
                      {queryStringParm: "data", location: $("#inputData textarea")}];
   QueryParams.forEach(input => {
