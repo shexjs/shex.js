@@ -448,6 +448,7 @@ function getShapeMap () {
   return mapAndErrors.shapeMap;
 }
 
+var iface = null; // needed by validate before prepareInterface returns.
 /**
  * Load URL search parameters
  */
@@ -456,7 +457,7 @@ function prepareInterface () {
   if ($("#inputSchema textarea").val() !== "" || $("#inputData textarea").val() !== "")
     return;
 
-  var iface = parseQueryString(location.search);
+  iface = parseQueryString(location.search);
   if ("shapeMap" in iface) {
     var first = true;
     iface.shapeMap = iface.shapeMap.reduce(
@@ -499,7 +500,6 @@ function prepareInterface () {
     validate();
   }
   $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
-  return iface;
 
   /**
    * update location with a current values of some inputs
@@ -919,7 +919,7 @@ start=@<Schema>
 }`;
 
 prepareConstrols();
-var iface = prepareInterface();
+prepareInterface();
 prepareDragAndDrop();
 prepareDemos();
 
