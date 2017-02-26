@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx2 Simple Online Validator</title>
+    <title>ShEx2 — Simple Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
     <style>
       h1 { font-size: 1.3em; }
@@ -34,7 +34,6 @@
       #actions {
         float:right;
         margin-right: .1em;
-        height: 2.6ex;
       }
       /* #actions input { height: 1.5ex; }  */
       /* #actions button { height: 2.5ex; } */
@@ -69,6 +68,9 @@
         margin: 0 .4em;
         vertical-align: top;
       }
+      h2.status { margin: 0; }
+      #addPair, #removePair { text-decoration: none; }
+      #schemaDialect, #dataDialect { font-size: .7em; }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -78,8 +80,8 @@
 
   <body>
 
-    <div>
-      <h1 style="float:left;">ShEx2 Simple Online Validator</h1>
+    <div id="title">
+      <h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <ul id="navlist" style="float:left; padding-left: 1em;">
         <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li>
         <li>‣ <span class="heading">controls:</span> <input type="checkbox" id="append"/><label for="append">drop appends</label> | <label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select> </li>
@@ -92,24 +94,31 @@
 
     <div id="inputarea">
       <div id="inputSchema" class="panel">
-        <p class="status"> </p>
+        <h2 class="status"> </h2>
         <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
         <div>
           <div style="float:left">
             <p>Examples:</p>
+            <div class="examples">
+              <ul>
+                <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
+              </ul>
+            </div>
           </div>
-          <div id="actions" style="float:right; margin-right: .1em;">
-            <button id="validate">validate (ctl-enter)</button> <input id="focus" type="text" value="" class="data"/> as <input id="inputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/>
+          <div id="actions" style="margin-right: .1em;">
+            <div>
+            <button id="validate" style="float:left">validate (ctl-enter)</button>
+            <div style="float:left">
+              <input id="focus0" type="text" value="" class="data focus"/> as <input id="inputShape0" type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><a id="removePair" href="" title="remove last node/shape pair"> -</a><a id="addPair" href="" title="add a node/shape pair"> +</a>
+            </div>
+            </div>
           </div>
-          <div class="examples" style="clear:both;">
-            <ul>
-              <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
-            </ul>
+          <div style="clear:both;">
           </div>
         </div>
       </div>
       <div id="inputData" class="panel">
-        <p class="status"> </p>
+        <h2 class="status"> </h2>
         <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
         <div style="margin-left: .1em;">
           <div class="passes" style="float:left">
@@ -127,7 +136,7 @@
       </div>
     </div>
     <div id="results">
-      <p class="status"> </p>
+      <h2 class="status"> </h2>
       <textarea disabled="disabled"></textarea>
     </div>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
