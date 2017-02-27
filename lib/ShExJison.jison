@@ -327,7 +327,7 @@
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" alread defined");
+        error("Parse error: "+label+" already defined");
     } else
       Parser.shapes[label] = shape;
   }
@@ -342,7 +342,7 @@
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" alread defined");
+        error("Parse error: "+label+" already defined");
     } else
       Parser.productions[label] = production;
   }
@@ -601,12 +601,12 @@ notStartAction:
 start:
       // IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C	{
       //   if (Parser.start)
-      //     error("Parse error: start alread defined as " + Parser.start);
+      //     error("Parse error: start already defined as " + Parser.start);
       //   Parser.start = $3; // t: startInline
       // }
       IT_start '=' shapeExpression	{
         if (Parser.start)
-          error("Parse error: start alread defined");
+          error("Parse error: start already defined");
         Parser.start = $3; // t: startInline
       }
     ;
