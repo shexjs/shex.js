@@ -10,17 +10,23 @@ var ShExRSchema; // defined below
 
 
 // utility functions
-function parseTurtle (text) {
+function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
-  ret.addTriples(N3Parser({documentIRI:Base}).parse(text));
+  var parser = N3Parser({documentIRI:Base});
+  ret.addTriples(parser.parse(text));
+  meta.base = parser._base;
+  meta.prefixes = parser._prefixes;
   return ret;
 }
 
 var shexParser = ShExParser.construct(Base);
-function parseShEx (text) {
+function parseShEx (text, meta) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
-  return shexParser.parse(text);
+  var ret = shexParser.parse(text);
+  meta.base = ret.base;
+  meta.prefixes = ret.prefixes;
+  return ret;
 }
 
 function sum (s) { // cheap way to identify identical strings
@@ -70,9 +76,7 @@ function _makeCache (parseSelector) {
 
 function makeSchemaCache (parseSelector) {
   var ret = _makeCache(parseSelector);
-  ret.parse = function (text) {
-    return parseTurtle(text);
-  };
+  ret.meta = {};
   var graph = null;
   ret.language = null;
   ret.parse = function (text) {
@@ -83,16 +87,16 @@ function makeSchemaCache (parseSelector) {
       graph ? "ShExR" :
       "ShExC";
     $("#results .status").text("parsing "+this.language+" schema...").show();
-    var ret =
-        isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
-        graph ? parseShExR() :
-        parseShEx(text);
+    var schema =
+          isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
+          graph ? parseShExR() :
+          parseShEx(text, ret.meta);
     $("#results .status").hide();
-    return ret;
+    return schema;
 
     function tryN3 (text) {
       try {
-        return text.match(/^\s*$/) ? null : parseTurtle (text); // interpret empty schema as ShExC
+        return text.match(/^\s*$/) ? null : parseTurtle (text, ret.meta); // interpret empty schema as ShExC
       } catch (e) {
         return null;
       }
@@ -119,8 +123,9 @@ function makeSchemaCache (parseSelector) {
 
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
+  ret.meta = {};
   ret.parse = function (text) {
-    return parseTurtle(text);
+    return parseTurtle(text, ret.meta);
   };
   ret.getNodes = function () {
     var data = this.refresh();
@@ -204,36 +209,6 @@ function pickData (name, dataTest, elt, listItems, side) {
     addNodeShapePair(null, dataTest.inputShapeMap.slice(1)); // catch the rest of the shapeMap.
     // validate();
   }
-}
-
-// Guess the starting shape.
-function guessStartingShape (inputSelection, cache) {
-  var shape = inputSelection.val();
-  if (shape === "") {
-    var candidates = cache.getShapes();
-    if (candidates.length > 0) {
-      inputSelection.val(candidates[0]);
-      return candidates[0];
-    } else
-      return undefined;
-  } else {
-    return shape;
-  }
-}
-
-
-// Guess the starting focus.
-function guessStartingNode (inputSelection, cache) {
-  var focus = inputSelection.val();
-  if (focus === "") {
-    var candidates = cache.getNodes();;
-    if (candidates.length > 0) {
-      inputSelection.val(candidates[0]);
-      return candidates[0];
-    } else
-      return undefined;
-  } else
-    return focus;
 }
 
 
@@ -433,10 +408,27 @@ function getShapeMap () {
   var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
-    var node = guessStartingNode($(n), InputData);
-    if (!node)
+
+  var node = "node-type" in iface ?
+	ShExUtil.someNodeWithType(
+	  ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
+				   label => { return (InputData.refresh().findByIRI(null, RDF_TYPE, label).length > 0); },
+				   loaded.data.prefixes)) :
+      ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => { return InputData.refresh().findByIRI(null, null, null)[0].subject; },
+                               label => {
+                                 return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
+                                         InputData.refresh().findByIRI(null, null, label).length > 0);
+                               });
+
+    if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
       ret.errors.push("node not found: " + $(n).val());
-    var shape = guessStartingShape($(shapes[i]), InputSchema);
+    var shape =
+	  ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
+                                   (label) => {
+				     return label in InputSchema.refresh().shapes;
+				   });
+    if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
+      throw Error("shape " + $(shapes[i]).val() + " not defined");
     if (!shape)
       ret.errors.push("shape not found: " + $(shapes[i]).val());
     if (node && shape)
