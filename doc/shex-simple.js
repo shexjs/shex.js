@@ -263,10 +263,11 @@ function validate () {
     var validator = ShExValidator.construct(InputSchema.refresh()
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     $("#schemaDialect").text(InputSchema.language);
-    var dataText = InputData.get();
+    InputData.refresh(); // for prefixes for getShapeMap
     var shapeMap = getShapeMap().map(pair => {
       return {node: lexToTerm(pair.node), shape: lexToTerm(pair.shape)};
     });
+    var dataText = InputData.get();
     if (dataText || shapeMap.length) {
       parsing = "input data";
       $("#results .status").text("parsing data...").show();
@@ -409,16 +410,21 @@ function getShapeMap () {
   var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
 
-  var node = "node-type" in iface ?
-	ShExUtil.someNodeWithType(
-	  ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
-				   label => { return (InputData.refresh().findByIRI(null, RDF_TYPE, label).length > 0); },
-				   loaded.data.prefixes)) :
-      ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => { return InputData.refresh().findByIRI(null, null, null)[0].subject; },
-                               label => {
-                                 return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
-                                         InputData.refresh().findByIRI(null, null, label).length > 0);
-                               });
+    var node = "node-type" in iface ?
+	  ShExUtil.someNodeWithType(
+	    ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
+				     label => {
+				       return (InputData.refresh().
+					       findByIRI(null, RDF_TYPE, label).length > 0);
+				     },
+				     loaded.data.prefixes)) :
+	ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
+	  return InputData.refresh().findByIRI(null, null, null)[0].subject;
+	},
+				 label => {
+                                   return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
+                                           InputData.refresh().findByIRI(null, null, label).length > 0);
+				 });
 
     if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
       ret.errors.push("node not found: " + $(n).val());
