@@ -393,7 +393,7 @@ function prepareConstrols () {
 
 /**
  *
- * location.search: e.g. "?schema=asdf&data=qwer&shapeMap=ab%5Ecd%5E%5E_ef%5Egh"
+ * location.search: e.g. "?schema=asdf&data=qwer&shape-map=ab%5Ecd%5E%5E_ef%5Egh"
  */
 var parseQueryString = function(query) {
   if (query[0]==='?') query=query.substr(1); // optional leading '?'
@@ -456,19 +456,27 @@ function prepareInterface () {
     return;
 
   iface = parseQueryString(location.search);
-  if ("shapeMap" in iface) {
+  if ("shape-map" in iface) {
+    var shapeMap =  iface["shape-map"];
+    delete iface["shape-map"];
     var first = true;
-    iface.shapeMap = iface.shapeMap.reduce(
+    //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
+    var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
+    var pairPattern = s + "@" + s + ",?";
+    iface.shapeMap = shapeMap.reduce(
       (r, b) => {
-        b.split(/\^\^/).forEach(pair => {
-          var p = pair.split(/\^/);
-          r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
+        // test: b = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
+        var pairs = b.match(RegExp(pairPattern, "g"));
+        pairs.map(r2 => {
+          var p = r2.match(RegExp(pairPattern));
+          var node = p[1], shape = p[2];
+          r[node] = node in r ? r[node].concat(shape) : [shape];
           if (first) {
-            $("#focus0").val(p[0]);
-            $("#inputShape0").val(p[1]);
+            $("#focus0").val(node);
+            $("#inputShape0").val(shape);
             first = false;
           } else {
-            addNodeShapePair(null, [{node: p[0], shape: p[1]}]);
+            addNodeShapePair(null, [{node: node, shape: shape}]);
           }
         });
         return r;
