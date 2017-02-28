@@ -628,7 +628,7 @@ statement:
     ;
 
 shapeExprDecl:
-    shapeLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+    shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
         addShape($1,  $2);
       }
 
@@ -790,7 +790,7 @@ shapeOrRef:
         $1 = $1.substr(1, $1.length-1);
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
       }
-    | '@' shapeLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 inlineShapeOrRef:
@@ -804,7 +804,7 @@ inlineShapeOrRef:
         $1 = $1.substr(1, $1.length-1);
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
       }
-    | '@' shapeLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 nodeConstraint:
@@ -1040,14 +1040,14 @@ _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus:
     ;
 
 unaryTripleExpr:
-      productionLabel tripleConstraint	{
-        $$ = extend({ id: $1 }, $2);
-        addProduction($1,  $$);
+      '$' tripleExprLabel tripleConstraint	{
+        $$ = extend({ id: $2 }, $3);
+        addProduction($2,  $$);
       }
     | tripleConstraint	
-    | productionLabel bracketedTripleExpr	{
-        $$ = extend({ id: $1 }, $2);
-        addProduction($1,  $$);
+    | '$' tripleExprLabel bracketedTripleExpr	{
+        $$ = extend({ id: $2 }, $3);
+        addProduction($2,  $$);
       }
     | bracketedTripleExpr	
     | valueConstraint	
@@ -1069,11 +1069,6 @@ bracketedTripleExpr:
 _Qcardinality_E_Opt:
       	-> {} // t: 1dot
     | cardinality	// t: 1cardOpt
-    ;
-
-productionLabel:
-      '$' iri	-> $2 // t: 1val1vcrefIRIREF
-    | '$' blankNode	-> $2 // t: 1val1vcrefbnode
     ;
 
 tripleConstraint:
@@ -1177,7 +1172,7 @@ exclusion:
     ;
 
 include:
-      '&' shapeLabel	-> { type: "Inclusion", "include": $2 } // t: 2groupInclude1
+      '&' tripleExprLabel	-> { type: "Inclusion", "include": $2 } // t: 2groupInclude1
     ;
 
 annotation:
@@ -1222,9 +1217,14 @@ predicate:
 datatype:
       iri       ;
 
-shapeLabel:
+shapeExprLabel:
       iri	// t: 1dot
     | blankNode	// t: 1dotInline1
+    ;
+
+tripleExprLabel:
+      iri	// t: 1val1vcrefIRIREF
+    | blankNode	// t: 1val1vcrefbnode
     ;
 
 numericLiteral:
@@ -1257,11 +1257,11 @@ blankNode:
     ;
 
 includeSet:
-      '&' _QshapeLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      '&' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
     ;
 
-_QshapeLabel_E_Plus:
-      shapeLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
-    | _QshapeLabel_E_Plus shapeLabel	-> appendTo($1, $2) // t: 1dotInherit3
+_QshapeExprLabel_E_Plus:
+      shapeExprLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+    | _QshapeExprLabel_E_Plus shapeExprLabel	-> appendTo($1, $2) // t: 1dotInherit3
     ;
 
