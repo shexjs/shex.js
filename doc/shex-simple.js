@@ -870,7 +870,7 @@ start=@<Schema>
 <OneOf> CLOSED {
   a [sx:OneOf] ;
   sx:min xsd:integer? ;
-  sx:max xsd:integer OR [sx:INF]? ;
+  sx:max xsd:integer OR [sx:unbounded]? ;
   sx:expressions @<tripleExpressionList2Plus> ;
   sx:semActs @<SemActList1Plus>? ;
   sx:annotation @<Annotation>*
@@ -879,7 +879,7 @@ start=@<Schema>
 <EachOf> CLOSED {
   a [sx:EachOf] ;
   sx:min xsd:integer? ;
-  sx:max xsd:integer OR [sx:INF]? ;
+  sx:max xsd:integer OR [sx:unbounded]? ;
   sx:expressions @<tripleExpressionList2Plus> ;
   sx:semActs @<SemActList1Plus>? ;
   sx:annotation @<Annotation>*
@@ -899,7 +899,7 @@ start=@<Schema>
   sx:inverse [true false]? ;
   sx:negated [true false]? ;
   sx:min xsd:integer? ;
-  sx:max xsd:integer OR [sx:INF]? ;
+  sx:max xsd:integer OR [sx:unbounded]? ;
   sx:predicate IRI ;
   sx:valueExpr @<shapeExpr>? ;
   sx:semActs @<SemActList1Plus>? ;

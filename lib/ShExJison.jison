@@ -1097,8 +1097,8 @@ tripleConstraint:
 //     | senseFlags     ;
 
 cardinality:
-      '*'	-> { min:0, max:"INF" } // t: 1cardStar
-    | '+'	-> { min:1, max:"INF" } // t: 1cardPlus
+      '*'	-> { min:0, max:"unbounded" } // t: 1cardStar
+    | '+'	-> { min:1, max:"unbounded" } // t: 1cardPlus
     | '?'	-> { min:0, max:1 } // t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
@@ -1109,7 +1109,7 @@ cardinality:
         else if ($1.indexOf(',') === -1) // t: 1card2
             $$["max"] = parseInt(nums[0], 10);
         else
-            $$["max"] = "INF";
+            $$["max"] = "unbounded";
       }
     ;
 
