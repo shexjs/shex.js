@@ -122,7 +122,7 @@
                                 | "PATTERN" string
                                 | '~' string  # shortcut for "PATTERN"
 [26]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[27]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
+[27]    numericFacet          ::= numericRange numericLiteral
                                 | numericLength INTEGER
 [28]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [29]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
