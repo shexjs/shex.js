@@ -411,28 +411,29 @@ function getShapeMap () {
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
 
     var node = "node-type" in iface ?
-	  ShExUtil.someNodeWithType(
-	    ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
-				     label => {
-				       return (InputData.refresh().
-					       findByIRI(null, RDF_TYPE, label).length > 0);
-				     },
-				     loaded.data.prefixes)) :
-	ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
-	  return InputData.refresh().findByIRI(null, null, null)[0].subject;
-	},
-				 label => {
+          ShExUtil.someNodeWithType(
+            ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
+                                     label => {
+                                       return (InputData.refresh().
+                                               findByIRI(null, RDF_TYPE, label).length > 0);
+                                     },
+                                     loaded.data.prefixes)) :
+        ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
+          var triples = InputData.refresh().findByIRI(null, null, null);
+          return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
+        },
+                                 label => {
                                    return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
                                            InputData.refresh().findByIRI(null, null, label).length > 0);
-				 });
+                                 });
 
     if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
       ret.errors.push("node not found: " + $(n).val());
     var shape =
-	  ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
+          ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
                                    (label) => {
-				     return label in InputSchema.refresh().shapes;
-				   });
+                                     return label in InputSchema.refresh().shapes;
+                                   });
     if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
       throw Error("shape " + $(shapes[i]).val() + " not defined");
     if (!shape)
