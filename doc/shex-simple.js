@@ -518,9 +518,9 @@ function prepareInterface () {
     });
     var shapeMap = getShapeMap();
     if (shapeMap.length)
-      parms.push("shapeMap=" + shapeMap.reduce((ret, p) => {
-        return ret.concat([encodeURIComponent(p.node + "^" + p.shape)]);
-      }, []).join(encodeURIComponent("^^")));
+      parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
+        return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
+      }, []).join(encodeURIComponent(",")));
     if (iface.interface)
       parms.push("interface="+iface.interface[0]);
     var s = parms.join("&");
