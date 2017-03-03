@@ -273,19 +273,32 @@
         }
         else {
           var replacement = replacements[escapedChar];
-          if (!replacement) throw new Error();
+          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
           return replacement;
         }
       });
       return string;
     }
-    catch (error) { return ''; }
+    catch (error) { console.warn(error); return ''; }
   };
 
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
     return unescape(string, stringEscapeSequence, stringEscapeReplacements);
+  }
+
+  // Translates regular expression escape codes in the string into their textual equivalent
+  function unescapeRegexp (regexp) {
+    var end = regexp.lastIndexOf("/");
+    var s = regexp.substr(2, end-2);
+    s = s.replace(/\\\//g, "/");
+    var ret = {
+      pattern: unescape(s, stringEscapeSequence, stringEscapeReplacements)
+    };
+    if (regexp.length > end+1)
+      ret.flags = regexp.substr(end+1);
+    return ret;
   }
 
   // Convenience function to return object with p1 key, value p2
@@ -376,7 +389,6 @@ IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_BNODE                [Bb][Nn][Oo][Dd][Ee]
 IT_IRI                  [Ii][Rr][Ii]
 IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
-IT_PATTERN              [Pp][Aa][Tt][Tt][Ee][Rr][Nn]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
 IT_NOT                  [No][Oo][Tt]
@@ -401,6 +413,7 @@ WS                      (" ")|(("\t")|(("\r")|("\n")))
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
+REGEXP                  '~/' ([^\u002f\u005C\u00A\u00D] | '\\' [tbnrf\\/] | {UCHAR})* '/' [smix]*
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
@@ -449,6 +462,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{PN_CHARS_BASE}       return 'PN_CHARS_BASE';
 //{PN_CHARS_U}          return 'PN_CHARS_U';
 //{PN_CHARS}            return 'PN_CHARS';
+{REGEXP}                return 'REGEXP';
 {BLANK_NODE_LABEL}      return 'BLANK_NODE_LABEL';
 //{PN_PREFIX}           return 'PN_PREFIX';
 //{HEX}                 return 'HEX';
@@ -475,7 +489,6 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_BNODE}              return 'IT_BNODE';
 {IT_IRI}                return 'IT_IRI';
 {IT_NONLITERAL}         return 'IT_NONLITERAL';
-{IT_PATTERN}            return 'IT_PATTERN';
 {IT_AND}                return 'IT_AND';
 {IT_OR}                 return 'IT_OR';
 {IT_NOT}                return 'IT_NOT';
@@ -882,8 +895,7 @@ xsFacet:
 
 stringFacet:
       stringLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalLength
-    | IT_PATTERN string	-> { pattern: $2 } // t: 1literalPattern
-    | '~' string	-> { pattern: $2 } // t: 1literalPattern
+    | REGEXP	-> unescapeRegexp($1) // t: 1literalPattern
     ;
 
 stringLength:
