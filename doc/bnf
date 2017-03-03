@@ -184,7 +184,7 @@
 [141s]  PNAME_LN              ::= PNAME_NS PN_LOCAL
 [61]    ATPNAME_NS            ::= '@' PN_PREFIX? ':'
 [62]    ATPNAME_LN            ::= '@' PNAME_NS PN_LOCAL
-[63]    REGEXP                ::= '/' ([^#x2f#x5C#xA#xD] | '\\' [tbnrf\\/] | UCHAR)* '/' [smix]*
+[63]    REGEXP                ::= '~/' ([^#x2f#x5C#xA#xD] | '\\' [tbnrf\\/] | UCHAR)* '/' [smix]*
 
 [142s]  BLANK_NODE_LABEL      ::= '_:' (PN_CHARS_U | [0-9]) ((PN_CHARS | '.')* PN_CHARS)?
 [145s]  LANGTAG               ::= '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
