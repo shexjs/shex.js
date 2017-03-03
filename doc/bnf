@@ -71,6 +71,8 @@
 # ~ s/SomeOf/OneOf/g (EGP 20161201)
 # ~ s/shapeLabel/shapeExprLabel/? (EGP 20170228)
 # + tripleExprLabel (EGP 20170228)
+# - ^^-style facet arguments per shex#41 (EGP 20170303)
+# ~ switch to ~/regexp/ (EGP 20170303)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -121,7 +123,7 @@
 [25]    stringFacet           ::= stringLength INTEGER
                                 | REGEXP
 [26]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[27]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
+[27]    numericFacet          ::= numericRange numericLiteral
                                 | numericLength INTEGER
 [28]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [29]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
