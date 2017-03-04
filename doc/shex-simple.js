@@ -265,7 +265,7 @@ function validate () {
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
     var shapeMap = getShapeMap().map(pair => {
-      return {node: lexToTerm(pair.node), shape: lexToTerm(pair.shape)};
+      return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
     });
     var dataText = InputData.get();
     if (dataText || shapeMap.length) {
@@ -429,7 +429,7 @@ function getShapeMap () {
 
     if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
       ret.errors.push("node not found: " + $(n).val());
-    var shape =
+    var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
           ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
                                    (label) => {
                                      return label in InputSchema.refresh().shapes;
