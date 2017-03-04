@@ -148,7 +148,8 @@
 [46]    valueSet              ::= '[' valueSetValue* ']'
 
 [47]    valueSetValue         ::= iriRange | literal
-[48]    iriRange              ::= iri ('~' exclusion*)? | '.' exclusion+
+[48]    iriRange              ::= iri ('~' exclusion*)?
+                                | '.' exclusion+
 [49]    exclusion             ::= '-' iri '~'?
 
 [50]    include               ::= '&' tripleExprLabel

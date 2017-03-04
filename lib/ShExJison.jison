@@ -1140,11 +1140,13 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
-    | literal	// t: 1val1DECIMAL
+    | literal//Range	// t: @@
+    | '.' _QiriExclusion_E_Plus	-> { type: "IRIStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+//    | '.' _QLiteralexclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 iriRange:
-      iri _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt	{
+      iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
             type: "IRIStemRange",
@@ -1156,29 +1158,28 @@ iriRange:
           $$ = $1; // t: 1val1IRIREF, 1AvalA
         }
       }
-    | '.' _Qexclusion_E_Plus	-> { type: "IRIStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
-_Qexclusion_E_Star:
+_QiriExclusion_E_Star:
       	-> [] // t: 1val1iriStem, 1val1iriStemMinusiri3
-    | _Qexclusion_E_Star exclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
+    | _QiriExclusion_E_Star iriExclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
     ;
 
-_O_Q_TILDE_E_S_Qexclusion_E_Star_C:
-      '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
+_O_Q_TILDE_E_S_QiriExclusion_E_Star_C:
+      '~' _QiriExclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
     ;
 
-_Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
+_Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
       // t: 1val1IRIREF
-    | _O_Q_TILDE_E_S_Qexclusion_E_Star_C	// t: 1val1iriStemMinusiri3
+    | _O_Q_TILDE_E_S_QiriExclusion_E_Star_C	// t: 1val1iriStemMinusiri3
     ;
 
-_Qexclusion_E_Plus:
-      exclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | _Qexclusion_E_Plus exclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+_QiriExclusion_E_Plus:
+      iriExclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
-exclusion:
+iriExclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
     | '-' iri '~'	-> { type: "IRIStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
     ;
