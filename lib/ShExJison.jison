@@ -1147,7 +1147,7 @@ iriRange:
       iri _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "StemRange",
+            type: "IRIStemRange",
             stem: $1
           };
           if ($2.length)
@@ -1156,7 +1156,7 @@ iriRange:
           $$ = $1; // t: 1val1IRIREF, 1AvalA
         }
       }
-    | '.' _Qexclusion_E_Plus	-> { type: "StemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | '.' _Qexclusion_E_Plus	-> { type: "IRIStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 _Qexclusion_E_Star:
@@ -1180,7 +1180,7 @@ _Qexclusion_E_Plus:
 
 exclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
-    | '-' iri '~'	-> { type: "Stem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    | '-' iri '~'	-> { type: "IRIStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
     ;
 
 include:
