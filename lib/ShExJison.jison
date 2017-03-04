@@ -1140,9 +1140,9 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
-    | literal//Range	// t: @@
+    | literalRange	// t: @@
     | '.' _QiriExclusion_E_Plus	-> { type: "IRIStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-//    | '.' _QLiteralexclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinusliteral3, 1val1dotMinusliteralStem3
     ;
 
 iriRange:
@@ -1182,6 +1182,45 @@ _QiriExclusion_E_Plus:
 iriExclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
     | '-' iri '~'	-> { type: "IRIStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    ;
+
+literalRange:
+      literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
+        if ($2) {
+          $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+            type: "LiteralStemRange",
+            stem: $1
+          };
+          if ($2.length)
+            $$["exclusions"] = $2; // t: @@ 1val1literalStemMinusliteral3
+        } else {
+          $$ = $1; // t: @@ 1val1LITERAL, 1AvalA
+        }
+      }
+    ;
+
+_QliteralExclusion_E_Star:
+      	-> [] // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C:
+      '~' _QliteralExclusion_E_Star	-> $2 // t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
+      // t: @@ 1val1LITERAL
+    | _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C	// t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_QliteralExclusion_E_Plus:
+      literalExclusion	-> [$1] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    ;
+
+literalExclusion:
+      '-' literal	-> $2 // t: @@ 1val1literalStemMinusliteral3
+    | '-' literal '~'	-> { type: "LiteralStem", stem: $2 } // t: @@ 1val1literalStemMinusliteralStem3
     ;
 
 include:
