@@ -264,12 +264,19 @@ function validate () {
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
-    var shapeMap = getShapeMap().map(pair => {
-      return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
-    });
     var dataText = InputData.get();
-    if (dataText || shapeMap.length) {
+    function hasFocusNode () {
+      return $(".focus").map((idx, elt) => {
+        return $(elt).val();
+      }).get().some(str => {
+        return str.length > 0;
+      });
+    }
+    if (dataText || hasFocusNode()) {
       parsing = "input data";
+      var shapeMap = getShapeMap().map(pair => {
+        return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
+      });
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
