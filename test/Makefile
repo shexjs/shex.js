@@ -6,7 +6,8 @@ TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
 GENCorpus?=$(join $(TESTDIR), bin/genCorpus.js)
 REPORTER?=dot
-HTTP_CLI_TEMPLATE?="http://raw.githubusercontent.com/shexSpec/shex.js/BRANCH/test/"
+BRANCH?=$(shell git rev-parse --abbrev-ref HEAD) # e.g. master or ShEx1
+HTTPTEST?="http://raw.githubusercontent.com/shexSpec/shex.js/$(BRANCH)/test/"
 
 ValidationManifest=$(join $(TESTDIR), validation/manifest.jsonld) # isn't there an easier way to construct filenames?
 ValidationCorpus=$(join $(TESTDIR), schemas/corpus.json) # isn't there an easier way to construct filenames?
@@ -38,7 +39,6 @@ Map-test: ../lib/ShExJison.js Map-test.js
 	$(MOCHA) -C -R $(REPORTER) Map-test.js
 
 cli-test: ../lib/ShExJison.js cli-test.js
-	HTTPTEST=$(subst BRANCH,$(shell git rev-parse --abbrev-ref HEAD),$(HTTP_CLI_TEMPLATE)) \
 	$(MOCHA) -C -R $(REPORTER) cli-test.js
 
 test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test

@@ -16,7 +16,9 @@ var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 
 function register (validator) {
-  var prefixes = validator.schema.prefixes;
+  var prefixes = "prefixes" in validator.schema ?
+      validator.schema.prefixes :
+      {};
 
   validator.semActHandler.results[MapExt] = {};
   validator.semActHandler.register(
@@ -50,7 +52,7 @@ function register (validator) {
             }
 
             var prefixedName = getPrefixedName(bindingName);
-            var quotedValue = _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
+            var quotedValue = value; // _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
@@ -98,7 +100,7 @@ function materializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = shape || schema.start;
+      shape = shape && shape !== "- start -"? { type: "ShapeRef", reference: shape } : schema.start;
       target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 

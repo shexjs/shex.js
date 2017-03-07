@@ -121,7 +121,14 @@ describe("A ShEx validator", function () {
                    typeof obj[k] !== "object" &&
                    N3Util.isIRI(obj[k])) {
                  obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-               }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
+               } else if (["values"].indexOf(k) !== -1) {
+                 for (var i = 0; i < obj[k].length; ++i) {
+                   if (typeof obj[k][i] !== "object" && N3Util.isIRI(obj[k][i])) {
+                     obj[k][i] = resolveRelativeIRI(dataURL, obj[k][i]);
+                   }
+                 };
+               }
+             }) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
 
              assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
              // var start = schema.start;

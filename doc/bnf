@@ -69,6 +69,10 @@
 # ~ s/unaryShape/unaryTripleExpr/ (EGP 20160930)
 # ~ s/encapsulatedShape/bracketedTripleExpr/ (EGP 20160930)
 # ~ s/SomeOf/OneOf/g (EGP 20161201)
+# ~ s/shapeLabel/shapeExprLabel/? (EGP 20170228)
+# + tripleExprLabel (EGP 20170228)
+# - ^^-style facet arguments per shex#41 (EGP 20170303)
+# ~ switch to ~/regexp/ (EGP 20170303)
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -86,7 +90,7 @@
 
 [8]     statement             ::= directive | notStartAction
 
-[9]     shapeExprDecl         ::= shapeLabel (shapeExpression|"EXTERNAL")
+[9]     shapeExprDecl         ::= shapeExprLabel (shapeExpression|"EXTERNAL")
 [10]    shapeExpression       ::= shapeOr
 [11]    inlineShapeExpression ::= inlineShapeOr
 [12]    shapeOr               ::= shapeAnd ("OR" shapeAnd)*
@@ -97,17 +101,17 @@
 [17]    inlineShapeNot        ::= "NOT"? inlineShapeAtom
 [18]    shapeAtom             ::= nodeConstraint shapeOrRef?
                                 | shapeOrRef
-				| "(" shapeExpression ")"
+                                | "(" shapeExpression ")"
                                 | '.'  # no constraint
 [19]    inlineShapeAtom       ::= nodeConstraint inlineShapeOrRef?
                                 | inlineShapeOrRef nodeConstraint?
-				| "(" shapeExpression ")"
+                                | "(" shapeExpression ")"
                                 | '.'  # no constraint
 
 [20]    shapeOrRef            ::= shapeDefinition
-                                | ATPNAME_LN | ATPNAME_NS | '@' shapeLabel
+                                | ATPNAME_LN | ATPNAME_NS | '@' shapeExprLabel
 [21]    inlineShapeOrRef      ::= inlineShapeDefinition
-                                | ATPNAME_LN | ATPNAME_NS | '@' shapeLabel
+                                | ATPNAME_LN | ATPNAME_NS | '@' shapeExprLabel
 
 [22]    nodeConstraint        ::= "LITERAL" xsFacet*
                                 | nonLiteralKind stringFacet*
@@ -117,10 +121,9 @@
 [23]    nonLiteralKind        ::= "IRI" | "BNODE" | "NONLITERAL"
 [24]    xsFacet               ::= stringFacet | numericFacet
 [25]    stringFacet           ::= stringLength INTEGER
-                                | "PATTERN" string
-                                | '~' string  # shortcut for "PATTERN"
+                                | REGEXP
 [26]    stringLength          ::= "LENGTH" | "MINLENGTH" | "MAXLENGTH"
-[27]    numericFacet          ::= numericRange (numericLiteral | string '^^' datatype )
+[27]    numericFacet          ::= numericRange numericLiteral
                                 | numericLength INTEGER
 [28]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [29]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
@@ -136,9 +139,8 @@
 [37]    groupTripleExpr       ::= singleElementGroup | multiElementGroup
 [38]    singleElementGroup    ::= unaryTripleExpr ';'?
 [39]    multiElementGroup     ::= unaryTripleExpr (';' unaryTripleExpr)+ ';'?
-[40]    unaryTripleExpr       ::= productionLabel? (tripleConstraint | bracketedTripleExpr) | include | valueConstraint
+[40]    unaryTripleExpr       ::= ('$' tripleExprLabel)? (tripleConstraint | bracketedTripleExpr) | include | valueConstraint
 [41]    bracketedTripleExpr   ::= '(' innerTripleExpr ')' cardinality? annotation* semanticActions
-[42]    productionLabel       ::= '$' (iri | blankNode)
 
 [43]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions
 [44]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
@@ -151,9 +153,9 @@
 
 [00]    valueConstraint       ::= "UNIQUE" "(" ("FOCUS" ',')? accessor (',' accessor)* ")"
                                 | accessor ("<" | "=" | "!=" | ">") accessor
-[00]    accessor              ::= productionLabel | "LANGTAG" "(" productionLabel ")" | "DATATYPE" "(" productionLabel ")"
+[00]    accessor              ::= ('$' tripleExprLabel)? | "LANGTAG" "(" ('$' tripleExprLabel)? ")" | "DATATYPE" "(" ('$' tripleExprLabel)? ")"
 
-[50]    include               ::= '&' shapeLabel
+[50]    include               ::= '&' tripleExprLabel
 
 [51]    annotation            ::= '//' predicate (iri | literal)
 [52]    semanticActions       ::= codeDecl*
@@ -162,7 +164,8 @@
 [13t]   literal               ::= rdfLiteral | numericLiteral | booleanLiteral
 [54]    predicate             ::= iri | RDF_TYPE
 [55]    datatype              ::= iri
-[56]    shapeLabel            ::= iri | blankNode
+[56]    shapeExprLabel        ::= iri | blankNode
+[42]    tripleExprLabel       ::= '$' (iri | blankNode)
 [16t]   numericLiteral        ::= INTEGER | DECIMAL | DOUBLE
 [129s]  rdfLiteral            ::= string (LANGTAG | '^^' datatype)?
 [134s]  booleanLiteral        ::= 'true' | 'false'
@@ -173,7 +176,7 @@
 [138s]  blankNode             ::= BLANK_NODE_LABEL
 
 # Reserved for future use
-[57]    includeSet            ::= '&' shapeLabel+
+[57]    includeSet            ::= '&' shapeExprLabel+
 
 @terminals
 
@@ -185,6 +188,7 @@
 [141s]  PNAME_LN              ::= PNAME_NS PN_LOCAL
 [61]    ATPNAME_NS            ::= '@' PN_PREFIX? ':'
 [62]    ATPNAME_LN            ::= '@' PNAME_NS PN_LOCAL
+[63]    REGEXP                ::= '~/' ([^#x2f#x5C#xA#xD] | '\\' [tbnrf\\/] | UCHAR)* '/' [smix]*
 
 [142s]  BLANK_NODE_LABEL      ::= '_:' (PN_CHARS_U | [0-9]) ((PN_CHARS | '.')* PN_CHARS)?
 [145s]  LANGTAG               ::= '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
