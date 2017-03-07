@@ -9,11 +9,19 @@ npm install --save shex
 
 ## test
 
-```
-(cd node_modules/shex && npm test) # assumming it was installed in ./node_nodules
-```
+First you need to install the testing framework (mocha, chai, shex-test for the actual tests):
+`npm explore shex 'npm install'`
 
-This runs `mocha -R dot` because there are around one thousand tests.
+Now you can run the tests:
+`npm explore shex 'npm test'`
+
+(BTW, `npm explore shex` executes a command in the shex directory so you can also `cd node_modules/shex && npm install && npm test`)
+
+This runs `mocha -R dot` (the *dot* reporter because there are around three thousand tests).
+
+There are slower tests (command line interface, HTTP, etc) which you can run with the `SLOW=<timeout in milliseconds>` environment variable set. For the HTTP tests you will have to specifiy a git repository in `$BRANCH`, e.g.
+`SLOW=10000 BRANCH=master npm explore shex 'npm test'`
+
 
 ## validation
 
