@@ -291,7 +291,7 @@
   // Translates regular expression escape codes in the string into their textual equivalent
   function unescapeRegexp (regexp) {
     var end = regexp.lastIndexOf("/");
-    var s = regexp.substr(2, end-2);
+    var s = regexp.substr(1, end-1);
     s = s.replace(/\\\//g, "/");
     var ret = {
       pattern: unescape(s, stringEscapeSequence, stringEscapeReplacements)
@@ -407,13 +407,13 @@ REPEAT_RANGE            "{"({INTEGER})((","(({INTEGER})|'*')?))?"}"
 DECIMAL                 ([+-])?([0-9])*"."([0-9])+
 EXPONENT                [Ee]([+-])?([0-9])+
 DOUBLE                  ([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
-ECHAR                   "\\"[\"\\bfnrt]
+ECHAR                   "\\"[\"\'\\bfnrt]
 WS                      (" ")|(("\t")|(("\r")|("\n")))
 //ANON                  "\["(({WS}))*"\]"
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
-REGEXP                  '~/' ([^\u002f\u005C\u00A\u00D] | '\\' [tbnrf\\/] | {UCHAR})* '/' [smix]*
+REGEXP                  '/' ([^\u002f\u005C\u00A\u00D] | '\\' [.\\?*+{}()|^$\u005B\u005D/tbnrf/] | {UCHAR})+ '/' [smix]*
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
