@@ -253,10 +253,16 @@
       irirefEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})/g,
       stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                              't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
+      regexpEscapeReplacements = {
+        '.': "\\.", '\\': "\\", '?': "\\?", '*': "\\*", '+': "\\+",
+        '{': "\\{", '}': "\\}", '(': "\\(", ')': "\\)", '|': "\\|",
+        '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
+        't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f'
+      },
       semactEscapeReplacements = { '\\': '\\', '%': '%' },
       fromCharCode = String.fromCharCode;
 
-  function unescape(string, regex, replacements) {
+  function unescape (string, regex, replacements) {
     try {
       string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
         var charCode;
@@ -294,7 +300,7 @@
     var s = regexp.substr(1, end-1);
     s = s.replace(/\\\//g, "/");
     var ret = {
-      pattern: unescape(s, stringEscapeSequence, stringEscapeReplacements)
+      pattern: unescape(s, stringEscapeSequence, regexpEscapeReplacements)
     };
     if (regexp.length > end+1)
       ret.flags = regexp.substr(end+1);
@@ -413,7 +419,7 @@ WS                      (" ")|(("\t")|(("\r")|("\n")))
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
-REGEXP                  '/' ([^\u002f\u005C\u00A\u00D] | '\\' [.\\?*+{}()|^$\u005B\u005D/tbnrf/] | {UCHAR})+ '/' [smix]*
+REGEXP                  '/' ([^\u002f\u005C\u00A\u00D] | '\\' [.\\?*+{}()|^$\u005B\u005D/tbnrf] | {UCHAR})+ '/' [smix]*
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
