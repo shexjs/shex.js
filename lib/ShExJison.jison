@@ -265,7 +265,13 @@
   function unescapeRegexp (regexp) {
     var end = regexp.lastIndexOf("/");
     var s = regexp.substr(1, end-1);
-    s = s.replace(/\\\//g, "/");
+    var regexpEscapeReplacements = {
+      '.': "\\.", '\\': "\\\\", '?': "\\?", '*': "\\*", '+': "\\+",
+      '{': "\\{", '}': "\\}", '(': "\\(", ')': "\\)", '|': "\\|",
+      '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
+      't': '\t', 'n': '\n', 'r': '\r', '-': "\\-", '/': '/'
+    };
+    s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
     var ret = {
       pattern: s
     };
