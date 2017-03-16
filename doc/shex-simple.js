@@ -274,7 +274,7 @@ function validate () {
     }
     if (dataText || hasFocusNode()) {
       parsing = "input data";
-      var shapeMap = getShapeMap().map(pair => {
+      var shapeMap = getShapeMap($(".focus"), $(".inputShape")).map(pair => {
         return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
       });
       $("#results .status").text("parsing data...").show();
@@ -371,7 +371,7 @@ function removeNodeShapePair (evt, howMany) {
   return false;
 }
 
-function prepareConstrols () {
+function prepareControls () {
   $("#inputData .passes, #inputData .fails").hide();
   $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#validate").on("click", disableResultsAndValidate);
@@ -412,9 +412,9 @@ var parseQueryString = function(query) {
   return map;
 };
 
-function getShapeMap () {
-  var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+function getShapeMap (nodeList, shapeList) {
+  var nodes = nodeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  var shapes = shapeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
 
     var node = "node-type" in iface ?
@@ -464,10 +464,22 @@ function prepareInterface () {
     return;
 
   iface = parseQueryString(location.search);
-  if ("shape-map" in iface) {
-    var shapeMap =  iface["shape-map"];
-    delete iface["shape-map"];
-    var first = true;
+  var useFirstNodeShapeInputs = true;
+  function _addPair (node, shape) {
+    if (useFirstNodeShapeInputs) {
+      $("#focus0").val(node);
+      $("#inputShape0").val(shape);
+      useFirstNodeShapeInputs = false;
+    } else {
+      addNodeShapePair(null, [{node: node, shape: shape}]);
+    }
+  }
+  if ("shape-map" in iface)
+    parseShapeMap("shape-map", _addPair);
+
+  function parseShapeMap (queryParm, addPair) {
+    var shapeMap =  iface[queryParm];
+    delete iface[queryParm];
     //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
     var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
     var pairPattern = s + "@" + s + ",?";
@@ -479,13 +491,7 @@ function prepareInterface () {
           var p = r2.match(RegExp(pairPattern));
           var node = p[1], shape = p[2];
           r[node] = node in r ? r[node].concat(shape) : [shape];
-          if (first) {
-            $("#focus0").val(node);
-            $("#inputShape0").val(shape);
-            first = false;
-          } else {
-            addNodeShapePair(null, [{node: node, shape: shape}]);
-          }
+          addPair(node, shape);
         });
         return r;
       }, {});
@@ -523,7 +529,7 @@ function prepareInterface () {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
     });
-    var shapeMap = getShapeMap();
+    var shapeMap = getShapeMap($(".focus"), $(".inputShape"));
     if (shapeMap.length)
       parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
         return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
@@ -932,7 +938,7 @@ start=@<Schema>
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
 
-prepareConstrols();
+prepareControls();
 prepareInterface();
 prepareDragAndDrop();
 prepareDemos();

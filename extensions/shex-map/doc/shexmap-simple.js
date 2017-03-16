@@ -13,17 +13,23 @@ var ShExRSchema; // defined below
 
 
 // utility functions
-function parseTurtle (text) {
+function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
-  ret.addTriples(N3Parser({documentIRI:Base}).parse(text));
+  var parser = N3Parser({documentIRI:Base});
+  ret.addTriples(parser.parse(text));
+  meta.base = parser._base;
+  meta.prefixes = parser._prefixes;
   return ret;
 }
 
 var shexParser = ShExParser.construct(Base);
-function parseShEx (text) {
+function parseShEx (text, meta) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
-  return shexParser.parse(text);
+  var ret = shexParser.parse(text);
+  meta.base = ret.base;
+  meta.prefixes = ret.prefixes;
+  return ret;
 }
 
 function sum (s) { // cheap way to identify identical strings
@@ -64,7 +70,10 @@ function _makeCache (parseSelector) {
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse($(parseSelector).val());
+      var text = $(parseSelector).val();
+      if (text.length === 0)
+        $(parseSelector).val(text = "{}");
+      this.parsed = text ? this.parse(text) : {};
       _dirty = false;
       return this.parsed;
     }
@@ -73,9 +82,7 @@ function _makeCache (parseSelector) {
 
 function makeSchemaCache (parseSelector) {
   var ret = _makeCache(parseSelector);
-  ret.parse = function (text) {
-    return parseTurtle(text);
-  };
+  ret.meta = {};
   var graph = null;
   ret.language = null;
   ret.parse = function (text) {
@@ -86,16 +93,16 @@ function makeSchemaCache (parseSelector) {
       graph ? "ShExR" :
       "ShExC";
     $("#results .status").text("parsing "+this.language+" schema...").show();
-    var ret =
-        isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
-        graph ? parseShExR() :
-        parseShEx(text);
+    var schema =
+          isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
+          graph ? parseShExR() :
+          parseShEx(text, ret.meta);
     $("#results .status").hide();
-    return ret;
+    return schema;
 
     function tryN3 (text) {
       try {
-        return text.match(/^\s*$/) ? null : parseTurtle (text); // interpret empty schema as ShExC
+        return text.match(/^\s*$/) ? null : parseTurtle (text, ret.meta); // interpret empty schema as ShExC
       } catch (e) {
         return null;
       }
@@ -122,8 +129,9 @@ function makeSchemaCache (parseSelector) {
 
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
+  ret.meta = {};
   ret.parse = function (text) {
-    return parseTurtle(text);
+    return parseTurtle(text, ret.meta);
   };
   ret.getNodes = function () {
     var data = this.refresh();
@@ -225,36 +233,6 @@ function pickData (name, dataTest, elt, listItems, side) {
   }
 }
 
-// Guess the starting shape.
-function guessStartingShape (inputSelection, cache) {
-  var shape = inputSelection.val();
-  if (shape === "") {
-    var candidates = cache.getShapes();
-    if (candidates.length > 0) {
-      inputSelection.val(candidates[0]);
-      return candidates[0];
-    } else
-      return undefined;
-  } else {
-    return shape;
-  }
-}
-
-
-// Guess the starting focus.
-function guessStartingNode (inputSelection, cache) {
-  var focus = inputSelection.val();
-  if (focus === "") {
-    var candidates = cache.getNodes();;
-    if (candidates.length > 0) {
-      inputSelection.val(candidates[0]);
-      return candidates[0];
-    } else
-      return undefined;
-  } else
-    return focus;
-}
-
 
 // Control results area content.
 var results = (function () {
@@ -308,12 +286,20 @@ function validate () {
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     ShExMap.register(validator);
     $("#schemaDialect").text(InputSchema.language);
+    InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
-    var shapeMap = getShapeMap().map(pair => {
-      return {node: lexToTerm(pair.node), shape: lexToTerm(pair.shape)};
-    });
-    if (dataText || shapeMap.length) {
+    function hasFocusNode () {
+      return $(".focus").map((idx, elt) => {
+        return $(elt).val();
+      }).get().some(str => {
+        return str.length > 0;
+      });
+    }
+    if (dataText || hasFocusNode()) {
       parsing = "input data";
+      var shapeMap = getShapeMap($(".focus"), $(".inputShape")).map(pair => {
+        return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
+      });
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -394,11 +380,12 @@ function materialize () {
       Bindings.refresh()
     );
     var mapper = ShExMap.materializer(outputSchema);
-    var outputShape = guessStartingShape($("#outputShape"), OutputSchema);
-
-    var outputGraph = mapper.materialize(resultBindings, lexToTerm($("#createRoot").val()), outputShape);
+    var outputShapeMap = getShapeMap($("#createRoot"), $("#outputShape"), OutputSchema);
     var writer = N3.Writer({ prefixes: {} });
-    writer.addTriples(outputGraph.find());
+    outputShapeMap.forEach(pair => {
+      var outputGraph = mapper.materialize(resultBindings, pair.node, pair.shape);
+      writer.addTriples(outputGraph.find());
+    });
     writer.end(function (error, result) {
       results.replace(result);
     });
@@ -474,7 +461,7 @@ function prepareConstrols () {
 
 /**
  *
- * location.search: e.g. "?schema=asdf&data=qwer&shapeMap=ab%5Ecd%5E%5E_ef%5Egh"
+ * location.search: e.g. "?schema=asdf&data=qwer&shape-map=ab%5Ecd%5E%5E_ef%5Egh"
  */
 var parseQueryString = function(query) {
   if (query[0]==='?') query=query.substr(1); // optional leading '?'
@@ -486,33 +473,40 @@ var parseQueryString = function(query) {
   return map;
 };
 
-/**
- * update location with a current values of some inputs
- */
-function updateURL () {
-  var parms = QueryParams.map(input => {
-    var parm = input.queryStringParm;
-    return parm + "=" + encodeURIComponent(input.location.val());
-  });
-  var shapeMap = getShapeMap();
-  if (shapeMap.length)
-    parms.push("shapeMap=" + shapeMap.reduce((ret, p) => {
-      return ret.concat([encodeURIComponent(p.node + "^" + p.shape)]);
-    }, []).join(encodeURIComponent("^^")));
-  if (iface.interface)
-    parms.push("interface="+iface.interface[0]);
-  var s = parms.join("&");
-  window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
-}
-
-function getShapeMap () {
-  var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+function getShapeMap (nodeList, shapeList) {
+  var nodes = nodeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  var shapes = shapeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
-    var node = guessStartingNode($(n), InputData);
-    if (!node)
-      ret.errors.push("node not found: " + $(n).val());
-    var shape = guessStartingShape($(shapes[i]), InputSchema);
+
+    var node = "node-type" in iface ?
+          ShExUtil.someNodeWithType(
+            ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
+                                     label => {
+                                       return (InputData.refresh().
+                                               findByIRI(null, RDF_TYPE, label).length > 0);
+                                     },
+                                     loaded.data.prefixes)) :
+        ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
+          var triples = InputData.refresh().findByIRI(null, null, null);
+          return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
+        },
+                                 label => {
+                                   return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
+                                           InputData.refresh().findByIRI(null, null, label).length > 0);
+                                 }, n => {
+                                   ret.errors.push("node not found: " + n);
+                                   return n;
+                                 });
+
+    if (node === ShExUtil.NotSupplied)
+      ret.errors.push("unable to guess starting node");
+    var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
+          ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
+                                   (label) => {
+                                     return label in InputSchema.refresh().shapes;
+                                   });
+    if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
+      throw Error("shape " + $(shapes[i]).val() + " not defined");
     if (!shape)
       ret.errors.push("shape not found: " + $(shapes[i]).val());
     if (node && shape)
@@ -524,28 +518,62 @@ function getShapeMap () {
   return mapAndErrors.shapeMap;
 }
 
+var iface = null; // needed by validate before prepareInterface returns.
+/**
+ * Load URL search parameters
+ */
 function prepareInterface () {
-  var iface = parseQueryString(location.search);
-  if ("shapeMap" in iface) {
-    var first = true;
-    iface.shapeMap = iface.shapeMap.reduce(
+  // don't overwrite if we arrived here from going back for forth in history
+  if ($("#inputSchema textarea").val() !== "" || $("#inputData textarea").val() !== "")
+    return;
+
+  iface = parseQueryString(location.search);
+  var useFirstNodeShapeInputs = true;
+  function _addNSPair (node, shape) {
+    if (useFirstNodeShapeInputs) {
+      $("#focus0").val(node);
+      $("#inputShape0").val(shape);
+      useFirstNodeShapeInputs = false;
+    } else {
+      addNodeShapePair(null, [{node: node, shape: shape}]);
+    }
+  }
+  if ("shape-map" in iface)
+    parseShapeMap("shape-map", _addNSPair);
+
+  function _addGenPair (node, shape) {
+    // only works for one n/s pair
+    $("#createNode").val(node);
+    $("#outputShape").val(shape);
+  }
+  if ("shape-map" in iface)
+    parseShapeMap("output-map", _addGenPair);
+
+  function parseShapeMap (queryParm, addPair) {
+    var shapeMap =  iface[queryParm];
+    delete iface[queryParm];
+    //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
+    var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
+    var pairPattern = s + "@" + s + ",?";
+    iface.shapeMap = shapeMap.reduce(
       (r, b) => {
-        b.split(/\^\^/).forEach(pair => {
-          var p = pair.split(/\^/);
-          r[p[0]] = p[0] in r ? r[p[0]].concat(p[1]) : [p[1]];
-          if (first) {
-            $("#focus0").val(p[0]);
-            $("#inputShape0").val(p[1]);
-            first = false;
-          } else {
-            addNodeShapePair(null, [{node: p[0], shape: p[1]}]);
-          }
+        // test: b = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
+        var pairs = b.match(RegExp(pairPattern, "g"));
+        pairs.map(r2 => {
+          var p = r2.match(RegExp(pairPattern));
+          var node = p[1], shape = p[2];
+          r[node] = node in r ? r[node].concat(shape) : [shape];
+          addPair(node, shape);
         });
         return r;
       }, {});
   }
+
   var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                     {queryStringParm: "data", location: $("#inputData textarea")}];
+                     {queryStringParm: "data", location: $("#inputData textarea")},
+                     {queryStringParm: "bindings", location: $("#bindings1 textarea")},
+                     {queryStringParm: "statics", location: $("#staticVars textarea")},
+                     {queryStringParm: "outSchema", location: $("#outputSchema textarea")}];
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
     if (parm in iface)
@@ -567,7 +595,31 @@ function prepareInterface () {
     validate();
   }
   $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
-  return iface;
+
+  /**
+   * update location with a current values of some inputs
+   */
+  function updateURL () {
+    var parms = QueryParams.map(input => {
+      var parm = input.queryStringParm;
+      return parm + "=" + encodeURIComponent(input.location.val());
+    });
+    var shapeMap = getShapeMap($(".focus"), $(".inputShape"));
+    if (shapeMap.length)
+      parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
+        return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
+      }, []).join(encodeURIComponent(",")));
+    var outputMap = getShapeMap($("#createRoot"), $("#outputShape"));
+    if (outputMap.length)
+      parms.push("output-map=" + outputMap.reduce((ret, p) => {
+        return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
+      }, []).join(encodeURIComponent(",")));
+    if (iface.interface)
+      parms.push("interface="+iface.interface[0]);
+    var s = parms.join("&");
+    window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+  }
+
 }
 
 /**
@@ -662,7 +714,7 @@ function prepareDemos () {
           outputShape: "- start -",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
-      },
+      }
     },
     "BP back": {
       schema: BPunitsDAM.schema,
@@ -754,15 +806,14 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
-  addContextMenus("#focus0", "#inputShape0");
+  addContextMenus("#focus0", "#inputShape0", "#outputShape");
 }
-function addContextMenus (nodeSelector, shapeSelector) {
+function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
   [ { inputSelector: nodeSelector,
-      schema: { "S1": {}, "S2": {} },
       getItems: function () { return InputData.getNodes(); } },
     { inputSelector: shapeSelector,
       getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: "#outputShape",
+    { inputSelector: outShapeSelector,
       getItems: function () { return OutputSchema.getShapes(); } }
   ].forEach(entry => {
     $.contextMenu({
@@ -1105,7 +1156,7 @@ start=@<Schema>
 }`;
 
 prepareConstrols();
-var iface = prepareInterface();
+prepareInterface();
 prepareDragAndDrop();
 prepareDemos();
 
