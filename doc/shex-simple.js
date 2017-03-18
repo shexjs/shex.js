@@ -13,7 +13,7 @@ var ShExRSchema; // defined below
 function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
-  var parser = N3Parser({documentIRI:Base});
+  var parser = N3Parser({documentIRI:Base, format: "text/turtle" });
   ret.addTriples(parser.parse(text));
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
