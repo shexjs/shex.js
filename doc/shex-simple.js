@@ -23,6 +23,16 @@ function parseTurtle (text, meta) {
 
 var shexParser = ShExParser.construct(Base);
 function parseShEx (text, meta) {
+  $("#schemaDialect").text(InputSchema.language);
+  var resolverText = $("#meta textarea").val();
+  if (resolverText) {
+    var resolverStore = N3Store();
+    shexParser._setTermResolver(ShExParser.dbTermResolver(resolverStore));
+    resolverStore.addTriples(N3Parser({documentIRI:Base}).parse(resolverText));
+  } else {
+    shexParser._setTermResolver(ShExParser.disabledTermResolver());
+  }
+
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   var ret = shexParser.parse(text);
   meta.base = ret.base;
@@ -265,15 +275,6 @@ function validate () {
   try {
     var validator = ShExValidator.construct(InputSchema.refresh()
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
-    $("#schemaDialect").text(InputSchema.language);
-    var resolverText = $("#meta textarea").val();
-    if (resolverText) {
-      var resolverStore = N3Store();
-      shexParser._setTermResolver(ShExParser.dbTermResolver(resolverStore));
-      resolverStore.addTriples(N3Parser({documentIRI:Base}).parse(resolverText));
-    } else {
-      shexParser._setTermResolver(ShExParser.disabledTermResolver());
-    }
     InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
     function hasFocusNode () {
@@ -509,7 +510,8 @@ function prepareInterface () {
   }
 
   var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                     {queryStringParm: "data", location: $("#inputData textarea")}];
+                     {queryStringParm: "data", location: $("#inputData textarea")},
+                     {queryStringParm: "meta", location: $("#meta textarea")}];
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
     if (parm in iface)
@@ -720,13 +722,13 @@ function prepareDemos () {
   });
   addContextMenus("#focus0", "#inputShape0");
 }
-function addContextMenus (nodeSelector, shapeSelector, metaSelector) {
+function addContextMenus (nodeSelector, shapeSelector) {
   [ { inputSelector: nodeSelector,
       getItems: function () { return InputData.getNodes(); } },
     { inputSelector: shapeSelector,
       getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: metaSelector, // !!! nuke me
-      getItems: function () { return []; } }
+    // { inputSelector: metaSelector, // !!! nuke me
+    //   getItems: function () { return []; } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.inputSelector,
