@@ -664,18 +664,21 @@ function prepareDemos () {
       passes: {
         "good": {
           data: proteinRecord_good,
-          focus: "http://a.example/s",
-          shape: "http://a.example/S"}
+          inputShapeMap: [{
+            node: "<http://a.example/s>",
+            shape: "<http://a.example/S>"}]}
       },
       fails: {
         "bad label": {
           data: proteinRecord_badLabel,
-          focus: "http://a.example/s",
-          shape: "http://a.example/S" },
+          inputShapeMap: [{
+            node: "<http://a.example/s>",
+            shape: "<http://a.example/S>"}]},
         "bad datatype": {
           data: proteinRecord_badDatatype,
-          focus: "http://a.example/s",
-          shape: "http://a.example/S" }
+          inputShapeMap: [{
+            node: "<http://a.example/s>",
+            shape: "<http://a.example/S>"}]}
       }
     }
   };
