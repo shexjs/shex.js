@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx2 — Simple Online Validator</title>
+    <title>ShExMap — Simple Online Translator</title>
     <meta name="description" content="simple ShEx2 demo" />
     <style>
       h1 { font-size: 1.3em; }
@@ -11,14 +11,14 @@
       .passes, #results textarea.passes { padding-left: .1em; border-left: thick solid #bfb; }
       .fails , #results textarea.fails  { padding-left: .1em; border-left: thick solid #fbb; }
       .error , #results textarea.error  { padding-left: .1em; border-left: thick solid #b00; }
-      #inputarea { overflow-x: none; white-space:nowrap; }
+      #inputarea { overflow-x: auto; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
       .schema.textarea, .schema { background-color: #f4f4ff; }
       #inputSchema li.selected a { background-color: #e8e8ff; }
-      #meta textarea, .meta { background-color: #fffff4; }
-      #meta li.selected { background-color: #ffffe8; }
       #inputData textarea, .data { background-color: #f4fff4; }
       #inputData li.selected { background-color: #e8ffe8; }
+      #bindings1 textarea, .meta { background-color: #fffff4; }
+      #bindings1 li.selected { background-color: #ffffe8; }
       .droparea { border: .25em dashed #ddd; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
       #results textarea:disabled { background-color: #fff; }
@@ -83,9 +83,9 @@
   <body>
 
     <div id="title">
-      <h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
+      <h1 style="float:left;">ShExMap — Simple Online Translator</h1>
       <ul id="navlist" style="float:left; padding-left: 1em;">
-        <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li>
+        <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li>
         <li>‣ <span class="heading">controls:</span> <input type="checkbox" id="append"/><label for="append">drop appends</label> | <label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select> </li>
         <li>‣ <span class="heading">source</span>: <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
         <li>‣ <a href="https://github.com/shexSpec/shex.js">project</a></li>
@@ -119,27 +119,42 @@
           </div>
         </div>
       </div>
-      <div style="float:left; width: 49%;">
-        <div id="meta">
-          <p class="status"> </p>
-          <textarea rows="12" style="width: 100%"></textarea>
-        </div>
-        <div id="inputData" class="panel">
-          <h2 class="status"> </h2>
-          <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
-          <div style="margin-left: .1em;">
-            <div class="passes" style="float:left">
-              <p></p>
-              <ul>
-                <li>This demo is no fun without javascript.</li>
-              </ul>
-            </div>
-            <div class="fails" style="float:left">
-              <p></p>
-              <ul>
-              </ul>
-            </div>
+      <div id="inputData" class="panel">
+        <h2 class="status"> </h2>
+        <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
+        <div style="margin-left: .1em;">
+          <div class="passes" style="float:left">
+            <p></p>
+            <ul>
+              <li>This demo is no fun without javascript.</li>
+            </ul>
           </div>
+          <div class="fails" style="float:left">
+            <p></p>
+            <ul>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div id="bindings1">
+          <h2 class="status"> </h2>
+          <textarea rows="19" class="bindings droparea" style="width: 100%"></textarea>
+        </div>
+        <div id="staticVars" style="width: 100%;">
+          <h2 class="status"> </h2>
+          <textarea rows="5" class="vars droparea" style="width: 100%"></textarea>
+        </div>
+        <div>
+          <div id="outactions" style="float:right; margin-right: .1em;">
+            <button id="materialize">materialize (ctl-\)</button> <input id="outputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/> from <input id="createRoot" type="text" value="" class="data"/>
+          </div>
+        </div>
+      </div>
+      <div id="output" class="panel">
+        <div id="outputSchema" style="width: 100%;">
+          <h2 class="status"> </h2>
+          <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
         </div>
       </div>
     </div>
@@ -148,18 +163,26 @@
       <textarea disabled="disabled"></textarea>
     </div>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
-    <script src="require.js"></script>
+    <script src="../../../doc/require.js"      ></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
-    <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
-    <script src="../lib/ShExJison.js"    ></script><script></script>
-    <script src="../lib/ShExParser.js"   ></script><script></script>
-    <script src="../lib/ShExWriter.js"   ></script><script></script>
-    <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
-    <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["../lib/regex/nfax-val-1err"] = module.exports;</script>
-    <script src="../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
-    <script src="./shex-simple.js"></script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
+    <script src="http://underscorejs.org/underscore-min.js"></script><script>modules["underscore"] = _;</script>
+    <script src="../../../lib/ShExUtil.js"     ></script><script>modules["../../lib/ShExUtil"] = ShExUtil;</script>
+    <script src="../../../lib/ShExJison.js"    ></script><script></script>
+    <script src="../../../lib/ShExParser.js"   ></script><script></script>
+    <script src="../../../lib/ShExWriter.js"   ></script><script></script>
+    <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../../../lib/regex/nfax-val-1err.js"></script><script>modules["../lib/regex/nfax-val-1err"] = module.exports;</script>
+    <script src="../../../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
+    <script src="../lib/extension-utils"       ></script><script>modules["./extension-utils"] = module.exports;</script>
+    <script src="../lib/regex_extension"       ></script><script>modules["./regex_extension"] = module.exports;</script>
+    <script src="../lib/hashmap_extension"     ></script><script>modules["./hashmap_extension"] = module.exports;</script>
+    <script src="../lib/extensions"            ></script><script>modules["./lib/extensions"] = module.exports;</script>
+
+    <script src="../module.js"                 ></script><script>ShExMap = module.exports;</script>
+    <script src="./shexmap-simple.js"          ></script>
   </body>
 </html>

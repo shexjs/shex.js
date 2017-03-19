@@ -7,7 +7,7 @@ var EARL = "EARL" in process.env;
 // var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser");
 var ShExValidator = require("../lib/ShExValidator");
-var TestExtension = require("../extensions/shex:Test/module");
+var TestExtension = require("../extensions/shex-test/module");
 
 var N3 = require("n3");
 var N3Util = N3.Util;
@@ -129,9 +129,17 @@ describe("A ShEx validator", function () {
              var referenceResult = resultsFile ? parseJSONFile(resultsFile, function (k, obj) {
                // resolve relative URLs in results file
                if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+                   typeof obj[k] !== "object" &&
                    N3Util.isIRI(obj[k])) {
                  obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-               }}) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
+               } else if (["values"].indexOf(k) !== -1) {
+                 for (var i = 0; i < obj[k].length; ++i) {
+                   if (typeof obj[k][i] !== "object" && N3Util.isIRI(obj[k][i])) {
+                     obj[k][i] = resolveRelativeIRI(dataURL, obj[k][i]);
+                   }
+                 };
+               }
+             }) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(resultsFile, "utf8")))
 
              assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
              // var start = schema.start;
@@ -139,7 +147,7 @@ describe("A ShEx validator", function () {
              //   start = Object.keys(schema.action.shapes)[0];
 
              var store = new N3.Store();
-             var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
+             var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
              turtleParser.parse(
                fs.readFileSync(dataFile, "utf8"),
                function (error, triple, prefixes) {

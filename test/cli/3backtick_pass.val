@@ -16,7 +16,7 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://a.example/protName",
-                "object": "\"Dracula\""
+                "object": { "value": "Dracula" }
               }
             ],
             "valueExpr": {
@@ -52,7 +52,7 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://a.example/protWidth",
-                "object": "\"30\"^^http://a.example/microns"
+                "object": { "value": "30", "type": "http://a.example/microns" }
               }
             ],
             "valueExpr": {

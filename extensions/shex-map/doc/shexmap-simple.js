@@ -1,12 +1,14 @@
-// shex-simple - Simple ShEx2 validator for HTML.
+// shexmap-simple - Simple ShEx2 validator for HTML.
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
 const START_SHAPE_LABEL = "- start -";
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
 var InputSchema = makeSchemaCache("#inputSchema textarea");
-var InputMeta = makeTurtleCache("#meta textarea");
 var InputData = makeTurtleCache("#inputData textarea");
+var Bindings = makeJSONCache("#bindings1 textarea");
+var Statics = makeJSONCache("#staticVars textarea");
+var OutputSchema = makeSchemaCache("#outputSchema textarea");
 var ShExRSchema; // defined below
 
 
@@ -68,7 +70,10 @@ function _makeCache (parseSelector) {
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse($(parseSelector).val());
+      var text = $(parseSelector).val();
+      if (text.length === 0)
+        $(parseSelector).val(text = "{}");
+      this.parsed = text ? this.parse(text) : {};
       _dirty = false;
       return this.parsed;
     }
@@ -137,6 +142,14 @@ function makeTurtleCache(parseSelector) {
   return ret;
 }
 
+function makeJSONCache(parseSelector) {
+  var ret = _makeCache(parseSelector);
+  ret.parse = function (text) {
+    return JSON.parse(text);
+  };
+  return ret;
+}
+
 
 // controls for example links
 function load (selector, obj, func, listItems, side, str) {
@@ -178,8 +191,6 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     InputSchema.set(schemaTest.schema);
     $("#inputSchema .status").text(name);
 
-    InputMeta.set(schemaTest.meta);
-
     InputData.set("");
     $("#inputData .status").text(" ");
     $("#inputData .passes, #inputData .fails").show();
@@ -210,6 +221,14 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     removeNodeShapePair(null, Infinity);
     addNodeShapePair(null, dataTest.inputShapeMap.slice(1)); // catch the rest of the shapeMap.
+
+    $("#outputSchema textarea").val(dataTest.outputSchema);
+    $("#outputSchema .status").text(name);
+    Statics.set(JSON.stringify(dataTest.staticVars, null, "  "));
+    $("#staticVars .status").text(name);
+
+    $("#outputShape").val(dataTest.outputShape); // targetSchema.start in Map-test
+    $("#createRoot").val(dataTest.createRoot); // createRoot in Map-test
     // validate();
   }
 }
@@ -265,15 +284,8 @@ function validate () {
   try {
     var validator = ShExValidator.construct(InputSchema.refresh()
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
+    ShExMap.register(validator);
     $("#schemaDialect").text(InputSchema.language);
-    var resolverText = $("#meta textarea").val();
-    if (resolverText) {
-      var resolverStore = N3Store();
-      shexParser._setTermResolver(ShExParser.dbTermResolver(resolverStore));
-      resolverStore.addTriples(N3Parser({documentIRI:Base}).parse(resolverText));
-    } else {
-      shexParser._setTermResolver(ShExParser.disabledTermResolver());
-    }
     InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
     function hasFocusNode () {
@@ -302,21 +314,29 @@ function validate () {
           JSON.stringify(ret, null, "  ");
       var res = results.replace(text);
       $("#results .status").hide();
-      // for debugging values and schema formats:
-      // try {
-      //   var x = ShExUtil.valToValues(ret);
-      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
-      //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   var y = ShExUtil.valuesToSchema(x);
-      //   res = results.append(JSON.stringify(y, null, "  "));
-      // } catch (e) {
-      //   console.dir(e);
-      // }
       if ("errors" in ret) {
         res.addClass("fails");
       } else {
         res.addClass("passes");
-      }
+        // Bindings.set(ShExMap.extractBindings(ret));
+        var resultBindings = {};
+        function findBindings (object) {
+          for (var key in object) {
+            var item = object[key];
+            if (typeof item === 'object') {
+              if (ShExMap.url in item)
+                Object.keys(item[ShExMap.url]).forEach(k => {
+                  resultBindings[k] = item[ShExMap.url][k];
+                })
+              else
+                object[key] = findBindings(item);
+            }
+          }
+          return object;
+        }
+        findBindings(ret);
+        Bindings.set(JSON.stringify(resultBindings, null, "  "));
+       }
     } else {
       var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
@@ -345,6 +365,35 @@ function validate () {
   } catch (e) {
     results.replace("error parsing " + parsing + ":\n" + e).addClass("error");
   }
+}
+
+function materialize () {
+  results.start();
+  var parsing = "output schema";
+  try {
+    var outputSchemaText = $("#outputSchema textarea").val();
+    var outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
+    var outputSchema = OutputSchema.refresh();
+
+    var resultBindings = Object.assign(
+      Statics.refresh(),
+      Bindings.refresh()
+    );
+    var mapper = ShExMap.materializer(outputSchema);
+    var outputShapeMap = getShapeMap($("#createRoot"), $("#outputShape"), OutputSchema);
+    var writer = N3.Writer({ prefixes: {} });
+    outputShapeMap.forEach(pair => {
+      var outputGraph = mapper.materialize(resultBindings, pair.node, pair.shape);
+      writer.addTriples(outputGraph.find());
+    });
+    writer.end(function (error, result) {
+      results.replace(result);
+    });
+  } catch (e) {
+    results.replace("error parsing " + parsing + ":\n" + e).
+      removeClass("passes fails").addClass("error");
+  }
+  results.finish();
 }
 
 var Removables = [];
@@ -382,10 +431,11 @@ function removeNodeShapePair (evt, howMany) {
   return false;
 }
 
-function prepareControls () {
+function prepareConstrols () {
   $("#inputData .passes, #inputData .fails").hide();
   $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#validate").on("click", disableResultsAndValidate);
+  $("#materialize").on("click", materialize);
   $("#clear").on("click", clearAll);
   $("#addPair").on("click", addNodeShapePair);
   $("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
@@ -443,10 +493,13 @@ function getShapeMap (nodeList, shapeList) {
                                  label => {
                                    return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
                                            InputData.refresh().findByIRI(null, null, label).length > 0);
+                                 }, n => {
+                                   ret.errors.push("node not found: " + n);
+                                   return n;
                                  });
 
-    if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
-      ret.errors.push("node not found: " + $(n).val());
+    if (node === ShExUtil.NotSupplied)
+      ret.errors.push("unable to guess starting node");
     var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
           ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
                                    (label) => {
@@ -476,7 +529,7 @@ function prepareInterface () {
 
   iface = parseQueryString(location.search);
   var useFirstNodeShapeInputs = true;
-  function _addPair (node, shape) {
+  function _addNSPair (node, shape) {
     if (useFirstNodeShapeInputs) {
       $("#focus0").val(node);
       $("#inputShape0").val(shape);
@@ -486,7 +539,15 @@ function prepareInterface () {
     }
   }
   if ("shape-map" in iface)
-    parseShapeMap("shape-map", _addPair);
+    parseShapeMap("shape-map", _addNSPair);
+
+  function _addGenPair (node, shape) {
+    // only works for one n/s pair
+    $("#createNode").val(node);
+    $("#outputShape").val(shape);
+  }
+  if ("shape-map" in iface)
+    parseShapeMap("output-map", _addGenPair);
 
   function parseShapeMap (queryParm, addPair) {
     var shapeMap =  iface[queryParm];
@@ -509,7 +570,10 @@ function prepareInterface () {
   }
 
   var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                     {queryStringParm: "data", location: $("#inputData textarea")}];
+                     {queryStringParm: "data", location: $("#inputData textarea")},
+                     {queryStringParm: "bindings", location: $("#bindings1 textarea")},
+                     {queryStringParm: "statics", location: $("#staticVars textarea")},
+                     {queryStringParm: "outSchema", location: $("#outputSchema textarea")}];
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
     if (parm in iface)
@@ -545,6 +609,11 @@ function prepareInterface () {
       parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
         return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
       }, []).join(encodeURIComponent(",")));
+    var outputMap = getShapeMap($("#createRoot"), $("#outputShape"));
+    if (outputMap.length)
+      parms.push("output-map=" + outputMap.reduce((ret, p) => {
+        return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
+      }, []).join(encodeURIComponent(",")));
     if (iface.interface)
       parms.push("interface="+iface.interface[0]);
     var s = parms.join("&");
@@ -559,13 +628,16 @@ function prepareInterface () {
 function prepareDragAndDrop () {
   var _scma = $("#inputSchema textarea");
   var _data = $("#inputData textarea");
-  var _meta = $("#meta textarea");
+  var _bnds = $("#bindings1 textarea");
+  var _outs = $("#outputSchema textarea");
+  var _vars = $("#staticVars textarea");
   var _body = $("body");
   [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
-   {dropElt: _meta, targets: [{ext: "", target: InputMeta}]},
    {dropElt: _data, targets: [{ext: "", target: InputData}]},
+   {dropElt: _bnds, targets: [{ext: "", target: Bindings}]},
+   {dropElt: _outs, targets: [{ext: "", target: OutputSchema}]},
+   {dropElt: _vars, targets: [{ext: "", target: Statics}]},
    {dropElt: _body, targets: [{ext: ".shex", target: InputSchema},
-                              {ext: ".owl", target: InputMeta},
                               {ext: ".ttl", target: InputData}]}].
     forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
@@ -616,64 +688,82 @@ function prepareDragAndDrop () {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-var clinicalObs = {};
+var BPFHIR = {}, BPunitsDAM = {}; SchemaConcert = {};
 function prepareDemos () {
   var demos = {
-    "clinical observation": {
-      schema: clinicalObs.schema,
+    "BP": {
+      schema: BPFHIR.schema,
       passes: {
-        "with birthdate": {
-          data: clinicalObs.with_birthdate,
+        "simple": {
+          data: BPFHIR.simple,
           inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -"}]},
-        "without birthdate": {
-          data: clinicalObs.without_birthdate,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
-        "no subject name": {
-          data: clinicalObs.no_subject_name,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]}
+            node: "tag:BPfhir123",
+            shape: "- start -"}],
+          outputSchema: BPunitsDAM.schema,
+          outputShape: "- start -",
+          staticVars: BPunitsDAM.constants,
+          createRoot: "<tag:b0>"}
       },
       fails: {
-        "bad status": {
-          data: clinicalObs.bad_status,
+        "bad code": {
+          data: BPFHIR.badCode,
           inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
-        "no subject": {
-          data: clinicalObs.no_subject,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
-        "wrong birthdate datatype": {
-          data: clinicalObs.birthdate_datatype,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]}
+            node: "tag:BPfhir123",
+            shape: "- start -"}],
+          outputSchema: BPunitsDAM.schema,
+          outputShape: "- start -",
+          staticVars: BPunitsDAM.constants,
+          createRoot: "<tag:b0>"}
       }
     },
-    "protein record": {
-      schema: proteinRecord,
-      meta: proteinRecord_meta,
+    "BP back": {
+      schema: BPunitsDAM.schema,
       passes: {
-        "good": {
-          data: proteinRecord_good,
-          focus: "http://a.example/s",
-          shape: "http://a.example/S"}
+        "simple": {
+          data: BPunitsDAM.simple,
+          inputShapeMap: [{
+            node: "<tag:b0>",
+            inputShape: "- start -"}],
+          outputSchema: BPFHIR.schema,
+          outputShape: "- start -",
+          staticVars: BPFHIR.constants,
+          createRoot: "tag:BPfhir123"}
       },
       fails: {
-        "bad label": {
-          data: proteinRecord_badLabel,
-          focus: "http://a.example/s",
-          shape: "http://a.example/S" },
-        "bad datatype": {
-          data: proteinRecord_badDatatype,
-          focus: "http://a.example/s",
-          shape: "http://a.example/S" }
+        // "bad code": {
+        //   data: BPunitsDAM.simple,
+        //   inputShapeMap: [{
+        //     node: "<tag:b0>",
+        //     shape: "- start -"}],
+        //   outputSchema: BPFHIR.schema,
+        //   outputShape: "- start -",
+        //   staticVars: BPFHIR.constants,
+        //   createRoot: "tag:BPfhir123"}
+      },
+    },
+    "symmetric": {
+      schema: SchemaConcert.schema,
+      passes: {
+        "BBKing": {
+          data: SchemaConcert.BBKing,
+          inputShapeMap: [{
+            node: "_:b0",
+            shape: "- start -"}],
+          outputSchema: SchemaConcert.schema,
+          outputShape: "- start -",
+          staticVars: {},
+          createRoot: "_:b0"}
+      },
+      fails: {
+        "Non-IRI": {
+          data: SchemaConcert.nonIRI,
+          inputShapeMap: [{
+            node: "_:b0",
+            shape: "- start -"}],
+          outputSchema: SchemaConcert.schema,
+          outputShape: "- start -",
+          staticVars: {},
+          createRoot: "_:b0"}
       }
     }
   };
@@ -701,6 +791,9 @@ function prepareDemos () {
     if (e.ctrlKey && (code === 10 || code === 13)) {
       $("#validate").click();
       return false; // same as e.preventDefault();
+    } else if (e.ctrlKey && e.key === "\\") {
+      $("#materialize").click();
+      return false; // same as e.preventDefault();
     }
   });
   $("#inputSchema textarea").keyup(function (e) { // keyup to capture backspace
@@ -713,20 +806,15 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
-  $("#meta textarea").keyup(function (e) {
-    var code = e.keyCode || e.charCode;
-    if (!(e.ctrlKey && (code === 10 || code === 13)))
-      later(e.target, "meta", InputMeta);
-  });
-  addContextMenus("#focus0", "#inputShape0");
+  addContextMenus("#focus0", "#inputShape0", "#outputShape");
 }
-function addContextMenus (nodeSelector, shapeSelector, metaSelector) {
+function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
   [ { inputSelector: nodeSelector,
       getItems: function () { return InputData.getNodes(); } },
     { inputSelector: shapeSelector,
       getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: metaSelector, // !!! nuke me
-      getItems: function () { return []; } }
+    { inputSelector: outShapeSelector,
+      getItems: function () { return OutputSchema.getShapes(); } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.inputSelector,
@@ -747,124 +835,170 @@ function addContextMenus (nodeSelector, shapeSelector, metaSelector) {
 }
 
 // Large constants with demo data which break syntax highlighting:
-clinicalObs.schema = `PREFIX : <http://hl7.org/fhir/>
+BPFHIR.schema = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
+PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
+PREFIX Map: <http://shex.io/extensions/Map/#>
 
-start = @<ObservationShape>
+start = @<BPfhir>
 
-<ObservationShape> {               # An Observation has:
-  :status ["preliminary" "final"]; #   status in this value set
-  :subject @<PatientShape>         #   a subject matching <PatientShape>.
+<BPfhir> {
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Blood_Pressure] };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<sysBP> };
+  fhir:related { fhir:type ["has-component"]; fhir:target @<diaBP> }
 }
-
-<PatientShape> {                   # A Patient has:
- :name xsd:string*;                #   one or more names
- :birthdate xsd:date?              #   and an optional birthdate.
+<sysBP> {
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Systolic_Blood_Pressure] };
+  fhir:valueQuantity {
+    a [fhir:Quantity]?;
+    fhir:value xsd:float %Map:{ bp:sysVal %};
+    fhir:units xsd:string %Map:{ bp:sysUnits %}
+  }
+}
+<diaBP> {
+  a [fhir:Observation]?;
+  fhir:coding { fhir:code [sct:Diastolic_Blood_Pressure] };
+  fhir:valueQuantity {
+    a [fhir:Quantity]?;
+    fhir:value xsd:float %Map:{ bp:diaVal %};
+    fhir:units xsd:string %Map:{ bp:diaUnits %}
+  }
 }
 `;
-clinicalObs.with_birthdate = `PREFIX : <http://hl7.org/fhir/>
+
+BPFHIR.constants = {"http://abc.example/anotherConstant": "abc-def"};
+
+BPFHIR.simple = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
+PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
+<tag:BPfhir123>
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Blood_Pressure ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
+.
+_:sysBP123
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "110"^^xsd:float;
+    fhir:units "mmHg"
+  ]
+.
+_:diaBP123
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "70"^^xsd:float;
+    fhir:units "mmHg"
+  ]
+.
+`;
 
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs.no_subject_name = `PREFIX : <http://hl7.org/fhir/>
+BPFHIR.badCode = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
+PREFIX sct: <http://snomed.info/sct/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
+<tag:BPfhir123>
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Blood_Pressure ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:sysBP123 ];
+  fhir:related [ fhir:type "has-component"; fhir:target _:diaBP123 ]
+.
+_:sysBP123
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Systolic_Blood_Pressure ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "110"^^xsd:float;
+    fhir:units "mmHg"
+  ]
+.
+_:diaBP123
+  a fhir:Observation;
+  fhir:coding [ fhir:code sct:Diastolic_Blood_Pressure999 ];
+  fhir:valueQuantity [
+    a fhir:Quantity;
+    fhir:value "70"^^xsd:float;
+    fhir:units "mmHg"
+  ]
+.
+`;
 
-<Patient2>
-  :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs.without_birthdate = `PREFIX : <http://hl7.org/fhir/>
+BPunitsDAM.schema = `PREFIX  : <http://shex.io/extensions/Map/#BPunitsDAM->
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
+PREFIX Map: <http://shex.io/extensions/Map/#>
 
-<Obs1>
-  :status    "preliminary" ;
-  :subject   <Patient2> .
+start = @<BPunitsDAM>
 
-<Patient2>
-  :name "Bob" .`;
-clinicalObs.bad_status = `PREFIX : <http://hl7.org/fhir/>
+<BPunitsDAM> {
+  :systolic {
+    :value xsd:float %Map:{ bp:sysVal %};
+    :units xsd:string %Map:{ bp:sysUnits %}
+  };
+  :diastolic {
+    :value xsd:float %Map:{ bp:diaVal %};
+    :units xsd:string %Map:{ bp:diaUnits %}
+  };
+  :someConstProp xsd:string? %Map:{ <http://abc.example/someConstant> %}
+}
+`;
+
+BPunitsDAM.constants = {"http://abc.example/someConstant": "123-456"};
+
+BPunitsDAM.simple = `<tag:b0>
+  <http://shex.io/extensions/Map/#BPunitsDAM-systolic> [
+  <http://shex.io/extensions/Map/#BPunitsDAM-value> "110"^^<http://www.w3.org/2001/XMLSchema#float> ;
+  <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ] ;
+  <http://shex.io/extensions/Map/#BPunitsDAM-diastolic> [
+  <http://shex.io/extensions/Map/#BPunitsDAM-value> "70"^^<http://www.w3.org/2001/XMLSchema#float> ;
+  <http://shex.io/extensions/Map/#BPunitsDAM-units> "mmHg" ].
+`;
+
+SchemaConcert.schema = `PREFIX    : <http://a.example/>
+PREFIX schema: <http://schema.org/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX Map: <http://shex.io/extensions/Map/#>
 
-<Obs1>
-  :status    "finally" ;
-  :subject   <Patient2> .
+start=@<Concert>
 
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .
-
+<Concert> {
+  schema:bandName xsd:string %Map:{ :Name %} ;
+  schema:tix IRI %Map:{ :TicketUrl %} ;
+  schema:venue @<Venue>
+}
+<Venue> {
+  schema:location xsd:string %Map:{ :LocationName %} ;
+  schema:address  xsd:string %Map:{ :LocationAddress %}
+}
 `;
-clinicalObs.no_subject = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-<Obs1>
-  :status    "final" .
+SchemaConcert.BBKing = `PREFIX schema: <http://schema.org/>
 
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .
+[] schema:bandName "B.B. King";
+  schema:tix <https://www.etix.com/ticket/1771656>;
+  schema:venue [
+    schema:location "Lupo’s Heartbreak Hotel";
+    schema:address "79 Washington St...."
+  ] .
+`
 
-`;
-clinicalObs.birthdate_datatype = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
 
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
-
-proteinRecord = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-LABEL [ rdfs:label skos:label ]
-<S> {
-  \`protein name\` LITERAL;
-  \`protein type\` [ \`signaling\` \`regulatory\` \`transport\` ];
-  \`protein width\` \`ucum microns\`
-}`;
-proteinRecord_meta = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-PREFIX ex: <http://a.example/>
-
-ex:protName rdfs:label "protein name" .
-ex:protType skos:label "protein type" .
-ex:Signaling rdfs:label "signaling" .
-ex:Regulatory skos:label "regulatory" .
-ex:Transport rdfs:label "transport" ; skos:label "transport" .
-ex:protWidth rdfs:label "protein width" ; skos:label "protein width" .
-ex:microns rdfs:label "ucum microns" .
-`;
-proteinRecord_good = `PREFIX ex: <http://a.example/>
-
-<s>
-  ex:protName "Dracula" ;
-  ex:protType ex:Regulatory ;
-  ex:protWidth "30"^^ex:microns .
-`;
-proteinRecord_badLabel = `PREFIX ex: <http://a.example/>
-
-<s>
-  ex:protName999 "Dracula" ;
-  ex:protType ex:Regulatory ;
-  ex:protWidth "30"^^ex:microns .
-`;
-proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
-
-<s>
-  ex:protName "Dracula" ;
-  ex:protType ex:Regulatory ;
-  ex:protWidth "30"^^ex:microns999 .
-`;
+[] schema:bandName "B.B. King";
+  schema:tix "https://www.etix.com/ticket/1771656";
+  schema:venue [
+    schema:location "Lupo’s Heartbreak Hotel";
+    schema:address "79 Washington St...."
+  ] .
+`
 
 ShExRSchema = `PREFIX sx: <http://shex.io/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -1021,7 +1155,7 @@ start=@<Schema>
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
 
-prepareControls();
+prepareConstrols();
 prepareInterface();
 prepareDragAndDrop();
 prepareDemos();
