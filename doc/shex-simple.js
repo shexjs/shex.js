@@ -14,7 +14,14 @@ function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
   var parser = N3Parser({documentIRI:Base, format: "text/turtle" });
-  ret.addTriples(parser.parse(text));
+  parser.parse((error, triple, prefixes) => {
+    if (triple)
+      ret.addTriple(triple);
+    if (error)
+      throw error;
+  });
+  parser.addChunk(text);
+  parser.end();
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
   return ret;
@@ -76,7 +83,7 @@ function _makeCache (parseSelector) {
 
 function makeSchemaCache (parseSelector) {
   var ret = _makeCache(parseSelector);
-  ret.meta = {};
+  ret.meta = { prefixes: {}, base: null };
   var graph = null;
   ret.language = null;
   ret.parse = function (text) {
@@ -104,7 +111,7 @@ function makeSchemaCache (parseSelector) {
 
     function parseShExR () {
       var graphParser = ShExValidator.construct(
-        parseShEx(ShExRSchema),
+        parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
       var schemaRoot = graph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
