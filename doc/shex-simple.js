@@ -287,7 +287,7 @@ function validate () {
             "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
             ("errors" in ret ?
              ShExUtil.errsToSimple(ret).join("\n") :
-             JSON.stringify(ShExUtil.valToSimple(ret), null, 2)) :
+             JSON.stringify(ShExUtil.simpleToShapeMap(ShExUtil.valToSimple(ret)), null, 2)) :
           JSON.stringify(ret, null, "  ");
       var res = results.replace(text);
       $("#results .status").hide();
