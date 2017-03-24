@@ -343,9 +343,9 @@ function addNodeShapePair (evt, pairs) {
   pairs.forEach(pair => {
     var id = Removables.length+1;
     var t = $("<span><br/><input id='focus"+id+
-              "' type='text' value='"+pair.node+
+              "' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
               "' class='data focus'/> as <input id='inputShape"+id+
-              "' type='text' value='"+pair.shape+
+              "' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
               "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
              );
     addContextMenus("#focus"+id, "#inputShape"+id);
