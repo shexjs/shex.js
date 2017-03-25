@@ -258,7 +258,15 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return ShExUtil.unescapeText(string, stringEscapeReplacements);
+    return { value: ShExUtil.unescapeText(string, stringEscapeReplacements) };
+  }
+
+  function unescapeLangString(string, trimLength) {
+    var at = string.lastIndexOf("@");
+    var lang = string.substr(at);
+    string = string.substr(0, at);
+    var u = unescapeString(string, trimLength);
+    return extend(u, { language: lowercase(lang.substr(1)) });
   }
 
   // Translates regular expression escape codes in the string into their textual equivalent
@@ -402,12 +410,19 @@ HEX                     [0-9] | [A-F] | [a-f]
 PERCENT                 '%' {HEX} {HEX}
 UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX}
 CODE                    "{" ([^%\\] | "\\"[%\\] | {UCHAR})* "%}"
+
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
 //NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
 //NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
+
+LANG_STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" {LANGTAG}
+LANG_STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' {LANGTAG}
+LANG_STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''" {LANGTAG}
+LANG_STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""' {LANGTAG}
+
 IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 //ATIRIREF              '@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
@@ -448,12 +463,19 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{PERCENT}             return 'PERCENT';
 //{UCHAR}               return 'UCHAR';
 {CODE}                  return 'CODE';
-{STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
+
+{LANG_STRING_LITERAL_LONG1}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: @@
+{LANG_STRING_LITERAL_LONG2}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
+{LANG_STRING_LITERAL1}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: @@
+{LANG_STRING_LITERAL2}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: 1val1LANGTAG
+
+{STRING_LITERAL_LONG1}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL1     
 //{NON_TERMINATED_STRING_LITERAL_LONG1}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
+{STRING_LITERAL_LONG2}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG1
 //{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL1}       return 'STRING_LITERAL1';
-{STRING_LITERAL2}       return 'STRING_LITERAL2';
+{STRING_LITERAL1}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL2     
+{STRING_LITERAL2}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG2
+
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
 //{PLX}                 return 'PLX';
 //{PN_LOCAL}            return 'PN_LOCAL';
@@ -1111,14 +1133,18 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
-    | literal	// t: 1val1DECIMAL
+    | literalRange	// t: @@
+    | languageRange	// t: @@
+    | '.' _QiriExclusion_E_Plus	-> { type: "IRIStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | '.' _QlanguageExclusion_E_Plus	-> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
     ;
 
 iriRange:
-      iri _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt	{
+      iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "StemRange",
+            type: "IRIStemRange",
             stem: $1
           };
           if ($2.length)
@@ -1127,31 +1153,112 @@ iriRange:
           $$ = $1; // t: 1val1IRIREF, 1AvalA
         }
       }
-    | '.' _Qexclusion_E_Plus	-> { type: "StemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
-_Qexclusion_E_Star:
+_QiriExclusion_E_Star:
       	-> [] // t: 1val1iriStem, 1val1iriStemMinusiri3
-    | _Qexclusion_E_Star exclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
+    | _QiriExclusion_E_Star iriExclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
     ;
 
-_O_Q_TILDE_E_S_Qexclusion_E_Star_C:
-      '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
+_O_Q_TILDE_E_S_QiriExclusion_E_Star_C:
+      '~' _QiriExclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
     ;
 
-_Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
+_Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
       // t: 1val1IRIREF
-    | _O_Q_TILDE_E_S_Qexclusion_E_Star_C	// t: 1val1iriStemMinusiri3
+    | _O_Q_TILDE_E_S_QiriExclusion_E_Star_C	// t: 1val1iriStemMinusiri3
     ;
 
-_Qexclusion_E_Plus:
-      exclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | _Qexclusion_E_Plus exclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+_QiriExclusion_E_Plus:
+      iriExclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
-exclusion:
+iriExclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
-    | '-' iri '~'	-> { type: "Stem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    | '-' iri '~'	-> { type: "IRIStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    ;
+
+literalRange:
+      literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
+        if ($2) {
+          $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+            type: "LiteralStemRange",
+            stem: $1
+          };
+          if ($2.length)
+            $$["exclusions"] = $2; // t: @@ 1val1literalStemMinusliteral3
+        } else {
+          $$ = $1; // t: @@ 1val1LITERAL, 1AvalA
+        }
+      }
+    ;
+
+_QliteralExclusion_E_Star:
+      	-> [] // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C:
+      '~' _QliteralExclusion_E_Star	-> $2 // t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
+      // t: @@ 1val1LITERAL
+    | _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C	// t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_QliteralExclusion_E_Plus:
+      literalExclusion	-> [$1] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    ;
+
+literalExclusion:
+      '-' literal	-> $2 // t: @@ 1val1literalStemMinusliteral3
+    | '-' literal '~'	-> { type: "LiteralStem", stem: $2 } // t: @@ 1val1literalStemMinusliteralStem3
+    ;
+
+languageRange:
+      language _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
+        if ($2) {
+          $$ = {  // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
+            type: "LanguageStemRange",
+            stem: $1
+          };
+          if ($2.length)
+            $$["exclusions"] = $2; // t: @@ 1val1languageStemMinuslanguage3
+        } else {
+          $$ = $1; // t: @@ 1val1LANGUAGE, 1AvalA
+        }
+      }
+    ;
+
+_QlanguageExclusion_E_Star:
+      	-> [] // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
+    | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2) // t: @@ 1val1languageStemMinuslanguage3
+    ;
+
+_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C:
+      '~' _QlanguageExclusion_E_Star	-> $2 // t: @@ 1val1languageStemMinuslanguage3
+    ;
+
+_Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
+      // t: @@ 1val1LANGUAGE
+    | _O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C	// t: @@ 1val1languageStemMinuslanguage3
+    ;
+
+_QlanguageExclusion_E_Plus:
+      languageExclusion	-> [$1] // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    | _QlanguageExclusion_E_Plus languageExclusion	-> appendTo($1, $2) // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    ;
+
+languageExclusion:
+      '-' language	-> $2 // t: @@ 1val1languageStemMinuslanguage3
+    | '-' language '~'	-> { type: "LanguageStem", stem: $2 } // t: @@ 1val1languageStemMinuslanguageStem3
+    ;
+
+language:
+      LANGTAG	-> { value: $1.substr(1) }
     ;
 
 include:
@@ -1184,12 +1291,16 @@ codeDecl:
     ;
 
 literal:
-      string	-> { value: $1 } // t: 1val1STRING_LITERAL1
-    | string LANGTAG	-> { value: $1, language: lowercase($2.substr(1)) } // t: 1val1LANGTAG
-    | string '^^' datatype	-> { value: $1, type: $3 } // t: 1val1Datatype
+      LANG_STRING	// t: 1val1STRING_LITERAL1
+    | STRING optDT	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
     | numericLiteral
     | IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
     | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
+    ;
+
+optDT:
+      	-> null
+    | '^^' datatype	-> $2
     ;
 
 predicate:
@@ -1214,13 +1325,6 @@ numericLiteral:
       INTEGER	-> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
     | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
     | DOUBLE	-> createLiteral($1, XSD_DOUBLE) // t: 1val1DOUBLE
-    ;
-
-string:
-      STRING_LITERAL1	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL1
-    | STRING_LITERAL_LONG1	-> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG1
-    | STRING_LITERAL2	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL2
-    | STRING_LITERAL_LONG2	-> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG2
     ;
 
 iri:
