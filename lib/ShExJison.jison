@@ -24,7 +24,7 @@
     ShEx parser in the Jison parser generator format.
   */
 
-  UNBOUNDED = -1; // ugly global for browser env
+  var UNBOUNDED = -1;
 
   var ShExUtil = require("./ShExUtil");
 
