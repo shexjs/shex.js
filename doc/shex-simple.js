@@ -13,7 +13,7 @@ var ShExRSchema; // defined below
 function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
-  var parser = N3Parser({documentIRI:Base});
+  var parser = N3Parser({documentIRI:Base, format: "text/turtle" });
   ret.addTriples(parser.parse(text));
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
@@ -76,7 +76,7 @@ function _makeCache (parseSelector) {
 
 function makeSchemaCache (parseSelector) {
   var ret = _makeCache(parseSelector);
-  ret.meta = {};
+  ret.meta = { prefixes: {}, base: null };
   var graph = null;
   ret.language = null;
   ret.parse = function (text) {
@@ -104,7 +104,7 @@ function makeSchemaCache (parseSelector) {
 
     function parseShExR () {
       var graphParser = ShExValidator.construct(
-        parseShEx(ShExRSchema),
+        parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
       var schemaRoot = graph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
@@ -264,12 +264,19 @@ function validate () {
                     /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
-    var shapeMap = getShapeMap().map(pair => {
-      return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
-    });
     var dataText = InputData.get();
-    if (dataText || shapeMap.length) {
+    function hasFocusNode () {
+      return $(".focus").map((idx, elt) => {
+        return $(elt).val();
+      }).get().some(str => {
+        return str.length > 0;
+      });
+    }
+    if (dataText || hasFocusNode()) {
       parsing = "input data";
+      var shapeMap = getShapeMap($(".focus"), $(".inputShape")).map(pair => {
+        return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
+      });
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -280,7 +287,7 @@ function validate () {
             "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
             ("errors" in ret ?
              ShExUtil.errsToSimple(ret).join("\n") :
-             JSON.stringify(ShExUtil.valToSimple(ret), null, 2)) :
+             JSON.stringify(ShExUtil.simpleToShapeMap(ShExUtil.valToSimple(ret)), null, 2)) :
           JSON.stringify(ret, null, "  ");
       var res = results.replace(text);
       $("#results .status").hide();
@@ -336,9 +343,9 @@ function addNodeShapePair (evt, pairs) {
   pairs.forEach(pair => {
     var id = Removables.length+1;
     var t = $("<span><br/><input id='focus"+id+
-              "' type='text' value='"+pair.node+
+              "' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
               "' class='data focus'/> as <input id='inputShape"+id+
-              "' type='text' value='"+pair.shape+
+              "' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
               "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
              );
     addContextMenus("#focus"+id, "#inputShape"+id);
@@ -364,7 +371,7 @@ function removeNodeShapePair (evt, howMany) {
   return false;
 }
 
-function prepareConstrols () {
+function prepareControls () {
   $("#inputData .passes, #inputData .fails").hide();
   $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#validate").on("click", disableResultsAndValidate);
@@ -405,9 +412,9 @@ var parseQueryString = function(query) {
   return map;
 };
 
-function getShapeMap () {
-  var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+function getShapeMap (nodeList, shapeList) {
+  var nodes = nodeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  var shapes = shapeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
 
     var node = "node-type" in iface ?
@@ -457,10 +464,22 @@ function prepareInterface () {
     return;
 
   iface = parseQueryString(location.search);
-  if ("shape-map" in iface) {
-    var shapeMap =  iface["shape-map"];
-    delete iface["shape-map"];
-    var first = true;
+  var useFirstNodeShapeInputs = true;
+  function _addPair (node, shape) {
+    if (useFirstNodeShapeInputs) {
+      $("#focus0").val(node);
+      $("#inputShape0").val(shape);
+      useFirstNodeShapeInputs = false;
+    } else {
+      addNodeShapePair(null, [{node: node, shape: shape}]);
+    }
+  }
+  if ("shape-map" in iface)
+    parseShapeMap("shape-map", _addPair);
+
+  function parseShapeMap (queryParm, addPair) {
+    var shapeMap =  iface[queryParm];
+    delete iface[queryParm];
     //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
     var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
     var pairPattern = s + "@" + s + ",?";
@@ -472,13 +491,7 @@ function prepareInterface () {
           var p = r2.match(RegExp(pairPattern));
           var node = p[1], shape = p[2];
           r[node] = node in r ? r[node].concat(shape) : [shape];
-          if (first) {
-            $("#focus0").val(node);
-            $("#inputShape0").val(shape);
-            first = false;
-          } else {
-            addNodeShapePair(null, [{node: node, shape: shape}]);
-          }
+          addPair(node, shape);
         });
         return r;
       }, {});
@@ -516,7 +529,7 @@ function prepareInterface () {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
     });
-    var shapeMap = getShapeMap();
+    var shapeMap = getShapeMap($(".focus"), $(".inputShape"));
     if (shapeMap.length)
       parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
         return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
@@ -925,7 +938,7 @@ start=@<Schema>
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
 
-prepareConstrols();
+prepareControls();
 prepareInterface();
 prepareDragAndDrop();
 prepareDemos();

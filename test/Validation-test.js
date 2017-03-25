@@ -136,7 +136,7 @@ describe("A ShEx validator", function () {
              //   start = Object.keys(schema.action.shapes)[0];
 
              var store = new N3.Store();
-             var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: ""});
+             var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
              turtleParser.parse(
                fs.readFileSync(dataFile, "utf8"),
                function (error, triple, prefixes) {

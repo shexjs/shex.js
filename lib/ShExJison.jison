@@ -24,6 +24,10 @@
     ShEx parser in the Jison parser generator format.
   */
 
+  const UNBOUNDED = -1;
+
+  var ShExUtil = require("./ShExUtil");
+
   // Common namespaces and entities
   var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       RDF_TYPE  = RDF + 'type',
@@ -249,43 +253,14 @@
   Parser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
-  var stringEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g,
-      irirefEscapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})/g,
-      stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
-                             't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
-      semactEscapeReplacements = { '\\': '\\', '%': '%' },
-      fromCharCode = String.fromCharCode;
-
-  function unescape(string, regex, replacements) {
-    try {
-      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
-        var charCode;
-        if (unicode4) {
-          charCode = parseInt(unicode4, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          return fromCharCode(charCode);
-        }
-        else if (unicode8) {
-          charCode = parseInt(unicode8, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          if (charCode < 0xFFFF) return fromCharCode(charCode);
-          return fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
-        }
-        else {
-          var replacement = replacements[escapedChar];
-          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
-          return replacement;
-        }
-      });
-      return string;
-    }
-    catch (error) { console.warn(error); return ''; }
-  };
+  var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+                                   't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
+      semactEscapeReplacements = { '\\': '\\', '%': '%' };
 
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return { value: unescape(string, stringEscapeSequence, stringEscapeReplacements) };
+    return { value: ShExUtil.unescapeText(string, stringEscapeReplacements) };
   }
 
   function unescapeLangString(string, trimLength) {
@@ -299,10 +274,16 @@
   // Translates regular expression escape codes in the string into their textual equivalent
   function unescapeRegexp (regexp) {
     var end = regexp.lastIndexOf("/");
-    var s = regexp.substr(2, end-2);
-    s = s.replace(/\\\//g, "/");
+    var s = regexp.substr(1, end-1);
+    var regexpEscapeReplacements = {
+      '.': "\\.", '\\': "\\\\", '?': "\\?", '*': "\\*", '+': "\\+",
+      '{': "\\{", '}': "\\}", '(': "\\(", ')': "\\)", '|': "\\|",
+      '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
+      't': '\\t', 'n': '\\n', 'r': '\\r', '-': "\\-", '/': '/'
+    };
+    s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
     var ret = {
-      pattern: unescape(s, stringEscapeSequence, stringEscapeReplacements)
+      pattern: s
     };
     if (regexp.length > end+1)
       ret.flags = regexp.substr(end+1);
@@ -322,7 +303,7 @@
     return {
       type: "SemAct",
       name: key,
-      code: unescape(string, stringEscapeSequence, semactEscapeReplacements)
+      code: ShExUtil.unescapeText(string, semactEscapeReplacements)
     };
   }
 
@@ -415,13 +396,13 @@ REPEAT_RANGE            "{"({INTEGER})((","(({INTEGER})|'*')?))?"}"
 DECIMAL                 ([+-])?([0-9])*"."([0-9])+
 EXPONENT                [Ee]([+-])?([0-9])+
 DOUBLE                  ([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
-ECHAR                   "\\"[\"\\bfnrt]
+ECHAR                   "\\"[\"\'\\bfnrt]
 WS                      (" ")|(("\t")|(("\r")|("\n")))
 //ANON                  "\["(({WS}))*"\]"
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
-REGEXP                  '~/' ([^\u002f\u005C\u00A\u00D] | '\\' [tbnrf\\/] | {UCHAR})* '/' [smix]*
+REGEXP                  '/' ([^\u002f\u005C\u000A\u000D] | '\\' [nrt\\|.?*+(){}$\u002D\u005B\u005D\u005E/] | {UCHAR})+ '/' [smix]*
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
@@ -1123,8 +1104,8 @@ tripleConstraint:
 //     | senseFlags     ;
 
 cardinality:
-      '*'	-> { min:0, max:"unbounded" } // t: 1cardStar
-    | '+'	-> { min:1, max:"unbounded" } // t: 1cardPlus
+      '*'	-> { min:0, max:UNBOUNDED } // t: 1cardStar
+    | '+'	-> { min:1, max:UNBOUNDED } // t: 1cardPlus
     | '?'	-> { min:0, max:1 } // t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
@@ -1135,7 +1116,7 @@ cardinality:
         else if ($1.indexOf(',') === -1) // t: 1card2
             $$["max"] = parseInt(nums[0], 10);
         else
-            $$["max"] = "unbounded";
+            $$["max"] = UNBOUNDED;
       }
     ;
 
@@ -1349,7 +1330,7 @@ numericLiteral:
     ;
 
 iri:
-      IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? unescape($1.slice(1,-1), irirefEscapeSequence) : _resolveIRI(unescape($1.slice(1,-1), irirefEscapeSequence)) // t: 1dot
+      IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? ShExUtil.unescapeText($1.slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($1.slice(1,-1), {})) // t: 1dot
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
         $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
