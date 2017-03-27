@@ -14,7 +14,9 @@ function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
   var parser = N3Parser({documentIRI:Base, format: "text/turtle" });
-  ret.addTriples(parser.parse(text));
+  var triples = parser.parse(text);
+  if (triples !== undefined)
+    ret.addTriples(triples);
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
   return ret;
@@ -96,7 +98,12 @@ function makeSchemaCache (parseSelector) {
 
     function tryN3 (text) {
       try {
-        return text.match(/^\s*$/) ? null : parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        if (text.match(/^\s*$/))
+          return null;
+        var ret = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        if (ret.find().length === 0)
+          return null;
+        return ret;
       } catch (e) {
         return null;
       }
