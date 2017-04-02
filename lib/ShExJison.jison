@@ -554,6 +554,7 @@ shexDoc:
         if (Parser._base !== null)
           ret.base = Parser._base;
         Parser.reset();
+//console.log(JSON.stringify(ret));
         return ret;
       }
     ;
@@ -620,7 +621,7 @@ start:
       //     error("Parse error: start already defined as " + Parser.start);
       //   Parser.start = $3; // t: startInline
       // }
-      IT_start '=' shapeExpression	{
+      IT_start '=' inlineShapeExpression	{
         if (Parser.start)
           error("Parse error: start already defined");
         Parser.start = $3; // t: startInline
@@ -677,7 +678,33 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
     ;
 
 shapeExpression:
-      shapeOr	
+      _QIT_NOT_E_Opt shapeAtomNoRef _QshapeOr_E_Opt	{
+        if ($1)
+          $2 = { type: "ShapeNot", "shapeExpr": $2 };
+        if ($3) {
+          $3.shapeExprs.unshift($2);
+          $$ = $3;
+        } else {
+// console.log("shapeAtomNoRef:", $2);
+          $$ = $2;
+        }
+      }
+    | IT_NOT shapeRef _QshapeOr_E_Opt	-> { type: "ShapeNot", "shapeExpr": $2 }
+    | shapeRef shapeOr	{
+// console.log("shapeRef_shapeOr:", $1, $2);
+        $2.shapeExprs.unshift($1);
+        $$ = $2; // { type: "ShapeOr", "shapeExprs": [$1].concat($2) };
+    }
+    ;
+
+_QIT_NOT_E_Opt:
+    	-> false
+    | IT_NOT	-> true
+    ;
+
+_QshapeOr_E_Opt:
+    	-> null
+    | shapeOr	-> $1
     ;
 
 inlineShapeExpression:
@@ -685,11 +712,45 @@ inlineShapeExpression:
     ;
 
 shapeOr:
-      shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
+      Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{
+        $$ = { type: "ShapeOr", shapeExprs: $1 };
+// console.log("shapeOr_1:", $$);
+      }
+    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
+        $$ = $2.length > 0 ? shapeJunction("ShapeAnd", $1, $2) : { type: "ShapeAnd", shapeExprs:$1 };
+// console.log("shapeOr_2:", $$);
+      }
     ;
+
+// shapeOr:
+//       Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	
+//           -> $1.length > 1 ? { type: "ShapeOr", shapeExprs: $1 } : $1
+//     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
+//         // [not] [] -> not
+//         // [not] [and and and] -> Or([not and and and])
+//         // [not not] [and] -> Or([not not and])
+//         // [not not] [and and and] -> Or([not not and and and])
+//         var disjuncts = $1.concat($2);
+//         $$ = disjuncts.length > 1 ? { type: "ShapeOr", shapeExprs: disjuncts } : disjuncts[0];
+//       }
+//     ;
 
 _O_QIT_OR_E_S_QshapeAnd_E_C:
       IT_OR shapeAnd	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus:
+      _O_QIT_OR_E_S_QshapeAnd_E_C	-> [$1]
+    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2)
+    ;
+
+_O_QIT_AND_E_S_QshapeNot_E_C:
+      IT_AND shapeNot	-> $2
+    ;
+
+_Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus:
+      _O_QIT_AND_E_S_QshapeNot_E_C	-> [$1]
+    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2)
     ;
 
 _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star:
@@ -712,10 +773,6 @@ _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star:
 
 shapeAnd:
       shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
-    ;
-
-_O_QIT_AND_E_S_QshapeNot_E_C:
-      IT_AND shapeNot	-> $2
     ;
 
 _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star:
@@ -758,14 +815,17 @@ inlineShapeNot:
     ;
 
 shapeAtom:
-//    nodeConstraint _QshapeOrRef_E_Opt	
-      nodeConstraint
-    | nodeConstraint shapeOrRef	{
+//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
+      nonLitNodeConstraint
+    | nonLitNodeConstraint shapeOrRef	{
         $$ = $2 === EmptyShape ?
           extend({ type: "NodeConstraint"}, $1) :
           { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       }
-    | shapeOrRef	// t: 1dotRef1
+    | litNodeConstraint	
+//  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
+    | shapeOrRef	 // t: 1dotRef1
+    | shapeOrRef nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -774,15 +834,36 @@ shapeAtom:
 //       	
 //     | shapeOrRef     ;
 
-inlineShapeAtom:
-//    nodeConstraint _QinlineShapeOrRef_E_Opt	
-      nodeConstraint
-    | nodeConstraint inlineShapeOrRef	{
+_QnonLitNodeConstraint_E_Opt:
+      	
+    | nonLitNodeConstraint     ;
+
+shapeAtomNoRef:
+//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
+      nonLitNodeConstraint
+    | nonLitNodeConstraint shapeOrRef	{
         $$ = $2 === EmptyShape ?
           extend({ type: "NodeConstraint"}, $1) :
           { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       }
-    | inlineShapeOrRef _QnodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
+    | litNodeConstraint	
+//  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
+    | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
+    | shapeDefinition nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
+    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | '.'	-> EmptyShape // t: 1dot
+    ;
+
+inlineShapeAtom:
+//    nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
+      nonLitNodeConstraint
+    | nonLitNodeConstraint inlineShapeOrRef	{
+        $$ = $2 === EmptyShape ?
+          extend({ type: "NodeConstraint"}, $1) :
+          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      }
+    | litNodeConstraint	
+    | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -791,43 +872,31 @@ inlineShapeAtom:
 //     
 //     | inlineShapeOrRef	;
 
-_QnodeConstraint_E_Opt:
-      	
-    | nodeConstraint     ;
-
 shapeOrRef:
       shapeDefinition	// t: 1dotInline1
-    | ATPNAME_LN	{ // t: 1dotRefLNex
-        $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':');
-        $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
-      }
-    | ATPNAME_NS	{ // t: 1dotRefNS1
-        $1 = $1.substr(1, $1.length-1);
-        $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
-      }
-    | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | shapeRef
     ;
 
 inlineShapeOrRef:
       inlineShapeDefinition	// t: 1dotInline1
-    | ATPNAME_LN	{ // t: 1dotRefLNex
+    | shapeRef
+    ;
+
+shapeRef:
+      ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
       }
-    | ATPNAME_NS	{ // t: 1dotRefNS1
+    | ATPNAME_NS	{ // t: 1dotRefNS1@@
         $1 = $1.substr(1, $1.length-1);
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
       }
     | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
-nodeConstraint:
+litNodeConstraint:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
-//  | nonLiteralKind _QstringFacet_E_Star	
-    | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
-    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
@@ -837,7 +906,7 @@ nodeConstraint:
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
-    | _QxsFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
+    | _QnumericFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
     ;
 
 _QxsFacet_E_Star:
@@ -847,6 +916,23 @@ _QxsFacet_E_Star:
           error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
         }
         $$ = extend($1, $2) // t: 1literalLength
+      }
+    ;
+
+nonLitNodeConstraint:
+//    nonLiteralKind _QstringFacet_E_Star	
+      nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
+    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
+    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1) // t: @@
+    ;
+
+_QnumericFacet_E_Plus:
+      numericFacet	// t: !! look to 1literalPattern
+    | _QnumericFacet_E_Plus numericFacet	{
+        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
+          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+        }
+        $$ = extend($1, $2) // t: !! look to 1literalLength
       }
     ;
 
@@ -860,9 +946,9 @@ _QstringFacet_E_Star:
       }
     ;
 
-_QxsFacet_E_Plus:
-      xsFacet	// t: !! look to 1literalPattern
-    | _QxsFacet_E_Plus xsFacet	{
+_QstringFacet_E_Plus:
+      stringFacet	// t: !! look to 1literalPattern
+    | _QstringFacet_E_Plus stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
           error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
         }
@@ -874,21 +960,6 @@ nonLiteralKind:
       IT_IRI	-> { nodeKind: "iri" } // t: 1iriPattern
     | IT_BNODE	-> { nodeKind: "bnode" } // t: 1bnodeLength
     | IT_NONLITERAL	-> { nodeKind: "nonliteral" } // t: 1nonliteralLength
-    ;
-
-//_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
-//      	
-//    | _O_QIT_PATTERN_E_S_Qstring_E_C	
-//    ;
-
-_QstringFacet_E_Plus:
-      stringFacet	// t: 1literalPattern
-    | _QstringFacet_E_Plus stringFacet	{
-        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
-        }
-        $$ = extend($1, $2)
-      }
     ;
 
 xsFacet:
@@ -1137,7 +1208,7 @@ valueSetValue:
       iriRange	// t: 1val1IRIREF
     | literalRange	// t: @@
     | languageRange	// t: @@
-    | '.' _QiriExclusion_E_Plus	-> { type: "IRIStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | '.' _QiriExclusion_E_Plus	-> { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinusliteral3, 1val1dotMinusliteralStem3
     | '.' _QlanguageExclusion_E_Plus	-> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
     ;
@@ -1146,7 +1217,7 @@ iriRange:
       iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "IRIStemRange",
+            type: "IriStemRange",
             stem: $1
           };
           if ($2.length)
@@ -1178,7 +1249,7 @@ _QiriExclusion_E_Plus:
 
 iriExclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
-    | '-' iri '~'	-> { type: "IRIStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    | '-' iri '~'	-> { type: "IriStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
     ;
 
 literalRange:
