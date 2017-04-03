@@ -1,0 +1,10 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/base/n",
+  "shape": "http://a.example/base/S4",
+  "solution": {
+    "type": "EachOfSolutions",
+    "solutions": [
+    ]
+  }
+}
