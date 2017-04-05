@@ -1331,7 +1331,7 @@ languageExclusion:
     ;
 
 language:
-      LANGTAG	-> { value: $1.substr(1) }
+      LANGTAG	-> $1.substr(1)
     ;
 
 include:
