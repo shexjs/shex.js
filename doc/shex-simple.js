@@ -100,10 +100,10 @@ function makeSchemaCache (parseSelector) {
       try {
         if (text.match(/^\s*$/))
           return null;
-        var ret = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
-        if (ret.find().length === 0)
+        var db = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        if (db.find().length === 0)
           return null;
-        return ret;
+        return db;
       } catch (e) {
         return null;
       }
