@@ -10,11 +10,11 @@
       "values": [
         {
           "type": "LanguageStemRange",
-          "stem": { "value": "fr" },
+          "stem": "fr",
           "exclusions": [
-            { "value": "fr-be" },
-            { "value": "fr-cd" },
-            { "value": "fr-ch" }
+            "fr-be",
+            "fr-cd",
+            "fr-ch"
           ]
         }
       ]

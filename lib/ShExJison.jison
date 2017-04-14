@@ -1257,7 +1257,7 @@ literalRange:
         if ($2) {
           $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
             type: "LiteralStemRange",
-            stem: $1
+            stem: $1.value
           };
           if ($2.length)
             $$["exclusions"] = $2; // t: @@ 1val1literalStemMinusliteral3
@@ -1287,8 +1287,8 @@ _QliteralExclusion_E_Plus:
     ;
 
 literalExclusion:
-      '-' literal	-> $2 // t: @@ 1val1literalStemMinusliteral3
-    | '-' literal '~'	-> { type: "LiteralStem", stem: $2 } // t: @@ 1val1literalStemMinusliteralStem3
+      '-' literal	-> $2.value // t: @@ 1val1literalStemMinusliteral3
+    | '-' literal '~'	-> { type: "LiteralStem", stem: $2.value } // t: @@ 1val1literalStemMinusliteralStem3
     ;
 
 languageRange:
@@ -1331,7 +1331,7 @@ languageExclusion:
     ;
 
 language:
-      LANGTAG	-> { value: $1.substr(1) }
+      LANGTAG	-> $1.substr(1)
     ;
 
 include:

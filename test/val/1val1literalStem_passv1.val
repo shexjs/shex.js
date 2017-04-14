@@ -10,7 +10,7 @@
       "values": [
         {
           "type": "LiteralStemRange",
-          "stem": { "value": "v" }
+          "stem": "v"
         }
       ]
     },

@@ -10,19 +10,19 @@
       "values": [
         {
           "type": "LiteralStemRange",
-          "stem": { "value": "v" },
+          "stem": "v",
           "exclusions": [
             {
               "type": "LiteralStem",
-              "stem": { "value": "v1" }
+              "stem": "v1"
             },
             {
               "type": "LiteralStem",
-              "stem": { "value": "v2" }
+              "stem": "v2"
             },
             {
               "type": "LiteralStem",
-              "stem": { "value": "v3" }
+              "stem": "v3"
             }
           ]
         }
