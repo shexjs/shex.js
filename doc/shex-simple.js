@@ -124,7 +124,7 @@ function makeSchemaCache (parseSelector) {
     var start = "start" in obj ? [START_SHAPE_LABEL] : [];
     var rest = "shapes" in obj ? Object.keys(obj.shapes).map(termToLex) : [];
     return start.concat(rest);
-  }
+  };
   return ret;
 }
 
@@ -263,6 +263,14 @@ function disableResultsAndValidate () {
   }, 0);
 }
 
+function hasFocusNode () {
+  return $(".focus").map((idx, elt) => {
+    return $(elt).val();
+  }).get().some(str => {
+    return str.length > 0;
+  });
+}
+
 function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
@@ -272,18 +280,9 @@ function validate () {
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
-    function hasFocusNode () {
-      return $(".focus").map((idx, elt) => {
-        return $(elt).val();
-      }).get().some(str => {
-        return str.length > 0;
-      });
-    }
     if (dataText || hasFocusNode()) {
       parsing = "input data";
-      var shapeMap = getShapeMap($(".focus"), $(".inputShape")).map(pair => {
-        return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
-      });
+      var shapeMap = shapeMapToTerms(getShapeMap($(".focus"), $(".inputShape"), InputData, InputSchema));
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -329,7 +328,7 @@ function validate () {
         new ShExWriter({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
-            res.addClass("error");
+            // res.addClass("error");
           } else {
             results.replace(text).addClass("passes");
           }
@@ -419,7 +418,9 @@ var parseQueryString = function(query) {
   return map;
 };
 
-function getShapeMap (nodeList, shapeList) {
+/** getShapeMap -- zip a node list and a shape list into a ShapeMap
+ */
+function getShapeMap (nodeList, shapeList, data, schema) {
   var nodes = nodeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var shapes = shapeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
@@ -428,25 +429,26 @@ function getShapeMap (nodeList, shapeList) {
           ShExUtil.someNodeWithType(
             ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
                                      label => {
-                                       return (InputData.refresh().
+                                       return (data.refresh().
                                                getTriplesByIRI(null, RDF_TYPE, label).length > 0);
                                      },
                                      loaded.data.prefixes)) :
-        ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
-          var triples = InputData.refresh().getTriplesByIRI(null, null, null);
+        ShExUtil.parsePassedNode($(n).val(), data.meta, () => {
+          var triples = data.refresh().getTriplesByIRI(null, null, null);
           return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
         },
                                  label => {
-                                   return (InputData.refresh().getTriplesByIRI(label, null, null).length > 0 ||
-                                           InputData.refresh().getTriplesByIRI(null, null, label).length > 0);
+                                   return true; // don't check for known.
+                                   // return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
+                                   //         data.refresh().getTriplesByIRI(null, null, label).length > 0);
                                  });
 
     if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
       ret.errors.push("node not found: " + $(n).val());
     var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
-          ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
+          ShExUtil.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
                                    (label) => {
-                                     return label in InputSchema.refresh().shapes;
+                                     return label in schema.refresh().shapes;
                                    });
     if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
       throw Error("shape " + $(shapes[i]).val() + " not defined");
@@ -461,6 +463,15 @@ function getShapeMap (nodeList, shapeList) {
   return mapAndErrors.shapeMap;
 }
 
+/** shapeMapToTerms -- map ShapeMap to API terms
+ * @@TODO: add to ShExValidator so API accepts ShapeMap
+ */
+function shapeMapToTerms (shapeMap) {
+  return shapeMap.map(pair => {
+    return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
+  });
+}
+
 var iface = null; // needed by validate before prepareInterface returns.
 /**
  * Load URL search parameters
@@ -472,7 +483,7 @@ function prepareInterface () {
 
   iface = parseQueryString(location.search);
   var useFirstNodeShapeInputs = true;
-  function _addPair (node, shape) {
+  function _addNSPair (node, shape) {
     if (useFirstNodeShapeInputs) {
       $("#focus0").val(node);
       $("#inputShape0").val(shape);
@@ -482,7 +493,7 @@ function prepareInterface () {
     }
   }
   if ("shape-map" in iface)
-    parseShapeMap("shape-map", _addPair);
+    parseShapeMap("shape-map", _addNSPair);
 
   function parseShapeMap (queryParm, addPair) {
     var shapeMap =  iface[queryParm];
@@ -536,11 +547,14 @@ function prepareInterface () {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
     });
-    var shapeMap = getShapeMap($(".focus"), $(".inputShape"));
-    if (shapeMap.length)
-      parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
-        return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
-      }, []).join(encodeURIComponent(",")));
+    var dataText = InputData.get();
+    if (dataText || hasFocusNode()) {
+      var shapeMap = getShapeMap($(".focus"), $(".inputShape"), InputData, InputSchema);
+      if (shapeMap.length)
+        parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
+          return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
+        }, []).join(encodeURIComponent(",")));
+    }
     if (iface.interface)
       parms.push("interface="+iface.interface[0]);
     var s = parms.join("&");
