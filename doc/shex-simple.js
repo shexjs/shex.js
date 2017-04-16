@@ -101,7 +101,7 @@ function makeSchemaCache (parseSelector) {
         if (text.match(/^\s*$/))
           return null;
         var db = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
-        if (db.find().length === 0)
+        if (db.getTriples().length === 0)
           return null;
         return db;
       } catch (e) {
@@ -114,7 +114,7 @@ function makeSchemaCache (parseSelector) {
         parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
-      var schemaRoot = graph.find(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+      var schemaRoot = graph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
       var val = graphParser.validate(graph, schemaRoot); // start shape
       return ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
     }
@@ -136,7 +136,7 @@ function makeTurtleCache(parseSelector) {
   };
   ret.getNodes = function () {
     var data = this.refresh();
-    return data.find().map(t => {
+    return data.getTriples().map(t => {
       return termToLex(t.subject);
     });
   };
@@ -429,16 +429,16 @@ function getShapeMap (nodeList, shapeList) {
             ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
                                      label => {
                                        return (InputData.refresh().
-                                               findByIRI(null, RDF_TYPE, label).length > 0);
+                                               getTriplesByIRI(null, RDF_TYPE, label).length > 0);
                                      },
                                      loaded.data.prefixes)) :
         ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
-          var triples = InputData.refresh().findByIRI(null, null, null);
+          var triples = InputData.refresh().getTriplesByIRI(null, null, null);
           return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
         },
                                  label => {
-                                   return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
-                                           InputData.refresh().findByIRI(null, null, label).length > 0);
+                                   return (InputData.refresh().getTriplesByIRI(label, null, null).length > 0 ||
+                                           InputData.refresh().getTriplesByIRI(null, null, label).length > 0);
                                  });
 
     if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)

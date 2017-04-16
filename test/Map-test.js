@@ -52,7 +52,7 @@ var Harness = {
           maybeLog(outputGraph.toString());
           maybeLog("expect:");
           maybeLog(loads[1].data.toString());
-          // console.log(outputGraph.find(), "\n--\n", loads[1].data.find());
+          // console.log(outputGraph.getTriples(), "\n--\n", loads[1].data.find());
           expect(outputGraph.equals(loads[1].data)).to.be.true;
           done();
         }).catch(function (error) {
@@ -108,7 +108,7 @@ function graphToString () {
   var w = n3.Writer({
       write: function (chunk, encoding, done) { output += chunk; done && done(); },
   });
-  w.addTriples(this.find(null, null, null)); // is this kosher with no end method?
+  w.addTriples(this.getTriples(null, null, null)); // is this kosher with no end method?
   return "{\n" + output + "\n}";
 }
 
@@ -142,7 +142,7 @@ function graphEquals (right, m) {
     if (g.length == 0)                            // Success if there's nothing left to match.
       return true;
     var t = g.pop(), s = val(t.subject), o = val(t.object); // Take the first triple in left.
-    var tm = right.findByIRI(s, t.predicate, o);  // Find candidates in right.
+    var tm = right.getTriplesByIRI(s, t.predicate, o);  // Find candidates in right.
 
     var r = tm.reduce(function (ret, triple) {    // Walk through candidates in right.
       if (ret) return true;                       // Only examine first successful mapping.
@@ -176,7 +176,7 @@ function graphEquals (right, m) {
     }
     return r;
   }
-  return match(this.find(null, null, null));     // Start with all triples.
+  return match(this.getTriples(null, null, null));     // Start with all triples.
 }
 
   function testEquiv (name, g1, g2, equals, mapping) {
