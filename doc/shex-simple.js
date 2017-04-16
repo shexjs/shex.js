@@ -433,7 +433,7 @@ function getShapeMap (nodeList, shapeList, data, schema) {
                                                getTriplesByIRI(null, RDF_TYPE, label).length > 0);
                                      },
                                      loaded.data.prefixes)) :
-        ShExUtil.parsePassedNode($(n).val(), data.meta, () => {
+        ShExUtil.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
           var triples = data.refresh().getTriplesByIRI(null, null, null);
           return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
         },
