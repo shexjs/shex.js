@@ -15,6 +15,7 @@ var extensions = require("./lib/extensions");
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 
+var UNBOUNDED = -1;
 const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
 function register (validator) {
@@ -176,7 +177,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
 
         } else {
           var oldSubject = curSubjectx.cs;
-          var maxAdd = "max" in expr ? expr.max === "*" ? Infinity : expr.max : 1;
+          var maxAdd = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
           if (maxAdd > MAX_MAX_CARD)
             maxAdd = MAX_MAX_CARD;
           if (!recurse)
@@ -203,7 +204,7 @@ function extractBindingsDelMe (soln, min, max, depth) {
   if ("min" in soln && soln.min < min)
     min = soln.min
   var myMax = "max" in soln ?
-      (soln.max === "*" ?
+      (soln.max === UNBOUNDED ?
        Infinity :
        soln.max) :
       1;
