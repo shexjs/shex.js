@@ -97,8 +97,8 @@ describe("A ShEx parser", function () {
            try {
              var schemaGraph = N3.Store();
              schemaGraph.addTriples(N3.Parser({documentIRI:shexRFile, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
-             // console.log(schemaGraph.find());
-             var schemaRoot = schemaGraph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
+             // console.log(schemaGraph.getTriples());
+             var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
                parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8")),

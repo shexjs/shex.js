@@ -24,6 +24,8 @@
     ShEx parser in the Jison parser generator format.
   */
 
+  var UNBOUNDED = -1;
+
   var ShExUtil = require("./ShExUtil");
 
   // Common namespaces and entities
@@ -262,7 +264,15 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return ShExUtil.unescapeText(string, stringEscapeReplacements);
+    return { value: ShExUtil.unescapeText(string, stringEscapeReplacements) };
+  }
+
+  function unescapeLangString(string, trimLength) {
+    var at = string.lastIndexOf("@");
+    var lang = string.substr(at);
+    string = string.substr(0, at);
+    var u = unescapeString(string, trimLength);
+    return extend(u, { language: lowercase(lang.substr(1)) });
   }
 
   // Translates regular expression escape codes in the string into their textual equivalent
@@ -407,13 +417,21 @@ HEX                     [0-9] | [A-F] | [a-f]
 PERCENT                 '%' {HEX} {HEX}
 UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX}
 CODE                    "{" ([^%\\] | "\\"[%\\] | {UCHAR})* "%}"
+
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
 //NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
 //NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
+
 STRING_GRAVE            '`' ([^\u0060\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '`' /* #x60=` #x5C=\ #xA=new line #xD=carriage return */
+
+LANG_STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" {LANGTAG}
+LANG_STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' {LANGTAG}
+LANG_STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''" {LANGTAG}
+LANG_STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""' {LANGTAG}
+
 IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 //ATIRIREF              '@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
@@ -454,13 +472,20 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{PERCENT}             return 'PERCENT';
 //{UCHAR}               return 'UCHAR';
 {CODE}                  return 'CODE';
-{STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
+
+{LANG_STRING_LITERAL_LONG1}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: @@
+{LANG_STRING_LITERAL_LONG2}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
+{LANG_STRING_LITERAL1}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: @@
+{LANG_STRING_LITERAL2}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: 1val1LANGTAG
+
+{STRING_LITERAL_LONG1}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL1     
 //{NON_TERMINATED_STRING_LITERAL_LONG1}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
+{STRING_LITERAL_LONG2}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG1
 //{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL1}       return 'STRING_LITERAL1';
-{STRING_LITERAL2}       return 'STRING_LITERAL2';
-{STRING_GRAVE}          return 'STRING_GRAVE';
+{STRING_LITERAL1}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL2     
+{STRING_LITERAL2}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG2
+{STRING_GRAVE}          { yytext = unescapeString(yytext, 1); return 'STRING_GRAVE'; }
+
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
 //{PLX}                 return 'PLX';
 //{PN_LOCAL}            return 'PN_LOCAL';
@@ -538,6 +563,7 @@ shexDoc:
         if (Parser._base !== null)
           ret.base = Parser._base;
         Parser.reset();
+//console.log(JSON.stringify(ret));
         return ret;
       }
     ;
@@ -623,7 +649,7 @@ start:
       //     error("Parse error: start already defined as " + Parser.start);
       //   Parser.start = $3; // t: startInline
       // }
-      IT_start '=' shapeExpression	{
+      IT_start '=' inlineShapeExpression	{
         if (Parser.start)
           error("Parse error: start already defined");
         Parser.start = $3; // t: startInline
@@ -680,7 +706,33 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
     ;
 
 shapeExpression:
-      shapeOr	
+      _QIT_NOT_E_Opt shapeAtomNoRef _QshapeOr_E_Opt	{
+        if ($1)
+          $2 = { type: "ShapeNot", "shapeExpr": $2 };
+        if ($3) {
+          $3.shapeExprs.unshift($2);
+          $$ = $3;
+        } else {
+// console.log("shapeAtomNoRef:", $2);
+          $$ = $2;
+        }
+      }
+    | IT_NOT shapeRef _QshapeOr_E_Opt	-> { type: "ShapeNot", "shapeExpr": $2 }
+    | shapeRef shapeOr	{
+// console.log("shapeRef_shapeOr:", $1, $2);
+        $2.shapeExprs.unshift($1);
+        $$ = $2; // { type: "ShapeOr", "shapeExprs": [$1].concat($2) };
+    }
+    ;
+
+_QIT_NOT_E_Opt:
+    	-> false
+    | IT_NOT	-> true
+    ;
+
+_QshapeOr_E_Opt:
+    	-> null
+    | shapeOr	-> $1
     ;
 
 inlineShapeExpression:
@@ -688,11 +740,45 @@ inlineShapeExpression:
     ;
 
 shapeOr:
-      shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
+      Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{
+        $$ = { type: "ShapeOr", shapeExprs: $1 };
+// console.log("shapeOr_1:", $$);
+      }
+    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
+        $$ = $2.length > 0 ? shapeJunction("ShapeAnd", $1, $2) : { type: "ShapeAnd", shapeExprs:$1 };
+// console.log("shapeOr_2:", $$);
+      }
     ;
+
+// shapeOr:
+//       Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	
+//           -> $1.length > 1 ? { type: "ShapeOr", shapeExprs: $1 } : $1
+//     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
+//         // [not] [] -> not
+//         // [not] [and and and] -> Or([not and and and])
+//         // [not not] [and] -> Or([not not and])
+//         // [not not] [and and and] -> Or([not not and and and])
+//         var disjuncts = $1.concat($2);
+//         $$ = disjuncts.length > 1 ? { type: "ShapeOr", shapeExprs: disjuncts } : disjuncts[0];
+//       }
+//     ;
 
 _O_QIT_OR_E_S_QshapeAnd_E_C:
       IT_OR shapeAnd	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus:
+      _O_QIT_OR_E_S_QshapeAnd_E_C	-> [$1]
+    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2)
+    ;
+
+_O_QIT_AND_E_S_QshapeNot_E_C:
+      IT_AND shapeNot	-> $2
+    ;
+
+_Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus:
+      _O_QIT_AND_E_S_QshapeNot_E_C	-> [$1]
+    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2)
     ;
 
 _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star:
@@ -715,10 +801,6 @@ _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star:
 
 shapeAnd:
       shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
-    ;
-
-_O_QIT_AND_E_S_QshapeNot_E_C:
-      IT_AND shapeNot	-> $2
     ;
 
 _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star:
@@ -761,14 +843,17 @@ inlineShapeNot:
     ;
 
 shapeAtom:
-//    nodeConstraint _QshapeOrRef_E_Opt	
-      nodeConstraint
-    | nodeConstraint shapeOrRef	{
+//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
+      nonLitNodeConstraint
+    | nonLitNodeConstraint shapeOrRef	{
         $$ = $2 === EmptyShape ?
           extend({ type: "NodeConstraint"}, $1) :
           { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       }
-    | shapeOrRef	// t: 1dotRef1
+    | litNodeConstraint	
+//  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
+    | shapeOrRef	 // t: 1dotRef1
+    | shapeOrRef nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -777,15 +862,36 @@ shapeAtom:
 //       	
 //     | shapeOrRef     ;
 
-inlineShapeAtom:
-//    nodeConstraint _QinlineShapeOrRef_E_Opt	
-      nodeConstraint
-    | nodeConstraint inlineShapeOrRef	{
+_QnonLitNodeConstraint_E_Opt:
+      	
+    | nonLitNodeConstraint     ;
+
+shapeAtomNoRef:
+//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
+      nonLitNodeConstraint
+    | nonLitNodeConstraint shapeOrRef	{
         $$ = $2 === EmptyShape ?
           extend({ type: "NodeConstraint"}, $1) :
           { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
       }
-    | inlineShapeOrRef _QnodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
+    | litNodeConstraint	
+//  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
+    | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
+    | shapeDefinition nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
+    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | '.'	-> EmptyShape // t: 1dot
+    ;
+
+inlineShapeAtom:
+//    nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
+      nonLitNodeConstraint
+    | nonLitNodeConstraint inlineShapeOrRef	{
+        $$ = $2 === EmptyShape ?
+          extend({ type: "NodeConstraint"}, $1) :
+          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      }
+    | litNodeConstraint	
+    | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -794,43 +900,31 @@ inlineShapeAtom:
 //     
 //     | inlineShapeOrRef	;
 
-_QnodeConstraint_E_Opt:
-      	
-    | nodeConstraint     ;
-
 shapeOrRef:
       shapeDefinition	// t: 1dotInline1
-    | ATPNAME_LN	{ // t: 1dotRefLNex
-        $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':');
-        $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
-      }
-    | ATPNAME_NS	{ // t: 1dotRefNS1
-        $1 = $1.substr(1, $1.length-1);
-        $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
-      }
-    | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | shapeRef
     ;
 
 inlineShapeOrRef:
       inlineShapeDefinition	// t: 1dotInline1
-    | ATPNAME_LN	{ // t: 1dotRefLNex
+    | shapeRef
+    ;
+
+shapeRef:
+      ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
       }
-    | ATPNAME_NS	{ // t: 1dotRefNS1
+    | ATPNAME_NS	{ // t: 1dotRefNS1@@
         $1 = $1.substr(1, $1.length-1);
         $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
       }
     | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
-nodeConstraint:
+litNodeConstraint:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
-//  | nonLiteralKind _QstringFacet_E_Star	
-    | nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
-    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
@@ -840,7 +934,7 @@ nodeConstraint:
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
     | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
-    | _QxsFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
+    | _QnumericFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
     ;
 
 _QxsFacet_E_Star:
@@ -850,6 +944,23 @@ _QxsFacet_E_Star:
           error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
         }
         $$ = extend($1, $2) // t: 1literalLength
+      }
+    ;
+
+nonLitNodeConstraint:
+//    nonLiteralKind _QstringFacet_E_Star	
+      nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
+    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
+    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1) // t: @@
+    ;
+
+_QnumericFacet_E_Plus:
+      numericFacet	// t: !! look to 1literalPattern
+    | _QnumericFacet_E_Plus numericFacet	{
+        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
+          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+        }
+        $$ = extend($1, $2) // t: !! look to 1literalLength
       }
     ;
 
@@ -863,9 +974,9 @@ _QstringFacet_E_Star:
       }
     ;
 
-_QxsFacet_E_Plus:
-      xsFacet	// t: !! look to 1literalPattern
-    | _QxsFacet_E_Plus xsFacet	{
+_QstringFacet_E_Plus:
+      stringFacet	// t: !! look to 1literalPattern
+    | _QstringFacet_E_Plus stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
           error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
         }
@@ -877,21 +988,6 @@ nonLiteralKind:
       IT_IRI	-> { nodeKind: "iri" } // t: 1iriPattern
     | IT_BNODE	-> { nodeKind: "bnode" } // t: 1bnodeLength
     | IT_NONLITERAL	-> { nodeKind: "nonliteral" } // t: 1nonliteralLength
-    ;
-
-//_Q_O_QIT_PATTERN_E_S_Qstring_E_C_E_Opt:
-//      	
-//    | _O_QIT_PATTERN_E_S_Qstring_E_C	
-//    ;
-
-_QstringFacet_E_Plus:
-      stringFacet	// t: 1literalPattern
-    | _QstringFacet_E_Plus stringFacet	{
-        if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
-        }
-        $$ = extend($1, $2)
-      }
     ;
 
 xsFacet:
@@ -1107,8 +1203,8 @@ tripleConstraint:
 //     | senseFlags     ;
 
 cardinality:
-      '*'	-> { min:0, max:"unbounded" } // t: 1cardStar
-    | '+'	-> { min:1, max:"unbounded" } // t: 1cardPlus
+      '*'	-> { min:0, max:UNBOUNDED } // t: 1cardStar
+    | '+'	-> { min:1, max:UNBOUNDED } // t: 1cardPlus
     | '?'	-> { min:0, max:1 } // t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
@@ -1119,7 +1215,7 @@ cardinality:
         else if ($1.indexOf(',') === -1) // t: 1card2
             $$["max"] = parseInt(nums[0], 10);
         else
-            $$["max"] = "unbounded";
+            $$["max"] = UNBOUNDED;
       }
     ;
 
@@ -1138,15 +1234,19 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
-    | STRING_GRAVE	-> Parser._termResolver.resolve(unescapeString($1, 1))
-    | literal	// t: 1val1DECIMAL
+    | STRING_GRAVE	-> Parser._termResolver.resolve($1)
+    | literalRange	// t: @@
+    | languageRange	// t: @@
+    | '.' _QiriExclusion_E_Plus	-> { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | '.' _QlanguageExclusion_E_Plus	-> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
     ;
 
 iriRange:
-      iri _Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt	{
+      iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "StemRange",
+            type: "IriStemRange",
             stem: $1
           };
           if ($2.length)
@@ -1155,31 +1255,112 @@ iriRange:
           $$ = $1; // t: 1val1IRIREF, 1AvalA
         }
       }
-    | '.' _Qexclusion_E_Plus	-> { type: "StemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
-_Qexclusion_E_Star:
+_QiriExclusion_E_Star:
       	-> [] // t: 1val1iriStem, 1val1iriStemMinusiri3
-    | _Qexclusion_E_Star exclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
+    | _QiriExclusion_E_Star iriExclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
     ;
 
-_O_Q_TILDE_E_S_Qexclusion_E_Star_C:
-      '~' _Qexclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
+_O_Q_TILDE_E_S_QiriExclusion_E_Star_C:
+      '~' _QiriExclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
     ;
 
-_Q_O_Q_TILDE_E_S_Qexclusion_E_Star_C_E_Opt:
+_Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
       // t: 1val1IRIREF
-    | _O_Q_TILDE_E_S_Qexclusion_E_Star_C	// t: 1val1iriStemMinusiri3
+    | _O_Q_TILDE_E_S_QiriExclusion_E_Star_C	// t: 1val1iriStemMinusiri3
     ;
 
-_Qexclusion_E_Plus:
-      exclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | _Qexclusion_E_Plus exclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+_QiriExclusion_E_Plus:
+      iriExclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
-exclusion:
+iriExclusion:
       '-' iri	-> $2 // t: 1val1iriStemMinusiri3
-    | '-' iri '~'	-> { type: "Stem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    | '-' iri '~'	-> { type: "IriStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+    ;
+
+literalRange:
+      literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
+        if ($2) {
+          $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+            type: "LiteralStemRange",
+            stem: $1.value
+          };
+          if ($2.length)
+            $$["exclusions"] = $2; // t: @@ 1val1literalStemMinusliteral3
+        } else {
+          $$ = $1; // t: @@ 1val1LITERAL, 1AvalA
+        }
+      }
+    ;
+
+_QliteralExclusion_E_Star:
+      	-> [] // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C:
+      '~' _QliteralExclusion_E_Star	-> $2 // t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
+      // t: @@ 1val1LITERAL
+    | _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C	// t: @@ 1val1literalStemMinusliteral3
+    ;
+
+_QliteralExclusion_E_Plus:
+      literalExclusion	-> [$1] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    ;
+
+literalExclusion:
+      '-' literal	-> $2.value // t: @@ 1val1literalStemMinusliteral3
+    | '-' literal '~'	-> { type: "LiteralStem", stem: $2.value } // t: @@ 1val1literalStemMinusliteralStem3
+    ;
+
+languageRange:
+      language _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
+        if ($2) {
+          $$ = {  // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
+            type: "LanguageStemRange",
+            stem: $1
+          };
+          if ($2.length)
+            $$["exclusions"] = $2; // t: @@ 1val1languageStemMinuslanguage3
+        } else {
+          $$ = $1; // t: @@ 1val1LANGUAGE, 1AvalA
+        }
+      }
+    ;
+
+_QlanguageExclusion_E_Star:
+      	-> [] // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
+    | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2) // t: @@ 1val1languageStemMinuslanguage3
+    ;
+
+_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C:
+      '~' _QlanguageExclusion_E_Star	-> $2 // t: @@ 1val1languageStemMinuslanguage3
+    ;
+
+_Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
+      // t: @@ 1val1LANGUAGE
+    | _O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C	// t: @@ 1val1languageStemMinuslanguage3
+    ;
+
+_QlanguageExclusion_E_Plus:
+      languageExclusion	-> [$1] // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    | _QlanguageExclusion_E_Plus languageExclusion	-> appendTo($1, $2) // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    ;
+
+languageExclusion:
+      '-' language	-> $2 // t: @@ 1val1languageStemMinuslanguage3
+    | '-' language '~'	-> { type: "LanguageStem", stem: $2 } // t: @@ 1val1languageStemMinuslanguageStem3
+    ;
+
+language:
+      LANGTAG	-> $1.substr(1)
     ;
 
 include:
@@ -1212,12 +1393,16 @@ codeDecl:
     ;
 
 literal:
-      string	-> { value: $1 } // t: 1val1STRING_LITERAL1
-    | string LANGTAG	-> { value: $1, language: lowercase($2.substr(1)) } // t: 1val1LANGTAG
-    | string '^^' datatype	-> { value: $1, type: $3 } // t: 1val1Datatype
+      LANG_STRING	// t: 1val1STRING_LITERAL1
+    | STRING optDT	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
     | numericLiteral
     | IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
     | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
+    ;
+
+optDT:
+      	-> null
+    | '^^' datatype	-> $2
     ;
 
 predicate:
@@ -1244,13 +1429,6 @@ numericLiteral:
     | DOUBLE	-> createLiteral($1, XSD_DOUBLE) // t: 1val1DOUBLE
     ;
 
-string:
-      STRING_LITERAL1	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL1
-    | STRING_LITERAL_LONG1	-> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG1
-    | STRING_LITERAL2	-> unescapeString($1, 1) // t: 1val1STRING_LITERAL2
-    | STRING_LITERAL_LONG2	-> unescapeString($1, 3) // t: 1val1STRING_LITERAL_LONG2
-    ;
-
 iri:
       IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? ShExUtil.unescapeText($1.slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($1.slice(1,-1), {})) // t: 1dot
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
@@ -1272,7 +1450,7 @@ iriOrLabel:
         $$ = expandPrefix($1.substr(0, $1.length - 1));
     }
     | STRING_GRAVE {
-        $$ = Parser._termResolver.resolve(unescapeString($1, 1));
+        $$ = Parser._termResolver.resolve($1);
     }
     ;
 

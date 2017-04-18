@@ -13,13 +13,13 @@
       .error , #results textarea.error  { padding-left: .1em; border-left: thick solid #b00; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
-      .schema.textarea, .schema { background-color: #f4f4ff; }
+      .schema.textarea, .schema { background-color: #f4f4ff; border-color: #fc561c }
       #inputSchema li.selected a { background-color: #e8e8ff; }
       #meta textarea, .meta { background-color: #fffff4; }
       #meta li.selected { background-color: #ffffe8; }
-      #inputData textarea, .data { background-color: #f4fff4; }
+      #inputData textarea, .data { background-color: #f4fff4; border-color: #f0a133 }
       #inputData li.selected { background-color: #e8ffe8; }
-      .droparea { border: .25em dashed #ddd; }
+      .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
       #results textarea:disabled { background-color: #fff; }
       #results textarea { width: 99%; border: none; }
@@ -83,7 +83,7 @@
   <body>
 
     <div id="title">
-      <h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
+      <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <ul id="navlist" style="float:left; padding-left: 1em;">
         <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li>
         <li>‣ <span class="heading">controls:</span> <input type="checkbox" id="append"/><label for="append">drop appends</label> | <label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select> </li>
