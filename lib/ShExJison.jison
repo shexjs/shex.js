@@ -1377,10 +1377,10 @@ _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star:
     ;
 
 _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C:
-      "<"	
-    | "="	
-    | "!="	
-    | ">"	
+      '<'	
+    | '='	
+    | '!='	
+    | '>'	
     ;
 
 accessor:
