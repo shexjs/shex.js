@@ -213,7 +213,7 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
   Schema(loaded.schema.shapes);
   remove(schema, "shapes");
   empty(schema);
-  var tz = db.find();
+  var tz = db.getTriples();
   var w = require("n3").Writer({ prefixes: {
     my: "http://a.example/",
     sh: "http://www.w3.org/ns/shacl#"

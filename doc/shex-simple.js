@@ -13,8 +13,10 @@ var ShExRSchema; // defined below
 function parseTurtle (text, meta) {
   var ret = N3Store();
   N3Parser._resetBlankNodeIds();
-  var parser = N3Parser({documentIRI:Base});
-  ret.addTriples(parser.parse(text));
+  var parser = N3Parser({documentIRI:Base, format: "text/turtle" });
+  var triples = parser.parse(text);
+  if (triples !== undefined)
+    ret.addTriples(triples);
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
   return ret;
@@ -76,7 +78,7 @@ function _makeCache (parseSelector) {
 
 function makeSchemaCache (parseSelector) {
   var ret = _makeCache(parseSelector);
-  ret.meta = {};
+  ret.meta = { prefixes: {}, base: null };
   var graph = null;
   ret.language = null;
   ret.parse = function (text) {
@@ -96,7 +98,12 @@ function makeSchemaCache (parseSelector) {
 
     function tryN3 (text) {
       try {
-        return text.match(/^\s*$/) ? null : parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        if (text.match(/^\s*$/))
+          return null;
+        var db = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        if (db.getTriples().length === 0)
+          return null;
+        return db;
       } catch (e) {
         return null;
       }
@@ -104,10 +111,10 @@ function makeSchemaCache (parseSelector) {
 
     function parseShExR () {
       var graphParser = ShExValidator.construct(
-        parseShEx(ShExRSchema),
+        parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
-      var schemaRoot = graph.find(null, ShExUtil.RDF.type, "http://shex.io/ns/shex#Schema")[0].subject;
+      var schemaRoot = graph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
       var val = graphParser.validate(graph, schemaRoot); // start shape
       return ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
     }
@@ -117,7 +124,7 @@ function makeSchemaCache (parseSelector) {
     var start = "start" in obj ? [START_SHAPE_LABEL] : [];
     var rest = "shapes" in obj ? Object.keys(obj.shapes).map(termToLex) : [];
     return start.concat(rest);
-  }
+  };
   return ret;
 }
 
@@ -129,7 +136,7 @@ function makeTurtleCache(parseSelector) {
   };
   ret.getNodes = function () {
     var data = this.refresh();
-    return data.find().map(t => {
+    return data.getTriples().map(t => {
       return termToLex(t.subject);
     });
   };
@@ -256,6 +263,14 @@ function disableResultsAndValidate () {
   }, 0);
 }
 
+function hasFocusNode () {
+  return $(".focus").map((idx, elt) => {
+    return $(elt).val();
+  }).get().some(str => {
+    return str.length > 0;
+  });
+}
+
 function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
@@ -265,18 +280,9 @@ function validate () {
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
-    function hasFocusNode () {
-      return $(".focus").map((idx, elt) => {
-        return $(elt).val();
-      }).get().some(str => {
-        return str.length > 0;
-      });
-    }
     if (dataText || hasFocusNode()) {
       parsing = "input data";
-      var shapeMap = getShapeMap().map(pair => {
-        return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
-      });
+      var shapeMap = shapeMapToTerms(getShapeMap($(".focus"), $(".inputShape"), InputData, InputSchema));
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -287,7 +293,7 @@ function validate () {
             "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
             ("errors" in ret ?
              ShExUtil.errsToSimple(ret).join("\n") :
-             JSON.stringify(ShExUtil.valToSimple(ret), null, 2)) :
+             JSON.stringify(ShExUtil.simpleToShapeMap(ShExUtil.valToSimple(ret)), null, 2)) :
           JSON.stringify(ret, null, "  ");
       var res = results.replace(text);
       $("#results .status").hide();
@@ -322,7 +328,7 @@ function validate () {
         new ShExWriter({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
-            res.addClass("error");
+            // res.addClass("error");
           } else {
             results.replace(text).addClass("passes");
           }
@@ -343,9 +349,9 @@ function addNodeShapePair (evt, pairs) {
   pairs.forEach(pair => {
     var id = Removables.length+1;
     var t = $("<span><br/><input id='focus"+id+
-              "' type='text' value='"+pair.node+
+              "' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
               "' class='data focus'/> as <input id='inputShape"+id+
-              "' type='text' value='"+pair.shape+
+              "' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
               "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
              );
     addContextMenus("#focus"+id, "#inputShape"+id);
@@ -371,7 +377,7 @@ function removeNodeShapePair (evt, howMany) {
   return false;
 }
 
-function prepareConstrols () {
+function prepareControls () {
   $("#inputData .passes, #inputData .fails").hide();
   $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#validate").on("click", disableResultsAndValidate);
@@ -412,34 +418,37 @@ var parseQueryString = function(query) {
   return map;
 };
 
-function getShapeMap () {
-  var nodes = $(".focus").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  var shapes = $(".inputShape").map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+/** getShapeMap -- zip a node list and a shape list into a ShapeMap
+ */
+function getShapeMap (nodeList, shapeList, data, schema) {
+  var nodes = nodeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
+  var shapes = shapeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
   var mapAndErrors = nodes.get().reduce((ret, n, i) => {
 
     var node = "node-type" in iface ?
           ShExUtil.someNodeWithType(
             ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
                                      label => {
-                                       return (InputData.refresh().
-                                               findByIRI(null, RDF_TYPE, label).length > 0);
+                                       return (data.refresh().
+                                               getTriplesByIRI(null, RDF_TYPE, label).length > 0);
                                      },
                                      loaded.data.prefixes)) :
-        ShExUtil.parsePassedNode($(n).val(), InputData.meta, () => {
-          var triples = InputData.refresh().findByIRI(null, null, null);
+        ShExUtil.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
+          var triples = data.refresh().getTriplesByIRI(null, null, null);
           return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
         },
                                  label => {
-                                   return (InputData.refresh().findByIRI(label, null, null).length > 0 ||
-                                           InputData.refresh().findByIRI(null, null, label).length > 0);
+                                   return true; // don't check for known.
+                                   // return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
+                                   //         data.refresh().getTriplesByIRI(null, null, label).length > 0);
                                  });
 
     if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
       ret.errors.push("node not found: " + $(n).val());
     var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
-          ShExUtil.parsePassedNode($(shapes[i]).val(), InputSchema.meta, () => { Object.keys(InputSchema.refresh().shapes)[0]; },
+          ShExUtil.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
                                    (label) => {
-                                     return label in InputSchema.refresh().shapes;
+                                     return label in schema.refresh().shapes;
                                    });
     if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
       throw Error("shape " + $(shapes[i]).val() + " not defined");
@@ -454,6 +463,15 @@ function getShapeMap () {
   return mapAndErrors.shapeMap;
 }
 
+/** shapeMapToTerms -- map ShapeMap to API terms
+ * @@TODO: add to ShExValidator so API accepts ShapeMap
+ */
+function shapeMapToTerms (shapeMap) {
+  return shapeMap.map(pair => {
+    return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
+  });
+}
+
 var iface = null; // needed by validate before prepareInterface returns.
 /**
  * Load URL search parameters
@@ -464,10 +482,22 @@ function prepareInterface () {
     return;
 
   iface = parseQueryString(location.search);
-  if ("shape-map" in iface) {
-    var shapeMap =  iface["shape-map"];
-    delete iface["shape-map"];
-    var first = true;
+  var useFirstNodeShapeInputs = true;
+  function _addNSPair (node, shape) {
+    if (useFirstNodeShapeInputs) {
+      $("#focus0").val(node);
+      $("#inputShape0").val(shape);
+      useFirstNodeShapeInputs = false;
+    } else {
+      addNodeShapePair(null, [{node: node, shape: shape}]);
+    }
+  }
+  if ("shape-map" in iface)
+    parseShapeMap("shape-map", _addNSPair);
+
+  function parseShapeMap (queryParm, addPair) {
+    var shapeMap =  iface[queryParm];
+    delete iface[queryParm];
     //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
     var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
     var pairPattern = s + "@" + s + ",?";
@@ -479,13 +509,7 @@ function prepareInterface () {
           var p = r2.match(RegExp(pairPattern));
           var node = p[1], shape = p[2];
           r[node] = node in r ? r[node].concat(shape) : [shape];
-          if (first) {
-            $("#focus0").val(node);
-            $("#inputShape0").val(shape);
-            first = false;
-          } else {
-            addNodeShapePair(null, [{node: node, shape: shape}]);
-          }
+          addPair(node, shape);
         });
         return r;
       }, {});
@@ -523,11 +547,14 @@ function prepareInterface () {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
     });
-    var shapeMap = getShapeMap();
-    if (shapeMap.length)
-      parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
-        return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
-      }, []).join(encodeURIComponent(",")));
+    var dataText = InputData.get();
+    if (dataText || hasFocusNode()) {
+      var shapeMap = getShapeMap($(".focus"), $(".inputShape"), InputData, InputSchema);
+      if (shapeMap.length)
+        parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
+          return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
+        }, []).join(encodeURIComponent(",")));
+    }
     if (iface.interface)
       parms.push("interface="+iface.interface[0]);
     var s = parms.join("&");
@@ -777,10 +804,10 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
 
-ShExRSchema = `PREFIX sx: <http://shex.io/ns/shex#>
+ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-BASE <http://shex.io/ns/ShExR#>
+BASE <http://www.w3.org/ns/shex#>
 start=@<Schema>
 
 <Schema> CLOSED {
@@ -809,12 +836,10 @@ start=@<Schema>
 
 <NodeConstraint> CLOSED {
   a [sx:NodeConstraint] ;
-  (  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]
-   | sx:datatype IRI
-#   | &<xsFacet>
-   | &<stringFacet>
-   | &<numericFacet>
-   | sx:values @<valueSetValueList1Plus>)+
+  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]?;
+  sx:datatype IRI ? ;
+  &<xsFacets>  ;
+  sx:values @<valueSetValueList1Plus>?
 }
 
 <Shape> CLOSED {
@@ -823,6 +848,7 @@ start=@<Schema>
   sx:extra IRI* ;
   sx:expression @<tripleExpression>? ;
   sx:semActs @<SemActList1Plus>? ;
+  sx:annotation @<Annotation>* ;
 }
 
 <ShapeExternal> CLOSED {
@@ -843,11 +869,12 @@ start=@<Schema>
 
 # <xsFacet> @<stringFacet> OR @<numericFacet>
 <facet_holder> { # hold labeled productions
+  $<xsFacets> ( &<stringFacet> | &<numericFacet> )* ;
   $<stringFacet> (
       sx:length xsd:integer
     | sx:minlength xsd:integer
     | sx:maxlength xsd:integer
-    | sx:pattern xsd:string
+    | sx:pattern xsd:string ; sx:flags xsd:string?
   );
   $<numericFacet> (
       sx:mininclusive   @<numericLiteral>
@@ -860,13 +887,27 @@ start=@<Schema>
 }
 <numericLiteral> xsd:integer OR xsd:decimal OR xsd:double
 
-<valueSetValue> @<objectValue> OR @<Stem> OR @<StemRange>
+<valueSetValue> @<objectValue> OR @<IriStem> OR @<IriStemRange>
+                               OR @<LiteralStem> OR @<LiteralStemRange>
+                               OR @<LanguageStem> OR @<LanguageStemRange>
 <objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
-<Stem> CLOSED { a [sx:Stem]; sx:stem xsd:anyUri }
-<StemRange> CLOSED {
-  a [sx:StemRange];
-  sx:stem xsd:anyUri OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<Stem>*
+<IriStem> CLOSED { a [sx:IriStem]; sx:stem xsd:string }
+<IriStemRange> CLOSED {
+  a [sx:IriStemRange];
+  sx:stem xsd:string OR @<Wildcard>;
+  sx:exclusion @<objectValue> OR @<IriStem>*
+}
+<LiteralStem> CLOSED { a [sx:LiteralStem]; sx:stem xsd:string }
+<LiteralStemRange> CLOSED {
+  a [sx:LiteralStemRange];
+  sx:stem xsd:string OR @<Wildcard>;
+  sx:exclusion @<objectValue> OR @<LiteralStem>*
+}
+<LanguageStem> CLOSED { a [sx:LanguageStem]; sx:stem xsd:string }
+<LanguageStemRange> CLOSED {
+  a [sx:LanguageStemRange];
+  sx:stem xsd:string OR @<Wildcard>;
+  sx:exclusion @<objectValue> OR @<LanguageStem>*
 }
 <Wildcard> BNODE CLOSED {
   a [sx:Wildcard]
@@ -877,7 +918,7 @@ start=@<Schema>
 <OneOf> CLOSED {
   a [sx:OneOf] ;
   sx:min xsd:integer? ;
-  sx:max xsd:integer OR [sx:unbounded]? ;
+  sx:max xsd:integer? ;
   sx:expressions @<tripleExpressionList2Plus> ;
   sx:semActs @<SemActList1Plus>? ;
   sx:annotation @<Annotation>*
@@ -886,7 +927,7 @@ start=@<Schema>
 <EachOf> CLOSED {
   a [sx:EachOf] ;
   sx:min xsd:integer? ;
-  sx:max xsd:integer OR [sx:unbounded]? ;
+  sx:max xsd:integer? ;
   sx:expressions @<tripleExpressionList2Plus> ;
   sx:semActs @<SemActList1Plus>? ;
   sx:annotation @<Annotation>*
@@ -906,7 +947,7 @@ start=@<Schema>
   sx:inverse [true false]? ;
   sx:negated [true false]? ;
   sx:min xsd:integer? ;
-  sx:max xsd:integer OR [sx:unbounded]? ;
+  sx:max xsd:integer? ;
   sx:predicate IRI ;
   sx:valueExpr @<shapeExpr>? ;
   sx:semActs @<SemActList1Plus>? ;
@@ -932,7 +973,7 @@ start=@<Schema>
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
 
-prepareConstrols();
+prepareControls();
 prepareInterface();
 prepareDragAndDrop();
 prepareDemos();
