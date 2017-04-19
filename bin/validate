@@ -46,6 +46,7 @@ var ValidatorOptions = { diagnose: true };
 var SchemaOptions = { duplicateShape: "abort" };
 // var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
+const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 var orChoices = Object.keys(ShExValidator.options.or).join("|");
 var parChoices = Object.keys(ShExValidator.options.partition).join("|");
 var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
@@ -109,43 +110,6 @@ function abort (msg) {
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
  */
 var N3 = require("n3");
-function resolveRelativeIRI (baseIri, relativeIri) {
-  if (!N3.Util.isIRI(relativeIri))
-    return relativeIri; // not really an IRI
-  var p = N3.Parser({ documentIRI: baseIri });
-  p._readSubject({type: "IRI", value: relativeIri});
-  return p._subject;
-}
-
-function resolvePrefixedIRI (prefixedIri, prefixes) {
-  var colon = prefixedIri.indexOf(":");
-  if (colon === -1)
-    return null;
-  var prefix = prefixes[prefixedIri.substr(0, colon)];
-  return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
-}
-
-function parsePassedNode (passedValue, meta, deflt, known) {
-  if (!meta)
-    return known(passedValue) ? passedValue : UnknownIRI;
-  if (passedValue === undefined || passedValue.length === 0)
-    return known && known(meta.base) ? meta.base : deflt ? deflt() : NotSupplied;
-  var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
-  if (relIRI)
-    passedValue = passedValue.substr(1, passedValue.length-2);
-  var t = resolveRelativeIRI(meta.base, passedValue);
-  if (known(t))
-    return t;
-  if (!relIRI) {
-    t = resolvePrefixedIRI(passedValue, meta.prefixes);
-    if (t !== null && known(t))
-      return t;
-  }
-  return UnknownIRI;
-}
-
-var NotSupplied = "-- not supplied --",
-    UnknownIRI = "-- not found --";
 
 function findNodesAndValidate (loaded, parms, options) {
   function knownShape (label) {
@@ -155,55 +119,103 @@ function findNodesAndValidate (loaded, parms, options) {
     return Object.keys(loaded.schema.shapes)[0];
   }
   function knownNode (label) {
-    return (loaded.data.findByIRI(label, null, null).length > 0 ||
-            loaded.data.findByIRI(null, null, label).length > 0);
+    return (loaded.data.getTriplesByIRI(label, null, null).length > 0 ||
+            loaded.data.getTriplesByIRI(null, null, label).length > 0);
   }
   function knownType (label) {
-    return (loaded.data.findByIRI(null, RDF_TYPE, label).length > 0);
+    return (loaded.data.getTriplesByIRI(null, RDF_TYPE, label).length > 0);
   }
   function someIRInode () {
-    var triples = loaded.data.findByIRI(null, null, null);
+    var triples = loaded.data.getTriplesByIRI(null, null, null);
     for (var i = 0; i < triples.length; ++i)
       if (N3.Util.isIRI(triples[i].subject))
         return triples[i].subject;
-    return triples.length > 0 ? triples[0].subject : NotSupplied;
+    return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
   function someNodeWithType (type) {
-    var triples = loaded.data.findByIRI(null, RDF_TYPE, type)
-    return triples.length > 0 ? triples[0].subject : NotSupplied;
+    var triples = loaded.data.getTriplesByIRI(null, RDF_TYPE, type)
+    return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
+  function _makeShapeMap () {
+    // resolve relative shape and focus node names against the first schema and data source respectively.
+    var node = parms["node-type"] ?
+        someNodeWithType(ShExUtil.parsePassedNode(parms["node-type"], loaded.dataMeta[0],
+						  null, knownType, loaded.data.prefixes)) :
+        ShExUtil.parsePassedNode(parms.node, loaded.dataMeta[0], someIRInode,
+                                 knownNode, loaded.data.prefixes);
+    var shape, shapeLabel;
+    ret.mode = node;
+    if (!parms.shape && loaded.schema.start) {
+      shape = loaded.schema.start;
+      shapeLabel = "- start -";
+      ret.shape = shapeLabel;
+    } else {
+      var found = ShExUtil.parsePassedNode(parms.shape, loaded.schemaMeta[0],
+					   someShape, knownShape, loaded.schema.prefixes)
+      if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
+        throw Error("shape " + parms.shape + " not defined" + optsStr(parms.shape, loaded.schema.shapes));
+      // shape = { type: "ShapeRef", reference: found };
 
-  // resolve relative shape and focus node names against the first schema and data source respectively.
-  var node = parms["node-type"] ?
-      someNodeWithType(parsePassedNode(parms["node-type"], loaded.dataMeta[0],
-                                       null, knownType, loaded.data.prefixes)) :
-      parsePassedNode(parms.node, loaded.dataMeta[0], someIRInode,
-                      knownNode, loaded.data.prefixes);
-  var shape, shapeLabel;
-  var ret = { node: node };
-  if (!parms.shape && loaded.schema.start) {
-    shape = loaded.schema.start;
-    shapeLabel = "- start -";
-    ret.shape = shapeLabel;
-  } else {
-    var found = parsePassedNode(parms.shape, loaded.schemaMeta[0],
-                                someShape, knownShape, loaded.schema.prefixes)
-    if (found === NotSupplied || found === UnknownIRI)
-      throw Error("shape " + parms.shape + " not defined" + optsStr(parms.shape, loaded.schema.shapes));
-    // shape = { type: "ShapeRef", reference: found };
+      shape = found;
+      shapeLabel = parms.shape;
+      if (parms.shape === undefined)
+        console.log("Guessing shape " + found);
+    }
 
-    shape = found;
-    shapeLabel = parms.shape;
-    if (parms.shape === undefined)
-      console.log("Guessing shape " + found);
+    if (node === ShExUtil.NotSupplied)
+      throw Error("node not defined and no default found" +
+                  ("node-type" in parms ?
+                   " looking for type " + parms["node-type"] :
+                   ""));
+    if (node === ShExUtil.UnknownIRI) {
+      console.warn("node " + parms.node + " not found in data" +
+                   optsStr("node" in parms ? parms.node : node, loaded.data._entities));
+      node = parms.node;
+    }
+
+    // console.log("runValidator ("+graph+", "+node+", "+schema+", "+shape+")");
+    if (node === undefined || (shape === undefined && !("start" in schema))) {
+      var msgs = [];
+      if (node === undefined) {
+        var subjectNodes = graph.count() < 50 ? Object.keys(graph.getTriplesByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
+        msgs.push("No starting node specified" +
+                  (subjectNodes.length ?
+                   "; try -n with one of: " + subjectNodes.join(", ") :
+                   "")
+                 );
+      }
+      // Make sure we have a start node.
+      if (shape === undefined && !("start" in schema)) {
+        var schemaKeys = Object.keys(schema.shapes);
+        schemaKeys.join(", ")
+        msgs.push("No shape specified on command line or in shex" +
+                  (schemaKeys.length < 50 ?
+                   "; try -n with one of: " + schemaKeys.join(", ") :
+                   "")
+                 );
+      }
+      abort(msgs.join("\n"));
+    }
+    return [ { node: node, shape: shape } ];
   }
-  if (node == NotSupplied)
-    throw Error("node " + parms.node + " not defined" + optsStr(parms.node, loaded.data._entities));
-  if (node === UnknownIRI) {
-    console.warn("node " + parms.node + " not found in data" + optsStr(parms.node, loaded.data._entities));
-    node = parms.node;
+
+  var ret = {};
+
+  var shapeMap = "map" in parms ? parms.map : _makeShapeMap();
+  if (cmds.verbose) {
+    var tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
+    tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
+    var w;
+    new ShExWriter({simplifyParentheses: false }).
+      writeSchema(schema, function (error, text, prefixes) {
+        if (error) throw error;
+        else w = text;
+      });
+    var shapeIn = shape ? shape + " in" : "";
+    console.log("validating " + tz + " over " + graph.size + " triples against " + w);
   }
-  ret.results = runValidator(loaded.data, node, loaded.schema, shape, options);
+
+  ret.results = runValidator(loaded.data, shapeMap, loaded.schema, options);
 
   function optsStr (key, dict) {
     var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
@@ -227,16 +239,25 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     valParms.data = valParms.json.splice(1); // push all but one into data
   }
   if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve) abort("No data specified");
-  if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified");
+  if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
     ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
 
-    // Expected results if provided.
+    // Expected results, if provided.
     !("result" in valParms) ? Promise.resolve(undefined) :
       typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
       ShExLoader.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
+      }),
+
+    // ShapeMap, if provided.
+    !("map" in valParms) ? Promise.resolve(undefined) :
+      ShExLoader.GET(valParms.map).then(function (body) {
+        var map = JSON.parse(body.text);
+        return ShExUtil.absolutizeShapeMap(Object.keys(map).reduce((r, k) => {
+          return r.concat({node: k, shape: map[k]});
+        }, []));
       })
   ]).then(function (loadedAndResults) {
     if (valParms.serve) {
@@ -246,11 +267,13 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         }
         var found = parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
                                     null, knownShape, loadedAndResults[0].schema.prefixes);
-        if (found === UnknownIRI)
+        if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
       runServer(loadedAndResults[0], valParms, validatorOptions, schemaOptions)
     } else {
+      if ("map" in valParms)
+        valParms.map = loadedAndResults[2];
       var res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
       if (cmds["dry-run"])
         return res;
@@ -385,42 +408,7 @@ function queueTests (tests, cmds) {
   });
 }
 
-function runValidator (graph, focusNode, schema, shape, options) {
-  // console.log("runValidator ("+graph+", "+focusNode+", "+schema+", "+shape+")");
-  if (focusNode === undefined || (shape === undefined && !("start" in schema))) {
-    var msgs = [];
-    if (focusNode === undefined) {
-      var subjectNodes = graph.count() < 50 ? Object.keys(graph.findByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
-      msgs.push("No starting node specified" +
-                (subjectNodes.length ?
-                 "; try -n with one of: " + subjectNodes.join(", ") :
-                 "")
-               );
-    }
-    // Make sure we have a start node.
-    if (shape === undefined && !("start" in schema)) {
-      var schemaKeys = Object.keys(schema.shapes);
-      schemaKeys.join(", ")
-      msgs.push("No shape specified on command line or in shex" +
-                (schemaKeys.length < 50 ?
-                 "; try -n with one of: " + schemaKeys.join(", ") :
-                 "")
-               );
-      }
-    abort(msgs.join("\n"));
-  }
-  
-  if (cmds.verbose) {
-    var w;
-    new ShExWriter({simplifyParentheses: false }).
-      writeSchema(schema, function (error, text, prefixes) {
-        if (error) throw error;
-        else w = text;
-      });
-    var shapeIn = shape ? shape + " in" : "";
-    console.log("validating", focusNode, "in", graph.size, "triples against", shapeIn, w);
-  }
-
+function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
   var validator = ShExValidator.construct(schema, options);
   var extensions = ShExLoader.loadExtensions();
@@ -432,7 +420,7 @@ function runValidator (graph, focusNode, schema, shape, options) {
     return 0;
 
   // run validator
-  var res = validator.validate(graph, focusNode, shape);
+  var res = validator.validate(graph, shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -444,9 +432,9 @@ function runValidator (graph, focusNode, schema, shape, options) {
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
        return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("../extensions/shex:Map").materializer(loaded.schema).
+       var db = require("../extensions/shex-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
-       find(null, null, null);
+       getTriples(null, null, null);
        var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
        w.addTriples(db); w.end(function (error, result) { console.log(result); });
        });'
@@ -471,20 +459,20 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
     var testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
           var pattern = RegExp(testName);
-          loaded.data.find(null, mf+"name", null).filter(function (triple) {
+          loaded.data.getTriples(null, mf+"name", null).filter(function (triple) {
             if (N3.Util.getLiteralValue(triple.object).match(pattern))
               ret.push(triple.subject);
           })
           return ret;
         }, []) :
-        loaded.data.find(null, mf+"action", null).map(function (t) {
+        loaded.data.getTriples(null, mf+"action", null).map(function (t) {
           return t.subject;
         });
     var tests = testNodes.map(function (subject) {
-      var action = loaded.data.find(subject, mf+"action", null)[0].object;
+      var action = loaded.data.getTriples(subject, mf+"action", null)[0].object;
       var validatorOptions = Object.assign({}, ValidatorOptions);
       var schemaOptions = Object.assign({}, SchemaOptions);
-      var traits = loaded.data.find(subject, sht+"trait", null);
+      var traits = loaded.data.getTriples(subject, sht+"trait", null);
       traits.forEach(function (t) {
         var tStr = t.object.substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
@@ -495,8 +483,9 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
       return [["shex" , "schema", true ],
               ["shape", "shape" , false],
               ["data" , "data"  , true ],
-              ["node" , "focus" , false]].reduce(function (ret, elt) {
-                var m = loaded.data.find(action, sht+elt[1], null);
+              ["node" , "focus" , false],
+              ["map"  , "map"   , false]].reduce(function (ret, elt) {
+                var m = loaded.data.getTriples(action, sht+elt[1], null);
                 if (m.length > 0) {
                   var v = m[0].object;
                   ret[elt[0]] = elt[2] ? [v] : v;
@@ -531,14 +520,15 @@ function loadJSONmanifest (jsonManifests) {
                 if (tStr in TraitToOption)
                   options[TraitToOption[tStr]] = tStr;
               });
-              return {
-                name: t.name,
-                shex: t.action.schema,
-                shape: t.action.shape,
-                data: t.action.data,
-                node: t.action.focus,
-                options: options
-              };
+              return Object.assign(
+                { name: t.name,
+                  shex: t.action.schema,
+                  data: t.action.data,
+                  options: options },
+                "shape" in t.action ? {shape: t.action.shape} : {},
+                "focus" in t.action ? {node: t.action.focus} : {},
+                "map" in t.action ? {map: t.action.map} : {}
+              );
             })
           else // Hopefully an object like { shex: "t.shex" , shape: "S", data: "t.ttl", "node": "s" }
             d = [d];
@@ -558,7 +548,7 @@ function loadJSONmanifest (jsonManifests) {
             else if (elt[attr].constructor !== Array)
               elt[attr] = [elt[attr]];
             elt[attr] = elt[attr].map(function (url) {
-              return resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
+              return ShExUtil.resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
             });
           });
           elt.schemaOptions = Object.assign({}, SchemaOptions);
@@ -568,7 +558,7 @@ function loadJSONmanifest (jsonManifests) {
           } else
             elt.validatorOptions = ValidatorOptions;
           if ("result" in elt && elt.result !== null)
-            elt.result = resolveRelativeIRI(p.url, elt.result);
+            elt.result = ShExUtil.resolveRelativeIRI(p.url, elt.result);
           elt.jsonld = []; // @@ no way to specify jsonld in manifest
         });
         return queueTests(d, cmds);
@@ -629,8 +619,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       port    = match[2] || 80,
       host    = "http://" + match[1],
       srvpath = match[3],
-      fs      = require("fs"),
-      RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+      fs      = require("fs");
 
   app.
     use(koaBody({
@@ -682,7 +671,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data
-            serverLoaded.data.find().forEach(t => { loaded.data.addTriple(t); });
+            serverLoaded.data.getTriples().forEach(t => { loaded.data.addTriple(t); });
             loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
 
             // add server-loaded schema

@@ -16,11 +16,11 @@
                 "type": "TestedTriple",
                 "subject": "urn:local:data:Problem:101",
                 "predicate": "urn:local:vpr:Problem.id",
-                "object": "\"101\"",
+                "object": { "value": "101" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/ID": [
-                      "\"101\""
+                      { "value": "101" }
                     ]
                   }
                 }
@@ -46,11 +46,11 @@
                 "type": "TestedTriple",
                 "subject": "urn:local:data:Problem:101",
                 "predicate": "urn:local:vpr:Problem.pid",
-                "object": "\"D110000000\"",
+                "object": { "value": "D110000000" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/patID": [
-                      "\"D110000000\""
+                      { "value": "D110000000" }
                     ]
                   }
                 }
@@ -77,11 +77,11 @@
                 "type": "TestedTriple",
                 "subject": "urn:local:data:Problem:101",
                 "predicate": "urn:local:vpr:Problem.problemText",
-                "object": "\"fainting preceded by sudden severe throat pain\"",
+                "object": { "value": "fainting preceded by sudden severe throat pain" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/Text": [
-                      "\"fainting preceded by sudden severe throat pain\""
+                      { "value": "fainting preceded by sudden severe throat pain" }
                     ]
                   }
                 }
@@ -126,11 +126,11 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Code:301",
                                 "predicate": "urn:local:vpr:Code.id",
-                                "object": "\"301\"",
+                                "object": { "value": "301" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
                                     "tag:eric@w3.org/2016/ProblemList/CodeID": [
-                                      "\"301\""
+                                      { "value": "301" }
                                     ]
                                   }
                                 }
@@ -156,11 +156,11 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Code:301",
                                 "predicate": "urn:local:vpr:Code.code",
-                                "object": "\"1530\"",
+                                "object": { "value": "1530" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
                                     "tag:eric@w3.org/2016/ProblemList/Code": [
-                                      "\"1530\""
+                                      { "value": "1530" }
                                     ]
                                   }
                                 }
@@ -186,11 +186,11 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Code:301",
                                 "predicate": "urn:local:vpr:Code.system",
-                                "object": "\"MEDCIN\"",
+                                "object": { "value": "MEDCIN" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
                                     "tag:eric@w3.org/2016/ProblemList/Sys": [
-                                      "\"MEDCIN\""
+                                      { "value": "MEDCIN" }
                                     ]
                                   }
                                 }
@@ -216,11 +216,11 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Code:301",
                                 "predicate": "urn:local:vpr:Code.display",
-                                "object": "\"Syncope (disorder)\"",
+                                "object": { "value": "Syncope (disorder)" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
                                     "tag:eric@w3.org/2016/ProblemList/Disp": [
-                                      "\"Syncope (disorder)\""
+                                      { "value": "Syncope (disorder)" }
                                     ]
                                   }
                                 }
@@ -341,7 +341,7 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Comment:201",
                                 "predicate": "urn:local:vpr:Comment.id",
-                                "object": "\"201\""
+                                "object": { "value": "201" }
                               }
                             ],
                             "valueExpr": {
@@ -357,7 +357,7 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Comment:201",
                                 "predicate": "urn:local:vpr:Comment.comment",
-                                "object": "\"N/A\""
+                                "object": { "value": "N/A" }
                               }
                             ],
                             "valueExpr": {
@@ -373,7 +373,7 @@
                                 "type": "TestedTriple",
                                 "subject": "urn:local:data:Comment:201",
                                 "predicate": "urn:local:vpr:Comment.entered",
-                                "object": "\"9/1/1996 12:30\""
+                                "object": { "value": "9/1/1996 12:30" }
                               }
                             ],
                             "valueExpr": {
@@ -429,11 +429,11 @@
                 "type": "TestedTriple",
                 "subject": "urn:local:data:Problem:101",
                 "predicate": "urn:local:vpr:Problem.onset",
-                "object": "\"8/31/1996 12:30\"",
+                "object": { "value": "8/31/1996 12:30" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/Onset": [
-                      "\"1996-8-31T12:30\"^^http://www.w3.org/2001/XMLSchema#"
+                      { "value": "1996-8-31T12:30", "type": "http://www.w3.org/2001/XMLSchema#" }
                     ]
                   }
                 }
@@ -459,11 +459,11 @@
                 "type": "TestedTriple",
                 "subject": "urn:local:data:Problem:101",
                 "predicate": "urn:local:vpr:Problem.entered",
-                "object": "\"9/1/1996 12:30\"",
+                "object": { "value": "9/1/1996 12:30" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
                     "tag:eric@w3.org/2016/ProblemList/Entered": [
-                      "\"1996-9-1T12:30\"^^http://www.w3.org/2001/XMLSchema#"
+                      { "value": "1996-9-1T12:30", "type": "http://www.w3.org/2001/XMLSchema#" }
                     ]
                   }
                 }

@@ -1,0 +1,121 @@
+#!/usr/bin/env node
+
+/** ShExMap serializer -- used in conjunction with validator's .val output, e.g.
+ *
+ * shex.js/bin/validate -d data.ttl -x sourceSchema.shex -s StartShape -n startNode \
+ *   | shexSpec/shex.js/bin/materialize -t targetSchema.shex [-j vars.json] [-r rootnode]
+ *
+ * See https://github.com/shexSpec for more information.
+ */
+
+var _ = require("underscore");
+var FS = require("fs");
+var N3 = require("n3");
+
+var ShExLoader = require("../../../lib/ShExLoader");
+var ShExValidator = require("../../../lib/ShExValidator");
+var Mapper = require("../module");
+
+var CLI = require("command-line-args")([
+  { name: "help", alias: "h", type: Boolean },
+  { name: "jsonvars", alias: "j", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "json vars file" },
+  { name: "root", alias: "r", type: String, typeLabel: "IRI", multiple: false, defaultValue: "tag:eric@w3.org/2016/root", description: "RDF root node IRI" },
+  { name: "target", alias: "t", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "target shex file" },
+]);
+
+function abort(msg) { 
+  console.error(msg);
+  console.error(CLI.getUsage({title: "materialize", 
+                              description: "reads the validate schema output from STDIN and maps it to the specified target schema",
+                              synopsis: [
+                                "materialize -t <target schema> | -h  [-j <JSON Vars File>] [-r <RDF root IRI>]"
+                              ],
+                              examples: [
+                                "materialize -h",
+                                "validate -x schema.shex -l data.jsonld -s Shape | materialize -t target.shex",
+                                "cat file.val | materialize -t target.shex -j vars.json -r https://www.w3.org/RDF"
+                              ]
+                            })
+  );
+  process.exit(1);
+}
+
+var cmds = (function () {
+  try {
+    return CLI.parse();
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
+})();
+
+if (cmds.help) { 
+   abort("");
+}
+
+if (_.isUndefined(cmds.target)) {
+  abort("\nNo ShEx target schema file specified.");
+}
+
+try {
+  FS.accessSync(cmds.target, FS.r_OK);
+  if (!_.isUndefined(cmds.jsonvars)) {
+    FS.accessSync(cmds.jsonvars, FS.r_OK);
+  }
+} catch (e) {
+  console.error(e.message);
+  process.exit(1);
+}
+
+Promise.all([ShExLoader.load([cmds.target], [], [], []),
+             new Promise((resolve, reject) => {
+               var inputChunks = [];
+               process.stdin.resume();
+               process.stdin.setEncoding("utf8");       
+       
+               process.stdin.on("data", function (chunk) {
+                 inputChunks.push(chunk);
+               });
+
+               process.stdin.on("end", function () {
+                 resolve(JSON.parse(inputChunks.join('')));
+               });
+             }),
+             new Promise((resolve, reject) => {
+               cmds.jsonvars ?
+                 FS.readFile(cmds.jsonvars, "utf8", function (err, data) {
+                   if (err) reject(err);
+                   if (data) resolve(JSON.parse(data));
+                 }) :
+               resolve({});
+             })
+            ]).
+  then(loads => {
+    var schema = loads[0].schema;
+    var val = loads[1];
+    var resultBindings = loads[2];
+    var map = Mapper.materializer(schema);
+
+    function findBindings (object) {
+      for (var key in object) {
+        var item = object[key];
+        if (typeof item === 'object') {
+          if (Mapper.url in item)
+            Object.keys(item[Mapper.url]).forEach(k => {
+              resultBindings[k] = item[Mapper.url][k];
+            })
+          else
+            object[key] = findBindings(item);
+        }
+      }
+      return object;
+    }
+    findBindings(val);
+
+    var outputGraph = map.materialize(resultBindings, cmds.root);
+    var writer = N3.Writer({ prefixes: {} });
+    outputGraph.getTriples().forEach(t => { writer.addTriple(t); });
+    writer.end(function (error, result) { console.log(result); });
+  }).catch(e => { console.error(e); });
+
+

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>ShExMap — Simple Online Translator</title>
+    <meta name="description" content="simple ShEx2 demo" />
+    <style>
+      h1 { font-size: 1.3em; }
+      h1, p, ul { margin: 0; }
+      .passes { margin-right: 1em; }
+      .passes, #results textarea.passes { padding-left: .1em; border-left: thick solid #bfb; }
+      .fails , #results textarea.fails  { padding-left: .1em; border-left: thick solid #fbb; }
+      .error , #results textarea.error  { padding-left: .1em; border-left: thick solid #b00; }
+      #inputarea { overflow-x: auto; white-space:nowrap; }
+      #inputarea textarea { overflow-x: auto }
+      .schema.textarea, .schema { background-color: #f4f4ff; border-color: #fc561c }
+      #inputSchema li.selected a { background-color: #e8e8ff; }
+      #inputData textarea, .data { background-color: #f4fff4; border-color: #f0a133 }
+      #inputData li.selected { background-color: #e8ffe8; }
+      #bindings1 textarea, .meta { background-color: #fffff4; border-color: #56fc1c}
+      #bindings1 li.selected { background-color: #ffffe8; }
+      .droparea { border-width: .25em; border-style: dashed; }
+      .droparea.hover, body.hover { border: .25em dashed #0c0; }
+      #results textarea:disabled { background-color: #fff; }
+      #results textarea { width: 99%; border: none; }
+      #results.running { padding-left: .1em; border-left: thick solid #779; }
+      #results textarea:disabled.passes { color: #373; }
+      #results textarea:disabled.fails  { color: #733; }
+      #results textarea:disabled.error  { color: #300; }
+      .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
+      #navlist li {
+        display: inline;
+        list-style-type: none;
+        padding-right: 10px;
+      }
+      #actions {
+        float:right;
+        margin-right: .1em;
+      }
+      /* #actions input { height: 1.5ex; }  */
+      /* #actions button { height: 2.5ex; } */
+      /* http://stackoverflow.com/questions/686905/labeling-file-upload-button#answer-35767488 */
+      .inputfile {
+        /* visibility: hidden etc. wont work */
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        position: absolute;
+        z-index: -1;
+      }
+      .inputfile:focus + label {
+        /* keyboard navigation */
+        outline: 1px dotted #000;
+        outline: -webkit-focus-ring-color auto 5px;
+      }
+      .inputfile + label * {
+        pointer-events: none;
+      }
+      label {
+        border: thin solid black;
+        padding: 0 .3em;
+      }
+      .heading {
+        font-weight: bold;
+      }
+      .panel {
+        width: 48.5%;
+        display: inline-block;
+        margin: 0 .4em;
+        vertical-align: top;
+      }
+      h2.status { margin: 0; }
+      #addPair, #removePair { text-decoration: none; }
+      #schemaDialect, #dataDialect { font-size: .7em; }
+    </style>
+
+    <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+    <script src="https://www.w3.org/scripts/jquery/2.1/jquery.min.js"></script>
+    <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+  </head>
+
+  <body>
+
+    <div id="title">
+      <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShExMap — Simple Online Translator</h1>
+      <ul id="navlist" style="float:left; padding-left: 1em;">
+        <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li>
+        <li>‣ <span class="heading">controls:</span> <input type="checkbox" id="append"/><label for="append">drop appends</label> | <label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select> </li>
+        <li>‣ <span class="heading">source</span>: <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
+        <li>‣ <a href="https://github.com/shexSpec/shex.js">project</a></li>
+        <li>‣ <a href="https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html">rawgit</a></li>
+      </ul>
+      <div style="clear: both;"></div>
+    </div>
+
+    <div id="inputarea">
+      <div id="inputSchema" class="panel">
+        <h2 class="status"> </h2>
+        <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
+        <div>
+          <div style="float:left">
+            <p>Examples:</p>
+            <div class="examples">
+              <ul>
+                <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
+              </ul>
+            </div>
+          </div>
+          <div id="actions" style="margin-right: .1em;">
+            <div>
+            <button id="validate" style="float:left">validate (ctl-enter)</button>
+            <div style="float:left">
+              <input id="focus0" type="text" value="" class="data focus"/> as <input id="inputShape0" type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><a id="removePair" href="" title="remove last node/shape pair"> -</a><a id="addPair" href="" title="add a node/shape pair"> +</a>
+            </div>
+            </div>
+          </div>
+          <div style="clear:both;">
+          </div>
+        </div>
+      </div>
+      <div id="inputData" class="panel">
+        <h2 class="status"> </h2>
+        <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
+        <div style="margin-left: .1em;">
+          <div class="passes" style="float:left">
+            <p></p>
+            <ul>
+              <li>This demo is no fun without javascript.</li>
+            </ul>
+          </div>
+          <div class="fails" style="float:left">
+            <p></p>
+            <ul>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div id="bindings1">
+          <h2 class="status"> </h2>
+          <textarea rows="19" class="bindings droparea" style="width: 100%"></textarea>
+        </div>
+        <div id="staticVars" style="width: 100%;">
+          <h2 class="status"> </h2>
+          <textarea rows="5" class="vars droparea" style="width: 100%"></textarea>
+        </div>
+        <div>
+          <div id="outactions" style="float:right; margin-right: .1em;">
+            <button id="materialize">materialize (ctl-\)</button> <input id="outputShape" type="text" value="" class="schema context-menu-one btn btn-neutral"/> from <input id="createRoot" type="text" value="" class="data"/>
+          </div>
+        </div>
+      </div>
+      <div id="output" class="panel">
+        <div id="outputSchema" style="width: 100%;">
+          <h2 class="status"> </h2>
+          <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
+        </div>
+      </div>
+    </div>
+    <div id="results">
+      <h2 class="status"> </h2>
+      <textarea disabled="disabled"></textarea>
+    </div>
+    <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
+    <script src="../../../doc/require.js"      ></script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
+    <script src="http://underscorejs.org/underscore-min.js"></script><script>modules["underscore"] = _;</script>
+    <script src="../../../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
+    <script src="../../../lib/ShExJison.js"    ></script><script></script>
+    <script src="../../../lib/ShExParser.js"   ></script><script></script>
+    <script src="../../../lib/ShExWriter.js"   ></script><script></script>
+    <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../../../lib/regex/nfax-val-1err.js"></script><script>modules["../lib/regex/nfax-val-1err"] = module.exports;</script>
+    <script src="../../../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
+    <script src="../lib/extension-utils"       ></script><script>modules["./extension-utils"] = module.exports;</script>
+    <script src="../lib/regex_extension"       ></script><script>modules["./regex_extension"] = module.exports;</script>
+    <script src="../lib/hashmap_extension"     ></script><script>modules["./hashmap_extension"] = module.exports;</script>
+    <script src="../lib/extensions"            ></script><script>modules["./lib/extensions"] = module.exports;</script>
+
+    <script src="../module.js"                 ></script><script>ShExMap = module.exports;</script>
+    <script src="./shexmap-simple.js"          ></script>
+  </body>
+</html>
