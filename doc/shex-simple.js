@@ -438,12 +438,13 @@ function getShapeMap (nodeList, shapeList, data, schema) {
           return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
         },
                                  label => {
-                                   return true; // don't check for known.
-                                   // return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
-                                   //         data.refresh().getTriplesByIRI(null, null, label).length > 0);
+                                   return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
+                                           data.refresh().getTriplesByIRI(null, null, label).length > 0);
                                  });
 
-    if (node === ShExUtil.NotSupplied || node === ShExUtil.UnknownIRI)
+    if (node === ShExUtil.UnknownIRI)
+      node = $(n).val();
+    else if (node === ShExUtil.NotSupplied)
       ret.errors.push("node not found: " + $(n).val());
     var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
           ShExUtil.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },

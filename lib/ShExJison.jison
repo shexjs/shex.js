@@ -817,11 +817,8 @@ inlineShapeNot:
 shapeAtom:
 //    nonLitNodeConstraint _QshapeOrRef_E_Opt	
       nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	{
-        $$ = $2 === EmptyShape ?
-          extend({ type: "NodeConstraint"}, $1) :
-          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      }
+    | nonLitNodeConstraint shapeOrRef	
+        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
     | litNodeConstraint	
 //  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
     | shapeOrRef	 // t: 1dotRef1
@@ -841,11 +838,8 @@ _QnonLitNodeConstraint_E_Opt:
 shapeAtomNoRef:
 //    nonLitNodeConstraint _QshapeOrRef_E_Opt	
       nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	{
-        $$ = $2 === EmptyShape ?
-          extend({ type: "NodeConstraint"}, $1) :
-          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      }
+    | nonLitNodeConstraint shapeOrRef	
+        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
     | litNodeConstraint	
 //  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
     | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
@@ -857,11 +851,8 @@ shapeAtomNoRef:
 inlineShapeAtom:
 //    nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
       nonLitNodeConstraint
-    | nonLitNodeConstraint inlineShapeOrRef	{
-        $$ = $2 === EmptyShape ?
-          extend({ type: "NodeConstraint"}, $1) :
-          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      }
+    | nonLitNodeConstraint inlineShapeOrRef	
+        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
     | litNodeConstraint	
     | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
