@@ -9,7 +9,7 @@
       "type": "NodeConstraint",
       "values": [
         {
-          "type": "LanguageStemRange",
+          "type": "LanguageStem",
           "stem": "fr"
         }
       ]

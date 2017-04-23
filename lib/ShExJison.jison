@@ -1208,7 +1208,7 @@ iriRange:
       iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "IriStemRange",
+            type: $2.length ? "IriStemRange" : "IriStem",
             stem: $1
           };
           if ($2.length)
@@ -1247,7 +1247,7 @@ literalRange:
       literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
-            type: "LiteralStemRange",
+            type: $2.length ? "LiteralStemRange" : "LiteralStem",
             stem: $1.value
           };
           if ($2.length)
@@ -1286,7 +1286,7 @@ languageRange:
       language _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
-            type: "LanguageStemRange",
+            type: $2.length ? "LanguageStemRange" : "LanguageStem",
             stem: $1
           };
           if ($2.length)
