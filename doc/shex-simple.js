@@ -131,14 +131,82 @@ function makeSchemaCache (parseSelector) {
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
   ret.meta = {};
+  ret.endpoint = null,
+  ret.query = null,
+  ret.executeQuery = function (query, endpoint) {
+    var rows;
+    $.ajax({
+      async: false,
+      url: endpoint || ret.endpoint,
+      data: { query: query },
+      datatype: "xml",
+      // datatype: "json",
+      // accepts: { json: "application/sparql-results+json" },
+      success : function(data) {
+        if (endpoint)
+          ret.endpoint = endpoint;
+        ret.query = query;
+        rows = []; // $.map flattens nested arrays.
+        $(data).find("sparql > results > result").
+          each((_, row) => {
+            rows.push($(row).find("binding > *:nth-child(1)").
+              map((idx, elt) => {
+                elt = $(elt);
+                var text = elt.text();
+                switch (elt.prop("tagName")) {
+                case "uri": return "<" + text + ">";
+                case "bnode": return "_:" + text;
+                case "literal":
+                  var datatype = elt.attr("datatype");
+                  var lang = elt.attr("xml:lang");
+                  return "\"" + text + "\"" + (
+                    datatype ? "^^" + datatype :
+                    lang ? "@" + lang :
+                      "");
+                default: throw "unknown XML results type: " + elt.prop("tagName");
+                }
+              }).get());
+          });
+      }
+    });
+    return rows;
+  };
   ret.parse = function (text) {
+    if (ret.query && ret.endpoint) {
+      return {
+        getTriplesByIRI: function (s, p, o) {
+          var query = s ?
+                `SELECT ?p ?o { <${s}> ?p ?o }`:
+                `SELECT ?s ?p { ?s ?p <${o}> }`;
+          var rows = ret.executeQuery(query);
+          var triples = rows.map(row =>  {
+            return s ? {
+              subject: s,
+              predicate: row[0],
+              object: row[1]
+            } : {
+              subject: row[0],
+              predicate: row[1],
+              object: o
+            };
+          });
+          return triples;
+        }
+      };
+    }
     return parseTurtle(text, ret.meta);
   };
   ret.getNodes = function () {
-    var data = this.refresh();
-    return data.getTriples().map(t => {
-      return termToLex(t.subject);
-    });
+    var text = this.get();
+    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
+    if (m) {
+      return ret.executeQuery(m[2], m[1]).map(row => { return row[0]; });
+    } else {
+      var data = this.refresh();
+      return data.getTriples().map(t => {
+        return termToLex(t.subject);
+      });
+    }
   };
   return ret;
 }
@@ -625,6 +693,7 @@ function prepareDragAndDrop () {
 
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs = {};
+var wikidataItem = {};
 function prepareDemos () {
   var demos = {
     "clinical observation": {
@@ -662,6 +731,18 @@ function prepareDemos () {
           inputShapeMap: [{
             node: "<http://a.example/Obs1>",
             shape: "- start -" }]}
+      }
+    },
+    "wikidata query": {
+      schema: wikidataItem.schema,
+      passes: {
+        "12078": {
+          data: wikidataItem.cats,
+          inputShapeMap: [{
+            node: "- click to resolve -",
+            shape: "- start -"}]}
+      },
+      fails: {
       }
     }
   };
@@ -804,6 +885,38 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <Patient2>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
+
+wikidataItem.schema = `PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX pr: <http://www.wikidata.org/prop/reference/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+
+start = @<wikidata_item>
+
+<wikidata_item> {
+  p:P1748 {
+    ps:P1748 LITERAL ;
+    prov:wasDerivedFrom @<reference>
+  }+
+}
+
+<reference> {
+  pr:P248  IRI ;
+  pr:P813  xsd:dateTime ;
+  pr:P699  LITERAL
+}
+`;
+
+wikidataItem.cats = `
+Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql
+
+Query: SELECT ?item ?itemLabel
+WHERE
+{ ?item wdt:P279* wd:Q12078 .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+} LIMIT 10
+`;
 
 ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
