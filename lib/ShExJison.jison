@@ -407,7 +407,7 @@ BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHA
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
 PNAME_NS                {PN_PREFIX}? ':'
-ATPNAME_NS              '@' {PN_PREFIX}? ':'
+ATPNAME_NS              '@' {PNAME_NS}
 HEX                     [0-9] | [A-F] | [a-f]
 PERCENT                 '%' {HEX} {HEX}
 UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX}
@@ -431,7 +431,7 @@ PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) (({PN_CHARS} | '.' | ':' | {PLX})* ({PN_CHARS} | ':' | {PLX}))?
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
-ATPNAME_LN              '@' {PNAME_NS} {PN_LOCAL}
+ATPNAME_LN              '@' {PNAME_LN}
 COMMENT                 '#' [^\u000a\u000d]*
 
 %%
