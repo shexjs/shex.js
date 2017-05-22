@@ -480,6 +480,7 @@
   "#1focusBNODE_dot_pass": "1focusBNODE_dot_pass.val",
   "#1focusnonLiteral-dot_pass-iri-equal": "1focusnonLiteral_dot_pass.val",
   "#focusdatatype_pass": "focusdatatype_pass.val",
+  "#focusdatatype_pass-empty": "focusdatatype_pass.val",
   "#focusvs_pass": "focusvs_pass.val",
   "#1focusvsANDIRI_pass": "1focusvsANDIRI_pass.val",
   "#1focusvsORdatatype_pass-val": "1focusvsORdatatype_pass-val.val",
