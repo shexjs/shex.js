@@ -200,7 +200,9 @@ function makeTurtleCache(parseSelector) {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
     if (m) {
-      return ret.executeQuery(m[2], m[1]).map(row => { return termToLex(row[0]); });
+      return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
+        return termToLex(row[0]);
+      }));
     } else {
       var data = this.refresh();
       return data.getTriples().map(t => {
@@ -358,7 +360,7 @@ function validate () {
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
       var text =
-            "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
+            true || "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
             ("errors" in ret ?
              ShExUtil.errsToSimple(ret).join("\n") :
              JSON.stringify(ShExUtil.simpleToShapeMap(ShExUtil.valToSimple(ret)), null, 2)) :
@@ -793,7 +795,16 @@ function addContextMenus (nodeSelector, shapeSelector) {
     $.contextMenu({
       selector: entry.inputSelector,
       callback: function (key, options) {
-        $(options.selector).val(key);
+        if (key === "- add all -") {
+          var toAdd = Object.keys(options.items).filter(k => {
+            return k !== "- add all -";
+          });
+          $(options.selector).val(toAdd.shift());
+          var shape = $(options.selector.replace(/focus/, "inputShape")).val();
+          addNodeShapePair(null, toAdd.map(node => { return {node: node, shape: shape}; }));
+        } else {
+          $(options.selector).val(key);
+        }
       },
       build: function (elt, e) {
         return {
