@@ -154,7 +154,7 @@ function makeTurtleCache(parseSelector) {
                 elt = $(elt);
                 var text = elt.text();
                 switch (elt.prop("tagName")) {
-                case "uri": return "<" + text + ">";
+                case "uri": return text;
                 case "bnode": return "_:" + text;
                 case "literal":
                   var datatype = elt.attr("datatype");
@@ -200,7 +200,7 @@ function makeTurtleCache(parseSelector) {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
     if (m) {
-      return ret.executeQuery(m[2], m[1]).map(row => { return row[0]; });
+      return ret.executeQuery(m[2], m[1]).map(row => { return termToLex(row[0]); });
     } else {
       var data = this.refresh();
       return data.getTriples().map(t => {
