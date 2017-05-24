@@ -259,7 +259,6 @@ function disableResultsAndValidate () {
   results.start();
   setTimeout(function () {
     validate();
-    results.finish();
   }, 0);
 }
 
@@ -270,13 +269,12 @@ function hasFocusNode () {
     return str.length > 0;
   });
 }
+  const USE_INCREMENTAL_RESULTS = true;
 
 function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
   try {
-    var validator = ShExValidator.construct(InputSchema.refresh()
-                    /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
@@ -286,7 +284,52 @@ function validate () {
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
-      var ret = validator.validate(inputData, shapeMap);
+      var ShExWorker = new Worker("shex-simple-worker.js");
+      ShExWorker.onmessage = expectCreated;
+      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()});
+
+      var resultsMap = USE_INCREMENTAL_RESULTS ?
+            Util.createResults() :
+            "not used";
+
+      function expectCreated (msg) {
+        if (msg.data.response !== "created")
+          throw "expected created: " + JSON.stringify(msg.data);
+        ShExWorker.onmessage = parseUpdatesAndResults;
+        ShExWorker.postMessage({
+          request: "validate",
+          data: inputData.getTriplesByIRI(),
+          queryMap: shapeMap,
+          options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
+        });
+      }
+
+      function parseUpdatesAndResults (msg) {
+        switch (msg.data.response) {
+        case "update":
+          console.dir(msg.data.results);
+          // msg.data.results.forEach(newRes => {
+          //   var key = Util.indexKey(newRes.node, newRes.shape);
+          //   if (key in index) {
+          //     markResult(updateCells[key], newRes.status, start);
+          //   } else {
+          //     extraResult(newRes);
+          //   }
+          // });
+
+          if (USE_INCREMENTAL_RESULTS) {
+            // Merge into results.
+            resultsMap.merge(msg.data.results);
+          }
+          break;
+
+        case "done":
+          var ret = 
+            USE_INCREMENTAL_RESULTS ?
+            resultsMap.getShapeMap() :
+            Util.createResults().merge(msg.data.results).getShapeMap();
+          ShExWorker.onmessage = running = false;
+          // $("#go").removeClass("stoppable").text("go");
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
       var text =
@@ -312,6 +355,14 @@ function validate () {
       } else {
         res.addClass("passes");
       }
+      results.finish();
+          break;
+
+        default:
+          console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
+        }
+      }
+
     } else {
       var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
