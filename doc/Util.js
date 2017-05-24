@@ -27,12 +27,14 @@ Util = (function () {
           null :
           _shapeMap.length === 1 ?
           _shapeMap[0] :
-          { type: "SolutionList", solutions: _shapeMap };
+          "errors" in _shapeMap[0] ?
+          { type: "FailureList", errors: _shapeMap } :
+        { type: "SolutionList", solutions: _shapeMap };
       },
 
       // Add entries to results ShapeMap.
       merge: function (toAdd) {
-        if (toAdd.type !== "SolutionList")
+        if (toAdd.type !== "SolutionList" && toAdd.type !== "FailureList")
           toAdd = [toAdd];
         toAdd.forEach(ent => {
           var key = indexKey(ent.node, ent.shape);

@@ -2,6 +2,7 @@
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
+const USE_INCREMENTAL_RESULTS = true;
 const START_SHAPE_LABEL = "- start -";
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
 var InputSchema = makeSchemaCache("#inputSchema textarea");
@@ -269,7 +270,6 @@ function hasFocusNode () {
     return str.length > 0;
   });
 }
-  const USE_INCREMENTAL_RESULTS = true;
 
 function validate () {
   $("#results .status").hide();
@@ -286,7 +286,8 @@ function validate () {
 
       var ShExWorker = new Worker("shex-simple-worker.js");
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()});
+      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()}
+              /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
 
       var resultsMap = USE_INCREMENTAL_RESULTS ?
             Util.createResults() :
