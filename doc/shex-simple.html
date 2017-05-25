@@ -75,7 +75,12 @@
       #schemaDialect, #dataDialect { font-size: .7em; }
       #shapeMap { padding-left: .25em; }
       .pair { list-style-type: none; }
-      .addPair, .removePair { font-size: 40%; line-height: .5ex; }
+      .addPair, .removePair { font-size: 80%; line-height: 1ex; font-family: monospace; }
+      .pair button {
+        width: 1em;
+        padding: .5em 0;
+        padding-right: .5em; /* for firefox rendering issue */
+      }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
