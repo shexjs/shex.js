@@ -353,7 +353,7 @@ function addNodeShapePair (evt, pairs) {
     var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
                   "' class='schema inputShape context-menu-one btn btn-neutral'/>");
     var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
-    var remove = $('<button class="removePair" title="remove last node/shape pair">-</button>');
+    var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
     add.on("click", addNodeShapePair);
     remove.on("click", removeNodeShapePair);
     span.append(focus, " as ", shape, add, remove);
