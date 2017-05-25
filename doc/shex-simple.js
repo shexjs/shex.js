@@ -211,10 +211,11 @@ function pickData (name, dataTest, elt, listItems, side) {
     $(elt).addClass("selected");
     //    $("input.data").val(getDataNodes()[0]);
     // hard-code the first node/shape pair
-    $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
-    $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
-    removeNodeShapePair(null, Infinity);
-    addNodeShapePair(null, dataTest.inputShapeMap.slice(1)); // catch the rest of the shapeMap.
+    removeNodeShapePair(null);
+    // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
+    // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
+    // removeNodeShapePair(null);
+    addNodeShapePair(null, dataTest.inputShapeMap); // add Map-test
     // validate();
   }
 }
@@ -394,38 +395,44 @@ function validate () {
   }
 }
 
-var Removables = [];
 function addNodeShapePair (evt, pairs) {
-  if (pairs === undefined)
+  if (evt)
     pairs = [{node: "", shape: ""}];
   pairs.forEach(pair => {
-    var id = Removables.length+1;
-    var t = $("<span><br/><input id='focus"+id+
-              "' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
-              "' class='data focus'/> as <input id='inputShape"+id+
-              "' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
-              "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
-             );
-    addContextMenus("#focus"+id, "#inputShape"+id);
-    Removables.push(t);
-    t.insertBefore($("#removePair"));
-    if (id === 1)
-      $("#removePair").css("visibility", "visible");
+    var span = $("<li class='pair'/>");
+    var focus = $("<input "+"' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
+                  "' class='data focus'/>");
+    var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
+                  "' class='schema inputShape context-menu-one btn btn-neutral'/>");
+    var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
+    var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
+    add.on("click", addNodeShapePair);
+    remove.on("click", removeNodeShapePair);
+    span.append(focus, " as ", shape, add, remove);
+    if (evt) {
+      $(evt.target).parent().after(span);
+    } else {
+      $("#shapeMap").append(span);
+    }
+  });
+  if ($(".removePair").length === 1)
+    $(".removePair").css("visibility", "hidden");
+  else
+    $(".removePair").css("visibility", "visible");
+  $(".pair").each(idx => {
+    addContextMenus(".pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
   });
   return false;
 }
 
-function removeNodeShapePair (evt, howMany) {
-  if (howMany === undefined)
-    howMany = 1;
-  for (var i = 0; i < howMany; ++i) {
-    var id = Removables.length;
-    if (id === 0)
-      break;
-    Removables.pop().remove();
-    if (id === 1)
-      $("#removePair").css("visibility", "hidden");
+function removeNodeShapePair (evt) {
+  if (evt) {
+    $(evt.target).parent().remove();
+  } else {
+    $(".pair").remove();
   }
+  if ($(".removePair").length === 1)
+    $(".removePair").css("visibility", "hidden");
   return false;
 }
 
@@ -434,8 +441,6 @@ function prepareControls () {
   $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
-  $("#addPair").on("click", addNodeShapePair);
-  $("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
 
   // Prepare file uploads
   $("input.inputfile").each((idx, elt) => {
@@ -535,20 +540,12 @@ function prepareInterface () {
     return;
 
   iface = parseQueryString(location.search);
-  var useFirstNodeShapeInputs = true;
-  function _addNSPair (node, shape) {
-    if (useFirstNodeShapeInputs) {
-      $("#focus0").val(node);
-      $("#inputShape0").val(shape);
-      useFirstNodeShapeInputs = false;
-    } else {
-      addNodeShapePair(null, [{node: node, shape: shape}]);
-    }
-  }
   if ("shape-map" in iface)
-    parseShapeMap("shape-map", _addNSPair);
+    parseShapeMap("shape-map");
+  else
+    addNodeShapePair(null, [{node: "", shape: ""}]);
 
-  function parseShapeMap (queryParm, addPair) {
+  function parseShapeMap (queryParm) {
     var shapeMap =  iface[queryParm];
     delete iface[queryParm];
     //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
@@ -562,7 +559,7 @@ function prepareInterface () {
           var p = r2.match(RegExp(pairPattern));
           var node = p[1], shape = p[2];
           r[node] = node in r ? r[node].concat(shape) : [shape];
-          addPair(node, shape);
+          addNodeShapePair(null, [{node: node, shape: shape}]);
         });
         return r;
       }, {});
