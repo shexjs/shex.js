@@ -39,11 +39,23 @@ function sum (s) { // cheap way to identify identical strings
 }
 
 // <n3.js-specific>
-function termToLex (node) {
-  return node[0] === "_" && node[1] === ":" ? node : "<" + node + ">";
+function termToLex (node, prefixes) {
+  return node === "- start -" ? node : N3Writer({ prefixes:prefixes || {} })._encodeObject(node);
 }
-function lexToTerm (lex) {
-  return lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
+function lexToTerm (lex, resolver) {
+  return lex === "- start -" ? lex : N3Lexer().tokenize(lex).map(token => {
+    var left = 
+          token.type === "typeIRI" ? "^^" :
+          token.type === "langcode" ? "@" :
+          token.type === "type" ? resolver.meta.prefixes[token.prefix] :
+          token.type === "prefixed" ? resolver.meta.prefixes[token.prefix] :
+          "";
+    var right = token.type === "IRI" || token.type === "typeIRI" ?
+          resolver._resolveAbsoluteIRI(token) :
+          token.value;
+    return left + right;
+  }).join("");
+  return lex === "- start -" ? lex : lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
 }
 // </n3.js-specific>
 
@@ -222,8 +234,8 @@ function pickData (name, dataTest, elt, listItems, side) {
 
 // Control results area content.
 var results = (function () {
-  var resultsElt = autosize(document.querySelector("#results textarea"));
-  var resultsSel = $("#results textarea");
+  var resultsElt = autosize(document.querySelector("#results div"));
+  var resultsSel = $("#results div");
   return {
     replace: function (text) {
       var ret = resultsSel.text(text);
@@ -273,30 +285,114 @@ function hasFocusNode () {
 }
 
 function validate () {
+  var interface = "interface" in iface ? iface.interface[0] : "simple";
+  results.clear();
+  $(".pair").removeClass("passes").removeClass("fails");
   $("#results .status").hide();
   var parsing = "input schema";
   try {
-    var validator = ShExValidator.construct(InputSchema.refresh()
-                    /*, { regexModule: modules["../lib/regex/nfax-val-1err"] }*/);
     $("#schemaDialect").text(InputSchema.language);
     InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
     if (dataText || hasFocusNode()) {
       parsing = "input data";
-      var shapeMap = shapeMapToTerms(getShapeMap($(".focus"), $(".inputShape"), InputData, InputSchema));
+      var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
+      $("#results .status").text("creating validator...").show();
+      var validator = ShExValidator.construct(InputSchema.refresh(),
+                      { results: "api"
+                      /*, regexModule: modules["../lib/regex/nfax-val-1err"] */ });
+
+      $("#results .status").text("validating...").show();
       var ret = validator.validate(inputData, shapeMap);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
-      var text =
-            "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
-            ("errors" in ret ?
-             ShExUtil.errsToSimple(ret).join("\n") :
-             JSON.stringify(ShExUtil.simpleToShapeMap(ShExUtil.valToSimple(ret)), null, 2)) :
-          JSON.stringify(ret, null, "  ");
-      var res = results.replace(text);
+      ret.forEach(renderEntry);
+      // for debugging values and schema formats:
+      // try {
+      //   var x = ShExUtil.valToValues(ret);
+      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
+      //   res = results.replace(JSON.stringify(x, null, "  "));
+      //   var y = ShExUtil.valuesToSchema(x);
+      //   res = results.append(JSON.stringify(y, null, "  "));
+      // } catch (e) {
+      //   console.dir(e);
+      // }
+      finishRendering();
+    } else {
+      var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
+      $("#results .status").
+        text("parsed "+InputSchema.language+" schema, generated "+outputLanguage+" ").
+        append($("<button>(copy to input)</button>").
+               css("border-radius", ".5em").
+               on("click", function () {
+                 InputSchema.set($("#results div").text());
+               })).
+        append(":").
+        show();
+      var parsedSchema;
+      if (InputSchema.language === "ShExJ") {
+        new ShExWriter({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
+          if (error) {
+            $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
+            // res.addClass("error");
+          } else {
+            results.append($("<pre/>").text(text).addClass("passes"));
+          }
+        });
+      } else {
+        var pre = $("<pre/>");
+        pre.text(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(InputSchema.parsed)), null, "  ")).addClass("passes");
+        results.append(pre);
+      }
+      results.finish();
+    }
+  } catch (e) {
+    results.replace("error parsing " + parsing + ":\n").addClass("error").
+      append($("<pre/>").text(e.stack || e));
+  }
+
+  function renderEntry (entry) {
+    var fails = entry.status === "nonconformant";
+    var klass = fails ? "fails" : "passes";
+
+    // update the QueryMap
+    $(".pair").filter((idx, elt) => {
+      return $(elt).attr("data-node") === entry.node &&
+        $(elt).attr("data-shape") === entry.shape;
+    }).addClass(klass);
+
+    switch (interface) {
+    case "human":
+      var elt = $("<div class='human'/>").text(
+        `${termToLex(entry.node)}@${fails ? "!" : ""}${termToLex(entry.shape)}`
+      ).addClass(klass);
+      if (fails)
+        elt.append($("<pre>").text(ShExUtil.errsToSimple(entry.appinfo).join("\n")));
+      results.append(elt);
+      break;
+    case "simple":
+      if (fails)
+        entry.reason = ShExUtil.errsToSimple(entry.appinfo).join("\n");
+      delete entry.appinfo;
+      // fall through to default
+    default:
+      results.append($("<pre/>").text(JSON.stringify(entry, null, "  ")).
+                     addClass(klass));
+    }
+  }
+
+  function finishRendering () {
+          $("#results .status").text("rendering results...").show();
+          // Add commas to JSON results.
+          if (interface !== "human")
+            $("#results div *").each((idx, elt) => {
+              if (idx === 0)
+                $(elt).prepend("[");
+              $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
+            });
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
@@ -308,38 +404,7 @@ function validate () {
       // } catch (e) {
       //   console.dir(e);
       // }
-      if ("errors" in ret) {
-        res.addClass("fails");
-      } else {
-        res.addClass("passes");
-      }
-    } else {
-      var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
-      $("#results .status").
-        text("parsed "+InputSchema.language+" schema, generated "+outputLanguage+" ").
-        append($("<button>(copy to input)</button>").
-               css("border-radius", ".5em").
-               on("click", function () {
-                 InputSchema.set($("#results textarea").val());
-               })).
-        append(":").
-        show();
-      var parsedSchema;
-      if (InputSchema.language === "ShExJ") {
-        new ShExWriter({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
-          if (error) {
-            $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
-            // res.addClass("error");
-          } else {
-            results.replace(text).addClass("passes");
-          }
-        });
-      } else {
-        results.replace(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(InputSchema.parsed)), null, "  ")).addClass("passes");
-      }
-    }
-  } catch (e) {
-    results.replace("error parsing " + parsing + ":\n" + e).addClass("error");
+      results.finish();
   }
 }
 
@@ -424,57 +489,187 @@ var parseQueryString = function(query) {
 };
 
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
+ * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
  */
-function getShapeMap (nodeList, shapeList, data, schema) {
-  var nodes = nodeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  var shapes = shapeList.map((idx, elt) => { return $(elt); }); // .map((idx, elt) => { return $(elt).val(); });
-  var mapAndErrors = nodes.get().reduce((ret, n, i) => {
-
-    var node = "node-type" in iface ?
-          ShExUtil.someNodeWithType(
-            ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
-                                     label => {
-                                       return (data.refresh().
-                                               getTriplesByIRI(null, RDF_TYPE, label).length > 0);
-                                     },
-                                     loaded.data.prefixes)) :
-        ShExUtil.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
-          var triples = data.refresh().getTriplesByIRI(null, null, null);
-          return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
-        },
-                                 label => {
-                                   return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
-                                           data.refresh().getTriplesByIRI(null, null, label).length > 0);
-                                 });
-
-    if (node === ShExUtil.UnknownIRI)
-      node = $(n).val();
-    else if (node === ShExUtil.NotSupplied)
-      ret.errors.push("node not found: " + $(n).val());
-    var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
-          ShExUtil.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
-                                   (label) => {
-                                     return label in schema.refresh().shapes;
-                                   });
-    if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
-      throw Error("shape " + $(shapes[i]).val() + " not defined");
-    if (!shape)
-      ret.errors.push("shape not found: " + $(shapes[i]).val());
+function parseUIShapeMap () {
+  var [dataResolver, schemaResolver] = [new IRIResolver(InputData.meta), new IRIResolver(InputSchema.meta)];
+  var mapAndErrors = $(".pair").get().reduce((acc, pair) => {
+    var node = $(pair).find(".focus").val();
+    var shape = $(pair).find(".inputShape").val();
+    $(pair).attr("data-node", lexToTerm(node, dataResolver));
+    $(pair).attr("data-shape", lexToTerm(shape, schemaResolver));
     if (node && shape)
-      ret.shapeMap.push({node: node, shape: shape});
-    return ret;
+      acc.shapeMap.push({node: node, shape: shape});
+    return acc;
+
+    // var node = "node-type" in iface ?
+    //       ShExUtil.someNodeWithType(
+    //         ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
+    //                                  label => {
+    //                                    return (data.refresh().
+    //                                            getTriplesByIRI(null, RDF_TYPE, label).length > 0);
+    //                                  },
+    //                                  loaded.data.prefixes)) :
+    //     ShExUtil.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
+    //       var triples = data.refresh().getTriplesByIRI(null, null, null);
+    //       return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
+    //     },
+    //                              label => {
+    //                                return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
+    //                                        data.refresh().getTriplesByIRI(null, null, label).length > 0);
+    //                              });
+
+    // if (node === ShExUtil.UnknownIRI)
+    //   node = $(n).val();
+    // else if (node === ShExUtil.NotSupplied)
+    //   ret.errors.push("node not found: " + $(n).val());
+    // var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
+    //       ShExUtil.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
+    //                                (label) => {
+    //                                  return label in schema.refresh().shapes;
+    //                                });
+    // if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
+    //   throw Error("shape " + $(shapes[i]).val() + " not defined");
+    // if (!shape)
+    //   ret.errors.push("shape not found: " + $(shapes[i]).val());
+    // if (node && shape)
+    //   ret.shapeMap.push({node: node, shape: shape});
+    // return ret;
   }, {shapeMap: [], errors: []});
   if (mapAndErrors.errors.length) // !! overwritten immediately
     results.append(mapAndErrors.errors.join("\n"));
   return mapAndErrors.shapeMap;
 }
 
+function IRIResolver (meta) {
+  if (!(this instanceof IRIResolver))
+    return new IRIResolver(options);
+  this.meta = meta;
+  this._setBase(meta.base);
+}
+
+var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
+    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
+IRIResolver.prototype = {
+
+  // vvv stolen from Ruben Vergorgh's N3Parser.js vvv
+  // ### `_setBase` sets the base IRI to resolve relative IRIs
+  _setBase: function (baseIRI) {
+    if (!baseIRI)
+      this._base = null;
+    else {
+      // Remove fragment if present
+      var fragmentPos = baseIRI.indexOf('#');
+      if (fragmentPos >= 0)
+        baseIRI = baseIRI.substr(0, fragmentPos);
+      // Set base IRI and its components
+      this._base = baseIRI;
+      this._basePath   = baseIRI.indexOf('/') < 0 ? baseIRI :
+        baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
+      baseIRI = baseIRI.match(schemeAuthority);
+      this._baseRoot   = baseIRI[0];
+      this._baseScheme = baseIRI[1];
+    }
+  },
+
+  // ### `_resolveIRI` resolves a relative IRI token against the base path,
+  // assuming that a base path has been set and that the IRI is indeed relative
+  _resolveIRI: function (token) {
+    var iri = token.value;
+    switch (iri[0]) {
+      // An empty relative IRI indicates the base IRI
+    case undefined: return this._base;
+      // Resolve relative fragment IRIs against the base IRI
+    case '#': return this._base + iri;
+      // Resolve relative query string IRIs by replacing the query string
+    case '?': return this._base.replace(/(?:\?.*)?$/, iri);
+      // Resolve root-relative IRIs at the root of the base IRI
+    case '/':
+      // Resolve scheme-relative IRIs to the scheme
+      return (iri[1] === '/' ? this._baseScheme : this._baseRoot) + this._removeDotSegments(iri);
+      // Resolve all other IRIs at the base IRI's path
+    default:
+      return this._removeDotSegments(this._basePath + iri);
+    }
+  },
+
+  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986
+  _removeDotSegments: function (iri) {
+    // Don't modify the IRI if it does not contain any dot segments
+    if (!dotSegments.test(iri))
+      return iri;
+
+    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
+    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+
+    while (i < length) {
+      switch (next) {
+        // The path starts with the first slash after the authority
+      case ':':
+        if (pathStart < 0) {
+          // Skip two slashes before the authority
+          if (iri[++i] === '/' && iri[++i] === '/')
+            // Skip to slash after the authority
+            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
+              i = pathStart;
+        }
+        break;
+        // Don't modify a query string or fragment
+      case '?':
+      case '#':
+        i = length;
+        break;
+        // Handle '/.' or '/..' path segments
+      case '/':
+        if (iri[i + 1] === '.') {
+          next = iri[++i + 1];
+          switch (next) {
+            // Remove a '/.' segment
+          case '/':
+            result += iri.substring(segmentStart, i - 1);
+            segmentStart = i + 1;
+            break;
+            // Remove a trailing '/.' segment
+          case undefined:
+          case '?':
+          case '#':
+            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
+            // Remove a '/..' segment
+          case '.':
+            next = iri[++i + 1];
+            if (next === undefined || next === '/' || next === '?' || next === '#') {
+              result += iri.substring(segmentStart, i - 2);
+              // Try to remove the parent path from result
+              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
+                result = result.substr(0, segmentStart);
+              // Remove a trailing '/..' segment
+              if (next !== '/')
+                return result + '/' + iri.substr(i + 1);
+              segmentStart = i + 1;
+            }
+          }
+        }
+      }
+      next = iri[++i];
+    }
+    return result + iri.substring(segmentStart);
+  },
+
+  _resolveAbsoluteIRI: function  (token) {
+    return (this._base === null || absoluteIRI.test(token.value)) ?
+      token.value : this._resolveIRI(token);
+  }
+
+};
+
 /** shapeMapToTerms -- map ShapeMap to API terms
  * @@TODO: add to ShExValidator so API accepts ShapeMap
  */
 function shapeMapToTerms (shapeMap) {
+  var [dataResolver, schemaResolver] = [new IRIResolver(InputData.meta), new IRIResolver(InputSchema.meta)];
   return shapeMap.map(pair => {
-    return {node: lexToTerm(pair.node), shape: pair.shape === "- start -" ? pair.shape : lexToTerm(pair.shape)};
+    return {node: lexToTerm(pair.node, dataResolver), shape: lexToTerm(pair.shape, schemaResolver)};
   });
 }
 
@@ -501,13 +696,17 @@ function prepareInterface () {
     var pairPattern = s + "@" + s + ",?";
     iface.shapeMap = shapeMap.reduce(
       (r, b) => {
-        // test: b = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-        var pairs = b.match(RegExp(pairPattern, "g"));
-        pairs.map(r2 => {
-          var p = r2.match(RegExp(pairPattern));
-          var node = p[1], shape = p[2];
-          r[node] = node in r ? r[node].concat(shape) : [shape];
-          addNodeShapePair(null, [{node: node, shape: shape}]);
+        // e.g.: b = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
+        var pairs = (b + ",").match(/([^,\\]|\\.)+,/g).
+              map(s => s.substr(0, s.length-1)); // trim ','s
+        pairs.forEach(r2 => {
+          var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
+          if (m) {
+            var node = m[1] || "";
+            var shape = m[2] || "";
+            r[node] = node in r ? r[node].concat(shape) : [shape];
+            addNodeShapePair(null, [{node: node, shape: shape}]);
+          }
         });
         return r;
       }, {});
@@ -541,20 +740,21 @@ function prepareInterface () {
    * update location with a current values of some inputs
    */
   function updateURL () {
-    var parms = QueryParams.map(input => {
-      var parm = input.queryStringParm;
-      return parm + "=" + encodeURIComponent(input.location.val());
-    });
-    var dataText = InputData.get();
-    if (dataText || hasFocusNode()) {
-      var shapeMap = getShapeMap($(".focus"), $(".inputShape"), InputData, InputSchema);
-      if (shapeMap.length)
-        parms.push("shape-map=" + shapeMap.reduce((ret, p) => {
-          return ret.concat([encodeURIComponent(p.node + "@" + p.shape)]);
-        }, []).join(encodeURIComponent(",")));
-    }
+    var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface[0]);
+    var pairs = $(".pair");
+    if (pairs.length > 0) {
+      parms.push("shape-map=" + pairs.map((idx, elt) => {
+        var node = $(elt).find(".focus").val();
+        var shape = $(elt).find(".inputShape").val();
+        return [encodeURIComponent(node + "@" + shape)];
+      }).get().join(encodeURIComponent(",")));
+    }
+    parms = parms.concat(QueryParams.map(input => {
+      var parm = input.queryStringParm;
+      return parm + "=" + encodeURIComponent(input.location.val());
+    }));
     var s = parms.join("&");
     window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
   }
