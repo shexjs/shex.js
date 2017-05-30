@@ -509,6 +509,7 @@ function validate () {
       ShExWorker.onmessage = expectCreated;
       ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
+                               , endpoint: InputData.endpoint
                              });
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
@@ -523,12 +524,16 @@ function validate () {
         $("#validate").on("click", terminateWorker);
         $("#results .status").text("validating...").show();
         ShExWorker.onmessage = parseUpdatesAndResults;
-        ShExWorker.postMessage({
-          request: "validate",
-          data: inputData.getTriplesByIRI(),
-          queryMap: shapeMap,
-          options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
-        });
+        ShExWorker.postMessage(Object.assign(
+          {
+            request: "validate",
+            queryMap: shapeMap,
+            options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
+          },
+          ("endpoint" in InputData ?
+           { endpoint: InputData.endpoint } :
+           { data: InputData.getTriplesByIRI() })
+        ));
       }
 
       function terminateWorker (evt) {

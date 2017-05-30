@@ -29,8 +29,9 @@ onmessage = function (msg) {
     break;
 
   case "validate":
-    var db = N3Store();
-    db.addTriples(msg.data.data);
+    var db = "endpoint" in msg.data ?
+      makeQueryDB(msg.data.endpoint) :
+      makeStaticDB(msg.data.data);
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
     var results = Util.createResults();
@@ -62,3 +63,63 @@ onmessage = function (msg) {
 
 }
 
+function makeStaticDB (triples) {
+  var ret = N3Store();
+  ret.addTriples(triples);
+  return ret;
+}
+
+function makeQueryDB (endpoint) {
+  var executeQuery = function (query, endpointParm) {
+    var rows;
+
+    var queryURL = (endpointParm || endpoint) + "?query=" + encodeURIComponent(query);
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", queryURL, false);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.send();
+    // var selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
+    // var selects = selectsBlock.match(/\?[^\s?]+/g);
+    var t = JSON.parse(xhr.responseText);
+    var selects = t.head.vars;
+    return t.results.bindings.map(row => {
+      return selects.map(sel => {
+        var elt = row[sel];
+        switch (elt.type) {
+        case "uri": return elt.value;
+        case "bnode": return "_:" + elt.value;
+        case "literal":
+          var datatype = elt.datatype;
+          var lang = elt["xml:lang"];
+          return "\"" + elt.value + "\"" + (
+            datatype ? "^^" + datatype :
+              lang ? "@" + lang :
+              "");
+        default: throw "unknown XML results type: " + elt.prop("tagName");
+        }
+        return row[sel];
+      })
+    });
+  };
+
+      return {
+        getTriplesByIRI: function (s, p, o) {
+          var query = s ?
+                `SELECT ?p ?o { <${s}> ?p ?o }`:
+                `SELECT ?s ?p { ?s ?p <${o}> }`;
+          var rows = executeQuery(query);
+          var triples = rows.map(row =>  {
+            return s ? {
+              subject: s,
+              predicate: row[0],
+              object: row[1]
+            } : {
+              subject: row[0],
+              predicate: row[1],
+              object: o
+            };
+          });
+          return triples;
+        }
+      };
+}
