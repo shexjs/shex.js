@@ -2,6 +2,7 @@
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
+const USE_INCREMENTAL_RESULTS = true;
 const START_SHAPE_LABEL = "- start -";
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
 var InputSchema = makeSchemaCache("#inputSchema textarea");
@@ -505,26 +506,77 @@ function validate () {
       var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
-      var validator = ShExValidator.construct(InputSchema.refresh(),
-                      { results: "api"
-                      /*, regexModule: modules["../lib/regex/nfax-val-1err"] */ });
+      ShExWorker.onmessage = expectCreated;
+      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()
+              /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
+                             });
 
-      $("#results .status").text("validating...").show();
-      var ret = validator.validate(inputData, shapeMap);
-      // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
-      $("#results .status").text("rendering results...").show();
-      ret.forEach(renderEntry);
-      // for debugging values and schema formats:
-      // try {
-      //   var x = ShExUtil.valToValues(ret);
-      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
-      //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   var y = ShExUtil.valuesToSchema(x);
-      //   res = results.append(JSON.stringify(y, null, "  "));
-      // } catch (e) {
-      //   console.dir(e);
-      // }
-      finishRendering();
+      // var resultsMap = USE_INCREMENTAL_RESULTS ?
+      //       Util.createResults() :
+      //       "not used";
+
+      function expectCreated (msg) {
+        if (msg.data.response !== "created")
+          throw "expected created: " + JSON.stringify(msg.data);
+        $("#validate").addClass("stoppable").text("abort (ctl-enter)");
+        $("#validate").off("click", disableResultsAndValidate);
+        $("#validate").on("click", terminateWorker);
+        $("#results .status").text("validating...").show();
+        ShExWorker.onmessage = parseUpdatesAndResults;
+        ShExWorker.postMessage({
+          request: "validate",
+          data: inputData.getTriplesByIRI(),
+          queryMap: shapeMap,
+          options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
+        });
+      }
+
+      function terminateWorker (evt) {
+        ShExWorker.terminate();
+        ShExWorker = new Worker("shex-simple-worker.js");
+        if (evt !== null)
+          $("#results .status").text("validation aborted").show();
+        resultsCleanup();
+      }
+
+      function resultsCleanup () {
+        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
+        $("#validate").off("click", terminateWorker);
+        $("#validate").on("click", disableResultsAndValidate);
+      }
+
+      function parseUpdatesAndResults (msg) {
+        switch (msg.data.response) {
+        case "update":
+          // msg.data.results.forEach(newRes => {
+          //   var key = Util.indexKey(newRes.node, newRes.shape);
+          //   if (key in index) {
+          //     markResult(updateCells[key], newRes.status, start);
+          //   } else {
+          //     extraResult(newRes);
+          //   }
+          // });
+
+          if (USE_INCREMENTAL_RESULTS) {
+            // Merge into results.
+            msg.data.results.forEach(renderEntry);
+            // resultsMap.merge(msg.data.results);
+          }
+          break;
+
+        case "done":
+          ShExWorker.onmessage = false;
+          $("#results .status").text("rendering results...").show();
+          if (!USE_INCREMENTAL_RESULTS)
+            msg.data.results.forEach(renderEntry);
+          finishRendering();
+          break;
+
+        default:
+          console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
+        }
+      }
+
     } else {
       var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
@@ -597,6 +649,7 @@ function validate () {
                 $(elt).prepend("[");
               $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
             });
+          resultsCleanup();
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
