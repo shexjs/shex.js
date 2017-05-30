@@ -411,7 +411,7 @@ BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHA
 //ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
 PNAME_NS                {PN_PREFIX}? ':'
-ATPNAME_NS              '@' {PN_PREFIX}? ':'
+ATPNAME_NS              '@' {PNAME_NS}
 HEX                     [0-9] | [A-F] | [a-f]
 PERCENT                 '%' {HEX} {HEX}
 UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX}
@@ -435,7 +435,7 @@ PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) (({PN_CHARS} | '.' | ':' | {PLX})* ({PN_CHARS} | ':' | {PLX}))?
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
-ATPNAME_LN              '@' {PNAME_NS} {PN_LOCAL}
+ATPNAME_LN              '@' {PNAME_LN}
 COMMENT                 '#' [^\u000a\u000d]*
 
 %%
@@ -828,11 +828,8 @@ inlineShapeNot:
 shapeAtom:
 //    nonLitNodeConstraint _QshapeOrRef_E_Opt	
       nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	{
-        $$ = $2 === EmptyShape ?
-          extend({ type: "NodeConstraint"}, $1) :
-          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      }
+    | nonLitNodeConstraint shapeOrRef	
+        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
     | litNodeConstraint	
 //  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
     | shapeOrRef	 // t: 1dotRef1
@@ -852,11 +849,8 @@ _QnonLitNodeConstraint_E_Opt:
 shapeAtomNoRef:
 //    nonLitNodeConstraint _QshapeOrRef_E_Opt	
       nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	{
-        $$ = $2 === EmptyShape ?
-          extend({ type: "NodeConstraint"}, $1) :
-          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      }
+    | nonLitNodeConstraint shapeOrRef	
+        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
     | litNodeConstraint	
 //  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
     | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
@@ -868,11 +862,8 @@ shapeAtomNoRef:
 inlineShapeAtom:
 //    nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
       nonLitNodeConstraint
-    | nonLitNodeConstraint inlineShapeOrRef	{
-        $$ = $2 === EmptyShape ?
-          extend({ type: "NodeConstraint"}, $1) :
-          { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-      }
+    | nonLitNodeConstraint inlineShapeOrRef	
+        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
     | litNodeConstraint	
     | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
@@ -1231,7 +1222,7 @@ iriRange:
       iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
-            type: "IriStemRange",
+            type: $2.length ? "IriStemRange" : "IriStem",
             stem: $1
           };
           if ($2.length)
@@ -1270,7 +1261,7 @@ literalRange:
       literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
-            type: "LiteralStemRange",
+            type: $2.length ? "LiteralStemRange" : "LiteralStem",
             stem: $1.value
           };
           if ($2.length)
@@ -1309,7 +1300,7 @@ languageRange:
       language _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
-            type: "LanguageStemRange",
+            type: $2.length ? "LanguageStemRange" : "LanguageStem",
             stem: $1
           };
           if ($2.length)
