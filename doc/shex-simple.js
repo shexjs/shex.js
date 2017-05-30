@@ -218,6 +218,13 @@ function makeTurtleCache(parseSelector) {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
     if (m) {
+      // fake a meta entry:
+      var meta = { prefixes: {} };
+      var resolver = new IRIResolver(meta);
+      meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); }
+      meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
+      InputData.meta = meta;
+
       return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
         return InputData.meta.termToLex(row[0]);
       }));
