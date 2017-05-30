@@ -131,14 +131,84 @@ function makeSchemaCache (parseSelector) {
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
   ret.meta = {};
+  ret.endpoint = null,
+  ret.query = null,
+  ret.executeQuery = function (query, endpoint) {
+    var rows;
+    $.ajax({
+      async: false,
+      url: endpoint || ret.endpoint,
+      data: { query: query },
+      datatype: "xml",
+      // datatype: "json",
+      // accepts: { json: "application/sparql-results+json" },
+      success : function(data) {
+        if (endpoint)
+          ret.endpoint = endpoint;
+        ret.query = query;
+        rows = []; // $.map flattens nested arrays.
+        $(data).find("sparql > results > result").
+          each((_, row) => {
+            rows.push($(row).find("binding > *:nth-child(1)").
+              map((idx, elt) => {
+                elt = $(elt);
+                var text = elt.text();
+                switch (elt.prop("tagName")) {
+                case "uri": return text;
+                case "bnode": return "_:" + text;
+                case "literal":
+                  var datatype = elt.attr("datatype");
+                  var lang = elt.attr("xml:lang");
+                  return "\"" + text + "\"" + (
+                    datatype ? "^^" + datatype :
+                    lang ? "@" + lang :
+                      "");
+                default: throw "unknown XML results type: " + elt.prop("tagName");
+                }
+              }).get());
+          });
+      }
+    });
+    return rows;
+  };
   ret.parse = function (text) {
+    if (ret.query && ret.endpoint) {
+      return {
+        getTriplesByIRI: function (s, p, o) {
+          var query = s ?
+                `SELECT ?p ?o { <${s}> ?p ?o }`:
+                `SELECT ?s ?p { ?s ?p <${o}> }`;
+          var rows = ret.executeQuery(query);
+          var triples = rows.map(row =>  {
+            return s ? {
+              subject: s,
+              predicate: row[0],
+              object: row[1]
+            } : {
+              subject: row[0],
+              predicate: row[1],
+              object: o
+            };
+          });
+          return triples;
+        }
+      };
+    }
     return parseTurtle(text, ret.meta);
   };
   ret.getNodes = function () {
-    var data = this.refresh();
-    return data.getTriples().map(t => {
-      return termToLex(t.subject);
-    });
+    var text = this.get();
+    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
+    if (m) {
+      return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
+        return termToLex(row[0]);
+      }));
+    } else {
+      var data = this.refresh();
+      return data.getTriples().map(t => {
+        return termToLex(t.subject);
+      });
+    }
   };
   return ret;
 }
@@ -210,10 +280,11 @@ function pickData (name, dataTest, elt, listItems, side) {
     $(elt).addClass("selected");
     //    $("input.data").val(getDataNodes()[0]);
     // hard-code the first node/shape pair
-    $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
-    $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
-    removeNodeShapePair(null, Infinity);
-    addNodeShapePair(null, dataTest.inputShapeMap.slice(1)); // catch the rest of the shapeMap.
+    removeNodeShapePair(null);
+    // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
+    // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
+    // removeNodeShapePair(null);
+    addNodeShapePair(null, dataTest.inputShapeMap); // add Map-test
     // validate();
   }
 }
@@ -290,7 +361,7 @@ function validate () {
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
       var text =
-            "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
+            true || "interface" in iface && iface.interface.indexOf("simple") !== -1 ?
             ("errors" in ret ?
              ShExUtil.errsToSimple(ret).join("\n") :
              JSON.stringify(ShExUtil.simpleToShapeMap(ShExUtil.valToSimple(ret)), null, 2)) :
@@ -342,38 +413,44 @@ function validate () {
   }
 }
 
-var Removables = [];
 function addNodeShapePair (evt, pairs) {
-  if (pairs === undefined)
+  if (evt)
     pairs = [{node: "", shape: ""}];
   pairs.forEach(pair => {
-    var id = Removables.length+1;
-    var t = $("<span><br/><input id='focus"+id+
-              "' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
-              "' class='data focus'/> as <input id='inputShape"+id+
-              "' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
-              "' class='schema inputShape context-menu-one btn btn-neutral'/></span>"
-             );
-    addContextMenus("#focus"+id, "#inputShape"+id);
-    Removables.push(t);
-    t.insertBefore($("#removePair"));
-    if (id === 1)
-      $("#removePair").css("visibility", "visible");
+    var span = $("<li class='pair'/>");
+    var focus = $("<input "+"' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
+                  "' class='data focus'/>");
+    var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
+                  "' class='schema inputShape context-menu-one btn btn-neutral'/>");
+    var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
+    var remove = $('<button class="removePair" title="remove last node/shape pair">-</button>');
+    add.on("click", addNodeShapePair);
+    remove.on("click", removeNodeShapePair);
+    span.append(focus, " as ", shape, add, remove);
+    if (evt) {
+      $(evt.target).parent().after(span);
+    } else {
+      $("#shapeMap").append(span);
+    }
+  });
+  if ($(".removePair").length === 1)
+    $(".removePair").css("visibility", "hidden");
+  else
+    $(".removePair").css("visibility", "visible");
+  $(".pair").each(idx => {
+    addContextMenus(".pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
   });
   return false;
 }
 
-function removeNodeShapePair (evt, howMany) {
-  if (howMany === undefined)
-    howMany = 1;
-  for (var i = 0; i < howMany; ++i) {
-    var id = Removables.length;
-    if (id === 0)
-      break;
-    Removables.pop().remove();
-    if (id === 1)
-      $("#removePair").css("visibility", "hidden");
+function removeNodeShapePair (evt) {
+  if (evt) {
+    $(evt.target).parent().remove();
+  } else {
+    $(".pair").remove();
   }
+  if ($(".removePair").length === 1)
+    $(".removePair").css("visibility", "hidden");
   return false;
 }
 
@@ -382,8 +459,6 @@ function prepareControls () {
   $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
-  $("#addPair").on("click", addNodeShapePair);
-  $("#removePair").on("click", removeNodeShapePair).css("visibility", "hidden");
 
   // Prepare file uploads
   $("input.inputfile").each((idx, elt) => {
@@ -483,20 +558,12 @@ function prepareInterface () {
     return;
 
   iface = parseQueryString(location.search);
-  var useFirstNodeShapeInputs = true;
-  function _addNSPair (node, shape) {
-    if (useFirstNodeShapeInputs) {
-      $("#focus0").val(node);
-      $("#inputShape0").val(shape);
-      useFirstNodeShapeInputs = false;
-    } else {
-      addNodeShapePair(null, [{node: node, shape: shape}]);
-    }
-  }
   if ("shape-map" in iface)
-    parseShapeMap("shape-map", _addNSPair);
+    parseShapeMap("shape-map");
+  else
+    addNodeShapePair(null, [{node: "", shape: ""}]);
 
-  function parseShapeMap (queryParm, addPair) {
+  function parseShapeMap (queryParm) {
     var shapeMap =  iface[queryParm];
     delete iface[queryParm];
     //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
@@ -510,7 +577,7 @@ function prepareInterface () {
           var p = r2.match(RegExp(pairPattern));
           var node = p[1], shape = p[2];
           r[node] = node in r ? r[node].concat(shape) : [shape];
-          addPair(node, shape);
+          addNodeShapePair(null, [{node: node, shape: shape}]);
         });
         return r;
       }, {});
@@ -625,6 +692,7 @@ function prepareDragAndDrop () {
 
 // prepareDemos() is invoked after these variables are assigned:
 var clinicalObs = {};
+var wikidataItem = {};
 function prepareDemos () {
   var demos = {
     "clinical observation": {
@@ -662,6 +730,18 @@ function prepareDemos () {
           inputShapeMap: [{
             node: "<http://a.example/Obs1>",
             shape: "- start -" }]}
+      }
+    },
+    "wikidata query": {
+      schema: wikidataItem.schema,
+      passes: {
+        "12078": {
+          data: wikidataItem.cats,
+          inputShapeMap: [{
+            node: "- click to resolve -",
+            shape: "- start -"}]}
+      },
+      fails: {
       }
     }
   };
@@ -712,7 +792,16 @@ function addContextMenus (nodeSelector, shapeSelector) {
     $.contextMenu({
       selector: entry.inputSelector,
       callback: function (key, options) {
-        $(options.selector).val(key);
+        if (key === "- add all -") {
+          var toAdd = Object.keys(options.items).filter(k => {
+            return k !== "- add all -";
+          });
+          $(options.selector).val(toAdd.shift());
+          var shape = $(options.selector.replace(/focus/, "inputShape")).val();
+          addNodeShapePair(null, toAdd.map(node => { return {node: node, shape: shape}; }));
+        } else {
+          $(options.selector).val(key);
+        }
       },
       build: function (elt, e) {
         return {
@@ -804,6 +893,38 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 <Patient2>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
+
+wikidataItem.schema = `PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX p: <http://www.wikidata.org/prop/>
+PREFIX pr: <http://www.wikidata.org/prop/reference/>
+PREFIX ps: <http://www.wikidata.org/prop/statement/>
+
+start = @<wikidata_item>
+
+<wikidata_item> {
+  p:P1748 {
+    ps:P1748 LITERAL ;
+    prov:wasDerivedFrom @<reference>
+  }+
+}
+
+<reference> {
+  pr:P248  IRI ;
+  pr:P813  xsd:dateTime ;
+  pr:P699  LITERAL
+}
+`;
+
+wikidataItem.cats = `
+Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql
+
+Query: SELECT ?item ?itemLabel
+WHERE
+{ ?item wdt:P279* wd:Q12078 .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
+} LIMIT 10
+`;
 
 ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>

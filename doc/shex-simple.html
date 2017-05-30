@@ -9,7 +9,9 @@
       h1, p, ul { margin: 0; }
       .passes { margin-right: 1em; }
       .passes, #results textarea.passes { padding-left: .1em; border-left: thick solid #bfb; }
+      .pair.passes { background-color: #bfb; border-left: none; }
       .fails , #results textarea.fails  { padding-left: .1em; border-left: thick solid #fbb; }
+      .pair.fails { background-color: #fbb; border-left: none; }
       .error , #results textarea.error  { padding-left: .1em; border-left: thick solid #b00; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
@@ -71,6 +73,9 @@
       h2.status { margin: 0; }
       #addPair, #removePair { text-decoration: none; }
       #schemaDialect, #dataDialect { font-size: .7em; }
+      #shapeMap { padding-left: .25em; }
+      .pair { list-style-type: none; }
+      .addPair, .removePair { font-size: 40%; line-height: .5ex; }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -108,9 +113,9 @@
           <div id="actions" style="margin-right: .1em;">
             <div>
             <button id="validate" style="float:left">validate (ctl-enter)</button>
-            <div style="float:left">
-              <input id="focus0" type="text" value="" class="data focus"/> as <input id="inputShape0" type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><a id="removePair" href="" title="remove last node/shape pair"> -</a><a id="addPair" href="" title="add a node/shape pair"> +</a>
-            </div>
+            <ul id="shapeMap" style="float:left">
+              <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
+            </ul>
             </div>
           </div>
           <div style="clear:both;">
