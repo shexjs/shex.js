@@ -943,10 +943,10 @@ function prepareDemos () {
             shape: "- start -" }]}
       }
     },
-    "wikidata query": {
+    "Each Wikidata item on Cancer should have a NCI Thesaurus ID": {
       schema: wikidataItem.schema,
       passes: {
-        "12078": {
+        "Get all Wikidata items on Cancers (SPARQL)": {
           data: wikidataItem.cats,
           inputShapeMap: [{
             node: "- click to resolve -",
