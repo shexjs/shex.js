@@ -42,9 +42,6 @@ function parseShEx (text, meta) {
   var ret = shexParser.parse(text);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
-  var resolver = new IRIResolver(meta);
-  meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
-  meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
 
@@ -122,6 +119,9 @@ function makeSchemaCache (parseSelector) {
           isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta);
+    var resolver = new IRIResolver(ret.meta);
+    ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
+    ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
     $("#results .status").hide();
     return schema;
 
