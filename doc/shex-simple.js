@@ -503,7 +503,6 @@ function validate () {
       parsing = "input data";
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
-      var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
@@ -532,7 +531,7 @@ function validate () {
           },
           ("endpoint" in InputData ?
            { endpoint: InputData.endpoint } :
-           { data: InputData.getTriplesByIRI() })
+           { data: InputData.refresh().getTriplesByIRI() })
         ));
       }
 
