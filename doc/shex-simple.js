@@ -150,8 +150,8 @@ function makeSchemaCache (parseSelector) {
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
   ret.meta = {};
-  ret.endpoint = null,
-  ret.query = null,
+  // ret.endpoint = null,
+  // ret.query = null,
   ret.executeQuery = function (query, endpoint) {
     var rows;
     $.ajax({
@@ -1001,10 +1001,10 @@ function prepareDemos () {
             shape: "- start -" }]}
       }
     },
-    "wikidata query": {
+    "Each Wikidata item on Cancer should have a NCI Thesaurus ID": {
       schema: wikidataItem.schema,
       passes: {
-        "12078": {
+        "Get all Wikidata items on Cancers (SPARQL)": {
           data: wikidataItem.cats,
           inputShapeMap: [{
             node: "- click to resolve -",
