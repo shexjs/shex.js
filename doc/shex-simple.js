@@ -426,7 +426,6 @@ function validate () {
       parsing = "input data";
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
-      var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
@@ -448,7 +447,7 @@ function validate () {
         ShExWorker.onmessage = parseUpdatesAndResults;
         ShExWorker.postMessage({
           request: "validate",
-          data: inputData.getTriplesByIRI(),
+          data: InputData.refresh().getTriplesByIRI(),
           queryMap: shapeMap,
           options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
         });
