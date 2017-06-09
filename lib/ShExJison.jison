@@ -444,7 +444,6 @@ COMMENT                 '#' [^\u000a\u000d]*
 %%
 
 {STRING_GRAVE}          {
-console.log("ASDF", yytext);
   var iBacktick = yytext.indexOf('`');
   var prefix = null;
   if (iBacktick > 0) {
@@ -452,7 +451,6 @@ console.log("ASDF", yytext);
     yytext = yytext.substr(iBacktick);
   }
   yytext = { prefix: prefix, label: unescapeString(yytext, 1) };
-  console.log(yytext);
   return 'STRING_GRAVE';
 }
 
