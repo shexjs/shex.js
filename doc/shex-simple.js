@@ -1055,30 +1055,39 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 proteinRecord = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX ex1: <http://ex1.example/>
+PREFIX ex2: <http://ex2.example/>
+
 LABEL [ rdfs:label skos:label ]
 <S> {
-  \`protein name\` LITERAL;
-  \`protein type\` [ \`signaling\` \`regulatory\` \`transport\` ];
+  ex1:\`protein name\` LITERAL;
+  ex2:\`protein type\` [ \`signaling\` \`regulatory\` \`transport\` ];
   \`protein width\` \`ucum microns\`
 }`;
 proteinRecord_meta = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-PREFIX ex: <http://a.example/>
+PREFIX ex1: <http://ex1.example/>
+PREFIX ex2: <http://ex2.example/>
+PREFIX foo: <http://foo.example/>
 
-ex:protName rdfs:label "protein name" .
-ex:protType skos:label "protein type" .
-ex:Signaling rdfs:label "signaling" .
-ex:Regulatory skos:label "regulatory" .
-ex:Transport rdfs:label "transport" ; skos:label "transport" .
-ex:protWidth rdfs:label "protein width" ; skos:label "protein width" .
-ex:microns rdfs:label "ucum microns" .
+foo:otherProtName rdfs:label "protein name" .
+ex1:protName rdfs:label "protein name" .
+ex1:protType skos:label "protein type" .
+ex2:protName rdfs:label "protein name" .
+ex2:protType skos:label "protein type" .
+ex1:Signaling rdfs:label "signaling" .
+ex1:Regulatory skos:label "regulatory" .
+ex1:Transport rdfs:label "transport" ; skos:label "transport" .
+ex1:protWidth rdfs:label "protein width" ; skos:label "protein width" .
+ex1:microns rdfs:label "ucum microns" .
 `;
-proteinRecord_good = `PREFIX ex: <http://a.example/>
+proteinRecord_good = `PREFIX ex1: <http://ex1.example/>
+PREFIX ex2: <http://ex2.example/>
 
 <s>
-  ex:protName "Dracula" ;
-  ex:protType ex:Regulatory ;
-  ex:protWidth "30"^^ex:microns .
+  ex1:protName "Dracula" ;
+  ex2:protType ex1:Regulatory ;
+  ex1:protWidth "30"^^ex1:microns .
 `;
 proteinRecord_badLabel = `PREFIX ex: <http://a.example/>
 

@@ -425,7 +425,7 @@ STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "''
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
 //NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
 
-STRING_GRAVE            '`' ([^\u0060\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '`' /* #x60=` #x5C=\ #xA=new line #xD=carriage return */
+STRING_GRAVE            {PNAME_NS}? '`' ([^\u0060\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '`' /* #x60=` #x5C=\ #xA=new line #xD=carriage return */
 
 LANG_STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" {LANGTAG}
 LANG_STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' {LANGTAG}
@@ -442,6 +442,19 @@ ATPNAME_LN              '@' {PNAME_LN}
 COMMENT                 '#' [^\u000a\u000d]*
 
 %%
+
+{STRING_GRAVE}          {
+console.log("ASDF", yytext);
+  var iBacktick = yytext.indexOf('`');
+  var prefix = null;
+  if (iBacktick > 0) {
+    prefix = yytext.substr(0, iBacktick-1);
+    yytext = yytext.substr(iBacktick);
+  }
+  yytext = { prefix: prefix, label: unescapeString(yytext, 1) };
+  console.log(yytext);
+  return 'STRING_GRAVE';
+}
 
 \s+|{COMMENT} /**/
 {ATPNAME_LN}            return 'ATPNAME_LN';
@@ -484,7 +497,6 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
 {STRING_LITERAL1}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL2     
 {STRING_LITERAL2}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG2
-{STRING_GRAVE}          { yytext = unescapeString(yytext, 1); return 'STRING_GRAVE'; }
 
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
 //{PLX}                 return 'PLX';
@@ -1225,7 +1237,7 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
-    | STRING_GRAVE	-> Parser._termResolver.resolve($1)
+    | STRING_GRAVE	-> Parser._termResolver.resolve($1, Parser._prefixes)
     | literalRange	// t: @@
     | languageRange	// t: @@
     | '.' _QiriExclusion_E_Plus	-> { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
@@ -1441,7 +1453,7 @@ iriOrLabel:
         $$ = expandPrefix($1.substr(0, $1.length - 1));
     }
     | STRING_GRAVE {
-        $$ = Parser._termResolver.resolve($1);
+        $$ = Parser._termResolver.resolve($1, Parser._prefixes);
     }
     ;
 
