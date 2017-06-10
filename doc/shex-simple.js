@@ -435,7 +435,7 @@ function validate () {
                                            "endpoint" in InputData ?
                                            { endpoint: InputData.endpoint } :
                                            {  }
-                                          );
+                                          ));
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
       //       Util.createResults() :
