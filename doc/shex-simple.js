@@ -6,6 +6,7 @@ const USE_INCREMENTAL_RESULTS = true;
 const START_SHAPE_LABEL = "- start -";
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
 var InputSchema = makeSchemaCache("#inputSchema textarea");
+var InputMeta = makeTurtleCache("#meta textarea");
 var InputData = makeTurtleCache("#inputData textarea");
 var ShExRSchema; // defined below
 
@@ -28,13 +29,20 @@ function parseTurtle (text, meta) {
 
 var shexParser = ShExParser.construct(Base);
 function parseShEx (text, meta) {
+  $("#schemaDialect").text(InputSchema.language);
+  var resolverText = $("#meta textarea").val();
+  if (resolverText) {
+    var resolverStore = N3Store();
+    shexParser._setTermResolver(ShExParser.dbTermResolver(resolverStore));
+    resolverStore.addTriples(N3Parser({documentIRI:Base}).parse(resolverText));
+  } else {
+    shexParser._setTermResolver(ShExParser.disabledTermResolver());
+  }
+
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   var ret = shexParser.parse(text);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
-  var resolver = new IRIResolver(meta);
-  meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
-  meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
 
@@ -112,6 +120,9 @@ function makeSchemaCache (parseSelector) {
           isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta);
+    var resolver = new IRIResolver(ret.meta);
+    ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
+    ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
     $("#results .status").hide();
     return schema;
 
@@ -400,6 +411,8 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   } else {
     InputSchema.set(schemaTest.schema);
     $("#inputSchema .status").text(name);
+
+    InputMeta.set(schemaTest.meta);
 
     InputData.set("");
     $("#inputData .status").text(" ");
@@ -852,7 +865,8 @@ function prepareInterface () {
   }
 
   var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                     {queryStringParm: "data", location: $("#inputData textarea")}];
+                     {queryStringParm: "data", location: $("#inputData textarea")},
+                     {queryStringParm: "meta", location: $("#meta textarea")}];
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
     if (parm in iface)
@@ -906,10 +920,13 @@ function prepareInterface () {
 function prepareDragAndDrop () {
   var _scma = $("#inputSchema textarea");
   var _data = $("#inputData textarea");
+  var _meta = $("#meta textarea");
   var _body = $("body");
   [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
+   {dropElt: _meta, targets: [{ext: "", target: InputMeta}]},
    {dropElt: _data, targets: [{ext: "", target: InputData}]},
    {dropElt: _body, targets: [{ext: ".shex", target: InputSchema},
+                              {ext: ".owl", target: InputMeta},
                               {ext: ".ttl", target: InputData}]}].
     forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
@@ -1012,6 +1029,29 @@ function prepareDemos () {
       },
       fails: {
       }
+    },
+    "protein record": {
+      schema: proteinRecord,
+      meta: proteinRecord_meta,
+      passes: {
+        "good": {
+          data: proteinRecord_good,
+          inputShapeMap: [{
+            node: "<http://a.example/s>",
+            shape: "<http://a.example/S>"}]}
+      },
+      fails: {
+        "bad label": {
+          data: proteinRecord_badLabel,
+          inputShapeMap: [{
+            node: "<http://a.example/s>",
+            shape: "<http://a.example/S>"}]},
+        "bad datatype": {
+          data: proteinRecord_badDatatype,
+          inputShapeMap: [{
+            node: "<http://a.example/s>",
+            shape: "<http://a.example/S>"}]}
+      }
     }
   };
   var listItems = {inputSchema:{}, inputData:{}};
@@ -1050,13 +1090,20 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
+  $("#meta textarea").keyup(function (e) {
+    var code = e.keyCode || e.charCode;
+    if (!(e.ctrlKey && (code === 10 || code === 13)))
+      later(e.target, "meta", InputMeta);
+  });
   addContextMenus("#focus0", "#inputShape0");
 }
 function addContextMenus (nodeSelector, shapeSelector) {
   [ { inputSelector: nodeSelector,
       getItems: function () { return InputData.getNodes(); } },
     { inputSelector: shapeSelector,
-      getItems: function () { return InputSchema.getShapes(); } }
+      getItems: function () { return InputSchema.getShapes(); } },
+    // { inputSelector: metaSelector, // !!! nuke me
+    //   getItems: function () { return []; } }
   ].forEach(entry => {
     $.contextMenu({
       selector: entry.inputSelector,
@@ -1193,6 +1240,57 @@ WHERE
 { ?item wdt:P279* wd:Q12078 .
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
 } LIMIT 10
+`;
+
+proteinRecord = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX ex1: <http://ex1.example/>
+PREFIX ex2: <http://ex2.example/>
+
+LABEL [ rdfs:label skos:label ]
+<S> {
+  ex1:\`protein name\` LITERAL;
+  ex2:\`protein type\` [ \`signaling\` \`regulatory\` \`transport\` ];
+  \`protein width\` \`ucum microns\`
+}`;
+proteinRecord_meta = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX ex1: <http://ex1.example/>
+PREFIX ex2: <http://ex2.example/>
+PREFIX foo: <http://foo.example/>
+
+foo:otherProtName rdfs:label "protein name" .
+ex1:protName rdfs:label "protein name" .
+ex1:protType skos:label "protein type" .
+ex2:protName rdfs:label "protein name" .
+ex2:protType skos:label "protein type" .
+ex1:Signaling rdfs:label "signaling" .
+ex1:Regulatory skos:label "regulatory" .
+ex1:Transport rdfs:label "transport" ; skos:label "transport" .
+ex1:protWidth rdfs:label "protein width" ; skos:label "protein width" .
+ex1:microns rdfs:label "ucum microns" .
+`;
+proteinRecord_good = `PREFIX ex1: <http://ex1.example/>
+PREFIX ex2: <http://ex2.example/>
+
+<s>
+  ex1:protName "Dracula" ;
+  ex2:protType ex1:Regulatory ;
+  ex1:protWidth "30"^^ex1:microns .
+`;
+proteinRecord_badLabel = `PREFIX ex: <http://a.example/>
+
+<s>
+  ex:protName999 "Dracula" ;
+  ex:protType ex:Regulatory ;
+  ex:protWidth "30"^^ex:microns .
+`;
+proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
+
+<s>
+  ex:protName "Dracula" ;
+  ex:protType ex:Regulatory ;
+  ex:protWidth "30"^^ex:microns999 .
 `;
 
 ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>

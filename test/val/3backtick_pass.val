@@ -1,0 +1,67 @@
+{
+  "type": "ShapeTest",
+  "node": "http://a.example/s",
+  "shape": "http://a.example/S",
+  "solution": {
+    "type": "EachOfSolutions",
+    "solutions": [
+      {
+        "type": "EachOfSolution",
+        "expressions": [
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://ex1.example/protName",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s",
+                "predicate": "http://ex1.example/protName",
+                "object": { "value": "Dracula" }
+              }
+            ],
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "literal"
+            }
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://ex1.example/protType",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s",
+                "predicate": "http://ex1.example/protType",
+                "object": "http://ex1.example/Regulatory"
+              }
+            ],
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "values": [
+                "http://ex1.example/Signaling",
+                "http://ex1.example/Regulatory",
+                "http://ex1.example/Transport"
+              ]
+            }
+          },
+          {
+            "type": "TripleConstraintSolutions",
+            "predicate": "http://ex1.example/protWidth",
+            "solutions": [
+              {
+                "type": "TestedTriple",
+                "subject": "http://a.example/s",
+                "predicate": "http://ex1.example/protWidth",
+                "object": { "value": "30", "type": "http://ex1.example/microns" }
+              }
+            ],
+            "valueExpr": {
+              "type": "NodeConstraint",
+              "datatype": "http://ex1.example/microns"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

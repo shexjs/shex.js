@@ -60,6 +60,7 @@ var CLI = require("command-line-args")([
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
   { name: "shape",     alias: "s", type: String, typeLabel: "IRI|Bnode", multiple: false, defaultValue: undefined, description: "shape to validate" },
   { name: "shex",      alias: "x", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExC schema" },
+  { name: "term-resolver",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "description resolver" }, // @@ add URL
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
@@ -479,6 +480,9 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
         if (tStr in TraitToOption)
           validatorOptions[TraitToOption[tStr]] = tStr;
       });
+      var resolver = loaded.data.getTriples(action, sht+"termResolver", null);
+      if (resolver.length)
+        schemaOptions["termResolver"] = resolver.map(function (t) { return t.object });
 
       return [["shex" , "schema", true ],
               ["shape", "shape" , false],
@@ -523,6 +527,7 @@ function loadJSONmanifest (jsonManifests) {
               return Object.assign(
                 { name: t.name,
                   shex: t.action.schema,
+                  termResolver: t.action.termResolver,
                   data: t.action.data,
                   options: options },
                 "shape" in t.action ? {shape: t.action.shape} : {},
@@ -552,6 +557,10 @@ function loadJSONmanifest (jsonManifests) {
             });
           });
           elt.schemaOptions = Object.assign({}, SchemaOptions);
+          if ("termResolver" in elt && elt.termResolver) {
+            elt.schemaOptions.termResolver = [ShExUtil.resolveRelativeIRI(p.url, elt.termResolver)];
+            delete elt.termResolver;
+          }
           if ("options" in elt) {
             elt.validatorOptions = elt.options;
             delete elt.options;
@@ -583,6 +592,9 @@ function loadCommandLine (cmds) {
   }
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
+  }
+  if (cmds["term-resolver"].length) {
+    SchemaOptions.termResolver = cmds["term-resolver"];
   }
   if ("regex-module" in cmds) {
     if (cmds["regex-module"] === "?") {
@@ -661,6 +673,10 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             parms[k] = serverParms[k];
         });
         var options = serverOptions;
+        if ("term-resolver" in parms)
+          options = extend(options, {
+            termResolver: parms["term-resolver"]
+          });
         if ("regex-module" in parms)
           options = extend(options, {
             regexModule: require(REGEX_MODULES + parms["regex-module"])

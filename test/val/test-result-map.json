@@ -511,6 +511,8 @@
   "#shapeExtern_pass": "shapeExtern_pass.val",
   "#shapeExternRef_pass": "shapeExternRef_pass.val",
   "#1dot-relative_pass": "1dot-relative_pass.val",
+  "#3backtick_pass": "3backtick_pass.val",
+  "#3PNAMEbacktick_pass": "3PNAMEbacktick_pass.val",
   "#false-lead-excluding-value-shape": "false-lead-excluding-value-shape.val",
   "#nPlus1": "nPlus1.val",
   "#nPlus1-greedy-rewrite": "nPlus1-greedy-rewrite.val",

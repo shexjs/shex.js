@@ -1,0 +1,8 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+LABEL [ rdfs:label skos:label ]
+<http://a.example/S> {
+  `protein name` LITERAL;
+  `protein type` [ `signaling` `regulatory` `transport` ];
+  `protein width` `ucum microns`
+}

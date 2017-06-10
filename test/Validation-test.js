@@ -126,6 +126,16 @@ describe("A ShEx validator", function () {
               shapes;
           }
           shexParser._setBase(schemaURL);
+          var resolverOptions = ShExParser.disabledTermResolver();
+          if ("termResolver" in test.action) {
+            var resolverFile = path.resolve(validationPath, test.action.termResolver);
+            var resolverURL = "file://" + resolverFile;
+
+            var resolverStore = new N3.Store();
+            var resolverText = fs.readFileSync(resolverFile, "utf8");
+            resolverStore.addTriples(N3.Parser({documentIRI: resolverURL, blankNodePrefix: ""}).parse(fs.readFileSync(resolverFile, "utf8")));
+            resolverOptions = ShExParser.dbTermResolver(resolverStore);
+          }
           var schemaOptions = Object.assign({
             regexModule: regexModule,
             diagnose: true,
@@ -144,7 +154,8 @@ describe("A ShEx validator", function () {
               return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
                                                   shapeLabel, depth, seen);
             }
-          }, params);
+          }, params, resolverOptions);
+          shexParser._setTermResolver(resolverOptions);
 
           var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
           var validator = ShExValidator.construct(schema, schemaOptions);
