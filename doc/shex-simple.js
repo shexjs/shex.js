@@ -430,9 +430,13 @@ function validate () {
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()
+      ShExWorker.postMessage(Object.assign({ request: "create", schema: InputSchema.refresh()
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
-                             });
+                                           },
+                                           "endpoint" in InputData ?
+                                           { endpoint: InputData.endpoint } :
+                                           {  }
+                                          );
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
       //       Util.createResults() :
