@@ -32,9 +32,6 @@ function parseShEx (text, meta) {
   var ret = shexParser.parse(text);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
-  var resolver = new IRIResolver(meta);
-  meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
-  meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
 
@@ -112,6 +109,9 @@ function makeSchemaCache (parseSelector) {
           isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta);
+    var resolver = new IRIResolver(ret.meta);
+    ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
+    ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
     $("#results .status").hide();
     return schema;
 
@@ -426,7 +426,6 @@ function validate () {
       parsing = "input data";
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
-      var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
@@ -452,7 +451,7 @@ function validate () {
         ShExWorker.onmessage = parseUpdatesAndResults;
         ShExWorker.postMessage({
           request: "validate",
-          data: inputData.getTriplesByIRI(),
+          data: InputData.refresh().getTriplesByIRI(),
           queryMap: shapeMap,
           options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
         });
