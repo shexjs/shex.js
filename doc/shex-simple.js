@@ -32,9 +32,6 @@ function parseShEx (text, meta) {
   var ret = shexParser.parse(text);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
-  var resolver = new IRIResolver(meta);
-  meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
-  meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
 
@@ -112,6 +109,9 @@ function makeSchemaCache (parseSelector) {
           isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta);
+    var resolver = new IRIResolver(ret.meta);
+    ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
+    ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
     $("#results .status").hide();
     return schema;
 
@@ -503,14 +503,16 @@ function validate () {
       parsing = "input data";
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
-      var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()
+      ShExWorker.postMessage(Object.assign({ request: "create", schema: InputSchema.refresh()
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
-                               , endpoint: InputData.endpoint
-                             });
+                                           },
+                                           "endpoint" in InputData ?
+                                           { endpoint: InputData.endpoint } :
+                                           {  }
+                                          ));
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
       //       Util.createResults() :
@@ -532,7 +534,7 @@ function validate () {
           },
           ("endpoint" in InputData ?
            { endpoint: InputData.endpoint } :
-           { data: InputData.getTriplesByIRI() })
+           { data: InputData.refresh().getTriplesByIRI() })
         ));
       }
 
