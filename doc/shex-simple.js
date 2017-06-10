@@ -161,8 +161,8 @@ function makeSchemaCache (parseSelector) {
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
   ret.meta = {};
-  ret.endpoint = null,
-  ret.query = null,
+  // ret.endpoint = null,
+  // ret.query = null,
   ret.executeQuery = function (query, endpoint) {
     var rows;
     $.ajax({
@@ -516,14 +516,16 @@ function validate () {
       parsing = "input data";
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
-      var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage({ request: "create", schema: InputSchema.refresh()
+      ShExWorker.postMessage(Object.assign({ request: "create", schema: InputSchema.refresh()
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
-                               , endpoint: InputData.endpoint
-                             });
+                                           },
+                                           "endpoint" in InputData ?
+                                           { endpoint: InputData.endpoint } :
+                                           {  }
+                                          ));
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
       //       Util.createResults() :
@@ -545,7 +547,7 @@ function validate () {
           },
           ("endpoint" in InputData ?
            { endpoint: InputData.endpoint } :
-           { data: InputData.getTriplesByIRI() })
+           { data: InputData.refresh().getTriplesByIRI() })
         ));
       }
 
