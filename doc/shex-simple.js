@@ -150,8 +150,8 @@ function makeSchemaCache (parseSelector) {
 function makeTurtleCache(parseSelector) {
   var ret = _makeCache(parseSelector);
   ret.meta = {};
-  ret.endpoint = null,
-  ret.query = null,
+  // ret.endpoint = null,
+  // ret.query = null,
   ret.executeQuery = function (query, endpoint) {
     var rows;
     $.ajax({
