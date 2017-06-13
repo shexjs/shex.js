@@ -8,12 +8,11 @@ var InputSchema = makeSchemaCache("#inputSchema textarea");
 var InputData = makeTurtleCache("#inputData textarea");
 var ShExRSchema; // defined below
 
-
 // utility functions
 function parseTurtle (text, meta) {
-  var ret = N3Store();
-  N3Parser._resetBlankNodeIds();
-  var parser = N3Parser({documentIRI:Base, format: "text/turtle" });
+  var ret = ShEx.N3.Store();
+  ShEx.N3.Parser._resetBlankNodeIds();
+  var parser = ShEx.N3.Parser({documentIRI:Base, format: "text/turtle" });
   var triples = parser.parse(text);
   if (triples !== undefined)
     ret.addTriples(triples);
@@ -25,7 +24,7 @@ function parseTurtle (text, meta) {
   return ret;
 }
 
-var shexParser = ShExParser.construct(Base);
+var shexParser = ShEx.Parser.construct(Base);
 function parseShEx (text, meta) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   var ret = shexParser.parse(text);
@@ -43,10 +42,10 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  return node === "- start -" ? node : N3Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  return node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 function rdflib_lexToTerm (lex, resolver) {
-  return lex === "- start -" ? lex : N3Lexer().tokenize(lex).map(token => {
+  return lex === "- start -" ? lex : ShEx.N3.Lexer().tokenize(lex).map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
@@ -105,7 +104,7 @@ function makeSchemaCache (parseSelector) {
       "ShExC";
     $("#results .status").text("parsing "+this.language+" schema...").show();
     var schema =
-          isJSON ? ShExUtil.ShExJtoAS(JSON.parse(text)) :
+          isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta);
     var resolver = new IRIResolver(ret.meta);
@@ -128,13 +127,13 @@ function makeSchemaCache (parseSelector) {
     }
 
     function parseShExR () {
-      var graphParser = ShExValidator.construct(
+      var graphParser = ShEx.Validator.construct(
         parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
-      var schemaRoot = graph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+      var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
       var val = graphParser.validate(graph, schemaRoot); // start shape
-      return ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
+      return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
   ret.getShapes = function () {
@@ -428,7 +427,7 @@ function validate () {
       var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
-      var validator = ShExValidator.construct(InputSchema.refresh(),
+      var validator = ShEx.Validator.construct(InputSchema.refresh(),
                       { results: "api"
                       /*, regexModule: modules["../lib/regex/nfax-val-1err"] */ });
 
@@ -461,7 +460,7 @@ function validate () {
         show();
       var parsedSchema;
       if (InputSchema.language === "ShExJ") {
-        new ShExWriter({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
+        new ShEx.Writer({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
             // res.addClass("error");
@@ -471,7 +470,7 @@ function validate () {
         });
       } else {
         var pre = $("<pre/>");
-        pre.text(JSON.stringify(ShExUtil.AStoShExJ(ShExUtil.canonicalize(InputSchema.parsed)), null, "  ")).addClass("passes");
+        pre.text(JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(InputSchema.parsed)), null, "  ")).addClass("passes");
         results.append(pre);
       }
       results.finish();
@@ -497,12 +496,12 @@ function validate () {
         `${InputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${InputData.meta.termToLex(entry.shape)}`
       ).addClass(klass);
       if (fails)
-        elt.append($("<pre>").text(ShExUtil.errsToSimple(entry.appinfo).join("\n")));
+        elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
       results.append(elt);
       break;
     case "simple":
       if (fails)
-        entry.reason = ShExUtil.errsToSimple(entry.appinfo).join("\n");
+        entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
       delete entry.appinfo;
       // fall through to default
     default:
@@ -523,10 +522,10 @@ function validate () {
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
-      //   var x = ShExUtil.valToValues(ret);
-      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
+      //   var x = ShEx.Util.valToValues(ret);
+      //   // var x = ShEx.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
       //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   var y = ShExUtil.valuesToSchema(x);
+      //   var y = ShEx.Util.valuesToSchema(x);
       //   res = results.append(JSON.stringify(y, null, "  "));
       // } catch (e) {
       //   console.dir(e);
@@ -629,32 +628,32 @@ function parseUIShapeMap () {
     return acc;
 
     // var node = "node-type" in iface ?
-    //       ShExUtil.someNodeWithType(
-    //         ShExUtil.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
+    //       ShEx.Util.someNodeWithType(
+    //         ShEx.Util.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
     //                                  label => {
     //                                    return (data.refresh().
     //                                            getTriplesByIRI(null, RDF_TYPE, label).length > 0);
     //                                  },
     //                                  loaded.data.prefixes)) :
-    //     ShExUtil.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
+    //     ShEx.Util.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
     //       var triples = data.refresh().getTriplesByIRI(null, null, null);
-    //       return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
+    //       return triples.length > 0 ? triples[0].subject : ShEx.Util.NotSupplied;
     //     },
     //                              label => {
     //                                return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
     //                                        data.refresh().getTriplesByIRI(null, null, label).length > 0);
     //                              });
 
-    // if (node === ShExUtil.UnknownIRI)
+    // if (node === ShEx.Util.UnknownIRI)
     //   node = $(n).val();
-    // else if (node === ShExUtil.NotSupplied)
+    // else if (node === ShEx.Util.NotSupplied)
     //   ret.errors.push("node not found: " + $(n).val());
     // var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
-    //       ShExUtil.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
+    //       ShEx.Util.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
     //                                (label) => {
     //                                  return label in schema.refresh().shapes;
     //                                });
-    // if (shape === ShExUtil.NotSupplied || shape === ShExUtil.UnknownIRI)
+    // if (shape === ShEx.Util.NotSupplied || shape === ShEx.Util.UnknownIRI)
     //   throw Error("shape " + $(shapes[i]).val() + " not defined");
     // if (!shape)
     //   ret.errors.push("shape not found: " + $(shapes[i]).val());
