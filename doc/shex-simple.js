@@ -410,7 +410,6 @@ function hasFocusNode () {
 }
 
 function validate () {
-  var interface = "interface" in iface ? iface.interface[0] : "simple";
   results.clear();
   $(".pair").removeClass("passes").removeClass("fails");
   $("#results .status").hide();
@@ -490,7 +489,7 @@ function validate () {
         $(elt).attr("data-shape") === entry.shape;
     }).addClass(klass);
 
-    switch (interface) {
+    switch (iface.interface) {
     case "human":
       var elt = $("<div class='human'/>").text(
         `${InputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${InputData.meta.termToLex(entry.shape)}`
@@ -499,7 +498,7 @@ function validate () {
         elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
       results.append(elt);
       break;
-    case "simple":
+    case "minimal":
       if (fails)
         entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
       delete entry.appinfo;
@@ -513,7 +512,7 @@ function validate () {
   function finishRendering () {
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
-          if (interface !== "human")
+          if (iface.interface !== "human")
             $("#results div *").each((idx, elt) => {
               if (idx === 0)
                 $(elt).prepend("[");
@@ -578,8 +577,26 @@ function removeNodeShapePair (evt) {
 function prepareControls () {
   $("#inputData .passes, #inputData .fails").hide();
   $("#inputData .passes ul, #inputData .fails ul").empty();
+  $("#menu-button").on("click", toggleControls);
+  $("#interface").on("change", setInterface);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
+
+  $('#about-button').click(evt => {
+    $.blockUI({
+      message: $('#about'), css: {
+        width: "50%",
+        top: "5%",
+        left: "25%"
+      }
+    });
+    $('#about').attr('title','Click to unblock').click(dismissAbout);
+  });
+  function dismissAbout (evt) {
+    $.unblockUI();
+    toggleControls(evt);
+    return false;
+  }
 
   // Prepare file uploads
   $("input.inputfile").each((idx, elt) => {
@@ -598,6 +615,35 @@ function prepareControls () {
       reader.readAsText(evt.target.files[0]);
     });
   });
+}
+
+function toggleControls (evt) {
+  $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
+  var hiding = $("#controls").css("display") === "flex";
+  $("#controls").css("display", hiding ? "none" : "flex");
+  if (!hiding) {
+    var target = evt.target;
+    while (target.tagName !== "BUTTON")
+      target = target.parentElement;
+    if ($("#menuForm").css("position") === "absolute") {
+      $("#controls").
+        css("top", 0).
+        css("left", $("#menu-button").css("margin-left"));
+    } else {
+      var bottonBBox = target.getBoundingClientRect();
+      var controlsBBox = $("#menuForm").get(0).getBoundingClientRect();
+      var left = bottonBBox.right - bottonBBox.width; // - controlsBBox.width;
+      $("#controls").css("top", bottonBBox.bottom).css("left", left);
+    }
+  }
+  return false;
+}
+
+function setInterface (evt) {
+  iface.interface = $("#interface option:selected").val()
+  toggleControls();
+  // $("#controls").css("display", "none");
+  customizeInterface();
 }
 
 /**
@@ -691,6 +737,11 @@ function prepareInterface () {
   else
     addNodeShapePair(null, [{node: "", shape: ""}]);
 
+  if ("interface" in iface)
+    iface.interface = iface.interface[0];
+  else
+    iface.interface = "human";
+
   function parseShapeMap (queryParm) {
     var shapeMap =  iface[queryParm];
     delete iface[queryParm];
@@ -724,14 +775,7 @@ function prepareInterface () {
         input.location.val(input.location.val() + text);
       });
   });
-  if ("interface" in iface && iface.interface.indexOf("simple") !== -1) {
-    $("#title").hide();
-    $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
-    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
-    $("#actions").parent().children().not("#actions").hide();
-    // $("#actions").parent().hide();
-    // $("#results .status").text("results:").show();
-  }
+  customizeInterface();
   if ("schema" in iface && iface.schema.reduce((r, elt) => {
     return r+elt.length;
   }, 0)) {
@@ -745,7 +789,7 @@ function prepareInterface () {
   function updateURL () {
     var parms = [];
     if (iface.interface)
-      parms.push("interface="+iface.interface[0]);
+      parms.push("interface="+iface.interface);
     var pairs = $(".pair");
     if (pairs.length > 0) {
       parms.push("shape-map=" + pairs.map((idx, elt) => {
@@ -762,6 +806,28 @@ function prepareInterface () {
     window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
   }
 
+}
+
+function customizeInterface () {
+  if (iface.interface === "minimal") {
+    $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
+    $("#actions").parent().children().not("#actions").hide();
+    $("#title img, #title h1").hide();
+    $("#menuForm").css("position", "absolute").css(
+      "left",
+      $("#inputSchema .status").get(0).getBoundingClientRect().width -
+        $("#menuForm").get(0).getBoundingClientRect().width
+    );
+    $("#controls").css("position", "relative");
+  } else {
+    $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").hide();
+    $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").hide();
+    $("#actions").parent().children().not("#actions").show();
+    $("#title img, #title h1").show();
+    $("#menuForm").removeAttr("style");
+    $("#controls").css("position", "absolute");
+  }
 }
 
 /**
