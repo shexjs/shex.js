@@ -126,13 +126,15 @@
     <script src="http://malsup.github.io/jquery.blockUI.js" type="text/javascript"></script>
   </head>
 
-  <body>
+  <body xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- G10,108 35 44 64 65 88 91 A4,5,14,16 F16,30,32 SL6,18,20,26,30,32 PDF10,12,1,20,42,59,68,79,86,89 -->
     <!-- FLASH16,30 -->
     <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" display="none">
       <symbol id="down-arrow" viewBox="0 -10 107 63" >
         <path d="M 54,40 90,3 C 99,-5 112,8 104,16 L 60,60 c 0,0 -8,6 -14,0 L 3,16 C -5,8 8,-4 15,2 Z" />
       </symbol>
+      <use id="up-arrow" xlink:href="#down-arrow" transform="scale(1, -1)" y="-120%" />
+      <!-- id="up-arrow" xlink:href="#down-arrow" transform="matrix(1,0,0,-1,0,13)" -->
     </svg>
 
     <div id="title">
@@ -142,7 +144,7 @@
       <!-- </ul> -->
       <form id="menuForm">
           <button id="menu-button" title="click for menu">
-            controls <svg><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#down-arrow" /></svg>
+            controls <svg><use xlink:href="#down-arrow"/><use xlink:href="#up-arrow" /></svg>
           </button>
         <div id="controls">
           <div>

@@ -621,6 +621,7 @@ function toggleControls (evt) {
   $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
   var hiding = $("#controls").css("display") === "flex";
   $("#controls").css("display", hiding ? "none" : "flex");
+  toggleControlsArrow(hiding ? "down" : "up");
   if (!hiding) {
     var target = evt.target;
     while (target.tagName !== "BUTTON")
@@ -638,6 +639,27 @@ function toggleControls (evt) {
     $("#permalink a").attr("href", getPermalink());
   }
   return false;
+}
+
+function toggleControlsArrow (which) {
+  // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
+  var down = $(document.getElementById("menu-button").
+               querySelectorAll('use[*|href="#down-arrow"]'));
+  var up = $(document.getElementById("menu-button").
+             querySelectorAll('use[*|href="#up-arrow"]'));
+
+  switch (which) {
+  case "down":
+    down.show();
+    up.hide();
+    break;
+  case "up":
+    down.hide();
+    up.show();
+    break;
+  default:
+    throw Error("toggleControlsArrow expected [up|down], got \"" + which + "\"");
+  }
 }
 
 function setInterface (evt) {
@@ -741,6 +763,7 @@ function prepareInterface () {
   else
     addNodeShapePair(null, [{node: "", shape: ""}]);
 
+  toggleControlsArrow("down");
   if ("interface" in iface)
     iface.interface = iface.interface[0];
   else
