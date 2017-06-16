@@ -635,6 +635,7 @@ function toggleControls (evt) {
       var left = bottonBBox.right - bottonBBox.width; // - controlsBBox.width;
       $("#controls").css("top", bottonBBox.bottom).css("left", left);
     }
+    $("#permalink a").attr("href", getPermalink());
   }
   return false;
 }
@@ -723,6 +724,9 @@ function shapeMapToTerms (shapeMap) {
 }
 
 var iface = null; // needed by validate before prepareInterface returns.
+var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
+                   {queryStringParm: "data", location: $("#inputData textarea")}];
+
 /**
  * Load URL search parameters
  */
@@ -766,8 +770,6 @@ function prepareInterface () {
       }, {});
   }
 
-  var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                     {queryStringParm: "data", location: $("#inputData textarea")}];
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
     if (parm in iface)
@@ -781,12 +783,16 @@ function prepareInterface () {
   }, 0)) {
     validate();
   }
-  $("#inputSchema textarea").prev().add("#title").on("click", updateURL);
+  // old hack for permalink
+  $("#inputSchema textarea").prev().add("#title").on("click", evt => {
+    window.history.pushState(null, null, getPermalink());
+  });
+}
 
   /**
    * update location with a current values of some inputs
    */
-  function updateURL () {
+  function getPermalink () {
     var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface);
@@ -803,10 +809,8 @@ function prepareInterface () {
       return parm + "=" + encodeURIComponent(input.location.val());
     }));
     var s = parms.join("&");
-    window.history.pushState(null, null, location.origin+location.pathname+"?"+s);
+    return location.origin + location.pathname + "?" + s;
   }
-
-}
 
 function customizeInterface () {
   if (iface.interface === "minimal") {
