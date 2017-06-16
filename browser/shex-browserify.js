@@ -3983,6 +3983,8 @@ var ShExUtil = {
   },
 
   parsePassedNode: function (passedValue, meta, deflt, known, reportUnknown) {
+    if (passedValue === undefined || passedValue.length === 0)
+      return known && known(meta.base) ? meta.base : deflt ? deflt() : this.NotSupplied;
     if (passedValue[0] === "_" && passedValue[1] === ":")
       return passedValue;
     if (passedValue[0] === "\"") {
@@ -4005,8 +4007,6 @@ var ShExUtil = {
     }
     if (!meta)
       return known(passedValue) ? passedValue : this.UnknownIRI;
-    if (passedValue === undefined || passedValue.length === 0)
-      return known && known(meta.base) ? meta.base : deflt ? deflt() : this.NotSupplied;
     var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
