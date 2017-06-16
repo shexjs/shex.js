@@ -417,10 +417,10 @@ function validate () {
   try {
     InputSchema.refresh();
     $("#schemaDialect").text(InputSchema.language);
-    InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
     if (dataText || hasFocusNode()) {
       parsing = "input data";
+      InputData.refresh(); // for prefixes for getShapeMap
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
