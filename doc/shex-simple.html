@@ -63,7 +63,7 @@
         pointer-events: none;
       }
       label {
-        border: thin solid black;
+        /* border: thin solid black; */
         padding: 0 .3em;
       }
       .heading {
@@ -86,6 +86,38 @@
         padding: .5em 0;
         padding-right: .5em; /* for firefox rendering issue */
       }
+
+#menuForm > fieldset {
+    box-shadow: -.3ex .3ex grey;
+    display: inline;
+}
+
+#controls {
+    position: absolute;
+    left: 0;
+    top: 0;
+    list-style: none;
+    margin: 0;
+    display: none;
+    background: white; opacity: 1;
+    border: thin solid buttontext;
+    /* box-shadow: -.3ex .3ex grey; */
+}
+#controls div {
+    border: 10px solid buttonface;
+}
+#controls h3 {
+    margin: 0;
+}
+#menu-button { margin-left: 1em; }
+#menu-button svg { width: 1em; height: 1.5ex; }
+#about {
+  margin: 3em;
+}
+#dismiss-about { text-align: center; }
+#controls ul { padding-left: 0; margin-left: 0; list-style-type: none; }
+#controls li { padding: 0 1em; }
+#controls li.menuitem:hover { background-color: buttonface; }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -95,19 +127,76 @@
     </script>
     <script src="https://www.w3.org/scripts/jquery/2.1/jquery.min.js"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+    <script src="http://malsup.github.io/jquery.blockUI.js" type="text/javascript"></script>
   </head>
 
-  <body>
+  <body xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- G10,108 35 44 64 65 88 91 A4,5,14,16 F16,30,32 SL6,18,20,26,30,32 PDF10,12,1,20,42,59,68,79,86,89 -->
+    <!-- FLASH16,30 -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" display="none">
+      <symbol id="down-arrow" viewBox="0 -10 107 63" >
+        <path d="M 54,40 90,3 C 99,-5 112,8 104,16 L 60,60 c 0,0 -8,6 -14,0 L 3,16 C -5,8 8,-4 15,2 Z" />
+      </symbol>
+      <use id="up-arrow" xlink:href="#down-arrow" transform="scale(1, -1)" y="-120%" />
+      <!-- id="up-arrow" xlink:href="#down-arrow" transform="matrix(1,0,0,-1,0,13)" -->
+    </svg>
 
     <div id="title">
       <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
-      <ul id="navlist" style="float:left; padding-left: 1em;">
-        <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li>
-        <li>‣ <span class="heading">controls:</span> <input type="checkbox" id="append"/><label for="append">drop appends</label> | <label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select> </li>
-        <li>‣ <span class="heading">source</span>: <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
-        <li>‣ <a href="https://github.com/shexSpec/shex.js">project</a></li>
-        <li>‣ <a href="https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html">rawgit</a></li>
-      </ul>
+      <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
+      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
+      <!-- </ul> -->
+      <form id="menuForm">
+          <button id="menu-button" title="click for menu">
+            controls <svg><use xlink:href="#down-arrow"/><use xlink:href="#up-arrow" /></svg>
+          </button>
+        <div id="controls">
+          <div>
+            <ul>
+              <li class="        "><h3>user interface</h3></li>
+              <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
+              <li class="        "><hr/></li>
+              <li class="        "><h3>drag and drop</h3></li>
+              <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
+              <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
+              <li class="        "><hr/></li>
+              <li class="menuitem" id="permalink"><a>Permalink</a></li>
+              <li class="menuitem" id="about-button">About</li>
+            </ul>
+          </div>
+        </div>
+      </form>
+      <div id="about" style="display:none; cursor: default; text-align: left; ">
+        <h1>About shex-simple</h1>
+        <p>
+          <b>shex-simple</b> is a simple RDF validator web application.
+          It accepts a ShEx <span class="schema">schema</span> on the left in three forms: Compact Syntax (ShExC), JSON (ShExJ) and RDF/Turtle (ShExR).
+          <span class="data">Data</span> can be provided on the right in Turtle.
+        </p>
+        <h2>Resources</h2>
+        <ul>
+          <li>Sources:
+          <ul>
+            <li><a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.js">js</a>, <a href="https://github.com/shexSpec/shex.js/blob/master/doc/shex-simple.html">html</a> </li>
+            <li><a href="https://github.com/shexSpec/shex.js">project</a></li>
+            <li><a href="https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html">rawgit</a></li>
+          </ul>
+          </li>
+          <li>ShEx:
+          <ul>
+            <li><a href="http://shex.io/shex-primer/">Primer</a> </li>
+            <li><a href="http://shex.io/shex-semantics/">Specification</a> </li>
+            <li>Issues:<ul>
+              <li><a href="https://github.com/shexSpec/shex/issues?utf8=%E2%9C%93&amp;q=is%3Aissue%20is%3Aopen%20milestone%3A2.0">2.0 release</a></li>
+              <li><a href="https://github.com/shexSpec/shex/issues?utf8=%E2%9C%93&amp;q=is%3Aissue%20is%3Aopen%20milestone%3A2.1">2.x features</a></li>
+            </ul>
+            </li>
+            <li><a href="https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html">rawgit</a></li>
+          </ul>
+          </li>
+        </ul>
+        <input type="button" id="dismiss-about" value="OK"/>
+      </div>
       <div style="clear: both;"></div>
     </div>
 
@@ -159,19 +248,7 @@
       <div></div>
     </div>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
-    <script src="require.js"></script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
-    <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
-    <script src="../lib/ShExJison.js"    ></script><script></script>
-    <script src="../lib/ShExParser.js"   ></script><script></script>
-    <script src="../lib/ShExWriter.js"   ></script><script></script>
-    <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
-    <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["../lib/regex/nfax-val-1err"] = module.exports;</script>
-    <script src="../lib/ShExValidator.js"></script><script>ShExValidator = module.exports;</script>
+    <script src="../browser/shex-browserify.js"></script>
     <script src="./Util.js"></script>
     <script src="./shex-simple.js"></script>
   </body>
