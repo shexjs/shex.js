@@ -134,7 +134,7 @@ function findNodesAndValidate (loaded, parms, options) {
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
   function someNodeWithType (type) {
-    var triples = loaded.data.getTriplesByIRI(null, RDF_TYPE, type)
+    var triples = loaded.data.getTriplesByIRI(null, RDF_TYPE, type);
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
   function _makeShapeMap () {
@@ -152,7 +152,7 @@ function findNodesAndValidate (loaded, parms, options) {
       ret.shape = shapeLabel;
     } else {
       var found = ShExUtil.parsePassedNode(parms.shape, loaded.schemaMeta[0],
-					   someShape, knownShape, loaded.schema.prefixes)
+					   someShape, knownShape, loaded.schema.prefixes);
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + parms.shape + " not defined" + optsStr(parms.shape, loaded.schema.shapes));
       // shape = { type: "ShapeRef", reference: found };
@@ -188,7 +188,7 @@ function findNodesAndValidate (loaded, parms, options) {
       // Make sure we have a start node.
       if (shape === undefined && !("start" in schema)) {
         var schemaKeys = Object.keys(schema.shapes);
-        schemaKeys.join(", ")
+        schemaKeys.join(", ");
         msgs.push("No shape specified on command line or in shex" +
                   (schemaKeys.length < 50 ?
                    "; try -n with one of: " + schemaKeys.join(", ") :
@@ -271,7 +271,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
-      runServer(loadedAndResults[0], valParms, validatorOptions, schemaOptions)
+      runServer(loadedAndResults[0], valParms, validatorOptions, schemaOptions);
     } else {
       if ("map" in valParms)
         valParms.map = loadedAndResults[2];
@@ -299,7 +299,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   }).catch(function (e) {
     console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
     return 1;
-  })
+  });
 }
 
 // Extract user commands
@@ -308,7 +308,7 @@ function getInvocation (parms) {
   function shortenFile (u) {
     var m = u.match(/file:\/\/(\/.*)$/);
     if (m)
-      u = Path.relative(process.cwd(), m[1])
+      u = Path.relative(process.cwd(), m[1]);
     return "'"+u+"'";
   }
   function shexFileArg (u) { return "-x "+shortenFile(u); }
@@ -463,7 +463,7 @@ function loadRDFmanifest (turtleManifests, jsonldManifests) {
           loaded.data.getTriples(null, mf+"name", null).filter(function (triple) {
             if (N3.Util.getLiteralValue(triple.object).match(pattern))
               ret.push(triple.subject);
-          })
+          });
           return ret;
         }, []) :
         loaded.data.getTriples(null, mf+"action", null).map(function (t) {
@@ -534,7 +534,7 @@ function loadJSONmanifest (jsonManifests) {
                 "focus" in t.action ? {node: t.action.focus} : {},
                 "map" in t.action ? {map: t.action.map} : {}
               );
-            })
+            });
           else // Hopefully an object like { shex: "t.shex" , shape: "S", data: "t.ttl", "node": "s" }
             d = [d];
         }
@@ -706,8 +706,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
               httpResponse.body = JSON.stringify(result, null, 2)+"\n";
             }
           }).then(function () {
-            schemaFiles.forEach(path => { fs.unlink(path) });
-            dataFiles.forEach(path => { fs.unlink(path) });
+            schemaFiles.forEach(path => { fs.unlink(path); });
+            dataFiles.forEach(path => { fs.unlink(path); });
             return next;
           }).catch(e => {
             var stack = typeof e === "object" && "stack" in e ? e.stack : e;
@@ -718,8 +718,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
               errors: [msg]
             };
             httpResponse.status = 500;
-            schemaFiles.forEach(path => { fs.unlink(path) });
-            dataFiles.forEach(path => { fs.unlink(path) });
+            schemaFiles.forEach(path => { fs.unlink(path); });
+            dataFiles.forEach(path => { fs.unlink(path); });
           });
         break;
       case "/":
