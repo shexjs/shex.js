@@ -329,7 +329,6 @@ function binder (tree) {
     return ret.length === 1 ? ret[0] : ret;
   }
   tree = _simplify(tree);
-  console.log("HERE:", JSON.stringify(tree, null, 2));
 
   // var globals = tree.reduce((r, e, idx) => {
   //   if (e.constructor !== Array) {
