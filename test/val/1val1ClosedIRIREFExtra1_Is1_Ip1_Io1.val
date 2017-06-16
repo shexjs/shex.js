@@ -2,7 +2,7 @@
   "type": "ShapeTest",
   "node": "http://a.example/s1",
   "shape": "http://a.example/S1",
-  "solution": { 
+  "solution": {
     "type":"TripleConstraintSolutions", "predicate":"http://a.example/p1",
     "valueExpr": { "type":"NodeConstraint", "values": [ "http://a.example/o1" ] },
     "solutions":[
