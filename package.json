@@ -35,9 +35,10 @@
     "jison": "0.4.16",
     "mocha": "^3.2.0",
     "chai": "1.9.x",
+    "cross-spawn": "^5.0.1",
     "pre-commit": "~1.1.3",
-    "browserify": "~13.x",
-    "uglify-js": "~2.4.3"
+    "browserify": "^13.1.0",
+    "uglify-es": "^3.0.15"
   },
   "bin": [
     "bin/json-to-shex",
@@ -49,7 +50,8 @@
     "make": "(cd test/ && make test)",
     "test": "./node_modules/.bin/mocha -C -R dot",
     "lint": "eslint test/findPath.js",
-    "browser": "node browser/build-browser-versions",
+    "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
+    "skinny-browser-TODO": "node browser/build-browser-versions",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100"
   },
   "repository": {
