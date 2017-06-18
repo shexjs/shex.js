@@ -575,8 +575,8 @@ function removeNodeShapePair (evt) {
 }
 
 function prepareControls () {
-  $("#inputData .passes, #inputData .fails").hide();
-  $("#inputData .passes ul, #inputData .fails ul").empty();
+  // $("#inputData .passes, #inputData .fails").hide();
+  // $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
   $("#validate").on("click", disableResultsAndValidate);
