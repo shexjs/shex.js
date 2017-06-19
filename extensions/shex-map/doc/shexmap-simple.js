@@ -322,24 +322,7 @@ function validate () {
         res.addClass("fails");
       } else {
         res.addClass("passes");
-        // Bindings.set(ShExMap.extractBindings(ret));
-        var resultBindings = {};
-        function findBindings (object) {
-          for (var key in object) {
-            var item = object[key];
-            if (typeof item === 'object') {
-              if (ShExMap.url in item)
-                Object.keys(item[ShExMap.url]).forEach(k => {
-                  resultBindings[k] = item[ShExMap.url][k];
-                })
-              else
-                object[key] = findBindings(item);
-            }
-          }
-          return object;
-        }
-        findBindings(ret);
-        resultBindings = ShExUtil.valToExtension(ret, ShExMap.url);
+        var resultBindings = ShExUtil.valToExtension(ret, ShExMap.url);
         Bindings.set(JSON.stringify(resultBindings, null, "  "));
        }
     } else {
@@ -380,8 +363,12 @@ function materialize () {
     var outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
     var outputSchema = OutputSchema.refresh();
 
-    function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
+    // var resultBindings = Object.assign(
+    //   Statics.refresh(),
+    //   Bindings.refresh()
+    // );
 
+    function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
     var resultBindings = _dup(Bindings.refresh());
     var _t = Statics.refresh();
     if (_t && Object.keys(_t) > 0) {
@@ -389,6 +376,7 @@ function materialize () {
         resultBindings = [resultBindings];
       resultBindings.unshift(_t);
     }
+
     var mapper = ShExMap.materializer(outputSchema);
     var outputShapeMap = getShapeMap($("#createRoot"), $("#outputShape"), null, OutputSchema);
     // var outputShape = guessStartingShape($("#outputShape"), null, OutputSchema);

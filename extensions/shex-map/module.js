@@ -162,10 +162,12 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
             }
 
             if (_.isUndefined(tripleObject))
-              console.warn('Not in bindings: ',code);
+              ; // console.warn('Not in bindings: ',code);
             else if (expr.inverse)
+            //add(tripleObject, expr.predicate, curSubject);
               add(tripleObject, expr.predicate, curSubjectx.cs);
             else
+            //add(curSubject    , expr.predicate, tripleObject);
               add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
