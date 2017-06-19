@@ -230,7 +230,7 @@ function lower(mapDirective, bindings, prefixes, args) {
     // Get the expanded var name if it was prefixed
     var expandedName = expandedVarName(mapArgs.varName, prefixes);
 
-    var mappedValue = extUtils.trimQuotes( bindings[expandedName] );
+    var mappedValue = extUtils.trimQuotes( bindings.get(expandedName) );
     if (_.isUndefined(mappedValue)) throw Error('Unable to find mapped value for ' + mapArgs.varName);
 
     // Now use the mapped Value to find the original value and clean it up if we get something
@@ -371,12 +371,13 @@ function lower(mapDirective, bindings, prefixes, args) {
         function (m, varName, offset, str) {
             matched = true;
             var expVarName = buildExpandedVars(varName, expandedVars, prefixes);
-            if (_.isUndefined(bindings[expVarName])) {
+            var val = bindings.get(expVarName);
+            if (_.isUndefined(val)) {
                 throw Error("Unable to process " + mapDirective + 
                             " because variable \"" + expVarName + "\" was not found!");
       
             } else {
-                return extUtils.trimQuotes( bindings[expVarName]); 
+                return extUtils.trimQuotes( val);
             }
     });
 
@@ -410,6 +411,9 @@ var extensions = require("./lib/extensions");
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
+
+var UNBOUNDED = -1;
+const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
 function register (validator) {
   var prefixes = "prefixes" in validator.schema ?
@@ -500,28 +504,39 @@ function materializer (schema, nextBNode) {
       target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
-      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
-      function B () { return nextBNode(); }
-      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
-
       var curSubject = createRoot || B();
+      var curSubjectx = {cs: curSubject};
 
       var v = ShExUtil.Visitor();
       var oldVisitShapeRef = v.visitShapeRef;
 
       v.visitShapeRef = function (shapeRef) {
-        this.visitShape(schema.shapes[shapeRef.reference], shapeRef.reference);
+        this.visitShapeExpr(schema.shapes[shapeRef.reference], shapeRef.reference);
         return oldVisitShapeRef.call(v, shapeRef);
       };
 
       v.visitValueRef = function (r) {
-        this.visitShape(schema.shapes[r.reference], r.reference);
+        this.visitExpression(schema.shapes[r.reference], r.reference);
         return this._visitValue(r);
       };
 
       v.visitTripleConstraint = function (expr) {
+        myvisitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
+      };
+
+      v.visitShapeExpr(shape, "_: -start-");
+      return target;
+    }
+  };
+}
+
+function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+      function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
+
         var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
         if (mapExts.length) {
           mapExts.forEach(function (ext) {
@@ -530,9 +545,10 @@ function materializer (schema, nextBNode) {
 
             var tripleObject;
             if (m) { 
-              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
-              if (!_.isUndefined(bindings[arg])) {
-                tripleObject = bindings[arg];
+              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
+              var val = bindings.get(arg);
+              if (!_.isUndefined(val)) {
+                tripleObject = val;
               }
             }
 
@@ -545,36 +561,49 @@ function materializer (schema, nextBNode) {
             if (_.isUndefined(tripleObject))
               ; // console.warn('Not in bindings: ',code);
             else if (expr.inverse)
-              add(tripleObject, expr.predicate, curSubject);
+            //add(tripleObject, expr.predicate, curSubject);
+              add(tripleObject, expr.predicate, curSubjectx.cs);
             else
-              add(curSubject, expr.predicate, tripleObject);
+            //add(curSubject    , expr.predicate, tripleObject);
+              add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
-          add(curSubject, expr.predicate, expr.valueExpr.values[0]);
+          if (expr.inverse)
+            add(expr.valueExpr.values[0], expr.predicate, curSubjectx.cs);
+          else
+            add(curSubjectx.cs, expr.predicate, expr.valueExpr.values[0]);
 
         } else {
-          var oldSubject = curSubject;
-          curSubject = B();
-          add(oldSubject, expr.predicate, curSubject);
-          this._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
-                         ["inverse", "negated", "predicate", "valueExprRef", "valueExpr",
+          var oldSubject = curSubjectx.cs;
+          var maxAdd = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+          if (maxAdd > MAX_MAX_CARD)
+            maxAdd = MAX_MAX_CARD;
+          if (!recurse)
+            maxAdd = 1; // no grounds to know how much to repeat.
+          for (var repetition = 0; repetition < maxAdd; ++repetition) {
+            curSubjectx.cs = B();
+            if (recurse) {
+              var res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+              if ("errors" in res)
+                break;
+            }
+            if (expr.inverse)
+              add(curSubjectx.cs, expr.predicate, oldSubject);
+            else
+              add(oldSubject, expr.predicate, curSubjectx.cs);
+          }
+          visitor._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
+                         ["inverse", "negated", "predicate", "valueExpr",
                           "min", "max", "annotations", "semActs"])
-          curSubject = oldSubject;
+          curSubjectx.cs = oldSubject;
         }
-      };
-
-      v.visitShapeExpr(shape, "_: -start-");
-      return target;
-    }
-  };
-}
-
-function extractBindings (soln, min, max, depth) {
+      }
+function extractBindingsDelMe (soln, min, max, depth) {
   if ("min" in soln && soln.min < min)
     min = soln.min
   var myMax = "max" in soln ?
-      (soln.max === "*" ?
+      (soln.max === UNBOUNDED ?
        Infinity :
        soln.max) :
       1;
@@ -583,7 +612,7 @@ function extractBindings (soln, min, max, depth) {
 
   function walkExpressions (s) {
     return s.expressions.reduce((inner, e) => {
-      return inner.concat(extractBindings(e, min, max, depth+1));
+      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
     }, []);
   }
 
@@ -592,7 +621,7 @@ function extractBindings (soln, min, max, depth) {
         [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
         [];
     return "referenced" in s ?
-      fromTriple.concat(extractBindings(s.referenced.solution, min, max, depth+1)) :
+      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
       fromTriple;
   }
 
@@ -755,11 +784,11 @@ function binder (tree) {
 
 var iface = {
   register: register,
-  extractBindings: extractBindings,
   done: done,
   materializer: materializer,
   binder: binder,
-  url: MapExt
+  url: MapExt,
+  visitTripleConstraint: myvisitTripleConstraint
 };
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
@@ -3243,6 +3272,70 @@ var ShExUtil = {
     // remove extraneous BNode IDs
     v.cleanIds();
     return schema;
+  },
+
+  valGrep: function (obj, type, f) {
+    var _ShExUtil = this;
+    var ret = [];
+    for (var i in obj) {
+      var o = obj[i];
+      if (typeof o === "object") {
+        if ("type" in o && o.type === type)
+          ret.push(f(o));
+        ret.push.apply(ret, _ShExUtil.valGrep(o, type, f));
+      }
+    }
+    return ret;
+  },
+
+  n3jsToTurtle: function (res) {
+    function termToLex (node) {
+      return typeof node === "object" ? ("\"" + node.value + "\"" + (
+        "type" in node ? "^^<" + node.type + ">" :
+          "language" in node ? "@" + node.language :
+          ""
+      )) :
+      N3Util.isIRI(node) ? "<" + node + ">" :
+      N3Util.isBlank(node) ? node :
+      "???";
+    }
+    return this.valGrep(res, "TestedTriple", function (t) {
+      return ["subject", "predicate", "object"].map(k => {
+        return termToLex(t[k]);
+      }).join(" ")+" .";
+    });
+  },
+
+  valToN3js: function (res) {
+    return this.valGrep(res, "TestedTriple", function (t) {
+      var ret = JSON.parse(JSON.stringify(t));
+      if (typeof t.object === "object")
+        ret.object = ("\"" + t.object.value + "\"" + (
+          "type" in t.object ? "^^" + t.object.type :
+            "language" in t.object ? "@" + t.object.language :
+            ""
+        ));
+      return ret;
+    });
+  },
+
+  n3jsToTurtle: function (n3js) {
+    function termToLex (node) {
+      if (N3Util.isIRI(node))
+        return "<" + node + ">";
+      if (N3Util.isBlank(node))
+        return node;
+      var t = N3Util.getLiteralType(node);
+      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
+        return "\"" + N3Util.getLiteralValue(node) + "\"" +
+        "^^<" + t + ">";
+      return node;
+    }
+    return n3js.map(function (t) {
+      return ["subject", "predicate", "object"].map(k => {
+        return termToLex(t[k]);
+      }).join(" ")+" .";
+    });
   },
 
   /* canonicalize: move all tripleExpression references to their first expression.
