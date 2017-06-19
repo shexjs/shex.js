@@ -542,8 +542,12 @@ function materializer (schema, nextBNode) {
                   tripleObject = extensions.lower(code, bindings, schema.prefixes);
             }
 
-            if (_.isUndefined(tripleObject)) console.warn('Not in bindings: ',code);
-            add(curSubject, expr.predicate, tripleObject);
+            if (_.isUndefined(tripleObject))
+              ; // console.warn('Not in bindings: ',code);
+            else if (expr.inverse)
+              add(tripleObject, expr.predicate, curSubject);
+            else
+              add(curSubject, expr.predicate, tripleObject);
           });
 
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
@@ -610,11 +614,151 @@ function extractBindings (soln, min, max, depth) {
     return [].concat.apply([], soln.solutions.map(walk));
 }
 
+function binder (tree) {
+  var stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
+  var globals = {}; // !! delme
+  //
+
+  /**
+   * returns: { var->count }
+   */
+  function _mults (obj) {
+    var rays = [];
+    var objs = [];
+    var counts = Object.keys(obj).reduce((r, k) => {
+      var toAdd = null;
+      if (typeof obj[k] === "object") {
+        toAdd = _mults(obj[k]);
+        if (obj[k].constructor === Array)
+          rays.push(k);
+        else
+          objs.push(k);
+      } else {
+        // variable name.
+        toAdd = _make(k, 1);
+      }
+      return _add(r, toAdd);
+    }, {});
+    if (rays.length > 0) {
+      objs.forEach(i => {
+        var novel = Object.keys(obj[i]).filter(k => {
+          return counts[k] === 1;
+        });
+        if (novel.length) {
+          var n2 = novel.reduce((r, k) => {
+            r[k] = obj[i][k];
+            return r;
+          }, {});
+          rays.forEach(l => {
+            _cross(obj[l], n2);
+          });
+        }
+      });
+      objs.reverse();
+      objs.forEach(i => {
+        obj.splice(i, 1); // remove object from tree
+      });
+    }
+    return counts;
+  }
+  function _add (l, r) {
+    var ret = Object.assign({}, l);
+    return Object.keys(r).reduce((ret, k) => {
+      var add = k in r ? r[k] : 1;
+      ret[k] = k in ret ? ret[k] + add : add;
+      return ret;
+    }, ret);
+  }
+  function _make (k, v) {
+    var ret = {};
+    ret[k] = v;
+    return ret;
+  }
+  function _cross (list, map) {
+    for (var listIndex in list) {
+      if (list[listIndex].constructor === Array) {
+        _cross(list[listIndex], map);
+      } else {
+        Object.keys(map).forEach(mapKey => {
+          if (mapKey in list[listIndex])
+            throw Error("unexpected duplicate key: " + mapKey + " in " + JSON.stringify(list[listIndex]));
+          list[listIndex][mapKey] = map[mapKey];
+        });
+      }
+    };
+  }
+  _mults(tree);
+  function _simplify (list) {
+    var ret = list.reduce((r, elt) => {
+      return r.concat(
+        elt.constructor === Array ?
+          _simplify(elt) :
+          elt
+      );
+    }, []);
+    return ret.length === 1 ? ret[0] : ret;
+  }
+  tree = _simplify(tree);
+
+  // var globals = tree.reduce((r, e, idx) => {
+  //   if (e.constructor !== Array) {
+  //     Object.keys(e).forEach(k => {
+  //       r[k] = e[k];
+  //     });
+  //     removables.unshift(idx); // higher indexes at the left
+  //   }
+  //   return r;
+  // }, {});
+
+  function getter (v) {
+    // work with copy of stack while trying to grok this problem...
+    if (stack === null)
+      return undefined;
+    if (v in globals)
+      return globals[v];
+    var nextStack = stack.slice();
+    var next = diveIntoObj(nextStack); // no effect if in obj
+    while (!(v in next)) {
+      var last;
+      while(next.constructor !== Array) {
+        last = nextStack.pop();
+        next = getObj(nextStack);
+      }
+      if (next.length === last+1) {
+        stack = null;
+        return undefined;
+      }
+      nextStack.push(last+1);
+      next = diveIntoObj(nextStack);
+      console.log("advanced to " + nextStack);
+      // throw Error ("can't advance to find " + v + " in " + JSON.stringify(next));
+    }
+    stack = nextStack.slice();
+    var ret = next[v];
+    delete next[v];
+    return ret;
+
+    function getObj (s) {
+      return s.reduce(function (res, elt) {
+        return res[elt];
+      }, tree);
+    }
+
+    function diveIntoObj (s) {
+      while (getObj(s).constructor === Array)
+        s.push(0);
+      return getObj(s);
+    }
+  };
+  return {get: getter};
+}
+
 var iface = {
   register: register,
   extractBindings: extractBindings,
   done: done,
   materializer: materializer,
+  binder: binder,
   url: MapExt
 };
 
@@ -3563,6 +3707,51 @@ var ShExUtil = {
     return this.walkVal (val, function (sln) {
       return { ldterm: sln.object };
     });
+  },
+
+  valToExtension: function (val, lookfor) {
+    var map = this.walkVal (val, function (sln) {
+      return { extensions: sln.extensions };
+    });
+    function extensions (obj) {
+      var list = [];
+      var crushed = {};
+      function crush (elt) {
+        if (crushed === null)
+          return elt;
+        if (elt.constructor === Array) {
+          crushed = null;
+          return elt;
+        }
+        for (k in elt) {
+          if (k in crushed) {
+            crushed = null
+            return elt;
+          }
+          crushed[k] = elt[k];
+        }
+        return elt;
+      }
+      for (var k in obj) {
+        if (k === "extensions") {
+          if (obj[k])
+            list.push(crush(obj[k][lookfor]));
+        } else if (k === "nested") {
+          var nested = extensions(obj[k]);
+          if (nested.constructor === Array)
+            nested.forEach(crush);
+          else
+            crush(nested);
+          list = list.concat(nested);
+        } else {
+          list.push(crush(extensions(obj[k])));
+        }
+      }
+      return list.length === 1 ? list[0] :
+        crushed ? crushed :
+        list;
+    }
+    return extensions(map);
   },
 
   valuesToSchema: function (values) {

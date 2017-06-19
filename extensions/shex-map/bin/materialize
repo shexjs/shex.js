@@ -12,6 +12,7 @@ var _ = require("underscore");
 var FS = require("fs");
 var N3 = require("n3");
 
+var ShExUtil = require("../../../lib/ShExUtil");
 var ShExLoader = require("../../../lib/ShExLoader");
 var ShExValidator = require("../../../lib/ShExValidator");
 var Mapper = require("../module");
@@ -93,29 +94,24 @@ Promise.all([ShExLoader.load([cmds.target], [], [], []),
   then(loads => {
     var schema = loads[0].schema;
     var val = loads[1];
-    var resultBindings = loads[2];
+    var statics = loads[2];
     var map = Mapper.materializer(schema);
 
-    function findBindings (object) {
-      for (var key in object) {
-        var item = object[key];
-        if (typeof item === 'object') {
-          if (Mapper.url in item)
-            Object.keys(item[Mapper.url]).forEach(k => {
-              resultBindings[k] = item[Mapper.url][k];
-            })
-          else
-            object[key] = findBindings(item);
-        }
-      }
-      return object;
-    }
-    findBindings(val);
+    var resultBindings1 = ShExUtil.valToExtension(val, Mapper.url);
 
-    var outputGraph = map.materialize(resultBindings, cmds.root);
+    function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
+
+    var resultBindings2 = _dup(resultBindings1);
+    var _t = _dup(statics);
+    if (_t && Object.keys(_t).length > 0) {
+      if (resultBindings2.constructor !== Array)
+        resultBindings2 = [resultBindings2];
+      resultBindings2.unshift(_t);
+    }
+    var outputGraph = map.materialize(Mapper.binder(resultBindings2), cmds.root);
     var writer = N3.Writer({ prefixes: {} });
     outputGraph.getTriples().forEach(t => { writer.addTriple(t); });
     writer.end(function (error, result) { console.log(result); });
-  }).catch(e => { console.error(e); });
+  }).catch(e => { console.error("stack" in e ? e.stack : e); });
 
 
