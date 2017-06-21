@@ -210,9 +210,27 @@
           <div id="actions" style="margin-right: .1em;">
             <div>
             <button id="validate" style="float:left">validate (ctl-enter)</button>
-            <ul id="shapeMap" style="float:left">
-              <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
-            </ul>
+            <div id="tabs" style="float:left">
+              <ul>
+                <li><a href="#tabs-1">Query Map</a></li>
+                <li><a href="#tabs-2">Editor</a></li>
+                <li><a href="#tabs-3">Fixed Map</a></li>
+              </ul>
+              <div id="tabs-1">
+                <textarea id="textMap">
+                </ul>
+              </div>
+              <div id="tabs-2">
+                <ul id="shapeMap" style="float:left">
+                  <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
+                </ul>
+              </div>
+              <div id="tabs-3">
+                <ul id="fixedMap" style="float:left">
+                  <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
+                </ul>
+              </div>
+            </div>
             </div>
           </div>
           <div style="clear:both;">
@@ -223,15 +241,16 @@
         <h2 class="status"> </h2>
         <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
         <div style="margin-left: .1em;">
-          <div class="passes" style="float:left">
+          <div class="passes" style="float:left; display:none;">
             <p></p>
             <ul>
-              <li>This demo is no fun without javascript.</li>
+              <li>Select an example schema on the left for passing data.</li>
             </ul>
           </div>
-          <div class="fails" style="float:left">
+          <div class="fails" style="float:left; display:none;">
             <p></p>
             <ul>
+              <li>Select an example schema on the left for failing data.</li>
             </ul>
           </div>
         </div>

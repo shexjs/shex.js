@@ -8,6 +8,13 @@ var InputSchema = makeSchemaCache("#inputSchema textarea");
 var InputData = makeTurtleCache("#inputData textarea");
 var ShExRSchema; // defined below
 
+const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
+const uriOrKey = uri + "|FOCUS|_";
+const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
+                                uriOrKey+")?(\\s*)("+
+                                uri+")?(\\s*)("+
+                                uriOrKey+")?(\\s*)(})?(\\s*)$");
+
 // utility functions
 function parseTurtle (text, meta) {
   var ret = ShEx.N3.Store();
@@ -546,7 +553,7 @@ function addNodeShapePair (evt, pairs) {
     var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
     add.on("click", addNodeShapePair);
     remove.on("click", removeNodeShapePair);
-    span.append(focus, " as ", shape, add, remove);
+    span.append(focus, "@", shape, add, remove);
     if (evt) {
       $(evt.target).parent().after(span);
     } else {
@@ -668,8 +675,9 @@ function parseUIShapeMap () {
   var mapAndErrors = $(".pair").get().reduce((acc, pair) => {
     var node = $(pair).find(".focus").val();
     var shape = $(pair).find(".inputShape").val();
-    $(pair).attr("data-node", InputData.meta.lexToTerm(node));
     $(pair).attr("data-shape", InputSchema.meta.lexToTerm(shape));
+    var m = ParseTriplePattern(node);
+    $(pair).attr("data-node", InputData.meta.lexToTerm(node));
     if (node && shape)
       acc.shapeMap.push({node: node, shape: shape});
     return acc;
@@ -903,7 +911,7 @@ function prepareDemos () {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
           inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
+            node: "{FOCUS :status _}",
             shape: "- start -"}]},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
@@ -979,12 +987,73 @@ function addContextMenus (nodeSelector, shapeSelector) {
     { inputSelector: shapeSelector,
       getItems: function () { return InputSchema.getShapes(); } }
   ].forEach(entry => {
+    // !!! terribly stateful; only one context menu at a time!
+    var terms = null, v = null, target, scrollLeft, m, addSpace = "";
     $.contextMenu({
       selector: entry.inputSelector,
       callback: function (key, options) {
-        $(options.selector).val(key);
+        if (terms) {
+          var term = terms.tz[terms.match];
+          var val = v.substr(0, term[0]) +
+              key + addSpace +
+              v.substr(term[0] + term[1]);
+          if (terms.match === 2 && !m[8])
+            val = val + "}";
+          else if (term[0] + term[1] === v.length)
+            val = val + " ";
+          $(options.selector).val(val);
+          // target.scrollLeft = scrollLeft + val.length - v.length;
+          target.scrollLeft = target.scrollWidth;
+        } else {
+          $(options.selector).val(key);
+        }
       },
-      build: function (elt, e) {
+      build: function (elt, evt) {
+        if (elt.hasClass("data")) {
+          v = elt.val();
+          m = v.match(ParseTriplePattern);
+          if (m) {
+            target = evt.target;
+            var selStart = target.selectionStart;
+            scrollLeft = target.scrollLeft;
+            terms = [0, 1, 2].reduce((acc, ord) => {
+              if (m[(ord+1)*2-1] !== undefined) {
+                var at = acc.start + m[(ord+1)*2-1].length;
+                var len = m[(ord+1)*2] ? m[(ord+1)*2].length : 0;
+                return {
+                  start: at + len,
+                  tz: acc.tz.concat([[at, len]]),
+                  match: acc.match === null && at + len >= selStart ?
+                    ord :
+                    acc.match
+                };
+              } else {
+                return acc;
+              }
+            }, {start: 0, tz: [], match: null });
+            function norm (tz) {
+              return tz.map(t => {
+                return InputData.meta.termToLex(t);
+              });
+            }
+            const getTermsFunctions = [
+              () => { return ["FOCUS", "_"].concat(norm(store.getSubjects())); },
+              () => { return norm(store.getPredicates()); },
+              () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
+            ];
+            var store = InputData.refresh();
+            var items = getTermsFunctions[terms.match]();
+            return {
+              items:
+              items.reduce((ret, opt) => {
+                ret[opt] = { name: opt };
+                return ret;
+              }, {})
+            };
+            
+          }
+        }
+        terms = v = null;
         return {
           items:
           entry.getItems().reduce((ret, opt) => {

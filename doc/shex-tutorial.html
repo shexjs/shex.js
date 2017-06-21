@@ -2,7 +2,7 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>ShEx Tutorial</title>
+    <title>ShEx Mini Tutorial</title>
     <meta name="description" content="simple ShEx2 demo" />
     <style>
       h1 { font-size: 1.3em; }
@@ -15,14 +15,14 @@
       .pair.fails { border-left: none; padding-left: none; }
       .pair.fails::after { background-color: #fbb; content: "✗"; }
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
-      #inputarea { overflow-x: none; white-space:nowrap; }
+      /* #inputarea { overflow-x: none; white-space:nowrap; } */
       #inputarea textarea { overflow-x: auto }
       .schema.textarea, .schema { background-color: #f4f4ff; border: medium solid #e4e4ef; }
       #inputSchema li.selected a { background-color: #e8e8ff; }
-      #inputSchema .examples { border: medium solid #e4e4ef; }
-      #inputData textarea, .data { background-color: #f4fff4; border: medium solid #e4efe4; }
+      /* #inputSchema .examples { border: medium solid #e4e4ef; } */
+      #inputData textarea, .data { background-color: #f4fff4; border: medium solid #e4efe4; font-family: monospace; }
       #inputData li.selected { background-color: #e8ffe8; }
-      #inputData .examples { border: medium solid #e4efe4; }
+      /* #inputData .examples { border: medium solid #e4efe4; } */
       /* .droparea { border-width: .25em; border-style: dashed; }
          .droparea.hover, body.hover { border: .25em dashed #0c0; } */
       .stoppable { background-color: red; }
@@ -41,7 +41,7 @@
         padding-right: 10px;
       }
       #actions {
-        float:right;
+        /* float:right; */
         margin-right: .1em;
       }
       /* #actions input { height: 1.5ex; }  */
@@ -131,11 +131,11 @@
     background: #f4fff4;
     /* width: 6em; */
 }
-#inputSchema h2, #inputData h2 {
+h2 {
     color: #333;
     font-size: .6em;
     border: 1px solid #bbb;
-    display: table-caption;
+    display: table-cell;
     font-family: sans-serif;
     padding: 0.2em 1em;
     margin: 0;
@@ -159,11 +159,8 @@
 
     <div id="title">
       <div style="float:left; width: 50%;">
-        <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx Tutorial</h1>
+        <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx Mini Tutorial</h1>
       </div>
-      <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
-      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
-      <!-- </ul> -->
       <div style="float:left; width: 49%">
         <p>
           Shape Expressions (ShEx), a language for describing RDF graph structures, is most commonly used to validate data.
@@ -175,8 +172,8 @@
 
     <div id="inputarea">
       <div id="inputSchema">
-      <div class="panel">
         <h2 class="status999">Schema (ShExC)</h2>
+      <div class="panel">
         <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
       </div>
       <div class="panel">
@@ -184,7 +181,7 @@
           A ShEx Schema prescribes condiDons that RDF data graphs must meet in order to be considered “conformant”.
           Select an example schema from the following:
         </p>
-            <h2>Schema examples:</h2>
+            <!-- <h2>Schema examples:</h2> -->
             <div class="examples">
               <ul>
                 <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
@@ -197,15 +194,15 @@
       </div>
       <hr style="clear:both;"/>
       <div id="inputData">
-      <div class="panel">
         <h2 class="status999">Data (Turtle)</h2>
+      <div class="panel">
         <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
       </div>
         <div class="panel">
           <p>
             Select some RDF data to test against the schema:
           </p>
-          <h2>Data examples:</h2>
+          <!-- <h2>Data examples:</h2> -->
             <div class="examples">
             <p>Data that will pass:</p>
           <div class="passes">
@@ -225,54 +222,56 @@
           </p>          
         </div>
     </div>
-    <hr style="clear:both;"/>
-    <div>
-            <ul id="shapeMap" class="panel">
-            </ul>
-            <div class="panel">
-              <p>
-                text about Query ShapeMaps.
-              </p>
-            </div>
+      <hr style="clear:both;"/>
+      <div>
+        <h2 class="status999">Query Shape Map</h2>
+      <div class="panel">
+        <ul id="shapeMap">
+        </ul>
+      </div>
+      <div class="panel">
+        <p>
+          text about query shape maps.
+        </p>
+      </div>
+    </div>
+      <hr style="clear:both;"/>
+      <div>
+        <h2 class="status999">Fixed Shape Map</h2>
+      <div class="panel">
+        <ul id="shapeMap">
+        </ul>
+      </div>
+      <div class="panel">
+        <p>
+          A query shape mape is evaluated against the data to create a <span class="new">fixed shape map</span>.
+          You typically don't need to care about the fixed shape map, but it can be a handy way to report results, as you will see when you press the <a href="#validate">validate button</a> below.
+        </p>
+      </div>
     </div>
     <hr style="clear:both;"/>
     <div>
-            <ul id="fixedMap" class="panel">
-            </ul>
-            <div class="panel">
-              <p>
-                text about Fixed ShapeMaps.
-              </p>
-            </div>
-    </div>
-    <hr style="clear:both;"/>
-    <div>
+    <div class="panel">
           <div id="actions" style="margin-right: .1em;">
             <div>
-            <button id="validate" style="float:left">validate (ctl-enter)</button>
+            <button id="validate" style="float:left">validate</button>
             </div>
           </div>
     </div>
+    <div class="panel">
       <form id="menuForm">
-          <button id="menu-button" title="click for menu">
-            controls <svg><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#down-arrow" /></svg>
-          </button>
-        <div id="controls">
-          <div>
-            <ul>
-              <li class="        "><h3>user interface</h3></li>
-              <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
-              <li class="        "><hr/></li>
-              <li class="        "><h3>drag and drop</h3></li>
-              <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
-              <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
-              <li class="        "><hr/></li>
-              <li class="menuitem" id="permalink"><a>Permalink</a></li>
-              <li class="menuitem" id="about-button">About</li>
-            </ul>
-          </div>
-        </div>
+        <p>
+          Clicking Validate on the left will render the results below. This interface allows you to choose between three different levels of detail.
+        </p>
+        <p class="menuitem">
+          <label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select>
+        </p>
+        <!-- <p class="menuitem" id="permalink"><a>Permalink</a></p> -->
+        <!-- <p class="menuitem" id="about-button">About</p> -->
       </form>
+    </div>
+    </div>
+    <hr style="clear:both;"/>
       <div id="about" style="display:none; cursor: default; text-align: left; ">
         <h1>About shex-simple</h1>
         <p>
@@ -304,10 +303,10 @@
         </ul>
         <input type="button" id="dismiss-about" value="OK"/>
       </div>
-          <div style="clear:both;">
-          </div>
+          <div style="clear:both;"/>
+        </div>
+        <h2 class="status999">Validation Results</h2>
     <div id="results">
-      <h2 class="status"> </h2>
       <div></div>
     </div>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
