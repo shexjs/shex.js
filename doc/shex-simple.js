@@ -548,9 +548,11 @@ function addNodeShapePair (evt, pairs) {
   pairs.forEach(pair => {
     var span = $("<li class='pair'/>");
     var focus = $("<input "+"' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
-                  "' class='data focus'/>");
+                  "' class='data focus'/>").
+        on("change", deployEditMap);
     var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
-                  "' class='schema inputShape context-menu-one btn btn-neutral'/>");
+                  "' class='schema inputShape context-menu-one btn btn-neutral'/>").
+        on("change", deployEditMap);
     var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
     var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
     add.on("click", addNodeShapePair);
@@ -666,7 +668,14 @@ function prepareControls () {
     $("#about").dialog("open");
   });
 
-  $("#shapeMap-tabs").tabs();
+  $("#shapeMap-tabs").tabs({
+    activate: function (event, ui) {
+      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
+        deployEditMap();
+      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0))
+        parseUIQueryMap();
+    }
+  });
 
   function dismissModal (evt) {
     // $.unblockUI();
@@ -720,6 +729,8 @@ function toggleControls (evt) {
 
 function toggleControlsArrow (which) {
   // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
+  if (document.getElementById("menu-button") === null)
+    return;
   var down = $(document.getElementById("menu-button").
                querySelectorAll('use[*|href="#down-arrow"]'));
   var up = $(document.getElementById("menu-button").
@@ -773,23 +784,24 @@ function parseUIQueryMap () {
     var m = nodeSelector.match(ParseTriplePattern);
     var nodes = m ? getTriples (m[2], m[4], m[6]) : [nodeSelector];
     nodes.forEach(node => {
-      var span = $("<li class='pair'/>", {
-        "data-node":    InputData.meta.lexToTerm(node),
-        "data-shape": InputSchema.meta.lexToTerm(shape)
-      });
-      var focusElt = $("<input "+"' type='text' value='"+node.replace(/['"]/g, "&quot;")+
-                       "' class='data focus'/>").
-          on("blur", deployEditMap);
-      var shapeElt = $("<input "+"' type='text' value='"+shape.replace(/['"]/g, "&quot;")+
-                       "' class='schema inputShape context-menu-one btn btn-neutral'/>").
-          on("blur", deployEditMap);
-      // var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
-      var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
-      // add.on("click", addNodeShapePair);
-      remove.on("click", removeNodeShapePair);
-      span.append(focusElt, "@", shapeElt, /* add, */ remove);
-      $("#fixedMap").append(span);
-      acc.shapeMap.push({node: node, shape: shape});
+      var nodeTerm = InputData.meta.lexToTerm(node);
+      var shapeTerm = InputSchema.meta.lexToTerm(shape);
+      if ($("#fixedMap li[data-node='"+nodeTerm+"'][data-shape='"+shapeTerm+"']").length === 0) {
+        acc.shapeMap.push({node: node, shape: shape});
+        var span = $("<li class='pair'"+
+                     " data-node='"+nodeTerm+"'"+
+                     " data-shape='"+shapeTerm+"'/>");
+        var focusElt = $("<input "+"' type='text' value='"+node.replace(/['"]/g, "&quot;")+
+                         "' class='data focus'/>");
+        var shapeElt = $("<input "+"' type='text' value='"+shape.replace(/['"]/g, "&quot;")+
+                         "' class='schema inputShape context-menu-one btn btn-neutral'/>");
+        // var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
+        var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
+        // add.on("click", addNodeShapePair);
+        remove.on("click", removeNodeShapePair);
+        span.append(focusElt, "@", shapeElt, /* add, */ remove);
+        $("#fixedMap").append(span);
+      }
     });
     return acc;
   }, {shapeMap: [], errors: []});
@@ -816,7 +828,7 @@ function deployEditMap () {
     if (!nodeSelector || !shape)
       return acc;
     return acc.concat([nodeSelector+"@"+shape]);
-  });
+  }, []).join("\n");
   $("#textMap").empty().val(text);
 }
 

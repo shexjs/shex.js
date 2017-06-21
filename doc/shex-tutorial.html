@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>ShEx Mini Tutorial</title>
     <meta name="description" content="simple ShEx2 demo" />
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
     <style>
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; margin-left: .1em; }
@@ -140,12 +141,30 @@ h2 {
     padding: 0.2em 1em;
     margin: 0;
 }
+
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+    padding: 0 .1em;
+}
+.ui-tabs .ui-tabs-panel {
+    padding: 0;
+}
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+    font-size: small;
+}
+#textMap {
+    padding: 0;
+    border: none;
+}
+#shapeMap-tabs {
+    font-family: inherit;
+    font-size: inherit;
+}
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
     <script src="https://www.w3.org/scripts/jquery/2.1/jquery.min.js"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
-    <script src="http://malsup.github.io/jquery.blockUI.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   </head>
 
   <body>
@@ -226,7 +245,23 @@ h2 {
       <div>
         <h2 class="status999">Query Shape Map</h2>
       <div class="panel">
-        <ul id="shapeMap">
+            <div>
+            <div id="shapeMap-tabs">
+              <ul>
+                <li><a href="#textMap-tab">Query Map</a></li>
+                <li><a href="#editMap-tab">Editor</a></li>
+              </ul>
+              <div id="textMap-tab">
+                <textarea id="textMap" style="width:100%; height:100%;">
+                </textarea>
+              </div>
+              <div id="editMap-tab">
+                <ul id="editMap">
+                  <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
+                </ul>
+              </div>
+            </div>
+            </div>
         </ul>
       </div>
       <div class="panel">
@@ -239,8 +274,11 @@ h2 {
       <div>
         <h2 class="status999">Fixed Shape Map</h2>
       <div class="panel">
-        <ul id="shapeMap">
-        </ul>
+              <div id="fixedMap-tab">
+                <ul id="fixedMap">
+                  <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button></span -->
+                </ul>
+              </div>
       </div>
       <div class="panel">
         <p>
