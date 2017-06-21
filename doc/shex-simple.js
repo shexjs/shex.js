@@ -677,6 +677,7 @@ function prepareControls () {
     }
   });
 
+  $("#parseUIQueryMap").on("click", parseUIQueryMap);
   function dismissModal (evt) {
     // $.unblockUI();
     $("#about").dialog("close");
