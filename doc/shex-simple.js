@@ -3,8 +3,9 @@
 // Release under MIT License.
 
 const START_SHAPE_LABEL = "- start -";
-var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
-var InputSchema = makeSchemaCache("#inputSchema textarea");
+var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
+var SchemaTextarea = $("#inputSchema textarea.schema");
+var InputSchema = makeSchemaCache("#inputSchema textarea.schema");
 var InputData = makeTurtleCache("#inputData textarea");
 var ShExRSchema; // defined below
 
@@ -359,7 +360,8 @@ function pickData (name, dataTest, elt, listItems, side) {
     // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
     // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     // removeNodeShapePair(null);
-    addNodeShapePair(null, dataTest.inputShapeMap); // add Map-test
+    $("#textMap").val(dataTest.queryMap);
+    parseQueryMap(dataTest.queryMap);
     // validate();
   }
 }
@@ -418,7 +420,7 @@ function hasFocusNode () {
 
 function validate () {
   results.clear();
-  $(".pair").removeClass("passes").removeClass("fails");
+  $("#fixedMap .pair").removeClass("passes").removeClass("fails");
   $("#results .status").hide();
   var parsing = "input schema";
   try {
@@ -428,7 +430,7 @@ function validate () {
     if (dataText || hasFocusNode()) {
       parsing = "input data";
       InputData.refresh(); // for prefixes for getShapeMap
-      var shapeMap = shapeMapToTerms(parseUIShapeMap());
+      var fixedMap = fixedShapeMapToTerms(parseUIQueryMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -438,7 +440,7 @@ function validate () {
                       /*, regexModule: modules["../lib/regex/nfax-val-1err"] */ });
 
       $("#results .status").text("validating...").show();
-      var ret = validator.validate(inputData, shapeMap);
+      var ret = validator.validate(inputData, fixedMap);
       // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
       $("#results .status").text("rendering results...").show();
       ret.forEach(renderEntry);
@@ -490,8 +492,8 @@ function validate () {
     var fails = entry.status === "nonconformant";
     var klass = fails ? "fails" : "passes";
 
-    // update the QueryMap
-    $(".pair").filter((idx, elt) => {
+    // update the FixedMap
+    $("#fixedMap .pair").filter((idx, elt) => {
       return $(elt).attr("data-node") === entry.node &&
         $(elt).attr("data-shape") === entry.shape;
     }).addClass(klass);
@@ -557,15 +559,15 @@ function addNodeShapePair (evt, pairs) {
     if (evt) {
       $(evt.target).parent().after(span);
     } else {
-      $("#shapeMap").append(span);
+      $("#editMap").append(span);
     }
   });
   if ($(".removePair").length === 1)
     $(".removePair").css("visibility", "hidden");
   else
     $(".removePair").css("visibility", "visible");
-  $(".pair").each(idx => {
-    addContextMenus(".pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
+  $("#editMap .pair").each(idx => {
+    addContextMenus("#editMap .pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
   });
   return false;
 }
@@ -574,7 +576,7 @@ function removeNodeShapePair (evt) {
   if (evt) {
     $(evt.target).parent().remove();
   } else {
-    $(".pair").remove();
+    $("#editMap .pair").remove();
   }
   if ($(".removePair").length === 1)
     $(".removePair").css("visibility", "hidden");
@@ -663,6 +665,8 @@ function prepareControls () {
   $("#about-button").click(evt => {
     $("#about").dialog("open");
   });
+
+  $("#shapeMap-tabs").tabs();
 
   function dismissModal (evt) {
     // $.unblockUI();
@@ -759,60 +763,67 @@ var parseQueryString = function(query) {
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
  */
-function parseUIShapeMap () {
-  var mapAndErrors = $(".pair").get().reduce((acc, pair) => {
-    var node = $(pair).find(".focus").val();
-    var shape = $(pair).find(".inputShape").val();
-    $(pair).attr("data-shape", InputSchema.meta.lexToTerm(shape));
-    var m = ParseTriplePattern(node);
-    $(pair).attr("data-node", InputData.meta.lexToTerm(node));
-    if (node && shape)
+function parseUIQueryMap () {
+  $("#fixedMap").empty();
+  var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
+    var nodeSelector = $(queryPair).find(".focus").val();
+    var shape = $(queryPair).find(".inputShape").val();
+    if (!nodeSelector || !shape)
+      return acc;
+    var m = nodeSelector.match(ParseTriplePattern);
+    var nodes = m ? getTriples (m[2], m[4], m[6]) : [nodeSelector];
+    nodes.forEach(node => {
+      var span = $("<li class='pair'/>", {
+        "data-node":    InputData.meta.lexToTerm(node),
+        "data-shape": InputSchema.meta.lexToTerm(shape)
+      });
+      var focusElt = $("<input "+"' type='text' value='"+node.replace(/['"]/g, "&quot;")+
+                       "' class='data focus'/>").
+          on("blur", deployEditMap);
+      var shapeElt = $("<input "+"' type='text' value='"+shape.replace(/['"]/g, "&quot;")+
+                       "' class='schema inputShape context-menu-one btn btn-neutral'/>").
+          on("blur", deployEditMap);
+      // var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
+      var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
+      // add.on("click", addNodeShapePair);
+      remove.on("click", removeNodeShapePair);
+      span.append(focusElt, "@", shapeElt, /* add, */ remove);
+      $("#fixedMap").append(span);
       acc.shapeMap.push({node: node, shape: shape});
+    });
     return acc;
-
-    // var node = "node-type" in iface ?
-    //       ShEx.Util.someNodeWithType(
-    //         ShEx.Util.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
-    //                                  label => {
-    //                                    return (data.refresh().
-    //                                            getTriplesByIRI(null, RDF_TYPE, label).length > 0);
-    //                                  },
-    //                                  loaded.data.prefixes)) :
-    //     ShEx.Util.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
-    //       var triples = data.refresh().getTriplesByIRI(null, null, null);
-    //       return triples.length > 0 ? triples[0].subject : ShEx.Util.NotSupplied;
-    //     },
-    //                              label => {
-    //                                return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
-    //                                        data.refresh().getTriplesByIRI(null, null, label).length > 0);
-    //                              });
-
-    // if (node === ShEx.Util.UnknownIRI)
-    //   node = $(n).val();
-    // else if (node === ShEx.Util.NotSupplied)
-    //   ret.errors.push("node not found: " + $(n).val());
-    // var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
-    //       ShEx.Util.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
-    //                                (label) => {
-    //                                  return label in schema.refresh().shapes;
-    //                                });
-    // if (shape === ShEx.Util.NotSupplied || shape === ShEx.Util.UnknownIRI)
-    //   throw Error("shape " + $(shapes[i]).val() + " not defined");
-    // if (!shape)
-    //   ret.errors.push("shape not found: " + $(shapes[i]).val());
-    // if (node && shape)
-    //   ret.shapeMap.push({node: node, shape: shape});
-    // return ret;
   }, {shapeMap: [], errors: []});
+
   if (mapAndErrors.errors.length) // !! overwritten immediately
     results.append(mapAndErrors.errors.join("\n"));
   return mapAndErrors.shapeMap;
+
+  function getTriples (s, p, o) {
+    var get = s === "FOCUS" ? "subject" : "object";
+    return InputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+      return InputData.meta.termToLex(t[get]);
+    });
+    function mine (term) {
+      return term === "FOCUS" || term === "_" ? null : InputData.meta.lexToTerm(term);
+    }
+  }
 }
 
-/** shapeMapToTerms -- map ShapeMap to API terms
+function deployEditMap () {
+  var text = $("#editMap .pair").get().reduce((acc, queryPair) => {
+    var nodeSelector = $(queryPair).find(".focus").val();
+    var shape = $(queryPair).find(".inputShape").val();
+    if (!nodeSelector || !shape)
+      return acc;
+    return acc.concat([nodeSelector+"@"+shape]);
+  });
+  $("#textMap").empty().val(text);
+}
+
+/** fixedShapeMapToTerms -- map ShapeMap to API terms
  * @@TODO: add to ShExValidator so API accepts ShapeMap
  */
-function shapeMapToTerms (shapeMap) {
+function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
     return {node: InputData.meta.lexToTerm(pair.node),
             shape: InputSchema.meta.lexToTerm(pair.shape)};
@@ -820,21 +831,25 @@ function shapeMapToTerms (shapeMap) {
 }
 
 var iface = null; // needed by validate before prepareInterface returns.
-var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                   {queryStringParm: "data", location: $("#inputData textarea")}];
+var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea},
+                   {queryStringParm: "data", location: $("#inputData textarea")},
+                   {queryStringParam: "queryMap", location: $("#textMap")}];
 
 /**
  * Load URL search parameters
  */
 function prepareInterface () {
   // don't overwrite if we arrived here from going back for forth in history
-  if ($("#inputSchema textarea").val() !== "" || $("#inputData textarea").val() !== "")
+  if (SchemaTextarea.val() !== "" || $("#inputData textarea").val() !== "")
     return;
 
   iface = parseQueryString(location.search);
-  if ("shape-map" in iface)
-    parseShapeMap("shape-map");
-  else
+  if ("shape-map" in iface) {
+    parseQueryMap(iface["shape-map"].
+                  filter(s => { return s.length > 0; }).
+                  join(","));
+    delete iface["shape-map"];
+  } else
     addNodeShapePair(null, [{node: "", shape: ""}]);
 
   toggleControlsArrow("down");
@@ -842,30 +857,6 @@ function prepareInterface () {
     iface.interface = iface.interface[0];
   else
     iface.interface = "human";
-
-  function parseShapeMap (queryParm) {
-    var shapeMap =  iface[queryParm];
-    delete iface[queryParm];
-    //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
-    var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
-    var pairPattern = s + "@" + s + ",?";
-    iface.shapeMap = shapeMap.reduce(
-      (r, b) => {
-        // e.g.: b = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-        var pairs = (b + ",").match(/([^,\\]|\\.)+,/g).
-              map(s => s.substr(0, s.length-1)); // trim ','s
-        pairs.forEach(r2 => {
-          var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
-          if (m) {
-            var node = m[1] || "";
-            var shape = m[2] || "";
-            r[node] = node in r ? r[node].concat(shape) : [shape];
-            addNodeShapePair(null, [{node: node, shape: shape}]);
-          }
-        });
-        return r;
-      }, {});
-  }
 
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
@@ -881,9 +872,29 @@ function prepareInterface () {
     validate();
   }
   // // old hack for permalink
-  // $("#inputSchema textarea").prev().add("#title").on("click", evt => {
+  // SchemaTextarea.prev().add("#title").on("click", evt => {
   //   window.history.pushState(null, null, getPermalink());
   // });
+}
+
+function parseQueryMap (shapeMap) {
+  //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
+  var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
+  var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
+  iface.shapeMap = {};
+  // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
+  var pairs = (shapeMap + ",").match(/([^,\\]|\\.)+,/g).
+      map(s => s.substr(0, s.length-1)); // trim ','s
+
+  pairs.forEach(r2 => {
+    var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
+    if (m) {
+      var node = m[1] || "";
+      var shape = m[2] || "";
+      iface.shapeMap[node] = node in iface.shapeMap ? iface.shapeMap[node].concat(shape) : [shape];
+      addNodeShapePair(null, [{node: node, shape: shape}]);
+    }
+  });
 }
 
   /**
@@ -893,7 +904,7 @@ function prepareInterface () {
     var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface);
-    var pairs = $(".pair");
+    var pairs = $("#queryMap .pair");
     if (pairs.length > 0) {
       parms.push("shape-map=" + pairs.map((idx, elt) => {
         var node = $(elt).find(".focus").val();
@@ -935,7 +946,7 @@ function customizeInterface () {
  * Prepare drag and drop into text areas
  */
 function prepareDragAndDrop () {
-  var _scma = $("#inputSchema textarea");
+  var _scma = SchemaTextarea;
   var _data = $("#inputData textarea");
   var _body = $("body");
   [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
@@ -999,36 +1010,24 @@ function prepareDemos () {
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          inputShapeMap: [{
-            node: "{FOCUS :status _}",
-            shape: "- start -"}]},
+          queryMap: "{FOCUS :status _}@- start -"},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
+          queryMap: "<http://a.example/Obs1>@- start -"},
         "no subject name": {
           data: clinicalObs.no_subject_name,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]}
+          queryMap: "<http://a.example/Obs1>@- start -"}
       },
       fails: {
         "bad status": {
           data: clinicalObs.bad_status,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
+          queryMap: "<http://a.example/Obs1>@- start -"},
         "no subject": {
           data: clinicalObs.no_subject,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
+          queryMap: "<http://a.example/Obs1>@- start -"},
         "wrong birthdate datatype": {
           data: clinicalObs.birthdate_datatype,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]}
+          queryMap: "<http://a.example/Obs1>@- start -"}
       }
     }
   };
@@ -1058,7 +1057,7 @@ function prepareDemos () {
       return false; // same as e.preventDefault();
     }
   });
-  $("#inputSchema textarea").keyup(function (e) { // keyup to capture backspace
+  SchemaTextarea.keyup(function (e) { // keyup to capture backspace
     var code = e.keyCode || e.charCode;
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputSchema", InputSchema);
