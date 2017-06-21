@@ -424,10 +424,10 @@ function validate () {
   try {
     InputSchema.refresh();
     $("#schemaDialect").text(InputSchema.language);
-    InputData.refresh(); // for prefixes for getShapeMap
     var dataText = InputData.get();
     if (dataText || hasFocusNode()) {
       parsing = "input data";
+      InputData.refresh(); // for prefixes for getShapeMap
       var shapeMap = shapeMapToTerms(parseUIShapeMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
@@ -589,20 +589,86 @@ function prepareControls () {
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
 
-  $('#about-button').click(evt => {
-    $.blockUI({
-      message: $('#about'), css: {
-        width: "50%",
-        top: "5%",
-        left: "25%"
+  $("#loadForm").dialog({
+    autoOpen: false,
+    modal: true,
+    open: function (evt, ui) {
+      debugger;
+      console.dir(evt);
+    },
+    buttons: {
+      "GET": function (evt, ui) {
+        var url = $("#loadInput").val();
+        var tips = $(".validateTips");
+        function updateTips (t) {
+          tips
+            .text( t )
+            .addClass( "ui-state-highlight" );
+          setTimeout(function() {
+            tips.removeClass( "ui-state-highlight", 1500 );
+          }, 500 );
+        }
+        if (url.length < 5) {
+          $("#loadInput").addClass("ui-state-error");
+          updateTips("URL \"" + url + "\" is way too short.");
+          return;
+        }
+        tips.removeClass("ui-state-highlight").text();
+        $.ajax({
+          accepts: {
+            mycustomtype: 'text/shex,text/turtle,*/*'
+          },
+          url: url
+        }).fail(function( jqXHR, textStatus ) {
+          updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
+        }).done(function (data) {
+          if ($("#loadForm span").text() === "schema")
+            InputSchema.set(data);
+          else
+            InputData.set(data);
+          $("#loadForm").dialog("close");
+          toggleControls();
+        });
+      },
+      Cancel: function() {
+        $("#loadInput").removeClass("ui-state-error");
+        $("#loadForm").dialog("close");
+        toggleControls();
       }
-    });
-    $('#about').attr('title','Click to unblock').click(dismissAbout);
+    },
+    close: function() {
+      $("#loadInput").removeClass("ui-state-error");
+      $("#loadForm").dialog("close");
+      toggleControls();
+    }
   });
-  function dismissAbout (evt) {
-    $.unblockUI();
-    toggleControls(evt);
-    return false;
+  ["schema", "data"].forEach(type => {
+    $("#load-"+type+"-button").click(evt => {
+      $("#loadForm").attr("class", type).find("span").text(type);
+      $("#loadForm").dialog("open");
+      console.dir(type);
+    });
+  });
+
+  $("#about").dialog({
+    autoOpen: false,
+    modal: true,
+    width: "50%",
+    buttons: {
+      "Dismiss": dismissModal
+    },
+    close: dismissModal
+  });
+
+  $("#about-button").click(evt => {
+    $("#about").dialog("open");
+  });
+
+  function dismissModal (evt) {
+    // $.unblockUI();
+    $("#about").dialog("close");
+    toggleControls();
+    return true;
   }
 
   // Prepare file uploads
@@ -626,9 +692,10 @@ function prepareControls () {
 
 function toggleControls (evt) {
   $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
-  var hiding = $("#controls").css("display") === "flex";
-  $("#controls").css("display", hiding ? "none" : "flex");
-  if (!hiding) {
+  var revealing = evt && $("#controls").css("display") !== "flex";
+  $("#controls").css("display", revealing ? "flex" : "none");
+  toggleControlsArrow(revealing ? "up" : "down");
+  if (revealing) {
     var target = evt.target;
     while (target.tagName !== "BUTTON")
       target = target.parentElement;
@@ -645,6 +712,27 @@ function toggleControls (evt) {
     $("#permalink a").attr("href", getPermalink());
   }
   return false;
+}
+
+function toggleControlsArrow (which) {
+  // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
+  var down = $(document.getElementById("menu-button").
+               querySelectorAll('use[*|href="#down-arrow"]'));
+  var up = $(document.getElementById("menu-button").
+             querySelectorAll('use[*|href="#up-arrow"]'));
+
+  switch (which) {
+  case "down":
+    down.show();
+    up.hide();
+    break;
+  case "up":
+    down.hide();
+    up.show();
+    break;
+  default:
+    throw Error("toggleControlsArrow expected [up|down], got \"" + which + "\"");
+  }
 }
 
 function setInterface (evt) {
@@ -749,6 +837,7 @@ function prepareInterface () {
   else
     addNodeShapePair(null, [{node: "", shape: ""}]);
 
+  toggleControlsArrow("down");
   if ("interface" in iface)
     iface.interface = iface.interface[0];
   else
@@ -791,10 +880,10 @@ function prepareInterface () {
   }, 0)) {
     validate();
   }
-  // old hack for permalink
-  $("#inputSchema textarea").prev().add("#title").on("click", evt => {
-    window.history.pushState(null, null, getPermalink());
-  });
+  // // old hack for permalink
+  // $("#inputSchema textarea").prev().add("#title").on("click", evt => {
+  //   window.history.pushState(null, null, getPermalink());
+  // });
 }
 
   /**

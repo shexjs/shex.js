@@ -186,6 +186,9 @@ Object.keys(AllTests).forEach(function (script) {
 
     tests.forEach(function (test) {
       it("should execute $(" + test.args.join(" ") + ")"+
+         ("stdin" in test ?
+          " with stdin from " + test.stdin :
+          "") +
          ( "resultMatch" in test ?
            (" and match /" + test.resultMatch) + "/" :
            (" and get " +
