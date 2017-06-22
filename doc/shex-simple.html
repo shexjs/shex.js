@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>ShEx2 — Simple Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
     <style>
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; margin-left: .1em; }
@@ -17,9 +18,9 @@
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
-      .schema.textarea, .schema { background-color: #f4f4ff; border-color: #fc561c }
+      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; border-color: #fc561c }
       #inputSchema li.selected a { background-color: #e8e8ff; }
-      #inputData textarea, .data { background-color: #f4fff4; border-color: #f0a133 }
+      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
       #inputData li.selected { background-color: #e8ffe8; }
       .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
@@ -118,6 +119,24 @@
 #controls ul { padding-left: 0; margin-left: 0; list-style-type: none; }
 #controls li { padding: 0 1em; }
 #controls li.menuitem:hover { background-color: buttonface; }
+
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
+    padding: 0 .1em;
+}
+.ui-tabs .ui-tabs-panel {
+    padding: 0;
+}
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+    font-size: small;
+}
+#shapeMap-tabs .ui-tabs-panel {
+    font-family: monospace;
+    min-height: 10ex;
+}
+#shapeMap-tabs {
+    font-family: inherit;
+    font-size: inherit;
+}
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -125,9 +144,9 @@
       // Load worker early.
       var ShExWorker = new Worker("shex-simple-worker.js");
     </script>
-    <script src="https://www.w3.org/scripts/jquery/2.1/jquery.min.js"></script>
+    <script src="https://www.w3.org/scripts/jquery/2.1.4/jquery.min.js"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
-    <script src="http://malsup.github.io/jquery.blockUI.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   </head>
 
   <body xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -156,6 +175,10 @@
               <li class="        "><h3>user interface</h3></li>
               <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
               <li class="        "><hr/></li>
+              <li class="        "><h3>HTTP</h3></li>
+              <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
+              <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
+              <li class="        "><hr/></li>
               <li class="        "><h3>drag and drop</h3></li>
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
               <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
@@ -166,7 +189,12 @@
           </div>
         </div>
       </form>
-      <div id="about" style="display:none; cursor: default; text-align: left; ">
+      <div id="loadForm" style="cursor: default; text-align: left; ">
+        <h1>Load <span></span></h1>
+        <p class="menuitem"><label for="loadInput" style="float: left;">from </label><input id="loadInput" style="width: 80%;"/></p>
+        <p class="validateTips">Enter a URL.</p>
+      </div>
+      <div id="about">
         <h1>About shex-simple</h1>
         <p>
           <b>shex-simple</b> is a simple RDF validator web application.
@@ -195,7 +223,6 @@
           </ul>
           </li>
         </ul>
-        <input type="button" id="dismiss-about" value="OK"/>
       </div>
       <div style="clear: both;"></div>
     </div>
@@ -205,7 +232,7 @@
         <h2 class="status"> </h2>
         <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
         <div>
-          <div style="float:left">
+          <div>
             <p>Examples:</p>
             <div class="examples">
               <ul>
@@ -213,12 +240,28 @@
               </ul>
             </div>
           </div>
-          <div id="actions" style="margin-right: .1em;">
+          <div id="actions" style="margin-right: .1em; width:100%;">
             <div>
-            <button id="validate" style="float:left">validate (ctl-enter)</button>
-            <ul id="shapeMap" style="float:left">
-              <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
-            </ul>
+            <div id="shapeMap-tabs">
+              <ul>
+                <li><a href="#textMap">Query Map</a></li>
+                <li><a href="#editMap-tab">Query Map Editor</a></li>
+                <li><a href="#fixedMap-tab">Fixed Map</a></li>
+              </ul>
+              <!-- <div id="textMap-tab"> -->
+                <textarea id="textMap" style="width:100%; height:100%;"></textarea>
+              <!-- </div> -->
+              <div id="editMap-tab">
+                <ul id="editMap" data-dirty="false">
+                  <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
+                </ul>
+              </div>
+              <div id="fixedMap-tab">
+                <ul id="fixedMap">
+                  <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button></span -->
+                </ul>
+              </div>
+            </div>
             </div>
           </div>
           <div style="clear:both;">
@@ -229,18 +272,21 @@
         <h2 class="status"> </h2>
         <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
         <div style="margin-left: .1em;">
-          <div class="passes" style="float:left">
+          <div class="passes" style="float:left; display:none;">
             <p></p>
             <ul>
-              <li>This demo is no fun without javascript.</li>
+              <li>Select an example schema on the left for passing data.</li>
             </ul>
           </div>
-          <div class="fails" style="float:left">
+          <div class="fails" style="float:left; display:none;">
             <p></p>
             <ul>
+              <li>Select an example schema on the left for failing data.</li>
             </ul>
           </div>
         </div>
+        <div style="clear:both; padding-top: .5em;"/>
+            <button id="validate">validate (ctl-enter)</button>
       </div>
     </div>
     <div id="results">
@@ -250,6 +296,8 @@
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
     <script src="../browser/shex-browserify.js"></script>
     <script src="./Util.js"></script>
+    <script src="./ShExRSchema.js"></script>
+    <script src="./examples.js"></script>
     <script src="./shex-simple.js"></script>
   </body>
 </html>
