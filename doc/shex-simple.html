@@ -129,9 +129,9 @@
 .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
     font-size: small;
 }
-#textMap {
-    padding: 0;
-    border: none;
+#shapeMap-tabs .ui-tabs-panel {
+    font-family: monospace;
+    min-height: 10ex;
 }
 #shapeMap-tabs {
     font-family: inherit;
@@ -240,16 +240,15 @@
             <div>
             <div id="shapeMap-tabs">
               <ul>
-                <li><a href="#textMap-tab">Query Map</a></li>
-                <li><a href="#editMap-tab">Editor</a></li>
+                <li><a href="#textMap">Query Map</a></li>
+                <li><a href="#editMap-tab">Query Map Editor</a></li>
                 <li><a href="#fixedMap-tab">Fixed Map</a></li>
               </ul>
-              <div id="textMap-tab">
-                <textarea id="textMap" style="width:100%; height:100%;">
-                </textarea>
-              </div>
+              <!-- <div id="textMap-tab"> -->
+                <textarea id="textMap" style="width:100%; height:100%;"></textarea>
+              <!-- </div> -->
               <div id="editMap-tab">
-                <ul id="editMap">
+                <ul id="editMap" data-dirty="false">
                   <!-- span class="pair"><input type="text" value="" class="data focus"/> as <input type="text" value="" class="schema inputShape context-menu-one btn btn-neutral"/><button class="removePair" title="remove last node/shape pair">-</button><button class="addPair" title="add a node/shape pair">+</button></span -->
                 </ul>
               </div>
@@ -282,7 +281,7 @@
             </ul>
           </div>
         </div>
-        <div style="clear:both;"/>
+        <div style="clear:both; padding-top: .5em;"/>
             <button id="validate">validate (ctl-enter)</button>
       </div>
     </div>

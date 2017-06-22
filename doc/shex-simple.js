@@ -360,8 +360,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
     // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     // removeNodeShapePair(null);
-    $("#textMap").val(dataTest.queryMap);
     parseQueryMap(dataTest.queryMap);
+    $("#textMap").val(dataTest.queryMap);
+    markEditMapClean();
     // validate();
   }
 }
@@ -430,7 +431,7 @@ function validate () {
     if (dataText || hasFocusNode()) {
       parsing = "input data";
       InputData.refresh(); // for prefixes for getShapeMap
-      var fixedMap = fixedShapeMapToTerms(parseUIQueryMap());
+      var fixedMap = fixedShapeMapToTerms(parseEditMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -543,16 +544,18 @@ function validate () {
 }
 
 function addNodeShapePair (evt, pairs) {
-  if (evt)
+  if (evt) {
     pairs = [{node: "", shape: ""}];
+    markEditMapDirty();
+  }
   pairs.forEach(pair => {
     var span = $("<li class='pair'/>");
     var focus = $("<input "+"' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
                   "' class='data focus'/>").
-        on("change", deployEditMap);
+        on("change", markEditMapDirty);
     var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
                   "' class='schema inputShape context-menu-one btn btn-neutral'/>").
-        on("change", deployEditMap);
+        on("change", markEditMapDirty);
     var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
     var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
     add.on("click", addNodeShapePair);
@@ -575,6 +578,7 @@ function addNodeShapePair (evt, pairs) {
 }
 
 function removeNodeShapePair (evt) {
+  markEditMapDirty(); // should check evt target to only mark dirty if it's an editMap
   if (evt) {
     $(evt.target).parent().remove();
   } else {
@@ -670,14 +674,17 @@ function prepareControls () {
 
   $("#shapeMap-tabs").tabs({
     activate: function (event, ui) {
-      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
+      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0) && $("#editMap").attr("data-dirty") === "true")
         deployEditMap();
-      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0))
-        parseUIQueryMap();
+      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0) && $("#editMap").attr("data-dirty") === "true")
+        parseEditMap();
     }
   });
+  $("#textMap").on("blur", evt => {
+    parseQueryMap($("#textMap").val());
+  });
+  $("#parseEditMap").on("click", parseEditMap); // only in tutorial for now.
 
-  $("#parseUIQueryMap").on("click", parseUIQueryMap);
   function dismissModal (evt) {
     // $.unblockUI();
     $("#about").dialog("close");
@@ -775,7 +782,7 @@ var parseQueryString = function(query) {
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
  */
-function parseUIQueryMap () {
+function parseEditMap () {
   $("#fixedMap").empty();
   var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
     var nodeSelector = $(queryPair).find(".focus").val();
@@ -829,7 +836,7 @@ function deployEditMap () {
     if (!nodeSelector || !shape)
       return acc;
     return acc.concat([nodeSelector+"@"+shape]);
-  }, []).join("\n");
+  }, []).join(",\n");
   $("#textMap").empty().val(text);
 }
 
@@ -846,7 +853,7 @@ function fixedShapeMapToTerms (shapeMap) {
 var iface = null; // needed by validate before prepareInterface returns.
 var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea},
                    {queryStringParm: "data", location: $("#inputData textarea")},
-                   {queryStringParam: "queryMap", location: $("#textMap")}];
+                   {queryStringParam: "shape-map", location: $("#textMap")}];
 
 /**
  * Load URL search parameters
@@ -864,6 +871,7 @@ function prepareInterface () {
     delete iface["shape-map"];
   } else
     addNodeShapePair(null, [{node: "", shape: ""}]);
+  markEditMapClean();
 
   toggleControlsArrow("down");
   if ("interface" in iface)
@@ -890,11 +898,25 @@ function prepareInterface () {
   // });
 }
 
+// !!! deplyEditMap vs parseEditMap
+// related: deployEditMap
+//          parseQueryMap(dataTest.queryMap);
+
+function markEditMapDirty (status) {
+  $("#editMap").attr("data-dirty", true);
+}
+
+function markEditMapClean () {
+  $("#editMap").attr("data-dirty", false);
+}
+
+/** parseQueryMap - parse a supplied query map and build #editMap
+ */
 function parseQueryMap (shapeMap) {
+  $("#editMap").empty();
   //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
   var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
   var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
-  iface.shapeMap = {};
   // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
   var pairs = (shapeMap + ",").match(/([^,\\]|\\.)+,/g).
       map(s => s.substr(0, s.length-1)); // trim ','s
@@ -904,7 +926,6 @@ function parseQueryMap (shapeMap) {
     if (m) {
       var node = m[1] || "";
       var shape = m[2] || "";
-      iface.shapeMap[node] = node in iface.shapeMap ? iface.shapeMap[node].concat(shape) : [shape];
       addNodeShapePair(null, [{node: node, shape: shape}]);
     }
   });
@@ -917,14 +938,19 @@ function parseQueryMap (shapeMap) {
     var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface);
-    var pairs = $("#queryMap .pair");
-    if (pairs.length > 0) {
-      parms.push("shape-map=" + pairs.map((idx, elt) => {
-        var node = $(elt).find(".focus").val();
-        var shape = $(elt).find(".inputShape").val();
-        return [encodeURIComponent(node + "@" + shape)];
-      }).get().join(encodeURIComponent(",")));
-    }
+    if ($("#editMap").attr("data-dirty"))
+      deployEditMap();
+    var m = $("#textMap").val();
+    if (m)
+      parms.push("shape-map="+encodeURIComponent(iface));
+    // var pairs = $("#queryMap .pair");
+    // if (pairs.length > 0) {
+    //   parms.push("shape-map=" + pairs.map((idx, elt) => {
+    //     var node = $(elt).find(".focus").val();
+    //     var shape = $(elt).find(".inputShape").val();
+    //     return [encodeURIComponent(node + "@" + shape)];
+    //   }).get().join(encodeURIComponent(",")));
+    // }
     parms = parms.concat(QueryParams.map(input => {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
