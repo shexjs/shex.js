@@ -674,16 +674,16 @@ function prepareControls () {
 
   $("#shapeMap-tabs").tabs({
     activate: function (event, ui) {
-      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0) && $("#editMap").attr("data-dirty") === "true")
+      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
         deployEditMap();
-      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0) && $("#editMap").attr("data-dirty") === "true")
+      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0))
         parseEditMap();
     }
   });
   $("#textMap").on("blur", evt => {
     parseQueryMap($("#textMap").val());
   });
-  $("#parseEditMap").on("click", parseEditMap); // only in tutorial for now.
+  $("#parseEditMap").on("click", parseEditMap); // may add this button to tutorial
 
   function dismissModal (evt) {
     // $.unblockUI();
@@ -779,6 +779,14 @@ var parseQueryString = function(query) {
   return map;
 };
 
+function markEditMapDirty (status) {
+  $("#editMap").attr("data-dirty", true);
+}
+
+function markEditMapClean () {
+  $("#editMap").attr("data-dirty", false);
+}
+
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
  */
@@ -830,14 +838,17 @@ function parseEditMap () {
 }
 
 function deployEditMap () {
-  var text = $("#editMap .pair").get().reduce((acc, queryPair) => {
-    var nodeSelector = $(queryPair).find(".focus").val();
-    var shape = $(queryPair).find(".inputShape").val();
-    if (!nodeSelector || !shape)
-      return acc;
-    return acc.concat([nodeSelector+"@"+shape]);
-  }, []).join(",\n");
-  $("#textMap").empty().val(text);
+  if ($("#editMap").attr("data-dirty") === "true") {
+    var text = $("#editMap .pair").get().reduce((acc, queryPair) => {
+      var nodeSelector = $(queryPair).find(".focus").val();
+      var shape = $(queryPair).find(".inputShape").val();
+      if (!nodeSelector || !shape)
+        return acc;
+      return acc.concat([nodeSelector+"@"+shape]);
+    }, []).join(",\n");
+    $("#textMap").empty().val(text);
+    markEditMapClean();
+  }
 }
 
 /** fixedShapeMapToTerms -- map ShapeMap to API terms
@@ -898,18 +909,6 @@ function prepareInterface () {
   // });
 }
 
-// !!! deplyEditMap vs parseEditMap
-// related: deployEditMap
-//          parseQueryMap(dataTest.queryMap);
-
-function markEditMapDirty (status) {
-  $("#editMap").attr("data-dirty", true);
-}
-
-function markEditMapClean () {
-  $("#editMap").attr("data-dirty", false);
-}
-
 /** parseQueryMap - parse a supplied query map and build #editMap
  */
 function parseQueryMap (shapeMap) {
@@ -938,8 +937,7 @@ function parseQueryMap (shapeMap) {
     var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface);
-    if ($("#editMap").attr("data-dirty"))
-      deployEditMap();
+    deployEditMap();
     var m = $("#textMap").val();
     if (m)
       parms.push("shape-map="+encodeURIComponent(iface));
@@ -1041,37 +1039,9 @@ function prepareDragAndDrop () {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-var clinicalObs = {};
 function prepareDemos () {
-  var demos = {
-    "clinical observation": {
-      schema: clinicalObs.schema,
-      passes: {
-        "with birthdate": {
-          data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@- start -,\n<http://a.example/Patient2>@<http://a.example/ObservationShape>"},
-        "without birthdate": {
-          data: clinicalObs.without_birthdate,
-          queryMap: "<http://a.example/Obs1>@- start -"},
-        "no subject name": {
-          data: clinicalObs.no_subject_name,
-          queryMap: "<http://a.example/Obs1>@- start -"}
-      },
-      fails: {
-        "bad status": {
-          data: clinicalObs.bad_status,
-          queryMap: "<http://a.example/Obs1>@- start -"},
-        "no subject": {
-          data: clinicalObs.no_subject,
-          queryMap: "<http://a.example/Obs1>@- start -"},
-        "wrong birthdate datatype": {
-          data: clinicalObs.birthdate_datatype,
-          queryMap: "<http://a.example/Obs1>@- start -"}
-      }
-    }
-  };
   var listItems = {inputSchema:{}, inputData:{}};
-  load("#inputSchema .examples ul", demos, pickSchema,
+  load("#inputSchema .examples ul", Demos, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
@@ -1108,6 +1078,7 @@ function prepareDemos () {
   });
   addContextMenus("#focus0", "#inputShape0");
 }
+
 function addContextMenus (nodeSelector, shapeSelector) {
   [ { inputSelector: nodeSelector,
       getItems: function () { return InputData.getNodes(); } },
@@ -1192,253 +1163,6 @@ function addContextMenus (nodeSelector, shapeSelector) {
     });
   });
 }
-
-// Large constants with demo data which break syntax highlighting:
-clinicalObs.schema = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-start = @<ObservationShape>
-
-<ObservationShape> {               # An Observation has:
-  :status ["preliminary" "final"]; #   status in this value set
-  :subject @<PatientShape>         #   a subject matching <PatientShape>.
-}
-
-<PatientShape> {                   # A Patient has:
- :name xsd:string*;                #   one or more names
- :birthdate xsd:date?              #   and an optional birthdate.
-}
-`;
-clinicalObs.with_birthdate = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs.no_subject_name = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs.without_birthdate = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "preliminary" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" .`;
-clinicalObs.bad_status = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "finally" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .
-
-`;
-clinicalObs.no_subject = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .
-
-`;
-clinicalObs.birthdate_datatype = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
-
-ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-BASE <http://www.w3.org/ns/shex#>
-start=@<Schema>
-
-<Schema> CLOSED {
-  a [sx:Schema] ;
-  sx:startActs @<SemActList1Plus>? ;
-  sx:start @<shapeExpr>?;
-  sx:shapes @<shapeExpr>*
-}
-
-<shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
-
-<ShapeOr> CLOSED {
-  a [sx:ShapeOr] ;
-  sx:shapeExprs @<shapeExprList2Plus>
-}
-
-<ShapeAnd> CLOSED {
-  a [sx:ShapeAnd] ;
-  sx:shapeExprs @<shapeExprList2Plus>
-}
-
-<ShapeNot> CLOSED {
-  a [sx:ShapeNot] ;
-  sx:shapeExpr @<shapeExpr>
-}
-
-<NodeConstraint> CLOSED {
-  a [sx:NodeConstraint] ;
-  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]?;
-  sx:datatype IRI ? ;
-  &<xsFacets>  ;
-  sx:values @<valueSetValueList1Plus>?
-}
-
-<Shape> CLOSED {
-  a [sx:Shape] ;
-  sx:closed [true false]? ;
-  sx:extra IRI* ;
-  sx:expression @<tripleExpression>? ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>* ;
-}
-
-<ShapeExternal> CLOSED {
-  a [sx:ShapeExternal] ;
-}
-
-<SemAct> CLOSED {
-  a [sx:SemAct] ;
-  sx:name IRI ;
-  sx:code xsd:string?
-}
-
-<Annotation> CLOSED {
-  a [sx:Annotation] ;
-  sx:predicate IRI ;
-  sx:object @<objectValue>
-}
-
-# <xsFacet> @<stringFacet> OR @<numericFacet>
-<facet_holder> { # hold labeled productions
-  $<xsFacets> ( &<stringFacet> | &<numericFacet> )* ;
-  $<stringFacet> (
-      sx:length xsd:integer
-    | sx:minlength xsd:integer
-    | sx:maxlength xsd:integer
-    | sx:pattern xsd:string ; sx:flags xsd:string?
-  );
-  $<numericFacet> (
-      sx:mininclusive   @<numericLiteral>
-    | sx:minexclusive   @<numericLiteral>
-    | sx:maxinclusive   @<numericLiteral>
-    | sx:maxexclusive   @<numericLiteral>
-    | sx:totaldigits    xsd:integer
-    | sx:fractiondigits xsd:integer
-  )
-}
-<numericLiteral> xsd:integer OR xsd:decimal OR xsd:double
-
-<valueSetValue> @<objectValue> OR @<IriStem> OR @<IriStemRange>
-                               OR @<LiteralStem> OR @<LiteralStemRange>
-                               OR @<LanguageStem> OR @<LanguageStemRange>
-<objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
-<IriStem> CLOSED { a [sx:IriStem]; sx:stem xsd:string }
-<IriStemRange> CLOSED {
-  a [sx:IriStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<IriStem>*
-}
-<LiteralStem> CLOSED { a [sx:LiteralStem]; sx:stem xsd:string }
-<LiteralStemRange> CLOSED {
-  a [sx:LiteralStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<LiteralStem>*
-}
-<LanguageStem> CLOSED { a [sx:LanguageStem]; sx:stem xsd:string }
-<LanguageStemRange> CLOSED {
-  a [sx:LanguageStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<LanguageStem>*
-}
-<Wildcard> BNODE CLOSED {
-  a [sx:Wildcard]
-}
-
-<tripleExpression> @<TripleConstraint> OR @<OneOf> OR @<EachOf>
-
-<OneOf> CLOSED {
-  a [sx:OneOf] ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
-  sx:expressions @<tripleExpressionList2Plus> ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
-}
-
-<EachOf> CLOSED {
-  a [sx:EachOf] ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
-  sx:expressions @<tripleExpressionList2Plus> ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
-}
-
-<tripleExpressionList2Plus> CLOSED {
-  rdf:first @<tripleExpression> ;
-  rdf:rest @<tripleExpressionList1Plus>
-}
-<tripleExpressionList1Plus> CLOSED {
-  rdf:first @<tripleExpression> ;
-  rdf:rest  [rdf:nil] OR @<tripleExpressionList1Plus>
-}
-
-<TripleConstraint> CLOSED {
-  a [sx:TripleConstraint] ;
-  sx:inverse [true false]? ;
-  sx:negated [true false]? ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
-  sx:predicate IRI ;
-  sx:valueExpr @<shapeExpr>? ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
-}
-
-<SemActList1Plus> CLOSED {
-  rdf:first @<SemAct> ;
-  rdf:rest  [rdf:nil] OR @<SemActList1Plus>
-}
-
-<shapeExprList2Plus> CLOSED {
-  rdf:first @<shapeExpr> ;
-  rdf:rest  @<shapeExprList1Plus>
-}
-<shapeExprList1Plus> CLOSED {
-  rdf:first @<shapeExpr> ;
-  rdf:rest  [rdf:nil] OR @<shapeExprList1Plus>
-}
-
-<valueSetValueList1Plus> CLOSED {
-  rdf:first @<valueSetValue> ;
-  rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
-}`;
 
 prepareControls();
 prepareInterface();
