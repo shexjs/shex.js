@@ -185,7 +185,10 @@ h2 {
       </div>
       <div style="float:left; width: 49%">
         <p>
-          <span class="explanation">The Shape Expressions language describes RDF graph structures, most commonly to validate data.</span>
+        <span class="explanation"><a href="http://shex.io/primer">ShEx</a> describes RDF graph structures, most commonly to validate data.</span>
+        </p>
+        <p>
+        <span class="explanation">A ShEx Schema prescribes conditions that RDF data graphs must meet to “conform”.</span>
         </p>
       </div>
       <hr style="clear: both;"/>
@@ -199,20 +202,16 @@ h2 {
         </div>
         <div class="panel">
           <p>
-            <span class="number">1.</span> <span class="explanation">Pick a schema</span>
+            <span class="number">1.</span> <span class="explanation">Pick a schema.</span>
           </p>
-          <p>
-          </p>
+          <br/>
           <!-- <h2>Schema examples:</h2> -->
           <div class="examples">
             <ul>
               <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
             </ul>
           </div>
-          <p>
-            A ShEx Schema prescribes conditions that RDF data graphs must meet in order to be considered “conformant”
-            (see in-line comments).
-          </p>
+            <br/>
         </div>
       </div>
       <hr style="clear:both;"/>
@@ -223,16 +222,19 @@ h2 {
         </div>
         <div class="panel">
           <p>
-            <span class="number">2.</span> <span class="explanation">Pick some RDF data to test</span>
+            <span class="number">2.</span> <span class="explanation">Pick some RDF data to test.</span>
           </p>
+          <br/>
           <!-- <h2>Data examples:</h2> -->
           <div class="examples">
             <p>Data that will pass:</p>
+            <br/>
             <div class="passes">
               <ul>
                 <li>(First pick a schema.)</li>
               </ul>
             </div>
+            <br/>
             <p>Data that will fail:</p>
             <div class="fails">
               <ul>
@@ -240,14 +242,11 @@ h2 {
               </ul>
             </div>
           </div>
-          <p style="">
-            text after data choices
-          </p>          
         </div>
       </div>
       <hr style="clear:both;"/>
       <div>
-        <h2 class="status999">Query Shape Map</h2>
+        <h2 class="status999">Shape Map</h2>
         <div class="panel">
           <div id="textMap-tab">
             <textarea id="textMap" style="width:100%; height:100%;">
@@ -256,8 +255,11 @@ h2 {
         </div>
         <div class="panel">
           <p>
-            <span class="number">3.</span> <span class="explanation">Note default shape map (left).
-            Click to <button id="validate">validate</button> in a <span class="menuitem">
+            <span class="number">3.</span> <span class="explanation"> Note the default Shape Map matching shapes to data nodes.</span>
+          </p>
+          <br/>
+          <p>
+            <span class="number">4.</span> <span class="explanation">Click to <button id="validate">validate</button> the data in a <span class="menuitem">
             <label for="interface"></label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select>
             </span> style.</span>
         </div>
