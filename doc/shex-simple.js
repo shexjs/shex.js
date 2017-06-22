@@ -1049,7 +1049,7 @@ function prepareDemos () {
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@- start -"},
+          queryMap: "{FOCUS :status _}@- start -,\n<http://a.example/Patient2>@<http://a.example/ObservationShape>"},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
           queryMap: "<http://a.example/Obs1>@- start -"},
