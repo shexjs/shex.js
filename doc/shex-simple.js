@@ -4,10 +4,18 @@
 
 const USE_INCREMENTAL_RESULTS = true;
 const START_SHAPE_LABEL = "- start -";
-var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href; 
-var InputSchema = makeSchemaCache("#inputSchema textarea");
+var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
+var SchemaTextarea = $("#inputSchema textarea.schema");
+var InputSchema = makeSchemaCache("#inputSchema textarea.schema");
 var InputData = makeTurtleCache("#inputData textarea");
 var ShExRSchema; // defined below
+
+const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
+const uriOrKey = uri + "|FOCUS|_";
+const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
+                                uriOrKey+")?(\\s*)("+
+                                uri+")?(\\s*)("+
+                                uriOrKey+")?(\\s*)(})?(\\s*)$");
 
 // utility functions
 function parseTurtle (text, meta) {
@@ -430,7 +438,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
     // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     // removeNodeShapePair(null);
-    addNodeShapePair(null, dataTest.inputShapeMap); // add Map-test
+    parseQueryMap(dataTest.queryMap);
+    $("#textMap").val(dataTest.queryMap);
+    markEditMapClean();
     // validate();
   }
 }
@@ -489,7 +499,7 @@ function hasFocusNode () {
 
 function validate () {
   results.clear();
-  $(".pair").removeClass("passes").removeClass("fails");
+  $("#fixedMap .pair").removeClass("passes").removeClass("fails");
   $("#results .status").hide();
   var parsing = "input schema";
   try {
@@ -499,7 +509,7 @@ function validate () {
     if (dataText || hasFocusNode()) {
       parsing = "input data";
       InputData.refresh(); // for prefixes for getShapeMap
-      var shapeMap = shapeMapToTerms(parseUIShapeMap());
+      var fixedMap = fixedShapeMapToTerms(parseEditMap());
       $("#results .status").text("parsing data...").show();
 
       $("#results .status").text("creating validator...").show();
@@ -527,7 +537,7 @@ function validate () {
         ShExWorker.postMessage(Object.assign(
           {
             request: "validate",
-            queryMap: shapeMap,
+            queryMap: fixedMap,
             options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
           },
           ("endpoint" in InputData ?
@@ -619,8 +629,8 @@ function validate () {
     var fails = entry.status === "nonconformant";
     var klass = fails ? "fails" : "passes";
 
-    // update the QueryMap
-    $(".pair").filter((idx, elt) => {
+    // update the FixedMap
+    $("#fixedMap .pair").filter((idx, elt) => {
       return $(elt).attr("data-node") === entry.node &&
         $(elt).attr("data-shape") === entry.shape;
     }).addClass(klass);
@@ -671,40 +681,45 @@ function validate () {
 }
 
 function addNodeShapePair (evt, pairs) {
-  if (evt)
+  if (evt) {
     pairs = [{node: "", shape: ""}];
+    markEditMapDirty();
+  }
   pairs.forEach(pair => {
     var span = $("<li class='pair'/>");
     var focus = $("<input "+"' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
-                  "' class='data focus'/>");
+                  "' class='data focus'/>").
+        on("change", markEditMapDirty);
     var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
-                  "' class='schema inputShape context-menu-one btn btn-neutral'/>");
+                  "' class='schema inputShape context-menu-one btn btn-neutral'/>").
+        on("change", markEditMapDirty);
     var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
     var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
     add.on("click", addNodeShapePair);
     remove.on("click", removeNodeShapePair);
-    span.append(focus, " as ", shape, add, remove);
+    span.append(focus, "@", shape, add, remove);
     if (evt) {
       $(evt.target).parent().after(span);
     } else {
-      $("#shapeMap").append(span);
+      $("#editMap").append(span);
     }
   });
   if ($(".removePair").length === 1)
     $(".removePair").css("visibility", "hidden");
   else
     $(".removePair").css("visibility", "visible");
-  $(".pair").each(idx => {
-    addContextMenus(".pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
+  $("#editMap .pair").each(idx => {
+    addContextMenus("#editMap .pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
   });
   return false;
 }
 
 function removeNodeShapePair (evt) {
+  markEditMapDirty(); // should check evt target to only mark dirty if it's an editMap
   if (evt) {
     $(evt.target).parent().remove();
   } else {
-    $(".pair").remove();
+    $("#editMap .pair").remove();
   }
   if ($(".removePair").length === 1)
     $(".removePair").css("visibility", "hidden");
@@ -712,27 +727,106 @@ function removeNodeShapePair (evt) {
 }
 
 function prepareControls () {
-  $("#inputData .passes, #inputData .fails").hide();
-  $("#inputData .passes ul, #inputData .fails ul").empty();
+  // $("#inputData .passes, #inputData .fails").hide();
+  // $("#inputData .passes ul, #inputData .fails ul").empty();
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
 
-  $('#about-button').click(evt => {
-    $.blockUI({
-      message: $('#about'), css: {
-        width: "50%",
-        top: "5%",
-        left: "25%"
+  $("#loadForm").dialog({
+    autoOpen: false,
+    modal: true,
+    open: function (evt, ui) {
+      debugger;
+      console.dir(evt);
+    },
+    buttons: {
+      "GET": function (evt, ui) {
+        var url = $("#loadInput").val();
+        var tips = $(".validateTips");
+        function updateTips (t) {
+          tips
+            .text( t )
+            .addClass( "ui-state-highlight" );
+          setTimeout(function() {
+            tips.removeClass( "ui-state-highlight", 1500 );
+          }, 500 );
+        }
+        if (url.length < 5) {
+          $("#loadInput").addClass("ui-state-error");
+          updateTips("URL \"" + url + "\" is way too short.");
+          return;
+        }
+        tips.removeClass("ui-state-highlight").text();
+        $.ajax({
+          accepts: {
+            mycustomtype: 'text/shex,text/turtle,*/*'
+          },
+          url: url
+        }).fail(function( jqXHR, textStatus ) {
+          updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
+        }).done(function (data) {
+          if ($("#loadForm span").text() === "schema")
+            InputSchema.set(data);
+          else
+            InputData.set(data);
+          $("#loadForm").dialog("close");
+          toggleControls();
+        });
+      },
+      Cancel: function() {
+        $("#loadInput").removeClass("ui-state-error");
+        $("#loadForm").dialog("close");
+        toggleControls();
       }
-    });
-    $('#about').attr('title','Click to unblock').click(dismissAbout);
+    },
+    close: function() {
+      $("#loadInput").removeClass("ui-state-error");
+      $("#loadForm").dialog("close");
+      toggleControls();
+    }
   });
-  function dismissAbout (evt) {
-    $.unblockUI();
-    toggleControls(evt);
-    return false;
+  ["schema", "data"].forEach(type => {
+    $("#load-"+type+"-button").click(evt => {
+      $("#loadForm").attr("class", type).find("span").text(type);
+      $("#loadForm").dialog("open");
+      console.dir(type);
+    });
+  });
+
+  $("#about").dialog({
+    autoOpen: false,
+    modal: true,
+    width: "50%",
+    buttons: {
+      "Dismiss": dismissModal
+    },
+    close: dismissModal
+  });
+
+  $("#about-button").click(evt => {
+    $("#about").dialog("open");
+  });
+
+  $("#shapeMap-tabs").tabs({
+    activate: function (event, ui) {
+      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
+        deployEditMap();
+      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0))
+        parseEditMap();
+    }
+  });
+  $("#textMap").on("blur", evt => {
+    parseQueryMap($("#textMap").val());
+  });
+  $("#parseEditMap").on("click", parseEditMap); // may add this button to tutorial
+
+  function dismissModal (evt) {
+    // $.unblockUI();
+    $("#about").dialog("close");
+    toggleControls();
+    return true;
   }
 
   // Prepare file uploads
@@ -756,10 +850,10 @@ function prepareControls () {
 
 function toggleControls (evt) {
   $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
-  var hiding = $("#controls").css("display") === "flex";
-  $("#controls").css("display", hiding ? "none" : "flex");
-  toggleControlsArrow(hiding ? "down" : "up");
-  if (!hiding) {
+  var revealing = evt && $("#controls").css("display") !== "flex";
+  $("#controls").css("display", revealing ? "flex" : "none");
+  toggleControlsArrow(revealing ? "up" : "down");
+  if (revealing) {
     var target = evt.target;
     while (target.tagName !== "BUTTON")
       target = target.parentElement;
@@ -780,6 +874,8 @@ function toggleControls (evt) {
 
 function toggleControlsArrow (which) {
   // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
+  if (document.getElementById("menu-button") === null)
+    return;
   var down = $(document.getElementById("menu-button").
                querySelectorAll('use[*|href="#down-arrow"]'));
   var up = $(document.getElementById("menu-button").
@@ -820,62 +916,82 @@ var parseQueryString = function(query) {
   return map;
 };
 
+function markEditMapDirty (status) {
+  $("#editMap").attr("data-dirty", true);
+}
+
+function markEditMapClean () {
+  $("#editMap").attr("data-dirty", false);
+}
+
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
  */
-function parseUIShapeMap () {
-  var mapAndErrors = $(".pair").get().reduce((acc, pair) => {
-    var node = $(pair).find(".focus").val();
-    var shape = $(pair).find(".inputShape").val();
-    $(pair).attr("data-node", InputData.meta.lexToTerm(node));
-    $(pair).attr("data-shape", InputSchema.meta.lexToTerm(shape));
-    if (node && shape)
-      acc.shapeMap.push({node: node, shape: shape});
+function parseEditMap () {
+  $("#fixedMap").empty();
+  var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
+    var nodeSelector = $(queryPair).find(".focus").val();
+    var shape = $(queryPair).find(".inputShape").val();
+    if (!nodeSelector || !shape)
+      return acc;
+    var m = nodeSelector.match(ParseTriplePattern);
+    var nodes = m ? getTriples (m[2], m[4], m[6]) : [nodeSelector];
+    nodes.forEach(node => {
+      var nodeTerm = InputData.meta.lexToTerm(node);
+      var shapeTerm = InputSchema.meta.lexToTerm(shape);
+      if ($("#fixedMap li[data-node='"+nodeTerm+"'][data-shape='"+shapeTerm+"']").length === 0) {
+        acc.shapeMap.push({node: node, shape: shape});
+        var span = $("<li class='pair'"+
+                     " data-node='"+nodeTerm+"'"+
+                     " data-shape='"+shapeTerm+"'/>");
+        var focusElt = $("<input "+"' type='text' value='"+node.replace(/['"]/g, "&quot;")+
+                         "' class='data focus'/>");
+        var shapeElt = $("<input "+"' type='text' value='"+shape.replace(/['"]/g, "&quot;")+
+                         "' class='schema inputShape context-menu-one btn btn-neutral'/>");
+        // var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
+        var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
+        // add.on("click", addNodeShapePair);
+        remove.on("click", removeNodeShapePair);
+        span.append(focusElt, "@", shapeElt, /* add, */ remove);
+        $("#fixedMap").append(span);
+      }
+    });
     return acc;
-
-    // var node = "node-type" in iface ?
-    //       ShEx.Util.someNodeWithType(
-    //         ShEx.Util.parsePassedNode(iface["node-type"], {prefixes: {}, base: null}, null,
-    //                                  label => {
-    //                                    return (data.refresh().
-    //                                            getTriplesByIRI(null, RDF_TYPE, label).length > 0);
-    //                                  },
-    //                                  loaded.data.prefixes)) :
-    //     ShEx.Util.parsePassedNode($(n).val(), data ? data.meta : {}, () => {
-    //       var triples = data.refresh().getTriplesByIRI(null, null, null);
-    //       return triples.length > 0 ? triples[0].subject : ShEx.Util.NotSupplied;
-    //     },
-    //                              label => {
-    //                                return (data.refresh().getTriplesByIRI(label, null, null).length > 0 ||
-    //                                        data.refresh().getTriplesByIRI(null, null, label).length > 0);
-    //                              });
-
-    // if (node === ShEx.Util.UnknownIRI)
-    //   node = $(n).val();
-    // else if (node === ShEx.Util.NotSupplied)
-    //   ret.errors.push("node not found: " + $(n).val());
-    // var shape = $(shapes[i]).val() === "- start -" ? "- start -" :
-    //       ShEx.Util.parsePassedNode($(shapes[i]).val(), schema.meta, () => { Object.keys(schema.refresh().shapes)[0]; },
-    //                                (label) => {
-    //                                  return label in schema.refresh().shapes;
-    //                                });
-    // if (shape === ShEx.Util.NotSupplied || shape === ShEx.Util.UnknownIRI)
-    //   throw Error("shape " + $(shapes[i]).val() + " not defined");
-    // if (!shape)
-    //   ret.errors.push("shape not found: " + $(shapes[i]).val());
-    // if (node && shape)
-    //   ret.shapeMap.push({node: node, shape: shape});
-    // return ret;
   }, {shapeMap: [], errors: []});
+
   if (mapAndErrors.errors.length) // !! overwritten immediately
     results.append(mapAndErrors.errors.join("\n"));
   return mapAndErrors.shapeMap;
+
+  function getTriples (s, p, o) {
+    var get = s === "FOCUS" ? "subject" : "object";
+    return InputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+      return InputData.meta.termToLex(t[get]);
+    });
+    function mine (term) {
+      return term === "FOCUS" || term === "_" ? null : InputData.meta.lexToTerm(term);
+    }
+  }
 }
 
-/** shapeMapToTerms -- map ShapeMap to API terms
+function deployEditMap () {
+  if ($("#editMap").attr("data-dirty") === "true") {
+    var text = $("#editMap .pair").get().reduce((acc, queryPair) => {
+      var nodeSelector = $(queryPair).find(".focus").val();
+      var shape = $(queryPair).find(".inputShape").val();
+      if (!nodeSelector || !shape)
+        return acc;
+      return acc.concat([nodeSelector+"@"+shape]);
+    }, []).join(",\n");
+    $("#textMap").empty().val(text);
+    markEditMapClean();
+  }
+}
+
+/** fixedShapeMapToTerms -- map ShapeMap to API terms
  * @@TODO: add to ShExValidator so API accepts ShapeMap
  */
-function shapeMapToTerms (shapeMap) {
+function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
     return {node: InputData.meta.lexToTerm(pair.node),
             shape: InputSchema.meta.lexToTerm(pair.shape)};
@@ -883,52 +999,33 @@ function shapeMapToTerms (shapeMap) {
 }
 
 var iface = null; // needed by validate before prepareInterface returns.
-var QueryParams = [{queryStringParm: "schema", location: $("#inputSchema textarea")},
-                   {queryStringParm: "data", location: $("#inputData textarea")}];
+var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea},
+                   {queryStringParm: "data", location: $("#inputData textarea")},
+                   {queryStringParam: "shape-map", location: $("#textMap")}];
 
 /**
  * Load URL search parameters
  */
 function prepareInterface () {
   // don't overwrite if we arrived here from going back for forth in history
-  if ($("#inputSchema textarea").val() !== "" || $("#inputData textarea").val() !== "")
+  if (SchemaTextarea.val() !== "" || $("#inputData textarea").val() !== "")
     return;
 
   iface = parseQueryString(location.search);
-  if ("shape-map" in iface)
-    parseShapeMap("shape-map");
-  else
+  if ("shape-map" in iface) {
+    parseQueryMap(iface["shape-map"].
+                  filter(s => { return s.length > 0; }).
+                  join(","));
+    delete iface["shape-map"];
+  } else
     addNodeShapePair(null, [{node: "", shape: ""}]);
+  markEditMapClean();
 
   toggleControlsArrow("down");
   if ("interface" in iface)
     iface.interface = iface.interface[0];
   else
     iface.interface = "human";
-
-  function parseShapeMap (queryParm) {
-    var shapeMap =  iface[queryParm];
-    delete iface[queryParm];
-    //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
-    var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
-    var pairPattern = s + "@" + s + ",?";
-    iface.shapeMap = shapeMap.reduce(
-      (r, b) => {
-        // e.g.: b = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-        var pairs = (b + ",").match(/([^,\\]|\\.)+,/g).
-              map(s => s.substr(0, s.length-1)); // trim ','s
-        pairs.forEach(r2 => {
-          var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
-          if (m) {
-            var node = m[1] || "";
-            var shape = m[2] || "";
-            r[node] = node in r ? r[node].concat(shape) : [shape];
-            addNodeShapePair(null, [{node: node, shape: shape}]);
-          }
-        });
-        return r;
-      }, {});
-  }
 
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
@@ -943,9 +1040,30 @@ function prepareInterface () {
   }, 0)) {
     validate();
   }
-  // old hack for permalink
-  $("#inputSchema textarea").prev().add("#title").on("click", evt => {
-    window.history.pushState(null, null, getPermalink());
+  // // old hack for permalink
+  // SchemaTextarea.prev().add("#title").on("click", evt => {
+  //   window.history.pushState(null, null, getPermalink());
+  // });
+}
+
+/** parseQueryMap - parse a supplied query map and build #editMap
+ */
+function parseQueryMap (shapeMap) {
+  $("#editMap").empty();
+  //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
+  var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
+  var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
+  // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
+  var pairs = (shapeMap + ",").match(/([^,\\]|\\.)+,/g).
+      map(s => s.substr(0, s.length-1)); // trim ','s
+
+  pairs.forEach(r2 => {
+    var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
+    if (m) {
+      var node = m[1] || "";
+      var shape = m[2] || "";
+      addNodeShapePair(null, [{node: node, shape: shape}]);
+    }
   });
 }
 
@@ -956,14 +1074,18 @@ function prepareInterface () {
     var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface);
-    var pairs = $(".pair");
-    if (pairs.length > 0) {
-      parms.push("shape-map=" + pairs.map((idx, elt) => {
-        var node = $(elt).find(".focus").val();
-        var shape = $(elt).find(".inputShape").val();
-        return [encodeURIComponent(node + "@" + shape)];
-      }).get().join(encodeURIComponent(",")));
-    }
+    deployEditMap();
+    var m = $("#textMap").val();
+    if (m)
+      parms.push("shape-map="+encodeURIComponent(iface));
+    // var pairs = $("#queryMap .pair");
+    // if (pairs.length > 0) {
+    //   parms.push("shape-map=" + pairs.map((idx, elt) => {
+    //     var node = $(elt).find(".focus").val();
+    //     var shape = $(elt).find(".inputShape").val();
+    //     return [encodeURIComponent(node + "@" + shape)];
+    //   }).get().join(encodeURIComponent(",")));
+    // }
     parms = parms.concat(QueryParams.map(input => {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
@@ -998,7 +1120,7 @@ function customizeInterface () {
  * Prepare drag and drop into text areas
  */
 function prepareDragAndDrop () {
-  var _scma = $("#inputSchema textarea");
+  var _scma = SchemaTextarea;
   var _data = $("#inputData textarea");
   var _body = $("body");
   [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
@@ -1054,62 +1176,9 @@ function prepareDragAndDrop () {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-var clinicalObs = {};
-var wikidataItem = {};
 function prepareDemos () {
-  var demos = {
-    "clinical observation": {
-      schema: clinicalObs.schema,
-      passes: {
-        "with birthdate": {
-          data: clinicalObs.with_birthdate,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -"}]},
-        "without birthdate": {
-          data: clinicalObs.without_birthdate,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
-        "no subject name": {
-          data: clinicalObs.no_subject_name,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]}
-      },
-      fails: {
-        "bad status": {
-          data: clinicalObs.bad_status,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
-        "no subject": {
-          data: clinicalObs.no_subject,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]},
-        "wrong birthdate datatype": {
-          data: clinicalObs.birthdate_datatype,
-          inputShapeMap: [{
-            node: "<http://a.example/Obs1>",
-            shape: "- start -" }]}
-      }
-    },
-    "Each Wikidata item on Cancer should have a NCI Thesaurus ID": {
-      schema: wikidataItem.schema,
-      passes: {
-        "Get all Wikidata items on Cancers (SPARQL)": {
-          data: wikidataItem.cats,
-          inputShapeMap: [{
-            node: "- click to resolve -",
-            shape: "- start -"}]}
-      },
-      fails: {
-      }
-    }
-  };
   var listItems = {inputSchema:{}, inputData:{}};
-  load("#inputSchema .examples ul", demos, pickSchema,
+  load("#inputSchema .examples ul", Demos, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
@@ -1134,7 +1203,7 @@ function prepareDemos () {
       return false; // same as e.preventDefault();
     }
   });
-  $("#inputSchema textarea").keyup(function (e) { // keyup to capture backspace
+  SchemaTextarea.keyup(function (e) { // keyup to capture backspace
     var code = e.keyCode || e.charCode;
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputSchema", InputSchema);
@@ -1146,12 +1215,15 @@ function prepareDemos () {
   });
   addContextMenus("#focus0", "#inputShape0");
 }
+
 function addContextMenus (nodeSelector, shapeSelector) {
   [ { inputSelector: nodeSelector,
       getItems: function () { return InputData.getNodes(); } },
     { inputSelector: shapeSelector,
       getItems: function () { return InputSchema.getShapes(); } }
   ].forEach(entry => {
+    // !!! terribly stateful; only one context menu at a time!
+    var terms = null, v = null, target, scrollLeft, m, addSpace = "";
     $.contextMenu({
       selector: entry.inputSelector,
       callback: function (key, options) {
@@ -1162,11 +1234,68 @@ function addContextMenus (nodeSelector, shapeSelector) {
           $(options.selector).val(toAdd.shift());
           var shape = $(options.selector.replace(/focus/, "inputShape")).val();
           addNodeShapePair(null, toAdd.map(node => { return {node: node, shape: shape}; }));
+        } else if (terms) {
+          var term = terms.tz[terms.match];
+          var val = v.substr(0, term[0]) +
+              key + addSpace +
+              v.substr(term[0] + term[1]);
+          if (terms.match === 2 && !m[8])
+            val = val + "}";
+          else if (term[0] + term[1] === v.length)
+            val = val + " ";
+          $(options.selector).val(val);
+          // target.scrollLeft = scrollLeft + val.length - v.length;
+          target.scrollLeft = target.scrollWidth;
         } else {
           $(options.selector).val(key);
         }
       },
-      build: function (elt, e) {
+      build: function (elt, evt) {
+        if (elt.hasClass("data")) {
+          v = elt.val();
+          m = v.match(ParseTriplePattern);
+          if (m) {
+            target = evt.target;
+            var selStart = target.selectionStart;
+            scrollLeft = target.scrollLeft;
+            terms = [0, 1, 2].reduce((acc, ord) => {
+              if (m[(ord+1)*2-1] !== undefined) {
+                var at = acc.start + m[(ord+1)*2-1].length;
+                var len = m[(ord+1)*2] ? m[(ord+1)*2].length : 0;
+                return {
+                  start: at + len,
+                  tz: acc.tz.concat([[at, len]]),
+                  match: acc.match === null && at + len >= selStart ?
+                    ord :
+                    acc.match
+                };
+              } else {
+                return acc;
+              }
+            }, {start: 0, tz: [], match: null });
+            function norm (tz) {
+              return tz.map(t => {
+                return InputData.meta.termToLex(t);
+              });
+            }
+            const getTermsFunctions = [
+              () => { return ["FOCUS", "_"].concat(norm(store.getSubjects())); },
+              () => { return norm(store.getPredicates()); },
+              () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
+            ];
+            var store = InputData.refresh();
+            var items = getTermsFunctions[terms.match]();
+            return {
+              items:
+              items.reduce((ret, opt) => {
+                ret[opt] = { name: opt };
+                return ret;
+              }, {})
+            };
+            
+          }
+        }
+        terms = v = null;
         return {
           items:
           entry.getItems().reduce((ret, opt) => {
@@ -1178,285 +1307,6 @@ function addContextMenus (nodeSelector, shapeSelector) {
     });
   });
 }
-
-// Large constants with demo data which break syntax highlighting:
-clinicalObs.schema = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-start = @<ObservationShape>
-
-<ObservationShape> {               # An Observation has:
-  :status ["preliminary" "final"]; #   status in this value set
-  :subject @<PatientShape>         #   a subject matching <PatientShape>.
-}
-
-<PatientShape> {                   # A Patient has:
- :name xsd:string*;                #   one or more names
- :birthdate xsd:date?              #   and an optional birthdate.
-}
-`;
-clinicalObs.with_birthdate = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs.no_subject_name = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :birthdate "1999-12-31"^^xsd:date .`;
-clinicalObs.without_birthdate = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "preliminary" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" .`;
-clinicalObs.bad_status = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "finally" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .
-
-`;
-clinicalObs.no_subject = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31"^^xsd:date .
-
-`;
-clinicalObs.birthdate_datatype = `PREFIX : <http://hl7.org/fhir/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-
-<Obs1>
-  :status    "final" ;
-  :subject   <Patient2> .
-
-<Patient2>
-  :name "Bob" ;
-  :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
-
-wikidataItem.schema = `PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX p: <http://www.wikidata.org/prop/>
-PREFIX pr: <http://www.wikidata.org/prop/reference/>
-PREFIX ps: <http://www.wikidata.org/prop/statement/>
-
-start = @<wikidata_item>
-
-<wikidata_item> {
-  p:P1748 {
-    ps:P1748 LITERAL ;
-    prov:wasDerivedFrom @<reference>
-  }+
-}
-
-<reference> {
-  pr:P248  IRI ;
-  pr:P813  xsd:dateTime ;
-  pr:P699  LITERAL
-}
-`;
-
-wikidataItem.cats = `
-Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql
-
-Query: SELECT ?item ?itemLabel
-WHERE
-{ ?item wdt:P279* wd:Q12078 .
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
-} LIMIT 10
-`;
-
-ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-BASE <http://www.w3.org/ns/shex#>
-start=@<Schema>
-
-<Schema> CLOSED {
-  a [sx:Schema] ;
-  sx:startActs @<SemActList1Plus>? ;
-  sx:start @<shapeExpr>?;
-  sx:shapes @<shapeExpr>*
-}
-
-<shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
-
-<ShapeOr> CLOSED {
-  a [sx:ShapeOr] ;
-  sx:shapeExprs @<shapeExprList2Plus>
-}
-
-<ShapeAnd> CLOSED {
-  a [sx:ShapeAnd] ;
-  sx:shapeExprs @<shapeExprList2Plus>
-}
-
-<ShapeNot> CLOSED {
-  a [sx:ShapeNot] ;
-  sx:shapeExpr @<shapeExpr>
-}
-
-<NodeConstraint> CLOSED {
-  a [sx:NodeConstraint] ;
-  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]?;
-  sx:datatype IRI ? ;
-  &<xsFacets>  ;
-  sx:values @<valueSetValueList1Plus>?
-}
-
-<Shape> CLOSED {
-  a [sx:Shape] ;
-  sx:closed [true false]? ;
-  sx:extra IRI* ;
-  sx:expression @<tripleExpression>? ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>* ;
-}
-
-<ShapeExternal> CLOSED {
-  a [sx:ShapeExternal] ;
-}
-
-<SemAct> CLOSED {
-  a [sx:SemAct] ;
-  sx:name IRI ;
-  sx:code xsd:string?
-}
-
-<Annotation> CLOSED {
-  a [sx:Annotation] ;
-  sx:predicate IRI ;
-  sx:object @<objectValue>
-}
-
-# <xsFacet> @<stringFacet> OR @<numericFacet>
-<facet_holder> { # hold labeled productions
-  $<xsFacets> ( &<stringFacet> | &<numericFacet> )* ;
-  $<stringFacet> (
-      sx:length xsd:integer
-    | sx:minlength xsd:integer
-    | sx:maxlength xsd:integer
-    | sx:pattern xsd:string ; sx:flags xsd:string?
-  );
-  $<numericFacet> (
-      sx:mininclusive   @<numericLiteral>
-    | sx:minexclusive   @<numericLiteral>
-    | sx:maxinclusive   @<numericLiteral>
-    | sx:maxexclusive   @<numericLiteral>
-    | sx:totaldigits    xsd:integer
-    | sx:fractiondigits xsd:integer
-  )
-}
-<numericLiteral> xsd:integer OR xsd:decimal OR xsd:double
-
-<valueSetValue> @<objectValue> OR @<IriStem> OR @<IriStemRange>
-                               OR @<LiteralStem> OR @<LiteralStemRange>
-                               OR @<LanguageStem> OR @<LanguageStemRange>
-<objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
-<IriStem> CLOSED { a [sx:IriStem]; sx:stem xsd:string }
-<IriStemRange> CLOSED {
-  a [sx:IriStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<IriStem>*
-}
-<LiteralStem> CLOSED { a [sx:LiteralStem]; sx:stem xsd:string }
-<LiteralStemRange> CLOSED {
-  a [sx:LiteralStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<LiteralStem>*
-}
-<LanguageStem> CLOSED { a [sx:LanguageStem]; sx:stem xsd:string }
-<LanguageStemRange> CLOSED {
-  a [sx:LanguageStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<LanguageStem>*
-}
-<Wildcard> BNODE CLOSED {
-  a [sx:Wildcard]
-}
-
-<tripleExpression> @<TripleConstraint> OR @<OneOf> OR @<EachOf>
-
-<OneOf> CLOSED {
-  a [sx:OneOf] ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
-  sx:expressions @<tripleExpressionList2Plus> ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
-}
-
-<EachOf> CLOSED {
-  a [sx:EachOf] ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
-  sx:expressions @<tripleExpressionList2Plus> ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
-}
-
-<tripleExpressionList2Plus> CLOSED {
-  rdf:first @<tripleExpression> ;
-  rdf:rest @<tripleExpressionList1Plus>
-}
-<tripleExpressionList1Plus> CLOSED {
-  rdf:first @<tripleExpression> ;
-  rdf:rest  [rdf:nil] OR @<tripleExpressionList1Plus>
-}
-
-<TripleConstraint> CLOSED {
-  a [sx:TripleConstraint] ;
-  sx:inverse [true false]? ;
-  sx:negated [true false]? ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
-  sx:predicate IRI ;
-  sx:valueExpr @<shapeExpr>? ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
-}
-
-<SemActList1Plus> CLOSED {
-  rdf:first @<SemAct> ;
-  rdf:rest  [rdf:nil] OR @<SemActList1Plus>
-}
-
-<shapeExprList2Plus> CLOSED {
-  rdf:first @<shapeExpr> ;
-  rdf:rest  @<shapeExprList1Plus>
-}
-<shapeExprList1Plus> CLOSED {
-  rdf:first @<shapeExpr> ;
-  rdf:rest  [rdf:nil] OR @<shapeExprList1Plus>
-}
-
-<valueSetValueList1Plus> CLOSED {
-  rdf:first @<valueSetValue> ;
-  rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
-}`;
 
 prepareControls();
 prepareInterface();
