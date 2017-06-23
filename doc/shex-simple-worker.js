@@ -2,18 +2,7 @@
 // importScripts('require.js');
 // //var process = {env:{}};
 // importScripts('../lib/ShExValidator.js');
-importScripts("require.js");
-importScripts("https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"); modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;
-importScripts("https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"); modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;
-importScripts("https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"); modules["n3"]["Parser"] = N3Parser = module.exports;
-importScripts("https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"); modules["n3"]["Store"] = N3Store = module.exports;
-importScripts("../lib/ShExUtil.js"); modules["./ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;
-importScripts("../lib/ShExJison.js");
-importScripts("../lib/ShExParser.js");
-importScripts("../lib/ShExWriter.js");
-importScripts("../lib/regex/threaded-val-nerr.js"); modules["../lib/regex/threaded-val-nerr"] = module.exports;
-importScripts("../lib/regex/nfax-val-1err.js"); modules["../lib/regex/nfax-val-1err"] = module.exports;
-importScripts("../lib/ShExValidator.js"); ShExValidator = module.exports;
+importScripts("../browser/shex-browserify.js");
 importScripts("Util.js");
 
 var validator = null;
@@ -24,7 +13,7 @@ onmessage = function (msg) {
     if ("regexModule" in options)
       options.regexModule = modules[options.regexModule];
     options = Object.create({ results: "api" }, options); // default to API results
-    validator = ShExValidator.construct(msg.data.schema, options);
+    validator = ShEx.Validator.construct(msg.data.schema, options);
     postMessage({ response: "created" });
     break;
 
@@ -64,7 +53,7 @@ onmessage = function (msg) {
 }
 
 function makeStaticDB (triples) {
-  var ret = N3Store();
+  var ret = ShEx.N3.Store();
   ret.addTriples(triples);
   return ret;
 }
