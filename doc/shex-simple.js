@@ -864,7 +864,7 @@ function fixedShapeMapToTerms (shapeMap) {
 var iface = null; // needed by validate before prepareInterface returns.
 var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea},
                    {queryStringParm: "data", location: $("#inputData textarea")},
-                   {queryStringParam: "shape-map", location: $("#textMap")}];
+                   {queryStringParm: "shape-map", location: $("#textMap")}];
 
 /**
  * Load URL search parameters
@@ -879,7 +879,6 @@ function prepareInterface () {
     parseQueryMap(iface["shape-map"].
                   filter(s => { return s.length > 0; }).
                   join(","));
-    delete iface["shape-map"];
   } else
     addNodeShapePair(null, [{node: "", shape: ""}]);
   markEditMapClean();
@@ -914,6 +913,10 @@ function prepareInterface () {
 function parseQueryMap (shapeMap) {
   $("#editMap").empty();
   //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
+  if (shapeMap.trim() === "") {
+    addNodeShapePair(null, [{node: "", shape: ""}]);
+    return;
+  }
   var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
   var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
   // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
@@ -938,17 +941,6 @@ function parseQueryMap (shapeMap) {
     if (iface.interface)
       parms.push("interface="+iface.interface);
     deployEditMap();
-    var m = $("#textMap").val();
-    if (m)
-      parms.push("shape-map="+encodeURIComponent(iface));
-    // var pairs = $("#queryMap .pair");
-    // if (pairs.length > 0) {
-    //   parms.push("shape-map=" + pairs.map((idx, elt) => {
-    //     var node = $(elt).find(".focus").val();
-    //     var shape = $(elt).find(".inputShape").val();
-    //     return [encodeURIComponent(node + "@" + shape)];
-    //   }).get().join(encodeURIComponent(",")));
-    // }
     parms = parms.concat(QueryParams.map(input => {
       var parm = input.queryStringParm;
       return parm + "=" + encodeURIComponent(input.location.val());
