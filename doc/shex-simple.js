@@ -779,7 +779,7 @@ var parseQueryString = function(query) {
   return map;
 };
 
-function markEditMapDirty (status) {
+function markEditMapDirty () {
   $("#editMap").attr("data-dirty", true);
 }
 
@@ -1090,6 +1090,7 @@ function addContextMenus (nodeSelector, shapeSelector) {
     $.contextMenu({
       selector: entry.inputSelector,
       callback: function (key, options) {
+        markEditMapDirty();
         if (terms) {
           var term = terms.tz[terms.match];
           var val = v.substr(0, term[0]) +
