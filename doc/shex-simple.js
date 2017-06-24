@@ -425,12 +425,12 @@ function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
   try {
-    InputSchema.refresh();
+    noStack(() => { InputSchema.refresh(); });
     $("#schemaDialect").text(InputSchema.language);
     var dataText = InputData.get();
     if (dataText || hasFocusNode()) {
       parsing = "input data";
-      InputData.refresh(); // for prefixes for getShapeMap
+      noStack(() => { InputData.refresh(); }); // for prefixes for getShapeMap
       var fixedMap = fixedShapeMapToTerms(parseEditMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
@@ -483,6 +483,16 @@ function validate () {
         results.append(pre);
       }
       results.finish();
+    }
+
+    function noStack (f) {
+      try {
+        f();
+      } catch (e) {
+        // The Parser error stack is uninteresting.
+        delete e.stack;
+        throw e;
+      }
     }
   } catch (e) {
     results.replace("error parsing " + parsing + ":\n").addClass("error").
