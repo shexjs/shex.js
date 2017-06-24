@@ -494,10 +494,9 @@ function validate () {
     var klass = fails ? "fails" : "passes";
 
     // update the FixedMap
-    $("#fixedMap .pair").filter((idx, elt) => {
-      return $(elt).attr("data-node") === entry.node &&
-        $(elt).attr("data-shape") === entry.shape;
-    }).addClass(klass);
+    $("#fixedMap .pair"+
+      "[data-node='"+entry.node+"']"+
+      "[data-shape='"+entry.shape+"']").addClass(klass);
 
     switch (iface.interface) {
     case "human":
@@ -676,6 +675,7 @@ function prepareControls () {
     activate: function (event, ui) {
       if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
         deployEditMap();
+      // @@ bug: should only overwrite fixedMap if something was dirty.
       if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0))
         parseEditMap();
     }
