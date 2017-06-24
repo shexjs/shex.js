@@ -4126,6 +4126,12 @@ var ShExUtil = {
             return ret.concat("  " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+    } else if (val.type === "ShapeOrFailure") {
+      return val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
+          }, []) :
+          " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
     } else if (val.type === "ExcessTripleViolation") {
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
     } else if (val.type === "ClosedShapeViolation") {
