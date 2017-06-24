@@ -558,28 +558,38 @@ function addNodeShapePair (evt, pairs) {
     markEditMapDirty();
   }
   pairs.forEach(pair => {
-    var span = $("<li class='pair'/>");
-    var focus = $("<input "+"' type='text' value='"+pair.node.replace(/['"]/g, "&quot;")+
-                  "' class='data focus'/>").
-        on("change", markEditMapDirty);
-    var shape = $("<input "+"' type='text' value='"+pair.shape.replace(/['"]/g, "&quot;")+
-                  "' class='schema inputShape context-menu-one btn btn-neutral'/>").
-        on("change", markEditMapDirty);
-    var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
-    var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
-    add.on("click", addNodeShapePair);
-    remove.on("click", removeNodeShapePair);
-    span.append(focus, "@", shape, add, remove);
+    var spanElt = $("<tr/>", {class: "pair"});
+    var focusElt = $("<input/>", {
+      type: 'text',
+      value: pair.node,
+      class: 'data focus'
+    }).on("change", markEditMapDirty);
+    var shapeElt = $("<input/>", {
+      type: 'text',
+      value: pair.shape,
+      class: 'schema inputShape'
+    }).on("change", markEditMapDirty);
+    var addElt = $("<button/>", {
+      class: "addPair",
+      title: "add a node/shape pair"}).text("+");
+    var removeElt = $("<button/>", {
+      class: "removePair",
+      title: "remove this node/shape pair"}).text("-");
+    addElt.on("click", addNodeShapePair);
+    removeElt.on("click", removeNodeShapePair);
+    spanElt.append([focusElt, "@", shapeElt, addElt, removeElt].map(elt => {
+      return $("<td/>").append(elt);
+    }));
     if (evt) {
-      $(evt.target).parent().after(span);
+      $(evt.target).parent().parent().after(spanElt);
     } else {
-      $("#editMap").append(span);
+      $("#editMap").append(spanElt);
     }
   });
-  if ($(".removePair").length === 1)
-    $(".removePair").css("visibility", "hidden");
+  if ($("#editMap .removePair").length === 1)
+    $("#editMap .removePair").css("visibility", "hidden");
   else
-    $(".removePair").css("visibility", "visible");
+    $("#editMap .removePair").css("visibility", "visible");
   $("#editMap .pair").each(idx => {
     addContextMenus("#editMap .pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape");
   });
@@ -589,12 +599,12 @@ function addNodeShapePair (evt, pairs) {
 function removeNodeShapePair (evt) {
   markEditMapDirty(); // should check evt target to only mark dirty if it's an editMap
   if (evt) {
-    $(evt.target).parent().remove();
+    $(evt.target).parent().parent().remove();
   } else {
     $("#editMap .pair").remove();
   }
-  if ($(".removePair").length === 1)
-    $(".removePair").css("visibility", "hidden");
+  if ($("#editMap .removePair").length === 1)
+    $("#editMap .removePair").css("visibility", "hidden");
   return false;
 }
 
@@ -814,19 +824,33 @@ function parseEditMap () {
       var shapeTerm = InputSchema.meta.lexToTerm(shape);
       if ($("#fixedMap li[data-node='"+nodeTerm+"'][data-shape='"+shapeTerm+"']").length === 0) {
         acc.shapeMap.push({node: node, shape: shape});
-        var span = $("<li class='pair'"+
-                     " data-node='"+nodeTerm+"'"+
-                     " data-shape='"+shapeTerm+"'/>");
-        var focusElt = $("<input "+"' type='text' value='"+node.replace(/['"]/g, "&quot;")+
-                         "' class='data focus'/>");
-        var shapeElt = $("<input "+"' type='text' value='"+shape.replace(/['"]/g, "&quot;")+
-                         "' class='schema inputShape context-menu-one btn btn-neutral'/>");
-        // var add = $('<button class="addPair" title="add a node/shape pair">+</button>');
-        var remove = $('<button class="removePair" title="remove this node/shape pair">-</button>');
-        // add.on("click", addNodeShapePair);
-        remove.on("click", removeNodeShapePair);
-        span.append(focusElt, "@", shapeElt, /* add, */ remove);
-        $("#fixedMap").append(span);
+
+    var spanElt = $("<tr/>", {class: "pair"
+                              ,"data-node": nodeTerm
+                              ,"data-shape": shapeTerm
+                             });
+    var focusElt = $("<input/>", {
+      type: 'text',
+      value: nodeTerm,
+      class: 'data focus',
+      disabled: "disabled"
+    }).on("change", markEditMapDirty);
+    var shapeElt = $("<input/>", {
+      type: 'text',
+      value: shapeTerm,
+      class: 'schema inputShape',
+      disabled: "disabled"
+    }).on("change", markEditMapDirty);
+    var removeElt = $("<button/>", {
+      class: "removePair",
+      title: "remove this node/shape pair"}).text("-");
+    removeElt.on("click", evt => {
+      $(evt.target).closest("tr").remove();
+    });
+    spanElt.append([focusElt, "@", shapeElt, removeElt].map(elt => {
+      return $("<td/>").append(elt);
+    }));
+        $("#fixedMap").append(spanElt);
       }
     });
     return acc;
