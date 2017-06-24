@@ -431,6 +431,7 @@ function validate () {
     if (dataText || hasFocusNode()) {
       parsing = "input data";
       noStack(() => { InputData.refresh(); }); // for prefixes for getShapeMap
+      // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms(parseEditMap());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
@@ -852,6 +853,10 @@ function parseEditMap () {
     }));
         $("#fixedMap").append(spanElt);
       }
+    });
+    // scroll inputs to right
+    $("#fixedMap input").each((idx, focusElt) => {
+      focusElt.scrollLeft = focusElt.scrollWidth;
     });
     return acc;
   }, {shapeMap: [], errors: []});
