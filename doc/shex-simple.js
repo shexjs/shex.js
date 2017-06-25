@@ -419,7 +419,7 @@ function hasFocusNode () {
 
 function validate () {
   results.clear();
-  $("#fixedMap .pair").removeClass("passes").removeClass("fails");
+  $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   var parsing = "input schema";
   try {
@@ -430,7 +430,12 @@ function validate () {
       parsing = "input data";
       noStack(() => { InputData.refresh(); }); // for prefixes for getShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
-      var fixedMap = fixedShapeMapToTerms(parseEditMap());
+      var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
+        return {
+          node: $(tr).find("input.focus").val(),
+          shape: $(tr).find("input.inputShape").val()
+        };
+      }).get());
       $("#results .status").text("parsing data...").show();
       var inputData = InputData.refresh();
 
@@ -501,30 +506,40 @@ function validate () {
   function renderEntry (entry) {
     var fails = entry.status === "nonconformant";
     var klass = fails ? "fails" : "passes";
-
-    // update the FixedMap
-    $("#fixedMap .pair"+
-      "[data-node='"+entry.node+"']"+
-      "[data-shape='"+entry.shape+"']").addClass(klass);
+    var resultStr = fails ? "✗" : "✓";
+    var elt = null;
 
     switch (iface.interface) {
     case "human":
-      var elt = $("<div class='human'/>").text(
+      elt = $("<div class='human'/>").append(
+        $("<span/>").text(resultStr),
+        $("<span/>").text(
         `${InputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${InputData.meta.termToLex(entry.shape)}`
-      ).addClass(klass);
+        )).addClass(klass);
       if (fails)
         elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
-      results.append(elt);
       break;
+
     case "minimal":
       if (fails)
         entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
       delete entry.appinfo;
       // fall through to default
     default:
-      results.append($("<pre/>").text(JSON.stringify(entry, null, "  ")).
-                     addClass(klass));
+      elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
     }
+    results.append(elt);
+
+    // update the FixedMap
+    var fixedMapEntry = $("#fixedMap .pair"+
+                          "[data-node='"+entry.node+"']"+
+                          "[data-shape='"+entry.shape+"']");
+    fixedMapEntry.addClass(klass).find("a").text(resultStr);
+    var nodeLex = fixedMapEntry.find("input.focus").val();
+    var shapeLex = fixedMapEntry.find("input.inputShape").val();
+    var anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
+    elt.attr("id", anchor);
+    fixedMapEntry.find("a").attr("href", "#" + anchor);
   }
 
   function finishRendering () {
@@ -692,15 +707,15 @@ function prepareControls () {
     activate: function (event, ui) {
       if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
         copyEditMapToTextMap();
-      // @@ bug: should only overwrite fixedMap if something was dirty.
-      if (ui.newPanel.get(0) === $("#fixedMap-tab").get(0))
-        parseEditMap();
     }
   });
   $("#textMap").on("change", evt => {
     copyTextMapToEditMap();
   });
-  $("#parseEditMap").on("click", parseEditMap); // may add this button to tutorial
+  $("#inputData textarea").on("change", evt => {
+    copyEditMapToFixedMap();
+  });
+  $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
 
   function dismissModal (evt) {
     // $.unblockUI();
@@ -807,7 +822,7 @@ function markEditMapClean () {
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
  */
-function parseEditMap () {
+function copyEditMapToFixedMap () {
   $("#fixedMap").empty();
   var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
     var nodeSelector = $(queryPair).find(".focus").val();
@@ -819,8 +834,9 @@ function parseEditMap () {
     nodes.forEach(node => {
       var nodeTerm = InputData.meta.lexToTerm(node);
       var shapeTerm = InputSchema.meta.lexToTerm(shape);
-      if ($("#fixedMap li[data-node='"+nodeTerm+"'][data-shape='"+shapeTerm+"']").length === 0) {
-        acc.shapeMap.push({node: node, shape: shape});
+      var key = nodeTerm + "|" + shapeTerm;
+      if (key in acc)
+        return;
 
     var spanElt = $("<tr/>", {class: "pair"
                               ,"data-node": nodeTerm
@@ -844,22 +860,21 @@ function parseEditMap () {
     removeElt.on("click", evt => {
       $(evt.target).closest("tr").remove();
     });
-    spanElt.append([focusElt, "@", shapeElt, removeElt].map(elt => {
+      spanElt.append([focusElt, "@", shapeElt, removeElt, $("<a/>")].map(elt => {
       return $("<td/>").append(elt);
     }));
-        $("#fixedMap").append(spanElt);
-      }
-    });
-    // scroll inputs to right
-    $("#fixedMap input").each((idx, focusElt) => {
-      focusElt.scrollLeft = focusElt.scrollWidth;
-    });
-    return acc;
-  }, {shapeMap: [], errors: []});
 
-  if (mapAndErrors.errors.length) // !! overwritten immediately
-    results.append(mapAndErrors.errors.join("\n"));
-  return mapAndErrors.shapeMap;
+      $("#fixedMap").append(spanElt);
+      acc[key] = spanElt; // just needs the key so far.
+    });
+
+    return acc;
+  }, {});
+
+  // scroll inputs to right
+  $("#fixedMap input").each((idx, focusElt) => {
+    focusElt.scrollLeft = focusElt.scrollWidth;
+  });
 
   function getTriples (s, p, o) {
     var get = s === "FOCUS" ? "subject" : "object";
@@ -882,6 +897,7 @@ function copyEditMapToTextMap () {
       return acc.concat([nodeSelector+"@"+shape]);
     }, []).join(",\n");
     $("#textMap").empty().val(text);
+    copyEditMapToFixedMap();
     markEditMapClean();
   }
 }
@@ -911,6 +927,7 @@ function copyTextMapToEditMap (shapeMap) {
       addEditMapPair(null, [{node: node, shape: shape}]);
     }
   });
+  copyEditMapToFixedMap();
   markEditMapClean();
 }
 

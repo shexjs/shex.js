@@ -11,10 +11,10 @@
       .passes999 { margin-right: 1em; }
       .passes, #results div .passes { padding-left: .1em; border-left: thick solid #bfb; }
       .pair.passes { border-left: none; padding-left: none; }
-      .pair.passes::after { background-color: #bfb; content: "✓"; }
+      .pair.passes { background-color: #bfb; }
       .fails , #results div .fails  { padding-left: .1em; border-left: thick solid #fbb; }
       .pair.fails { border-left: none; padding-left: none; }
-      .pair.fails::after { background-color: #fbb; content: "✗"; }
+      .pair.fails { background-color: #fbb; }
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
@@ -151,6 +151,8 @@
 #editMap input, #fixedMap input {
     width: 100%;
 }
+#fixedMap tr td:nth-child(2),
+#fixedMap tr td:nth-child(5) { width: .8em; }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
