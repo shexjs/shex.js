@@ -828,13 +828,13 @@ function parseEditMap () {
                              });
     var focusElt = $("<input/>", {
       type: 'text',
-      value: nodeTerm,
+      value: node,
       class: 'data focus',
       disabled: "disabled"
     });
     var shapeElt = $("<input/>", {
       type: 'text',
-      value: shapeTerm,
+      value: shape,
       class: 'schema inputShape',
       disabled: "disabled"
     });
