@@ -29,9 +29,6 @@ function parseTurtle (text, meta) {
     ret.addTriples(triples);
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
-  var resolver = new IRIResolver(meta);
-  meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
-  meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
 
