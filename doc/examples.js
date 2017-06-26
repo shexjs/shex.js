@@ -168,7 +168,7 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@- start -,\n<http://a.example/Patient2>@<http://a.example/ObservationShape>"},
+          queryMap: "{FOCUS :status _}@- start -,\n<Patient2>@<http://a.example/ObservationShape>"},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
           queryMap: "<http://a.example/Obs1>@- start -"},
@@ -193,7 +193,11 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
       passes: {
         "Get all Wikidata items on Cancers (SPARQL)": {
           data: wikidataItem.cats,
-          queryMap: "- click to resolve -@- start -"}
+          queryMap: "SPARQL `SELECT ?item ?itemLabel "+
+            "WHERE "+
+            "{ ?item wdt:P279* wd:Q12078 . "+
+            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } "+
+            "} LIMIT 10`@- start -"}
       },
       fails: {
       }
@@ -215,5 +219,6 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
           queryMap: "<http://a.example/s>@<http://a.example/S>"}
       }
     }
+
   };
 })();
