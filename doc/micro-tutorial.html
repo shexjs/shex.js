@@ -19,10 +19,18 @@
       /* #inputarea { overflow-x: none; white-space:nowrap; } */
       #inputarea textarea { overflow-x: auto }
       .schema.textarea, .schema { background-color: #f4f4ff; border: medium solid #e4e4ef; }
-      #inputSchema li.selected a { background-color: #e8e8ff; }
+      #inputSchema li.selected button { background-color: #e8e8ff; }
       /* #inputSchema .examples { border: medium solid #e4e4ef; } */
       #inputData textarea, .data { background-color: #f4fff4; border: medium solid #e4efe4; font-family: monospace; }
-      #inputData li.selected { background-color: #e8ffe8; }
+      #inputData li.selected button { background-color: #e8ffe8; }
+      #inputSchema li button, #inputData li button {
+        font-size: .8em;
+        padding: 0em 2ex;
+        border-radius: .5em;
+        border: thin solid #000;
+        cursor: pointer;
+        box-shadow: 0.1em 0px 1em rgba(255, 255, 255, 0.9) inset;
+      }
       #textMap-tab { width: 100%; background-color: #f4ffff; border: medium solid #e4efef; font-family: monospace; }
       /* #inputData .examples { border: medium solid #e4efe4; } */
       /* .droparea { border-width: .25em; border-style: dashed; }
@@ -164,6 +172,12 @@ h2 {
 .explanation { font-size: 1.4em; }
 .new { font-weight: bold; }
 button, select { font-size: .8em; }
+#inputSchema ul {
+    padding-left: 2.4em;
+}
+#inputData ul {
+    padding-left: 2.1em;
+}
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -229,15 +243,15 @@ button, select { font-size: .8em; }
           <br/>
           <!-- <h2>Data examples:</h2> -->
           <div class="examples">
-            <p>Data that will pass:</p>
             <div class="passes">
+            <p>Data that will pass:</p>
               <ul>
                 <li>(First pick a schema.)</li>
               </ul>
             </div>
             <br/>
-            <p>Data that will fail:</p>
             <div class="fails">
+            <p>Data that will fail:</p>
               <ul>
                 <li>(First pick a schema.)</li>
               </ul>
