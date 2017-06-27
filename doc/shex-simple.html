@@ -19,11 +19,19 @@
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
       .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; border-color: #fc561c }
-      #inputSchema li.selected a { background-color: #e8e8ff; }
+      #inputSchema li.selected button { background-color: #e8e8ff; }
       #meta textarea, .meta { background-color: #fffff4; }
       #meta li.selected { background-color: #ffffe8; }
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
-      #inputData li.selected { background-color: #e8ffe8; }
+      #inputData li.selected button { background-color: #e8ffe8; }
+      #inputSchema li button, #inputData li button {
+        font-size: .7em;
+        padding: 0em 2ex;
+        border-radius: .5em;
+        border: thin solid #000;
+        cursor: pointer;
+        box-shadow: 0.1em 0px 1em rgba(255, 255, 255, 0.9) inset;
+      }
       .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
       .stoppable { background-color: red; }
@@ -182,7 +190,7 @@
     <div id="title">
       <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
-      <!--   <li>‣ <span class="heading">upload:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
+      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
       <form id="menuForm">
           <button id="menu-button" title="click for menu">
@@ -313,9 +321,9 @@
               </ul>
             </div>
           </div>
+          <div style="clear:both; padding-top: .5em;"/>
+              <button id="validate">validate (ctl-enter)</button>
         </div>
-        <div style="clear:both; padding-top: .5em;"/>
-            <button id="validate">validate (ctl-enter)</button>
       </div>
     </div>
     <div id="results">
