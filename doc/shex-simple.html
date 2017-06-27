@@ -202,6 +202,7 @@ ul {
             <ul>
               <li class="        "><h3>user interface</h3></li>
               <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
+              <li class="menuitem"><input type="checkbox" id="showMeta"/><label for="showMeta">show metadata pane</label></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>HTTP</h3></li>
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
@@ -301,13 +302,13 @@ ul {
         </div>
       </div>
       <div class="panel">
-        <div id="meta">
+        <div id="meta" data-adjust="#inputData textarea" style="display: none;">
           <p class="status"> </p>
           <textarea rows="12" style="width: 100%"></textarea>
         </div>
         <div id="inputData">
           <h2 class="status"> </h2>
-          <textarea rows="12" class="data droparea" style="width: 100%"></textarea>
+          <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
           <div style="margin-left: .1em;">
             <div class="passes" style="float:left; display:none;">
               <p></p>

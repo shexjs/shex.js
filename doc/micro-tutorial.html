@@ -21,6 +21,8 @@
       .schema.textarea, .schema { background-color: #f4f4ff; border: medium solid #e4e4ef; }
       #inputSchema li.selected button { background-color: #e8e8ff; }
       /* #inputSchema .examples { border: medium solid #e4e4ef; } */
+      #meta textarea, .meta { background-color: #fffff4; }
+      #meta li.selected { background-color: #ffffe8; }
       #inputData textarea, .data { background-color: #f4fff4; border: medium solid #e4efe4; font-family: monospace; }
       #inputData li.selected button { background-color: #e8ffe8; }
       #inputSchema li button, #inputData li button {
@@ -230,6 +232,17 @@ button, select { font-size: .8em; }
             <br/>
         </div>
       </div>
+      <div id="meta" style="display: none;">
+        <h2 class="status999">Metadata (Turtle)</h2>
+        <div class="panel">
+          <textarea rows="12" class="data droparea" style="width: 100%"></textarea>
+        </div>
+        <div class="panel">
+          <p>
+            <span class="number">1½.</span> <span class="explanation">Provide labels for backticks.</span>
+          </p>
+        </div>
+      </div>
       <hr style="clear:both;"/>
       <div id="inputData">
         <h2 class="status999">Data (Turtle)</h2>
@@ -293,6 +306,7 @@ button, select { font-size: .8em; }
       </ul>
       <ul id="fixedMap">
       </ul>
+      <input type="checkbox" id="showMeta"/><label for="showMeta">show metadata pane</label>
     </div>
     <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
     <script src="../browser/shex-browserify.js"></script>
