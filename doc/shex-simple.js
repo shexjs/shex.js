@@ -288,7 +288,10 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     InputSchema.set(schemaTest.schema);
     $("#inputSchema .status").text(name);
 
-    InputMeta.set(schemaTest.meta);
+    var hasMeta = "meta" in schemaTest && schemaTest.meta.length > 0;
+    InputMeta.set(hasMeta ? schemaTest.meta : "");
+    $("#showMeta").prop("checked", hasMeta);
+    showMeta();
 
     InputData.set("");
     $("#inputData .status").text(" ");
@@ -650,6 +653,7 @@ function prepareControls () {
   $("#interface").on("change", setInterface);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
+  $("#showMeta").on("click", showMeta);
 
   $("#loadForm").dialog({
     autoOpen: false,
@@ -810,6 +814,18 @@ function toggleControlsArrow (which) {
     break;
   default:
     throw Error("toggleControlsArrow expected [up|down], got \"" + which + "\"");
+  }
+}
+
+function showMeta () {
+  if ($("#showMeta").is(":checked")) {
+    $("#meta").show();
+    if ($("#meta").attr("data-adjust"))
+      $($("#meta").attr("data-adjust")).attr("rows", "12");
+  } else {
+    $("#meta").hide();
+    if ($("#meta").attr("data-adjust"))
+      $($("#meta").attr("data-adjust")).attr("rows", "25");
   }
 }
 
