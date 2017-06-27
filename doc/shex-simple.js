@@ -169,7 +169,7 @@ function makeTurtleCache(parseSelector) {
 function load (selector, obj, func, listItems, side, str) {
   $(selector).empty();
   Object.keys(obj).forEach(k => {
-    var li = $('<li><a href="#">' + k + '</li>');
+    var li = $("<li/>").append($("<button/>").text(k));
     li.on("click", () => {
       func(k, obj[k], li, listItems, side);
     });
