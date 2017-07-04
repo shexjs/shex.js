@@ -795,7 +795,7 @@ function copyTextMapToEditMap (shapeMap) {
       map(s => s.substr(0, s.length-1)); // trim ','s
 
   pairs.forEach(r2 => {
-    var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
+    var m = r2.match(/^\s*((?:[^@\\]|\\@)*?)\s*@\s*((?:[^@\\]|\\@)*?)\s*$/);
     if (m) {
       var node = m[1] || "";
       var shape = m[2] || "";
