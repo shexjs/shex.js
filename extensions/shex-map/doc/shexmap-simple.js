@@ -953,6 +953,7 @@ function prepareInterface () {
   // SchemaTextarea.prev().add("#title").on("click", evt => {
   //   window.history.pushState(null, null, getPermalink());
   // });
+}
 
   /**
    * update location with a current values of some inputs
@@ -969,7 +970,6 @@ function prepareInterface () {
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
-}
 
 function customizeInterface () {
   if (iface.interface === "minimal") {
