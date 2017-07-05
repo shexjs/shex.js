@@ -4,12 +4,11 @@
  *   node identifiers: @foo> %map:{ foo.id=substr(20) %}
  *   multiplicity: ...
  */
-var N3 = require("n3");
-var N3Util = N3.Util;
+var ShEx = require("../../shex");
 
 var _ = require('underscore');
 
-var ShExUtil = require("../../lib/ShExUtil");
+var ShExUtil = ShEx.Util;
 var extensions = require("./lib/extensions");
 
 var MapExt = "http://shex.io/extensions/Map/#";
@@ -104,8 +103,14 @@ function materializer (schema, nextBNode) {
   return {
     materialize: function (bindings, createRoot, shape, target) {
       shape = shape && shape !== "- start -"? { type: "ShapeRef", reference: shape } : schema.start;
-      target = target || N3.Store();
+      target = target || ShEx.N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
+
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function P (pname) { return ShEx.N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return ShEx.N3.Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
       var curSubject = createRoot || B();
       var curSubjectx = {cs: curSubject};
@@ -134,8 +139,8 @@ function materializer (schema, nextBNode) {
 }
 
 function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
-      function P (pname) { return N3Util.expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
+      function P (pname) { return ShEx.N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return ShEx.N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
