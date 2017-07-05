@@ -295,6 +295,7 @@ var results = (function () {
 function disableResultsAndValidate () {
   results.start();
   setTimeout(function () {
+    copyEditMapToTextMap();
     validate();
   }, 0);
 }
