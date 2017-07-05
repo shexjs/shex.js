@@ -244,24 +244,19 @@ function pickData (name, dataTest, elt, listItems, side) {
 
 // Control results area content.
 var results = (function () {
-  var resultsElt = autosize(document.querySelector("#results div"));
+  var resultsElt = document.querySelector("#results div");
   var resultsSel = $("#results div");
   return {
     replace: function (text) {
-      var ret = resultsSel.text(text);
-      autosize.update(resultsElt);
+      return resultsSel.text(text);
       return ret;
     },
     append: function (text) {
-      var ret = resultsSel.append(text);
-      autosize.update(resultsElt);
-      return ret;
+      return resultsSel.append(text);
     },
     clear: function () {
       resultsSel.removeClass("passes fails error");
-      var ret = resultsSel.text("");
-      autosize.update(resultsElt);
-      return ret;
+      return resultsSel.text("");
     },
     start: function () {
       resultsSel.removeClass("passes fails error");
