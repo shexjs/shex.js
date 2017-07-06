@@ -1292,7 +1292,7 @@ languageRange:
           if ($2.length)
             $$["exclusions"] = $2; // t: @@ 1val1languageStemMinuslanguage3
         } else {
-          $$ = $1; // t: @@ 1val1LANGUAGE, 1AvalA
+          $$ = { type: "Language", value: $1 }; // t: !!@@ 1val1LANGUAGE, 1AvalA
         }
       }
     ;
