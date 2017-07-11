@@ -57,6 +57,7 @@ function rdflib_lexToTerm (lex, resolver) {
           token.type === "langcode" ? "@" :
           token.type === "type" ? resolver.meta.prefixes[token.prefix] :
           token.type === "prefixed" ? resolver.meta.prefixes[token.prefix] :
+          token.type === "blank" ? "_:" :
           "";
     var right = token.type === "IRI" || token.type === "typeIRI" ?
           resolver._resolveAbsoluteIRI(token) :
@@ -170,7 +171,7 @@ function makeTurtleCache(parseSelector) {
 function load (selector, obj, func, listItems, side, str) {
   $(selector).empty();
   Object.keys(obj).forEach(k => {
-    var li = $('<li><a href="#">' + k + '</li>');
+    var li = $("<li/>").append($("<button/>").text(k));
     li.on("click", () => {
       func(k, obj[k], li, listItems, side);
     });
@@ -244,24 +245,19 @@ function pickData (name, dataTest, elt, listItems, side) {
 
 // Control results area content.
 var results = (function () {
-  var resultsElt = autosize(document.querySelector("#results div"));
+  var resultsElt = document.querySelector("#results div");
   var resultsSel = $("#results div");
   return {
     replace: function (text) {
-      var ret = resultsSel.text(text);
-      autosize.update(resultsElt);
+      return resultsSel.text(text);
       return ret;
     },
     append: function (text) {
-      var ret = resultsSel.append(text);
-      autosize.update(resultsElt);
-      return ret;
+      return resultsSel.append(text);
     },
     clear: function () {
       resultsSel.removeClass("passes fails error");
-      var ret = resultsSel.text("");
-      autosize.update(resultsElt);
-      return ret;
+      return resultsSel.text("");
     },
     start: function () {
       resultsSel.removeClass("passes fails error");
@@ -281,6 +277,7 @@ var results = (function () {
 function disableResultsAndValidate () {
   results.start();
   setTimeout(function () {
+    copyEditMapToTextMap();
     validate();
   }, 0);
 }
@@ -851,7 +848,7 @@ function copyTextMapToEditMap (shapeMap) {
       map(s => s.substr(0, s.length-1)); // trim ','s
 
   pairs.forEach(r2 => {
-    var m = r2.match(/^((?:[^@\\]|\\@)*)@((?:[^@\\]|\\@)*)$/);
+    var m = r2.match(/^\s*((?:[^@\\]|\\@)*?)\s*@\s*((?:[^@\\]|\\@)*?)\s*$/);
     if (m) {
       var node = m[1] || "";
       var shape = m[2] || "";
