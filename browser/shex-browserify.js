@@ -1295,10 +1295,10 @@ case 183:
 this.$ = { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $$[$0] } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3;
 break;
 case 184:
-this.$ = { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $$[$0] } // t:@@ 1val1dotMinusliteral3, 1val1dotMinusliteralStem3;
+this.$ = { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $$[$0] } // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3;
 break;
 case 185:
-this.$ = { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $$[$0] } // t:@@ 1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3;
+this.$ = { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $$[$0] } // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3;
 break;
 case 186:
 
@@ -1335,25 +1335,25 @@ break;
 case 196:
 
         if ($$[$0]) {
-          this.$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+          this.$ = {  // t: 1val1literalStemMinusliteralStem3, 1val1literalStem
             type: $$[$0].length ? "LiteralStemRange" : "LiteralStem",
             stem: $$[$0-1].value
           };
           if ($$[$0].length)
-            this.$["exclusions"] = $$[$0]; // t: @@ 1val1literalStemMinusliteral3
+            this.$["exclusions"] = $$[$0]; // t: 1val1literalStemMinusliteral3
         } else {
-          this.$ = $$[$0-1]; // t: @@ 1val1LITERAL, 1AvalA
+          this.$ = $$[$0-1]; // t: 1val1LITERAL
         }
       
 break;
 case 197:
-this.$ = [] // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3;
+this.$ = [] // t: 1val1literalStem, 1val1literalStemMinusliteral3;
 break;
 case 198:
-this.$ = appendTo($$[$0-1], $$[$0]) // t: @@ 1val1literalStemMinusliteral3;
+this.$ = appendTo($$[$0-1], $$[$0]) // t: 1val1literalStemMinusliteral3;
 break;
 case 199:
-this.$ = $$[$0] // t: @@ 1val1literalStemMinusliteral3;
+this.$ = $$[$0] // t: 1val1literalStemMinusliteral3;
 break;
 case 202:
 this.$ = [$$[$0]] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3;
@@ -1362,33 +1362,33 @@ case 203:
 this.$ = appendTo($$[$0-1], $$[$0]) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3;
 break;
 case 204:
-this.$ = $$[$0].value // t: @@ 1val1literalStemMinusliteral3;
+this.$ = $$[$0].value // t: 1val1literalStemMinusliteral3;
 break;
 case 205:
-this.$ = { type: "LiteralStem", stem: $$[$0-1].value } // t: @@ 1val1literalStemMinusliteralStem3;
+this.$ = { type: "LiteralStem", stem: $$[$0-1].value } // t: 1val1literalStemMinusliteralStem3;
 break;
 case 206:
 
         if ($$[$0]) {
-          this.$ = {  // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
+          this.$ = {  // t: 1val1languageStemMinuslanguage3 1val1languageStemMinuslanguageStem3 : 1val1languageStem
             type: $$[$0].length ? "LanguageStemRange" : "LanguageStem",
             stem: $$[$0-1]
           };
           if ($$[$0].length)
-            this.$["exclusions"] = $$[$0]; // t: @@ 1val1languageStemMinuslanguage3
+            this.$["exclusions"] = $$[$0]; // t: 1val1languageStemMinuslanguage3, 1val1languageStemMinuslanguageStem3
         } else {
-          this.$ = { type: "Language", value: $$[$0-1] }; // t: !!@@ 1val1LANGUAGE, 1AvalA
+          this.$ = { type: "Language", languageTag: $$[$0-1] }; // t: 1val1language
         }
       
 break;
 case 207:
-this.$ = [] // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3;
+this.$ = [] // t: 1val1languageStem, 1val1languageStemMinuslanguage3;
 break;
 case 208:
-this.$ = appendTo($$[$0-1], $$[$0]) // t: @@ 1val1languageStemMinuslanguage3;
+this.$ = appendTo($$[$0-1], $$[$0]) // t: 1val1languageStemMinuslanguage3;
 break;
 case 209: case 214:
-this.$ = $$[$0] // t: @@ 1val1languageStemMinuslanguage3;
+this.$ = $$[$0] // t: 1val1languageStemMinuslanguage3;
 break;
 case 212:
 this.$ = [$$[$0]] // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3;
@@ -1397,7 +1397,7 @@ case 213:
 this.$ = appendTo($$[$0-1], $$[$0]) // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3;
 break;
 case 215:
-this.$ = { type: "LanguageStem", stem: $$[$0-1] } // t: @@ 1val1languageStemMinuslanguageStem3;
+this.$ = { type: "LanguageStem", stem: $$[$0-1] } // t: 1val1languageStemMinuslanguageStem3;
 break;
 case 216:
 this.$ = $$[$0].substr(1);
@@ -1421,7 +1421,7 @@ case 224:
 this.$ = unescapeSemanticAction($$[$0-1], $$[$0]) // t: 1dotCode1;
 break;
 case 225:
-this.$ = { type: "SemAct", name: $$[$0-1] } // t: @@;
+this.$ = { type: "SemAct", name: $$[$0-1] } // t: 1dotNoCode1;
 break;
 case 227:
 this.$ = $$[$0] ? extend($$[$0-1], { type: $$[$0] }) : $$[$0-1]; // t: 1val1Datatype;
@@ -2744,7 +2744,7 @@ SX._namespace = "http://www.w3.org/ns/shex#";
  "ShapeRef", "reference", "ShapeExternal",
  "EachOf", "OneOf", "expressions", "min", "max", "annotation",
  "TripleConstraint", "inverse", "negated", "predicate", "valueExpr",
- "Inclusion", "include",
+ "Inclusion", "include", "Language", "languageTag",
  "IriStem", "LiteralStem", "LanguageStem", "stem",
  "IriStemRange", "LiteralStemRange", "LanguageStemRange", "exclusion",
  "Wildcard", "SemAct", "name", "code",
@@ -3886,6 +3886,11 @@ var ShExUtil = {
             type: t.substr(SX._namespace.length),
             stem: ldterm
           };
+        } else if ([SX.Language].indexOf(t) !== -1) {
+          return {
+            type: "Language",
+            languageTag: v.nested[SX.languageTag][0].ldterm.value
+          };
         } else if ([SX.IriStemRange, SX.LiteralStemRange, SX.LanguageStemRange].indexOf(t) !== -1) {
           var st = v.nested[SX.stem][0];
           var stem = st;
@@ -4133,6 +4138,8 @@ var ShExUtil = {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
           " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+    } else if (val.type === "ShapeNotFailure") {
+      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
     } else if (val.type === "ExcessTripleViolation") {
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
     } else if (val.type === "ClosedShapeViolation") {
@@ -4984,6 +4991,11 @@ function ShExValidator_constructor(schema, options) {
       return valueExpr.shapeExprs.reduce(function (ret, nested, iter) {
         return ret.concat(_ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, true));
       }, []);
+    } else if (valueExpr.type === "ShapeNot") {
+      var ret = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, recurse, direct, true);
+      return ret.length ?
+        [] :
+        ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"];
     } else {
       throw Error("unknown value expression type '" + valueExpr.type + "'");
     }
@@ -5051,12 +5063,12 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.values) {
         if (N3Util.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          if (!(typeof v === "object" && "value" in v))
-            return false;
           var ld = ldify(value);
           if (v.type === "Language") {
-            return v.value === ld.language; // @@ use equals/normalizeTest
+            return v.languageTag === ld.language; // @@ use equals/normalizeTest
           }
+          if (!(typeof v === "object" && "value" in v))
+            return false;
           return v.value === ld.value &&
             v.type === ld.type &&
             v.language === ld.language;
@@ -5841,10 +5853,12 @@ ShExWriter.prototype = {
 //          expect(t, "type", "IriStemRange");
               if (!("type" in t))
                 runtimeError("expected "+JSON.stringify(t)+" to have a 'type' attribute.");
-          var stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
+          var stemRangeTypes = ["Language", "IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
               if (stemRangeTypes.indexOf(t.type) === -1)
                 runtimeError("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'.");
-          if (!isTerm(t.stem)) {
+          if (t.type === "Language") {
+            pieces.push("@" + t.languageTag);
+          } else if (!isTerm(t.stem)) {
             expect(t.stem, "type", "Wildcard");
             pieces.push(".");
           } else {
