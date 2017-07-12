@@ -371,8 +371,8 @@ function validate () {
       }
     }
   } catch (e) {
-    results.replace("error parsing " + parsing + ":\n").addClass("error").
-      append($("<pre/>").text(e.stack || e));
+    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
+    results.append($("<pre/>").text(e.stack || e));
   }
 
   function renderEntry (entry) {
