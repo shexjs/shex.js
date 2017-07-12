@@ -13,7 +13,7 @@ const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
 const uriOrKey = uri + "|FOCUS|_";
 const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
                                 uriOrKey+")?(\\s*)("+
-                                uri+")?(\\s*)("+
+                                uri+"|a)?(\\s*)("+
                                 uriOrKey+")?(\\s*)(})?(\\s*)$");
 
 // utility functions
@@ -47,10 +47,15 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  return node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  var ret = node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
+    ret = "a";
+  return ret;
 }
 function rdflib_lexToTerm (lex, resolver) {
-  return lex === "- start -" ? lex : ShEx.N3.Lexer().tokenize(lex).map(token => {
+  return lex === "- start -" ? lex :
+    lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
+    ShEx.N3.Lexer().tokenize(lex).map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
