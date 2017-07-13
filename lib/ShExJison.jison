@@ -978,6 +978,14 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
       INTEGER	-> parseInt($1, 10);
     | DECIMAL	-> parseFloat($1);
     | DOUBLE	-> parseFloat($1);
+    | STRING '^^' datatype	{
+        if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
+          $$ = parseFloat($1.value);
+        else if (numericDatatypes.indexOf($3) !== -1)
+          $$ = parseInt($1.value)
+        else
+          error("Parse error: numeric range facet expected numeric datatype instead of " + $3);
+      }
     ;
 
 numericRange:
