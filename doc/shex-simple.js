@@ -97,6 +97,22 @@ function _makeCache (parseSelector) {
       this.parsed = this.parse($(parseSelector).val());
       _dirty = false;
       return this.parsed;
+    },
+    asyncGet: function (url) {
+      var _cache = this;
+      $.ajax({
+        accepts: {
+          mycustomtype: 'text/shex,text/turtle,*/*'
+        },
+        url: url
+      }).fail(function( jqXHR, textStatus ) {
+        updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
+      }).done(function (data) {
+        _cache.set(data);
+        _cache.url = url;
+        $("#loadForm").dialog("close");
+        toggleControls();
+      });
     }
   };
   ret.meta = { prefixes: {}, base: null };
@@ -533,7 +549,7 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        asyncGet(url, target);
+        target.asyncGet(url);
       },
       Cancel: function() {
         $("#loadInput").removeClass("ui-state-error");
@@ -839,7 +855,7 @@ function prepareInterface () {
     if (parm + "URL" in iface) {
       var url = iface[parm + "URL"];
       input.cache.url = url;
-      asyncGet(url, parm === "schema" ? InputSchema : InputData);
+      (parm === "schema" ? InputSchema : InputData).asyncGet(url);
     } else if (parm in iface) {
       iface[parm].forEach(text => {
         input.location.val(input.location.val() + text);
@@ -891,22 +907,6 @@ function prepareInterface () {
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
-
-function asyncGet (url, target) {
-  $.ajax({
-    accepts: {
-      mycustomtype: 'text/shex,text/turtle,*/*'
-    },
-    url: url
-  }).fail(function( jqXHR, textStatus ) {
-    updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
-  }).done(function (data) {
-    target.set(data);
-    target.url = url;
-    $("#loadForm").dialog("close");
-    toggleControls();
-  });
-}
 
 function customizeInterface () {
   if (iface.interface === "minimal") {
