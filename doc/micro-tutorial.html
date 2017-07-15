@@ -180,6 +180,7 @@ button, select { font-size: .8em; }
 #inputData ul {
     padding-left: 2.1em;
 }
+.seeAlso { font-size: small; }
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
@@ -200,6 +201,15 @@ button, select { font-size: .8em; }
     <div id="title">
       <div style="float:left; width: 50%;">
         <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx Micro Tutorial</h1>
+        <div class="seeAlso">
+        <p>See also:</p>
+        <ul style="column-count: 2;">
+          <li><a href="shex-simple">full interface</a></li>
+          <li><a href="https://www.w3.org/community/shex">ShEx Community Group</a></li>
+          <li><a href="http://shex.io/shex-primer/">Primer</a></li>
+          <li><a href="http://shex.io/shex-semantics/">Spec</a></li>
+        </ul>
+        </div>
       </div>
       <div style="float:left; width: 49%">
         <p>
@@ -285,7 +295,9 @@ button, select { font-size: .8em; }
           <p>
             <span class="number">3.</span> <span class="explanation"> Shape Maps customizably match shapes to data.</span>
           </p>
-          <br/>
+          <p class="seealso" style="margin-bottom: 2ex;">
+            See also <a href="https://shexspec.github.io/ShapeMap/">ShapeMap specification</a>.
+          </p>
           <p>
             <span class="number">4.</span> <span class="explanation">Click to <button id="validate">validate</button> with<span class="menuitem">
             <label for="interface"></label><select id="interface"><option value="minimal">minimal machine-readable</option><option value="human">human-readable</option><option value="appinfo">verbose machine-readable</option></select>
