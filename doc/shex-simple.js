@@ -14,7 +14,7 @@ const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
 const uriOrKey = uri + "|FOCUS|_";
 const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
                                 uriOrKey+")?(\\s*)("+
-                                uri+")?(\\s*)("+
+                                uri+"|a)?(\\s*)("+
                                 uriOrKey+")?(\\s*)(})?(\\s*)$");
 
 // utility functions
@@ -48,10 +48,15 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  return node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  var ret = node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
+    ret = "a";
+  return ret;
 }
 function rdflib_lexToTerm (lex, resolver) {
-  return lex === "- start -" ? lex : ShEx.N3.Lexer().tokenize(lex).map(token => {
+  return lex === "- start -" ? lex :
+    lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
+    ShEx.N3.Lexer().tokenize(lex).map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
@@ -93,6 +98,22 @@ function _makeCache (parseSelector) {
       this.parsed = this.parse($(parseSelector).val());
       _dirty = false;
       return this.parsed;
+    },
+    asyncGet: function (url) {
+      var _cache = this;
+      $.ajax({
+        accepts: {
+          mycustomtype: 'text/shex,text/turtle,*/*'
+        },
+        url: url
+      }).fail(function( jqXHR, textStatus ) {
+        updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
+      }).done(function (data) {
+        _cache.set(data);
+        _cache.url = url;
+        $("#loadForm").dialog("close");
+        toggleControls();
+      });
     }
   };
   ret.meta = { prefixes: {}, base: null };
@@ -426,8 +447,8 @@ function validate () {
       }
     }
   } catch (e) {
-    results.replace("error parsing " + parsing + ":\n").addClass("error").
-      append($("<pre/>").text(e.stack || e));
+    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
+    results.append($("<pre/>").text(e.stack || e));
   }
 
   function renderEntry (entry) {
@@ -565,6 +586,9 @@ function prepareControls () {
     },
     buttons: {
       "GET": function (evt, ui) {
+        var target = $("#loadForm span").text() === "schema" ?
+            InputSchema :
+            InputData;
         var url = $("#loadInput").val();
         var tips = $(".validateTips");
         function updateTips (t) {
@@ -581,21 +605,7 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        $.ajax({
-          accepts: {
-            mycustomtype: 'text/shex,text/turtle,*/*'
-          },
-          url: url
-        }).fail(function( jqXHR, textStatus ) {
-          updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
-        }).done(function (data) {
-          if ($("#loadForm span").text() === "schema")
-            InputSchema.set(data);
-          else
-            InputData.set(data);
-          $("#loadForm").dialog("close");
-          toggleControls();
-        });
+        target.asyncGet(url);
       },
       Cancel: function() {
         $("#loadInput").removeClass("ui-state-error");
@@ -875,8 +885,8 @@ function fixedShapeMapToTerms (shapeMap) {
 }
 
 var iface = null; // needed by validate before prepareInterface returns.
-var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea},
-                   {queryStringParm: "data", location: $("#inputData textarea")},
+var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea, cache: InputSchema},
+                   {queryStringParm: "data", location: $("#inputData textarea"), cache: InputData},
                    {queryStringParm: "shape-map", location: $("#textMap")}];
 
 /**
@@ -898,10 +908,15 @@ function prepareInterface () {
   // Load but don't parse the schema, data and shape-map.
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
-    if (parm in iface)
+    if (parm + "URL" in iface) {
+      var url = iface[parm + "URL"];
+      input.cache.url = url;
+      (parm === "schema" ? InputSchema : InputData).asyncGet(url);
+    } else if (parm in iface) {
       iface[parm].forEach(text => {
         input.location.val(input.location.val() + text);
       });
+    }
   });
 
   // Parse the schema and data so the prefixes and base are available.
@@ -934,10 +949,17 @@ function prepareInterface () {
     if (iface.interface)
       parms.push("interface="+iface.interface);
     copyEditMapToTextMap();
-    parms = parms.concat(QueryParams.map(input => {
+    parms = parms.concat(QueryParams.reduce((acc, input) => {
       var parm = input.queryStringParm;
-      return parm + "=" + encodeURIComponent(input.location.val());
-    }));
+      var val = input.location.val();
+      if (input.cache && input.cache.url) {
+        parm += "URL";
+        val = input.cache.url;
+      }
+      return parm.trim().length > 0 ?
+        acc.concat(parm + "=" + encodeURIComponent(val)) :
+        acc;
+    }, []));
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
@@ -1038,10 +1060,12 @@ function prepareDemos () {
 
     timeouts[side] = setTimeout(() => {
       timeouts[side] = undefined;
-      $("#"+side+" .selected").removeClass("selected");
       var curSum = sum($(target).val());
       if (curSum in listItems[side])
         listItems[side][curSum].addClass("selected");
+      else
+        $("#"+side+" .selected").removeClass("selected");
+      delete cache.url;
     }, 250);
   }
   $("body").keydown(function (e) { // keydown because we need to preventDefault
