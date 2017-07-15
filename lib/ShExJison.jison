@@ -978,6 +978,14 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
       INTEGER	-> parseInt($1, 10);
     | DECIMAL	-> parseFloat($1);
     | DOUBLE	-> parseFloat($1);
+    | STRING '^^' datatype	{
+        if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
+          $$ = parseFloat($1.value);
+        else if (numericDatatypes.indexOf($3) !== -1)
+          $$ = parseInt($1.value)
+        else
+          error("Parse error: numeric range facet expected numeric datatype instead of " + $3);
+      }
     ;
 
 numericRange:
@@ -1200,11 +1208,11 @@ _QvalueSetValue_E_Star:
 
 valueSetValue:
       iriRange	// t: 1val1IRIREF
-    | literalRange	// t: @@
-    | languageRange	// t: @@
+    | literalRange	// t: 1val1literal
+    | languageRange	// t: 1val1language
     | '.' _QiriExclusion_E_Plus	-> { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinusliteral3, 1val1dotMinusliteralStem3
-    | '.' _QlanguageExclusion_E_Plus	-> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:@@ 1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | '.' _QlanguageExclusion_E_Plus	-> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
     ;
 
 iriRange:
@@ -1249,30 +1257,30 @@ iriExclusion:
 literalRange:
       literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
         if ($2) {
-          $$ = {  // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
+          $$ = {  // t: 1val1literalStemMinusliteralStem3, 1val1literalStem
             type: $2.length ? "LiteralStemRange" : "LiteralStem",
             stem: $1.value
           };
           if ($2.length)
-            $$["exclusions"] = $2; // t: @@ 1val1literalStemMinusliteral3
+            $$["exclusions"] = $2; // t: 1val1literalStemMinusliteral3
         } else {
-          $$ = $1; // t: @@ 1val1LITERAL, 1AvalA
+          $$ = $1; // t: 1val1LITERAL
         }
       }
     ;
 
 _QliteralExclusion_E_Star:
-      	-> [] // t: @@ 1val1literalStem, 1val1literalStemMinusliteral3
-    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: @@ 1val1literalStemMinusliteral3
+      	-> [] // t: 1val1literalStem, 1val1literalStemMinusliteral3
+    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: 1val1literalStemMinusliteral3
     ;
 
 _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C:
-      '~' _QliteralExclusion_E_Star	-> $2 // t: @@ 1val1literalStemMinusliteral3
+      '~' _QliteralExclusion_E_Star	-> $2 // t: 1val1literalStemMinusliteral3
     ;
 
 _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
-      // t: @@ 1val1LITERAL
-    | _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C	// t: @@ 1val1literalStemMinusliteral3
+      // t: 1val1LITERAL
+    | _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C	// t: 1val1LITERAL
     ;
 
 _QliteralExclusion_E_Plus:
@@ -1281,37 +1289,37 @@ _QliteralExclusion_E_Plus:
     ;
 
 literalExclusion:
-      '-' literal	-> $2.value // t: @@ 1val1literalStemMinusliteral3
-    | '-' literal '~'	-> { type: "LiteralStem", stem: $2.value } // t: @@ 1val1literalStemMinusliteralStem3
+      '-' literal	-> $2.value // t: 1val1literalStemMinusliteral3
+    | '-' literal '~'	-> { type: "LiteralStem", stem: $2.value } // t: 1val1literalStemMinusliteralStem3
     ;
 
 languageRange:
       language _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
         if ($2) {
-          $$ = {  // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
+          $$ = {  // t: 1val1languageStemMinuslanguage3 1val1languageStemMinuslanguageStem3 : 1val1languageStem
             type: $2.length ? "LanguageStemRange" : "LanguageStem",
             stem: $1
           };
           if ($2.length)
-            $$["exclusions"] = $2; // t: @@ 1val1languageStemMinuslanguage3
+            $$["exclusions"] = $2; // t: 1val1languageStemMinuslanguage3, 1val1languageStemMinuslanguageStem3
         } else {
-          $$ = $1; // t: @@ 1val1LANGUAGE, 1AvalA
+          $$ = { type: "Language", languageTag: $1 }; // t: 1val1language
         }
       }
     ;
 
 _QlanguageExclusion_E_Star:
-      	-> [] // t: @@ 1val1languageStem, 1val1languageStemMinuslanguage3
-    | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2) // t: @@ 1val1languageStemMinuslanguage3
+      	-> [] // t: 1val1languageStem, 1val1languageStemMinuslanguage3
+    | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2) // t: 1val1languageStemMinuslanguage3
     ;
 
 _O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C:
-      '~' _QlanguageExclusion_E_Star	-> $2 // t: @@ 1val1languageStemMinuslanguage3
+      '~' _QlanguageExclusion_E_Star	-> $2 // t: 1val1languageStemMinuslanguage3
     ;
 
 _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
-      // t: @@ 1val1LANGUAGE
-    | _O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C	// t: @@ 1val1languageStemMinuslanguage3
+      // t: 1val1LANGUAGE
+    | _O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C	// t: 1val1languageStemMinuslanguage3
     ;
 
 _QlanguageExclusion_E_Plus:
@@ -1320,8 +1328,8 @@ _QlanguageExclusion_E_Plus:
     ;
 
 languageExclusion:
-      '-' language	-> $2 // t: @@ 1val1languageStemMinuslanguage3
-    | '-' language '~'	-> { type: "LanguageStem", stem: $2 } // t: @@ 1val1languageStemMinuslanguageStem3
+      '-' language	-> $2 // t: 1val1languageStemMinuslanguage3
+    | '-' language '~'	-> { type: "LanguageStem", stem: $2 } // t: 1val1languageStemMinuslanguageStem3
     ;
 
 language:
@@ -1354,7 +1362,7 @@ _QcodeDecl_E_Star:
 codeDecl:
      // XXX '%' CODE	-> unescapeSemanticAction("", $2) // t: 1dotUnlabeledCode1
       '%' iri CODE	-> unescapeSemanticAction($2, $3) // t: 1dotCode1
-    | '%' iri '%'	-> { type: "SemAct", name: $2 } // t: @@
+    | '%' iri '%'	-> { type: "SemAct", name: $2 } // t: 1dotNoCode1
     ;
 
 literal:
