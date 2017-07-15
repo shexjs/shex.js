@@ -1,3 +1,14 @@
+replicate
+      var m = r2.match(/^\s*((?:[^@\\]|\\@)*?)\s*@\s*((?:[^@\\]|\\@)*?)\s*$/);
+from shex-simple.js to shexmap-simple.js
+
+figuring out why interface disappears at
+    switch (iface.interface) {
+
+fix _:b0 in node selection
+
+- autosize and resultsSel.animate({height:height}, 100)
+
 + STRING_LITERAL2-ECHAR
 + STRING_LITERAL2-UCHAR1
 + STRING_LITERAL2-UCHAR2
