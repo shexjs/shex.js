@@ -740,6 +740,12 @@ function copyEditMapToFixedMap () {
       class: "removePair",
       title: "remove this node/shape pair"}).text("-");
     removeElt.on("click", evt => {
+      // Remove related result.
+      var href, result;
+      if ((href = $(evt.target).closest("tr").find("a").attr("href"))
+          && (result = document.getElementById(href.substr(1))))
+        $(result).remove();
+      // Remove FixedMap entry.
       $(evt.target).closest("tr").remove();
     });
       spanElt.append([focusElt, "@", shapeElt, removeElt, $("<a/>")].map(elt => {
