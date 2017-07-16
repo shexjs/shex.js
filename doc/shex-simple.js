@@ -335,7 +335,7 @@ function validate () {
       $("#results .status").text("creating validator...").show();
       var validator = ShEx.Validator.construct(
         InputSchema.refresh(),
-        { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
+        { results: "api", regexModule: ShEx[iface.regexpEngine] });
 
       $("#results .status").text("validating...").show();
       var ret = validator.validate(inputData, fixedMap);
@@ -518,6 +518,7 @@ function removeEditMapPair (evt) {
 function prepareControls () {
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
+  $("#regexpEngine").on("change", setRegexpEngine);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
 
@@ -627,6 +628,7 @@ function prepareControls () {
 
 function toggleControls (evt) {
   $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
+  $("#regexpEngine option[value='"+iface.regexpEngine+"']").attr('selected','selected');
   var revealing = evt && $("#controls").css("display") !== "flex";
   $("#controls").css("display", revealing ? "flex" : "none");
   toggleControlsArrow(revealing ? "up" : "down");
@@ -677,6 +679,11 @@ function setInterface (evt) {
   toggleControls();
   // $("#controls").css("display", "none");
   customizeInterface();
+}
+
+function setRegexpEngine (evt) {
+  iface.regexpEngine = $("#regexpEngine option:selected").val()
+  toggleControls();
 }
 
 /**
@@ -854,6 +861,10 @@ function prepareInterface () {
     iface.interface = iface.interface[0];
   else
     iface.interface = "human";
+  if ("regexpEngine" in iface)
+    iface.regexpEngine = iface.regexpEngine[0];
+  else
+    iface.regexpEngine = "human";
 
   // Load but don't parse the schema, data and shape-map.
   QueryParams.forEach(input => {
@@ -898,6 +909,8 @@ function prepareInterface () {
     var parms = [];
     if (iface.interface)
       parms.push("interface="+iface.interface);
+    if (iface.regexpEngine)
+      parms.push("regexpEngine="+iface.regexpEngine);
     copyEditMapToTextMap();
     parms = parms.concat(QueryParams.reduce((acc, input) => {
       var parm = input.queryStringParm;
