@@ -335,7 +335,7 @@ function validate () {
       $("#results .status").text("creating validator...").show();
       var validator = ShEx.Validator.construct(
         InputSchema.refresh(),
-        { results: "api", regexModule: ShEx[iface.regexpEngine] });
+        { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
       $("#results .status").text("validating...").show();
       var ret = validator.validate(inputData, fixedMap);
@@ -402,7 +402,7 @@ function validate () {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
-    switch (iface.interface) {
+    switch ($("#interface").val()) {
     case "human":
       elt = $("<div class='human'/>").append(
         $("<span/>").text(resultStr),
@@ -438,7 +438,7 @@ function validate () {
   function finishRendering () {
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
-          if (iface.interface !== "human")
+          if ($("#interface").val() !== "human")
             $("#results div *").each((idx, elt) => {
               if (idx === 0)
                 $(elt).prepend("[");
@@ -518,7 +518,7 @@ function removeEditMapPair (evt) {
 function prepareControls () {
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
-  $("#regexpEngine").on("change", setRegexpEngine);
+  $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
 
@@ -627,8 +627,6 @@ function prepareControls () {
 }
 
 function toggleControls (evt) {
-  $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
-  $("#regexpEngine option[value='"+iface.regexpEngine+"']").attr('selected','selected');
   var revealing = evt && $("#controls").css("display") !== "flex";
   $("#controls").css("display", revealing ? "flex" : "none");
   toggleControlsArrow(revealing ? "up" : "down");
@@ -675,15 +673,8 @@ function toggleControlsArrow (which) {
 }
 
 function setInterface (evt) {
-  iface.interface = $("#interface option:selected").val()
   toggleControls();
-  // $("#controls").css("display", "none");
   customizeInterface();
-}
-
-function setRegexpEngine (evt) {
-  iface.regexpEngine = $("#regexpEngine option:selected").val()
-  toggleControls();
 }
 
 /**
@@ -842,9 +833,13 @@ function fixedShapeMapToTerms (shapeMap) {
 }
 
 var iface = null; // needed by validate before prepareInterface returns.
-var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea, cache: InputSchema},
-                   {queryStringParm: "data", location: $("#inputData textarea"), cache: InputData},
-                   {queryStringParm: "shape-map", location: $("#textMap")}];
+var QueryParams = [
+  {queryStringParm: "schema",       location: SchemaTextarea,           cache: InputSchema},
+  {queryStringParm: "data",         location: $("#inputData textarea"), cache: InputData  },
+  {queryStringParm: "shape-map",    location: $("#textMap")                               },
+  {queryStringParm: "interface",    location: $("#interface"),          deflt: "humam"    },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),       deflt: "thorough" },
+];
 
 /**
  * Load URL search parameters
@@ -857,14 +852,6 @@ function prepareInterface () {
   iface = parseQueryString(location.search);
 
   toggleControlsArrow("down");
-  if ("interface" in iface)
-    iface.interface = iface.interface[0];
-  else
-    iface.interface = "human";
-  if ("regexpEngine" in iface)
-    iface.regexpEngine = iface.regexpEngine[0];
-  else
-    iface.regexpEngine = "human";
 
   // Load but don't parse the schema, data and shape-map.
   QueryParams.forEach(input => {
@@ -874,9 +861,15 @@ function prepareInterface () {
       input.cache.url = url;
       (parm === "schema" ? InputSchema : InputData).asyncGet(url);
     } else if (parm in iface) {
+      input.location.val("");
       iface[parm].forEach(text => {
-        input.location.val(input.location.val() + text);
+        var prepend = input.location.prop("tagName") === "TEXTAREA" ?
+            input.location.val() :
+            "";
+        input.location.val(prepend + text);
       });
+    } else if ("deflt" in input) {
+      input.location.val(input.deflt);
     }
   });
 
@@ -896,10 +889,6 @@ function prepareInterface () {
   }, 0)) {
     validate();
   }
-  // // old hack for permalink
-  // SchemaTextarea.prev().add("#title").on("click", evt => {
-  //   window.history.pushState(null, null, getPermalink());
-  // });
 }
 
   /**
@@ -907,10 +896,6 @@ function prepareInterface () {
    */
   function getPermalink () {
     var parms = [];
-    if (iface.interface)
-      parms.push("interface="+iface.interface);
-    if (iface.regexpEngine)
-      parms.push("regexpEngine="+iface.regexpEngine);
     copyEditMapToTextMap();
     parms = parms.concat(QueryParams.reduce((acc, input) => {
       var parm = input.queryStringParm;
@@ -928,7 +913,7 @@ function prepareInterface () {
   }
 
 function customizeInterface () {
-  if (iface.interface === "minimal") {
+  if ($("#interface").val() === "minimal") {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
     $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
     $("#actions").parent().children().not("#actions").hide();
