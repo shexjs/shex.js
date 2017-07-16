@@ -838,7 +838,7 @@ var QueryParams = [
   {queryStringParm: "data",         location: $("#inputData textarea"), cache: InputData  },
   {queryStringParm: "shape-map",    location: $("#textMap")                               },
   {queryStringParm: "interface",    location: $("#interface"),          deflt: "humam"    },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),       deflt: "thorough" },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),       deflt: "threaded-val-nerr" },
 ];
 
 /**
