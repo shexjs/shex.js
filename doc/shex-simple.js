@@ -333,9 +333,9 @@ function validate () {
       var inputData = InputData.refresh();
 
       $("#results .status").text("creating validator...").show();
-      var validator = ShEx.Validator.construct(InputSchema.refresh(),
-                      { results: "api"
-                      /*, regexModule: modules["../lib/regex/nfax-val-1err"] */ });
+      var validator = ShEx.Validator.construct(
+        InputSchema.refresh(),
+        { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
       $("#results .status").text("validating...").show();
       var ret = validator.validate(inputData, fixedMap);

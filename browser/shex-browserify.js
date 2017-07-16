@@ -81349,9 +81349,11 @@ module.exports = {
   Validator:    require('./lib/ShExValidator'),
   Loader:       require('./lib/ShExLoader'),
   Writer:       require('./lib/ShExWriter'),
+  'nfax-val-1err':     require('./lib/regex/nfax-val-1err'),
+  'threaded-val-nerr': require('./lib/regex/threaded-val-nerr'),
   Mapper:       require('./extensions/shex-map/module'),
   N3:           require('n3'),
 };
 
-},{"./extensions/shex-map/module":5,"./lib/ShExLoader":7,"./lib/ShExParser":8,"./lib/ShExUtil":9,"./lib/ShExValidator":10,"./lib/ShExWriter":11,"n3":425}]},{},[501])(501)
+},{"./extensions/shex-map/module":5,"./lib/ShExLoader":7,"./lib/ShExParser":8,"./lib/ShExUtil":9,"./lib/ShExValidator":10,"./lib/ShExWriter":11,"./lib/regex/nfax-val-1err":12,"./lib/regex/threaded-val-nerr":13,"n3":425}]},{},[501])(501)
 });
