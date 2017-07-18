@@ -16,6 +16,14 @@ const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
                                 uri+"|a)?(\\s*)("+
                                 uriOrKey+")?(\\s*)(})?(\\s*)$");
 
+var QueryParams = [
+  {queryStringParm: "schema",       location: SchemaTextarea,           cache: InputSchema},
+  {queryStringParm: "data",         location: $("#inputData textarea"), cache: InputData  },
+  {queryStringParm: "shape-map",    location: $("#textMap")                               },
+  {queryStringParm: "interface",    location: $("#interface"),          deflt: "humam"    },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),       deflt: "threaded-val-nerr" },
+];
+
 // utility functions
 function parseTurtle (text, meta) {
   var ret = ShEx.N3.Store();
@@ -831,15 +839,6 @@ function fixedShapeMapToTerms (shapeMap) {
   });
 }
 
-var iface = null; // needed by validate before prepareInterface returns.
-var QueryParams = [
-  {queryStringParm: "schema",       location: SchemaTextarea,           cache: InputSchema},
-  {queryStringParm: "data",         location: $("#inputData textarea"), cache: InputData  },
-  {queryStringParm: "shape-map",    location: $("#textMap")                               },
-  {queryStringParm: "interface",    location: $("#interface"),          deflt: "humam"    },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),       deflt: "threaded-val-nerr" },
-];
-
 /**
  * Load URL search parameters
  */
@@ -848,7 +847,7 @@ function prepareInterface () {
   if (SchemaTextarea.val() !== "" || $("#inputData textarea").val() !== "")
     return;
 
-  iface = parseQueryString(location.search);
+  var iface = parseQueryString(location.search);
 
   toggleControlsArrow("down");
 
@@ -937,25 +936,31 @@ function customizeInterface () {
  * Prepare drag and drop into text areas
  */
 function prepareDragAndDrop () {
-  var _scma = SchemaTextarea;
-  var _data = $("#inputData textarea");
-  var _body = $("body");
-  [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
-   {dropElt: _data, targets: [{ext: "", target: InputData}]},
-   {dropElt: _body, targets: [{ext: ".shex", target: InputSchema},
-                              {ext: ".ttl", target: InputData}]}].
-    forEach(desc => {
+  QueryParams.filter(q => {
+    return "cache" in q;
+  }).map(q => {
+    return {
+      location: q.location,
+      targets: [{
+        ext: "",
+        target: q.cache
+      }]
+    };
+  }).concat([
+    {location: $("body"), targets: [{ext: ".shex", target: InputSchema},
+                                    {ext: ".ttl", target: InputData}]}
+  ]).forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
-      desc.dropElt.
+      desc.location.
         on("drag dragstart dragend dragover dragenter dragleave drop", function (e) {
           e.preventDefault();
           e.stopPropagation();
         }).
         on("dragover dragenter", (e) => {
-          desc.dropElt.addClass("hover");
+          desc.location.addClass("hover");
         }).
         on("dragend dragleave drop", (e) => {
-          desc.dropElt.removeClass("hover");
+          desc.location.removeClass("hover");
         }).
         on("drop", (e) => {
           readfiles(e.originalEvent.dataTransfer.files, desc.targets);
@@ -1022,6 +1027,8 @@ function prepareDemos () {
       $("#validate").focus().click();
       at.focus();
       return false; // same as e.preventDefault();
+    } else {
+      return true;
     }
   });
   SchemaTextarea.keyup(function (e) { // keyup to capture backspace
