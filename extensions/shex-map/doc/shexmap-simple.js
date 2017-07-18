@@ -178,7 +178,7 @@ function makeSchemaCache (parseSelector) {
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
-  ret.getShapes = function () {
+  ret.getItems = function () {
     var obj = this.refresh();
     var start = "start" in obj ? [START_SHAPE_LABEL] : [];
     var rest = "shapes" in obj ? Object.keys(obj.shapes).map(InputSchema.meta.termToLex) : [];
@@ -192,7 +192,7 @@ function makeTurtleCache(parseSelector) {
   ret.parse = function (text) {
     return parseTurtle(text, ret.meta);
   };
-  ret.getNodes = function () {
+  ret.getItems = function () {
     var data = this.refresh();
     return data.getTriples().map(t => {
       return InputData.meta.termToLex(t.subject);
@@ -261,7 +261,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.schema").val(InputSchema.getShapes()[0]);
+    $("input.schema").val(InputSchema.getItems()[0]);
   }
 }
 
@@ -579,7 +579,8 @@ function addEditMapPair (evt, pairs) {
   else
     $("#editMap .removePair").css("visibility", "visible");
   $("#editMap .pair").each(idx => {
-    addContextMenus("#editMap .pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape", "#outputShape");
+    addContextMenus("#editMap .pair:nth("+idx+") .focus", InputData);
+    addContextMenus(".pair:nth("+idx+") .inputShape", InputSchema);
   });
   return false;
 }
@@ -1127,21 +1128,16 @@ function prepareDemos () {
     if (!(e.ctrlKey && (code === 10 || code === 13)))
       later(e.target, "inputData", InputData);
   });
-  addContextMenus("#focus0", "#inputShape0", "#outputShape");
+  addContextMenus("#focus0", InputData);
+  addContextMenus("#inputShape0", InputSchema);
+  addContextMenus("#outputShape", OutputSchema);
 }
 
-function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
-  [ { inputSelector: nodeSelector,
-      getItems: function () { return InputData.getNodes(); } },
-    { inputSelector: shapeSelector,
-      getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: outShapeSelector,
-      getItems: function () { return OutputSchema.getShapes(); } }
-  ].forEach(entry => {
+function addContextMenus (inputSelector, cache) {
     // !!! terribly stateful; only one context menu at a time!
     var terms = null, v = null, target, scrollLeft, m, addSpace = "";
     $.contextMenu({
-      selector: entry.inputSelector,
+      selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
         if (terms) {
@@ -1208,14 +1204,13 @@ function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
         terms = v = null;
         return {
           items:
-          entry.getItems().reduce((ret, opt) => {
+          cache.getItems().reduce((ret, opt) => {
             ret[opt] = { name: opt };
             return ret;
           }, {})
         };
       }
     });
-  });
 }
 
 prepareControls();
