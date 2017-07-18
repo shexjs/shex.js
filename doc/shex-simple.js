@@ -270,7 +270,6 @@ var results = (function () {
   return {
     replace: function (text) {
       return resultsSel.text(text);
-      return ret;
     },
     append: function (text) {
       return resultsSel.append(text);
