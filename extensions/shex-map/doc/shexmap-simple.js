@@ -927,13 +927,12 @@ function prepareInterface () {
 
   toggleControlsArrow("down");
 
-  function _addGenPair (node, shape) {
-    // only works for one n/s pair
-    $("#createNode").val(node);
-    $("#outputShape").val(shape);
-  }
   if ("output-map" in iface)
-    parseShapeMap("output-map", _addGenPair);
+    parseShapeMap("output-map", function (node, shape) {
+      // only works for one n/s pair
+      $("#createNode").val(node);
+      $("#outputShape").val(shape);
+    });
 
   // Load but don't parse the schema, data and shape-map.
   QueryParams.forEach(input => {
