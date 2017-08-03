@@ -335,7 +335,7 @@ function binder (tree) {
     }, []);
     return ret.length === 1 ? ret[0] : ret;
   }
-  tree = _simplify(tree);
+  tree = tree.constructor === Array ? _simplify(tree) : [tree]; // expects an array
 
   // var globals = tree.reduce((r, e, idx) => {
   //   if (e.constructor !== Array) {
