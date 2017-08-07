@@ -408,7 +408,7 @@ start = @<collector>
           outputSchema: SchemaConcert.schema,
           outputShape: "- start -",
           staticVars: {},
-          createRoot: "_:b0"}
+          createRoot: "_:root"}
       },
       fails: {
         "Non-IRI": {
@@ -417,7 +417,7 @@ start = @<collector>
           outputSchema: SchemaConcert.schema,
           outputShape: "- start -",
           staticVars: {},
-          createRoot: "_:b0"}
+          createRoot: "_:root"}
       }
     }
   };
