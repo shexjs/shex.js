@@ -20,7 +20,7 @@ var QueryParams = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
   {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData   },
   {queryStringParm: "shape-map",    location: $("#textMap")                             },
-  {queryStringParm: "interface",    location: $("#interface"),       deflt: "humam"     },
+  {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
 ];
 

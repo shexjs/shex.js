@@ -211,6 +211,9 @@ ul {
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
               <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
               <li class="        "><hr/></li>
+              <li class="        "><h3>performance</h3></li>
+              <li class="menuitem"><label for="regexpEngine">error reporting:</label><select id="regexpEngine"><option value="threaded-val-nerr">thorough</option><option value="nfax-val-1err">fast</option></select></li>
+              <li class="        "><hr/></li>
               <li class="menuitem" id="permalink"><a>Permalink</a></li>
               <li class="menuitem" id="about-button">About</li>
             </ul>
@@ -356,7 +359,7 @@ ul {
  -->
 
     <!-- #else -->
-<!-- -->
+<!--
     <script src="../../../doc/require.js"      ></script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
@@ -372,7 +375,7 @@ ul {
     <script src="../../../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
     <script src="../../../lib/ShExLoader.js"></script><script>modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;</script>
     <script src="../../../shex.js"></script>
-<!-- -->
+ -->
     <!-- #endif -->
 
     <script>
