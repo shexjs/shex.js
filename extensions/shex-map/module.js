@@ -4,6 +4,8 @@
  *   node identifiers: @foo> %map:{ foo.id=substr(20) %}
  *   multiplicity: ...
  */
+
+var ShExMap = (function () {
 var ShEx = require("../../shex");
 
 var _ = require('underscore');
@@ -356,7 +358,7 @@ function binder (tree) {
   return {get: getter};
 }
 
-var iface = {
+return {
   register: register,
   extractBindings: extractBindings,
   done: done,
@@ -365,7 +367,7 @@ var iface = {
   url: MapExt
 };
 
+})();
+
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = iface;
-else
-  ShExMap = iface;
+  module.exports = ShExMap;
