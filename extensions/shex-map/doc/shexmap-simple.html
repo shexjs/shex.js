@@ -348,40 +348,47 @@ ul {
       <div>
       </div>
     </div>
-    <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
+    <script src="../../../doc/iri.js"></script>
+    <!-- #if browserify -->
+<!--
+    <script src="../../../browser/shex-browserify.js"></script>
+    <script src="../../../doc/require.js"      ></script>
+ -->
+
+    <!-- #else -->
 <!-- -->
     <script src="../../../doc/require.js"      ></script>
-    <script src="http://underscorejs.org/underscore-min.js"></script><script>modules["underscore"] = _;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
-    <script src="../../../lib/ShExUtil.js"     ></script><script>modules["./lib/ShExUtil"] = modules["./ShExUtil"] = ShExUtil;</script>
-    <script src="../../../lib/ShExJison.js"    ></script><script></script>
-    <script src="../../../lib/ShExParser.js"   ></script><script>modules["./lib/ShExParser"] = ShExParser;</script>
-    <script>modules["./lib/ShExLoader"] = null;</script>
+    <script src="../../../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
+    <script>module.exports = exports;</script><script src="../../../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
+    <script src="../../../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>
     <script src="../../../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = module.exports;</script>
-    <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = module.exports;</script>
-    <script src="../../../lib/regex/nfax-val-1err.js"></script><script>modules["../lib/regex/nfax-val-1err"] = module.exports;</script>
-    <script src="../../../lib/ShExValidator.js"></script><script>ShExValidator = modules["./lib/ShExValidator"] = module.exports;</script>
-    <script src="../../../lib/regex/nfax-val-1err-materializer.js"></script><script>modules["../lib/regex/nfax-val-1err-materializer.js"] = module.exports;</script>
-    <script>modules["./extensions/shex-map/module"] = null;</script>
-    <script src="../../../shex.js"></script><script>modules["ShEx"] = ShEx = module.exports;</script>
+    <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../../../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
+    <script src="../../../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
+    <script src="../../../lib/ShExLoader.js"></script><script>modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;</script>
+    <script src="../../../shex.js"></script>
 <!-- -->
-    <script src="../../../doc/iri.js"></script><script>IRIResolver = module.exports;</script>
-    <script src="../../../doc/ShExRSchema.js"></script>
-    <script src="./examples.js"></script>
-    <!-- script src="../../../browser/shex-browserify.js"></script -->
-    <!-- script src="../../../doc/require.js"      ></script --><script>
+    <!-- #endif -->
+
+    <script>
       modules["../../shex"] = ShEx;
     </script>
+    <script src="http://underscorejs.org/underscore-min.js"></script><script>modules["underscore"] = module.exports;</script>
     <script src="../lib/extension-utils.js"    ></script><script>modules["./extension-utils"] = module.exports;</script>
     <script src="../lib/regex_extension.js"    ></script><script>modules["./regex_extension"] = module.exports;</script>
     <script src="../lib/hashmap_extension.js"  ></script><script>modules["./hashmap_extension"] = module.exports;</script>
     <script src="../lib/extensions.js"         ></script><script>modules["./lib/extensions"] = module.exports;</script>
-    <script src="../module.js"                 ></script><script>ShEx.Mapper = modules["../extensions/shex-map/module"] = modules["./extensions/shex-map/module"] = module.exports;</script>
+    <script src="../../../lib/regex/nfax-val-1err-materializer.js"></script><script>modules["../lib/regex/nfax-val-1err-materializer.js"] = module.exports;</script>
+
+    <script src="../module.js"                 ></script><script>modules["../extensions/shex-map/module"] = ShExMap = module.exports;</script>
     <script src="../../../lib/ShExMaterializer.js"></script><script>ShExMaterializer = module.exports;</script>
+    <script src="../../../doc/ShExRSchema.js"></script>
+    <script src="./examples.js"></script>
     <script src="./shexmap-simple.js"></script>
   </body>
 </html>

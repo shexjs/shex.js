@@ -5,6 +5,8 @@
  *    regex(/"(?<dem:family>[a-zA-Z'\\-]+),\\s*(?<dem:given>[a-zA-Z'\\-\\s]+)"/)
  * The expression will be applied and the results returned as a hash.
  */
+
+var RegexExtension = (function () {
 var _ = require('underscore');
 var extUtils = require('./extension-utils');
 
@@ -139,7 +141,11 @@ function lower(mapDirective, bindings, prefixes, args) {
     return extUtils.unescapeMetaChars(string);
 }
 
-module.exports = {
+return {
   lift: lift,
   lower: lower
 };
+})();
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = RegexExtension;

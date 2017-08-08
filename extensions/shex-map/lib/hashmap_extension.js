@@ -3,6 +3,7 @@
  *    hashmap(variable, {"D": "Divorced", "M": "Married", "S": "Single", "W": "Widowed"}) 
  * And returns the appropriate map value based on the input.
  */
+var HashmapExtension = (function () {
 var _ = require('underscore');
 var util = require('util');
 
@@ -126,7 +127,11 @@ function lower(mapDirective, bindings, prefixes, args) {
     return inverseValue; 
 }
 
-module.exports = {
+return {
   lift: lift,
   lower: lower
 };
+})();
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = HashmapExtension;

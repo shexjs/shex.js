@@ -366,7 +366,7 @@ function validate () {
       var validator = ShEx.Validator.construct(
         Caches.inputSchema.refresh(),
         { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
-      ShEx.Mapper.register(validator);
+      ShExMap.register(validator);
 
       $("#results .status").text("validating...").show();
       var ret = validator.validate(inputData, fixedMap);
@@ -466,7 +466,7 @@ function validate () {
     fixedMapEntry.find("a").attr("href", "#" + anchor);
 
     if (entry.status === "conformant") {
-      var resultBindings = ShEx.Util.valToExtension(entry.appinfo, ShEx.Mapper.url);
+      var resultBindings = ShEx.Util.valToExtension(entry.appinfo, ShExMap.url);
       Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     } else {
       Caches.bindings.set("{}");
@@ -519,16 +519,16 @@ function materialize () {
       resultBindings.unshift(_t);
     }
 
-    var mapper = ShEx.Mapper.materializer(outputSchema);
+    var mapper = ShExMap.materializer(outputSchema);
     var outputShapeMap = fixedShapeMapToTerms([{
       node: $("#createRoot").val(),
       shape: $("#outputShape").val() // resolve with Caches.outputSchema
     }]);
 
-    var binder = ShEx.Mapper.binder(resultBindings);
+    var binder = ShExMap.binder(resultBindings);
     Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
-    // binder = ShEx.Mapper.binder(resultBindings);
+    // binder = ShExMap.binder(resultBindings);
     var writer = ShEx.N3.Writer({ prefixes: {} });
     outputShapeMap.forEach(pair => {
       try {

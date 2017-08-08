@@ -4,6 +4,8 @@
  *   node identifiers: @foo> %map:{ foo.id=substr(20) %}
  *   multiplicity: ...
  */
+
+var ShExMap = (function () {
 var ShEx = require("../../shex");
 
 var _ = require('underscore');
@@ -390,7 +392,7 @@ function binder (tree) {
   return {get: getter};
 }
 
-var iface = {
+return {
   register: register,
   done: done,
   materializer: materializer,
@@ -399,7 +401,7 @@ var iface = {
   visitTripleConstraint: myvisitTripleConstraint
 };
 
+})();
+
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = iface;
-else
-  ShExMap = iface;
+  module.exports = ShExMap;
