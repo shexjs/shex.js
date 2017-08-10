@@ -211,10 +211,14 @@ ul {
               <li class="        "><h3>HTTP</h3></li>
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
               <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
+              <li class="menuitem" id="load-examples-button">load <span class="examples">examples</span></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>drag and drop</h3></li>
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
               <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
+              <li class="        "><hr/></li>
+              <li class="        "><h3>performance</h3></li>
+              <li class="menuitem"><label for="regexpEngine">error reporting:</label><select id="regexpEngine"><option value="threaded-val-nerr">thorough</option><option value="nfax-val-1err">fast</option></select></li>
               <li class="        "><hr/></li>
               <li class="menuitem" id="permalink"><a>Permalink</a></li>
               <li class="menuitem" id="about-button">About</li>
@@ -336,6 +340,9 @@ ul {
       <h2 class="status"> </h2>
       <div></div>
     </div>
+    <script src="../doc/iri.js"></script>
+    <!-- #if browserify -->
+<!-- -->
     <script src="../browser/shex-browserify.js"></script>
     <script src="./iri.js"></script>
     <script src="./Util.js"></script>

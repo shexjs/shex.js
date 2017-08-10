@@ -1,4 +1,4 @@
-ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
+var ShExRSchema = `PREFIX sx: <http://www.w3.org/ns/shex#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 BASE <http://www.w3.org/ns/shex#>
@@ -166,4 +166,7 @@ start=@<Schema>
   rdf:first @<valueSetValue> ;
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
 }`;
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = ShExRSchema;
 

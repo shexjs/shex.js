@@ -3,7 +3,7 @@
  * It determines which extension is requested, and then, assuming
  * the extension is valid, it forwards the request on
  */
-
+var Extensions = (function () {
 var _ = require('underscore');
 
 // Known extensions
@@ -70,7 +70,11 @@ function lower(mapDirective, bindings, prefixes) {
     }
 }
 
-module.exports = {
+return {
     lift: lift,
     lower: lower,
 };
+})();
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = Extensions;
