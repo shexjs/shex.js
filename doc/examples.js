@@ -1,4 +1,4 @@
-Demos = (() => {
+(() => {
 var clinicalObs = {};
 var wikidataItem = {};
 
