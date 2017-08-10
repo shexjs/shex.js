@@ -201,7 +201,7 @@ function makeExamplesCache (selection) {
   ret.set = function (text) {
     var evalMe = "(function () {\n" + text + "\n return Demos; })();"
     var demos = eval(evalMe);
-    prepareDemos(demos);
+    prepareExamples(demos);
   };
   ret.parse = function (text) {
     throw Error("should not try to parse examples cache");
@@ -904,9 +904,9 @@ function prepareInterface () {
 
   customizeInterface();
   $(".examples li").text("no example schemas loaded");
-  var loadDemos = "demos" in iface ? iface.demos[0] : "./examples.js";
-  if (loadDemos.length) // examples= disables examples
-    Caches.examples.asyncGet(loadDemos, m => {
+  var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
+  if (loadExamples.length) // examples= disables examples
+    Caches.examples.asyncGet(loadExamples, m => {
       $(".examples li").text(m);
     });
   if ("schema" in iface && iface.schema.reduce((r, elt) => {
@@ -1024,8 +1024,7 @@ function prepareDragAndDrop () {
   }
 }
 
-// prepareDemos() is invoked after these variables are assigned:
-function prepareDemos (demoList) {
+function prepareExamples (demoList) {
   var listItems = {inputSchema:{}, inputData:{}};
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
