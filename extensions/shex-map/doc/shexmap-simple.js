@@ -1118,7 +1118,7 @@ function prepareDragAndDrop () {
 
 // prepareDemos() is invoked after these variables are assigned:
 function prepareDemos (demoList) {
-  var listItems = {inputSchema:{}, inputData:{}};
+  var listItems = {inputSchema:{}, inputData:{}, examples: {}};
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
