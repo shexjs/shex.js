@@ -1087,7 +1087,7 @@ function prepareDemos () {
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
-  var timeouts = { inputSchema: undefined, inputData: undefined };
+  var timeouts = { inputSchema: undefined, inputData: undefined, examples: undefined };
   function later (target, side, cache) {
     cache.dirty(true);
     if (timeouts[side])
