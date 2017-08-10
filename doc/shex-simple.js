@@ -127,14 +127,20 @@ function _makeCache (selection) {
         accepts: {
           mycustomtype: 'text/shex,text/turtle,*/*'
         },
-        url: url
-      }).fail(function( jqXHR, textStatus ) {
-        fail("GET <" + url + "> failed: " + jqXHR.statusText);
+        url: url,
+        dataType: "text"
+      }).fail(function (jqXHR, textStatus) {
+        var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
+        fail("GET <" + url + "> failed: " + error);
       }).done(function (data) {
-        _cache.set(data);
-        _cache.url = url;
-        $("#loadForm").dialog("close");
-        toggleControls();
+        try {
+          _cache.set(data);
+          _cache.url = url;
+          $("#loadForm").dialog("close");
+          toggleControls();
+        } catch (e) {
+          fail("unable to evaluate: " + e);
+        }
       });
     }
   };
@@ -283,9 +289,8 @@ function makeTurtleCache (selection) {
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
   ret.set = function (text) {
-    var evalMe = "(function () {\n" + text + "\n return Demos; })();"
-    var demos = eval(evalMe);
-    prepareDemos(demos);
+    var demos = eval(text); // exceptions pass through to caller (asyncGet)
+    prepareExamples(demos);
   };
   ret.parse = function (text) {
     throw Error("should not try to parse examples cache");
@@ -703,10 +708,6 @@ function prepareControls () {
   $("#loadForm").dialog({
     autoOpen: false,
     modal: true,
-    open: function (evt, ui) {
-      debugger;
-      console.dir(evt);
-    },
     buttons: {
       "GET": function (evt, ui) {
         var target =
@@ -747,7 +748,6 @@ function prepareControls () {
     $("#load-"+type+"-button").click(evt => {
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
-      console.dir(type);
     });
   });
 
@@ -1077,9 +1077,9 @@ function prepareInterface () {
 
   customizeInterface();
   $(".examples li").text("no example schemas loaded");
-  var loadDemos = "demos" in iface ? iface.demos[0] : "./examples.js";
-  if (loadDemos.length) // examples= disables examples
-    Caches.examples.asyncGet(loadDemos, m => {
+  var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
+  if (loadExamples.length) // examples= disables examples
+    Caches.examples.asyncGet(loadExamples, m => {
       $(".examples li").text(m);
     });
   if ("schema" in iface && iface.schema.reduce((r, elt) => {
@@ -1198,8 +1198,7 @@ function prepareDragAndDrop () {
   }
 }
 
-// prepareDemos() is invoked after these variables are assigned:
-function prepareDemos (demoList) {
+function prepareExamples (demoList) {
   var listItems = {inputSchema:{}, inputData:{}};
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
