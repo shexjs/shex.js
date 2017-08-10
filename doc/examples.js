@@ -1,4 +1,4 @@
-Demos = (() => {
+(() => {
 var clinicalObs = {};
 
 clinicalObs.schema = `PREFIX : <http://hl7.org/fhir/>
