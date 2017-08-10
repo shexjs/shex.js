@@ -196,8 +196,8 @@ function makeSchemaCache (selection) {
   return ret;
 }
 
-function makeTurtleCache(parseSelector) {
-  var ret = _makeCache(parseSelector);
+function makeTurtleCache (selection) {
+  var ret = _makeCache(selection);
   // ret.endpoint = null,
   // ret.query = null,
   ret.executeQuery = function (query, endpoint) {
@@ -263,17 +263,17 @@ function makeTurtleCache(parseSelector) {
     }
     return parseTurtle(text, ret.meta);
   };
-  ret.getNodes = function () {
+  ret.getItems = function () {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*(?:\n[\s]*Query:[\s]*([\s\S]*?))?$/i);
     if (m) {
       return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
-        return InputData.meta.termToLex(row[0]);
+        return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
       var data = this.refresh();
       return data.getTriples().map(t => {
-        return InputData.meta.termToLex(t.subject);
+        return Caches.inputData.meta.termToLex(t.subject);
       });
     }
   };
@@ -361,11 +361,11 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    InputData.set(dataTest.data);
-    var text = InputData.get();
+    Caches.inputData.set(dataTest.data);
+    var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
     if (m)
-      InputData.endpoint = m[1];
+      Caches.inputData.endpoint = m[1];
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -904,8 +904,8 @@ function copyEditMapToFixedMap () {
     if ((m = nodeSelector.match(ParseTriplePattern))) {
       nodes = getTriples(m[2], m[4], m[6]);
     } else if ((m = nodeSelector.match(ParseBacktickPattern))) {
-      nodes = [/*"- add all -"*/].concat(InputData.executeQuery(m[2]).map(row => {
-        return InputData.meta.termToLex(row[0]);
+      nodes = [/*"- add all -"*/].concat(Caches.inputData.executeQuery(m[2]).map(row => {
+        return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
       nodes = [nodeSelector];
