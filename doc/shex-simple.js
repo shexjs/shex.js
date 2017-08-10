@@ -7,6 +7,7 @@ var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
+Caches.examples = makeExamplesCache($("#inputData textarea"));
 var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
@@ -106,7 +107,7 @@ function _makeCache (selection) {
       _dirty = false;
       return this.parsed;
     },
-    asyncGet: function (url) {
+    asyncGet: function (url, fail) {
       var _cache = this;
       $.ajax({
         accepts: {
@@ -114,7 +115,7 @@ function _makeCache (selection) {
         },
         url: url
       }).fail(function( jqXHR, textStatus ) {
-        updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
+        fail("GET <" + url + "> failed: " + jqXHR.statusText);
       }).done(function (data) {
         _cache.set(data);
         _cache.url = url;
@@ -181,7 +182,7 @@ function makeSchemaCache (selection) {
   return ret;
 }
 
-function makeTurtleCache(selection) {
+function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
   ret.parse = function (text) {
     return parseTurtle(text, ret.meta);
@@ -191,6 +192,22 @@ function makeTurtleCache(selection) {
     return data.getTriples().map(t => {
       return Caches.inputData.meta.termToLex(t.subject);
     });
+  };
+  return ret;
+}
+
+function makeExamplesCache (selection) {
+  var ret = _makeCache(selection);
+  ret.set = function (text) {
+    var evalMe = "(function () {\n" + text + "\n return Demos; })();"
+    var demos = eval(evalMe);
+    prepareDemos(demos);
+  };
+  ret.parse = function (text) {
+    throw Error("should not try to parse examples cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get examples cache items");
   };
   return ret;
 }
@@ -539,9 +556,10 @@ function prepareControls () {
     },
     buttons: {
       "GET": function (evt, ui) {
-        var target = $("#loadForm span").text() === "schema" ?
-            Caches.inputSchema :
-            Caches.inputData;
+        var target =
+            $("#loadForm span").text() === "schema" ? Caches.inputSchema :
+            $("#loadForm span").text() === "data" ? Caches.inputData :
+            Caches.examples;
         var url = $("#loadInput").val();
         var tips = $(".validateTips");
         function updateTips (t) {
@@ -558,7 +576,7 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        target.asyncGet(url);
+        target.asyncGet(url, updateTips);
       },
       Cancel: function() {
         $("#loadInput").removeClass("ui-state-error");
@@ -572,7 +590,7 @@ function prepareControls () {
       toggleControls();
     }
   });
-  ["schema", "data"].forEach(type => {
+  ["schema", "data", "examples"].forEach(type => {
     $("#load-"+type+"-button").click(evt => {
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
@@ -858,7 +876,9 @@ function prepareInterface () {
     if (parm + "URL" in iface) {
       var url = iface[parm + "URL"];
       input.cache.url = url;
-      (parm === "schema" ? Caches.inputSchema : Caches.inputData).asyncGet(url);
+      (parm === "schema" ? Caches.inputSchema : Caches.inputData).asyncGet(url, m => {
+        input.location.val(m);
+      });
     } else if (parm in iface) {
       input.location.val("");
       iface[parm].forEach(text => {
@@ -883,6 +903,12 @@ function prepareInterface () {
     makeFreshEditMap();
 
   customizeInterface();
+  $(".examples li").text("no example schemas loaded");
+  var loadDemos = "demos" in iface ? iface.demos[0] : "./examples.js";
+  if (loadDemos.length) // examples= disables examples
+    Caches.examples.asyncGet(loadDemos, m => {
+      $(".examples li").text(m);
+    });
   if ("schema" in iface && iface.schema.reduce((r, elt) => {
     return r+elt.length;
   }, 0)) {
@@ -999,9 +1025,9 @@ function prepareDragAndDrop () {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-function prepareDemos () {
+function prepareDemos (demoList) {
   var listItems = {inputSchema:{}, inputData:{}};
-  load("#inputSchema .examples ul", Demos, pickSchema,
+  load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
@@ -1126,5 +1152,4 @@ function addContextMenus (inputSelector, cache) {
 prepareControls();
 prepareInterface();
 prepareDragAndDrop();
-prepareDemos();
 
