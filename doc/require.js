@@ -20,7 +20,8 @@ if (typeof Error.captureStackTrace === "undefined")
     // do nothing
   }
 process = { env: {} };
-module = { exports: 5 };
+exports = {  };
+module = { exports: exports };
 modules = {
   util: {
     inspect: function (o) { return "util.inspect(s):"+JSON.stringify(o); }

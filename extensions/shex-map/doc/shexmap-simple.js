@@ -4,20 +4,32 @@
 
 const START_SHAPE_LABEL = "- start -";
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
-var SchemaTextarea = $("#inputSchema textarea.schema");
-var InputSchema = makeSchemaCache("#inputSchema textarea.schema");
-var InputData = makeTurtleCache("#inputData textarea");
-var Bindings = makeJSONCache("#bindings1 textarea");
-var Statics = makeJSONCache("#staticVars textarea");
-var OutputSchema = makeSchemaCache("#outputSchema textarea");
+var Caches = {};
+Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
+Caches.inputData = makeTurtleCache($("#inputData textarea"));
+Caches.examples = makeExamplesCache($("#inputData textarea"));
+Caches.bindings = makeJSONCache($("#bindings1 textarea"));
+Caches.statics = makeJSONCache($("#staticVars textarea"));
+Caches.outputSchema = makeSchemaCache($("#outputSchema textarea"));
 var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
 const uriOrKey = uri + "|FOCUS|_";
 const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
                                 uriOrKey+")?(\\s*)("+
-                                uri+")?(\\s*)("+
+                                uri+"|a)?(\\s*)("+
                                 uriOrKey+")?(\\s*)(})?(\\s*)$");
+
+var QueryParams = [
+  {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
+  {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData   },
+  {queryStringParm: "shape-map",    location: $("#textMap")                             },
+  {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
+  {queryStringParm: "bindings",     location: Caches.bindings.selection,    cache: Caches.bindings    },
+  {queryStringParm: "statics",      location: Caches.statics.selection,     cache: Caches.statics     },
+  {queryStringParm: "outSchema",    location: Caches.outputSchema.selection,cache: Caches.outputSchema},
+];
 
 // utility functions
 function parseTurtle (text, meta) {
@@ -50,10 +62,15 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  return node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  var ret = node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
+    ret = "a";
+  return ret;
 }
 function rdflib_lexToTerm (lex, resolver) {
-  return lex === "- start -" ? lex : ShEx.N3.Lexer().tokenize(lex).map(token => {
+  return lex === "- start -" ? lex :
+    lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
+    ShEx.N3.Lexer().tokenize(lex).map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
@@ -72,10 +89,10 @@ function rdflib_lexToTerm (lex, resolver) {
 
 
 // caches for textarea parsers
-function _makeCache (parseSelector) {
+function _makeCache (selection) {
   var _dirty = true;
   var ret = {
-    parseSelector: parseSelector,
+    selection: selection,
     parsed: null,
     dirty: function (newVal) {
       var ret = _dirty;
@@ -83,18 +100,34 @@ function _makeCache (parseSelector) {
       return ret;
     },
     get: function () {
-      return $(parseSelector).val();
+      return selection.val();
     },
     set: function (text) {
       _dirty = true;
-      $(parseSelector).val(text);
+      selection.val(text);
     },
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse($(parseSelector).val());
+      this.parsed = this.parse(selection.val());
       _dirty = false;
       return this.parsed;
+    },
+    asyncGet: function (url, fail) {
+      var _cache = this;
+      $.ajax({
+        accepts: {
+          mycustomtype: 'text/shex,text/turtle,*/*'
+        },
+        url: url
+      }).fail(function( jqXHR, textStatus ) {
+        fail("GET <" + url + "> failed: " + jqXHR.statusText);
+      }).done(function (data) {
+        _cache.set(data);
+        _cache.url = url;
+        $("#loadForm").dialog("close");
+        toggleControls();
+      });
     }
   };
   ret.meta = { prefixes: {}, base: null };
@@ -104,8 +137,8 @@ function _makeCache (parseSelector) {
   return ret;
 }
 
-function makeSchemaCache (parseSelector) {
-  var ret = _makeCache(parseSelector);
+function makeSchemaCache (selection) {
+  var ret = _makeCache(selection);
   var graph = null;
   ret.language = null;
   ret.parse = function (text) {
@@ -146,37 +179,52 @@ function makeSchemaCache (parseSelector) {
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
-  ret.getShapes = function () {
+  ret.getItems = function () {
     var obj = this.refresh();
     var start = "start" in obj ? [START_SHAPE_LABEL] : [];
-    var rest = "shapes" in obj ? Object.keys(obj.shapes).map(InputSchema.meta.termToLex) : [];
+    var rest = "shapes" in obj ? Object.keys(obj.shapes).map(Caches.inputSchema.meta.termToLex) : [];
     return start.concat(rest);
   };
   return ret;
 }
 
-function makeTurtleCache(parseSelector) {
-  var ret = _makeCache(parseSelector);
+function makeTurtleCache (selection) {
+  var ret = _makeCache(selection);
   ret.parse = function (text) {
     return parseTurtle(text, ret.meta);
   };
-  ret.getNodes = function () {
+  ret.getItems = function () {
     var data = this.refresh();
     return data.getTriples().map(t => {
-      return InputData.meta.termToLex(t.subject);
+      return Caches.inputData.meta.termToLex(t.subject);
     });
   };
   return ret;
 }
 
-function makeJSONCache(parseSelector) {
-  var ret = _makeCache(parseSelector);
+function makeExamplesCache (selection) {
+  var ret = _makeCache(selection);
+  ret.set = function (text) {
+    var evalMe = "(function () {\n" + text + "\n return Demos; })();"
+    var demos = eval(evalMe);
+    prepareDemos(demos);
+  };
+  ret.parse = function (text) {
+    throw Error("should not try to parse examples cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get examples cache items");
+  };
+  return ret;
+}
+
+function makeJSONCache(selection) {
+  var ret = _makeCache(selection);
   ret.parse = function (text) {
     return JSON.parse(text);
   };
   return ret;
 }
-
 
 // controls for example links
 function load (selector, obj, func, listItems, side, str) {
@@ -192,7 +240,7 @@ function load (selector, obj, func, listItems, side, str) {
 }
 
 function clearData () {
-  InputData.set("");
+  Caches.inputData.set("");
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
@@ -200,7 +248,7 @@ function clearData () {
 
 function clearAll () {
   $("#results .status").hide();
-  InputSchema.set("");
+  Caches.inputSchema.set("");
   $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
@@ -215,10 +263,10 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    InputSchema.set(schemaTest.schema);
+    Caches.inputSchema.set(schemaTest.schema);
     $("#inputSchema .status").text(name);
 
-    InputData.set("");
+    Caches.inputData.set("");
     $("#inputData .status").text(" ");
     $("#inputData .passes, #inputData .fails").show();
     $("#inputData .passes p:first").text("Passing:");
@@ -229,7 +277,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.schema").val(InputSchema.getShapes()[0]);
+    $("input.schema").val(Caches.inputSchema.getItems()[0]);
   }
 }
 
@@ -238,7 +286,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    InputData.set(dataTest.data);
+    Caches.inputData.set(dataTest.data);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -250,9 +298,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#textMap").val(dataTest.queryMap);
     copyTextMapToEditMap();
 
-    $("#outputSchema textarea").val(dataTest.outputSchema);
+    Caches.outputSchema.set(dataTest.outputSchema);
     $("#outputSchema .status").text(name);
-    Statics.set(JSON.stringify(dataTest.staticVars, null, "  "));
+    Caches.statics.set(JSON.stringify(dataTest.staticVars, null, "  "));
     $("#staticVars .status").text(name);
 
     $("#outputShape").val(dataTest.outputShape); // targetSchema.start in Map-test
@@ -314,12 +362,12 @@ function validate () {
   $("#results .status").hide();
   var parsing = "input schema";
   try {
-    noStack(() => { InputSchema.refresh(); });
-    $("#schemaDialect").text(InputSchema.language);
-    var dataText = InputData.get();
+    noStack(() => { Caches.inputSchema.refresh(); });
+    $("#schemaDialect").text(Caches.inputSchema.language);
+    var dataText = Caches.inputData.get();
     if (dataText || hasFocusNode()) {
       parsing = "input data";
-      noStack(() => { InputData.refresh(); }); // for prefixes for getShapeMap
+      noStack(() => { Caches.inputData.refresh(); }); // for prefixes for getShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
@@ -328,12 +376,12 @@ function validate () {
         };
       }).get());
       $("#results .status").text("parsing data...").show();
-      var inputData = InputData.refresh();
+      var inputData = Caches.inputData.refresh();
 
       $("#results .status").text("creating validator...").show();
-      var validator = ShEx.Validator.construct(InputSchema.refresh(),
-                      { results: "api"
-                      /*, regexModule: modules["../lib/regex/nfax-val-1err"] */ });
+      var validator = ShEx.Validator.construct(
+        Caches.inputSchema.refresh(),
+        { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
       ShExMap.register(validator);
 
       $("#results .status").text("validating...").show();
@@ -353,19 +401,19 @@ function validate () {
       // }
       finishRendering();
     } else {
-      var outputLanguage = InputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
+      var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
-        text("parsed "+InputSchema.language+" schema, generated "+outputLanguage+" ").
+        text("parsed "+Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
         append($("<button>(copy to input)</button>").
                css("border-radius", ".5em").
                on("click", function () {
-                 InputSchema.set($("#results div").text());
+                 Caches.inputSchema.set($("#results div").text());
                })).
         append(":").
         show();
       var parsedSchema;
-      if (InputSchema.language === "ShExJ") {
-        new ShEx.Writer({simplifyParentheses: false}).writeSchema(InputSchema.parsed, (error, text) => {
+      if (Caches.inputSchema.language === "ShExJ") {
+        new ShEx.Writer({simplifyParentheses: false}).writeSchema(Caches.inputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
             // res.addClass("error");
@@ -375,7 +423,7 @@ function validate () {
         });
       } else {
         var pre = $("<pre/>");
-        pre.text(JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(InputSchema.parsed)), null, "  ")).addClass("passes");
+        pre.text(JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
         results.append(pre);
       }
       results.finish();
@@ -391,8 +439,8 @@ function validate () {
       }
     }
   } catch (e) {
-    results.replace("error parsing " + parsing + ":\n").addClass("error").
-      append($("<pre/>").text(e.stack || e));
+    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
+    results.append($("<pre/>").text(e.stack || e));
   }
 
   function renderEntry (entry) {
@@ -401,12 +449,12 @@ function validate () {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
-    switch (iface.interface) {
+    switch ($("#interface").val()) {
     case "human":
       elt = $("<div class='human'/>").append(
         $("<span/>").text(resultStr),
         $("<span/>").text(
-        `${InputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${InputData.meta.termToLex(entry.shape)}`
+        `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
         )).addClass(klass);
       if (fails)
         elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
@@ -435,16 +483,16 @@ function validate () {
 
     if (entry.status === "conformant") {
       var resultBindings = ShEx.Util.valToExtension(entry.appinfo, ShExMap.url);
-      Bindings.set(JSON.stringify(resultBindings, null, "  "));
+      Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     } else {
-      Bindings.set("{}");
+      Caches.bindings.set("{}");
     }
   }
 
   function finishRendering () {
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
-          if (iface.interface !== "human")
+          if ($("#interface").val() !== "human")
             $("#results div *").each((idx, elt) => {
               if (idx === 0)
                 $(elt).prepend("[");
@@ -469,18 +517,18 @@ function materialize () {
   results.start();
   var parsing = "output schema";
   try {
-    var outputSchemaText = $("#outputSchema textarea").val();
+    var outputSchemaText = Caches.outputSchema.selection.val();
     var outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
-    var outputSchema = OutputSchema.refresh();
+    var outputSchema = Caches.outputSchema.refresh();
 
     // var resultBindings = Object.assign(
-    //   Statics.refresh(),
-    //   Bindings.refresh()
+    //   Caches.statics.refresh(),
+    //   Caches.bindings.refresh()
     // );
 
     function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-    var resultBindings = _dup(Bindings.refresh());
-    var _t = Statics.refresh();
+    var resultBindings = _dup(Caches.bindings.refresh());
+    var _t = Caches.statics.refresh();
     if (_t && Object.keys(_t) > 0) {
       if (resultBindings.constructor !== Array)
         resultBindings = [resultBindings];
@@ -490,7 +538,7 @@ function materialize () {
     var mapper = ShExMap.materializer(outputSchema);
     var outputShapeMap = fixedShapeMapToTerms([{
       node: $("#createRoot").val(),
-      shape: $("#outputShape").val() // resolve with OutputSchema
+      shape: $("#outputShape").val() // resolve with Caches.outputSchema
     }]);
     var writer = ShEx.N3.Writer({ prefixes: {} });
     outputShapeMap.forEach(pair => {
@@ -547,7 +595,8 @@ function addEditMapPair (evt, pairs) {
   else
     $("#editMap .removePair").css("visibility", "visible");
   $("#editMap .pair").each(idx => {
-    addContextMenus("#editMap .pair:nth("+idx+") .focus", ".pair:nth("+idx+") .inputShape", "#outputShape");
+    addContextMenus("#editMap .pair:nth("+idx+") .focus", Caches.inputData);
+    addContextMenus(".pair:nth("+idx+") .inputShape", Caches.inputSchema);
   });
   return false;
 }
@@ -567,6 +616,7 @@ function removeEditMapPair (evt) {
 function prepareControls () {
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
+  $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#materialize").on("click", materialize);
   $("#clear").on("click", clearAll);
@@ -580,6 +630,10 @@ function prepareControls () {
     },
     buttons: {
       "GET": function (evt, ui) {
+        var target =
+            $("#loadForm span").text() === "schema" ? Caches.inputSchema :
+            $("#loadForm span").text() === "data" ? Caches.inputData :
+            Caches.examples;
         var url = $("#loadInput").val();
         var tips = $(".validateTips");
         function updateTips (t) {
@@ -596,21 +650,7 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        $.ajax({
-          accepts: {
-            mycustomtype: 'text/shex,text/turtle,*/*'
-          },
-          url: url
-        }).fail(function( jqXHR, textStatus ) {
-          updateTips("GET <" + url + "> failed: " + jqXHR.statusText);
-        }).done(function (data) {
-          if ($("#loadForm span").text() === "schema")
-            InputSchema.set(data);
-          else
-            InputData.set(data);
-          $("#loadForm").dialog("close");
-          toggleControls();
-        });
+        target.asyncGet(url, updateTips);
       },
       Cancel: function() {
         $("#loadInput").removeClass("ui-state-error");
@@ -624,7 +664,7 @@ function prepareControls () {
       toggleControls();
     }
   });
-  ["schema", "data"].forEach(type => {
+  ["schema", "data", "examples"].forEach(type => {
     $("#load-"+type+"-button").click(evt => {
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
@@ -655,7 +695,7 @@ function prepareControls () {
   $("#textMap").on("change", evt => {
     copyTextMapToEditMap();
   });
-  $("#inputData textarea").on("change", evt => {
+  Caches.inputData.selection.on("change", evt => {
     copyEditMapToFixedMap();
   });
   $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
@@ -687,7 +727,6 @@ function prepareControls () {
 }
 
 function toggleControls (evt) {
-  $("#interface option[value='"+iface.interface+"']").attr('selected','selected');
   var revealing = evt && $("#controls").css("display") !== "flex";
   $("#controls").css("display", revealing ? "flex" : "none");
   toggleControlsArrow(revealing ? "up" : "down");
@@ -734,9 +773,7 @@ function toggleControlsArrow (which) {
 }
 
 function setInterface (evt) {
-  iface.interface = $("#interface option:selected").val()
   toggleControls();
-  // $("#controls").css("display", "none");
   customizeInterface();
 }
 
@@ -763,7 +800,7 @@ function markEditMapClean () {
 }
 
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
- * use {InputData,InputSchema}.meta.{prefix,base} to complete IRIs
+ * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
  */
 function copyEditMapToFixedMap () {
   $("#fixedMap").empty();
@@ -775,8 +812,8 @@ function copyEditMapToFixedMap () {
     var m = nodeSelector.match(ParseTriplePattern);
     var nodes = m ? getTriples (m[2], m[4], m[6]) : [nodeSelector];
     nodes.forEach(node => {
-      var nodeTerm = InputData.meta.lexToTerm(node);
-      var shapeTerm = InputSchema.meta.lexToTerm(shape);
+      var nodeTerm = Caches.inputData.meta.lexToTerm(node);
+      var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
       var key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
         return;
@@ -801,6 +838,12 @@ function copyEditMapToFixedMap () {
       class: "removePair",
       title: "remove this node/shape pair"}).text("-");
     removeElt.on("click", evt => {
+      // Remove related result.
+      var href, result;
+      if ((href = $(evt.target).closest("tr").find("a").attr("href"))
+          && (result = document.getElementById(href.substr(1))))
+        $(result).remove();
+      // Remove FixedMap entry.
       $(evt.target).closest("tr").remove();
     });
       spanElt.append([focusElt, "@", shapeElt, removeElt, $("<a/>")].map(elt => {
@@ -821,11 +864,11 @@ function copyEditMapToFixedMap () {
 
   function getTriples (s, p, o) {
     var get = s === "FOCUS" ? "subject" : "object";
-    return InputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
-      return InputData.meta.termToLex(t[get]);
+    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+      return Caches.inputData.meta.termToLex(t[get]);
     });
     function mine (term) {
-      return term === "FOCUS" || term === "_" ? null : InputData.meta.lexToTerm(term);
+      return term === "FOCUS" || term === "_" ? null : Caches.inputData.meta.lexToTerm(term);
     }
   }
 }
@@ -884,54 +927,55 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {node: InputData.meta.lexToTerm(pair.node),
-            shape: InputSchema.meta.lexToTerm(pair.shape)};
+    return {node: Caches.inputData.meta.lexToTerm(pair.node),
+            shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
   });
 }
 
-var iface = null; // needed by validate before prepareInterface returns.
-var QueryParams = [{queryStringParm: "schema", location: SchemaTextarea},
-                   {queryStringParm: "data", location: $("#inputData textarea")},
-                   {queryStringParm: "shape-map", location: $("#textMap")},
-                   {queryStringParm: "bindings", location: $("#bindings1 textarea")},
-                   {queryStringParm: "statics", location: $("#staticVars textarea")},
-                   {queryStringParm: "outSchema", location: $("#outputSchema textarea")}];
 /**
  * Load URL search parameters
  */
 function prepareInterface () {
   // don't overwrite if we arrived here from going back for forth in history
-  if (SchemaTextarea.val() !== "" || $("#inputData textarea").val() !== "")
+  if (Caches.inputSchema.selection.val() !== "" || Caches.inputData.selection.val() !== "")
     return;
 
-  iface = parseQueryString(location.search);
+  var iface = parseQueryString(location.search);
 
   toggleControlsArrow("down");
-  if ("interface" in iface)
-    iface.interface = iface.interface[0];
-  else
-    iface.interface = "human";
 
-  function _addGenPair (node, shape) {
-    // only works for one n/s pair
-    $("#createNode").val(node);
-    $("#outputShape").val(shape);
-  }
   if ("output-map" in iface)
-    parseShapeMap("output-map", _addGenPair);
+    parseShapeMap("output-map", function (node, shape) {
+      // only works for one n/s pair
+      $("#createNode").val(node);
+      $("#outputShape").val(shape);
+    });
 
   // Load but don't parse the schema, data and shape-map.
   QueryParams.forEach(input => {
     var parm = input.queryStringParm;
-    if (parm in iface)
-      iface[parm].forEach(text => {
-        input.location.val(input.location.val() + text);
+    if (parm + "URL" in iface) {
+      var url = iface[parm + "URL"];
+      input.cache.url = url;
+      (parm === "schema" ? Caches.inputSchema : Caches.inputData).asyncGet(url, m => {
+        input.location.val(m);
       });
+    } else if (parm in iface) {
+      input.location.val("");
+      iface[parm].forEach(text => {
+        var prepend = input.location.prop("tagName") === "TEXTAREA" ?
+            input.location.val() :
+            "";
+        input.location.val(prepend + text);
+      });
+    } else if ("deflt" in input) {
+      input.location.val(input.deflt);
+    }
   });
 
   // Parse the schema and data so the prefixes and base are available.
-  try { InputSchema.refresh() } catch (e) { }
-  try { InputData.refresh() } catch (e) { }
+  try { Caches.inputSchema.refresh() } catch (e) { }
+  try { Caches.inputData.refresh() } catch (e) { }
 
   // Parse the shape-map using the prefixes and base.
   if ($("#textMap").val().trim().length > 0)
@@ -940,15 +984,17 @@ function prepareInterface () {
     makeFreshEditMap();
 
   customizeInterface();
+  $(".examples li").text("no example schemas loaded");
+  var loadDemos = "demos" in iface ? iface.demos[0] : "./examples.js";
+  if (loadDemos.length) // examples= disables examples
+    Caches.examples.asyncGet(loadDemos, m => {
+      $(".examples li").text(m);
+    });
   if ("schema" in iface && iface.schema.reduce((r, elt) => {
     return r+elt.length;
   }, 0)) {
     validate();
   }
-  // // old hack for permalink
-  // SchemaTextarea.prev().add("#title").on("click", evt => {
-  //   window.history.pushState(null, null, getPermalink());
-  // });
 }
 
   /**
@@ -956,19 +1002,24 @@ function prepareInterface () {
    */
   function getPermalink () {
     var parms = [];
-    if (iface.interface)
-      parms.push("interface="+iface.interface);
     copyEditMapToTextMap();
-    parms = parms.concat(QueryParams.map(input => {
+    parms = parms.concat(QueryParams.reduce((acc, input) => {
       var parm = input.queryStringParm;
-      return parm + "=" + encodeURIComponent(input.location.val());
-    }));
+      var val = input.location.val();
+      if (input.cache && input.cache.url) {
+        parm += "URL";
+        val = input.cache.url;
+      }
+      return parm.trim().length > 0 ?
+        acc.concat(parm + "=" + encodeURIComponent(val)) :
+        acc;
+    }, []));
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
 
 function customizeInterface () {
-  if (iface.interface === "minimal") {
+  if ($("#interface").val() === "minimal") {
     $("#inputSchema .status").html("schema (<span id=\"schemaDialect\">ShEx</span>)").show();
     $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
     $("#actions").parent().children().not("#actions").hide();
@@ -993,31 +1044,31 @@ function customizeInterface () {
  * Prepare drag and drop into text areas
  */
 function prepareDragAndDrop () {
-  var _scma = SchemaTextarea;
-  var _data = $("#inputData textarea");
-  var _bnds = $("#bindings1 textarea");
-  var _outs = $("#outputSchema textarea");
-  var _vars = $("#staticVars textarea");
-  var _body = $("body");
-  [{dropElt: _scma, targets: [{ext: "", target: InputSchema}]},
-   {dropElt: _data, targets: [{ext: "", target: InputData}]},
-   {dropElt: _bnds, targets: [{ext: "", target: Bindings}]},
-   {dropElt: _outs, targets: [{ext: "", target: OutputSchema}]},
-   {dropElt: _vars, targets: [{ext: "", target: Statics}]},
-   {dropElt: _body, targets: [{ext: ".shex", target: InputSchema},
-                              {ext: ".ttl", target: InputData}]}].
-    forEach(desc => {
+  QueryParams.filter(q => {
+    return "cache" in q;
+  }).map(q => {
+    return {
+      location: q.location,
+      targets: [{
+        ext: "",
+        target: q.cache
+      }]
+    };
+  }).concat([
+    {location: $("body"), targets: [{ext: ".shex", target: Caches.inputSchema},
+                                    {ext: ".ttl", target: Caches.inputData}]}
+  ]).forEach(desc => {
       // kudos to http://html5demos.com/dnd-upload
-      desc.dropElt.
+      desc.location.
         on("drag dragstart dragend dragover dragenter dragleave drop", function (e) {
           e.preventDefault();
           e.stopPropagation();
         }).
         on("dragover dragenter", (e) => {
-          desc.dropElt.addClass("hover");
+          desc.location.addClass("hover");
         }).
         on("dragend dragleave drop", (e) => {
-          desc.dropElt.removeClass("hover");
+          desc.location.removeClass("hover");
         }).
         on("drop", (e) => {
           readfiles(e.originalEvent.dataTransfer.files, desc.targets);
@@ -1055,9 +1106,9 @@ function prepareDragAndDrop () {
 }
 
 // prepareDemos() is invoked after these variables are assigned:
-function prepareDemos () {
+function prepareDemos (demoList) {
   var listItems = {inputSchema:{}, inputData:{}};
-  load("#inputSchema .examples ul", Demos, pickSchema,
+  load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
@@ -1069,10 +1120,12 @@ function prepareDemos () {
 
     timeouts[side] = setTimeout(() => {
       timeouts[side] = undefined;
-      $("#"+side+" .selected").removeClass("selected");
       var curSum = sum($(target).val());
       if (curSum in listItems[side])
         listItems[side][curSum].addClass("selected");
+      else
+        $("#"+side+" .selected").removeClass("selected");
+      delete cache.url;
     }, 250);
   }
   $("body").keydown(function (e) { // keydown because we need to preventDefault
@@ -1089,31 +1142,23 @@ function prepareDemos () {
       return true;
     }
   });
-  SchemaTextarea.keyup(function (e) { // keyup to capture backspace
-    var code = e.keyCode || e.charCode;
-    if (!(e.ctrlKey && (code === 10 || code === 13)))
-      later(e.target, "inputSchema", InputSchema);
+  Object.keys(Caches).forEach(function (cache) {
+    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
+      var code = e.keyCode || e.charCode;
+      if (!(e.ctrlKey && (code === 10 || code === 13)))
+        later(e.target, cache, Caches[cache]);
+    });
   });
-  $("#inputData textarea").keyup(function (e) {
-    var code = e.keyCode || e.charCode;
-    if (!(e.ctrlKey && (code === 10 || code === 13)))
-      later(e.target, "inputData", InputData);
-  });
-  addContextMenus("#focus0", "#inputShape0", "#outputShape");
+  addContextMenus("#focus0", Caches.inputData);
+  addContextMenus("#inputShape0", Caches.inputSchema);
+  addContextMenus("#outputShape", Caches.outputSchema);
 }
 
-function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
-  [ { inputSelector: nodeSelector,
-      getItems: function () { return InputData.getNodes(); } },
-    { inputSelector: shapeSelector,
-      getItems: function () { return InputSchema.getShapes(); } },
-    { inputSelector: outShapeSelector,
-      getItems: function () { return OutputSchema.getShapes(); } }
-  ].forEach(entry => {
+function addContextMenus (inputSelector, cache) {
     // !!! terribly stateful; only one context menu at a time!
     var terms = null, v = null, target, scrollLeft, m, addSpace = "";
     $.contextMenu({
-      selector: entry.inputSelector,
+      selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
         if (terms) {
@@ -1157,7 +1202,7 @@ function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
             }, {start: 0, tz: [], match: null });
             function norm (tz) {
               return tz.map(t => {
-                return InputData.meta.termToLex(t);
+                return Caches.inputData.meta.termToLex(t);
               });
             }
             const getTermsFunctions = [
@@ -1165,7 +1210,7 @@ function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
               () => { return norm(store.getPredicates()); },
               () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
             ];
-            var store = InputData.refresh();
+            var store = Caches.inputData.refresh();
             var items = getTermsFunctions[terms.match]();
             return {
               items:
@@ -1180,18 +1225,16 @@ function addContextMenus (nodeSelector, shapeSelector, outShapeSelector) {
         terms = v = null;
         return {
           items:
-          entry.getItems().reduce((ret, opt) => {
+          cache.getItems().reduce((ret, opt) => {
             ret[opt] = { name: opt };
             return ret;
           }, {})
         };
       }
     });
-  });
 }
 
 prepareControls();
 prepareInterface();
 prepareDragAndDrop();
-prepareDemos();
 
