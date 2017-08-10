@@ -514,6 +514,11 @@ function validate () {
 }
 
 function materialize () {
+  if (Caches.bindings.get().trim.length === 0) {
+    results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
+      removeClass("passes fails").addClass("error");
+    return;
+  }
   results.start();
   var parsing = "output schema";
   try {
@@ -528,6 +533,8 @@ function materialize () {
 
     function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
     var resultBindings = _dup(Caches.bindings.refresh());
+    if (Caches.statics.get().trim.length === 0)
+      Caches.statics.set("{  }");
     var _t = Caches.statics.refresh();
     if (_t && Object.keys(_t) > 0) {
       if (resultBindings.constructor !== Array)
