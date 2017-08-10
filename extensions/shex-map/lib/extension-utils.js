@@ -2,10 +2,11 @@
  * A file with common utility functions used by the extensions.
  */
 
+var ExtensionUtils = (function () {
 var _ = require('underscore');
 
 
-module.exports = {
+return {
     // Collapse multiple spaces into one
     collapseSpaces:  function(string) { 
         return string.replace(/  +/g, ' '); 
@@ -33,3 +34,7 @@ module.exports = {
         return string.replace(/\\([\/^$])/g, "$1"); 
     }
 }
+})();
+
+if (typeof require !== 'undefined' && typeof exports !== 'undefined')
+  module.exports = ExtensionUtils;

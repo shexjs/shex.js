@@ -217,7 +217,7 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
           outputSchema: SchemaConcert.schema,
           outputShape: "- start -",
           staticVars: {},
-          createRoot: "_:b0"}
+          createRoot: "_:root"}
       },
       fails: {
         "Non-IRI": {
@@ -226,7 +226,7 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
           outputSchema: SchemaConcert.schema,
           outputShape: "- start -",
           staticVars: {},
-          createRoot: "_:b0"}
+          createRoot: "_:root"}
       }
     }
   };
