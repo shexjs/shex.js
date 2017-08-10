@@ -272,7 +272,7 @@ function makeTurtleCache (selection) {
       }));
     } else {
       var data = this.refresh();
-      return data.getTriples().map(t => {
+      return data.getTriplesByIRI().map(t => {
         return Caches.inputData.meta.termToLex(t.subject);
       });
     }
@@ -450,11 +450,11 @@ function validate () {
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage(Object.assign({ request: "create", schema: InputSchema.refresh()
+      ShExWorker.postMessage(Object.assign({ request: "create", schema: Caches.inputSchema.refresh()
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
                                            },
-                                           "endpoint" in InputData ?
-                                           { endpoint: InputData.endpoint } :
+                                           "endpoint" in Caches.inputData ?
+                                           { endpoint: Caches.inputData.endpoint } :
                                            {  }
                                           ));
 
@@ -476,9 +476,9 @@ function validate () {
             queryMap: fixedMap,
             options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
           },
-          ("endpoint" in InputData ?
-           { endpoint: InputData.endpoint } :
-           { data: InputData.refresh().getTriplesByIRI() })
+          ("endpoint" in Caches.inputData ?
+           { endpoint: Caches.inputData.endpoint } :
+           { data: Caches.inputData.refresh().getTriplesByIRI() })
         ));
       }
 
