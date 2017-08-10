@@ -1,3 +1,6 @@
+if (true) {
+importScripts("../browser/shex-browserify.js");
+} else {
 importScripts("../doc/require.js"      );
 importScripts("https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"); modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;
 importScripts("https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"); modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;
@@ -13,6 +16,7 @@ importScripts("../lib/regex/nfax-val-1err.js"); modules["./lib/regex/nfax-val-1e
 importScripts("../lib/ShExValidator.js"); modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] =ShExValidator = module.exports;
 importScripts("../lib/ShExLoader.js"); modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;
 importScripts("../shex.js");
+}
 importScripts("Util.js");
 
 var validator = null;
@@ -28,7 +32,7 @@ onmessage = function (msg) {
     break;
 
   case "validate":
-    var db = N3Store();
+    var db = ShEx.N3.Store();
     db.addTriples(msg.data.data);
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
