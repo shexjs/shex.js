@@ -1,4 +1,4 @@
-(function () {
+var IRIResolver = (function () {
 
 function IRIResolver (meta) {
   if (!(this instanceof IRIResolver))
@@ -121,9 +121,8 @@ IRIResolver.prototype = {
   }
 };
 
-  if (typeof module !== 'undefined' && typeof module.exports !== 'undefined')
-    module.exports = IRIResolver;
-  else
-    window.IRIResolver = IRIResolver;
-
+return IRIResolver;
 })();
+
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined')
+  module.exports = IRIResolver;
