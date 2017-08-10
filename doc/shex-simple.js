@@ -113,14 +113,20 @@ function _makeCache (selection) {
         accepts: {
           mycustomtype: 'text/shex,text/turtle,*/*'
         },
-        url: url
-      }).fail(function( jqXHR, textStatus ) {
-        fail("GET <" + url + "> failed: " + jqXHR.statusText);
+        url: url,
+        dataType: "text"
+      }).fail(function (jqXHR, textStatus) {
+        var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
+        fail("GET <" + url + "> failed: " + error);
       }).done(function (data) {
-        _cache.set(data);
-        _cache.url = url;
-        $("#loadForm").dialog("close");
-        toggleControls();
+        try {
+          _cache.set(data);
+          _cache.url = url;
+          $("#loadForm").dialog("close");
+          toggleControls();
+        } catch (e) {
+          fail("unable to evaluate: " + e);
+        }
       });
     }
   };
@@ -199,8 +205,7 @@ function makeTurtleCache (selection) {
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
   ret.set = function (text) {
-    var evalMe = "(function () {\n" + text + "\n return Demos; })();"
-    var demos = eval(evalMe);
+    var demos = eval(text); // exceptions pass through to caller (asyncGet)
     prepareExamples(demos);
   };
   ret.parse = function (text) {
@@ -550,10 +555,6 @@ function prepareControls () {
   $("#loadForm").dialog({
     autoOpen: false,
     modal: true,
-    open: function (evt, ui) {
-      debugger;
-      console.dir(evt);
-    },
     buttons: {
       "GET": function (evt, ui) {
         var target =
@@ -594,7 +595,6 @@ function prepareControls () {
     $("#load-"+type+"-button").click(evt => {
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
-      console.dir(type);
     });
   });
 
