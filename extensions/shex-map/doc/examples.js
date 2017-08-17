@@ -1,3 +1,5 @@
+(function () {
+
 // Large constants with demo data which break syntax highlighting:
 var BPFHIR = {}, BPunitsDAM = {}; SchemaConcert = {};
 BPFHIR.schema = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
@@ -165,7 +167,7 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
   ] .
 `
 
-  var Demos = {
+  return {
     "BP": {
       schema: BPFHIR.schema,
       passes: {
@@ -230,3 +232,4 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
       }
     }
   };
+})();
