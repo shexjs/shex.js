@@ -1025,12 +1025,12 @@ function prepareDragAndDrop () {
 }
 
 function prepareExamples (demoList) {
-  var listItems = {inputSchema:{}, inputData:{}};
+  var listItems = {inputSchema:{}, inputData:{}, examples: {}};
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
-  var timeouts = { inputSchema: undefined, inputData: undefined };
+  var timeouts = { inputSchema: undefined, inputData: undefined, examples: undefined };
   function later (target, side, cache) {
     cache.dirty(true);
     if (timeouts[side])
