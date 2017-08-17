@@ -171,18 +171,18 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
       passes: {
         "simple": {
           data: BPFHIR.simple,
-          queryMap: "<tag:BPfhir123>@- start -",
+          queryMap: "<tag:BPfhir123>@START",
           outputSchema: BPunitsDAM.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
       },
       fails: {
         "bad code": {
           data: BPFHIR.badCode,
-          queryMap: "<tag:BPfhir123>@- start -",
+          queryMap: "<tag:BPfhir123>@START",
           outputSchema: BPunitsDAM.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
       }
@@ -192,18 +192,18 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
       passes: {
         "simple": {
           data: BPunitsDAM.simple,
-          queryMap: "<tag:b0>@- start -",
+          queryMap: "<tag:b0>@START",
           outputSchema: BPFHIR.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
       },
       fails: {
         // "bad code": {
         //   data: BPunitsDAM.simple,
-        //   queryMap: "<tag:b0>@- start -",
+        //   queryMap: "<tag:b0>@START",
         //   outputSchema: BPFHIR.schema,
-        //   outputShape: "- start -",
+        //   outputShape: "START",
         //   staticVars: BPFHIR.constants,
         //   createRoot: "tag:BPfhir123"}
       },
@@ -213,18 +213,18 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
       passes: {
         "BBKing": {
           data: SchemaConcert.BBKing,
-          queryMap: "_:b0@- start -",
+          queryMap: "_:b0@START",
           outputSchema: SchemaConcert.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: {},
           createRoot: "_:root"}
       },
       fails: {
         "Non-IRI": {
           data: SchemaConcert.nonIRI,
-          queryMap: "_:b0@- start -",
+          queryMap: "_:b0@START",
           outputSchema: SchemaConcert.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: {},
           createRoot: "_:root"}
       }
