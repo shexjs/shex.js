@@ -97,7 +97,7 @@ describe("A ShEx parser", function () {
            var schema = fs.readFileSync(shexRFile, "utf8");
            try {
              var schemaGraph = N3.Store();
-             schemaGraph.addTriples(N3.Parser({documentIRI:shexRFile, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
+             schemaGraph.addTriples(N3.Parser({documentIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
              // console.log(schemaGraph.getTriples());
              var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
@@ -107,10 +107,11 @@ describe("A ShEx parser", function () {
              );
              var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
+             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
              if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
-             expect(parsedSchema).to.deep.equal(canonAbstractSyntax);
+             expect(canonParsed).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
              throw(e);
@@ -133,9 +134,11 @@ describe("A ShEx parser", function () {
           if (VERBOSE) console.log("written  :" + w);
           parser._setFileName(shexCFile + " (generated)");
           try {
+            parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
             var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
-            expect(parsed2).to.deep.equal(canonAbstractSyntax);
+            expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
           } catch (e) {
             parser.reset();
             throw(e);
