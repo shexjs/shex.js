@@ -3,6 +3,7 @@ var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
+var BASE = "http://a.example/application/base/";
 
 var ShExParser = require("../lib/ShExParser");
 var ShExWriter = require("../lib/ShExWriter");
@@ -33,7 +34,7 @@ describe("A ShEx parser", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
 
-  var parser = ShExParser.construct();
+  var parser = ShExParser.construct(BASE);
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
@@ -77,7 +78,7 @@ describe("A ShEx parser", function () {
            try {
              parser._setFileName(shexCFile);
              var parsedSchema = parser.parse(schema);
-             var canonParsed = ShExUtil.canonicalize(parsedSchema)
+             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("parsed   :" + JSON.stringify(canonParsed));
              if (VERBOSE) console.log("expected :" + JSON.stringify(canonAbstractSyntax));
@@ -132,8 +133,9 @@ describe("A ShEx parser", function () {
           if (VERBOSE) console.log("written  :" + w);
           parser._setFileName(shexCFile + " (generated)");
           try {
-            var parsed2 = parser.parse(w);
-            expect(parsed2).to.deep.equal(abstractSyntax);
+            var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+            expect(parsed2).to.deep.equal(canonAbstractSyntax);
           } catch (e) {
             parser.reset();
             throw(e);
