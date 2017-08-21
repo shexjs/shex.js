@@ -25,7 +25,11 @@ var negativeTests = [
 ];
 var illDefinedTestsPath = findPath("illDefined");
 
-if (!SLOW)
+var parser = ShExParser.construct(BASE);
+
+if (SLOW)
+  var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
+else
   console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
 
 describe("A ShEx parser", function () {
@@ -33,8 +37,6 @@ describe("A ShEx parser", function () {
   // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
-
-  var parser = ShExParser.construct(BASE);
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
@@ -90,11 +92,6 @@ describe("A ShEx parser", function () {
          });
 
     if (SLOW) {
-      var graphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
-      var GraphParser = ShExValidator.construct(
-        graphSchema,
-        {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
-      );
       it("should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
@@ -106,7 +103,11 @@ describe("A ShEx parser", function () {
              // console.log(schemaGraph.getTriples());
              var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
-             var val = GraphParser.validate(schemaGraph, schemaRoot); // start shape
+             var graphParser = ShExValidator.construct(
+               GraphSchema,
+               {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
+             );
+             var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
