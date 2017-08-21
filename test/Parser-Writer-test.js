@@ -90,6 +90,11 @@ describe("A ShEx parser", function () {
          });
 
     if (SLOW) {
+      var graphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
+      var GraphParser = ShExValidator.construct(
+        graphSchema,
+        {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
+      );
       it("should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
@@ -101,11 +106,7 @@ describe("A ShEx parser", function () {
              // console.log(schemaGraph.getTriples());
              var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
-             var graphParser = ShExValidator.construct(
-               parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8")),
-               {}
-             );
-             var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
+             var val = GraphParser.validate(schemaGraph, schemaRoot); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
              var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
