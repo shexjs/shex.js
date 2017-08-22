@@ -6,6 +6,7 @@ var EARL = "EARL" in process.env;
 
 // var ShExUtil = require("../lib/ShExUtil");
 var ShExParser = require("../lib/ShExParser");
+var ShExLoader = require("../lib/ShExLoader");
 var ShExValidator = require("../lib/ShExValidator");
 var TestExtension = require("../extensions/shex-test/module");
 
@@ -146,7 +147,10 @@ describe("A ShEx validator", function () {
             }
           }, params);
 
-          var schema = shexParser.parse(fs.readFileSync(schemaFile, "utf8"));
+          var schema = ShExLoader.loadShExSync(schemaFile, shexParser,
+                                               function (i) {
+                                                 return i.replace("file://", "") + ".shex";
+                                               });
           var validator = ShExValidator.construct(schema, schemaOptions);
           var testResults = TestExtension.register(validator);
 

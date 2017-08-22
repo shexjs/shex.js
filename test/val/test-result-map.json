@@ -557,5 +557,6 @@
   "#2dot_fail-empty-err": "2dot_missing1.err",
   "#node_kind_example": "node_kind_example.err",
   "#recursion_example": "recursion_example.val",
-  "#dependent_shape": "dependent_shape.val"
+  "#dependent_shape": "dependent_shape.val",
+  "#3circRefS1-IS2-IS3-IS3": "3circRefPlus1_pass-open.val"
 }

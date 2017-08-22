@@ -6,6 +6,7 @@ var EARL = "EARL" in process.env; // We're generation an EARL report.
 var BASE = "http://a.example/application/base/";
 
 var ShExParser = require("../lib/ShExParser");
+var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter");
 var ShExUtil = require("../lib/ShExUtil");
 var ShExValidator = require("../lib/ShExValidator");
@@ -27,10 +28,21 @@ var illDefinedTestsPath = findPath("illDefined");
 
 var parser = ShExParser.construct(BASE);
 
-if (SLOW)
+if (SLOW) {
   var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
-else
+  var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
+  var valueExpr_tripleCnstrnt = GraphSchema.shapes[nsPath + "TripleConstraint"].
+      expression.expressions.find(e => {
+        return e.predicate === nsPath + "shex#valueExpr";
+      });
+  valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",
+                                        shapeExprs:
+                                        [ { type: "ShapeRef",
+                                            reference: nsPath + "shapeExpr" },
+                                          { type: "Shape", closed: true } ] }
+} else {
   console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
+}
 
 describe("A ShEx parser", function () {
   // var b = function () {  };
@@ -101,7 +113,7 @@ describe("A ShEx parser", function () {
              var schemaGraph = N3.Store();
              schemaGraph.addTriples(N3.Parser({documentIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
              // console.log(schemaGraph.getTriples());
-             var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+             var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
                GraphSchema,
@@ -190,9 +202,14 @@ describe("A ShEx parser", function () {
         if (VERBOSE) console.log(schemaFile);
         var schemaText = fs.readFileSync(path, "utf8");
         var error = null, schema = null;
-        try {debugger;
+        try {
              schema =
-             schemaFile.match(/\.shex$/) ? parser.parse(schemaText) :
+             schemaFile.match(/\.shex$/) ?
+             // parser.parse(schemaText) :
+             ShExLoader.loadShExSync(path, parser,
+                                     function (i) {
+                                       return i.replace("file://", "") + ".shex";
+                                     }) :
              ShExUtil.validateSchema(JSON.parse(schemaText));
              // console.warn(JSON.stringify(schema));
             }
