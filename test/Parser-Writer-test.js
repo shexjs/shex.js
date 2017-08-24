@@ -198,29 +198,22 @@ describe("A ShEx parser", function () {
 
     negSyntaxTests.forEach(function (schemaFile) {
       var path = testSet.path + schemaFile;
-      it("should not parse schema '" + path + "'", function () {
+      it("should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(schemaFile);
-        var schemaText = fs.readFileSync(path, "utf8");
-        var error = null, schema = null;
-        try {
-             schema =
-             schemaFile.match(/\.shex$/) ?
-             // parser.parse(schemaText) :
-             ShExLoader.loadShExSync(path, parser,
-                                     function (i) {
-                                       return i.replace("file://", "") + ".shex";
-                                     }) :
-             ShExUtil.validateSchema(JSON.parse(schemaText));
-             // console.warn(JSON.stringify(schema));
+        ShExLoader.loadShExImports(path, parser).
+          then(function (schema) {
+            report(Error("Expected " + path + " to fail with " + testSet.include));
+          }).
+          catch(function (error) {
+            try {
+              expect(error).to.exist;
+              expect(error).to.be.an.instanceof(Error);
+              expect(error.message).to.include(testSet.include);
+              report();
+            } catch (e) {
+              report(e);
             }
-        catch (e) {
-          error = e;
-          // console.warn(e);
-        }
-        
-        expect(error).to.exist;
-        expect(error).to.be.an.instanceof(Error);
-        expect(error.message).to.include(testSet.include);
+          });
       });
     });
   });

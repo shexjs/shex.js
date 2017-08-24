@@ -127,6 +127,7 @@ describe("A ShEx validator", function () {
               shapes;
           }
           shexParser._setBase(schemaURL);
+          var validator;
           var schemaOptions = Object.assign({
             regexModule: regexModule,
             diagnose: true,
@@ -146,77 +147,81 @@ describe("A ShEx validator", function () {
                                                   shapeLabel, depth, seen);
             }
           }, params);
+          ShExLoader.loadShExImports(schemaFile, shexParser, function (i) {
+            return i + ".shex";
+          }).
+            then(function (schema) {
+              // var schema = ;
+              validator = ShExValidator.construct(schema, schemaOptions);
+              var testResults = TestExtension.register(validator);
 
-          var schema = ShExLoader.loadShExSync(schemaFile, shexParser,
-                                               function (i) {
-                                                 return i.replace("file://", "") + ".shex";
-                                               });
-          var validator = ShExValidator.construct(schema, schemaOptions);
-          var testResults = TestExtension.register(validator);
+              assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
+              // var start = schema.start;
+              // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
+              //   start = Object.keys(schema.action.shapes)[0];
 
-          assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
-          // var start = schema.start;
-          // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
-          //   start = Object.keys(schema.action.shapes)[0];
-
-          var store = new N3.Store();
-          var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
-          turtleParser.parse(
-            fs.readFileSync(dataFile, "utf8"),
-            function (error, triple, prefixes) {
-              if (error) {
-                report("error parsing " + dataFile + ": " + error);
-              } else if (triple) {
-                store.addTriple(triple);
-              } else {
-                try {
-                  function maybeGetTerm (base, s) {
-                    return s === undefined ? null :
-                      typeof(s) === "object" ? "\""+s["@value"]+"\""+(
-                        "@type" in s ? "^^"+s["@type"] :
-                          "@language" in s ? "@"+s["@language"] :
-                          ""
-                      ):
-                    s.substr(0, 2) === "_:" ? s :
-                      resolveRelativeIRI(base, s);
-                  }
-                  var map = maybeGetTerm(manifestFile, test.action.map);
-                  if (map) {
-                    map = JSON.parse(fs.readFileSync(map, "utf8"));
-                    map = Object.keys(map).reduce((r, k) => {
-                      return r.concat({node: k, shape: map[k]});
-                    }, [])
+              var store = new N3.Store();
+              var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
+              turtleParser.parse(
+                fs.readFileSync(dataFile, "utf8"),
+                function (error, triple, prefixes) {
+                  if (error) {
+                    report("error parsing " + dataFile + ": " + error);
+                  } else if (triple) {
+                    store.addTriple(triple);
                   } else {
-                    var focus = maybeGetTerm(dataURL, test.action.focus);
-                    var shape = maybeGetTerm(schemaURL, test.action.shape);
-                    map = [{node: focus, shape: shape}];
-                  }
-                  var validationResult = validator.validate(store, map);
-                  if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
-                  if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
-                  if (params.results !== "api") {
-                    if (test["@type"] === "sht:ValidationFailure") {
-                      assert(!validationResult || "errors" in validationResult, "test expected to fail");
-                      if (referenceResult)
-                        expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
-                    } else {
-                      assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-                      expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                    try {
+                      function maybeGetTerm (base, s) {
+                        return s === undefined ? null :
+                          typeof(s) === "object" ? "\""+s["@value"]+"\""+(
+                            "@type" in s ? "^^"+s["@type"] :
+                              "@language" in s ? "@"+s["@language"] :
+                              ""
+                          ):
+                        s.substr(0, 2) === "_:" ? s :
+                          resolveRelativeIRI(base, s);
+                      }
+                      var map = maybeGetTerm(manifestFile, test.action.map);
+                      if (map) {
+                        map = JSON.parse(fs.readFileSync(map, "utf8"));
+                        map = Object.keys(map).reduce((r, k) => {
+                          return r.concat({node: k, shape: map[k]});
+                        }, [])
+                      } else {
+                        var focus = maybeGetTerm(dataURL, test.action.focus);
+                        var shape = maybeGetTerm(schemaURL, test.action.shape);
+                        map = [{node: focus, shape: shape}];
+                      }
+                      var validationResult = validator.validate(store, map);
+                      if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
+                      if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
+                      if (params.results !== "api") {
+                        if (test["@type"] === "sht:ValidationFailure") {
+                          assert(!validationResult || "errors" in validationResult, "test expected to fail");
+                          if (referenceResult)
+                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                        } else {
+                          assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
+                          expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                        }
+                      }
+                      var xr = test.extensionResults.filter(function (x) {
+                        return x.extension === TestExtension.url;
+                      }).map(function (x) {
+                        return x.prints;
+                      });
+                      if (xr.length) {
+                        expect(testResults).to.deep.equal(xr);
+                      }
+                      report();
+                    } catch (e) {
+                      report(e);
                     }
                   }
-                  var xr = test.extensionResults.filter(function (x) {
-                    return x.extension === TestExtension.url;
-                  }).map(function (x) {
-                    return x.prints;
-                  });
-                  if (xr.length) {
-                    expect(testResults).to.deep.equal(xr);
-                  }
-                  report();
-                } catch (e) {
-                  report(e);
-                }
-              }
+                });
+            }).
+            catch(function (e) {
+              report(e);
             });
         }
       } catch (e) {
