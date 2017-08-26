@@ -18,6 +18,7 @@ var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var jsonSchemasPath = findPath("parsedSchemas");
+var manifestFile = schemasPath + "manifest.jsonld";
 var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
 var negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
@@ -31,6 +32,11 @@ if (SLOW)
   var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
 else
   console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
+
+// positive transformation tests
+var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+if (TESTS)
+  schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
 describe("A ShEx parser", function () {
   // var b = function () {  };
@@ -54,23 +60,15 @@ describe("A ShEx parser", function () {
       expect(error.message).to.include("Parse error on line 1");
     });
 
+  schemas.forEach(function (test) {
+    var schema = test.name;
 
-  // positive transformation tests
-  var schemas = fs.
-    readdirSync(schemasPath).
-    filter(function (s) { return s.indexOf(".shex") !== -1; }).
-    map(function (s) { return s.replace(/\.shex$/, ""); });
-  if (TESTS)
-    schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
-  schemas.sort();
-  schemas.forEach(function (schema) {
-
-    var jsonSchemaFile = jsonSchemasPath + schema + ".json";
+    var jsonSchemaFile = jsonSchemasPath + test.json;
     if (!fs.existsSync(jsonSchemaFile)) return;
     try {
       var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
-      var shexCFile = schemasPath + schema + ".shex";
-      var shexRFile = schemasPath + schema + ".ttl";
+      var shexCFile = schemasPath + test.shex;
+      var shexRFile = schemasPath + test.ttl;
 
       it("should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
@@ -79,6 +77,7 @@ describe("A ShEx parser", function () {
            var schema = fs.readFileSync(shexCFile, "utf8");
            try {
              parser._setFileName(shexCFile);
+             parser._setBase(BASE);
              var parsedSchema = parser.parse(schema);
              var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
@@ -262,4 +261,46 @@ describe("A ShEx parser", function () {
     });
   }
 });
+
+// Parses a JSON object, restoring `undefined` values
+function parseJSONFile(filename, mapFunction) {
+  "use strict";
+  try {
+    var string = fs.readFileSync(filename, "utf8");
+    var object = JSON.parse(string);
+    function resolveRelativeURLs (obj) {
+      Object.keys(obj).forEach(function (k) {
+        if (typeof obj[k] === "object") {
+          resolveRelativeURLs(obj[k]);
+        }
+        if (mapFunction) {
+          mapFunction(k, obj);
+        }
+      });
+    }
+    resolveRelativeURLs(object);
+    return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+  } catch (e) {
+    throw new Error("error reading " + filename +
+                    ": " + ("stack" in e ? e.stack : e));
+  }
+}
+
+// Not sure this is needed when everything's working but I have hunch it makes
+// error handling a little more graceful.
+
+// Stolen from Ruben Verborgh's SPARQL.js tests:
+// Recursively replace values of "{undefined}" by `undefined`
+function restoreUndefined(object) {
+  "use strict";
+  for (var key in object) {
+    var item = object[key];
+    if (typeof item === "object") {
+      object[key] = restoreUndefined(item);
+    } else if (item === "{undefined}") {
+      object[key] = undefined;
+    }
+  }
+  return object;
+}
 
