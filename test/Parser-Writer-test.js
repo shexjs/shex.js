@@ -38,6 +38,11 @@ var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
+// positive transformation tests
+var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+if (TESTS)
+  schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
+
 describe("A ShEx parser", function () {
   // var b = function () {  };
   // it("is a toy", function () {
