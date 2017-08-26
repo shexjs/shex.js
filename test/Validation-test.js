@@ -147,11 +147,12 @@ describe("A ShEx validator", function () {
                                                   shapeLabel, depth, seen);
             }
           }, params);
-          ShExLoader.loadShExImports(schemaFile, shexParser, function (i) {
+          function pickShEx (i) {
             return i + ".shex";
-          }).
-            then(function (schema) {
-              // var schema = ;
+          }
+          ShExLoader.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
+            then(function (loaded) {
+              var schema = loaded.schema;
               validator = ShExValidator.construct(schema, schemaOptions);
               var testResults = TestExtension.register(validator);
 

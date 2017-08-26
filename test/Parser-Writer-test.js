@@ -204,8 +204,8 @@ describe("A ShEx parser", function () {
       var path = testSet.path + schemaFile;
       it("should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(schemaFile);
-        ShExLoader.loadShExImports(path, parser).
-          then(function (schema) {
+        ShExLoader.load([path], [], [], [], { parser: parser }, {}).
+          then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
           }).
           catch(function (error) {
@@ -279,6 +279,33 @@ describe("A ShEx parser", function () {
     });
   }
 });
+
+if (SLOW) {
+  /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
+   * want it in the API.
+   */
+  describe("loadShExImports_NotUsed", function () {
+    schemas.filter(test => {
+      return "trait" in test && test.trait.indexOf("Import") !== -1;
+    }).filter(t => {
+      return true;
+    }).forEach(test => {
+      var path = schemasPath + test.shex;
+      it("should load the same imports as ShExLoader.load in '" + path + "'", function () {
+        parser._setBase("file://"+path);
+        return Promise.all([
+          ShExLoader.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
+          ShExLoader.loadShExImports_NotUsed(path, parser, pickShEx)
+        ]).then(function (loadedAndSchema) {
+          expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).to.deep.equal(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
+        });
+        function pickShEx (i) {
+          return i + ".shex";
+        }
+      });
+    });
+  });
+}
 
 // Parses a JSON object, restoring `undefined` values
 function parseJSONFile(filename, mapFunction) {
