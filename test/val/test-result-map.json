@@ -132,6 +132,7 @@
   "#1literalMinlength_pass-lit-long": "1literalMinlength_pass-lit-long.val",
   "#1iriMinlength_pass-iri-equal": "1iriMinlength_pass-iri-equal.val",
   "#1iriMinlength_pass-iri-long": "1iriMinlength_pass-iri-long.val",
+  "#3circRefS123": "3circRefPlus1_pass-open.val",
   "#3circRefPlus1_pass-open": "3circRefPlus1_pass-open.val",
   "#3circRefPlus1_pass-recursiveData": "3circRefPlus1_pass-recursiveData.val",
   "#1iriRef1_pass-iri": "1iriRef1_pass-iri.val",
@@ -558,5 +559,14 @@
   "#node_kind_example": "node_kind_example.err",
   "#recursion_example": "recursion_example.val",
   "#dependent_shape": "dependent_shape.val",
+  "#2RefS1-IS2": "In2_Ip2_In1@In1_Ip1_LX.val",
+  "#2RefS2-IS1": "In2_Ip2_In1@In1_Ip1_LX.val",
+  "#2RefS1-Icirc": "In2_Ip2_In1@In1_Ip1_LX.val",
+  "#3circRefS1-IS23": "3circRefPlus1_pass-open.val",
+  "#3circRefS1-IS23_pass-p1": "3circRefS1-IS23_pass-p1.val",
+  "#3circRefS1-IS2-IS3": "3circRefPlus1_pass-open.val",
+  "#3circRefS3-IS12": "3circRefPlus1_pass-open.val",
+  "#3circRefS123-Icirc": "3circRefPlus1_pass-open.val",
+  "#3circRefS1-Icirc": "3circRefPlus1_pass-open.val",
   "#3circRefS1-IS2-IS3-IS3": "3circRefPlus1_pass-open.val"
 }
