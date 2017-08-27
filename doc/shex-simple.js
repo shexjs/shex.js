@@ -2,7 +2,7 @@
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
-const START_SHAPE_LABEL = "- start -";
+const START_SHAPE_LABEL = "START";
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
@@ -57,13 +57,13 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  var ret = node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  var ret = node === ShEx.Validator.start ? START_SHAPE_LABEL : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
   if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
     ret = "a";
   return ret;
 }
 function rdflib_lexToTerm (lex, resolver) {
-  return lex === "- start -" ? lex :
+  return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
     ShEx.N3.Lexer().tokenize(lex).map(token => {
     var left = 
@@ -78,7 +78,7 @@ function rdflib_lexToTerm (lex, resolver) {
           token.value;
     return left + right;
   }).join("");
-  return lex === "- start -" ? lex : lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
+  return lex === ShEx.Validator.start ? lex : lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
 }
 // </n3.js-specific>
 

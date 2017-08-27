@@ -101,7 +101,7 @@ function materializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = shape && shape !== "- start -"? { type: "ShapeRef", reference: shape } : schema.start;
+      shape = shape && shape !== ShEx.Validator.start? { type: "ShapeRef", reference: shape } : schema.start;
       target = target || ShEx.N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
