@@ -378,26 +378,26 @@ function validate () {
 
       $("#results .status").text("creating validator...").show();
       ShEx.Loader.load([], ["data:text/json," + JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(Caches.inputSchema.refresh())))], [], []).then(loaded => {
-      var validator = ShEx.Validator.construct(
-        loaded.schema,
-        { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
+        var validator = ShEx.Validator.construct(
+          loaded.schema,
+          { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
-      $("#results .status").text("validating...").show();
-      var ret = validator.validate(inputData, fixedMap);
-      // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
-      $("#results .status").text("rendering results...").show();
-      ret.forEach(renderEntry);
-      // for debugging values and schema formats:
-      // try {
-      //   var x = ShExUtil.valToValues(ret);
-      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
-      //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   var y = ShExUtil.valuesToSchema(x);
-      //   res = results.append(JSON.stringify(y, null, "  "));
-      // } catch (e) {
-      //   console.dir(e);
-      // }
-      finishRendering();
+        $("#results .status").text("validating...").show();
+        var ret = validator.validate(inputData, fixedMap);
+        // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
+        $("#results .status").text("rendering results...").show();
+        ret.forEach(renderEntry);
+        // for debugging values and schema formats:
+        // try {
+        //   var x = ShExUtil.valToValues(ret);
+        //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
+        //   res = results.replace(JSON.stringify(x, null, "  "));
+        //   var y = ShExUtil.valuesToSchema(x);
+        //   res = results.append(JSON.stringify(y, null, "  "));
+        // } catch (e) {
+        //   console.dir(e);
+        // }
+        finishRendering();
       }).catch(function (e) {
         failMessage(e);
       });
