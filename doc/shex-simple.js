@@ -947,9 +947,10 @@ function prepareInterface () {
     });
     addContextMenus("#focus0", Caches.inputData);
     addContextMenus("#inputShape0", Caches.inputSchema);
-    if ("schema" in iface &&
+    if ("schemaURL" in iface ||
         // some schema is non-empty
-        iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
+        ("schema" in iface &&
+         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))) {
       validate();
     }
   });
