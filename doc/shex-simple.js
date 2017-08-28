@@ -1151,7 +1151,8 @@ function addContextMenus (inputSelector, cache) {
               () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
             ];
             var store = Caches.inputData.refresh();
-            var items = getTermsFunctions[terms.match]();
+            var items = terms.match === null ? [] : getTermsFunctions[terms.match]();
+            // contextMenu will whine: "No Items specified". oh well...
             return {
               items:
               items.reduce((ret, opt) => {
