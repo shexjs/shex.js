@@ -1797,10 +1797,19 @@ function GET (f, mediaType) {
   });
 }
 
-function loadList (list, mediaType, done) {
-  return list.map(function (p) {
+function loadList (src, metaList, mediaType, parserWrapper, target, options, loadImports) {
+  return src.map(function (p) {
     return GET(p, mediaType).then(function (loaded) {
-      return done(loaded.text, loaded.url);
+      var meta = {
+        mediaType: mediaType,
+        url: loaded.url,
+        base: loaded.url,
+        prefixes: {}
+      };
+      metaList.push(meta);
+      return new Promise(function (resolve, reject) {
+        parserWrapper(resolve, reject, loaded.text, mediaType, loaded.url, target, meta, options, loadImports);
+      });
     });
   });
 }
@@ -1814,41 +1823,109 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
     data: N3.Store(),
     schemaMeta: [],
     dataMeta: []
-  }
+  };
   var promises = [];
+  var schemasSeen = shex.concat(json);
+  var transform = null;
+  if (schemaOptions && "iriTransform" in schemaOptions) {
+    transform = schemaOptions.iriTransform;
+    delete schemaOptions.iriTransform;
+  }
 
-  function add (src, metaList, mediaType, f, target, options) {
-    return loadList(src, mediaType, function (text, url) {
-      var meta = {mediaType: mediaType, url: url, base: url, prefixes: {}};
-      metaList.push(meta);
-      return new Promise(function (resolve, reject) {
-        f(resolve, reject, text, mediaType, url, target, meta, options);
-      });
-    })
+  var promiseScope = DynamicPromise();
+  function loadImports (schema) {
+    var rest = "imports" in schema ?
+        schema.imports.
+        map(function (i) {
+          return transform ? transform(i) : i;
+        }).
+        filter(function (i) {
+          return schemasSeen.indexOf(i) === -1;
+        }) :
+        [];
+    return rest.length ? Promise.all(rest.map(i => {
+      schemasSeen.push(i);
+      return promiseScope.add(GET(i).then(function (loaded) {
+        var meta = {
+          // mediaType: mediaType,
+          url: loaded.url,
+          base: loaded.url,
+          prefixes: {}
+        };
+        // metaList.push(meta);
+        return new Promise(function (resolve, reject) {
+          parseShExC(resolve, reject, loaded.text, "text/shex", loaded.url, returns.schema, meta, schemaOptions, loadImports);
+        });
+      }));
+    })).then(a => {
+      return null;
+    }) : null;
   }
 
   // gather all the potentially remote inputs
   promises = promises.
-    concat(add(shex, returns.schemaMeta, "text/shex",
-               parseShExC, returns.schema, schemaOptions)).
-    concat(add(json, returns.schemaMeta, "text/json",
-               parseShExJ, returns.schema, schemaOptions)).
-    concat(add(turtle, returns.dataMeta, "text/turtle",
-               parseTurtle, returns.data, dataOptions)).
-    concat(add(jsonld, returns.dataMeta, "application/ld+json",
-               parseJSONLD, returns.data, dataOptions));
-  return Promise.all(promises).then(function () { return returns; });
+    concat(loadList(shex, returns.schemaMeta, "text/shex",
+                    parseShExC, returns.schema, schemaOptions, loadImports)).
+    concat(loadList(json, returns.schemaMeta, "text/json",
+                    parseShExJ, returns.schema, schemaOptions, loadImports)).
+    concat(loadList(turtle, returns.dataMeta, "text/turtle",
+                    parseTurtle, returns.data, dataOptions)).
+    concat(loadList(jsonld, returns.dataMeta, "application/ld+json",
+                    parseJSONLD, returns.data, dataOptions));
+  return promiseScope.all(promises).then(function () {
+    if (returns.schemaMeta.length > 0)
+      ShExUtil.isWellDefined(returns.schema);
+    return returns;
+  });
 }
 
-function parseShExC (resolve, reject, text, mediaType, url, schema, meta, schemaOptions) {
+function DynamicPromise () {
+  var promises = [];
+  var results = [];
+  var completedPromises = 0;
+  var resolve, reject;
+  return {
+    all: function (pz) {
+      promises = pz;
+      return new Promise(function (res, rej) {
+        resolve = res; reject = rej;
+        promises.forEach(function (promise, index) {
+          // promises.push(promise);
+          addThen(promise, index);
+        });
+      });
+    },
+    add: function (promise) {
+      promises.push(promise);
+      return addThen(promise, promises.length - 1);
+    }
+  };
+  function addThen (promise, index) {
+    promise.then(function (value) {
+      results[index] = value;
+      ++completedPromises;
+      if(completedPromises === promises.length) {
+        resolve(results);
+      }
+    }).catch(function (error) {
+      reject(error);
+    });
+    return promise;
+  }
+}
+
+function parseShExC (resolve, reject, text, mediaType, url, schema, meta, schemaOptions, loadImports) {
+  var parser = schemaOptions && "parser" in schemaOptions ?
+      schemaOptions.parser :
+      ShExParser.construct(url, {}, schemaOptions);
   try {
-    var s = (ShExParser.construct(url, {}, schemaOptions)).parse(text);
+    var s = parser.parse(text);
     // !! horrible hack until I set a variable to know if there's a BASE.
     if (s.base === url) delete s.base;
     ShExUtil.merge(schema, s, true, true);
     meta.prefixes = schema.prefixes;
     meta.base = schema.base || meta.base;
-    resolve([mediaType, url]);
+    resolve(loadImports(s)); // [mediaType, url]
   } catch (e) {
     var e2 = Error("error parsing ShEx " + url + ": " + e);
     e2.stack = e.stack;
@@ -1856,13 +1933,41 @@ function parseShExC (resolve, reject, text, mediaType, url, schema, meta, schema
   }
 }
 
-function parseShExJ (resolve, reject, text, mediaType, url, schema, meta, schemaOptions) {
+function loadShExImports_NotUsed (from, parser, transform) {
+  var schemasSeen = [from];
+  var ret = { type: "Schema" };
+  return GET(from).then(loadImports).then(function () {
+    ShExUtil.isWellDefined(ret);
+    return ret;
+  });
+  function loadImports (loaded) {
+    var schema = parser.parse(loaded.text);
+    ShExUtil.merge(ret, schema, false, true);
+    var rest = "imports" in schema ?
+        schema.imports.
+        map(function (i) {
+          return transform ? transform(i) : i;
+        }).
+        filter(function (i) {
+          return schemasSeen.indexOf(i) === -1;
+        }) :
+        [];
+    return rest.length ? Promise.all(rest.map(i => {
+      schemasSeen.push(i);
+      return GET(i).then(loadImports);
+    })).then(a => {
+      return null;
+    }) : null;
+  }
+}
+
+function parseShExJ (resolve, reject, text, mediaType, url, schema, meta, schemaOptions, loadImports) {
   try {
     var s = ShExUtil.ShExJtoAS(JSON.parse(text));
     ShExUtil.merge(schema, s, true, true);
     meta.prefixes = schema.prefixes;
     meta.base = schema.base;
-    resolve([mediaType, url]);
+    resolve(loadImports(s)); // [mediaType, url]
   } catch (e) {
     var e2 = Error("error parsing JSON " + url + ": " + e);
     e2.stack = e.stack;
@@ -1918,7 +2023,7 @@ function LoadExtensions () {
     }, {});
 }
 
-return { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET };
+return { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
 })();
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
@@ -1956,9 +2061,8 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
     // ShExJison.baseRoot = ShExJison.base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
     ShExJison._prefixes = Object.create(prefixesCopy);
     ShExJison._imports = [];
-    var ret;
     try {
-      ret = ShExJison.prototype.parse.apply(parser, arguments);
+      return ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
       // use the lexer's pretty-printing
       var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
@@ -1968,7 +2072,6 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
       parser.reset();
       throw t;
     }
-    return ShExUtil.isWellDefined(ret);
   }
   parser.parse = runParser;
   parser._setBase = ShExJison._setBase;
@@ -2442,7 +2545,7 @@ var ShExUtil = {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
-        if (knownShapeExprs.indexOf(expr.id) !== -1)
+        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
           return expr.id;
         delete expr.id;
       }
@@ -2771,6 +2874,13 @@ var ShExUtil = {
         }
       });
     }
+
+    // productions
+    if ("productions" in left)
+      ret.productions = left.productions;
+    if ("productions" in right)
+      if (!("productions" in left) || overwrite)
+        ret.productions = right.productions;
 
     // base
     if ("base" in left)
@@ -3606,6 +3716,7 @@ var ShExValidator = (function () {
 var UNBOUNDED = -1;
 
 // interface constants
+var Start = { term: "START" }
 var InterfaceOptions = {
   "or": {
     "oneOf": "exactly one disjunct must pass",
@@ -3930,7 +4041,7 @@ function ShExValidator_constructor(schema, options) {
           results.passes [0];
       }
     }
-    if (!labelOrShape || labelOrShape === "- start -") {
+    if (!labelOrShape || labelOrShape === Start) {
       if (!schema.start)
         runtimeError("start production not defined");
       labelOrShape = schema.start;
@@ -4796,6 +4907,7 @@ function runtimeError () {
 
   return {
     construct: ShExValidator_constructor,
+    start: Start,
     options: InterfaceOptions
   };
 })();
@@ -4925,9 +5037,11 @@ ShExWriter.prototype = {
       shapeExpr.shapeExprs.forEach(function (expr, ord) {
         if (ord > 0 && // !!! grammar rules too weird here
 	    !((shapeExpr.shapeExprs[ord-1].type === "NodeConstraint" &&
+               !("datatype" in shapeExpr.shapeExprs[ord-1]) &&
 	       (shapeExpr.shapeExprs[ord  ].type === "Shape" ||
 		shapeExpr.shapeExprs[ord  ].type === "ShapeRef")) ||
 	      (shapeExpr.shapeExprs[ord  ].type === "NodeConstraint" &&
+               !("datatype" in shapeExpr.shapeExprs[ord  ]) &&
 	       (shapeExpr.shapeExprs[ord-1].type === "Shape" ||
 		shapeExpr.shapeExprs[ord-1].type === "ShapeRef"))))
           pieces.push(" AND ");
