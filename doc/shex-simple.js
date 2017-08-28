@@ -108,8 +108,9 @@ function _makeCache (selection) {
       _dirty = false;
       return this.parsed;
     },
-    asyncGet: function (url, fail) {
+    asyncGet: function (url) {
       var _cache = this;
+      return new Promise(function (resolve, reject) {
       $.ajax({
         accepts: {
           mycustomtype: 'text/shex,text/turtle,*/*'
@@ -118,16 +119,28 @@ function _makeCache (selection) {
         dataType: "text"
       }).fail(function (jqXHR, textStatus) {
         var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-        fail("GET <" + url + "> failed: " + error);
+        reject({
+          type: "HTTP",
+          url: url,
+          error: error,
+          message: "GET <" + url + "> failed: " + error
+        });
       }).done(function (data) {
         try {
           _cache.set(data);
           _cache.url = url;
           $("#loadForm").dialog("close");
           toggleControls();
+          resolve({ url: url, data: data });
         } catch (e) {
-          fail("unable to evaluate: " + e);
+          reject({
+            type: "evaluation",
+            url: url,
+            error: e,
+            message: "unable to evaluate <" + url + ">: " + e
+          });
         }
+      });
       });
     }
   };
@@ -578,7 +591,9 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        target.asyncGet(url, updateTips);
+        target.asyncGet(url, updateTips).catch(function (e) {
+          updateTips(e.message);
+        });
       },
       Cancel: function() {
         $("#loadInput").removeClass("ui-state-error");
@@ -871,15 +886,16 @@ function prepareInterface () {
 
   toggleControlsArrow("down");
 
-  // Load but don't parse the schema, data and shape-map.
-  QueryParams.forEach(input => {
+  // Load all known query parameters.
+  Promise.all(QueryParams.reduce((promises, input) => {
     var parm = input.queryStringParm;
     if (parm + "URL" in iface) {
-      var url = iface[parm + "URL"];
-      input.cache.url = url;
-      (parm === "schema" ? Caches.inputSchema : Caches.inputData).asyncGet(url, m => {
-        input.location.val(m);
-      });
+      var url = iface[parm + "URL"][0];
+      input.cache.url = url; // all fooURL query parms are caches.
+      promises.push(input.cache.asyncGet(url).catch(function (e) {
+        input.location.val(e.message);
+        // results.append($("<pre/>").text(e.url + " " + e.error).addClass("error"));
+      }));
     } else if (parm in iface) {
       input.location.val("");
       iface[parm].forEach(text => {
@@ -888,14 +904,16 @@ function prepareInterface () {
             "";
         input.location.val(prepend + text);
       });
+      if ("cache" in input)
+        // If it parses, make meta (prefixes, base) available.
+        try {
+          input.cache.refresh();
+        } catch (e) { }
     } else if ("deflt" in input) {
       input.location.val(input.deflt);
     }
-  });
-
-  // Parse the schema and data so the prefixes and base are available.
-  try { Caches.inputSchema.refresh() } catch (e) { }
-  try { Caches.inputData.refresh() } catch (e) { }
+    return promises;
+  }, [])).then(function (_) {
 
   // Parse the shape-map using the prefixes and base.
   if ($("#textMap").val().trim().length > 0)
@@ -907,14 +925,15 @@ function prepareInterface () {
   $(".examples li").text("no example schemas loaded");
   var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
   if (loadExamples.length) // examples= disables examples
-    Caches.examples.asyncGet(loadExamples, m => {
-      $(".examples li").text(m);
+    Caches.examples.asyncGet(loadExamples).catch(function (e) {
+      $(".examples li").text(e.message);
     });
-  if ("schema" in iface && iface.schema.reduce((r, elt) => {
-    return r+elt.length;
-  }, 0)) {
+  if ("schema" in iface &&
+      // some schema is non-empty
+      iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
     validate();
   }
+  });
 }
 
   /**
