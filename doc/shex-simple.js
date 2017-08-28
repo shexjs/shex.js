@@ -3,6 +3,7 @@
 // Release under MIT License.
 
 const START_SHAPE_LABEL = "START";
+const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
@@ -467,9 +468,12 @@ function validate () {
     results.append(elt);
 
     // update the FixedMap
+    var shapeString = entry.shape === ShEx.Validator.start ?
+        START_SHAPE_INDEX_ENTRY :
+        entry.shape;
     var fixedMapEntry = $("#fixedMap .pair"+
                           "[data-node='"+entry.node+"']"+
-                          "[data-shape='"+entry.shape+"']");
+                          "[data-shape='"+shapeString+"']");
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
     var nodeLex = fixedMapEntry.find("input.focus").val();
     var shapeLex = fixedMapEntry.find("input.inputShape").val();
@@ -756,6 +760,8 @@ function copyEditMapToFixedMap () {
     nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node);
       var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
+      if (shapeTerm === ShEx.Validator.start)
+        shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
         return;
