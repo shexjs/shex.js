@@ -111,36 +111,36 @@ function _makeCache (selection) {
     asyncGet: function (url) {
       var _cache = this;
       return new Promise(function (resolve, reject) {
-      $.ajax({
-        accepts: {
-          mycustomtype: 'text/shex,text/turtle,*/*'
-        },
-        url: url,
-        dataType: "text"
-      }).fail(function (jqXHR, textStatus) {
-        var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-        reject({
-          type: "HTTP",
+        $.ajax({
+          accepts: {
+            mycustomtype: 'text/shex,text/turtle,*/*'
+          },
           url: url,
-          error: error,
-          message: "GET <" + url + "> failed: " + error
-        });
-      }).done(function (data) {
-        try {
-          _cache.set(data);
-          _cache.url = url;
-          $("#loadForm").dialog("close");
-          toggleControls();
-          resolve({ url: url, data: data });
-        } catch (e) {
+          dataType: "text"
+        }).fail(function (jqXHR, textStatus) {
+          var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
           reject({
-            type: "evaluation",
+            type: "HTTP",
             url: url,
-            error: e,
-            message: "unable to evaluate <" + url + ">: " + e
+            error: error,
+            message: "GET <" + url + "> failed: " + error
           });
-        }
-      });
+        }).done(function (data) {
+          try {
+            _cache.set(data);
+            _cache.url = url;
+            $("#loadForm").dialog("close");
+            toggleControls();
+            resolve({ url: url, data: data });
+          } catch (e) {
+            reject({
+              type: "evaluation",
+              url: url,
+              error: e,
+              message: "unable to evaluate <" + url + ">: " + e
+            });
+          }
+        });
       });
     }
   };
@@ -915,24 +915,24 @@ function prepareInterface () {
     return promises;
   }, [])).then(function (_) {
 
-  // Parse the shape-map using the prefixes and base.
-  if ($("#textMap").val().trim().length > 0)
-    copyTextMapToEditMap();
-  else
-    makeFreshEditMap();
+    // Parse the shape-map using the prefixes and base.
+    if ($("#textMap").val().trim().length > 0)
+      copyTextMapToEditMap();
+    else
+      makeFreshEditMap();
 
-  customizeInterface();
-  $(".examples li").text("no example schemas loaded");
-  var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
-  if (loadExamples.length) // examples= disables examples
-    Caches.examples.asyncGet(loadExamples).catch(function (e) {
-      $(".examples li").text(e.message);
-    });
-  if ("schema" in iface &&
-      // some schema is non-empty
-      iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
-    validate();
-  }
+    customizeInterface();
+    $(".examples li").text("no example schemas loaded");
+    var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
+    if (loadExamples.length) // examples= disables examples
+      Caches.examples.asyncGet(loadExamples).catch(function (e) {
+        $(".examples li").text(e.message);
+      });
+    if ("schema" in iface &&
+        // some schema is non-empty
+        iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
+      validate();
+    }
   });
 }
 
