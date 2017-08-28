@@ -1772,12 +1772,7 @@ function GET (f, mediaType) {
       });
     }) : (f.match("^[a-z]+://.") && !f.match("^file://.")) ?
     // Read from http or whatever Request handles.
-    Request(mediaType ? {
-	  uri: f,
-	  headers: { Accept: mediaType }
-	} : f).then(function (text) {
-      return {text: text, url: f};
-    }) : (m = f.match("^data:([^,]+),(.*)$")) ?
+    myHttpRequest(f, mediaType) : (m = f.match("^data:([^,]+),(.*)$")) ?
     // Read from data: URL
     Promise.resolve({text: m[2], url: m[0]}) :
   // Read from filesystem
@@ -1795,6 +1790,30 @@ function GET (f, mediaType) {
       }
     })
   });
+
+  function myHttpRequest(f, mediaType) {
+    if (typeof $ === "function") {
+      // @@ browser hack -- what's the right thing to do here?
+      return Promise.resolve($.ajax({
+        accepts: {
+          mycustomtype: 'text/shex,text/turtle,*/*'
+        },
+        url: f,
+        dataType: "text"
+      })).then(function (text) {
+        return {text: text, url: f};
+      }).catch(e => {
+        throw "GET <" + f + "> failed: " + e.complete().status;
+      });
+    } else {
+      return Request(mediaType ? {
+        uri: f,
+        headers: { Accept: mediaType }
+      } : f).then(function (text) {
+        return {text: text, url: f};
+      });
+    }
+  }
 }
 
 function loadList (src, metaList, mediaType, parserWrapper, target, options, loadImports) {
