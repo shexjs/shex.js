@@ -377,8 +377,9 @@ function validate () {
       var inputData = Caches.inputData.refresh();
 
       $("#results .status").text("creating validator...").show();
+      ShEx.Loader.load([], ["data:text/json," + JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(Caches.inputSchema.refresh())))], [], []).then(loaded => {
       var validator = ShEx.Validator.construct(
-        Caches.inputSchema.refresh(),
+        loaded.schema,
         { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
       $("#results .status").text("validating...").show();
@@ -397,6 +398,9 @@ function validate () {
       //   console.dir(e);
       // }
       finishRendering();
+      }).catch(function (e) {
+        failMessage(e);
+      });
     } else {
       var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
