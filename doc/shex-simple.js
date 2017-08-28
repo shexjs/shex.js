@@ -1151,8 +1151,11 @@ function addContextMenus (inputSelector, cache) {
               () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
             ];
             var store = Caches.inputData.refresh();
-            var items = terms.match === null ? [] : getTermsFunctions[terms.match]();
-            // contextMenu will whine: "No Items specified". oh well...
+            var items = [];
+            if (terms.match === null)
+              console.error("contextMenu will whine about \"No Items specified\". Shouldn't that be allowed?");
+            else
+              items = getTermsFunctions[terms.match]();
             return {
               items:
               items.reduce((ret, opt) => {
