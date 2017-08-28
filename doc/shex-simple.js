@@ -928,6 +928,19 @@ function prepareInterface () {
       Caches.examples.asyncGet(loadExamples).catch(function (e) {
         $(".examples li").text(e.message);
       });
+    $("body").keydown(function (e) { // keydown because we need to preventDefault
+      var code = e.keyCode || e.charCode; // standards anyone?
+      if (e.ctrlKey && (code === 10 || code === 13)) {
+        var at = $(":focus");
+        $("#validate").focus().click();
+        at.focus();
+        return false; // same as e.preventDefault();
+      } else {
+        return true;
+      }
+    });
+    addContextMenus("#focus0", Caches.inputData);
+    addContextMenus("#inputShape0", Caches.inputSchema);
     if ("schema" in iface &&
         // some schema is non-empty
         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
@@ -1066,17 +1079,6 @@ function prepareExamples (demoList) {
       delete cache.url;
     }, 250);
   }
-  $("body").keydown(function (e) { // keydown because we need to preventDefault
-    var code = e.keyCode || e.charCode; // standards anyone?
-    if (e.ctrlKey && (code === 10 || code === 13)) {
-      var at = $(":focus");
-      $("#validate").focus().click();
-      at.focus();
-      return false; // same as e.preventDefault();
-    } else {
-      return true;
-    }
-  });
   Object.keys(Caches).forEach(function (cache) {
     Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
       var code = e.keyCode || e.charCode;
@@ -1084,8 +1086,6 @@ function prepareExamples (demoList) {
         later(e.target, cache, Caches[cache]);
     });
   });
-  addContextMenus("#focus0", Caches.inputData);
-  addContextMenus("#inputShape0", Caches.inputSchema);
 }
 
 function addContextMenus (inputSelector, cache) {
