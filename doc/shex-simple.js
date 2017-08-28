@@ -595,7 +595,7 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        target.asyncGet(url, updateTips).catch(function (e) {
+        target.asyncGet(url).catch(function (e) {
           updateTips(e.message);
         });
       },
