@@ -188,7 +188,6 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
   ] .
 `
 
-<<<<<<< HEAD
 BPunitsNested.schema = `PREFIX  : <http://dam.example/med#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
@@ -325,10 +324,7 @@ start = @<collector>
 `;
 
 
-  var Demos = {
-=======
   return {
->>>>>>> master
     "BP": {
       schema: BPFHIR.schema,
       passes: {
@@ -362,12 +358,11 @@ start = @<collector>
           createRoot: "<tag:BPfhir123>"}
       },
       fails: {
-<<<<<<< HEAD
         "bad code": {
           data: BPunitsDAM.badBP,
-          queryMap: "<tag:b0>@- start -",
+          queryMap: "<tag:b0>@START",
           outputSchema: BPFHIR.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
       },
@@ -377,18 +372,18 @@ start = @<collector>
       passes: {
         "simple": {
           data: BPunitsDAM.simplePatient,
-          queryMap: "<http://a.example/PatientX>@- start -",
+          queryMap: "<http://a.example/PatientX>@START",
           outputSchema: BPFHIR.schema_Patient,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
       },
       fails: {
         "bad code": {
           data: BPunitsDAM.badPatient,
-          queryMap: "<http://a.example/PatientX>@- start -",
+          queryMap: "<http://a.example/PatientX>@START",
           outputSchema: BPFHIR.schema_Patient,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
       }
@@ -398,20 +393,11 @@ start = @<collector>
       passes: {
         "simple": {
           data: BPunitsNested.simple,
-          queryMap: "<http://a.example/PatientX>@- start -",
+          queryMap: "<http://a.example/PatientX>@START",
           outputSchema: BPFHIRNested.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: {},
           createRoot: "<tag:BPfhir123>"}
-=======
-        // "bad code": {
-        //   data: BPunitsDAM.simple,
-        //   queryMap: "<tag:b0>@START",
-        //   outputSchema: BPFHIR.schema,
-        //   outputShape: "START",
-        //   staticVars: BPFHIR.constants,
-        //   createRoot: "tag:BPfhir123"}
->>>>>>> master
       },
       fails: { }
     },
