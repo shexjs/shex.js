@@ -4,7 +4,7 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
+var Base = "http://a.example/"; // location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -459,8 +459,7 @@ function validate () {
       }
     }
   } catch (e) {
-    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
-    results.append($("<pre/>").text(e.stack || e));
+    failMessage(e);
   }
 
   function renderEntry (entry) {
@@ -533,6 +532,11 @@ function validate () {
       //   console.dir(e);
       // }
       results.finish();
+  }
+
+  function failMessage (e) {
+    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
+    results.append($("<pre/>").text(e.stack || e));
   }
 }
 
@@ -1050,9 +1054,10 @@ function prepareInterface () {
     addContextMenus("#focus0", Caches.inputData);
     addContextMenus("#inputShape0", Caches.inputSchema);
     addContextMenus("#outputShape", Caches.outputSchema);
-    if ("schema" in iface &&
+    if ("schemaURL" in iface ||
         // some schema is non-empty
-        iface.schema.reduce((r, elt) => { return r+elt.length; }, 0)) {
+        ("schema" in iface &&
+         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))) {
       validate();
     }
   });
