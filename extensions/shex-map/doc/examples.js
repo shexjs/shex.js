@@ -1,3 +1,5 @@
+(function () {
+
 // Large constants with demo data which break syntax highlighting:
 var BPFHIR = {}, BPunitsDAM = {}; SchemaConcert = {}, BPunitsNested = {}, BPFHIRNested = {};
 BPFHIR.schemaPrefixes = `PREFIX fhir: <http://hl7.org/fhir-rdf/>
@@ -186,6 +188,7 @@ SchemaConcert.nonIRI = `PREFIX schema: <http://schema.org/>
   ] .
 `
 
+<<<<<<< HEAD
 BPunitsNested.schema = `PREFIX  : <http://dam.example/med#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
@@ -323,23 +326,26 @@ start = @<collector>
 
 
   var Demos = {
+=======
+  return {
+>>>>>>> master
     "BP": {
       schema: BPFHIR.schema,
       passes: {
         "simple": {
           data: BPFHIR.simple,
-          queryMap: "<tag:BPfhir123>@- start -",
+          queryMap: "<tag:BPfhir123>@START",
           outputSchema: BPunitsDAM.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
       },
       fails: {
         "bad code": {
           data: BPFHIR.badCode,
-          queryMap: "<tag:BPfhir123>@- start -",
+          queryMap: "<tag:BPfhir123>@START",
           outputSchema: BPunitsDAM.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
       }
@@ -349,13 +355,14 @@ start = @<collector>
       passes: {
         "simple": {
           data: BPunitsDAM.simple,
-          queryMap: "<tag:b0>@- start -",
+          queryMap: "<tag:b0>@START",
           outputSchema: BPFHIR.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
       },
       fails: {
+<<<<<<< HEAD
         "bad code": {
           data: BPunitsDAM.badBP,
           queryMap: "<tag:b0>@- start -",
@@ -396,6 +403,15 @@ start = @<collector>
           outputShape: "- start -",
           staticVars: {},
           createRoot: "<tag:BPfhir123>"}
+=======
+        // "bad code": {
+        //   data: BPunitsDAM.simple,
+        //   queryMap: "<tag:b0>@START",
+        //   outputSchema: BPFHIR.schema,
+        //   outputShape: "START",
+        //   staticVars: BPFHIR.constants,
+        //   createRoot: "tag:BPfhir123"}
+>>>>>>> master
       },
       fails: { }
     },
@@ -404,20 +420,21 @@ start = @<collector>
       passes: {
         "BBKing": {
           data: SchemaConcert.BBKing,
-          queryMap: "_:b0@- start -",
+          queryMap: "_:b0@START",
           outputSchema: SchemaConcert.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: {},
           createRoot: "_:root"}
       },
       fails: {
         "Non-IRI": {
           data: SchemaConcert.nonIRI,
-          queryMap: "_:b0@- start -",
+          queryMap: "_:b0@START",
           outputSchema: SchemaConcert.schema,
-          outputShape: "- start -",
+          outputShape: "START",
           staticVars: {},
           createRoot: "_:root"}
       }
     }
   };
+})();

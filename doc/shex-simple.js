@@ -2,8 +2,9 @@
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
-const START_SHAPE_LABEL = "- start -";
-var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
+const START_SHAPE_LABEL = "START";
+const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
+var Base = "http://a.example/"; // location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -42,6 +43,7 @@ var shexParser = ShEx.Parser.construct(Base);
 function parseShEx (text, meta) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   var ret = shexParser.parse(text);
+  // ret = ShEx.Util.canonicalize(ret, Base);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
   return ret;
@@ -56,13 +58,13 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  var ret = node === "- start -" ? node : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  var ret = node === ShEx.Validator.start ? START_SHAPE_LABEL : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
   if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
     ret = "a";
   return ret;
 }
 function rdflib_lexToTerm (lex, resolver) {
-  return lex === "- start -" ? lex :
+  return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
     ShEx.N3.Lexer().tokenize(lex).map(token => {
     var left = 
@@ -77,7 +79,7 @@ function rdflib_lexToTerm (lex, resolver) {
           token.value;
     return left + right;
   }).join("");
-  return lex === "- start -" ? lex : lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
+  return lex === ShEx.Validator.start ? lex : lex[0] === "<" ? lex.substr(1, lex.length - 2) : lex;
 }
 // </n3.js-specific>
 
@@ -107,26 +109,39 @@ function _makeCache (selection) {
       _dirty = false;
       return this.parsed;
     },
-    asyncGet: function (url, fail) {
+    asyncGet: function (url) {
       var _cache = this;
-      $.ajax({
-        accepts: {
-          mycustomtype: 'text/shex,text/turtle,*/*'
-        },
-        url: url,
-        dataType: "text"
-      }).fail(function (jqXHR, textStatus) {
-        var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-        fail("GET <" + url + "> failed: " + error);
-      }).done(function (data) {
-        try {
-          _cache.set(data);
-          _cache.url = url;
-          $("#loadForm").dialog("close");
-          toggleControls();
-        } catch (e) {
-          fail("unable to evaluate: " + e);
-        }
+      return new Promise(function (resolve, reject) {
+        $.ajax({
+          accepts: {
+            mycustomtype: 'text/shex,text/turtle,*/*'
+          },
+          url: url,
+          dataType: "text"
+        }).fail(function (jqXHR, textStatus) {
+          var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
+          reject({
+            type: "HTTP",
+            url: url,
+            error: error,
+            message: "GET <" + url + "> failed: " + error
+          });
+        }).done(function (data) {
+          try {
+            _cache.set(data);
+            _cache.url = url;
+            $("#loadForm").dialog("close");
+            toggleControls();
+            resolve({ url: url, data: data });
+          } catch (e) {
+            reject({
+              type: "evaluation",
+              url: url,
+              error: e,
+              message: "unable to evaluate <" + url + ">: " + e
+            });
+          }
+        });
       });
     }
   };
@@ -421,8 +436,7 @@ function validate () {
       }
     }
   } catch (e) {
-    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
-    results.append($("<pre/>").text(e.stack || e));
+    failMessage(e);
   }
 
   function renderEntry (entry) {
@@ -453,9 +467,12 @@ function validate () {
     results.append(elt);
 
     // update the FixedMap
+    var shapeString = entry.shape === ShEx.Validator.start ?
+        START_SHAPE_INDEX_ENTRY :
+        entry.shape;
     var fixedMapEntry = $("#fixedMap .pair"+
                           "[data-node='"+entry.node+"']"+
-                          "[data-shape='"+entry.shape+"']");
+                          "[data-shape='"+shapeString+"']");
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
     var nodeLex = fixedMapEntry.find("input.focus").val();
     var shapeLex = fixedMapEntry.find("input.inputShape").val();
@@ -485,6 +502,11 @@ function validate () {
       //   console.dir(e);
       // }
       results.finish();
+  }
+
+  function failMessage (e) {
+    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
+    results.append($("<pre/>").text(e.stack || e));
   }
 }
 
@@ -577,7 +599,9 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        target.asyncGet(url, updateTips);
+        target.asyncGet(url).catch(function (e) {
+          updateTips(e.message);
+        });
       },
       Cancel: function() {
         $("#loadInput").removeClass("ui-state-error");
@@ -740,6 +764,8 @@ function copyEditMapToFixedMap () {
     nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node);
       var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
+      if (shapeTerm === ShEx.Validator.start)
+        shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
         return;
@@ -870,15 +896,16 @@ function prepareInterface () {
 
   toggleControlsArrow("down");
 
-  // Load but don't parse the schema, data and shape-map.
-  QueryParams.forEach(input => {
+  // Load all known query parameters.
+  Promise.all(QueryParams.reduce((promises, input) => {
     var parm = input.queryStringParm;
     if (parm + "URL" in iface) {
-      var url = iface[parm + "URL"];
-      input.cache.url = url;
-      (parm === "schema" ? Caches.inputSchema : Caches.inputData).asyncGet(url, m => {
-        input.location.val(m);
-      });
+      var url = iface[parm + "URL"][0];
+      input.cache.url = url; // all fooURL query parms are caches.
+      promises.push(input.cache.asyncGet(url).catch(function (e) {
+        input.location.val(e.message);
+        // results.append($("<pre/>").text(e.url + " " + e.error).addClass("error"));
+      }));
     } else if (parm in iface) {
       input.location.val("");
       iface[parm].forEach(text => {
@@ -887,33 +914,50 @@ function prepareInterface () {
             "";
         input.location.val(prepend + text);
       });
+      if ("cache" in input)
+        // If it parses, make meta (prefixes, base) available.
+        try {
+          input.cache.refresh();
+        } catch (e) { }
     } else if ("deflt" in input) {
       input.location.val(input.deflt);
     }
-  });
+    return promises;
+  }, [])).then(function (_) {
 
-  // Parse the schema and data so the prefixes and base are available.
-  try { Caches.inputSchema.refresh() } catch (e) { }
-  try { Caches.inputData.refresh() } catch (e) { }
+    // Parse the shape-map using the prefixes and base.
+    if ($("#textMap").val().trim().length > 0)
+      copyTextMapToEditMap();
+    else
+      makeFreshEditMap();
 
-  // Parse the shape-map using the prefixes and base.
-  if ($("#textMap").val().trim().length > 0)
-    copyTextMapToEditMap();
-  else
-    makeFreshEditMap();
-
-  customizeInterface();
-  $(".examples li").text("no example schemas loaded");
-  var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
-  if (loadExamples.length) // examples= disables examples
-    Caches.examples.asyncGet(loadExamples, m => {
-      $(".examples li").text(m);
+    customizeInterface();
+    $(".examples li").text("no example schemas loaded");
+    var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
+    if (loadExamples.length) // examples= disables examples
+      Caches.examples.asyncGet(loadExamples).catch(function (e) {
+        $(".examples li").text(e.message);
+      });
+    $("body").keydown(function (e) { // keydown because we need to preventDefault
+      var code = e.keyCode || e.charCode; // standards anyone?
+      if (e.ctrlKey && (code === 10 || code === 13)) {
+        var at = $(":focus");
+        $("#validate").focus().click();
+        at.focus();
+        return false; // same as e.preventDefault();
+      } else {
+        return true;
+      }
     });
-  if ("schema" in iface && iface.schema.reduce((r, elt) => {
-    return r+elt.length;
-  }, 0)) {
-    validate();
-  }
+    addContextMenus("#focus0", Caches.inputData);
+    addContextMenus("#inputShape0", Caches.inputSchema);
+    if ("schemaURL" in iface ||
+        // some schema is non-empty
+        ("schema" in iface &&
+         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))) {
+      validate();
+    }
+  });
 }
 
   /**
@@ -1025,12 +1069,12 @@ function prepareDragAndDrop () {
 }
 
 function prepareExamples (demoList) {
-  var listItems = {inputSchema:{}, inputData:{}};
+  var listItems = {inputSchema:{}, inputData:{}, examples: {}};
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
-  var timeouts = { inputSchema: undefined, inputData: undefined };
+  var timeouts = { inputSchema: undefined, inputData: undefined, examples: undefined };
   function later (target, side, cache) {
     cache.dirty(true);
     if (timeouts[side])
@@ -1046,17 +1090,6 @@ function prepareExamples (demoList) {
       delete cache.url;
     }, 250);
   }
-  $("body").keydown(function (e) { // keydown because we need to preventDefault
-    var code = e.keyCode || e.charCode; // standards anyone?
-    if (e.ctrlKey && (code === 10 || code === 13)) {
-      var at = $(":focus");
-      $("#validate").focus().click();
-      at.focus();
-      return false; // same as e.preventDefault();
-    } else {
-      return true;
-    }
-  });
   Object.keys(Caches).forEach(function (cache) {
     Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
       var code = e.keyCode || e.charCode;
@@ -1064,8 +1097,6 @@ function prepareExamples (demoList) {
         later(e.target, cache, Caches[cache]);
     });
   });
-  addContextMenus("#focus0", Caches.inputData);
-  addContextMenus("#inputShape0", Caches.inputSchema);
 }
 
 function addContextMenus (inputSelector, cache) {
@@ -1125,7 +1156,11 @@ function addContextMenus (inputSelector, cache) {
               () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
             ];
             var store = Caches.inputData.refresh();
-            var items = getTermsFunctions[terms.match]();
+            var items = [];
+            if (terms.match === null)
+              console.error("contextMenu will whine about \"No Items specified\". Shouldn't that be allowed?");
+            else
+              items = getTermsFunctions[terms.match]();
             return {
               items:
               items.reduce((ret, opt) => {
