@@ -58,10 +58,19 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  var ret = node === ShEx.Validator.start ? START_SHAPE_LABEL : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
-  if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
-    ret = "a";
-  return ret;
+  if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    return "a";
+  if (node === ShEx.Validator.start)
+    return START_SHAPE_LABEL;
+  if (node === resolver._base)
+    return "<>";
+  if (node.indexOf(resolver._base) === 0 &&
+      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1)
+    return "<" + node.substr(resolver._base.length) + ">";
+  if (node.indexOf(resolver._basePath) === 0 &&
+      ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
+    return "<" + node.substr(resolver._basePath.length) + ">";
+  return ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -87,9 +96,11 @@ function rdflib_lexToTerm (lex, resolver) {
 // caches for textarea parsers
 function _makeCache (selection) {
   var _dirty = true;
+  var resolver;
   var ret = {
     selection: selection,
     parsed: null,
+    meta: { prefixes: {}, base: null },
     dirty: function (newVal) {
       var ret = _dirty;
       _dirty = newVal;
@@ -106,6 +117,7 @@ function _makeCache (selection) {
       if (!_dirty)
         return this.parsed;
       this.parsed = this.parse(selection.val());
+      resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
     },
@@ -145,8 +157,7 @@ function _makeCache (selection) {
       });
     }
   };
-  ret.meta = { prefixes: {}, base: null };
-  var resolver = new IRIResolver(ret.meta);
+  resolver = new IRIResolver(ret.meta);
   ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
   ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
