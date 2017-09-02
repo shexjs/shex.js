@@ -42,6 +42,7 @@ function parseTurtle (text, meta) {
 var shexParser = ShEx.Parser.construct(Base);
 function parseShEx (text, meta) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParser._setBase(Base);
   var ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, Base);
   meta.base = ret.base;
