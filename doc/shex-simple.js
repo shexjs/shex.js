@@ -110,9 +110,10 @@ function _makeCache (selection) {
     get: function () {
       return selection.val();
     },
-    set: function (text) {
+    set: function (text, base) {
       _dirty = true;
       selection.val(text);
+      this.url = base;
     },
     refresh: function () {
       if (!_dirty)
