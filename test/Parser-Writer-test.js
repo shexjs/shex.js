@@ -50,11 +50,6 @@ var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
-// positive transformation tests
-var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
-if (TESTS)
-  schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
-
 describe("A ShEx parser", function () {
   // var b = function () {  };
   // it("is a toy", function () {
@@ -188,8 +183,8 @@ describe("A ShEx parser", function () {
   });
 
 
+  // negative syntax and structure tests
   negativeTests.forEach(testSet => {
-    // negative syntax tests
     var negSyntaxTests = fs.readdirSync(testSet.path).
         filter(function (s) { return s.indexOf(".shex") !== -1; });
     if (TESTS)

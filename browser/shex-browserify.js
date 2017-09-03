@@ -115,7 +115,7 @@ break;
 case 16:
  // t: ShExParser-test.js/with pre-defined prefixes
         var prefixIRI;
-        if (this._base === null || absoluteIRI.test($$[$0].slice(1, -1)))
+        if (Parser._base === null || absoluteIRI.test($$[$0].slice(1, -1)))
           prefixIRI = $$[$0].slice(1, -1);
         else
           prefixIRI = _resolveIRI($$[$0].slice(1, -1));
@@ -698,7 +698,10 @@ case 245:
 this.$ = createLiteral($$[$0], XSD_DOUBLE) // t: 1val1DOUBLE;
 break;
 case 246:
-this.$ = this._base === null || absoluteIRI.test($$[$0].slice(1, -1)) ? ShExUtil.unescapeText($$[$0].slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($$[$0].slice(1,-1), {})) // t: 1dot;
+ // t: 1dot
+        var unesc = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
+        this.$ = Parser._base === null || absoluteIRI.test($$[$0].slice(1, -1)) ? unesc : _resolveIRI(unesc)
+      
 break;
 case 247:
  // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
