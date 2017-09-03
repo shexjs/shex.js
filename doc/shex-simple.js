@@ -4,7 +4,7 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var Base = "http://a.example/"; // location.origin + location.pathname;
+var DefaultBase = "http://a.example/"; location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -27,10 +27,10 @@ var QueryParams = [
 ];
 
 // utility functions
-function parseTurtle (text, meta) {
+function parseTurtle (text, meta, base) {
   var ret = ShEx.N3.Store();
   ShEx.N3.Parser._resetBlankNodeIds();
-  var parser = ShEx.N3.Parser({documentIRI:Base, format: "text/turtle" });
+  var parser = ShEx.N3.Parser({documentIRI: base, format: "text/turtle" });
   var triples = parser.parse(text);
   if (triples !== undefined)
     ret.addTriples(triples);
@@ -39,12 +39,12 @@ function parseTurtle (text, meta) {
   return ret;
 }
 
-var shexParser = ShEx.Parser.construct(Base);
-function parseShEx (text, meta) {
+var shexParser = ShEx.Parser.construct(DefaultBase);
+function parseShEx (text, meta, base) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
-  shexParser._setBase(Base);
+  shexParser._setBase(base);
   var ret = shexParser.parse(text);
-  // ret = ShEx.Util.canonicalize(ret, Base);
+  // ret = ShEx.Util.canonicalize(ret, DefaultBase);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
   return ret;
@@ -117,7 +117,7 @@ function _makeCache (selection) {
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse(selection.val());
+      this.parsed = this.parse(selection.val(), this.url);
       resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
@@ -141,8 +141,7 @@ function _makeCache (selection) {
           });
         }).done(function (data) {
           try {
-            _cache.set(data);
-            _cache.url = url;
+            _cache.set(data, url);
             $("#loadForm").dialog("close");
             toggleControls();
             resolve({ url: url, data: data });
@@ -168,7 +167,7 @@ function makeSchemaCache (selection) {
   var ret = _makeCache(selection);
   var graph = null;
   ret.language = null;
-  ret.parse = function (text) {
+  ret.parse = function (text, base) {
     var isJSON = text.match(/^\s*\{/);
     graph = isJSON ? null : tryN3(text);
     this.language =
@@ -179,7 +178,7 @@ function makeSchemaCache (selection) {
     var schema =
           isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
-          parseShEx(text, ret.meta);
+          parseShEx(text, ret.meta, base);
     $("#results .status").hide();
     return schema;
 
@@ -187,7 +186,7 @@ function makeSchemaCache (selection) {
       try {
         if (text.match(/^\s*$/))
           return null;
-        var db = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        var db = parseTurtle (text, ret.meta, DefaultBase); // interpret empty schema as ShExC
         if (db.getTriples().length === 0)
           return null;
         return db;
@@ -198,7 +197,7 @@ function makeSchemaCache (selection) {
 
     function parseShExR () {
       var graphParser = ShEx.Validator.construct(
-        parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
+        parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
       var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
@@ -217,8 +216,8 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
-  ret.parse = function (text) {
-    return parseTurtle(text, ret.meta);
+  ret.parse = function (text, base) {
+    return parseTurtle(text, ret.meta, base);
   };
   ret.getItems = function () {
     var data = this.refresh();
@@ -235,7 +234,7 @@ function makeExamplesCache (selection) {
     var demos = eval(text); // exceptions pass through to caller (asyncGet)
     prepareExamples(demos);
   };
-  ret.parse = function (text) {
+  ret.parse = function (text, base) {
     throw Error("should not try to parse examples cache");
   };
   ret.getItems = function () {
@@ -258,7 +257,7 @@ function load (selector, obj, func, listItems, side, str) {
 }
 
 function clearData () {
-  Caches.inputData.set("");
+  Caches.inputData.set("", DefaultBase);
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
@@ -266,7 +265,7 @@ function clearData () {
 
 function clearAll () {
   $("#results .status").hide();
-  Caches.inputSchema.set("");
+  Caches.inputSchema.set("", DefaultBase);
   $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
@@ -281,10 +280,10 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.schema);
+    Caches.inputSchema.set(schemaTest.schema, DefaultBase);
     $("#inputSchema .status").text(name);
 
-    Caches.inputData.set("");
+    Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
     $("#inputData .passes, #inputData .fails").show();
     $("#inputData .passes p:first").text("Passing:");
@@ -304,7 +303,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data);
+    Caches.inputData.set(dataTest.data, DefaultBase);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -420,7 +419,7 @@ function validate () {
         append($("<button>(copy to input)</button>").
                css("border-radius", ".5em").
                on("click", function () {
-                 Caches.inputSchema.set($("#results div").text());
+                 Caches.inputSchema.set($("#results div").text(), DefaultBase);
                })).
         append(":").
         show();
@@ -917,6 +916,7 @@ function prepareInterface () {
     var parm = input.queryStringParm;
     if (parm + "URL" in iface) {
       var url = iface[parm + "URL"][0];
+      // !!! set anyways in asyncGet?
       input.cache.url = url; // all fooURL query parms are caches.
       promises.push(input.cache.asyncGet(url).catch(function (e) {
         input.location.val(e.message);
@@ -1069,7 +1069,7 @@ function prepareDragAndDrop () {
         reader.onload = (function (target) {
           return function (event) {
             var appendTo = $("#append").is(":checked") ? target.get() : "";
-            target.set(appendTo + event.target.result);
+            target.set(appendTo + event.target.result, DefaultBase);
           };
         })(target);
         reader.readAsText(file);
