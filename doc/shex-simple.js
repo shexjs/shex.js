@@ -249,15 +249,17 @@ function makeExamplesCache (selection) {
         }).then(() => {
           // if (!($("#append").is(":checked")))
           //   ...;
-          console.dir(action);
           var demoSet = {
             fails: {},
             passes: {},
-            schema: action.schema
+            schema: action.schema,
+            schemaURL: action.schemaURL || DefaultBase,
           };
           var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
-          var d = {};
-          d.data = action.data;
+          var d = {
+            data: action.data,
+            dataURL: action.dataURL || DefaultBase
+          };
           d.queryMap = "map" in action ?
             action.map :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
@@ -268,7 +270,6 @@ function makeExamplesCache (selection) {
         });
 
         function maybeGET(obj, key, accept) {
-          console.dir([obj, key]);
           if (key in obj) {
             if (!(key + "URL" in obj))
               obj[key + "URL"] = DefaultBase;
@@ -282,7 +283,6 @@ function makeExamplesCache (selection) {
               dataType: "text"
             }).then(text => {
               obj[key] = text;
-              console.dir(action);
             }).fail(e => {
               results.append($("<pre/>").text(
                 "Error " + e.status + " " + e.statusText + " on GET " + obj[key]
@@ -321,7 +321,7 @@ function makeExamplesCache (selection) {
 
 function makeShapeMapCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (text) {console.dir(text);
+  ret.set = function (text) {
     removeEditMapPair(null);
     $("#textMap").val(text);
     copyTextMapToEditMap();
@@ -373,7 +373,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.schema, DefaultBase);
+    Caches.inputSchema.set(schemaTest.schema, schemaTest.schemaURL);
     $("#inputSchema .status").text(name);
 
     Caches.inputData.set("", DefaultBase);
@@ -396,7 +396,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data, DefaultBase);
+    Caches.inputData.set(dataTest.data, dataTest.dataURL);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
