@@ -8,7 +8,8 @@ var DefaultBase = "http://a.example/"; location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
-Caches.examples = makeExamplesCache($("#inputData textarea"));
+Caches.examples = makeExamplesCache($("#exampleDrop"));
+Caches.shapeMap = makeShapeMapCache($("#shapeMap-tabs")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
@@ -21,6 +22,7 @@ const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
 var QueryParams = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
   {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData   },
+  {queryStringParm: "shape-map",    location: Caches.shapeMap.selection,    cache: Caches.shapeMap    },
   {queryStringParm: "shape-map",    location: $("#textMap")                             },
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
@@ -231,9 +233,99 @@ function makeTurtleCache (selection) {
 
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (text) {
-    var demos = eval(text); // exceptions pass through to caller (asyncGet)
-    prepareExamples(demos);
+  ret.set = function (textOrObj) {
+    var demos;
+    if (typeof textOrObj === "object") {
+      demos = {};
+      (textOrObj.constructor === Array ? textOrObj : [textOrObj]).forEach(elt => {
+        var action = "action" in elt ? elt.action: elt;
+        Promise.all([
+          maybeGET(action, "schema", "text/shex,application/jsonld,text/turtle"),
+          maybeGET(action, "data", "text/turtle"),
+        ]).catch(e => {
+          results.append($("<pre/>").text(
+            "aborting load of " + Object.toString(elt, null, 2)
+          ).addClass("error"));
+        }).then(() => {
+          // if (!($("#append").is(":checked")))
+          //   ...;
+          console.dir(action);
+          var demoSet = {
+            fails: {},
+            passes: {},
+            schema: action.schema
+          };
+          var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
+          var d = {};
+          d.data = action.data;
+          d.queryMap = "map" in action ?
+            action.map :
+            ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
+          var name = "name" in action ? action.name : d.queryMap;
+          target[name] = d;
+          demos[elt["@id"]] = demoSet;
+          prepareExamples(demos);
+        });
+
+        function maybeGET(obj, key, accept) {
+          console.dir([obj, key]);
+          if (key in obj) {
+            if (!(key + "URL" in obj))
+              obj[key + "URL"] = DefaultBase;
+            return Promise.resolve();
+          } else {
+            return $.ajax({
+              accepts: {
+                mycustomtype: accept
+              },
+              url: obj[key + "URL"],
+              dataType: "text"
+            }).then(text => {
+              obj[key] = text;
+              console.dir(action);
+            }).fail(e => {
+              results.append($("<pre/>").text(
+                "Error " + e.status + " " + e.statusText + " on GET " + obj[key]
+              ).addClass("error"));
+            });
+          }
+        }
+
+        function ttl (ld) {
+          return typeof ld === "object" ? lit(ld) :
+            ld.startsWith("_:") ? ld :
+            "<" + ld + ">";
+          function lit (o) {
+            let ret = "\""+o["@value"]+"\"";
+            if ("@type" in o)
+              ret += "^^<" + o["@type"] + ">";
+            if ("language" in o)
+              ret += "@" + o["language"];
+            return ret;
+          }
+        }
+      });
+    } else {
+      demos = eval(textOrObj); // exceptions pass through to caller (asyncGet)
+      prepareExamples(demos);
+    }
+  };
+  ret.parse = function (text, base) {
+    throw Error("should not try to parse examples cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get examples cache items");
+  };
+  return ret;
+}
+
+function makeShapeMapCache (selection) {
+  var ret = _makeCache(selection);
+  ret.set = function (text) {console.dir(text);
+    removeEditMapPair(null);
+    $("#textMap").val(text);
+    copyTextMapToEditMap();
+    copyEditMapToFixedMap();
   };
   ret.parse = function (text, base) {
     throw Error("should not try to parse examples cache");
@@ -1030,28 +1122,107 @@ function prepareDragAndDrop () {
     return {
       location: q.location,
       targets: [{
-        ext: "",
+        ext: "",   // Will match any file
+        media: "", //   or media type.
         target: q.cache
       }]
     };
   }).concat([
-    {location: $("body"), targets: [{ext: ".shex", target: Caches.inputSchema},
-                                    {ext: ".ttl", target: Caches.inputData}]}
+    {location: $("body"), targets: [
+      {media: "application/json", target: Caches.examples},
+      {ext: ".shex", media: "text/shex", target: Caches.inputSchema},
+      {ext: ".ttl", media: "text/turtle", target: Caches.inputData},
+      {ext: ".smap", media: "text/plain", target: Caches.shapeMap}]}
   ]).forEach(desc => {
+    var droparea = desc.location;
       // kudos to http://html5demos.com/dnd-upload
       desc.location.
         on("drag dragstart dragend dragover dragenter dragleave drop", function (e) {
           e.preventDefault();
           e.stopPropagation();
         }).
-        on("dragover dragenter", (e) => {
+        on("dragover dragenter", (evt) => {
           desc.location.addClass("hover");
         }).
-        on("dragend dragleave drop", (e) => {
+        on("dragend dragleave drop", (evt) => {
           desc.location.removeClass("hover");
         }).
-        on("drop", (e) => {
-          readfiles(e.originalEvent.dataTransfer.files, desc.targets);
+        on("drop", (evt) => {
+          evt.preventDefault();
+          droparea.removeClass("droppable");
+          $("#results .status").removeClass("error");
+          results.clear();
+          let xfer = evt.originalEvent.dataTransfer;
+          [
+            {type: "files"},
+            {type: "application/json"},
+            {type: "text/uri-list"},
+            {type: "text/plain"}
+          ].find(l => {
+            if (l.type.indexOf("/") === -1) {
+              if (xfer[l.type].length > 0) {
+                $("#results .status").text("handling "+xfer[l.type].length+" files...").show();
+                readfiles(xfer[l.type], desc.targets);
+                return true;
+              }
+            } else {
+              if (xfer.getData(l.type)) {
+                var val = xfer.getData(l.type);
+                $("#results .status").text("handling "+l.type+"...").show();
+                if (l.type === "application/json") {
+                  if (desc.location.get(0) === $("body").get(0)) {
+                    var parsed = JSON.parse(val);
+                    var action = "action" in parsed ? parsed.action: parsed;
+                    action.schemaURL = action.schema; delete action.schema;
+                    action.dataURL = action.data; delete action.data;
+                    Caches.examples.set(parsed);
+                  } else {
+                    inject(desc.targets, DefaultBase, val, l.type);
+                  }
+                } else if (l.type === "text/uri-list") {
+                  $.ajax({
+                    accepts: {
+                      mycustomtype: 'text/shex,text/turtle,*/*'
+                    },
+                    url: val,
+                    dataType: "text"
+                  }).fail(function (jqXHR, textStatus) {
+                    var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
+                    results.append($("<pre/>").text("GET <" + val + "> failed: " + error));
+                  }).done(function (data, status, jqXhr) {
+                    try {
+                      inject(desc.targets, val, data, jqXhr.getResponseHeader("Content-Type").split(/[ ;,]/)[0]);
+                      $("#loadForm").dialog("close");
+                      toggleControls();
+                    } catch (e) {
+                      results.append($("<pre/>").text("unable to evaluate <" + val + ">: " + (e.stack || e)));
+                    }
+                  });
+                } else if (l.type === "text/plain") {
+                  inject(desc.targets, DefaultBase, val, l.type);
+                }
+                $("#results .status").text("").hide();
+                // desc.targets.text(xfer.getData(l.type));
+                return true;
+                function inject (targets, url, data, mediaType) {
+                  var target =
+                      targets.length === 1 ? targets[0].target :
+                      targets.reduce((ret, elt) => {
+                        return ret ? ret :
+                          mediaType === elt.media ? elt.target :
+                          null;
+                      }, null);
+                  if (target) {
+                    var appendTo = $("#append").is(":checked") ? target.get() : "";
+                    target.set(appendTo + data, url);
+                  } else {
+                    results.append("don't know what to do with " + mediaType + "\n");
+                  }
+                }
+              }
+            }
+            return false;
+          });
         });
     });
   function readfiles(files, targets) {
@@ -1078,10 +1249,6 @@ function prepareDragAndDrop () {
         results.append("don't know what to do with " + name + "\n");
       }
     }
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
-    xhr.send(formData);
   }
 }
 
