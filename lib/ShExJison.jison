@@ -622,7 +622,7 @@ baseDecl:
 prefixDecl:
       IT_PREFIX PNAME_NS IRIREF	{ // t: ShExParser-test.js/with pre-defined prefixes
         var prefixIRI;
-        if (this._base === null || absoluteIRI.test($3.slice(1, -1)))
+        if (Parser._base === null || absoluteIRI.test($3.slice(1, -1)))
           prefixIRI = $3.slice(1, -1);
         else
           prefixIRI = _resolveIRI($3.slice(1, -1));
@@ -1439,7 +1439,10 @@ numericLiteral:
     ;
 
 iri:
-      IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? ShExUtil.unescapeText($1.slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($1.slice(1,-1), {})) // t: 1dot
+      IRIREF	{ // t: 1dot
+        var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        $$ = Parser._base === null || absoluteIRI.test($1.slice(1, -1)) ? unesc : _resolveIRI(unesc)
+      }
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
         $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
