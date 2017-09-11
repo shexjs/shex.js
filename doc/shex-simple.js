@@ -272,7 +272,7 @@ function makeTurtleCache (selection) {
     });
     return rows;
   };
-  ret.parse = function (text) {
+  ret.parse = function (text, base) {
     if (ret.query && ret.endpoint) {
       return {
         getTriplesByIRI: function (s, p, o) {
@@ -295,7 +295,7 @@ function makeTurtleCache (selection) {
         }
       };
     }
-    return parseTurtle(text, ret.meta);
+    return parseTurtle(text, ret.meta, base);
   };
   ret.getItems = function () {
     var text = this.get();
@@ -494,7 +494,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data);
+    Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
     var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
     if (m)

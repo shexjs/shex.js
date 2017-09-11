@@ -197,7 +197,7 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
             "WHERE "+
             "{ ?item wdt:P279* wd:Q12078 . "+
             "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } "+
-            "} LIMIT 10`@- start -"}
+            "} LIMIT 10`@START"}
       },
       fails: {
       }
