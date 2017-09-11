@@ -267,9 +267,11 @@ function makeExamplesCache (selection) {
             passes: {},
             schema: action.schema,
             schemaURL: action.schemaURL || DefaultBase,
-            meta: action.termResolver,
-            metaURL: action.termResolverURL || DefaultBase,
           };
+          if ("termResolver" in action || "termResolverURL" in action) {
+            demoSet.meta = action.termResolver;
+            demoSet.metaURL = action.termResolverURL || DefaultBase;
+          }
           var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
           var d = {
             data: action.data,
@@ -1210,7 +1212,9 @@ function prepareDragAndDrop () {
                     var action = "action" in parsed ? parsed.action: parsed;
                     action.schemaURL = action.schema; delete action.schema;
                     action.dataURL = action.data; delete action.data;
-                    action.termResolverURL = action.termResolver; delete action.termResolver;
+                    if ("termResolver" in action) {
+                      action.termResolverURL = action.termResolver; delete action.termResolver;
+                    }
                     Caches.examples.set(parsed);
                   } else {
                     inject(desc.targets, DefaultBase, val, l.type);
