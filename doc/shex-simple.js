@@ -286,10 +286,12 @@ function makeExamplesCache (selection) {
 
         function maybeGET(obj, key, accept) {
           if (key in obj) {
+            // Take the passed data, guess base if not provided.
             if (!(key + "URL" in obj))
               obj[key + "URL"] = DefaultBase;
             return Promise.resolve();
-          } else {
+          } else if (key + "URL" in obj) {
+            // Load the remote resource.
             return $.ajax({
               accepts: {
                 mycustomtype: accept
@@ -303,6 +305,9 @@ function makeExamplesCache (selection) {
                 "Error " + e.status + " " + e.statusText + " on GET " + obj[key]
               ).addClass("error"));
             });
+          } else {
+            // Ignore this parameter.
+            return Promise.resolve();
           }
         }
 
