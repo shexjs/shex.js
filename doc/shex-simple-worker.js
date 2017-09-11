@@ -19,6 +19,7 @@ importScripts("../shex.js");
 }
 importScripts("Util.js");
 
+const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 var validator = null;
 onmessage = function (msg) {
   switch (msg.data.request) {
@@ -41,7 +42,13 @@ onmessage = function (msg) {
 
     for (var currentEntry = 0; currentEntry < queryMap.length; ) {
       var singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
+      if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
+        singletonMap[0].shape = ShEx.Validator.start;
       var newResults = validator.validate(db, singletonMap);
+      newResults.forEach(function (res) {
+        if (res.shape === ShEx.Validator.start)
+          res.shape = START_SHAPE_INDEX_ENTRY;
+      });
       // Merge into results.
       results.merge(newResults);
 

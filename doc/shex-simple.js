@@ -3,8 +3,9 @@
 // Release under MIT License.
 
 const USE_INCREMENTAL_RESULTS = true;
-const START_SHAPE_LABEL = "- start -";
-var Base = "http://a.example/" ; // "https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html"; // window.location.href;
+const START_SHAPE_LABEL = "START";
+const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
+var DefaultBase = "http://a.example/"; location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputMeta = makeTurtleCache($("#meta textarea"));
@@ -603,10 +604,18 @@ function validate () {
         $("#validate").on("click", terminateWorker);
         $("#results .status").text("validating...").show();
         ShExWorker.onmessage = parseUpdatesAndResults;
+        var transportMap = fixedMap.map(function (ent) {
+          return {
+            node: ent.node,
+            shape: ent.shape === ShEx.Validator.start ?
+              START_SHAPE_INDEX_ENTRY :
+              ent.shape
+          };
+        });
         ShExWorker.postMessage(Object.assign(
           {
             request: "validate",
-            queryMap: fixedMap,
+            queryMap: transportMap,
             options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
           },
           ("endpoint" in Caches.inputData ?
@@ -643,6 +652,11 @@ function validate () {
 
           if (USE_INCREMENTAL_RESULTS) {
             // Merge into results.
+            msg.data.results.forEach(function (res) {
+              if (res.shape === START_SHAPE_INDEX_ENTRY)
+                res.shape = ShEx.Validator.start;
+            });
+            console.dir(msg.data.results);
             msg.data.results.forEach(renderEntry);
             // resultsMap.merge(msg.data.results);
           }
@@ -1435,7 +1449,7 @@ function prepareDragAndDrop () {
 }
 
 function prepareExamples (demoList) {
-  var listItems = {inputSchema:{}, inputData:{}, examples: {}};
+  var listItems = {inputSchema:{}, inputData:{}, examples: {}, shapeMap: {}};
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
