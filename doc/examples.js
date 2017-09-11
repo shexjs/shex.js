@@ -117,24 +117,24 @@ WHERE
       passes: {
         "with birthdate": {
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@- start -,\n<Patient2>@<http://a.example/ObservationShape>"},
+          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<http://a.example/ObservationShape>"},
         "without birthdate": {
           data: clinicalObs.without_birthdate,
-          queryMap: "<http://a.example/Obs1>@- start -"},
+          queryMap: "<http://a.example/Obs1>@START"},
         "no subject name": {
           data: clinicalObs.no_subject_name,
-          queryMap: "<http://a.example/Obs1>@- start -"}
+          queryMap: "<http://a.example/Obs1>@START"}
       },
       fails: {
         "bad status": {
           data: clinicalObs.bad_status,
-          queryMap: "<http://a.example/Obs1>@- start -"},
+          queryMap: "<http://a.example/Obs1>@START"},
         "no subject": {
           data: clinicalObs.no_subject,
-          queryMap: "<http://a.example/Obs1>@- start -"},
+          queryMap: "<http://a.example/Obs1>@START"},
         "wrong birthdate datatype": {
           data: clinicalObs.birthdate_datatype,
-          queryMap: "<http://a.example/Obs1>@- start -"}
+          queryMap: "<http://a.example/Obs1>@START"}
       }
     },
     "wikidata query": {
@@ -146,7 +146,7 @@ WHERE
             "WHERE "+
             "{ ?item wdt:P279* wd:Q12078 . "+
             "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } "+
-            "} LIMIT 10`@- start -"}
+            "} LIMIT 10`@START"}
       },
       fails: {
       }

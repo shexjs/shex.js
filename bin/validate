@@ -147,7 +147,7 @@ function findNodesAndValidate (loaded, parms, options) {
     ret.mode = node;
     if (!parms.shape && loaded.schema.start) {
       shape = loaded.schema.start;
-      shapeLabel = "- start -";
+      shapeLabel = ShExValidator.start;
       ret.shape = shapeLabel;
     } else {
       var found = ShExUtil.parsePassedNode(parms.shape, loaded.schemaMeta[0],

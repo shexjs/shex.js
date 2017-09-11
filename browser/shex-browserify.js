@@ -114,7 +114,7 @@ break;
 case 15:
  // t: ShExParser-test.js/with pre-defined prefixes
         var prefixIRI;
-        if (this._base === null || absoluteIRI.test($$[$0].slice(1, -1)))
+        if (Parser._base === null || absoluteIRI.test($$[$0].slice(1, -1)))
           prefixIRI = $$[$0].slice(1, -1);
         else
           prefixIRI = _resolveIRI($$[$0].slice(1, -1));
@@ -687,7 +687,10 @@ case 243:
 this.$ = createLiteral($$[$0], XSD_DOUBLE) // t: 1val1DOUBLE;
 break;
 case 244:
-this.$ = this._base === null || absoluteIRI.test($$[$0].slice(1, -1)) ? ShExUtil.unescapeText($$[$0].slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($$[$0].slice(1,-1), {})) // t: 1dot;
+ // t: 1dot
+        var unesc = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
+        this.$ = Parser._base === null || absoluteIRI.test($$[$0].slice(1, -1)) ? unesc : _resolveIRI(unesc)
+      
 break;
 case 245:
  // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
@@ -1757,12 +1760,7 @@ function GET (f, mediaType) {
       });
     }) : (f.match("^[a-z]+://.") && !f.match("^file://.")) ?
     // Read from http or whatever Request handles.
-    Request(mediaType ? {
-	  uri: f,
-	  headers: { Accept: mediaType }
-	} : f).then(function (text) {
-      return {text: text, url: f};
-    }) : (m = f.match("^data:([^,]+),(.*)$")) ?
+    myHttpRequest(f, mediaType) : (m = f.match("^data:([^,]+),(.*)$")) ?
     // Read from data: URL
     Promise.resolve({text: m[2], url: m[0]}) :
   // Read from filesystem
@@ -1780,12 +1778,45 @@ function GET (f, mediaType) {
       }
     })
   });
+
+  function myHttpRequest(f, mediaType) {
+    if (typeof $ === "function") {
+      // @@ browser hack -- what's the right thing to do here?
+      return Promise.resolve($.ajax({
+        accepts: {
+          mycustomtype: 'text/shex,text/turtle,*/*'
+        },
+        url: f,
+        dataType: "text"
+      })).then(function (text) {
+        return {text: text, url: f};
+      }).catch(e => {
+        throw "GET <" + f + "> failed: " + e.complete().status;
+      });
+    } else {
+      return Request(mediaType ? {
+        uri: f,
+        headers: { Accept: mediaType }
+      } : f).then(function (text) {
+        return {text: text, url: f};
+      });
+    }
+  }
 }
 
-function loadList (list, mediaType, done) {
-  return list.map(function (p) {
+function loadList (src, metaList, mediaType, parserWrapper, target, options) {
+  return src.map(function (p) {
     return GET(p, mediaType).then(function (loaded) {
-      return done(loaded.text, loaded.url);
+      var meta = {
+        mediaType: mediaType,
+        url: loaded.url,
+        base: loaded.url,
+        prefixes: {}
+      };
+      metaList.push(meta);
+      return new Promise(function (resolve, reject) {
+        parserWrapper(resolve, reject, loaded.text, mediaType, loaded.url, target, meta, options);
+      });
     });
   });
 }
@@ -1799,29 +1830,19 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
     data: N3.Store(),
     schemaMeta: [],
     dataMeta: []
-  }
+  };
   var promises = [];
-
-  function add (src, metaList, mediaType, f, target, options) {
-    return loadList(src, mediaType, function (text, url) {
-      var meta = {mediaType: mediaType, url: url, base: url, prefixes: {}};
-      metaList.push(meta);
-      return new Promise(function (resolve, reject) {
-        f(resolve, reject, text, mediaType, url, target, meta, options);
-      });
-    })
-  }
 
   // gather all the potentially remote inputs
   promises = promises.
-    concat(add(shex, returns.schemaMeta, "text/shex",
-               parseShExC, returns.schema, schemaOptions)).
-    concat(add(json, returns.schemaMeta, "text/json",
-               parseShExJ, returns.schema, schemaOptions)).
-    concat(add(turtle, returns.dataMeta, "text/turtle",
-               parseTurtle, returns.data, dataOptions)).
-    concat(add(jsonld, returns.dataMeta, "application/ld+json",
-               parseJSONLD, returns.data, dataOptions));
+    concat(loadList(shex, returns.schemaMeta, "text/shex",
+                    parseShExC, returns.schema, schemaOptions)).
+    concat(loadList(json, returns.schemaMeta, "text/json",
+                    parseShExJ, returns.schema, schemaOptions)).
+    concat(loadList(turtle, returns.dataMeta, "text/turtle",
+                    parseTurtle, returns.data, dataOptions)).
+    concat(loadList(jsonld, returns.dataMeta, "application/ld+json",
+                    parseJSONLD, returns.data, dataOptions));
   return Promise.all(promises).then(function () { return returns; });
 }
 
@@ -2055,6 +2076,10 @@ var ShExUtil = {
           visitMap(prefixes, function (val) {
             return val;
           });
+      },
+
+      visitIRI: function (i) {
+        return i;
       },
 
       visitStartActs: function (startActs) {
@@ -2494,7 +2519,7 @@ var ShExUtil = {
   /* canonicalize: move all tripleExpression references to their first expression.
    *
    */
-  canonicalize: function (schema) {
+  canonicalize: function (schema, trimIRI) {
     var ret = JSON.parse(JSON.stringify(schema));
     delete ret.prefixes;
     delete ret.base;
@@ -2519,6 +2544,11 @@ var ShExUtil = {
       }
       return oldVisitExpression.call(v, expression);
     };
+    if (trimIRI) {
+      v.visitIRI = function (i) {
+        return i.replace(trimIRI, "");
+      }
+    }
     if ("shapes" in ret) {
       Object.keys(ret.shapes).sort().forEach(k => {
         if ("extra" in ret.shapes[k])
@@ -3568,6 +3598,7 @@ var ShExValidator = (function () {
 var UNBOUNDED = -1;
 
 // interface constants
+var Start = { term: "START" }
 var InterfaceOptions = {
   "or": {
     "oneOf": "exactly one disjunct must pass",
@@ -3892,7 +3923,7 @@ function ShExValidator_constructor(schema, options) {
           results.passes [0];
       }
     }
-    if (!labelOrShape || labelOrShape === "- start -") {
+    if (!labelOrShape || labelOrShape === Start) {
       if (!schema.start)
         runtimeError("start production not defined");
       labelOrShape = schema.start;
@@ -4758,6 +4789,7 @@ function runtimeError () {
 
   return {
     construct: ShExValidator_constructor,
+    start: Start,
     options: InterfaceOptions
   };
 })();
@@ -4883,9 +4915,11 @@ ShExWriter.prototype = {
       shapeExpr.shapeExprs.forEach(function (expr, ord) {
         if (ord > 0 && // !!! grammar rules too weird here
 	    !((shapeExpr.shapeExprs[ord-1].type === "NodeConstraint" &&
+               !("datatype" in shapeExpr.shapeExprs[ord-1]) &&
 	       (shapeExpr.shapeExprs[ord  ].type === "Shape" ||
 		shapeExpr.shapeExprs[ord  ].type === "ShapeRef")) ||
 	      (shapeExpr.shapeExprs[ord  ].type === "NodeConstraint" &&
+               !("datatype" in shapeExpr.shapeExprs[ord  ]) &&
 	       (shapeExpr.shapeExprs[ord-1].type === "Shape" ||
 		shapeExpr.shapeExprs[ord-1].type === "ShapeRef"))))
           pieces.push(" AND ");
