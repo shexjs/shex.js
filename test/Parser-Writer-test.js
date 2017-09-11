@@ -3,6 +3,7 @@ var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
+var BASE = "http://a.example/application/base/";
 
 var ShExParser = require("../lib/ShExParser");
 var ShExWriter = require("../lib/ShExWriter");
@@ -17,6 +18,7 @@ var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var jsonSchemasPath = findPath("parsedSchemas");
+var manifestFile = schemasPath + "manifest.jsonld";
 var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
 var negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
@@ -24,16 +26,23 @@ var negativeTests = [
 ];
 var illDefinedTestsPath = findPath("illDefined");
 
-if (!SLOW)
+var parser = ShExParser.construct(BASE);
+
+if (SLOW)
+  var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
+else
   console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
+
+// positive transformation tests
+var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+if (TESTS)
+  schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
 describe("A ShEx parser", function () {
   // var b = function () {  };
   // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
-
-  var parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
@@ -51,23 +60,15 @@ describe("A ShEx parser", function () {
       expect(error.message).to.include("Parse error on line 1");
     });
 
+  schemas.forEach(function (test) {
+    var schema = test.name;
 
-  // positive transformation tests
-  var schemas = fs.
-    readdirSync(schemasPath).
-    filter(function (s) { return s.indexOf(".shex") !== -1; }).
-    map(function (s) { return s.replace(/\.shex$/, ""); });
-  if (TESTS)
-    schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
-  schemas.sort();
-  schemas.forEach(function (schema) {
-
-    var jsonSchemaFile = jsonSchemasPath + schema + ".json";
+    var jsonSchemaFile = jsonSchemasPath + test.json;
     if (!fs.existsSync(jsonSchemaFile)) return;
     try {
       var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
-      var shexCFile = schemasPath + schema + ".shex";
-      var shexRFile = schemasPath + schema + ".ttl";
+      var shexCFile = schemasPath + test.shex;
+      var shexRFile = schemasPath + test.ttl;
 
       it("should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
@@ -76,8 +77,9 @@ describe("A ShEx parser", function () {
            var schema = fs.readFileSync(shexCFile, "utf8");
            try {
              parser._setFileName(shexCFile);
+             parser._setBase(BASE);
              var parsedSchema = parser.parse(schema);
-             var canonParsed = ShExUtil.canonicalize(parsedSchema)
+             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("parsed   :" + JSON.stringify(canonParsed));
              if (VERBOSE) console.log("expected :" + JSON.stringify(canonAbstractSyntax));
@@ -101,8 +103,8 @@ describe("A ShEx parser", function () {
              var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
-               parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8")),
-               {}
+               GraphSchema,
+               {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
              );
              var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
@@ -132,8 +134,9 @@ describe("A ShEx parser", function () {
           if (VERBOSE) console.log("written  :" + w);
           parser._setFileName(shexCFile + " (generated)");
           try {
-            var parsed2 = parser.parse(w);
-            expect(parsed2).to.deep.equal(abstractSyntax);
+            var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+            expect(parsed2).to.deep.equal(canonAbstractSyntax);
           } catch (e) {
             parser.reset();
             throw(e);
@@ -165,8 +168,8 @@ describe("A ShEx parser", function () {
   });
 
 
+  // negative syntax and structure tests
   negativeTests.forEach(testSet => {
-    // negative syntax tests
     var negSyntaxTests = fs.readdirSync(testSet.path).
         filter(function (s) { return s.indexOf(".shex") !== -1; });
     if (TESTS)
@@ -258,4 +261,46 @@ describe("A ShEx parser", function () {
     });
   }
 });
+
+// Parses a JSON object, restoring `undefined` values
+function parseJSONFile(filename, mapFunction) {
+  "use strict";
+  try {
+    var string = fs.readFileSync(filename, "utf8");
+    var object = JSON.parse(string);
+    function resolveRelativeURLs (obj) {
+      Object.keys(obj).forEach(function (k) {
+        if (typeof obj[k] === "object") {
+          resolveRelativeURLs(obj[k]);
+        }
+        if (mapFunction) {
+          mapFunction(k, obj);
+        }
+      });
+    }
+    resolveRelativeURLs(object);
+    return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+  } catch (e) {
+    throw new Error("error reading " + filename +
+                    ": " + ("stack" in e ? e.stack : e));
+  }
+}
+
+// Not sure this is needed when everything's working but I have hunch it makes
+// error handling a little more graceful.
+
+// Stolen from Ruben Verborgh's SPARQL.js tests:
+// Recursively replace values of "{undefined}" by `undefined`
+function restoreUndefined(object) {
+  "use strict";
+  for (var key in object) {
+    var item = object[key];
+    if (typeof item === "object") {
+      object[key] = restoreUndefined(item);
+    } else if (item === "{undefined}") {
+      object[key] = undefined;
+    }
+  }
+  return object;
+}
 
