@@ -24,6 +24,7 @@
       #meta li.selected { background-color: #ffffe8; }
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
       #inputData li.selected button { background-color: #e8ffe8; }
+      #exampleDrop { border-color: white; width: 100%; }
       #inputSchema li button, #inputData li button {
         font-size: .7em;
         padding: 0em 2ex;
@@ -32,6 +33,7 @@
         cursor: pointer;
         box-shadow: 0.1em 0px 1em rgba(255, 255, 255, 0.9) inset;
       }
+      body { border-width: .25em; border-style: solid; border-color: white; }
       .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
       .stoppable { background-color: red; }
@@ -265,7 +267,7 @@ ul {
         <h2 class="status"> </h2>
         <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
         <div>
-          <div>
+          <div id="exampleDrop" class="droparea">
             <p>Examples:</p>
             <div class="examples">
               <ul>
@@ -275,7 +277,7 @@ ul {
           </div>
           <div id="actions" style="margin-right: .1em; width:100%;">
             <div>
-            <div id="shapeMap-tabs" style="width: 100%">
+            <div id="shapeMap-tabs" class="droparea" style="width: 100%">
               <ul>
                 <li><a href="#textMap">Query Map</a></li>
                 <li><a href="#editMap-tab">Query Map Editor</a></li>
