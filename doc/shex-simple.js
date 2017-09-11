@@ -395,7 +395,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.schema, schemaTest.schemaURL);
+    Caches.inputSchema.set(schemaTest.schema, schemaTest.schemaURL || DefaultBase);
     $("#inputSchema .status").text(name);
 
     var hasMeta = "meta" in schemaTest && schemaTest.meta.length > 0;
@@ -423,7 +423,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data, dataTest.dataURL);
+    Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
