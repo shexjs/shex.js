@@ -2655,7 +2655,9 @@ var ShExUtil = {
     var knownExpressions = [];
     var oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
     v.visitInclusion = function (inclusion) {
-      if (knownExpressions.indexOf(inclusion.include) === -1) {
+      if (knownExpressions.indexOf(inclusion.include) === -1 &&
+          "productions" in schema &&
+          inclusion.include in schema.productions) {
         knownExpressions.push(inclusion.include)
         return oldVisitExpression.call(v, schema.productions[inclusion.include]);
       }
@@ -3027,7 +3029,9 @@ var ShExUtil = {
     var _ShExUtil = this;
     if (val.type === "NodeTest") {
       return null;
-    } else if (val.type === "ShapeTest" || val.type === "ShapeOrResults") {
+    } else if (val.type === "ShapeTest") {
+      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+    } else if (val.type === "ShapeOrResults") {
       return _ShExUtil.walkVal(val.solution, cb);
     } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
       return val.solutions.reduce((ret, sln) => {
@@ -4023,17 +4027,17 @@ function ShExValidator_constructor(schema, options) {
       var shapeMap = point;
       if (this.options.results === "api") {
         return shapeMap.map(pair => {
-          var res = this.validate(db, pair.node, pair.shape, depth, seen);
+          var res = this.validate(db, pair.nodeSelector, pair.shapeLabel, depth, seen);
           return {
-            node: pair.node,
-            shape: pair.shape,
+            node: pair.nodeSelector,
+            shape: pair.shapeLabel,
             status: "errors" in res ? "nonconformant" : "conformant",
             appinfo: res
           };
         });
       }
       var results = shapeMap.reduce((ret, pair) => {
-        var res = this.validate(db, pair.node, pair.shape, depth, seen);
+        var res = this.validate(db, pair.nodeSelector, pair.shapeLabel, depth, seen);
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
