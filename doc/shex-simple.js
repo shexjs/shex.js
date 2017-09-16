@@ -478,8 +478,8 @@ function validate () {
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
-          node: $(tr).find("input.focus").val(),
-          shape: $(tr).find("input.inputShape").val()
+          nodeSelector: $(tr).find("input.focus").val(),
+          shapeLabel: $(tr).find("input.inputShape").val()
         };
       }).get());
       $("#results .status").text("parsing data...").show();
@@ -992,8 +992,8 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {node: Caches.inputData.meta.lexToTerm(pair.node),
-            shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
+    return {nodeSelector: Caches.inputData.meta.lexToTerm(pair.nodeSelector),
+            shapeLabel: Caches.inputSchema.meta.lexToTerm(pair.shapeLabel)};
   });
 }
 
