@@ -1821,19 +1821,42 @@ function GET (f, mediaType) {
 
 function loadList (src, metaList, mediaType, parserWrapper, target, options, loadImports) {
   return src.map(function (p) {
+    return typeof p === "object" ? mergeSchema(p) : loadParseMergeSchema(p);
+  });
+
+  function mergeSchema (obj) {
+    var meta = addMeta(obj.url, mediaType);
+    try {
+      ShExUtil.merge(target, obj.schema, true, true);
+      meta.prefixes = target.prefixes;
+      meta.base = target.base;
+      return Promise.resolve(loadImports(obj.schema)); // [mediaType, url]
+    } catch (e) {
+      var e2 = Error("error merging schema object " + obj.schema + ": " + e);
+      e2.stack = e.stack;
+      return Promise.reject(e2);
+    }
+  }
+
+  function loadParseMergeSchema (p) {
     return GET(p, mediaType).then(function (loaded) {
-      var meta = {
-        mediaType: mediaType,
-        url: loaded.url,
-        base: loaded.url,
-        prefixes: {}
-      };
-      metaList.push(meta);
       return new Promise(function (resolve, reject) {
-        parserWrapper(resolve, reject, loaded.text, mediaType, loaded.url, target, meta, options, loadImports);
+        parserWrapper(resolve, reject, loaded.text, mediaType, loaded.url, target,
+                      addMeta(loaded.url, mediaType), options, loadImports);
       });
     });
-  });
+  }
+
+  function addMeta (url, mediaType) {
+    var meta = {
+      mediaType: mediaType,
+      url: url,
+      base: url,
+      prefixes: {}
+    };
+    metaList.push(meta);
+    return meta;
+  }
 }
 
 /* LoadPromise - load shex and json files into a single Schema and turtle into
@@ -2655,7 +2678,9 @@ var ShExUtil = {
     var knownExpressions = [];
     var oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
     v.visitInclusion = function (inclusion) {
-      if (knownExpressions.indexOf(inclusion.include) === -1) {
+      if (knownExpressions.indexOf(inclusion.include) === -1 &&
+          "productions" in schema &&
+          inclusion.include in schema.productions) {
         knownExpressions.push(inclusion.include)
         return oldVisitExpression.call(v, schema.productions[inclusion.include]);
       }
@@ -3027,7 +3052,9 @@ var ShExUtil = {
     var _ShExUtil = this;
     if (val.type === "NodeTest") {
       return null;
-    } else if (val.type === "ShapeTest" || val.type === "ShapeOrResults") {
+    } else if (val.type === "ShapeTest") {
+      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+    } else if (val.type === "ShapeOrResults") {
       return _ShExUtil.walkVal(val.solution, cb);
     } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
       return val.solutions.reduce((ret, sln) => {
@@ -4023,17 +4050,17 @@ function ShExValidator_constructor(schema, options) {
       var shapeMap = point;
       if (this.options.results === "api") {
         return shapeMap.map(pair => {
-          var res = this.validate(db, pair.node, pair.shape, depth, seen);
+          var res = this.validate(db, pair.nodeSelector, pair.shapeLabel, depth, seen);
           return {
-            node: pair.node,
-            shape: pair.shape,
+            node: pair.nodeSelector,
+            shape: pair.shapeLabel,
             status: "errors" in res ? "nonconformant" : "conformant",
             appinfo: res
           };
         });
       }
       var results = shapeMap.reduce((ret, pair) => {
-        var res = this.validate(db, pair.node, pair.shape, depth, seen);
+        var res = this.validate(db, pair.nodeSelector, pair.shapeLabel, depth, seen);
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;

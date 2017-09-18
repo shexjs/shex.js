@@ -185,13 +185,13 @@ describe("A ShEx validator", function () {
                       var map = maybeGetTerm(manifestFile, test.action.map);
                       if (map) {
                         map = JSON.parse(fs.readFileSync(map, "utf8"));
-                        map = Object.keys(map).reduce((r, k) => {
-                          return r.concat({node: k, shape: map[k]});
-                        }, [])
+                        // map = Object.keys(map).reduce((r, k) => {
+                        //   return r.concat({nodeSelector: k, shapeLabel: map[k]});
+                        // }, [])
                       } else {
                         var focus = maybeGetTerm(dataURL, test.action.focus);
                         var shape = maybeGetTerm(schemaURL, test.action.shape);
-                        map = [{node: focus, shape: shape}];
+                        map = [{nodeSelector: focus, shapeLabel: shape}];
                       }
                       var validationResult = validator.validate(store, map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
