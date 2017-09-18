@@ -486,7 +486,16 @@ function validate () {
       var inputData = Caches.inputData.refresh();
 
       $("#results .status").text("creating validator...").show();
-      ShEx.Loader.load([], ["data:text/json," + JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(Caches.inputSchema.refresh())))], [], []).then(loaded => {
+      // var dataURL = "data:text/json," +
+      //     JSON.stringify(
+      //       ShEx.Util.AStoShExJ(
+      //         ShEx.Util.canonicalize(
+      //           Caches.inputSchema.refresh())));
+      var alreadLoaded = {
+        schema: Caches.inputSchema.refresh(),
+        url: Caches.inputSchema.url || DefaultBase
+      };
+      ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
         var validator = ShEx.Validator.construct(
           loaded.schema,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
