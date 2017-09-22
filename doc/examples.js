@@ -78,31 +78,31 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   :name "Bob" ;
   :birthdate "1999-12-31T01:23:45"^^xsd:dateTime .`;
 
-  return {
-    "clinical observation": {
+  return [
+    { name: "clinical observation",
       schema: clinicalObs.schema,
-      passes: {
-        "with birthdate": {
+      passes: [
+        { name: "with birthdate",
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<http://a.example/ObservationShape>"},
-        "without birthdate": {
+          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>"},
+        { name: "without birthdate",
           data: clinicalObs.without_birthdate,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "no subject name": {
+          queryMap: "<Obs1>@START"},
+        { name: "no subject name",
           data: clinicalObs.no_subject_name,
-          queryMap: "<http://a.example/Obs1>@START"}
-      },
-      fails: {
-        "bad status": {
+          queryMap: "<Obs1>@START"}
+      ],
+      fails: [
+        { name: "bad status",
           data: clinicalObs.bad_status,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "no subject": {
+          queryMap: "<Obs1>@START"},
+        { name: "no subject",
           data: clinicalObs.no_subject,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "wrong birthdate datatype": {
+          queryMap: "<Obs1>@START"},
+        { name: "wrong birthdate datatype",
           data: clinicalObs.birthdate_datatype,
-          queryMap: "<http://a.example/Obs1>@START"}
-      }
+          queryMap: "<Obs1>@START"}
+      ]
     }
-  };
+  ];
 })();

@@ -5,7 +5,7 @@
 const USE_INCREMENTAL_RESULTS = true;
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var DefaultBase = "http://a.example/"; location.origin + location.pathname;
+var DefaultBase = location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -104,7 +104,7 @@ function _makeCache (selection) {
   var ret = {
     selection: selection,
     parsed: null,
-    meta: { prefixes: {}, base: null },
+    meta: { prefixes: {}, base: DefaultBase },
     dirty: function (newVal) {
       var ret = _dirty;
       _dirty = newVal;
@@ -145,6 +145,8 @@ function _makeCache (selection) {
           });
         }).done(function (data) {
           try {
+            _cache.meta.base = url;
+            resolver._setBase(url);
             _cache.set(data, url);
             $("#loadForm").dialog("close");
             toggleControls();
@@ -234,61 +236,98 @@ function makeTurtleCache (selection) {
 
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (textOrObj) {
-    var demos;
-    if (typeof textOrObj === "object") {
-      demos = {};
-      (textOrObj.constructor === Array ? textOrObj : [textOrObj]).forEach(elt => {
-        var action = "action" in elt ? elt.action: elt;
-        Promise.all([
-          maybeGET(action, "schema", "text/shex,application/jsonld,text/turtle"),
-          maybeGET(action, "data", "text/turtle"),
-        ]).catch(e => {
-          results.append($("<pre/>").text(
-            "aborting load of " + Object.toString(elt, null, 2)
-          ).addClass("error"));
-        }).then(() => {
-          // if (!($("#append").is(":checked")))
-          //   ...;
-          var demoSet = {
-            fails: {},
-            passes: {},
-            schema: action.schema,
-            schemaURL: action.schemaURL || DefaultBase,
-          };
-          var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
-          var d = {
-            data: action.data,
-            dataURL: action.dataURL || DefaultBase
-          };
-          d.queryMap = "map" in action ?
+  ret.set = function (textOrObj, url, source) {
+    clearAll();
+    if (typeof textOrObj !== "object") {
+      try {
+        textOrObj = JSON.parse(textOrObj);
+      } catch (e) {
+        textOrObj = eval(textOrObj); // exceptions pass through to caller (asyncGet)
+      }
+    }
+    if (textOrObj.constructor !== Array)
+      textOrObj = [textOrObj];
+    var demos = [];
+    Promise.all(textOrObj.reduce((outer, elt) => {
+      if ("action" in elt) {
+        // compatibility with test suite structure.
+        var action = elt.action;
+        var demoSet = {
+          name: elt["@id"],
+          schema: action.schema,
+          schemaURL: action.schemaURL || url,
+          fails: [],
+          passes: [],
+        };
+        if ("termResolver" in action || "termResolverURL" in action) {
+          demoSet.meta = action.termResolver;
+          demoSet.metaURL = action.termResolverURL || DefaultBase;
+        }
+        var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
+        var queryMap = "map" in action ?
             action.map :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
-          var name = "name" in action ? action.name : d.queryMap;
-          target[name] = d;
-          demos[elt["@id"]] = demoSet;
-          prepareExamples(demos);
-        });
+        var d = {
+          name: "name" in action ? action.name : queryMap,
+          data: action.data,
+          dataURL: action.dataURL || DefaultBase,
+          queryMap: queryMap
+        };
+      // target[name] = d;
+        target.push(d);
+        elt = demoSet;
+      }
+      // demos[elt["@id"]] = demoSet;
+      demos.push(elt);
+      return outer.concat(
+        Promise.resolve(elt.schemaURL),
+        maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
+        maybeGET(elt, url, "termResolver", "text/turtle"),
+        ["passes", "fails"].reduce((inner, k) => {
+          return inner.concat(elt[k].map(d => {
+            return maybeGET(d, url, "data", "text/turtle");
+          }));
+        }, []));
+    }, [])).then(() => {
+      // if (!($("#append").is(":checked")))
+      //   ...;
+      prepareExamples(demos);
+    }).catch(e => {
+      var whence = source === undefined ? "<" + url  + ">" : source;
+      results.append($("<pre/>").text(
+        "failed to load examples from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
+      ).addClass("error"));
+    });
+  };
+  ret.parse = function (text, base) {
+    throw Error("should not try to parse examples cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get examples cache items");
+  };
+  return ret;
 
-        function maybeGET(obj, key, accept) {
-          if (key in obj) {
+        function maybeGET(obj, base, key, accept) {
+          if (obj[key] != null) {
             // Take the passed data, guess base if not provided.
             if (!(key + "URL" in obj))
-              obj[key + "URL"] = DefaultBase;
+              obj[key + "URL"] = base;
             return Promise.resolve();
           } else if (key + "URL" in obj) {
+            // absolutize the URL
+            obj[key + "URL"] = ret.meta.lexToTerm("<"+obj[key + "URL"]+">");
             // Load the remote resource.
             return $.ajax({
               accepts: {
                 mycustomtype: accept
               },
-              url: obj[key + "URL"],
+              url: ret.meta.lexToTerm("<"+obj[key + "URL"]+">"),
               dataType: "text"
             }).then(text => {
               obj[key] = text;
             }).fail(e => {
               results.append($("<pre/>").text(
-                "Error " + e.status + " " + e.statusText + " on GET " + obj[key]
+                "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
               ).addClass("error"));
             });
           } else {
@@ -310,19 +349,6 @@ function makeExamplesCache (selection) {
             return ret;
           }
         }
-      });
-    } else {
-      demos = eval(textOrObj); // exceptions pass through to caller (asyncGet)
-      prepareExamples(demos);
-    }
-  };
-  ret.parse = function (text, base) {
-    throw Error("should not try to parse examples cache");
-  };
-  ret.getItems = function () {
-    throw Error("should not try to get examples cache items");
-  };
-  return ret;
 }
 
 function makeShapeMapCache (selection) {
@@ -343,14 +369,14 @@ function makeShapeMapCache (selection) {
 }
 
 // controls for example links
-function load (selector, obj, func, listItems, side, str) {
+function load (selector, list, func, listItems, side, str) {
   $(selector).empty();
-  Object.keys(obj).forEach(k => {
-    var li = $("<li/>").append($("<button/>").text(k));
+  list.forEach(entry => {
+    var li = $("<li/>").append($("<button/>").text(entry.name));
     li.on("click", () => {
-      func(k, obj[k], li, listItems, side);
+      func(entry.name, entry, li, listItems, side);
     });
-    listItems[side][sum(str(obj[k]))] = li;
+    listItems[side][sum(str(entry))] = li;
     $(selector).append(li);
   });
 }
@@ -479,15 +505,16 @@ function validate () {
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
-          node: $(tr).find("input.focus").val(),
-          shape: $(tr).find("input.inputShape").val()
+          nodeSelector: $(tr).find("input.focus").val(),
+          shapeLabel: $(tr).find("input.inputShape").val()
         };
       }).get());
       $("#results .status").text("parsing data...").show();
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage(Object.assign({ request: "create", schema: Caches.inputSchema.refresh()
+      ShExWorker.postMessage(Object.assign({ request: "create", schema: Caches.inputSchema.refresh(),
+                                             schemaURL: Caches.inputSchema.url || DefaultBase
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
                                            },
                                            "endpoint" in Caches.inputData ?
@@ -509,10 +536,10 @@ function validate () {
         ShExWorker.onmessage = parseUpdatesAndResults;
         var transportMap = fixedMap.map(function (ent) {
           return {
-            node: ent.node,
-            shape: ent.shape === ShEx.Validator.start ?
+            nodeSelector: ent.nodeSelector,
+            shapeLabel: ent.shapeLabel === ShEx.Validator.start ?
               START_SHAPE_INDEX_ENTRY :
-              ent.shape
+              ent.shapeLabel
           };
         });
         ShExWorker.postMessage({
@@ -564,8 +591,12 @@ function validate () {
         case "done":
           ShExWorker.onmessage = false;
           $("#results .status").text("rendering results...").show();
-          if (!USE_INCREMENTAL_RESULTS)
-            msg.data.results.forEach(renderEntry);
+          if (!USE_INCREMENTAL_RESULTS) {
+            if ("solutions" in msg.data.results)
+              msg.data.results.solutions.forEach(renderEntry);
+            else
+              renderEntry(msg.data.results);
+            }
           finishRendering();
           break;
 
@@ -1057,8 +1088,8 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {node: Caches.inputData.meta.lexToTerm(pair.node),
-            shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
+    return {nodeSelector: Caches.inputData.meta.lexToTerm(pair.nodeSelector),
+            shapeLabel: Caches.inputSchema.meta.lexToTerm(pair.shapeLabel)};
   });
 }
 
@@ -1113,10 +1144,12 @@ function prepareInterface () {
     customizeInterface();
     $(".examples li").text("no example schemas loaded");
     var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
-    if (loadExamples.length) // examples= disables examples
-      Caches.examples.asyncGet(loadExamples).catch(function (e) {
+    if (loadExamples.length) { // examples= disables examples
+      Caches.examples.asyncGet(Caches.examples.meta.lexToTerm("<"+loadExamples+">"))
+      .catch(function (e) {
         $(".examples li").text(e.message);
       });
+    }
     $("body").keydown(function (e) { // keydown because we need to preventDefault
       var code = e.keyCode || e.charCode; // standards anyone?
       if (e.ctrlKey && (code === 10 || code === 13)) {
@@ -1223,12 +1256,13 @@ function prepareDragAndDrop () {
           $("#results .status").removeClass("error");
           results.clear();
           let xfer = evt.originalEvent.dataTransfer;
-          [
+          const prefTypes = [
             {type: "files"},
             {type: "application/json"},
             {type: "text/uri-list"},
             {type: "text/plain"}
-          ].find(l => {
+          ];
+          if (prefTypes.find(l => {
             if (l.type.indexOf("/") === -1) {
               if (xfer[l.type].length > 0) {
                 $("#results .status").text("handling "+xfer[l.type].length+" files...").show();
@@ -1245,7 +1279,7 @@ function prepareDragAndDrop () {
                     var action = "action" in parsed ? parsed.action: parsed;
                     action.schemaURL = action.schema; delete action.schema;
                     action.dataURL = action.data; delete action.data;
-                    Caches.examples.set(parsed);
+                    Caches.examples.set(parsed, DefaultBase, "drag and drop");
                   } else {
                     inject(desc.targets, DefaultBase, val, l.type);
                   }
@@ -1292,7 +1326,19 @@ function prepareDragAndDrop () {
               }
             }
             return false;
-          });
+          }) === undefined)
+            results.append($("<pre/>").text(
+              "drag and drop not recognized:\n" +
+                JSON.stringify({
+                  dropEffect: xfer.dropEffect,
+                  effectAllowed: xfer.effectAllowed,
+                  files: xfer.files.length,
+                  items: [].slice.call(xfer.items).map(i => {
+                    return {kind: i.kind, type: i.type};
+                  })
+                }, null, 2)
+            ));
+
         });
     });
   function readfiles(files, targets) {
