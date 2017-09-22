@@ -534,7 +534,7 @@ function loadJSONmanifest (jsonManifests) {
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
               var pattern = RegExp(n);
-              return ret || ("name" in elt && elt.name.match(pattern) !== -1);
+              return ret || ("name" in elt && elt.name.match(pattern));
             }, false);
           });
         d.forEach(function (elt) {
