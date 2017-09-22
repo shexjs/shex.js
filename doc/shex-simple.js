@@ -1193,12 +1193,13 @@ function prepareDragAndDrop () {
           $("#results .status").removeClass("error");
           results.clear();
           let xfer = evt.originalEvent.dataTransfer;
-          [
+          const prefTypes = [
             {type: "files"},
             {type: "application/json"},
             {type: "text/uri-list"},
             {type: "text/plain"}
-          ].find(l => {
+          ];
+          if (prefTypes.find(l => {
             if (l.type.indexOf("/") === -1) {
               if (xfer[l.type].length > 0) {
                 $("#results .status").text("handling "+xfer[l.type].length+" files...").show();
@@ -1262,7 +1263,19 @@ function prepareDragAndDrop () {
               }
             }
             return false;
-          });
+          }) === undefined)
+            results.append($("<pre/>").text(
+              "drag and drop not recognized:\n" +
+                JSON.stringify({
+                  dropEffect: xfer.dropEffect,
+                  effectAllowed: xfer.effectAllowed,
+                  files: xfer.files.length,
+                  items: [].slice.call(xfer.items).map(i => {
+                    return {kind: i.kind, type: i.type};
+                  })
+                }, null, 2)
+            ));
+
         });
     });
   function readfiles(files, targets) {
