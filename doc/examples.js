@@ -162,63 +162,63 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
   ex:protWidth "30"^^ex:microns999 .
 `;
 
-  return {
-    "clinical observation": {
+  return [
+    { name: "clinical observation",
       schema: clinicalObs.schema,
-      passes: {
-        "with birthdate": {
+      passes: [
+        { name: "with birthdate",
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<http://a.example/ObservationShape>"},
-        "without birthdate": {
+          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>"},
+        { name: "without birthdate",
           data: clinicalObs.without_birthdate,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "no subject name": {
+          queryMap: "<Obs1>@START"},
+        { name: "no subject name",
           data: clinicalObs.no_subject_name,
-          queryMap: "<http://a.example/Obs1>@START"}
-      },
-      fails: {
-        "bad status": {
+          queryMap: "<Obs1>@START"}
+      ],
+      fails: [
+        { name: "bad status",
           data: clinicalObs.bad_status,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "no subject": {
+          queryMap: "<Obs1>@START"},
+        { name: "no subject",
           data: clinicalObs.no_subject,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "wrong birthdate datatype": {
+          queryMap: "<Obs1>@START"},
+        { name: "wrong birthdate datatype",
           data: clinicalObs.birthdate_datatype,
-          queryMap: "<http://a.example/Obs1>@START"}
-      }
+          queryMap: "<Obs1>@START"}
+      ]
     },
-    "Each Wikidata item on Cancer should have a NCI Thesaurus ID": {
+    { name: "Each Wikidata item on Cancer should have a NCI Thesaurus ID",
       schema: wikidataItem.schema,
-      passes: {
-        "Get all Wikidata items on Cancers (SPARQL)": {
+      passes: [
+        { name: "Get all Wikidata items on Cancers (SPARQL)",
           data: wikidataItem.cats,
           queryMap: "SPARQL `SELECT ?item ?itemLabel "+
             "WHERE "+
             "{ ?item wdt:P279* wd:Q12078 . "+
             "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } "+
             "} LIMIT 10`@START"}
-      },
-      fails: {
-      }
+      ],
+      fails: [
+      ]
     },
-    "protein record": {
+    { name: "protein record",
       schema: proteinRecord,
       meta: proteinRecord_meta,
-      passes: {
-        "good": {
+      passes: [
+        { name: "good",
           data: proteinRecord_good,
-          queryMap: "<http://a.example/s>@<http://a.example/S>"}
-      },
-      fails: {
-        "bad label": {
+          queryMap: "<s>@<S>"}
+      ],
+      fails: [
+        { name: "bad label",
           data: proteinRecord_badLabel,
-          queryMap: "<http://a.example/s>@<http://a.example/S>"},
-        "bad datatype": {
+          queryMap: "<s>@<S>"},
+        { name: "bad datatype",
           data: proteinRecord_badDatatype,
-          queryMap: "<http://a.example/s>@<http://a.example/S>"}
-      }
+          queryMap: "<s>@<S>"}
+      ]
     }
 
-  };
+  ];
 })();
