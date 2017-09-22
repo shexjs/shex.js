@@ -111,46 +111,46 @@ WHERE
 } LIMIT 10
 `;
 
-  return {
-    "clinical observation": {
+  return [
+    { name: "clinical observation",
       schema: clinicalObs.schema,
-      passes: {
-        "with birthdate": {
+      passes: [
+        { name: "with birthdate",
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<http://a.example/ObservationShape>"},
-        "without birthdate": {
+          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>"},
+        { name: "without birthdate",
           data: clinicalObs.without_birthdate,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "no subject name": {
+          queryMap: "<Obs1>@START"},
+        { name: "no subject name",
           data: clinicalObs.no_subject_name,
-          queryMap: "<http://a.example/Obs1>@START"}
-      },
-      fails: {
-        "bad status": {
+          queryMap: "<Obs1>@START"}
+      ],
+      fails: [
+        { name: "bad status",
           data: clinicalObs.bad_status,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "no subject": {
+          queryMap: "<Obs1>@START"},
+        { name: "no subject",
           data: clinicalObs.no_subject,
-          queryMap: "<http://a.example/Obs1>@START"},
-        "wrong birthdate datatype": {
+          queryMap: "<Obs1>@START"},
+        { name: "wrong birthdate datatype",
           data: clinicalObs.birthdate_datatype,
-          queryMap: "<http://a.example/Obs1>@START"}
-      }
+          queryMap: "<Obs1>@START"}
+      ]
     },
-    "wikidata query": {
+    { name: "wikidata query",
       schema: wikidataItem.schema,
-      passes: {
-        "12078": {
+      passes: [
+        { name: "12078",
           data: wikidataItem.cats,
           queryMap: "SPARQL `SELECT ?item ?itemLabel "+
             "WHERE "+
             "{ ?item wdt:P279* wd:Q12078 . "+
             "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } "+
             "} LIMIT 10`@START"}
-      },
-      fails: {
-      }
+      ],
+      fails: [
+      ]
     }
 
-  };
+  ];
 })();

@@ -246,7 +246,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -369,6 +369,7 @@
 
 IT_BASE                 [Bb][Aa][Ss][Ee]
 IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
+IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
 IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
@@ -483,6 +484,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{PN_LOCAL}            return 'PN_LOCAL';
 {IT_BASE}               return 'IT_BASE';
 {IT_PREFIX}             return 'IT_PREFIX';
+{IT_IMPORT}             return 'IT_IMPORT';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
 {IT_VIRTUAL}            return 'IT_VIRTUAL';
@@ -531,6 +533,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 "true"                  return 'IT_true';
 "false"                 return 'IT_false';
 <<EOF>>                 return 'EOF';
+[a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
 .                       return 'invalid character '+yytext;
 
 /lex
@@ -547,7 +550,8 @@ shexDoc:
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
         var ret = extend({ type: "Schema"},
-                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Build return object from
+                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Properties ordered here to
+                         Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}, // build return object from
                          valueExprDefns, startActs, startObj,                  // components in parser state
                          Parser.shapes ? {shapes: Parser.shapes} : {},         // maintaining intuitve order.
                          Parser.productions ? {productions: Parser.productions} : {});
@@ -590,6 +594,7 @@ _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
 directive:
       baseDecl	// t: @@
     | prefixDecl	// t: 1dotLNex
+    | importDecl	// t: @@
     ;
 
 baseDecl:
@@ -607,6 +612,17 @@ prefixDecl:
         else
           prefixIRI = _resolveIRI($3.slice(1, -1));
         Parser._prefixes[$2.slice(0, -1)] = prefixIRI;
+      }
+    ;
+
+importDecl:
+      IT_IMPORT IRIREF	{ // t: @@
+        var importIRI;
+        if (this._base === null || absoluteIRI.test($2.slice(1, -1)))
+          importIRI = $2.slice(1, -1);
+        else
+          importIRI = _resolveIRI($2.slice(1, -1));
+        Parser._imports.push(importIRI);
       }
     ;
 
