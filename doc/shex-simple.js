@@ -4,7 +4,7 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var DefaultBase = "http://a.example/"; location.origin + location.pathname;
+var DefaultBase = location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputMeta = makeTurtleCache($("#meta textarea"));
@@ -115,7 +115,7 @@ function _makeCache (selection) {
   var ret = {
     selection: selection,
     parsed: null,
-    meta: { prefixes: {}, base: null },
+    meta: { prefixes: {}, base: DefaultBase },
     dirty: function (newVal) {
       var ret = _dirty;
       _dirty = newVal;
@@ -1113,10 +1113,12 @@ function prepareInterface () {
     customizeInterface();
     $(".examples li").text("no example schemas loaded");
     var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
-    if (loadExamples.length) // examples= disables examples
-      Caches.examples.asyncGet(loadExamples).catch(function (e) {
+    if (loadExamples.length) { // examples= disables examples
+      Caches.examples.asyncGet(Caches.examples.meta.lexToTerm("<"+loadExamples+">"))
+      .catch(function (e) {
         $(".examples li").text(e.message);
       });
+    }
     $("body").keydown(function (e) { // keydown because we need to preventDefault
       var code = e.keyCode || e.charCode; // standards anyone?
       if (e.ctrlKey && (code === 10 || code === 13)) {

@@ -135,24 +135,24 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
       passes: [
         { name: "with birthdate",
           data: clinicalObs.with_birthdate,
-          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<http://a.example/ObservationShape>"},
+          queryMap: "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>"},
         { name: "without birthdate",
           data: clinicalObs.without_birthdate,
-          queryMap: "<http://a.example/Obs1>@START"},
+          queryMap: "<Obs1>@START"},
         { name: "no subject name",
           data: clinicalObs.no_subject_name,
-          queryMap: "<http://a.example/Obs1>@START"}
+          queryMap: "<Obs1>@START"}
       ],
       fails: [
         { name: "bad status",
           data: clinicalObs.bad_status,
-          queryMap: "<http://a.example/Obs1>@START"},
+          queryMap: "<Obs1>@START"},
         { name: "no subject",
           data: clinicalObs.no_subject,
-          queryMap: "<http://a.example/Obs1>@START"},
+          queryMap: "<Obs1>@START"},
         { name: "wrong birthdate datatype",
           data: clinicalObs.birthdate_datatype,
-          queryMap: "<http://a.example/Obs1>@START"}
+          queryMap: "<Obs1>@START"}
       ]
     },
     { name: "protein record",
@@ -161,15 +161,15 @@ proteinRecord_badDatatype = `PREFIX ex: <http://a.example/>
       passes: [
         { name: "good",
           data: proteinRecord_good,
-          queryMap: "<http://a.example/s>@<http://a.example/S>"}
+          queryMap: "<s>@<S>"}
       ],
       fails: [
         { name: "bad label",
           data: proteinRecord_badLabel,
-          queryMap: "<http://a.example/s>@<http://a.example/S>"},
+          queryMap: "<s>@<S>"},
         { name: "bad datatype",
           data: proteinRecord_badDatatype,
-          queryMap: "<http://a.example/s>@<http://a.example/S>"}
+          queryMap: "<s>@<S>"}
       ]
     }
   ];
