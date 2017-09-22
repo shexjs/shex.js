@@ -28,8 +28,19 @@ onmessage = function (msg) {
     if ("regexModule" in options)
       options.regexModule = modules[options.regexModule];
     options = Object.create({ results: "api" }, options); // default to API results
-    validator = ShEx.Validator.construct(msg.data.schema, options);
-    postMessage({ response: "created" });
+    // var dataURL = "data:text/json," +
+    //     JSON.stringify(
+    //       ShEx.Util.AStoShExJ(
+    //         ShEx.Util.canonicalize(
+    //           msg.data.schema)));
+    var alreadLoaded = {
+      schema: msg.data.schema,
+      url: msg.data.schemaURL
+    };
+    ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+      validator = ShEx.Validator.construct(loaded.schema, options);
+      postMessage({ response: "created" });
+    });
     break;
 
   case "validate":
@@ -42,8 +53,8 @@ onmessage = function (msg) {
 
     for (var currentEntry = 0; currentEntry < queryMap.length; ) {
       var singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
-      if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
-        singletonMap[0].shape = ShEx.Validator.start;
+      if (singletonMap[0].shapeLabel === START_SHAPE_INDEX_ENTRY)
+        singletonMap[0].shapeLabel = ShEx.Validator.start;
       var newResults = validator.validate(db, singletonMap);
       newResults.forEach(function (res) {
         if (res.shape === ShEx.Validator.start)

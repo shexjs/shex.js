@@ -34,8 +34,6 @@ Util = (function () {
 
       // Add entries to results ShapeMap.
       merge: function (toAdd) {
-        if (toAdd.type !== "SolutionList" && toAdd.type !== "FailureList")
-          toAdd = [toAdd];
         toAdd.forEach(ent => {
           var key = indexKey(ent.node, ent.shape);
           if (!(key in known)) {

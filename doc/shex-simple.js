@@ -605,7 +605,8 @@ function validate () {
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
-      ShExWorker.postMessage(Object.assign({ request: "create", schema: Caches.inputSchema.refresh()
+      ShExWorker.postMessage(Object.assign({ request: "create", schema: Caches.inputSchema.refresh(),
+                                             schemaURL: Caches.inputSchema.url || DefaultBase
               /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
                                            },
                                            "endpoint" in Caches.inputData ?
@@ -627,10 +628,10 @@ function validate () {
         ShExWorker.onmessage = parseUpdatesAndResults;
         var transportMap = fixedMap.map(function (ent) {
           return {
-            node: ent.node,
-            shape: ent.shape === ShEx.Validator.start ?
+            nodeSelector: ent.nodeSelector,
+            shapeLabel: ent.shapeLabel === ShEx.Validator.start ?
               START_SHAPE_INDEX_ENTRY :
-              ent.shape
+              ent.shapeLabel
           };
         });
         ShExWorker.postMessage(Object.assign(
@@ -686,8 +687,12 @@ function validate () {
         case "done":
           ShExWorker.onmessage = false;
           $("#results .status").text("rendering results...").show();
-          if (!USE_INCREMENTAL_RESULTS)
-            msg.data.results.forEach(renderEntry);
+          if (!USE_INCREMENTAL_RESULTS) {
+            if ("solutions" in msg.data.results)
+              msg.data.results.solutions.forEach(renderEntry);
+            else
+              renderEntry(msg.data.results);
+            }
           finishRendering();
           break;
 
