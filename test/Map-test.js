@@ -165,6 +165,7 @@ function graphEquals (right, m) {
           !add(t.object, triple.object) ||       // or the bindings for tₗ.o→tᵣ.o fail
           !match(g)) {                           // of the remaining triples fail,
         adds.forEach(function (added) {             // remove each added binding.
+          delete back[m[added]];
           delete m[added];
         });
         return false;
