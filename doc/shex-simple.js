@@ -302,7 +302,7 @@ function makeTurtleCache (selection) {
   };
   ret.getItems = function () {
     var text = this.get();
-    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*(?:\n[\s]*Query:[\s]*([\s\S]*?))?$/i);
+    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
       return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
@@ -518,7 +518,7 @@ function pickData (name, dataTest, elt, listItems, side) {
   } else {
     Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
     var text = Caches.inputData.get();
-    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*\n[\s]*Query:[\s]*([\s\S]*?)$/i);
+    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m)
       Caches.inputData.endpoint = m[1];
     $("#inputData .status").text(name);

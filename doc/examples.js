@@ -102,13 +102,8 @@ start = @<wikidata_item>
 `;
 
 wikidataItem.cats = `
-Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql
 
-Query: SELECT ?item ?itemLabel
-WHERE
-{ ?item wdt:P279* wd:Q12078 .
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
-} LIMIT 10
+  Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql
 `;
 
 proteinRecord = `PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
