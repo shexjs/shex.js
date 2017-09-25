@@ -1490,12 +1490,18 @@ function prepareDragAndDrop () {
 }
 
 function prepareExamples (demoList) {
-  var listItems = {inputSchema:{}, inputData:{}, examples: {}, shapeMap: {}};
+  var listItems = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = {};
+    return acc;
+  }, {});
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
-  var timeouts = { inputSchema: undefined, inputData: undefined, examples: undefined };
+  var timeouts = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = undefined;
+    return acc;
+  }, {});
   function later (target, side, cache) {
     cache.dirty(true);
     if (timeouts[side])
