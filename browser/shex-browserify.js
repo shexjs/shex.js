@@ -1865,7 +1865,8 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
       ShExUtil.merge(target, obj.schema, true, true);
       meta.prefixes = target.prefixes;
       meta.base = target.base;
-      return Promise.resolve(loadImports(obj.schema)); // [mediaType, url]
+      loadImports(obj.schema);
+      return Promise.resolve([mediaType, obj.url]);
     } catch (e) {
       var e2 = Error("error merging schema object " + obj.schema + ": " + e);
       e2.stack = e.stack;
@@ -1875,10 +1876,8 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
 
   function loadParseMergeSchema (p) {
     return GET(p, mediaType).then(function (loaded) {
-      return new Promise(function (resolve, reject) {
-        parserWrapper(resolve, reject, loaded.text, mediaType, loaded.url, target,
-                      addMeta(loaded.url, mediaType), options, loadImports);
-      });
+      return parserWrapper(loaded.text, mediaType, loaded.url, target,
+                           addMeta(loaded.url, mediaType), options, loadImports);
     });
   }
 
@@ -1905,27 +1904,27 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
     dataMeta: []
   };
   var promises = [];
-  var schemasSeen = shex.concat(json);
+  var schemasSeen = shex.concat(json).map(p => {
+    // might be already loaded objects with a url property.
+    return typeof p === "object" ? p.url : p;
+  });
   var transform = null;
   if (schemaOptions && "iriTransform" in schemaOptions) {
     transform = schemaOptions.iriTransform;
     delete schemaOptions.iriTransform;
   }
 
-  var promiseScope = DynamicPromise();
+  var allLoaded = DynamicPromise();
   function loadImports (schema) {
-    var rest = "imports" in schema ?
-        schema.imports.
-        map(function (i) {
-          return transform ? transform(i) : i;
-        }).
-        filter(function (i) {
-          return schemasSeen.indexOf(i) === -1;
-        }) :
-        [];
-    return rest.length ? Promise.all(rest.map(i => {
+    if (!("imports" in schema))
+      return;
+    schema.imports.map(function (i) {
+      return transform ? transform(i) : i;
+    }).filter(function (i) {
+      return schemasSeen.indexOf(i) === -1;
+    }).map(i => {
       schemasSeen.push(i);
-      return promiseScope.add(GET(i).then(function (loaded) {
+      allLoaded.add(GET(i).then(function (loaded) {
         var meta = {
           // mediaType: mediaType,
           url: loaded.url,
@@ -1933,13 +1932,10 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
           prefixes: {}
         };
         // metaList.push(meta);
-        return new Promise(function (resolve, reject) {
-          parseShExC(resolve, reject, loaded.text, "text/shex", loaded.url, returns.schema, meta, schemaOptions, loadImports);
-        });
-      }));
-    })).then(a => {
-      return null;
-    }) : null;
+        return parseShExC(loaded.text, "text/shex", loaded.url,
+                          returns.schema, meta, schemaOptions, loadImports);
+      })); // addAfter would be after invoking schema.
+    });
   }
 
   // gather all the potentially remote inputs
@@ -1967,7 +1963,7 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
                     parseTurtle, returns.data, dataOptions)).
     concat(loadList(jsonld, returns.dataMeta, "application/ld+json",
                     parseJSONLD, returns.data, dataOptions));
-  return promiseScope.all(promises).then(function () {
+  return allLoaded.all(promises).then(function (resources) {
     if (returns.schemaMeta.length > 0)
       ShExUtil.isWellDefined(returns.schema);
     return returns;
@@ -1978,38 +1974,38 @@ function DynamicPromise () {
   var promises = [];
   var results = [];
   var completedPromises = 0;
-  var resolve, reject;
-  return {
-    all: function (pz) {
-      promises = pz;
-      return new Promise(function (res, rej) {
-        resolve = res; reject = rej;
-        promises.forEach(function (promise, index) {
-          // promises.push(promise);
-          addThen(promise, index);
-        });
-      });
-    },
-    add: function (promise) {
+  var resolveSelf, rejectSelf;
+  var self = new Promise(function (resolve, reject) {
+    resolveSelf = resolve; rejectSelf = reject;
+  });
+  self.all = function (pz) {
+    pz.forEach(function (promise, index) {
       promises.push(promise);
-      return addThen(promise, promises.length - 1);
-    }
+      addThen(promise, index);
+    });
+    return self;
   };
+  self.add = function (promise) {
+    promises.push(promise);
+    addThen(promise, promises.length - 1);
+    return self;
+  }
+  return self;
+
   function addThen (promise, index) {
     promise.then(function (value) {
       results[index] = value;
       ++completedPromises;
       if(completedPromises === promises.length) {
-        resolve(results);
+        resolveSelf(results);
       }
     }).catch(function (error) {
-      reject(error);
+      rejectSelf(error);
     });
-    return promise;
   }
 }
 
-function parseShExC (resolve, reject, text, mediaType, url, schema, meta, schemaOptions, loadImports) {
+function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImports) {
   var parser = schemaOptions && "parser" in schemaOptions ?
       schemaOptions.parser :
       ShExParser.construct(url, {}, schemaOptions);
@@ -2020,22 +2016,23 @@ function parseShExC (resolve, reject, text, mediaType, url, schema, meta, schema
     ShExUtil.merge(schema, s, true, true);
     meta.prefixes = schema.prefixes;
     meta.base = schema.base || meta.base;
-    resolve(loadImports(s)); // [mediaType, url]
+    loadImports(s);
+    return Promise.resolve([mediaType, url]);
   } catch (e) {
     var e2 = Error("error parsing ShEx " + url + ": " + e);
-    e2.stack = e.stack;
-    reject(e2);
+    // e2.stack = e.stack;console.error(e2);
+    return Promise.reject(e2);
   }
 }
 
 function loadShExImports_NotUsed (from, parser, transform) {
   var schemasSeen = [from];
   var ret = { type: "Schema" };
-  return GET(from).then(loadImports).then(function () {
+  return GET(from).then(load999Imports).then(function () {
     ShExUtil.isWellDefined(ret);
     return ret;
   });
-  function loadImports (loaded) {
+  function load999Imports (loaded) {
     var schema = parser.parse(loaded.text);
     ShExUtil.merge(ret, schema, false, true);
     var rest = "imports" in schema ?
@@ -2049,28 +2046,30 @@ function loadShExImports_NotUsed (from, parser, transform) {
         [];
     return rest.length ? Promise.all(rest.map(i => {
       schemasSeen.push(i);
-      return GET(i).then(loadImports);
+      return GET(i).then(load999Imports);
     })).then(a => {
       return null;
     }) : null;
   }
 }
 
-function parseShExJ (resolve, reject, text, mediaType, url, schema, meta, schemaOptions, loadImports) {
+function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImports) {
   try {
     var s = ShExUtil.ShExJtoAS(JSON.parse(text));
     ShExUtil.merge(schema, s, true, true);
     meta.prefixes = schema.prefixes;
     meta.base = schema.base;
-    resolve(loadImports(s)); // [mediaType, url]
+    loadImports(s);
+    return Promise.resolve([mediaType, url]);
   } catch (e) {
     var e2 = Error("error parsing JSON " + url + ": " + e);
-    e2.stack = e.stack;
-    reject(e2);
+    // e2.stack = e.stack;
+    return Promise.reject(e2);
   }
 }
 
-function parseTurtle (resolve, reject, text, mediaType, url, data, meta, dataOptions) {
+function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
+  return new Promise(function (resolve, reject) {
   N3.Parser({documentIRI: url, blankNodePrefix: "", format: "text/turtle"}).
     parse(text,
           function (error, triple, prefixes) {
@@ -2087,9 +2086,28 @@ function parseTurtle (resolve, reject, text, mediaType, url, data, meta, dataOpt
               resolve([mediaType, url]);
             }
           });
+  });
 }
 
-function parseJSONLD (resolve, reject, text, mediaType, url, data, meta, dataOptions) {
+/* parseTurtle999 - a variant of parseTurtle with no callback.
+ * so, which is "better"?
+ */
+function parseTurtle999 (text, mediaType, url, data, meta, dataOptions) {
+  try {
+    var p = N3.Parser({documentIRI: url, blankNodePrefix: "", format: "text/turtle"});
+    var triples = p.parse(text);
+    meta.prefixes = p._prefixes;
+    meta.base = p._base;
+    data.addPrefixes(p._prefixes);
+    data.addTriples(triples);
+    return Promise.resolve([mediaType, url]);
+  } catch (e) {
+    return Promise.reject(Error("error parsing " + url + ": " + e));
+  }
+}
+
+function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
+  return new Promise(function (resolve, reject) {
   var struct = JSON.parse(text);
   Jsonld.toRDF(struct, {format: "application/nquads", base: url}, function (lderr, nquads) {
     if (lderr) {
@@ -2097,8 +2115,9 @@ function parseJSONLD (resolve, reject, text, mediaType, url, data, meta, dataOpt
     } else {
       meta.prefixes = {}; // @@ take from @context?
       meta.base = url;    // @@ take from @context.base? (or vocab?)
-      parseTurtle(resolve, reject, nquads, mediaType, url, data, meta);
+      resolve(parseTurtle(nquads, mediaType, url, data, meta));
     }
+  });
   });
 }
 
