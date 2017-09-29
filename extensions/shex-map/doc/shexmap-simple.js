@@ -731,7 +731,7 @@ function materialize () {
     outputShapeMap.forEach(pair => {
       try {
         var mapper2 = ShExMaterializer.construct(outputSchema);
-        var res = mapper2.validate(binder, pair.node, pair.shape);
+        var res = mapper2.validate(binder, pair.nodeSelector, pair.shapeLabel);
         // console.log("g:", ShExUtil.valToTurtle(res));
         writer.addTriples(ShExUtil.valToN3js(res));
       } catch (e) {

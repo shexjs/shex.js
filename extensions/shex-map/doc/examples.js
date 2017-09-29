@@ -346,7 +346,7 @@ start = @<collector>
           createRoot: "<tag:b0>"}
       ]
     },
-    { "name": "BP-back",
+    { "name": "BP back",
       schema: BPunitsDAM.schema,
       passes: [
         { "name": "simple",
@@ -372,7 +372,7 @@ start = @<collector>
       passes: [
         { "name": "simple",
           data: BPunitsDAM.simplePatient,
-          queryMap: "<http://a.example/PatientX>@START",
+          queryMap: "<PatientX>@START",
           outputSchema: BPFHIR.schema_Patient,
           outputShape: "START",
           staticVars: BPFHIR.constants,
@@ -381,7 +381,7 @@ start = @<collector>
       fails: [
         { "name": "bad code",
           data: BPunitsDAM.badPatient,
-          queryMap: "<http://a.example/PatientX>@START",
+          queryMap: "<PatientX>@START",
           outputSchema: BPFHIR.schema_Patient,
           outputShape: "START",
           staticVars: BPFHIR.constants,
@@ -393,7 +393,7 @@ start = @<collector>
       passes: [
         { "name": "simple",
           data: BPunitsNested.simple,
-          queryMap: "<http://a.example/PatientX>@START",
+          queryMap: "<PatientX>@START",
           outputSchema: BPFHIRNested.schema,
           outputShape: "START",
           staticVars: {},
