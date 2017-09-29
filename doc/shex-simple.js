@@ -236,7 +236,8 @@ function makeTurtleCache (selection) {
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
   ret.set = function (textOrObj, url, source) {
-    clearAll();
+    $("#inputSchema li").remove();
+    $("#inputData li").remove();
     if (typeof textOrObj !== "object") {
       try {
         textOrObj = JSON.parse(textOrObj);
