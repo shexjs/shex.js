@@ -46,15 +46,14 @@ var Harness = {
           var map = Mapper.materializer(loads[1].schema);
           var binder = Mapper.binder([resultBindings]);
           var outputGraph = map.materialize(binder, createRoot);
-          outputGraph.equals = graphEquals; // hotpatch with graph isomorphism function.
           outputGraph.toString = graphToString;
           maybeLog(mapstr);
           maybeLog("output:");
           maybeLog(outputGraph.toString());
           maybeLog("expect:");
           maybeLog(loads[1].data.toString());
-          // console.log(outputGraph.getTriples(), "\n--\n", loads[1].data.find());
-          expect(outputGraph.equals(loads[1].data)).to.be.true;
+          // console.log(outputGraph.toString(), "\n--\n", loads[1].data.toString());
+          expect(geq(outputGraph, loads[1].data)).to.be.true;
           done();
         }).catch(function (error) {
           done(error);
@@ -63,6 +62,10 @@ var Harness = {
     });
   }
 };
+
+function geq (l, r) { // graphEquals needs a this
+  return graphEquals.call(l, r);
+}
 
 describe('A ShEx Mapper', function () {
   var tests = [
@@ -166,6 +169,7 @@ function graphEquals (right, m) {
           !add(t.object, triple.object) ||       // or the bindings for tₗ.o→tᵣ.o fail
           !match(g)) {                           // of the remaining triples fail,
         adds.forEach(function (added) {             // remove each added binding.
+          delete back[m[added]];
           delete m[added];
         });
         return false;

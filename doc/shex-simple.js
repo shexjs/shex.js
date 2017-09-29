@@ -4,11 +4,12 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var Base = "http://a.example/"; // location.origin + location.pathname;
+var DefaultBase = location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
-Caches.examples = makeExamplesCache($("#inputData textarea"));
+Caches.examples = makeExamplesCache($("#exampleDrop"));
+Caches.shapeMap = makeShapeMapCache($("#shapeMap-tabs")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
@@ -21,16 +22,17 @@ const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
 var QueryParams = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
   {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData   },
+  {queryStringParm: "shape-map",    location: Caches.shapeMap.selection,    cache: Caches.shapeMap    },
   {queryStringParm: "shape-map",    location: $("#textMap")                             },
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
 ];
 
 // utility functions
-function parseTurtle (text, meta) {
+function parseTurtle (text, meta, base) {
   var ret = ShEx.N3.Store();
   ShEx.N3.Parser._resetBlankNodeIds();
-  var parser = ShEx.N3.Parser({documentIRI:Base, format: "text/turtle" });
+  var parser = ShEx.N3.Parser({documentIRI: base, format: "text/turtle" });
   var triples = parser.parse(text);
   if (triples !== undefined)
     ret.addTriples(triples);
@@ -39,11 +41,12 @@ function parseTurtle (text, meta) {
   return ret;
 }
 
-var shexParser = ShEx.Parser.construct(Base);
-function parseShEx (text, meta) {
+var shexParser = ShEx.Parser.construct(DefaultBase);
+function parseShEx (text, meta, base) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParser._setBase(base);
   var ret = shexParser.parse(text);
-  // ret = ShEx.Util.canonicalize(ret, Base);
+  // ret = ShEx.Util.canonicalize(ret, DefaultBase);
   meta.base = ret.base;
   meta.prefixes = ret.prefixes;
   return ret;
@@ -58,10 +61,19 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
-  var ret = node === ShEx.Validator.start ? START_SHAPE_LABEL : ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
-  if (ret === "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>")
-    ret = "a";
-  return ret;
+  if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    return "a";
+  if (node === ShEx.Validator.start)
+    return START_SHAPE_LABEL;
+  if (node === resolver._base)
+    return "<>";
+  if (node.indexOf(resolver._base) === 0 &&
+      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1)
+    return "<" + node.substr(resolver._base.length) + ">";
+  if (node.indexOf(resolver._basePath) === 0 &&
+      ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
+    return "<" + node.substr(resolver._basePath.length) + ">";
+  return ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -87,9 +99,11 @@ function rdflib_lexToTerm (lex, resolver) {
 // caches for textarea parsers
 function _makeCache (selection) {
   var _dirty = true;
+  var resolver;
   var ret = {
     selection: selection,
     parsed: null,
+    meta: { prefixes: {}, base: DefaultBase },
     dirty: function (newVal) {
       var ret = _dirty;
       _dirty = newVal;
@@ -98,14 +112,16 @@ function _makeCache (selection) {
     get: function () {
       return selection.val();
     },
-    set: function (text) {
+    set: function (text, base) {
       _dirty = true;
       selection.val(text);
+      this.url = base;
     },
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse(selection.val());
+      this.parsed = this.parse(selection.val(), this.url);
+      resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
     },
@@ -128,8 +144,9 @@ function _makeCache (selection) {
           });
         }).done(function (data) {
           try {
-            _cache.set(data);
-            _cache.url = url;
+            _cache.meta.base = url;
+            resolver._setBase(url);
+            _cache.set(data, url);
             $("#loadForm").dialog("close");
             toggleControls();
             resolve({ url: url, data: data });
@@ -145,8 +162,7 @@ function _makeCache (selection) {
       });
     }
   };
-  ret.meta = { prefixes: {}, base: null };
-  var resolver = new IRIResolver(ret.meta);
+  resolver = new IRIResolver(ret.meta);
   ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
   ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
@@ -156,7 +172,7 @@ function makeSchemaCache (selection) {
   var ret = _makeCache(selection);
   var graph = null;
   ret.language = null;
-  ret.parse = function (text) {
+  ret.parse = function (text, base) {
     var isJSON = text.match(/^\s*\{/);
     graph = isJSON ? null : tryN3(text);
     this.language =
@@ -167,7 +183,7 @@ function makeSchemaCache (selection) {
     var schema =
           isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
           graph ? parseShExR() :
-          parseShEx(text, ret.meta);
+          parseShEx(text, ret.meta, base);
     $("#results .status").hide();
     return schema;
 
@@ -175,7 +191,7 @@ function makeSchemaCache (selection) {
       try {
         if (text.match(/^\s*$/))
           return null;
-        var db = parseTurtle (text, ret.meta); // interpret empty schema as ShExC
+        var db = parseTurtle (text, ret.meta, DefaultBase); // interpret empty schema as ShExC
         if (db.getTriples().length === 0)
           return null;
         return db;
@@ -186,7 +202,7 @@ function makeSchemaCache (selection) {
 
     function parseShExR () {
       var graphParser = ShEx.Validator.construct(
-        parseShEx(ShExRSchema, {}), // !! do something useful with the meta parm (prefixes and base)
+        parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
       var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
@@ -205,8 +221,8 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
-  ret.parse = function (text) {
-    return parseTurtle(text, ret.meta);
+  ret.parse = function (text, base) {
+    return parseTurtle(text, ret.meta, base);
   };
   ret.getItems = function () {
     var data = this.refresh();
@@ -219,11 +235,130 @@ function makeTurtleCache (selection) {
 
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (text) {
-    var demos = eval(text); // exceptions pass through to caller (asyncGet)
-    prepareExamples(demos);
+  ret.set = function (textOrObj, url, source) {
+    clearAll();
+    if (typeof textOrObj !== "object") {
+      try {
+        textOrObj = JSON.parse(textOrObj);
+      } catch (e) {
+        textOrObj = eval(textOrObj); // exceptions pass through to caller (asyncGet)
+      }
+    }
+    if (textOrObj.constructor !== Array)
+      textOrObj = [textOrObj];
+    var demos = [];
+    Promise.all(textOrObj.reduce((outer, elt) => {
+      if ("action" in elt) {
+        // compatibility with test suite structure.
+        var action = elt.action;
+        var demoSet = {
+          name: elt["@id"],
+          schema: action.schema,
+          schemaURL: action.schemaURL || url,
+          fails: [],
+          passes: [],
+        };
+        if ("termResolver" in action || "termResolverURL" in action) {
+          demoSet.meta = action.termResolver;
+          demoSet.metaURL = action.termResolverURL || DefaultBase;
+        }
+        var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
+        var queryMap = "map" in action ?
+            action.map :
+            ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
+        var d = {
+          name: "name" in action ? action.name : queryMap,
+          data: action.data,
+          dataURL: action.dataURL || DefaultBase,
+          queryMap: queryMap
+        };
+      // target[name] = d;
+        target.push(d);
+        elt = demoSet;
+      }
+      // demos[elt["@id"]] = demoSet;
+      demos.push(elt);
+      return outer.concat(
+        Promise.resolve(elt.schemaURL),
+        maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
+        maybeGET(elt, url, "termResolver", "text/turtle"),
+        ["passes", "fails"].reduce((inner, k) => {
+          return inner.concat(elt[k].map(d => {
+            return maybeGET(d, url, "data", "text/turtle");
+          }));
+        }, []));
+    }, [])).then(() => {
+      // if (!($("#append").is(":checked")))
+      //   ...;
+      prepareExamples(demos);
+    }).catch(e => {
+      var whence = source === undefined ? "<" + url  + ">" : source;
+      results.append($("<pre/>").text(
+        "failed to load examples from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
+      ).addClass("error"));
+    });
   };
-  ret.parse = function (text) {
+  ret.parse = function (text, base) {
+    throw Error("should not try to parse examples cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get examples cache items");
+  };
+  return ret;
+
+        function maybeGET(obj, base, key, accept) {
+          if (obj[key] != null) {
+            // Take the passed data, guess base if not provided.
+            if (!(key + "URL" in obj))
+              obj[key + "URL"] = base;
+            return Promise.resolve();
+          } else if (key + "URL" in obj) {
+            // absolutize the URL
+            obj[key + "URL"] = ret.meta.lexToTerm("<"+obj[key + "URL"]+">");
+            // Load the remote resource.
+            return $.ajax({
+              accepts: {
+                mycustomtype: accept
+              },
+              url: ret.meta.lexToTerm("<"+obj[key + "URL"]+">"),
+              dataType: "text"
+            }).then(text => {
+              obj[key] = text;
+            }).fail(e => {
+              results.append($("<pre/>").text(
+                "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
+              ).addClass("error"));
+            });
+          } else {
+            // Ignore this parameter.
+            return Promise.resolve();
+          }
+        }
+
+        function ttl (ld) {
+          return typeof ld === "object" ? lit(ld) :
+            ld.startsWith("_:") ? ld :
+            "<" + ld + ">";
+          function lit (o) {
+            let ret = "\""+o["@value"]+"\"";
+            if ("@type" in o)
+              ret += "^^<" + o["@type"] + ">";
+            if ("language" in o)
+              ret += "@" + o["language"];
+            return ret;
+          }
+        }
+}
+
+function makeShapeMapCache (selection) {
+  var ret = _makeCache(selection);
+  ret.set = function (text) {
+    removeEditMapPair(null);
+    $("#textMap").val(text);
+    copyTextMapToEditMap();
+    copyEditMapToFixedMap();
+  };
+  ret.parse = function (text, base) {
     throw Error("should not try to parse examples cache");
   };
   ret.getItems = function () {
@@ -233,20 +368,20 @@ function makeExamplesCache (selection) {
 }
 
 // controls for example links
-function load (selector, obj, func, listItems, side, str) {
+function load (selector, list, func, listItems, side, str) {
   $(selector).empty();
-  Object.keys(obj).forEach(k => {
-    var li = $("<li/>").append($("<button/>").text(k));
+  list.forEach(entry => {
+    var li = $("<li/>").append($("<button/>").text(entry.name));
     li.on("click", () => {
-      func(k, obj[k], li, listItems, side);
+      func(entry.name, entry, li, listItems, side);
     });
-    listItems[side][sum(str(obj[k]))] = li;
+    listItems[side][sum(str(entry))] = li;
     $(selector).append(li);
   });
 }
 
 function clearData () {
-  Caches.inputData.set("");
+  Caches.inputData.set("", DefaultBase);
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
@@ -254,7 +389,7 @@ function clearData () {
 
 function clearAll () {
   $("#results .status").hide();
-  Caches.inputSchema.set("");
+  Caches.inputSchema.set("", DefaultBase);
   $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
@@ -269,10 +404,10 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.schema);
+    Caches.inputSchema.set(schemaTest.schema, schemaTest.schemaURL || DefaultBase);
     $("#inputSchema .status").text(name);
 
-    Caches.inputData.set("");
+    Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
     $("#inputData .passes, #inputData .fails").show();
     $("#inputData .passes p:first").text("Passing:");
@@ -292,7 +427,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data);
+    Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -369,34 +504,47 @@ function validate () {
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
-          node: $(tr).find("input.focus").val(),
-          shape: $(tr).find("input.inputShape").val()
+          nodeSelector: $(tr).find("input.focus").val(),
+          shapeLabel: $(tr).find("input.inputShape").val()
         };
       }).get());
       $("#results .status").text("parsing data...").show();
       var inputData = Caches.inputData.refresh();
 
       $("#results .status").text("creating validator...").show();
-      var validator = ShEx.Validator.construct(
-        Caches.inputSchema.refresh(),
-        { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
+      // var dataURL = "data:text/json," +
+      //     JSON.stringify(
+      //       ShEx.Util.AStoShExJ(
+      //         ShEx.Util.canonicalize(
+      //           Caches.inputSchema.refresh())));
+      var alreadLoaded = {
+        schema: Caches.inputSchema.refresh(),
+        url: Caches.inputSchema.url || DefaultBase
+      };
+      ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+        var validator = ShEx.Validator.construct(
+          loaded.schema,
+          { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
-      $("#results .status").text("validating...").show();
-      var ret = validator.validate(inputData, fixedMap);
-      // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
-      $("#results .status").text("rendering results...").show();
-      ret.forEach(renderEntry);
-      // for debugging values and schema formats:
-      // try {
-      //   var x = ShExUtil.valToValues(ret);
-      //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
-      //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   var y = ShExUtil.valuesToSchema(x);
-      //   res = results.append(JSON.stringify(y, null, "  "));
-      // } catch (e) {
-      //   console.dir(e);
-      // }
-      finishRendering();
+        $("#results .status").text("validating...").show();
+        var ret = validator.validate(inputData, fixedMap);
+        // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
+        $("#results .status").text("rendering results...").show();
+        ret.forEach(renderEntry);
+        // for debugging values and schema formats:
+        // try {
+        //   var x = ShExUtil.valToValues(ret);
+        //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
+        //   res = results.replace(JSON.stringify(x, null, "  "));
+        //   var y = ShExUtil.valuesToSchema(x);
+        //   res = results.append(JSON.stringify(y, null, "  "));
+        // } catch (e) {
+        //   console.dir(e);
+        // }
+        finishRendering();
+      }).catch(function (e) {
+        failMessage(e);
+      });
     } else {
       var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
@@ -404,7 +552,7 @@ function validate () {
         append($("<button>(copy to input)</button>").
                css("border-radius", ".5em").
                on("click", function () {
-                 Caches.inputSchema.set($("#results div").text());
+                 Caches.inputSchema.set($("#results div").text(), DefaultBase);
                })).
         append(":").
         show();
@@ -879,8 +1027,8 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {node: Caches.inputData.meta.lexToTerm(pair.node),
-            shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
+    return {nodeSelector: Caches.inputData.meta.lexToTerm(pair.nodeSelector),
+            shapeLabel: Caches.inputSchema.meta.lexToTerm(pair.shapeLabel)};
   });
 }
 
@@ -901,6 +1049,7 @@ function prepareInterface () {
     var parm = input.queryStringParm;
     if (parm + "URL" in iface) {
       var url = iface[parm + "URL"][0];
+      // !!! set anyways in asyncGet?
       input.cache.url = url; // all fooURL query parms are caches.
       promises.push(input.cache.asyncGet(url).catch(function (e) {
         input.location.val(e.message);
@@ -934,10 +1083,12 @@ function prepareInterface () {
     customizeInterface();
     $(".examples li").text("no example schemas loaded");
     var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
-    if (loadExamples.length) // examples= disables examples
-      Caches.examples.asyncGet(loadExamples).catch(function (e) {
+    if (loadExamples.length) { // examples= disables examples
+      Caches.examples.asyncGet(Caches.examples.meta.lexToTerm("<"+loadExamples+">"))
+      .catch(function (e) {
         $(".examples li").text(e.message);
       });
+    }
     $("body").keydown(function (e) { // keydown because we need to preventDefault
       var code = e.keyCode || e.charCode; // standards anyone?
       if (e.ctrlKey && (code === 10 || code === 13)) {
@@ -1013,28 +1164,120 @@ function prepareDragAndDrop () {
     return {
       location: q.location,
       targets: [{
-        ext: "",
+        ext: "",   // Will match any file
+        media: "", //   or media type.
         target: q.cache
       }]
     };
   }).concat([
-    {location: $("body"), targets: [{ext: ".shex", target: Caches.inputSchema},
-                                    {ext: ".ttl", target: Caches.inputData}]}
+    {location: $("body"), targets: [
+      {media: "application/json", target: Caches.examples},
+      {ext: ".shex", media: "text/shex", target: Caches.inputSchema},
+      {ext: ".ttl", media: "text/turtle", target: Caches.inputData},
+      {ext: ".smap", media: "text/plain", target: Caches.shapeMap}]}
   ]).forEach(desc => {
+    var droparea = desc.location;
       // kudos to http://html5demos.com/dnd-upload
       desc.location.
         on("drag dragstart dragend dragover dragenter dragleave drop", function (e) {
           e.preventDefault();
           e.stopPropagation();
         }).
-        on("dragover dragenter", (e) => {
+        on("dragover dragenter", (evt) => {
           desc.location.addClass("hover");
         }).
-        on("dragend dragleave drop", (e) => {
+        on("dragend dragleave drop", (evt) => {
           desc.location.removeClass("hover");
         }).
-        on("drop", (e) => {
-          readfiles(e.originalEvent.dataTransfer.files, desc.targets);
+        on("drop", (evt) => {
+          evt.preventDefault();
+          droparea.removeClass("droppable");
+          $("#results .status").removeClass("error");
+          results.clear();
+          let xfer = evt.originalEvent.dataTransfer;
+          const prefTypes = [
+            {type: "files"},
+            {type: "application/json"},
+            {type: "text/uri-list"},
+            {type: "text/plain"}
+          ];
+          if (prefTypes.find(l => {
+            if (l.type.indexOf("/") === -1) {
+              if (xfer[l.type].length > 0) {
+                $("#results .status").text("handling "+xfer[l.type].length+" files...").show();
+                readfiles(xfer[l.type], desc.targets);
+                return true;
+              }
+            } else {
+              if (xfer.getData(l.type)) {
+                var val = xfer.getData(l.type);
+                $("#results .status").text("handling "+l.type+"...").show();
+                if (l.type === "application/json") {
+                  if (desc.location.get(0) === $("body").get(0)) {
+                    var parsed = JSON.parse(val);
+                    var action = "action" in parsed ? parsed.action: parsed;
+                    action.schemaURL = action.schema; delete action.schema;
+                    action.dataURL = action.data; delete action.data;
+                    Caches.examples.set(parsed, DefaultBase, "drag and drop");
+                  } else {
+                    inject(desc.targets, DefaultBase, val, l.type);
+                  }
+                } else if (l.type === "text/uri-list") {
+                  $.ajax({
+                    accepts: {
+                      mycustomtype: 'text/shex,text/turtle,*/*'
+                    },
+                    url: val,
+                    dataType: "text"
+                  }).fail(function (jqXHR, textStatus) {
+                    var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
+                    results.append($("<pre/>").text("GET <" + val + "> failed: " + error));
+                  }).done(function (data, status, jqXhr) {
+                    try {
+                      inject(desc.targets, val, data, jqXhr.getResponseHeader("Content-Type").split(/[ ;,]/)[0]);
+                      $("#loadForm").dialog("close");
+                      toggleControls();
+                    } catch (e) {
+                      results.append($("<pre/>").text("unable to evaluate <" + val + ">: " + (e.stack || e)));
+                    }
+                  });
+                } else if (l.type === "text/plain") {
+                  inject(desc.targets, DefaultBase, val, l.type);
+                }
+                $("#results .status").text("").hide();
+                // desc.targets.text(xfer.getData(l.type));
+                return true;
+                function inject (targets, url, data, mediaType) {
+                  var target =
+                      targets.length === 1 ? targets[0].target :
+                      targets.reduce((ret, elt) => {
+                        return ret ? ret :
+                          mediaType === elt.media ? elt.target :
+                          null;
+                      }, null);
+                  if (target) {
+                    var appendTo = $("#append").is(":checked") ? target.get() : "";
+                    target.set(appendTo + data, url);
+                  } else {
+                    results.append("don't know what to do with " + mediaType + "\n");
+                  }
+                }
+              }
+            }
+            return false;
+          }) === undefined)
+            results.append($("<pre/>").text(
+              "drag and drop not recognized:\n" +
+                JSON.stringify({
+                  dropEffect: xfer.dropEffect,
+                  effectAllowed: xfer.effectAllowed,
+                  files: xfer.files.length,
+                  items: [].slice.call(xfer.items).map(i => {
+                    return {kind: i.kind, type: i.type};
+                  })
+                }, null, 2)
+            ));
+
         });
     });
   function readfiles(files, targets) {
@@ -1053,7 +1296,7 @@ function prepareDragAndDrop () {
         reader.onload = (function (target) {
           return function (event) {
             var appendTo = $("#append").is(":checked") ? target.get() : "";
-            target.set(appendTo + event.target.result);
+            target.set(appendTo + event.target.result, DefaultBase);
           };
         })(target);
         reader.readAsText(file);
@@ -1061,20 +1304,22 @@ function prepareDragAndDrop () {
         results.append("don't know what to do with " + name + "\n");
       }
     }
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/devnull.php"); // One must ignore these errors, sorry!
-    xhr.send(formData);
   }
 }
 
 function prepareExamples (demoList) {
-  var listItems = {inputSchema:{}, inputData:{}, examples: {}};
+  var listItems = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = {};
+    return acc;
+  }, {});
   load("#inputSchema .examples ul", demoList, pickSchema,
        listItems, "inputSchema", function (o) {
          return o.schema;
        });
-  var timeouts = { inputSchema: undefined, inputData: undefined, examples: undefined };
+  var timeouts = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = undefined;
+    return acc;
+  }, {});
   function later (target, side, cache) {
     cache.dirty(true);
     if (timeouts[side])

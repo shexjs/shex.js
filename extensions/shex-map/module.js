@@ -369,7 +369,7 @@ function binder (tree) {
       }
       nextStack.push(last+1);
       next = diveIntoObj(nextStack);
-      console.log("advanced to " + nextStack);
+      // console.log("advanced to " + nextStack);
       // throw Error ("can't advance to find " + v + " in " + JSON.stringify(next));
     }
     stack = nextStack.slice();

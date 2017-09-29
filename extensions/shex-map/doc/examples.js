@@ -324,103 +324,103 @@ start = @<collector>
 `;
 
 
-  return {
-    "BP": {
+  return [
+    { "name": "BP",
       schema: BPFHIR.schema,
-      passes: {
-        "simple": {
+      passes: [
+        { "name": "simple",
           data: BPFHIR.simple,
           queryMap: "<tag:BPfhir123>@START",
           outputSchema: BPunitsDAM.schema,
           outputShape: "START",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
-      },
-      fails: {
-        "bad code": {
+      ],
+      fails: [
+        { "name": "bad code",
           data: BPFHIR.badCode,
           queryMap: "<tag:BPfhir123>@START",
           outputSchema: BPunitsDAM.schema,
           outputShape: "START",
           staticVars: BPunitsDAM.constants,
           createRoot: "<tag:b0>"}
-      }
+      ]
     },
-    "BP-back": {
+    { "name": "BP-back",
       schema: BPunitsDAM.schema,
-      passes: {
-        "simple": {
+      passes: [
+        { "name": "simple",
           data: BPunitsDAM.simple,
           queryMap: "<tag:b0>@START",
           outputSchema: BPFHIR.schema,
           outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
-      },
-      fails: {
-        "bad code": {
+      ],
+      fails: [
+        { "name": "bad code",
           data: BPunitsDAM.badBP,
           queryMap: "<tag:b0>@START",
           outputSchema: BPFHIR.schema,
           outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
-      },
+      ],
     },
-    "BPPatient multi-bindings": {
+    { "name": "BPPatient multi-bindings",
       schema: BPunitsDAM.schema_Patient,
-      passes: {
-        "simple": {
+      passes: [
+        { "name": "simple",
           data: BPunitsDAM.simplePatient,
           queryMap: "<http://a.example/PatientX>@START",
           outputSchema: BPFHIR.schema_Patient,
           outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
-      },
-      fails: {
-        "bad code": {
+      ],
+      fails: [
+        { "name": "bad code",
           data: BPunitsDAM.badPatient,
           queryMap: "<http://a.example/PatientX>@START",
           outputSchema: BPFHIR.schema_Patient,
           outputShape: "START",
           staticVars: BPFHIR.constants,
           createRoot: "<tag:BPfhir123>"}
-      }
+      ]
     },
-    "BPPatient 2 levels": {
+    { "name": "BPPatient 2 levels",
       schema: BPunitsNested.schema,
-      passes: {
-        "simple": {
+      passes: [
+        { "name": "simple",
           data: BPunitsNested.simple,
           queryMap: "<http://a.example/PatientX>@START",
           outputSchema: BPFHIRNested.schema,
           outputShape: "START",
           staticVars: {},
           createRoot: "<tag:BPfhir123>"}
-      },
-      fails: { }
+      ],
+      fails: [ ]
     },
-    "symmetric": {
+    { "name": "symmetric",
       schema: SchemaConcert.schema,
-      passes: {
-        "BBKing": {
+      passes: [
+        { "name": "BBKing",
           data: SchemaConcert.BBKing,
           queryMap: "_:b0@START",
           outputSchema: SchemaConcert.schema,
           outputShape: "START",
           staticVars: {},
           createRoot: "_:root"}
-      },
-      fails: {
-        "Non-IRI": {
+      ],
+      fails: [
+        { "name": "Non-IRI",
           data: SchemaConcert.nonIRI,
           queryMap: "_:b0@START",
           outputSchema: SchemaConcert.schema,
           outputShape: "START",
           staticVars: {},
           createRoot: "_:root"}
-      }
+      ]
     }
-  };
+  ];
 })();
