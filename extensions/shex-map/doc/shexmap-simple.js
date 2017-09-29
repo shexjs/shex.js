@@ -724,7 +724,7 @@ function materialize () {
     }]);
     var writer = ShEx.N3.Writer({ prefixes: {} });
     outputShapeMap.forEach(pair => {
-      var outputGraph = mapper.materialize(resultBindings, pair.node, pair.shape);
+      var outputGraph = mapper.materialize(resultBindings, pair.nodeSelector, pair.shapeLabel);
       writer.addTriples(outputGraph.getTriples());
     });
     writer.end(function (error, result) {
