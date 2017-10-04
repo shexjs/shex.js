@@ -3624,6 +3624,8 @@ var ShExUtil = {
       return ["NodeConstraintError: expected to match " + txt];
     } else if (val.type === "MissingProperty") {
       return ["Missing property: " + val.property];
+    } else if (val.type === "NegatedProperty") {
+      return ["Unexpected property: " + val.property];
     } else if (val.constructor === Array) {debugger;
       return val.reduce((ret, e) => {
         var nested = _ShExUtil.errsToSimple(e).map(x => { return "  " + x; });
