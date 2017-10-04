@@ -537,10 +537,10 @@ function validate () {
         ShExWorker.onmessage = parseUpdatesAndResults;
         var transportMap = fixedMap.map(function (ent) {
           return {
-            nodeSelector: ent.nodeSelector,
-            shapeLabel: ent.shapeLabel === ShEx.Validator.start ?
+            node: ent.node,
+            shape: ent.shape === ShEx.Validator.start ?
               START_SHAPE_INDEX_ENTRY :
-              ent.shapeLabel
+              ent.shape
           };
         });
         ShExWorker.postMessage({
