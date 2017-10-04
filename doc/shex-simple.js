@@ -307,7 +307,8 @@ function makeTurtleCache (selection) {
 function makeExamplesCache (selection) {
   var ret = _makeCache(selection);
   ret.set = function (textOrObj, url, source) {
-    clearAll();
+    $("#inputSchema .examples li").remove();
+    $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
       try {
         textOrObj = JSON.parse(textOrObj);
@@ -579,8 +580,8 @@ function validate () {
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
-          nodeSelector: $(tr).find("input.focus").val(),
-          shapeLabel: $(tr).find("input.inputShape").val()
+          node: $(tr).find("input.focus").val(),
+          shape: $(tr).find("input.inputShape").val()
         };
       }).get());
       $("#results .status").text("parsing data...").show();
@@ -978,19 +979,19 @@ function markEditMapClean () {
 function copyEditMapToFixedMap () {
   $("#fixedMap").empty();
   var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
-    var nodeSelector = $(queryPair).find(".focus").val();
+    var node = $(queryPair).find(".focus").val();
     var shape = $(queryPair).find(".inputShape").val();
-    if (!nodeSelector || !shape)
+    if (!node || !shape)
       return acc;
     var m = null, nodes = null;
-    if ((m = nodeSelector.match(ParseTriplePattern))) {
+    if ((m = node.match(ParseTriplePattern))) {
       nodes = getTriples(m[2], m[4], m[6]);
-    } else if ((m = nodeSelector.match(ParseBacktickPattern))) {
+    } else if ((m = node.match(ParseBacktickPattern))) {
       nodes = [/*"- add all -"*/].concat(Caches.inputData.executeQuery(m[2]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
-      nodes = [nodeSelector];
+      nodes = [node];
     }
     nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node);
@@ -1059,11 +1060,11 @@ function copyEditMapToFixedMap () {
 function copyEditMapToTextMap () {
   if ($("#editMap").attr("data-dirty") === "true") {
     var text = $("#editMap .pair").get().reduce((acc, queryPair) => {
-      var nodeSelector = $(queryPair).find(".focus").val();
+      var node = $(queryPair).find(".focus").val();
       var shape = $(queryPair).find(".inputShape").val();
-      if (!nodeSelector || !shape)
+      if (!node || !shape)
         return acc;
-      return acc.concat([nodeSelector+"@"+shape]);
+      return acc.concat([node+"@"+shape]);
     }, []).join(",\n");
     $("#textMap").empty().val(text);
     copyEditMapToFixedMap();
@@ -1110,8 +1111,8 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {nodeSelector: Caches.inputData.meta.lexToTerm(pair.nodeSelector),
-            shapeLabel: Caches.inputSchema.meta.lexToTerm(pair.shapeLabel)};
+    return {node: Caches.inputData.meta.lexToTerm(pair.node),
+            shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
   });
 }
 
