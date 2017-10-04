@@ -1079,14 +1079,14 @@ function copyEditMapToFixedMap () {
     if (!node || !shape)
       return acc;
     var m = null, nodes = null;
-    if ((m = nodeSelector.match(ParseTriplePattern))) {
+    if ((m = node.match(ParseTriplePattern))) {
       nodes = getTriples(m[2], m[4], m[6]);
-    } else if ((m = nodeSelector.match(ParseBacktickPattern))) {
+    } else if ((m = node.match(ParseBacktickPattern))) {
       nodes = [/*"- add all -"*/].concat(Caches.inputData.executeQuery(m[2]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
-      nodes = [nodeSelector];
+      nodes = [node];
     }
     nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node);
