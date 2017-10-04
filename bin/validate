@@ -197,7 +197,7 @@ function findNodesAndValidate (loaded, parms, options) {
       }
       abort(msgs.join("\n"));
     }
-    return [ { nodeSelector: node, shapeLabel: shape } ];
+    return [ { node: node, shape: shape } ];
   }
 
   var ret = {};
@@ -644,8 +644,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         var parms = {
           // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
           // untested! dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
-          schemaName:undefined, schemaFile:undefined, shapeLabel:undefined,
-          dataName:undefined,   dataFile:undefined,   nodeSelector:undefined, nodeType:undefined
+          schemaName:undefined, schemaFile:undefined, shape:undefined,
+          dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
         };
         if (this.request.method !== "POST")
           this.throw(500, "only supports POST now");
@@ -661,9 +661,9 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                  });
         }
         var schemaFiles = makeArray("schema");
-        parms.shape      = body.fields.shapeLabel; // untested! body.fields.shape
+        parms.shape      = body.fields.shape; // untested! body.fields.shape
         var dataFiles = makeArray("data");
-        parms.node      = body.fields.nodeSelector; // untested! body.fields.node
+        parms.node      = body.fields.node; // untested! body.fields.node
         parms["node-type"] = body.fields.nodeType;
 
         // Default to serverParms

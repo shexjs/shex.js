@@ -185,20 +185,15 @@ describe("A ShEx parser", function () {
 
   // negative syntax and structure tests
   negativeTests.forEach(testSet => {
-    var negSyntaxTests = fs.readdirSync(testSet.path).
-        filter(function (s) { return s.indexOf(".shex") !== -1; });
+    var manifest = testSet.path + "manifest.jsonld";
+    var negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
     if (TESTS)
-      negSyntaxTests = negSyntaxTests.filter(function (s) {
-        return TESTS.indexOf(s) !== -1 ||
-          TESTS.indexOf(s.replace(/\.shex$/, "")) !== -1 ||
-          TESTS.indexOf(s.replace(/\.json$/, "")) !== -1;
-      });
-    negSyntaxTests.sort();
+      negSchemas = negSchemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
-    negSyntaxTests.forEach(function (schemaFile) {
-      var path = testSet.path + schemaFile;
+    negSchemas.forEach(function (test) {
+      var path = testSet.path + test.shex;
       it("should not parse schema '" + path + "'", function (report) {
-        if (VERBOSE) console.log(schemaFile);
+        if (VERBOSE) console.log(test.name);
         ShExLoader.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
