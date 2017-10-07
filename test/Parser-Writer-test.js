@@ -124,7 +124,7 @@ describe("A ShEx parser", function () {
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
              if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
-             expect(canonParsed).to.deep.equal(canonAbstractSyntax);
+             expect(canonParsed).to.deep.equal(caseFoldLangTags(canonAbstractSyntax));
            } catch (e) {
              parser.reset();
              throw(e);
@@ -298,7 +298,7 @@ if (SLOW) {
 }
 
 // Parses a JSON object, restoring `undefined` values
-function parseJSONFile(filename, mapFunction) {
+function parseJSONFile (filename, mapFunction) {
   "use strict";
   try {
     var string = fs.readFileSync(filename, "utf8");
@@ -326,7 +326,7 @@ function parseJSONFile(filename, mapFunction) {
 
 // Stolen from Ruben Verborgh's SPARQL.js tests:
 // Recursively replace values of "{undefined}" by `undefined`
-function restoreUndefined(object) {
+function restoreUndefined (object) {
   "use strict";
   for (var key in object) {
     var item = object[key];
@@ -334,6 +334,19 @@ function restoreUndefined(object) {
       object[key] = restoreUndefined(item);
     } else if (item === "{undefined}") {
       object[key] = undefined;
+    }
+  }
+  return object;
+}
+
+function caseFoldLangTags (object) {
+  "use strict";
+  for (var key in object) {
+    var item = object[key];
+    if (key === "language") {
+      object[key] = object[key].toLowerCase();
+    } else if (typeof item === "object") {
+      object[key] = caseFoldLangTags(item);
     }
   }
   return object;
