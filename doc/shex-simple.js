@@ -224,7 +224,7 @@ function makeTurtleCache (selection) {
   // ret.endpoint = null,
   // ret.query = null,
   ret.executeQuery = function (query, endpoint) {
-    var rows;
+    var rows = [];
     $.ajax({
       async: false,
       url: endpoint || ret.endpoint,
@@ -262,7 +262,11 @@ function makeTurtleCache (selection) {
     return rows;
   };
   ret.parse = function (text, base) {
-    if (ret.query && ret.endpoint) {
+    var text = Caches.inputData.get();
+    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
+    if (m)
+      ret.endpoint = m[1];
+    if (ret.endpoint) {
       return {
         getTriplesByIRI: function (s, p, o) {
           var query = s ?
@@ -429,9 +433,7 @@ function makeShapeMapCache (selection) {
     copyTextMapToEditMap();
     copyEditMapToFixedMap();
   };
-  ret.parse = function (text, base) {
-    throw Error("should not try to parse examples cache");
-  };
+  ret.parse = function (text, base) {  };
   ret.getItems = function () {
     throw Error("should not try to get examples cache items");
   };
@@ -499,10 +501,6 @@ function pickData (name, dataTest, elt, listItems, side) {
     $(elt).removeClass("selected");
   } else {
     Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
-    var text = Caches.inputData.get();
-    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
-    if (m)
-      Caches.inputData.endpoint = m[1];
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
