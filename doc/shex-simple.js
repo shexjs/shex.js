@@ -984,6 +984,7 @@ function copyEditMapToFixedMap () {
     if ((m = node.match(ParseTriplePattern))) {
       nodes = getTriples(m[2], m[4], m[6]);
     } else if ((m = node.match(ParseBacktickPattern))) {
+      Caches.inputData.refresh();
       nodes = [/*"- add all -"*/].concat(Caches.inputData.executeQuery(m[2]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
       }));
