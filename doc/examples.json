@@ -1,0 +1,88 @@
+[
+  {
+    "name": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "passes": [
+      {
+        "name": "with birthdate",
+        "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .",
+        "queryMap": "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>"
+      },
+      {
+        "name": "without birthdate",
+        "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"preliminary\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" .",
+        "queryMap": "<Obs1>@START"
+      },
+      {
+        "name": "no subject name",
+        "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :birthdate \"1999-12-31\"^^xsd:date .",
+        "queryMap": "<Obs1>@START"
+      }
+    ],
+    "fails": [
+      {
+        "name": "bad status",
+        "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"finally\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n\n",
+        "queryMap": "<Obs1>@START"
+      },
+      {
+        "name": "no subject",
+        "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n\n",
+        "queryMap": "<Obs1>@START"
+      },
+      {
+        "name": "wrong birthdate datatype",
+        "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .",
+        "queryMap": "<Obs1>@START"
+      }
+    ]
+  },
+  {
+    "name": "a wikidata example",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\n\nstart = @<wikidata_item>\n\n<wikidata_item> {\n  p:P1748 {\n    ps:P1748 LITERAL ;\n    prov:wasDerivedFrom @<reference>\n  }+\n}\n\n<reference> {\n  pr:P248  IRI ;\n  pr:P813  xsd:dateTime ;\n  pr:P699  LITERAL\n}",
+    "passes": [
+      {
+        "name": "SPARQL queryMap from the wikidata endpoint",
+        "data": "\n\n  Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql\n",
+        "queryMap": "SPARQL `SELECT ?item  ?itemLabelWHERE{ ?item wdt:P279* wd:Q12078 .  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" }} LIMIT 10`@START"
+      }
+    ],
+    "fails": []
+  },
+  {
+    "name": "Each Wikidata item on Cancer should have a NCI Thesaurus ID",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\n\nstart = @<wikidata_item>\n\n<wikidata_item> {\n  p:P1748 {\n    ps:P1748 LITERAL ;\n    prov:wasDerivedFrom @<reference>\n  }+\n}\n\n<reference> {\n  pr:P248  IRI ;\n  pr:P813  xsd:dateTime ;\n  pr:P699  LITERAL\n}\n",
+    "passes": [
+      {
+        "name": "Get all Wikidata items on Cancers (SPARQL)",
+        "data": "\n\n  Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql\n",
+        "queryMap": "SPARQL `SELECT ?item ?itemLabel WHERE { ?item wdt:P279* wd:Q12078 .   SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } } LIMIT 10`@START"
+      }
+    ],
+    "fails": []
+  },
+  {
+    "name": "protein record",
+    "schema": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\nLABEL [ rdfs:label skos:label ]\n<S> {\n  ex1:`protein name` LITERAL;\n  ex2:`protein type` [ `signaling` `regulatory` `transport` ];\n  `protein width` `ucum microns`\n}",
+    "meta": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\nPREFIX foo: <http://foo.example/>\n\nfoo:otherProtName rdfs:label \"protein name\" .\nex1:protName rdfs:label \"protein name\" .\nex1:protType skos:label \"protein type\" .\nex2:protName rdfs:label \"protein name\" .\nex2:protType skos:label \"protein type\" .\nex1:Signaling rdfs:label \"signaling\" .\nex1:Regulatory skos:label \"regulatory\" .\nex1:Transport rdfs:label \"transport\" ; skos:label \"transport\" .\nex1:protWidth rdfs:label \"protein width\" ; skos:label \"protein width\" .\nex1:microns rdfs:label \"ucum microns\" .\n",
+    "passes": [
+      {
+        "name": "good",
+        "data": "PREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\n<s>\n  ex1:protName \"Dracula\" ;\n  ex2:protType ex1:Regulatory ;\n  ex1:protWidth \"30\"^^ex1:microns .\n",
+        "queryMap": "<s>@<S>"
+      }
+    ],
+    "fails": [
+      {
+        "name": "bad label",
+        "data": "PREFIX ex: <http://a.example/>\n\n<s>\n  ex:protName999 \"Dracula\" ;\n  ex:protType ex:Regulatory ;\n  ex:protWidth \"30\"^^ex:microns .\n",
+        "queryMap": "<s>@<S>"
+      },
+      {
+        "name": "bad datatype",
+        "data": "PREFIX ex: <http://a.example/>\n\n<s>\n  ex:protName \"Dracula\" ;\n  ex:protType ex:Regulatory ;\n  ex:protWidth \"30\"^^ex:microns999 .\n",
+        "queryMap": "<s>@<S>"
+      }
+    ]
+  }
+]
