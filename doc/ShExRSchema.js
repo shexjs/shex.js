@@ -38,6 +38,7 @@ start=@<Schema>
 
 <Shape> CLOSED {
   a [sx:Shape] ;
+  sx:abstract [true false]? ;
   sx:closed [true false]? ;
   sx:extra IRI* ;
   sx:expression @<tripleExpression>? ;

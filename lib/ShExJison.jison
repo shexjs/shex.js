@@ -372,7 +372,7 @@ IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
 IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
-IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
+IT_ABSTRACT             [aA][bB][sS][tT][rR][aA][cC][tT]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
@@ -487,7 +487,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_IMPORT}             return 'IT_IMPORT';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
-{IT_VIRTUAL}            return 'IT_VIRTUAL';
+{IT_ABSTRACT}           return 'IT_ABSTRACT';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
 {IT_LITERAL}            return 'IT_LITERAL';
@@ -661,19 +661,12 @@ statement:
     ;
 
 shapeExprDecl:
-    shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+      shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
         addShape($1,  $2);
       }
-
-    // // _QIT_VIRTUAL_E_Opt
-    // shapeLabel shapeDefinition semanticActions	{ // t: 1dot
-    //     addShape($1, extend($2, $3));
-    // }
-    // | IT_VIRTUAL shapeLabel shapeDefinition semanticActions	{ // t: 1dotVirtual
-    //     // sneak "virtual" in after "type"
-    //     // Type will be overwritten.
-    //     addShape($2, extend({type: null, virtual: true}, $3, $4)) // $4: t: 1dotVirtualShapeCode1
-    // }
+    | IT_ABSTRACT shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dotAbstract
+        addShape($2,  extend({type: null, abstract: true}, $3)); // $4: t: 1dotAbstractShapeCode1
+      }
     ;
 
 _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
@@ -821,9 +814,9 @@ shapeNot!:
 //     }
 //     ;
 
-// _QIT_VIRTUAL_E_Opt:
+// _QIT_ABSTRACT_E_Opt:
 //       	
-//     | IT_VIRTUAL     ;
+//     | IT_ABSTRACT     ;
 
 inlineShapeNot:
       inlineShapeAtom	
