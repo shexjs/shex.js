@@ -988,16 +988,19 @@ function copyEditMapToTextMap () {
   }
 }
 
-/** copyTextMapToEditMap - parse a supplied query map and build #editMap
+/**
+ * Parse a supplied query map and build #editMap
+ * @returns list of errors. ([] means everything was good.)
  */
-function copyTextMapToEditMap (shapeMap) {
+function copyTextMapToEditMap () {
   var shapeMap = $("#textMap").val();
   $("#editMap").empty();
   if (shapeMap.trim() === "") {
-    makeFreshEditMap();
-    return;
+    return makeFreshEditMap();
   }
 
+  var errors = [];
+  try {
   //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
   var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
   var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
@@ -1010,16 +1013,29 @@ function copyTextMapToEditMap (shapeMap) {
     if (m) {
       var node = m[1] || "";
       var shape = m[2] || "";
+      if (shape === "- start -")
+        throw Error("Please change \"- start -\" to \"" + START_SHAPE_LABEL + "\".");
       addEditMapPair(null, [{node: node, shape: shape}]);
     }
   });
   copyEditMapToFixedMap();
   markEditMapClean();
+  } catch (e) {
+    $("#fixedMap").empty();
+    results.append($("<div/>").append(
+      $("<span/>").text("Error parsing Query Map:"),
+      $("<pre/>").text(e)
+    ).addClass("error"));
+    errors.push(e);
+    console.log(e);
+  }
+  return errors;
 }
 
 function makeFreshEditMap () {
   addEditMapPair(null, [{node: "", shape: ""}]);
   markEditMapClean();
+  return [];
 }
 
 /** fixedShapeMapToTerms -- map ShapeMap to API terms
@@ -1075,10 +1091,9 @@ function prepareInterface () {
   }, [])).then(function (_) {
 
     // Parse the shape-map using the prefixes and base.
-    if ($("#textMap").val().trim().length > 0)
-      copyTextMapToEditMap();
-    else
-      makeFreshEditMap();
+    var shapeMapErrors = $("#textMap").val().trim().length > 0
+        ? copyTextMapToEditMap()
+        : makeFreshEditMap();
 
     customizeInterface();
     $(".examples li").text("no example schemas loaded");
@@ -1105,7 +1120,8 @@ function prepareInterface () {
     if ("schemaURL" in iface ||
         // some schema is non-empty
         ("schema" in iface &&
-         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))) {
+         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
+       && shapeMapErrors.length === 0) {
       validate();
     }
   });
