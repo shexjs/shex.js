@@ -239,9 +239,26 @@ function makeExamplesCache (selection) {
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
       try {
+        // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);
       } catch (e) {
-        textOrObj = eval(textOrObj); // exceptions pass through to caller (asyncGet)
+        // transform deprecated examples.js structure
+        textOrObj = eval(textOrObj).reduce(function (acc, schema) {
+          function x (data, status) {
+            return {
+              schemaLabel: schema.name,
+              schema: schema.schema,
+              dataLabel: data.name,
+              data: data.data,
+              queryMap: data.queryMap,
+              status: status
+            };
+          }
+          return acc.concat(
+            schema.passes.map(data => x(data, "conformant")),
+            schema.fails.map(data => x(data, "nonconformant"))
+          );
+        }, []);
       }
     }
     if (textOrObj.constructor !== Array)
@@ -251,42 +268,30 @@ function makeExamplesCache (selection) {
       if ("action" in elt) {
         // compatibility with test suite structure.
         var action = elt.action;
-        var demoSet = {
-          name: elt["@id"],
-          schema: action.schema,
-          schemaURL: action.schemaURL || url,
-          fails: [],
-          passes: [],
-        };
-        if ("termResolver" in action || "termResolverURL" in action) {
-          demoSet.meta = action.termResolver;
-          demoSet.metaURL = action.termResolverURL || DefaultBase;
-        }
-        var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
         var queryMap = "map" in action ?
             action.map :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
-        var d = {
-          name: "name" in action ? action.name : queryMap,
+        elt = {
+          schemaName: elt["@id"],
+          schema: action.schema,
+          schemaURL: action.schemaURL || url,
+          dataName: "dataName" in action ? action.dataName : queryMap,
           data: action.data,
           dataURL: action.dataURL || DefaultBase,
           queryMap: queryMap
         };
-      // target[name] = d;
-        target.push(d);
-        elt = demoSet;
+        if ("termResolver" in action || "termResolverURL" in action) {
+          elt.meta = action.termResolver;
+          elt.metaURL = action.termResolverURL || DefaultBase;
+        }
       }
-      // demos[elt["@id"]] = demoSet;
       demos.push(elt);
       return outer.concat(
         Promise.resolve(elt.schemaURL),
         maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
-        maybeGET(elt, url, "termResolver", "text/turtle"),
-        ["passes", "fails"].reduce((inner, k) => {
-          return inner.concat(elt[k].map(d => {
-            return maybeGET(d, url, "data", "text/turtle");
-          }));
-        }, []));
+        maybeGET(elt, url, "data", "text/turtle"),
+        maybeGET(elt, url, "termResolver", "text/turtle")
+      );
     }, [])).then(() => {
       // if (!($("#append").is(":checked")))
       //   ...;
@@ -367,21 +372,22 @@ function makeShapeMapCache (selection) {
   return ret;
 }
 
-// controls for example links
-function load (selector, list, func, listItems, side, str) {
+// controls for example buttons
+function paintExamples (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
-    var li = $("<li/>").append($("<button/>").text(entry.name));
+    var li = $("<li/>").append($("<button/>").text(entry.label));
     li.on("click", () => {
       func(entry.name, entry, li, listItems, side);
     });
-    listItems[side][sum(str(entry))] = li;
+    listItems[side][sum(entry.text)] = li;
     $(selector).append(li);
   });
 }
 
 function clearData () {
   Caches.inputData.set("", DefaultBase);
+  $("#textMap").val("");
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
@@ -404,16 +410,23 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.schema, schemaTest.schemaURL || DefaultBase);
+    Caches.inputSchema.set(schemaTest.text, schemaTest.url || DefaultBase);
     $("#inputSchema .status").text(name);
 
     Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
-    $("#inputData .passes, #inputData .fails").show();
-    $("#inputData .passes p:first").text("Passing:");
-    load("#inputData .passes ul", schemaTest.passes, pickData, listItems, "inputData", function (o) { return o.data; });
-    $("#inputData .fails p:first").text("Failing:");
-    load("#inputData .fails ul", schemaTest.fails, pickData, listItems, "inputData", function (o) { return o.data; });
+    var headings = {
+      "passes": "Passing:",
+      "fails": "Failing:",
+      "indeterminant": "Data:"
+    };
+    Object.keys(headings).forEach(function (key) {
+      if (key in schemaTest) {
+        $("#inputData ." + key + "").show();
+        $("#inputData ." + key + " p:first").text(headings[key]);
+        paintExamples("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
+      }
+    });
 
     results.clear();
     $("#inputSchema li.selected").removeClass("selected");
@@ -427,7 +440,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
+    Caches.inputData.set(dataTest.text, dataTest.url || DefaultBase);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -436,7 +449,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
     // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     removeEditMapPair(null);
-    $("#textMap").val(dataTest.queryMap);
+    $("#textMap").val(dataTest.entry.queryMap);
     copyTextMapToEditMap();
     // validate();
   }
@@ -1328,10 +1341,38 @@ function prepareExamples (demoList) {
     acc[k] = {};
     return acc;
   }, {});
-  load("#inputSchema .examples ul", demoList, pickSchema,
-       listItems, "inputSchema", function (o) {
-         return o.schema;
-       });
+  var nesting = demoList.reduce(function (acc, elt) {
+    var key = elt.schemaLabel + elt.schema;
+    if (!(key in acc)) {
+      // first entry with this schema
+      acc[key] = {
+        label: elt.schemaLabel,
+        text: elt.schema,
+        url: elt.schemaURL
+      };
+    } else {
+      // nth entry with this schema
+    }
+    var dataEntry = {
+      label: elt.dataLabel,
+      text: elt.data,
+      url: elt.dataURL,
+      entry: elt
+    };
+    var target = elt.status === "nonconformant"
+        ? "fails"
+        : elt.status === "conformant" ? "passes" : "indeterminant";
+    if (!(target in acc[key])) {
+      // first entyr with this data
+      acc[key][target] = [dataEntry];
+    } else {
+      // n'th entry with this data
+      acc[key][target].push(dataEntry);
+    }
+    return acc;
+  }, {});
+  var nestingAsList = Object.keys(nesting).map(e => nesting[e]);
+  paintExamples("#inputSchema .examples ul", nestingAsList, pickSchema, listItems, "inputSchema");
   var timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
