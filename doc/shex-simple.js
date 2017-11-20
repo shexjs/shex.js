@@ -333,14 +333,14 @@ function makeExamplesCache (selection) {
         // transform deprecated examples.js structure
         textOrObj = eval(textOrObj).reduce(function (acc, schema) {
           function x (data, status) {
-            return {
+            return Object.assign({
               schemaLabel: schema.name,
               schema: schema.schema,
               dataLabel: data.name,
               data: data.data,
               queryMap: data.queryMap,
               status: status
-            };
+            }, "meta" in schema ? { meta: schema.meta } : { } );
           }
           return acc.concat(
             schema.passes.map(data => x(data, "conformant")),
@@ -482,6 +482,7 @@ function clearData () {
 function clearAll () {
   $("#results .status").hide();
   Caches.inputSchema.set("", DefaultBase);
+  Caches.inputMeta.set("", DefaultBase);
   $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
@@ -1526,11 +1527,11 @@ function prepareExamples (demoList) {
     var key = elt.schemaLabel + elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
-      acc[key] = {
+      acc[key] = Object.assign({
         label: elt.schemaLabel,
         text: elt.schema,
         url: elt.schemaURL
-      };
+      }, "meta" in elt ? { meta: elt.meta } : { });
     } else {
       // nth entry with this schema
     }
