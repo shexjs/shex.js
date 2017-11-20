@@ -78,7 +78,7 @@ describe("A ShEx validator", function () {
         }
         it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
            "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
-           "' and get '" + (TERSE ? test.result : valFile) + "'" +
+           "' and get 'test/" + valFile + "'" +
            " in test '" + test["@id"] + "'.",
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
