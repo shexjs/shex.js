@@ -375,9 +375,7 @@ function makeShapeMapCache (selection) {
     copyTextMapToEditMap();
     copyEditMapToFixedMap();
   };
-  ret.parse = function (text, base) {
-    throw Error("should not try to parse examples cache");
-  };
+  ret.parse = function (text, base) {  };
   ret.getItems = function () {
     throw Error("should not try to get examples cache items");
   };
