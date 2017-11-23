@@ -4580,7 +4580,14 @@ function ShExValidator_constructor(schema, options) {
                 }
               }
               function startsWith (val, ref) {
-                return normalizedTest(val, ref, (l, r) => { return l.startsWith(r); });
+                return normalizedTest(val, ref, (l, r) => {
+                  return (valueConstraint.type === "LanguageStem" ||
+                          valueConstraint.type === "LanguageStemRange") ?
+                    // rfc4647 basic filtering
+                    (l === r || l[r.length] === "-") :
+                    // simple substring
+                    l.startsWith(r);
+                });
               }
               function equals (val, ref) {
                 return normalizedTest(val, ref, (l, r) => { return l === r; });

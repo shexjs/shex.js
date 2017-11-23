@@ -5,6 +5,12 @@
   "solution": {
     "type": "TripleConstraintSolutions",
     "predicate": "http://a.example/p1",
+    "valueExpr": {
+      "type": "NodeConstraint",
+      "values": [
+        { "type": "LanguageStem", "stem": "fr" }
+      ]
+    },
     "solutions": [
       {
         "type": "TestedTriple",
@@ -12,12 +18,6 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "septante", "language": "fr" }
       }
-    ],
-    "valueExpr": {
-      "type": "NodeConstraint",
-      "values": [
-        { "type": "LanguageStem", "stem": "fr" }
-      ]
-    }
+    ]
   }
 }
