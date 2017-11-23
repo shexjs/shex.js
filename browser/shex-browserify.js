@@ -2172,17 +2172,16 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
   // (Workaround for https://github.com/zaach/jison/issues/241)
   var parser = new ShExJison();
 
-  ShExJison._setBase(documentIRI);
-  ShExJison._setFileName(documentIRI);
   function runParser () {
     // ShExJison.base = documentIRI || "";
     // ShExJison.basePath = ShExJison.base.replace(/[^\/]*$/, '');
     // ShExJison.baseRoot = ShExJison.base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
     ShExJison._prefixes = Object.create(prefixesCopy);
     ShExJison._imports = [];
+    ShExJison._setBase(documentIRI);
+    ShExJison._setFileName(documentIRI);
     if (!ShExJison._termResolver)
       ShExJison._termResolver = termResolver;
-    var ret;
     try {
       return ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
@@ -2196,7 +2195,10 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
     }
   }
   parser.parse = runParser;
-  parser._setBase = ShExJison._setBase;
+  parser._setBase = function (base) {
+    ShExJison._setBase;
+    documentIRI = base;
+  }
   parser._setFileName = ShExJison._setFileName;
   parser._setTermResolver = ShExJison._setTermResolver;
   parser._setOptions = function (opts) { ShExJison.options = opts; };
@@ -3686,7 +3688,7 @@ var ShExUtil = {
         return ret.concat(_ShExUtil.errsToSimple(e));
       }, []);
     } else if (val.type === "Failure") {
-      return ["validating " + val.node + " as " + val.shape + ":"].concat(val.errors.reduce((ret, e) => {
+      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
         var nested = _ShExUtil.errsToSimple(e).map(x => { return "  " + x; });
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(e => {return "  " + e; });
       }, []));
@@ -3739,6 +3741,15 @@ var ShExUtil = {
     } else {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    function errorList (errors) {
+      return errors.reduce(function (acc, e) {
+        var attrs = Object.keys(e);
+        return acc.concat(
+          (attrs.length === 1 && attrs[0] === "errors")
+            ? errorList(e.errors)
+            : e);
+      }, []);
     }
   },
 
@@ -4685,7 +4696,14 @@ function ShExValidator_constructor(schema, options) {
                 }
               }
               function startsWith (val, ref) {
-                return normalizedTest(val, ref, (l, r) => { return l.startsWith(r); });
+                return normalizedTest(val, ref, (l, r) => {
+                  return (valueConstraint.type === "LanguageStem" ||
+                          valueConstraint.type === "LanguageStemRange") ?
+                    // rfc4647 basic filtering
+                    (l === r || l[r.length] === "-") :
+                    // simple substring
+                    l.startsWith(r);
+                });
               }
               function equals (val, ref) {
                 return normalizedTest(val, ref, (l, r) => { return l === r; });
