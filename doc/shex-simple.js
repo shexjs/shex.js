@@ -517,6 +517,8 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
         $("#inputData ." + key + "").show();
         $("#inputData ." + key + " p:first").text(headings[key]);
         paintExamples("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
+      } else {
+        $("#inputData ." + key + " ul").empty();
       }
     });
 
