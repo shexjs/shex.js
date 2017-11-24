@@ -541,7 +541,11 @@ function validate () {
       //       "not used";
 
       function expectCreated (msg) {
-        if (msg.data.response !== "created")
+        if (msg.data.response === "error") {
+          $("#results .status").empty().append("failed to create validator").addClass("error");
+          results.append($("<pre/>").text(msg.data.stack ? msg.data.stack : msg.data.message));
+          return;
+        } else if (msg.data.response !== "created")
           throw "expected created: " + JSON.stringify(msg.data);
         $("#validate").addClass("stoppable").text("abort (ctl-enter)");
         $("#validate").off("click", disableResultsAndValidate);

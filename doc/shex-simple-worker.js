@@ -40,6 +40,8 @@ onmessage = function (msg) {
     ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
       validator = ShEx.Validator.construct(loaded.schema, options);
       postMessage({ response: "created" });
+    }).catch(e => {
+      postMessage({ response: "error", message: e.message, stack: e.stack });
     });
     break;
 
