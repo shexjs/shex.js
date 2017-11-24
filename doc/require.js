@@ -32,7 +32,10 @@ modules = {
 };
 modules["request-promise"] = function (url) {
   return fetch(url).then(function (response) {
-    return response.text();
+    if (response.ok) {
+      return response.text();
+    }
+    throw Error("GET " + url + " failed: " + response.status + " " + response.statusText);
   });
 };
 var require = function (s) {
