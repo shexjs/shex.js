@@ -4,7 +4,7 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var DefaultBase = location.origin + location.pathname;
+const INPUTAREA_TIMEOUT = 250;var DefaultBase = location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -119,7 +119,7 @@ function _makeCache (selection) {
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse(selection.val(), this.url);
+      this.parsed = this.parse(selection.val(), this.meta.base);
       resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
@@ -159,7 +159,8 @@ function _makeCache (selection) {
           }
         });
       });
-    }
+    },
+    url: undefined // only set if inputarea caches some web resource.
   };
   resolver = new IRIResolver(ret.meta);
   ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
@@ -1390,7 +1391,7 @@ function prepareExamples (demoList) {
       else
         $("#"+side+" .selected").removeClass("selected");
       delete cache.url;
-    }, 250);
+    }, INPUTAREA_TIMEOUT);
   }
   Object.keys(Caches).forEach(function (cache) {
     Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
