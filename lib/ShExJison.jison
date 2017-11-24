@@ -636,13 +636,8 @@ prefixDecl:
     ;
 
 importDecl:
-      IT_IMPORT IRIREF	{ // t: @@
-        var importIRI;
-        if (this._base === null || absoluteIRI.test($2.slice(1, -1)))
-          importIRI = $2.slice(1, -1);
-        else
-          importIRI = _resolveIRI($2.slice(1, -1));
-        Parser._imports.push(importIRI);
+      IT_IMPORT iri	{ // t: @@
+        Parser._imports.push($2);
       }
     ;
 
