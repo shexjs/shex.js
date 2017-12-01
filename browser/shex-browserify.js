@@ -3136,7 +3136,11 @@ var ShExUtil = {
     var oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef) {
       if (!(shapeRef.reference in schema.shapes))
-        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema.");
+        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n        " +
+                    Object.keys(schema.shapes).map(
+                      u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
+                    ).join("\n        ")
+                    + ".");
       if (!inTE && shapeRef.reference === currentShape) 
         throw Error("Structural error: circular reference to " + currentShape + ".");
       return oldVisitShapeRef.call(visitor, shapeRef.reference);
