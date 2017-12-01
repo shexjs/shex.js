@@ -613,13 +613,8 @@ baseDecl:
     ;
 
 prefixDecl:
-      IT_PREFIX PNAME_NS IRIREF	{ // t: ShExParser-test.js/with pre-defined prefixes
-        var prefixIRI;
-        if (Parser._base === null || absoluteIRI.test($3.slice(1, -1)))
-          prefixIRI = $3.slice(1, -1);
-        else
-          prefixIRI = _resolveIRI($3.slice(1, -1));
-        Parser._prefixes[$2.slice(0, -1)] = prefixIRI;
+      IT_PREFIX PNAME_NS iri	{ // t: ShExParser-test.js/with pre-defined prefixes
+        Parser._prefixes[$2.slice(0, -1)] = $3;
       }
     ;
 
