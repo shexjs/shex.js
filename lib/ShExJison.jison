@@ -255,7 +255,15 @@
   // Regular expression and replacement strings to escape strings
   var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
-      semactEscapeReplacements = { '\\': '\\', '%': '%' };
+      semactEscapeReplacements = { '\\': '\\', '%': '%' },
+      pnameEscapeReplacements = {
+        '\\': '\\', "'": "'", '"': '"',
+        'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
+        '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
+        '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
+        '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
+      };
+
 
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
@@ -1413,11 +1421,11 @@ numericLiteral:
 iri:
       IRIREF	{ // t: 1dot
         var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
-        $$ = Parser._base === null || absoluteIRI.test($1.slice(1, -1)) ? unesc : _resolveIRI(unesc)
+        $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       }
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
+        $$ = expandPrefix($1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1));

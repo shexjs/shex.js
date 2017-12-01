@@ -695,13 +695,13 @@ break;
 case 246:
  // t: 1dot
         var unesc = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
-        this.$ = Parser._base === null || absoluteIRI.test($$[$0].slice(1, -1)) ? unesc : _resolveIRI(unesc)
+        this.$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       
 break;
 case 247:
  // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix($$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1);
+        this.$ = expandPrefix($$[$0].substr(0, namePos)) + ShExUtil.unescapeText($$[$0].substr(namePos + 1), pnameEscapeReplacements);
     
 break;
 case 248:
@@ -1108,7 +1108,15 @@ parse: function parse(input) {
   // Regular expression and replacement strings to escape strings
   var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
-      semactEscapeReplacements = { '\\': '\\', '%': '%' };
+      semactEscapeReplacements = { '\\': '\\', '%': '%' },
+      pnameEscapeReplacements = {
+        '\\': '\\', "'": "'", '"': '"',
+        'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
+        '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
+        '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
+        '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
+      };
+
 
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
