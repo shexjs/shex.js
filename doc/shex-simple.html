@@ -331,6 +331,11 @@ ul {
     </div>
     <script src="../doc/iri.js"></script>
     <!-- #if browserify -->
+    <script>
+      if (!("captureStackTrace" in Error)) {
+        Error.captureStackTrace = function () { };
+      }
+    </script>
 <!-- -->
     <script src="../browser/shex-browserify.js"></script>
 <!-- -->
