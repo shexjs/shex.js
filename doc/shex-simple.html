@@ -25,6 +25,7 @@
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
       #inputData li.selected button { background-color: #e8ffe8; }
       #exampleDrop { border-color: white; width: 100%; }
+      #exampleDrop div.examples { overflow: auto; max-height: 10ex; }
       #inputSchema li button, #inputData li button {
         font-size: .7em;
         padding: 0em 2ex;
@@ -345,6 +346,11 @@ ul {
     <script src="../doc/iri.js"></script>
     <script src="./Util.js"></script>
     <!-- #if browserify -->
+    <script>
+      if (!("captureStackTrace" in Error)) {
+        Error.captureStackTrace = function () { };
+      }
+    </script>
 <!-- -->
     <script src="../browser/shex-browserify.js"></script>
 <!-- -->
