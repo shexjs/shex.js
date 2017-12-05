@@ -126,7 +126,7 @@ function _makeCache (selection) {
     set: function (text, base) {
       _dirty = true;
       selection.val(text);
-      this.url = base;
+      this.meta.base = this.url = base;
     },
     refresh: function () {
       if (!_dirty)
