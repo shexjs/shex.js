@@ -481,6 +481,9 @@ var results = (function () {
       var height = resultsSel.height();
       resultsSel.height(1);
       resultsSel.animate({height:height}, 100);
+    },
+    text: function () {
+      return $(resultsElt).text();
     }
   };
 })();
@@ -735,6 +738,7 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
+  $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
     autoOpen: false,
@@ -887,6 +891,19 @@ function toggleControlsArrow (which) {
 function setInterface (evt) {
   toggleControls();
   customizeInterface();
+}
+
+function downloadResults (evt) {
+  var typed = [
+    { type: "text/plain", name: "results.txt" },
+    { type: "application/json", name: "results.json" }
+  ][$("#interface").val() === "appinfo" ? 1 : 0];
+  var blob = new Blob([results.text()], {type: typed.type});
+  $("#download-results-button")
+    .attr("href", window.URL.createObjectURL(blob))
+    .attr("download", typed.name);
+  toggleControls();
+  console.log(results.text());
 }
 
 /**
