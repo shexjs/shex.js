@@ -4,7 +4,7 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var DefaultBase = location.origin + location.pathname;
+const INPUTAREA_TIMEOUT = 250;var DefaultBase = location.origin + location.pathname;
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -114,12 +114,12 @@ function _makeCache (selection) {
     set: function (text, base) {
       _dirty = true;
       selection.val(text);
-      this.url = base;
+      this.meta.base = this.url = base;
     },
     refresh: function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse(selection.val(), this.url);
+      this.parsed = this.parse(selection.val(), this.meta.base);
       resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
@@ -159,7 +159,8 @@ function _makeCache (selection) {
           }
         });
       });
-    }
+    },
+    url: undefined // only set if inputarea caches some web resource.
   };
   resolver = new IRIResolver(ret.meta);
   ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
@@ -239,9 +240,26 @@ function makeExamplesCache (selection) {
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
       try {
+        // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);
       } catch (e) {
-        textOrObj = eval(textOrObj); // exceptions pass through to caller (asyncGet)
+        // transform deprecated examples.js structure
+        textOrObj = eval(textOrObj).reduce(function (acc, schema) {
+          function x (data, status) {
+            return {
+              schemaLabel: schema.name,
+              schema: schema.schema,
+              dataLabel: data.name,
+              data: data.data,
+              queryMap: data.queryMap,
+              status: status
+            };
+          }
+          return acc.concat(
+            schema.passes.map(data => x(data, "conformant")),
+            schema.fails.map(data => x(data, "nonconformant"))
+          );
+        }, []);
       }
     }
     if (textOrObj.constructor !== Array)
@@ -251,42 +269,30 @@ function makeExamplesCache (selection) {
       if ("action" in elt) {
         // compatibility with test suite structure.
         var action = elt.action;
-        var demoSet = {
-          name: elt["@id"],
-          schema: action.schema,
-          schemaURL: action.schemaURL || url,
-          fails: [],
-          passes: [],
-        };
-        if ("termResolver" in action || "termResolverURL" in action) {
-          demoSet.meta = action.termResolver;
-          demoSet.metaURL = action.termResolverURL || DefaultBase;
-        }
-        var target = elt["@type"] === "sht:ValidationFailure" ? demoSet.fails : demoSet.passes;
         var queryMap = "map" in action ?
             action.map :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
-        var d = {
-          name: "name" in action ? action.name : queryMap,
+        elt = {
+          schemaName: elt["@id"],
+          schema: action.schema,
+          schemaURL: action.schemaURL || url,
+          dataName: "dataName" in action ? action.dataName : queryMap,
           data: action.data,
           dataURL: action.dataURL || DefaultBase,
           queryMap: queryMap
         };
-      // target[name] = d;
-        target.push(d);
-        elt = demoSet;
+        if ("termResolver" in action || "termResolverURL" in action) {
+          elt.meta = action.termResolver;
+          elt.metaURL = action.termResolverURL || DefaultBase;
+        }
       }
-      // demos[elt["@id"]] = demoSet;
       demos.push(elt);
       return outer.concat(
         Promise.resolve(elt.schemaURL),
         maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
-        maybeGET(elt, url, "termResolver", "text/turtle"),
-        ["passes", "fails"].reduce((inner, k) => {
-          return inner.concat(elt[k].map(d => {
-            return maybeGET(d, url, "data", "text/turtle");
-          }));
-        }, []));
+        maybeGET(elt, url, "data", "text/turtle"),
+        maybeGET(elt, url, "termResolver", "text/turtle")
+      );
     }, [])).then(() => {
       // if (!($("#append").is(":checked")))
       //   ...;
@@ -358,30 +364,29 @@ function makeShapeMapCache (selection) {
     copyTextMapToEditMap();
     copyEditMapToFixedMap();
   };
-  ret.parse = function (text, base) {
-    throw Error("should not try to parse examples cache");
-  };
+  ret.parse = function (text, base) {  };
   ret.getItems = function () {
     throw Error("should not try to get examples cache items");
   };
   return ret;
 }
 
-// controls for example links
-function load (selector, list, func, listItems, side, str) {
+// controls for example buttons
+function paintExamples (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
-    var li = $("<li/>").append($("<button/>").text(entry.name));
+    var li = $("<li/>").append($("<button/>").text(entry.label));
     li.on("click", () => {
       func(entry.name, entry, li, listItems, side);
     });
-    listItems[side][sum(str(entry))] = li;
+    listItems[side][sum(entry.text)] = li;
     $(selector).append(li);
   });
 }
 
 function clearData () {
   Caches.inputData.set("", DefaultBase);
+  $("#textMap").val("");
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
@@ -404,16 +409,25 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.schema, schemaTest.schemaURL || DefaultBase);
+    Caches.inputSchema.set(schemaTest.text, schemaTest.url || DefaultBase);
     $("#inputSchema .status").text(name);
 
     Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
-    $("#inputData .passes, #inputData .fails").show();
-    $("#inputData .passes p:first").text("Passing:");
-    load("#inputData .passes ul", schemaTest.passes, pickData, listItems, "inputData", function (o) { return o.data; });
-    $("#inputData .fails p:first").text("Failing:");
-    load("#inputData .fails ul", schemaTest.fails, pickData, listItems, "inputData", function (o) { return o.data; });
+    var headings = {
+      "passes": "Passing:",
+      "fails": "Failing:",
+      "indeterminant": "Data:"
+    };
+    Object.keys(headings).forEach(function (key) {
+      if (key in schemaTest) {
+        $("#inputData ." + key + "").show();
+        $("#inputData ." + key + " p:first").text(headings[key]);
+        paintExamples("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
+      } else {
+        $("#inputData ." + key + " ul").empty();
+      }
+    });
 
     results.clear();
     $("#inputSchema li.selected").removeClass("selected");
@@ -427,7 +441,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.data, dataTest.dataURL || DefaultBase);
+    Caches.inputData.set(dataTest.text, dataTest.url || DefaultBase);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -436,7 +450,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
     // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     removeEditMapPair(null);
-    $("#textMap").val(dataTest.queryMap);
+    $("#textMap").val(dataTest.entry.queryMap);
     copyTextMapToEditMap();
     // validate();
   }
@@ -467,6 +481,9 @@ var results = (function () {
       var height = resultsSel.height();
       resultsSel.height(1);
       resultsSel.animate({height:height}, 100);
+    },
+    text: function () {
+      return $(resultsElt).text();
     }
   };
 })();
@@ -721,6 +738,7 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
+  $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
     autoOpen: false,
@@ -875,6 +893,19 @@ function setInterface (evt) {
   customizeInterface();
 }
 
+function downloadResults (evt) {
+  var typed = [
+    { type: "text/plain", name: "results.txt" },
+    { type: "application/json", name: "results.json" }
+  ][$("#interface").val() === "appinfo" ? 1 : 0];
+  var blob = new Blob([results.text()], {type: typed.type});
+  $("#download-results-button")
+    .attr("href", window.URL.createObjectURL(blob))
+    .attr("download", typed.name);
+  toggleControls();
+  console.log(results.text());
+}
+
 /**
  *
  * location.search: e.g. "?schema=asdf&data=qwer&shape-map=ab%5Ecd%5E%5E_ef%5Egh"
@@ -988,16 +1019,19 @@ function copyEditMapToTextMap () {
   }
 }
 
-/** copyTextMapToEditMap - parse a supplied query map and build #editMap
+/**
+ * Parse a supplied query map and build #editMap
+ * @returns list of errors. ([] means everything was good.)
  */
-function copyTextMapToEditMap (shapeMap) {
+function copyTextMapToEditMap () {
   var shapeMap = $("#textMap").val();
   $("#editMap").empty();
   if (shapeMap.trim() === "") {
-    makeFreshEditMap();
-    return;
+    return makeFreshEditMap();
   }
 
+  var errors = [];
+  try {
   //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
   var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
   var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
@@ -1010,16 +1044,29 @@ function copyTextMapToEditMap (shapeMap) {
     if (m) {
       var node = m[1] || "";
       var shape = m[2] || "";
+      if (shape === "- start -")
+        throw Error("Please change \"- start -\" to \"" + START_SHAPE_LABEL + "\".");
       addEditMapPair(null, [{node: node, shape: shape}]);
     }
   });
   copyEditMapToFixedMap();
   markEditMapClean();
+  } catch (e) {
+    $("#fixedMap").empty();
+    results.append($("<div/>").append(
+      $("<span/>").text("Error parsing Query Map:"),
+      $("<pre/>").text(e)
+    ).addClass("error"));
+    errors.push(e);
+    console.log(e);
+  }
+  return errors;
 }
 
 function makeFreshEditMap () {
   addEditMapPair(null, [{node: "", shape: ""}]);
   markEditMapClean();
+  return [];
 }
 
 /** fixedShapeMapToTerms -- map ShapeMap to API terms
@@ -1075,10 +1122,9 @@ function prepareInterface () {
   }, [])).then(function (_) {
 
     // Parse the shape-map using the prefixes and base.
-    if ($("#textMap").val().trim().length > 0)
-      copyTextMapToEditMap();
-    else
-      makeFreshEditMap();
+    var shapeMapErrors = $("#textMap").val().trim().length > 0
+        ? copyTextMapToEditMap()
+        : makeFreshEditMap();
 
     customizeInterface();
     $(".examples li").text("no example schemas loaded");
@@ -1105,7 +1151,8 @@ function prepareInterface () {
     if ("schemaURL" in iface ||
         // some schema is non-empty
         ("schema" in iface &&
-         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))) {
+         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
+       && shapeMapErrors.length === 0) {
       validate();
     }
   });
@@ -1312,10 +1359,38 @@ function prepareExamples (demoList) {
     acc[k] = {};
     return acc;
   }, {});
-  load("#inputSchema .examples ul", demoList, pickSchema,
-       listItems, "inputSchema", function (o) {
-         return o.schema;
-       });
+  var nesting = demoList.reduce(function (acc, elt) {
+    var key = elt.schemaLabel + elt.schema;
+    if (!(key in acc)) {
+      // first entry with this schema
+      acc[key] = {
+        label: elt.schemaLabel,
+        text: elt.schema,
+        url: elt.schemaURL
+      };
+    } else {
+      // nth entry with this schema
+    }
+    var dataEntry = {
+      label: elt.dataLabel,
+      text: elt.data,
+      url: elt.dataURL,
+      entry: elt
+    };
+    var target = elt.status === "nonconformant"
+        ? "fails"
+        : elt.status === "conformant" ? "passes" : "indeterminant";
+    if (!(target in acc[key])) {
+      // first entyr with this data
+      acc[key][target] = [dataEntry];
+    } else {
+      // n'th entry with this data
+      acc[key][target].push(dataEntry);
+    }
+    return acc;
+  }, {});
+  var nestingAsList = Object.keys(nesting).map(e => nesting[e]);
+  paintExamples("#inputSchema .examples ul", nestingAsList, pickSchema, listItems, "inputSchema");
   var timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
@@ -1333,7 +1408,7 @@ function prepareExamples (demoList) {
       else
         $("#"+side+" .selected").removeClass("selected");
       delete cache.url;
-    }, 250);
+    }, INPUTAREA_TIMEOUT);
   }
   Object.keys(Caches).forEach(function (cache) {
     Caches[cache].selection.keyup(function (e) { // keyup to capture backspace

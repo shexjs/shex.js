@@ -30,7 +30,14 @@ modules = {
   fs: { }, path: { }, jsonld: { },
   promise: Promise
 };
-modules["request-promise"] = {};
+modules["request-promise"] = function (url) {
+  return fetch(url).then(function (response) {
+    if (response.ok) {
+      return response.text();
+    }
+    throw Error("GET " + url + " failed: " + response.status + " " + response.statusText);
+  });
+};
 var require = function (s) {
   if (s in modules)
     return modules[s];
