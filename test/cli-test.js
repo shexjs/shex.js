@@ -127,6 +127,8 @@ var stamp = TIME ? function (s) {
 
 /* set up IO promises
  */
+let pq = PromiseQueue(40)
+
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
@@ -143,7 +145,8 @@ Object.keys(AllTests).forEach(function (script) {
       "resultMatch" in test ? { resultMatch: RegExp(test.resultMatch) } :
       ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
 
-      test.exec = new Promise(function (resolve, reject) {
+      test.exec = pq.add(() => {
+        return new Promise(function (resolve, reject) {
         process.chdir(__dirname); // the above paths are relative to this directory
 
         var program = child_process.spawn("../bin/" + script, test.args);
@@ -159,6 +162,7 @@ Object.keys(AllTests).forEach(function (script) {
         program.stderr.on("data", function(data) { stderr += data; });
         program.on("exit", function(exitCode) { resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}); });
         program.on("error", function(err) { reject(err); });
+      });
       });
     } catch (e) {
       var throwMe = new Error("Error setting up test " + test.name + " " + e);
@@ -231,5 +235,35 @@ Object.keys(AllTests).forEach(function (script) {
   });
 });
 
+}
+
+function PromiseQueue (max) {
+  let queue = []
+  let inPlay = 0
+
+  function done (x) {
+    --inPlay
+    if (queue.length > 0) {
+      queue.pop()()
+    }
+    return x
+  }
+
+  return {
+    add: function (f) {
+      if (++inPlay > max) {
+        return new Promise((resolve, reject) => {
+          queue.push(() => {
+            resolve(f().then(done))
+          })
+        })
+      } else {
+        return f().then(done)
+      }
+    },
+    size: function () {
+      return queue.length
+    }
+  }
 }
 
