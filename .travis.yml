@@ -1,3 +1,14 @@
+env:
+  - SLOW=10000
+sudo: false
 language: node_js
 node_js:
-- "stable"
+  - "stable"
+  - "6.0"
+  - "8.0"
+  - "node"
+cache:
+  directories:
+    - node_modules
+before_script:
+  - npm run browser
