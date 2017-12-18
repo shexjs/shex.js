@@ -1,7 +1,7 @@
 // Test shex.js command line scripts.
 
 "use strict";
-var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
+const TEST_cli = "TEST_cli" in process.env ? JSON.parse(process.env["TEST_cli"]) : false;
 var TIME = "TIME" in process.env;
 var TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,/) :
@@ -112,8 +112,8 @@ var AllTests = {
   ]
 };
 
-if (!SLOW) {
-  console.warn("\nSkipping cli-tests; to activate these tests, set environment variable SLOW=6000!");
+if (!TEST_cli) {
+  console.warn("Skipping cli-tests; to activate these tests, set environment variable TEST_cli=true");
 
 } else {
 

@@ -1,5 +1,3 @@
-env:
-  - SLOW=10000
 sudo: false
 language: node_js
 node_js:
@@ -7,6 +5,9 @@ node_js:
   - "6.0"
   - "8.0"
   - "node"
+script:
+  - `npm bin`/mocha -R dot
+  - TEST_cli=true `npm bin`/mocha -R dot test/cli-test.js
 cache:
   directories:
     - node_modules
