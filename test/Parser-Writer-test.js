@@ -1,5 +1,6 @@
 //  "use strict";
-var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
+const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_ShExR"]) : true;
+const TEST_Vestiges = true;
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
@@ -29,7 +30,7 @@ var illDefinedTestsPath = findPath("illDefined");
 
 var parser = ShExParser.construct(BASE);
 
-if (SLOW) {
+if (TEST_ShExR) {
   var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
   var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
   var valueExpr_tripleCnstrnt = GraphSchema.shapes[nsPath + "TripleConstraint"].
@@ -42,7 +43,7 @@ if (SLOW) {
                                             reference: nsPath + "shapeExpr" },
                                           { type: "Shape", closed: true } ] }
 } else {
-  console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
+  console.warn("ShExR tests disabled");
 }
 
 // positive transformation tests
@@ -102,7 +103,7 @@ describe("A ShEx parser", function () {
            }
          });
 
-    if (SLOW) {
+    if (TEST_ShExR) {
       it("should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
@@ -270,7 +271,7 @@ describe("A ShEx parser", function () {
   }
 });
 
-if (SLOW) {
+if (TEST_Vestiges) {
   /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
    * want it in the API.
    */
