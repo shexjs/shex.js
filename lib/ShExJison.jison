@@ -255,7 +255,15 @@
   // Regular expression and replacement strings to escape strings
   var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
-      semactEscapeReplacements = { '\\': '\\', '%': '%' };
+      semactEscapeReplacements = { '\\': '\\', '%': '%' },
+      pnameEscapeReplacements = {
+        '\\': '\\', "'": "'", '"': '"',
+        'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
+        '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
+        '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
+        '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
+      };
+
 
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
@@ -430,7 +438,7 @@ IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00
 //ATIRIREF              '@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
-PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) (({PN_CHARS} | '.' | ':' | {PLX})* ({PN_CHARS} | ':' | {PLX}))?
+PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_LN}
 COMMENT                 '#' [^\u000a\u000d]*
@@ -605,24 +613,14 @@ baseDecl:
     ;
 
 prefixDecl:
-      IT_PREFIX PNAME_NS IRIREF	{ // t: ShExParser-test.js/with pre-defined prefixes
-        var prefixIRI;
-        if (Parser._base === null || absoluteIRI.test($3.slice(1, -1)))
-          prefixIRI = $3.slice(1, -1);
-        else
-          prefixIRI = _resolveIRI($3.slice(1, -1));
-        Parser._prefixes[$2.slice(0, -1)] = prefixIRI;
+      IT_PREFIX PNAME_NS iri	{ // t: ShExParser-test.js/with pre-defined prefixes
+        Parser._prefixes[$2.slice(0, -1)] = $3;
       }
     ;
 
 importDecl:
-      IT_IMPORT IRIREF	{ // t: @@
-        var importIRI;
-        if (this._base === null || absoluteIRI.test($2.slice(1, -1)))
-          importIRI = $2.slice(1, -1);
-        else
-          importIRI = _resolveIRI($2.slice(1, -1));
-        Parser._imports.push(importIRI);
+      IT_IMPORT iri	{ // t: @@
+        Parser._imports.push($2);
       }
     ;
 
@@ -1418,11 +1416,11 @@ numericLiteral:
 iri:
       IRIREF	{ // t: 1dot
         var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
-        $$ = Parser._base === null || absoluteIRI.test($1.slice(1, -1)) ? unesc : _resolveIRI(unesc)
+        $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       }
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
+        $$ = expandPrefix($1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1));

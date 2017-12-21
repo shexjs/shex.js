@@ -1,5 +1,6 @@
 //  "use strict";
-var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
+const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_ShExR"]) : true;
+const TEST_Vestiges = true;
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
@@ -29,7 +30,7 @@ var illDefinedTestsPath = findPath("illDefined");
 
 var parser = ShExParser.construct(BASE);
 
-if (SLOW) {
+if (TEST_ShExR) {
   var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
   var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
   var valueExpr_tripleCnstrnt = GraphSchema.shapes[nsPath + "TripleConstraint"].
@@ -42,7 +43,7 @@ if (SLOW) {
                                             reference: nsPath + "shapeExpr" },
                                           { type: "Shape", closed: true } ] }
 } else {
-  console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
+  console.warn("ShExR tests disabled");
 }
 
 // positive transformation tests
@@ -102,7 +103,7 @@ describe("A ShEx parser", function () {
            }
          });
 
-    if (SLOW) {
+    if (TEST_ShExR) {
       it("should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
@@ -185,20 +186,15 @@ describe("A ShEx parser", function () {
 
   // negative syntax and structure tests
   negativeTests.forEach(testSet => {
-    var negSyntaxTests = fs.readdirSync(testSet.path).
-        filter(function (s) { return s.indexOf(".shex") !== -1; });
+    var manifest = testSet.path + "manifest.jsonld";
+    var negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
     if (TESTS)
-      negSyntaxTests = negSyntaxTests.filter(function (s) {
-        return TESTS.indexOf(s) !== -1 ||
-          TESTS.indexOf(s.replace(/\.shex$/, "")) !== -1 ||
-          TESTS.indexOf(s.replace(/\.json$/, "")) !== -1;
-      });
-    negSyntaxTests.sort();
+      negSchemas = negSchemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
-    negSyntaxTests.forEach(function (schemaFile) {
-      var path = testSet.path + schemaFile;
+    negSchemas.forEach(function (test) {
+      var path = testSet.path + test.shex;
       it("should not parse schema '" + path + "'", function (report) {
-        if (VERBOSE) console.log(schemaFile);
+        if (VERBOSE) console.log(test.name);
         ShExLoader.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
@@ -275,7 +271,7 @@ describe("A ShEx parser", function () {
   }
 });
 
-if (SLOW) {
+if (TEST_Vestiges) {
   /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
    * want it in the API.
    */

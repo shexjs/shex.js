@@ -1,0 +1,16 @@
+sudo: false
+language: node_js
+env:
+  - CLI_TIMEOUT=10000
+node_js:
+  - "6.0"
+  - "8.0"
+  - "stable"
+script:
+  - $(npm bin)/mocha -R dot
+  - TEST_cli=true $(npm bin)/mocha -R dot test/cli-test.js || true
+cache:
+  directories:
+    - node_modules
+before_script:
+  - npm run browser
