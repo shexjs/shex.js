@@ -291,6 +291,7 @@ function makeExamplesCache (selection) {
         Promise.resolve(elt.schemaURL),
         maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
         maybeGET(elt, url, "data", "text/turtle"),
+        maybeGET(elt, url, "queryMap", "text/smap"),
         maybeGET(elt, url, "termResolver", "text/turtle")
       );
     }, [])).then(() => {
