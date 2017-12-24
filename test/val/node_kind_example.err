@@ -24,6 +24,7 @@
         {
           "type": "TypeMismatch",
           "triple": {
+            "type": "TestedTriple",
             "subject": "http://example/issue3",
             "predicate": "http://schema.example/state",
             "object": {

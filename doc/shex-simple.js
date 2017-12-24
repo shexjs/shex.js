@@ -15,10 +15,10 @@ var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
 const uriOrKey = uri + "|FOCUS|_";
-const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
-                                uriOrKey+")?(\\s*)("+
-                                uri+"|a)?(\\s*)("+
-                                uriOrKey+")?(\\s*)(})?(\\s*)$");
+const ParseTriplePattern = "(\\s*{\\s*)("+
+      uriOrKey+")?(\\s*)("+
+      uri+"|a)?(\\s*)("+
+      uriOrKey+")?(\\s*)(})?(\\s*)";
 
 var QueryParams = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
@@ -115,7 +115,7 @@ function _makeCache (selection) {
     set: function (text, base) {
       _dirty = true;
       selection.val(text);
-      this.url = base;
+      this.meta.base = this.url = base;
     },
     refresh: function () {
       if (!_dirty)
@@ -292,6 +292,7 @@ function makeExamplesCache (selection) {
         Promise.resolve(elt.schemaURL),
         maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
         maybeGET(elt, url, "data", "text/turtle"),
+        maybeGET(elt, url, "queryMap", "text/smap"),
         maybeGET(elt, url, "termResolver", "text/turtle")
       );
     }, [])).then(() => {
@@ -482,6 +483,9 @@ var results = (function () {
       var height = resultsSel.height();
       resultsSel.height(1);
       resultsSel.animate({height:height}, 100);
+    },
+    text: function () {
+      return $(resultsElt).text();
     }
   };
 })();
@@ -800,6 +804,7 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
+  $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
     autoOpen: false,
@@ -954,6 +959,19 @@ function setInterface (evt) {
   customizeInterface();
 }
 
+function downloadResults (evt) {
+  var typed = [
+    { type: "text/plain", name: "results.txt" },
+    { type: "application/json", name: "results.json" }
+  ][$("#interface").val() === "appinfo" ? 1 : 0];
+  var blob = new Blob([results.text()], {type: typed.type});
+  $("#download-results-button")
+    .attr("href", window.URL.createObjectURL(blob))
+    .attr("download", typed.name);
+  toggleControls();
+  console.log(results.text());
+}
+
 /**
  *
  * location.search: e.g. "?schema=asdf&data=qwer&shape-map=ab%5Ecd%5E%5E_ef%5Egh"
@@ -986,10 +1004,10 @@ function copyEditMapToFixedMap () {
     var shape = $(queryPair).find(".inputShape").val();
     if (!node || !shape)
       return acc;
-    var m = node.match(ParseTriplePattern);
+    var m = node.match(RegExp("^"+ParseTriplePattern+"$"));
     var nodes = m ? getTriples (m[2], m[4], m[6]) : [node];
     nodes.forEach(node => {
-      var nodeTerm = Caches.inputData.meta.lexToTerm(node);
+      var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
       var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
@@ -1073,6 +1091,17 @@ function copyEditMapToTextMap () {
  */
 function copyTextMapToEditMap () {
   var shapeMap = $("#textMap").val();
+
+  const iriref = `<[^>]*>`;
+  const pname = `[^:@\"\']*:(?:[^:@\"\'\\\\]|\\\\[:])*`;
+  const iri = `${iriref}|${pname}`;
+  const literal1 = `\'(?:[^\']|\\\\\')*\'`;
+  const literal2 = `\"(?:[^\"]|\\\\\")*\"`;
+  const langtag = `@[a-z]+(?:-[a-z]+)*`;
+  const datatype = `^^${iri}`;
+  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?)`;
+  const object = `${iri}|${literal}`;
+
   $("#editMap").empty();
   if (shapeMap.trim() === "") {
     return makeFreshEditMap();
@@ -1080,18 +1109,16 @@ function copyTextMapToEditMap () {
 
   var errors = [];
   try {
-  //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
-  var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
-  var pairPattern = "(" + s + "|" + ParseTriplePattern + ")" + "@" + s + ",?";
+  var pairPattern = "(" + object + "|" + ParseTriplePattern + ")" + "@(" + iri + "|"+START_SHAPE_LABEL+")";
   // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-  var pairs = (shapeMap + ",").match(/([^,\\]|\\.)+,/g).
+  var pairs = (shapeMap + ",").match(RegExp("(" + pairPattern + "),?", "g")).
       map(s => s.substr(0, s.length-1)); // trim ','s
 
   pairs.forEach(r2 => {
-    var m = r2.match(/^\s*((?:[^@\\]|\\@)*?)\s*@\s*((?:[^@\\]|\\@)*?)\s*$/);
+    var m = r2.match(RegExp("^"+pairPattern+"$"));
     if (m) {
       var node = m[1] || "";
-      var shape = m[2] || "";
+      var shape = m[11] || "";
       if (shape === "- start -")
         throw Error("Please change \"- start -\" to \"" + START_SHAPE_LABEL + "\".");
       addEditMapPair(null, [{node: node, shape: shape}]);
@@ -1122,7 +1149,7 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {node: Caches.inputData.meta.lexToTerm(pair.node),
+    return {node: Caches.inputData.meta.lexToTerm(pair.node + " "),
             shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
   });
 }
@@ -1493,7 +1520,7 @@ function addContextMenus (inputSelector, cache) {
       build: function (elt, evt) {
         if (elt.hasClass("data")) {
           v = elt.val();
-          m = v.match(ParseTriplePattern);
+          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
