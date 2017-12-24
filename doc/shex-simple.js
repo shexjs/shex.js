@@ -270,17 +270,23 @@ function makeExamplesCache (selection) {
         // compatibility with test suite structure.
         var action = elt.action;
         var queryMap = "map" in action ?
-            action.map :
+            null :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
-        elt = {
-          schemaName: elt["@id"],
-          schema: action.schema,
-          schemaURL: action.schemaURL || url,
-          dataName: "dataName" in action ? action.dataName : queryMap,
-          data: action.data,
-          dataURL: action.dataURL || DefaultBase,
-          queryMap: queryMap
-        };
+        var queryMapURL = "map" in action ?
+            action.map :
+            null;
+        elt = Object.assign(
+          {
+            schemaLabel: elt["@id"],
+            schema: action.schema,
+            schemaURL: action.schemaURL || url,
+            dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
+            data: action.data,
+            dataURL: action.dataURL || DefaultBase
+          },
+          (queryMap ? { queryMap: queryMap } : { queryMapURL: queryMapURL }),
+          { status: elt["@type"] === "sht:ValidationFailure" ? "nonconformant" : "conformant" }
+        );
         if ("termResolver" in action || "termResolverURL" in action) {
           elt.meta = action.termResolver;
           elt.metaURL = action.termResolverURL || DefaultBase;
@@ -291,7 +297,7 @@ function makeExamplesCache (selection) {
         Promise.resolve(elt.schemaURL),
         maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
         maybeGET(elt, url, "data", "text/turtle"),
-        maybeGET(elt, url, "queryMap", "text/smap"),
+        maybeGET(elt, url, "queryMap", "text/smap,application/json"),
         maybeGET(elt, url, "termResolver", "text/turtle")
       );
     }, [])).then(() => {
@@ -451,7 +457,11 @@ function pickData (name, dataTest, elt, listItems, side) {
     // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
     // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
     removeEditMapPair(null);
-    $("#textMap").val(dataTest.entry.queryMap);
+    try {
+      $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+    } catch (e) {
+      $("#textMap").val(dataTest.entry.queryMap);
+    }
     copyTextMapToEditMap();
     // validate();
   }
