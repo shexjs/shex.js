@@ -16,11 +16,11 @@ var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
 const uriOrKey = uri + "|FOCUS|_";
-const ParseTriplePattern = RegExp("^(\\s*{\\s*)("+
-                                uriOrKey+")?(\\s*)("+
-                                uri+"|a)?(\\s*)("+
-                                uriOrKey+")?(\\s*)(})?(\\s*)$");
-const ParseBacktickPattern = RegExp("^\\s*([a-zA-Z0-9_]+)\\s*`((?:[^`]|``)+)`(\\s*)$");
+const ParseTriplePattern = "(\\s*{\\s*)("+
+      uriOrKey+")?(\\s*)("+
+      uri+"|a)?(\\s*)("+
+      uriOrKey+")?(\\s*)(})?(\\s*)";
+const ParseBacktickPattern = "\\s*([a-zA-Z0-9_]+)\\s*`((?:[^`]|``)+)`(\\s*)";
 
 var QueryParams = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
@@ -379,6 +379,7 @@ function makeExamplesCache (selection) {
         Promise.resolve(elt.schemaURL),
         maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
         maybeGET(elt, url, "data", "text/turtle"),
+        maybeGET(elt, url, "queryMap", "text/smap"),
         maybeGET(elt, url, "termResolver", "text/turtle")
       );
     }, [])).then(() => {
@@ -1114,9 +1115,9 @@ function copyEditMapToFixedMap () {
     if (!node || !shape)
       return acc;
     var m = null, nodes = null;
-    if ((m = node.match(ParseTriplePattern))) {
+    if ((m = node.match(RegExp("^"+ParseTriplePattern+"$")))) {
       nodes = getTriples(m[2], m[4], m[6]);
-    } else if ((m = node.match(ParseBacktickPattern))) {
+    } else if ((m = node.match(RegExp("^"+ParseBacktickPattern+"$")))) {
       Caches.inputData.refresh();
       nodes = [/*"- add all -"*/].concat(Caches.inputData.executeQuery(m[2]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
@@ -1125,7 +1126,7 @@ function copyEditMapToFixedMap () {
       nodes = [node];
     }
     nodes.forEach(node => {
-      var nodeTerm = Caches.inputData.meta.lexToTerm(node);
+      var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
       var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
@@ -1209,6 +1210,17 @@ function copyEditMapToTextMap () {
  */
 function copyTextMapToEditMap () {
   var shapeMap = $("#textMap").val();
+
+  const iriref = `<[^>]*>`;
+  const pname = `[^:@\"\']*:(?:[^:@\"\'\\\\]|\\\\[:])*`;
+  const iri = `${iriref}|${pname}`;
+  const literal1 = `\'(?:[^\']|\\\\\')*\'`;
+  const literal2 = `\"(?:[^\"]|\\\\\")*\"`;
+  const langtag = `@[a-z]+(?:-[a-z]+)*`;
+  const datatype = `^^${iri}`;
+  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?)`;
+  const object = `${iri}|${literal}`;
+
   $("#editMap").empty();
   if (shapeMap.trim() === "") {
     return makeFreshEditMap();
@@ -1216,18 +1228,16 @@ function copyTextMapToEditMap () {
 
   var errors = [];
   try {
-  //     "(?:(<[^>]*>)|((?:[^\\@,]|\\[@,])+))" catches components
-  var s = "((?:<[^>]*>)|(?:[^\\@,]|\\[@,])+)";
-  var pairPattern = "(" + s + "|" + ParseTriplePattern + "|" + ParseBacktickPattern + ")" + "@" + s + ",?";
+  var pairPattern = "(" + object + "|" + ParseTriplePattern + "|" + ParseBacktickPattern + ")" + "@(" + iri + "|"+START_SHAPE_LABEL+")";
   // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-  var pairs = (shapeMap + ",").match(/([^,\\]|\\.)+,/g).
+  var pairs = (shapeMap + ",").match(RegExp("(" + pairPattern + "),?", "g")).
       map(s => s.substr(0, s.length-1)); // trim ','s
 
   pairs.forEach(r2 => {
-    var m = r2.match(/^\s*((?:[^@\\]|\\@)*?)\s*@\s*((?:[^@\\]|\\@)*?)\s*$/);
+    var m = r2.match(RegExp("^"+pairPattern+"$"));
     if (m) {
       var node = m[1] || "";
-      var shape = m[2] || "";
+      var shape = m[14] || "";
       if (shape === "- start -")
         throw Error("Please change \"- start -\" to \"" + START_SHAPE_LABEL + "\".");
       addEditMapPair(null, [{node: node, shape: shape}]);
@@ -1258,7 +1268,7 @@ function makeFreshEditMap () {
  */
 function fixedShapeMapToTerms (shapeMap) {
   return shapeMap.map(pair => {
-    return {node: Caches.inputData.meta.lexToTerm(pair.node),
+    return {node: Caches.inputData.meta.lexToTerm(pair.node + " "),
             shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
   });
 }
@@ -1645,7 +1655,7 @@ function addContextMenus (inputSelector, cache) {
       build: function (elt, evt) {
         if (elt.hasClass("data")) {
           v = elt.val();
-          m = v.match(ParseTriplePattern);
+          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
