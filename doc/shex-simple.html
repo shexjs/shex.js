@@ -23,6 +23,7 @@
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
       #inputData li.selected button { background-color: #e8ffe8; }
       #exampleDrop { border-color: white; width: 100%; }
+      #exampleDrop div.examples { overflow: auto; max-height: 10ex; }
       #inputSchema li button, #inputData li button {
         font-size: .7em;
         padding: 0em 2ex;
@@ -202,6 +203,7 @@ ul {
             <ul>
               <li class="        "><h3>user interface</h3></li>
               <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
+              <li class="menuitem"><a id="download-results-button">download <span class="results">results</span></a></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>HTTP</h3></li>
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
@@ -330,6 +332,12 @@ ul {
       <div></div>
     </div>
     <script src="../doc/iri.js"></script>
+    <script>
+      if (!("captureStackTrace" in Error)) {
+        Error.captureStackTrace = function () { };
+      }
+    </script>
+
     <!-- #if browserify -->
 <!-- -->
     <script src="../browser/shex-browserify.js"></script>
@@ -353,6 +361,7 @@ ul {
     <script src="../lib/ShExLoader.js"></script><script>modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;</script>
     <script src="../shex.js"></script>
  -->
+
     <!-- #endif -->
 
     <script src="../doc/ShExRSchema.js"></script>
