@@ -3721,6 +3721,8 @@ var ShExUtil = {
         var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
+    } else if (val.type === "ValueComparisonFailure") {
+      return ["ValueComparisonFailure: expected " + val.left + val.comparator + val.right];
     } else {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
