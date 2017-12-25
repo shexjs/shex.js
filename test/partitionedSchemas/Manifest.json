@@ -32,19 +32,19 @@
       "expect": "2EachInclude1_S2_S1"
     },
     {
-      "from": "3circularRef1",
+      "from": "3circRefPlus1",
       "include": ["http://a.example/S2"],
-      "expect": "3circularRef1_S2"
+      "expect": "3circRefPlus1_S2"
     },
     {
-      "from": "3circularRef1",
+      "from": "3circRefPlus1",
       "include": ["http://a.example/S4"],
-      "expect": "3circularRef1_S4"
+      "expect": "3circRefPlus1_S4"
     },
     {
-      "from": "3circularRef1",
+      "from": "3circRefPlus1",
       "include": ["http://a.example/S1", "http://a.example/S3", "http://a.example/S4", "http://a.example/S2"],
-      "expect": "3circularRef1_S1_S3_S4_S2"
+      "expect": "3circRefPlus1_S1_S3_S4_S2"
     }
   ]
 }

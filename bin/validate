@@ -147,7 +147,7 @@ function findNodesAndValidate (loaded, parms, options) {
     ret.mode = node;
     if (!parms.shape && loaded.schema.start) {
       shape = loaded.schema.start;
-      shapeLabel = "- start -";
+      shapeLabel = ShExValidator.start;
       ret.shape = shapeLabel;
     } else {
       var found = ShExUtil.parsePassedNode(parms.shape, loaded.schemaMeta[0],
@@ -254,10 +254,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     // ShapeMap, if provided.
     !("map" in valParms) ? Promise.resolve(undefined) :
       ShExLoader.GET(valParms.map).then(function (body) {
-        var map = JSON.parse(body.text);
-        return ShExUtil.absolutizeShapeMap(Object.keys(map).reduce((r, k) => {
-          return r.concat({node: k, shape: map[k]});
-        }, []));
+        return ShExUtil.absolutizeShapeMap(JSON.parse(body.text));
       })
   ]).then(function (loadedAndResults) {
     if (valParms.serve) {
@@ -537,7 +534,7 @@ function loadJSONmanifest (jsonManifests) {
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
               var pattern = RegExp(n);
-              return ret || ("name" in elt && elt.name.match(pattern) !== -1);
+              return ret || ("name" in elt && elt.name.match(pattern));
             }, false);
           });
         d.forEach(function (elt) {
@@ -633,6 +630,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       switch (this.originalUrl) {
       case srvpath:
         var parms = {
+          // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
+          // untested! dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
           schemaName:undefined, schemaFile:undefined, shape:undefined,
           dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
         };
@@ -650,9 +649,9 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                  });
         }
         var schemaFiles = makeArray("schema");
-        parms.shape      = body.fields.shape;
+        parms.shape      = body.fields.shape; // untested! body.fields.shape
         var dataFiles = makeArray("data");
-        parms.node      = body.fields.node;
+        parms.node      = body.fields.node; // untested! body.fields.node
         parms["node-type"] = body.fields.nodeType;
 
         // Default to serverParms
