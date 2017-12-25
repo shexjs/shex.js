@@ -4,6 +4,8 @@
  *   node identifiers: @foo> %map:{ foo.id=substr(20) %}
  *   multiplicity: ...
  */
+
+var ShExMap = (function () {
 var ShEx = require("../../shex");
 
 var _ = require('underscore');
@@ -99,7 +101,7 @@ function materializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = shape && shape !== "- start -"? { type: "ShapeRef", reference: shape } : schema.start;
+      shape = shape && shape !== ShEx.Validator.start? { type: "ShapeRef", reference: shape } : schema.start;
       target = target || ShEx.N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
@@ -301,7 +303,7 @@ function binder (tree) {
     }, []);
     return ret.length === 1 ? ret[0] : ret;
   }
-  tree = _simplify(tree);
+  tree = tree.constructor === Array ? _simplify(tree) : [tree]; // expects an array
 
   // var globals = tree.reduce((r, e, idx) => {
   //   if (e.constructor !== Array) {
@@ -333,7 +335,7 @@ function binder (tree) {
       }
       nextStack.push(last+1);
       next = diveIntoObj(nextStack);
-      console.log("advanced to " + nextStack);
+      // console.log("advanced to " + nextStack);
       // throw Error ("can't advance to find " + v + " in " + JSON.stringify(next));
     }
     stack = nextStack.slice();
@@ -356,7 +358,7 @@ function binder (tree) {
   return {get: getter};
 }
 
-var iface = {
+return {
   register: register,
   extractBindings: extractBindings,
   done: done,
@@ -365,7 +367,7 @@ var iface = {
   url: MapExt
 };
 
+})();
+
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = iface;
-else
-  ShExMap = iface;
+  module.exports = ShExMap;

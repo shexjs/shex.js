@@ -1,10 +1,13 @@
 //  "use strict";
-var SLOW = "SLOW" in process.env; // Only run these tests if SLOW is set. SLOW=4000 to set per-test timeout to 4s.
+const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_ShExR"]) : true;
+const TEST_Vestiges = true;
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
+var BASE = "http://a.example/application/base/";
 
 var ShExParser = require("../lib/ShExParser");
+var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter");
 var ShExUtil = require("../lib/ShExUtil");
 var ShExValidator = require("../lib/ShExValidator");
@@ -17,6 +20,7 @@ var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
 var jsonSchemasPath = findPath("parsedSchemas");
+var manifestFile = schemasPath + "manifest.jsonld";
 var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
 var negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
@@ -24,16 +28,34 @@ var negativeTests = [
 ];
 var illDefinedTestsPath = findPath("illDefined");
 
-if (!SLOW)
-  console.warn("\nSkipping ShExR tests; to activate these tests, set environment variable SLOW=6000!");
+var parser = ShExParser.construct(BASE);
+
+if (TEST_ShExR) {
+  var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
+  var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
+  var valueExpr_tripleCnstrnt = GraphSchema.shapes[nsPath + "TripleConstraint"].
+      expression.expressions.find(e => {
+        return e.predicate === nsPath + "shex#valueExpr";
+      });
+  valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",
+                                        shapeExprs:
+                                        [ { type: "ShapeRef",
+                                            reference: nsPath + "shapeExpr" },
+                                          { type: "Shape", closed: true } ] }
+} else {
+  console.warn("ShExR tests disabled");
+}
+
+// positive transformation tests
+var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+if (TESTS)
+  schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
 describe("A ShEx parser", function () {
   // var b = function () {  };
   // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
-
-  var parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
@@ -51,23 +73,15 @@ describe("A ShEx parser", function () {
       expect(error.message).to.include("Parse error on line 1");
     });
 
+  schemas.forEach(function (test) {
+    var schema = test.name;
 
-  // positive transformation tests
-  var schemas = fs.
-    readdirSync(schemasPath).
-    filter(function (s) { return s.indexOf(".shex") !== -1; }).
-    map(function (s) { return s.replace(/\.shex$/, ""); });
-  if (TESTS)
-    schemas = schemas.filter(function (s) { return TESTS.indexOf(s) !== -1; });
-  schemas.sort();
-  schemas.forEach(function (schema) {
-
-    var jsonSchemaFile = jsonSchemasPath + schema + ".json";
+    var jsonSchemaFile = jsonSchemasPath + test.json;
     if (!fs.existsSync(jsonSchemaFile)) return;
     try {
       var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
-      var shexCFile = schemasPath + schema + ".shex";
-      var shexRFile = schemasPath + schema + ".ttl";
+      var shexCFile = schemasPath + test.shex;
+      var shexRFile = schemasPath + test.ttl;
 
       it("should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
@@ -76,8 +90,9 @@ describe("A ShEx parser", function () {
            var schema = fs.readFileSync(shexCFile, "utf8");
            try {
              parser._setFileName(shexCFile);
+             parser._setBase(BASE);
              var parsedSchema = parser.parse(schema);
-             var canonParsed = ShExUtil.canonicalize(parsedSchema)
+             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("parsed   :" + JSON.stringify(canonParsed));
              if (VERBOSE) console.log("expected :" + JSON.stringify(canonAbstractSyntax));
@@ -88,7 +103,7 @@ describe("A ShEx parser", function () {
            }
          });
 
-    if (SLOW) {
+    if (TEST_ShExR) {
       it("should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
@@ -96,20 +111,21 @@ describe("A ShEx parser", function () {
            var schema = fs.readFileSync(shexRFile, "utf8");
            try {
              var schemaGraph = N3.Store();
-             schemaGraph.addTriples(N3.Parser({documentIRI:shexRFile, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
+             schemaGraph.addTriples(N3.Parser({documentIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
              // console.log(schemaGraph.getTriples());
-             var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+             var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
-               parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8")),
-               {}
+               GraphSchema,
+               {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
              );
              var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
+             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
              if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
-             expect(parsedSchema).to.deep.equal(canonAbstractSyntax);
+             expect(canonParsed).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
              throw(e);
@@ -132,8 +148,11 @@ describe("A ShEx parser", function () {
           if (VERBOSE) console.log("written  :" + w);
           parser._setFileName(shexCFile + " (generated)");
           try {
-            var parsed2 = parser.parse(w);
-            expect(parsed2).to.deep.equal(abstractSyntax);
+            parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
+            var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
+            var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+            expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
           } catch (e) {
             parser.reset();
             throw(e);
@@ -165,38 +184,31 @@ describe("A ShEx parser", function () {
   });
 
 
+  // negative syntax and structure tests
   negativeTests.forEach(testSet => {
-    // negative syntax tests
-    var negSyntaxTests = fs.readdirSync(testSet.path).
-        filter(function (s) { return s.indexOf(".shex") !== -1; });
+    var manifest = testSet.path + "manifest.jsonld";
+    var negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
     if (TESTS)
-      negSyntaxTests = negSyntaxTests.filter(function (s) {
-        return TESTS.indexOf(s) !== -1 ||
-          TESTS.indexOf(s.replace(/\.shex$/, "")) !== -1 ||
-          TESTS.indexOf(s.replace(/\.json$/, "")) !== -1;
-      });
-    negSyntaxTests.sort();
+      negSchemas = negSchemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
-    negSyntaxTests.forEach(function (schemaFile) {
-      var path = testSet.path + schemaFile;
-      it("should not parse schema '" + path + "'", function () {
-        if (VERBOSE) console.log(schemaFile);
-        var schemaText = fs.readFileSync(path, "utf8");
-        var error = null, schema = null;
-        try {debugger;
-             schema =
-             schemaFile.match(/\.shex$/) ? parser.parse(schemaText) :
-             ShExUtil.validateSchema(JSON.parse(schemaText));
-             // console.warn(JSON.stringify(schema));
+    negSchemas.forEach(function (test) {
+      var path = testSet.path + test.shex;
+      it("should not parse schema '" + path + "'", function (report) {
+        if (VERBOSE) console.log(test.name);
+        ShExLoader.load([path], [], [], [], { parser: parser }, {}).
+          then(function (loaded) {
+            report(Error("Expected " + path + " to fail with " + testSet.include));
+          }).
+          catch(function (error) {
+            try {
+              expect(error).to.exist;
+              expect(error).to.be.an.instanceof(Error);
+              expect(error.message).to.include(testSet.include);
+              report();
+            } catch (e) {
+              report(e);
             }
-        catch (e) {
-          error = e;
-          // console.warn(e);
-        }
-        
-        expect(error).to.exist;
-        expect(error).to.be.an.instanceof(Error);
-        expect(error.message).to.include(testSet.include);
+          });
       });
     });
   });
@@ -258,4 +270,73 @@ describe("A ShEx parser", function () {
     });
   }
 });
+
+if (TEST_Vestiges) {
+  /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
+   * want it in the API.
+   */
+  describe("loadShExImports_NotUsed", function () {
+    schemas.filter(test => {
+      return "trait" in test && test.trait.indexOf("Import") !== -1;
+    }).filter(t => {
+      return true;
+    }).forEach(test => {
+      var path = schemasPath + test.shex;
+      it("should load the same imports as ShExLoader.load in '" + path + "'", function () {
+        parser._setBase("file://"+path);
+        return Promise.all([
+          ShExLoader.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
+          ShExLoader.loadShExImports_NotUsed(path, parser, pickShEx)
+        ]).then(function (loadedAndSchema) {
+          expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).to.deep.equal(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
+        });
+        function pickShEx (i) {
+          return i + ".shex";
+        }
+      });
+    });
+  });
+}
+
+// Parses a JSON object, restoring `undefined` values
+function parseJSONFile(filename, mapFunction) {
+  "use strict";
+  try {
+    var string = fs.readFileSync(filename, "utf8");
+    var object = JSON.parse(string);
+    function resolveRelativeURLs (obj) {
+      Object.keys(obj).forEach(function (k) {
+        if (typeof obj[k] === "object") {
+          resolveRelativeURLs(obj[k]);
+        }
+        if (mapFunction) {
+          mapFunction(k, obj);
+        }
+      });
+    }
+    resolveRelativeURLs(object);
+    return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+  } catch (e) {
+    throw new Error("error reading " + filename +
+                    ": " + ("stack" in e ? e.stack : e));
+  }
+}
+
+// Not sure this is needed when everything's working but I have hunch it makes
+// error handling a little more graceful.
+
+// Stolen from Ruben Verborgh's SPARQL.js tests:
+// Recursively replace values of "{undefined}" by `undefined`
+function restoreUndefined(object) {
+  "use strict";
+  for (var key in object) {
+    var item = object[key];
+    if (typeof item === "object") {
+      object[key] = restoreUndefined(item);
+    } else if (item === "{undefined}") {
+      object[key] = undefined;
+    }
+  }
+  return object;
+}
 

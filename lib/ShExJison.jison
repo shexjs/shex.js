@@ -246,7 +246,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -255,7 +255,15 @@
   // Regular expression and replacement strings to escape strings
   var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
-      semactEscapeReplacements = { '\\': '\\', '%': '%' };
+      semactEscapeReplacements = { '\\': '\\', '%': '%' },
+      pnameEscapeReplacements = {
+        '\\': '\\', "'": "'", '"': '"',
+        'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
+        '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
+        '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
+        '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
+      };
+
 
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
@@ -369,6 +377,7 @@
 
 IT_BASE                 [Bb][Aa][Ss][Ee]
 IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
+IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
 IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
@@ -433,7 +442,7 @@ IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00
 //ATIRIREF              '@<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
-PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) (({PN_CHARS} | '.' | ':' | {PLX})* ({PN_CHARS} | ':' | {PLX}))?
+PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_LN}
 COMMENT                 '#' [^\u000a\u000d]*
@@ -487,6 +496,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{PN_LOCAL}            return 'PN_LOCAL';
 {IT_BASE}               return 'IT_BASE';
 {IT_PREFIX}             return 'IT_PREFIX';
+{IT_IMPORT}             return 'IT_IMPORT';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
 {IT_VIRTUAL}            return 'IT_VIRTUAL';
@@ -542,6 +552,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 "true"                  return 'IT_true';
 "false"                 return 'IT_false';
 <<EOF>>                 return 'EOF';
+[a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
 .                       return 'invalid character '+yytext;
 
 /lex
@@ -558,7 +569,8 @@ shexDoc:
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
         var ret = extend({ type: "Schema"},
-                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Build return object from
+                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Properties ordered here to
+                         Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}, // build return object from
                          valueExprDefns, startActs, startObj,                  // components in parser state
                          Parser.shapes ? {shapes: Parser.shapes} : {},         // maintaining intuitve order.
                          Parser.productions ? {productions: Parser.productions} : {});
@@ -601,6 +613,7 @@ _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
 directive:
       baseDecl	// t: @@
     | prefixDecl	// t: 1dotLNex
+    | importDecl	// t: @@
     ;
 
 baseDecl:
@@ -611,13 +624,14 @@ baseDecl:
     ;
 
 prefixDecl:
-      IT_PREFIX PNAME_NS IRIREF	{ // t: ShExParser-test.js/with pre-defined prefixes
-        var prefixIRI;
-        if (this._base === null || absoluteIRI.test($3.slice(1, -1)))
-          prefixIRI = $3.slice(1, -1);
-        else
-          prefixIRI = _resolveIRI($3.slice(1, -1));
-        Parser._prefixes[$2.slice(0, -1)] = prefixIRI;
+      IT_PREFIX PNAME_NS iri	{ // t: ShExParser-test.js/with pre-defined prefixes
+        Parser._prefixes[$2.slice(0, -1)] = $3;
+      }
+    ;
+
+importDecl:
+      IT_IMPORT iri	{ // t: @@
+        Parser._imports.push($2);
       }
     ;
 
@@ -1455,10 +1469,13 @@ numericLiteral:
     ;
 
 iri:
-      IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? ShExUtil.unescapeText($1.slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($1.slice(1,-1), {})) // t: 1dot
+      IRIREF	{ // t: 1dot
+        var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
+      }
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
+        $$ = expandPrefix($1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1));
