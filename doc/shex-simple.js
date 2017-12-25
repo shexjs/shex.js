@@ -9,7 +9,7 @@ var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputMeta = makeTurtleCache($("#meta textarea"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
-Caches.examples = makeExamplesCache($("#exampleDrop"));
+Caches.manifest = makeManifestCache($("#manifestDrop"));
 Caches.shapeMap = makeShapeMapCache($("#shapeMap-tabs")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
@@ -245,10 +245,10 @@ function makeTurtleCache (selection) {
   return ret;
 }
 
-function makeExamplesCache (selection) {
+function makeManifestCache (selection) {
   var ret = _makeCache(selection);
   ret.set = function (textOrObj, url, source) {
-    $("#inputSchema .examples li").remove();
+    $("#inputSchema .manifest li").remove();
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
       try {
@@ -315,19 +315,19 @@ function makeExamplesCache (selection) {
     }, [])).then(() => {
       // if (!($("#append").is(":checked")))
       //   ...;
-      prepareExamples(demos);
+      prepareManifest(demos);
     }).catch(e => {
       var whence = source === undefined ? "<" + url  + ">" : source;
       results.append($("<pre/>").text(
-        "failed to load examples from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
+        "failed to load manifest from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
       ).addClass("error"));
     });
   };
   ret.parse = function (text, base) {
-    throw Error("should not try to parse examples cache");
+    throw Error("should not try to parse manifest cache");
   };
   ret.getItems = function () {
-    throw Error("should not try to get examples cache items");
+    throw Error("should not try to get manifest cache items");
   };
   return ret;
 
@@ -385,13 +385,13 @@ function makeShapeMapCache (selection) {
   };
   ret.parse = function (text, base) {  };
   ret.getItems = function () {
-    throw Error("should not try to get examples cache items");
+    throw Error("should not try to get manifest cache items");
   };
   return ret;
 }
 
-// controls for example buttons
-function paintExamples (selector, list, func, listItems, side) {
+// controls for manifest buttons
+function paintManifest (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
     var li = $("<li/>").append($("<button/>").text(entry.label));
@@ -448,7 +448,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
       if (key in schemaTest) {
         $("#inputData ." + key + "").show();
         $("#inputData ." + key + " p:first").text(headings[key]);
-        paintExamples("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
+        paintManifest("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
       } else {
         $("#inputData ." + key + " ul").empty();
       }
@@ -470,11 +470,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    //    $("input.data").val(getDataNodes()[0]);
-    // hard-code the first node/shape pair
-    // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
-    // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
+    $("input.data").val(Caches.inputData.getItems()[0]);
     removeEditMapPair(null);
+    // This will probably overwrite $("input.data").val()
     try {
       $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
     } catch (e) {
@@ -778,7 +776,7 @@ function prepareControls () {
         var target =
             $("#loadForm span").text() === "schema" ? Caches.inputSchema :
             $("#loadForm span").text() === "data" ? Caches.inputData :
-            Caches.examples;
+            Caches.manifest;
         var url = $("#loadInput").val();
         var tips = $(".validateTips");
         function updateTips (t) {
@@ -811,7 +809,7 @@ function prepareControls () {
       toggleControls();
     }
   });
-  ["schema", "data", "examples"].forEach(type => {
+  ["schema", "data", "manifest"].forEach(type => {
     $("#load-"+type+"-button").click(evt => {
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
@@ -1178,12 +1176,15 @@ function prepareInterface () {
         : makeFreshEditMap();
 
     customizeInterface();
-    $(".examples li").text("no example schemas loaded");
-    var loadExamples = "examples" in iface ? iface.examples[0] : "./examples.js";
-    if (loadExamples.length) { // examples= disables examples
-      Caches.examples.asyncGet(Caches.examples.meta.lexToTerm("<"+loadExamples+">"))
+    $(".manifest li").text("no manifest schemas loaded");
+    var loadManifest =
+        "manifest" in iface ? iface.manifest[0] :
+        "examples" in iface ? iface.examples[0] : // ?examples is deprecated
+        "../examples/manifest.json";
+    if (loadManifest.length) { // manifest= disables manifest
+      Caches.manifest.asyncGet(Caches.manifest.meta.lexToTerm("<"+loadManifest+">"))
       .catch(function (e) {
-        $(".examples li").text(e.message);
+        $(".manifest li").text(e.message);
       });
     }
     $("body").keydown(function (e) { // keydown because we need to preventDefault
@@ -1269,7 +1270,7 @@ function prepareDragAndDrop () {
     };
   }).concat([
     {location: $("body"), targets: [
-      {media: "application/json", target: Caches.examples},
+      {media: "application/json", target: Caches.manifest},
       {ext: ".shex", media: "text/shex", target: Caches.inputSchema},
       {ext: ".owl", media: "text/turtle+owl", target: Caches.inputMeta},
       {ext: ".ttl", media: "text/turtle", target: Caches.inputData},
@@ -1320,7 +1321,7 @@ function prepareDragAndDrop () {
                     if ("termResolver" in action) {
                       action.termResolverURL = action.termResolver; delete action.termResolver;
                     }
-                    Caches.examples.set(parsed, DefaultBase, "drag and drop");
+                    Caches.manifest.set(parsed, DefaultBase, "drag and drop");
                   } else {
                     inject(desc.targets, DefaultBase, val, l.type);
                   }
@@ -1409,7 +1410,7 @@ function prepareDragAndDrop () {
   }
 }
 
-function prepareExamples (demoList) {
+function prepareManifest (demoList) {
   var listItems = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = {};
     return acc;
@@ -1445,7 +1446,7 @@ function prepareExamples (demoList) {
     return acc;
   }, {});
   var nestingAsList = Object.keys(nesting).map(e => nesting[e]);
-  paintExamples("#inputSchema .examples ul", nestingAsList, pickSchema, listItems, "inputSchema");
+  paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
   var timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
