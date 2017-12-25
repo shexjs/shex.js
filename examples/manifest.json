@@ -46,5 +46,37 @@
     "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .",
     "queryMap": "<Obs1>@START",
     "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "negated dot",
+    "schema": "<#S1> {\n   !<p1> .\n}",
+    "dataLabel": "empty",
+    "data": "",
+    "queryMap": "<#empty>@<#S1>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "negated dot",
+    "schema": "<#S1> {\n   !<p1> .\n}",
+    "dataLabel": "matched predicate",
+    "data": "<#s1> <p0> <o0>; <p1> <o1>; <p2> <o2> .",
+    "queryMap": "<#s1>@<#S1>",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "negated inverse dot",
+    "schema": "<#S1> {\n   !^<p1> .\n}",
+    "dataLabel": "empty",
+    "data": "",
+    "queryMap": "<#empty>@<#S1>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "negated inverse dot",
+    "schema": "<#S1> {\n   !^<p1> .\n}",
+    "dataLabel": "matched predicate",
+    "data": "<#s0> <p0> <#o1> .\n<#s1> <p1> <#o1> .\n<#s2> <p2> <#o1> .",
+    "queryMap": "<#o1>@<#S1>",
+    "status": "nonconformant"
   }
 ]
