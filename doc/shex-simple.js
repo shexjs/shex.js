@@ -452,11 +452,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    //    $("input.data").val(getDataNodes()[0]);
-    // hard-code the first node/shape pair
-    // $("#focus0").val(dataTest.inputShapeMap[0].node); // inputNode in Map-test
-    // $("#inputShape0").val(dataTest.inputShapeMap[0].shape); // srcSchema.start in Map-test
+    $("input.data").val(Caches.inputData.getItems()[0]);
     removeEditMapPair(null);
+    // This will probably overwrite $("input.data").val()
     try {
       $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
     } catch (e) {
