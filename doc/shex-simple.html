@@ -22,8 +22,8 @@
       #inputSchema li.selected button { background-color: #e8e8ff; }
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
       #inputData li.selected button { background-color: #e8ffe8; }
-      #exampleDrop { border-color: white; width: 100%; }
-      #exampleDrop div.examples { overflow: auto; max-height: 10ex; }
+      #manifestDrop { border-color: white; width: 100%; }
+      #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
       #inputSchema li button, #inputData li button {
         font-size: .7em;
         padding: 0em 2ex;
@@ -208,7 +208,7 @@ ul {
               <li class="        "><h3>HTTP</h3></li>
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
               <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
-              <li class="menuitem" id="load-examples-button">load <span class="examples">examples</span></li>
+              <li class="menuitem" id="load-manifest-button">load <span class="manifest">manifest</span></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>drag and drop</h3></li>
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
@@ -266,9 +266,9 @@ ul {
         <h2 class="status"> </h2>
         <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
         <div>
-          <div id="exampleDrop" class="droparea">
-            <p>Examples:</p>
-            <div class="examples">
+          <div id="manifestDrop" class="droparea">
+            <p>Manifest:</p>
+            <div class="manifest">
               <ul>
                 <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
               </ul>
