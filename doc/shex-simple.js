@@ -439,7 +439,11 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.schema").val(Caches.inputSchema.getItems()[0]);
+    try {
+      $("input.schema").val(Caches.inputSchema.getItems()[0]);
+    } catch (e) {
+      failMessage(e, "schema");
+    }
   }
 }
 
@@ -452,7 +456,11 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.data").val(Caches.inputData.getItems()[0]);
+    try {
+      $("input.data").val(Caches.inputData.getItems()[0]);
+    } catch (e) {
+      failMessage(e, "schema");
+    }
     removeEditMapPair(null);
     // This will probably overwrite $("input.data").val()
     try {
@@ -479,6 +487,7 @@ var results = (function () {
     },
     clear: function () {
       resultsSel.removeClass("passes fails error");
+      $("#results .status").text("").hide();
       return resultsSel.text("");
     },
     start: function () {
@@ -569,7 +578,7 @@ function validate () {
         // }
         finishRendering();
       }).catch(function (e) {
-        failMessage(e);
+        failMessage(e, parsing);
       });
     } else {
       var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -610,7 +619,7 @@ function validate () {
       }
     }
   } catch (e) {
-    failMessage(e);
+    failMessage(e, parsing);
   }
 
   function renderEntry (entry) {
@@ -677,11 +686,15 @@ function validate () {
       // }
       results.finish();
   }
+}
 
-  function failMessage (e) {
-    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
-    results.append($("<pre/>").text(e.stack || e));
-  }
+var LastFail = null;
+function failMessage (e, parsing) {
+  $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error").show();
+  if (LastFail)
+    LastFail.remove();
+  LastFail = $("<pre/>").text(e);
+  results.append(LastFail);
 }
 
 function addEditMapPair (evt, pairs) {
@@ -1434,8 +1447,12 @@ function prepareManifest (demoList) {
   Object.keys(Caches).forEach(function (cache) {
     Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
       var code = e.keyCode || e.charCode;
-      if (!(e.ctrlKey && (code === 10 || code === 13)))
+      // if (!(e.ctrlKey)) {
+      //   results.clear();
+      // }
+      if (!(e.ctrlKey && (code === 10 || code === 13))) {
         later(e.target, cache, Caches[cache]);
+      }
     });
   });
 }
@@ -1513,13 +1530,20 @@ function addContextMenus (inputSelector, cache) {
           }
         }
         terms = v = null;
-        return {
-          items:
-          cache.getItems().reduce((ret, opt) => {
-            ret[opt] = { name: opt };
-            return ret;
-          }, {})
-        };
+        try {
+          return {
+            items: cache.getItems().reduce((ret, opt) => {
+              ret[opt] = { name: opt };
+              return ret;
+            }, {})
+          };
+        } catch (e) {
+          failMessage(e, cache === Caches.inputSchema ? "schema" : "data");
+          let items = {};
+          const failContent = "no choices found";
+          items[failContent] = failContent;
+          return { items: items }
+        }
       }
     });
 }
