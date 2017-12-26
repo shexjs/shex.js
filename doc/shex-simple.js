@@ -1055,7 +1055,12 @@ function copyTextMapToEditMap () {
   const literal2 = `\"(?:[^\"]|\\\\\")*\"`;
   const langtag = `@[a-z]+(?:-[a-z]+)*`;
   const datatype = `^^${iri}`;
-  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?)`;
+  const integer = `[+-]?[0-9]+`;
+  const decimal = `[+-]?[0-9]*\\.[0-9]+`;
+  const exponent = `[eE][+-]?[0-9]+`;
+  const double_ = `[+-]?(?:[0-9]+\\.[0-9]*${exponent}|\\.?[0-9]+${exponent})`;
+  const numeric = `${integer}|${decimal}|${double_}`;
+  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?|${numeric})`;
   const object = `${iri}|${literal}`;
 
   $("#editMap").empty();
