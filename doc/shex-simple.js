@@ -81,7 +81,7 @@ function rdflib_lexToTerm (lex, resolver) {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
-          token.type === "type" ? resolver.meta.prefixes[token.prefix] :
+          token.type === "type" ? "^^" + resolver.meta.prefixes[token.prefix] :
           token.type === "prefixed" ? resolver.meta.prefixes[token.prefix] :
           token.type === "blank" ? "_:" :
           "";
