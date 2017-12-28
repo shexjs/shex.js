@@ -264,11 +264,24 @@ function makeManifestCache (selection) {
     }
     if (textOrObj.constructor !== Array)
       textOrObj = [textOrObj];
-    var demos = [];
-    Promise.all(textOrObj.reduce((outer, elt) => {
+    var promises = [];
+    var demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
         // compatibility with test suite structure.
         var action = elt.action;
+        var schemaLabel = action.schemaURL.substr(action.schemaURL.lastIndexOf('/')+1);
+        var dataLabel = elt["@id"];
+        var match = null;
+        var emptyGraph = "-- empty graph --";
+        if ("comment" in elt) {
+          if ((match = elt.comment.match(/^(.*?) \/ { (.*?) }$/))) {
+            schemaLabel = match[1]; dataLabel = match[2] || emptyGraph;
+          } else if ((match = elt.comment.match(/^(.*?) on { (.*?) }$/))) {
+            schemaLabel = match[1]; dataLabel = match[2] || emptyGraph;
+          } else if ((match = elt.comment.match(/^(.*?) as { (.*?) }$/))) {
+            schemaLabel = match[2]; dataLabel = match[1] || emptyGraph;
+          }
+        }
         var queryMap = "map" in action ?
             null :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
@@ -277,10 +290,11 @@ function makeManifestCache (selection) {
             null;
         elt = Object.assign(
           {
-            schemaLabel: elt["@id"],
+            schemaLabel: schemaLabel,
             schema: action.schema,
             schemaURL: action.schemaURL || url,
-            dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
+            // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
+            dataLabel: dataLabel,
             data: action.data,
             dataURL: action.dataURL || DefaultBase
           },
@@ -292,24 +306,20 @@ function makeManifestCache (selection) {
           elt.metaURL = action.termResolverURL || DefaultBase;
         }
       }
-      demos.push(elt);
-      return outer.concat(
-        Promise.resolve(elt.schemaURL),
-        maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
-        maybeGET(elt, url, "data", "text/turtle"),
-        maybeGET(elt, url, "queryMap", "text/smap,application/json"),
-        maybeGET(elt, url, "termResolver", "text/turtle")
-      );
-    }, [])).then(() => {
-      // if (!($("#append").is(":checked")))
-      //   ...;
-      prepareManifest(demos);
-    }).catch(e => {
-      var whence = source === undefined ? "<" + url  + ">" : source;
-      results.append($("<pre/>").text(
-        "failed to load manifest from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
-      ).addClass("error"));
-    });
+      return acc.concat(elt);
+    }, []);
+    prepareManifest(demos);
+    // Promise.all(promises).then(l => {
+    //   // if (!($("#append").is(":checked")))
+    //   //   ...;
+    //   console.log("loaded:");
+    //   console.dir(l);
+    // }).catch(e => {
+    //   var whence = source === undefined ? "<" + url  + ">" : source;
+    //   results.append($("<pre/>").text(
+    //     "failed to load manifest from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
+    //   ).addClass("error"));
+    // });
   };
   ret.parse = function (text, base) {
     throw Error("should not try to parse manifest cache");
@@ -324,27 +334,30 @@ function makeManifestCache (selection) {
             // Take the passed data, guess base if not provided.
             if (!(key + "URL" in obj))
               obj[key + "URL"] = base;
-            return Promise.resolve();
+            obj[key] = Promise.resolve(obj[key]);
           } else if (key + "URL" in obj) {
             // absolutize the URL
             obj[key + "URL"] = ret.meta.lexToTerm("<"+obj[key + "URL"]+">");
             // Load the remote resource.
-            return $.ajax({
-              accepts: {
-                mycustomtype: accept
-              },
-              url: ret.meta.lexToTerm("<"+obj[key + "URL"]+">"),
-              dataType: "text"
-            }).then(text => {
-              obj[key] = text;
-            }).fail(e => {
-              results.append($("<pre/>").text(
-                "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
-              ).addClass("error"));
+            obj[key] = new Promise((resolve, reject) => {
+              $.ajax({
+                accepts: {
+                  mycustomtype: accept
+                },
+                url: ret.meta.lexToTerm("<"+obj[key + "URL"]+">"),
+                dataType: "text"
+              }).then(text => {
+                resolve(text);
+              }).fail(e => {
+                results.append($("<pre/>").text(
+                  "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
+                ).addClass("error"));
+                reject(e);
+              });
             });
           } else {
             // Ignore this parameter.
-            return Promise.resolve();
+            obj[key] = Promise.resolve(obj[key]);
           }
         }
 
@@ -383,11 +396,19 @@ function paintManifest (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
     var li = $("<li/>").append($("<button/>").text(entry.label));
-    li.on("click", () => {
-      func(entry.name, entry, li, listItems, side);
-    });
-    listItems[side][sum(entry.text)] = li;
-    $(selector).append(li);
+    if (entry.text === undefined) {
+      fetch(entry.url).then(response => response.text()).then(schemaLoaded);
+    } else {
+      schemaLoaded(entry.text);
+    }
+    function schemaLoaded (text) {
+      entry.text = text;
+      li.on("click", () => {
+        func(entry.name, entry, li, listItems, side);
+      });
+      listItems[side][sum(text)] = li;
+      $(selector).append(li);
+    }
   });
 }
 
@@ -421,6 +442,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
 
     Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
+    Caches.shapeMap.set("", DefaultBase);
     var headings = {
       "passes": "Passing:",
       "fails": "Failing:",
@@ -463,13 +485,21 @@ function pickData (name, dataTest, elt, listItems, side) {
     }
     removeEditMapPair(null);
     // This will probably overwrite $("input.data").val()
-    try {
-      $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
-    } catch (e) {
-      $("#textMap").val(dataTest.entry.queryMap);
+    if (dataTest.entry.queryMap === undefined) {
+      fetch(dataTest.entry.queryMapURL).then(response => response.text()).then(queryMapLoaded);
+    } else {
+      queryMapLoaded(dataTest.entry.queryMap);
     }
-    copyTextMapToEditMap();
-    // validate();
+    function queryMapLoaded (text) {
+      dataTest.entry.queryMap = text;
+      try {
+        $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+      } catch (e) {
+        $("#textMap").val(dataTest.entry.queryMap);
+      }
+      copyTextMapToEditMap();
+      // validate();
+    }
   }
 }
 
@@ -1301,9 +1331,14 @@ function prepareDragAndDrop () {
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
                     var parsed = JSON.parse(val);
-                    var action = "action" in parsed ? parsed.action: parsed;
-                    action.schemaURL = action.schema; delete action.schema;
-                    action.dataURL = action.data; delete action.data;
+                    if (!(parsed.constructor === Array)) {
+                      parsed = [parsed];
+                    }
+                    parsed.map(elt => {
+                      var action = "action" in elt ? elt.action: elt;
+                      action.schemaURL = action.schema; delete action.schema;
+                      action.dataURL = action.data; delete action.data;
+                    });
                     Caches.manifest.set(parsed, DefaultBase, "drag and drop");
                   } else {
                     inject(desc.targets, DefaultBase, val, l.type);
@@ -1399,7 +1434,7 @@ function prepareManifest (demoList) {
     return acc;
   }, {});
   var nesting = demoList.reduce(function (acc, elt) {
-    var key = elt.schemaLabel + elt.schema;
+    var key = elt.schemaLabel + "|" + elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
       acc[key] = {
