@@ -243,28 +243,33 @@ function makeManifestCache (selection) {
         // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);
       } catch (e) {
+        var whence = source === undefined ? "<" + url  + ">" : source;
+        results.append($("<pre/>").text(
+          "failed to load manifest from " + whence + ":\n" + e + "\n" + textOrObj
+        ).addClass("error"));
+        return;
+        // @@DELME(2017-12-29)
         // transform deprecated examples.js structure
-        textOrObj = eval(textOrObj).reduce(function (acc, schema) {
-          function x (data, status) {
-            return {
-              schemaLabel: schema.name,
-              schema: schema.schema,
-              dataLabel: data.name,
-              data: data.data,
-              queryMap: data.queryMap,
-              status: status
-            };
-          }
-          return acc.concat(
-            schema.passes.map(data => x(data, "conformant")),
-            schema.fails.map(data => x(data, "nonconformant"))
-          );
-        }, []);
+        // textOrObj = eval(textOrObj).reduce(function (acc, schema) {
+        //   function x (data, status) {
+        //     return {
+        //       schemaLabel: schema.name,
+        //       schema: schema.schema,
+        //       dataLabel: data.name,
+        //       data: data.data,
+        //       queryMap: data.queryMap,
+        //       status: status
+        //     };
+        //   }
+        //   return acc.concat(
+        //     schema.passes.map(data => x(data, "conformant")),
+        //     schema.fails.map(data => x(data, "nonconformant"))
+        //   );
+        // }, []);
       }
     }
     if (textOrObj.constructor !== Array)
       textOrObj = [textOrObj];
-    var promises = [];
     var demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
         // compatibility with test suite structure.
@@ -306,20 +311,16 @@ function makeManifestCache (selection) {
           elt.metaURL = action.termResolverURL || DefaultBase;
         }
       }
+      ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
+        if (parm in elt) {
+          elt[parm] = new URL(elt[parm], url).href;
+        } else {
+          delete elt[parm];
+        }
+      });
       return acc.concat(elt);
     }, []);
     prepareManifest(demos);
-    // Promise.all(promises).then(l => {
-    //   // if (!($("#append").is(":checked")))
-    //   //   ...;
-    //   console.log("loaded:");
-    //   console.dir(l);
-    // }).catch(e => {
-    //   var whence = source === undefined ? "<" + url  + ">" : source;
-    //   results.append($("<pre/>").text(
-    //     "failed to load manifest from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
-    //   ).addClass("error"));
-    // });
   };
   ret.parse = function (text, base) {
     throw Error("should not try to parse manifest cache");
@@ -397,7 +398,10 @@ function paintManifest (selector, list, func, listItems, side) {
   list.forEach(entry => {
     var li = $("<li/>").append($("<button/>").text(entry.label));
     if (entry.text === undefined) {
-      fetch(entry.url).then(response => response.text()).then(schemaLoaded);
+      fetchOK(entry.url).catch(response => {
+          renderErrorMessage(response, side);
+          return "# " + message; // leave a message in the schema or data block
+        }).then(schemaLoaded);
     } else {
       schemaLoaded(entry.text);
     }
@@ -410,6 +414,20 @@ function paintManifest (selector, list, func, listItems, side) {
       $(selector).append(li);
     }
   });
+}
+
+function fetchOK (url) {
+  return fetch(url).then(response => {
+    if (!response.ok) {
+      throw response;
+    }
+    return response.text()
+  });
+}
+
+function renderErrorMessage (response, what) {
+  var message = "failed to load " + "queryMap" + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
+  results.append($("<pre/>").text(message).addClass("error"));
 }
 
 function clearData () {
@@ -486,7 +504,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     removeEditMapPair(null);
     // This will probably overwrite $("input.data").val()
     if (dataTest.entry.queryMap === undefined) {
-      fetch(dataTest.entry.queryMapURL).then(response => response.text()).then(queryMapLoaded);
+      fetchOK(dataTest.entry.queryMapURL).then(queryMapLoaded).catch(response => {
+        renderErrorMessage(response, "queryMap");
+      });
     } else {
       queryMapLoaded(dataTest.entry.queryMap);
     }
