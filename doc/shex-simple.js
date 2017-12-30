@@ -396,12 +396,14 @@ function makeShapeMapCache (selection) {
 function paintManifest (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
-    var li = $("<li/>").append($("<button/>").text(entry.label));
+    var button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
+    var li = $("<li/>").append(button);
+    $(selector).append(li);
     if (entry.text === undefined) {
       fetchOK(entry.url).catch(response => {
-          renderErrorMessage(response, side);
-          return "# " + message; // leave a message in the schema or data block
-        }).then(schemaLoaded);
+        renderErrorMessage(response, side);
+        return "# " + message; // leave a message in the schema or data block
+      }).then(schemaLoaded);
     } else {
       schemaLoaded(entry.text);
     }
@@ -411,7 +413,7 @@ function paintManifest (selector, list, func, listItems, side) {
         func(entry.name, entry, li, listItems, side);
       });
       listItems[side][sum(text)] = li;
-      $(selector).append(li);
+      button.text(entry.label).removeAttr("disabled");
     }
   });
 }
