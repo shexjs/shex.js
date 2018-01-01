@@ -1010,7 +1010,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
+      _Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -1020,15 +1020,15 @@ shapeDefinition:
       }
     ;
 
-_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      includeSet	-> [ "extends", $1 ] // t: 1dotExtend1
+_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
+      extensions	-> [ "extends", $1 ] // t: 1dotExtend1
     | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
 
-_Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
+_Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       	-> EmptyObject
-    | _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
+    | _Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
       if ($1 === EmptyObject)
 	$1 = {};
       if ($2[0] === "closed")
@@ -1052,7 +1052,7 @@ _Qannotation_E_Star:
     ;
 
 inlineShapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
+      _Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -1427,7 +1427,7 @@ blankNode:
     // | ANON    -- not used
     ;
 
-includeSet:
+extensions:
       '&' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotExtend1, 1dot3Extend, 1dotExtend3
     ;
 
