@@ -43,7 +43,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- Pulse --
-<#Pulse> {
+<#Pulse> @<#Observation> AND {
   $<#Pulse-TE>
     fhir:code ["pulse"]
 }
