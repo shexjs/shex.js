@@ -1,0 +1,77 @@
+PREFIX : <http://hl7.org/ns/fhir>
+PREFIX fhir: <http://hl7.org/ns/fhir#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<#Observation> {
+  fhir:code .? ;
+  fhir:component {
+    fhir:code . ;
+    fhir:value .
+  }*
+}
+
+
+# -- super-classes --
+<#Vital> @<#Observation>
+
+
+<#PostureVital> @<Vital> AND @<Posture>
+
+
+<#ReclinedVital> @<PostureVital> AND @<Reclined>
+
+
+
+
+# -- BP --
+<#BP> EXPANDS <#Vital> @<#Observation> AND EXTRA fhir:component {
+
+  fhir:component { fhir:code ["systolic"] } ;
+  fhir:component { fhir:code ["diastolic"] }
+
+}
+
+<#PostureBP> EXPANDS <#BP> @<#Observation> AND {
+  &<#BP>.shapeExprs[1].expression;
+  &<#Posture>.expression
+}
+
+<#ReclinedBP> EXPANDS <#PostureBP> @<#Observation> AND {
+  &<#BP>[1];
+  &<#Reclined>[1]
+}
+
+
+# -- Pulse --
+<#Pulse> EXPANDS <#Vital> {
+
+    fhir:code ["pulse"]
+}
+
+<#PosturePulse> EXPANDS <#Pulse> @<#Observation> AND {
+  &<#Pulse>[1] ;
+  &<#Posture>  
+}
+
+<#ReclinedPulse> EXPANDS <#PosturePulse> @<#Observation> AND {
+  &<#Pulse-TE> ;
+  &<#Reclined-TE>  
+}
+
+
+# -- postures --
+<#Posture> EXTRA fhir:component {
+
+  fhir:component {
+    fhir:code ["posture"]
+  }
+}
+
+<#Reclined> @<#Posture> AND EXTRA fhir:component {
+
+  fhir:component {
+    fhir:code ["posture"] ;
+    fhir:value ["reclined"]
+  }
+}
+
