@@ -114,7 +114,13 @@ function _makeCache (selection) {
     set: function (text, base) {
       _dirty = true;
       selection.val(text);
-      this.meta.base = this.url = base;
+      this.meta.base = base;
+      if (base !== DefaultBase) {
+        this.url = base; // crappy hack -- parms should differntiate:
+        // working base: base for URL resolution.
+        // loaded base: place where you can GET current doc.
+        // Note that Caches.manifest.set takes a 3rd parm.
+      }
     },
     refresh: function () {
       if (!_dirty)
@@ -1262,7 +1268,7 @@ function prepareInterface () {
         parm += "URL";
         val = input.cache.url;
       }
-      return parm.trim().length > 0 ?
+      return val.length > 0 ?
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
