@@ -2373,7 +2373,11 @@ var ShExUtil = {
       // _visitGroup: visit a grouping expression (someOf or eachOf)
       _visitGroup: function (expr, type) {
         var _Visitor = this;
-        var r = { type: expr.type };
+        var r = Object.assign(
+          // pre-declare an id so it sorts to the top
+          "id" in expr ? { id: null } : { },
+          { type: expr.type }
+        );
         r.expressions = expr.expressions.map(function (nested) {
           return _Visitor.visitExpression(nested);
         });
@@ -2382,7 +2386,13 @@ var ShExUtil = {
       },
 
       visitTripleConstraint: function (expr) {
-        return this._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
+        return this._maybeSet(expr,
+                              Object.assign(
+                                // pre-declare an id so it sorts to the top
+                                "id" in expr ? { id: null } : { },
+                                { type: "TripleConstraint" }
+                              ),
+                              "TripleConstraint",
                               ["id", "inverse", "predicate", "valueExpr",
                                "min", "max", "annotations", "semActs"])
       },
@@ -2588,9 +2598,10 @@ var ShExUtil = {
     if ("shapes" in schema) {
       var newShapes = []
       for (var key in schema.shapes) {
-        var shape = v.visitShapeExpr(schema.shapes[key]);
-        shape.id = key;
-        newShapes.push(shape);
+        newShapes.push(Object.assign(
+          {id: key},
+          v.visitShapeExpr(schema.shapes[key])
+        ));
       };
       schema.shapes = newShapes;
     }
@@ -4134,7 +4145,7 @@ function ShExValidator_constructor(schema, options) {
       return this._validateShapeExpr(db, point, labelOrShape, "_: -start-", depth, seen);
 
     if (!(labelOrShape in this.schema.shapes))
-      runtimeError("shape " + labelOrShape + " not defined");
+      runtimeError("shape " + labelOrShape + " not found in:\n" + Object.keys(this.schema.shapes).map(s => "  " + s).join("\n"));
 
     var shapeLabel = labelOrShape; // for clarity
     if (seen === undefined)
