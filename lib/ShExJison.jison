@@ -660,13 +660,27 @@ statement:
 
 shapeExprDecl:
       // _QIT_ABSTRACT_E_Opt
-      shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        addShape($1, $2);
+      shapeExprLabel _Qspecialization_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+        if ($2.length > 0) {
+          addShape($1, Object.assign({type: "ShapeDecl"},
+                                     $2.length > 0 ? { specializes: $2 } : { },
+                                     {shapeExpr: $3})) // $5: t: @@
+        } else {
+          addShape($1, $3);
+        }
       }
-    | IT_ABSTRACT shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dotAbstract
+    | IT_ABSTRACT shapeExprLabel _Qspecialization_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dotAbstract
         // sneak "abstract" in after "type"
-        addShape($2, {type: "ShapeDecl", abstract: true, shapeExpr: $3}) // $4: t: 1dotAbstractShapeCode1
+        addShape($2, Object.assign({type: "ShapeDecl", abstract: true},
+                                   $3.length > 0 ? { specializes: $3 } : { },
+                                   {shapeExpr: $4})) // $5: t: 1dotAbstractShapeCode1
       }
+    // | specialization	-> [ "specializes", $1 ] // t: @@1dotSpecialize1
+    ;
+
+_Qspecialization_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qspecialization_E_Star specialization	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
@@ -1010,7 +1024,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      _Q_O_Qextensions_E_Or_Qspecializations_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
+      _Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -1020,16 +1034,15 @@ shapeDefinition:
       }
     ;
 
-_O_Qextensions_E_Or_Qspecializations_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
+_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
       extensions	-> [ "extends", $1 ] // t: 1dotExtend1
-    | specializations	-> [ "specializes", $1 ] // t: @@1dotSpecialize1
     | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
 
-_Q_O_Qextensions_E_Or_Qspecializations_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
+_Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       	-> EmptyObject
-    | _Q_O_Qextensions_E_Or_Qspecializations_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextensions_E_Or_Qspecializations_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
+    | _Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
       if ($1 === EmptyObject)
 	$1 = {};
       if ($2[0] === "closed")
@@ -1053,7 +1066,7 @@ _Qannotation_E_Star:
     ;
 
 inlineShapeDefinition:
-      _Q_O_Qextensions_E_Or_Qspecializations_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
+      _Q_O_Qextensions_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
@@ -1432,8 +1445,8 @@ extensions:
       '&' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotExtend1, 1dot3Extend, 1dotExtend3
     ;
 
-specializations:
-      '-' _QshapeExprLabel_E_Plus	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
+specialization:
+      '-' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
     ;
 
 _QshapeExprLabel_E_Plus:

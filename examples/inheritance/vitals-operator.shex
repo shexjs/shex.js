@@ -12,13 +12,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- super-classes --
-<#Vital> -<#Observation>
+<#Vital> .
 
 
-<#PostureVital> -<#Vital> &<#Posture>
+<#PostureVital> -<#Vital> -<#Posture> .
 
 
-<#ReclinedVital> -<#PostureVital> &<#Reclined>
+<#ReclinedVital> -<#PostureVital> -<#Reclined> .
 
 
 
