@@ -138,6 +138,7 @@ function _makeCache (selection) {
             mycustomtype: 'text/shex,text/turtle,*/*'
           },
           url: url,
+          cache: false, // force reload -- hard to prove it works.
           dataType: "text"
         }).fail(function (jqXHR, textStatus) {
           var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
@@ -326,7 +327,7 @@ function makeManifestCache (selection) {
       });
       return acc.concat(elt);
     }, []);
-    prepareManifest(demos);
+    prepareManifest(demos, url);
   };
   ret.parse = function (text, base) {
     throw Error("should not try to parse manifest cache");
@@ -863,6 +864,14 @@ function prepareControls () {
   });
   ["schema", "data", "manifest"].forEach(type => {
     $("#load-"+type+"-button").click(evt => {
+      var target =
+          type === "schema" ? Caches.inputSchema :
+          type === "data" ? Caches.inputData :
+          Caches.manifest;
+      var prefillURL = target.url ? target.url :
+          target.meta.base && target.meta.base !== DefaultBase ? target.meta.base :
+          "";
+      $("#loadInput").val(prefillURL);
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
     });
@@ -1456,7 +1465,7 @@ function prepareDragAndDrop () {
   }
 }
 
-function prepareManifest (demoList) {
+function prepareManifest (demoList, base) {
   var listItems = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = {};
     return acc;
@@ -1468,7 +1477,7 @@ function prepareManifest (demoList) {
       acc[key] = {
         label: elt.schemaLabel,
         text: elt.schema,
-        url: elt.schemaURL
+        url: elt.schemaURL || (elt.schema ? base : undefined)
       };
     } else {
       // nth entry with this schema
@@ -1476,7 +1485,7 @@ function prepareManifest (demoList) {
     var dataEntry = {
       label: elt.dataLabel,
       text: elt.data,
-      url: elt.dataURL,
+      url: elt.dataURL || (elt.data ? base : undefined),
       entry: elt
     };
     var target = elt.status === "nonconformant"
