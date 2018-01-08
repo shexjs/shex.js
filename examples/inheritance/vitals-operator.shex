@@ -12,13 +12,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- super-classes --
-<#Vital> .
+ABSTRACT <#Vital> .
 
 
-<#PostureVital> -<#Vital> -<#Posture> .
+ABSTRACT <#PostureVital> -<#Vital> -<#Posture> .
 
 
-<#ReclinedVital> -<#PostureVital> -<#Reclined> .
+ABSTRACT <#ReclinedVital> -<#PostureVital> -<#Reclined> .
 
 
 
@@ -43,7 +43,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- Pulse --
-<#Pulse> {
+<#Pulse> -<#Vital> {
 
     fhir:code ["pulse"]
 }
