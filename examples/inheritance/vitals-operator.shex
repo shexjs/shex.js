@@ -24,7 +24,7 @@ ABSTRACT <#ReclinedVital> -<#PostureVital> -<#Reclined> .
 
 
 # -- BP --
-<#BP> -<#Vital> EXTRA fhir:component {
+<#BP> -<#Vital> -<#Observation> {
   fhir:component { fhir:code ["systolic"] } ;
   fhir:component { fhir:code ["diastolic"] }
 }
