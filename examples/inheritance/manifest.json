@@ -22,6 +22,14 @@
     "dataURL": "vitals",
     "queryMapURL": "vitals.smap",
     "status": "conformant"
+  },
+  {
+    "schemaLabel": "<ABCDEFGHIJ>",
+    "schemaURL": "ABCDEFGHIJ.shex",
+    "dataLabel": "<sABCDEFGHIJK>",
+    "data": "<sABCDEFGHIJK> <p> 0, 2, 3, 4, 5 .",
+    "queryMap": "<sABCDEFGHIJK>@<A>",
+    "status": "conformant"
   }
 ]
 
