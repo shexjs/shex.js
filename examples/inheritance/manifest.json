@@ -11,7 +11,7 @@
     "schemaLabel": "vitals path",
     "schemaURL": "vitals-path.shex",
     "dataLabel": "data",
-    "dataURL": "vitals",
+    "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",
     "status": "conformant"
   },
@@ -19,7 +19,7 @@
     "schemaLabel": "vitals with inheritance operators",
     "schemaURL": "vitals-operator.shex",
     "dataLabel": "data",
-    "dataURL": "vitals",
+    "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",
     "status": "conformant"
   },
