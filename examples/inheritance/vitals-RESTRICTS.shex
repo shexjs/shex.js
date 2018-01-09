@@ -12,48 +12,48 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- super-classes --
-ABSTRACT <#Vital> -<#Observation> .
+ABSTRACT <#Vital> RESTRICTS <#Observation> .
 
 
-ABSTRACT <#PostureVital> -<#Vital> -<#Posture> .
+ABSTRACT <#PostureVital> RESTRICTS <#Vital> RESTRICTS <#Posture> .
 
 
-ABSTRACT <#ReclinedVital> -<#PostureVital> -<#Reclined> .
+ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> RESTRICTS <#Reclined> .
 
 
 
 
 # -- BP --
-<#BP> -<#Vital> {
+<#BP> RESTRICTS <#Vital> {
   fhir:component { fhir:code ["systolic"] } ;
   fhir:component { fhir:code ["diastolic"] }
 }
 
 
 
-<#PostureBP> &<#BP> &<#PostureVital> { }
+<#PostureBP> EXTENDS <#BP> EXTENDS <#PostureVital> { }
 
 
 
 
-<#ReclinedBP> &<#BP> &<#ReclinedVital> { }
+<#ReclinedBP> EXTENDS <#BP> EXTENDS <#ReclinedVital> { }
 
 
 
 
 
 # -- Pulse --
-<#Pulse> -<#Vital> {
+<#Pulse> RESTRICTS <#Vital> {
 
     fhir:code ["pulse"]
 }
 
-<#PosturePulse> &<#Pulse> &<#PostureVital> { }
+<#PosturePulse> EXTENDS <#Pulse> EXTENDS <#PostureVital> { }
 
 
 
 
-<#ReclinedPulse> &<#Pulse> &<#ReclinedVital> { }
+<#ReclinedPulse> EXTENDS <#Pulse> EXTENDS <#ReclinedVital> { }
 
 
 
@@ -67,7 +67,7 @@ ABSTRACT <#ReclinedVital> -<#PostureVital> -<#Reclined> .
   }
 }
 
-<#Reclined> -<#Posture> {
+<#Reclined> RESTRICTS <#Posture> {
 
   fhir:component {
     fhir:code ["posture"] ;

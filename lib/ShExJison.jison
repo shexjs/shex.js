@@ -381,6 +381,9 @@ IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
 IT_ABSTRACT             [Aa][Bb][Ss][Tt][Rr][Aa][Cc][Tt]
+IT_RESTRICTS		[Rr][Ee][Ss][Tt][Rr][Ii][Cc][Tt][Ss]
+IT_SPECIALIZES		[Ss][Pp][Ee][Cc][Ii][Aa][Ll][Ii][Zz][Ee][Ss]
+IT_EXTENDS		[Ee][Xx][Tt][Ee][Nn][Dd][Ss]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
@@ -496,6 +499,9 @@ COMMENT                 '#' [^\u000a\u000d]*
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
 {IT_ABSTRACT}           return 'IT_ABSTRACT';
+{IT_RESTRICTS}		return 'IT_RESTRICTS';
+{IT_SPECIALIZES}	return 'IT_SPECIALIZES';
+{IT_EXTENDS}		return 'IT_EXTENDS';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
 {IT_LITERAL}            return 'IT_LITERAL';
@@ -1443,10 +1449,13 @@ blankNode:
 
 extensions:
       '&' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotExtend1, 1dot3Extend, 1dotExtend3
+    | 'IT_EXTENDS' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotExtend1, 1dot3Extend, 1dotExtend3
     ;
 
 specialization:
       '-' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
+    | 'IT_RESTRICTS' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
+    | 'IT_SPECIALIZES' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
     ;
 
 _QshapeExprLabel_E_Plus:
