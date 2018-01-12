@@ -1277,7 +1277,10 @@ function prepareInterface () {
     parms = parms.concat(QueryParams.reduce((acc, input) => {
       var parm = input.queryStringParm;
       var val = input.location.val();
-      if (input.cache && input.cache.url) {
+      if (input.cache && input.cache.url &&
+          // Specifically avoid loading from DefaultBase?schema=blah
+          // because that will load the HTML page.
+          !input.cache.url.startsWith(DefaultBase)) {
         parm += "URL";
         val = input.cache.url;
       }
