@@ -1,5 +1,37 @@
 [
   {
+    "schemaLabel": "1 restriction",
+    "schemaURL": "B.shex",
+    "dataLabel": "<s>@<B>",
+    "data": "<sABxxxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxBxxxxxxxx> <p> 0 .",
+    "queryMap": "<sABxxxxxxxx>@<B>,\n<sAxxxxxxxxx>@<B>,\n<sxBxxxxxxxx>@<B>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "multiple, transitive restrictions",
+    "schemaURL": "D.shex",
+    "dataLabel": "<s>@<D>",
+    "data": "<sABCDxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxxCxxxxxxx> <p> 0 .",
+    "queryMap": "<sABCDxxxxxx>@<D>,\n<sAxxxxxxxxx>@<D>,\n<sxxCxxxxxxx>@<D>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "1 extension",
+    "schemaURL": "E.shex",
+    "dataLabel": "<s>@<E>",
+    "data": "<sABCDExxxx1> <p> 0, 2 .\n<sABCDExxxx2> <p> 2 .\n<sABCDExxxx3> <p> 0, 2, 3 .\n<sxBCDExxxxx> <p> 0, 2 .\n<sABxDExxxxx> <p> 0, 2 .\n<sABCxExxxxx> <p> 0, 2 .\n<sABCDxxxxxx> <p> 0, 2 .\n",
+    "queryMap": "<sABCDExxxx1>@<E>,\n<sABCDExxxx2>@<E>\n<sABCDExxxx3>@<E>,\n<sxBCDExxxxx>@<E>,\n<sABxDExxxxx>@<E>,\n<sABCxExxxxx>@<E>,\n<sABCDxxxxxx>@<E>,\n",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "<ABCDEFGHIJ>",
+    "schemaURL": "ABCDEFGHIJ.shex",
+    "dataLabel": "<s>@<J>",
+    "data": "<sABCDEFGHIJ> <p> 0, 2, 3, 4, 5 .",
+    "queryMap": "<sABCDEFGHIJ>@<J>",
+    "status": "conformant"
+  },
+  {
     "schemaLabel": "vitals diamond",
     "schemaURL": "vitals.shex",
     "dataLabel": "data",
@@ -24,27 +56,11 @@
     "status": "conformant"
   },
   {
-    "schemaLabel": "vitals SPECIALIZES",
-    "schemaURL": "vitals-SPECIALIZES.shex",
-    "dataLabel": "data",
-    "dataURL": "vitals.ttl",
-    "queryMapURL": "vitals.smap",
-    "status": "conformant"
-  },
-  {
     "schemaLabel": "vitals RESTRICTS",
     "schemaURL": "vitals-RESTRICTS.shex",
     "dataLabel": "data",
     "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",
-    "status": "conformant"
-  },
-  {
-    "schemaLabel": "<ABCDEFGHIJ>",
-    "schemaURL": "ABCDEFGHIJ.shex",
-    "dataLabel": "<sABCDEFGHIJK>",
-    "data": "<sABCDEFGHIJK> <p> 0, 2, 3, 4, 5 .",
-    "queryMap": "<sABCDEFGHIJK>@<A>",
     "status": "conformant"
   }
 ]
