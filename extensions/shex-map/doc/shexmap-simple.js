@@ -1248,6 +1248,12 @@ function prepareInterface () {
       } else if (e.ctrlKey && e.key === "\\") {
         $("#materialize").click();
         return false; // same as e.preventDefault();
+      } else if (e.ctrlKey && e.key === "[") {
+        bindingsToTable()
+        return false; // same as e.preventDefault();
+      } else if (e.ctrlKey && e.key === "]") {
+        tableToBindings()
+        return false; // same as e.preventDefault();
       } else {
         return true;
       }
@@ -1608,6 +1614,50 @@ function addContextMenus (inputSelector, cache) {
         };
       }
     });
+}
+
+function bindingsToTable () {
+  let d = JSON.parse($("#bindings1 textarea").val())
+  let div = $("<div/>").css("overflow", "auto")
+  div.width($("#bindings1 textarea").width())
+  div.height($("#bindings1 textarea").height())
+  $("#bindings1 textarea").hide()
+  let thead = $("<thead/>")
+  let tbody = $("<tbody/>")
+  let table = $("<table>").append(thead, tbody)
+  $("#bindings1").append(div.append(table))
+
+  let vars = [];
+  function varsIn (a) {
+    return a.forEach(elt => {
+      if (elt.constructor === Array) {
+        varsIn(elt)
+      } else {
+        let tr = $("<tr/>")
+        let cols = []
+        Object.keys(elt).forEach(k => {
+          if (vars.indexOf(k) === -1)
+            vars.push(k)
+          let i = vars.indexOf(k)
+          cols[i] = elt[k]
+        })
+        // tr.append(cols.map(c => $("<td/>").text(c)))
+        for (var colI = 0; colI < cols.length; ++colI)
+          tr.append($("<td/>").text(cols[colI] ? Caches.inputData.meta.termToLex(cols[colI]) : ""))
+        tbody.append(tr)
+      }
+    })
+  }
+  varsIn(d)
+
+  vars.forEach(v => {
+    thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
+  })
+}
+
+function tableToBindings () {
+  $("#bindings1 div").remove()
+  $("#bindings1 textarea").show()
 }
 
 prepareControls();
