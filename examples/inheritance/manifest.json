@@ -1,6 +1,6 @@
 [
   {
-    "schemaLabel": "1 restriction",
+    "schemaLabel": "B - 1 restriction",
     "schemaURL": "B.shex",
     "dataLabel": "<s>@<B>",
     "data": "<sABxxxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxBxxxxxxxx> <p> 0 .",
@@ -8,7 +8,15 @@
     "status": "conformant"
   },
   {
-    "schemaLabel": "multiple, transitive restrictions",
+    "schemaLabel": "C - 2",
+    "schemaURL": "2.shex",
+    "dataLabel": "<s>@<C>",
+    "data": "<s> <p> 1, 2, 3; <q> 3 .",
+    "queryMap": "<s>@<C>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "D - multiple, transitive restrictions",
     "schemaURL": "D.shex",
     "dataLabel": "<s>@<D>",
     "data": "<sABCDxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxxCxxxxxxx> <p> 0 .",
@@ -16,20 +24,36 @@
     "status": "conformant"
   },
   {
-    "schemaLabel": "1 extension",
+    "schemaLabel": "E - 1 extension",
     "schemaURL": "E.shex",
     "dataLabel": "<s>@<E>",
-    "data": "<sABCDExxxx1> <p> 0, 2 .\n<sABCDExxxx2> <p> 2 .\n<sABCDExxxx3> <p> 0, 2, 3 .\n<sxBCDExxxxx> <p> 0, 2 .\n<sABxDExxxxx> <p> 0, 2 .\n<sABCxExxxxx> <p> 0, 2 .\n<sABCDxxxxxx> <p> 0, 2 .\n",
-    "queryMap": "<sABCDExxxx1>@<E>,\n<sABCDExxxx2>@<E>\n<sABCDExxxx3>@<E>,\n<sxBCDExxxxx>@<E>,\n<sABxDExxxxx>@<E>,\n<sABCxExxxxx>@<E>,\n<sABCDxxxxxx>@<E>,\n",
+    "data": "<sABCDExxxxx> <p> 0, 2 .\n<sABCDExxxx1> <p> 2 .\n<sABCDExxxx3> <p> 0, 2, 3 .\n<sxBCDExxxxx> <p> 0, 2 .\n<sABxDExxxxx> <p> 0, 2 .\n<sABCxExxxxx> <p> 0, 2 .\n<sABCDxxxxxx> <p> 0, 2 .\n",
+    "queryMap": "<sABCDExxxxx>@<E>,\n<sABCDExxxx1>@<E>,\n<sABCDExxxx3>@<E>,\n<sxBCDExxxxx>@<E>,\n<sABxDExxxxx>@<E>,\n<sABCxExxxxx>@<E>,\n<sABCDxxxxxx>@<E>,\n",
     "status": "conformant"
   },
   {
-    "schemaLabel": "<ABCDEFGHIJ>",
-    "schemaURL": "ABCDEFGHIJ.shex",
+    "schemaLabel": "G - multiple, transitive extensions",
+    "schemaURL": "G.shex",
+    "dataLabel": "<s>@<G>",
+    "data": "<sABCDExxxxx> <p> 0, 2 .\n<sABCDExxxx1> <p> 2 .\n<sABCDExxxx3> <p> 0, 2, 3 .\n<sxBCDExxxxx> <p> 0, 2 .\n<sABxDExxxxx> <p> 0, 2 .\n<sABCxExxxxx> <p> 0, 2 .\n<sABCDxxxxxx> <p> 0, 2 .\n",
+    "queryMap": "<sABCDExxxxx>@<E>,\n<sABCDExxxx1>@<E>,\n<sABCDExxxx3>@<E>,\n<sxBCDExxxxx>@<E>,\n<sABxDExxxxx>@<E>,\n<sABCxExxxxx>@<E>,\n<sABCDxxxxxx>@<E>,\n",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "J - all",
+    "schemaURL": "J.shex",
     "dataLabel": "<s>@<J>",
     "data": "<sABCDEFGHIJ> <p> 0, 2, 3, 4, 5 .",
     "queryMap": "<sABCDEFGHIJ>@<J>",
     "status": "conformant"
+  },
+  {
+    "schemaLabel": "2",
+    "schemaURL": "2.shex",
+    "dataLabel": "<s99>@<C>",
+    "data": "<s> <p> 1, 2, 3; <q> 99 .",
+    "queryMap": "<s>@<C>",
+    "status": "nonconformant"
   },
   {
     "schemaLabel": "vitals diamond",
