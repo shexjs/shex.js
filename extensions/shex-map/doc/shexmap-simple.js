@@ -1618,9 +1618,9 @@ function addContextMenus (inputSelector, cache) {
 
 function bindingsToTable () {
   let d = JSON.parse($("#bindings1 textarea").val())
-  let div = $("<div/>").css("overflow", "auto")
-  div.width($("#bindings1 textarea").width())
-  div.height($("#bindings1 textarea").height())
+  let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")
+  div.css("width", $("#bindings1 textarea").width()+10)
+  div.css("height", $("#bindings1 textarea").height()+12)
   $("#bindings1 textarea").hide()
   let thead = $("<thead/>")
   let tbody = $("<tbody/>")
@@ -1643,7 +1643,7 @@ function bindingsToTable () {
         })
         // tr.append(cols.map(c => $("<td/>").text(c)))
         for (var colI = 0; colI < cols.length; ++colI)
-          tr.append($("<td/>").text(cols[colI] ? Caches.inputData.meta.termToLex(cols[colI]) : ""))
+          tr.append($("<td/>").text(cols[colI] ? Caches.inputData.meta.termToLex(cols[colI]) : "").css("background-color", "#f7f7f7"))
         tbody.append(tr)
       }
     })
