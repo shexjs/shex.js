@@ -35,8 +35,8 @@
     "schemaLabel": "G - multiple, transitive extensions",
     "schemaURL": "G.shex",
     "dataLabel": "<s>@<G>",
-    "data": "<sABCDExxxxx> <p> 0, 2 .\n<sABCDExxxx1> <p> 2 .\n<sABCDExxxx3> <p> 0, 2, 3 .\n<sxBCDExxxxx> <p> 0, 2 .\n<sABxDExxxxx> <p> 0, 2 .\n<sABCxExxxxx> <p> 0, 2 .\n<sABCDxxxxxx> <p> 0, 2 .\n",
-    "queryMap": "<sABCDExxxxx>@<E>,\n<sABCDExxxx1>@<E>,\n<sABCDExxxx3>@<E>,\n<sxBCDExxxxx>@<E>,\n<sABxDExxxxx>@<E>,\n<sABCxExxxxx>@<E>,\n<sABCDxxxxxx>@<E>,\n",
+    "data": "<sABCDEFGxxx> <p> 0, 2, 3, 4 .\n<sABCDEFGxx1> <p> 2 .\n<sABCDEFGxx3> <p> 0, 2, 3 .\n<sxBCDEFGxxx> <p> 0, 2 .\n<sABxDEFGxxx> <p> 0, 2 .\n<sABCxEFGxxx> <p> 0, 2 .\n<sABCDxFGxxx> <p> 0, 2 .\n",
+    "queryMap": "<sABCDEFGxxx>@<E>,\n<sABCDEFGxx1>@<E>,\n<sABCDEFGxx3>@<E>,\n<sxBCDEFGxxx>@<E>,\n<sABxDEFGxxx>@<E>,\n<sABCxEFGxxx>@<E>,\n<sABCDxFGxxx>@<E>,\n",
     "status": "conformant"
   },
   {
