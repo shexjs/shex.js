@@ -43,8 +43,8 @@
     "schemaLabel": "J - all",
     "schemaURL": "J.shex",
     "dataLabel": "<s>@<J>",
-    "data": "<sABCDEFGHIJ> <p> 0, 2, 3, 4, 5 .",
-    "queryMap": "<sABCDEFGHIJ>@<J>",
+    "data": "<sABCDEFGHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sxBCDEFGHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABxDEFGHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFxHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGxIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGHxJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGHIxx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGHIJ0> <r> 1.\n<sABCDEFGHIJ1> <p> 0            ; <q> 5, 6.\n<sABCDEFGHIJ2> <p> 0, 2         ; <q> 5, 6.\n<sABCDEFGHIJ3> <p> 0, 2, 3      ; <q> 5, 6.\n<sABCDEFGHIJ5> <p> 0, 2, 3, 4, 5; <q> 5, 6.\n<sABCDEFGHIJ6> <p> 0, 2, 3, 4   ; <q> 5.\n<sABCDEFGHIJ6> <p> 0, 2, 3, 4   ; <q> 5, 6, 7.\n",
+    "queryMap": "<sABCDEFGHIJx>@<J>,\n<sABCDEFGHIJx>@<A>,\n<sxBCDEFGHIJx>@<J>,\n<sABCDEFxHIJx>@<J>,\n<sABCDEFGxIJx>@<J>,\n<sABCDEFGHxJx>@<J>,\n<sABCDEFGHIxx>@<J>,\n<sABCDEFGHIJ0>@<J>,\n<sABCDEFGHIJ1>@<J>,\n<sABCDEFGHIJ2>@<J>,\n<sABCDEFGHIJ3>@<J>,\n<sABCDEFGHIJ5>@<J>,\n<sABCDEFGHIJ6>@<J>,\n<sABCDEFGHIJ6>@<J>,\n",
     "status": "conformant"
   },
   {
@@ -54,6 +54,14 @@
     "data": "<s> <p> 1, 2, 3; <q> 99 .",
     "queryMap": "<s>@<C>",
     "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "4",
+    "schemaURL": "4.shex",
+    "dataLabel": "<sABCDEFGxxx>@<E>,<G>",
+    "data": "<sABCDEFGxxx> <p> 0, 2; <q> 4 .",
+    "queryMap": "<sABCDEFGxxx>@<E>,\n<sABCDEFGxxx>@<G>",
+    "status": "conformant"
   },
   {
     "schemaLabel": "vitals diamond",
