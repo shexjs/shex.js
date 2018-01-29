@@ -6444,6 +6444,7 @@ var ShEx = require('../../shex');
 
 var ThreadedValNErr = (function () {
 var N3Util = require("n3").Util;
+var N3Store = require("n3").Store;
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape) {
@@ -6682,7 +6683,7 @@ function vpEngine (schema, shape) {
         function passScoped (expr, thread) {
           if (!("scopedShapeExpression" in expr))
             return thread;
-          var subgraph = ShEx.N3.Store();
+          var subgraph = N3Store();
           thread.matched.reduce(
             (tcz, tci) => tcz.concat(tci.tNos.map(
               tci => neighborhood[tci]
