@@ -15,10 +15,10 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 ABSTRACT <#Vital> RESTRICTS <#Observation> .
 
 
-ABSTRACT <#PostureVital> RESTRICTS <#Vital> RESTRICTS <#Posture> .
+ABSTRACT <#PostureVital> RESTRICTS <#Vital> EXTENDS <#Posture> {}
 
 
-ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> RESTRICTS <#Reclined> .
+ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> EXTENDS <#Reclined> {}
 
 
 
