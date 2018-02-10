@@ -393,6 +393,9 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
 IT_NOT                  [No][Oo][Tt]
+IT_WITH                 [Ww][Ii][Tt][Hh]
+IT_SHAPE                [Ss][Hh][Aa][Pp][Ee]
+IT_EXPRESSION           [Ee][Xx][Pp][Rr][Ee][Ss][Ss][Ii][Oo][Nn]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE         [Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MAXINCLUSIVE         [Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -1161,14 +1164,15 @@ unaryTripleExpr:
     ;
 
 bracketedTripleExpr:
-      '(' innerTripleExpr ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' innerTripleExpr ')' _Qcardinality_E_Opt _QscopedShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
         if ("min" in $4) { $$.min = $4.min; } // t: open3groupdotclosecard23Annot3Code2
         if ("max" in $4) { $$.max = $4.max; } // t: open3groupdotclosecard23Annot3Code2
-        if ($5.length) { $$.annotations = $5; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
+        if ($5) { $$.scopedShapeExpression = $5; } // t: !!
+        if ($6.length) { $$.annotations = $6; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($7) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($7.semActs) : $7.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
@@ -1177,24 +1181,33 @@ _Qcardinality_E_Opt:
     | cardinality	// t: 1cardOpt
     ;
 
+_QscopedShapeExpression_E_Opt:
+      	-> null // t: 1dot
+    | IT_WITH (IT_SHAPE IT_EXPRESSION)? inlineShapeExpression -> $3	// t: !!
+    ;
+
 tripleConstraint:
     // _QsenseFlags_E_Opt 
-      predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      predicate inlineShapeExpression _Qcardinality_E_Opt _QscopedShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
         // $5: t: 1dotCode1
 	if ($2 !== EmptyShape && false) {
 	  var t = blank();
 	  addShape(t, $2);
 	  $2 = { type: "ShapeRef", reference: t };
 	}
-        $$ = extend({ type: "TripleConstraint", predicate: $1}, ($2 === EmptyShape ? {} : { valueExpr: $2 }), $3, $5); // t: 1dot
-        if ($4.length)
-          $$["annotations"] = $4; // t: 1dotAnnot3
-      }
-    | senseFlags predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
-        // %6: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1inversedot
+        $$ = extend({ type: "TripleConstraint", predicate: $1}, ($2 === EmptyShape ? {} : { valueExpr: $2 }), $3, $6); // t: 1dot
+        if ($4)
+          $$.scopedShapeExpression = $4; // t: !!
         if ($5.length)
-          $$["annotations"] = $5; // t: 1inversedotAnnot3
+          $$["annotations"] = $5; // t: 1dotAnnot3
+      }
+    | senseFlags predicate inlineShapeExpression _Qcardinality_E_Opt _QscopedShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
+        // %6: t: 1inversedotCode1
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $7); // t: 1inversedot
+        if ($5)
+          $$.scopedShapeExpression = $5; // t: !!
+        if ($6.length)
+          $$["annotations"] = $6; // t: 1inversedotAnnot3
       }
     ;
 
