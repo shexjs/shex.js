@@ -4148,7 +4148,7 @@ function ShExValidator_constructor(schema, options) {
         runtimeError("unexpected expr type: " + expr.type);
 
       function record (tcs) {
-        if ("scopedShapeExpression" in expr)
+        if ("onShapeExpression" in expr)
           expr.scopedTripleConstraints = tcs;
         return tcs;
       }
@@ -4297,18 +4297,20 @@ function ShExValidator_constructor(schema, options) {
             // return extend(shape, tcs);
             if ("extends" in shape) {
               tcs = tcs.concat(
-                shape.extends.map(l =>
-                  // schema.shapes[l] is an ShapeExpression se with projection te.
-                  // (no projection would imply something valid with no neighborhood)
-                  // Returns te with attached se-Sz(te):
-                  //   se with trues for shapes contributing to te.
-                  projectionAsTripleExpression(schema.shapes[l])
-                )
+                shape.extends.map(
+                  l =>
+                    // schema.shapes[l] is an ShapeExpression se with projection te.
+                    // (no projection would imply something valid with no neighborhood)
+                    // Returns te with attached se-Sz(te):
+                    //   se with trues for shapes contributing to te.
+                    projectionAsTripleExpression(schema.shapes[l])
+                ).filter(tc => tc) // strip out undefined from EXTENDing empty shapes
               )
             }
             if ("expression" in shape)
               tcs.push(ShExUtil.Visitor().visitExpression(shape.expression));
             var ret = Object.assign({}, shape);
+            delete ret.extends;
             if (tcs.length)
               ret.expression = maybe(EACH, tcs);
             return ret;
@@ -4353,8 +4355,8 @@ function ShExValidator_constructor(schema, options) {
 
           var se = visitor.visitShapeDecl(expr);
           var ret = maybe(EACH, tes);
-          if (se)
-            ret.scopedShapeExpression = se;
+          if (tes.length > 0)
+            ret.onShapeExpression = se;
           return ret;
         }
 
@@ -4388,6 +4390,8 @@ function ShExValidator_constructor(schema, options) {
         function maybe (kind, exprs, oneMore) {
           var ret = { type: kind.type };
           ret[kind.prop] = exprs.slice();
+          if (exprs.find(e => !e))
+            throw Error(exprs);
           if (oneMore)
             ret[kind.prop].push(oneMore);
           return ret[kind.prop].length > 1 ?
@@ -4602,7 +4606,6 @@ function ShExValidator_constructor(schema, options) {
       var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
         _seq(neighborhood.length).map(function () { return 0; });
       var tripleToConstraintMapping = xp.get(); // [0,1,0,3] mapping from triple to constraint
-
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         var unexpectedTriples = outgoing.triples.filter((t, i) => {
@@ -5910,6 +5913,7 @@ if (typeof require !== 'undefined' && typeof exports !== 'undefined')
 },{"util":455}],7:[function(require,module,exports){
 var NFAXVal1Err = (function () {
   var N3Util = require("n3").Util;
+  var N3Store = require("n3").Store;
 
   var Split = "<span class='keyword' title='Split'>|</span>";
   var Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -6191,7 +6195,8 @@ function compileNFA (schema, shape) {
               };
               thread.matched = thread.matched.concat(withIndexes);
               state.outs.forEach(o => { // single out if NFA includes epsilons
-                addstate(nlist, o, thread);
+                if (passScoped(state.c, thread))
+                  addstate(nlist, o, thread);
               });
             } while ((function () {
               if (thread.avail[constraintNo].length > 0 && taken.length < max) {
@@ -6260,6 +6265,39 @@ function compileNFA (schema, shape) {
       return "errors" in chosen.matched ?
         chosen.matched :
         matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+
+        function passScoped (expr, thread) {
+          if (!("onShapeExpression" in expr))
+            return thread;
+          var subgraph = N3Store();
+          expr.scopedTripleConstraints.reduce(
+            (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
+              ti => neighborhood[ti]
+            )), [])
+            .forEach(t => subgraph.addTriple(t));
+
+          var ret;
+            // copy of diver below with added subgraph.
+            function diver (focus, shapeLabel, dive) {
+              var sub = dive(focus, shapeLabel, subgraph);
+              if ("errors" in sub)
+                return sub.errors;
+              if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+                  sub.type === "Recursion")
+                ret = sub; // !!! needs to aggregate errors and solutions
+              return [];
+            }
+            function diveRecurse (focus, shapeLabel) {
+              return diver(focus, shapeLabel, recurse);
+            }
+            function diveDirect (focus, shapeLabel) {
+              return diver(focus, shapeLabel, direct);
+            }
+            var subErrors =
+              checkValueExpr(node, expr.onShapeExpression, diveRecurse, diveDirect, subgraph);
+
+          return subErrors.length === 0;
+        }
     }
 
     function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
@@ -6615,7 +6653,7 @@ function vpEngine (schema, shape) {
                 matched: th.matched//.slice() ever needed??
               };
               var sub = validateExpr(nested, thcopy);
-              var scope1 = passScoped(nested, sub[0]);
+              var scope1 = passScoped(expr, sub[0]);
               if (sub[0].errors.length === 0) { // all subs pass or all fail
                 matched = matched.concat(sub);
                 sub.forEach(newThread => {
@@ -6648,7 +6686,7 @@ function vpEngine (schema, shape) {
                 var sub = validateExpr(nested, exprThread);
                 // Move newThread.expression into a hierarchical solution structure.
                 sub.forEach(newThread => {
-                  var scope = passScoped(nested, newThread);
+                  var scope = passScoped(expr, newThread);
                   if (newThread.errors.length === 0) {
                     var expressions =
                         "solution" in exprThread ? exprThread.solution.expressions : [];
@@ -6678,17 +6716,17 @@ function vpEngine (schema, shape) {
         runtimeError("unexpected expr type: " + expr.type);
 
         /** passScoped - add errors to thread if the triples allocated to a
-         * thread don't match a scopedShapeExpression.
+         * thread don't match a onShapeExpression.
          */
         function passScoped (expr, thread) {
-          if (!("scopedShapeExpression" in expr))
+          if (!("onShapeExpression" in expr))
             return thread;
           var subgraph = N3Store();
-          thread.matched.reduce(
-            (tcz, tci) => tcz.concat(tci.tNos.map(
-              tci => neighborhood[tci]
-            )), []
-          ).forEach(t => subgraph.addTriple(t));
+          expr.scopedTripleConstraints.reduce(
+            (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
+              ti => neighborhood[ti]
+            )), [])
+            .forEach(t => subgraph.addTriple(t));
 
           var ret;
             // copy of diver below with added subgraph.
@@ -6708,7 +6746,7 @@ function vpEngine (schema, shape) {
               return diver(focus, shapeLabel, direct);
             }
             var subErrors =
-              checkValueExpr(node, expr.scopedShapeExpression, diveRecurse, diveDirect, subgraph);
+              checkValueExpr(node, expr.onShapeExpression, diveRecurse, diveDirect, subgraph);
 
           if (subErrors.length) {
             var err = {
