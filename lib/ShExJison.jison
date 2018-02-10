@@ -393,7 +393,7 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
 IT_NOT                  [No][Oo][Tt]
-IT_WITH                 [Ww][Ii][Tt][Hh]
+IT_ON                   [Oo][Nn]
 IT_SHAPE                [Ss][Hh][Aa][Pp][Ee]
 IT_EXPRESSION           [Ee][Xx][Pp][Rr][Ee][Ss][Ss][Ii][Oo][Nn]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -1183,7 +1183,7 @@ _Qcardinality_E_Opt:
 
 _QscopedShapeExpression_E_Opt:
       	-> null // t: 1dot
-    | IT_WITH (IT_SHAPE IT_EXPRESSION)? inlineShapeExpression -> $3	// t: !!
+    | IT_ON (IT_SHAPE IT_EXPRESSION)? inlineShapeExpression -> $3	// t: !!
     ;
 
 tripleConstraint:
