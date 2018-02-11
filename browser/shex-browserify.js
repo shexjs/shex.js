@@ -6199,7 +6199,7 @@ function compileNFA (schema, shape) {
                 // Find all terminating expressions.
                 var finishedExprs = state.stack.filter(
                   (elt, i) =>
-                    i >= n.stack.length || n.stack[i].c !== state.stack[i].c
+                    !("stack" in n) || i >= n.stack.length || n.stack[i].c !== state.stack[i].c
                 ).map(elt => elt.c);
                 // Test those expressions for scoped shape expressions.
                 var errors = [state.c].concat(finishedExprs).find(
