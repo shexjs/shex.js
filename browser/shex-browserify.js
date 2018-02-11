@@ -6195,7 +6195,19 @@ function compileNFA (schema, shape) {
               };
               thread.matched = thread.matched.concat(withIndexes);
               state.outs.forEach(o => { // single out if NFA includes epsilons
-                if (passScoped(state.c, thread))
+                var n = _this.states[o];
+                // Find all terminating expressions.
+                var finishedExprs = state.stack.filter(
+                  (elt, i) =>
+                    i >= n.stack.length || n.stack[i].c !== state.stack[i].c
+                ).map(elt => elt.c);
+                // Test those expressions for scoped shape expressions.
+                var errors = [state.c].concat(finishedExprs).find(
+                  expr => passScoped(expr, thread)
+                )
+                if (errors)
+                  console.log("@@ need to do something with nested errors: " + errors);
+                else
                   addstate(nlist, o, thread);
               });
             } while ((function () {
@@ -6268,7 +6280,7 @@ function compileNFA (schema, shape) {
 
         function passScoped (expr, thread) {
           if (!("onShapeExpression" in expr))
-            return thread;
+            return null;
           var subgraph = N3Store();
           expr.scopedTripleConstraints.reduce(
             (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
@@ -6296,7 +6308,7 @@ function compileNFA (schema, shape) {
             var subErrors =
               checkValueExpr(node, expr.onShapeExpression, diveRecurse, diveDirect, subgraph);
 
-          return subErrors.length === 0;
+          return subErrors.length === 0 ? null : subErrors;
         }
     }
 
