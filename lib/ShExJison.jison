@@ -1186,7 +1186,12 @@ _Qcardinality_E_Opt:
 
 _QonShapeExpression_E_Opt:
       	-> null // t: 1dot
-    | IT_ON (IT_SHAPE IT_EXPRESSION)? inlineShapeExpression -> $4	// t: !!
+    | IT_ON _QIT_SHAPE_IT_EXPRESSION_E_Opt inlineShapeExpression -> $3	// t: !!
+    ;
+
+_QIT_SHAPE_IT_EXPRESSION_E_Opt:
+      	
+    | IT_SHAPE IT_EXPRESSION
     ;
 
 tripleConstraint:
