@@ -129,7 +129,7 @@ GET(data, function (b) {
 See? That's all there was too it!
 
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
-<a id="loader-script"/>
+<a name="loader-script"/>
 ```
 var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
