@@ -76,7 +76,7 @@ This and the shape can be written as relative IRIs:
 Parsing from the old interwebs involves a painful mix of asynchronous callbacks for getting the schema and the data and parsing the data (shorter path below):
 
 ```
-var shexc = "http://shex.io/examples/Issue.shex";
+<a id="long-script"/>var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
 var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
@@ -131,7 +131,7 @@ See? That's all there was too it!
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
 
 ```
-var shexc = "http://shex.io/examples/Issue.shex";
+<a id="loader-script"/>var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
 var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
