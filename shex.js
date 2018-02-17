@@ -1,5 +1,6 @@
 var ShEx = {
   Parser:       require('./lib/ShExParser'),
+  ShapeMapParser: require('./lib/ShapeMapParser'),
   Util:         require('./lib/ShExUtil'),
   Validator:    require('./lib/ShExValidator'),
   Loader:       require('./lib/ShExLoader'),
