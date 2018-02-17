@@ -550,10 +550,10 @@ jsonValue:
     | IT_true	-> true
     | jsonObject	
     | jsonArray	
-    | INTEGER	
-    | DECIMAL	
-    | DOUBLE	
-    | STRING_LITERAL2	
+    | INTEGER	-> parseFloat($1)
+    | DECIMAL	-> parseFloat($1)
+    | DOUBLE	-> parseFloat($1)
+    | STRING_LITERAL2	-> unescapeString($1, 1).value
     ;
 
 jsonObject:
@@ -581,8 +581,8 @@ _Q_O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C_E_Opt:
 jsonMember:
       STRING_LITERAL2_COLON jsonValue	{
         $$ = {  };
-        var t = $1.substr(0, $1.length - 1).trim();
-        $$[t] = $2;
+        var t = $1.substr(0, $1.length - 1).trim(); // remove trailing ':' and spaces
+        $$[unescapeString(t, 1).value] = $2;
       }
     ;
 
