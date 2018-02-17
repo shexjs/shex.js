@@ -334,6 +334,10 @@
 /* lexical grammar */
 %lex
 
+APPINFO_COLON           'appinfo:'
+APPINFO_SPACE_COLON     'appinfo' [\u0020\u000A\u0009]+ ':'
+STRING_LITERAL2_COLON   '"' ([^\u0022\u005C\u000A\u000D] | {ECHAR} | {UCHAR})* '"' [\u0020\u000A\u0009]* ':'
+
 START                   [Ss][Tt][Aa][Rr][Tt]
 ATSTART                 "@"[Ss][Tt][Aa][Rr][Tt]
 GT_SPARQL               [Ss][Pp][Aa][Rr][Qq][Ll]
@@ -375,21 +379,22 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 %%
 
 \s+|{COMMENT} /**/
+{APPINFO_SPACE_COLON}   return 'APPINFO_SPACE_COLON';
+{STRING_LITERAL2_COLON} return 'STRING_LITERAL2_COLON';
 {START}                 return 'START';
 {ATSTART}               return 'ATSTART';
 {GT_SPARQL}             return 'GT_SPARQL';
-"\"appinfo\""           return 'GT_QUOTED__appinfo';
-":"                     return 'GT_COLON';
 
 {ATPNAME_LN}            return 'ATPNAME_LN';
 {ATPNAME_NS}            return 'ATPNAME_NS';
 {LANGTAG}               return 'LANGTAG';
 {PNAME_LN}              return 'PNAME_LN';
+{APPINFO_COLON}         return 'APPINFO_COLON';
+{PNAME_NS}              return 'PNAME_NS';
 {DOUBLE}                return 'DOUBLE';
 {DECIMAL}               return 'DECIMAL';
 {INTEGER}               return 'INTEGER';
 {IRIREF}                return 'IRIREF';
-{PNAME_NS}              return 'PNAME_NS';
 {BLANK_NODE_LABEL}      return 'BLANK_NODE_LABEL';
 
 {EXTENSION}             return 'EXTENSION';
@@ -531,7 +536,12 @@ reason:
     ;
 
 jsonAttributes:
-      GT_DOLLAR GT_QUOTED__appinfo GT_COLON jsonValue	-> { appinfo: $4 }
+      GT_DOLLAR _O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C jsonValue	-> { appinfo: $3 }
+    ;
+
+_O_QAPPINFO_COLON_E_Or_QAPPINFO_SPACE_COLON_E_C:
+      APPINFO_COLON	
+    | APPINFO_SPACE_COLON	
     ;
 
 jsonValue:
@@ -540,6 +550,8 @@ jsonValue:
     | IT_true	-> true
     | jsonObject	
     | jsonArray	
+    | INTEGER	
+    | DECIMAL	
     | DOUBLE	
     | STRING_LITERAL2	
     ;
@@ -554,7 +566,7 @@ _O_QGT_COMMA_E_S_QjsonMember_E_C:
 
 _Q_O_QGT_COMMA_E_S_QjsonMember_E_C_E_Star:
       	-> {  }
-  | _Q_O_QGT_COMMA_E_S_QjsonMember_E_C_E_Star _O_QGT_COMMA_E_S_QjsonMember_E_C	-> extend($1, $2)
+    | _Q_O_QGT_COMMA_E_S_QjsonMember_E_C_E_Star _O_QGT_COMMA_E_S_QjsonMember_E_C	-> extend($1, $2)
     ;
 
 _O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C:
@@ -567,7 +579,11 @@ _Q_O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C_E_Opt:
     ;
 
 jsonMember:
-      STRING_LITERAL2 GT_COLON jsonValue	{ $$ = {  }; $$[$1] = $3; }
+      STRING_LITERAL2_COLON jsonValue	{
+        $$ = {  };
+        var t = $1.substr(0, $1.length - 1).trim();
+        $$[t] = $2;
+      }
     ;
 
 jsonArray:
@@ -639,6 +655,10 @@ nodeIri:
         var namePos = $1.indexOf(':');
         $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
+    | APPINFO_COLON	{
+        var namePos = $1.indexOf(':');
+        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+    }
     | PNAME_NS	{
         $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, $1.length - 1));
     }
@@ -652,6 +672,10 @@ shapeIri:
     | PNAME_LN	{
         var namePos = $1.indexOf(':');
         $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+    }
+    | APPINFO_COLON	{
+        var namePos = $1.indexOf(':');
+        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | PNAME_NS	{
         $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1));
