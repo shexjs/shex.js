@@ -382,6 +382,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {STRING_LITERAL1}       return 'STRING_LITERAL1';
 {STRING_LITERAL2}       return 'STRING_LITERAL2';
 
+"a"                     return 'IT_a';
 ","                     return 'GT_COMMA';
 "{"                     return 'GT_LCURLEY';
 "}"                     return 'GT_RCURLEY';
@@ -471,8 +472,8 @@ objectTerm:
     ;
 
 triplePattern:
-      GT_LCURLEY IT_FOCUS nodeIri _O_QobjectTerm_E_Or_QIT___E_C GT_RCURLEY	-> { type: "TriplePattern", subject: ShEx.ShapeMap.focus, predicate: $3, object: $4 }
-    | GT_LCURLEY _O_QsubjectTerm_E_Or_QIT___E_C nodeIri IT_FOCUS GT_RCURLEY	-> { type: "TriplePattern", subject: $2, predicate: $3, object: ShEx.ShapeMap.focus }
+      GT_LCURLEY IT_FOCUS nodePredicate _O_QobjectTerm_E_Or_QIT___E_C GT_RCURLEY	-> { type: "TriplePattern", subject: ShEx.ShapeMap.focus, predicate: $3, object: $4 }
+    | GT_LCURLEY _O_QsubjectTerm_E_Or_QIT___E_C nodePredicate IT_FOCUS GT_RCURLEY	-> { type: "TriplePattern", subject: $2, predicate: $3, object: ShEx.ShapeMap.focus }
     ;
 
 _O_QobjectTerm_E_Or_QIT___E_C:
@@ -622,6 +623,11 @@ string:
     | STRING_LITERAL_LONG1	-> unescapeString($1, 3)
     | STRING_LITERAL2	-> unescapeString($1, 1)
     | STRING_LITERAL_LONG2	-> unescapeString($1, 3)
+    ;
+
+nodePredicate:
+      nodeIri	
+    | IT_a	-> "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
     ;
 
 nodeIri:
