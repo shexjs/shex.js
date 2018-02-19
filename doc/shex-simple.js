@@ -13,7 +13,7 @@ var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
-Caches.shapeMap = makeShapeMapCache($("#shapeMap-tabs")); // @@ rename to #shapeMap
+Caches.shapeMap = makeShapeMapCache($("#textMap")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
 const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
@@ -295,7 +295,7 @@ function makeManifestCache (selection) {
         }
         var queryMap = "map" in action ?
             null :
-            ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
+            ldToTurtle(action.focus) + "@" + ("shape" in action ? ldToTurtle(action.shape) : START_SHAPE_LABEL);
         var queryMapURL = "map" in action ?
             action.map :
             null;
@@ -367,8 +367,10 @@ function makeManifestCache (selection) {
             obj[key] = Promise.resolve(obj[key]);
           }
         }
+}
 
-        function ttl (ld) {
+
+        function ldToTurtle (ld) {
           return typeof ld === "object" ? lit(ld) :
             ld.startsWith("_:") ? ld :
             "<" + ld + ">";
@@ -376,22 +378,21 @@ function makeManifestCache (selection) {
             let ret = "\""+o["@value"]+"\"";
             if ("@type" in o)
               ret += "^^<" + o["@type"] + ">";
-            if ("language" in o)
-              ret += "@" + o["language"];
+            if ("@language" in o)
+              ret += "@" + o["@language"];
             return ret;
           }
         }
-}
 
 function makeShapeMapCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (text) {
+  ret.parse = function (text) {
     removeEditMapPair(null);
     $("#textMap").val(text);
     copyTextMapToEditMap();
     copyEditMapToFixedMap();
   };
-  ret.parse = function (text, base) {  };
+  // ret.parse = function (text, base) {  };
   ret.getItems = function () {
     throw Error("should not try to get manifest cache items");
   };
@@ -598,8 +599,8 @@ function validate () {
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
-          node: $(tr).find("input.focus").val(),
-          shape: $(tr).find("input.inputShape").val()
+          node: Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
+          shape: Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
         };
       }).get());
       $("#results .status").text("parsing data...").show();
@@ -756,21 +757,49 @@ function failMessage (e, parsing) {
   results.append(LastFail);
 }
 
-function addEditMapPair (evt, pairs) {
-  if (evt) {
-    pairs = [{node: "", shape: ""}];
-    markEditMapDirty();
-  }
-  pairs.forEach(pair => {
+function addEmptyEditMapPair (evt) {
+  addEditMapPairs(null, $(evt.target).parent().parent());
+  markEditMapDirty();
+  return false;
+}
+
+function addEditMapPairs (pairs, target) {
+  (pairs || [{node: {type: "empty"}}]).forEach(pair => {
+    var nodeType = (typeof pair.node !== "object" || "@value" in pair.node)
+        ? "node"
+        : pair.node.type;
+    var skip = false;
+    var node; var shape;
+    switch (nodeType) {
+    case "empty": node = shape = ""; break;
+    case "node": node = ldToTurtle(pair.node); shape = ldToTurtle(pair.shape); break;
+    case "TriplePattern": node = renderTP(pair.node); shape = ldToTurtle(pair.shape); break;
+    case "Extension":
+      results.append($("<div/>").append(
+        $("<span/>").text("unsupported extension: <" + pair.node.language + ">:"),
+        $("<pre/>").text(pair.node.lexical)
+      ).addClass("error"));
+      skip = true; // skip this entry.
+      break;
+    default:
+      results.append($("<div/>").append(
+        $("<span/>").text("unrecognized ShapeMap:"),
+        $("<pre/>").text(JSON.stringify(pair))
+      ).addClass("error"));
+      skip = true; // skip this entry.
+      break;
+    }
+    if (!skip) {
+
     var spanElt = $("<tr/>", {class: "pair"});
     var focusElt = $("<input/>", {
       type: 'text',
-      value: pair.node,
+      value: node,
       class: 'data focus'
     }).on("change", markEditMapDirty);
     var shapeElt = $("<input/>", {
       type: 'text',
-      value: pair.shape,
+      value: shape,
       class: 'schema inputShape'
     }).on("change", markEditMapDirty);
     var addElt = $("<button/>", {
@@ -779,15 +808,16 @@ function addEditMapPair (evt, pairs) {
     var removeElt = $("<button/>", {
       class: "removePair",
       title: "remove this node/shape pair"}).text("-");
-    addElt.on("click", addEditMapPair);
+    addElt.on("click", addEmptyEditMapPair);
     removeElt.on("click", removeEditMapPair);
     spanElt.append([focusElt, "@", shapeElt, addElt, removeElt].map(elt => {
       return $("<td/>").append(elt);
     }));
-    if (evt) {
-      $(evt.target).parent().parent().after(spanElt);
+    if (target) {
+      target.after(spanElt);
     } else {
       $("#editMap").append(spanElt);
+    }
     }
   });
   if ($("#editMap .removePair").length === 1)
@@ -799,6 +829,18 @@ function addEditMapPair (evt, pairs) {
     addContextMenus(".pair:nth("+idx+") .inputShape", Caches.inputSchema);
   });
   return false;
+
+  function renderTP (tp) {debugger;
+    var ret = ["subject", "predicate", "object"].map(k => {
+      var ld = tp[k];
+      if (ld === ShEx.ShapeMap.focus)
+        return "FOCUS";
+      if (!ld) // ?? ShEx.Uti.any
+        return "_";
+      return ldToTurtle(ld);
+    });
+    return "{" + ret.join(" ") + "}";
+  }
 }
 
 function removeEditMapPair (evt) {
@@ -1023,10 +1065,10 @@ function copyEditMapToFixedMap () {
     if (!node || !shape)
       return acc;
     var m = node.match(RegExp("^"+ParseTriplePattern+"$"));
-    var nodes = m ? getTriples (m[2], m[4], m[6]) : [node];
+    var nodes = m ? getTriples(m[2], m[4], m[6]) : [node];
     nodes.forEach(node => {
-      var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
-      var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
+      var nodeTerm = node; // Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
+      var shapeTerm = shape; // Caches.inputSchema.meta.lexToTerm(shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
@@ -1109,60 +1151,30 @@ function copyEditMapToTextMap () {
  */
 function copyTextMapToEditMap () {
   var shapeMap = $("#textMap").val();
-
-  const iriref = `<[^>]*>`;
-  const pname = `[^:@\"\']*:(?:[^:@\"\'\\\\]|\\\\[:])*`;
-  const iri = `${iriref}|${pname}`;
-  const literal1 = `\'(?:[^\']|\\\\\')*\'`;
-  const literal2 = `\"(?:[^\"]|\\\\\")*\"`;
-  const langtag = `@[a-z]+(?:-[a-z]+)*`;
-  const datatype = `^^${iri}`;
-  const integer = `[+-]?[0-9]+`;
-  const decimal = `[+-]?[0-9]*\\.[0-9]+`;
-  const exponent = `[eE][+-]?[0-9]+`;
-  const double_ = `[+-]?(?:[0-9]+\\.[0-9]*${exponent}|\\.?[0-9]+${exponent})`;
-  const numeric = `${integer}|${decimal}|${double_}`;
-  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?|${numeric})`;
-  const object = `${iri}|${literal}`;
-
-  $("#editMap").empty();
-  if (shapeMap.trim() === "") {
-    return makeFreshEditMap();
-  }
-
-  var errors = [];
+  Caches.inputSchema.refresh();
+  Caches.inputData.refresh();
   try {
-  var pairPattern = "(" + object + "|" + ParseTriplePattern + ")" + "@(" + iri + "|"+START_SHAPE_LABEL+")";
-  // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-  var pairs = (shapeMap + ",").match(RegExp("(" + pairPattern + "),?", "g")).
-      map(s => s.substr(0, s.length-1)); // trim ','s
-
-  pairs.forEach(r2 => {
-    var m = r2.match(RegExp("^"+pairPattern+"$"));
-    if (m) {
-      var node = m[1] || "";
-      var shape = m[11] || "";
-      if (shape === "- start -")
-        throw Error("Please change \"- start -\" to \"" + START_SHAPE_LABEL + "\".");
-      addEditMapPair(null, [{node: node, shape: shape}]);
-    }
-  });
-  copyEditMapToFixedMap();
-  markEditMapClean();
+    var smparser = ShEx.ShapeMapParser.construct(
+      Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+    var sm = smparser.parse(shapeMap);
+    addEditMapPairs(sm);
+    copyEditMapToFixedMap();
+    markEditMapClean();
   } catch (e) {
     $("#fixedMap").empty();
     results.append($("<div/>").append(
       $("<span/>").text("Error parsing Query Map:"),
       $("<pre/>").text(e)
     ).addClass("error"));
-    errors.push(e);
-    console.log(e);
+    // errors.push(e);
+    console.error(e);
   }
-  return errors;
+  // return errors;
+  return [];
 }
 
 function makeFreshEditMap () {
-  addEditMapPair(null, [{node: "", shape: ""}]);
+  addEditMapPairs(null, null);
   markEditMapClean();
   return [];
 }
@@ -1171,10 +1183,10 @@ function makeFreshEditMap () {
  * @@TODO: add to ShExValidator so API accepts ShapeMap
  */
 function fixedShapeMapToTerms (shapeMap) {
-  return shapeMap.map(pair => {
+  return shapeMap; /*.map(pair => {
     return {node: Caches.inputData.meta.lexToTerm(pair.node + " "),
             shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
-  });
+  });*/
 }
 
 /**

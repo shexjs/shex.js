@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>ShEx2 — Simple Online Validator</title>
     <meta name="description" content="simple ShEx2 demo" />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+    <link rel="stylesheet" href="../da-web/jquery-ui.css"/>
     <style>
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; margin-left: .1em; }
@@ -175,10 +175,10 @@ ul {
 }
     </style>
 
-    <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
-    <script src="https://www.w3.org/scripts/jquery/2.1.4/jquery.min.js"></script>
-    <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link href="../da-web/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+    <script src="../da-web/jquery.min.js"></script>
+    <script src="../da-web/jquery.contextMenu.js" type="text/javascript"></script>
+    <script src="../da-web/jquery-ui.js"></script>
   </head>
 
   <body xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -193,7 +193,7 @@ ul {
     </svg>
 
     <div id="title">
-      <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
+      <img src="../da-web/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
@@ -342,28 +342,31 @@ ul {
     </script>
 
     <!-- #if browserify -->
-<!-- -->
+<!--
     <script src="../browser/shex-browserify.js"></script>
-<!-- -->
+ -->
 
     <!-- #else -->
-<!--
+<!-- -->
     <script src="../doc/require.js"      ></script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
     <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script>module.exports = exports;</script><script src="../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
     <script src="../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>
-    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = module.exports;</script>
+    <script>module.exports = exports;</script><script src="../lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
+    <script src="../lib/ShapeMapParser.js"   ></script><script>modules["../lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
+    <script src="../lib/ShapeMap.js"   ></script><script>modules["../lib/ShapeMap"] = modules["./lib/ShapeMap"] = module.exports;</script>
+    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["./ShExWriter"] = module.exports;</script>
     <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
     <script src="../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
     <script src="../lib/ShExLoader.js"></script><script>modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;</script>
     <script src="../shex.js"></script>
- -->
+<!-- -->
 
     <!-- #endif -->
 
