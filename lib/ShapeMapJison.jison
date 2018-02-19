@@ -49,16 +49,6 @@
   var numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
 
-  // Returns a lowercase version of the given string
-  function lowercase(string) {
-    return string.toLowerCase();
-  }
-
-  // Appends the item to the array and returns the array
-  function appendTo(array, item) {
-    return array.push(item), array;
-  }
-
   // Extends a base object with properties of other objects
   function extend(base) {
     if (!base) base = {};
@@ -66,14 +56,6 @@
       for (var name in arg)
         base[name] = arg[name];
     return base;
-  }
-
-  // Creates an array that contains all items of the given arrays
-  function unionAll() {
-    var union = [];
-    for (var i = 0, l = arguments.length; i < l; i++)
-      union = union.concat.apply(union, arguments[i]);
-    return union;
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:58 with
@@ -216,23 +198,17 @@
     return result + iri.substring(segmentStart);
   }
 
-  // Creates an expression with the given type and attributes
-  function expression(expr, attr) {
-    var expression = { expression: expr };
-    if (attr)
-      for (var a in attr)
-        expression[a] = attr[a];
-    return expression;
-  }
-
-  // Creates a path with the given type and items
-  function path(type, items) {
-    return { type: 'path', pathType: type, items: items };
+  function obj() {
+    var ret = {  };
+    for (var i = 0; i < arguments.length; i+= 2) {
+      ret[arguments[i]] = arguments[i+1];
+    }
+    return ret;
   }
 
   // Creates a literal with the given value and type
   function createLiteral(value, type) {
-    return { value: value, type: type };
+    return obj("@value", value, "@type", type );
   }
 
   // Creates a new blank node identifier
@@ -263,7 +239,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return { value: ShExUtil.unescapeText(string, stringEscapeReplacements) };
+    return obj("@value", ShExUtil.unescapeText(string, stringEscapeReplacements));
   }
 
   function unescapeLangString(string, trimLength) {
@@ -271,7 +247,7 @@
     var lang = string.substr(at);
     string = string.substr(0, at);
     var u = unescapeString(string, trimLength);
-    return extend(u, { language: lowercase(lang.substr(1)) });
+    return extend(u, obj("@language", lang.substr(1).toLowerCase()));
   }
 
   function error (msg) {
@@ -338,6 +314,7 @@ APPINFO_COLON           'appinfo:'
 APPINFO_SPACE_COLON     'appinfo' [\u0020\u000A\u0009]+ ':'
 STRING_LITERAL2_COLON   '"' ([^\u0022\u005C\u000A\u000D] | {ECHAR} | {UCHAR})* '"' [\u0020\u000A\u0009]* ':'
 
+FOCUS                   [Ff][Oo][Cc][Uu][Ss]
 START                   [Ss][Tt][Aa][Rr][Tt]
 ATSTART                 "@"[Ss][Tt][Aa][Rr][Tt]
 GT_SPARQL               [Ss][Pp][Aa][Rr][Qq][Ll]
@@ -381,6 +358,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 \s+|{COMMENT} /**/
 {APPINFO_SPACE_COLON}   return 'APPINFO_SPACE_COLON';
 {STRING_LITERAL2_COLON} return 'STRING_LITERAL2_COLON';
+{FOCUS}                 return 'IT_FOCUS';
 {START}                 return 'START';
 {ATSTART}               return 'ATSTART';
 {GT_SPARQL}             return 'GT_SPARQL';
@@ -493,8 +471,8 @@ objectTerm:
     ;
 
 triplePattern:
-      GT_LCURLEY IT_FOCUS nodeIri _O_QobjectTerm_E_Or_QIT___E_C GT_RCURLEY	-> { type: "TriplePattern", subject: "FOCUS", predicate: $3, object: $4 }
-    | GT_LCURLEY _O_QsubjectTerm_E_Or_QIT___E_C nodeIri IT_FOCUS GT_RCURLEY	-> { type: "TriplePattern", subject: $2, predicate: $3, object: "FOCUS" }
+      GT_LCURLEY IT_FOCUS nodeIri _O_QobjectTerm_E_Or_QIT___E_C GT_RCURLEY	-> { type: "TriplePattern", subject: ShEx.ShapeMap.focus, predicate: $3, object: $4 }
+    | GT_LCURLEY _O_QsubjectTerm_E_Or_QIT___E_C nodeIri IT_FOCUS GT_RCURLEY	-> { type: "TriplePattern", subject: $2, predicate: $3, object: ShEx.ShapeMap.focus }
     ;
 
 _O_QobjectTerm_E_Or_QIT___E_C:
@@ -553,7 +531,7 @@ jsonValue:
     | INTEGER	-> parseFloat($1)
     | DECIMAL	-> parseFloat($1)
     | DOUBLE	-> parseFloat($1)
-    | STRING_LITERAL2	-> unescapeString($1, 1).value
+    | STRING_LITERAL2	-> unescapeString($1, 1)["@value"]
     ;
 
 jsonObject:
@@ -582,7 +560,7 @@ jsonMember:
       STRING_LITERAL2_COLON jsonValue	{
         $$ = {  };
         var t = $1.substr(0, $1.length - 1).trim(); // remove trailing ':' and spaces
-        $$[unescapeString(t, 1).value] = $2;
+        $$[unescapeString(t, 1)["@value"]] = $2;
       }
     ;
 
@@ -625,8 +603,8 @@ rdfLiteral:
     ;
 
 _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C:
-      LANGTAG	-> { language: lowercase($1.substr(1)) }
-    | GT_DTYPE nodeIri	-> { type: $2 }
+      LANGTAG	-> obj("@language", $1.substr(1).toLowerCase())
+    | GT_DTYPE nodeIri	-> obj("@type", $2)
     ;
 
 _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C_E_Opt:
@@ -635,8 +613,8 @@ _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_QnodeIri_E_C_E_Opt:
     ;
 
 booleanLiteral:
-      IT_true	-> { value: "true", type: XSD_BOOLEAN }
-    | IT_false	-> { value: "false", type: XSD_BOOLEAN }
+      IT_true	-> createLiteral("true", XSD_BOOLEAN)
+    | IT_false	-> createLiteral("false", XSD_BOOLEAN)
     ;
 
 string:
