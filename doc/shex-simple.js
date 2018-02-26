@@ -4,7 +4,11 @@
 
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-const INPUTAREA_TIMEOUT = 250;var DefaultBase = location.origin + location.pathname;
+const INPUTAREA_TIMEOUT = 250;
+const NO_MANIFEST_LOADED = "no manifest loaded";
+
+var DefaultBase = location.origin + location.pathname;
+
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
@@ -20,13 +24,17 @@ const ParseTriplePattern = "(\\s*{\\s*)("+
       uriOrKey+")?(\\s*)(})?(\\s*)";
 const ParseBacktickPattern = "\\s*([a-zA-Z0-9_]+)\\s*`((?:[^`]|``)+)`(\\s*)";
 
-var QueryParams = [
-  {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema },
-  {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData   },
-  {queryStringParm: "shape-map",    location: $("#textMap"),    cache: Caches.shapeMap    },
+var Getables = [
+  {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema},
+  {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData  },
+  {queryStringParm: "manifest",     location: Caches.manifest.selection,    cache: Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+  {queryStringParm: "shape-map",    location: $("#textMap"),                cache: Caches.shapeMap   },
+];
+
+var QueryParams = Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
-];
+]);
 
 // utility functions
 function parseTurtle (text, meta, base) {
@@ -82,7 +90,7 @@ function rdflib_lexToTerm (lex, resolver) {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
-          token.type === "type" ? resolver.meta.prefixes[token.prefix] :
+          token.type === "type" ? "^^" + resolver.meta.prefixes[token.prefix] :
           token.type === "prefixed" ? resolver.meta.prefixes[token.prefix] :
           token.type === "blank" ? "_:" :
           "";
@@ -115,7 +123,13 @@ function _makeCache (selection) {
     set: function (text, base) {
       _dirty = true;
       selection.val(text);
-      this.meta.base = this.url = base;
+      this.meta.base = base;
+      if (base !== DefaultBase) {
+        this.url = base; // crappy hack -- parms should differntiate:
+        // working base: base for URL resolution.
+        // loaded base: place where you can GET current doc.
+        // Note that Caches.manifest.set takes a 3rd parm.
+      }
     },
     refresh: function () {
       if (!_dirty)
@@ -133,15 +147,11 @@ function _makeCache (selection) {
             mycustomtype: 'text/shex,text/turtle,*/*'
           },
           url: url,
+          cache: false, // force reload
           dataType: "text"
         }).fail(function (jqXHR, textStatus) {
           var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-          reject({
-            type: "HTTP",
-            url: url,
-            error: error,
-            message: "GET <" + url + "> failed: " + error
-          });
+          reject(Error("GET <" + url + "> failed: " + error));
         }).done(function (data) {
           try {
             _cache.meta.base = url;
@@ -151,12 +161,7 @@ function _makeCache (selection) {
             toggleControls();
             resolve({ url: url, data: data });
           } catch (e) {
-            reject({
-              type: "evaluation",
-              url: url,
-              error: e,
-              message: "unable to evaluate <" + url + ">: " + e
-            });
+            reject(Error("unable to evaluate <" + url + ">: " + e));
           }
         });
       });
@@ -318,32 +323,51 @@ function makeManifestCache (selection) {
         // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);
       } catch (e) {
+        var whence = source === undefined ? "<" + url  + ">" : source;
+        $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
+        results.append($("<pre/>").text(
+          "failed to load manifest from " + whence + ":\n" + e + "\n" + textOrObj
+        ).addClass("error"));
+        return;
+        // @@DELME(2017-12-29)
         // transform deprecated examples.js structure
-        textOrObj = eval(textOrObj).reduce(function (acc, schema) {
-          function x (data, status) {
-            return {
-              schemaLabel: schema.name,
-              schema: schema.schema,
-              dataLabel: data.name,
-              data: data.data,
-              queryMap: data.queryMap,
-              status: status
-            };
-          }
-          return acc.concat(
-            schema.passes.map(data => x(data, "conformant")),
-            schema.fails.map(data => x(data, "nonconformant"))
-          );
-        }, []);
+        // textOrObj = eval(textOrObj).reduce(function (acc, schema) {
+        //   function x (data, status) {
+        //     return {
+        //       schemaLabel: schema.name,
+        //       schema: schema.schema,
+        //       dataLabel: data.name,
+        //       data: data.data,
+        //       queryMap: data.queryMap,
+        //       status: status
+        //     };
+        //   }
+        //   return acc.concat(
+        //     schema.passes.map(data => x(data, "conformant")),
+        //     schema.fails.map(data => x(data, "nonconformant"))
+        //   );
+        // }, []);
       }
     }
     if (textOrObj.constructor !== Array)
       textOrObj = [textOrObj];
-    var demos = [];
-    Promise.all(textOrObj.reduce((outer, elt) => {
+    var demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
         // compatibility with test suite structure.
         var action = elt.action;
+        var schemaLabel = action.schemaURL.substr(action.schemaURL.lastIndexOf('/')+1);
+        var dataLabel = elt["@id"];
+        var match = null;
+        var emptyGraph = "-- empty graph --";
+        if ("comment" in elt) {
+          if ((match = elt.comment.match(/^(.*?) \/ { (.*?) }$/))) {
+            schemaLabel = match[1]; dataLabel = match[2] || emptyGraph;
+          } else if ((match = elt.comment.match(/^(.*?) on { (.*?) }$/))) {
+            schemaLabel = match[1]; dataLabel = match[2] || emptyGraph;
+          } else if ((match = elt.comment.match(/^(.*?) as { (.*?) }$/))) {
+            schemaLabel = match[2]; dataLabel = match[1] || emptyGraph;
+          }
+        }
         var queryMap = "map" in action ?
             null :
             ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
@@ -352,10 +376,11 @@ function makeManifestCache (selection) {
             null;
         elt = Object.assign(
           {
-            schemaLabel: elt["@id"],
+            schemaLabel: schemaLabel,
             schema: action.schema,
             schemaURL: action.schemaURL || url,
-            dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
+            // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
+            dataLabel: dataLabel,
             data: action.data,
             dataURL: action.dataURL || DefaultBase
           },
@@ -367,24 +392,16 @@ function makeManifestCache (selection) {
           elt.metaURL = action.termResolverURL || DefaultBase;
         }
       }
-      demos.push(elt);
-      return outer.concat(
-        Promise.resolve(elt.schemaURL),
-        maybeGET(elt, url, "schema", "text/shex,application/jsonld,text/turtle"),
-        maybeGET(elt, url, "data", "text/turtle"),
-        maybeGET(elt, url, "queryMap", "text/smap,application/json"),
-        maybeGET(elt, url, "termResolver", "text/turtle")
-      );
-    }, [])).then(() => {
-      // if (!($("#append").is(":checked")))
-      //   ...;
-      prepareManifest(demos);
-    }).catch(e => {
-      var whence = source === undefined ? "<" + url  + ">" : source;
-      results.append($("<pre/>").text(
-        "failed to load manifest from " + whence + ":\n" + JSON.stringify(demos, null, 2) + (e.stack || e)
-      ).addClass("error"));
-    });
+      ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
+        if (parm in elt) {
+          elt[parm] = new URL(elt[parm], new URL(url, DefaultBase).href).href;
+        } else {
+          delete elt[parm];
+        }
+      });
+      return acc.concat(elt);
+    }, []);
+    prepareManifest(demos, url);
   };
   ret.parse = function (text, base) {
     throw Error("should not try to parse manifest cache");
@@ -399,27 +416,30 @@ function makeManifestCache (selection) {
             // Take the passed data, guess base if not provided.
             if (!(key + "URL" in obj))
               obj[key + "URL"] = base;
-            return Promise.resolve();
+            obj[key] = Promise.resolve(obj[key]);
           } else if (key + "URL" in obj) {
             // absolutize the URL
             obj[key + "URL"] = ret.meta.lexToTerm("<"+obj[key + "URL"]+">");
             // Load the remote resource.
-            return $.ajax({
-              accepts: {
-                mycustomtype: accept
-              },
-              url: ret.meta.lexToTerm("<"+obj[key + "URL"]+">"),
-              dataType: "text"
-            }).then(text => {
-              obj[key] = text;
-            }).fail(e => {
-              results.append($("<pre/>").text(
-                "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
-              ).addClass("error"));
+            obj[key] = new Promise((resolve, reject) => {
+              $.ajax({
+                accepts: {
+                  mycustomtype: accept
+                },
+                url: ret.meta.lexToTerm("<"+obj[key + "URL"]+">"),
+                dataType: "text"
+              }).then(text => {
+                resolve(text);
+              }).fail(e => {
+                results.append($("<pre/>").text(
+                  "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
+                ).addClass("error"));
+                reject(e);
+              });
             });
           } else {
             // Ignore this parameter.
-            return Promise.resolve();
+            obj[key] = Promise.resolve(obj[key]);
           }
         }
 
@@ -457,13 +477,41 @@ function makeShapeMapCache (selection) {
 function paintManifest (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
-    var li = $("<li/>").append($("<button/>").text(entry.label));
-    li.on("click", () => {
-      func(entry.name, entry, li, listItems, side);
-    });
-    listItems[side][sum(entry.text)] = li;
+    var button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
+    var li = $("<li/>").append(button);
     $(selector).append(li);
+    if (entry.text === undefined) {
+      fetchOK(entry.url).catch(response => {
+        // leave a message in the schema or data block
+        return "# " + renderErrorMessage(response, side);
+      }).then(schemaLoaded);
+    } else {
+      schemaLoaded(entry.text);
+    }
+    function schemaLoaded (text) {
+      entry.text = text;
+      li.on("click", () => {
+        func(entry.name, entry, li, listItems, side);
+      });
+      listItems[side][sum(text)] = li;
+      button.text(entry.label).removeAttr("disabled");
+    }
   });
+}
+
+function fetchOK (url) {
+  return fetch(url).then(response => {
+    if (!response.ok) {
+      throw response;
+    }
+    return response.text()
+  });
+}
+
+function renderErrorMessage (response, what) {
+  var message = "failed to load " + "queryMap" + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
+  results.append($("<pre/>").text(message).addClass("error"));
+  return message;
 }
 
 function clearData () {
@@ -491,11 +539,12 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.text, schemaTest.url || DefaultBase);
+    Caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
     $("#inputSchema .status").text(name);
 
     Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
+    Caches.shapeMap.set("", DefaultBase);
     var headings = {
       "passes": "Passing:",
       "fails": "Failing:",
@@ -514,7 +563,11 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.schema").val(Caches.inputSchema.getItems()[0]);
+    try {
+      $("input.schema").val(Caches.inputSchema.getItems()[0]);
+    } catch (e) {
+      failMessage(e, "schema");
+    }
   }
 }
 
@@ -523,20 +576,34 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
-    Caches.inputData.set(dataTest.text, dataTest.url || DefaultBase);
+    Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    $("input.data").val(Caches.inputData.getItems()[0]);
+    try {
+      $("input.data").val(Caches.inputData.getItems()[0]);
+    } catch (e) {
+      failMessage(e, "data");
+    }
     removeEditMapPair(null);
     // This will probably overwrite $("input.data").val()
-    try {
-      $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
-    } catch (e) {
-      $("#textMap").val(dataTest.entry.queryMap);
+    if (dataTest.entry.queryMap === undefined) {
+      fetchOK(dataTest.entry.queryMapURL).then(queryMapLoaded).catch(response => {
+        renderErrorMessage(response, "queryMap");
+      });
+    } else {
+      queryMapLoaded(dataTest.entry.queryMap);
     }
-    copyTextMapToEditMap();
-    // validate();
+    function queryMapLoaded (text) {
+      dataTest.entry.queryMap = text;
+      try {
+        $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
+      } catch (e) {
+        $("#textMap").val(dataTest.entry.queryMap);
+      }
+      copyTextMapToEditMap();
+      // validate();
+    }
   }
 }
 
@@ -554,6 +621,7 @@ var results = (function () {
     },
     clear: function () {
       resultsSel.removeClass("passes fails error");
+      $("#results .status").text("").hide();
       return resultsSel.text("");
     },
     start: function () {
@@ -644,7 +712,7 @@ function validate () {
         // }
         finishRendering();
       }).catch(function (e) {
-        failMessage(e);
+        failMessage(e, parsing);
       });
     } else {
       var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -685,7 +753,7 @@ function validate () {
       }
     }
   } catch (e) {
-    failMessage(e);
+    failMessage(e, parsing);
   }
 
   function renderEntry (entry) {
@@ -752,11 +820,15 @@ function validate () {
       // }
       results.finish();
   }
+}
 
-  function failMessage (e) {
-    $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error");
-    results.append($("<pre/>").text(e.stack || e));
-  }
+var LastFail = null;
+function failMessage (e, parsing) {
+  $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error").show();
+  if (LastFail)
+    LastFail.remove();
+  LastFail = $("<pre/>").text(e);
+  results.append(LastFail);
 }
 
 function addEditMapPair (evt, pairs) {
@@ -829,10 +901,8 @@ function prepareControls () {
     modal: true,
     buttons: {
       "GET": function (evt, ui) {
-        var target =
-            $("#loadForm span").text() === "schema" ? Caches.inputSchema :
-            $("#loadForm span").text() === "data" ? Caches.inputData :
-            Caches.manifest;
+        results.clear();
+        var target = Getables.find(g => g.queryStringParm === $("#loadForm span").text());
         var url = $("#loadInput").val();
         var tips = $(".validateTips");
         function updateTips (t) {
@@ -849,7 +919,7 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        target.asyncGet(url).catch(function (e) {
+        target.cache.asyncGet(url).catch(function (e) {
           updateTips(e.message);
         });
       },
@@ -865,8 +935,13 @@ function prepareControls () {
       toggleControls();
     }
   });
-  ["schema", "data", "manifest"].forEach(type => {
+  Getables.forEach(target => {
+    var type = target.queryStringParm
     $("#load-"+type+"-button").click(evt => {
+      var prefillURL = target.url ? target.url :
+          target.cache.meta.base && target.cache.meta.base !== DefaultBase ? target.cache.meta.base :
+          "";
+      $("#loadInput").val(prefillURL);
       $("#loadForm").attr("class", type).find("span").text(type);
       $("#loadForm").dialog("open");
     });
@@ -1126,7 +1201,12 @@ function copyTextMapToEditMap () {
   const literal2 = `\"(?:[^\"]|\\\\\")*\"`;
   const langtag = `@[a-z]+(?:-[a-z]+)*`;
   const datatype = `^^${iri}`;
-  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?)`;
+  const integer = `[+-]?[0-9]+`;
+  const decimal = `[+-]?[0-9]*\\.[0-9]+`;
+  const exponent = `[eE][+-]?[0-9]+`;
+  const double_ = `[+-]?(?:[0-9]+\\.[0-9]*${exponent}|\\.?[0-9]+${exponent})`;
+  const numeric = `${integer}|${decimal}|${double_}`;
+  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?|${numeric})`;
   const object = `${iri}|${literal}`;
 
   $("#editMap").empty();
@@ -1192,31 +1272,51 @@ function prepareInterface () {
   var iface = parseQueryString(location.search);
 
   toggleControlsArrow("down");
+  $(".manifest li").text("no manifest schemas loaded");
+  if ("examples" in iface) { // deprecated ?examples= interface
+    iface.manifestURL = iface.examples;
+    delete iface.examples;
+  }
+  if (!("manifest" in iface) && !("manifestURL" in iface)) {
+    iface.manifestURL = ["../examples/manifest.json"];
+  }
 
   // Load all known query parameters.
   Promise.all(QueryParams.reduce((promises, input) => {
     var parm = input.queryStringParm;
     if (parm + "URL" in iface) {
       var url = iface[parm + "URL"][0];
-      // !!! set anyways in asyncGet?
-      input.cache.url = url; // all fooURL query parms are caches.
-      promises.push(input.cache.asyncGet(url).catch(function (e) {
-        input.location.val(e.message);
-        // results.append($("<pre/>").text(e.url + " " + e.error).addClass("error"));
-      }));
+      if (url.length > 0) { // manifest= loads no manifest
+        // !!! set anyways in asyncGet?
+        input.cache.url = url; // all fooURL query parms are caches.
+        promises.push(input.cache.asyncGet(url).catch(function (e) {
+          if ("fail" in input) {
+            input.fail(e);
+          } else {
+            input.location.val(e.message);
+          }
+          results.append($("<pre/>").text(e).addClass("error"));
+        }));
+      }
     } else if (parm in iface) {
-      input.location.val("");
-      iface[parm].forEach(text => {
-        var prepend = input.location.prop("tagName") === "TEXTAREA" ?
-            input.location.val() :
-            "";
-        input.location.val(prepend + text);
-      });
+      var prepend = input.location.prop("tagName") === "TEXTAREA" ?
+          input.location.val() :
+          "";
+      var value = iface[parm].join("");
       if ("cache" in input)
         // If it parses, make meta (prefixes, base) available.
         try {
-          input.cache.refresh();
-        } catch (e) { }
+          input.cache.set(prepend + value, window.location.href);
+        } catch (e) {
+          if ("fail" in input) {
+            input.fail(e);
+          }
+          results.append($("<pre/>").text(
+            "error setting " + input.queryStringParm + ":\n" + e + "\n" + textOrObj
+          ).addClass("error"));
+        }
+      else
+        input.location.val(prepend + value);
     } else if ("deflt" in input) {
       input.location.val(input.deflt);
     }
@@ -1229,17 +1329,6 @@ function prepareInterface () {
         : makeFreshEditMap();
 
     customizeInterface();
-    $(".manifest li").text("no manifest schemas loaded");
-    var loadManifest =
-        "manifest" in iface ? iface.manifest[0] :
-        "examples" in iface ? iface.examples[0] : // ?examples is deprecated
-        "../examples/manifest.json";
-    if (loadManifest.length) { // manifest= disables manifest
-      Caches.manifest.asyncGet(Caches.manifest.meta.lexToTerm("<"+loadManifest+">"))
-      .catch(function (e) {
-        $(".manifest li").text(e.message);
-      });
-    }
     $("body").keydown(function (e) { // keydown because we need to preventDefault
       var code = e.keyCode || e.charCode; // standards anyone?
       if (e.ctrlKey && (code === 10 || code === 13)) {
@@ -1272,11 +1361,14 @@ function prepareInterface () {
     parms = parms.concat(QueryParams.reduce((acc, input) => {
       var parm = input.queryStringParm;
       var val = input.location.val();
-      if (input.cache && input.cache.url) {
+      if (input.cache && input.cache.url &&
+          // Specifically avoid loading from DefaultBase?schema=blah
+          // because that will load the HTML page.
+          !input.cache.url.startsWith(DefaultBase)) {
         parm += "URL";
         val = input.cache.url;
       }
-      return parm.trim().length > 0 ?
+      return val.length > 0 ?
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
@@ -1326,6 +1418,7 @@ function prepareDragAndDrop () {
       {media: "application/json", target: Caches.manifest},
       {ext: ".shex", media: "text/shex", target: Caches.inputSchema},
       {ext: ".ttl", media: "text/turtle", target: Caches.inputData},
+      {ext: ".json", media: "application/json", target: Caches.manifest},
       {ext: ".smap", media: "text/plain", target: Caches.shapeMap}]}
   ]).forEach(desc => {
     var droparea = desc.location;
@@ -1367,9 +1460,14 @@ function prepareDragAndDrop () {
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
                     var parsed = JSON.parse(val);
-                    var action = "action" in parsed ? parsed.action: parsed;
-                    action.schemaURL = action.schema; delete action.schema;
-                    action.dataURL = action.data; delete action.data;
+                    if (!(parsed.constructor === Array)) {
+                      parsed = [parsed];
+                    }
+                    parsed.map(elt => {
+                      var action = "action" in elt ? elt.action: elt;
+                      action.schemaURL = action.schema; delete action.schema;
+                      action.dataURL = action.data; delete action.data;
+                    });
                     Caches.manifest.set(parsed, DefaultBase, "drag and drop");
                   } else {
                     inject(desc.targets, DefaultBase, val, l.type);
@@ -1386,7 +1484,7 @@ function prepareDragAndDrop () {
                     results.append($("<pre/>").text("GET <" + val + "> failed: " + error));
                   }).done(function (data, status, jqXhr) {
                     try {
-                      inject(desc.targets, val, data, jqXhr.getResponseHeader("Content-Type").split(/[ ;,]/)[0]);
+                      inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]);
                       $("#loadForm").dialog("close");
                       toggleControls();
                     } catch (e) {
@@ -1434,6 +1532,7 @@ function prepareDragAndDrop () {
     });
   function readfiles(files, targets) {
     var formData = new FormData();
+    var sucecesses = 0;
 
     for (var i = 0; i < files.length; i++) {
       var file = files[i], name = file.name;
@@ -1452,26 +1551,28 @@ function prepareDragAndDrop () {
           };
         })(target);
         reader.readAsText(file);
+        ++sucecesses;
       } else {
         results.append("don't know what to do with " + name + "\n");
       }
     }
+    $("#results .status").text("loaded "+sucecesses+" files.").show();
   }
 }
 
-function prepareManifest (demoList) {
+function prepareManifest (demoList, base) {
   var listItems = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = {};
     return acc;
   }, {});
   var nesting = demoList.reduce(function (acc, elt) {
-    var key = elt.schemaLabel + elt.schema;
+    var key = elt.schemaLabel + "|" + elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
       acc[key] = {
         label: elt.schemaLabel,
         text: elt.schema,
-        url: elt.schemaURL
+        url: elt.schemaURL || (elt.schema ? base : undefined)
       };
     } else {
       // nth entry with this schema
@@ -1479,7 +1580,7 @@ function prepareManifest (demoList) {
     var dataEntry = {
       label: elt.dataLabel,
       text: elt.data,
-      url: elt.dataURL,
+      url: elt.dataURL || (elt.data ? base : undefined),
       entry: elt
     };
     var target = elt.status === "nonconformant"
@@ -1518,8 +1619,12 @@ function prepareManifest (demoList) {
   Object.keys(Caches).forEach(function (cache) {
     Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
       var code = e.keyCode || e.charCode;
-      if (!(e.ctrlKey && (code === 10 || code === 13)))
+      // if (!(e.ctrlKey)) {
+      //   results.clear();
+      // }
+      if (!(e.ctrlKey && (code === 10 || code === 13))) {
         later(e.target, cache, Caches[cache]);
+      }
     });
   });
 }
@@ -1604,13 +1709,20 @@ function addContextMenus (inputSelector, cache) {
           }
         }
         terms = v = null;
-        return {
-          items:
-          cache.getItems().reduce((ret, opt) => {
-            ret[opt] = { name: opt };
-            return ret;
-          }, {})
-        };
+        try {
+          return {
+            items: cache.getItems().reduce((ret, opt) => {
+              ret[opt] = { name: opt };
+              return ret;
+            }, {})
+          };
+        } catch (e) {
+          failMessage(e, cache === Caches.inputSchema ? "schema" : "data");
+          let items = {};
+          const failContent = "no choices found";
+          items[failContent] = failContent;
+          return { items: items }
+        }
       }
     });
 }
