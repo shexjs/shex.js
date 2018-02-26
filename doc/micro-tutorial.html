@@ -234,7 +234,7 @@ button, select { font-size: .8em; }
           </p>
           <br/>
           <!-- <h2>Schema examples:</h2> -->
-          <div class="examples">
+          <div class="manifest">
             <ul>
               <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
             </ul>
@@ -320,11 +320,40 @@ button, select { font-size: .8em; }
       </ul>
       <input type="checkbox" id="showMeta"/><label for="showMeta">show metadata pane</label>
     </div>
-    <script src="https://rawgit.com/jackmoore/autosize/master/dist/autosize.js"></script>
+    <script src="../doc/iri.js"></script>
+    <script>
+      if (!("captureStackTrace" in Error)) {
+        Error.captureStackTrace = function () { };
+      }
+    </script>
+
+    <!-- #if browserify -->
+<!-- -->
     <script src="../browser/shex-browserify.js"></script>
-    <script src="./iri.js"></script>
-    <script src="./ShExRSchema.js"></script>
-    <script src="./examples.js"></script>
+<!-- -->
+
+    <!-- #else -->
+<!--
+    <script src="../doc/require.js"      ></script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
+    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
+    <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
+    <script>module.exports = exports;</script><script src="../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
+    <script src="../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>
+    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = module.exports;</script>
+    <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
+    <script src="../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
+    <script src="../lib/ShExLoader.js"></script><script>modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;</script>
+    <script src="../shex.js"></script>
+ -->
+
+    <!-- #endif -->
+
+    <script src="../doc/ShExRSchema.js"></script>
     <script src="./shex-simple.js"></script>
   </body>
 </html>
