@@ -74,7 +74,7 @@ This and the shape can be written as relative IRIs:
 ### validation library
 
 Parsing from the old interwebs involves a painful mix of asynchronous callbacks for getting the schema and the data and parsing the data (shorter path below):
-
+<a id="long-script"/>
 ```
 var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
@@ -129,7 +129,7 @@ GET(data, function (b) {
 See? That's all there was too it!
 
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
-
+<a name="loader-script"/>
 ```
 var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
@@ -137,7 +137,7 @@ var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
 
 var shex = require("shex");
-shex.Loader([shexc], [], [data], []).then(function (loaded) {
+shex.Loader.load([shexc], [], [data], []).then(function (loaded) {
     console.log(shex.Validator.construct(loaded.schema).validate(loaded.data, node, shape));    
 });
 ```
