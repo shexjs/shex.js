@@ -452,8 +452,8 @@ _QjsonAttributes_E_Opt:
 nodeSelector:
       objectTerm	
     | triplePattern	
-    | GT_SPARQL EXTENSION	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $2 }
-    | nodeIri EXTENSION	-> { type: "Extension", language: $1, lexical: $2 }
+    | GT_SPARQL EXTENSION	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: unescapeString($2, 1)["@value"] }
+    | nodeIri EXTENSION	-> { type: "Extension", language: $1, lexical: unescapeString($2, 1)["@value"] }
     ;
 
 // _O_QGT_SPARQL_E_Or_QnodeIri_E_C:
