@@ -654,6 +654,7 @@ function validate () {
         // }
         finishRendering();
       }).catch(function (e) {
+        $("#results .status").text("validation errors:").show();
         failMessage(e, parsing);
       });
     } else {
@@ -764,17 +765,14 @@ function validate () {
   }
 }
 
-var LastFail = null;
 var LastFailTime = 0;
 function failMessage (e, kind, text) {
-  $("#results .status").empty().append("error parsing " + kind + ":\n").addClass("error").show();
+  // disabled: $("#results .status").empty().text(@@).show()
   var div = $("<div/>").addClass("error");
-  if (LastFail)
-    LastFail.remove();
+  div.append($("<h3/>").text("error parsing " + kind + ":\n"));
+  div.append($("<pre/>").text(e.message));
   if (text)
     div.append($("<pre/>").text(text));
-  LastFail = $("<pre/>").text(e);
-  div.append(LastFail);
   results.append(div);
   LastFailTime = new Date().getTime();
 }
@@ -1096,7 +1094,7 @@ function copyEditMapToFixedMap () {
     try {
       var sm = smparser.parse(node + '@' + shape)[0];
       nodes = typeof sm.node === "string" || "@value" in sm.node
-          ? [node]
+        ? [node]
         : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
     } catch (e) {
       // find which cell was broken
