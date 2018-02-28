@@ -877,10 +877,8 @@ function addEditMapPairs (pairs, target) {
         node = "SPARQL `" + pair.node.lexical + "`";
         shape = startOrLdToTurtle(pair.shape);
       } else {
-        results.append($("<div/>").append(
-          $("<span/>").text("unsupported extension: <" + pair.node.language + ">:"),
-        $("<pre/>").text(pair.node.lexical)
-        ).addClass("error"));
+        failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
+                    "Query Map", pair.node.lexical);
         skip = true; // skip this entry.
       }
       break;
