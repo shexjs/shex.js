@@ -792,8 +792,8 @@ function addEditMapPairs (pairs, target) {
     var node; var shape;
     switch (nodeType) {
     case "empty": node = shape = ""; break;
-    case "node": node = ldToTurtle(pair.node); shape = ldToTurtle(pair.shape); break;
-    case "TriplePattern": node = renderTP(pair.node); shape = ldToTurtle(pair.shape); break;
+    case "node": node = ldToTurtle(pair.node); shape = startOrLdToTurtle(pair.shape); break;
+    case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       results.append($("<div/>").append(
         $("<span/>").text("unsupported extension: <" + pair.node.language + ">:"),
@@ -860,6 +860,10 @@ function addEditMapPairs (pairs, target) {
       return ldToTurtle(ld);
     });
     return "{" + ret.join(" ") + "}";
+  }
+
+  function startOrLdToTurtle (term) {
+    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term);
   }
 }
 
