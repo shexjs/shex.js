@@ -786,12 +786,14 @@ var LastFail = null;
 var LastFailTime = 0;
 function failMessage (e, kind, text) {
   $("#results .status").empty().append("error parsing " + kind + ":\n").addClass("error").show();
+  var div = $("<div/>").addClass("error");
   if (LastFail)
     LastFail.remove();
   if (text)
-    results.append($("<pre/>").text(text));
+    div.append($("<pre/>").text(text));
   LastFail = $("<pre/>").text(e);
-  results.append(LastFail);
+  div.append(LastFail);
+  results.append(div);
   LastFailTime = new Date().getTime();
 }
 
@@ -1116,7 +1118,7 @@ function markEditMapClean () {
 function copyEditMapToFixedMap () {
   $("#fixedMap").empty();
   var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
-    $(queryPair).removeClass("error"); // any pending error marker
+    $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
     var shape = $(queryPair).find(".inputShape").val();
     if (!node || !shape)
@@ -1130,8 +1132,14 @@ function copyEditMapToFixedMap () {
           ? [node]
         : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
     } catch (e) {
+      // find which cell was broken
+      try { smparser.parse(node + '@' + "START"); } catch (e) {
+        $(queryPair).find(".focus").addClass("error");
+      }
+      try { smparser.parse("<>" + '@' + shape); } catch (e) {
+        $(queryPair).find(".inputShape").addClass("error");
+      }
       failMessage(e, "Edit Map", node + '@' + shape);
-      $(queryPair).addClass("error");
       nodes = []; // skip this entry
     }
     nodes.forEach(node => {
