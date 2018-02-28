@@ -14,15 +14,26 @@ Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputMeta = makeTurtleCache($("#meta textarea"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
-Caches.shapeMap = makeShapeMapCache($("#shapeMap-tabs")); // @@ rename to #shapeMap
+Caches.shapeMap = makeShapeMapCache($("#textMap")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
-const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
-const uriOrKey = uri + "|FOCUS|_";
-const ParseTriplePattern = "(\\s*{\\s*)("+
-      uriOrKey+")?(\\s*)("+
-      uri+"|a)?(\\s*)("+
-      uriOrKey+")?(\\s*)(})?(\\s*)";
+const ParseTriplePattern = (function () {
+  const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
+  const literal = "((?:" +
+        "'(?:[^'\\\\]|\\\\')*'" + "|" +
+        "\"(?:[^\"\\\\]|\\\\\")*\"" + "|" +
+        "'''(?:(?:'|'')?[^'\\\\]|\\\\')*'''" + "|" +
+        "\"\"\"(?:(?:\"|\"\")?[^\"\\\\]|\\\\\")*\"\"\"" +
+        ")" +
+        "(?:@[a-zA-Z-]+|\\^\\^(?:" + uri + "))?)";
+  const uriOrKey = uri + "|FOCUS|_";
+  // const termOrKey = uri + "|" + literal + "|FOCUS|_";
+
+  return "(\\s*{\\s*)("+
+    uriOrKey+")?(\\s*)("+
+    uri+"|a)?(\\s*)("+
+    uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
+})();
 
 var Getables = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema},
@@ -97,7 +108,8 @@ function rdflib_termToLex (node, resolver) {
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
-    ShEx.N3.Lexer().tokenize(lex).map(token => {
+    ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
+    .map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
           token.type === "langcode" ? "@" :
@@ -307,7 +319,7 @@ function makeManifestCache (selection) {
         }
         var queryMap = "map" in action ?
             null :
-            ttl(action.focus) + "@" + ("shape" in action ? ttl(action.shape) : "START");
+            ldToTurtle(action.focus) + "@" + ("shape" in action ? ldToTurtle(action.shape) : START_SHAPE_LABEL);
         var queryMapURL = "map" in action ?
             action.map :
             null;
@@ -379,31 +391,34 @@ function makeManifestCache (selection) {
             obj[key] = Promise.resolve(obj[key]);
           }
         }
+}
 
-        function ttl (ld) {
+
+        function ldToTurtle (ld) {
           return typeof ld === "object" ? lit(ld) :
             ld.startsWith("_:") ? ld :
             "<" + ld + ">";
           function lit (o) {
-            let ret = "\""+o["@value"]+"\"";
+            let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
+              return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
+            }) +"\"";
             if ("@type" in o)
               ret += "^^<" + o["@type"] + ">";
-            if ("language" in o)
-              ret += "@" + o["language"];
+            if ("@language" in o)
+              ret += "@" + o["@language"];
             return ret;
           }
         }
-}
 
 function makeShapeMapCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (text) {
+  ret.parse = function (text) {
     removeEditMapPair(null);
     $("#textMap").val(text);
     copyTextMapToEditMap();
     copyEditMapToFixedMap();
   };
-  ret.parse = function (text, base) {  };
+  // ret.parse = function (text, base) {  };
   ret.getItems = function () {
     throw Error("should not try to get manifest cache items");
   };
@@ -586,6 +601,9 @@ var results = (function () {
 
 // Validation UI
 function disableResultsAndValidate () {
+  if (new Date().getTime() - LastFailTime < 100)
+    return; // return if < 100ms since last error.
+  results.clear();
   results.start();
   setTimeout(function () {
     copyEditMapToTextMap();
@@ -602,7 +620,6 @@ function hasFocusNode () {
 }
 
 function validate () {
-  results.clear();
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   var parsing = "input schema";
@@ -616,8 +633,8 @@ function validate () {
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
-          node: $(tr).find("input.focus").val(),
-          shape: $(tr).find("input.inputShape").val()
+          node: Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
+          shape: Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
         };
       }).get());
       $("#results .status").text("parsing data...").show();
@@ -766,29 +783,61 @@ function validate () {
 }
 
 var LastFail = null;
-function failMessage (e, parsing) {
-  $("#results .status").empty().append("error parsing " + parsing + ":\n").addClass("error").show();
+var LastFailTime = 0;
+function failMessage (e, kind, text) {
+  $("#results .status").empty().append("error parsing " + kind + ":\n").addClass("error").show();
   if (LastFail)
     LastFail.remove();
+  if (text)
+    results.append($("<pre/>").text(text));
   LastFail = $("<pre/>").text(e);
   results.append(LastFail);
+  LastFailTime = new Date().getTime();
 }
 
-function addEditMapPair (evt, pairs) {
-  if (evt) {
-    pairs = [{node: "", shape: ""}];
-    markEditMapDirty();
-  }
-  pairs.forEach(pair => {
+function addEmptyEditMapPair (evt) {
+  addEditMapPairs(null, $(evt.target).parent().parent());
+  markEditMapDirty();
+  return false;
+}
+
+function addEditMapPairs (pairs, target) {
+  (pairs || [{node: {type: "empty"}}]).forEach(pair => {
+    var nodeType = (typeof pair.node !== "object" || "@value" in pair.node)
+        ? "node"
+        : pair.node.type;
+    var skip = false;
+    var node; var shape;
+    switch (nodeType) {
+    case "empty": node = shape = ""; break;
+    case "node": node = ldToTurtle(pair.node); shape = startOrLdToTurtle(pair.shape); break;
+    case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
+    case "Extension":
+      results.append($("<div/>").append(
+        $("<span/>").text("unsupported extension: <" + pair.node.language + ">:"),
+        $("<pre/>").text(pair.node.lexical)
+      ).addClass("error"));
+      skip = true; // skip this entry.
+      break;
+    default:
+      results.append($("<div/>").append(
+        $("<span/>").text("unrecognized ShapeMap:"),
+        $("<pre/>").text(JSON.stringify(pair))
+      ).addClass("error"));
+      skip = true; // skip this entry.
+      break;
+    }
+    if (!skip) {
+
     var spanElt = $("<tr/>", {class: "pair"});
     var focusElt = $("<input/>", {
       type: 'text',
-      value: pair.node,
+      value: node,
       class: 'data focus'
     }).on("change", markEditMapDirty);
     var shapeElt = $("<input/>", {
       type: 'text',
-      value: pair.shape,
+      value: shape,
       class: 'schema inputShape'
     }).on("change", markEditMapDirty);
     var addElt = $("<button/>", {
@@ -797,15 +846,16 @@ function addEditMapPair (evt, pairs) {
     var removeElt = $("<button/>", {
       class: "removePair",
       title: "remove this node/shape pair"}).text("-");
-    addElt.on("click", addEditMapPair);
+    addElt.on("click", addEmptyEditMapPair);
     removeElt.on("click", removeEditMapPair);
     spanElt.append([focusElt, "@", shapeElt, addElt, removeElt].map(elt => {
       return $("<td/>").append(elt);
     }));
-    if (evt) {
-      $(evt.target).parent().parent().after(spanElt);
+    if (target) {
+      target.after(spanElt);
     } else {
       $("#editMap").append(spanElt);
+    }
     }
   });
   if ($("#editMap .removePair").length === 1)
@@ -817,6 +867,22 @@ function addEditMapPair (evt, pairs) {
     addContextMenus(".pair:nth("+idx+") .inputShape", Caches.inputSchema);
   });
   return false;
+
+  function renderTP (tp) {
+    var ret = ["subject", "predicate", "object"].map(k => {
+      var ld = tp[k];
+      if (ld === ShEx.ShapeMap.focus)
+        return "FOCUS";
+      if (!ld) // ?? ShEx.Uti.any
+        return "_";
+      return ldToTurtle(ld);
+    });
+    return "{" + ret.join(" ") + "}";
+  }
+
+  function startOrLdToTurtle (term) {
+    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term);
+  }
 }
 
 function removeEditMapPair (evt) {
@@ -912,6 +978,7 @@ function prepareControls () {
     }
   });
   $("#textMap").on("change", evt => {
+    results.clear();
     copyTextMapToEditMap();
   });
   Caches.inputData.selection.on("change", evt => {
@@ -1049,15 +1116,27 @@ function markEditMapClean () {
 function copyEditMapToFixedMap () {
   $("#fixedMap").empty();
   var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
+    $(queryPair).removeClass("error"); // any pending error marker
     var node = $(queryPair).find(".focus").val();
     var shape = $(queryPair).find(".inputShape").val();
     if (!node || !shape)
       return acc;
-    var m = node.match(RegExp("^"+ParseTriplePattern+"$"));
-    var nodes = m ? getTriples (m[2], m[4], m[6]) : [node];
+    var smparser = ShEx.ShapeMapParser.construct(
+      Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+    var nodes = [];
+    try {
+      var sm = smparser.parse(node + '@' + shape)[0];
+      nodes = typeof sm.node === "string" || "@value" in sm.node
+          ? [node]
+        : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
+    } catch (e) {
+      failMessage(e, "Edit Map", node + '@' + shape);
+      $(queryPair).addClass("error");
+      nodes = []; // skip this entry
+    }
     nodes.forEach(node => {
-      var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
-      var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
+      var nodeTerm = node; // Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
+      var shapeTerm = shape; // Caches.inputSchema.meta.lexToTerm(shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
@@ -1109,12 +1188,14 @@ function copyEditMapToFixedMap () {
   });
 
   function getTriples (s, p, o) {
-    var get = s === "FOCUS" ? "subject" : "object";
+    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
     return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
       return Caches.inputData.meta.termToLex(t[get]);
     });
     function mine (term) {
-      return term === "FOCUS" || term === "_" ? null : Caches.inputData.meta.lexToTerm(term);
+      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
+        ? null
+        : term;
     }
   }
 }
@@ -1139,61 +1220,28 @@ function copyEditMapToTextMap () {
  * @returns list of errors. ([] means everything was good.)
  */
 function copyTextMapToEditMap () {
+  $("#textMap").removeClass("error");
   var shapeMap = $("#textMap").val();
-
-  const iriref = `<[^>]*>`;
-  const pname = `[^:@\"\']*:(?:[^:@\"\'\\\\]|\\\\[:])*`;
-  const iri = `${iriref}|${pname}`;
-  const literal1 = `\'(?:[^\']|\\\\\')*\'`;
-  const literal2 = `\"(?:[^\"]|\\\\\")*\"`;
-  const langtag = `@[a-z]+(?:-[a-z]+)*`;
-  const datatype = `^^${iri}`;
-  const integer = `[+-]?[0-9]+`;
-  const decimal = `[+-]?[0-9]*\\.[0-9]+`;
-  const exponent = `[eE][+-]?[0-9]+`;
-  const double_ = `[+-]?(?:[0-9]+\\.[0-9]*${exponent}|\\.?[0-9]+${exponent})`;
-  const numeric = `${integer}|${decimal}|${double_}`;
-  const literal = `(?:(?:${literal1}|${literal2})(?:${langtag}|${datatype})?|${numeric})`;
-  const object = `${iri}|${literal}`;
-
-  $("#editMap").empty();
-  if (shapeMap.trim() === "") {
-    return makeFreshEditMap();
-  }
-
-  var errors = [];
+  Caches.inputSchema.refresh();
+  Caches.inputData.refresh();
   try {
-  var pairPattern = "(" + object + "|" + ParseTriplePattern + ")" + "@(" + iri + "|"+START_SHAPE_LABEL+")";
-  // e.g.: shapeMao = "my:n1@my:Shape1,<n2>@<Shape2>,my:n\\@3:.@<Shape3>";
-  var pairs = (shapeMap + ",").match(RegExp("(" + pairPattern + "),?", "g")).
-      map(s => s.substr(0, s.length-1)); // trim ','s
-
-  pairs.forEach(r2 => {
-    var m = r2.match(RegExp("^"+pairPattern+"$"));
-    if (m) {
-      var node = m[1] || "";
-      var shape = m[11] || "";
-      if (shape === "- start -")
-        throw Error("Please change \"- start -\" to \"" + START_SHAPE_LABEL + "\".");
-      addEditMapPair(null, [{node: node, shape: shape}]);
-    }
-  });
-  copyEditMapToFixedMap();
-  markEditMapClean();
+    var smparser = ShEx.ShapeMapParser.construct(
+      Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+    var sm = smparser.parse(shapeMap);
+    removeEditMapPair(null);
+    addEditMapPairs(sm);
+    copyEditMapToFixedMap();
+    markEditMapClean();
   } catch (e) {
+    $("#textMap").addClass("error");
     $("#fixedMap").empty();
-    results.append($("<div/>").append(
-      $("<span/>").text("Error parsing Query Map:"),
-      $("<pre/>").text(e)
-    ).addClass("error"));
-    errors.push(e);
-    console.log(e);
+    failMessage(e, "Query Map");
   }
-  return errors;
+  return [];
 }
 
 function makeFreshEditMap () {
-  addEditMapPair(null, [{node: "", shape: ""}]);
+  addEditMapPairs(null, null);
   markEditMapClean();
   return [];
 }
@@ -1202,10 +1250,10 @@ function makeFreshEditMap () {
  * @@TODO: add to ShExValidator so API accepts ShapeMap
  */
 function fixedShapeMapToTerms (shapeMap) {
-  return shapeMap.map(pair => {
+  return shapeMap; /*.map(pair => {
     return {node: Caches.inputData.meta.lexToTerm(pair.node + " "),
             shape: Caches.inputSchema.meta.lexToTerm(pair.shape)};
-  });
+  });*/
 }
 
 /**
@@ -1611,7 +1659,14 @@ function addContextMenus (inputSelector, cache) {
       build: function (elt, evt) {
         if (elt.hasClass("data")) {
           v = elt.val();
-          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
+
+          // Would like to use SMParser but that means users can't fix bad SMs.
+          // var sm = smparser.parse(v + '@START')[0];
+          // var m = typeof sm.node === "string" || "@value" in sm.node
+          //     ? null
+          //     : tpToM(sm.node);
+
+          var m = v.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
@@ -1672,6 +1727,18 @@ function addContextMenus (inputSelector, cache) {
           items[failContent] = failContent;
           return { items: items }
         }
+
+        // hack to emulate regex parsing product
+        // function tpToM (tp) {
+        //   return [v, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
+        //   function lex (node) {
+        //     return node === ShEx.ShapeMap.focus
+        //       ? "FOCUS"
+        //       : node === null
+        //       ? "_"
+        //       : Caches.inputData.meta.termToLex(node);
+        //   }
+        // }
       }
     });
 }
