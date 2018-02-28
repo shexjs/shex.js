@@ -815,10 +815,8 @@ function addEditMapPairs (pairs, target) {
     case "node": node = ldToTurtle(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
-      results.append($("<div/>").append(
-        $("<span/>").text("unsupported extension: <" + pair.node.language + ">:"),
-        $("<pre/>").text(pair.node.lexical)
-      ).addClass("error"));
+      failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
+                  "Query Map", pair.node.lexical);
       skip = true; // skip this entry.
       break;
     default:
