@@ -34,7 +34,6 @@ const ParseTriplePattern = (function () {
     uri+"|a)?(\\s*)("+
     uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
 })();
-const ParseBacktickPattern = "\\s*([a-zA-Z0-9_]+)\\s*`((?:[^`]|``)+)`(\\s*)";
 
 var Getables = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema},
