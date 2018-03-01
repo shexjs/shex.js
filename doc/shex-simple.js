@@ -36,7 +36,6 @@ const ParseTriplePattern = (function () {
     uri+"|a)?(\\s*)("+
     uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
 })();
-const ParseBacktickPattern = "\\s*([a-zA-Z0-9_]+)\\s*`((?:[^`]|``)+)`(\\s*)";
 
 var Getables = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema},
@@ -966,7 +965,7 @@ function addEditMapPairs (pairs, target) {
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       if (pair.node.language === EXTENSION_sparql) {
-        node = "SPARQL `" + pair.node.lexical + "`";
+        node = "SPARQL '" + (pair.node.lexical.replace(/'/g, "\\'")) + "'";
         shape = startOrLdToTurtle(pair.shape);
       } else {
         failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
