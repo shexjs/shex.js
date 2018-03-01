@@ -583,12 +583,20 @@ var results = (function () {
 
 // Validation UI
 function disableResultsAndValidate () {
-  if (new Date().getTime() - LastFailTime < 100)
+  if (new Date().getTime() - LastFailTime < 100) {
+    results.append(
+      $("<div/>").addClass("warning").append(
+        $("<h2/>").text("see shape map errors above"),
+        $("<button/>").text("validate (ctl-enter)").on("click", disableResultsAndValidate),
+        " again to continue."
+      )
+    );
     return; // return if < 100ms since last error.
+  }
   results.clear();
   results.start();
   setTimeout(function () {
-    copyEditMapToTextMap();
+    copyEditMapToTextMap(); // will update if #editMap is dirty
     validate();
   }, 0);
 }
