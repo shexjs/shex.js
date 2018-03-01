@@ -431,12 +431,7 @@ _QGT_COMMA_E_Opt:
     ;
 
 pair:
-      nodeSelector shapeSelector _Qstatus_E_Opt _Qreason_E_Opt _QjsonAttributes_E_Opt	-> extend({ node: $1, shape: $2 }, $3, $4, $5)
-    ;
-
-_Qstatus_E_Opt:
-      	-> { status: 'conformant' } // defaults to conformant
-    | status	-> { status: $1 }
+      nodeSelector statusAndShape _Qreason_E_Opt _QjsonAttributes_E_Opt	-> extend({ node: $1 }, $2, $3, $4)
     ;
 
 _Qreason_E_Opt:
@@ -449,17 +444,41 @@ _QjsonAttributes_E_Opt:
     | jsonAttributes	
     ;
 
+statusAndShape:
+      GT_AT _Qstatus_E_Opt shapeSelector	-> extend({ shape: $3 }, $2)
+    | ATSTART	-> { shape: ShEx.Validator.start }
+    | ATPNAME_NS	{
+        $1 = $1.substr(1, $1.length-1);
+        $$ = { shape: expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1)) };
+      }
+    | ATPNAME_LN	{
+        $1 = $1.substr(1, $1.length-1);
+        var namePos = $1.indexOf(':');
+        $$ = { shape: expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + $1.substr(namePos + 1) };
+      }
+    ;
+
+_Qstatus_E_Opt:
+      	-> { status: 'conformant' } // defaults to conformant
+    | status	-> { status: $1 }
+    ;
+
 nodeSelector:
       objectTerm	
     | triplePattern	
-    | GT_SPARQL EXTENSION	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $2 }
-    | nodeIri EXTENSION	-> { type: "Extension", language: $1, lexical: $2 }
+    | GT_SPARQL EXTENSION	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: unescapeString($2, 1)["@value"] }
+    | nodeIri EXTENSION	-> { type: "Extension", language: $1, lexical: unescapeString($2, 1)["@value"] }
     ;
 
 // _O_QGT_SPARQL_E_Or_QnodeIri_E_C:
 //       GT_SPARQL	-> "http://www.w3.org/ns/shex#Extensions-sparql"
 //     | nodeIri	
 //     ;
+
+shapeSelector:
+      shapeIri	
+    | START	-> ShEx.Validator.start
+    ;
 
 subjectTerm:
       nodeIri	
@@ -484,25 +503,6 @@ _O_QobjectTerm_E_Or_QIT___E_C:
 _O_QsubjectTerm_E_Or_QIT___E_C:
       subjectTerm	
     | IT__	-> null
-    ;
-
-shapeSelector:
-      GT_AT _O_QshapeIri_E_Or_QSTART_E_C	-> $2
-    | ATSTART	-> ShEx.Validator.start
-    | ATPNAME_NS	{
-        $1 = $1.substr(1, $1.length-1);
-        $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1));
-      }
-    | ATPNAME_LN	{
-        $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + $1.substr(namePos + 1);
-      }
-    ;
-
-_O_QshapeIri_E_Or_QSTART_E_C:
-      shapeIri	
-    | START	-> ShEx.Validator.start
     ;
 
 status:

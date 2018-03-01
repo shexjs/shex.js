@@ -49,6 +49,8 @@
       #results div:disabled.error  { color: #300; }
       #results div.human { margin: 1ex 0; }
       #results div.human pre { margin: 0 2em; }
+      #results h3 { font-size: larger; margin: 0; }
+      #results pre { margin: 1ex; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -95,7 +97,9 @@
       h2.status { margin: 0; }
       #addPair, #removePair { text-decoration: none; }
       #schemaDialect, #dataDialect { font-size: .7em; }
-      #shapeMap { padding-left: .25em; }
+      #shapeMap { padding-left: .25em; } /* !! doesn't exist */
+      #shapeMap-tabs textarea.error { padding-left: default; border-left: default; background-color: #fdd; }
+      #editMap input.error { padding-left: none; border-left: none; background-color: #fdd; }
       .pair { list-style-type: none; }
       .addPair, .removePair { font-size: 80%; line-height: 1ex; font-family: monospace; }
       .pair button {
@@ -371,7 +375,10 @@ ul {
     <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script>module.exports = exports;</script><script src="../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
     <script src="../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>
-    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = module.exports;</script>
+    <script>module.exports = exports;</script><script src="../lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
+    <script src="../lib/ShapeMapParser.js"   ></script><script>modules["../lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
+    <script src="../lib/ShapeMap.js"   ></script><script>modules["../lib/ShapeMap"] = modules["./lib/ShapeMap"] = module.exports;</script>
+    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["./ShExWriter"] = module.exports;</script>
     <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
     <script src="../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
