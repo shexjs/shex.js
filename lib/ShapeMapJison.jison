@@ -317,7 +317,7 @@ STRING_LITERAL2_COLON   '"' ([^\u0022\u005C\u000A\u000D] | {ECHAR} | {UCHAR})* '
 FOCUS                   [Ff][Oo][Cc][Uu][Ss]
 START                   [Ss][Tt][Aa][Rr][Tt]
 ATSTART                 "@"[Ss][Tt][Aa][Rr][Tt]
-GT_SPARQL               [Ss][Pp][Aa][Rr][Qq][Ll]
+IT_SPARQL               [Ss][Pp][Aa][Rr][Qq][Ll]
 LANGTAG                 "@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER                 ([+-])?([0-9])+
 DECIMAL                 ([+-])?([0-9])*"."([0-9])+
@@ -334,8 +334,6 @@ ATPNAME_NS              '@' {PNAME_NS}
 HEX                     [0-9] | [A-F] | [a-f]
 PERCENT                 '%' {HEX} {HEX}
 UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX} {HEX}
-
-EXTENSION               "`" ([^\u0060\u005c] | "\\" "`")* "`"
 
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
@@ -361,7 +359,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {FOCUS}                 return 'IT_FOCUS';
 {START}                 return 'START';
 {ATSTART}               return 'ATSTART';
-{GT_SPARQL}             return 'GT_SPARQL';
+{IT_SPARQL}             return 'IT_SPARQL';
 
 {ATPNAME_LN}            return 'ATPNAME_LN';
 {ATPNAME_NS}            return 'ATPNAME_NS';
@@ -374,8 +372,6 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {INTEGER}               return 'INTEGER';
 {IRIREF}                return 'IRIREF';
 {BLANK_NODE_LABEL}      return 'BLANK_NODE_LABEL';
-
-{EXTENSION}             return 'EXTENSION';
 
 {STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
 {STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
@@ -466,12 +462,13 @@ _Qstatus_E_Opt:
 nodeSelector:
       objectTerm	
     | triplePattern	
-    | GT_SPARQL EXTENSION	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: unescapeString($2, 1)["@value"] }
-    | nodeIri EXTENSION	-> { type: "Extension", language: $1, lexical: unescapeString($2, 1)["@value"] }
+//     | _O_QIT_SPARQL_E_Or_QnodeIri_E_C string	-> { type: "Extension", language: $1, lexical: $2["@value"] }
+    | IT_SPARQL string	-> { type: "Extension", language: "http://www.w3.org/ns/shex#Extensions-sparql", lexical: $2["@value"] }
+    | nodeIri string	-> { type: "Extension", language: $1, lexical: $2["@value"] }
     ;
 
-// _O_QGT_SPARQL_E_Or_QnodeIri_E_C:
-//       GT_SPARQL	-> "http://www.w3.org/ns/shex#Extensions-sparql"
+// _O_QIT_SPARQL_E_Or_QnodeIri_E_C:
+//       IT_SPARQL	-> "http://www.w3.org/ns/shex#Extensions-sparql"
 //     | nodeIri	
 //     ;
 
