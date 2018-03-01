@@ -879,7 +879,7 @@ function addEditMapPairs (pairs, target) {
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       if (pair.node.language === EXTENSION_sparql) {
-        node = "SPARQL `" + pair.node.lexical + "`";
+        node = "SPARQL '" + (pair.node.lexical.replace(/'/g, "\\'")) + "'";
         shape = startOrLdToTurtle(pair.shape);
       } else {
         failMessage(Error("unsupported extension: <" + pair.node.language + ">"),

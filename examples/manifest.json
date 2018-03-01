@@ -52,7 +52,7 @@
     "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\n\nstart = @<wikidata_item>\n\n<wikidata_item> {\n  p:P1748 {\n    ps:P1748 LITERAL ;\n    prov:wasDerivedFrom @<reference>\n  }+\n}\n\n<reference> {\n  pr:P248  IRI ;\n  pr:P813  xsd:dateTime ;\n  pr:P699  LITERAL\n}\n",
     "dataLabel": "12078",
     "data": "\n\n  Endpoint: https://query.wikidata.org/bigdata/namespace/wdq/sparql\n",
-    "queryMap": "SPARQL `SELECT ?item ?itemLabel WHERE { ?item wdt:P279* wd:Q12078 .   SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } } LIMIT 10`@START",
+    "queryMap": "SPARQL 'SELECT ?item ?itemLabel WHERE { ?item wdt:P279* wd:Q12078 .   SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\" } } LIMIT 10'@START",
     "status": "conformant"
   }
 ]
