@@ -895,9 +895,7 @@ function validate () {
     results.append(elt);
 
     // update the FixedMap
-    var shapeString = entry.shape === ShEx.Validator.start ?
-        START_SHAPE_INDEX_ENTRY :
-        entry.shape;
+    var shapeString = entry.shape === ShEx.Validator.start ? START_SHAPE_INDEX_ENTRY : entry.shape;
     var fixedMapEntry = $("#fixedMap .pair"+
                           "[data-node='"+entry.node+"']"+
                           "[data-shape='"+shapeString+"']");
@@ -1299,8 +1297,8 @@ function copyEditMapToFixedMap () {
       nodes = []; // skip this entry
     }
     nodes.forEach(node => {
-      var nodeTerm = node; // Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
-      var shapeTerm = shape; // Caches.inputSchema.meta.lexToTerm(shape);
+      var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
+      var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
