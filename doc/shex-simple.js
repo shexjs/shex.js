@@ -282,8 +282,30 @@ function makeTurtleCache (selection) {
   ret.parse = function (text, base) {
     var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
-    if (m)
+    if (m) {
       ret.endpoint = m[1];
+      if ($("#slurp").length === 0) {
+        // Add a #slurp checkbox
+        $("#load-data-button").append(
+          $("<span/>", {id: "slurpSpan",
+                        style: "float:right",
+                        title: "fill data pane with data queried from <" + Caches.inputData.endpoint + ">"})
+            .append(
+              $("<input/>", {id: "slurp", type: "checkbox"}),
+              $("<label/>", {for: "slurp"}).text("slurp")
+            ).on("click", () => {
+              // HACK: disable propagation and toggle after handler is done.
+              setTimeout(() => {
+                $("#slurp").prop("checked", !$("#slurp").prop("checked"));
+              }, 0);
+              return false; // don't pass to load data button
+            })
+        );
+      }
+    } else {
+      delete ret.endpoint; // make sure it's not set
+      $("#slurpSpan").remove();
+    }
     if (ret.endpoint) {
       return {
         getTriplesByIRI: function (s, p, o) {
@@ -302,6 +324,12 @@ function makeTurtleCache (selection) {
               object: o
             };
           });
+          if ("slurpWriter" in ret) {
+            ret.slurpStatus = (s // use schema's prefixes 'cause they're better than nothing.
+                               ? "arcsOut(" + Caches.inputSchema.meta.termToLex(s) + ")"
+                               : "arcsIn(" + Caches.inputSchema.meta.termToLex(o) + ")");
+            ret.slurpWriter.addTriples(triples);
+          }
           return triples;
         }
       };
@@ -535,6 +563,7 @@ function clearData () {
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
+  delete Caches.inputData.endpoint;
 }
 
 function clearAll () {
@@ -704,6 +733,24 @@ function validate () {
       }).get());
       $("#results .status").text("parsing data...").show();
       var inputData = Caches.inputData.refresh();
+      if ($("#slurp").is(":checked")) {
+        // Set inputData's dirty bit.
+        Caches.inputData.set("# slurping from " + Caches.inputData.endpoint + "...\n");
+        var stream = {
+          write: function (chunk, encoding, callback) {
+            $("#inputData textarea").val((i, text) => {
+              if ("slurpStatus" in Caches.inputData && chunk.match(/\n/)) {
+                chunk = chunk.replace(/\n/, "\n# " + Caches.inputData.slurpStatus + "\n"); // is this injection too sneaky?
+                delete Caches.inputData.slurpStatus;
+              }
+              return text + chunk; // cheaper than set but a pain to maintain...
+            });
+            if (callback)
+              callback();
+          }
+        };
+        Caches.inputData.slurpWriter = ShEx.N3.Writer(stream, { prefixes: Caches.inputSchema.meta.prefixes });
+      }
 
       $("#results .status").text("creating validator...").show();
       // var dataURL = "data:text/json," +
@@ -823,6 +870,15 @@ function validate () {
   }
 
   function finishRendering () {
+    if ("slurpWriter" in Caches.inputData) {
+      Caches.inputData.slurpWriter.end(() => {
+        $("#slurpSpan").remove();
+        // delete Caches.intputData.endpoint;
+        Caches.inputData.refresh();
+        delete Caches.inputData.slurpWriter;
+      });
+    }
+
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
           if ($("#interface").val() !== "human")
