@@ -254,70 +254,36 @@ function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
   // ret.endpoint = null,
   // ret.query = null,
-  ret.executeQuery = function (query, endpoint) {
-    var rows = [];
-    $.ajax({
-      async: false,
-      url: endpoint || ret.endpoint,
-      data: { query: query },
-      datatype: "xml",
-      // datatype: "json",
-      // accepts: { json: "application/sparql-results+json" },
-      success : function(data) {
-        if (endpoint)
-          ret.endpoint = endpoint;
-        ret.query = query;
-        rows = []; // $.map flattens nested arrays.
-        $(data).find("sparql > results > result").
-          each((_, row) => {
-            rows.push($(row).find("binding > *:nth-child(1)").
-              map((idx, elt) => {
-                elt = $(elt);
-                var text = elt.text();
-                switch (elt.prop("tagName")) {
-                case "uri": return text;
-                case "bnode": return "_:" + text;
-                case "literal":
-                  var datatype = elt.attr("datatype");
-                  var lang = elt.attr("xml:lang");
-                  return "\"" + text + "\"" + (
-                    datatype ? "^^" + datatype :
-                    lang ? "@" + lang :
-                      "");
-                default: throw "unknown XML results type: " + elt.prop("tagName");
-                }
-              }).get());
-          });
-      }
-    });
-    return rows;
-  };
   ret.parse = function (text, base) {
     var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
-    if (m)
+    if (m) {
       ret.endpoint = m[1];
+      if ($("#slurp").length === 0) {
+        // Add a #slurp checkbox
+        $("#load-data-button").append(
+          $("<span/>", {id: "slurpSpan",
+                        style: "float:right",
+                        title: "fill data pane with data queried from <" + Caches.inputData.endpoint + ">"})
+            .append(
+              $("<input/>", {id: "slurp", type: "checkbox"}),
+              $("<label/>", {for: "slurp"}).text("slurp")
+            ).on("click", () => {
+              // HACK: disable propagation and toggle after handler is done.
+              setTimeout(() => {
+                $("#slurp").prop("checked", !$("#slurp").prop("checked"));
+              }, 0);
+              return false; // don't pass to load data button
+            })
+        );
+      }
+    } else {
+      delete ret.endpoint; // make sure it's not set
+      $("#slurpSpan").remove();
+    }
     if (ret.endpoint) {
-      return {
-        getTriplesByIRI: function (s, p, o) {
-          var query = s ?
-                `SELECT ?p ?o { <${s}> ?p ?o }`:
-                `SELECT ?s ?p { ?s ?p <${o}> }`;
-          var rows = ret.executeQuery(query);
-          var triples = rows.map(row =>  {
-            return s ? {
-              subject: s,
-              predicate: row[0],
-              object: row[1]
-            } : {
-              subject: row[0],
-              predicate: row[1],
-              object: o
-            };
-          });
-          return triples;
-        }
-      };
+      return ShEx.Util.makeQueryDB(ret.endpoint,
+                                   $("#slurp").is(":checked") ? queryTracker() : null);
     }
     return parseTurtle(text, ret.meta, base);
   };
@@ -325,7 +291,7 @@ function makeTurtleCache (selection) {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
-      return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
+      return ["- add all -"].concat(ShEx.Util.executeQuery("SELECT DISTINCT ?s { ?s ?p ?o }", m[1]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
@@ -548,6 +514,7 @@ function clearData () {
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
+  delete Caches.inputData.endpoint;
 }
 
 function clearAll () {
@@ -722,6 +689,12 @@ function validate () {
         };
       }).get());
       $("#results .status").text("parsing data...").show();
+      var inputData = Caches.inputData.refresh();
+      if ($("#slurp").is(":checked")) {
+        // .set() sets inputData's dirty bit.
+        Caches.inputData.set("# slurping from <" + Caches.inputData.endpoint + ">...\n\n\n");
+        Caches.inputData.slurpWriter = ShEx.N3.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
+      }
 
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
@@ -765,7 +738,7 @@ function validate () {
             options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
           },
           ("endpoint" in Caches.inputData ?
-           { endpoint: Caches.inputData.endpoint } :
+           { endpoint: Caches.inputData.endpoint, slurp: $("#slurp").is(":checked") } :
            { data: Caches.inputData.refresh().getTriplesByIRI() })
         ));
       }
@@ -775,10 +748,10 @@ function validate () {
         ShExWorker = new Worker("shex-simple-worker.js");
         if (evt !== null)
           $("#results .status").text("validation aborted").show();
-        resultsCleanup();
+        workerUICleanup();
       }
 
-      function resultsCleanup () {
+      function workerUICleanup () {
         $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
         $("#validate").off("click", terminateWorker);
         $("#validate").on("click", disableResultsAndValidate);
@@ -818,6 +791,19 @@ function validate () {
               renderEntry(msg.data.results);
             }
           finishRendering();
+          break;
+
+        case "startQuery":
+          // use schema's prefixes 'cause they're better than nothing.
+          var node = Caches.inputSchema.meta.termToLex(msg.data.term);
+          var shape = Caches.inputSchema.meta.termToLex(msg.data.shape);
+          var slurpStatus = (msg.data.isOut ? "←" : "→") + " " + node + "@" + shape;
+          noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+          break;
+
+        case "finishQuery":
+          noScrollAppend($("#inputData textarea"), " " + msg.data.triples.length + " triples (" + msg.data.time + " μs)\n");
+          Caches.inputData.slurpWriter.addTriples(msg.data.triples);
           break;
 
         default:
@@ -907,7 +893,46 @@ function validate () {
     fixedMapEntry.find("a").attr("href", "#" + anchor);
   }
 
+  /** attempt to disable scrolling if not at bottom of target.
+   * tried both selectionState and scrollTop.
+   */
+  function noScrollAppend (target, toAdd) {
+    var e = target.get(0);
+    // var oldLen = target.val().length
+    // var oldSel = target.prop("selectionStart");
+    // var oldScrollTop = e.scrollTop;
+    // var oldScrollHeight = e.scrollHeight;
+    target.val((i, text) => {
+      return text + toAdd;
+    });
+    // console.log(oldScrollTop, oldScrollHeight);
+    // if (oldScrollTop === oldScrollHeight) {
+      e.scrollTop = e.scrollHeight;
+    //   target.prop("selectionStart", target.val().length);
+    // } else {
+    //   target.prop("selectionStart", oldScrollTop);
+    // }
+    // if (oldSel === oldLen) {
+    //   e.scrollTop = e.scrollHeight;
+    //   target.prop("selectionStart", target.val().length);
+    // } else {
+    //   target.prop("selectionStart", oldSel);
+    // }
+  }
+
   function finishRendering () {
+    if ("slurpWriter" in Caches.inputData) {
+      Caches.inputData.slurpWriter.end((err, chunk) => {
+        $("#inputData textarea").val((i, text) => {
+          return text + "\n\n# Visited data:\n" + chunk; // cheaper than set() but a pain to maintain...
+        });
+        $("#slurpSpan").remove();
+        // delete Caches.intputData.endpoint;
+        Caches.inputData.refresh();
+        delete Caches.inputData.slurpWriter;
+      });
+    }
+
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
           if ($("#interface").val() !== "human")
@@ -916,7 +941,7 @@ function validate () {
                 $(elt).prepend("[");
               $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
             });
-          resultsCleanup();
+          workerUICleanup();
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
@@ -1281,7 +1306,7 @@ function copyEditMapToFixedMap () {
       nodes = typeof sm.node === "string" || "@value" in sm.node
         ? [node]
         : sm.node.language === EXTENSION_sparql
-        ? [/*"- add all -"*/].concat(Caches.inputData.executeQuery(sm.node.lexical).map(row => {
+        ? [/*"- add all -"*/].concat(ShEx.Util.executeQuery(sm.node.lexical, Caches.inputData.endpoint).map(row => {
           return Caches.inputData.meta.termToLex(row[0]);
         }))
         : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
