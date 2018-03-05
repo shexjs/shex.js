@@ -3717,6 +3717,92 @@ var ShExUtil = {
     return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
   },
 
+  executeQuery: function (query, endpoint) {
+    var rows;
+
+    var queryURL = endpoint + "?query=" + encodeURIComponent(query);
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", queryURL, false);
+    xhr.setRequestHeader('Accept', 'application/sparql-results+json');
+    xhr.send();
+    // var selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
+    // var selects = selectsBlock.match(/\?[^\s?]+/g);
+    var t = JSON.parse(xhr.responseText);
+    var selects = t.head.vars;
+    return t.results.bindings.map(row => {
+      return selects.map(sel => {
+        var elt = row[sel];
+        switch (elt.type) {
+        case "uri": return elt.value;
+        case "bnode": return "_:" + elt.value;
+        case "literal":
+          var datatype = elt.datatype;
+          var lang = elt["xml:lang"];
+          return "\"" + elt.value + "\"" + (
+            datatype ? "^^" + datatype :
+              lang ? "@" + lang :
+              "");
+        default: throw "unknown XML results type: " + elt.prop("tagName");
+        }
+        return row[sel];
+      })
+    });
+
+/* TO ADD? XML results format parsed with jquery:
+        $(data).find("sparql > results > result").
+          each((_, row) => {
+            rows.push($(row).find("binding > *:nth-child(1)").
+              map((idx, elt) => {
+                elt = $(elt);
+                var text = elt.text();
+                switch (elt.prop("tagName")) {
+                case "uri": return text;
+                case "bnode": return "_:" + text;
+                case "literal":
+                  var datatype = elt.attr("datatype");
+                  var lang = elt.attr("xml:lang");
+                  return "\"" + text + "\"" + (
+                    datatype ? "^^" + datatype :
+                    lang ? "@" + lang :
+                      "");
+                default: throw "unknown XML results type: " + elt.prop("tagName");
+                }
+              }).get());
+          });
+*/
+  },
+
+  /** emulate N3Store().getTriplesByIRI() with additional parm.
+   */
+  makeQueryDB: function (endpoint, queryTracker) {
+    var _ShExUtil = this;
+    return {
+      getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
+        var query = s ?
+            `SELECT ?p ?o { <${s}> ?p ?o }`:
+          `SELECT ?s ?p { ?s ?p <${o}> }`;
+        var startTime = new Date();
+        if (queryTracker)
+          queryTracker.start(!!s, s ? s : o, shapeLabel);
+        var rows = _ShExUtil.executeQuery(query, endpoint);
+        var triples = rows.map(row =>  {
+          return s ? {
+            subject: s,
+            predicate: row[0],
+            object: row[1]
+          } : {
+            subject: row[0],
+            predicate: row[1],
+            object: o
+          };
+        });
+        if (queryTracker)
+          queryTracker.end(triples, new Date() - startTime);
+        return triples;
+      }
+    };
+  },
+
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
 
   // Expect property p with value v in object o
@@ -4250,8 +4336,8 @@ function ShExValidator_constructor(schema, options) {
       }; // some semAct aborted !! return real error
     _log("validating <" + point + "> as <" + shapeLabel + ">");
 
-    var outgoing = indexNeighborhood(db.getTriplesByIRI(point, null, null, null).sort(byObject));
-    var incoming = indexNeighborhood(db.getTriplesByIRI(null, null, point, null).sort(bySubject));
+    var outgoing = indexNeighborhood(db.getTriplesByIRI(point, null, null, null, shapeLabel).sort(byObject));
+    var incoming = indexNeighborhood(db.getTriplesByIRI(null, null, point, null, shapeLabel).sort(bySubject));
     var neighborhood = outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
 
     var constraintList = this.indexTripleConstraints(shape.expression);

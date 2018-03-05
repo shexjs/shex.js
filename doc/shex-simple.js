@@ -241,44 +241,6 @@ function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
   // ret.endpoint = null,
   // ret.query = null,
-  ret.executeQuery = function (query, endpoint) {
-    var rows = [];
-    $.ajax({
-      async: false,
-      url: endpoint || ret.endpoint,
-      data: { query: query },
-      datatype: "xml",
-      // datatype: "json",
-      // accepts: { json: "application/sparql-results+json" },
-      success : function(data) {
-        if (endpoint)
-          ret.endpoint = endpoint;
-        ret.query = query;
-        rows = []; // $.map flattens nested arrays.
-        $(data).find("sparql > results > result").
-          each((_, row) => {
-            rows.push($(row).find("binding > *:nth-child(1)").
-              map((idx, elt) => {
-                elt = $(elt);
-                var text = elt.text();
-                switch (elt.prop("tagName")) {
-                case "uri": return text;
-                case "bnode": return "_:" + text;
-                case "literal":
-                  var datatype = elt.attr("datatype");
-                  var lang = elt.attr("xml:lang");
-                  return "\"" + text + "\"" + (
-                    datatype ? "^^" + datatype :
-                    lang ? "@" + lang :
-                      "");
-                default: throw "unknown XML results type: " + elt.prop("tagName");
-                }
-              }).get());
-          });
-      }
-    });
-    return rows;
-  };
   ret.parse = function (text, base) {
     var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
@@ -307,32 +269,8 @@ function makeTurtleCache (selection) {
       $("#slurpSpan").remove();
     }
     if (ret.endpoint) {
-      return {
-        getTriplesByIRI: function (s, p, o) {
-          var query = s ?
-                `SELECT ?p ?o { <${s}> ?p ?o }`:
-                `SELECT ?s ?p { ?s ?p <${o}> }`;
-          var rows = ret.executeQuery(query);
-          var triples = rows.map(row =>  {
-            return s ? {
-              subject: s,
-              predicate: row[0],
-              object: row[1]
-            } : {
-              subject: row[0],
-              predicate: row[1],
-              object: o
-            };
-          });
-          if ("slurpWriter" in ret) {
-            ret.slurpStatus = (s // use schema's prefixes 'cause they're better than nothing.
-                               ? "arcsOut(" + Caches.inputSchema.meta.termToLex(s) + ")"
-                               : "arcsIn(" + Caches.inputSchema.meta.termToLex(o) + ")");
-            ret.slurpWriter.addTriples(triples);
-          }
-          return triples;
-        }
-      };
+      return ShEx.Util.makeQueryDB(ret.endpoint,
+                                   $("#slurp").is(":checked") ? queryTracker() : null);
     }
     return parseTurtle(text, ret.meta, base);
   };
@@ -340,12 +278,12 @@ function makeTurtleCache (selection) {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
-      return ["- add all -"].concat(ret.executeQuery(m[2], m[1]).map(row => {
+      return ["- add all -"].concat(ShEx.Util.executeQuery("SELECT DISTINCT ?s { ?s ?p ?o }", m[1]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
       var data = this.refresh();
-      return data.getTriples().map(t => {
+      return data.getTriplesByIRI().map(t => {
         return Caches.inputData.meta.termToLex(t.subject);
       });
     }
@@ -734,22 +672,10 @@ function validate () {
       $("#results .status").text("parsing data...").show();
       var inputData = Caches.inputData.refresh();
       if ($("#slurp").is(":checked")) {
-        // Set inputData's dirty bit.
-        Caches.inputData.set("# slurping from " + Caches.inputData.endpoint + "...\n");
-        var stream = {
-          write: function (chunk, encoding, callback) {
-            $("#inputData textarea").val((i, text) => {
-              if ("slurpStatus" in Caches.inputData && chunk.match(/\n/)) {
-                chunk = chunk.replace(/\n/, "\n# " + Caches.inputData.slurpStatus + "\n"); // is this injection too sneaky?
-                delete Caches.inputData.slurpStatus;
-              }
-              return text + chunk; // cheaper than set but a pain to maintain...
-            });
-            if (callback)
-              callback();
-          }
-        };
-        Caches.inputData.slurpWriter = ShEx.N3.Writer(stream, { prefixes: Caches.inputSchema.meta.prefixes });
+        // .set() sets inputData's dirty bit.
+        Caches.inputData.set("# slurping from <" + Caches.inputData.endpoint + ">...\n\n\n");
+        Caches.inputData.slurpWriter = ShEx.N3.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
+        inputData = ShEx.Util.makeQueryDB(Caches.inputData.endpoint, queryTracker());
       }
 
       $("#results .status").text("creating validator...").show();
@@ -869,9 +795,39 @@ function validate () {
     fixedMapEntry.find("a").attr("href", "#" + anchor);
   }
 
+  /** attempt to disable scrolling if not at bottom of target.
+   * tried both selectionState and scrollTop.
+   */
+  function noScrollAppend (target, toAdd) {
+    var e = target.get(0);
+    // var oldLen = target.val().length
+    // var oldSel = target.prop("selectionStart");
+    // var oldScrollTop = e.scrollTop;
+    // var oldScrollHeight = e.scrollHeight;
+    target.val((i, text) => {
+      return text + toAdd;
+    });
+    // console.log(oldScrollTop, oldScrollHeight);
+    // if (oldScrollTop === oldScrollHeight) {
+      e.scrollTop = e.scrollHeight;
+    //   target.prop("selectionStart", target.val().length);
+    // } else {
+    //   target.prop("selectionStart", oldScrollTop);
+    // }
+    // if (oldSel === oldLen) {
+    //   e.scrollTop = e.scrollHeight;
+    //   target.prop("selectionStart", target.val().length);
+    // } else {
+    //   target.prop("selectionStart", oldSel);
+    // }
+  }
+
   function finishRendering () {
     if ("slurpWriter" in Caches.inputData) {
-      Caches.inputData.slurpWriter.end(() => {
+      Caches.inputData.slurpWriter.end((err, chunk) => {
+        $("#inputData textarea").val((i, text) => {
+          return text + "\n\n# Visited data:\n" + chunk; // cheaper than set() but a pain to maintain...
+        });
         $("#slurpSpan").remove();
         // delete Caches.intputData.endpoint;
         Caches.inputData.refresh();
@@ -1156,6 +1112,21 @@ function toggleControls (evt) {
   return false;
 }
 
+function queryTracker () {
+  return {
+    start: function (isOut, term, shapeLabel) {
+      var node = Caches.inputSchema.meta.termToLex(term);
+      var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
+      var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
+      noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+    },
+    end: function (triples, time) {
+      noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
+      Caches.inputData.slurpWriter.addTriples(triples);
+    }
+  }
+}
+
 function toggleControlsArrow (which) {
   // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
   if (document.getElementById("menu-button") === null)
@@ -1238,7 +1209,7 @@ function copyEditMapToFixedMap () {
       nodes = typeof sm.node === "string" || "@value" in sm.node
         ? [node]
         : sm.node.language === EXTENSION_sparql
-        ? [/*"- add all -"*/].concat(Caches.inputData.executeQuery(sm.node.lexical).map(row => {
+        ? [/*"- add all -"*/].concat(ShEx.Util.executeQuery(sm.node.lexical, Caches.inputData.endpoint).map(row => {
           return Caches.inputData.meta.termToLex(row[0]);
         }))
         : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
