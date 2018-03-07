@@ -456,7 +456,7 @@ function renderErrorMessage (response, what) {
 
 function clearData () {
   Caches.inputData.set("", DefaultBase);
-  $("#textMap").val("");
+  $("#textMap").val("").removeClass("error");
   $(".focus").val("");
   $("#inputData .status").text(" ");
   results.clear();
@@ -504,7 +504,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
     try {
-      $("input.schema").val(Caches.inputSchema.getItems()[0]);
+      Caches.inputSchema.refresh();
     } catch (e) {
       failMessage(e, "schema");
     }
@@ -521,7 +521,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
     try {
-      $("input.data").val(Caches.inputData.getItems()[0]);
+      Caches.inputData.refresh();
     } catch (e) {
       failMessage(e, "data");
     }
@@ -773,7 +773,7 @@ function validate () {
 
 var LastFailTime = 0;
 function failMessage (e, kind, text) {
-  // disabled: $("#results .status").empty().text(@@).show()
+  $("#results .status").empty().text("Errors encountered:").show()
   var div = $("<div/>").addClass("error");
   div.append($("<h3/>").text("error parsing " + kind + ":\n"));
   div.append($("<pre/>").text(e.message));
@@ -1201,8 +1201,8 @@ function copyEditMapToTextMap () {
 function copyTextMapToEditMap () {
   $("#textMap").removeClass("error");
   var shapeMap = $("#textMap").val();
-  Caches.inputSchema.refresh();
-  Caches.inputData.refresh();
+  try { Caches.inputSchema.refresh(); } catch (e) { }
+  try { Caches.inputData.refresh(); } catch (e) { }
   try {
     var smparser = ShEx.ShapeMapParser.construct(
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
