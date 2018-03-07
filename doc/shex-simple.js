@@ -6,6 +6,7 @@ const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";
+var LOG_PROGRESS = false;
 
 var DefaultBase = location.origin + location.pathname;
 
@@ -664,7 +665,7 @@ function validate () {
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
         $("#results .status").text("validating...").show();
-        var ret = validator.validate(inputData, fixedMap);
+        var ret = validator.validate(inputData, fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
         // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
         ret.forEach(renderEntry);
@@ -723,6 +724,19 @@ function validate () {
     }
   } catch (e) {
     failMessage(e, parsing);
+  }
+
+  function makeConsoleTracker () {
+    function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
+    function sm (node, shape) { return `${Caches.inputData.meta.termToLex(node)}@${Caches.inputSchema.meta.termToLex(shape)}`; }
+    var logger = {
+      recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
+      known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
+      enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
+      exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
+      depth: 0
+    };
+    return logger;
   }
 
   function renderEntry (entry) {
