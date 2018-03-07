@@ -8,6 +8,7 @@ const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id 
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";
 const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
+const SPARQL_get_items_limit = 50;
 
 var DefaultBase = location.origin + location.pathname;
 
@@ -291,7 +292,8 @@ function makeTurtleCache (selection) {
     var text = this.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
-      return ["- add all -"].concat(ShEx.Util.executeQuery("SELECT DISTINCT ?s { ?s ?p ?o }", m[1]).map(row => {
+      var q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
+      return ["- add all -"].concat(ShEx.Util.executeQuery(q, m[1]).map(row => {
         return Caches.inputData.meta.termToLex(row[0]);
       }));
     } else {
