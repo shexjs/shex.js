@@ -500,7 +500,7 @@ function renderErrorMessage (response, what) {
 function clearData () {
   Caches.inputData.set("", DefaultBase);
   $("#textMap").val("").removeClass("error");
-  $(".focus").val("");
+  Caches.shapeMap.parse("");
   $("#inputData .status").text(" ");
   results.clear();
   delete Caches.inputData.endpoint;
@@ -560,6 +560,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     clearData();
     $(elt).removeClass("selected");
   } else {
+    // Update data pane.
     Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
@@ -569,8 +570,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     } catch (e) {
       failMessage(e, "data");
     }
+
+    // Update ShapeMap pane.
     removeEditMapPair(null);
-    // This will probably overwrite $("input.data").val()
     if (dataTest.entry.queryMap === undefined) {
       fetchOK(dataTest.entry.queryMapURL).then(queryMapLoaded).catch(response => {
         renderErrorMessage(response, "queryMap");
@@ -578,6 +580,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     } else {
       queryMapLoaded(dataTest.entry.queryMap);
     }
+
     function queryMapLoaded (text) {
       dataTest.entry.queryMap = text;
       try {
@@ -1196,7 +1199,9 @@ function markEditMapClean () {
  * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
  */
 function copyEditMapToFixedMap () {
-  $("#fixedMap").empty();
+  var restoreElt = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
+  var restoreText = restoreElt.text();
+  restoreElt.text("resolving Fixed Map").addClass("error");
   var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
@@ -1224,7 +1229,7 @@ function copyEditMapToFixedMap () {
         $(queryPair).find(".inputShape").addClass("error");
       }
       failMessage(e, "Edit Map", node + '@' + shape);
-      nodes = []; // skip this entry
+      nodes = promise.resolve([]); // skip this entry
     }
     nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
@@ -1235,6 +1240,32 @@ function copyEditMapToFixedMap () {
       if (key in acc)
         return;
 
+      var spanElt = createEntry(node, nodeTerm, shape, shapeTerm);
+      acc[key] = spanElt; // just needs the key so far.
+    });
+
+    return acc;
+  }, {});
+
+  // scroll inputs to right
+  $("#fixedMap input").each((idx, focusElt) => {
+    focusElt.scrollLeft = focusElt.scrollWidth;
+  });
+  restoreElt.text(restoreText).removeClass("error");
+
+  function getTriples (s, p, o) {
+    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
+    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+      return Caches.inputData.meta.termToLex(t[get]);
+    });
+    function mine (term) {
+      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
+        ? null
+        : term;
+    }
+  }
+
+      function createEntry (node, nodeTerm, shape, shapeTerm) {
     var spanElt = $("<tr/>", {class: "pair"
                               ,"data-node": nodeTerm
                               ,"data-shape": shapeTerm
@@ -1267,29 +1298,9 @@ function copyEditMapToFixedMap () {
       return $("<td/>").append(elt);
     }));
 
-      $("#fixedMap").append(spanElt);
-      acc[key] = spanElt; // just needs the key so far.
-    });
-
-    return acc;
-  }, {});
-
-  // scroll inputs to right
-  $("#fixedMap input").each((idx, focusElt) => {
-    focusElt.scrollLeft = focusElt.scrollWidth;
-  });
-
-  function getTriples (s, p, o) {
-    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
-    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);
-    });
-    function mine (term) {
-      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
-        ? null
-        : term;
-    }
-  }
+        $("#fixedMap").append(spanElt);
+        return spanElt;
+      }
 }
 
 function copyEditMapToTextMap () {
