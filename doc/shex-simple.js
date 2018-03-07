@@ -244,7 +244,7 @@ function makeTurtleCache (selection) {
   };
   ret.getItems = function () {
     var data = this.refresh();
-    return data.getTriples().map(t => {
+    return data.getTriplesByIRI().map(t => {
       return Caches.inputData.meta.termToLex(t.subject);
     });
   };
@@ -456,10 +456,15 @@ function renderErrorMessage (response, what) {
 }
 
 function clearData () {
+  // Clear out data textarea.
   Caches.inputData.set("", DefaultBase);
-  $("#textMap").val("").removeClass("error");
-  $(".focus").val("");
   $("#inputData .status").text(" ");
+
+  // Clear out every form of ShapeMap.
+  $("#textMap").val("").removeClass("error");
+  makeFreshEditMap();
+  $("#fixedMap").empty();
+
   results.clear();
 }
 
@@ -485,7 +490,6 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
 
     Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
-    Caches.shapeMap.set("", DefaultBase);
     var headings = {
       "passes": "Passing:",
       "fails": "Failing:",
@@ -513,10 +517,11 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
 }
 
 function pickData (name, dataTest, elt, listItems, side) {
+  clearData();
   if ($(elt).hasClass("selected")) {
-    clearData();
     $(elt).removeClass("selected");
   } else {
+    // Update data pane.
     Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
@@ -526,8 +531,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     } catch (e) {
       failMessage(e, "data");
     }
+
+    // Update ShapeMap pane.
     removeEditMapPair(null);
-    // This will probably overwrite $("input.data").val()
     if (dataTest.entry.queryMap === undefined) {
       fetchOK(dataTest.entry.queryMapURL).then(queryMapLoaded).catch(response => {
         renderErrorMessage(response, "queryMap");
@@ -535,6 +541,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     } else {
       queryMapLoaded(dataTest.entry.queryMap);
     }
+
     function queryMapLoaded (text) {
       dataTest.entry.queryMap = text;
       try {
@@ -1101,8 +1108,10 @@ function markEditMapClean () {
  * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
  */
 function copyEditMapToFixedMap () {
-  $("#fixedMap").empty();
-  var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
+  var restoreElt = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
+  var restoreText = restoreElt.text();
+  restoreElt.text("resolving Fixed Map").addClass("running");
+  var nodeShapePromises = $("#editMap .pair").get().reduce((acc, queryPair) => {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
     var shape = $(queryPair).find(".inputShape").val();
@@ -1113,9 +1122,10 @@ function copyEditMapToFixedMap () {
     var nodes = [];
     try {
       var sm = smparser.parse(node + '@' + shape)[0];
-      nodes = typeof sm.node === "string" || "@value" in sm.node
-        ? [node]
-        : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
+      var added = typeof sm.node === "string" || "@value" in sm.node
+        ? Promise.resolve({nodes: [node], shape: shape})
+        : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
+      return acc.concat(added);
     } catch (e) {
       // find which cell was broken
       try { smparser.parse(node + '@' + "START"); } catch (e) {
@@ -1125,17 +1135,47 @@ function copyEditMapToFixedMap () {
         $(queryPair).find(".inputShape").addClass("error");
       }
       failMessage(e, "Edit Map", node + '@' + shape);
-      nodes = []; // skip this entry
+      nodes = Promise.resolve([]); // skip this entry
+      return acc;
     }
-    nodes.forEach(node => {
+  }, []);
+
+  Promise.all(nodeShapePromises).then(pairs => pairs.reduce((acc, pair) => {
+    pair.nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
-      var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
+      var shapeTerm = Caches.inputSchema.meta.lexToTerm(pair.shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
         return;
 
+      var spanElt = createEntry(node, nodeTerm, pair.shape, shapeTerm);
+      acc[key] = spanElt; // just needs the key so far.
+    });
+
+    return acc;
+  }, {})).then(() => {
+    // scroll inputs to right
+    $("#fixedMap input").each((idx, focusElt) => {
+      focusElt.scrollLeft = focusElt.scrollWidth;
+    });
+    restoreElt.text(restoreText).removeClass("running");
+  });
+
+  function getTriples (s, p, o) {
+    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
+    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+      return Caches.inputData.meta.termToLex(t[get]);
+    });
+    function mine (term) {
+      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
+        ? null
+        : term;
+    }
+  }
+
+      function createEntry (node, nodeTerm, shape, shapeTerm) {
     var spanElt = $("<tr/>", {class: "pair"
                               ,"data-node": nodeTerm
                               ,"data-shape": shapeTerm
@@ -1168,28 +1208,12 @@ function copyEditMapToFixedMap () {
       return $("<td/>").append(elt);
     }));
 
-      $("#fixedMap").append(spanElt);
-      acc[key] = spanElt; // just needs the key so far.
-    });
+        $("#fixedMap").append(spanElt);
+        return spanElt;
+      }
 
-    return acc;
-  }, {});
-
-  // scroll inputs to right
-  $("#fixedMap input").each((idx, focusElt) => {
-    focusElt.scrollLeft = focusElt.scrollWidth;
-  });
-
-  function getTriples (s, p, o) {
-    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
-    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);
-    });
-    function mine (term) {
-      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
-        ? null
-        : term;
-    }
+  function lexifyFirstColumn (row) {
+    return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
   }
 }
 
