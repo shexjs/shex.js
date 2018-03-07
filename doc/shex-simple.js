@@ -528,7 +528,6 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
 
     Caches.inputData.set("", DefaultBase);
     $("#inputData .status").text(" ");
-    Caches.shapeMap.set("", DefaultBase);
     var headings = {
       "passes": "Passing:",
       "fails": "Failing:",
@@ -556,8 +555,8 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
 }
 
 function pickData (name, dataTest, elt, listItems, side) {
+  clearData();
   if ($(elt).hasClass("selected")) {
-    clearData();
     $(elt).removeClass("selected");
   } else {
     // Update data pane.
@@ -1201,8 +1200,8 @@ function markEditMapClean () {
 function copyEditMapToFixedMap () {
   var restoreElt = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
   var restoreText = restoreElt.text();
-  restoreElt.text("resolving Fixed Map").addClass("error");
-  var mapAndErrors = $("#editMap .pair").get().reduce((acc, queryPair) => {
+  restoreElt.text("resolving Fixed Map").addClass("running");
+  var nodeShapePromises = $("#editMap .pair").get().reduce((acc, queryPair) => {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
     var shape = $(queryPair).find(".inputShape").val();
@@ -1213,13 +1212,13 @@ function copyEditMapToFixedMap () {
     var nodes = [];
     try {
       var sm = smparser.parse(node + '@' + shape)[0];
-      nodes = typeof sm.node === "string" || "@value" in sm.node
-        ? [node]
+      var added = typeof sm.node === "string" || "@value" in sm.node
+        ? Promise.resolve({nodes: [node], shape: shape})
         : sm.node.language === EXTENSION_sparql
-        ? [/*"- add all -"*/].concat(ShEx.Util.executeQuery(sm.node.lexical, Caches.inputData.endpoint).map(row => {
-          return Caches.inputData.meta.termToLex(row[0]);
-        }))
-        : getTriples(sm.node.subject, sm.node.predicate, sm.node.object);
+        ? ShEx.Util.executeQueryPromise(sm.node.lexical, Caches.inputData.endpoint)
+          .then(rows => Promise.resolve({nodes: rows.map(lexifyFirstColumn), shape: shape}))
+        : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
+      return acc.concat(added);
     } catch (e) {
       // find which cell was broken
       try { smparser.parse(node + '@' + "START"); } catch (e) {
@@ -1229,29 +1228,33 @@ function copyEditMapToFixedMap () {
         $(queryPair).find(".inputShape").addClass("error");
       }
       failMessage(e, "Edit Map", node + '@' + shape);
-      nodes = promise.resolve([]); // skip this entry
+      nodes = Promise.resolve([]); // skip this entry
+      return acc;
     }
-    nodes.forEach(node => {
+  }, []);
+
+  Promise.all(nodeShapePromises).then(pairs => pairs.reduce((acc, pair) => {
+    pair.nodes.forEach(node => {
       var nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
-      var shapeTerm = Caches.inputSchema.meta.lexToTerm(shape);
+      var shapeTerm = Caches.inputSchema.meta.lexToTerm(pair.shape);
       if (shapeTerm === ShEx.Validator.start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       var key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
         return;
 
-      var spanElt = createEntry(node, nodeTerm, shape, shapeTerm);
+      var spanElt = createEntry(node, nodeTerm, pair.shape, shapeTerm);
       acc[key] = spanElt; // just needs the key so far.
     });
 
     return acc;
-  }, {});
-
-  // scroll inputs to right
-  $("#fixedMap input").each((idx, focusElt) => {
-    focusElt.scrollLeft = focusElt.scrollWidth;
+  }, {})).then(() => {
+    // scroll inputs to right
+    $("#fixedMap input").each((idx, focusElt) => {
+      focusElt.scrollLeft = focusElt.scrollWidth;
+    });
+    restoreElt.text(restoreText).removeClass("running");
   });
-  restoreElt.text(restoreText).removeClass("error");
 
   function getTriples (s, p, o) {
     var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
@@ -1301,6 +1304,10 @@ function copyEditMapToFixedMap () {
         $("#fixedMap").append(spanElt);
         return spanElt;
       }
+
+  function lexifyFirstColumn (row) {
+    return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
+  }
 }
 
 function copyEditMapToTextMap () {
