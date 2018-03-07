@@ -1,7 +1,7 @@
 {
   "type": "ShapeTest",
   "node": "http://a.example/s1",
-  "shape": "_: -start-",
+  "shape": { "term": "START" },
   "solution": {
     "type": "TripleConstraintSolutions",
     "predicate": "http://a.example/p1",
