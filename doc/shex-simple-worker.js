@@ -58,7 +58,7 @@ onmessage = function (msg) {
       var singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
         singletonMap[0].shape = ShEx.Validator.start;
-      var newResults = validator.validate(db, singletonMap);
+      var newResults = validator.validate(db, singletonMap, options.track ? makeRelayTracker() : null);
       newResults.forEach(function (res) {
         if (res.shape === ShEx.Validator.start)
           res.shape = START_SHAPE_INDEX_ENTRY;
@@ -93,6 +93,16 @@ function makeStaticDB (triples) {
   ret.addTriples(triples);
   return ret;
 }
+
+  function makeRelayTracker () {
+    var logger = {
+      recurse: x => { postMessage({ response: "recurse", x: x }); return x; },
+      known: x => { postMessage({ response: "known", x: x }); return x; },
+      enter: (point, label) => { postMessage({ response: "enter", point: point, label: label }); },
+      exit: (point, label, ret) => { postMessage({ response: "exit", point: point, label: label, ret: null }); }, /* don't ship big ret structures */
+    };
+    return logger;
+  }
 
 function queryTracker () {
   return {

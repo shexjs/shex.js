@@ -7,6 +7,7 @@ const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";
+var LOG_PROGRESS = false;
 const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
 
 var DefaultBase = location.origin + location.pathname;
@@ -706,6 +707,8 @@ function validate () {
                                            { endpoint: Caches.inputData.endpoint } :
                                            {  }
                                           ));
+      var validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
+
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
       //       Util.createResults() :
@@ -735,7 +738,7 @@ function validate () {
           {
             request: "validate",
             queryMap: transportMap,
-            options: {includeDoneResults: !USE_INCREMENTAL_RESULTS}
+            options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS}
           },
           ("endpoint" in Caches.inputData ?
            { endpoint: Caches.inputData.endpoint, slurp: $("#slurp").is(":checked") } :
@@ -775,10 +778,25 @@ function validate () {
               if (res.shape === START_SHAPE_INDEX_ENTRY)
                 res.shape = ShEx.Validator.start;
             });
-            console.dir(msg.data.results);
             msg.data.results.forEach(renderEntry);
             // resultsMap.merge(msg.data.results);
           }
+          break;
+
+        case "recurse":
+          validationTracker.recurse(msg.data.x);
+          break;
+
+        case "known":
+          validationTracker.known(msg.data.x);
+          break;
+
+        case "enter":
+          validationTracker.enter(msg.data.point, msg.data.label);
+          break;
+
+        case "exit":
+          validationTracker.exit(msg.data.point, msg.data.label, msg.data.ret);
           break;
 
         case "done":
@@ -851,6 +869,24 @@ function validate () {
     }
   } catch (e) {
     failMessage(e, parsing);
+  }
+
+  function makeConsoleTracker () {
+    function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
+    function sm (node, shape) {
+      if (typeof shape === "object" && "term" in shape && shape.term === ShEx.Validator.start.term) {
+        shape = ShEx.Validator.start;
+      }
+      return `${Caches.inputData.meta.termToLex(node)}@${Caches.inputSchema.meta.termToLex(shape)}`;
+    }
+    var logger = {
+      recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
+      known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
+      enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
+      exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
+      depth: 0
+    };
+    return logger;
   }
 
   function renderEntry (entry) {
