@@ -498,12 +498,17 @@ function renderErrorMessage (response, what) {
 }
 
 function clearData () {
+  // Clear out data textarea.
   Caches.inputData.set("", DefaultBase);
-  $("#textMap").val("").removeClass("error");
-  Caches.shapeMap.parse("");
   $("#inputData .status").text(" ");
-  results.clear();
   delete Caches.inputData.endpoint;
+
+  // Clear out every form of ShapeMap.
+  $("#textMap").val("").removeClass("error");
+  makeFreshEditMap();
+  $("#fixedMap").empty();
+
+  results.clear();
 }
 
 function clearAll () {
