@@ -190,7 +190,7 @@ describe("A ShEx validator", function () {
                         // }, [])
                       } else {
                         var focus = maybeGetTerm(dataURL, test.action.focus);
-                        var shape = maybeGetTerm(schemaURL, test.action.shape);
+                        var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
                       var validationResult = validator.validate(store, map);
