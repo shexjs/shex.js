@@ -119,7 +119,7 @@ describe("A ShEx parser", function () {
                GraphSchema,
                {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
              );
-             var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
+             var val = graphParser.validate(schemaGraph, schemaRoot, ShExValidator.start); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
              var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
