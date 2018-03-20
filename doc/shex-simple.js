@@ -515,6 +515,13 @@ function clearData () {
   // Clear out data textarea.
   Caches.inputData.set("", DefaultBase);
   $("#inputData .status").text(" ");
+
+  // Clear out every form of ShapeMap.
+  $("#textMap").val("").removeClass("error");
+  makeFreshEditMap();
+  $("#fixedMap").empty();
+
+  results.clear();
   delete Caches.inputData.endpoint;
 
   // Clear out every form of ShapeMap.
