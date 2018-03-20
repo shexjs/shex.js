@@ -1234,9 +1234,8 @@ function copyEditMapToFixedMap () {
       var added = typeof sm.node === "string" || "@value" in sm.node
         ? Promise.resolve({nodes: [node], shape: shape})
         : sm.node.language === EXTENSION_sparql
-        ? Promise.resolve({nodes: ShEx.Util.executeQuery(sm.node.lexical, Caches.inputData.endpoint).map(row => {
-          return Caches.inputData.meta.termToLex(row[0]);
-        }), shape: shape})
+        ? ShEx.Util.executeQueryPromise(sm.node.lexical, Caches.inputData.endpoint)
+          .then(rows => Promise.resolve({nodes: rows.map(lexifyFirstColumn), shape: shape}))
         : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
       return acc.concat(added);
     } catch (e) {
