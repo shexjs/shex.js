@@ -118,6 +118,9 @@ function findNodesAndValidate (loaded, parms, options) {
   function knownShape (label) {
     return label in loaded.schema.shapes;
   }
+  function unknownShape (label) {
+    throw Error(label + " not found in\n" + Object.keys(loaded.schema.shapes).map(n => "  " + n + "\n").join(''));
+  }
   function someShape () {
     return Object.keys(loaded.schema.shapes)[0];
   }
@@ -143,9 +146,9 @@ function findNodesAndValidate (loaded, parms, options) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
     var node = nodeTypeP ?
         someNodeWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
-						  null, knownType, loaded.data.prefixes)) :
+						  null, knownType, x =>  x)) :
         ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
-                                 MISC_NODES ? () => true : knownNode, loaded.data.prefixes); // accept unknown nodes
+                                 MISC_NODES ? () => true : knownNode, x => x); // accept unknown nodes
     var shape, shapeLabel;
     ret.mode = node;
     if (!shapeP && loaded.schema.start) {
@@ -154,7 +157,7 @@ function findNodesAndValidate (loaded, parms, options) {
       ret.shape = shapeLabel;
     } else {
       var found = ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
-					   someShape, knownShape, loaded.schema.prefixes);
+					   someShape, knownShape, unknownShape);
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + shapeP + " not defined" + optsStr(shapeP, loaded.schema.shapes));
       // shape = { type: "ShapeRef", reference: found };
