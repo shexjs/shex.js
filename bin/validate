@@ -66,6 +66,7 @@ var CLI = require("command-line-args")([
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple:  true, defaultValue: undefined, description: "data query endpoint" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
@@ -243,7 +244,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.json.length > 1 && valParms.data.length === 0) {
     valParms.data = valParms.json.splice(1); // push all but one into data
   }
-  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve) abort("No data specified");
+  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve && !valParms.endpoint) abort("No data specified");
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
@@ -263,6 +264,29 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     : "map" in valParms ? Promise.resolve(JSON.parse(valParms.map))
     : Promise.resolve(undefined)
   ]).then(function (loadedAndResults) {
+function queryTracker () {
+  return {
+    start: function (isOut, term, shapeLabel) {
+      console.warn((isOut ? "←" : "→") + " " + term + "@" + shapeLabel);
+      return
+      var node = Caches.inputSchema.meta.termToLex(term);
+      var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
+      var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
+      noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+    },
+    end: function (triples, time) {
+      console.warn(" " + triples.length + " triples (" + time + " μs)\n");
+      return
+      noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
+      Caches.inputData.slurpWriter.addTriples(triples);
+    }
+  }
+}
+
+    if (valParms.endpoint) {
+      loadedAndResults[0].data = ShExUtil
+        .makeQueryDB(valParms.endpoint, queryTracker());
+    }
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
