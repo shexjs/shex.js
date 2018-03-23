@@ -270,17 +270,14 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
 function queryTracker () {
   return {
     start: function (isOut, term, shapeLabel) {
-      console.warn((isOut ? "←" : "→") + " " + term + "@" + shapeLabel);
+      process.stderr.write((isOut ? "←" : "→") + " <" + term + ">@<" + shapeLabel + ">");
       return
       var node = Caches.inputSchema.meta.termToLex(term);
       var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
-      var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
-      noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
     },
     end: function (triples, time) {
-      console.warn(" " + triples.length + " triples (" + time + " μs)\n");
+      process.stderr.write(" " + triples.length + " triples (" + time + " μs)\n");
       return
-      noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
       Caches.inputData.slurpWriter.addTriples(triples);
     }
   }
