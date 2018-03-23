@@ -9,8 +9,6 @@ node_js:
 script:
   - $(npm bin)/mocha -R dot
   - TEST_cli=true $(npm bin)/mocha -R dot test/cli-test.js || true
-
-  - $(npm bin)/validate -x https://raw.githubusercontent.com/SuLab/Genewiki-ShEx/master/diseases/wikidata-disease-ontology.shex --endpoint https://query.wikidata.org/bigdata/namespace/wdq/sparql --map '[{"node":"http://www.wikidata.org/entity/Q29496", "shape":"http://micel.io/genewiki/disease"}]'
 cache:
   directories:
     - node_modules
