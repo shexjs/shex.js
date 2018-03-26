@@ -429,7 +429,7 @@ function runValidator (graph, shapeMap, schema, options) {
     return 0;
 
   // run validator
-  var res = validator.validate(graph, shapeMap);
+  var res = validator.validate(ShExUtil.makeN3DB(graph), shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
