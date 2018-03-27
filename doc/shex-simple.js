@@ -748,6 +748,12 @@ function validate () {
           finishRendering();
           break;
 
+        case "error":
+          ShExWorker.onmessage = false;
+          failMessage(msg.data, "validation invocation", msg.data.text);
+          finishRendering();
+          break;
+
         default:
           console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
         }

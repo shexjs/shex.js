@@ -46,14 +46,17 @@ onmessage = function (msg) {
     break;
 
   case "validate":
-    var db = ShEx.N3.Store();
-    db.addTriples(msg.data.data);
+    var errorText = undefined;
+    try {
+    var db =
+      ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
     var results = Util.createResults();
 
     for (var currentEntry = 0; currentEntry < queryMap.length; ) {
       var singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
+      errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
         singletonMap[0].shape = ShEx.Validator.start;
       var newResults = validator.validate(db, singletonMap, options.track ? makeRelayTracker() : null);
@@ -77,12 +80,21 @@ onmessage = function (msg) {
       postMessage({ response: "done", results: results.getShapeMap() });
     else
       postMessage({ response: "done" });
+    } catch (e) {
+    postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });
+    }
     break;
 
   default:
     throw "unknown request: " + JSON.stringify(msg.data);
   }
 
+}
+
+function makeStaticDB (triples) {
+  var ret = ShEx.N3.Store();
+  ret.addTriples(triples);
+  return ret;
 }
 
   function makeRelayTracker () {
