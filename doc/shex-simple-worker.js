@@ -46,6 +46,8 @@ onmessage = function (msg) {
     break;
 
   case "validate":
+    var errorText = undefined;
+    try {
     var db = "endpoint" in msg.data
       ? ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
       : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
@@ -56,6 +58,7 @@ onmessage = function (msg) {
     // console.log("start validation:" + new Date());
     for (var currentEntry = 0; currentEntry < queryMap.length; ) {
       var singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
+      errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
         singletonMap[0].shape = ShEx.Validator.start;
       var newResults = validator.validate(db, singletonMap, options.track ? makeRelayTracker() : null);
@@ -80,6 +83,9 @@ onmessage = function (msg) {
       postMessage({ response: "done", results: results.getShapeMap() });
     else
       postMessage({ response: "done" });
+    } catch (e) {
+    postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });
+    }
     break;
 
   default:
