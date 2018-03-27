@@ -266,6 +266,9 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     : "map" in valParms ? Promise.resolve(JSON.parse(valParms.map))
     : Promise.resolve(undefined)
   ]).then(function (loadedAndResults) {
+
+    loadedAndResults[0].data =
+      ShExUtil.makeN3DB(loadedAndResults[0].data);
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
@@ -429,7 +432,7 @@ function runValidator (graph, shapeMap, schema, options) {
     return 0;
 
   // run validator
-  var res = validator.validate(ShExUtil.makeN3DB(graph), shapeMap);
+  var res = validator.validate(graph, shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
