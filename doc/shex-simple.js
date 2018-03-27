@@ -290,8 +290,7 @@ function makeTurtleCache (selection) {
     return parseTurtle(text, ret.meta, base);
   };
   ret.getItems = function () {
-    var text = this.get();
-    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
+    var m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
       var q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
       return ["- add all -"].concat(ShEx.Util.executeQuery(q, m[1]).map(row => {

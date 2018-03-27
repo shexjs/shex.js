@@ -67,6 +67,7 @@ var CLI = require("command-line-args")([
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple:  true, defaultValue: undefined, description: "data query endpoint" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
@@ -119,6 +120,9 @@ function findNodesAndValidate (loaded, parms, options) {
   function knownShape (label) {
     return label in loaded.schema.shapes;
   }
+  function unknownShape (label) {
+    throw Error(label + " not found in\n" + Object.keys(loaded.schema.shapes).map(n => "  " + n + "\n").join(''));
+  }
   function someShape () {
     return Object.keys(loaded.schema.shapes)[0];
   }
@@ -144,9 +148,9 @@ function findNodesAndValidate (loaded, parms, options) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
     var node = nodeTypeP ?
         someNodeWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
-						  null, knownType, loaded.data.prefixes)) :
+						  null, knownType, x =>  x)) :
         ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
-                                 MISC_NODES ? () => true : knownNode, loaded.data.prefixes); // accept unknown nodes
+                                 MISC_NODES ? () => true : knownNode, x => x); // accept unknown nodes
     var shape, shapeLabel;
     ret.mode = node;
     if (!shapeP && loaded.schema.start) {
@@ -155,7 +159,7 @@ function findNodesAndValidate (loaded, parms, options) {
       ret.shape = shapeLabel;
     } else {
       var found = ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
-					   someShape, knownShape, loaded.schema.prefixes);
+					   someShape, knownShape, unknownShape);
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + shapeP + " not defined" + optsStr(shapeP, loaded.schema.shapes));
       // shape = { type: "ShapeRef", reference: found };
@@ -244,7 +248,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.json.length > 1 && valParms.data.length === 0) {
     valParms.data = valParms.json.splice(1); // push all but one into data
   }
-  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve) abort("No data specified");
+  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve && !valParms.endpoint) abort("No data specified");
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
@@ -264,6 +268,25 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     : "map" in valParms ? Promise.resolve(JSON.parse(valParms.map))
     : Promise.resolve(undefined)
   ]).then(function (loadedAndResults) {
+function queryTracker () {
+  return {
+    start: function (isOut, term, shapeLabel) {
+      process.stderr.write((isOut ? "←" : "→") + " <" + term + ">@<" + shapeLabel + ">");
+      return
+      var node = Caches.inputSchema.meta.termToLex(term);
+      var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
+    },
+    end: function (triples, time) {
+      process.stderr.write(" " + triples.length + " triples (" + time + " μs)\n");
+      return
+      Caches.inputData.slurpWriter.addTriples(triples);
+    }
+  }
+}
+
+    loadedAndResults[0].data = valParms.endpoint
+      ? ShExUtil.makeQueryDB(valParms.endpoint, queryTracker())
+      : ShExUtil.makeN3DB(loadedAndResults[0].data);
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
