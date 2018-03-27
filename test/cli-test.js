@@ -64,14 +64,16 @@ var AllTests = {
 
     // local file access
     { name: "simple-local" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "missing-node" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1", "-d", "cli/p1.ttl", "-n", "x999"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
+    { name: "missing-shape" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "http://a.example/S1999", "-d", "cli/p1.ttl", "-n", "x"], errorMatch: "example/S1\n", status: 1 },
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-turtle" , args: ["--turtle-manifest", "cli/manifest-simple.ttl"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "json-override" , args: ["--json-manifest", "cli/manifest-simple.json", "-n", "x", "-s", "http://a.example/S1"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "json-override-fail" , args: ["--json-manifest", "cli/manifest-simple.json", "-n", "y", "-s", "http://a.example/S1"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
+    { name: "json-override-fail" , args: ["--json-manifest", "cli/manifest-simple.json", "-n", "x999", "-s", "http://a.example/S1"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
     { name: "turtle-override" , args: ["--turtle-manifest", "cli/manifest-simple.ttl", "-n", "x", "-s", "http://a.example/S1"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
-    { name: "turtle-override-fail" , args: ["--turtle-manifest", "cli/manifest-simple.ttl", "-n", "y", "-s", "http://a.example/S1"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
+    { name: "turtle-override-fail" , args: ["--turtle-manifest", "cli/manifest-simple.ttl", "-n", "x999", "-s", "http://a.example/S1"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
     { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
     { name: "test-name", args: ["--json-manifest", "cli/manifest-results.json", "--test-name", "1dotOr2dot-someOf_pass_p1-p2p3"], resultText: "true\n", status: 0 },
     { name: "shape-map", args: ["--json-manifest", "cli/manifest-results.json", "--map", '[{"node":"x", "shape":"http://a.example/S1"}]'], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
