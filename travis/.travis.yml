@@ -1,0 +1,10 @@
+language: node_js
+env:
+  - CLI_TIMEOUT=10000
+node_js:
+  - "6.0"
+  - "8.0"
+  - "stable"
+
+script:
+  - $(npm bin)/validate -x https://raw.githubusercontent.com/SuLab/Genewiki-ShEx/master/diseases/wikidata-disease-ontology.shex --endpoint https://query.wikidata.org/bigdata/namespace/wdq/sparql --map '[{"node":"http://www.wikidata.org/entity/Q29496", "shape":"http://micel.io/genewiki/disease"}]'
