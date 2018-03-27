@@ -283,10 +283,9 @@ function queryTracker () {
   }
 }
 
-    if (valParms.endpoint) {
-      loadedAndResults[0].data = ShExUtil
-        .makeQueryDB(valParms.endpoint, queryTracker());
-    }
+    loadedAndResults[0].data = valParms.endpoint
+      ? ShExUtil.makeQueryDB(valParms.endpoint, queryTracker())
+      : ShExUtil.makeN3DB(loadedAndResults[0].data);
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
