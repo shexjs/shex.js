@@ -3710,9 +3710,9 @@ var ShExUtil = {
     if (known(t))
       return t;
     if (!relIRI) {
-      t = this.resolvePrefixedIRI(passedValue, meta.prefixes);
-      if (t !== null && known(t))
-        return t;
+      var t2 = this.resolvePrefixedIRI(passedValue, meta.prefixes);
+      if (t2 !== null && known(t2))
+        return t2;
     }
     return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
   },
@@ -3749,7 +3749,6 @@ var ShExUtil = {
 
   executeQuery: function (query, endpoint) {
     var rows, t, j;
-
     var queryURL = endpoint + "?query=" + encodeURIComponent(query);
     if (require('sync-request')) {
       var request = require('sync-request');
@@ -3814,47 +3813,126 @@ var ShExUtil = {
   },
 
   makeN3DB: function (db, queryTracker) {
-    return {
-      size: db.size,
-      getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
-        // console.log(Error(s + p + o).stack)
-        if (queryTracker)
-          queryTracker.start(!!s, s ? s : o, shapeLabel);
-        var triples = db.getTriplesByIRI(s, p, o, graph)
-        if (queryTracker)
-          queryTracker.end(triples, new Date() - startTime);
-        return triples;
+
+    function getNeighborhood (point, shapeLabel, /* shape */) {
+      // I'm guessing a local DB doesn't benefit from shape optimization.
+      var startTime;
+      if (queryTracker) {
+        startTime = new Date();
+        queryTracker.start(false, point, shapeLabel);
       }
+      var outgoing = db.getTriplesByIRI(point, null, null, null);
+      if (queryTracker) {
+        var time = new Date();
+        queryTracker.end(outgoing, time - startTime);
+        startTime = time;
+      }
+      if (queryTracker) {
+        queryTracker.start(true, point, shapeLabel);
+      }
+      var incoming = db.getTriplesByIRI(null, null, point, null);
+      if (queryTracker) {
+        queryTracker.end(incoming, new Date() - startTime);
+      }
+      return  {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      // size: db.size,
+      getNeighborhood: getNeighborhood,
+      // getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
+      //   // console.log(Error(s + p + o).stack)
+      //   if (queryTracker)
+      //     queryTracker.start(!!s, s ? s : o, shapeLabel);
+      //   var triples = db.getTriplesByIRI(s, p, o, graph)
+      //   if (queryTracker)
+      //     queryTracker.end(triples, new Date() - startTime);
+      //   return triples;
+      // }
     };
   },
   /** emulate N3Store().getTriplesByIRI() with additional parm.
    */
   makeQueryDB: function (endpoint, queryTracker) {
     var _ShExUtil = this;
-    return {
-      getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
-        var query = s ?
-            `SELECT ?p ?o { <${s}> ?p ?o }`:
-          `SELECT ?s ?p { ?s ?p <${o}> }`;
-        var startTime = new Date();
-        if (queryTracker)
-          queryTracker.start(!!s, s ? s : o, shapeLabel);
-        var rows = _ShExUtil.executeQuery(query, endpoint);
-        var triples = rows.map(row =>  {
-          return s ? {
-            subject: s,
-            predicate: row[0],
-            object: row[1]
-          } : {
-            subject: row[0],
-            predicate: row[1],
-            object: o
-          };
-        });
-        if (queryTracker)
-          queryTracker.end(triples, new Date() - startTime);
-        return triples;
+
+    function mapQueryToTriples (query, s, o) {
+      var rows = _ShExUtil.executeQuery(query, endpoint);
+      var triples = rows.map(row =>  {
+        return s ? {
+          subject: s,
+          predicate: row[0],
+          object: row[1]
+        } : {
+          subject: row[0],
+          predicate: row[1],
+          object: o
+        };
+      });
+      return triples;
+    }
+
+    function getTripleConstraints (tripleExpr) {
+      var visitor = _ShExUtil.Visitor();
+      var ret = {
+        out: [],
+        inc: []
+      };
+      visitor.visitTripleConstraint = function (expr) {
+        ret[expr.inverse ? "inc" : "out"].push(expr);
+        return expr;
+      };
+
+      if (tripleExpr)
+        visitor.visitExpression(tripleExpr);
+      return ret;
+    }
+
+    function getNeighborhood (point, shapeLabel, shape) {
+      // I'm guessing a local DB doesn't benefit from shape optimization.
+      var startTime;
+      var tcs = getTripleConstraints(shape.expression);
+      var pz = tcs.out.map(t => t.predicate);
+      pz = pz.filter((p, idx) => pz.lastIndexOf(p) === idx);
+      if (queryTracker) {
+        startTime = new Date();
+        queryTracker.start(false, point, shapeLabel);
       }
+      var outgoing = mapQueryToTriples(
+        shape.closed
+          ? `SELECT ?p ?o { <${point}> ?p ?o }`
+          : "SELECT ?p ?o {\n" +
+          pz.map(
+            p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
+          ).join(" UNION\n") +
+          "\n}",
+        point, null
+      ).filter( got => tcs.out.find(tc => tc.predicate === got.predicate) );
+      if (queryTracker) {
+        var time = new Date();
+        queryTracker.end(outgoing, time - startTime);
+        startTime = time;
+      }
+      if (queryTracker) {
+        queryTracker.start(true, point, shapeLabel);
+      }
+      var incoming = tcs.inc.length > 0
+          ? mapQueryToTriples(`SELECT ?s ?p { ?s ?p <${point}> }`, null, point)
+          : []
+      if (queryTracker) {
+        queryTracker.end(incoming, new Date() - startTime);
+      }
+      return  {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      getNeighborhood: getNeighborhood,
     };
   },
 
@@ -4407,9 +4485,11 @@ function ShExValidator_constructor(schema, options) {
       }; // some semAct aborted !! return real error
     // @@ add to tracker: f("validating <" + point + "> as <" + shapeLabel + ">");
 
-    var outgoing = indexNeighborhood(db.getTriplesByIRI(point, null, null, null, shapeLabel).sort(byObject));
-    var incoming = indexNeighborhood(db.getTriplesByIRI(null, null, point, null, shapeLabel).sort(bySubject));
-    var neighborhood = outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
+    var fromDB  = db.getNeighborhood(point, shapeLabel, shape);
+    var outgoing = indexNeighborhood(fromDB.outgoing.sort(byObject ));
+    var incoming = indexNeighborhood(fromDB.incoming.sort(bySubject));
+    var outgoingLength = fromDB.outgoing.length;
+    var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     var constraintList = this.indexTripleConstraints(shape.expression);
     var tripleList = constraintList.reduce(function (ret, constraint, ord) {
@@ -4454,7 +4534,7 @@ function ShExValidator_constructor(schema, options) {
     var extras = []; // triples accounted for by EXTRA
     var misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
       if (constraints.length === 0 &&                       // matches no constraints
-          ord < outgoing.triples.length &&                  // not an incoming triple
+          ord < outgoingLength &&                           // not an incoming triple
           ord in tripleList.misses) {                       // predicate matched some constraint(s)
         if (shape.extra !== undefined &&
             shape.extra.indexOf(neighborhood[ord].predicate) !== -1) {
@@ -4482,7 +4562,7 @@ function ShExValidator_constructor(schema, options) {
 
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
-        var unexpectedTriples = outgoing.triples.filter((t, i) => {
+        var unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return tripleToConstraintMapping[i] === undefined && // didn't match a constraint
           extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
@@ -5090,7 +5170,6 @@ var N3jsTripleToString = function () {
  */
 function indexNeighborhood (triples) {
   return {
-    triples: triples,
     byPredicate: triples.reduce(function (ret, t) {
       var p = t.predicate;
       if (!(p in ret))
