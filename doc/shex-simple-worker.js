@@ -46,9 +46,9 @@ onmessage = function (msg) {
     break;
 
   case "validate":
-    var db = "endpoint" in msg.data ?
-      ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null) :
-      makeStaticDB(msg.data.data);
+    var db = "endpoint" in msg.data
+      ? ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+      : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
     var results = Util.createResults();
