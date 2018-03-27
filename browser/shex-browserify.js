@@ -3890,16 +3890,18 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = mapQueryToTriples(
-        shape.closed
-          ? `SELECT ?p ?o { <${point}> ?p ?o }`
-          : "SELECT ?p ?o {\n" +
-          pz.map(
-            p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
-          ).join(" UNION\n") +
-          "\n}",
-        point, null
-      ).filter( got => tcs.out.find(tc => tc.predicate === got.predicate) );
+      var outgoing = (tcs.out.length > 0 || shape.closed)
+          ? mapQueryToTriples(
+            shape.closed
+              ? `SELECT ?p ?o { <${point}> ?p ?o }`
+              : "SELECT ?p ?o {\n" +
+              pz.map(
+                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
+              ).join(" UNION\n") +
+              "\n}",
+            point, null
+          )
+          : [];
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
