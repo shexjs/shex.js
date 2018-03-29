@@ -224,7 +224,7 @@ function makeSchemaCache (selection) {
         {}
       );
       var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      var val = graphParser.validate(graph, schemaRoot); // start shape
+      var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -654,7 +654,7 @@ function validate () {
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
         $("#results .status").text("validating...").show();
-        var ret = validator.validate(inputData, fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
+        var ret = validator.validate(ShEx.Util.makeN3DB(inputData), fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
         // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
         ret.forEach(renderEntry);
