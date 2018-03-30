@@ -98,8 +98,8 @@ function rdflib_termToLex (node, resolver) {
     return START_SHAPE_LABEL;
   if (node === resolver._base)
     return "<>";
-  if (node.indexOf(resolver._base) === 0 &&
-      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1)
+  if (node.indexOf(resolver._base) === 0/* &&
+      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1 */)
     return "<" + node.substr(resolver._base.length) + ">";
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
@@ -193,7 +193,7 @@ function _makeCache (selection) {
     url: undefined // only set if inputarea caches some web resource.
   };
   resolver = new IRIResolver(ret.meta);
-  ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
+  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, resolver); };
   ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
@@ -236,7 +236,7 @@ function makeSchemaCache (selection) {
         {}
       );
       var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      var val = graphParser.validate(graph, schemaRoot); // start shape
+      var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -320,7 +320,7 @@ function makeManifestCache (selection) {
         }
         var queryMap = "map" in action ?
             null :
-            ldToTurtle(action.focus) + "@" + ("shape" in action ? ldToTurtle(action.shape) : START_SHAPE_LABEL);
+            ldToTurtle(action.focus, Caches.inputData.meta.termToLex) + "@" + ("shape" in action ? ldToTurtle(action.shape, Caches.inputSchema.meta.termToLex) : START_SHAPE_LABEL);
         var queryMapURL = "map" in action ?
             action.map :
             null;
@@ -395,10 +395,8 @@ function makeManifestCache (selection) {
 }
 
 
-        function ldToTurtle (ld) {
-          return typeof ld === "object" ? lit(ld) :
-            ld.startsWith("_:") ? ld :
-            "<" + ld + ">";
+        function ldToTurtle (ld, termToLex) {
+          return typeof ld === "object" ? lit(ld) : termToLex(ld);
           function lit (o) {
             let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
               return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
@@ -672,7 +670,7 @@ function validate () {
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
         $("#results .status").text("validating...").show();
-        var ret = validator.validate(inputData, fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
+        var ret = validator.validate(ShEx.Util.makeN3DB(inputData), fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
         // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
         ret.forEach(renderEntry);
@@ -837,7 +835,7 @@ function addEditMapPairs (pairs, target) {
     var node; var shape;
     switch (nodeType) {
     case "empty": node = shape = ""; break;
-    case "node": node = ldToTurtle(pair.node); shape = startOrLdToTurtle(pair.shape); break;
+    case "node": node = ldToTurtle(pair.node, Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
@@ -900,13 +898,13 @@ function addEditMapPairs (pairs, target) {
         return "FOCUS";
       if (!ld) // ?? ShEx.Uti.any
         return "_";
-      return ldToTurtle(ld);
+      return ldToTurtle(ld, Caches.inputData.meta.termToLex);
     });
     return "{" + ret.join(" ") + "}";
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term);
+    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term, Caches.inputSchema.meta.termToLex);
   }
 }
 
@@ -1139,9 +1137,10 @@ function markEditMapClean () {
  * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
  */
 function copyEditMapToFixedMap () {
-  var restoreElt = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
-  var restoreText = restoreElt.text();
-  restoreElt.text("resolving Fixed Map").addClass("running");
+  $("#fixedMap tbody").empty(); // empty out the fixed map.
+  var fixedMapTab = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
+  var restoreText = fixedMapTab.text();
+  fixedMapTab.text("resolving Fixed Map").addClass("running");
   var nodeShapePromises = $("#editMap .pair").get().reduce((acc, queryPair) => {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
@@ -1191,7 +1190,7 @@ function copyEditMapToFixedMap () {
     $("#fixedMap input").each((idx, focusElt) => {
       focusElt.scrollLeft = focusElt.scrollWidth;
     });
-    restoreElt.text(restoreText).removeClass("running");
+    fixedMapTab.text(restoreText).removeClass("running");
   });
 
   function getTriples (s, p, o) {
@@ -1349,7 +1348,7 @@ function prepareInterface () {
       if ("cache" in input)
         // If it parses, make meta (prefixes, base) available.
         try {
-          input.cache.set(prepend + value, window.location.href);
+          input.cache.set(prepend + value, location.href);
         } catch (e) {
           if ("fail" in input) {
             input.fail(e);
