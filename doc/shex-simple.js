@@ -1108,9 +1108,10 @@ function markEditMapClean () {
  * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
  */
 function copyEditMapToFixedMap () {
-  var restoreElt = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
-  var restoreText = restoreElt.text();
-  restoreElt.text("resolving Fixed Map").addClass("running");
+  $("#fixedMap tbody").empty(); // empty out the fixed map.
+  var fixedMapTab = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
+  var restoreText = fixedMapTab.text();
+  fixedMapTab.text("resolving Fixed Map").addClass("running");
   var nodeShapePromises = $("#editMap .pair").get().reduce((acc, queryPair) => {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
@@ -1160,7 +1161,7 @@ function copyEditMapToFixedMap () {
     $("#fixedMap input").each((idx, focusElt) => {
       focusElt.scrollLeft = focusElt.scrollWidth;
     });
-    restoreElt.text(restoreText).removeClass("running");
+    fixedMapTab.text(restoreText).removeClass("running");
   });
 
   function getTriples (s, p, o) {
