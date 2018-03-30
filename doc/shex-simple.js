@@ -86,8 +86,8 @@ function rdflib_termToLex (node, resolver) {
     return START_SHAPE_LABEL;
   if (node === resolver._base)
     return "<>";
-  if (node.indexOf(resolver._base) === 0 &&
-      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1)
+  if (node.indexOf(resolver._base) === 0/* &&
+      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1 */)
     return "<" + node.substr(resolver._base.length) + ">";
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
@@ -181,7 +181,7 @@ function _makeCache (selection) {
     url: undefined // only set if inputarea caches some web resource.
   };
   resolver = new IRIResolver(ret.meta);
-  ret.meta.termToLex = function (lex) { return  rdflib_termToLex(lex, resolver); };
+  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, resolver); };
   ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
   return ret;
 }
@@ -308,7 +308,7 @@ function makeManifestCache (selection) {
         }
         var queryMap = "map" in action ?
             null :
-            ldToTurtle(action.focus) + "@" + ("shape" in action ? ldToTurtle(action.shape) : START_SHAPE_LABEL);
+            ldToTurtle(action.focus, Caches.inputData.meta.termToLex) + "@" + ("shape" in action ? ldToTurtle(action.shape, Caches.inputSchema.meta.termToLex) : START_SHAPE_LABEL);
         var queryMapURL = "map" in action ?
             action.map :
             null;
@@ -383,10 +383,8 @@ function makeManifestCache (selection) {
 }
 
 
-        function ldToTurtle (ld) {
-          return typeof ld === "object" ? lit(ld) :
-            ld.startsWith("_:") ? ld :
-            "<" + ld + ">";
+        function ldToTurtle (ld, termToLex) {
+          return typeof ld === "object" ? lit(ld) : termToLex(ld);
           function lit (o) {
             let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
               return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
@@ -819,7 +817,7 @@ function addEditMapPairs (pairs, target) {
     var node; var shape;
     switch (nodeType) {
     case "empty": node = shape = ""; break;
-    case "node": node = ldToTurtle(pair.node); shape = startOrLdToTurtle(pair.shape); break;
+    case "node": node = ldToTurtle(pair.node, Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
@@ -882,13 +880,13 @@ function addEditMapPairs (pairs, target) {
         return "FOCUS";
       if (!ld) // ?? ShEx.Uti.any
         return "_";
-      return ldToTurtle(ld);
+      return ldToTurtle(ld, Caches.inputData.meta.termToLex);
     });
     return "{" + ret.join(" ") + "}";
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term);
+    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term, Caches.inputSchema.meta.termToLex);
   }
 }
 
@@ -1319,7 +1317,7 @@ function prepareInterface () {
       if ("cache" in input)
         // If it parses, make meta (prefixes, base) available.
         try {
-          input.cache.set(prepend + value, window.location.href);
+          input.cache.set(prepend + value, location.href);
         } catch (e) {
           if ("fail" in input) {
             input.fail(e);
