@@ -3913,7 +3913,7 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getNeighborhood (point, shapeLabel, /* shape */) {
+    function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
       var startTime;
       if (queryTracker) {
