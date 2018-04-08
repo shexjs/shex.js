@@ -1257,6 +1257,7 @@ function copyTextMapToEditMap () {
 }
 
 function makeFreshEditMap () {
+  removeEditMapPair(null);
   addEditMapPairs(null, null);
   markEditMapClean();
   return [];
