@@ -236,7 +236,7 @@ function main () {
           )
         ),
       ),
-      Object.keys(schema.shapes).map(
+      Object.keys(schema.shapes).slice(0,3).map(
         shapeLabel => $('<table/>').append(
           $('<tr/>').append(
             $('<td/>', {id: trim(shapeLabel)}).text(trim(shapeLabel)),
@@ -250,7 +250,7 @@ function main () {
             ),
             $('<td/>')
           ),
-          renderShapeExpr(schema.shapes[shapeLabel], '├')
+          renderShapeExpr(schema.shapes[shapeLabel], '')
         )
       )
     )
@@ -258,7 +258,7 @@ function main () {
     function renderShapeExpr(expr, lead) {
       switch (expr.type) {
       case 'Shape':
-        return renderTripleExpr(expr.expression, lead)
+        return renderTripleExpr(expr.expression, lead, false)
       case 'NodeConstraint':
       case 'ShapeDecl':
         return [$('<tr><td colspan="3">' + expr.type + '</td></tr>')]
@@ -267,17 +267,18 @@ function main () {
       }
     }
 
-    function renderTripleExpr(expr, lead) {
+    function renderTripleExpr(expr, lead, last) {
       switch (expr.type) {
       case 'EachOf':
         return expr.expressions.reduce(
-          (acc, nested) => acc.concat(renderTripleExpr(nested, lead)), []
+          (acc, nested, i) => acc.concat(renderTripleExpr(nested, lead, i === expr.expressions.length - 1)), []
         )
       case 'TripleConstraint':
         return [
           $('<tr/>').append(
             $('<td/>').append(
               lead,
+              last ? '└' :  '├',
               $('<span/>').text(expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻').css(
                 {
                   display: 'inline-block',
@@ -290,7 +291,7 @@ function main () {
             $('<td/>').text(renderEmbeddedShape(expr.valueExpr)),
             $('<td/>').text(renderCardinality(expr))
           )
-        ].concat(renderNestedShape(expr.valueExpr, lead))
+        ].concat(renderNestedShape(expr.valueExpr, lead + (last ? ' ' : '│') + '   '))
       default:
         throw Error('renderShapeExpr has no handler for ' + expr.type)
       }
@@ -301,14 +302,14 @@ function main () {
         ? trim(valueExpr.datatype)
         : valueExpr.type === 'ShapeRef'
         ? trim(valueExpr.reference)
-        : '--'
+        : ''
     }
 
     function renderNestedShape (valueExpr, lead) {
       if (valueExpr.type !== 'Shape') {
         return []
       }
-      return renderShapeExpr(valueExpr, '│   ' + lead)
+      return renderShapeExpr(valueExpr, lead)
     }
 
     function renderCardinality (expr) {

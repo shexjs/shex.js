@@ -302,22 +302,6 @@ border-left: 1px solid #fdd;
     <script type="text/javascript">
       $(document).ready(function () {
         var tr = $("#incl_Identifiable");
-  //foo(tr)
-  function foo (target) {
-    let add = $("<tr/>", {id: "div3"}).append(
-      $("<td>").text("val2-1"),
-      $("<td>").text("val2-2"),
-    )
-    target.after(add)
-    setTimeout(function () {
-	  console.log(10, target.position())
-    add.css({
-      position: "absolute", 
-      top: target.position().top+10
-    })
-      
-    }, 1050)
-  }
         tr.css("margin", ".5em");
         var area = DrawOver.select(tr, "margin");
         area.canvas.css({'pointer-events': 'none'});
@@ -326,29 +310,6 @@ border-left: 1px solid #fdd;
     </script>
     </div>
 
-      <pre>ConceptSystem EXTENDS AnnotatedIdentifiable
-├▻type                                       CollectionType                     ?
-├▻name                                       ObjectName                         *
-├▻purpose                                    InternationalStructuredString      ?
-├─contains
-│   ├▭index                                  xsd:integer                        ?
-│   └▻member                                 Concept                            *
-│
-├▭isOrdered                                  xsd:boolean                        ?
-├─isStructuredBy                                                                *
-│   + Identifiable
-│   ├▻hasRelationSpecification               RelationSpecification 
-│   ├▻semantic                               ExternalControlledVocabularyEntry  ?
-│   ├▻totality                               TotalityType                       ?
-│   └─hasMemberRelation                                                          *
-│       ├▻hasRelationSepcification           RelationSpecification
-│       ├▻semantic                           ExternalControlledVocabularyEntry  ?
-│       ├▻totality                           TotalityType                       ?
-│       ├▻source                             Concept                            *
-│       └▻target                             Concept                            *
-│
-│
-└▻definingConcept                            Concept                            *</pre>
     </div>
     <div id="loaded">
       <hr/>
