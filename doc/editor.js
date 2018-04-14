@@ -8,6 +8,7 @@ var SUPPRESS_DUPLICATE_CLASSES = true // Don't list subclasses in parent's packa
 var UPPER_UNLIMITED = '*'
 
 const UPCLASS = 'extends up'
+const KEYWORD = 'keyword'
 
 var Getables = [
 ];
@@ -233,33 +234,42 @@ function main () {
             Object.keys(schema.prefixes).reduce(
               (acc, prefix) => acc.concat(
                 $('<dt/>').text(prefix),
-                $('<dd/>').text(schema.prefixes[prefix]),
+                $('<dd/>').text(schema.prefixes[prefix])
               ), [])
           )
-        ),
+        )
       ),
       Object.keys(schema.shapes).map(
-        shapeLabel => $('<table/>').append(
-          renderShapeExpr(schema.shapes[shapeLabel], '', renderShapeDecl(shapeLabel))
-        )
+        shapeLabel => renderDecl(shapeLabel)
       )
     )
 
-    function renderShapeDecl (shapeLabel) {
-      return $('<tr/>').append(
+    function renderDecl (shapeLabel) {
+      let shapeDecl = schema.shapes[shapeLabel]
+      let abstract = false
+      if (shapeDecl.type === 'ShapeDecl') {
+        abstract = shapeDecl.abstract
+        shapeDecl = shapeDecl.shapeExpr
+      }
+      let declRow = $('<tr/>').append(
         $('<td/>', {id: trim(shapeLabel)}).text(trim(shapeLabel)),
         $('<td/>'),
         $('<td/>')
       )
+      let div = $('<section/>')
+      div.append($('<h3/>').text(trim(shapeLabel)))
+      // @@ does a NodeConstraint render differently if it's in a nested vs. called from renderDecl?
+      div.append($('<table/>').append(renderShapeExpr(shapeDecl, '', declRow, abstract)))
+      return div
     }
 
-    function renderShapeExpr(expr, lead, decl) {
-      let top = [decl]
+    function renderShapeExpr (expr, lead, declRow, abstract) {
+      let top = [declRow]
       switch (expr.type) {
       case 'Shape':
         if ('extends' in expr) {
-          // Update the decl with the first extends.
-          decl.find('td:nth-child(2)').append(ref(expr.extends[0]))
+          // Update the declRow with the first extends.
+          declRow.find('td:nth-child(2)').append(ref(expr.extends[0]))
 
           // Each additional extends gets its own row.
           top = top.concat(expr.extends.slice(1).map(
@@ -275,10 +285,14 @@ function main () {
           }
         }
         return top.concat(renderTripleExpr(expr.expression, lead, false))
-      case 'ShapeDecl':
-        return renderShapeExpr(expr.shapeExpr, lead, decl) // !!! do something with 'abstract'
       case 'NodeConstraint':
-        return top.concat([$('<tr><td>...</td><td>' + JSON.stringify(expr) + '</td><td></td></tr>')])
+        if ('values' in expr) {
+          return top.concat(expr.values.map(
+            val => $('<tr><td></td><td style="display: list-item;">' + trim(val) + '</td><td></td></tr>')
+          ))
+        } else {
+          return top.concat([$('<tr><td>...</td><td>' + JSON.stringify(expr) + '</td><td></td></tr>')])
+        }
       default:
         throw Error('renderShapeExpr has no handler for ' + JSON.stringify(expr, null, 2))
       }
@@ -291,7 +305,8 @@ function main () {
           (acc, nested, i) => acc.concat(renderTripleExpr(nested, lead, i === expr.expressions.length - 1)), []
         )
       case 'TripleConstraint':
-        let decl = $('<tr/>').append(
+        let inline = renderInlineShape(expr.valueExpr)
+        let declRow = $('<tr/>').append(
           $('<td/>').append(
             lead,
             last ? '└' :  '├',
@@ -304,28 +319,41 @@ function main () {
               }
             ),
             trim(expr.predicate)),
-          $('<td/>').text(renderEmbeddedShape(expr.valueExpr)),
+          $('<td/>').text(inline),
           $('<td/>').text(renderCardinality(expr))
         )
-        return renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', decl)
+        return inline === '' ? renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', declRow) : declRow
       default:
-        throw Error('renderShapeExpr has no handler for ' + expr.type)
+        throw Error('renderTripleExpr has no handler for ' + expr.type)
       }
     }
 
-    function renderEmbeddedShape (valueExpr) {
-      return valueExpr.type === 'NodeConstraint'
-        ? trim(valueExpr.datatype)
+    function renderInlineShape (valueExpr) {
+      return valueExpr.type === 'Shape'
+        ? ''
         : valueExpr.type === 'ShapeRef'
         ? trim(valueExpr.reference)
-        : ''
+        : valueExpr.type === 'NodeConstraint'
+        ? renderInlineNodeConstraint(valueExpr)
+        : (() => { throw Error('renderInlineShape doesn\'t handle ' + valueExpr.type) })()
     }
 
-    function renderNestedShape (valueExpr, lead, decl) {
-      if (valueExpr.type !== 'Shape') {
-        return decl
+    function renderInlineNodeConstraint (expr) {
+      if (Object.keys(expr).length > 2) {
+        return '' // pass to inline renderer
       }
-      return renderShapeExpr(valueExpr, lead, decl)
+      if ('datatype' in expr) { return trim(expr.datatype) }
+      if ('values' in expr) { return '[' + expr.values.map(
+        v => trim(v)
+      ).join(' ') + ']' }
+      throw Error('renderInlineNodeConstraint didn\'t match')
+    }
+
+    function renderNestedShape (valueExpr, lead, declRow) {
+      if (valueExpr.type !== 'Shape') {
+        return declRow
+      }
+      return renderShapeExpr(valueExpr, lead, declRow, false)
     }
 
     function renderCardinality (expr) {
@@ -342,15 +370,22 @@ function main () {
         : '{' + min + ',' + max + '}'
     }
 
-    function trim (iri) {
-      if (iri.startsWith(namespace))
-        return iri.substr(namespace.length)
+    function trim (term) {
+      if (typeof term === 'object') {
+        if ('value' in term)
+          return '"' + term.value + '"'
+        throw Error('trim ' + JSON.stringify(term))
+      }
+      if (term === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+        return $('<span/>', {class: KEYWORD}).text('a')
+      if (term.startsWith(namespace))
+        return term.substr(namespace.length)
       for (var prefix in schema.prefixes) {
-        if (iri.startsWith(schema.prefixes[prefix])) {
-          return prefix + ':' + iri.substr(schema.prefixes[prefix].length)
+        if (term.startsWith(schema.prefixes[prefix])) {
+          return prefix + ':' + term.substr(schema.prefixes[prefix].length)
         }
       }
-      return iri
+      return term
     }
   }
 }
