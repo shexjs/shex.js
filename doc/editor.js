@@ -7,6 +7,8 @@ var BUILD_PRODUCTS = true // can disable if OWL and ShEx construction crashes.
 var SUPPRESS_DUPLICATE_CLASSES = true // Don't list subclasses in parent's package.
 var UPPER_UNLIMITED = '*'
 
+const UPCLASS = 'extends up'
+
 var Getables = [
 ];
 
@@ -236,34 +238,49 @@ function main () {
           )
         ),
       ),
-      Object.keys(schema.shapes).slice(0,3).map(
+      Object.keys(schema.shapes).map(
         shapeLabel => $('<table/>').append(
-          $('<tr/>').append(
-            $('<td/>', {id: trim(shapeLabel)}).text(trim(shapeLabel)),
-            $('<td/>').append(
-              (schema.shapes[shapeLabel].extends || []).reduce(
-                (acc, ext) => acc.concat(
-                  $('<a/>', {href: '#' + trim(ext)}).text(trim(ext)),
-                  $('<br/>')
-                ), []
-              )
-            ),
-            $('<td/>')
-          ),
-          renderShapeExpr(schema.shapes[shapeLabel], '')
+          renderShapeExpr(schema.shapes[shapeLabel], '', renderShapeDecl(shapeLabel))
         )
       )
     )
 
-    function renderShapeExpr(expr, lead) {
+    function renderShapeDecl (shapeLabel) {
+      return $('<tr/>').append(
+        $('<td/>', {id: trim(shapeLabel)}).text(trim(shapeLabel)),
+        $('<td/>'),
+        $('<td/>')
+      )
+    }
+
+    function renderShapeExpr(expr, lead, decl) {
+      let top = [decl]
       switch (expr.type) {
       case 'Shape':
-        return renderTripleExpr(expr.expression, lead, false)
-      case 'NodeConstraint':
+        if ('extends' in expr) {
+          // Update the decl with the first extends.
+          decl.find('td:nth-child(2)').append(ref(expr.extends[0]))
+
+          // Each additional extends gets its own row.
+          top = top.concat(expr.extends.slice(1).map(
+            ext => $('<tr/>').append(
+              $('<td/>').text(lead + '│' + '   '),
+              $('<td/>').append(ref(ext)),
+              $('<td/>')
+            )
+          ))
+
+          function ref (ext) {
+            return $('<a/>', {href: '#' + trim(ext), class: UPCLASS}).text(trim(ext))
+          }
+        }
+        return top.concat(renderTripleExpr(expr.expression, lead, false))
       case 'ShapeDecl':
-        return [$('<tr><td colspan="3">' + expr.type + '</td></tr>')]
+        return renderShapeExpr(expr.shapeExpr, lead, decl) // !!! do something with 'abstract'
+      case 'NodeConstraint':
+        return top.concat([$('<tr><td>...</td><td>' + JSON.stringify(expr) + '</td><td></td></tr>')])
       default:
-        throw Error('renderShapeExpr has no handler for ' + expr.type)
+        throw Error('renderShapeExpr has no handler for ' + JSON.stringify(expr, null, 2))
       }
     }
 
@@ -274,24 +291,23 @@ function main () {
           (acc, nested, i) => acc.concat(renderTripleExpr(nested, lead, i === expr.expressions.length - 1)), []
         )
       case 'TripleConstraint':
-        return [
-          $('<tr/>').append(
-            $('<td/>').append(
-              lead,
-              last ? '└' :  '├',
-              $('<span/>').text(expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻').css(
-                {
-                  display: 'inline-block',
-                  width: '.9em',
-                  'margin-left': '-.05em',
-                  'text-align': 'left'
-                }
-              ),
-              trim(expr.predicate)),
-            $('<td/>').text(renderEmbeddedShape(expr.valueExpr)),
-            $('<td/>').text(renderCardinality(expr))
-          )
-        ].concat(renderNestedShape(expr.valueExpr, lead + (last ? ' ' : '│') + '   '))
+        let decl = $('<tr/>').append(
+          $('<td/>').append(
+            lead,
+            last ? '└' :  '├',
+            $('<span/>').text(expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻').css(
+              {
+                display: 'inline-block',
+                width: '.9em',
+                'margin-left': '-.05em',
+                'text-align': 'left'
+              }
+            ),
+            trim(expr.predicate)),
+          $('<td/>').text(renderEmbeddedShape(expr.valueExpr)),
+          $('<td/>').text(renderCardinality(expr))
+        )
+        return renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', decl)
       default:
         throw Error('renderShapeExpr has no handler for ' + expr.type)
       }
@@ -305,11 +321,11 @@ function main () {
         : ''
     }
 
-    function renderNestedShape (valueExpr, lead) {
+    function renderNestedShape (valueExpr, lead, decl) {
       if (valueExpr.type !== 'Shape') {
-        return []
+        return decl
       }
-      return renderShapeExpr(valueExpr, lead)
+      return renderShapeExpr(valueExpr, lead, decl)
     }
 
     function renderCardinality (expr) {
