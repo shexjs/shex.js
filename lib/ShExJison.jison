@@ -447,7 +447,7 @@ PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_LN}
-COMMENT                 '#' [^\u000a\u000d]*
+COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
 
 %%
 
