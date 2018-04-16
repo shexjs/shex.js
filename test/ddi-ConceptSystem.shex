@@ -2,11 +2,12 @@ PREFIX ddi: <http://ddi-alliance.org/ns/#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX umld: <http://schema.omg.org/spec/UML/2.1/uml.xml#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX xhtml: <http://www.w3.org/XML/1998/namespace#>
+PREFIX shexmi: <http://www.w3.org/ns/shex-xmi#>
+PREFIX mark: <https://github.com/commonmark/commonmark.js>
 
 ddi:ConceptSystem {
   ddi:baseProp ["a" "b"];
-  ddi:baseP2 xsd:string
+  ddi:baseP2 xsd:string;
     ddi:name xsd:string;
 #  | ddi:givenName xsd:string;
     ddi:familyName xsd:string;
@@ -71,12 +72,23 @@ ddi:ConceptSystem {
   } *;
   ddi:definingConcept @ddi:Concept *;
 } // rdfs:definedBy <http://lion.ddialliance.org/ddiobjects/relationspecification>
- // ddi:package "package1"
+ // shexmi:package "package 1"
+ // shexmi:comment """Heading 1
+=========
+Text:
+1.  numbered
+2.  list
+
+Heading 2
+=========
+More text.
+"""^^mark:
 
 ddi:CollectionType [
   ddi:Bag
   ddi:Set
 ]
+# // shexmi:package "package 1"
 
 ddi:AnnotatedIdentifiable {
   ddi:agency xsd:string ;
@@ -99,7 +111,7 @@ ddi:AnnotatedIdentifiable {
   } ?;
   ddi:hasAnnotation @ddi:Annotation ?;
   ddi:relatedMaterial @ddi:ExternalMaterial *;
-} // ddi:package "package1"
+} // shexmi:package "package 1"
 
 ddi:Identifiable {
   ddi:agency xsd:string ;
@@ -120,12 +132,12 @@ ddi:Identifiable {
       ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
       ddi:basedOn @ddi:Identifiable *;
   } ?;
-} // ddi:package "package2"
+} // shexmi:package "package 2"
 
 ddi:ObjectName {
   ddi:content xsd:string ?;
   ddi:context @ddi:ExternalControlledVocabularyEntry ?;
-} // ddi:package "package2"
+} // shexmi:package "package 2"
 
 ddi:ExternalControlledVocabularyEntry {
   ddi:controlledVocabularyID xsd:string ?;
@@ -136,11 +148,11 @@ ddi:ExternalControlledVocabularyEntry {
   ddi:uri ddi:anyURI ?;
   ddi:content xsd:string ?;
   ddi:language ddi:language ?;
-} // ddi:package "package3"
+} // shexmi:package "package 3"
 
 ddi:InternationalStructuredString {
   ddi:languageSpecificStructuredString @ddi:LanguageSpecificStructuredStringType +;
-} // ddi:package "package3"
+} // shexmi:package "package 3"
 
 ddi:LanguageSpecificStructuredStringType {
   ddi:formattedContent xsd:string +;
@@ -150,7 +162,7 @@ ddi:LanguageSpecificStructuredStringType {
   ddi:translationSourceLanguage ddi:language *;
   ddi:translationDate umld:UnlimitedNatural ?;
   ddi:isPlainText xsd:boolean ?;
-} // ddi:package "package3"
+} // shexmi:package "package 3"
 
 ddi:Concept {
   ddi:agency xsd:string ;
@@ -175,7 +187,7 @@ ddi:Concept {
   ddi:relatedMaterial @ddi:ExternalMaterial *;
   ddi:name @ddi:ObjectName *;
   ddi:definition @ddi:InternationalStructuredString ?;
-} // ddi:package "package3"
+} // shexmi:package "package 3"
 
 ddi:RelationSpecification [
   ddi:Unordered
@@ -186,10 +198,12 @@ ddi:RelationSpecification [
   ddi:Equivalence
   ddi:GeneralSpecfic
 ]
+# // shexmi:package "package 3"
 
 ddi:TotalityType [
   ddi:Total
   ddi:Partial
   ddi:Unknown
 ]
+# // shexmi:package "package 3"
 

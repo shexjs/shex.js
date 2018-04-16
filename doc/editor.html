@@ -129,7 +129,11 @@ border-left: 1px solid #fdd;
     .what {
         background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIwIiBoZWlnaHQ9IjAiIGRpc3BsYXk9Im5vbmUiPgogICAgICA8c3ltYm9sIGlkPSJkb3duLWFycm93IiB2aWV3Qm94PSIwIC0xMCAxMDcgNjMiID4KICAgICAgICA8cGF0aCBkPSJNIDU0LDQwIDkwLDMgQyA5OSwtNSAxMTIsOCAxMDQsMTYgTCA2MCw2MCBjIDAsMCAtOCw2IC0xNCwwIEwgMywxNiBDIC01LDggOCwtNCAxNSwyIFoiIC8+CiAgICAgIDwvc3ltYm9sPgogICAgICA8dXNlIGlkPSJ1cC1hcnJvdyIgeGxpbms6aHJlZj0iI2Rvd24tYXJyb3ciIHRyYW5zZm9ybT0ic2NhbGUoMSwgLTEpIiB5PSItMTIwJSIgLz4KICAgICAgPCEtLSBpZD0idXAtYXJyb3ciIHhsaW5rOmhyZWY9IiNkb3duLWFycm93IiB0cmFuc2Zvcm09Im1hdHJpeCgxLDAsMCwtMSwwLDEzKSIgLS0+CiAgICA8L3N2Zz4=");
     }
-
+    .comment {
+        margin-left: 1em;
+        border-left: thin solid green;
+        margin-bottom: 2ex;
+    }
   dl {
     border: 3px double #ccc;
     padding: 0.5em;
@@ -257,6 +261,7 @@ border-left: 1px solid #fdd;
 
     <div style="clear:both">
       <div class="render"></div>
+      <h2>scribbling ideas</h2>
       <table style="position: relative">
         <thead>
           <tr><th></th><th>type</th><th>count</th></tr>
@@ -387,6 +392,7 @@ border-left: 1px solid #fdd;
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
+    <script src="https://rawgit.com/markedjs/marked/master/lib/marked.js"></script><script>window.marked = module.exports;console.log(window.marked)</script>
     <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script>module.exports = exports;</script><script src="../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
     <script src="../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>

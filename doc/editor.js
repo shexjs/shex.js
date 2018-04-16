@@ -8,6 +8,30 @@ var SUPPRESS_DUPLICATE_CLASSES = true // Don't list subclasses in parent's packa
 var UPPER_UNLIMITED = '*'
 
 const KEYWORD = 'keyword'
+const SHEXMI = 'http://www.w3.org/ns/shex-xmi#'
+const COMMONMARK = 'https://github.com/commonmark/commonmark.js'
+const COMMENTCLASS = 'comment'
+const MARKED_OPTS = {
+  "baseUrl": null,
+  "breaks": false,
+  "gfm": true,
+  "headerIds": true,
+  "headerPrefix": "",
+  "highlight": null,
+  "langPrefix": "lang-",
+  "mangle": true,
+  "pedantic": false,
+  // "renderer": {
+  //   "options": null
+  // },
+  "sanitize": false,
+  "sanitizer": null,
+  "silent": false,
+  "smartLists": false,
+  "smartypants": false,
+  "tables": true,
+  "xhtml": false
+}
 
 var Getables = [
 ];
@@ -184,7 +208,11 @@ function main () {
             }
             // This may take a long time to render.
             $('<textarea/>', {cols: 60, rows: 10}).val(loadEvent.target.result).appendTo(div)
-            renderSchema(loadEvent.target.result, 'uploaded ' + file.name + ' ' + new Date().toISOString(), status, $('#namespace').val())
+            div.append($('<button/>').text('reparse').on('click', doIt))
+            doIt()
+            function doIt () {
+              renderSchema(loadEvent.target.result, 'uploaded ' + file.name + ' ' + new Date().toISOString(), status, $('#namespace').val())
+            }
           }
           loader.readAsText(file)
         }, RENDER_DELAY)
@@ -207,7 +235,11 @@ function main () {
     }).then(function (text) {
       window.setTimeout(() => {
         $('<textarea/>', {cols: 60, rows: 10}).val(text).appendTo(div)
-        renderSchema(text, 'fetched ' + source + ' ' + new Date().toISOString(), status, $('#namespace').val())
+        div.append($('<button/>').text('reparse').on('click', doIt))
+        doIt()
+        function doIt () {
+          renderSchema(text, 'fetched ' + source + ' ' + new Date().toISOString(), status, $('#namespace').val())
+        }
       }, RENDER_DELAY)
     }).catch(function (error) {
       div.append($('<pre/>').text(error)).addClass('error')
@@ -223,6 +255,7 @@ function main () {
     console.dir(schema)
     let schemaBox = $('<div/>')
     $('.render').append(schemaBox)
+    let packageRef = [null]
     schemaBox.append(
       $('<dl/>', { class: 'prolog' }).append(
         $('<dt/>').text('base'),
@@ -238,12 +271,13 @@ function main () {
           )
         )
       ),
-      Object.keys(schema.shapes).map(
-        shapeLabel => renderDecl(shapeLabel)
+      Object.keys(schema.shapes).reduce(
+        (acc, shapeLabel, idx) =>
+          acc.concat(renderDecl(shapeLabel, packageRef, idx === Object.keys(schema.shapes).length - 1)), []
       )
     )
 
-    function renderDecl (shapeLabel) {
+    function renderDecl (shapeLabel, packageRef, last) {
       let shapeDecl = schema.shapes[shapeLabel]
       let abstract = false
       if (shapeDecl.type === 'ShapeDecl') {
@@ -255,11 +289,49 @@ function main () {
         $('<td/>'),
         $('<td/>')
       )
+      let packageDivs = []
       let div = $('<section/>')
       div.append($('<h3/>').text(trim(shapeLabel)))
+      let shexmiAnnots = (shapeDecl.annotations || []).filter(
+        a => a.predicate.startsWith(SHEXMI)
+      )
+      shexmiAnnots.forEach(
+        a => {
+          switch (a.predicate.substr(SHEXMI.length)) {
+            case 'package':
+              if (a.object.value !== packageRef[0]) {
+                if (packageRef[0] !== null) {
+                  packageDivs.push($('</section>'))
+                }
+                packageDivs.push($('<section>'))
+                packageRef[0] = a.object.value
+                packageDivs.push($('<h3/>').text(packageRef[0]))
+              }
+              break
+            case 'comment':
+              switch (a.object.type) {
+                case COMMONMARK:
+                  div.append(
+                    $('<div/>', { class: COMMENTCLASS }).append(window.marked(
+                      a.object.value, MARKED_OPTS
+                    ))
+                  )
+                  break
+                default:
+                  div.append(
+                    $('<pre/>', { class: COMMENTCLASS }).text(a.object.value)
+                  )
+              }
+              break
+            default:
+              throw Error('unknown shexmi annotation: ' + a.predicate.substr(SHEXMI.length))
+          }
+        }
+      )
+
       // @@ does a NodeConstraint render differently if it's in a nested vs. called from renderDecl?
       div.append($('<table/>').append(renderShapeExpr(shapeDecl, '', declRow, abstract)))
-      return div
+      return packageDivs.concat(div, (packageRef[0] && last ? [$('</section>')] : []))
     }
 
     function renderShapeExpr (expr, lead, declRow, abstract) {
