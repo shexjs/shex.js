@@ -134,6 +134,29 @@ border-left: 1px solid #fdd;
         border-left: thin solid green;
         margin-bottom: 2ex;
     }
+    .render section, .render div {
+        border: thin dashed #ddf;
+        padding: 0em;
+        margin: .5em;
+    }
+    .prefix    { color: #228b22; }
+    .localname { color: #008b8b; }
+    .native:hover, .native:focus {
+        color: #2a6496;
+        text-decoration: underline;
+    }
+
+    .native:focus {
+        outline: thin dotted;
+    }
+    .native {
+        color: #428bca;
+        text-decoration: none;
+    }
+    .shapeExpr { border: thin dotted #777; padding: 1em; }
+    .shapeExpr td:first-child { padding-left: 1em; }
+    .shapeExpr td:last-child { padding-right: 1em; }
+
   dl {
     border: 3px double #ccc;
     padding: 0.5em;
@@ -174,6 +197,9 @@ border-left: 1px solid #fdd;
 
     <div id="title">
       <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Schema Explorer</h1>
+      <button id="menu-button" title="click for menu" style="float:left">
+        <svg><use xlink:href="#down-arrow"/><use xlink:href="#up-arrow" style="display:none;"/></svg>
+      </button>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
@@ -245,63 +271,60 @@ border-left: 1px solid #fdd;
       <form id="loadform">
         <p style="float:left; text-align: right;">
           Load file:<br/>
-          <span id="sources"><a href="DDI-massaged.xmi" title="comments and extension elements removed">m</a> <a href="DDI-canonical.xmi" title="canonicallized by the Joachim filter">c</a> <!-- <a href="http://lion.ddialliance.org/xmi.xml" title="load live from lion (needs CORS headers)">l</a> --></span> URL:<br/>
+          <span id="sources"><a href="../test/ddi-ConceptSystem.shex" title="flat example">f</a> <!-- <a href="http://lion.ddialliance.org/xmi.xml" title="load live from lion (needs CORS headers)">l</a> --></span> URL:<br/>
           <a href="http://ddi-alliance.org/ns/#" title="DDI prefix">ddi</a> NS:<br/>
           switches:
         </p>
         <p style="float:left; margin-left: .5em;"><input id="load-file" name="files[]" multiple="multiple" type="file" /><br/><input size="35" id="load-url"/><br/>
           <input id="namespace" size="35" value="http://ddi-alliance.org/ns/#"/><br/>
           <label for="inventMissing">invent missing shapes</label><input id="inventMissing" type="checkbox" checked="checked"/>
-          <button id="menu-button" title="click for menu" style="float:right">
-            <svg><use xlink:href="#down-arrow"/><use xlink:href="#up-arrow" style="display:none;"/></svg>
-          </button>
         </p>
       </form>
     </div>
 
     <div style="clear:both">
       <div class="render"></div>
-      <h2>scribbling ideas</h2>
-      <table style="position: relative">
-        <thead>
-          <tr><th></th><th>type</th><th>count</th></tr>
-        </thead>
-        <tbody>
-<tr><td colspan="3">ConceptSystem EXTENDS AnnotatedIdentifiable</td></tr>
-<tr                  ><td>      ├▻type                                              </td><td>CollectionType                     </td><td>?</td></tr>
-<tr class="inc1 top" ><td colspan="3"><span class="inc1" ></span>│ <span class="tag">(AnnotatedIdentifiable)</span>                            </td></tr>
-<tr class="inc1    " ><td><span class="inc1"></span>├▻name                                       </td><td>ObjectName                         </td><td>*</td></tr>
-<tr class="inc1 bot" ><td><span class="inc1"></span>├▻purpose                                    </td><td>InternationalStructuredString      </td><td>?</td></tr>
-<tr                  ><td>      ├─contains                                          </td><td>                                   </td><td> </td></tr>
-<tr                  ><td>      │   ├▭index                                         </td><td>xsd:integer                        </td><td>?</td></tr>
-<tr                  ><td>      │   └▻member                                        </td><td>Concept                            </td><td>*</td></tr>
-<tr                  ><td>      ├▭isOrdered                                         </td><td>xsd:boolean                        </td><td>?</td></tr>
-<tr                  ><td>      ├─isStructuredBy                                    </td><td>                                   </td><td>*</td></tr>
-<tr class="inc3 dn " id="incl_Identifiable"><td>      │   │ <a href="#foo" class="bar up">Identifiable</a>                                  </td><td>                                   </td><td> </td></tr>
-<tr class="inc3 dn " ><td>      │   ├▻hasRelationSpecification                      </td><td>RelationSpecification              </td><td> </td></tr>
-<tr class="inc3 dn " ><td>      │   ├▻semantic                                      </td><td>ExternalControlledVocabularyEntry  </td><td>?</td></tr>
-<tr                  ><td>      │   ├▻totality                                      </td><td>TotalityType                       </td><td>?</td></tr>
-<tr                  ><td>      │   └─hasMemberRelation                             </td><td>                                   </td><td>*</td></tr>
-<tr                  ><td>      │       ├▻hasRelationSepcification                  </td><td>RelationSpecification              </td><td> </td></tr>
-<tr class="inc3 top" ><td colspan="3"><span class="inc3" ><span class="inc2" ><span class="inc1" ></span></span></span>│ <span class="tag">(nested class 1)</span>                            </td></tr>
-<tr class="inc3    " ><td><span class="inc2" ><span class="inc1" ></span></span>│       ├▻source                             </td><td>Concept                            </td><td>*</td></tr>
-<tr class="inc2 top" ><td><span class="inc3" ><span class="inc2" ><span class="inc1" ></span></span></span>│       └▻target                             </td><td>Concept                            </td><td>*</td></tr>
-<tr class="inc1 top" ><td colspan="3"><span class="inc1" ></span>│ (nested class3)                            </td></tr>
-<tr class="inc1    " ><td><span class="inc1"></span>│       ├▻semantic                           </td><td>ExternalControlledVocabularyEntry  </td><td>?</td></tr>
-<tr class="inc1    " ><td><span class="inc1"></span>│       ├▻totality                           </td><td>TotalityType                       </td><td>?</td></tr>
-<tr class="inc1 bot" ><td><span class="inc1" ></span>└▻definingConcept                            </td><td>Concept                            </td><td>*</td></tr>
-                         </tbody>
-      </table>
+<!--       <h2>scribbling ideas</h2> -->
+<!--       <table style="position: relative"> -->
+<!--         <thead> -->
+<!--           <tr><th></th><th>type</th><th>count</th></tr> -->
+<!--         </thead> -->
+<!--         <tbody> -->
+<!-- <tr><td colspan="3">ConceptSystem EXTENDS AnnotatedIdentifiable</td></tr> -->
+<!-- <tr                  ><td>      ├▻type                                              </td><td>CollectionType                     </td><td>?</td></tr> -->
+<!-- <tr class="inc1 top" ><td colspan="3"><span class="inc1" ></span>│ <span class="tag">(AnnotatedIdentifiable)</span>                            </td></tr> -->
+<!-- <tr class="inc1    " ><td><span class="inc1"></span>├▻name                                       </td><td>ObjectName                         </td><td>*</td></tr> -->
+<!-- <tr class="inc1 bot" ><td><span class="inc1"></span>├▻purpose                                    </td><td>InternationalStructuredString      </td><td>?</td></tr> -->
+<!-- <tr                  ><td>      ├─contains                                          </td><td>                                   </td><td> </td></tr> -->
+<!-- <tr                  ><td>      │   ├▭index                                         </td><td>xsd:integer                        </td><td>?</td></tr> -->
+<!-- <tr                  ><td>      │   └▻member                                        </td><td>Concept                            </td><td>*</td></tr> -->
+<!-- <tr                  ><td>      ├▭isOrdered                                         </td><td>xsd:boolean                        </td><td>?</td></tr> -->
+<!-- <tr                  ><td>      ├─isStructuredBy                                    </td><td>                                   </td><td>*</td></tr> -->
+<!-- <tr class="inc3 dn " id="incl_Identifiable"><td>      │   │ <a href="#foo" class="bar up">Identifiable</a>                                  </td><td>                                   </td><td> </td></tr> -->
+<!-- <tr class="inc3 dn " ><td>      │   ├▻hasRelationSpecification                      </td><td>RelationSpecification              </td><td> </td></tr> -->
+<!-- <tr class="inc3 dn " ><td>      │   ├▻semantic                                      </td><td>ExternalControlledVocabularyEntry  </td><td>?</td></tr> -->
+<!-- <tr                  ><td>      │   ├▻totality                                      </td><td>TotalityType                       </td><td>?</td></tr> -->
+<!-- <tr                  ><td>      │   └─hasMemberRelation                             </td><td>                                   </td><td>*</td></tr> -->
+<!-- <tr                  ><td>      │       ├▻hasRelationSepcification                  </td><td>RelationSpecification              </td><td> </td></tr> -->
+<!-- <tr class="inc3 top" ><td colspan="3"><span class="inc3" ><span class="inc2" ><span class="inc1" ></span></span></span>│ <span class="tag">(nested class 1)</span>                            </td></tr> -->
+<!-- <tr class="inc3    " ><td><span class="inc2" ><span class="inc1" ></span></span>│       ├▻source                             </td><td>Concept                            </td><td>*</td></tr> -->
+<!-- <tr class="inc2 top" ><td><span class="inc3" ><span class="inc2" ><span class="inc1" ></span></span></span>│       └▻target                             </td><td>Concept                            </td><td>*</td></tr> -->
+<!-- <tr class="inc1 top" ><td colspan="3"><span class="inc1" ></span>│ (nested class3)                            </td></tr> -->
+<!-- <tr class="inc1    " ><td><span class="inc1"></span>│       ├▻semantic                           </td><td>ExternalControlledVocabularyEntry  </td><td>?</td></tr> -->
+<!-- <tr class="inc1    " ><td><span class="inc1"></span>│       ├▻totality                           </td><td>TotalityType                       </td><td>?</td></tr> -->
+<!-- <tr class="inc1 bot" ><td><span class="inc1" ></span>└▻definingConcept                            </td><td>Concept                            </td><td>*</td></tr> -->
+<!--                          </tbody> -->
+<!--       </table> -->
     <div>
-    <script type="text/javascript">
-      $(document).ready(function () {
-        var tr = $("#incl_Identifiable");
-        tr.css("margin", ".5em");
-        var area = DrawOver.select(tr, "margin");
-        area.canvas.css({'pointer-events': 'none'});
-        area.boundingBox().fill("none").stroke({color: "#b33", width: ".1em"});
-      });
-    </script>
+    <!-- <script type="text/javascript"> -->
+    <!--   $(document).ready(function () { -->
+    <!--     var tr = $("#incl_Identifiable"); -->
+    <!--     tr.css("margin", ".5em"); -->
+    <!--     var area = DrawOver.select(tr, "margin"); -->
+    <!--     area.canvas.css({'pointer-events': 'none'}); -->
+    <!--     area.boundingBox().fill("none").stroke({color: "#b33", width: ".1em"}); -->
+    <!--   }); -->
+    <!-- </script> -->
     </div>
 
     </div>
@@ -373,6 +396,7 @@ border-left: 1px solid #fdd;
       </table>
 -->
     <script src="../doc/iri.js"></script>
+    <script src="https://rawgit.com/markedjs/marked/master/lib/marked.js"></script><script></script>
     <script>
       if (!("captureStackTrace" in Error)) {
         Error.captureStackTrace = function () { };
@@ -392,7 +416,6 @@ border-left: 1px solid #fdd;
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
-    <script src="https://rawgit.com/markedjs/marked/master/lib/marked.js"></script><script>window.marked = module.exports;console.log(window.marked)</script>
     <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script>module.exports = exports;</script><script src="../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
     <script src="../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>

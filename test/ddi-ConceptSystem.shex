@@ -72,97 +72,35 @@ ddi:ConceptSystem {
   } *;
   ddi:definingConcept @ddi:Concept *;
 } // rdfs:definedBy <http://lion.ddialliance.org/ddiobjects/relationspecification>
- // shexmi:package "package 1"
- // shexmi:comment """Heading 1
-=========
-Text:
-1.  numbered
-2.  list
+ // shexmi:package "Conceptual"
+ // shexmi:comment """Definition
+============
+A set of Concepts structured by the relations among them. [GSIM 1.1] 
 
-Heading 2
-=========
-More text.
+Examples
+==========
+1) Concept of Sex: Male, Female, Other 2) Concept of Household Relationship: Household Head, Spouse of Household Head, Child of Household Head, Unrelated Household Member, etc.  
+
+Explanatory notes
+===================
+Note that this structure can be used to structure Concept, Classification, Universe, Population, Unit Type and any other class that extends from Concept.
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+c:ConceptSchemeType
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+Concept System
 """^^mark:
-
-ddi:CollectionType [
-  ddi:Bag
-  ddi:Set
-]
-# // shexmi:package "package 1"
-
-ddi:AnnotatedIdentifiable {
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
-  ddi:hasAnnotation @ddi:Annotation ?;
-  ddi:relatedMaterial @ddi:ExternalMaterial *;
-} // shexmi:package "package 1"
-
-ddi:Identifiable {
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
-} // shexmi:package "package 2"
-
-ddi:ObjectName {
-  ddi:content xsd:string ?;
-  ddi:context @ddi:ExternalControlledVocabularyEntry ?;
-} // shexmi:package "package 2"
-
-ddi:ExternalControlledVocabularyEntry {
-  ddi:controlledVocabularyID xsd:string ?;
-  ddi:controlledVocabularyName xsd:string ?;
-  ddi:controlledVocabularyAgencyName xsd:string ?;
-  ddi:controlledVocabularyVersionID xsd:string ?;
-  ddi:otherValue xsd:string ?;
-  ddi:uri ddi:anyURI ?;
-  ddi:content xsd:string ?;
-  ddi:language ddi:language ?;
-} // shexmi:package "package 3"
-
-ddi:InternationalStructuredString {
-  ddi:languageSpecificStructuredString @ddi:LanguageSpecificStructuredStringType +;
-} // shexmi:package "package 3"
-
-ddi:LanguageSpecificStructuredStringType {
-  ddi:formattedContent xsd:string +;
-  ddi:language ddi:language ?;
-  ddi:isTranslated xsd:boolean ?;
-  ddi:isTranslatable xsd:boolean ?;
-  ddi:translationSourceLanguage ddi:language *;
-  ddi:translationDate umld:UnlimitedNatural ?;
-  ddi:isPlainText xsd:boolean ?;
-} // shexmi:package "package 3"
 
 ddi:Concept {
   ddi:agency xsd:string ;
@@ -187,7 +125,284 @@ ddi:Concept {
   ddi:relatedMaterial @ddi:ExternalMaterial *;
   ddi:name @ddi:ObjectName *;
   ddi:definition @ddi:InternationalStructuredString ?;
-} // shexmi:package "package 3"
+} // shexmi:package "Conceptual"
+ // shexmi:comment """Definition
+============
+Unit of thought differentiated by characteristics [GSIM 1.1]
+
+Examples
+==========
+Poverty, Income, Household relationship, Family, Gender, Business Establishment, Satisfaction, etc.
+
+Explanatory notes
+===================
+Many DDI4 classes are subtypes of the Concept class including Category, Universe, UnitType, ConceptualVariable. This class realizes the pattern class Signified and as such a Concept can be denoted by a Sign.
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+c:ConceptType
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+Concept
+"""^^mark:
+
+ddi:AnnotatedIdentifiable {
+  ddi:agency xsd:string ;
+  ddi:id xsd:string ;
+  ddi:version xsd:string ;
+  ddi:versionResponsibility xsd:string ?;
+  ddi:versionRationale xsd:string ?;
+  ddi:versionDate ddi:IsoDateType ?;
+  ddi:isUniversallyUnique xsd:boolean ;
+  ddi:isPersistent xsd:boolean ;
+  ddi:localId  {
+      ddi:localIdValue xsd:string ;
+      ddi:localIdType xsd:string ;
+      ddi:localIdVersion xsd:string ?;
+  } *;
+  ddi:basedOnObject  {
+      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
+      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
+      ddi:basedOn @ddi:Identifiable *;
+  } ?;
+  ddi:hasAnnotation @ddi:Annotation ?;
+  ddi:relatedMaterial @ddi:ExternalMaterial *;
+} // shexmi:package "Identification"
+ // shexmi:comment """Definition
+============
+Used to identify objects for purposes of internal and/or external referencing. Elements of this type are versioned. Provides identification and administrative metadata about the object. Adds optional annotation. Use this as the extension base for First Order Classes that contain intellectual content that needs to be discoverable in its own right.
+
+Examples
+==========
+
+
+Explanatory notes
+===================
+
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+
+"""^^mark:
+
+ddi:Identifiable {
+  ddi:agency xsd:string ;
+  ddi:id xsd:string ;
+  ddi:version xsd:string ;
+  ddi:versionResponsibility xsd:string ?;
+  ddi:versionRationale xsd:string ?;
+  ddi:versionDate ddi:IsoDateType ?;
+  ddi:isUniversallyUnique xsd:boolean ;
+  ddi:isPersistent xsd:boolean ;
+  ddi:localId  {
+      ddi:localIdValue xsd:string ;
+      ddi:localIdType xsd:string ;
+      ddi:localIdVersion xsd:string ?;
+  } *;
+  ddi:basedOnObject  {
+      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
+      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
+      ddi:basedOn @ddi:Identifiable *;
+  } ?;
+} // shexmi:package "Identification"
+ // shexmi:comment """Definition
+============
+Used to identify objects for purposes of internal and/or external referencing. Elements of this type are versioned. Provides identification and administrative metadata about the object. Adds optional annotation. Use this as the extension base for First Order Classes that contain intellectual content that needs to be discoverable in its own right.
+
+Examples
+==========
+
+
+Explanatory notes
+===================
+
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+
+"""^^mark:
+
+ddi:ObjectName {
+  ddi:content xsd:string ?;
+  ddi:context @ddi:ExternalControlledVocabularyEntry ?;
+} // shexmi:package "ComplexDataTypes"
+ // shexmi:comment """Definition
+============
+A standard means of expressing a Name for a class object.  A linguistic signifier. Human understandable name (word, phrase, or mnemonic) that reflects the ISO/IEC 11179-5 naming principles.
+
+Examples
+==========
+
+
+Explanatory notes
+===================
+USE in Model: In general the property name should be "name" as it is the name of the class object which contains it. Use a specific name (i.e. xxxName) only when naming something other than the class object which contains it.
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+r:NameType
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+
+"""^^mark:
+
+ddi:ExternalControlledVocabularyEntry {
+  ddi:controlledVocabularyID xsd:string ?;
+  ddi:controlledVocabularyName xsd:string ?;
+  ddi:controlledVocabularyAgencyName xsd:string ?;
+  ddi:controlledVocabularyVersionID xsd:string ?;
+  ddi:otherValue xsd:string ?;
+  ddi:uri ddi:anyURI ?;
+  ddi:content xsd:string ?;
+  ddi:language ddi:language ?;
+} // shexmi:package "ComplexDataTypes"
+ // shexmi:comment """Definition
+============
+A tightly bound pair of items from an external controlled vocabulary. The extent property describes the extent to which the parent term applies for the specific case. 
+
+Examples
+==========
+When used to assign a role to an actor within a specific activity this term would express the degree of contribution. Contributor with Role=Editor and extent=Lead.
+
+Alternatively. the term might be a controlled vocabulary from a list of controlled vocabularies, e.g. the Generic Longitudinal Business Process Model (GLBPM) in a list that could include other business process model frameworks. In this context the extent becomes the name of a business process model task, e.g. "integrate data" from the GLBPM.
+
+Explanatory notes
+===================
+
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+
+"""^^mark:
+
+ddi:InternationalStructuredString {
+  ddi:languageSpecificStructuredString @ddi:LanguageSpecificStructuredStringType +;
+} // shexmi:package "ComplexDataTypes"
+ // shexmi:comment """Definition
+============
+Packaging structure for multiple language versions of the same string content, for objects that allow for internal formatting using XHTML tags. Where an element of this type is repeatable, the expectation is that each repetition contains different content, each of which can be expressed in multiple languages.
+
+Examples
+==========
+
+
+Explanatory notes
+===================
+
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+r:StructuredStringType
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+
+"""^^mark:
+
+ddi:LanguageSpecificStructuredStringType {
+  ddi:formattedContent xsd:string +;
+  ddi:language ddi:language ?;
+  ddi:isTranslated xsd:boolean ?;
+  ddi:isTranslatable xsd:boolean ?;
+  ddi:translationSourceLanguage ddi:language *;
+  ddi:translationDate umld:UnlimitedNatural ?;
+  ddi:isPlainText xsd:boolean ?;
+} // shexmi:package "ComplexDataTypes"
+ // shexmi:comment """Definition
+============
+Relation between components in a layout as specified by RelationSpecification
+
+Examples
+==========
+
+
+Explanatory notes
+===================
+A layout may consist of other components in addition to instance variables. In the RDF Data Cube Vocabulary at https://dvcs.w3.org/hg/gld/raw-file/29a3dd6dc12c/data-cube/index.html#dsd in addition to instance variables functioning in various roles (dimension, measure, attribute) there are categories or more precisely sdmx-codes. In the RDF Data Cube Vocabulary sdmx-codes are associated with observations together with their associated dimensions. These observations contain measurements that in turn are rolled up into aggregates.
+
+So at least when it comes to data cubes both instance variables AND their codes need to be represented in the layout mix. The way this works in LayoutComponentRelation with data cubes is that instance variables as dimensions have codes and codes participate in instance variables as measurements.
+
+By way of an example see: https://ddi-alliance.atlassian.net/wiki/download/attachments/491696/Data%20Cube%20Graph%20for%20RDF%20Data%20Cube%20Vocabulary%20Example.png?api=v2
+
+
+Synonyms
+==========
+
+
+DDI 3.2 mapping
+=================
+
+
+RDF mapping
+=============
+
+
+GSIM mapping
+==============
+
+"""^^mark:
 
 ddi:RelationSpecification [
   ddi:Unordered
@@ -198,12 +413,18 @@ ddi:RelationSpecification [
   ddi:Equivalence
   ddi:GeneralSpecfic
 ]
-# // shexmi:package "package 3"
+# // shexmi:package "ComplexDataTypes"
+
+ddi:CollectionType [
+  ddi:Bag
+  ddi:Set
+]
+# // shexmi:package "EnumerationsRegExp"
 
 ddi:TotalityType [
   ddi:Total
   ddi:Partial
   ddi:Unknown
 ]
-# // shexmi:package "package 3"
+# // shexmi:package "EnumerationsRegExp"
 
