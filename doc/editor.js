@@ -9,6 +9,52 @@ var UPPER_UNLIMITED = '*'
 
 const UPCLASS = 'extends up'
 const KEYWORD = 'keyword'
+const SHEXMI = 'http://www.w3.org/ns/shex-xmi#'
+const COMMONMARK = 'https://github.com/commonmark/commonmark.js'
+const CLASS_comment = 'comment'
+const CLASS_pname = 'pname'
+const CLASS_prefix = 'prefix'
+const CLASS_localname = 'localname'
+const CLASS_native = 'native'
+const CLASS_literal = 'literal'
+const CLASS_shapeExpr = 'shapeExpr'
+const MARKED_OPTS = {
+  "baseUrl": null,
+  "breaks": false,
+  "gfm": true,
+  "headerIds": true,
+  "headerPrefix": "",
+  "highlight": null,
+  "langPrefix": "lang-",
+  "mangle": true,
+  "pedantic": false,
+  "renderer": Object.assign({}, window.marked.Renderer.prototype, {
+    // "options": null
+    heading: function(text, level, raw) {
+      if (this.options.headerIds) {
+        return '<h'
+          + (parseInt(level) + 3) // start at h4
+          + ' id="'
+          + this.options.headerPrefix
+          + raw.toLowerCase().replace(/[^\w]+/g, '-')
+          + '">'
+          + text
+          + '</h'
+          + (parseInt(level) + 3)
+          + '>\n';
+      }
+      // ignore IDs
+      return '<h' + level + '>' + text + '</h' + level + '>\n';
+    }
+  }),
+  "sanitize": false,
+  "sanitizer": null,
+  "silent": false,
+  "smartLists": false,
+  "smartypants": false,
+  "tables": true,
+  "xhtml": false
+}
 
 var Getables = [
 ];
@@ -185,7 +231,11 @@ function main () {
             }
             // This may take a long time to render.
             $('<textarea/>', {cols: 60, rows: 10}).val(loadEvent.target.result).appendTo(div)
-            renderSchema(loadEvent.target.result, 'uploaded ' + file.name + ' ' + new Date().toISOString(), status, $('#namespace').val())
+            div.append($('<button/>').text('reparse').on('click', doIt))
+            doIt()
+            function doIt () {
+              renderSchema(loadEvent.target.result, 'uploaded ' + file.name + ' ' + new Date().toISOString(), status, $('#namespace').val())
+            }
           }
           loader.readAsText(file)
         }, RENDER_DELAY)
@@ -208,7 +258,11 @@ function main () {
     }).then(function (text) {
       window.setTimeout(() => {
         $('<textarea/>', {cols: 60, rows: 10}).val(text).appendTo(div)
-        renderSchema(text, 'fetched ' + source + ' ' + new Date().toISOString(), status, $('#namespace').val())
+        div.append($('<button/>').text('reparse').on('click', doIt))
+        doIt()
+        function doIt () {
+          renderSchema(text, 'fetched ' + source + ' ' + new Date().toISOString(), status, $('#namespace').val())
+        }
       }, RENDER_DELAY)
     }).catch(function (error) {
       div.append($('<pre/>').text(error)).addClass('error')
@@ -224,6 +278,8 @@ function main () {
     console.dir(schema)
     let schemaBox = $('<div/>')
     $('.render').append(schemaBox)
+    let packageRef = [null]
+    let packageDiv = null
     schemaBox.append(
       $('<dl/>', { class: 'prolog' }).append(
         $('<dt/>').text('base'),
@@ -238,13 +294,24 @@ function main () {
               ), [])
           )
         )
-      ),
-      Object.keys(schema.shapes).map(
-        shapeLabel => renderDecl(shapeLabel)
       )
     )
+    Object.keys(schema.shapes).forEach(
+      (shapeLabel, idx) => {
+        let last = idx === Object.keys(schema.shapes).length - 1
+        let oldPackage = packageRef[0]
+        let add = renderDecl(shapeLabel, packageRef)
+        if (oldPackage !== packageRef[0]) {
+          packageDiv = $('<section>')
+          packageDiv.append($('<h2/>').text(trimStr(packageRef[0])))
+          schemaBox.append(packageDiv)
+          oldPackage = packageRef[0]
+        }
+        (packageDiv || schemaBox).append(add)
+      }
+    )
 
-    function renderDecl (shapeLabel) {
+    function renderDecl (shapeLabel, packageRef) {
       let shapeDecl = schema.shapes[shapeLabel]
       let abstract = false
       if (shapeDecl.type === 'ShapeDecl') {
@@ -252,14 +319,44 @@ function main () {
         shapeDecl = shapeDecl.shapeExpr
       }
       let declRow = $('<tr/>').append(
-        $('<td/>', {id: trim(shapeLabel)}).text(trim(shapeLabel)),
+        $('<td/>').append(trim(shapeLabel)),
         $('<td/>'),
         $('<td/>')
       )
       let div = $('<section/>')
-      div.append($('<h3/>').text(trim(shapeLabel)))
+      div.append($('<h3/>', {id: trimStr(shapeLabel)}).append(trim(shapeLabel)))
+      let shexmiAnnots = (shapeDecl.annotations || []).filter(
+        a => a.predicate.startsWith(SHEXMI)
+      )
+      shexmiAnnots.forEach(
+        a => {
+          switch (a.predicate.substr(SHEXMI.length)) {
+            case 'package':
+              packageRef[0] = a.object.value
+              break
+            case 'comment':
+              switch (a.object.type) {
+                case COMMONMARK:
+                  div.append(
+                    $('<div/>', { class: CLASS_comment }).append(window.marked(
+                      a.object.value, MARKED_OPTS
+                    ))
+                  )
+                  break
+                default:
+                  div.append(
+                    $('<pre/>', { class: CLASS_comment }).text(a.object.value)
+                  )
+              }
+              break
+            default:
+              throw Error('unknown shexmi annotation: ' + a.predicate.substr(SHEXMI.length))
+          }
+        }
+      )
+
       // @@ does a NodeConstraint render differently if it's in a nested vs. called from renderDecl?
-      div.append($('<table/>').append(renderShapeExpr(shapeDecl, '', declRow, abstract)))
+      div.append($('<table/>', {class: CLASS_shapeExpr}).append(renderShapeExpr(shapeDecl, '', declRow, abstract)))
       return div
     }
 
@@ -288,7 +385,7 @@ function main () {
       case 'NodeConstraint':
         if ('values' in expr) {
           return top.concat(expr.values.map(
-            val => $('<tr><td></td><td style="display: list-item;">' + trim(val) + '</td><td></td></tr>')
+            val => $('<tr><td></td><td style="display: list-item;">' + trimStr(val) + '</td><td></td></tr>')
           ))
         } else {
           return top.concat([$('<tr><td>...</td><td>' + JSON.stringify(expr) + '</td><td></td></tr>')])
@@ -319,7 +416,7 @@ function main () {
               }
             ),
             trim(expr.predicate)),
-          $('<td/>').text(inline),
+          $('<td/>').append(inline),
           $('<td/>').text(renderCardinality(expr))
         )
         return inline === '' ? renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', declRow) : declRow
@@ -344,7 +441,7 @@ function main () {
       }
       if ('datatype' in expr) { return trim(expr.datatype) }
       if ('values' in expr) { return '[' + expr.values.map(
-        v => trim(v)
+        v => trimStr(v)
       ).join(' ') + ']' }
       throw Error('renderInlineNodeConstraint didn\'t match')
     }
@@ -373,11 +470,39 @@ function main () {
     function trim (term) {
       if (typeof term === 'object') {
         if ('value' in term)
-          return '"' + term.value + '"'
+          return $('<span/>', {class: CLASS_literal}).text('"' + term.value + '"')
         throw Error('trim ' + JSON.stringify(term))
       }
       if (term === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
         return $('<span/>', {class: KEYWORD}).text('a')
+      if (term.startsWith(namespace))
+        return $('<a/>', {class: CLASS_native, href: '#' + term.substr(namespace.length)}).text(term.substr(namespace.length))
+      for (var prefix in schema.prefixes) {
+        if (term.startsWith(schema.prefixes[prefix])) {
+          return $('<span/>', {class: CLASS_pname}).append(
+            $('<span/>', {class: CLASS_prefix}).text(prefix + ':'),
+            $('<span/>', {class: CLASS_localname}).text(term.substr(schema.prefixes[prefix].length))
+          )
+          let pre = $('<span/>', {class: CLASS_prefix}).text(prefix + ':')
+          let loc = $('<span/>', {class: CLASS_localname}).text(term.substr(schema.prefixes[prefix].length))
+          let ret = $('<span/>', {class: CLASS_pname})
+          ret.prepend(pre)
+          pre.after(loc)
+          return ret
+          return $(`<span class="${CLASS_pname}"><span class="${CLASS_prefix}">${prefix}:</span><span class="${CLASS_localname}">${term.substr(schema.prefixes[prefix].length)}</span></span>`)
+        }
+      }
+      return term
+    }
+
+    function trimStr (term) {
+      if (typeof term === 'object') {
+        if ('value' in term)
+          return '"' + term.value + '"'
+        throw Error('trim ' + JSON.stringify(term))
+      }
+      if (term === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+        return 'a'
       if (term.startsWith(namespace))
         return term.substr(namespace.length)
       for (var prefix in schema.prefixes) {
