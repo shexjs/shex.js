@@ -18,6 +18,8 @@ const CLASS_localname = 'localname'
 const CLASS_native = 'native'
 const CLASS_literal = 'literal'
 const CLASS_shapeExpr = 'shapeExpr'
+const ARROW_up = '⇧'
+const ARROW_down = '⇩'
 const MARKED_OPTS = {
   "baseUrl": null,
   "breaks": false,
@@ -361,15 +363,19 @@ function main () {
     }
 
     function renderShapeExpr (expr, lead, declRow, abstract) {
-      let top = [declRow]
+      let top = declRow ? [declRow] : []
       switch (expr.type) {
       case 'Shape':
         if ('extends' in expr) {
-          // Update the declRow with the first extends.
-          declRow.find('td:nth-child(2)').append(ref(expr.extends[0]))
+          let exts = expr.extends.slice()
+
+          if (declRow) {
+            // Update the declRow with the first extends.
+            declRow.find('td:nth-child(2)').append(ref(exts.shift()))
+          }
 
           // Each additional extends gets its own row.
-          top = top.concat(expr.extends.slice(1).map(
+          top = top.concat(exts.map(
             ext => $('<tr/>').append(
               $('<td/>').text(lead + '│' + '   '),
               $('<td/>').append(ref(ext)),
@@ -378,16 +384,33 @@ function main () {
           ))
 
           function ref (ext) {
-            return [$('<span/>', {class: UPCLASS}).text('⇩').on('click', (evt) => inject(evt, ext)), $('<a/>', {href: '#' + trim(ext), class: UPCLASS}).append(trim(ext))]
+            let arrow = $('<span/>', {class: UPCLASS}).text(ARROW_down)
+            arrow.on('click', (evt) => inject(arrow, evt, ext, []))
+            return [arrow, $('<a/>', {href: '#' + trim(ext), class: UPCLASS}).append(trim(ext))]
           }
 
-          function inject (evt, ext) {
+          function inject (arrow, evt, ext, elts) {
             console.log(ext, schema.shapes[ext])
             let tr = $(evt.target).parent().parent()
             // let add = renderTripleExpr(schema.shapes[ext].expression, lead, false)
-            let add = renderShapeExpr(schema.shapes[ext], '', tr, false)
+            let shapeDecl = schema.shapes[ext]
+            if (shapeDecl.type === 'ShapeDecl') {
+              shapeDecl = shapeDecl.shapeExpr
+            }
+            let add = renderShapeExpr(shapeDecl, lead, null, false)
+            add.forEach(elt => elt.hide())
             tr.after(add)
+            add.forEach(elt => elt.show('slow'))
+            arrow.off()
+            arrow.text(ARROW_up)
+            arrow.on('click', (evt) => remove(arrow, evt, ext, elts.concat(add)))
             return false
+          }
+          function remove (arrow, evt, ext, elts) {
+            arrow.off()
+            elts.forEach(elt => elt.hide('slow', function() { elt.remove();}))
+            arrow.text(ARROW_down)
+            arrow.on('click', (evt) => inject(arrow, evt, ext, []))
           }
         }
         return top.concat(renderTripleExpr(expr.expression, lead, true))
