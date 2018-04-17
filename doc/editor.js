@@ -378,10 +378,19 @@ function main () {
           ))
 
           function ref (ext) {
-            return $('<a/>', {href: '#' + trim(ext), class: UPCLASS}).text(trim(ext))
+            return [$('<span/>', {class: UPCLASS}).text('⇩').on('click', (evt) => inject(evt, ext)), $('<a/>', {href: '#' + trim(ext), class: UPCLASS}).append(trim(ext))]
+          }
+
+          function inject (evt, ext) {
+            console.log(ext, schema.shapes[ext])
+            let tr = $(evt.target).parent().parent()
+            // let add = renderTripleExpr(schema.shapes[ext].expression, lead, false)
+            let add = renderShapeExpr(schema.shapes[ext], '', tr, false)
+            tr.after(add)
+            return false
           }
         }
-        return top.concat(renderTripleExpr(expr.expression, lead, false))
+        return top.concat(renderTripleExpr(expr.expression, lead, true))
       case 'NodeConstraint':
         if ('values' in expr) {
           return top.concat(expr.values.map(

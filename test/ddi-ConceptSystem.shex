@@ -15,7 +15,7 @@ ddi:ConceptSystem EXTENDS ddi:Foo ddi:AnnotatedIdentifiable {
       ddi:member @ddi:Concept *;
   } *;
   ddi:isOrdered xsd:boolean ?;
-  ddi:isStructuredBy  EXTENDS ddi:Identifiable {
+  ddi:isStructuredBy  EXTENDS ddi:Identifiable ddi:Foo {
       ddi:hasRelationSpecification @ddi:RelationSpecification ;
       ddi:semantic @ddi:ExternalControlledVocabularyEntry ?;
       ddi:totality @ddi:TotalityType ?;
@@ -102,11 +102,6 @@ GSIM mapping
 ==============
 Concept
 """^^mark:
-
-ddi:CollectionType [
-  ddi:Bag
-  ddi:Set
-]
 
 ABSTRACT ddi:AnnotatedIdentifiable EXTENDS ddi:Identifiable {
   ddi:hasAnnotation @ddi:Annotation ?;
