@@ -358,11 +358,11 @@ function main () {
       )
 
       // @@ does a NodeConstraint render differently if it's in a nested vs. called from renderDecl?
-      div.append($('<table/>', {class: CLASS_shapeExpr}).append(renderShapeExpr(shapeDecl, '', declRow, abstract)))
+      div.append($('<table/>', {class: CLASS_shapeExpr}).append(renderShapeExpr(shapeDecl, '', declRow, abstract, [])))
       return div
     }
 
-    function renderShapeExpr (expr, lead, declRow, abstract) {
+    function renderShapeExpr (expr, lead, declRow, abstract, parents) {
       let top = declRow ? [declRow] : []
       switch (expr.type) {
       case 'Shape':
@@ -385,11 +385,11 @@ function main () {
 
           function ref (ext) {
             let arrow = $('<span/>', {class: UPCLASS}).text(ARROW_down)
-            arrow.on('click', (evt) => inject(arrow, evt, ext, []))
+            arrow.on('click', (evt) => inject(arrow, evt, ext, parents))
             return [arrow, $('<a/>', {href: '#' + trim(ext), class: UPCLASS}).append(trim(ext))]
           }
 
-          function inject (arrow, evt, ext, elts) {
+          function inject (arrow, evt, ext, parents) {
             console.log(ext, schema.shapes[ext])
             let tr = $(evt.target).parent().parent()
             // let add = renderTripleExpr(schema.shapes[ext].expression, lead, false)
@@ -397,18 +397,21 @@ function main () {
             if (shapeDecl.type === 'ShapeDecl') {
               shapeDecl = shapeDecl.shapeExpr
             }
-            let add = renderShapeExpr(shapeDecl, lead, null, false)
+            let allMyElts = []
+            let add = renderShapeExpr(shapeDecl, lead, null, false, allMyElts)
+            Array.prototype.splice.apply(allMyElts, [0, 0].concat(add))
+            Array.prototype.splice.apply(parents, [0, 0].concat(allMyElts))
             add.forEach(elt => elt.hide())
             tr.after(add)
             add.forEach(elt => elt.show('slow'))
             arrow.off()
             arrow.text(ARROW_up)
-            arrow.on('click', (evt) => remove(arrow, evt, ext, elts.concat(add)))
+            arrow.on('click', (evt) => remove(arrow, evt, ext, allMyElts))
             return false
           }
-          function remove (arrow, evt, ext, elts) {
+          function remove (arrow, evt, ext, doomed) {
             arrow.off()
-            elts.forEach(elt => elt.hide('slow', function() { elt.remove();}))
+            doomed.forEach(elt => elt.hide('slow', function() { elt.remove();}))
             arrow.text(ARROW_down)
             arrow.on('click', (evt) => inject(arrow, evt, ext, []))
           }
@@ -482,7 +485,7 @@ function main () {
       if (valueExpr.type !== 'Shape') {
         return declRow
       }
-      return renderShapeExpr(valueExpr, lead, declRow, false)
+      return renderShapeExpr(valueExpr, lead, declRow, false, [])
     }
 
     function renderCardinality (expr) {
