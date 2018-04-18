@@ -224,7 +224,6 @@ function main () {
           let loader = new window.FileReader()
           loader.onload = function (loadEvent) {
             if (loadEvent.target.readyState !== 2) {
-              console.dir(loadEvent)
               return
             }
             if (loadEvent.target.error) {
@@ -274,7 +273,6 @@ function main () {
   prepareControls()
 
   function renderSchema (schemaText, source, status, namespace) {
-    console.log(source, status)
     let shexParser = ShEx.Parser.construct($('#namespace').val())
     let schema = shexParser.parse(schemaText)
     console.dir(schema)
@@ -390,7 +388,6 @@ function main () {
           }
 
           function inject (arrow, evt, ext, parents) {
-            console.log(ext, schema.shapes[ext])
             let tr = $(evt.target).parent().parent()
             // let add = renderTripleExpr(schema.shapes[ext].expression, lead, false)
             let shapeDecl = schema.shapes[ext]
@@ -416,7 +413,7 @@ function main () {
             arrow.on('click', (evt) => inject(arrow, evt, ext, []))
           }
         }
-        return top.concat(renderTripleExpr(expr.expression, lead, true))
+        return expr.expression ? top.concat(renderTripleExpr(expr.expression, lead, true)) : top
       case 'NodeConstraint':
         if ('values' in expr) {
           return top.concat(expr.values.map(
@@ -442,7 +439,7 @@ function main () {
           $('<td/>').append(
             lead,
             last ? '└' :  '├',
-            $('<span/>').text(expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻').css(
+            $('<span/>').text(expr.valueExpr === undefined ? '◯' : expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻').css(
               {
                 display: 'inline-block',
                 width: '.9em',
@@ -461,7 +458,9 @@ function main () {
     }
 
     function renderInlineShape (valueExpr) {
-      return valueExpr.type === 'Shape'
+      return valueExpr === undefined
+        ? '.'
+        : valueExpr.type === 'Shape'
         ? ''
         : valueExpr.type === 'ShapeRef'
         ? trim(valueExpr.reference)
