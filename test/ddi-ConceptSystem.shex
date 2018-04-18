@@ -42,17 +42,9 @@ Explanatory notes
 ===================
 Note that this structure can be used to structure Concept, Classification, Universe, Population, Unit Type and any other class that extends from Concept.
 
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 c:ConceptSchemeType
-
-RDF mapping
-=============
-
 
 GSIM mapping
 ==============
@@ -86,17 +78,9 @@ Explanatory notes
 ===================
 Many DDI4 classes are subtypes of the Concept class including Category, Universe, UnitType, ConceptualVariable. This class realizes the pattern class Signified and as such a Concept can be denoted by a Sign.
 
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 c:ConceptType
-
-RDF mapping
-=============
-
 
 GSIM mapping
 ==============
@@ -110,30 +94,6 @@ ABSTRACT ddi:AnnotatedIdentifiable EXTENDS ddi:Identifiable {
  // shexmi:comment """Definition
 ============
 Used to identify objects for purposes of internal and/or external referencing. Elements of this type are versioned. Provides identification and administrative metadata about the object. Adds optional annotation. Use this as the extension base for First Order Classes that contain intellectual content that needs to be discoverable in its own right.
-
-Examples
-==========
-
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ABSTRACT ddi:Identifiable {
@@ -159,30 +119,6 @@ ABSTRACT ddi:Identifiable {
  // shexmi:comment """Definition
 ============
 Used to identify objects for purposes of internal and/or external referencing. Elements of this type are versioned. Provides identification and administrative metadata about the object. Adds optional annotation. Use this as the extension base for First Order Classes that contain intellectual content that needs to be discoverable in its own right.
-
-Examples
-==========
-
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:ObjectName {
@@ -193,29 +129,13 @@ ddi:ObjectName {
 ============
 A standard means of expressing a Name for a class object.  A linguistic signifier. Human understandable name (word, phrase, or mnemonic) that reflects the ISO/IEC 11179-5 naming principles.
 
-Examples
-==========
-
-
 Explanatory notes
 ===================
 USE in Model: In general the property name should be "name" as it is the name of the class object which contains it. Use a specific name (i.e. xxxName) only when naming something other than the class object which contains it.
 
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 r:NameType
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:ExternalControlledVocabularyEntry {
@@ -237,26 +157,6 @@ Examples
 When used to assign a role to an actor within a specific activity this term would express the degree of contribution. Contributor with Role=Editor and extent=Lead.
 
 Alternatively. the term might be a controlled vocabulary from a list of controlled vocabularies, e.g. the Generic Longitudinal Business Process Model (GLBPM) in a list that could include other business process model frameworks. In this context the extent becomes the name of a business process model task, e.g. "integrate data" from the GLBPM.
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:InternationalStructuredString {
@@ -266,29 +166,9 @@ ddi:InternationalStructuredString {
 ============
 Packaging structure for multiple language versions of the same string content, for objects that allow for internal formatting using XHTML tags. Where an element of this type is repeatable, the expectation is that each repetition contains different content, each of which can be expressed in multiple languages.
 
-Examples
-==========
-
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 r:StructuredStringType
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:LanguageSpecificStructuredStringType {
@@ -304,10 +184,6 @@ ddi:LanguageSpecificStructuredStringType {
 ============
 Relation between components in a layout as specified by RelationSpecification
 
-Examples
-==========
-
-
 Explanatory notes
 ===================
 A layout may consist of other components in addition to instance variables. In the RDF Data Cube Vocabulary at https://dvcs.w3.org/hg/gld/raw-file/29a3dd6dc12c/data-cube/index.html#dsd in addition to instance variables functioning in various roles (dimension, measure, attribute) there are categories or more precisely sdmx-codes. In the RDF Data Cube Vocabulary sdmx-codes are associated with observations together with their associated dimensions. These observations contain measurements that in turn are rolled up into aggregates.
@@ -315,22 +191,6 @@ A layout may consist of other components in addition to instance variables. In t
 So at least when it comes to data cubes both instance variables AND their codes need to be represented in the layout mix. The way this works in LayoutComponentRelation with data cubes is that instance variables as dimensions have codes and codes participate in instance variables as measurements.
 
 By way of an example see: https://ddi-alliance.atlassian.net/wiki/download/attachments/491696/Data%20Cube%20Graph%20for%20RDF%20Data%20Cube%20Vocabulary%20Example.png?api=v2
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
 
 """^^mark:
 
