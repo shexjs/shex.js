@@ -854,7 +854,10 @@ shapeAtom:
       nonLitNodeConstraint
     | nonLitNodeConstraint shapeOrRef	
         -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-    | litNodeConstraint	
+    | litNodeConstraint _Qannotation_E_Star	{
+        $$ = $1;
+        if ($2.length) { $$.annotations = $2; }
+      }
 //  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
     | shapeOrRef	 // t: 1dotRef1
     | shapeOrRef nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
@@ -875,7 +878,10 @@ shapeAtomNoRef:
       nonLitNodeConstraint
     | nonLitNodeConstraint shapeOrRef	
         -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-    | litNodeConstraint	
+    | litNodeConstraint _Qannotation_E_Star	{
+        $$ = $1;
+        if ($2.length) { $$.annotations = $2; }
+      }
 //  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
     | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | shapeDefinition nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
