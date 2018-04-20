@@ -413,18 +413,18 @@ ddi:RelationSpecification [
   ddi:Equivalence
   ddi:GeneralSpecfic
 ]
-# // shexmi:package "ComplexDataTypes"
+ // shexmi:package "ComplexDataTypes"
 
 ddi:CollectionType [
   ddi:Bag
   ddi:Set
 ]
-# // shexmi:package "EnumerationsRegExp"
+ // shexmi:package "EnumerationsRegExp"
 
 ddi:TotalityType [
   ddi:Total
   ddi:Partial
   ddi:Unknown
 ]
-# // shexmi:package "EnumerationsRegExp"
+ // shexmi:package "EnumerationsRegExp"
 
