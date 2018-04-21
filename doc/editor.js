@@ -419,7 +419,7 @@ function main () {
           )
         )
 
-        return (inline === '' ? renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', declRow) : [declRow]).concat(commentRows)
+        return commentRows.concat(inline === '' ? renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', declRow) : [declRow])
       default:
         throw Error('renderTripleExpr has no handler for ' + expr.type)
       }
