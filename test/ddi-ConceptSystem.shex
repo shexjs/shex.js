@@ -31,14 +31,14 @@ ddi:ConceptSystem {
   } ?;
   ddi:hasAnnotation @ddi:Annotation ?;
   ddi:relatedMaterial @ddi:ExternalMaterial *;
-  # ddi:type @ddi:CollectionType ?;
+  ddi:type @ddi:CollectionType ? // shexmi:comment """Whether the collection is a bag or a set: a bag is a collection with duplicates allowed, a set is a collection without duplicates.""";
   a [ddi:Foo ddi:Bar];
-  ddi:name @ddi:ObjectName *;
-  ddi:purpose @ddi:InternationalStructuredString ?;
-  ddi:contains  {
-      ddi:index xsd:integer ?;
-      ddi:member @ddi:Concept *;
-  } *;
+  ddi:name @ddi:ObjectName * // shexmi:comment """A linguistic signifier. Human understandable name (word, phrase, or mnemonic) that reflects the ISO/IEC 11179-5 naming principles. If more than one name is provided provide a context to differentiate usage.""";
+  ddi:purpose @ddi:InternationalStructuredString ? // shexmi:comment """Explanation of the intent of some decision or object. Supports the use of multiple languages and structured text.""";
+  ddi:contains {
+    ddi:index xsd:integer ? // shexmi:comment """Index value of member in an ordered array""";
+    ddi:member @ddi:Concept *;
+  } * // shexmi:comment """MemberIndicator Allows for the identification of the member and optionally provides an index for the member within an ordered array""";
   ddi:isOrdered xsd:boolean ?;
   ddi:isStructuredBy {
       ddi:agency xsd:string ;

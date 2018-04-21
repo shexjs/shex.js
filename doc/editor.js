@@ -385,6 +385,16 @@ function main () {
         )
       case 'TripleConstraint':
         let inline = renderInlineShape(expr.valueExpr)
+        let predicate = trim(expr.predicate)
+        let comments = (expr.annotations || []).filter(
+          a => a.predicate === SHEXMI + 'comment'
+        ).map(
+          a => a.object.value
+        )
+        if (comments.length > 0) {
+          predicate.attr('title', comments[0])
+          console.log(predicate)
+        }
         let declRow = $('<tr/>').append(
           $('<td/>').append(
             lead,
@@ -397,11 +407,19 @@ function main () {
                 'text-align': 'left'
               }
             ),
-            trim(expr.predicate)),
+            predicate
+          ),
           $('<td/>').append(inline),
           $('<td/>').text(renderCardinality(expr))
         )
-        return inline === '' ? renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', declRow) : declRow
+        let commentRows = comments.map(
+          comment => $('<tr/>', {class: 'annotation'}).append(
+            $('<td/>', {class: 'lines'}).text(lead + '│' + '   '),
+            $('<td/>', {colspan: 2}).text(comment)
+          )
+        )
+
+        return (inline === '' ? renderNestedShape(expr.valueExpr, lead + (last ? '   ' : '│') + '   ', declRow) : [declRow]).concat(commentRows)
       default:
         throw Error('renderTripleExpr has no handler for ' + expr.type)
       }
