@@ -7796,7 +7796,7 @@ function compileNFA (schema, shape) {
           var ret;
             // copy of diver below with added subgraph.
             function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel, ShEx.Util.makeN3DB(subgraph));
+              var sub = dive(focus, shapeLabel, ShExUtil.makeN3DB(subgraph));
               if ("errors" in sub)
                 return sub.errors;
               if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
@@ -8248,7 +8248,7 @@ function vpEngine (schema, shape) {
           var ret;
             // copy of diver below with added subgraph.
             function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel, ShEx.Util.makeN3DB(subgraph, null));
+              var sub = dive(focus, shapeLabel, ShExUtil.makeN3DB(subgraph, null));
               if ("errors" in sub)
                 return sub.errors;
               if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
