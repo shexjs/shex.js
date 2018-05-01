@@ -7,6 +7,7 @@
 # yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2?lang=perl
 # repo: https://github.com/shexSpec/spec/
 # branch: gh-pages
+# path: index.html
 # TODO:
 #   annotations on shapes
 #   look hard at EXTERNAL valueClassDefinitions
