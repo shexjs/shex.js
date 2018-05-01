@@ -382,7 +382,6 @@ IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
 IT_ABSTRACT             [Aa][Bb][Ss][Tt][Rr][Aa][Cc][Tt]
 IT_RESTRICTS		[Rr][Ee][Ss][Tt][Rr][Ii][Cc][Tt][Ss]
-IT_SPECIALIZES		[Ss][Pp][Ee][Cc][Ii][Aa][Ll][Ii][Zz][Ee][Ss]
 IT_EXTENDS		[Ee][Xx][Tt][Ee][Nn][Dd][Ss]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
@@ -503,7 +502,6 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
 {IT_ABSTRACT}           return 'IT_ABSTRACT';
 {IT_RESTRICTS}		return 'IT_RESTRICTS';
-{IT_SPECIALIZES}	return 'IT_SPECIALIZES';
 {IT_EXTENDS}		return 'IT_EXTENDS';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
@@ -672,27 +670,27 @@ statement:
 
 shapeExprDecl:
       // _QIT_ABSTRACT_E_Opt
-      shapeExprLabel _Qspecialization_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+      shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
         if ($2.length > 0) {
           addShape($1, Object.assign({type: "ShapeDecl"},
-                                     $2.length > 0 ? { specializes: $2 } : { },
+                                     $2.length > 0 ? { restricts: $2 } : { },
                                      {shapeExpr: $3})) // $5: t: @@
         } else {
           addShape($1, $3);
         }
       }
-    | IT_ABSTRACT shapeExprLabel _Qspecialization_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dotAbstract
+    | IT_ABSTRACT shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dotAbstract
         // sneak "abstract" in after "type"
         addShape($2, Object.assign({type: "ShapeDecl", abstract: true},
-                                   $3.length > 0 ? { specializes: $3 } : { },
+                                   $3.length > 0 ? { restricts: $3 } : { },
                                    {shapeExpr: $4})) // $5: t: 1dotAbstractShapeCode1
       }
-    // | specialization	-> [ "specializes", $1 ] // t: @@1dotSpecialize1
+    // | restriction	-> [ "restricts", $1 ] // t: @@1dotSpecialize1
     ;
 
-_Qspecialization_E_Star:
+_Qrestriction_E_Star:
       	-> [] // t: 1dot, 1dotAnnot3
-    | _Qspecialization_E_Star specialization	-> appendTo($1, $2) // t: 1dotAnnot3
+    | _Qrestriction_E_Star restriction	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
@@ -1479,10 +1477,9 @@ extensions:
     | 'IT_EXTENDS' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotExtend1, 1dot3Extend, 1dotExtend3
     ;
 
-specialization:
+restriction:
       '-' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
     | 'IT_RESTRICTS' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
-    | 'IT_SPECIALIZES' shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
     ;
 
 _QshapeExprLabel_E_Plus:
