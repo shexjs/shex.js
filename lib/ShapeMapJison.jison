@@ -407,7 +407,10 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 %% /* language grammar */
 
 shapeMap:
-      pair _Q_O_QGT_COMMA_E_S_Qpair_E_C_E_Star _QGT_COMMA_E_Opt	EOF {
+      EOF	{
+          return []
+        }
+    | pair _Q_O_QGT_COMMA_E_S_Qpair_E_C_E_Star _QGT_COMMA_E_Opt	EOF {
           return [$1].concat($2)
         }
     ;
