@@ -77,7 +77,6 @@ describe("A ShEx parser", function () {
     var schema = test.name;
 
     var jsonSchemaFile = jsonSchemasPath + test.json;
-    if (!fs.existsSync(jsonSchemaFile)) return;
     try {
       var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
       var shexCFile = schemasPath + test.shex;
