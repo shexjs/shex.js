@@ -640,6 +640,7 @@ var results = (function () {
     clear: function () {
       resultsSel.removeClass("passes fails error");
       $("#results .status").text("").hide();
+      $("#shapeMap-tabs").removeAttr("title");
       return resultsSel.text("");
     },
     start: function () {
@@ -724,6 +725,7 @@ function validate () {
                                            {  }
                                           ));
       var validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
+      var time = new Date(); // includes overhead of worker messages.
 
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
@@ -824,6 +826,8 @@ function validate () {
             else
               renderEntry(msg.data.results);
             }
+          time = new Date() - time;
+          $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
           finishRendering();
           break;
 
@@ -949,6 +953,7 @@ function validate () {
     var anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
     elt.attr("id", anchor);
     fixedMapEntry.find("a").attr("href", "#" + anchor);
+    fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
   /** attempt to disable scrolling if not at bottom of target.
