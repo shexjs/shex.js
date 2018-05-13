@@ -240,7 +240,7 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
   ret.parse = function (text, base) {
-    return parseTurtle(text, ret.meta, base);
+    return ShEx.Util.makeN3DB(parseTurtle(text, ret.meta, base));
   };
   ret.getItems = function () {
     var data = this.refresh();
@@ -655,7 +655,7 @@ function validate () {
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
         $("#results .status").text("validating...").show();
-        var ret = validator.validate(ShEx.Util.makeN3DB(inputData), fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
+        var ret = validator.validate(inputData, fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
         // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
         ret.forEach(renderEntry);

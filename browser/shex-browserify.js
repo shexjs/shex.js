@@ -3833,6 +3833,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
+    function getTriplesByIRI(s, p, o, g) {
+      return db.getTriplesByIRI(s, p, o, g);
+    }
+
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
       var startTime;
@@ -3862,6 +3866,7 @@ var ShExUtil = {
     return {
       // size: db.size,
       getNeighborhood: getNeighborhood,
+      getTriplesByIRI: getTriplesByIRI,
       // getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
       //   // console.log(Error(s + p + o).stack)
       //   if (queryTracker)
@@ -3877,6 +3882,14 @@ var ShExUtil = {
    */
   makeQueryDB: function (endpoint, queryTracker) {
     var _ShExUtil = this;
+
+    function getTriplesByIRI(s, p, o, g) {
+      return mapQueryToTriples("SELECT " + [
+        (s?"":"?s"), (p?"":"?p"), (o?"":"?o"),
+        "{",
+        (s?s:"?s"), (p?p:"?s"), (o?o:"?s"),
+        "}"].join(" "), s, o)
+    }
 
     function mapQueryToTriples (query, s, o) {
       var rows = _ShExUtil.executeQuery(query, endpoint);
@@ -3954,6 +3967,7 @@ var ShExUtil = {
 
     return {
       getNeighborhood: getNeighborhood,
+      getTriplesByIRI: getTriplesByIRI,
     };
   },
 
