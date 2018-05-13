@@ -571,6 +571,7 @@ var results = (function () {
     clear: function () {
       resultsSel.removeClass("passes fails error");
       $("#results .status").text("").hide();
+      $("#shapeMap-tabs").removeAttr("title");
       return resultsSel.text("");
     },
     start: function () {
@@ -655,7 +656,10 @@ function validate () {
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
         $("#results .status").text("validating...").show();
+        var time = new Date();
         var ret = validator.validate(inputData, fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
+        time = new Date() - time;
+        $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
         // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
         ret.forEach(renderEntry);
@@ -767,6 +771,7 @@ function validate () {
     var anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
     elt.attr("id", anchor);
     fixedMapEntry.find("a").attr("href", "#" + anchor);
+    fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
   function finishRendering () {
