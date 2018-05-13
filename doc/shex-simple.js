@@ -138,7 +138,7 @@ function _makeCache (selection) {
       selection.val(text);
       this.meta.base = base;
       if (base !== DefaultBase) {
-        this.url = base; // crappy hack -- parms should differntiate:
+        this.url = base; // @@crappyHack1 -- parms should differntiate:
         // working base: base for URL resolution.
         // loaded base: place where you can GET current doc.
         // Note that Caches.manifest.set takes a 3rd parm.
@@ -241,7 +241,7 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
   ret.parse = function (text, base) {
-    return parseTurtle(text, ret.meta, base);
+    return ShEx.Util.makeN3DB(parseTurtle(text, ret.meta, base));
   };
   ret.getItems = function () {
     var data = this.refresh();
@@ -341,6 +341,7 @@ function makeManifestCache (selection) {
       return acc.concat(elt);
     }, []);
     prepareManifest(demos, url);
+    $("#manifestDrop").show(); // may have been hidden if no manifest loaded.
   };
   ret.parse = function (text, base) {
     throw Error("should not try to parse manifest cache");
@@ -485,6 +486,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     clearAll();
   } else {
     Caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
+    Caches.inputSchema.url = undefined; // @@ crappyHack1
     $("#inputSchema .status").text(name);
 
     Caches.inputData.set("", DefaultBase);
@@ -522,6 +524,7 @@ function pickData (name, dataTest, elt, listItems, side) {
   } else {
     // Update data pane.
     Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
+    Caches.inputData.url = undefined; // @@ crappyHack1
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -1349,6 +1352,7 @@ function copyTextMapToEditMap () {
 }
 
 function makeFreshEditMap () {
+  removeEditMapPair(null);
   addEditMapPairs(null, null);
   markEditMapClean();
   return [];
