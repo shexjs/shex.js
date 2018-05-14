@@ -433,7 +433,7 @@ function main () {
         : valueExpr.type === 'NodeConstraint'
         ? renderInlineNodeConstraint(valueExpr)
         : valueExpr.type === 'ShapeOr'
-        ? valueExpr.shapeExprs.map(renderInlineShape).join(' ')
+        ? valueExpr.shapeExprs.map(renderInlineShape).join(' <span class="keyword">OR</span> ')
         : (() => { throw Error('renderInlineShape doesn\'t handle ' + JSON.stringify(valueExpr, null, 2)) })()
     }
 
