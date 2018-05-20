@@ -1333,8 +1333,16 @@ function prepareInterface () {
             "error setting " + input.queryStringParm + ":\n" + e + "\n" + textOrObj
           ).addClass("error"));
         }
-      else
+      else {
+        // Set HTML interface state.
+        // A little insulation against improper values:
+        let orig = input.location.val();
         input.location.val(prepend + value);
+        if (input.location.val() === null) {
+          // invalid value so return to last value
+          input.location.val(orig);
+        }
+      }
     } else if ("deflt" in input) {
       input.location.val(input.deflt);
     }
