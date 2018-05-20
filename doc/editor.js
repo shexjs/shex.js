@@ -432,18 +432,37 @@ function main () {
         ? trim(valueExpr.reference)
         : valueExpr.type === 'NodeConstraint'
         ? renderInlineNodeConstraint(valueExpr)
-        : (() => { throw Error('renderInlineShape doesn\'t handle ' + valueExpr.type) })()
+        : valueExpr.type === 'ShapeOr'
+        ? valueExpr.shapeExprs.map(renderInlineShape).join(' <span class="keyword">OR</span> ')
+        : (() => { throw Error('renderInlineShape doesn\'t handle ' + JSON.stringify(valueExpr, null, 2)) })()
     }
 
     function renderInlineNodeConstraint (expr) {
       if (Object.keys(expr).length > 2) {
         return '' // pass to inline renderer
       }
-      if ('datatype' in expr) { return trim(expr.datatype) }
-      if ('values' in expr) { return '[' + expr.values.map(
+      let ret = [];
+      let keys = Object.keys(expr)
+      take('type')
+      if (take('datatype')) { ret.push(trim(expr.datatype)) }
+      if (take('values')) { ret.push('[' + expr.values.map(
         v => trimStr(v)
-      ).join(' ') + ']' }
-      throw Error('renderInlineNodeConstraint didn\'t match')
+      ).join(' ') + ']') }
+      if (take('nodeKind')) { ret.push(expr.nodeKind) }
+      if (keys.length) {
+        throw Error('renderInlineNodeConstraint didn\'t match ' + keys.join(',') + ' in ' + JSON.stringify(expr, null, 2))
+      }
+      return ret.join(' ')
+
+      function take (key) {
+        let idx = keys.indexOf(key)
+        if (idx === -1) {
+          return false
+        } else {
+          keys.splice(idx, 1)
+          return true
+        }
+      }
     }
 
     function renderNestedShape (valueExpr, lead, declRow) {
@@ -499,6 +518,9 @@ function main () {
       if (typeof term === 'object') {
         if ('value' in term)
           return '"' + term.value + '"'
+        if (term.type === 'IriStem') {
+          return '&lt;' + term.stem + '&gt;~'
+        }
         throw Error('trim ' + JSON.stringify(term))
       }
       if (term === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')

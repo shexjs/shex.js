@@ -506,8 +506,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#showMeta").prop("checked", hasMeta);
     showMeta();
 
-    Caches.inputData.set("", DefaultBase);
-    $("#inputData .status").text(" ");
+    clearData();
     var headings = {
       "passes": "Passing:",
       "fails": "Failing:",
@@ -523,7 +522,6 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
       }
     });
 
-    results.clear();
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
     try {
@@ -1632,22 +1630,28 @@ function prepareManifest (demoList, base) {
     } else {
       // nth entry with this schema
     }
-    var dataEntry = {
-      label: elt.dataLabel,
-      text: elt.data,
-      url: elt.dataURL || (elt.data ? base : undefined),
-      entry: elt
-    };
-    var target = elt.status === "nonconformant"
-        ? "fails"
-        : elt.status === "conformant" ? "passes" : "indeterminant";
-    if (!(target in acc[key])) {
-      // first entyr with this data
-      acc[key][target] = [dataEntry];
+
+    if ("dataLabel" in elt) {
+      var dataEntry = {
+        label: elt.dataLabel,
+        text: elt.data,
+        url: elt.dataURL || (elt.data ? base : undefined),
+        entry: elt
+      };
+      var target = elt.status === "nonconformant"
+          ? "fails"
+          : elt.status === "conformant" ? "passes" : "indeterminant";
+      if (!(target in acc[key])) {
+        // first entry with this data
+        acc[key][target] = [dataEntry];
+      } else {
+        // n'th entry with this data
+        acc[key][target].push(dataEntry);
+      }
     } else {
-      // n'th entry with this data
-      acc[key][target].push(dataEntry);
+      // this is a schema-only example
     }
+
     return acc;
   }, {});
   var nestingAsList = Object.keys(nesting).map(e => nesting[e]);
