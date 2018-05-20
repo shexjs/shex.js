@@ -2398,7 +2398,7 @@ var ShExUtil = {
         var _Visitor = this;
         if (semActs === undefined)
           return undefined;
-        ret = []
+        var ret = []
         Object.keys(semActs).forEach(function (label) {
           ret.push(_Visitor.visitSemAct(semActs[label], label));
         });
