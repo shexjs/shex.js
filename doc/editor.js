@@ -449,14 +449,7 @@ function main () {
           $('<td/>').append(
             lead,
             last ? '└' :  '├',
-            $('<span/>').text(expr.valueExpr === undefined ? '◯' : expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻').css(
-              {
-                display: 'inline-block',
-                width: '.9em',
-                'margin-left': '-.05em',
-                'text-align': 'left'
-              }
-            ),
+            $('<span/>', {class: 'arrows'}).text(expr.valueExpr === undefined ? '◯' : expr.valueExpr.type === 'NodeConstraint' ? '▭' : '▻'),
             predicate
           ),
           $('<td/>').append(inline),
@@ -485,35 +478,57 @@ function main () {
         : valueExpr.type === 'NodeConstraint'
         ? renderInlineNodeConstraint(valueExpr)
         : valueExpr.type === 'ShapeOr'
-        ? valueExpr.shapeExprs.map(renderInlineShape).join(' <span class="keyword">OR</span> ')
+        ? valueExpr.shapeExprs.map(renderInlineShape).reduce(
+          (acc, elt, idx) => {
+            if (idx !== 0) {
+              acc = acc.concat(' ', $("<span/>", { class: 'keyword'}).text("OR"), ' ')
+            }
+            return acc.concat(elt)
+          }, []
+        )
         : (() => { throw Error('renderInlineShape doesn\'t handle ' + JSON.stringify(valueExpr, null, 2)) })()
     }
 
     function renderInlineNodeConstraint (expr) {
-      if (Object.keys(expr).length > 2) {
-        return '' // pass to inline renderer
-      }
       let ret = [];
       let keys = Object.keys(expr)
+      let append = appender(ret)
+      let take = (key) => take1(keys, key)
+
       take('type')
-      if (take('datatype')) { ret.push(trim(expr.datatype)) }
-      if (take('values')) { ret.push('[' + expr.values.map(
-        v => trimStr(v)
-      ).join(' ') + ']') }
-      if (take('nodeKind')) { ret.push(expr.nodeKind) }
+      if (take('datatype')) { append(trim(expr.datatype)) }
+      if (take('values')) { append('[', expr.values.reduce(
+        (acc, v, idx) => acc.concat(idx === 0 ? null : ' ', trimStr(v)), []
+      ), ']') }
+      if (take('nodeKind')) { append($('<span/>', { class: 'keyword'}).text(expr.nodeKind)) }
       if (keys.length) {
         throw Error('renderInlineNodeConstraint didn\'t match ' + keys.join(',') + ' in ' + JSON.stringify(expr, null, 2))
       }
-      return ret.join(' ')
+      return ret
 
-      function take (key) {
-        let idx = keys.indexOf(key)
-        if (idx === -1) {
-          return false
-        } else {
-          keys.splice(idx, 1)
-          return true
-        }
+    }
+
+    function take1 (keys, key) {
+      let idx = keys.indexOf(key)
+      if (idx === -1) {
+        return false
+      } else {
+        keys.splice(idx, 1)
+        return true
+      }
+    }
+
+    function append1 () {
+      for (let i = 1; i < arguments.length; ++i) {
+        let elts = arguments[i].constructor === Array
+              ? arguments[i]
+              : [arguments[i]]
+        elts.forEach(elt => { arguments[0].push(elt) })
+      }
+    }
+    function appender (target) {
+      return function () {
+        return append1.apply(null, [target].concat([].slice.call(arguments)))
       }
     }
 
