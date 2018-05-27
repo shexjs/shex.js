@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "eslint": "^3.x",
+    "jest": "^23.0.0",
     "jison": "0.4.16",
     "mocha": "^3.2.0",
     "chai": "1.9.x",
@@ -49,7 +50,7 @@
   ],
   "scripts": {
     "make": "(cd test/ && make test)",
-    "test": "./node_modules/.bin/mocha -C -R dot",
+    "test": "TEST_cli=true ./node_modules/.bin/jest --coverage",
     "lint": "eslint test/findPath.js",
     "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",

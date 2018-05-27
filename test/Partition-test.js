@@ -5,18 +5,17 @@ var ShExParser = require('../lib/ShExParser');
 var ShExUtil = require('../lib/ShExUtil');
 
 var fs = require('fs');
-var expect = require('chai').expect;
 var findPath = require('./findPath.js');
 
 var schemasPath = findPath('schemas');
 var partitionedSchemasPath = __dirname + '/../test/partitionedSchemas/';
 var manifestFile = __dirname + '/../test/partitionedSchemas/Manifest.json';
 
-describe('Partitioning', function () {
+describe('Partitioning', () => {
   var parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
-  beforeEach(function () { parser._resetBlanks(); });
+  beforeEach(() => { parser._resetBlanks(); });
   var manifest = parseJSON(fs.readFileSync(manifestFile, 'utf8'));
   if (TESTS)
     manifest.tests = manifest.tests.filter(function (t) {
@@ -33,12 +32,12 @@ describe('Partitioning', function () {
 
     it((VERBOSE ? schemaFile : test.from) + 
        ' for ' + test.include.join(', ') + ' should match ' + 
-       (VERBOSE ? expectedFile : test.expect), function () {
+       (VERBOSE ? expectedFile : test.expect), () => {
       if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
       if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
       if (VERBOSE) console.log("partition: ", JSON.stringify(partition));
       if (VERBOSE) console.log("expect: ", JSON.stringify(expected));
-      expect(partition).to.deep.equal(expected);
+      expect(partition).toEqual(expected);
     });
   });
 });

@@ -15,7 +15,7 @@ var N3Util = N3.Util;
 var fs = require("fs");
 var path = require("path");
 var chai = require("chai");
-var expect = chai.expect;
+// var expect = chai.expect;
 var assert = chai.assert;
 var findPath = require("./findPath.js");
 
@@ -33,7 +33,7 @@ TODO = [
   // delightfully empty (for now)
 ];
 
-describe("A ShEx validator", function () {
+describe("A ShEx validator", () => {
   "use strict";
 
   var shexParser = ShExParser.construct();
@@ -76,39 +76,43 @@ describe("A ShEx validator", function () {
         if (valFile) {
           valFile = "val/" + valFile;
         }
-        it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
-           "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
-           "' and get 'test/" + valFile + "'" +
-           " in test '" + test["@id"] + "'.",
-           function (report) {                                             // test action
-             var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
-               // resolve relative URLs in results file
-               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-                   typeof obj[k] !== "object" &&
-                   N3Util.isIRI(obj[k])) {
-                 obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
-               } else if (["values"].indexOf(k) !== -1) {
-                 for (var i = 0; i < obj[k].length; ++i) {
-                   if (typeof obj[k][i] !== "object" && N3Util.isIRI(obj[k][i])) {
-                     obj[k][i] = resolveRelativeIRI(dataURL, obj[k][i]);
-                   }
-                 };
-               }
-             }) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
+        it(
+          "should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+             "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
+             "' and get 'test/" + valFile + "'" +
+             " in test '" + test["@id"] + "'.",
+          report => {                                             // test action
+            var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
+              // resolve relative URLs in results file
+              if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+                  typeof obj[k] !== "object" &&
+                  N3Util.isIRI(obj[k])) {
+                obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+              } else if (["values"].indexOf(k) !== -1) {
+                for (var i = 0; i < obj[k].length; ++i) {
+                  if (typeof obj[k][i] !== "object" && N3Util.isIRI(obj[k][i])) {
+                    obj[k][i] = resolveRelativeIRI(dataURL, obj[k][i]);
+                  }
+                };
+              }
+            }) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
 
-             doIt(report, absoluteVal, {results: "val"}, true);
-           });
+            doIt(report, absoluteVal, {results: "val"}, true);
+          }
+        );
 
         if (test.result) {
           var resultsFile = test.result ? path.resolve(validationPath, test.result) : null;
-          it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
-             "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
-             "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
-             " in test '" + test["@id"] + "'.",
-             function (report) {                                             // test action
-               var res = JSON.parse(fs.readFileSync(resultsFile, "utf8"));
-               doIt(report, res, {results: "api"}, true);
-             });
+          it(
+            "should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+               "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
+               "' and get '" + (TERSE ? test.result : resultsFile) + "'" +
+               " in test '" + test["@id"] + "'.",
+            report => {                                             // test action
+              var res = JSON.parse(fs.readFileSync(resultsFile, "utf8"));
+              doIt(report, res, {results: "api"}, true);
+            }
+          );
         }
 
         function doIt (report, referenceResult, params, required) {
@@ -200,10 +204,10 @@ describe("A ShEx validator", function () {
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
                           if (referenceResult)
-                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                            expect(restoreUndefined(validationResult)).toEqual(restoreUndefined(referenceResult));
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-                          expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          expect(restoreUndefined(validationResult)).toEqual(restoreUndefined(referenceResult));
                         }
                       }
                       var xr = test.extensionResults.filter(function (x) {
@@ -212,7 +216,7 @@ describe("A ShEx validator", function () {
                         return x.prints;
                       });
                       if (xr.length) {
-                        expect(testResults).to.deep.equal(xr);
+                        expect(testResults).toEqual(xr);
                       }
                       report();
                     } catch (e) {

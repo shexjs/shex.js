@@ -4,78 +4,78 @@
  */
 
 var chai = require('chai');
-var expect = chai.expect;
-var should = chai.should();
+// var expect = chai.expect;
+// var should = expect(chai)();
 
 var _ = require('underscore');
 
 var mapExtUtils = require('../extensions/shex-map/lib/extension-utils');
 
-describe('Map extension utils', function() {
+describe('Map extension utils', () => {
 
-    it('should have the expected API', function() {
-        mapExtUtils.should.be.an('object');
-        mapExtUtils.collapseSpaces.should.be.a('function');
-        mapExtUtils.unescapeMetaChars.should.be.a('function');
+    test('should have the expected API', () => {
+        expect(typeof mapExtUtils).toBe('object');
+        expect(typeof mapExtUtils.collapseSpaces).toBe('function');
+        expect(typeof mapExtUtils.unescapeMetaChars).toBe('function');
     });
 
-    describe('#collapseSpaces', function() {
-        it('should replace white space with a single space', function() {
-            expect(mapExtUtils.collapseSpaces('  A   Test   String   ')).to.equal(' A Test String ');
+    describe('#collapseSpaces', () => {
+        test('should replace white space with a single space', () => {
+            expect(mapExtUtils.collapseSpaces('  A   Test   String   ')).toBe(' A Test String ');
         });
 
-        it('should not fail with empty string', function() {
-            expect(mapExtUtils.collapseSpaces('')).to.equal('');
+        test('should not fail with empty string', () => {
+            expect(mapExtUtils.collapseSpaces('')).toBe('');
         });
     });
 
-    describe('#trimQuotes', function() {
+    describe('#trimQuotes', () => {
 
-        it('should return an undefined string with no change', function() { 
+        test('should return an undefined string with no change', () => { 
             expect( 
                 mapExtUtils.trimQuotes(undefined)
-            ).to.be.undefined;
+            ).toBeUndefined();
         });
 
-        it('should return an empty string with no change', function() { 
+        test('should return an empty string with no change', () => { 
             expect( 
                 mapExtUtils.trimQuotes('')
-            ).to.equal('');
+            ).toBe('');
         });
 
-        it('should remove starting and trailing double quotes', function() {
+        test('should remove starting and trailing double quotes', () => {
             expect( 
                 mapExtUtils.trimQuotes('"Test"')
-            ).to.equal('Test');
+            ).toBe('Test');
         });
 
-        it('should remove starting and trailing single quotes', function() {
+        test('should remove starting and trailing single quotes', () => {
             expect( 
                 mapExtUtils.trimQuotes("'Test'")
-            ).to.equal('Test');
+            ).toBe('Test');
         });
 
-        it('should not remove mismatched quotes', function() {
+        test('should not remove mismatched quotes', () => {
             expect( 
                 mapExtUtils.trimQuotes("'Test\"")
-            ).to.equal("'Test\"");
+            ).toBe("'Test\"");
         });
 
-        it('should not remove non-leading and non-trailing quotes', function() {
+        test('should not remove non-leading and non-trailing quotes', () => {
             expect( 
                 mapExtUtils.trimQuotes("'Testing \"123\" for you'")
-            ).to.equal("Testing \"123\" for you");
+            ).toBe("Testing \"123\" for you");
         });
     });
 
-    describe('#unescapeMetaChars', function() {
+    describe('#unescapeMetaChars', () => {
  
-        it('should unescape meta characters', function() {
-            expect(mapExtUtils.unescapeMetaChars('<http:\/\/a.example\/dem#family>')).to.equal('<http://a.example/dem#family>');;
+        test('should unescape meta characters', () => {
+            expect(mapExtUtils.unescapeMetaChars('<http:\/\/a.example\/dem#family>')).toBe('<http://a.example/dem#family>');;
         });
 
-        it('should not unescape regex characters', function() {
-            expect(mapExtUtils.unescapeMetaChars('\\s*\\w.*')).to.equal('\\s*\\w.*');;
+        test('should not unescape regex characters', () => {
+            expect(mapExtUtils.unescapeMetaChars('\\s*\\w.*')).toBe('\\s*\\w.*');;
         });
     });
 });
