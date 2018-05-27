@@ -50,7 +50,9 @@
   ],
   "scripts": {
     "make": "(cd test/ && make test)",
-    "test": "TEST_cli=true ./node_modules/.bin/jest --coverage",
+    "test": "./node_modules/.bin/jest --passWithNoTests",
+    "test-cli": "TEST_cli=true ./node_modules/.bin/jest test/cli-test.js",
+    "test-all": "TEST_cli=true ./node_modules/.bin/jest --coverage",
     "lint": "eslint test/findPath.js",
     "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",

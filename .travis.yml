@@ -7,8 +7,8 @@ node_js:
   - "8.0"
   - "stable"
 script:
-  - $(npm bin)/mocha -R dot
-  - TEST_cli=true $(npm bin)/mocha -R dot test/cli-test.js || true
+  - npm test
+  - npm test-cli || true
 cache:
   directories:
     - node_modules

@@ -123,7 +123,10 @@ var AllTests = {
 
 if (!TEST_cli) {
   console.warn("Skipping cli-tests; to activate these tests, set environment variable TEST_cli=true");
-
+  describe("skipped script", () => {
+    "use strict";
+    it("should trivially pass", () => {})
+  })
 } else {
 
 var last = new Date();
