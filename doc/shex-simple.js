@@ -421,9 +421,13 @@ function paintManifest (selector, list, func, listItems, side) {
     var li = $("<li/>").append(button);
     $(selector).append(li);
     if (entry.text === undefined) {
-      fetchOK(entry.url).catch(response => {
+      fetchOK(entry.url).catch(responseOrError => {
         // leave a message in the schema or data block
-        return "# " + renderErrorMessage(response, side);
+        return "# " + renderErrorMessage(
+          responseOrError instanceof Error
+            ? { url: entry.url, status: -1, statusText: responseOrError.message }
+          : responseOrError,
+          side);
       }).then(schemaLoaded);
     } else {
       schemaLoaded(entry.text);
@@ -440,11 +444,11 @@ function paintManifest (selector, list, func, listItems, side) {
 }
 
 function fetchOK (url) {
-  return fetch(url).then(response => {
-    if (!response.ok) {
-      throw response;
+  return fetch(url).then(responseOrError => {
+    if (!responseOrError.ok) {
+      throw responseOrError;
     }
-    return response.text()
+    return responseOrError.text()
   });
 }
 
