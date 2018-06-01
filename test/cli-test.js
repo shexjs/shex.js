@@ -16,7 +16,7 @@ var chai = require("chai");
 // var expect = chai.expect;
 var assert = chai.assert;
 var should = expect(chai);
-var Queue = require("timeout-promise-queue").PromiseQueue(10);
+var Queue = require("timeout-promise-queue").PromiseQueue(25);
 
 var fs = require("fs");
 var _ = require("underscore");
@@ -173,8 +173,8 @@ Object.keys(AllTests).forEach(function (script) {
         program.stderr.on("data", function(data) { stderr += data; });
         program.on("exit", function(exitCode) {
           setTimeout(
-            () =>
-              resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}), 50)
+            () => resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}), 0
+          )
         });
         program.on("error", function(err) { reject(err); });
         cancel.on('timeout', err => {
