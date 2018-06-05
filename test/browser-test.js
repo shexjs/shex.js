@@ -83,16 +83,28 @@ function getDom (searchParms) {
   })
 }
 
-function setup (done, beforeThis, ready, searchParms) {
-  let timer = setTimeout(() => done('script load timeout'), STARTUP_TIMEOUT)
+function setup (done, ready, searchParms) {
+  // let start = Date.now()
+  // stamp('start')
+  let timer = setTimeout(() => {
+    // stamp('script load timeout')
+    done('script load timeout')
+  }, STARTUP_TIMEOUT)
   let dom = getDom(searchParms)
+  // stamp('dom')
   dom.window._testCallback = e => {
+    // stamp('hear')
     clearTimeout(timer)
     ready(dom)
     done(e)
   }
-  beforeThis.timeout(STARTUP_TIMEOUT);
   return dom
+
+  // function stamp (message) {
+  //   let t = Date.now()
+  //   console.warn(message, t, t - start)
+  //   start = t
+  // }
 }
 
 if (!TEST_browser) {
@@ -101,9 +113,10 @@ if (!TEST_browser) {
 } else {
 
 describe('no URL parameters', function () { // needs this
+  this.timeout(STARTUP_TIMEOUT);
   let dom, $
   before(done => {
-    dom = setup(done, this, () => $ = dom.window.$,
+    dom = setup(done, () => $ = dom.window.$,
                 '')
   })
 
@@ -118,25 +131,25 @@ describe('no URL parameters', function () { // needs this
   it("should load clinical observation example", function (done) {
     let clinObs = dom.window.$('#manifestDrop').find('button').slice(0, 1)
     expect(clinObs.text()).to.equal('clinical observation')
-
     clinObs.click()
 
     let withBDate = dom.window.$('.passes').find('button').slice(0, 1)
     expect(withBDate.text()).to.equal('with birthdate')
     withBDate.click()
 
-    dom.window.$('#validate').click()
-    setTimeout(() => {
+    // #validate.click has asynchronous behavior so pass done function.
+    $.event.trigger('click', e => {
       expect(dom.window.$('#results').text().match(/<Obs1>@START/)).not.to.equal(null)
       expect(dom.window.$('#results').text().match(/<Obs1>@START999/)).to.equal(null)
       done()
-    }, 50)
+    }, dom.window.document.getElementById('validate'))
   }).timeout(5000)
 })
 
 describe('default URL parameters', function () { // needs this
+  this.timeout(STARTUP_TIMEOUT);
   let dom, $
-  before(done => { dom = setup(done, this, () => $ = dom.window.$,
+  before(done => { dom = setup(done, () => $ = dom.window.$,
                                '?manifestURL=../examples/manifest.json') })
 
   it("should load clinical observation example", function (done) {

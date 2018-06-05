@@ -592,7 +592,7 @@ var results = (function () {
 
 
 // Validation UI
-function disableResultsAndValidate () {
+function disableResultsAndValidate (evt, done) {
   if (new Date().getTime() - LastFailTime < 100) {
     results.append(
       $("<div/>").addClass("warning").append(
@@ -607,7 +607,7 @@ function disableResultsAndValidate () {
   results.start();
   setTimeout(function () {
     copyEditMapToTextMap(); // will update if #editMap is dirty
-    validate();
+    validate(done);
   }, 0);
 }
 
@@ -619,7 +619,7 @@ function hasFocusNode () {
   });
 }
 
-function validate () {
+function validate (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   var parsing = "input schema";
@@ -674,9 +674,11 @@ function validate () {
         //   console.dir(e);
         // }
         finishRendering();
+        if (done) { done() }
       }).catch(function (e) {
         $("#results .status").text("validation errors:").show();
         failMessage(e, parsing);
+        if (done) { done(e) }
       });
     } else {
       var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -705,6 +707,7 @@ function validate () {
         results.append(pre);
       }
       results.finish();
+      if (done) { done() }
     }
 
     function noStack (f) {
@@ -718,6 +721,7 @@ function validate () {
     }
   } catch (e) {
     failMessage(e, parsing);
+    if (done) { done(e) }
   }
 
   function makeConsoleTracker () {
@@ -774,7 +778,7 @@ function validate () {
     fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
-  function finishRendering () {
+  function finishRendering (done) {
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
           if ($("#interface").val() !== "human")
