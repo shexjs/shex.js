@@ -2,7 +2,8 @@
 
 "use strict";
 const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
-const STARTUP_TIMEOUT = 40000
+const STARTUP_TIMEOUT = 10000
+const SCRIPT_CALLBACK_TIMEOUT = 40000
 const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
@@ -90,7 +91,7 @@ function setup (done, ready, searchParms) {
   let timer = setTimeout(() => {
     // stamp('script load timeout')
     done('script load timeout')
-  }, STARTUP_TIMEOUT)
+  }, SCRIPT_CALLBACK_TIMEOUT)
   let dom = getDom(searchParms)
   // stamp('dom')
   dom.window._testCallback = e => {
@@ -146,8 +147,8 @@ describe('no URL parameters', function () { // needs this
       expect(dom.window.$('#results').text().match(/<Obs1>@START999/)).to.equal(null)
       done()
     }, dom.window.document.getElementById('validate'))
-  }, 5000)
-}, STARTUP_TIMEOUT)
+  }, STARTUP_TIMEOUT)
+}, SCRIPT_CALLBACK_TIMEOUT)
 
 describe('default URL parameters', function () { // needs this
   let dom, $
@@ -158,8 +159,8 @@ describe('default URL parameters', function () { // needs this
     let buttons = dom.window.$('#manifestDrop').find('button')
     expect(buttons.slice(0, 1).text()).to.equal('clinical observation')
     done()
-  }, 5000)
-}, STARTUP_TIMEOUT)
+  }, STARTUP_TIMEOUT)
+}, SCRIPT_CALLBACK_TIMEOUT)
 
 let testExample1 = {
   "@id": "#3circRefS1-IS2-IS3-IS3",
