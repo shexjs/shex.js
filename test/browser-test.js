@@ -122,7 +122,7 @@ describe('no URL parameters', function () { // needs this
   beforeAll(done => {
     dom = setup(done, () => $ = dom.window.$,
                 '')
-  })
+  }, STARTUP_TIMEOUT)
 
   it("should have empty schema", function () {
     dom.window.$('#inputSchema textarea').val()
