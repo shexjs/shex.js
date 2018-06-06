@@ -551,7 +551,7 @@ function pickData (name, dataTest, elt, listItems, side) {
         $("#textMap").val(dataTest.entry.queryMap);
       }
       copyTextMapToEditMap();
-      // validate();
+      // callValidator();
     }
   }
 }
@@ -607,7 +607,7 @@ function disableResultsAndValidate (evt, done) {
   results.start();
   setTimeout(function () {
     copyEditMapToTextMap(); // will update if #editMap is dirty
-    validate(done);
+    callValidator(done);
   }, 0);
 }
 
@@ -619,7 +619,7 @@ function hasFocusNode () {
   });
 }
 
-function validate (done) {
+function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   var parsing = "input schema";
@@ -1381,7 +1381,7 @@ function loadSearchParameters () {
         ("schema" in iface &&
          iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
        && shapeMapErrors.length === 0) {
-      validate();
+      callValidator();
     }
   });
 }
