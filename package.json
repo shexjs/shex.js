@@ -56,6 +56,7 @@
     "make": "(cd test/ && make test)",
     "test": "jest",
     "test-all": "TEST_cli=true TEST_browser=true jest --coverage",
+    "coverage:report": "cat ./coverage/lcov.info | coveralls",
     "lint": "eslint test/findPath.js",
     "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",

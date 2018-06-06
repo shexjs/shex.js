@@ -8,6 +8,8 @@ node_js:
   - "stable"
 script:
   - npm run test-all
+after_success:
+  - npm run coverage:report
 cache:
   directories:
     - node_modules
