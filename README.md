@@ -1,4 +1,8 @@
 # shex.js
+<!-- [![NPM Version](https://badge.fury.io/js/timeout-promise-queue.png)](https://npmjs.org/package/timeout-promise-queue) -->
+<!-- [![Build Status](https://travis-ci.org/shexSpec/shex.js?branch=master)](https://travis-ci.org/shexSpec/shex.js) -->
+[![Build Status](https://travis-ci.org/shexSpec/shex.js.svg?branch=master)](https://travis-ci.org/shexSpec/shex.js)
+<!-- [![Coverage Status](https://coveralls.io/repos/github/ericprud/timeout-promise-queue/badge.svg?branch=master)](https://coveralls.io/github/ericprud/timeout-promise-queue?branch=master) -->
 shex.js javascript implementation of Shape Expressions ([try online](https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html))
 
 ## install
@@ -254,3 +258,15 @@ validate -x source_schema.shex -l data.jsonld -s ProblemShape | materialize -t t
 ```
 cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.org/fhir/shape/problem
 ```
+# ShEx2 features
+
+# ShEx IMPORT Demo (with relative IRIs):
+
+1. open a browser window (we'll call **validator**) with https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html
+2. open another browser window (we'll call **viewer**) with https://shex.io/shexTest/master/viewer?validation
+3. wait 'till *viewer* loads and look for "3circRefS1-IS2-IS3-IS3" (near the bottom)
+4. drag the "#3circRefS1-IS2-IS3-IS3" cell (or the ✓ to the left of it) to the right of the QueryMap area of *validator*
+5. click on the long label under "Manifest:", then the long label under "Passing:" and validate.
+
+It should validate, which involves the IMPORT of `3circRefS2-IS3` and `3circRefS3`.
+`3circRefS2-IS3` also IMPORTs `3circRefS3` which shows that IMPORT is idempotent (has a side effect only the first time).
