@@ -2,8 +2,8 @@
 
 "use strict";
 const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
-const STARTUP_TIMEOUT = 10000
-const SCRIPT_CALLBACK_TIMEOUT = 40000
+const STARTUP_TIMEOUT = 20000
+const SCRIPT_CALLBACK_TIMEOUT = 60000
 const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
