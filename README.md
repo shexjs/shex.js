@@ -1,7 +1,8 @@
-# shex.js
 [![NPM Version](https://badge.fury.io/js/shex.png)](https://npmjs.org/package/shex)
 [![Build Status](https://travis-ci.org/shexSpec/shex.js.svg?branch=master)](https://travis-ci.org/shexSpec/shex.js)
 [![Coverage Status](https://coveralls.io/repos/github/shexSpec/shex.js/badge.svg?branch=jest)](https://coveralls.io/github/shexSpec/shex.js?branch=hest)
+
+# shex.js
 shex.js javascript implementation of Shape Expressions ([try online](https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html))
 
 
