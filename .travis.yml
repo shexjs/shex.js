@@ -13,3 +13,11 @@ script:
 cache:
   directories:
     - node_modules
+    - ~/.npm
+notifications:
+  email: false
+after_success:
+  - npm run travis-deploy-once "npm run semantic-release"
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
