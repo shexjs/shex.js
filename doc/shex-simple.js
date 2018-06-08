@@ -733,7 +733,12 @@ function validate () {
       function expectCreated (msg) {
         if (msg.data.response === "error") {
           $("#results .status").empty().append("failed to create validator").addClass("error");
-          results.append($("<pre/>").text(msg.data.stack ? msg.data.stack : msg.data.message));
+          var errorOutput = $("<pre/>");
+          if (msg.data.message)
+            errorOutput[0].textContent += msg.data.message;
+          if (msg.data.stack)
+            errorOutput[0].textContent += '\n\n' + msg.data.stack;
+          results.append(errorOutput);
           return;
         } else if (msg.data.response !== "created")
           throw "expected created: " + JSON.stringify(msg.data);
