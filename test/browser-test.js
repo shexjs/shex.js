@@ -2,7 +2,8 @@
 
 "use strict";
 const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
-const STARTUP_TIMEOUT = 40000
+const STARTUP_TIMEOUT = 10000
+const SCRIPT_CALLBACK_TIMEOUT = 40000
 const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
@@ -89,7 +90,7 @@ function setup (done, ready, searchParms) {
   let timer = setTimeout(() => {
     // stamp('script load timeout')
     done('script load timeout')
-  }, STARTUP_TIMEOUT)
+  }, SCRIPT_CALLBACK_TIMEOUT)
   let dom = getDom(searchParms)
   // stamp('dom')
   dom.window._testCallback = e => {
@@ -113,7 +114,7 @@ if (!TEST_browser) {
 } else {
 
 describe('no URL parameters', function () { // needs this
-  this.timeout(STARTUP_TIMEOUT);
+  this.timeout(SCRIPT_CALLBACK_TIMEOUT);
   let dom, $
   before(done => {
     dom = setup(done, () => $ = dom.window.$,
@@ -143,11 +144,11 @@ describe('no URL parameters', function () { // needs this
       expect(dom.window.$('#results').text().match(/<Obs1>@START999/)).to.equal(null)
       done()
     }, dom.window.document.getElementById('validate'))
-  }).timeout(5000)
+  }).timeout(STARTUP_TIMEOUT)
 })
 
 describe('default URL parameters', function () { // needs this
-  this.timeout(STARTUP_TIMEOUT);
+  this.timeout(SCRIPT_CALLBACK_TIMEOUT);
   let dom, $
   before(done => { dom = setup(done, () => $ = dom.window.$,
                                '?manifestURL=../examples/manifest.json') })
@@ -156,7 +157,7 @@ describe('default URL parameters', function () { // needs this
     let buttons = dom.window.$('#manifestDrop').find('button')
     expect(buttons.slice(0, 1).text()).to.equal('clinical observation')
     done()
-  }).timeout(5000)
+  }).timeout(STARTUP_TIMEOUT)
 })
 
 let testExample1 = {
