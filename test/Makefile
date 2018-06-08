@@ -17,13 +17,16 @@ JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 ../lib/ShExJison.js: ../lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lalr
 
-Parser-Writer-test: ../lib/ShExJison.js Parser-Writer-test.js
+../lib/ShapeMapJison.js: ../lib/ShapeMapJison.jison
+	$(JISON) $^ -o $@ -p lalr
+
+Parser-Writer-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Parser-Writer-test.js
 	$(MOCHA) -C -R $(REPORTER) Parser-Writer-test.js
 
-Partition-test: ../lib/ShExJison.js Partition-test.js
+Partition-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Partition-test.js
 	$(MOCHA) -C -R $(REPORTER) Partition-test.js
 
-Compilation-test: ../lib/ShExJison.js ../lib/ShExUtil.js Compilation-test.js
+Compilation-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js ../lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
 $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
@@ -32,13 +35,13 @@ $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
 $(ValidationCorpus): $(GENCorpus) $(JSONSCHEMAS)
 	$(GENCorpus) $< -d $(join $(TESTDIR), schemas/) -o $@ -e # suppress output if there are errors
 
-Validation-test: ../lib/ShExJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
+Validation-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
-Map-test: ../lib/ShExJison.js Map-test.js
+Map-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Map-test.js
 	$(MOCHA) -C -R $(REPORTER) Map-test.js
 
-cli-test: ../lib/ShExJison.js cli-test.js
+cli-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js cli-test.js
 	$(MOCHA) -C -R $(REPORTER) cli-test.js
 
 map-extensions-test: ../lib/ShExJison.js map-extensions-test.js

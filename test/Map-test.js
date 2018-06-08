@@ -34,7 +34,7 @@ var Harness = {
           Mapper.register(validator);
 
           // run validator
-          var res = validator.validate(loads[0].data, inputNode, null);
+          var res = validator.validate(loads[0].data, inputNode, ShExValidator.start);
           expect(res).to.not.be.null;
           var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
 
