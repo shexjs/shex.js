@@ -441,7 +441,7 @@ PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_LN}
-COMMENT                 '#' [^\u000a\u000d]*
+COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
 
 %%
 
@@ -833,7 +833,10 @@ shapeAtom:
       nonLitNodeConstraint
     | nonLitNodeConstraint shapeOrRef	
         -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-    | litNodeConstraint	
+    | litNodeConstraint _Qannotation_E_Star	{
+        $$ = $1;
+        if ($2.length) { $$.annotations = $2; }
+      }
 //  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
     | shapeOrRef	 // t: 1dotRef1
     | shapeOrRef nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
@@ -854,7 +857,10 @@ shapeAtomNoRef:
       nonLitNodeConstraint
     | nonLitNodeConstraint shapeOrRef	
         -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-    | litNodeConstraint	
+    | litNodeConstraint _Qannotation_E_Star	{
+        $$ = $1;
+        if ($2.length) { $$.annotations = $2; }
+      }
 //  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
     | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | shapeDefinition nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
