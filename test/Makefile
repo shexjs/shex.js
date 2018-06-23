@@ -44,5 +44,8 @@ Map-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Map-test.js
 cli-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js cli-test.js
 	$(MOCHA) -C -R $(REPORTER) cli-test.js
 
-test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test
+browser-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js browser-test.js
+	$(MOCHA) -C -R $(REPORTER) browser-test.js
+
+test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test browser-test
 
