@@ -174,7 +174,7 @@ function _makeCache (selection) {
             toggleControls();
             resolve({ url: url, data: data });
           } catch (e) {
-            reject(Error("unable to evaluate <" + url + ">: " + e));
+            reject(Error("unable to " + (e.action || "evaluate") + " <" + url + ">: " + '\n' + e.message));
           }
         });
       });
@@ -262,12 +262,10 @@ function makeManifestCache (selection) {
         // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);
       } catch (e) {
-        var whence = source === undefined ? "<" + url  + ">" : source;
         $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
-        results.append($("<pre/>").text(
-          "failed to load manifest from " + whence + ":\n" + e + "\n" + textOrObj
-        ).addClass("error"));
-        return;
+        var throwMe = Error(e + '\n' + textOrObj);
+        throwMe.action = 'load manifest'
+        throw throwMe
         // @@DELME(2017-12-29)
         // transform deprecated examples.js structure
         // textOrObj = eval(textOrObj).reduce(function (acc, schema) {
@@ -422,9 +420,13 @@ function paintManifest (selector, list, func, listItems, side) {
     var li = $("<li/>").append(button);
     $(selector).append(li);
     if (entry.text === undefined) {
-      fetchOK(entry.url).catch(response => {
+      fetchOK(entry.url).catch(responseOrError => {
         // leave a message in the schema or data block
-        return "# " + renderErrorMessage(response, side);
+        return "# " + renderErrorMessage(
+          responseOrError instanceof Error
+            ? { url: entry.url, status: -1, statusText: responseOrError.message }
+          : responseOrError,
+          side);
       }).then(schemaLoaded);
     } else {
       schemaLoaded(entry.text);
@@ -441,11 +443,11 @@ function paintManifest (selector, list, func, listItems, side) {
 }
 
 function fetchOK (url) {
-  return fetch(url).then(response => {
-    if (!response.ok) {
-      throw response;
+  return fetch(url).then(responseOrError => {
+    if (!responseOrError.ok) {
+      throw responseOrError;
     }
-    return response.text()
+    return responseOrError.text()
   });
 }
 
@@ -550,7 +552,7 @@ function pickData (name, dataTest, elt, listItems, side) {
         $("#textMap").val(dataTest.entry.queryMap);
       }
       copyTextMapToEditMap();
-      // validate();
+      // callValidator();
     }
   }
 }
@@ -591,7 +593,7 @@ var results = (function () {
 
 
 // Validation UI
-function disableResultsAndValidate () {
+function disableResultsAndValidate (evt, done) {
   if (new Date().getTime() - LastFailTime < 100) {
     results.append(
       $("<div/>").addClass("warning").append(
@@ -606,7 +608,7 @@ function disableResultsAndValidate () {
   results.start();
   setTimeout(function () {
     copyEditMapToTextMap(); // will update if #editMap is dirty
-    validate();
+    callValidator(done);
   }, 0);
 }
 
@@ -618,7 +620,7 @@ function hasFocusNode () {
   });
 }
 
-function validate () {
+function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   var parsing = "input schema";
@@ -749,12 +751,15 @@ function validate () {
           time = new Date() - time;
           $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
           finishRendering();
+          if (done) { done() }
           break;
 
         case "error":
+          // !! out of sync with master branch .catch(function (e) {   })
           ShExWorker.onmessage = false;
           failMessage(msg.data, "validation invocation", msg.data.text);
           finishRendering();
+          if (done) { done(Error(msg.data.text)) }
           break;
 
         default:
@@ -789,6 +794,7 @@ function validate () {
         results.append(pre);
       }
       results.finish();
+      if (done) { done() }
     }
 
     function noStack (f) {
@@ -802,6 +808,7 @@ function validate () {
     }
   } catch (e) {
     failMessage(e, parsing);
+    if (done) { done(e) }
   }
 
   function makeConsoleTracker () {
@@ -863,7 +870,7 @@ function validate () {
     fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
-  function finishRendering () {
+  function finishRendering (done) {
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
           if ($("#interface").val() !== "human")
@@ -933,11 +940,11 @@ function addEditMapPairs (pairs, target) {
     if (!skip) {
 
     var spanElt = $("<tr/>", {class: "pair"});
-    var focusElt = $("<input/>", {
+    var focusElt = $("<textarea/>", {
+      rows: '1',
       type: 'text',
-      value: node,
       class: 'data focus'
-    }).on("change", markEditMapDirty);
+    }).text(node).on("change", markEditMapDirty);
     var shapeElt = $("<input/>", {
       type: 'text',
       value: shape,
@@ -1374,7 +1381,7 @@ function fixedShapeMapToTerms (shapeMap) {
 /**
  * Load URL search parameters
  */
-function prepareInterface () {
+function loadSearchParameters () {
   // don't overwrite if we arrived here from going back for forth in history
   if (Caches.inputSchema.selection.val() !== "" || Caches.inputData.selection.val() !== "")
     return;
@@ -1392,7 +1399,7 @@ function prepareInterface () {
   }
 
   // Load all known query parameters.
-  Promise.all(QueryParams.reduce((promises, input) => {
+  return Promise.all(QueryParams.reduce((promises, input) => {
     var parm = input.queryStringParm;
     if (parm + "URL" in iface) {
       var url = iface[parm + "URL"][0];
@@ -1406,24 +1413,26 @@ function prepareInterface () {
             input.location.val(e.message);
           }
           results.append($("<pre/>").text(e).addClass("error"));
+          throw e
         }));
       }
     } else if (parm in iface) {
       var prepend = input.location.prop("tagName") === "TEXTAREA" ?
           input.location.val() :
           "";
-      var value = iface[parm].join("");
+      var value = prepend + iface[parm].join("");
       if ("cache" in input)
         // If it parses, make meta (prefixes, base) available.
         try {
-          input.cache.set(prepend + value, location.href);
+          input.cache.set(value, location.href);
         } catch (e) {
           if ("fail" in input) {
             input.fail(e);
           }
           results.append($("<pre/>").text(
-            "error setting " + input.queryStringParm + ":\n" + e + "\n" + textOrObj
+            "error setting " + input.queryStringParm + ":\n" + e + "\n" + value
           ).addClass("error"));
+          throw e
         }
       else {
         // Set HTML interface state.
@@ -1465,7 +1474,7 @@ function prepareInterface () {
         ("schema" in iface &&
          iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
        && shapeMapErrors.length === 0) {
-      validate();
+      callValidator();
     }
   });
 }
@@ -1760,12 +1769,13 @@ function addContextMenus (inputSelector, cache) {
       selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
-        if (terms) {
+        if (options.items[key].ignore) { // ignore the event
+        } else if (terms) {
           var term = terms.tz[terms.match];
           var val = v.substr(0, term[0]) +
               key + addSpace +
               v.substr(term[0] + term[1]);
-          if (terms.match === 2 && !m[8])
+          if (terms.match === 2 && !m[9])
             val = val + "}";
           else if (term[0] + term[1] === v.length)
             val = val + " ";
@@ -1786,7 +1796,7 @@ function addContextMenus (inputSelector, cache) {
           //     ? null
           //     : tpToM(sm.node);
 
-          var m = v.match(RegExp("^"+ParseTriplePattern+"$"));
+          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
@@ -1808,13 +1818,16 @@ function addContextMenus (inputSelector, cache) {
             }, {start: 0, tz: [], match: null });
             function norm (tz) {
               return tz.map(t => {
-                return Caches.inputData.meta.termToLex(t);
+                return t.startsWith('!')
+                  ? {name: t.substr(1), ignore: true}
+                  : {name: Caches.inputData.meta.termToLex(t)};
               });
             }
+            const queryMapKeywords = [{name: "FOCUS"}, {name: "_"}];
             const getTermsFunctions = [
-              () => { return ["FOCUS", "_"].concat(norm(store.getSubjects())); },
+              () => { return queryMapKeywords.concat(norm(store.getSubjects())); },
               () => { return norm(store.getPredicates()); },
-              () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
+              () => { return queryMapKeywords.concat(norm(store.getObjects())); },
             ];
             var store = Caches.inputData.refresh();
             var items = [];
@@ -1825,11 +1838,13 @@ function addContextMenus (inputSelector, cache) {
             return {
               items:
               items.reduce((ret, opt) => {
-                ret[opt] = { name: opt };
+                ret[opt.name] = opt;
                 return ret;
               }, {})
             };
             
+          } else {
+            terms = null;
           }
         }
         terms = v = null;
@@ -1864,6 +1879,17 @@ function addContextMenus (inputSelector, cache) {
 }
 
 prepareControls();
-prepareInterface();
 prepareDragAndDrop();
+loadSearchParameters().then(
+  () => {
+    if ('_testCallback' in window) {
+      window._testCallback()
+    }
+  }).catch(
+    e => {
+    if ('_testCallback' in window) {
+      window._testCallback(e)
+    }
+    }
+  )
 

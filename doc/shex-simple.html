@@ -8,6 +8,19 @@
     <style>
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; margin-left: .1em; }
+      .ShExLogo { float:left; height:1.3em; padding-left: .3em; }
+      /* uncomment for breathing icon
+      .ShExLogo {
+        animation-duration: 2s;
+        animation-name: ShExLogo-breath;
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
+      }
+      @keyframes ShExLogo-breath {
+        from { transform: scale(1, 1); }
+        to { transform: scale(1.2, 1.2); }
+      }
+      */
       .passes999 { margin-right: 1em; }
       .passes, #results div .passes { padding-left: .1em; border-left: thick solid #bfb; }
       .pair.passes { border-left: none; padding-left: none; }
@@ -19,10 +32,17 @@
       .running { background-color: #ddf; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
-      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; border-color: #fc561c }
-      #inputSchema li.selected button { background-color: #e8e8ff; }
-      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
-      #inputData li.selected button { background-color: #e8ffe8; }
+      #inputarea textarea.data.focus {
+        width: 100%;
+        overflow: hidden;
+        border-style: inset;
+        border-width: 2px;
+        padding: 1px 0px;
+      }
+      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
+      #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
+      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
+      #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
       #manifestDrop { border-color: white; width: 100%; }
       #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
       #inputSchema li button, #inputData li button {
@@ -201,7 +221,7 @@ ul {
     </svg>
 
     <div id="title">
-      <img src="//www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
+      <img src="//www.w3.org/2015/ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->

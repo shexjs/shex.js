@@ -16,6 +16,7 @@ var chai = require("chai");
 var expect = chai.expect;
 var assert = chai.assert;
 var should = chai.should;
+var Queue = require("timeout-promise-queue").PromiseQueue(25);
 
 var fs = require("fs");
 var _ = require("underscore");
@@ -153,7 +154,7 @@ Object.keys(AllTests).forEach(function (script) {
       "errorMatch" in test ? { errorMatch: RegExp(test.errorMatch) } :
       ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
 
-      test.exec = new Promise(function (resolve, reject) {
+      test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
         process.chdir(__dirname); // the above paths are relative to this directory
 
         var program = child_process.spawn("../bin/" + script, test.args);
@@ -167,9 +168,17 @@ Object.keys(AllTests).forEach(function (script) {
 
         program.stdout.on("data", function(data) { stdout += data; });
         program.stderr.on("data", function(data) { stderr += data; });
-        program.on("exit", function(exitCode) { resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}); });
+        program.on("exit", function(exitCode) {
+          setTimeout(
+            () => resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}), 0
+          )
+        });
         program.on("error", function(err) { reject(err); });
-      });
+        cancel.on('timeout', err => {
+          program.kill()
+          reject()
+        })
+      }), 60 * 1000); // 1 minute
     } catch (e) {
       var throwMe = new Error("Error setting up test " + test.name + " " + e);
       throwMe.stack = "Error setting up test " + test.name + " " + e.stack;
@@ -234,7 +243,7 @@ Object.keys(AllTests).forEach(function (script) {
              expect(exec.exitCode).to.equal(test.status);
              done();
            }).catch(function (e) { done(e); });
-         });
+         }).timeout(2 * 60 * 1000); // 2 mins for the whole test suite
     });
   });
 });
