@@ -9,6 +9,7 @@ const NO_MANIFEST_LOADED = "no manifest loaded";
 var LOG_PROGRESS = false;
 const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
 const SPARQL_get_items_limit = 50;
+const MENU_ITEM_materialize = "- materialize -"
 
 var DefaultBase = location.origin + location.pathname;
 
@@ -280,9 +281,8 @@ function makeTurtleCache (selection) {
     var m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
       var q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
-      return ["- add all -"].concat(ShEx.Util.executeQuery(q, m[1]).map(row => {
-        return Caches.inputData.meta.termToLex(row[0]);
-      }));
+      return [MENU_ITEM_materialize]
+        .concat(ShEx.Util.executeQuery(q, m[1]).map(lexifyFirstColumn));
     } else {
       var data = this.refresh();
       return data.getTriplesByIRI().map(t => {
@@ -1788,13 +1788,19 @@ function addContextMenus (inputSelector, cache) {
       selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
-        if (key === "- add all -") { // !!! probably obselete
+        if (key === MENU_ITEM_materialize) {
           var toAdd = Object.keys(options.items).filter(k => {
-            return k !== "- add all -";
+            return k !== MENU_ITEM_materialize;
           });
           $(options.selector).val(toAdd.shift());
           var shape = $(options.selector.replace(/focus/, "inputShape")).val();
-          addEditMapPair(null, toAdd.map(node => { return {node: node, shape: shape}; }));
+          addEditMapPairs(toAdd.map(
+            node => {
+              return {
+                node: Caches.inputData.meta.lexToTerm(node),
+                shape: Caches.inputSchema.meta.lexToTerm(shape)
+              };
+            }), null);
         } else if (options.items[key].ignore) { // ignore the event
         } else if (terms) {
           var term = terms.tz[terms.match];
@@ -1869,6 +1875,29 @@ function addContextMenus (inputSelector, cache) {
               }, {})
             };
             
+          } else if (nodeLex && shapeLex) {
+            try {
+              var smparser = ShEx.ShapeMapParser.construct(
+                Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+              var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
+              if (sm.node.language === EXTENSION_sparql) {
+                let q = sm.node.lexical;
+                let obj = {}
+                obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
+                return {
+                  items: ShEx.Util.executeQuery(q, Caches.inputData.endpoint).reduce(
+                    (ret, row) => {
+                      let name = lexifyFirstColumn(row);
+                      ret[name] = { name: name };
+                      return ret;
+                    }, obj
+                  )
+                }
+              }
+            } catch (e) {
+              failMessage(e, "query");
+              return false
+            }
           }
         }
         terms = nodeLex = null;
