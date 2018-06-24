@@ -846,7 +846,7 @@ function callValidator (done) {
           break;
 
         case "error":
-          // !! out of sync with master .catch(function (e) {   })
+          // !! out of sync with master branch .catch(function (e) {   })
           ShExWorker.onmessage = false;
           failMessage(msg.data, "validation invocation", msg.data.text);
           finishRendering();

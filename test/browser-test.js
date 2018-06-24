@@ -1,4 +1,6 @@
 // Test shex-simple browser interface.
+// These tests don't work with Workers do to a jsdom limitation:
+//   https://github.com/jsdom/jsdom/issues/2020
 
 "use strict";
 const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
