@@ -32,6 +32,13 @@
       .running { background-color: #ddf; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
+      #inputarea textarea.data.focus {
+        width: 100%;
+        overflow: hidden;
+        border-style: inset;
+        border-width: 2px;
+        padding: 1px 0px;
+      }
       .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
       #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }

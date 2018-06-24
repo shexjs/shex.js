@@ -847,11 +847,11 @@ function addEditMapPairs (pairs, target) {
     if (!skip) {
 
     var spanElt = $("<tr/>", {class: "pair"});
-    var focusElt = $("<input/>", {
+    var focusElt = $("<textarea/>", {
+      rows: '1',
       type: 'text',
-      value: node,
       class: 'data focus'
-    }).on("change", markEditMapDirty);
+    }).text(node).on("change", markEditMapDirty);
     var shapeElt = $("<input/>", {
       type: 'text',
       value: shape,
