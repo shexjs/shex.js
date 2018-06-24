@@ -10,6 +10,7 @@ const NO_MANIFEST_LOADED = "no manifest loaded";
 var LOG_PROGRESS = false;
 const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
 const SPARQL_get_items_limit = 50;
+const MENU_ITEM_materialize = "- materialize -"
 
 var DefaultBase = location.origin + location.pathname;
 
@@ -293,9 +294,8 @@ function makeTurtleCache (selection) {
     var m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
     if (m) {
       var q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
-      return ["- add all -"].concat(ShEx.Util.executeQuery(q, m[1]).map(row => {
-        return Caches.inputData.meta.termToLex(row[0]);
-      }));
+      return [MENU_ITEM_materialize]
+        .concat(ShEx.Util.executeQuery(q, m[1]).map(lexifyFirstColumn));
     } else {
       var data = this.refresh();
       return data.getTriplesByIRI().map(t => {
@@ -1467,9 +1467,10 @@ function copyEditMapToFixedMap () {
         return spanElt;
       }
 
-  function lexifyFirstColumn (row) {
-    return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
-  }
+}
+
+function lexifyFirstColumn (row) {
+  return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
 }
 
 function copyEditMapToTextMap () {
@@ -1924,30 +1925,36 @@ function prepareManifest (demoList, base) {
 
 function addContextMenus (inputSelector, cache) {
     // !!! terribly stateful; only one context menu at a time!
-    var terms = null, v = null, target, scrollLeft, m, addSpace = "";
+    var terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
     $.contextMenu({
       selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
-        if (key === "- add all -") { // !!! probably obselete
+        if (key === MENU_ITEM_materialize) {
           var toAdd = Object.keys(options.items).filter(k => {
-            return k !== "- add all -";
+            return k !== MENU_ITEM_materialize;
           });
           $(options.selector).val(toAdd.shift());
           var shape = $(options.selector.replace(/focus/, "inputShape")).val();
-          addEditMapPair(null, toAdd.map(node => { return {node: node, shape: shape}; }));
+          addEditMapPairs(toAdd.map(
+            node => {
+              return {
+                node: Caches.inputData.meta.lexToTerm(node),
+                shape: Caches.inputSchema.meta.lexToTerm(shape)
+              };
+            }), null);
         } else if (options.items[key].ignore) { // ignore the event
         } else if (terms) {
           var term = terms.tz[terms.match];
-          var val = v.substr(0, term[0]) +
+          var val = nodeLex.substr(0, term[0]) +
               key + addSpace +
-              v.substr(term[0] + term[1]);
+              nodeLex.substr(term[0] + term[1]);
           if (terms.match === 2 && !m[9])
             val = val + "}";
-          else if (term[0] + term[1] === v.length)
+          else if (term[0] + term[1] === nodeLex.length)
             val = val + " ";
           $(options.selector).val(val);
-          // target.scrollLeft = scrollLeft + val.length - v.length;
+          // target.scrollLeft = scrollLeft + val.length - nodeLex.length;
           target.scrollLeft = target.scrollWidth;
         } else {
           $(options.selector).val(key);
@@ -1955,15 +1962,16 @@ function addContextMenus (inputSelector, cache) {
       },
       build: function (elt, evt) {
         if (elt.hasClass("data")) {
-          v = elt.val();
+          nodeLex = elt.val();
+          var shapeLex = elt.parent().parent().find(".schema").val()
 
           // Would like to use SMParser but that means users can't fix bad SMs.
-          // var sm = smparser.parse(v + '@START')[0];
+          // var sm = smparser.parse(nodeLex + '@START')[0];
           // var m = typeof sm.node === "string" || "@value" in sm.node
           //     ? null
           //     : tpToM(sm.node);
 
-          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
+          m = nodeLex.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
@@ -1986,7 +1994,7 @@ function addContextMenus (inputSelector, cache) {
             function norm (tz) {
               return tz.map(t => {
                 return t.startsWith('!')
-                  ? {name: t.substr(1), ignore: true}
+                  ? {name: "- " + t.substr(1) + " -", ignore: true}
                   : {name: Caches.inputData.meta.termToLex(t)};
               });
             }
@@ -1999,9 +2007,8 @@ function addContextMenus (inputSelector, cache) {
             var store = Caches.inputData.refresh();
             var items = [];
             if (terms.match === null)
-              console.error("contextMenu will whine about \"No Items specified\". Shouldn't that be allowed?");
-            else
-              items = getTermsFunctions[terms.match]();
+              return false; // prevent contextMenu from whining about an empty list
+            items = getTermsFunctions[terms.match]();
             return {
               items:
               items.reduce((ret, opt) => {
@@ -2010,11 +2017,32 @@ function addContextMenus (inputSelector, cache) {
               }, {})
             };
             
-          } else {
-            terms = null;
+          } else if (nodeLex && shapeLex) {
+            try {
+              var smparser = ShEx.ShapeMapParser.construct(
+                Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+              var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
+              if (sm.node.language === EXTENSION_sparql) {
+                let q = sm.node.lexical;
+                let obj = {}
+                obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
+                return {
+                  items: ShEx.Util.executeQuery(q, Caches.inputData.endpoint).reduce(
+                    (ret, row) => {
+                      let name = lexifyFirstColumn(row);
+                      ret[name] = { name: name };
+                      return ret;
+                    }, obj
+                  )
+                }
+              }
+            } catch (e) {
+              failMessage(e, "query");
+              return false
+            }
           }
         }
-        terms = v = null;
+        terms = nodeLex = null;
         try {
           return {
             items: cache.getItems().reduce((ret, opt) => {
@@ -2032,7 +2060,7 @@ function addContextMenus (inputSelector, cache) {
 
         // hack to emulate regex parsing product
         // function tpToM (tp) {
-        //   return [v, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
+        //   return [nodeLex, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
         //   function lex (node) {
         //     return node === ShEx.ShapeMap.focus
         //       ? "FOCUS"
