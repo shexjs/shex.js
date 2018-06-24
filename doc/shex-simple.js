@@ -1223,9 +1223,10 @@ function copyEditMapToFixedMap () {
         return spanElt;
       }
 
-  function lexifyFirstColumn (row) {
-    return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
-  }
+}
+
+function lexifyFirstColumn (row) {
+  return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
 }
 
 function copyEditMapToTextMap () {
@@ -1671,7 +1672,7 @@ function prepareManifest (demoList, base) {
 
 function addContextMenus (inputSelector, cache) {
     // !!! terribly stateful; only one context menu at a time!
-    var terms = null, v = null, target, scrollLeft, m, addSpace = "";
+    var terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
     $.contextMenu({
       selector: inputSelector,
       callback: function (key, options) {
@@ -1679,15 +1680,15 @@ function addContextMenus (inputSelector, cache) {
         if (options.items[key].ignore) { // ignore the event
         } else if (terms) {
           var term = terms.tz[terms.match];
-          var val = v.substr(0, term[0]) +
+          var val = nodeLex.substr(0, term[0]) +
               key + addSpace +
-              v.substr(term[0] + term[1]);
+              nodeLex.substr(term[0] + term[1]);
           if (terms.match === 2 && !m[9])
             val = val + "}";
-          else if (term[0] + term[1] === v.length)
+          else if (term[0] + term[1] === nodeLex.length)
             val = val + " ";
           $(options.selector).val(val);
-          // target.scrollLeft = scrollLeft + val.length - v.length;
+          // target.scrollLeft = scrollLeft + val.length - nodeLex.length;
           target.scrollLeft = target.scrollWidth;
         } else {
           $(options.selector).val(key);
@@ -1695,15 +1696,16 @@ function addContextMenus (inputSelector, cache) {
       },
       build: function (elt, evt) {
         if (elt.hasClass("data")) {
-          v = elt.val();
+          nodeLex = elt.val();
+          var shapeLex = elt.parent().parent().find(".schema").val()
 
           // Would like to use SMParser but that means users can't fix bad SMs.
-          // var sm = smparser.parse(v + '@START')[0];
+          // var sm = smparser.parse(nodeLex + '@START')[0];
           // var m = typeof sm.node === "string" || "@value" in sm.node
           //     ? null
           //     : tpToM(sm.node);
 
-          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
+          m = nodeLex.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
@@ -1726,7 +1728,7 @@ function addContextMenus (inputSelector, cache) {
             function norm (tz) {
               return tz.map(t => {
                 return t.startsWith('!')
-                  ? {name: t.substr(1), ignore: true}
+                  ? {name: "- " + t.substr(1) + " -", ignore: true}
                   : {name: Caches.inputData.meta.termToLex(t)};
               });
             }
@@ -1739,9 +1741,8 @@ function addContextMenus (inputSelector, cache) {
             var store = Caches.inputData.refresh();
             var items = [];
             if (terms.match === null)
-              console.error("contextMenu will whine about \"No Items specified\". Shouldn't that be allowed?");
-            else
-              items = getTermsFunctions[terms.match]();
+              return false; // prevent contextMenu from whining about an empty list
+            items = getTermsFunctions[terms.match]();
             return {
               items:
               items.reduce((ret, opt) => {
@@ -1750,11 +1751,9 @@ function addContextMenus (inputSelector, cache) {
               }, {})
             };
             
-          } else {
-            terms = null;
           }
         }
-        terms = v = null;
+        terms = nodeLex = null;
         try {
           return {
             items: cache.getItems().reduce((ret, opt) => {
@@ -1772,7 +1771,7 @@ function addContextMenus (inputSelector, cache) {
 
         // hack to emulate regex parsing product
         // function tpToM (tp) {
-        //   return [v, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
+        //   return [nodeLex, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
         //   function lex (node) {
         //     return node === ShEx.ShapeMap.focus
         //       ? "FOCUS"
