@@ -1676,12 +1676,13 @@ function addContextMenus (inputSelector, cache) {
       selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
-        if (terms) {
+        if (options.items[key].ignore) { // ignore the event
+        } else if (terms) {
           var term = terms.tz[terms.match];
           var val = v.substr(0, term[0]) +
               key + addSpace +
               v.substr(term[0] + term[1]);
-          if (terms.match === 2 && !m[8])
+          if (terms.match === 2 && !m[9])
             val = val + "}";
           else if (term[0] + term[1] === v.length)
             val = val + " ";
@@ -1702,7 +1703,7 @@ function addContextMenus (inputSelector, cache) {
           //     ? null
           //     : tpToM(sm.node);
 
-          var m = v.match(RegExp("^"+ParseTriplePattern+"$"));
+          m = v.match(RegExp("^"+ParseTriplePattern+"$"));
           if (m) {
             target = evt.target;
             var selStart = target.selectionStart;
@@ -1724,13 +1725,16 @@ function addContextMenus (inputSelector, cache) {
             }, {start: 0, tz: [], match: null });
             function norm (tz) {
               return tz.map(t => {
-                return Caches.inputData.meta.termToLex(t);
+                return t.startsWith('!')
+                  ? {name: t.substr(1), ignore: true}
+                  : {name: Caches.inputData.meta.termToLex(t)};
               });
             }
+            const queryMapKeywords = [{name: "FOCUS"}, {name: "_"}];
             const getTermsFunctions = [
-              () => { return ["FOCUS", "_"].concat(norm(store.getSubjects())); },
+              () => { return queryMapKeywords.concat(norm(store.getSubjects())); },
               () => { return norm(store.getPredicates()); },
-              () => { return ["FOCUS", "_"].concat(norm(store.getObjects())); },
+              () => { return queryMapKeywords.concat(norm(store.getObjects())); },
             ];
             var store = Caches.inputData.refresh();
             var items = [];
@@ -1741,11 +1745,13 @@ function addContextMenus (inputSelector, cache) {
             return {
               items:
               items.reduce((ret, opt) => {
-                ret[opt] = { name: opt };
+                ret[opt.name] = opt;
                 return ret;
               }, {})
             };
             
+          } else {
+            terms = null;
           }
         }
         terms = v = null;
