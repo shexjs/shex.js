@@ -512,7 +512,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     try {
       Caches.inputSchema.refresh();
     } catch (e) {
-      failMessage(e, "schema");
+      failMessage(e, "parsing schema");
     }
   }
 }
@@ -531,7 +531,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     try {
       Caches.inputData.refresh();
     } catch (e) {
-      failMessage(e, "data");
+      failMessage(e, "parsing data");
     }
 
     // Update ShapeMap pane.
@@ -623,23 +623,24 @@ function hasFocusNode () {
 function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
-  var parsing = "input schema";
+  var currentAction = "parsing input schema";
   try {
     noStack(() => { Caches.inputSchema.refresh(); });
     $("#schemaDialect").text(Caches.inputSchema.language);
-    var dataText = Caches.inputData.get();
-    if (dataText || hasFocusNode()) {
-      parsing = "input data";
-      noStack(() => { Caches.inputData.refresh(); }); // for prefixes for getShapeMap
+    if (hasFocusNode()) {
+      currentAction = "parsing input data";
+      $("#results .status").text("parsing data...").show();
+      var inputData = Caches.inputData.refresh(); // need prefixes for ShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
+      currentAction = "parsing shape map";
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
           node: Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
           shape: Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
         };
       }).get());
-      $("#results .status").text("parsing data...").show();
 
+      currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
       ShExWorker.onmessage = expectCreated;
       ShExWorker.postMessage(Object.assign({ request: "create", schema: Caches.inputSchema.refresh(),
@@ -651,7 +652,8 @@ function callValidator (done) {
                                            {  }
                                           ));
       var validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
-      var time = new Date(); // includes overhead of worker messages.
+        var time;
+        // time includes overhead of worker messages.
 
 
       // var resultsMap = USE_INCREMENTAL_RESULTS ?
@@ -668,7 +670,10 @@ function callValidator (done) {
         $("#validate").addClass("stoppable").text("abort (ctl-enter)");
         $("#validate").off("click", disableResultsAndValidate);
         $("#validate").on("click", terminateWorker);
+
+        currentAction = "validating";
         $("#results .status").text("validating...").show();
+        time = new Date();
         ShExWorker.onmessage = parseUpdatesAndResults;
         var transportMap = fixedMap.map(function (ent) {
           return {
@@ -680,7 +685,7 @@ function callValidator (done) {
         });
         ShExWorker.postMessage({
           request: "validate",
-          data: Caches.inputData.refresh().getTriplesByIRI(),
+          data: inputData.getTriplesByIRI(),
           queryMap: transportMap,
           options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
         });
@@ -748,18 +753,22 @@ function callValidator (done) {
             else
               renderEntry(msg.data.results);
             }
-          time = new Date() - time;
-          $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-          finishRendering();
-          if (done) { done() }
+        time = new Date() - time;
+        $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
+        finishRendering();
+        if (done) { done() }
+          resultsCleanup();
           break;
 
         case "error":
-          // !! out of sync with master branch .catch(function (e) {   })
           ShExWorker.onmessage = false;
-          failMessage(msg.data, "validation invocation", msg.data.text);
-          finishRendering();
-          if (done) { done(Error(msg.data.text)) }
+          var e = Error(msg.data.message);
+          e.stack = msg.data.stack;
+          resultsCleanup();
+        $("#results .status").text("validation errors:").show();
+        failMessage(e, currentAction);
+        console.error(e); // dump details to console.
+        if (done) { done(e) }
           break;
 
         default:
@@ -807,7 +816,8 @@ function callValidator (done) {
       }
     }
   } catch (e) {
-    failMessage(e, parsing);
+    failMessage(e, currentAction);
+    console.error(e); // dump details to console.
     if (done) { done(e) }
   }
 
@@ -879,7 +889,6 @@ function callValidator (done) {
                 $(elt).prepend("[");
               $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
             });
-          resultsCleanup();
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
@@ -896,10 +905,10 @@ function callValidator (done) {
 }
 
 var LastFailTime = 0;
-function failMessage (e, kind, text) {
+function failMessage (e, action, text) {
   $("#results .status").empty().text("Errors encountered:").show()
   var div = $("<div/>").addClass("error");
-  div.append($("<h3/>").text("error parsing " + kind + ":\n"));
+  div.append($("<h3/>").text("error " + action + ":\n"));
   div.append($("<pre/>").text(e.message));
   if (text)
     div.append($("<pre/>").text(text));
@@ -926,7 +935,7 @@ function addEditMapPairs (pairs, target) {
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
-                  "Query Map", pair.node.lexical);
+                  "parsing Query Map", pair.node.lexical);
       skip = true; // skip this entry.
       break;
     default:
@@ -1238,7 +1247,7 @@ function copyEditMapToFixedMap () {
       try { smparser.parse("<>" + '@' + shape); } catch (e) {
         $(queryPair).find(".inputShape").addClass("error");
       }
-      failMessage(e, "Edit Map", node + '@' + shape);
+      failMessage(e, "parsing Edit Map", node + '@' + shape);
       nodes = Promise.resolve([]); // skip this entry
       return acc;
     }
@@ -1351,13 +1360,13 @@ function copyTextMapToEditMap () {
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
     var sm = smparser.parse(shapeMap);
     removeEditMapPair(null);
-    addEditMapPairs(sm);
+    addEditMapPairs(sm.length ? sm : null);
     copyEditMapToFixedMap();
     markEditMapClean();
   } catch (e) {
     $("#textMap").addClass("error");
     $("#fixedMap").empty();
-    failMessage(e, "Query Map");
+    failMessage(e, "parsing Query Map");
   }
   return [];
 }
@@ -1855,7 +1864,7 @@ function addContextMenus (inputSelector, cache) {
             }, {})
           };
         } catch (e) {
-          failMessage(e, cache === Caches.inputSchema ? "schema" : "data");
+          failMessage(e, cache === Caches.inputSchema ? "parsing schema" : "parsing data");
           let items = {};
           const failContent = "no choices found";
           items[failContent] = failContent;
