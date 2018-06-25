@@ -696,10 +696,10 @@ function callValidator (done) {
         ShExWorker = new Worker("shex-simple-worker.js");
         if (evt !== null)
           $("#results .status").text("validation aborted").show();
-        resultsCleanup();
+        workerUICleanup();
       }
 
-      function resultsCleanup () {
+      function workerUICleanup () {
         $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
         $("#validate").off("click", terminateWorker);
         $("#validate").on("click", disableResultsAndValidate);
@@ -757,14 +757,14 @@ function callValidator (done) {
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
         finishRendering();
         if (done) { done() }
-          resultsCleanup();
+          workerUICleanup();
           break;
 
         case "error":
           ShExWorker.onmessage = false;
           var e = Error(msg.data.message);
           e.stack = msg.data.stack;
-          resultsCleanup();
+          workerUICleanup();
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);
         console.error(e); // dump details to console.
