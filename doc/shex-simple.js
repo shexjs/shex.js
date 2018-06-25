@@ -511,7 +511,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     try {
       Caches.inputSchema.refresh();
     } catch (e) {
-      failMessage(e, "schema");
+      failMessage(e, "parsing schema");
     }
   }
 }
@@ -530,7 +530,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     try {
       Caches.inputData.refresh();
     } catch (e) {
-      failMessage(e, "data");
+      failMessage(e, "parsing data");
     }
 
     // Update ShapeMap pane.
@@ -622,24 +622,24 @@ function hasFocusNode () {
 function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
-  var parsing = "input schema";
+  var currentAction = "parsing input schema";
   try {
     noStack(() => { Caches.inputSchema.refresh(); });
     $("#schemaDialect").text(Caches.inputSchema.language);
-    var dataText = Caches.inputData.get();
-    if (dataText || hasFocusNode()) {
-      parsing = "input data";
-      noStack(() => { Caches.inputData.refresh(); }); // for prefixes for getShapeMap
+    if (hasFocusNode()) {
+      currentAction = "parsing input data";
+      $("#results .status").text("parsing data...").show();
+      var inputData = Caches.inputData.refresh(); // need prefixes for ShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
+      currentAction = "parsing shape map";
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
         return {
           node: Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
           shape: Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
         };
       }).get());
-      $("#results .status").text("parsing data...").show();
-      var inputData = Caches.inputData.refresh();
 
+      currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
       // var dataURL = "data:text/json," +
       //     JSON.stringify(
@@ -651,12 +651,14 @@ function callValidator (done) {
         url: Caches.inputSchema.url || DefaultBase
       };
       ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+        var time;
         var validator = ShEx.Validator.construct(
           loaded.schema,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
+        currentAction = "validating";
         $("#results .status").text("validating...").show();
-        var time = new Date();
+        time = new Date();
         var ret = validator.validate(inputData, fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
         time = new Date() - time;
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
@@ -677,7 +679,8 @@ function callValidator (done) {
         if (done) { done() }
       }).catch(function (e) {
         $("#results .status").text("validation errors:").show();
-        failMessage(e, parsing);
+        failMessage(e, currentAction);
+        console.error(e); // dump details to console.
         if (done) { done(e) }
       });
     } else {
@@ -720,13 +723,16 @@ function callValidator (done) {
       }
     }
   } catch (e) {
-    failMessage(e, parsing);
+    failMessage(e, currentAction);
+    console.error(e); // dump details to console.
     if (done) { done(e) }
   }
 
   function makeConsoleTracker () {
     function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
-    function sm (node, shape) { return `${Caches.inputData.meta.termToLex(node)}@${Caches.inputSchema.meta.termToLex(shape)}`; }
+    function sm (node, shape) {
+      return `${Caches.inputData.meta.termToLex(node)}@${Caches.inputSchema.meta.termToLex(shape)}`;
+    }
     var logger = {
       recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
       known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
@@ -803,10 +809,10 @@ function callValidator (done) {
 }
 
 var LastFailTime = 0;
-function failMessage (e, kind, text) {
+function failMessage (e, action, text) {
   $("#results .status").empty().text("Errors encountered:").show()
   var div = $("<div/>").addClass("error");
-  div.append($("<h3/>").text("error parsing " + kind + ":\n"));
+  div.append($("<h3/>").text("error " + action + ":\n"));
   div.append($("<pre/>").text(e.message));
   if (text)
     div.append($("<pre/>").text(text));
@@ -833,7 +839,7 @@ function addEditMapPairs (pairs, target) {
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
       failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
-                  "Query Map", pair.node.lexical);
+                  "parsing Query Map", pair.node.lexical);
       skip = true; // skip this entry.
       break;
     default:
@@ -1145,7 +1151,7 @@ function copyEditMapToFixedMap () {
       try { smparser.parse("<>" + '@' + shape); } catch (e) {
         $(queryPair).find(".inputShape").addClass("error");
       }
-      failMessage(e, "Edit Map", node + '@' + shape);
+      failMessage(e, "parsing Edit Map", node + '@' + shape);
       nodes = Promise.resolve([]); // skip this entry
       return acc;
     }
@@ -1258,13 +1264,13 @@ function copyTextMapToEditMap () {
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
     var sm = smparser.parse(shapeMap);
     removeEditMapPair(null);
-    addEditMapPairs(sm);
+    addEditMapPairs(sm.length ? sm : null);
     copyEditMapToFixedMap();
     markEditMapClean();
   } catch (e) {
     $("#textMap").addClass("error");
     $("#fixedMap").empty();
-    failMessage(e, "Query Map");
+    failMessage(e, "parsing Query Map");
   }
   return [];
 }
@@ -1762,7 +1768,7 @@ function addContextMenus (inputSelector, cache) {
             }, {})
           };
         } catch (e) {
-          failMessage(e, cache === Caches.inputSchema ? "schema" : "data");
+          failMessage(e, cache === Caches.inputSchema ? "parsing schema" : "parsing data");
           let items = {};
           const failContent = "no choices found";
           items[failContent] = failContent;
