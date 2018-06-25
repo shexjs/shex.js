@@ -835,7 +835,6 @@ function callValidator (done) {
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
         finishRendering();
         if (done) { done() }
-          resultsCleanup();
           workerUICleanup();
           break;
 
@@ -856,7 +855,6 @@ function callValidator (done) {
           ShExWorker.onmessage = false;
           var e = Error(msg.data.message);
           e.stack = msg.data.stack;
-          resultsCleanup();
           workerUICleanup();
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);
