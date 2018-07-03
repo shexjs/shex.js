@@ -79,7 +79,7 @@ function logServed (url, filePath, length) {
 
 function getDom (searchParms) {
   let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + PAGE + searchParms
-  return new JSDOM(__dirname + fs.readFileSync('../' + PAGE, 'utf8'), {
+  return new JSDOM(fs.readFileSync(__dirname + '/../' + PAGE, 'utf8'), {
     url: url,
     runScripts: "dangerously",
     resources: "usable"
