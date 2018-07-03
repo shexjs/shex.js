@@ -57,7 +57,7 @@
   "scripts": {
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
-    "test-all": "mocha -C -R dot && TEST_cli=true mocha -C -R dot test/cli-test.js && TEST_browser=true mocha -C -R dot test/browser-test.js",
+    "test-all": "mocha -C -R dot && TEST_cli=true mocha -C -R dot test/cli-test.js",
     "lint": "eslint test/findPath.js",
     "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",
