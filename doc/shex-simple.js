@@ -506,7 +506,7 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     var hasMeta = "meta" in schemaTest && schemaTest.meta.length > 0;
     Caches.inputMeta.set(hasMeta ? schemaTest.meta : "");
     $("#showMeta").prop("checked", hasMeta);
-    showMeta();
+    revealMetaPane();
 
     clearData();
     var headings = {
@@ -944,7 +944,7 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
-  $("#showMeta").on("click", showMeta);
+  $("#showMeta").on("click", revealMetaPane);
   $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
@@ -1099,7 +1099,7 @@ function toggleControlsArrow (which) {
   }
 }
 
-function showMeta () {
+function revealMetaPane () {
   if ($("#showMeta").is(":checked")) {
     $("#meta").show();
     if ($("#meta").attr("data-adjust"))
