@@ -4357,8 +4357,8 @@ function ShExValidator_constructor(schema, options) {
     return {
       recurse: noop,
       known: noop,
-      enter: (point, label) => { ++this.depth; },
-      exit: (point, label, ret) => { --this.depth; },
+      enter: function (point, label) { ++this.depth; },
+      exit: function (point, label, ret) { --this.depth; },
       depth: 0
     };
   };
