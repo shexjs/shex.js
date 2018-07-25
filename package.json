@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "command-line-args": "^2.1.6",
+    "hierarchy-closure": "^1.0.1",
     "jsonld": "^0.4.11",
     "koa": "^1.2.0",
     "koa-body": "^1.4.0",
