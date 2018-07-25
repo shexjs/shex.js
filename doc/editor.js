@@ -458,7 +458,7 @@ function main () {
         let commentRows = comments.map(
           comment => $('<tr/>', {class: 'annotation'}).append(
             $('<td/>', {class: 'lines'}).text(lead + '│' + '   '),
-            $('<td/>', {colspan: 2}).text(comment)
+            $('<td/>', {class: 'comment'}).text(comment)
           )
         )
 
