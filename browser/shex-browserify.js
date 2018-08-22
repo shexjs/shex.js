@@ -6295,7 +6295,7 @@ case 13:
 this.$ = extend({ shape: $$[$0] }, $$[$0-1]);
 break;
 case 14:
-this.$ = { shape: ShEx.Validator.start };
+this.$ = { shape: ShExValidator.start };
 break;
 case 15:
 
@@ -6323,13 +6323,13 @@ case 22:
 this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] };
 break;
 case 24:
-this.$ = ShEx.Validator.start;
+this.$ = ShExValidator.start;
 break;
 case 29:
-this.$ = { type: "TriplePattern", subject: ShEx.ShapeMap.focus, predicate: $$[$0-2], object: $$[$0-1] };
+this.$ = { type: "TriplePattern", subject: ShapeMap.focus, predicate: $$[$0-2], object: $$[$0-1] };
 break;
 case 30:
-this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShEx.ShapeMap.focus };
+this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShapeMap.focus };
 break;
 case 32: case 34: case 42:
 this.$ = null;
@@ -6600,6 +6600,8 @@ parse: function parse(input) {
   var UNBOUNDED = -1;
 
   var ShExUtil = require("./ShExUtil");
+  var ShExValidator = require("./ShExValidator");
+  var ShapeMap = require("./ShapeMap");
 
   // Common namespaces and entities
   var XSD = 'http://www.w3.org/2001/XMLSchema#',
@@ -7337,7 +7339,7 @@ if (typeof module !== 'undefined' && require.main === module) {
 }
 }
 }).call(this,require('_process'))
-},{"./ShExUtil":4,"_process":310,"fs":155,"path":302}],9:[function(require,module,exports){
+},{"./ShExUtil":4,"./ShExValidator":5,"./ShapeMap":7,"_process":310,"fs":155,"path":302}],9:[function(require,module,exports){
 var ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
