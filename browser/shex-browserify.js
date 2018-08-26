@@ -3917,7 +3917,7 @@ var ShExUtil = {
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      var w = ShEx.Writer();
+      var w = require("../lib/ShExWriter")();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       var txt;
       w.end((err, res) => {
@@ -4316,7 +4316,7 @@ return AddShExUtil(AddShExUtil);
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = ShExUtil; // node environment
 
-},{"hierarchy-closure":248,"n3":277,"util":461}],5:[function(require,module,exports){
+},{"../lib/ShExWriter":6,"hierarchy-closure":248,"n3":277,"util":461}],5:[function(require,module,exports){
 (function (process){
 /* ShExValidator - javascript module to validate a graph with respect to Shape Expressions
  *
