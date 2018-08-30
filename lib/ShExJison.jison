@@ -793,34 +793,30 @@ _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star:
     ;
 
 shapeNot:
-      shapeAtom	
-    | IT_NOT shapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
+      _QIT_NOT_E_Opt shapeAtom		-> $1 ? { type: "ShapeNot", "shapeExpr": $2 } : $2
     ;
 
 inlineShapeNot:
-      inlineShapeAtom	
-    | IT_NOT inlineShapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
+      _QIT_NOT_E_Opt inlineShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": $2 } : $2
     ;
 
 shapeAtom:
-//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
-      nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	
-        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      nonLitNodeConstraint _QshapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint _Qannotation_E_Star	{
         $$ = $1;
         if ($2.length) { $$.annotations = $2; }
       }
-//  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
-    | shapeOrRef	 // t: 1dotRef1
-    | shapeOrRef nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
+    | shapeOrRef _QnonLitNodeConstraint_E_Opt	
+        -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
-// _QshapeOrRef_E_Opt:
-//       	
-//     | shapeOrRef     ;
+_QshapeOrRef_E_Opt:
+      	
+    | shapeOrRef	
+    ;
 
 _QnonLitNodeConstraint_E_Opt:
       	
@@ -828,35 +824,31 @@ _QnonLitNodeConstraint_E_Opt:
     ;
 
 shapeAtomNoRef:
-//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
-      nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	
-        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      nonLitNodeConstraint _QshapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint _Qannotation_E_Star	{
         $$ = $1;
         if ($2.length) { $$.annotations = $2; }
       }
-//  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
-    | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
-    | shapeDefinition nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
+    | shapeDefinition _QnonLitNodeConstraint_E_Opt	
+	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
 inlineShapeAtom:
-//    nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
-      nonLitNodeConstraint
-    | nonLitNodeConstraint inlineShapeOrRef	
-        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint	
     | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
-// _QinlineShapeOrRef_E_Opt:
-//     
-//     | inlineShapeOrRef	;
+_QinlineShapeOrRef_E_Opt:
+      	
+    | inlineShapeOrRef	
+    ;
 
 shapeOrRef:
       shapeDefinition	// t: 1dotInline1
@@ -905,18 +897,6 @@ _QxsFacet_E_Star:
       }
     ;
 
-nonLitNodeConstraint:
-//    nonLiteralKind _QstringFacet_E_Star	
-      nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
-    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
-    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1) // t: @@
-    ;
-
-_Qannotation_E_Star:
-      	-> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
-    ;
-
 _QnumericFacet_E_Plus:
       numericFacet	// t: !! look to 1literalPattern
     | _QnumericFacet_E_Plus numericFacet	{
@@ -925,6 +905,17 @@ _QnumericFacet_E_Plus:
         }
         $$ = extend($1, $2) // t: !! look to 1literalLength
       }
+    ;
+
+nonLitNodeConstraint:
+      nonLiteralKind _QstringFacet_E_Star	
+        -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {}) // t: 1iriPattern
+    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: @@
+    ;
+
+_Qannotation_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 _QstringFacet_E_Star:
@@ -1001,13 +992,19 @@ numericLength:
     ;
 
 shapeDefinition:
-      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
+      }
+    ;
+
+inlineShapeDefinition:
+      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
-        if ($5.length) { $$.annotations = $5; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($6) { $$.semActs = $6.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
@@ -1035,15 +1032,6 @@ _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
 _QtripleExpression_E_Opt:
       	// t: 0
     | tripleExpression	// t: 1dot
-    ;
-
-inlineShapeDefinition:
-      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
-        var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
-        $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
-	  EmptyShape :
-	  extend({ type: "Shape" }, exprObj, $1);
-      }
     ;
 
 extraPropertySet:

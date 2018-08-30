@@ -15,7 +15,7 @@ SHEXSCHEMAS = $(wildcard $(join $(TESTDIR), schemas/*.shex))
 JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 
 ../lib/ShExJison.js: ../lib/ShExJison.jison
-	$(JISON) $^ -o $@ -p lalr
+	$(JISON) $^ -o $@ -p lr
 
 ../lib/ShapeMapJison.js: ../lib/ShapeMapJison.jison
 	$(JISON) $^ -o $@ -p lalr
