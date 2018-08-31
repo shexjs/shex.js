@@ -803,10 +803,7 @@ inlineShapeNot:
 shapeAtom:
       nonLitNodeConstraint _QshapeOrRef_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint _Qannotation_E_Star	{
-        $$ = $1;
-        if ($2.length) { $$.annotations = $2; }
-      }
+    | litNodeConstraint	
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
         -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
@@ -826,10 +823,7 @@ _QnonLitNodeConstraint_E_Opt:
 shapeAtomNoRef:
       nonLitNodeConstraint _QshapeOrRef_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint _Qannotation_E_Star	{
-        $$ = $1;
-        if ($2.length) { $$.annotations = $2; }
-      }
+    | litNodeConstraint	
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
 	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
@@ -837,10 +831,10 @@ shapeAtomNoRef:
     ;
 
 inlineShapeAtom:
-      nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
+      nonLitInlineNodeConstraint _QinlineShapeOrRef_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint	
-    | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
+    | litInlineNodeConstraint	
+    | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -848,6 +842,11 @@ inlineShapeAtom:
 _QinlineShapeOrRef_E_Opt:
       	
     | inlineShapeOrRef	
+    ;
+
+_QnonLitInlineNodeConstraint_E_Opt:
+      	
+    | nonLitInlineNodeConstraint	
     ;
 
 shapeOrRef:
@@ -874,6 +873,27 @@ shapeRef:
     ;
 
 litNodeConstraint:
+      litInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !!
+        if ($3) { $$.semActs = $3.semActs; } // t: !!
+      }
+    ;
+
+_Qannotation_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
+    ;
+
+nonLitNodeConstraint:
+      nonLitInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !!
+        if ($3) { $$.semActs = $3.semActs; } // t: !!
+      }
+    ;
+
+litInlineNodeConstraint:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
@@ -907,15 +927,10 @@ _QnumericFacet_E_Plus:
       }
     ;
 
-nonLitNodeConstraint:
+nonLitInlineNodeConstraint:
       nonLiteralKind _QstringFacet_E_Star	
         -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {}) // t: 1iriPattern
     | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: @@
-    ;
-
-_Qannotation_E_Star:
-      	-> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 _QstringFacet_E_Star:
