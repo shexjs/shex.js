@@ -475,17 +475,17 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 //{UCHAR}               return 'UCHAR';
 {CODE}                  return 'CODE';
 
-{LANG_STRING_LITERAL_LONG1}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: @@
-{LANG_STRING_LITERAL_LONG2}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
-{LANG_STRING_LITERAL1}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: @@
-{LANG_STRING_LITERAL2}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: 1val1LANGTAG
+{LANG_STRING_LITERAL_LONG1}  return 'LANG_STRING_LITERAL_LONG1';
+{LANG_STRING_LITERAL_LONG2}  return 'LANG_STRING_LITERAL_LONG2';
+{LANG_STRING_LITERAL1}       return 'LANG_STRING_LITERAL1';
+{LANG_STRING_LITERAL2}       return 'LANG_STRING_LITERAL2';
 
-{STRING_LITERAL_LONG1}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL1     
+{STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
 //{NON_TERMINATED_STRING_LITERAL_LONG1}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL_LONG2}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG1
+{STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
 //{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL1}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL2     
-{STRING_LITERAL2}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG2
+{STRING_LITERAL1}       return 'STRING_LITERAL1';
+{STRING_LITERAL2}       return 'STRING_LITERAL2';
 
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
 //{PLX}                 return 'PLX';
@@ -803,10 +803,7 @@ inlineShapeNot:
 shapeAtom:
       nonLitNodeConstraint _QshapeOrRef_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint _Qannotation_E_Star	{
-        $$ = $1;
-        if ($2.length) { $$.annotations = $2; }
-      }
+    | litNodeConstraint	
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
         -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
@@ -826,10 +823,7 @@ _QnonLitNodeConstraint_E_Opt:
 shapeAtomNoRef:
       nonLitNodeConstraint _QshapeOrRef_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint _Qannotation_E_Star	{
-        $$ = $1;
-        if ($2.length) { $$.annotations = $2; }
-      }
+    | litNodeConstraint	
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
 	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
@@ -837,10 +831,10 @@ shapeAtomNoRef:
     ;
 
 inlineShapeAtom:
-      nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
+      nonLitInlineNodeConstraint _QinlineShapeOrRef_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint	
-    | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
+    | litInlineNodeConstraint	
+    | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
@@ -848,6 +842,11 @@ inlineShapeAtom:
 _QinlineShapeOrRef_E_Opt:
       	
     | inlineShapeOrRef	
+    ;
+
+_QnonLitInlineNodeConstraint_E_Opt:
+      	
+    | nonLitInlineNodeConstraint	
     ;
 
 shapeOrRef:
@@ -874,6 +873,27 @@ shapeRef:
     ;
 
 litNodeConstraint:
+      litInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !!
+        if ($3) { $$.semActs = $3.semActs; } // t: !!
+      }
+    ;
+
+_Qannotation_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
+    ;
+
+nonLitNodeConstraint:
+      nonLitInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !!
+        if ($3) { $$.semActs = $3.semActs; } // t: !!
+      }
+    ;
+
+litInlineNodeConstraint:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
@@ -907,15 +927,10 @@ _QnumericFacet_E_Plus:
       }
     ;
 
-nonLitNodeConstraint:
+nonLitInlineNodeConstraint:
       nonLiteralKind _QstringFacet_E_Star	
         -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {}) // t: 1iriPattern
     | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: @@
-    ;
-
-_Qannotation_E_Star:
-      	-> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 _QstringFacet_E_Star:
@@ -969,7 +984,7 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
       INTEGER	-> parseInt($1, 10);
     | DECIMAL	-> parseFloat($1);
     | DOUBLE	-> parseFloat($1);
-    | STRING '^^' datatype	{ // ## deprecated
+    | string '^^' datatype	{ // ## deprecated
         if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
           $$ = parseFloat($1.value);
         else if (numericDatatypes.indexOf($3) !== -1)
@@ -1392,8 +1407,8 @@ numericLiteral:
     ;
 
 rdfLiteral:
-      LANG_STRING	// t: 1val1STRING_LITERAL1
-    | STRING _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
+      langString	// t: 1val1STRING_LITERAL1
+    | string _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
     ;
 
 _O_QGT_DTYPE_E_S_Qdatatype_E_C:
@@ -1408,6 +1423,20 @@ _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt:
 booleanLiteral:
       IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
     | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
+    ;
+
+string:
+      STRING_LITERAL1	-> unescapeString($1, 1)	// t: 1val1STRING_LITERAL2
+    | STRING_LITERAL_LONG1	-> unescapeString($1, 3)	// t: 1val1STRING_LITERAL1
+    | STRING_LITERAL2	-> unescapeString($1, 1)	// t: 1val1STRING_LITERAL_LONG2
+    | STRING_LITERAL_LONG2	-> unescapeString($1, 3)	// t: 1val1STRING_LITERAL_LONG1
+    ;
+
+langString:
+      LANG_STRING_LITERAL1	-> unescapeLangString($1, 1)	// t: @@
+    | LANG_STRING_LITERAL_LONG1	-> unescapeLangString($1, 3)	// t: @@
+    | LANG_STRING_LITERAL2	-> unescapeLangString($1, 1)	// t: 1val1LANGTAG
+    | LANG_STRING_LITERAL_LONG2	-> unescapeLangString($1, 3)	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
     ;
 
 iri:
