@@ -1071,14 +1071,12 @@ innerTripleExpr:
     ;
 
 groupTripleExpr:
-      unaryTripleExpr groupTripleExpr_right	-> $2 ? { type: "EachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
+      singleElementGroup	// t: 1dot
+    | multiElementGroup	// t: 2dot
     ;
 
-groupTripleExpr_right:
-      	-> null
-    | ','	-> null // ## deprecated
-    | ';'	-> null
-    | _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_SEMI_E_Opt	-> $1
+singleElementGroup:
+      unaryTripleExpr _QGT_SEMI_E_Opt	-> $1
     ;
 
 _QGT_SEMI_E_Opt:
