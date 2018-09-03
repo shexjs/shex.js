@@ -1080,11 +1080,6 @@ _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus:
     | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2) // t: 2oneOfdot
     ;
 
-innerTripleExpr:
-      multiElementGroup	
-    | multiElementOneOf	
-    ;
-
 groupTripleExpr:
       singleElementGroup	// t: 1dot
     | multiElementGroup	// t: 2dot
@@ -1141,7 +1136,7 @@ _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C:
     ;
 
 bracketedTripleExpr:
-      '(' innerTripleExpr ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
