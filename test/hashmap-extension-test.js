@@ -3,18 +3,14 @@
  * Unit tests for extensions/shex-map/lib/hashmap-extension.js
  */
 
-var chai = require('chai');
-// var expect = chai.expect;
-// var should = expect(chai)();
-
 var _ = require('underscore');
 
 var mapper = require('../extensions/shex-map/module');
 var hmExtension = require('../extensions/shex-map/lib/hashmap_extension');
 
-describe('Hashmap extension', () => {
+describe('Hashmap extension', function() {
 
-    test('should have a lift and lower API', () => {
+    it('should have a lift and lower API', function() {
         expect(typeof hmExtension).toBe('object');
         expect(hmExtension.lift).toBeDefined();
         expect(hmExtension.lower).toBeDefined();
@@ -22,26 +18,30 @@ describe('Hashmap extension', () => {
         expect(typeof hmExtension.lower).toBe('function');
     });
 
-    describe('#lift', () => {
+    describe('#lift', function() {
 
-        test('should throw an error if there is no argument', () => {
+        it('should throw an error if there is no argument', function() {
             expect(
                 hmExtension.lift.bind(this,
                     "hashmap()",
                     "A test string",
-                    {"test": "urn:local:test:"})).toThrowError(Error);
+                    {"test": "urn:local:test:"}))
+            .toThrowError(Error,
+                "Hashmap extension requires a variable name and map as arguments, but found none!");
         });
 
-        test('should throw an error if there is only one argument', () => {
+        it('should throw an error if there is only one argument', function() {
             expect(
                 hmExtension.lift.bind(this,
                     "hashmap(string)",
                     "string",
                     {"test": "urn:local:test:"},
-                    "string")).toThrowError(Error);
+                    "string"))
+            .toThrowError(Error, 
+                "Hashmap extension requires a variable name and map as arguments, but found: hashmap(string)!");
         });
 
-        test('should throw an error if there is no hashmap', () => {
+        it('should throw an error if there is no hashmap', function() {
             expect(
                 hmExtension.lift.bind(this,
                     "hashmap(thing1, thing2)",
@@ -50,180 +50,195 @@ describe('Hashmap extension', () => {
                     "thing1, thing2")).toThrowError(Error);
         });
 
-        test(
-            'should throw an error if there is a hashmap with no variable',
-            () => {
-                expect(
-                    hmExtension.lift.bind(this,
-                        'hashmap(, {"a": "abc", "x": "xyz")',
-                        "a",
-                        {"test": "urn:local:test:"},
-                        '{"a": "abc", "x": "xyz"}')).toThrowError(Error);
-            }
-        );
+        it('should throw an error if there is a hashmap with no variable', function() {
+            expect(
+                hmExtension.lift.bind(this,
+                    'hashmap(, {"a": "abc", "x": "xyz")',
+                    "a",
+                    {"test": "urn:local:test:"},
+                    '{"a": "abc", "x": "xyz"}'))
+            .toThrowError(Error, 
+                'Hashmap extension requires a variable name and map as arguments, but found: hashmap(, {"a": "abc", "x": "xyz")!');
+        });
 
-        test('should throw an error if there is an empty hashmap', () => {
+        it('should throw an error if there is an empty hashmap', function() {
             expect(
                 hmExtension.lift.bind(this,
                     'hashmap(test, {})',
                     "a",
                     {"test": "urn:local:test:"},
-                    'test, {}')).toThrowError(Error);
+                    'test, {}'))
+            .toThrowError(Error, 
+                'Hashmap extension unable to parse map in hashmap(test, {})!Empty hashmap!');
         });
 
-        test('should fail gracefully if given a bad JSON map', () => {
+        it('should fail gracefully if given a bad JSON map', function() {
             expect(
                 hmExtension.lift.bind(this,
                     'hashmap(test, {a:abc x})',
                     "x",
                     {"test": "urn:local:test:"},
-                    'test, {a:abc x}')).toThrowError(Error);
+                    'test, {a:abc x}'))
+            .toThrowError(Error, 
+                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!Unexpected token a');
         });
 
-        test(
-            'should fail gracefully if given a hash map that does not have unique key/value pairs',
-            () => {
-                expect(
-                    hmExtension.lift.bind(this,
-                        'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
-                        "x",
-                        {"test": "urn:local:test:"},
-                        'test:string, {"a": "abc", "b": "abc", "x": "xyz"}')).toThrowError(Error);
-            }
-        );
+        it('should fail gracefully if given a hash map that does not have unique key/value pairs', function() {
+            expect(
+                hmExtension.lift.bind(this,
+                    'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
+                    "x",
+                    {"test": "urn:local:test:"},
+                    'test:string, {"a": "abc", "b": "abc", "x": "xyz"}'))
+            .toThrowError(Error, 
+                "Hashmap extension requires unique key/value pairs!");
+        });
 
-        test(
-            'should return undefined value if given input that is not in the hash map',
-            () => {
-                expect(
-                    hmExtension.lift(
-                        'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                        "j", 
-                        {"test": "urn:local:test:"},
-                        'test:string, {"a": "abc", "x": "xyz"}')).toEqual({'urn:local:test:string': undefined});
-            }
-        );
+        it('should return undefined value if given input that is not in the hash map', function() {
+            expect(
+                hmExtension.lift(
+                    'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
+                    "j", 
+                    {"test": "urn:local:test:"},
+                    'test:string, {"a": "abc", "x": "xyz"}'))
+            .toEqual(
+                {'urn:local:test:string': undefined});
+        });
 
-        test('should execute a simple hashmap function', () => {
+        it('should execute a simple hashmap function', function() {
             expect(
                 hmExtension.lift(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
                     "a", 
                     {"test": "urn:local:test:"},
-                    'test:string, {"a": "abc", "x": "xyz"}')).toEqual({'urn:local:test:string': 'abc'});
+                    'test:string, {"a": "abc", "x": "xyz"}'))
+            .toEqual(
+                {'urn:local:test:string': 'abc'});
 
             expect(
                 hmExtension.lift(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
                     "x", 
                     {"test": "urn:local:test:"},
-                    'test:string, {"a": "abc", "x": "xyz"}')).toEqual({'urn:local:test:string': 'xyz'});
+                    'test:string, {"a": "abc", "x": "xyz"}'))
+            .toEqual(
+                {'urn:local:test:string': 'xyz'});
         });
     });
 
-    describe('#lower', () => {
+    describe('#lower', function() {
 
-        test('should throw an error if there is no argument', () => {
+        it('should throw an error if there is no argument', function() {
             expect(
                 hmExtension.lower.bind(this,
                     "hashmap()",
                     "{}",
-                    {"test": "urn:local:test:"})).toThrowError(Error);
+                    {"test": "urn:local:test:"}))
+            .toThrowError(Error,
+                "Hashmap extension requires a variable name and map as arguments, but found none!");
         });
 
-        test('should throw an error if there is only one argument', () => {
+        it('should throw an error if there is only one argument', function() {
             expect(
                 hmExtension.lower.bind(this,
                     "hashmap(string)",
                     "{}",
                     {"test": "urn:local:test:"},
-                    "string")).toThrowError(Error);
+                    "string"))
+            .toThrowError(Error, 
+                "Hashmap extension requires a variable name and map as arguments, but found: hashmap(string)!");
         });
 
-        test('should throw an error if there is no hashmap', () => {
+        it('should throw an error if there is no hashmap', function() {
             expect(
                 hmExtension.lower.bind(this,
                     "hashmap(thing1, thing2)",
                     "{}",
                     {"test": "urn:local:test:"},
-                    "thing1, thing2")).toThrowError(Error);
+                    "thing1, thing2"))
+            .toThrowError(Error, 
+                "Hashmap extension requires a variable name and map as arguments, but found: hashmap(thing1, thing2)!");
         });
 
-        test(
-            'should throw an error if there is a hashmap with no variable',
-            () => {
-                expect(
-                    hmExtension.lower.bind(this,
-                        'hashmap(, {"a": "abc", "x": "xyz")',
-                        "{}",
-                        {"test": "urn:local:test:"},
-                        '{"a": "abc", "x": "xyz"}')).toThrowError(Error);
-            }
-        );
+        it('should throw an error if there is a hashmap with no variable', function() {
+            expect(
+                hmExtension.lower.bind(this,
+                    'hashmap(, {"a": "abc", "x": "xyz")',
+                    "{}",
+                    {"test": "urn:local:test:"},
+                    '{"a": "abc", "x": "xyz"}'))
+            .toThrowError(Error, 
+                'Hashmap extension requires a variable name and map as arguments, but found: hashmap(, {"a": "abc", "x": "xyz")!');
+        });
 
-        test('should throw an error if there is an empty hashmap', () => {
+        it('should throw an error if there is an empty hashmap', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test, {})',
                     "{}",
                     {"test": "urn:local:test:"},
-                    'test, {}')).toThrowError(Error);
+                    'test, {}'))
+            .toThrowError(Error, 
+                'Hashmap extension unable to parse map in hashmap(test, {})!Empty hashmap!');
         });
 
-        test('should fail gracefully if given a bad JSON map', () => {
+        it('should fail gracefully if given a bad JSON map', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test, {a:abc x})',
                     undefined,
                     {"test": "urn:local:test:"},
                     'test, {a:abc x}'))
-            .toThrowError(Error/*, 
-                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!Unexpected token a'*/);
+            .toThrowError(Error, 
+                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!Unexpected token a');
         });
 
-        it('should fail gracefully if given input that is not in the hash map', () => {
+        it('should fail gracefully if given input that is not in the hash map', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
                     mapper.binder([{"urn:local:test:string": "efg"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
-            .toThrowError(Error/*, 
-                "Hashmap extension was unable to invert the value efg with map { a: 'abc', x: 'xyz' }!"*/);
+            .toThrowError(Error, 
+                "Hashmap extension was unable to invert the value efg with map { a: 'abc', x: 'xyz' }!");
         });
 
-        it('should fail gracefully if given a hash map that does not have unique key/value pairs', () => {
+        it('should fail gracefully if given a hash map that does not have unique key/value pairs', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
                     mapper.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "b": "abc", "x": "xyz"}'))
-            .toThrowError(Error/*, 
-                "Hashmap extension requires unique key/value pairs!"*/);
+            .toThrowError(Error, 
+                "Hashmap extension requires unique key/value pairs!");
         });
 
-        test('should execute a simple hashmap function', () => {
+        it('should execute a simple hashmap function', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"alpha": "beta"})', 
                     mapper.binder([{"urn:local:test:string": "beta"}]), 
                     {"test": "urn:local:test:"},
-                    'test:string, {"alpha": "beta"}')).toBe('alpha');
+                    'test:string, {"alpha": "beta"}'))
+            .toBe('alpha');
 
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
                     mapper.binder([{"urn:local:test:string": "abc"}]), 
                     {"test": "urn:local:test:"},
-                    'test:string, {"a": "abc", "x": "xyz"}')).toBe('a');
+                    'test:string, {"a": "abc", "x": "xyz"}'))
+            .toBe('a');
 
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
                     mapper.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
-                    'test:string, {"a": "abc", "x": "xyz"}')).toBe('x');
+                    'test:string, {"a": "abc", "x": "xyz"}'))
+            .toBe('x');
         });
     });
 

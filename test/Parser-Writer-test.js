@@ -50,19 +50,19 @@ var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
-describe("A ShEx parser", () => {
+describe("A ShEx parser", function () {
   // var b = function () {  };
   // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
 
   // Ensure the same blank node identifiers are used in every test
-  beforeEach(() => { parser._resetBlanks(); });
+  beforeEach(function () { parser._resetBlanks(); });
 
 
   if (!EARL && !TESTS)
     // make sure errors are reported
-    it("should throw an error on an invalid schema", () => {
+    it("should throw an error on an invalid schema", function () {
       var schema = "invalid", error = null;
       try { parser.parse(schema); }
       catch (e) { error = e; }
@@ -82,7 +82,7 @@ describe("A ShEx parser", () => {
       var shexRFile = schemasPath + test.ttl;
 
       it("should correctly parse ShExC schema '" + shexCFile +
-         "' as '" + jsonSchemaFile + "'.", () => {
+         "' as '" + jsonSchemaFile + "'.", function () {
 
            if (VERBOSE) console.log(schema);
            var schema = fs.readFileSync(shexCFile, "utf8");
@@ -103,7 +103,7 @@ describe("A ShEx parser", () => {
 
     if (TEST_ShExR) {
       it("should correctly parse ShExR schema '" + shexRFile +
-         "' as '" + jsonSchemaFile + "'.", () => {
+         "' as '" + jsonSchemaFile + "'.", function () {
 
            if (VERBOSE) console.log(schema);
            var schema = fs.readFileSync(shexRFile, "utf8");
@@ -132,56 +132,47 @@ describe("A ShEx parser", () => {
     }
 
       if (!EARL) {
-        it(
-          "should duplicate '" + jsonSchemaFile + "' and produce the same structure.",
-          () => {
-            expect(ShExUtil.Visitor().visitSchema(abstractSyntax)).toEqual(abstractSyntax);
-          }
-        );
+        it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
+          expect(ShExUtil.Visitor().visitSchema(abstractSyntax)).toEqual(abstractSyntax);
+        });
 
-        it(
-          "should write '" + jsonSchemaFile + "' and parse to the same structure.",
-          () => {
-            var w;
-            new ShExWriter({simplifyParentheses: false }).
-              writeSchema(abstractSyntax, function (error, text, prefixes) {
-                if (error) throw error;
-                else w = text;
-              });
-            if (VERBOSE) console.log("written  :" + w);
-            parser._setFileName(shexCFile + " (generated)");
-            try {
-              parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
-              var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
-              var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
-              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
-              expect(canonParsed2).toEqual(canonAbstractSyntax);
-            } catch (e) {
-              parser.reset();
-              throw(e);
-            }
+        it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
+          var w;
+          new ShExWriter({simplifyParentheses: false }).
+            writeSchema(abstractSyntax, function (error, text, prefixes) {
+              if (error) throw error;
+              else w = text;
+            });
+          if (VERBOSE) console.log("written  :" + w);
+          parser._setFileName(shexCFile + " (generated)");
+          try {
+            parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
+            var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
+            var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+            expect(canonParsed2).toEqual(canonAbstractSyntax);
+          } catch (e) {
+            parser.reset();
+            throw(e);
           }
-        );
+        });
 
-        it(
-          "should write '" + jsonSchemaFile + "' with as few ()s as possible.",
-          () => {
-            var w;
-            new ShExWriter({simplifyParentheses: true }).
-              writeSchema(abstractSyntax, function (error, text, prefixes) {
-                if (error) throw error;
-                else w = text;
-              });
-            if (VERBOSE) console.log("simple   :" + w);
-            parser._setFileName(shexCFile + " (simplified)");
-            try {
-              var parsed3 = parser.parse(w); // test that simplified also parses
-            } catch (e) {
-              parser.reset();
-              throw(e);
-            }
+        it("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
+          var w;
+          new ShExWriter({simplifyParentheses: true }).
+            writeSchema(abstractSyntax, function (error, text, prefixes) {
+              if (error) throw error;
+              else w = text;
+            });
+          if (VERBOSE) console.log("simple   :" + w);
+          parser._setFileName(shexCFile + " (simplified)");
+          try {
+            var parsed3 = parser.parse(w); // test that simplified also parses
+          } catch (e) {
+            parser.reset();
+            throw(e);
           }
-        );
+        });
       }
     } catch (e) {
       var e2 = Error("Error in (" + jsonSchemaFile + "): " + e.message);
@@ -200,7 +191,7 @@ describe("A ShEx parser", () => {
 
     negSchemas.forEach(function (test) {
       var path = testSet.path + test.shex;
-      it("should not parse schema '" + path + "'", report => {
+      it("should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
         ShExLoader.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
@@ -226,22 +217,22 @@ describe("A ShEx parser", () => {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
       var parser = ShExParser.construct("http://a.example/", prefixes);
 
-      it("should use those prefixes", () => {
+      it("should use those prefixes", function () {
         var schema = "a:a { b:b .+ }";
         expect(parser.parse(schema).shapes["http://a.example/abc#a"].expression.predicate).toEqual("http://a.example/def#b");
       });
 
-      it("should allow temporarily overriding prefixes", () => {
+      it("should allow temporarily overriding prefixes", function () {
         var schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
         expect(parser.parse(schema).shapes["http://a.example/xyz#a"].expression.predicate).toEqual("http://a.example/def#b");
         expect(parser.parse("a:a { b:b .+ }").shapes["http://a.example/abc#a"].expression.predicate).toEqual("http://a.example/def#b");
       });
 
-      it("should not change the original prefixes", () => {
+      it("should not change the original prefixes", function () {
         expect(prefixes).toEqual({ a: "http://a.example/abc#", b: "http://a.example/def#" });
       });
 
-      it("should not take over changes to the original prefixes", () => {
+      it("should not take over changes to the original prefixes", function () {
         prefixes.a = "http://a.example/xyz#";
         expect(parser.parse("a:a { b:b .+ }").shapes["http://a.example/abc#a"].expression.predicate).toEqual("http://a.example/def#b");
       });
@@ -250,16 +241,16 @@ describe("A ShEx parser", () => {
       // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
 
-    describe("with pre-defined PNAME_NS prefixes", () => {
+    describe("with pre-defined PNAME_NS prefixes", function () {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
       var parser = ShExParser.construct("http://a.example/", prefixes);
 
-      it("should use those prefixes", () => {
+      it("should use those prefixes", function () {
         var schema = "a: { b: .+ }";
         expect(parser.parse(schema).shapes["http://a.example/abc#"].expression.predicate).toEqual("http://a.example/def#");
       });
 
-      it("should allow temporarily overriding prefixes", () => {
+      it("should allow temporarily overriding prefixes", function () {
         var schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
         expect(parser.parse(schema).shapes["http://a.example/xyz#"].expression.predicate).toEqual("http://a.example/def#");
         expect(parser.parse("a: { b: .+ }").shapes["http://a.example/abc#"].expression.predicate).toEqual("http://a.example/def#");
@@ -275,28 +266,25 @@ if (TEST_Vestiges) {
   /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
    * want it in the API.
    */
-  describe("loadShExImports_NotUsed", () => {
+  describe("loadShExImports_NotUsed", function () {
     schemas.filter(test => {
       return "trait" in test && test.trait.indexOf("Import") !== -1;
     }).filter(t => {
       return true;
     }).forEach(test => {
       var path = schemasPath + test.shex;
-      it(
-        "should load the same imports as ShExLoader.load in '" + path + "'",
-        () => {
-          parser._setBase("file://"+path);
-          return Promise.all([
-            ShExLoader.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
-            ShExLoader.loadShExImports_NotUsed(path, parser, pickShEx)
-          ]).then(function (loadedAndSchema) {
-            expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).toEqual(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
-          });
-          function pickShEx (i) {
-            return i + ".shex";
-          }
+      it("should load the same imports as ShExLoader.load in '" + path + "'", function () {
+        parser._setBase("file://"+path);
+        return Promise.all([
+          ShExLoader.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
+          ShExLoader.loadShExImports_NotUsed(path, parser, pickShEx)
+        ]).then(function (loadedAndSchema) {
+          expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).toEqual(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
+        });
+        function pickShEx (i) {
+          return i + ".shex";
         }
-      );
+      });
     });
   });
 }

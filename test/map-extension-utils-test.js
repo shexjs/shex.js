@@ -3,78 +3,74 @@
  * Unit tests for extensions/shex-map/lib/extension-utils.js
  */
 
-var chai = require('chai');
-// var expect = chai.expect;
-// var should = expect(chai)();
-
 var _ = require('underscore');
 
 var mapExtUtils = require('../extensions/shex-map/lib/extension-utils');
 
-describe('Map extension utils', () => {
+describe('Map extension utils', function() {
 
-    test('should have the expected API', () => {
+    it('should have the expected API', function() {
         expect(typeof mapExtUtils).toBe('object');
         expect(typeof mapExtUtils.collapseSpaces).toBe('function');
         expect(typeof mapExtUtils.unescapeMetaChars).toBe('function');
     });
 
-    describe('#collapseSpaces', () => {
-        test('should replace white space with a single space', () => {
+    describe('#collapseSpaces', function() {
+        it('should replace white space with a single space', function() {
             expect(mapExtUtils.collapseSpaces('  A   Test   String   ')).toBe(' A Test String ');
         });
 
-        test('should not fail with empty string', () => {
+        it('should not fail with empty string', function() {
             expect(mapExtUtils.collapseSpaces('')).toBe('');
         });
     });
 
-    describe('#trimQuotes', () => {
+    describe('#trimQuotes', function() {
 
-        test('should return an undefined string with no change', () => { 
+        it('should return an undefined string with no change', function() { 
             expect( 
                 mapExtUtils.trimQuotes(undefined)
             ).toBeUndefined();
         });
 
-        test('should return an empty string with no change', () => { 
+        it('should return an empty string with no change', function() { 
             expect( 
                 mapExtUtils.trimQuotes('')
             ).toBe('');
         });
 
-        test('should remove starting and trailing double quotes', () => {
+        it('should remove starting and trailing double quotes', function() {
             expect( 
                 mapExtUtils.trimQuotes('"Test"')
             ).toBe('Test');
         });
 
-        test('should remove starting and trailing single quotes', () => {
+        it('should remove starting and trailing single quotes', function() {
             expect( 
                 mapExtUtils.trimQuotes("'Test'")
             ).toBe('Test');
         });
 
-        test('should not remove mismatched quotes', () => {
+        it('should not remove mismatched quotes', function() {
             expect( 
                 mapExtUtils.trimQuotes("'Test\"")
             ).toBe("'Test\"");
         });
 
-        test('should not remove non-leading and non-trailing quotes', () => {
+        it('should not remove non-leading and non-trailing quotes', function() {
             expect( 
                 mapExtUtils.trimQuotes("'Testing \"123\" for you'")
             ).toBe("Testing \"123\" for you");
         });
     });
 
-    describe('#unescapeMetaChars', () => {
+    describe('#unescapeMetaChars', function() {
  
-        test('should unescape meta characters', () => {
+        it('should unescape meta characters', function() {
             expect(mapExtUtils.unescapeMetaChars('<http:\/\/a.example\/dem#family>')).toBe('<http://a.example/dem#family>');;
         });
 
-        test('should not unescape regex characters', () => {
+        it('should not unescape regex characters', function() {
             expect(mapExtUtils.unescapeMetaChars('\\s*\\w.*')).toBe('\\s*\\w.*');;
         });
     });

@@ -13,7 +13,7 @@ var jsonASTsPath = findPath("ASTs");
 var negSyntaxTestsPath = findPath("negativeSyntax");
 var illDefinedTestsPath = findPath("illDefined");
 
-describe("A ShEx AST", () => {
+describe("A ShEx AST", function () {
 
   // positive transformation tests
   var schemas = fs.readdirSync(schemasPath);
@@ -27,19 +27,16 @@ describe("A ShEx AST", () => {
     if (!fs.existsSync(jsonASTFile)) return;
     var jsonSchemaFile = schemasPath + schemaName + ".json"
 
-    test(
-      "should translate JSON schema '" + jsonSchemaFile + "' to '" + jsonASTFile + "'.",
-      () => {
-        var jsonAST = JSON.parse(fs.readFileSync(jsonASTFile, "utf8"));
+    it("should translate JSON schema '" + jsonSchemaFile + "' to '" + jsonASTFile + "'.", function () {
+      var jsonAST = JSON.parse(fs.readFileSync(jsonASTFile, "utf8"));
 
-        if (VERBOSE) console.log(schemaName);
-        var schema = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
-        var compiledAST = ShExValidator.construct(schema).getAST();
-        if (VERBOSE) console.log("compiled :" + JSON.stringify(compiledAST));
-        if (VERBOSE) console.log("expected :" + JSON.stringify(jsonAST));
-        expect(compiledAST).toEqual(jsonAST);
-      }
-    );
+      if (VERBOSE) console.log(schemaName);
+      var schema = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
+      var compiledAST = ShExValidator.construct(schema).getAST();
+      if (VERBOSE) console.log("compiled :" + JSON.stringify(compiledAST));
+      if (VERBOSE) console.log("expected :" + JSON.stringify(jsonAST));
+      expect(compiledAST).toEqual(jsonAST);
+    });
   });
 });
 

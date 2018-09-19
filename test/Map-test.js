@@ -16,52 +16,49 @@ var maybeLog = VERBOSE ? console.log : function () {};
 var Harness = {
   prepare: function (srcSchemas, targetSchemas, inputData, inputNode, createRoot, expectedBindings, expectedRDF) {
     var mapstr = srcSchemas + " -> " + targetSchemas.join(',');
-    test(
-      '('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF,
-      done => {
+    it('('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF, function (done) {
 
-        srcSchemas = srcSchemas.map(function (p) { return Path.resolve(__dirname, p); });
-        targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
-        inputData = Path.resolve(__dirname, inputData);
-        expectedRDF = Path.resolve(__dirname, expectedRDF);
-        // Lean on ShExLoader to load all the schemas and data graphs.
-        Promise.all([ShExLoader.load(srcSchemas, [], [inputData], []),
-                     ShExLoader.load(targetSchemas, [], [expectedRDF], [])]).
-          then(function (loads) {
-            loads[0].data.toString = loads[1].data.toString = graphToString;
+      srcSchemas = srcSchemas.map(function (p) { return Path.resolve(__dirname, p); });
+      targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
+      inputData = Path.resolve(__dirname, inputData);
+      expectedRDF = Path.resolve(__dirname, expectedRDF);
+      // Lean on ShExLoader to load all the schemas and data graphs.
+      Promise.all([ShExLoader.load(srcSchemas, [], [inputData], []),
+                   ShExLoader.load(targetSchemas, [], [expectedRDF], [])]).
+        then(function (loads) {
+          loads[0].data.toString = loads[1].data.toString = graphToString;
 
-            // prepare validator
-            var validator = ShExValidator.construct(loads[0].schema, { noCache: true });
-            Mapper.register(validator);
+          // prepare validator
+          var validator = ShExValidator.construct(loads[0].schema, { noCache: true });
+          Mapper.register(validator);
 
-            // run validator
-            var res = validator.validate(ShExUtil.makeN3DB(loads[0].data), inputNode, ShExValidator.start);
-            expect(res).not.toBeNull();
-            var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
+          // run validator
+          var res = validator.validate(ShExUtil.makeN3DB(loads[0].data), inputNode, ShExValidator.start);
+          expect(res).not.toBeNull();
+          var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
 
-            // test against expected.
-            if (expectedBindings) {
-              expect(resultBindings).toBe(expectedBindings);
-            }
+          // test against expected.
+          if (expectedBindings) {
+            expect(resultBindings).toBe(expectedBindings);
+          }
 
-            var map = Mapper.materializer(loads[1].schema);
-            var binder = Mapper.binder([resultBindings]);
-            var outputGraph = map.materialize(binder, createRoot);
-            outputGraph.toString = graphToString;
-            maybeLog(mapstr);
-            maybeLog("output:");
-            maybeLog(outputGraph.toString());
-            maybeLog("expect:");
-            maybeLog(loads[1].data.toString());
-            // console.log(outputGraph.toString(), "\n--\n", loads[1].data.toString());
-            expect(geq(outputGraph, loads[1].data)).toBe(true);
-            done();
-          }).catch(function (error) {
-            done(error);
-          });
+          var map = Mapper.materializer(loads[1].schema);
+          var binder = Mapper.binder([resultBindings]);
+          var outputGraph = map.materialize(binder, createRoot);
+          outputGraph.toString = graphToString;
+          maybeLog(mapstr);
+          maybeLog("output:");
+          maybeLog(outputGraph.toString());
+          maybeLog("expect:");
+          maybeLog(loads[1].data.toString());
+          // console.log(outputGraph.toString(), "\n--\n", loads[1].data.toString());
+          expect(geq(outputGraph, loads[1].data)).toBe(true);
+          done();
+        }).catch(function (error) {
+          done(error);
+        });
 
-      }
-    );
+    });
   }
 };
 
@@ -69,7 +66,7 @@ function geq (l, r) { // graphEquals needs a this
   return graphEquals.call(l, r);
 }
 
-describe('A ShEx Mapper', () => {
+describe('A ShEx Mapper', function () {
   var tests = [
     ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"],
     ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl"],
@@ -186,35 +183,35 @@ function graphEquals (right, m) {
   return match(this.getTriples(null, null, null));     // Start with all triples.
 }
 
-function testEquiv (name, g1, g2, equals, mapping) {
-  test("should test " + name + " to be " + equals, () => {
-    var l = n3.Store(); l.toString = graphToString; l.equals = graphEquals;
-    var r = n3.Store(); r.toString = graphToString;
-    g1.forEach(function (triple) { l.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
-    g2.forEach(function (triple) { r.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
-    var m = {};
-    var ret = l.equals(r, m);
-    expect(ret).toBe(equals);
-    if (mapping) {
-      if (mapping.constructor === Array) {
-        var found = 0;
-        mapping.forEach(function (thisMap) {
-          try {
-            expect(m).toEqual(thisMap);
-            ++found;
-          } catch (e) {
-          }
-        });
-        if (found !== 1) // slightly misleading error, but adequate.
+  function testEquiv (name, g1, g2, equals, mapping) {
+    it("should test " + name + " to be " + equals, function () {
+      var l = n3.Store(); l.toString = graphToString; l.equals = graphEquals;
+      var r = n3.Store(); r.toString = graphToString;
+      g1.forEach(function (triple) { l.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
+      g2.forEach(function (triple) { r.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
+      var m = {};
+      var ret = l.equals(r, m);
+      expect(ret).toBe(equals);
+      if (mapping) {
+        if (mapping.constructor === Array) {
+          var found = 0;
+          mapping.forEach(function (thisMap) {
+            try {
+              expect(m).toEqual(thisMap);
+              ++found;
+            } catch (e) {
+            }
+          });
+          if (found !== 1) // slightly misleading error, but adequate.
+            expect(m).toEqual(mapping);
+        } else {
           expect(m).toEqual(mapping);
-      } else {
-        expect(m).toEqual(mapping);
+        }
       }
-    }
-  });
-}
+    });
+  }
 
-describe("Graph equivalence", () => {
+describe("Graph equivalence", function () {
   var p12Permute = [
     {"_:l1": "_:r1", "_:l2": "_:r2"},
     {"_:l1": "_:r2", "_:l2": "_:r1"}];

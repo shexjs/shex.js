@@ -11,11 +11,11 @@ var schemasPath = findPath('schemas');
 var partitionedSchemasPath = __dirname + '/../test/partitionedSchemas/';
 var manifestFile = __dirname + '/../test/partitionedSchemas/Manifest.json';
 
-describe('Partitioning', () => {
+describe('Partitioning', function () {
   var parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
-  beforeEach(() => { parser._resetBlanks(); });
+  beforeEach(function () { parser._resetBlanks(); });
   var manifest = parseJSON(fs.readFileSync(manifestFile, 'utf8'));
   if (TESTS)
     manifest.tests = manifest.tests.filter(function (t) {
@@ -32,7 +32,7 @@ describe('Partitioning', () => {
 
     it((VERBOSE ? schemaFile : test.from) + 
        ' for ' + test.include.join(', ') + ' should match ' + 
-       (VERBOSE ? expectedFile : test.expect), () => {
+       (VERBOSE ? expectedFile : test.expect), function () {
       if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
       if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
       if (VERBOSE) console.log("partition: ", JSON.stringify(partition));

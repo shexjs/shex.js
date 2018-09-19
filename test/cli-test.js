@@ -196,7 +196,7 @@ stamp("setup");
 Object.keys(AllTests).forEach(function (script) {
   var tests = AllTests[script];
 
-  describe("The " + script + " script", () => {
+  describe("The " + script + " script", function () {
     "use strict";
 
     var setSlow = process.env["CLI_TIMEOUT"]; // CLI_TIMEOUT=4000 will run tests with timout of 4s
@@ -217,34 +217,36 @@ Object.keys(AllTests).forEach(function (script) {
             ("resultText" in test ? JSON.stringify(test.resultText) :
              "resultNoSpace" in test ? JSON.stringify(test.resultNoSpace) : test.result))
          ) +
-         " in test '" + test.name + "'.", done => {
-        stamp(script+"/"+test.name);
-        Promise.all([test.ref, test.exec]).then(function (both) {
-          var ref = both[0];
-          var exec = both[1];
+         " in test '" + test.name + "'.",
+         function (done) {
+           stamp(script+"/"+test.name);
+           Promise.all([test.ref, test.exec]).then(function (both) {
+             var ref = both[0];
+             var exec = both[1];
 
-          if (test.status === 0) {      // Keep this test before exitCode in order to
-            expect(exec.stderr).toHaveLength(0); // print errors from spawn.
-          }
+             if (test.status === 0) {      // Keep this test before exitCode in order to
+               expect(exec.stderr).toHaveLength(0); // print errors from spawn.
+             }
 
-          if ("errorMatch" in ref)
-            expect(exec.stderr).toMatch(ref.errorMatch);
-          if ("resultMatch" in ref)
-            expect(exec.stdout).toMatch(ref.resultMatch);
-          else if ("resultText" in ref)
-            expect(exec.stdout).toBe(ref.resultText);
-          else if ("resultNoSpace" in ref)
-            expect(exec.stdout.replace(/[ \n]/g, "")).toBe(ref.resultNoSpace.text.replace(/[ \n]/g, ""));
-          else if ("result" in ref) {
-            expect(JSON.parse(exec.stdout)).toEqual(ShExUtil.absolutizeResults(
-              JSON.parse(ref.result.text), ref.result.url));}
-          else if (!("errorMatch" in ref))
-            throw Error("unknown test criteria in " + JSON.stringify(ref));
+             if ("errorMatch" in ref)
+               expect(exec.stderr).toMatch(ref.errorMatch);
+             if ("resultMatch" in ref)
+               expect(exec.stdout).toMatch(ref.resultMatch);
+             else if ("resultText" in ref)
+               expect(exec.stdout).toBe(ref.resultText);
+             else if ("resultNoSpace" in ref)
+               expect(exec.stdout.replace(/[ \n]/g, "")).toBe(ref.resultNoSpace.text.replace(/[ \n]/g, ""));
+             else if ("result" in ref) {
+               expect(JSON.parse(exec.stdout)).toEqual(
+                 ShExUtil.absolutizeResults(
+                   JSON.parse(ref.result.text), ref.result.url));}
+             else if (!("errorMatch" in ref))
+               throw Error("unknown test criteria in " + JSON.stringify(ref));
 
-          expect(exec.exitCode).toBe(test.status);
-          done();
-        }).catch(function (e) { done(e); });
-      }, 2 * 60 * 1000); // 2 mins for the whole test suite
+             expect(exec.exitCode).toBe(test.status);
+             done();
+           }).catch(function (e) { done(e); });
+         }, 2 * 60 * 1000); // 2 mins for the whole test suite
     });
   });
 });

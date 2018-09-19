@@ -152,9 +152,8 @@ describe('no URL parameters', function () { // needs this
 
 describe('default URL parameters', function () { // needs this
   let dom, $
-  beforeAll(done => {
-    dom = setup(done, () => $ = dom.window.$,
-                '?manifestURL=../examples/manifest.json')
+  beforeAll(done => { dom = setup(done, () => $ = dom.window.$,
+                                  '?manifestURL=../examples/manifest.json')
   }, STARTUP_TIMEOUT)
 
   it("should load clinical observation example", function (done) {
