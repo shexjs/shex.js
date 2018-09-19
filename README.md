@@ -1,6 +1,8 @@
 [![NPM Version](https://badge.fury.io/js/shex.png)](https://npmjs.org/package/shex)
 [![Build Status](https://travis-ci.org/shexSpec/shex.js.svg?branch=master)](https://travis-ci.org/shexSpec/shex.js)
 [![Coverage Status](https://coveralls.io/repos/github/shexSpec/shex.js/badge.svg?branch=jest)](https://coveralls.io/github/shexSpec/shex.js?branch=hest)
+[![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
 
 # shex.js
 shex.js javascript implementation of Shape Expressions ([try online](https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html))

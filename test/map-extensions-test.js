@@ -9,6 +9,7 @@ var chai = require('chai');
 
 var _ = require('underscore');
 
+var mapper = require('../extensions/shex-map/module');
 var mapExtensions = require('../extensions/shex-map/lib/extensions');
 
 describe('Map extensions', () => {
@@ -160,15 +161,16 @@ describe('Map extensions', () => {
             expect(
                 mapExtensions.lower(
                     'hashmap(test:string, {"alpha": "beta"})',
-                    {"urn:local:test:string": "beta"},
-                    {"test": "urn:local:test:"})).toBe('alpha');
+                    mapper.binder([{"urn:local:test:string": "beta"}]),
+                    {"test": "urn:local:test:"}))
+            .toBe('alpha');
         });
 
         test('should execute a simple regex function', () => {
             expect(
                 mapExtensions.lower(
                     "regex(/(?<dem:test>^[a-zA-Z]+)/)", 
-                    { 'http://a.example/dem#test': 'Testing' }, 
+                    mapper.binder([{ 'http://a.example/dem#test': 'Testing' }]), 
                     {"dem": "http://a.example/dem#"})
             ).toBe('Testing');
         });

@@ -9,6 +9,7 @@ var chai = require('chai');
 
 var _ = require('underscore');
 
+var mapper = require('../extensions/shex-map/module');
 var hmExtension = require('../extensions/shex-map/lib/hashmap_extension');
 
 describe('Hashmap extension', () => {
@@ -175,52 +176,52 @@ describe('Hashmap extension', () => {
                     'hashmap(test, {a:abc x})',
                     undefined,
                     {"test": "urn:local:test:"},
-                    'test, {a:abc x}')).toThrowError(Error);
+                    'test, {a:abc x}'))
+            .toThrowError(Error/*, 
+                'Hashmap extension unable to parse map in hashmap(test, {a:abc x})!Unexpected token a'*/);
         });
 
-        test(
-            'should fail gracefully if given input that is not in the hash map',
-            () => {
-                expect(
-                    hmExtension.lower.bind(this,
-                        'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                        {"urn:local:test:string": "efg"}, 
-                        {"test": "urn:local:test:"},
-                        'test:string, {"a": "abc", "x": "xyz"}')).toThrowError(Error);
-            }
-        );
+        it('should fail gracefully if given input that is not in the hash map', () => {
+            expect(
+                hmExtension.lower.bind(this,
+                    'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
+                    mapper.binder([{"urn:local:test:string": "efg"}]), 
+                    {"test": "urn:local:test:"},
+                    'test:string, {"a": "abc", "x": "xyz"}'))
+            .toThrowError(Error/*, 
+                "Hashmap extension was unable to invert the value efg with map { a: 'abc', x: 'xyz' }!"*/);
+        });
 
-        test(
-            'should fail gracefully if given a hash map that does not have unique key/value pairs',
-            () => {
-                expect(
-                    hmExtension.lower.bind(this,
-                        'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
-                        {"urn:local:test:string": "xyz"}, 
-                        {"test": "urn:local:test:"},
-                        'test:string, {"a": "abc", "b": "abc", "x": "xyz"}')).toThrowError(Error);
-            }
-        );
+        it('should fail gracefully if given a hash map that does not have unique key/value pairs', () => {
+            expect(
+                hmExtension.lower.bind(this,
+                    'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
+                    mapper.binder([{"urn:local:test:string": "xyz"}]), 
+                    {"test": "urn:local:test:"},
+                    'test:string, {"a": "abc", "b": "abc", "x": "xyz"}'))
+            .toThrowError(Error/*, 
+                "Hashmap extension requires unique key/value pairs!"*/);
+        });
 
         test('should execute a simple hashmap function', () => {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"alpha": "beta"})', 
-                    {"urn:local:test:string": "beta"}, 
+                    mapper.binder([{"urn:local:test:string": "beta"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"alpha": "beta"}')).toBe('alpha');
 
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    {"urn:local:test:string": "abc"}, 
+                    mapper.binder([{"urn:local:test:string": "abc"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}')).toBe('a');
 
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    {"urn:local:test:string": "xyz"}, 
+                    mapper.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}')).toBe('x');
         });
