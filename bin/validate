@@ -52,8 +52,7 @@ var orChoices = Object.keys(ShExValidator.options.or).join("|");
 var parChoices = Object.keys(ShExValidator.options.partition).join("|");
 var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
-// Generate command line interface
-var CLI = require("command-line-args")([
+var CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean },
   { name: "quiet",     alias: "q", type: Boolean },
   { name: "help",      alias: "h", type: Boolean },
@@ -79,33 +78,59 @@ var CLI = require("command-line-args")([
   { name: "invocation",alias: "i", type: Boolean, desc: "show invocation" },
   { name: "dry-run",   alias: "N", type: Boolean, desc: "prepare validation but don't execute" },
   { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression modules to use" },
-]);
+];
+
+// Generate command line interface
+var CLI = require("command-line-args")(CommandLineOptions);
 var Argv1 = Path.relative("", process.argv[1]);
 var CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
 
 function abort (msg) {
   console.error(msg);
-  console.error(CLI.getUsage({
-    title: "validate",
-    description: "validate nodes in RDF graphs with respect to ShEx schemas.",
-    synopsis: [
-      "validate (-x <ShExC> | -j <ShExJ>) -s <start shape> (-d <Turtle> | -l <JSON-LD>) -n <start node>",
-      "validate (-x |-j)? (-s)? (-d|-l)? (-n)? -S http://localhost:8088/validate"
-    ],
-    examples: [
-      "validate local files:",
-      Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir),
-      "validate web resources:",
-      "  validate -x http://shex.io/examples/Issue.shex -s IssueShape -d http://shex.io/examples/Issue1.ttl -n Issue1",
-      "run as a server:",
-      Util.format('  validate -x http://localhost:8088/validate', CliDir),
-      Util.format('  curl -i http://localhost:8088/validate -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', CliDir, CliDir),
-      "run as a preloaded server:",
-      Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -S http://localhost:8088/validate', CliDir),
-      Util.format('  curl -i http://localhost:8088/validate -F "data=@%sp2p3.ttl" -F "node=x"', CliDir)
-    ],
-    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
-  }));
+  console.error(require('command-line-usage')([
+    {
+      header: 'validate',
+      content: 'validate nodes in RDF graphs with respect to ShEx schemas.'
+    },
+    {
+      header: 'Synopsis',
+      content: [
+        "validate (-x <ShExC> | -j <ShExJ>) -s <start shape> (-d <Turtle> | -l <JSON-LD>) -n <start node>",
+        "validate (-x |-j)? (-s)? (-d|-l)? (-n)? -S http://localhost:8088/validate"
+      ]
+    },
+    {
+      header: 'Options',
+      optionList: CommandLineOptions
+    },
+    {
+      header: 'Examples',
+      content: [
+        {l: 'validate local files',
+         r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir)}
+      ]
+    },
+    {
+      header: 'examples',
+      content: [
+        { l: "validate local files:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir) },
+        { l: "validate web resources:",
+          r: "  validate -x http://shex.io/examples/Issue.shex -s IssueShape -d http://shex.io/examples/Issue1.ttl -n Issue1" },
+        { l: "run as a server:",
+          r: Util.format('  validate -x http://localhost:8088/validate', CliDir) },
+        { l: "",
+          r: Util.format('  curl -i http://localhost:8088/validate -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', CliDir, CliDir) },
+        { l: "run as a preloaded server:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -S http://localhost:8088/validate', CliDir) },
+        { l: "",
+          r: Util.format('  curl -i http://localhost:8088/validate -F "data=@%sp2p3.ttl" -F "node=x"', CliDir) }
+      ]
+    },
+    {
+      content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
+    }
+                                              ]));
   process.exit(1);
 }
 
@@ -350,7 +375,7 @@ function getInvocation (parms) {
 
 var cmds = (function () {
   try {
-    return CLI.parse();
+    return CLI;
   } catch (e) {
     console.error(e.message);
     process.exit(1);
