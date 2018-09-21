@@ -635,7 +635,7 @@ notStartAction:
     ;
 
 start:
-      IT_start '=' inlineShapeExpression	{
+      IT_start '=' shapeExpression	{
         if (Parser.start)
           error("Parse error: start already defined");
         Parser.start = $3; // t: startInline
@@ -682,26 +682,7 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
     ;
 
 shapeExpression:
-      _QIT_NOT_E_Opt shapeAtomNoRef _QshapeOr_E_Opt	{
-        if ($1)
-          $2 = { type: "ShapeNot", "shapeExpr": $2 };
-        if ($3) {
-          $3.shapeExprs.unshift($2);
-          $$ = $3;
-        } else {
-          $$ = $2;
-        }
-      }
-    | IT_NOT shapeRef _QshapeOr_E_Opt	-> { type: "ShapeNot", "shapeExpr": $2 }
-    | shapeRef shapeOr	{
-        $2.shapeExprs.unshift($1);
-        $$ = $2; // { type: "ShapeOr", "shapeExprs": [$1].concat($2) };
-      }
-    ;
-
-_QshapeOr_E_Opt:
-      	-> null
-    | shapeOr	-> $1
+      shapeOr	
     ;
 
 inlineShapeExpression:
@@ -709,30 +690,11 @@ inlineShapeExpression:
     ;
 
 shapeOr:
-      _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{
-        $$ = { type: "ShapeOr", shapeExprs: $1 };
-      }
-    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
-        $$ = $2.length > 0 ? shapeJunction("ShapeAnd", $1, $2) : { type: "ShapeAnd", shapeExprs:$1 };
-      }
+      shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
     ;
 
 _O_QIT_OR_E_S_QshapeAnd_E_C:
       IT_OR shapeAnd	-> $2
-    ;
-
-_Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus:
-      _O_QIT_OR_E_S_QshapeAnd_E_C	-> [$1]
-    | _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus _O_QIT_OR_E_S_QshapeAnd_E_C	-> $1.concat($2)
-    ;
-
-_O_QIT_AND_E_S_QshapeNot_E_C:
-      IT_AND shapeNot	-> $2
-    ;
-
-_Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus:
-      _O_QIT_AND_E_S_QshapeNot_E_C	-> [$1]
-    | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2)
     ;
 
 _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star:
@@ -810,16 +772,6 @@ _QshapeOrRef_E_Opt:
 _QnonLitNodeConstraint_E_Opt:
       	
     | nonLitNodeConstraint	
-    ;
-
-shapeAtomNoRef:
-      nonLitNodeConstraint _QshapeOrRef_E_Opt	
-        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
-    | litNodeConstraint	
-    | shapeDefinition _QnonLitNodeConstraint_E_Opt	
-	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
     ;
 
 inlineShapeAtom:
