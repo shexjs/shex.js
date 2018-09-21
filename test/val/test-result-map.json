@@ -123,6 +123,7 @@
   "#1cardStar_pass1": "1cardStar_pass1.val",
   "#1cardStar_pass2": "1cardStar_pass2.val",
   "#1cardStar_pass6": "1cardStar_pass6.val",
+  "#simpleRef_1dot_pass-noOthers": "1dot_pass.val",
   "#1dotRef1_selfReference": "1dotRef1_selfReference.val",
   "#1dotRef1_referent,referrer": "In2_Ip2_In1@In1_Ip1_LX.val",
   "#1dotRef1_referrer,referent": "In2_Ip2_In1@In1_Ip1_LX.val",
