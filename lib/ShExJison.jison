@@ -359,13 +359,18 @@
 
   function shapeJunction (type, container, elts) {
     if (elts.length === 0) {
-      return container;
-    } else if (container.type === type) {
-      container.shapeExprs = container.shapeExprs.concat(elts);
+      return nonest(container);
+    } else if (container.type === type && !container.nested) {
+      nonest(container).shapeExprs = nonest(container).shapeExprs.concat(elts.map(nonest));
       return container;
     } else {
-      return { type: type, shapeExprs: [container].concat(elts) };
+      return { type: type, shapeExprs: [nonest(container)].concat(elts.map(nonest)) };
     }
+  }
+
+  function nonest (container) {
+    delete container.nested;
+    return container;
   }
 
   var EmptyObject = {  };
@@ -654,8 +659,8 @@ statement:
     ;
 
 shapeExprDecl:
-    shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        addShape($1,  $2);
+      shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+        addShape($1,  nonest($2));
       }
     ;
 
@@ -684,21 +689,14 @@ shapeExpression:
           $3.shapeExprs.unshift($2);
           $$ = $3;
         } else {
-// console.log("shapeAtomNoRef:", $2);
           $$ = $2;
         }
       }
     | IT_NOT shapeRef _QshapeOr_E_Opt	-> { type: "ShapeNot", "shapeExpr": $2 }
     | shapeRef shapeOr	{
-// console.log("shapeRef_shapeOr:", $1, $2);
         $2.shapeExprs.unshift($1);
         $$ = $2; // { type: "ShapeOr", "shapeExprs": [$1].concat($2) };
       }
-    ;
-
-_QIT_NOT_E_Opt:
-      	-> false
-    | IT_NOT	-> true
     ;
 
 _QshapeOr_E_Opt:
@@ -713,26 +711,11 @@ inlineShapeExpression:
 shapeOr:
       _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{
         $$ = { type: "ShapeOr", shapeExprs: $1 };
-// console.log("shapeOr_1:", $$);
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
         $$ = $2.length > 0 ? shapeJunction("ShapeAnd", $1, $2) : { type: "ShapeAnd", shapeExprs:$1 };
-// console.log("shapeOr_2:", $$);
       }
     ;
-
-// shapeOr:
-//       _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	
-//           -> $1.length > 1 ? { type: "ShapeOr", shapeExprs: $1 } : $1
-//     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
-//         // [not] [] -> not
-//         // [not] [and and and] -> Or([not and and and])
-//         // [not not] [and] -> Or([not not and])
-//         // [not not] [and and and] -> Or([not not and and and])
-//         var disjuncts = $1.concat($2);
-//         $$ = disjuncts.length > 1 ? { type: "ShapeOr", shapeExprs: disjuncts } : disjuncts[0];
-//       }
-//     ;
 
 _O_QIT_OR_E_S_QshapeAnd_E_C:
       IT_OR shapeAnd	-> $2
@@ -774,6 +757,10 @@ shapeAnd:
       shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
     ;
 
+_O_QIT_AND_E_S_QshapeNot_E_C:
+      IT_AND shapeNot	-> $2
+    ;
+
 _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star:
       	-> []
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star _O_QIT_AND_E_S_QshapeNot_E_C	-> $1.concat($2)
@@ -793,11 +780,16 @@ _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star:
     ;
 
 shapeNot:
-      _QIT_NOT_E_Opt shapeAtom		-> $1 ? { type: "ShapeNot", "shapeExpr": $2 } : $2
+      _QIT_NOT_E_Opt shapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
+    ;
+
+_QIT_NOT_E_Opt:
+      	-> false
+    | IT_NOT	-> true
     ;
 
 inlineShapeNot:
-      _QIT_NOT_E_Opt inlineShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": $2 } : $2
+      _QIT_NOT_E_Opt inlineShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
     ;
 
 shapeAtom:
@@ -806,7 +798,7 @@ shapeAtom:
     | litNodeConstraint	
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
         -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
@@ -835,7 +827,7 @@ inlineShapeAtom:
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litInlineNodeConstraint	
     | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
@@ -1157,7 +1149,7 @@ tripleConstraint:
         // $6: t: 1dotCode1
 	if ($3 !== EmptyShape && false) {
 	  var t = blank();
-	  addShape(t, $3);
+	  addShape(t, nonest($3));
 	  $3 = { type: "ShapeRef", reference: t };
 	}
         // %6: t: 1inversedotCode1
