@@ -123,12 +123,13 @@ function lower(mapDirective, bindings, prefixes, args) {
         function (m, varName, offset, str) {
             matched = true;
             var expVarName = buildExpandedVars(varName, expandedVars, prefixes);
-            if (_.isUndefined(bindings[expVarName])) {
+            var val = bindings.get(expVarName);
+            if (_.isUndefined(val)) {
                 throw Error("Unable to process " + mapDirective + 
                             " because variable \"" + expVarName + "\" was not found!");
       
             } else {
-                return extUtils.trimQuotes( bindings[expVarName]); 
+                return extUtils.trimQuotes( val);
             }
     });
 

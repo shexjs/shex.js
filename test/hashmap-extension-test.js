@@ -9,6 +9,7 @@ var should = chai.should();
 
 var _ = require('underscore');
 
+var mapper = require('../extensions/shex-map/module');
 var hmExtension = require('../extensions/shex-map/lib/hashmap_extension');
 
 describe('Hashmap extension', function() {
@@ -202,7 +203,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    {"urn:local:test:string": "efg"}, 
+                    mapper.binder([{"urn:local:test:string": "efg"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.throw(Error, 
@@ -213,7 +214,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
-                    {"urn:local:test:string": "xyz"}, 
+                    mapper.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "b": "abc", "x": "xyz"}'))
             .to.throw(Error, 
@@ -224,7 +225,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"alpha": "beta"})', 
-                    {"urn:local:test:string": "beta"}, 
+                    mapper.binder([{"urn:local:test:string": "beta"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"alpha": "beta"}'))
             .to.equal('alpha');
@@ -232,7 +233,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    {"urn:local:test:string": "abc"}, 
+                    mapper.binder([{"urn:local:test:string": "abc"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.equal('a');
@@ -240,7 +241,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    {"urn:local:test:string": "xyz"}, 
+                    mapper.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.equal('x');

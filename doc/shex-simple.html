@@ -32,10 +32,17 @@
       .running { background-color: #ddf; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
-      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; border-color: #fc561c }
-      #inputSchema li.selected button { background-color: #e8e8ff; }
-      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
-      #inputData li.selected button { background-color: #e8ffe8; }
+      #inputarea textarea.data.focus {
+        width: 100%;
+        overflow: hidden;
+        border-style: inset;
+        border-width: 2px;
+        padding: 1px 0px;
+      }
+      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
+      #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
+      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
+      #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
       #manifestDrop { border-color: white; width: 100%; }
       #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
       #inputSchema li button, #inputData li button {
@@ -377,7 +384,7 @@ ul {
     <script>module.exports = exports;</script><script src="../lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
     <script src="../lib/ShapeMapParser.js"   ></script><script>modules["../lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
     <script src="../lib/ShapeMap.js"   ></script><script>modules["../lib/ShapeMap"] = modules["./lib/ShapeMap"] = module.exports;</script>
-    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["./ShExWriter"] = module.exports;</script>
+    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../lib/ShExWriter"] = module.exports;</script>
     <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
     <script src="../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>

@@ -20,7 +20,7 @@ var Server = require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
     .get(RegExp(PATH))
     .reply(function(path, requestBody) {
       let filePath = getRelPath(path)
-      let ret = fs.readFileSync(filePath, 'utf8')
+      let ret = fs.readFileSync(__dirname + '/../' + filePath, 'utf8')
       logServed(path, filePath, ret.length)
       return [200, ret, {}];
     })
@@ -77,7 +77,7 @@ function logServed (url, filePath, length) {
 
 function getDom (searchParms) {
   let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + PAGE + searchParms
-  return new JSDOM(fs.readFileSync('./' + PAGE, 'utf8'), {
+  return new JSDOM(fs.readFileSync(__dirname + '/../' + PAGE, 'utf8'), {
     url: url,
     runScripts: "dangerously",
     resources: "usable"
