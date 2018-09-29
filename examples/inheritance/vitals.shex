@@ -32,13 +32,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 }
 
 <#PostureBP> @<#Observation> AND {
-  &<#BP-TE> ;
-  &<#Posture-TE>
+ &@<#BP-TE> ;
+ &@<#Posture-TE>
 }
 
 <#ReclinedBP> @<#Observation> AND {
-  &<#BP-TE> ;
-  &<#Reclined-TE>
+ &@<#BP-TE> ;
+ &@<#Reclined-TE>
 }
 
 
@@ -49,13 +49,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 }
 
 <#PosturePulse> @<#Observation> AND {
-  &<#Pulse-TE> ;
-  &<#Posture-TE>  
+ &@<#Pulse-TE> ;
+ &@<#Posture-TE>  
 }
 
 <#ReclinedPulse> @<#Observation> AND {
-  &<#Pulse-TE> ;
-  &<#Reclined-TE>  
+ &@<#Pulse-TE> ;
+ &@<#Reclined-TE>  
 }
 
 

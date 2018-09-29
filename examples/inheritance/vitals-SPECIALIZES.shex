@@ -31,12 +31,12 @@ ABSTRACT <#ReclinedVital> SPECIALIZES <#PostureVital> SPECIALIZES <#Reclined> .
 
 
 
-<#PostureBP> EXTENDS <#BP> EXTENDS <#PostureVital> { }
+<#PostureBP> EXTENDS @<#BP> EXTENDS @<#PostureVital> { }
 
 
 
 
-<#ReclinedBP> EXTENDS <#BP> EXTENDS <#ReclinedVital> { }
+<#ReclinedBP> EXTENDS @<#BP> EXTENDS @<#ReclinedVital> { }
 
 
 
@@ -48,12 +48,12 @@ ABSTRACT <#ReclinedVital> SPECIALIZES <#PostureVital> SPECIALIZES <#Reclined> .
     fhir:code ["pulse"]
 }
 
-<#PosturePulse> EXTENDS <#Pulse> EXTENDS <#PostureVital> { }
+<#PosturePulse> EXTENDS @<#Pulse> EXTENDS @<#PostureVital> { }
 
 
 
 
-<#ReclinedPulse> EXTENDS <#Pulse> EXTENDS <#ReclinedVital> { }
+<#ReclinedPulse> EXTENDS @<#Pulse> EXTENDS @<#ReclinedVital> { }
 
 
 

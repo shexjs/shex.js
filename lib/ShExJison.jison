@@ -1440,7 +1440,7 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
@@ -1449,16 +1449,11 @@ _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
     ;
 
 restriction:
-      _O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C shapeExprLabel	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
+      _O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C shapeOrRef	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
     ;
 
 _O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C:
       IT_RESTRICTS	
     | '-'	
-    ;
-
-_QshapeExprLabel_E_Plus:
-      shapeExprLabel	-> [$1] // t: 1dotExtend1, 1dot3Extend, 1dotExtend3
-    | _QshapeExprLabel_E_Plus shapeExprLabel	-> appendTo($1, $2) // t: 1dotExtend3
     ;
 

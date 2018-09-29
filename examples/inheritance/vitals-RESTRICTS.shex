@@ -15,10 +15,10 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 ABSTRACT <#Vital> RESTRICTS <#Observation> .
 
 
-ABSTRACT <#PostureVital> RESTRICTS <#Vital> EXTENDS <#Posture> {}
+ABSTRACT <#PostureVital> RESTRICTS <#Vital> EXTENDS @<#Posture> {}
 
 
-ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> EXTENDS <#Reclined> {}
+ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> EXTENDS @<#Reclined> {}
 
 
 
@@ -31,12 +31,12 @@ ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> EXTENDS <#Reclined> {}
 
 
 
-<#PostureBP> EXTENDS <#BP> EXTENDS <#PostureVital> { }
+<#PostureBP> EXTENDS @<#BP> EXTENDS @<#PostureVital> { }
 
 
 
 
-<#ReclinedBP> EXTENDS <#BP> EXTENDS <#ReclinedVital> { }
+<#ReclinedBP> EXTENDS @<#BP> EXTENDS @<#ReclinedVital> { }
 
 
 
@@ -48,12 +48,12 @@ ABSTRACT <#ReclinedVital> RESTRICTS <#PostureVital> EXTENDS <#Reclined> {}
     fhir:code ["pulse"]
 }
 
-<#PosturePulse> EXTENDS <#Pulse> EXTENDS <#PostureVital> { }
+<#PosturePulse> EXTENDS @<#Pulse> EXTENDS @<#PostureVital> { }
 
 
 
 
-<#ReclinedPulse> EXTENDS <#Pulse> EXTENDS <#ReclinedVital> { }
+<#ReclinedPulse> EXTENDS @<#Pulse> EXTENDS @<#ReclinedVital> { }
 
 
 
