@@ -1038,7 +1038,7 @@ inlineShapeDefinition:
     ;
 
 _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      extension	-> [ "extends", $1 ] // t: 1dotExtend1
+      extension	-> [ "extends", [$1] ] // t: 1dotExtend1
     | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
