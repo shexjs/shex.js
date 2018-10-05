@@ -1344,6 +1344,14 @@ languageRange:
           $$ = { type: "Language", languageTag: $1 }; // t: 1val1language
         }
       }
+    | '@' _O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C	{
+        $$ = {  // t: @@
+          type: $2.length ? "LanguageStemRange" : "LanguageStem",
+          stem: ""
+        };
+        if ($2.length)
+          $$["exclusions"] = $2; // t: @@
+      }
     ;
 
 _QlanguageExclusion_E_Star:
