@@ -1,0 +1,255 @@
+--- ../../../doc/shex-simple.js	2018-08-25 18:08:08.035941514 -0400
++++ shexmap-simple.js	2018-08-27 10:08:43.103779678 -0400
+@@ -1,4 +1,4 @@
+-// shex-simple - Simple ShEx2 validator for HTML.
++// shexmap-simple - Simple ShEx2 validator for HTML.
+ // Copyright 2017 Eric Prud'hommeux
+ // Release under MIT License.
+ 
+@@ -15,6 +15,9 @@
+ Caches.inputData = makeTurtleCache($("#inputData textarea"));
+ Caches.manifest = makeManifestCache($("#manifestDrop"));
+ Caches.shapeMap = makeShapeMapCache($("#textMap")); // @@ rename to #shapeMap
++Caches.bindings = makeJSONCache($("#bindings1 textarea"));
++Caches.statics = makeJSONCache($("#staticVars textarea"));
++Caches.outputSchema = makeSchemaCache($("#outputSchema textarea"));
+ var ShExRSchema; // defined below
+ 
+ const ParseTriplePattern = (function () {
+@@ -40,6 +43,9 @@
+   {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData  },
+   {queryStringParm: "manifest",     location: Caches.manifest.selection,    cache: Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+   {queryStringParm: "shape-map",    location: $("#textMap"),                cache: Caches.shapeMap   },
++  {queryStringParm: "bindings",     location: Caches.bindings.selection,    cache: Caches.bindings   },
++  {queryStringParm: "statics",      location: Caches.statics.selection,     cache: Caches.statics    },
++  {queryStringParm: "outSchema",    location: Caches.outputSchema.selection,cache: Caches.outputSchema},
+ ];
+ 
+ var QueryParams = Getables.concat([
+@@ -275,6 +281,10 @@
+         //       dataLabel: data.name,
+         //       data: data.data,
+         //       queryMap: data.queryMap,
++        //       outputSchema: data.outputSchema,
++        //       outputShape: data.outputShape,
++        //       staticVars: data.staticVars,
++        //       createRoot: data.createRoot,
+         //       status: status
+         //     };
+         //   }
+@@ -411,6 +421,14 @@
+   return ret;
+ }
+ 
++function makeJSONCache(selection) {
++  var ret = _makeCache(selection);
++  ret.parse = function (text) {
++    return JSON.parse(text);
++  };
++  return ret;
++}
++
+ // controls for manifest buttons
+ function paintManifest (selector, list, func, listItems, side) {
+   $(selector).empty();
+@@ -551,6 +569,14 @@
+         $("#textMap").val(dataTest.entry.queryMap);
+       }
+       copyTextMapToEditMap();
++
++      Caches.outputSchema.set(dataTest.entry.outputSchema);
++      $("#outputSchema .status").text(name);
++      Caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
++      $("#staticVars .status").text(name);
++
++      $("#outputShape").val(dataTest.entry.outputShape); // targetSchema.start in Map-test
++      $("#createRoot").val(dataTest.entry.createRoot); // createRoot in Map-test
+       // callValidator();
+     }
+   }
+@@ -655,6 +681,7 @@
+         var validator = ShEx.Validator.construct(
+           loaded.schema,
+           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
++        ShExMap.register(validator);
+ 
+         currentAction = "validating";
+         $("#results .status").text("validating...").show();
+@@ -782,6 +809,13 @@
+     elt.attr("id", anchor);
+     fixedMapEntry.find("a").attr("href", "#" + anchor);
+     fixedMapEntry.attr("title", entry.elapsed + " ms")
++
++    if (entry.status === "conformant") {
++      var resultBindings = ShEx.Util.valToExtension(entry.appinfo, ShExMap.url);
++      Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
++    } else {
++      Caches.bindings.set("{}");
++    }
+   }
+ 
+   function finishRendering (done) {
+@@ -820,6 +854,67 @@
+   LastFailTime = new Date().getTime();
+ }
+ 
++function materialize () {
++  if (Caches.bindings.get().trim().length === 0) {
++    results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
++      removeClass("passes fails").addClass("error");
++    return;
++  }
++  results.start();
++  var parsing = "output schema";
++  try {
++    var outputSchemaText = Caches.outputSchema.selection.val();
++    var outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
++    var outputSchema = Caches.outputSchema.refresh();
++
++    // var resultBindings = Object.assign(
++    //   Caches.statics.refresh(),
++    //   Caches.bindings.refresh()
++    // );
++
++    function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
++    var resultBindings = _dup(Caches.bindings.refresh());
++    if (Caches.statics.get().trim().length === 0)
++      Caches.statics.set("{  }");
++    var _t = Caches.statics.refresh();
++    if (_t && Object.keys(_t) > 0) {
++      if (resultBindings.constructor !== Array)
++        resultBindings = [resultBindings];
++      resultBindings.unshift(_t);
++    }
++
++    var mapper = ShExMap.materializer(outputSchema);
++    var outputShapeMap = fixedShapeMapToTerms([{
++      node: Caches.inputData.meta.lexToTerm($("#createRoot").val()),
++      shape: Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with Caches.outputSchema
++    }]);
++
++    var binder = ShExMap.binder(resultBindings);
++    Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
++      // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
++    // binder = ShExMap.binder(resultBindings);
++    var writer = ShEx.N3.Writer({ prefixes: {} });
++    outputShapeMap.forEach(pair => {
++      try {
++        var mapper2 = ShExMaterializer.construct(outputSchema);
++        var res = mapper2.validate(binder, pair.node, pair.shape);
++        // console.log("g:", ShExUtil.valToTurtle(res));
++        writer.addTriples(ShExUtil.valToN3js(res));
++      } catch (e) {
++        console.dir(e);
++      }
++    });
++    writer.end(function (error, result) {
++      $("#results div").empty();
++      results.append($("<pre/>").text(result));
++    });
++  } catch (e) {
++    results.replace("error parsing " + parsing + ":\n" + e).
++      removeClass("passes fails").addClass("error");
++  }
++  results.finish();
++}
++
+ function addEmptyEditMapPair (evt) {
+   addEditMapPairs(null, $(evt.target).parent().parent());
+   markEditMapDirty();
+@@ -926,6 +1021,7 @@
+   $("#regexpEngine").on("change", toggleControls);
+   $("#validate").on("click", disableResultsAndValidate);
+   $("#clear").on("click", clearAll);
++  $("#materialize").on("click", materialize);
+   $("#download-results-button").on("click", downloadResults);
+ 
+   $("#loadForm").dialog({
+@@ -1312,6 +1408,13 @@
+     iface.manifestURL = ["../examples/manifest.json"];
+   }
+ 
++  if ("output-map" in iface)
++    parseShapeMap("output-map", function (node, shape) {
++      // only works for one n/s pair
++      $("#createNode").val(node);
++      $("#outputShape").val(shape);
++    });
++
+   // Load all known query parameters.
+   return Promise.all(QueryParams.reduce((promises, input) => {
+     var parm = input.queryStringParm;
+@@ -1377,12 +1480,22 @@
+         $("#validate").focus().click();
+         at.focus();
+         return false; // same as e.preventDefault();
++      } else if (e.ctrlKey && e.key === "\\") {
++        $("#materialize").click();
++        return false; // same as e.preventDefault();
++      } else if (e.ctrlKey && e.key === "[") {
++        bindingsToTable()
++        return false; // same as e.preventDefault();
++      } else if (e.ctrlKey && e.key === "]") {
++        tableToBindings()
++        return false; // same as e.preventDefault();
+       } else {
+         return true;
+       }
+     });
+     addContextMenus("#focus0", Caches.inputData);
+     addContextMenus("#inputShape0", Caches.inputSchema);
++    addContextMenus("#outputShape", Caches.outputSchema);
+     if ("schemaURL" in iface ||
+         // some schema is non-empty
+         ("schema" in iface &&
+@@ -1790,6 +1903,50 @@
+     });
+ }
+ 
++function bindingsToTable () {
++  let d = JSON.parse($("#bindings1 textarea").val())
++  let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")
++  div.css("width", $("#bindings1 textarea").width()+10)
++  div.css("height", $("#bindings1 textarea").height()+12)
++  $("#bindings1 textarea").hide()
++  let thead = $("<thead/>")
++  let tbody = $("<tbody/>")
++  let table = $("<table>").append(thead, tbody)
++  $("#bindings1").append(div.append(table))
++
++  let vars = [];
++  function varsIn (a) {
++    return a.forEach(elt => {
++      if (elt.constructor === Array) {
++        varsIn(elt)
++      } else {
++        let tr = $("<tr/>")
++        let cols = []
++        Object.keys(elt).forEach(k => {
++          if (vars.indexOf(k) === -1)
++            vars.push(k)
++          let i = vars.indexOf(k)
++          cols[i] = elt[k]
++        })
++        // tr.append(cols.map(c => $("<td/>").text(c)))
++        for (var colI = 0; colI < cols.length; ++colI)
++          tr.append($("<td/>").text(cols[colI] ? Caches.inputData.meta.termToLex(cols[colI]) : "").css("background-color", "#f7f7f7"))
++        tbody.append(tr)
++      }
++    })
++  }
++  varsIn(d)
++
++  vars.forEach(v => {
++    thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
++  })
++}
++
++function tableToBindings () {
++  $("#bindings1 div").remove()
++  $("#bindings1 textarea").show()
++}
++
+ prepareControls();
+ prepareDragAndDrop();
+ loadSearchParameters().then(

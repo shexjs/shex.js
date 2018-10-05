@@ -17,33 +17,48 @@ var ShExLoader = require("../../../lib/ShExLoader");
 var ShExValidator = require("../../../lib/ShExValidator");
 var Mapper = require("../module");
 
-var CLI = require("command-line-args")([
+var CommandLineOptions = [
   { name: "help", alias: "h", type: Boolean },
   { name: "jsonvars", alias: "j", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "json vars file" },
   { name: "root", alias: "r", type: String, typeLabel: "IRI", multiple: false, defaultValue: "tag:eric@w3.org/2016/root", description: "RDF root node IRI" },
   { name: "target", alias: "t", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "target shex file" },
-]);
+];
+var CLI = require("command-line-args")(CommandLineOptions);
 
 function abort(msg) { 
   console.error(msg);
-  console.error(CLI.getUsage({title: "materialize", 
-                              description: "reads the validate schema output from STDIN and maps it to the specified target schema",
-                              synopsis: [
-                                "materialize -t <target schema> | -h  [-j <JSON Vars File>] [-r <RDF root IRI>]"
-                              ],
-                              examples: [
-                                "materialize -h",
-                                "validate -x schema.shex -l data.jsonld -s Shape | materialize -t target.shex",
-                                "cat file.val | materialize -t target.shex -j vars.json -r https://www.w3.org/RDF"
-                              ]
-                            })
-  );
+  console.error(require('command-line-usage')([
+    {
+      header: "materialize",
+      content: "reads the validate schema output from STDIN and maps it to the specified target schema" },
+    {
+      header: 'Synopsis',
+      content: [
+        "materialize -t <target schema> | -h  [-j <JSON Vars File>] [-r <RDF root IRI>]"
+      ]
+    },
+    {
+      header: 'Options',
+      optionList: CommandLineOptions
+    },
+    {
+      header: 'Examples',
+      content: [
+        "materialize -h",
+        "validate -x schema.shex -l data.jsonld -s Shape | materialize -t target.shex",
+        "cat file.val | materialize -t target.shex -j vars.json -r https://www.w3.org/RDF"
+      ]
+    },
+    {
+      content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
+    }
+  ]));
   process.exit(1);
 }
 
 var cmds = (function () {
   try {
-    return CLI.parse();
+    return CLI;
   } catch (e) {
     console.error(e.message);
     process.exit(1);

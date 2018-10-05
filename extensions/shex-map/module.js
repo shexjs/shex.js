@@ -10,11 +10,14 @@ var ShEx = require("../../shex");
 
 var _ = require('underscore');
 
-var ShExUtil = require("../../shex").Util;
+var ShExUtil = ShEx.Util;
 var extensions = require("./lib/extensions");
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
+
+var UNBOUNDED = -1;
+const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
 function register (validator) {
   var prefixes = "prefixes" in validator.schema ?
@@ -112,21 +115,38 @@ function materializer (schema, nextBNode) {
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
       var curSubject = createRoot || B();
+      var curSubjectx = {cs: curSubject};
 
       var v = ShExUtil.Visitor();
       var oldVisitShapeRef = v.visitShapeRef;
 
       v.visitShapeRef = function (shapeRef) {
-        this.visitShape(schema.shapes[shapeRef.reference], shapeRef.reference);
+        this.visitShapeExpr(schema.shapes[shapeRef.reference], shapeRef.reference);
         return oldVisitShapeRef.call(v, shapeRef);
       };
 
       v.visitValueRef = function (r) {
-        this.visitShape(schema.shapes[r.reference], r.reference);
+        this.visitExpression(schema.shapes[r.reference], r.reference);
         return this._visitValue(r);
       };
 
       v.visitTripleConstraint = function (expr) {
+        myvisitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
+      };
+
+      v.visitShapeExpr(shape, "_: -start-");
+      return target;
+    }
+  };
+}
+
+function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+      function P (pname) { return ShEx.N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return ShEx.N3.Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
+
         var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
         if (mapExts.length) {
           mapExts.forEach(function (ext) {
@@ -135,9 +155,10 @@ function materializer (schema, nextBNode) {
 
             var tripleObject;
             if (m) { 
-              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
-              if (!_.isUndefined(bindings[arg])) {
-                tripleObject = bindings[arg];
+              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
+              var val = bindings.get(arg);
+              if (!_.isUndefined(val)) {
+                tripleObject = val;
               }
             }
 
@@ -150,36 +171,49 @@ function materializer (schema, nextBNode) {
             if (_.isUndefined(tripleObject))
               ; // console.warn('Not in bindings: ',code);
             else if (expr.inverse)
-              add(tripleObject, expr.predicate, curSubject);
+            //add(tripleObject, expr.predicate, curSubject);
+              add(tripleObject, expr.predicate, curSubjectx.cs);
             else
-              add(curSubject, expr.predicate, tripleObject);
+            //add(curSubject    , expr.predicate, tripleObject);
+              add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
         } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
-          add(curSubject, expr.predicate, expr.valueExpr.values[0]);
+          if (expr.inverse)
+            add(expr.valueExpr.values[0], expr.predicate, curSubjectx.cs);
+          else
+            add(curSubjectx.cs, expr.predicate, expr.valueExpr.values[0]);
 
         } else {
-          var oldSubject = curSubject;
-          curSubject = B();
-          add(oldSubject, expr.predicate, curSubject);
-          this._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
-                         ["inverse", "negated", "predicate", "valueExprRef", "valueExpr",
+          var oldSubject = curSubjectx.cs;
+          var maxAdd = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+          if (maxAdd > MAX_MAX_CARD)
+            maxAdd = MAX_MAX_CARD;
+          if (!recurse)
+            maxAdd = 1; // no grounds to know how much to repeat.
+          for (var repetition = 0; repetition < maxAdd; ++repetition) {
+            curSubjectx.cs = B();
+            if (recurse) {
+              var res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+              if ("errors" in res)
+                break;
+            }
+            if (expr.inverse)
+              add(curSubjectx.cs, expr.predicate, oldSubject);
+            else
+              add(oldSubject, expr.predicate, curSubjectx.cs);
+          }
+          visitor._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
+                         ["inverse", "negated", "predicate", "valueExpr",
                           "min", "max", "annotations", "semActs"])
-          curSubject = oldSubject;
+          curSubjectx.cs = oldSubject;
         }
-      };
-
-      v.visitShapeExpr(shape, "_: -start-");
-      return target;
-    }
-  };
-}
-
-function extractBindings (soln, min, max, depth) {
+      }
+function extractBindingsDelMe (soln, min, max, depth) {
   if ("min" in soln && soln.min < min)
     min = soln.min
   var myMax = "max" in soln ?
-      (soln.max === "*" ?
+      (soln.max === UNBOUNDED ?
        Infinity :
        soln.max) :
       1;
@@ -188,7 +222,7 @@ function extractBindings (soln, min, max, depth) {
 
   function walkExpressions (s) {
     return s.expressions.reduce((inner, e) => {
-      return inner.concat(extractBindings(e, min, max, depth+1));
+      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
     }, []);
   }
 
@@ -197,7 +231,7 @@ function extractBindings (soln, min, max, depth) {
         [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
         [];
     return "referenced" in s ?
-      fromTriple.concat(extractBindings(s.referenced.solution, min, max, depth+1)) :
+      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
       fromTriple;
   }
 
@@ -360,11 +394,11 @@ function binder (tree) {
 
 return {
   register: register,
-  extractBindings: extractBindings,
   done: done,
   materializer: materializer,
   binder: binder,
-  url: MapExt
+  url: MapExt,
+  visitTripleConstraint: myvisitTripleConstraint
 };
 
 })();
