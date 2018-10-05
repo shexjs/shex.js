@@ -6,24 +6,32 @@ var ShExUtil = require("../lib/ShExUtil"); // translate back and forth to AS
 var ShExLoader = require("../lib/ShExLoader"); // for verbose output
 
 // Generate command line interface
-var CLI = require("command-line-args")([
+var CommandLineOptions = [
     { name: "help",  alias: "h", type: Boolean },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
     { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }
-]);
+];
+var CLI = require("command-line-args")(CommandLineOptions);
 function abort (msg) {
   console.error(msg);
-  console.error(CLI.getUsage({
-    title: "shex-to-json",
-    description: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex",
-    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
-  }));
+  console.error(require('command-line-usage')([
+    {
+      header: "shex-to-json",
+      content: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex" },
+    {
+      header: 'Options',
+      optionList: CommandLineOptions
+    },
+    {
+      content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
+    }
+  ]));
   process.exit(1);
 }
 
 // Extract user commands
-var cmds = CLI.parse();
+var cmds = CLI;
 if (cmds.help)
     abort("");
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
