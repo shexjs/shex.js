@@ -16,6 +16,7 @@
       #sources { font-size: small }
       .record { margin-right: .1em; margin-left: -.8em; font-size: .5em; color: blue; }
       p { margin: 0; }
+      p, .comment { background-color: #eee; }
     </style>
     <style>
       h1 { font-size: 1.3em; }
@@ -131,11 +132,11 @@ border-left: 1px solid #fdd;
     }
     .comment {
         margin-left: 1em;
-        border-left: thin solid green;
+        /* border-left: thin solid green; */
         margin-bottom: 2ex;
     }
     .render section, .render div {
-        border: thin dashed #ddf;
+        /* border: thin dashed #ddf; */
         padding: 0em;
         margin: .5em;
     }
@@ -424,7 +425,7 @@ border-left: 1px solid #fdd;
     <script>module.exports = exports;</script><script src="../lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
     <script src="../lib/ShapeMapParser.js"   ></script><script>modules["../lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
     <script src="../lib/ShapeMap.js"   ></script><script>modules["../lib/ShapeMap"] = modules["./lib/ShapeMap"] = module.exports;</script>
-    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["./ShExWriter"] = module.exports;</script>
+    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../lib/ShExWriter"] = module.exports;</script>
     <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
     <script src="../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
