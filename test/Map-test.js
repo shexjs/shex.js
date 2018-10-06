@@ -34,7 +34,7 @@ var Harness = {
           Mapper.register(validator);
 
           // run validator
-          var res = validator.validate(loads[0].data, inputNode, null);
+          var res = validator.validate(ShExUtil.makeN3DB(loads[0].data), inputNode, ShExValidator.start);
           expect(res).to.not.be.null;
           var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
 
@@ -44,7 +44,8 @@ var Harness = {
           }
 
           var map = Mapper.materializer(loads[1].schema);
-          var outputGraph = map.materialize(resultBindings, createRoot);
+          var binder = Mapper.binder([resultBindings]);
+          var outputGraph = map.materialize(binder, createRoot);
           outputGraph.toString = graphToString;
           maybeLog(mapstr);
           maybeLog("output:");

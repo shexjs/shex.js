@@ -1,0 +1,23 @@
+sudo: false
+language: node_js
+env:
+  - CLI_TIMEOUT=10000
+node_js:
+  - "6.0"
+  - "8.0"
+  - "stable"
+before_script:
+  - npm run browser
+script:
+  - npm run test-all
+cache:
+  directories:
+    - node_modules
+    - ~/.npm
+notifications:
+  email: false
+after_success:
+  - npm run travis-deploy-once "npm run semantic-release"
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
