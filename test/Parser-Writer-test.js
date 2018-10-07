@@ -77,7 +77,6 @@ describe("A ShEx parser", function () {
     var schema = test.name;
 
     var jsonSchemaFile = jsonSchemasPath + test.json;
-    if (!fs.existsSync(jsonSchemaFile)) return;
     try {
       var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
       var shexCFile = schemasPath + test.shex;
@@ -119,7 +118,7 @@ describe("A ShEx parser", function () {
                GraphSchema,
                {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
              );
-             var val = graphParser.validate(schemaGraph, schemaRoot); // start shape
+             var val = graphParser.validate(ShExUtil.makeN3DB(schemaGraph), schemaRoot, ShExValidator.start); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
              var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);

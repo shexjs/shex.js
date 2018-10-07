@@ -4,9 +4,10 @@
 # All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
 # http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
 #
-# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx3?lang=perl
-# repo: https://github.com/shexSpec/shexTest/
-# branch: TEisSE
+# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2?lang=perl
+# repo: https://github.com/shexSpec/spec/
+# branch: gh-pages
+# path: index.html
 # TODO:
 #   annotations on shapes
 #   look hard at EXTERNAL valueClassDefinitions
@@ -73,6 +74,13 @@
 # + tripleExprLabel (EGP 20170228)
 # - ^^-style facet arguments per shex#41 (EGP 20170303)
 # ~ switch to ~/regexp/ (EGP 20170303)
+# ~ s/shapeExpression/inlineShapeExpression/
+# + NOTs on shapeExpression
+# + shapeOr += ("AND" shapeNot)+
+# + shapeAtomNoRef
+# ~ nodeConstraint split into litNodeConstraint and nonLitNodeConstraint
+# - tripleExprLable -= '$'
+# ~ align REGEXP with XML Schema
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -185,7 +193,7 @@
 [141s]  PNAME_LN              ::= PNAME_NS PN_LOCAL
 [65]    ATPNAME_NS            ::= '@' PN_PREFIX? ':'
 [66]    ATPNAME_LN            ::= '@' PNAME_NS PN_LOCAL
-[67]    REGEXP                ::= '/' ([^#x2f#x5C#xA#xD] | '\\' [.\\?*+{}()|^$#x5B#x5D/tbnrf] | UCHAR)+ '/' [smix]*
+[67]    REGEXP                ::= '/' ([^#x2f#x5C#xA#xD] | '\\' [nrt\\|.?*+(){}$#x2D#x5B#x5D^/] | UCHAR)+ '/' [smix]*
 
 [142s]  BLANK_NODE_LABEL      ::= '_:' (PN_CHARS_U | [0-9]) ((PN_CHARS | '.')* PN_CHARS)?
 [145s]  LANGTAG               ::= '@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*

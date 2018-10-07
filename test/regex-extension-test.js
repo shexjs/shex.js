@@ -9,6 +9,7 @@ var should = chai.should();
 
 var _ = require('underscore');
 
+var mapper = require('../extensions/shex-map/module');
 var regexExtension = require('../extensions/shex-map/lib/regex_extension');
 
 describe('Regex extension', function() {
@@ -132,7 +133,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower.bind(this,
                     "regex(/A (?<test:string>[0-9]+) string/)", 
-                    {}, 
+                    mapper.binder([{}]), 
                     {"test": "urn:local:test:"},
                     "/?<dem:family>^[a-zA-Z]+)/")
                 ).to.throw(Error, 'Found no capture variable in regex(/A (?<test:string>[0-9]+) string/)!');
@@ -142,7 +143,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/(?<dem:family>^[a-zA-Z]+)/)", 
-                    {"http://a.example/dem#family": "Smith"},
+                    mapper.binder([{"http://a.example/dem#family": "Smith"}]),
                     {"dem": "http://a.example/dem#"},
                     "/(?<dem:family>^[a-zA-Z]+)/")
             ).to.equal("Smith");
@@ -152,7 +153,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/A (?<test:string>[a-zA-Z]+) string/)", 
-                    {"urn:local:test:string": "test"}, 
+                    mapper.binder([{"urn:local:test:string": "test"}]), 
                     {"test": "urn:local:test:"},
                     "/A (?<test:string>[a-zA-Z]+) string/")
             ).to.equal("A test string");
@@ -162,7 +163,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/(?<dem:family>[a-zA-Z]+), (?<dem:given>[a-zA-Z]+)/)",
-                    { 'http://a.example/dem#family': 'Doe', 'http://a.example/dem#given': 'John'},
+                    mapper.binder([{ 'http://a.example/dem#family': 'Doe', 'http://a.example/dem#given': 'John'}]),
                     {"dem": "http://a.example/dem#"},
                     "/(?<dem:family>[a-zA-Z]+), (?<dem:given>[a-zA-Z]+)/")
             ).to.equal("Doe, John");
