@@ -78,7 +78,7 @@ describe("A ShEx validator", function () {
         }
         it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
            "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
-           "' and get '" + (TERSE ? test.result : valFile) + "'" +
+           "' and get 'test/" + valFile + "'" +
            " in test '" + test["@id"] + "'.",
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
@@ -190,10 +190,10 @@ describe("A ShEx validator", function () {
                         // }, [])
                       } else {
                         var focus = maybeGetTerm(dataURL, test.action.focus);
-                        var shape = maybeGetTerm(schemaURL, test.action.shape);
+                        var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
-                      var validationResult = validator.validate(store, map);
+                      var validationResult = validator.validate(ShExUtil.makeN3DB(store), map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                       if (params.results !== "api") {
