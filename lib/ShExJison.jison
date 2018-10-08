@@ -359,13 +359,18 @@
 
   function shapeJunction (type, container, elts) {
     if (elts.length === 0) {
-      return container;
-    } else if (container.type === type) {
-      container.shapeExprs = container.shapeExprs.concat(elts);
+      return nonest(container);
+    } else if (container.type === type && !container.nested) {
+      nonest(container).shapeExprs = nonest(container).shapeExprs.concat(elts.map(nonest));
       return container;
     } else {
-      return { type: type, shapeExprs: [container].concat(elts) };
+      return { type: type, shapeExprs: [nonest(container)].concat(elts.map(nonest)) };
     }
+  }
+
+  function nonest (container) {
+    delete container.nested;
+    return container;
   }
 
   var EmptyObject = {  };
@@ -445,7 +450,7 @@ PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_LN}
-COMMENT                 '#' [^\u000a\u000d]*
+COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
 
 %%
 
@@ -454,7 +459,7 @@ COMMENT                 '#' [^\u000a\u000d]*
 // {ATIRIREF}           return 'ATIRIREF';
 {ATPNAME_NS}            return 'ATPNAME_NS';
 // {ATBLANK_NODE_LABEL} return 'ATBLANK_NODE_LABEL';
-{LANGTAG}               return 'LANGTAG';
+{LANGTAG}               { yytext = yytext.substr(1); return 'LANGTAG'; }
 "@"                     return '@';
 {PNAME_LN}              return 'PNAME_LN';
 {REPEAT_RANGE}          return 'REPEAT_RANGE';
@@ -479,17 +484,17 @@ COMMENT                 '#' [^\u000a\u000d]*
 //{UCHAR}               return 'UCHAR';
 {CODE}                  return 'CODE';
 
-{LANG_STRING_LITERAL_LONG1}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: @@
-{LANG_STRING_LITERAL_LONG2}  { yytext = unescapeLangString(yytext, 3); return 'LANG_STRING'; }	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
-{LANG_STRING_LITERAL1}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: @@
-{LANG_STRING_LITERAL2}       { yytext = unescapeLangString(yytext, 1); return 'LANG_STRING'; }	// t: 1val1LANGTAG
+{LANG_STRING_LITERAL_LONG1}  return 'LANG_STRING_LITERAL_LONG1';
+{LANG_STRING_LITERAL_LONG2}  return 'LANG_STRING_LITERAL_LONG2';
+{LANG_STRING_LITERAL1}       return 'LANG_STRING_LITERAL1';
+{LANG_STRING_LITERAL2}       return 'LANG_STRING_LITERAL2';
 
-{STRING_LITERAL_LONG1}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL1     
+{STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
 //{NON_TERMINATED_STRING_LITERAL_LONG1}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL_LONG2}  { yytext = unescapeString(yytext, 3); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG1
+{STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
 //{NON_TERMINATED_STRING_LITERAL_LONG2}   return 'NON_TERMINATED_STRING_LITERAL_LONG2';
-{STRING_LITERAL1}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL2     
-{STRING_LITERAL2}       { yytext = unescapeString(yytext, 1); return 'STRING'; }	// t: 1val1STRING_LITERAL_LONG2
+{STRING_LITERAL1}       return 'STRING_LITERAL1';
+{STRING_LITERAL2}       return 'STRING_LITERAL2';
 
 //{PN_LOCAL_ESC}        return 'PN_LOCAL_ESC';
 //{PLX}                 return 'PLX';
@@ -606,7 +611,7 @@ _O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C:
     ;
 
 _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt:
-      // t: @@
+      	// t: @@
     | _O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C	// t: 1dot
     ;
 
@@ -641,15 +646,10 @@ notStartAction:
     ;
 
 start:
-      // IT_start '=' _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C	{
-      //   if (Parser.start)
-      //     error("Parse error: start already defined as " + Parser.start);
-      //   Parser.start = $3; // t: startInline
-      // }
-      IT_start '=' inlineShapeExpression	{
+      IT_start '=' shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
         if (Parser.start)
           error("Parse error: start already defined");
-        Parser.start = $3; // t: startInline
+        Parser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
       }
     ;
 
@@ -670,19 +670,9 @@ statement:
     ;
 
 shapeExprDecl:
-    shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        addShape($1,  $2);
+      shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+        addShape($1,  nonest($2));
       }
-
-    // // _QIT_VIRTUAL_E_Opt
-    // shapeLabel shapeDefinition semanticActions	{ // t: 1dot
-    //     addShape($1, extend($2, $3));
-    // }
-    // | IT_VIRTUAL shapeLabel shapeDefinition semanticActions	{ // t: 1dotVirtual
-    //     // sneak "virtual" in after "type"
-    //     // Type will be overwritten.
-    //     addShape($2, extend({type: null, virtual: true}, $3, $4)) // $4: t: 1dotVirtualShapeCode1
-    // }
     ;
 
 _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
@@ -710,25 +700,18 @@ shapeExpression:
           $3.shapeExprs.unshift($2);
           $$ = $3;
         } else {
-// console.log("shapeAtomNoRef:", $2);
           $$ = $2;
         }
       }
     | IT_NOT shapeRef _QshapeOr_E_Opt	-> { type: "ShapeNot", "shapeExpr": $2 }
     | shapeRef shapeOr	{
-// console.log("shapeRef_shapeOr:", $1, $2);
         $2.shapeExprs.unshift($1);
         $$ = $2; // { type: "ShapeOr", "shapeExprs": [$1].concat($2) };
-    }
-    ;
-
-_QIT_NOT_E_Opt:
-    	-> false
-    | IT_NOT	-> true
+      }
     ;
 
 _QshapeOr_E_Opt:
-    	-> null
+      	-> null
     | shapeOr	-> $1
     ;
 
@@ -737,28 +720,13 @@ inlineShapeExpression:
     ;
 
 shapeOr:
-      Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{
+      _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{
         $$ = { type: "ShapeOr", shapeExprs: $1 };
-// console.log("shapeOr_1:", $$);
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
         $$ = $2.length > 0 ? shapeJunction("ShapeAnd", $1, $2) : { type: "ShapeAnd", shapeExprs:$1 };
-// console.log("shapeOr_2:", $$);
       }
     ;
-
-// shapeOr:
-//       Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	
-//           -> $1.length > 1 ? { type: "ShapeOr", shapeExprs: $1 } : $1
-//     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
-//         // [not] [] -> not
-//         // [not] [and and and] -> Or([not and and and])
-//         // [not not] [and] -> Or([not not and])
-//         // [not not] [and and and] -> Or([not not and and and])
-//         var disjuncts = $1.concat($2);
-//         $$ = disjuncts.length > 1 ? { type: "ShapeOr", shapeExprs: disjuncts } : disjuncts[0];
-//       }
-//     ;
 
 _O_QIT_OR_E_S_QshapeAnd_E_C:
       IT_OR shapeAnd	-> $2
@@ -814,88 +782,80 @@ _O_QIT_AND_E_S_QinlineShapeNot_E_C:
     ;
 
 _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star:
-    	-> []
+      	-> []
     | _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star _O_QIT_AND_E_S_QinlineShapeNot_E_C	-> $1.concat($2)
     ;
 
-shapeNot!:
-      shapeAtom	
-    | IT_NOT shapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
+shapeNot:
+      _QIT_NOT_E_Opt shapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
     ;
 
-// _O_QshapeLabel_E_Or_QshapeDefinition_E_S_QsemanticActions_E_C:
-//       shapeLabel	// t: startRef
-//     | shapeDefinition semanticActions	{ // t: startInline / startInline
-//         addShape($$ = blank(), extend($1, $2));
-//     }
-//     ;
-
-// _QIT_VIRTUAL_E_Opt:
-//       	
-//     | IT_VIRTUAL     ;
+_QIT_NOT_E_Opt:
+      	-> false
+    | IT_NOT	-> true
+    ;
 
 inlineShapeNot:
-      inlineShapeAtom	
-    | IT_NOT inlineShapeAtom	-> { type: "ShapeNot", "shapeExpr": $2 }
+      _QIT_NOT_E_Opt inlineShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
     ;
 
 shapeAtom:
-//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
-      nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	
-        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      nonLitNodeConstraint _QshapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint	
-//  | shapeOrRef _QnonLitNodeConstraint_E_Opt	
-    | shapeOrRef	 // t: 1dotRef1
-    | shapeOrRef nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | shapeOrRef _QnonLitNodeConstraint_E_Opt	
+        -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
-// _QshapeOrRef_E_Opt:
-//       	
-//     | shapeOrRef     ;
+_QshapeOrRef_E_Opt:
+      	
+    | shapeOrRef	
+    ;
 
 _QnonLitNodeConstraint_E_Opt:
       	
-    | nonLitNodeConstraint     ;
+    | nonLitNodeConstraint	
+    ;
 
 shapeAtomNoRef:
-//    nonLitNodeConstraint _QshapeOrRef_E_Opt	
-      nonLitNodeConstraint
-    | nonLitNodeConstraint shapeOrRef	
-        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
+      nonLitNodeConstraint _QshapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint	
-//  | shapeDefinition _QnonLitNodeConstraint_E_Opt	
-    | shapeDefinition	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
-    | shapeDefinition nonLitNodeConstraint	-> shapeJunction("ShapeAnd", $1, [$2]) // t:@@
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+    | shapeDefinition _QnonLitNodeConstraint_E_Opt	
+	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
 inlineShapeAtom:
-//    nonLitNodeConstraint _QinlineShapeOrRef_E_Opt	
-      nonLitNodeConstraint
-    | nonLitNodeConstraint inlineShapeOrRef	
-        -> { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] }
-    | litNodeConstraint	
-    | inlineShapeOrRef _QnonLitNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
-    | '(' shapeExpression ')'	-> $2 // t: 1val1vsMinusiri3
+      nonLitInlineNodeConstraint _QinlineShapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | litInlineNodeConstraint	
+    | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	-> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
     | '.'	-> EmptyShape // t: 1dot
     ;
 
-// _QinlineShapeOrRef_E_Opt:
-//     
-//     | inlineShapeOrRef	;
+_QinlineShapeOrRef_E_Opt:
+      	
+    | inlineShapeOrRef	
+    ;
+
+_QnonLitInlineNodeConstraint_E_Opt:
+      	
+    | nonLitInlineNodeConstraint	
+    ;
 
 shapeOrRef:
       shapeDefinition	// t: 1dotInline1
-    | shapeRef
+    | shapeRef	
     ;
 
 inlineShapeOrRef:
       inlineShapeDefinition	// t: 1dotInline1
-    | shapeRef
+    | shapeRef	
     ;
 
 shapeRef:
@@ -912,6 +872,27 @@ shapeRef:
     ;
 
 litNodeConstraint:
+      litInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !!
+        if ($3) { $$.semActs = $3.semActs; } // t: !!
+      }
+    ;
+
+_Qannotation_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
+    ;
+
+nonLitNodeConstraint:
+      nonLitInlineNodeConstraint _Qannotation_E_Star semanticActions	{ // t: !!
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !!
+        if ($3) { $$.semActs = $3.semActs; } // t: !!
+      }
+    ;
+
+litInlineNodeConstraint:
       IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
@@ -935,13 +916,6 @@ _QxsFacet_E_Star:
       }
     ;
 
-nonLitNodeConstraint:
-//    nonLiteralKind _QstringFacet_E_Star	
-      nonLiteralKind	-> extend({ type: "NodeConstraint" }, $1) // t: 1iriPattern
-    | nonLiteralKind _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1, $2) // t: 1iriPattern
-    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1) // t: @@
-    ;
-
 _QnumericFacet_E_Plus:
       numericFacet	// t: !! look to 1literalPattern
     | _QnumericFacet_E_Plus numericFacet	{
@@ -950,6 +924,12 @@ _QnumericFacet_E_Plus:
         }
         $$ = extend($1, $2) // t: !! look to 1literalLength
       }
+    ;
+
+nonLitInlineNodeConstraint:
+      nonLiteralKind _QstringFacet_E_Star	
+        -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {}) // t: 1iriPattern
+    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: @@
     ;
 
 _QstringFacet_E_Star:
@@ -1003,7 +983,7 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
       INTEGER	-> parseInt($1, 10);
     | DECIMAL	-> parseFloat($1);
     | DOUBLE	-> parseFloat($1);
-    | STRING '^^' datatype	{
+    | string '^^' datatype	{ // ## deprecated
         if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
           $$ = parseFloat($1.value);
         else if (numericDatatypes.indexOf($3) !== -1)
@@ -1026,54 +1006,46 @@ numericLength:
     ;
 
 shapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}' _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+        $$ = $1
+        if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
+      }
+    ;
+
+inlineShapeDefinition:
+      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
         var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
-        if ($5.length) { $$.annotations = $5; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($6) { $$.semActs = $6.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
-_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      includeSet	-> [ "inherit", $1 ] // t: 1dotInherit1
+_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
+      extension	-> [ "inherit", $1 ] // t: 1dotInherit1
     | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
 
-_Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
+_Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       	-> EmptyObject
-    | _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
-      if ($1 === EmptyObject)
-	$1 = {};
-      if ($2[0] === "closed")
-        $1["closed"] = true; // t: 1dotClosed
-      else if ($2[0] in $1)
-        $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
-      else
-        $1[$2[0]] = $2[1]; // t: 1dotInherit1
-      $$ = $1;
-    }
+    | _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
+        if ($1 === EmptyObject)
+          $1 = {};
+        if ($2[0] === "closed")
+          $1["closed"] = true; // t: 1dotClosed
+        else if ($2[0] in $1)
+          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
+        else
+          $1[$2[0]] = $2[1]; // t: 1dotInherit1
+        $$ = $1;
+      }
     ;
 
 _QtripleExpression_E_Opt:
-      // t: 0
+      	// t: 0
     | tripleExpression	// t: 1dot
-    ;
-
-_Qannotation_E_Star:
-      	-> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
-    ;
-
-inlineShapeDefinition:
-      _Q_O_QincludeSet_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
-        var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
-        $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
-	  EmptyShape :
-	  extend({ type: "Shape" }, exprObj, $1);
-      }
     ;
 
 extraPropertySet:
@@ -1086,11 +1058,13 @@ _Qpredicate_E_Plus:
     ;
 
 tripleExpression:
-    oneOfTripleExpr	;
+      oneOfTripleExpr	
+    ;
 
 oneOfTripleExpr:
       groupTripleExpr	
-    | multiElementOneOf        ;
+    | multiElementOneOf	
+    ;
 
 multiElementOneOf:
       groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "OneOf", expressions: unionAll([$1], $2) } // t: 2oneOfdot
@@ -1105,59 +1079,64 @@ _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus:
     | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2) // t: 2oneOfdot
     ;
 
-innerTripleExpr:
-      multiElementGroup	
-    | multiElementOneOf	
-    ;
-
 groupTripleExpr:
-      unaryTripleExpr groupTripleExpr_right	-> $2 ? { type: "EachOf", expressions: unionAll([$1], $2) } : $1 // t: 2groupOfdot
+      singleElementGroup	// t: 1dot
+    | multiElementGroup	// t: 2dot
     ;
 
-groupTripleExpr_right:
-      	-> null
-    | ','	-> null
-    | ';'	-> null
-    | _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_COMMA_E_Opt	-> $1
+singleElementGroup:
+      unaryTripleExpr _QGT_SEMI_E_Opt	-> $1
     ;
 
-_QGT_COMMA_E_Opt:
-        // t: 1dot
-    | ','       // t: 1dotComma
-    | ';'       // t: 1dotComma
+_QGT_SEMI_E_Opt:
+      	// t: 1dot
+    | ','	// ## deprecated // t: 1dotComma
+    | ';'	// t: 1dotComma
     ;
 
 multiElementGroup:
-      unaryTripleExpr _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_COMMA_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
+      unaryTripleExpr _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_SEMI_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
     ;
 
-_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C:
-      ',' unaryTripleExpr	-> $2 // t: 2groupOfdot
+_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C:
+      ',' unaryTripleExpr	-> $2 // ## deprecated // t: 2groupOfdot
     | ';' unaryTripleExpr	-> $2 // t: 2groupOfdot
     ;
 
-_Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus:
-      _O_QGT_COMMA_E_S_QunaryTripleExpr_E_C	-> [$1] // t: 2groupOfdot
-    | _Q_O_QGT_COMMA_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_COMMA_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2) // t: 2groupOfdot
+_Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus:
+      _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> [$1] // t: 2groupOfdot
+    | _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2) // t: 2groupOfdot
     ;
 
 unaryTripleExpr:
-      '$' tripleExprLabel tripleConstraint	{
-        $$ = extend({ id: $2 }, $3);
-        addProduction($2,  $$);
+      _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C	{
+        if ($1) {
+          $$ = extend({ id: $1 }, $2);
+          addProduction($1,  $$);
+        } else {
+          $$ = $2
+        }
       }
-    | tripleConstraint	
-    | '$' tripleExprLabel bracketedTripleExpr	{
-        $$ = extend({ id: $2 }, $3);
-        addProduction($2,  $$);
-      }
-    | bracketedTripleExpr	
     | valueConstraint	
     | include	
     ;
 
+_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C:
+      '$' tripleExprLabel	-> $2
+    ;
+
+_Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt:
+      	
+    | _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C	
+    ;
+
+_O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C:
+      tripleConstraint	
+    | bracketedTripleExpr	
+    ;
+
 bracketedTripleExpr:
-      '(' innerTripleExpr ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
@@ -1174,29 +1153,24 @@ _Qcardinality_E_Opt:
     ;
 
 tripleConstraint:
-    // _QsenseFlags_E_Opt 
-      predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
-        // $5: t: 1dotCode1
-	if ($2 !== EmptyShape && false) {
+      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        // $6: t: 1dotCode1
+	if ($3 !== EmptyShape && false) {
 	  var t = blank();
-	  addShape(t, $2);
-	  $2 = { type: "ShapeRef", reference: t };
+	  addShape(t, nonest($3));
+	  $3 = { type: "ShapeRef", reference: t };
 	}
-        $$ = extend({ type: "TripleConstraint", predicate: $1}, ($2 === EmptyShape ? {} : { valueExpr: $2 }), $3, $5); // t: 1dot
-        if ($4.length)
-          $$["annotations"] = $4; // t: 1dotAnnot3
-      }
-    | senseFlags predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "TripleConstraint" }, $1 ? $1 : {}, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot // t: 1inversedot, 1negatedinversedot
         if ($5.length)
-          $$["annotations"] = $5; // t: 1inversedotAnnot3
+          $$["annotations"] = $5; // t: 1dotAnnot3 // t: 1inversedotAnnot3
       }
     ;
 
-// _QsenseFlags_E_Opt:
-//       	
-//     | senseFlags     ;
+_QsenseFlags_E_Opt:
+      	
+    | senseFlags
+    ;
 
 cardinality:
       '*'	-> { min:0, max:UNBOUNDED } // t: 1cardStar
@@ -1235,13 +1209,35 @@ valueSetValue:
       iriRange	// t: 1val1IRIREF
     | literalRange	// t: 1val1literal
     | languageRange	// t: 1val1language
-    | '.' _QiriExclusion_E_Plus	-> { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | '.' _QliteralExclusion_E_Plus	-> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
-    | '.' _QlanguageExclusion_E_Plus	-> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $2 } // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    | '.' _O_QiriExclusion_E_Plus_Or_QliteralExclusion_E_Plus_Or_QlanguageExclusion_E_Plus_C	-> $2
+    ;
+
+_QiriExclusion_E_Plus:
+      iriExclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    ;
+
+_QliteralExclusion_E_Plus:
+      literalExclusion	-> [$1] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    ;
+
+_QlanguageExclusion_E_Plus:
+      languageExclusion	-> [$1] // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    | _QlanguageExclusion_E_Plus languageExclusion	-> appendTo($1, $2) // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    ;
+
+_O_QiriExclusion_E_Plus_Or_QliteralExclusion_E_Plus_Or_QlanguageExclusion_E_Plus_C:
+      _QiriExclusion_E_Plus	// t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+        -> { type: "IriStemRange", stem: { type: "Wildcard" }, exclusions: $1 }
+    | _QliteralExclusion_E_Plus	// t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+        -> { type: "LiteralStemRange", stem: { type: "Wildcard" }, exclusions: $1 }
+    | _QlanguageExclusion_E_Plus	// t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+        -> { type: "LanguageStemRange", stem: { type: "Wildcard" }, exclusions: $1 }
     ;
 
 iriRange:
-      iri _Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
+      iri _Q_O_QGT_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1iriStem, 1val1iriStemMinusiri3
             type: $2.length ? "IriStemRange" : "IriStem",
@@ -1260,27 +1256,26 @@ _QiriExclusion_E_Star:
     | _QiriExclusion_E_Star iriExclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
     ;
 
-_O_Q_TILDE_E_S_QiriExclusion_E_Star_C:
+_O_QGT_TILDE_E_S_QiriExclusion_E_Star_C:
       '~' _QiriExclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
     ;
 
-_Q_O_Q_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
-      // t: 1val1IRIREF
-    | _O_Q_TILDE_E_S_QiriExclusion_E_Star_C	// t: 1val1iriStemMinusiri3
-    ;
-
-_QiriExclusion_E_Plus:
-      iriExclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+_Q_O_QGT_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
+      	// t: 1val1IRIREF
+    | _O_QGT_TILDE_E_S_QiriExclusion_E_Star_C	// t: 1val1iriStemMinusiri3
     ;
 
 iriExclusion:
-      '-' iri	-> $2 // t: 1val1iriStemMinusiri3
-    | '-' iri '~'	-> { type: "IriStem", stem: $2 } // t: 1val1iriStemMinusiriStem3
+      '-' iri _QGT_TILDE_E_Opt	-> $3 ? { type: "IriStem", stem: $2 } /* t: 1val1iriStemMinusiriStem3 */ : $2 // t: 1val1iriStemMinusiri3
+    ;
+
+_QGT_TILDE_E_Opt:
+      	
+    | '~'	
     ;
 
 literalRange:
-      literal _Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
+      literal _Q_O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1literalStemMinusliteralStem3, 1val1literalStem
             type: $2.length ? "LiteralStemRange" : "LiteralStem",
@@ -1299,27 +1294,21 @@ _QliteralExclusion_E_Star:
     | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: 1val1literalStemMinusliteral3
     ;
 
-_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C:
+_O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C:
       '~' _QliteralExclusion_E_Star	-> $2 // t: 1val1literalStemMinusliteral3
     ;
 
-_Q_O_Q_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
-      // t: 1val1LITERAL
-    | _O_Q_TILDE_E_S_QliteralExclusion_E_Star_C	// t: 1val1LITERAL
-    ;
-
-_QliteralExclusion_E_Plus:
-      literalExclusion	-> [$1] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
-    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+_Q_O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
+      	// t: 1val1LITERAL
+    | _O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C	// t: 1val1LITERAL
     ;
 
 literalExclusion:
-      '-' literal	-> $2.value // t: 1val1literalStemMinusliteral3
-    | '-' literal '~'	-> { type: "LiteralStem", stem: $2.value } // t: 1val1literalStemMinusliteralStem3
+      '-' literal _QGT_TILDE_E_Opt	-> $3 ? { type: "LiteralStem", stem: $2.value } /* t: 1val1literalStemMinusliteral3 */ : $2.value // t: 1val1literalStemMinusliteralStem3
     ;
 
 languageRange:
-      language _Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
+      LANGTAG _Q_O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt	{
         if ($2) {
           $$ = {  // t: 1val1languageStemMinuslanguage3 1val1languageStemMinuslanguageStem3 : 1val1languageStem
             type: $2.length ? "LanguageStemRange" : "LanguageStem",
@@ -1331,6 +1320,14 @@ languageRange:
           $$ = { type: "Language", languageTag: $1 }; // t: 1val1language
         }
       }
+    | '@' _O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C	{
+        $$ = {  // t: @@
+          type: $2.length ? "LanguageStemRange" : "LanguageStem",
+          stem: ""
+        };
+        if ($2.length)
+          $$["exclusions"] = $2; // t: @@
+      }
     ;
 
 _QlanguageExclusion_E_Star:
@@ -1338,34 +1335,23 @@ _QlanguageExclusion_E_Star:
     | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2) // t: 1val1languageStemMinuslanguage3
     ;
 
-_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C:
+_O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C:
       '~' _QlanguageExclusion_E_Star	-> $2 // t: 1val1languageStemMinuslanguage3
     ;
 
-_Q_O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
-      // t: 1val1LANGUAGE
-    | _O_Q_TILDE_E_S_QlanguageExclusion_E_Star_C	// t: 1val1languageStemMinuslanguage3
-    ;
-
-_QlanguageExclusion_E_Plus:
-      languageExclusion	-> [$1] // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
-    | _QlanguageExclusion_E_Plus languageExclusion	-> appendTo($1, $2) // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+_Q_O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
+      	// t: 1val1LANGUAGE
+    | _O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C	// t: 1val1languageStemMinuslanguage3
     ;
 
 languageExclusion:
-      '-' language	-> $2 // t: 1val1languageStemMinuslanguage3
-    | '-' language '~'	-> { type: "LanguageStem", stem: $2 } // t: 1val1languageStemMinuslanguageStem3
-    ;
-
-language:
-      LANGTAG	-> $1.substr(1)
+      '-' LANGTAG _QGT_TILDE_E_Opt	-> $3 ? { type: "LanguageStem", stem: $2 } /* t: 1val1languageStemMinuslanguageStem3 */ : $2 // t: 1val1languageStemMinuslanguage3
     ;
 
 valueConstraint:
     IT_UNIQUE '(' _Q_O_QIT_FOCUS_E_S_QGT_COMMA_E_C_E_Opt accessor _Q_O_QGT_COMMA_E_S_Qaccessor_E_C_E_Star ')'	{
         $$ = { type: "Unique", focus: $3, uniques: [$4].concat($5) };
       }
-//    | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
     | accessor _O_QGT_LT_E_Or_QGT_EQUAL_E_Or_QGT_NEQUAL_E_Or_QGT_GT_E_C accessor	{
         $$ = { type: "ValueComparison", left: $1, comparator: $2, right: $3 };
       }
@@ -1407,7 +1393,7 @@ include:
     ;
 
 annotation:
-      '//' predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
+      "//" predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
@@ -1417,7 +1403,6 @@ _O_Qiri_E_Or_Qliteral_E_C:
 
 semanticActions:
       _QcodeDecl_E_Star	-> $1.length ? { semActs: $1 } : null; // t: 1dotCode1/2oneOfDot
-
     ;
 
 _QcodeDecl_E_Star:
@@ -1427,21 +1412,19 @@ _QcodeDecl_E_Star:
 
 codeDecl:
      // XXX '%' CODE	-> unescapeSemanticAction("", $2) // t: 1dotUnlabeledCode1
-      '%' iri CODE	-> unescapeSemanticAction($2, $3) // t: 1dotCode1
-    | '%' iri '%'	-> { type: "SemAct", name: $2 } // t: 1dotNoCode1
+      '%' iri _O_QCODE_E_Or_QGT_MODULO_E_C	
+        -> $3 ? unescapeSemanticAction($2, $3) /* t: 1dotCode1 */ : { type: "SemAct", name: $2 } // t: 1dotNoCode1
+    ;
+
+_O_QCODE_E_Or_QGT_MODULO_E_C:
+      CODE	
+    | '%'	-> null
     ;
 
 literal:
-      LANG_STRING	// t: 1val1STRING_LITERAL1
-    | STRING optDT	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
-    | numericLiteral
-    | IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
-    | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
-    ;
-
-optDT:
-      	-> null
-    | '^^' datatype	-> $2
+      rdfLiteral	
+    | numericLiteral	
+    | booleanLiteral	
     ;
 
 predicate:
@@ -1450,7 +1433,8 @@ predicate:
     ;
 
 datatype:
-      iri       ;
+      iri	
+    ;
 
 shapeExprLabel:
       iri	// t: 1dot
@@ -1468,27 +1452,68 @@ numericLiteral:
     | DOUBLE	-> createLiteral($1, XSD_DOUBLE) // t: 1val1DOUBLE
     ;
 
+rdfLiteral:
+      langString	// t: 1val1STRING_LITERAL1
+    | string _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
+    ;
+
+_O_QGT_DTYPE_E_S_Qdatatype_E_C:
+      "^^" datatype	-> $2
+    ;
+
+_Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt:
+      	-> null
+    | _O_QGT_DTYPE_E_S_Qdatatype_E_C	
+    ;
+
+booleanLiteral:
+      IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
+    | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
+    ;
+
+string:
+      STRING_LITERAL1	-> unescapeString($1, 1)	// t: 1val1STRING_LITERAL2
+    | STRING_LITERAL_LONG1	-> unescapeString($1, 3)	// t: 1val1STRING_LITERAL1
+    | STRING_LITERAL2	-> unescapeString($1, 1)	// t: 1val1STRING_LITERAL_LONG2
+    | STRING_LITERAL_LONG2	-> unescapeString($1, 3)	// t: 1val1STRING_LITERAL_LONG1
+    ;
+
+langString:
+      LANG_STRING_LITERAL1	-> unescapeLangString($1, 1)	// t: @@
+    | LANG_STRING_LITERAL_LONG1	-> unescapeLangString($1, 3)	// t: @@
+    | LANG_STRING_LITERAL2	-> unescapeLangString($1, 1)	// t: 1val1LANGTAG
+    | LANG_STRING_LITERAL_LONG2	-> unescapeLangString($1, 3)	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
+    ;
+
 iri:
       IRIREF	{ // t: 1dot
         var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
         $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       }
-    | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
+    | prefixedName	
+    ;
+
+prefixedName:
+      PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
         $$ = expandPrefix($1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
-    }
+      }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1));
-    }
+      }
     ;
 
 blankNode:
       BLANK_NODE_LABEL	// t: 1dotInline1
-    // | ANON    -- not used
     ;
 
-includeSet:
-      '&' _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+extension:
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+    ;
+
+_O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
+      IT_EXTENDS	
+    | '&'	
     ;
 
 _QshapeExprLabel_E_Plus:

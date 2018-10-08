@@ -1,5 +1,12 @@
+[![NPM Version](https://badge.fury.io/js/shex.png)](https://npmjs.org/package/shex)
+[![Build Status](https://travis-ci.org/shexSpec/shex.js.svg?branch=master)](https://travis-ci.org/shexSpec/shex.js)
+[![Coverage Status](https://coveralls.io/repos/github/shexSpec/shex.js/badge.svg?branch=jest)](https://coveralls.io/github/shexSpec/shex.js?branch=hest)
+[![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
+
 # shex.js
 shex.js javascript implementation of Shape Expressions ([try online](https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html))
+
 
 ## install
 
@@ -74,7 +81,7 @@ This and the shape can be written as relative IRIs:
 ### validation library
 
 Parsing from the old interwebs involves a painful mix of asynchronous callbacks for getting the schema and the data and parsing the data (shorter path below):
-
+<a id="long-script"/>
 ```
 var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
@@ -129,7 +136,7 @@ GET(data, function (b) {
 See? That's all there was too it!
 
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
-
+<a name="loader-script"/>
 ```
 var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
@@ -137,7 +144,7 @@ var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
 
 var shex = require("shex");
-shex.Loader([shexc], [], [data], []).then(function (loaded) {
+shex.Loader.load([shexc], [], [data], []).then(function (loaded) {
     console.log(shex.Validator.construct(loaded.schema).validate(loaded.data, node, shape));    
 });
 ```
@@ -254,3 +261,15 @@ validate -x source_schema.shex -l data.jsonld -s ProblemShape | materialize -t t
 ```
 cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.org/fhir/shape/problem
 ```
+# ShEx2 features
+
+# ShEx IMPORT Demo (with relative IRIs):
+
+1. open a browser window (we'll call **validator**) with https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html
+2. open another browser window (we'll call **viewer**) with https://shex.io/shexTest/master/viewer?validation
+3. wait 'till *viewer* loads and look for "3circRefS1-IS2-IS3-IS3" (near the bottom)
+4. drag the "#3circRefS1-IS2-IS3-IS3" cell (or the ✓ to the left of it) to the right of the QueryMap area of *validator*
+5. click on the long label under "Manifest:", then the long label under "Passing:" and validate.
+
+It should validate, which involves the IMPORT of `3circRefS2-IS3` and `3circRefS3`.
+`3circRefS2-IS3` also IMPORTs `3circRefS3` which shows that IMPORT is idempotent (has a side effect only the first time).

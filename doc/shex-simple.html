@@ -8,6 +8,19 @@
     <style>
       h1 { font-size: 1.3em; }
       h1, p, ul { margin: 0; margin-left: .1em; }
+      .ShExLogo { float:left; height:1.3em; padding-left: .3em; }
+      /* uncomment for breathing icon
+      .ShExLogo {
+        animation-duration: 2s;
+        animation-name: ShExLogo-breath;
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
+      }
+      @keyframes ShExLogo-breath {
+        from { transform: scale(1, 1); }
+        to { transform: scale(1.2, 1.2); }
+      }
+      */
       .passes999 { margin-right: 1em; }
       .passes, #results div .passes { padding-left: .1em; border-left: thick solid #bfb; }
       .pair.passes { border-left: none; padding-left: none; }
@@ -16,12 +29,20 @@
       .pair.fails { border-left: none; padding-left: none; }
       .pair.fails { background-color: #fbb; }
       .error , #results div .error  { padding-left: .1em; border-left: thick solid #b00; }
+      .running { background-color: #ddf; }
       #inputarea { overflow-x: none; white-space:nowrap; }
       #inputarea textarea { overflow-x: auto }
-      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; border-color: #fc561c }
-      #inputSchema li.selected button { background-color: #e8e8ff; }
-      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; border-color: #f0a133 }
-      #inputData li.selected button { background-color: #e8ffe8; }
+      #inputarea textarea.data.focus {
+        width: 100%;
+        overflow: hidden;
+        border-style: inset;
+        border-width: 2px;
+        padding: 1px 0px;
+      }
+      .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
+      #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
+      #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
+      #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
       #manifestDrop { border-color: white; width: 100%; }
       #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
       #inputSchema li button, #inputData li button {
@@ -32,18 +53,22 @@
         cursor: pointer;
         box-shadow: 0.1em 0px 1em rgba(255, 255, 255, 0.9) inset;
       }
+      #inputSchema li button.disabled, #inputData li button.disabled {
+        color: #777;
+      }
       body { border-width: .25em; border-style: solid; border-color: white; }
       .droparea { border-width: .25em; border-style: dashed; }
       .droparea.hover, body.hover { border: .25em dashed #0c0; }
       .stoppable { background-color: red; }
       #results div:disabled { background-color: #fff; }
       #results div { width: 99%; border: none; }
-      #results.running { padding-left: .1em; border-left: thick solid #779; }
       #results div:disabled.passes { color: #373; }
       #results div:disabled.fails  { color: #733; }
       #results div:disabled.error  { color: #300; }
       #results div.human { margin: 1ex 0; }
       #results div.human pre { margin: 0 2em; }
+      #results h3 { font-size: larger; margin: 0; }
+      #results pre { margin: 1ex; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -90,7 +115,9 @@
       h2.status { margin: 0; }
       #addPair, #removePair { text-decoration: none; }
       #schemaDialect, #dataDialect { font-size: .7em; }
-      #shapeMap { padding-left: .25em; }
+      #shapeMap { padding-left: .25em; } /* !! doesn't exist */
+      #shapeMap-tabs textarea.error { padding-left: default; border-left: default; background-color: #fdd; }
+      #editMap input.error { padding-left: none; border-left: none; background-color: #fdd; }
       .pair { list-style-type: none; }
       .addPair, .removePair { font-size: 80%; line-height: 1ex; font-family: monospace; }
       .pair button {
@@ -190,7 +217,7 @@ ul {
     </svg>
 
     <div id="title">
-      <img src="http://www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
+      <img src="//www.w3.org/2015/ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
@@ -354,7 +381,10 @@ ul {
     <script src="../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
     <script>module.exports = exports;</script><script src="../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
     <script src="../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>
-    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = module.exports;</script>
+    <script>module.exports = exports;</script><script src="../lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
+    <script src="../lib/ShapeMapParser.js"   ></script><script>modules["../lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
+    <script src="../lib/ShapeMap.js"   ></script><script>modules["../lib/ShapeMap"] = modules["./lib/ShapeMap"] = module.exports;</script>
+    <script src="../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../lib/ShExWriter"] = module.exports;</script>
     <script src="../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
     <script src="../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
     <script src="../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>

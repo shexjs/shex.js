@@ -190,10 +190,10 @@ describe("A ShEx validator", function () {
                         // }, [])
                       } else {
                         var focus = maybeGetTerm(dataURL, test.action.focus);
-                        var shape = maybeGetTerm(schemaURL, test.action.shape);
+                        var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
-                      var validationResult = validator.validate(store, map);
+                      var validationResult = validator.validate(ShExUtil.makeN3DB(store), map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                       if (params.results !== "api") {

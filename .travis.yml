@@ -6,11 +6,18 @@ node_js:
   - "6.0"
   - "8.0"
   - "stable"
+before_script:
+  - npm run browser
 script:
-  - $(npm bin)/mocha -R dot
-  - TEST_cli=true $(npm bin)/mocha -R dot test/cli-test.js || true
+  - npm run test-all
 cache:
   directories:
     - node_modules
-before_script:
-  - npm run browser
+    - ~/.npm
+notifications:
+  email: false
+after_success:
+  - npm run travis-deploy-once "npm run semantic-release"
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
