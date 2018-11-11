@@ -3409,28 +3409,53 @@ var ShExUtil = {
   validateSchema: function (schema) { // obselete, but may need other validations in the future.
     var _ShExUtil = this;
     var visitor = this.Visitor();
-    var currentShape = null;
+    var currentLabel = currentExtra = null;
+    var currentNegated = false;
+    var dependsOn = { };
     var inTE = false;
+    var oldVisitShape = visitor.visitShape;
+    var negativeDeps = Hierarchy.create();
+
+    visitor.visitShape = function (shape, label) {
+      var lastExtra = currentExtra;
+      currentExtra = shape.extra;
+      var ret = oldVisitShape.call(visitor, shape, label);
+      currentExtra = lastExtra;
+      return ret;
+    }
+
+    var oldVisitShapeNot = visitor.visitShapeNot;
+    visitor.visitShapeNot = function (shapeNot, label) {
+      var lastNegated = currentNegated;
+      currentNegated ^= true;
+      var ret = oldVisitShapeNot.call(visitor, shapeNot, label);
+      currentNegated = lastNegated;
+      return ret;
+    }
+
     var oldVisitTripleConstraint = visitor.visitTripleConstraint;
     visitor.visitTripleConstraint = function (expr) {
+      var lastNegated = currentNegated;
+      if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
+        currentNegated ^= true;
       inTE = true;
       var ret = oldVisitTripleConstraint.call(visitor, expr);
       inTE = false;
+      currentNegated = lastNegated;
       return ret;
     };
+
     var oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef) {
       if (!(shapeRef.reference in schema.shapes))
         throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(schema.shapes) + ".");
-      if (!inTE && shapeRef.reference === currentShape) 
-        throw Error("Structural error: circular reference to " + currentShape + ".");
-      return oldVisitShapeRef.call(visitor, shapeRef.reference);
+      if (!inTE && shapeRef.reference === currentLabel)
+        throw Error("Structural error: circular reference to " + currentLabel + ".");
+      if (currentNegated)
+        negativeDeps.add(currentLabel, shapeRef.reference)
+      return oldVisitShapeRef.call(visitor, shapeRef);
     }
-    var oldVisitShapeExpr = visitor.visitShapeExpr;
-    visitor.visitShapeExpr = function (expr, label) {
-      currentShape = label;
-      return oldVisitShapeExpr.call(visitor, expr, label);
-    }
+
     var oldVisitInclusion = visitor.visitInclusion;
     visitor.visitInclusion = function (inclusion) {
       var refd;
@@ -3441,7 +3466,15 @@ var ShExUtil = {
       return oldVisitInclusion.call(visitor, inclusion);
     };
 
-    visitor.visitSchema(schema);
+    Object.keys(schema.shapes || []).forEach(function (label) {
+      currentLabel = label;
+      visitor.visitShapeExpr(schema.shapes[label], label);
+    });
+    let circs = Object.keys(negativeDeps.children).filter(
+      k => negativeDeps.children[k].length > 0
+    );
+    if (circs.length)
+      throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
 
     function dumpKeys (obj) {
       return obj ? Object.keys(obj).map(
@@ -3449,6 +3482,7 @@ var ShExUtil = {
       ).join("\n        ") : '- none defined -'
     }
   },
+
   /** isWellDefined: assert that schema is well-defined.
    *
    * @schema: input schema
@@ -3456,7 +3490,7 @@ var ShExUtil = {
    */
   isWellDefined: function (schema) {
     this.validateSchema(schema);
-    var deps = this.getDependencies(schema);
+    // var deps = this.getDependencies(schema);
     return schema;
   },
 
@@ -39876,30 +39910,36 @@ utils.intFromLE = intFromLE;
 
 },{"bn.js":85,"minimalistic-assert":245,"minimalistic-crypto-utils":246}],162:[function(require,module,exports){
 module.exports={
-  "_from": "elliptic@^6.0.0",
+  "_args": [
+    [
+      "elliptic@6.4.1",
+      "/home/eric/checkouts/shexSpec/shex.js"
+    ]
+  ],
+  "_development": true,
+  "_from": "elliptic@6.4.1",
   "_id": "elliptic@6.4.1",
   "_inBundle": false,
   "_integrity": "sha512-BsXLz5sqX8OHcsh7CqBMztyXARmGQ3LWPtGjJi6DiJHq5C/qvi9P3OqgswKSDftbu8+IoI/QDTAm2fFnQ9SZSQ==",
   "_location": "/elliptic",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "elliptic@^6.0.0",
+    "raw": "elliptic@6.4.1",
     "name": "elliptic",
     "escapedName": "elliptic",
-    "rawSpec": "^6.0.0",
+    "rawSpec": "6.4.1",
     "saveSpec": null,
-    "fetchSpec": "^6.0.0"
+    "fetchSpec": "6.4.1"
   },
   "_requiredBy": [
     "/browserify-sign",
     "/create-ecdh"
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.4.1.tgz",
-  "_shasum": "c2d0b7776911b86722c632c3c06c60f2f819939a",
-  "_spec": "elliptic@^6.0.0",
-  "_where": "/home/eric/checkouts/shexSpec/shex.js/node_modules/browserify-sign",
+  "_spec": "6.4.1",
+  "_where": "/home/eric/checkouts/shexSpec/shex.js",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -39907,7 +39947,6 @@ module.exports={
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {
     "bn.js": "^4.4.0",
     "brorand": "^1.0.1",
@@ -39917,7 +39956,6 @@ module.exports={
     "minimalistic-assert": "^1.0.0",
     "minimalistic-crypto-utils": "^1.0.0"
   },
-  "deprecated": false,
   "description": "EC cryptography",
   "devDependencies": {
     "brfs": "^1.4.3",
@@ -93219,21 +93257,27 @@ Store.prototype.getAllCookies = function(cb) {
 
 },{}],390:[function(require,module,exports){
 module.exports={
-  "_from": "tough-cookie@~2.4.3",
+  "_args": [
+    [
+      "tough-cookie@2.4.3",
+      "/home/eric/checkouts/shexSpec/shex.js"
+    ]
+  ],
+  "_from": "tough-cookie@2.4.3",
   "_id": "tough-cookie@2.4.3",
   "_inBundle": false,
   "_integrity": "sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ==",
   "_location": "/tough-cookie",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "tough-cookie@~2.4.3",
+    "raw": "tough-cookie@2.4.3",
     "name": "tough-cookie",
     "escapedName": "tough-cookie",
-    "rawSpec": "~2.4.3",
+    "rawSpec": "2.4.3",
     "saveSpec": null,
-    "fetchSpec": "~2.4.3"
+    "fetchSpec": "2.4.3"
   },
   "_requiredBy": [
     "/jsdom",
@@ -93242,9 +93286,8 @@ module.exports={
     "/request-promise-native"
   ],
   "_resolved": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz",
-  "_shasum": "53f36da3f47783b0925afa06ff9f3b165280f781",
-  "_spec": "tough-cookie@~2.4.3",
-  "_where": "/home/eric/checkouts/shexSpec/shex.js/node_modules/request",
+  "_spec": "2.4.3",
+  "_where": "/home/eric/checkouts/shexSpec/shex.js",
   "author": {
     "name": "Jeremy Stashewsky",
     "email": "jstash@gmail.com"
@@ -93252,7 +93295,6 @@ module.exports={
   "bugs": {
     "url": "https://github.com/salesforce/tough-cookie/issues"
   },
-  "bundleDependencies": false,
   "contributors": [
     {
       "name": "Alexander Savin"
@@ -93277,7 +93319,6 @@ module.exports={
     "psl": "^1.1.24",
     "punycode": "^1.4.1"
   },
-  "deprecated": false,
   "description": "RFC6265 Cookies and Cookie Jar for node.js",
   "devDependencies": {
     "async": "^1.4.2",
