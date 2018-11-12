@@ -1,49 +1,57 @@
 [
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "with birthdate",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .",
-    "queryMap": "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>",
+    "data": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  hl7:status    \"final\" ;\n  hl7:subject   <Patient2> .\n\n<Patient2>\n  hl7:name \"Bob\" ;\n  hl7:birthdate \"1999-12-31\"^^xsd:date .",
+    "queryMap": "{FOCUS hl7:status _}@START,\n<Patient2>@<ObservationShape>",
     "status": "conformant"
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "with birthdate (JSON-LD)",
+    "data": "{\n  \"@context\": {\n    \"hl7\": \"http://hl7.org/fhir/\",\n    \"xsd\": \"http://www.w3.org/2001/XMLSchema#\",\n    \"status\": \"http://hl7.org/fhir/status\",\n    \"subject\": {\n      \"@id\": \"http://hl7.org/fhir/subject\",\n      \"@type\": \"@id\"\n    },\n    \"name\": \"http://hl7.org/fhir/name\",\n    \"birthdate\": {\n      \"@id\": \"http://hl7.org/fhir/birthdate\",\n      \"@type\": \"xsd:date\"\n    }\n  },\n  \"@id\": \"Obs1\",\n  \"status\": \"final\",\n  \"subject\": {\n    \"@id\": \"Patient2\",\n    \"name\": \"Bob\",\n    \"birthdate\": \"1999-12-31\"\n  }\n}",
+    "queryMap": "{FOCUS hl7:status _}@START,\n<Patient2>@<ObservationShape>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "without birthdate",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"preliminary\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" .",
+    "data": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  hl7:status    \"preliminary\" ;\n  hl7:subject   <Patient2> .\n\n<Patient2>\n  hl7:name \"Bob\" .",
     "queryMap": "<Obs1>@START",
     "status": "conformant"
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "no subject name",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :birthdate \"1999-12-31\"^^xsd:date .",
+    "data": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  hl7:status    \"final\" ;\n  hl7:subject   <Patient2> .\n\n<Patient2>\n  hl7:birthdate \"1999-12-31\"^^xsd:date .",
     "queryMap": "<Obs1>@START",
     "status": "conformant"
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "bad status",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"finally\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n\n",
+    "data": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  hl7:status    \"finally\" ;\n  hl7:subject   <Patient2> .\n\n<Patient2>\n  hl7:name \"Bob\" ;\n  hl7:birthdate \"1999-12-31\"^^xsd:date .\n\n",
     "queryMap": "<Obs1>@START",
     "status": "nonconformant"
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "no subject",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n\n",
+    "data": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  hl7:status    \"final\" .\n\n<Patient2>\n  hl7:name \"Bob\" ;\n  hl7:birthdate \"1999-12-31\"^^xsd:date .\n\n",
     "queryMap": "<Obs1>@START",
     "status": "nonconformant"
   },
   {
     "schemaLabel": "clinical observation",
-    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "schema": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  hl7:status [\"preliminary\" \"final\"]; #   status in this value set\n  hl7:subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n hl7:name xsd:string*;                #   one or more names\n hl7:birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "wrong birthdate datatype",
-    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .",
+    "data": "PREFIX hl7: <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  hl7:status    \"final\" ;\n  hl7:subject   <Patient2> .\n\n<Patient2>\n  hl7:name \"Bob\" ;\n  hl7:birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .",
     "queryMap": "<Obs1>@START",
     "status": "nonconformant"
   }

@@ -97541,11 +97541,12 @@ var ShEx = {
   'nfax-val-1err':     require('./lib/regex/nfax-val-1err'),
   'threaded-val-nerr': require('./lib/regex/threaded-val-nerr'),
   N3:           require('n3'),
+  JsonLd:       require('jsonld'),
 };
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = ShEx;
 
 
-},{"./lib/ShExLoader":2,"./lib/ShExParser":3,"./lib/ShExUtil":4,"./lib/ShExValidator":5,"./lib/ShExWriter":6,"./lib/ShapeMap":7,"./lib/ShapeMapParser":9,"./lib/regex/nfax-val-1err":10,"./lib/regex/threaded-val-nerr":11,"n3":247}]},{},[404])(404)
+},{"./lib/ShExLoader":2,"./lib/ShExParser":3,"./lib/ShExUtil":4,"./lib/ShExValidator":5,"./lib/ShExWriter":6,"./lib/ShapeMap":7,"./lib/ShapeMapParser":9,"./lib/regex/nfax-val-1err":10,"./lib/regex/threaded-val-nerr":11,"jsonld":226,"n3":247}]},{},[404])(404)
 });

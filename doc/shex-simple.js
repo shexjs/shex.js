@@ -12,7 +12,7 @@ var DefaultBase = location.origin + location.pathname;
 
 var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
-Caches.inputData = makeTurtleCache($("#inputData textarea"));
+Caches.inputData = makeDataCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
 Caches.shapeMap = makeShapeMapCache($("#textMap")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
@@ -58,6 +58,30 @@ function parseTurtle (text, meta, base) {
   meta.base = parser._base;
   meta.prefixes = parser._prefixes;
   return ret;
+}
+
+function parseJSONLD (text, meta, base) {
+  let struct = JSON.parse(text);
+  let context = struct["@context"];
+  return new Promise((resolve, reject) => {
+  ShEx.JsonLd.toRDF(struct, {format: "application/nquads", base: base}, function (lderr, nquads) {
+    if (lderr) {
+      reject("error parsing JSON-ld " + base + ": " + lderr);
+    } else {
+      meta.prefixes = Object.keys(context)
+        .filter(k => k.substr(0, 1) !== '@')
+        .reduce((acc, k) => extendMap(acc, k, context[k]), {});
+      meta.base = context['@base'] || base;
+      resolve(parseTurtle(nquads, {prefixes: {}, base: undefined}, base));
+      console.log(meta.prefixes);
+    }
+  });
+  });
+  function extendMap (obj, key, value) {
+    var ret = Object.assign({}, obj);
+    ret[key] = value;
+    return ret;
+  }
 }
 
 var shexParser = ShEx.Parser.construct(DefaultBase);
@@ -145,11 +169,13 @@ function _makeCache (selection) {
     },
     refresh: function () {
       if (!_dirty)
-        return this.parsed;
-      this.parsed = this.parse(selection.val(), this.meta.base);
-      resolver._setBase(this.meta.base);
-      _dirty = false;
-      return this.parsed;
+        return Promise.resolve(this.parsed);
+      return this.parse(selection.val(), this.meta.base).then(parsed => {
+        this.parsed = parsed;
+        resolver._setBase(this.meta.base);
+        _dirty = false;
+        return parsed;
+      });
     },
     asyncGet: function (url) {
       var _cache = this;
@@ -203,7 +229,7 @@ function makeSchemaCache (selection) {
           graph ? parseShExR() :
           parseShEx(text, ret.meta, base);
     $("#results .status").hide();
-    return schema;
+    return Promise.resolve(schema);
 
     function tryN3 (text) {
       try {
@@ -228,24 +254,38 @@ function makeSchemaCache (selection) {
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
-  ret.getItems = function () {
-    var obj = this.refresh();
-    var start = "start" in obj ? [START_SHAPE_LABEL] : [];
-    var rest = "shapes" in obj ? Object.keys(obj.shapes).map(Caches.inputSchema.meta.termToLex) : [];
-    return start.concat(rest);
+  ret.getItems777 = function () {
+    return this.refresh777().then(obj => {
+      var start = "start" in obj ? [START_SHAPE_LABEL] : [];
+      var rest = "shapes" in obj ? Object.keys(obj.shapes).map(Caches.inputSchema.meta.termToLex) : [];
+      return start.concat(rest);
+    });
   };
   return ret;
 }
 
-function makeTurtleCache (selection) {
+function makeDataCache (selection) {
   var ret = _makeCache(selection);
+  ret.language = null;
   ret.parse = function (text, base) {
-    return ShEx.Util.makeN3DB(parseTurtle(text, ret.meta, base));
+    var isJSON = text.match(/^\s*\{/);
+    this.language =
+      isJSON ? "JSON-LD" :
+      "Turtle";
+    $("#results .status").text("parsing "+this.language+" data...").show();
+    var p =
+        isJSON ? parseJSONLD(text, ret.meta, base) :
+        Promise.resolve(parseTurtle(text, ret.meta, base));
+    return p.then(db => {
+      $("#results .status").hide();
+      return ShEx.Util.makeN3DB(db);
+    });
   };
-  ret.getItems = function () {
-    var data = this.refresh();
-    return data.getTriplesByIRI().map(t => {
-      return Caches.inputData.meta.termToLex(t.subject);
+  ret.getItems777 = function () {
+    return this.refresh().then(data => {
+      return data.getTriplesByIRI().map(t => {
+        return Caches.inputData.meta.termToLex(t.subject);
+      });
     });
   };
   return ret;
@@ -436,7 +476,7 @@ function paintManifest (selector, list, func, listItems, side) {
     function schemaLoaded (text) {
       entry.text = text;
       li.on("click", () => {
-        func(entry.name, entry, li, listItems, side);
+        func(entry.name, entry, li, listItems, side); // returns Promise.resolve(parsed)
       });
       listItems[side][sum(text)] = li;
       button.text(entry.label).removeAttr("disabled");
@@ -511,11 +551,8 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
 
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    try {
-      Caches.inputSchema.refresh();
-    } catch (e) {
-      failMessage(e, "parsing schema");
-    }
+    return Caches.inputData.refresh()
+      .catch(e => failMessage(e, "parsing data"));
   }
 }
 
@@ -530,11 +567,9 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
-    try {
-      Caches.inputData.refresh();
-    } catch (e) {
-      failMessage(e, "parsing data");
-    }
+    return Caches.inputData.refresh()
+      .catch(e => failMessage(e, "parsing data"))
+      .then(_ => {
 
     // Update ShapeMap pane.
     removeEditMapPair(null);
@@ -545,6 +580,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     } else {
       queryMapLoaded(dataTest.entry.queryMap);
     }
+      });
 
     function queryMapLoaded (text) {
       dataTest.entry.queryMap = text;
@@ -626,13 +662,14 @@ function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   var currentAction = "parsing input schema";
-  try {
-    noStack(() => { Caches.inputSchema.refresh(); });
+  try {debugger
+    Caches.inputSchema.refresh().then(inputSchema => {
+    noStack(() => { ; });
     $("#schemaDialect").text(Caches.inputSchema.language);
     if (hasFocusNode()) {
       currentAction = "parsing input data";
       $("#results .status").text("parsing data...").show();
-      var inputData = Caches.inputData.refresh(); // need prefixes for ShapeMap
+      Caches.inputData.refresh().then(inputData => { // need prefixes for ShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       currentAction = "parsing shape map";
       var fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
@@ -650,7 +687,7 @@ function callValidator (done) {
       //         ShEx.Util.canonicalize(
       //           Caches.inputSchema.refresh())));
       var alreadLoaded = {
-        schema: Caches.inputSchema.refresh(),
+        schema: inputSchema,
         url: Caches.inputSchema.url || DefaultBase
       };
       ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
@@ -685,6 +722,7 @@ function callValidator (done) {
         failMessage(e, currentAction);
         console.error(e); // dump details to console.
         if (done) { done(e) }
+      });
       });
     } else {
       var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -725,6 +763,7 @@ function callValidator (done) {
         throw e;
       }
     }
+    });
   } catch (e) {
     failMessage(e, currentAction);
     console.error(e); // dump details to console.
@@ -1143,8 +1182,10 @@ function copyEditMapToFixedMap () {
     try {
       var sm = smparser.parse(node + '@' + shape)[0];
       var added = typeof sm.node === "string" || "@value" in sm.node
-        ? Promise.resolve({nodes: [node], shape: shape})
-        : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
+          ? Promise.resolve({nodes: [node], shape: shape})
+          : getTriples(sm.node.subject, sm.node.predicate, sm.node.object).then(
+            nodes => ({nodes: nodes, shape: shape})
+          )
       return acc.concat(added);
     } catch (e) {
       // find which cell was broken
@@ -1185,9 +1226,11 @@ function copyEditMapToFixedMap () {
 
   function getTriples (s, p, o) {
     var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
-    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);
-    });
+    return Caches.inputData.refresh().then(
+      db => db.getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+        return Caches.inputData.meta.termToLex(t[get]);
+      })
+    );
     function mine (term) {
       return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
         ? null
@@ -1260,8 +1303,10 @@ function copyEditMapToTextMap () {
 function copyTextMapToEditMap () {
   $("#textMap").removeClass("error");
   var shapeMap = $("#textMap").val();
-  try { Caches.inputSchema.refresh(); } catch (e) { }
-  try { Caches.inputData.refresh(); } catch (e) { }
+  return Promise.all([
+    Caches.inputSchema.refresh().catch (e => { }),
+    Caches.inputData.refresh().catch (e => { }),
+  ]).then(() => {
   try {
     var smparser = ShEx.ShapeMapParser.construct(
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
@@ -1275,7 +1320,7 @@ function copyTextMapToEditMap () {
     $("#fixedMap").empty();
     failMessage(e, "parsing Query Map");
   }
-  return [];
+  });
 }
 
 function makeFreshEditMap () {
@@ -1368,10 +1413,10 @@ function loadSearchParameters () {
   }, [])).then(function (_) {
 
     // Parse the shape-map using the prefixes and base.
-    var shapeMapErrors = $("#textMap").val().trim().length > 0
+    return $("#textMap").val().trim().length > 0
         ? copyTextMapToEditMap()
-        : makeFreshEditMap();
-
+        : Promise.resolve(makeFreshEditMap());
+  }).then(shapeMapErrors => {
     customizeInterface();
     $("body").keydown(function (e) { // keydown because we need to preventDefault
       var code = e.keyCode || e.charCode; // standards anyone?
@@ -1747,7 +1792,7 @@ function addContextMenus (inputSelector, cache) {
               () => { return norm(store.getPredicates()); },
               () => { return queryMapKeywords.concat(norm(store.getObjects())); },
             ];
-            var store = Caches.inputData.refresh();
+            // var store = Caches.inputData.refresh();
             var items = [];
             if (terms.match === null)
               return false; // prevent contextMenu from whining about an empty list
