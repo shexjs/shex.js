@@ -82,7 +82,9 @@ describe("A ShEx parser", function () {
       var shexCFile = schemasPath + test.shex;
       var shexRFile = schemasPath + test.ttl;
 
-      it("should correctly parse ShExC schema '" + shexCFile +
+      it(EARL
+         ? 'schemas/manifest\#' + test.name
+         : "should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
@@ -102,8 +104,10 @@ describe("A ShEx parser", function () {
            }
          });
 
-    if (TEST_ShExR) {
-      it("should correctly parse ShExR schema '" + shexRFile +
+    if (TEST_ShExR && !EARL) {
+      it(EARL
+         ? 'schemas/manifest\#' + test.name
+         : "should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
@@ -192,7 +196,12 @@ describe("A ShEx parser", function () {
 
     negSchemas.forEach(function (test) {
       var path = testSet.path + test.shex;
-      it("should not parse schema '" + path + "'", function (report) {
+      var dir = testSet.path.replace(/\/$/, '');
+      dir = dir.substr(dir.lastIndexOf('/')+1);
+
+      it(EARL
+         ? dir + '/manifest#' + test.name
+         : "should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
         ShExLoader.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
@@ -270,7 +279,7 @@ describe("A ShEx parser", function () {
   }
 });
 
-if (TEST_Vestiges) {
+if (!EARL && TEST_Vestiges) {
   /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
    * want it in the API.
    */
