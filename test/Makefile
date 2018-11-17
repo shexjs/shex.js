@@ -5,12 +5,12 @@ MOCHA?=../node_modules/.bin/mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
 GENCorpus?=$(join $(TESTDIR), bin/genCorpus.js)
-REPORTER1?=dot # override with e.g. REPORTER=mocha-earl-reporter
+REPORTER?=dot # override with e.g. REPORTER=mocha-earl-reporter
 ASSERTER?=http://www.w3.org/People/Eric/ericp-foaf#me
 SUBJECT?=https://www.npmjs.com/package/shex
 TEST_PREFIX?=https://raw.githubusercontent.com/shexSpec/shexTest/master/
 RPRT_OPTS?=--reporter-options asserter=$(ASSERTER),subject=$(SUBJECT),testPrefix=$(TEST_PREFIX)
-REPORTER=mocha-earl-reporter $(RPRT_OPTS)
+REPORTER1=mocha-earl-reporter $(RPRT_OPTS)
 
 BRANCH?=$(shell git rev-parse --abbrev-ref HEAD) # e.g. master or ShEx1
 HTTPTEST?="http://raw.githubusercontent.com/shexSpec/shex.js/$(BRANCH)/test/"
