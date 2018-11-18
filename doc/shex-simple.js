@@ -254,8 +254,8 @@ function makeSchemaCache (selection) {
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
-  ret.getItems777 = function () {
-    return this.refresh777().then(obj => {
+  ret.getItems = function () {
+    return this.refresh().then(obj => {
       var start = "start" in obj ? [START_SHAPE_LABEL] : [];
       var rest = "shapes" in obj ? Object.keys(obj.shapes).map(Caches.inputSchema.meta.termToLex) : [];
       return start.concat(rest);
@@ -281,7 +281,7 @@ function makeDataCache (selection) {
       return ShEx.Util.makeN3DB(db);
     });
   };
-  ret.getItems777 = function () {
+  ret.getItems = function () {
     return this.refresh().then(data => {
       return data.getTriplesByIRI().map(t => {
         return Caches.inputData.meta.termToLex(t.subject);
@@ -928,8 +928,8 @@ function addEditMapPairs (pairs, target) {
   else
     $("#editMap .removePair").css("visibility", "visible");
   $("#editMap .pair").each(idx => {
-    addContextMenus("#editMap .pair:nth("+idx+") .focus", Caches.inputData);
-    addContextMenus(".pair:nth("+idx+") .inputShape", Caches.inputSchema);
+    addContextMenus("#editMap .pair:nth("+idx+") .focus", Caches.inputData, "data", "nodes");
+    addContextMenus(".pair:nth("+idx+") .inputShape", Caches.inputSchema, "schema", "shapes");
   });
   return false;
 
@@ -1429,8 +1429,8 @@ function loadSearchParameters () {
         return true;
       }
     });
-    addContextMenus("#focus0", Caches.inputData);
-    addContextMenus("#inputShape0", Caches.inputSchema);
+    addContextMenus("#focus0", Caches.inputData, "data", "nodes");
+    addContextMenus("#inputShape0", Caches.inputSchema, "schema", "shapes");
     if ("schemaURL" in iface ||
         // some schema is non-empty
         ("schema" in iface &&
@@ -1724,14 +1724,14 @@ function prepareManifest (demoList, base) {
   });
 }
 
-function addContextMenus (inputSelector, cache) {
+function addContextMenus (inputSelector, cache, corpus, entityType) {
     // !!! terribly stateful; only one context menu at a time!
-    var terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
+    var terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "", myItems;
     $.contextMenu({
       selector: inputSelector,
       callback: function (key, options) {
         markEditMapDirty();
-        if (options.items[key].ignore) { // ignore the event
+        if (myItems[key].ignore) { // ignore the event
         } else if (terms) {
           var term = terms.tz[terms.match];
           var val = nodeLex.substr(0, term[0]) +
@@ -1804,19 +1804,29 @@ function addContextMenus (inputSelector, cache) {
                 return ret;
               }, {})
             };
-            
           }
         }
         terms = nodeLex = null;
         try {
           return {
-            items: cache.getItems().reduce((ret, opt) => {
-              ret[opt] = { name: opt };
-              return ret;
-            }, {})
-          };
+            items: {
+              "xxx": {
+                name: "<span id='superMenu'><span class='statusXXX'>loading</span> <span class='"+corpus+"'>"+entityType+"</span></span>",
+                isHtmlName: true,
+                icon: "add",
+                items: cache.getItems().then(opts => {
+                  myItems = opts.reduce((ret, opt) => {
+                    ret[opt] = { name: opt };
+                    return ret;
+                  }, {});
+                  $("#superMenu .statusXXX").text(""+Object.keys(myItems).length);
+                  return myItems;
+                })
+              }
+            }
+          }
         } catch (e) {
-          failMessage(e, cache === Caches.inputSchema ? "parsing schema" : "parsing data");
+          failMessage(e, "parsing " + corpus);
           let items = {};
           const failContent = "no choices found";
           items[failContent] = failContent;
