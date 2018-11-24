@@ -1788,21 +1788,36 @@ function addContextMenus (inputSelector, cache, corpus, entityType) {
             }
             const queryMapKeywords = [{name: "FOCUS"}, {name: "_"}];
             const getTermsFunctions = [
-              () => { return queryMapKeywords.concat(norm(store.getSubjects())); },
-              () => { return norm(store.getPredicates()); },
-              () => { return queryMapKeywords.concat(norm(store.getObjects())); },
+              (store) => { return queryMapKeywords.concat(norm(store.getSubjects())); },
+              (store) => { return norm(store.getPredicates()); },
+              (store) => { return queryMapKeywords.concat(norm(store.getObjects())); },
+            ];
+            const tripleParts = [
+              'subjects',
+              'predicates',
+              'objects'
             ];
             // var store = Caches.inputData.refresh();
             var items = [];
             if (terms.match === null)
               return false; // prevent contextMenu from whining about an empty list
-            items = getTermsFunctions[terms.match]();
             return {
-              items:
-              items.reduce((ret, opt) => {
-                ret[opt.name] = opt;
-                return ret;
-              }, {})
+              items: {
+                "yyy": {
+                  name: "<span id='superMenu2'><span class='statusYYY'>loading</span> <span class='"+corpus+"'>"+tripleParts[terms.match]+"</span></span>",
+                  isHtmlName: true,
+                  icon: "cut",
+                  items: Caches.inputData.refresh().then(store => {
+                    myItems = getTermsFunctions[terms.match](store)
+                      .reduce((ret, opt) => {
+                        ret[opt.name] = opt;
+                        return ret;
+                      }, {});
+                    $("#superMenu2 .statusYYY").text(""+Object.keys(myItems).length);
+                    return myItems;
+                  })
+                }
+              }
             };
           }
         }
