@@ -257,6 +257,9 @@ function makeManifestCache (selection) {
     $("#inputSchema .manifest li").remove();
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
+      if (url !== DefaultBase) {
+        this.url = url; // @@crappyHack1 -- parms should differntiate:
+      }
       try {
         // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);

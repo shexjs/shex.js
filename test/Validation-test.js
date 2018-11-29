@@ -57,8 +57,7 @@ describe("A ShEx validator", function () {
   }
 
   tests = tests.filter(test => {
-    return test.trait.indexOf("OneOf") === -1 &&
-      TODO.indexOf(test.name) === -1;
+    return TODO.indexOf(test.name) === -1;
   });
 
   regexModules.forEach(regexModule => {
@@ -76,7 +75,9 @@ describe("A ShEx validator", function () {
         if (valFile) {
           valFile = "val/" + valFile;
         }
-        it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+        it(EARL
+           ? 'validation/manifest\#' + test.name
+           : "should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
            "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
            "' and get 'test/" + valFile + "'" +
            " in test '" + test["@id"] + "'.",
@@ -99,7 +100,7 @@ describe("A ShEx validator", function () {
              doIt(report, absoluteVal, {results: "val"}, true);
            });
 
-        if (test.result) {
+        if (!EARL && test.result) {
           var resultsFile = test.result ? path.resolve(validationPath, test.result) : null;
           it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
              "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
