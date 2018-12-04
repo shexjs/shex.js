@@ -40,6 +40,7 @@ var ShExUtil = require("../lib/ShExUtil");
 var ShExLoader = require("../lib/ShExLoader");
 var ShExWriter = require("../lib/ShExWriter"); // for verbose output
 var ShExValidator = require("../lib/ShExValidator");
+var ShEx = require("../shex");
 var Path = require("path");
 var Util = require("util");
 var ValidatorOptions = { diagnose: true };
@@ -55,6 +56,7 @@ var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jis
 var CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean },
   { name: "quiet",     alias: "q", type: Boolean },
+  { name: "query",                 type: Boolean },
   { name: "help",      alias: "h", type: Boolean },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
@@ -163,19 +165,33 @@ function findNodesAndValidate (loaded, parms, options) {
         return triples[i].subject;
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
-  function someNodeWithType (type) {
+  function allNodesWithType (type) {
     var triples = loaded.data.getTriplesByIRI(null, RDF_TYPE, type);
-    return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
+    return triples.length > 0 ? triples.map(t => t.subject) : [ShExUtil.NotSupplied];
   };
+  function getTriples (s, p, o) {
+    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
+    return loaded.data.getTriplesByIRI(mine(s), mine(p), mine(o)).map(
+      t => t[get]
+    );
+    function mine (term) {
+      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
+        ? null
+        : term;
+    }
+  }
+
   function _makeShapeMap (nodeP, shapeP, nodeTypeP) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    var node = nodeTypeP ?
-        someNodeWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
-						  null, knownType, x =>  x)) :
-        ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
-                                 MISC_NODES ? () => true : knownNode, x => x); // accept unknown nodes
+    var nodes = nodeTypeP
+        ? allNodesWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
+						    null, knownType, x =>  x))
+        : typeof nodeP === "object" && nodeP.type === "TriplePattern"
+        ? getTriples(nodeP.subject, nodeP.predicate, nodeP.object)
+        : [ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
+                                 MISC_NODES ? () => true : knownNode, x => x)]; // accept unknown nodes
     var shape, shapeLabel;
-    ret.mode = node;
+
     if (!shapeP && loaded.schema.start) {
       shape = loaded.schema.start;
       shapeLabel = ShExValidator.start;
@@ -193,25 +209,25 @@ function findNodesAndValidate (loaded, parms, options) {
         console.log("Guessing shape " + found);
     }
 
-    if (node === ShExUtil.NotSupplied)
+    if (nodes[0] === ShExUtil.NotSupplied)
       throw Error("node not defined and no default found" +
                   ("node-type" in parms ?
                    " looking for type " + nodeTypeP :
                    ""));
-    if (!MISC_NODES && node === ShExUtil.UnknownIRI) {
+    if (!MISC_NODES && nodes[0] === ShExUtil.UnknownIRI) {
       console.warn("node " + nodeP + " not found in data" +
-                   optsStr("node" in parms ? nodeP : node, loaded.data._entities));
-      node = nodeP;
+                   optsStr("node" in parms ? nodeP : nodes[0], loaded.data._entities));
+      nodes = [nodeP];
     }
 
     // console.log("runValidator ("+graph+", "+node+", "+schema+", "+shape+")");
-    if (node === undefined || (shape === undefined && !("start" in schema))) {
+    if (nodes[0] === undefined || (shape === undefined && !("start" in schema))) {
       var msgs = [];
-      if (node === undefined) {
-        var subjectNodes = graph.count() < 50 ? Object.keys(graph.getTriplesByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
+      if (nodes[0] === undefined) {
+        var subjectNodes = loaded.data.size < 50 ? Object.keys(loaded.data.getTriplesByIRI(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
         msgs.push("No starting node specified" +
                   (subjectNodes.length ?
-                   "; try -n with one of: " + subjectNodes.join(", ") :
+                   "; try -n with one of:\n" + subjectNodes.map(n => "  " + n + "\n").join("") :
                    "")
                  );
       }
@@ -227,14 +243,21 @@ function findNodesAndValidate (loaded, parms, options) {
       }
       abort(msgs.join("\n"));
     }
-    return { node: node, shape: shape };
+    return nodes.map(node => ({ node: node, shape: shape }));
   }
 
   var ret = {};
 
   var shapeMap = "map" in parms
-      ? parms.map.map(pair => _makeShapeMap(pair.node, pair.shape, null))
-      : [_makeShapeMap(parms.node, parms.shape, parms["node-type"])];
+      ? parms.map.reduce(
+        (acc, pair) => acc.concat(_makeShapeMap(pair.node, pair.shape, null)), []
+      ).reduce(
+        (acc, pair) => acc.seen.indexOf(pair.node) === -1
+          ? {ret: acc.ret.concat(pair), seen: acc.seen.concat(pair.node)}
+        : acc,
+        {ret: [], seen: []}
+      ).ret
+      : _makeShapeMap(parms.node, parms.shape, parms["node-type"]);
   if (cmds.verbose) {
     var tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
@@ -245,7 +268,7 @@ function findNodesAndValidate (loaded, parms, options) {
         else w = text;
       });
     var shapeIn = shape ? shape + " in" : "";
-    console.log("validating " + tz + " over " + graph.size + " triples against " + w);
+    console.log("validating " + tz + " over " + loaded.data.size + " triples against " + w);
   }
 
   ret.results = runValidator(loaded.data, shapeMap, loaded.schema, options);
@@ -286,11 +309,34 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
 
     // ShapeMap, if provided.
     "mapURL" in valParms ? ShExLoader.GET(valParms.mapURL).then(function (body) {
-      return ShExUtil.absolutizeShapeMap(JSON.parse(body.text));
+      return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
     })
-    : "map" in valParms ? Promise.resolve(JSON.parse(valParms.map))
-    : Promise.resolve(undefined)
+    : Promise.resolve("map" in valParms
+                      ? { shapeMapBody: valParms.map,
+                          shapeMapBase: "file://" + Path.resolve(process.cwd()) }
+                      : undefined)
   ]).then(function (loadedAndResults) {
+    /* loadedAndResults is something like: [
+         { data: N3Store {…},
+           dataMeta: [{
+             base: "http://instance.example/",
+             mediaType: "text/turtle",
+             prefixes: {xsd: "http://www.w3.org/2001/XMLSchema#", …},
+             url: "file:///…/shex.js/examples/ClinObs-with-birthdate.ttl"
+           }],
+           schema: {type: "Schema", …},
+           schemaMeta: [{
+             base: "http://schema.example/",
+             mediaType: "text/shex",
+             prefixes: {xsd: "http://www.w3.org/2001/XMLSchema#", …},
+             url: "file:///…/shex.js/examples/ClinObs.shex"
+           }]
+         },
+         { type: "ShapeTest", … },
+         { shapeMapBody: '{node:"a", shape:"b"}' || "<a>@<b>"
+           shapeMapBase: "http://shapeMap.example/"
+         }
+       ] */
 
     loadedAndResults[0].data =
       ShExUtil.makeN3DB(loadedAndResults[0].data);
@@ -299,15 +345,24 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         function knownShape (label) {
           return label in loadedAndResults[0].schema.shapes;
         }
-        var found = parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
-                                    null, knownShape, loadedAndResults[0].schema.prefixes);
+        var found = ShExUtil.parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
+                                             null, knownShape, loadedAndResults[0].schema.prefixes);
         if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
       runServer(loadedAndResults[0], valParms, validatorOptions, schemaOptions);
     } else {
-      if (loadedAndResults[2]) // if we loaded a map
-        valParms.map = loadedAndResults[2];
+      if (loadedAndResults[2]) { // if we loaded a map
+        try {
+          valParms.map = ShExUtil.absolutizeShapeMap(JSON.parse(loadedAndResults[2].shapeMapBody),
+                                                     loadedAndResults[0].dataMeta[0].base); // @@ relative to data[0]'s base instead of loadedAndResults[2].shapeMapBase -- is that good?
+        } catch (e) {
+          valParms.map = ShEx.ShapeMapParser.construct(loadedAndResults[2].shapeMapBase,
+                                                       loadedAndResults[0].schemaMeta[0],
+                                                       loadedAndResults[0].dataMeta[0])
+            .parse(loadedAndResults[2].shapeMapBody);
+        }
+      }
 
       var res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
       if (cmds["dry-run"])
@@ -324,7 +379,52 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         // Exit status 3 means match failure.
         return Promise.resolve(match ? 0 : 3);
       } else {
-        if (!valParms.quiet)
+        if (cmds.query) {
+          function _dive1 (solns) {
+            if (solns.type === "SolutionList" ||
+                solns.type === "ShapeOrResults" ||
+                solns.type === "ShapeOrResults") {
+              solns.solutions.forEach(s => {
+                _dive1(s.solution);
+              });
+            } else if (solns.type === "ShapeTest") {
+              _dive1(solns.solution);
+            } else if (solns.type === "OneOfSolutions" ||
+                       solns.type === "EachOfSolutions") {
+              solns.solutions.forEach(s => {
+                _dive1(s);
+              });
+            } else if (solns.type === "OneOfSolution" ||
+                       solns.type === "EachOfSolution") {
+              solns.expressions.forEach(s => {
+                _dive1(s);
+              });
+            } else if (solns.type === "TripleConstraintSolutions") {
+              solns.solutions.map(s => {
+                if (s.type !== "TestedTriple")
+                  throw Error("unexpected result type: " + s.type);
+                var fakeResolver = {
+                  _base: "_base",
+                  _basePath: "_basePath",
+                  meta:{prefixes:{}}
+                };
+                console.log(
+                  rdflib_termToLex(s.subject, fakeResolver),
+                  rdflib_termToLex(s.predicate, fakeResolver),
+                  rdflib_termToLex(s.object, fakeResolver),
+                  "."
+                );
+                if ("referenced" in s) {
+                  _dive1(s.referenced.solution);
+                }
+              });
+            } else {
+              throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
+            }
+          }
+
+          _dive1(res);
+        } else if (!valParms.quiet)
           console.log(JSON.stringify(res, null, "  "));
         // Exit status 2 means validation failure.
         return Promise.resolve(passed ? 0 : 2);
@@ -334,6 +434,36 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
     return 1;
   });
+
+}
+
+function rdflib_termToLex (node, resolver) {
+  if (typeof node === "object") {
+    var ret = node.value
+        .replace(/"/g, "\\\"")
+        .replace(/\r/g, "\\r")
+        .replace(/\n/g, "\\n")
+        .replace(/\t/g, "\\t");
+    ret = "\"" + ret + "\"";
+    if ("language" in node)
+      ret = ret + "@" + node.language;
+    if ("datatype" in node)
+      ret = ret + "^^" + rdflib_termToLex(node.datatype, resolver);
+    return ret;
+  }
+  if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    return "a";
+  if (node === ShEx.Validator.start)
+    return START_SHAPE_LABEL;
+  if (node === resolver._base)
+    return "<>";
+  if (node.indexOf(resolver._base) === 0/* &&
+                                           ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1 */)
+    return "<" + node.substr(resolver._base.length) + ">";
+  if (node.indexOf(resolver._basePath) === 0 &&
+      ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
+    return "<" + node.substr(resolver._basePath.length) + ">";
+  return ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 
 // Extract user commands
@@ -722,7 +852,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data
-            serverLoaded.data.getTriples().forEach(t => { loaded.data.addTriple(t); });
+            serverLoaded.data.getTriplesByIRI().forEach(t => { loaded.data.addTriple(t); });
+            loaded.data = ShExUtil.makeN3DB(loaded.data);
             loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
 
             // add server-loaded schema
