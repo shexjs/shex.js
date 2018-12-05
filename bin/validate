@@ -57,6 +57,7 @@ var CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean },
   { name: "quiet",     alias: "q", type: Boolean },
   { name: "query",                 type: Boolean },
+  { name: "grep",                  type: Boolean },
   { name: "help",      alias: "h", type: Boolean },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
@@ -380,6 +381,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         return Promise.resolve(match ? 0 : 3);
       } else {
         if (cmds.query) {
+          var seen = {};
           function _dive1 (solns) {
             if (solns.type === "SolutionList" ||
                 solns.type === "ShapeOrResults" ||
@@ -408,12 +410,18 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
                   _basePath: "_basePath",
                   meta:{prefixes:{}}
                 };
-                console.log(
+                var triple = [
                   rdflib_termToLex(s.subject, fakeResolver),
                   rdflib_termToLex(s.predicate, fakeResolver),
                   rdflib_termToLex(s.object, fakeResolver),
                   "."
-                );
+                ].join(" ");
+                if (triple in seen) {
+                  seen[triple]++; // in case we ever care how many times we skipped it.
+                } else {
+                  console.log(triple);
+                  seen[triple] = 0;
+                }
                 if ("referenced" in s) {
                   _dive1(s.referenced.solution);
                 }
@@ -423,7 +431,8 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             }
           }
 
-          _dive1(res);
+          if (Object.keys(res).length > 0)
+            _dive1(res);
         } else if (!valParms.quiet)
           console.log(JSON.stringify(res, null, "  "));
         // Exit status 2 means validation failure.
@@ -587,7 +596,9 @@ function runValidator (graph, shapeMap, schema, options) {
     return 0;
 
   // run validator
-  var res = validator.validate(graph, shapeMap);
+  var res = cmds.grep
+      ? grep(graph, shapeMap)
+      : validator.validate(graph, shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -613,6 +624,20 @@ function runValidator (graph, shapeMap, schema, options) {
         res.semActResults = validator.semActHandler.results;
       }
     return res;
+  }
+
+  function grep (graph, fixedMap) {
+    var passes = fixedMap.reduce((acc, row) => {
+      var res = validator.validate(graph, [row]);
+      return "errors" in res
+        ? acc
+        : acc.concat(res);
+    }, []);
+    return passes.length > 1
+      ? { type: "SolutionList", solutions: passes }
+    : passes.length === 1
+      ? passes[0]
+      : {};
   }
 }
 
