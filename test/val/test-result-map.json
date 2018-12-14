@@ -582,5 +582,6 @@
   "#3circRefS123-Icirc": "3circRefPlus1_pass-open.val",
   "#3circRefS1-Icirc": "3circRefPlus1_pass-open.val",
   "#3circRefS1-IS2-IS3-IS3": "3circRefPlus1_pass-open.val",
-  "#inheritance-abstract-multi-empty_pass": "inheritance-abstract-multi-empty_pass.val"
+  "#inheritance-abstract-multi-empty_pass": "inheritance-abstract-multi-empty_pass.val",
+  "#inheritance-abstract-multi-empty_pass": null
 }
