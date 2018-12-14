@@ -4155,7 +4155,7 @@ var ShExUtil = {
       return ["Missing property: " + val.property];
     } else if (val.type === "NegatedProperty") {
       return ["Unexpected property: " + val.property];
-    } else if (val.constructor === Array) {debugger;
+    } else if (val.constructor === Array) {
       return val.reduce((ret, e) => {
         var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
@@ -4356,6 +4356,7 @@ var ShExUtil = {
       getSubjects: getSubjects,
       getPredicates: getPredicates,
       getObjects: getObjects,
+      get size() { return db.size; }
       // getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
       //   // console.log(Error(s + p + o).stack)
       //   if (queryTracker)
@@ -4460,6 +4461,7 @@ var ShExUtil = {
       getSubjects: function () { return ["!Query DB can't index subjects"] },
       getPredicates: function () { return ["!Query DB can't index predicates"] },
       getObjects: function () { return ["!Query DB can't index objects"] },
+      get size() { return undefined; }
     };
   },
 
@@ -4577,7 +4579,7 @@ var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedErr
 
 var N3Util = require("n3").Util;
 var ShExUtil = require("./ShExUtil");
-var ShExWriter = require("./ShExWriter");
+var ShExWriter = require("../lib/ShExWriter");
 
 function getLexicalValue (term) {
   return N3Util.isIRI(term) ? term :
@@ -4831,6 +4833,9 @@ function ShExValidator_constructor(schema, options) {
       else if (expr.type === "Inclusion")
         return record(indexTripleConstraints_dive(schema.productions[expr.include]));
 
+      else if (expr.type === "NestedShape")
+        return [];
+
       else
         runtimeError("unexpected expr type: " + expr.type);
 
@@ -4858,7 +4863,7 @@ function ShExValidator_constructor(schema, options) {
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
-  this.validate = function (db, point, label, tracker, seen) {
+  this.validate = function (db, point, label, tracker, seen, subGraph) {
     // default to schema's start shape
     if (typeof point === "object") {
       var shapeMap = point;
@@ -4981,7 +4986,7 @@ function ShExValidator_constructor(schema, options) {
     candidates = candidates.filter(l => !schema.shapes[l].abstract);
     var results = candidates.reduce((ret, label) => {
       var shapeExpr = schema.shapes[label];
-      var res = this._validateShapeDecl(db, point, shapeExpr, label, 0, tracker, seen);
+      var res = this._validateShapeDecl(db, point, shapeExpr, label, 0, tracker, seen, subGraph);
       return "errors" in res ?
         { passes: ret.passes, failures: ret.failures.concat(res) } :
         { passes: ret.passes.concat(res), failures: ret.failures } ;
@@ -5010,23 +5015,8 @@ function ShExValidator_constructor(schema, options) {
   }
 
   this._validateShapeDecl = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
-    var effectiveExpr = effectiveShapeExpression(shapeExpr);
-      var tempShape = new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join('');
-      // console.log(JSON.stringify(effectiveExpr, null, 2))
-      // console.log(tempShape)
-      // var tempSchema = {type:"Schema", shapes: {}}; tempSchema.shapes[labelOrShape] = effectiveExpr;
-      // new ShEx.Writer().writeSchema(tempSchema, function (error, text, prefixes) { console.log(text) })
-    if (shapeExpr.type === "ShapeDecl") {
-      // DELME if (shapeExpr.restricts) {
-      //   shapeExpr.restricts.find(sp => {
-      //     var spExpr = schema.shapes[sp];
-      //     var spRes = this._validateShapeDecl(db, point, spExpr, sp, depth, seen);
-      //     return "errors" in spRes ? (ret = spRes) : null;
-      //   });
-      // }
-      shapeExpr = shapeExpr.shapeExpr;
-    }
-    return this._validateShapeExpr(db, point, effectiveExpr, shapeLabel, depth, tracker, seen, subgraph);
+    var expr = shapeExpr.type === "ShapeDecl" ? shapeExpr.shapeExpr : shapeExpr;
+    return this._validateShapeExpr(db, point, expr, shapeLabel, depth, tracker, seen, subgraph);
   }
 
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
@@ -5056,8 +5046,7 @@ function ShExValidator_constructor(schema, options) {
       // ).concat(Object.keys(this.schema.shapes).filter(
       //   k => (shapeExpr.extends
       //         && shapeExpr.extends.indexOf(shapeLabel) !== -1)));
-      return this._validateShape(db, point, regexModule.compile(schema, shapeExpr),
-                                 shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
+      return this._validateShape(db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
     } else if (shapeExpr.type === "ShapeRef") {
       return this._validateShapeDecl(db, point, schema.shapes[shapeExpr.reference], shapeExpr.reference, depth, tracker, seen, subgraph);
     } else if (shapeExpr.type === "ShapeExternal") {
@@ -5094,8 +5083,18 @@ function ShExValidator_constructor(schema, options) {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
   }
 
-  this._validateShape = function (db, point, regexEngine, shape, shapeLabel, depth, tracker, seen, subgraph) {
+  this._validateShape = function (db, point, shape, shapeLabel, depth, tracker, seen, subgraph) {
     var _ShExValidator = this;
+
+    var inheritedTCs = [];
+    shape = effectiveShapeExpression(shape, inheritedTCs);
+    var regexEngine = regexModule.compile(schema, shape);
+      // var tempShape = new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join('');
+      // console.log(JSON.stringify(effectiveExpr, null, 2))
+      // console.log(tempShape)
+      // var tempSchema = {type:"Schema", shapes: {}}; tempSchema.shapes[labelOrShape] = effectiveExpr;
+      // new ShEx.Writer().writeSchema(tempSchema, function (error, text, prefixes) { console.log(text) })
+
 
     var ret = null;
     var startAcionStorage = {}; // !!! need test to see this write to results structure.
@@ -5114,7 +5113,7 @@ function ShExValidator_constructor(schema, options) {
     var outgoingLength = fromDB.outgoing.length;
     var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
-    var constraintList = this.indexTripleConstraints(shape.expression); // !! adds tcis to shape.expression
+    var constraintList = inheritedTCs.concat(this.indexTripleConstraints(shape.expression)); // !! adds tcis to shape.expression
     var tripleList = constraintList.reduce(function (ret, constraint, ord) {
 
       // subject and object depend on direction of constraint.
@@ -5224,8 +5223,8 @@ function ShExValidator_constructor(schema, options) {
         return i !== undefined;
       }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
 
-      function _recurse (point, shapeLabel) {
-        return _ShExValidator.validate(db, point, shapeLabel, tracker, seen);
+      function _recurse (point, shapeLabel, subGraph) {
+        return _ShExValidator.validate(db, point, shapeLabel, tracker, seen, subGraph);
       }
       function _direct (point, shapeExpr, subgraph) {
         return _ShExValidator._validateShapeDecl(db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
@@ -5594,142 +5593,95 @@ function ShExValidator_constructor(schema, options) {
   function effectiveShapeExpression (shape, tcs) {
     const AND = { type: "ShapeAnd", prop: "shapeExprs" };
     const EACH = { type: "EachOf", prop: "expressions" };
-    return restrict(shape, []);
-
-    function restrict (expr) {
-      var visitor = ShExUtil.Visitor();
-
-      visitor.visitShapeDecl = function (decl) {
-        return "restricts" in decl ?
-          maybe(
-            AND,
-            decl.restricts.map(
-              l =>
-                visitor.visitShapeDecl.call(visitor, followRef(l))
-            ), visitor.visitShapeExpr.call(visitor, decl.shapeExpr)) :
-          visitor.visitShapeExpr.call(visitor, decl.type === "ShapeDecl" ? decl.shapeExpr : decl);
-      }
-
-      visitor.visitShape = function (shape, label) {
-        var tcs = [];
-        // return extend(shape, tcs);
-        if ("extends" in shape) {
-          tcs = tcs.concat(
-            shape.extends.map(
-              l =>
-                // schema.shapes[l] is an ShapeExpression se with projection te.
-                // (no projection would imply something valid with no neighborhood)
-                // Returns te with attached se-Sz(te):
-                //   se with trues for shapes contributing to te.
-                projectionAsTripleExpression(followRef(l))
-            ).filter(tc => tc) // strip out undefined from EXTENDing empty shapes
-          )
-        }
-        if ("expression" in shape)
-          tcs.push(ShExUtil.Visitor().visitExpression(shape.expression));
-        var ret = Object.assign({}, shape);
-        delete ret.extends;
-        if (tcs.length)
-          ret.expression = maybe(EACH, tcs);
-        return ret;
-      }
-
-      return visitor.visitShapeDecl(expr);
+    var ret = Object.assign({}, shape);
+    var conjuncts = [];
+    if ("extends" in shape) {
+      delete ret.extends;
+      shape.extends.forEach(se => {
+        // build NestedShape.scopedTripleConstraints = indexes of the TCs in se
+        var ins = {}, outs = {}, scopedTCs = [];
+        mergeEffectiveTripleConstraints(se, ins, outs);
+        [ins, outs].forEach(direction => {
+          Object.keys(direction).forEach(p => {
+            scopedTCs.push(tcs.length)
+            tcs.push(direction[p])
+          })
+        });
+        conjuncts.push({
+          type: "NestedShape",
+          onShapeExpression: se,
+          scopedTripleConstraints: scopedTCs,
+          shape: shape
+        });
+      })
     }
+    if ("expression" in shape)
+      conjuncts.push(shape.expression);
+    if (conjuncts.length)
+      ret.expression = maybe(EACH, conjuncts);
+    return ret;
 
-    function followRef (shapeExpr) {
-      return shapeExpr.type === "ShapeRef" ? schema.shapes[shapeExpr.reference] : shapeExpr
-    }
-
-    /** projectionAsTripleExpression - turn a ShapeExpression with
+    /** mergeEffectiveTripleConstraints - turn a ShapeExpression with
      * a projection te into TripleExpression with an optional SE'
      * where shapes contributing to te are NOPs.
      */
-    function projectionAsTripleExpression (expr) {
-      var tes = [];
+    function mergeEffectiveTripleConstraints (expr, ins, outs) {
       var visitor = ShExUtil.Visitor();
+      var outerMin = 1;
+      var outerMax = 1;
+      var oldVisitOneOf = visitor.visitOneOf;
 
-      visitor.visitShapeDecl = function (decl) {
-        return "restricts" in decl ?
-          maybe(
-            AND,
-            decl.restricts.map(
-              // we don't include restrictions in the projection.
-              l =>
-                restrict(followRef(l))
-            ), visitor.visitShapeExpr.call(visitor, decl.shapeExpr)) :
-          visitor.visitShapeExpr.call(visitor, decl.type === "ShapeDecl" ? decl.shapeExpr : decl);
-      }
+      visitor.visitShapeRef = function (inclusion) {
+        return visitor.visitShapeDecl(schema.shapes[inclusion.reference]);
+      };
 
       visitor.visitShape = function (shape, label) {
         if ("extends" in shape) {
-          ses =
-            shape.extends.map(l =>
-                              // extension of an extension
-                              tes.push(projectionAsTripleExpression(followRef(l)))
-                             )
+          shape.extends.forEach( // extension of an extension
+            se => mergeEffectiveTripleConstraints(se, ins, outs)
+          )
         }
         if ("expression" in shape) {
-          tes.push(ShExUtil.Visitor().visitExpression(shape.expression));
+          visitor.visitExpression(shape.expression);
         }
         return { type: "Shape" }; // NOP
       }
 
-      var se = visitor.visitShapeDecl(expr);
-      var ret = maybe(EACH, tes);
-      if (tes.length > 0)
-        ret.onShapeExpression = se;
-      return ret;
-    }
-
-    function noShapes (se) {
-      var se;
-      switch (expr.type) {
-      case "ShapeDecl":
-        return maybe(
-          AND,
-          "extends" in expr ?
-            expr.extends.map(
-              l =>
-                noShapes(followRef(l))
-            ) :
-            [], noShapes(expr.shapeExpr));
-      case "ShapeAnd":
-        return maybe(
-          AND,
-          expr.shapeExprs.map(e => noShapes(e))
-        );
-      case "Shape":
-        return null;
-        return { type: "Shape" } // empty shape guarnateed to succeed.
-      case "NodeConstraint":
-        return expr;
-      default:
-        throw Error("can't find extensions in " + JSON.stringify(expr));
+      visitor.visitOneOf = function (expr) {
+        var oldOuterMin = outerMin;
+        var oldOuterMax = outerMax;
+        outerMin = 0;
+        oldVisitOneOf.call(visitor, expr);
+        outerMin = oldOuterMin;
+        outerMax = oldOuterMax;
       }
+
+      visitor.visitTripleConstraint = function (expr) {
+        idx = expr.inverse ? ins : outs;
+        var min = "min" in expr ? expr.min : 1; min = min * outerMin;
+        var max = "max" in expr ? expr.max : 1; max = max * outerMax;
+        idx[expr.predicate] = {
+          type: "TripleConstraint",
+          predicate: expr.predicate,
+          min: expr.predicate in idx ? Math.max(idx[expr.predicate].min, min) : min,
+          max: expr.predicate in idx ? Math.min(idx[expr.predicate].max, max) : max,
+          seen: expr.predicate in idx ? idx[expr.predicate].seen + 1 : 1
+        }
+        return expr;
+      };
+
+      visitor.visitShapeExpr(expr);
     }
 
     function maybe (kind, exprs, oneMore) {
       var ret = { type: kind.type };
       ret[kind.prop] = exprs.slice();
-      if (exprs.find(e => !e))
-        throw Error(exprs);
+      ret[kind.prop] = ret[kind.prop].filter(e => e)
       if (oneMore)
         ret[kind.prop].push(oneMore);
       return ret[kind.prop].length > 1 ?
         ret :
         ret[kind.prop][0];
-    }
-
-    function findOneShape (expr) {
-      switch (expr.type) {
-      case "Shape":
-        return expr;
-      case "ShapeAnd":
-        return expr.shapeExprs.find(findOneShape);
-      default:
-        throw Error("can't find shape in " + JSON.stringify(expr));
-      }
     }
   }
 }
@@ -6016,7 +5968,7 @@ if (typeof require !== "undefined" && typeof exports !== "undefined")
   module.exports = ShExValidator;
 
 }).call(this,require('_process'))
-},{"../lib/regex/nfax-val-1err":10,"../lib/regex/threaded-val-nerr":11,"./ShExUtil":4,"./ShExWriter":6,"_process":281,"n3":247}],6:[function(require,module,exports){
+},{"../lib/ShExWriter":6,"../lib/regex/nfax-val-1err":10,"../lib/regex/threaded-val-nerr":11,"./ShExUtil":4,"_process":281,"n3":247}],6:[function(require,module,exports){
 // **ShExWriter** writes ShEx documents.
 
 var ShExWriter = (function () {
@@ -6136,6 +6088,8 @@ ShExWriter.prototype = {
     if (shapeExpr.type === "ShapeRef")
       pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr.reference));
     // !!! []s for precedence!
+    else if (shapeExpr.type === "ShapeDecl")
+      pieces.push(_ShExWriter._writeShapeExpr(shapeExpr.shapeExpr, done, false, 3));
     else if (shapeExpr.type === "ShapeExternal")
       pieces.push("EXTERNAL");
     else if (shapeExpr.type === "ShapeAnd") {
@@ -7900,9 +7854,9 @@ var NFAXVal1Err = (function () {
   var Match = "<span class='keyword' title='Match'>␃</span>";
   /* compileNFA - compile regular expression and index triple constraints
    */
-var UNBOUNDED = -1;
+  var UNBOUNDED = -1;
 
-function compileNFA (schema, shape) {
+  function compileNFA (schema, shape) {
     var expression = shape.expression;
     return NFA();
 
@@ -7951,6 +7905,13 @@ function compileNFA (schema, shape) {
           // maybeAddRept(s, [s]);
         }
 
+        else if (expr.type === "NestedShape") {
+          s = State_make(expr, []);
+          states[s].stack = stack;
+          return {start: s, tail: [s]};
+          // maybeAddRept(s, [s]);
+        }
+
         else if (expr.type === "OneOf") {
           lastTail = [];
           starts = [];
@@ -7981,7 +7942,7 @@ function compileNFA (schema, shape) {
           return walkExpr(included, stack);
         }
 
-        runtimeError("unexpected expr type: " + expr.type);
+        throw Error("unexpected expr type: " + expr.type);
       };
 
       function State_make (c, outs, negated) {
@@ -8056,148 +8017,59 @@ function compileNFA (schema, shape) {
     }
 
     function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
-      var _this = this;
+      var rbenx = this;
       var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
-      function resetRepeat (thread, repeatedState) {
-        var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-          if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
-            r[k] = thread.repeats[k];
-          return r;
-        }, {});
-        return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-      }
-      function incrmRepeat (thread, repeatedState) {
-        var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-          r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
-          return r;
-        }, {});
-        return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-      }
-      function stateString (state, repeats) {
-        var rs = Object.keys(repeats).map(rpt => {
-          return rpt+":"+repeats[rpt];
-        }).join(",");
-        return rs.length ? state + "-" + rs : ""+state;
-      }
-
-      function addstate (list, stateNo, thread, seen) {
-        seen = seen || [];
-        var seenkey = stateString(stateNo, thread.repeats);
-        if (seen.indexOf(seenkey) !== -1)
-          return;
-        seen.push(seenkey);
-
-        var s = _this.states[stateNo];
-        if (s.c === Split) {
-          return s.outs.reduce((ret, o, idx) => {
-            return ret.concat(addstate(list, o, thread, seen));
-          }, []);
-        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
-        } else if (s.c === Rept) {
-          var ret = [];
-          // matched = [matched].concat("Rept" + s.expr);
-          if (!(stateNo in thread.repeats))
-            thread.repeats[stateNo] = 0;
-          var repetitions = thread.repeats[stateNo];
-          // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-          if (repetitions < s.max)
-            ret = ret.concat(addstate(list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-          if (repetitions >= s.min && repetitions <= s.max)
-            ret = ret.concat(addstate(list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
-          return ret;
-        } else {
-          // if (stateNo !== _this.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
-          //   return r2 || avail.length > 0;
-          // }, false))
-          return [list.push({ // return [new list element index]
-            state:stateNo,
-            repeats:thread.repeats,
-            avail:thread.avail.map(a => { // copy parent thread's avail vector
-              return a.slice();
-            }),
-            stack:thread.stack,
-            matched:thread.matched,
-            errors: thread.errors
-          }) - 1];
-        }
-      }
 
       function localExpect (list) {
         return list.map(st => {
-          var s = _this.states[st.state]; // simpler threads are a list of states.
+          var s = rbenx.states[st.state]; // simpler threads are a list of states.
           return renderAtom(s.c, s.negated);
         });
       }
 
-      if (_this.states.length === 1)
+      if (rbenx.states.length === 1)
         return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
 
       var chosen = null;
       // var dump = nfaToString();
       // console.log(dump.nfa(this.states, this.start));
-      addstate(clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
+      addstate(rbenx, clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
       while (clist.length) {
         nlist = [];
         if (trace)
           trace.push({threads:[]});
         for (var threadno = 0; threadno < clist.length; ++threadno) {
           var thread = clist[threadno];
-          if (thread.state === _this.end)
+          if (thread.state === rbenx.end)
             continue;
-          var state = _this.states[thread.state];
+          var state = rbenx.states[thread.state];
           var nlistlen = nlist.length;
           var constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
-          var min = "min" in state.c ? state.c.min : 1;
-          var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-          if ("negated" in state.c && state.c.negated)
-            min = max = 0;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
-          var taken = thread.avail[constraintNo].splice(0, max);
-          if (taken.length >= min) {
-            do {
-              // find the exprs that require repetition
-              var exprs = _this.states.map(x => { return x.c === Rept ? x.expr : null; });
-              var newStack = state.stack.map(e => {
-                var i = thread.repeats[exprs.indexOf(e.c)];
-                if (i === undefined)
-                  i = 0; // expr has no repeats
-                else
-                  i = i-1;
-                return { c:e.c, e:e.e, i:i };
-              });
-              var withIndexes = {
-                c: state.c,
-                triples: taken,
-                stack: newStack
-              };
-              thread.matched = thread.matched.concat(withIndexes);
-              state.outs.forEach(o => { // single out if NFA includes epsilons
-                var n = _this.states[o];
-                // Find all terminating expressions.
-                var finishedExprs = state.stack.filter(
-                  (elt, i) =>
-                    !("stack" in n) || i >= n.stack.length || n.stack[i].c !== state.stack[i].c
-                ).map(elt => elt.c);
-                // Test those expressions for scoped shape expressions.
-                var errors = [state.c].concat(finishedExprs).find(
-                  expr => passScoped(expr, thread)
-                )
-                if (errors)
-                  console.log("@@ need to do something with nested errors: " + errors);
-                else
-                  addstate(nlist, o, thread);
-              });
-            } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                taken.push(thread.avail[constraintNo].shift());
-                return true; // stay in look to take more.
-              } else {
-                return false; // no more to take or we're already at max
-              }
-            })());
+          if (constraintNo === -1) {
+            var scoped = state.c.scopedTripleConstraints.reduce(
+              (acc, tci) => acc.concat(constraintToTripleMapping[tci]), []);
+            addStates(rbenx, nlist, thread, scoped, constraintToTripleMapping, neighborhood, direct, node);
+          } else {
+            var min = "min" in state.c ? state.c.min : 1;
+            var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+            if ("negated" in state.c && state.c.negated)
+              min = max = 0;
+            if (thread.avail[constraintNo] === undefined)
+              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+            var taken = thread.avail[constraintNo].splice(0, max);
+            if (taken.length >= min) {
+              do {
+                addStates(rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, direct, node);
+              } while ((function () {
+                if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                  taken.push(thread.avail[constraintNo].shift());
+                  return true; // stay in look to take more.
+                } else {
+                  return false; // no more to take or we're already at max
+                }
+              })());
+            }
           }
           if (trace)
             trace[trace.length-1].threads.push({
@@ -8209,7 +8081,7 @@ function compileNFA (schema, shape) {
         }
         // console.log(dump.threadList(nlist));
         if (nlist.length === 0 && chosen === null)
-          return reportError(localExpect(clist, _this.states));
+          return reportError(localExpect(clist, rbenx.states));
         var t = clist;
         clist = nlist;
         nlist = t;
@@ -8220,7 +8092,7 @@ function compileNFA (schema, shape) {
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
                 return t === undefined ? ret : ret + 1; // count expected
               }, 0);
-          return ret !== null ? ret : (elt.state === _this.end && matchedAll) ? elt : null;
+          return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)
         if (longerChosen)
           chosen = longerChosen;
@@ -8232,11 +8104,11 @@ function compileNFA (schema, shape) {
       function reportError () { return {
         type: "Failure",
         node: node,
-        errors: localExpect(clist, _this.states)
+        errors: localExpect(clist, rbenx.states)
       } }
       function localExpect () {
         return clist.map(t => {
-          var c = _this.states[t.state].c;
+          var c = rbenx.states[t.state].c;
           // if (c === Match)
           //   return { type: "EndState999" };
           var valueExpr = extend({}, c.valueExpr);
@@ -8247,7 +8119,7 @@ function compileNFA (schema, shape) {
           }
           return extend({
             type: state.c.negated ? "NegatedProperty" :
-              t.state === _this.end ? "ExcessTripleViolation" :
+              t.state === rbenx.end ? "ExcessTripleViolation" :
               "MissingProperty",
             property: state.c.predicate
           }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {});
@@ -8257,39 +8129,129 @@ function compileNFA (schema, shape) {
       return "errors" in chosen.matched ?
         chosen.matched :
         matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+    }
 
-        function passScoped (expr, thread) {
-          if (!("onShapeExpression" in expr))
-            return null;
-          var subgraph = N3Store();
-          expr.scopedTripleConstraints.reduce(
-            (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
-              ti => neighborhood[ti]
-            )), [])
-            .forEach(t => subgraph.addTriple(t));
+    function addStates (rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, direct, node) {
+      var state = rbenx.states[thread.state];
+      // find the exprs that require repetition
+      var exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
+      var newStack = state.stack.map(e => {
+        var i = thread.repeats[exprs.indexOf(e.c)];
+        if (i === undefined)
+          i = 0; // expr has no repeats
+        else
+          i = i-1;
+        return { c:e.c, e:e.e, i:i };
+      });
+      var withIndexes = {
+        c: state.c,
+        triples: taken,
+        stack: newStack
+      };
+      thread.matched = thread.matched.concat(withIndexes);
+      state.outs.forEach(o => { // single out if NFA includes epsilons
+        var n = rbenx.states[o];
+        // Find all terminating expressions.
+        var finishedExprs = state.stack.filter(
+          (elt, i) =>
+            !("stack" in n) || i >= n.stack.length || n.stack[i].c !== state.stack[i].c
+        ).map(elt => elt.c);
+        // Test those expressions for scoped shape expressions.
+        var errors = [state.c].concat(finishedExprs).find(
+          expr => passScoped(expr, thread)
+        )
+        if (errors)
+          console.log("@@ need to do something with nested errors: " + errors);
+        else
+          addstate(rbenx, nlist, o, thread);
+      });
 
-          var ret;
-            // copy of diver below with added subgraph.
-            function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel, ShExUtil.makeN3DB(subgraph));
-              if ("errors" in sub)
-                return sub.errors;
-              if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
-                  sub.type === "Recursion")
-                ret = sub; // !!! needs to aggregate errors and solutions
-              return [];
-            }
-            function diveRecurse (focus, shapeLabel) {
-              return diver(focus, shapeLabel, recurse);
-            }
-            function diveDirect (focus, shapeLabel) {
-              return diver(focus, shapeLabel, direct);
-            }
-            var subErrors =
-              checkValueExpr(node, expr.onShapeExpression, diveRecurse, diveDirect, subgraph);
+      function passScoped (expr, thread) {
+        if (!("onShapeExpression" in expr))
+          return null;
+        var subgraph = N3Store();
+        expr.scopedTripleConstraints.reduce(
+          (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
+            ti => neighborhood[ti]
+          )), [])
+          .forEach(t => subgraph.addTriple(t));
 
-          return subErrors.length === 0 ? null : subErrors;
+        var res =
+            direct(node, expr.onShapeExpression, ShExUtil.makeN3DB(subgraph));
+
+        if ("errors" in res) {
+          return res.errors;
+        } else {
+          ret = res; // !!! needs to aggregate errors and solutions
+          return null;
         }
+      }
+    }
+
+    function addstate (rbenx, list, stateNo, thread, seen) {
+      seen = seen || [];
+      var seenkey = stateString(stateNo, thread.repeats);
+      if (seen.indexOf(seenkey) !== -1)
+        return;
+      seen.push(seenkey);
+
+      var s = rbenx.states[stateNo];
+      if (s.c === Split) {
+        return s.outs.reduce((ret, o, idx) => {
+          return ret.concat(addstate(rbenx, list, o, thread, seen));
+        }, []);
+        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
+      } else if (s.c === Rept) {
+        var ret = [];
+        // matched = [matched].concat("Rept" + s.expr);
+        if (!(stateNo in thread.repeats))
+          thread.repeats[stateNo] = 0;
+        var repetitions = thread.repeats[stateNo];
+        // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
+        if (repetitions < s.max)
+          ret = ret.concat(addstate(rbenx, list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
+        if (repetitions >= s.min && repetitions <= s.max)
+          ret = ret.concat(addstate(rbenx, list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
+        return ret;
+      } else {
+        // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
+        //   return r2 || avail.length > 0;
+        // }, false))
+        return [list.push({ // return [new list element index]
+          state:stateNo,
+          repeats:thread.repeats,
+          avail:thread.avail.map(a => { // copy parent thread's avail vector
+            return a.slice();
+          }),
+          stack:thread.stack,
+          matched:thread.matched,
+          errors: thread.errors
+        }) - 1];
+      }
+    }
+
+    function resetRepeat (thread, repeatedState) {
+      var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+        if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
+          r[k] = thread.repeats[k];
+        return r;
+      }, {});
+      return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+    }
+
+    function incrmRepeat (thread, repeatedState) {
+      var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+        r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
+        return r;
+      }, {});
+      return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+    }
+
+    function stateString (state, repeats) {
+      var rs = Object.keys(repeats).map(rpt => {
+        return rpt+":"+repeats[rpt];
+      }).join(",");
+      return rs.length ? state + "-" + rs : ""+state;
     }
 
     function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
@@ -8705,6 +8667,12 @@ function vpEngine (schema, shape) {
           );
         }
 
+        else if (expr.type === "NestedShape") {
+          var newThreads = [thread]
+          var scope1 = passScoped(expr, newThreads[0]);
+          return newThreads;
+        }
+
         runtimeError("unexpected expr type: " + expr.type);
 
         /** passScoped - add errors to thread if the triples allocated to a
@@ -8714,45 +8682,74 @@ function vpEngine (schema, shape) {
           if (!("onShapeExpression" in expr))
             return thread;
           var subgraph = N3Store();
-          expr.scopedTripleConstraints.reduce(
+          var myTriples = expr.scopedTripleConstraints.reduce(
             (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
-              ti => neighborhood[ti]
-            )), [])
-            .forEach(t => subgraph.addTriple(t));
+              ti => ({ti: ti, triple: neighborhood[ti]})
+            )), []);
+          myTriples.forEach(pair => subgraph.addTriple(pair.triple));
 
-          var ret;
-            // copy of diver below with added subgraph.
-            function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel, ShExUtil.makeN3DB(subgraph, null));
-              if ("errors" in sub)
-                return sub.errors;
-              if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
-                  sub.type === "Recursion")
-                ret = sub; // !!! needs to aggregate errors and solutions
-              return [];
-            }
-            function diveRecurse (focus, shapeLabel) {
-              return diver(focus, shapeLabel, recurse);
-            }
-            function diveDirect (focus, shapeLabel) {
-              return diver(focus, shapeLabel, direct);
-            }
-            var subErrors =
-              checkValueExpr(node, expr.onShapeExpression, diveRecurse, diveDirect, subgraph);
+          var res =
+              direct(node, expr.onShapeExpression, ShExUtil.makeN3DB(subgraph));
 
-          if (subErrors.length) {
+          if ("errors" in res) {
             var err = {
               type: "RestrictionError",
-              errors: subErrors
+              errors: res
             };
             thread.errors = thread.errors.concat(err);
-          } else if (ret) {
-            thread.expression.scopedShapeSolution = ret;
           } else {
-            // var e = Error("HERE");
-            // throw e;
+            // thread.expression.scopedShapeSolution = res; !!! TODO
+            var tNos = [];
+            function _dive1 (solns) {
+              if (solns.type === "ShapeAndResults" ||
+                  solns.type === "ShapeOrResults") {
+                solns.solutions.forEach(s => {
+                  _dive1(s.solution);
+                });
+              } else if (solns.type === "ShapeTest") {
+                _dive1(solns.solution);
+              } else if (solns.type === "OneOfSolutions" ||
+                  solns.type === "EachOfSolutions") {
+                solns.solutions.forEach(s => {
+                  s.expressions.forEach(e => {
+                    _dive1(e);
+                  });
+                });
+              } else if (solns.type === "TripleConstraintSolutions") {
+                solns.solutions = solns.solutions.map(x => {
+                  if (x.type !== "TestedTriple") // already done
+                    throw Error("unexpected result type: " + x.type);
+                  var pair = myTriples.find(
+                    pair =>
+                      pair.triple.subject === x.subject &&
+                      pair.triple.predicate === x.predicate &&
+                      sameLdTerm(ldify(pair.triple.object), x.object)
+                  );
+
+                  if (tNos.indexOf(pair.ti) === -1)
+                    tNos.push(pair.ti);
+                });
+              } else {
+                throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
+              }
+            }
+            _dive1(res);
+            thread.matched.push({
+              tNos: tNos
+            })
           }
           return thread;
+
+          function sameLdTerm (l, r) {
+            if (typeof l === "object") {
+              return typeof r === "object"
+                ? l.value === r.value && l.type === r.type && l.language === r.language
+                : false;
+            }
+            return typeof r === "object"
+              ? false
+              : l === r;
+          }
         }
 
         function homogenize (list) {
@@ -8824,20 +8821,6 @@ function vpEngine (schema, shape) {
 
     function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
       function _dive (solns) {
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          var ret = { value: N3Util.getLiteralValue(term) };
-          var dt = N3Util.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          var lang = N3Util.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
         if (solns.type === "OneOfSolutions" ||
             solns.type === "EachOfSolutions") {
           solns.solutions.forEach(s => {
@@ -8901,6 +8884,21 @@ function vpEngine (schema, shape) {
       return fromValidatePoint;
     }
   }
+
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: N3Util.getLiteralValue(term) };
+          var dt = N3Util.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = N3Util.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
 
 function extend(base) {
   if (!base) base = {};
