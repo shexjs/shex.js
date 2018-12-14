@@ -4275,6 +4275,7 @@ var ShExUtil = {
       getSubjects: getSubjects,
       getPredicates: getPredicates,
       getObjects: getObjects,
+      get size() { return db.size; }
       // getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
       //   // console.log(Error(s + p + o).stack)
       //   if (queryTracker)
@@ -4379,6 +4380,7 @@ var ShExUtil = {
       getSubjects: function () { return ["!Query DB can't index subjects"] },
       getPredicates: function () { return ["!Query DB can't index predicates"] },
       getObjects: function () { return ["!Query DB can't index objects"] },
+      get size() { return undefined; }
     };
   },
 
@@ -7561,9 +7563,9 @@ var NFAXVal1Err = (function () {
   var Match = "<span class='keyword' title='Match'>␃</span>";
   /* compileNFA - compile regular expression and index triple constraints
    */
-var UNBOUNDED = -1;
+  var UNBOUNDED = -1;
 
-function compileNFA (schema, shape) {
+  function compileNFA (schema, shape) {
     var expression = shape.expression;
     return NFA();
 
@@ -7642,7 +7644,7 @@ function compileNFA (schema, shape) {
           return walkExpr(included, stack);
         }
 
-        runtimeError("unexpected expr type: " + expr.type);
+        throw Error("unexpected expr type: " + expr.type);
       };
 
       function State_make (c, outs, negated) {
@@ -7717,135 +7719,53 @@ function compileNFA (schema, shape) {
     }
 
     function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
-      var _this = this;
+      var rbenx = this;
       var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
-      function resetRepeat (thread, repeatedState) {
-        var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-          if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
-            r[k] = thread.repeats[k];
-          return r;
-        }, {});
-        return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-      }
-      function incrmRepeat (thread, repeatedState) {
-        var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-          r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
-          return r;
-        }, {});
-        return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-      }
-      function stateString (state, repeats) {
-        var rs = Object.keys(repeats).map(rpt => {
-          return rpt+":"+repeats[rpt];
-        }).join(",");
-        return rs.length ? state + "-" + rs : ""+state;
-      }
-
-      function addstate (list, stateNo, thread, seen) {
-        seen = seen || [];
-        var seenkey = stateString(stateNo, thread.repeats);
-        if (seen.indexOf(seenkey) !== -1)
-          return;
-        seen.push(seenkey);
-
-        var s = _this.states[stateNo];
-        if (s.c === Split) {
-          return s.outs.reduce((ret, o, idx) => {
-            return ret.concat(addstate(list, o, thread, seen));
-          }, []);
-        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
-        } else if (s.c === Rept) {
-          var ret = [];
-          // matched = [matched].concat("Rept" + s.expr);
-          if (!(stateNo in thread.repeats))
-            thread.repeats[stateNo] = 0;
-          var repetitions = thread.repeats[stateNo];
-          // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-          if (repetitions < s.max)
-            ret = ret.concat(addstate(list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-          if (repetitions >= s.min && repetitions <= s.max)
-            ret = ret.concat(addstate(list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
-          return ret;
-        } else {
-          // if (stateNo !== _this.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
-          //   return r2 || avail.length > 0;
-          // }, false))
-          return [list.push({ // return [new list element index]
-            state:stateNo,
-            repeats:thread.repeats,
-            avail:thread.avail.map(a => { // copy parent thread's avail vector
-              return a.slice();
-            }),
-            stack:thread.stack,
-            matched:thread.matched,
-            errors: thread.errors
-          }) - 1];
-        }
-      }
 
       function localExpect (list) {
         return list.map(st => {
-          var s = _this.states[st.state]; // simpler threads are a list of states.
+          var s = rbenx.states[st.state]; // simpler threads are a list of states.
           return renderAtom(s.c, s.negated);
         });
       }
 
-      if (_this.states.length === 1)
+      if (rbenx.states.length === 1)
         return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
 
       var chosen = null;
       // var dump = nfaToString();
       // console.log(dump.nfa(this.states, this.start));
-      addstate(clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
+      addstate(rbenx, clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
       while (clist.length) {
         nlist = [];
         if (trace)
           trace.push({threads:[]});
         for (var threadno = 0; threadno < clist.length; ++threadno) {
           var thread = clist[threadno];
-          if (thread.state === _this.end)
+          if (thread.state === rbenx.end)
             continue;
-          var state = _this.states[thread.state];
+          var state = rbenx.states[thread.state];
           var nlistlen = nlist.length;
           var constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
-          var min = "min" in state.c ? state.c.min : 1;
-          var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-          if ("negated" in state.c && state.c.negated)
-            min = max = 0;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
-          var taken = thread.avail[constraintNo].splice(0, max);
-          if (taken.length >= min) {
-            do {
-              // find the exprs that require repetition
-              var exprs = _this.states.map(x => { return x.c === Rept ? x.expr : null; });
-              var newStack = state.stack.map(e => {
-                var i = thread.repeats[exprs.indexOf(e.c)];
-                if (i === undefined)
-                  i = 0; // expr has no repeats
-                else
-                  i = i-1;
-                return { c:e.c, e:e.e, i:i };
-              });
-              var withIndexes = {
-                c: state.c,
-                triples: taken,
-                stack: newStack
-              };
-              thread.matched = thread.matched.concat(withIndexes);
-              state.outs.forEach(o => { // single out if NFA includes epsilons
-                addstate(nlist, o, thread);
-              });
-            } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                taken.push(thread.avail[constraintNo].shift());
-                return true; // stay in look to take more.
-              } else {
-                return false; // no more to take or we're already at max
-              }
-            })());
+            var min = "min" in state.c ? state.c.min : 1;
+            var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+            if ("negated" in state.c && state.c.negated)
+              min = max = 0;
+            if (thread.avail[constraintNo] === undefined)
+              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+            var taken = thread.avail[constraintNo].splice(0, max);
+            if (taken.length >= min) {
+              do {
+                addStates(rbenx, nlist, thread, taken);
+              } while ((function () {
+                if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                  taken.push(thread.avail[constraintNo].shift());
+                  return true; // stay in look to take more.
+                } else {
+                  return false; // no more to take or we're already at max
+                }
+              })());
           }
           if (trace)
             trace[trace.length-1].threads.push({
@@ -7857,7 +7777,7 @@ function compileNFA (schema, shape) {
         }
         // console.log(dump.threadList(nlist));
         if (nlist.length === 0 && chosen === null)
-          return reportError(localExpect(clist, _this.states));
+          return reportError(localExpect(clist, rbenx.states));
         var t = clist;
         clist = nlist;
         nlist = t;
@@ -7868,7 +7788,7 @@ function compileNFA (schema, shape) {
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
                 return t === undefined ? ret : ret + 1; // count expected
               }, 0);
-          return ret !== null ? ret : (elt.state === _this.end && matchedAll) ? elt : null;
+          return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)
         if (longerChosen)
           chosen = longerChosen;
@@ -7880,11 +7800,11 @@ function compileNFA (schema, shape) {
       function reportError () { return {
         type: "Failure",
         node: node,
-        errors: localExpect(clist, _this.states)
+        errors: localExpect(clist, rbenx.states)
       } }
       function localExpect () {
         return clist.map(t => {
-          var c = _this.states[t.state].c;
+          var c = rbenx.states[t.state].c;
           // if (c === Match)
           //   return { type: "EndState999" };
           var valueExpr = extend({}, c.valueExpr);
@@ -7895,7 +7815,7 @@ function compileNFA (schema, shape) {
           }
           return extend({
             type: state.c.negated ? "NegatedProperty" :
-              t.state === _this.end ? "ExcessTripleViolation" :
+              t.state === rbenx.end ? "ExcessTripleViolation" :
               "MissingProperty",
             property: state.c.predicate
           }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {});
@@ -7905,6 +7825,95 @@ function compileNFA (schema, shape) {
       return "errors" in chosen.matched ?
         chosen.matched :
         matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+    }
+
+    function addStates (rbenx, nlist, thread, taken) {
+      var state = rbenx.states[thread.state];
+      // find the exprs that require repetition
+      var exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
+      var newStack = state.stack.map(e => {
+        var i = thread.repeats[exprs.indexOf(e.c)];
+        if (i === undefined)
+          i = 0; // expr has no repeats
+        else
+          i = i-1;
+        return { c:e.c, e:e.e, i:i };
+      });
+      var withIndexes = {
+        c: state.c,
+        triples: taken,
+        stack: newStack
+      };
+      thread.matched = thread.matched.concat(withIndexes);
+      state.outs.forEach(o => { // single out if NFA includes epsilons
+        addstate(rbenx, nlist, o, thread);
+      });
+    }
+
+    function addstate (rbenx, list, stateNo, thread, seen) {
+      seen = seen || [];
+      var seenkey = stateString(stateNo, thread.repeats);
+      if (seen.indexOf(seenkey) !== -1)
+        return;
+      seen.push(seenkey);
+
+      var s = rbenx.states[stateNo];
+      if (s.c === Split) {
+        return s.outs.reduce((ret, o, idx) => {
+          return ret.concat(addstate(rbenx, list, o, thread, seen));
+        }, []);
+        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
+      } else if (s.c === Rept) {
+        var ret = [];
+        // matched = [matched].concat("Rept" + s.expr);
+        if (!(stateNo in thread.repeats))
+          thread.repeats[stateNo] = 0;
+        var repetitions = thread.repeats[stateNo];
+        // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
+        if (repetitions < s.max)
+          ret = ret.concat(addstate(rbenx, list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
+        if (repetitions >= s.min && repetitions <= s.max)
+          ret = ret.concat(addstate(rbenx, list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
+        return ret;
+      } else {
+        // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
+        //   return r2 || avail.length > 0;
+        // }, false))
+        return [list.push({ // return [new list element index]
+          state:stateNo,
+          repeats:thread.repeats,
+          avail:thread.avail.map(a => { // copy parent thread's avail vector
+            return a.slice();
+          }),
+          stack:thread.stack,
+          matched:thread.matched,
+          errors: thread.errors
+        }) - 1];
+      }
+    }
+
+    function resetRepeat (thread, repeatedState) {
+      var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+        if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
+          r[k] = thread.repeats[k];
+        return r;
+      }, {});
+      return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+    }
+
+    function incrmRepeat (thread, repeatedState) {
+      var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+        r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
+        return r;
+      }, {});
+      return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+    }
+
+    function stateString (state, repeats) {
+      var rs = Object.keys(repeats).map(rpt => {
+        return rpt+":"+repeats[rpt];
+      }).join(",");
+      return rs.length ? state + "-" + rs : ""+state;
     }
 
     function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {

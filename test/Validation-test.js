@@ -95,7 +95,7 @@ describe("A ShEx validator", function () {
                    }
                  };
                }
-             }) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
+             }) : valFile; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
 
              doIt(report, absoluteVal, {results: "val"}, true);
            });
@@ -157,7 +157,7 @@ describe("A ShEx validator", function () {
               validator = ShExValidator.construct(schema, schemaOptions);
               var testResults = TestExtension.register(validator);
 
-              assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
+              assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;
               // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
               //   start = Object.keys(schema.action.shapes)[0];
@@ -204,7 +204,8 @@ describe("A ShEx validator", function () {
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-                          expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          if (referenceResult !== null)
+                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         }
                       }
                       var xr = test.extensionResults.filter(function (x) {
@@ -252,7 +253,7 @@ function parseJSONFile(filename, mapFunction) {
     var object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
-        if (typeof obj[k] === "object") {
+        if (typeof obj[k] === "object" && obj[k] !== null) {
           resolveRelativeURLs(obj[k]);
         }
         if (mapFunction) {
