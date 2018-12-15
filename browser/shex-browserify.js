@@ -49482,7 +49482,7 @@ if(_nodejs) {
  * Constructs a new JSON-LD Processor.
  */
 var Processor = function() {};
-
+  jsonld.Proc2 = Processor;
 /**
  * Recursively compacts an element using the given active context. All values
  * must be in expanded form before this method is called.

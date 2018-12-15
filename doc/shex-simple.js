@@ -63,6 +63,56 @@ function parseTurtle (text, meta, base) {
 function parseJSONLD (text, meta, base) {
   let struct = JSON.parse(text);
   let context = struct["@context"];
+  if (true) {
+  let ret = null;
+  let callback = function (lderr, nquads) {
+    if (lderr) {
+      throw Error("error parsing JSON-ld " + base + ": " + lderr);
+    } else {
+      meta.prefixes = Object.keys(context)
+        .filter(k => k.substr(0, 1) !== '@')
+        .reduce((acc, k) => extendMap(acc, k, context[k]), {});
+      meta.base = context['@base'] || base;
+      ret = parseTurtle(nquads, {prefixes: {}, base: undefined}, base);
+      console.log(meta.prefixes);
+    }
+  }
+  let apihandler = function (err, expanded) {
+    if(err) {
+      return callback(new JsonLdError(
+        'Could not expand input before serialization to RDF.',
+        'jsonld.RdfError', {cause: err}));
+    }
+
+    var dataset;
+    try {
+      // output RDF dataset
+      let p2 = new ShEx.JsonLd.Proc2(); // JsonLdProcessor();
+      dataset = p2.toRDF(expanded, options);
+      if(options.format) {
+        if(options.format === 'application/nquads') {
+          return callback(null, _toNQuads(dataset));
+        }
+        throw new JsonLdError(
+          'Unknown output format.',
+          'jsonld.UnknownFormat', {format: options.format});
+      }
+    } catch(ex) {
+      return callback(ex);
+    }
+    callback(null, dataset);
+  }
+    let options = {format: "application/nquads", base: base, documentLoader: ShEx.JsonLd.loadDocument, keepFreeFloatingNodes: false};
+    if (true) {
+      let processor = new ShEx.JsonLd.Proc2(); // JsonLdProcessor();
+      let activeCtx = {'@base': makeURL(base), mappings: {}, inverse: null, getInverse: () => {}, clone: function () { return this; }};
+      let expanded = processor.expand(activeCtx, null, struct, options, false);
+      apihandler(null, [expanded])
+    } else {
+      ShEx.JsonLd.expand(struct, options, apihandler)
+    }
+  return Promise.resolve(ret);
+  }
   return new Promise((resolve, reject) => {
   ShEx.JsonLd.toRDF(struct, {format: "application/nquads", base: base}, function (lderr, nquads) {
     if (lderr) {
@@ -77,10 +127,97 @@ function parseJSONLD (text, meta, base) {
     }
   });
   });
+
+  function makeURL (urlStr) {
+    let ret = new URL(base);
+    ret.path = ret.pathname;
+    return ret;
+  }
+
   function extendMap (obj, key, value) {
     var ret = Object.assign({}, obj);
     ret[key] = value;
     return ret;
+  }
+
+  function _toNQuads(dataset) {
+    var quads = [];
+    for(var graphName in dataset) {
+      var triples = dataset[graphName];
+      for(var ti = 0; ti < triples.length; ++ti) {
+        var triple = triples[ti];
+        if(graphName === '@default') {
+          graphName = null;
+        }
+        quads.push(_toNQuad(triple, graphName));
+      }
+    }
+    return quads.sort().join('');
+  }
+
+  function _toNQuad(triple, graphName) {
+  const RDF_LANGSTRING = 'RDF_LANGSTRING';
+  const XSD_STRING = 'XSD_STRING';
+
+    var s = triple.subject;
+    var p = triple.predicate;
+    var o = triple.object;
+    var g = graphName || null;
+    if('name' in triple && triple.name) {
+      g = triple.name.value;
+    }
+
+    var quad = '';
+
+    // subject is an IRI
+    if(s.type === 'IRI') {
+      quad += '<' + s.value + '>';
+    } else {
+      quad += s.value;
+    }
+    quad += ' ';
+
+    // predicate is an IRI
+    if(p.type === 'IRI') {
+      quad += '<' + p.value + '>';
+    } else {
+      quad += p.value;
+    }
+    quad += ' ';
+
+    // object is IRI, bnode, or literal
+    if(o.type === 'IRI') {
+      quad += '<' + o.value + '>';
+    } else if(o.type === 'blank node') {
+      quad += o.value;
+    } else {
+      var escaped = o.value
+          .replace(/\\/g, '\\\\')
+          .replace(/\t/g, '\\t')
+          .replace(/\n/g, '\\n')
+          .replace(/\r/g, '\\r')
+          .replace(/\"/g, '\\"');
+      quad += '"' + escaped + '"';
+      if(o.datatype === RDF_LANGSTRING) {
+        if(o.language) {
+          quad += '@' + o.language;
+        }
+      } else if(o.datatype !== XSD_STRING) {
+        quad += '^^<' + o.datatype + '>';
+      }
+    }
+
+    // graph
+    if(g !== null && g !== undefined) {
+      if(g.indexOf('_:') !== 0) {
+        quad += ' <' + g + '>';
+      } else {
+        quad += ' ' + g;
+      }
+    }
+
+    quad += ' .\n';
+    return quad;
   }
 }
 
