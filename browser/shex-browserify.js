@@ -1966,7 +1966,13 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
   var allLoaded = DynamicPromise();
   function loadImports (schema) {
     if (!("imports" in schema))
-      return;
+      return schema;
+    if (schemaOptions.keepImports) {
+      return schema;
+    }
+    var ret = Object.assign({}, schema);
+    var imports = ret.imports;
+    delete ret.imports;
     schema.imports.map(function (i) {
       return transform ? transform(i) : i;
     }).filter(function (i) {
@@ -1985,6 +1991,7 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
                           returns.schema, meta, schemaOptions, loadImports);
       })); // addAfter would be after invoking schema.
     });
+    return ret;
   }
 
   // gather all the potentially remote inputs
@@ -2047,10 +2054,9 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     var s = parser.parse(text);
     // !! horrible hack until I set a variable to know if there's a BASE.
     if (s.base === url) delete s.base;
-    ShExUtil.merge(schema, s, true, true);
     meta.prefixes = schema.prefixes;
     meta.base = schema.base || meta.base;
-    loadImports(s);
+    ShExUtil.merge(schema, loadImports(s), true, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
     var e2 = Error("error parsing ShEx " + url + ": " + e);
@@ -2068,22 +2074,26 @@ function loadShExImports_NotUsed (from, parser, transform) {
   });
   function load999Imports (loaded) {
     var schema = parser.parse(loaded.text);
+    var imports = schema.imports;
+    delete schema.imports;
     ShExUtil.merge(ret, schema, false, true);
-    var rest = "imports" in schema ?
-        schema.imports.
-        map(function (i) {
-          return transform ? transform(i) : i;
-        }).
-        filter(function (i) {
-          return schemasSeen.indexOf(i) === -1;
-        }) :
-        [];
-    return rest.length ? Promise.all(rest.map(i => {
-      schemasSeen.push(i);
-      return GET(i).then(load999Imports);
-    })).then(a => {
-      return null;
-    }) : null;
+    if (imports) {
+      var rest = imports
+          .map(function (i) {
+            return transform ? transform(i) : i;
+          }).
+          filter(function (i) {
+            return schemasSeen.indexOf(i) === -1;
+          });
+      return Promise.all(rest.map(i => {
+        schemasSeen.push(i);
+        return GET(i).then(load999Imports);
+      })).then(a => {
+        return null;
+      });
+    } else {
+      return null
+    }
   }
 }
 
@@ -2218,10 +2228,15 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
       var t = Error(`${documentIRI}(${lineNo}): ${e.message}\n${pos}`);
       t.lineNo = lineNo;
       t.context = pos;
-      parser.yy.lexer.matched = parser.yy.lexer.matched || "";
-      t.offset = parser.yy.lexer.matched.length;
-      t.width = parser.yy.lexer.match.length
-      t.lloc = parser.yy.lexer.yylloc;
+      if ("lexer" in parser.yy) {
+        parser.yy.lexer.matched = parser.yy.lexer.matched || "";
+        t.offset = parser.yy.lexer.matched.length;
+        t.width = parser.yy.lexer.match.length
+        t.lloc = parser.yy.lexer.yylloc;
+      } else {
+        // Failed before the Jison call to `yy.parser.yy = { lexer: yy.lexer}`
+        t.offset = t.width = t.lloc = 0;
+      }
       Error.captureStackTrace(t, runParser);
       parser.reset();
       throw t;
@@ -3429,6 +3444,10 @@ var ShExUtil = {
 
     copy("prefixes");
 
+    if ("imports" in right)
+      if (!("imports" in left) || overwrite)
+        ret.imports = right.imports;
+
     // startActs
     if ("startActs" in left)
       ret.startActs = left.startActs;
@@ -3807,9 +3826,22 @@ var ShExUtil = {
         return ret;
 
       var t = v[RDF.type][0].ldterm;
-      if (t === SX.Shape) {
+      if (t === SX.ShapeDecl) {
+        var ret = { type: "ShapeDecl" };
+        ["abstract"].forEach(a => {
+          if (SX[a] in v)
+            ret[a] = !!v[SX[a]][0].ldterm.value;
+        });
+        if (SX.shapeExpr in v) {
+          ret.shapeExpr =
+            "nested" in v[SX.shapeExpr][0] ?
+            extend({id: v[SX.shapeExpr][0].ldterm}, shapeExpr(v[SX.shapeExpr][0].nested)) :
+            v[SX.shapeExpr][0].ldterm;
+        }
+        return ret;
+      } else if (t === SX.Shape) {
         var ret = { type: "Shape" };
-        ["abstract", "closed"].forEach(a => {
+        ["closed"].forEach(a => {
           if (SX[a] in v)
             ret[a] = !!v[SX[a]][0].ldterm.value;
         });
