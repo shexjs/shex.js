@@ -2200,10 +2200,15 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
       var t = Error(`${documentIRI}(${lineNo}): ${e.message}\n${pos}`);
       t.lineNo = lineNo;
       t.context = pos;
-      parser.yy.lexer.matched = parser.yy.lexer.matched || "";
-      t.offset = parser.yy.lexer.matched.length;
-      t.width = parser.yy.lexer.match.length
-      t.lloc = parser.yy.lexer.yylloc;
+      if ("lexer" in parser.yy) {
+        parser.yy.lexer.matched = parser.yy.lexer.matched || "";
+        t.offset = parser.yy.lexer.matched.length;
+        t.width = parser.yy.lexer.match.length
+        t.lloc = parser.yy.lexer.yylloc;
+      } else {
+        // Failed before the Jison call to `yy.parser.yy = { lexer: yy.lexer}`
+        t.offset = t.width = t.lloc = 0;
+      }
       Error.captureStackTrace(t, runParser);
       parser.reset();
       throw t;
