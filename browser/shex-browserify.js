@@ -178,7 +178,8 @@ case 33:
         if ($$[$0]) {
           // If there were disjuncts, prepend with $$[$0-1].
           // Note that $$[$0] may be a ShapeOr or a ShapeAnd.
-          $$[$0].shapeExprs.unshift(nonest($$[$0-1])); // t: open1dotAND1dotcloseAND1dot, (. AND .) AND .
+          $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+          delete $$[$0].needsAtom;
           this.$ = $$[$0];
         } else {
           this.$ = $$[$0-1];
@@ -190,7 +191,8 @@ this.$ = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) } // !!! opt;
 break;
 case 35:
 
-        $$[$0].shapeExprs.unshift($$[$0-1]);
+        $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+        delete $$[$0].needsAtom;
         this.$ = $$[$0]; // { type: "ShapeOr", "shapeExprs": [$$[$0-1]].concat($$[$0]) };
       
 break;
@@ -202,12 +204,15 @@ this.$ = $$[$0];
 break;
 case 39:
  // returns a ShapeOr
-        this.$ = { type: "ShapeOr", shapeExprs: $$[$0].map(nonest) }; // t: @@
+        var disjuncts = $$[$0].map(nonest);
+        this.$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
       
 break;
 case 40:
  // returns a ShapeAnd
-        this.$ = $$[$0].length > 0 ? shapeJunction("ShapeAnd", $$[$0-1], $$[$0]) : { type: "ShapeAnd", shapeExprs:$$[$0-1].map(nonest) }; // t: !!
+        var and = { type: "ShapeAnd", shapeExprs: $$[$0-1].map(nonest) };
+        this.$ = $$[$0].length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($$[$0].map(nonest)) } : and; // t: @@
+        this.$.needsAtom = and.shapeExprs;
       
 break;
 case 42: case 45:
@@ -6127,17 +6132,40 @@ ShExWriter.prototype = {
     else if (shapeExpr.type === "ShapeAnd") {
       if (parentPrec >= 3)
         pieces.push("(");
+      var lastAndElided = false;
       shapeExpr.shapeExprs.forEach(function (expr, ord) {
-        if (ord > 0 && // !!! grammar rules too weird here
-	    !((shapeExpr.shapeExprs[ord-1].type === "NodeConstraint" &&
-               !("datatype" in shapeExpr.shapeExprs[ord-1]) &&
-	       (shapeExpr.shapeExprs[ord  ].type === "Shape" ||
-		shapeExpr.shapeExprs[ord  ].type === "ShapeRef")) ||
-	      (shapeExpr.shapeExprs[ord  ].type === "NodeConstraint" &&
-               !("datatype" in shapeExpr.shapeExprs[ord  ]) &&
-	       (shapeExpr.shapeExprs[ord-1].type === "Shape" ||
-		shapeExpr.shapeExprs[ord-1].type === "ShapeRef"))))
-          pieces.push(" AND ");
+        if (ord > 0) { // && !!! grammar rules too weird here
+          /*
+            shapeAtom:
+                  nonLitNodeConstraint shapeOrRef?
+                | shapeOrRef nonLitNodeConstraint?
+
+            nonLitInlineNodeConstraint:
+                  nonLiteralKind stringFacet*
+          */
+          function nonLitNodeConstraint (idx) {
+            let c = shapeExpr.shapeExprs[idx];
+            return c.type !== "NodeConstraint"
+              || ("nodeKind" in c && c.nodeKind === "literal")
+              || "datatype" in c
+              || "values" in c
+              ? false
+              : true;
+          }
+
+          function shapeOrRef (idx) {
+            let c = shapeExpr.shapeExprs[idx];
+            return c.type === "Shape" || c.type === "ShapeRef";
+          }
+
+          let elideAnd = !lastAndElided
+              && (nonLitNodeConstraint(ord-1) && shapeOrRef(ord)
+                  || shapeOrRef(ord-1) && nonLitNodeConstraint(ord))
+          if (!elideAnd) {
+            pieces.push(" AND ");
+          }
+          lastAndElided = elideAnd;
+        }
         pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr, done, false, 3));
       });
       if (parentPrec >= 3)
@@ -6420,7 +6448,7 @@ ShExWriter.prototype = {
       // if (ESCAPE_1.test(pattern))
       //   pattern = pattern.replace(ESCAPE_g, characterReplacer);
       var flags = 'flags' in v ? v.flags : "";
-      pieces.push("/" + pattern + "/" + flags);
+      pieces.push("/" + pattern + "/" + flags + " ");
     }
     ['length', 'minlength', 'maxlength',
      'mininclusive', 'minexclusive', 'maxinclusive', 'maxexclusive',
