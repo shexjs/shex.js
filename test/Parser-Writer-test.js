@@ -236,7 +236,7 @@ describe("A ShEx parser", function () {
           parser._setFileName(shexCFile + " (generated)");
           try {
             parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
-            var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var parsed2 = parser.parse(w);
             var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
             expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
