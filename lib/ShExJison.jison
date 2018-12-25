@@ -704,7 +704,19 @@ shapeExpression:
           $$ = $2;
         }
       }
-    | IT_NOT shapeRef _QshapeOr_E_Opt	-> { type: "ShapeNot", "shapeExpr": nonest($2) } // !!! opt
+    | IT_NOT shapeRef _QshapeOr_E_Opt	{
+        $2 = { type: "ShapeNot", "shapeExpr": nonest($2) } // !!! opt
+        if ($3) { // If there were disjuncts,
+          //           shapeOr will have $3.set needsAtom.
+          //           Prepend $3.needsAtom with $2.
+          //           Note that $3 may be a ShapeOr or a ShapeAnd.
+          $3.needsAtom.unshift(nonest($2));
+          delete $3.needsAtom;
+          $$ = $3;
+        } else {
+          $$ = $2;
+        }
+      }
     | shapeRef shapeOr	{
         $2.needsAtom.unshift(nonest($1));
         delete $2.needsAtom;

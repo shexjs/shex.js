@@ -157,9 +157,10 @@ case 29:
 
         if ($$[$0-2])
           $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) }; // t:@@
-        if ($$[$0]) {
-          // If there were disjuncts, prepend with $$[$0-1].
-          // Note that $$[$0] may be a ShapeOr or a ShapeAnd.
+        if ($$[$0]) { // If there were disjuncts,
+          //           shapeOr will have $$[$0].set needsAtom.
+          //           Prepend $$[$0].needsAtom with $$[$0-1].
+          //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
           $$[$0].needsAtom.unshift(nonest($$[$0-1]));
           delete $$[$0].needsAtom;
           this.$ = $$[$0];
@@ -169,7 +170,19 @@ case 29:
       
 break;
 case 30:
-this.$ = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) } // !!! opt;
+
+        $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) } // !!! opt
+        if ($$[$0]) { // If there were disjuncts,
+          //           shapeOr will have $$[$0].set needsAtom.
+          //           Prepend $$[$0].needsAtom with $$[$0-1].
+          //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
+          $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+          delete $$[$0].needsAtom;
+          this.$ = $$[$0];
+        } else {
+          this.$ = $$[$0-1];
+        }
+      
 break;
 case 31:
 
@@ -3460,6 +3473,7 @@ var ShExUtil = {
     var inTE = false;
     var oldVisitShape = visitor.visitShape;
     var negativeDeps = Hierarchy.create();
+    var positiveDeps = Hierarchy.create();
 
     visitor.visitShape = function (shape, label) {
       var lastExtra = currentExtra;
@@ -3496,8 +3510,7 @@ var ShExUtil = {
         throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(schema.shapes) + ".");
       if (!inTE && shapeRef.reference === currentLabel)
         throw Error("Structural error: circular reference to " + currentLabel + ".");
-      if (currentNegated)
-        negativeDeps.add(currentLabel, shapeRef.reference)
+      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef.reference)
       return oldVisitShapeRef.call(visitor, shapeRef);
     }
 
@@ -3516,7 +3529,10 @@ var ShExUtil = {
       visitor.visitShapeExpr(schema.shapes[label], label);
     });
     let circs = Object.keys(negativeDeps.children).filter(
-      k => negativeDeps.children[k].length > 0
+      k => negativeDeps.children[k].filter(
+        k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
+          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
+      ).length > 0
     );
     if (circs.length)
       throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
