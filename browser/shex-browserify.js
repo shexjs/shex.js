@@ -205,7 +205,15 @@ case 35:
 break;
 case 36:
  // returns a ShapeAnd
-        var and = { type: "ShapeAnd", shapeExprs: $$[$0-1].map(nonest) };
+        // $$[$0-1] could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
+        $$[$0-1].filter(c => c.type === "ShapeAnd").length === $$[$0-1].length
+        var and = {
+          type: "ShapeAnd",
+          shapeExprs: $$[$0-1].reduce(
+            (acc, elt) =>
+              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), []
+          )
+        };
         this.$ = $$[$0].length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($$[$0].map(nonest)) } : and; // t: @@
         this.$.needsAtom = and.shapeExprs;
       
@@ -5868,7 +5876,7 @@ ShExWriter.prototype = {
           /*
             shapeAtom:
                   nonLitNodeConstraint shapeOrRef?
-                | shapeOrRef nonLitNodeConstraint?
+                | shapeDecl nonLitNodeConstraint?
 
             nonLitInlineNodeConstraint:
                   nonLiteralKind stringFacet*
@@ -5888,9 +5896,14 @@ ShExWriter.prototype = {
             return c.type === "Shape" || c.type === "ShapeRef";
           }
 
+          function shapeDecl (idx) {
+            let c = shapeExpr.shapeExprs[idx];
+            return c.type === "Shape";
+          }
+
           let elideAnd = !lastAndElided
               && (nonLitNodeConstraint(ord-1) && shapeOrRef(ord)
-                  || shapeOrRef(ord-1) && nonLitNodeConstraint(ord))
+                  || shapeDecl(ord-1) && nonLitNodeConstraint(ord))
           if (!elideAnd) {
             pieces.push(" AND ");
           }
@@ -6108,7 +6121,7 @@ ShExWriter.prototype = {
       pieces.push("[");
 
       v.values.forEach(function (t, ord) {
-        if (ord > 1)
+        if (ord > 0)
           pieces.push(" ");
 
         if (!isTerm(t)) {
