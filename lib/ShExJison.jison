@@ -765,7 +765,15 @@ shapeOr: // Sets .needsAtom to tell shapeExpression where to place leading shape
         $$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{ // returns a ShapeAnd
-        var and = { type: "ShapeAnd", shapeExprs: $1.map(nonest) };
+        // $1 could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
+        $1.filter(c => c.type === "ShapeAnd").length === $1.length
+        var and = {
+          type: "ShapeAnd",
+          shapeExprs: $1.reduce(
+            (acc, elt) =>
+              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), []
+          )
+        };
         $$ = $2.length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($2.map(nonest)) } : and; // t: @@
         $$.needsAtom = and.shapeExprs;
       }
