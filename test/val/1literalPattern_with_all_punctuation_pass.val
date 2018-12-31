@@ -15,7 +15,13 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~" }
+        "object": { "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~" },
+        "referenced": {
+          "focus": "\" !\"#$%&'()/:;<=>?@[]^_`{|}~\"",
+          "nodeKind": "literal",
+          "pattern": "^ !\"#\\$%&'\\(\\)/:;<=>\\?@\\[\\]\\^_`\\{\\|\\}~$",
+          "type": "NodeConstraintTest"
+        }
       }
     ]
   }

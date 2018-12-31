@@ -30,7 +30,30 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "abab" }
+        "object": { "value": "abab" },
+        "referenced": {
+          "solutions": [
+            {
+              "focus": "\"abab\"",
+              "minlength": 4,
+              "nodeKind": "literal",
+              "type": "NodeConstraintTest"
+            },
+            {
+              "focus": "\"abab\"",
+              "maxlength": 5,
+              "nodeKind": "literal",
+              "type": "NodeConstraintTest"
+            },
+            {
+              "focus": "\"abab\"",
+              "nodeKind": "literal",
+              "pattern": "^(ab)+$",
+              "type": "NodeConstraintTest"
+            }
+          ],
+          "type": "ShapeAndResults"
+        }
       }
     ]
   }

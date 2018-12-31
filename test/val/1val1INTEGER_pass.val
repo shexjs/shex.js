@@ -16,7 +16,17 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#integer" }
+        "object": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+        "referenced": {
+          "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#integer",
+          "type": "NodeConstraintTest",
+          "values": [
+            {
+              "type": "http://www.w3.org/2001/XMLSchema#integer",
+              "value": "0"
+            }
+          ]
+        }
       }
     ]
   }

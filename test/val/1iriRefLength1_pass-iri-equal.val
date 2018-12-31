@@ -26,21 +26,32 @@
         "predicate": "http://a.example/p1",
         "object": "http://a.example/o1",
         "referenced": {
-          "type": "ShapeTest",
-          "node": "http://a.example/o1",
-          "shape": "http://a.example/S2",
-          "solution": {
-            "type": "TripleConstraintSolutions",
-            "predicate": "http://a.example/p2",
-            "solutions": [
-              {
-                "type": "TestedTriple",
-                "subject": "http://a.example/o1",
+          "type": "ShapeAndResults",
+          "solutions": [
+            {
+              "type": "NodeConstraintTest",
+              "focus": "http://a.example/o1",
+              "nodeKind": "iri",
+              "length": 19
+            },
+            {
+              "type": "ShapeTest",
+              "node": "http://a.example/o1",
+              "shape": "http://a.example/S2",
+              "solution": {
+                "type": "TripleConstraintSolutions",
                 "predicate": "http://a.example/p2",
-                "object": "http://a.example/o2"
+                "solutions": [
+                  {
+                    "type": "TestedTriple",
+                    "subject": "http://a.example/o1",
+                    "predicate": "http://a.example/p2",
+                    "object": "http://a.example/o2"
+                  }
+                ]
               }
-            ]
-          }
+            }
+          ]
         }
       }
     ]

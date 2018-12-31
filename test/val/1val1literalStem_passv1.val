@@ -19,7 +19,14 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "v1" }
+        "object": { "value": "v1" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"v1\"",
+          "values": [
+            { "type": "LiteralStem", "stem": "v" }
+          ]
+        }
       }
     ]
   }

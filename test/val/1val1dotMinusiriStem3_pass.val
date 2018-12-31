@@ -19,7 +19,34 @@
       ]
     },
     "solutions":[
-      {"type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":"http://a.example/o1"}
+      { "type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":"http://a.example/o1",
+        "referenced": {
+          "focus": "http://a.example/o1",
+          "type": "NodeConstraintTest",
+          "values": [
+            {
+              "exclusions": [
+                {
+                  "stem": "http://a.example/v1",
+                  "type": "IriStem"
+                },
+                {
+                  "stem": "http://a.example/v2",
+                  "type": "IriStem"
+                },
+                {
+                  "stem": "http://a.example/v3",
+                  "type": "IriStem"
+                }
+              ],
+              "stem": {
+                "type": "Wildcard"
+              },
+              "type": "IriStemRange"
+            }
+          ]
+        }
+      }
     ]
   }
 }

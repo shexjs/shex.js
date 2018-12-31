@@ -15,7 +15,13 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "abcd" }
+        "object": { "value": "abcd" },
+        "referenced": {
+          "focus": "\"abcd\"",
+          "maxlength": 5,
+          "nodeKind": "literal",
+          "type": "NodeConstraintTest"
+        }
       }
     ]
   }

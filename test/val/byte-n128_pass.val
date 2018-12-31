@@ -13,6 +13,11 @@
         "object": {
           "value": "-128",
           "type": "http://www.w3.org/2001/XMLSchema#byte"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#byte",
+          "focus": "\"-128\"^^http://www.w3.org/2001/XMLSchema#byte",
+          "type": "NodeConstraintTest"
         }
       }
     ],

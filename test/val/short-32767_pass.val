@@ -13,6 +13,11 @@
         "object": {
           "value": "32767",
           "type": "http://www.w3.org/2001/XMLSchema#short"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#short",
+          "focus": "\"32767\"^^http://www.w3.org/2001/XMLSchema#short",
+          "type": "NodeConstraintTest"
         }
       }
     ],

@@ -13,6 +13,11 @@
         "object": {
           "value": "+1",
           "type": "http://www.w3.org/2001/XMLSchema#float"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#float",
+          "focus": "\"+1\"^^http://www.w3.org/2001/XMLSchema#float",
+          "type": "NodeConstraintTest"
         }
       }
     ],

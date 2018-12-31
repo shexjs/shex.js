@@ -13,6 +13,11 @@
         "object": {
           "value": "+0",
           "type": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger",
+          "focus": "\"+0\"^^http://www.w3.org/2001/XMLSchema#nonPositiveInteger",
+          "type": "NodeConstraintTest"
         }
       }
     ],

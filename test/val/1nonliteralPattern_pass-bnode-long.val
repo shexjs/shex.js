@@ -15,7 +15,13 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "_:abc"
+        "object": "_:abc",
+        "referenced": {
+          "focus": "_:abc",
+          "nodeKind": "nonliteral",
+          "pattern": "bc$",
+          "type": "NodeConstraintTest"
+        }
       }
     ]
   }

@@ -6,7 +6,14 @@
     "type": "TripleConstraintSolutions", "predicate": "http://a.example/p1",
     "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer", "mininclusive": 5 },
     "solutions":[
-      {"type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "5", "type": "http://www.w3.org/2001/XMLSchema#integer" }}
+      { "type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "5", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+          "focus": "\"5\"^^http://www.w3.org/2001/XMLSchema#integer",
+          "mininclusive": 5,
+          "type": "NodeConstraintTest"
+        }
+      }
     ]
   }
 }

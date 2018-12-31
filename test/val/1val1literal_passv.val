@@ -10,7 +10,14 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "v" }
+        "object": { "value": "v" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"v\"",
+          "values": [
+            { "value": "v" }
+          ]
+        }
       }
     ],
     "valueExpr": {

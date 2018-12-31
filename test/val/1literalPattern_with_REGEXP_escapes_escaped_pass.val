@@ -15,7 +15,13 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8" }
+        "object": { "value": "\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8" },
+        "referenced": {
+          "focus": "\"\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8\"",
+          "nodeKind": "literal",
+          "pattern": "^\\\\/\\\\t\\\\n\\\\r\\\\-\\\\\\\\\\\\u0061\\\\U0001D4B8$",
+          "type": "NodeConstraintTest"
+        }
       }
     ]
   }

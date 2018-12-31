@@ -13,6 +13,11 @@
         "object": {
           "value": "65535",
           "type": "http://www.w3.org/2001/XMLSchema#unsignedShort"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#unsignedShort",
+          "focus": "\"65535\"^^http://www.w3.org/2001/XMLSchema#unsignedShort",
+          "type": "NodeConstraintTest"
         }
       }
     ],

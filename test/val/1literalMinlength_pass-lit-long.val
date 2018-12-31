@@ -15,7 +15,13 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "abcdef" }
+        "object": { "value": "abcdef" },
+        "referenced": {
+          "focus": "\"abcdef\"",
+          "minlength": 5,
+          "nodeKind": "literal",
+          "type": "NodeConstraintTest"
+        }
       }
     ]
   }

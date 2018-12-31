@@ -15,7 +15,18 @@
               "values": [ { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#integer" } ]
             },
             "solutions": [
-              { "type": "TestedTriple", "subject": "x", "predicate": "http://a.example/a", "object": { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#integer" } }
+              { "type": "TestedTriple", "subject": "x", "predicate": "http://a.example/a", "object": { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "\"1\"^^http://www.w3.org/2001/XMLSchema#integer",
+                  "values": [
+                    {
+                      "value": "1",
+                      "type": "http://www.w3.org/2001/XMLSchema#integer"
+                    }
+                  ]
+                }
+              }
             ]
           },
           {
@@ -31,7 +42,18 @@
                       "values": [ { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" } ]
                     },
                     "solutions": [
-                      { "type": "TestedTriple", "subject": "x", "predicate": "http://a.example/a", "object": { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" } }
+                      { "type": "TestedTriple", "subject": "x", "predicate": "http://a.example/a", "object": { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+                        "referenced": {
+                          "type": "NodeConstraintTest",
+                          "focus": "\"3\"^^http://www.w3.org/2001/XMLSchema#integer",
+                          "values": [
+                            {
+                              "value": "3",
+                              "type": "http://www.w3.org/2001/XMLSchema#integer"
+                            }
+                          ]
+                        }
+                      }
                     ]
                   }
                 ]

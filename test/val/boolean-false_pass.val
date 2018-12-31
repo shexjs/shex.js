@@ -13,6 +13,11 @@
         "object": {
           "value": "false",
           "type": "http://www.w3.org/2001/XMLSchema#boolean"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "focus": "\"false\"^^http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "NodeConstraintTest"
         }
       }
     ],

@@ -13,6 +13,11 @@
         "object": {
           "value": "1",
           "type": "http://www.w3.org/2001/XMLSchema#unsignedLong"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#unsignedLong",
+          "focus": "\"1\"^^http://www.w3.org/2001/XMLSchema#unsignedLong",
+          "type": "NodeConstraintTest"
         }
       }
     ],

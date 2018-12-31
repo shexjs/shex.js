@@ -16,7 +16,14 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "bC" }
+        "object": { "value": "bC" },
+        "referenced": {
+          "flags": "i",
+          "focus": "\"bC\"",
+          "nodeKind": "literal",
+          "pattern": "bc",
+          "type": "NodeConstraintTest"
+        }
       }
     ]
   }

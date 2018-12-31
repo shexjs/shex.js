@@ -18,7 +18,13 @@
             "type": "TestedTriple",
             "subject": "http://a.example/s1",
             "predicate": "http://a.example/p1",
-            "object": { "value": "abab" }
+            "object": { "value": "abab" },
+            "referenced": {
+              "type": "NodeConstraintTest",
+              "focus": "\"abab\"",
+              "nodeKind": "literal",
+              "minlength": 4
+            }
           }
         ]
       }
@@ -40,7 +46,13 @@
             "type": "TestedTriple",
             "subject": "http://a.example/s1",
             "predicate": "http://a.example/p1",
-            "object": { "value": "abab" }
+            "object": { "value": "abab" },
+            "referenced": {
+              "type": "NodeConstraintTest",
+              "focus": "\"abab\"",
+              "nodeKind": "literal",
+              "maxlength": 5
+            }
           }
         ]
       }
@@ -62,7 +74,13 @@
             "type": "TestedTriple",
             "subject": "http://a.example/s1",
             "predicate": "http://a.example/p1",
-            "object": { "value": "abab" }
+            "object": { "value": "abab" },
+            "referenced": {
+              "type": "NodeConstraintTest",
+              "focus": "\"abab\"",
+              "nodeKind": "literal",
+              "pattern": "(ab)+"
+            }
           }
         ]
       }

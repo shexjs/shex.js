@@ -26,7 +26,14 @@
                     "type": "TestedTriple",
                     "subject": "http://inst.example/Tester2",
                     "predicate": "http://schema.example/role",
-                    "object": "http://schema.example/testingRole"
+                    "object": "http://schema.example/testingRole",
+                    "referenced": {
+                      "type": "NodeConstraintTest",
+                      "focus": "http://schema.example/testingRole",
+                      "values": [
+                        "http://schema.example/testingRole"
+                      ]
+                    }
                   }
                 ],
                 "valueExpr": {
@@ -57,7 +64,14 @@
             "type": "TestedTriple",
             "subject": "http://inst.example/Tester2",
             "predicate": "http://schema.example/role",
-            "object": "http://schema.example/testingRole"
+            "object": "http://schema.example/testingRole",
+            "referenced": {
+              "type": "NodeConstraintTest",
+              "focus": "http://schema.example/testingRole",
+              "values": [
+                "http://schema.example/testingRole"
+              ]
+            }
           }
         ],
         "valueExpr": {

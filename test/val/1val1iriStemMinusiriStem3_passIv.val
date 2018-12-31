@@ -33,7 +33,22 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "http://a.example/v"
+        "object": "http://a.example/v",
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "http://a.example/v",
+          "values": [
+            {
+              "type": "IriStemRange",
+              "stem": "http://a.example/v",
+              "exclusions": [
+                { "type": "IriStem", "stem": "http://a.example/v1" },
+                { "type": "IriStem", "stem": "http://a.example/v2" },
+                { "type": "IriStem", "stem": "http://a.example/v3" }
+              ]
+            }
+          ]
+        }
       }
     ]
   }

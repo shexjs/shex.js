@@ -12,6 +12,11 @@
         "predicate": "http://a.example/p",
         "object": {
           "value": "a"
+        },
+        "referenced": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#string",
+          "focus": "\"a\"^^http://www.w3.org/2001/XMLSchema#string",
+          "type": "NodeConstraintTest"
         }
       }
     ],

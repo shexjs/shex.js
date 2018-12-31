@@ -16,7 +16,17 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "ab", "type": "http://a.example/bloodType" }
+        "object": { "value": "ab", "type": "http://a.example/bloodType" },
+        "referenced": {
+          "focus": "\"ab\"^^http://a.example/bloodType",
+          "type": "NodeConstraintTest",
+          "values": [
+            {
+              "type": "http://a.example/bloodType",
+              "value": "ab"
+            }
+          ]
+        }
       }
     ]
   }
