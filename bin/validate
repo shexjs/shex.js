@@ -713,7 +713,7 @@ function loadJSONmanifest (jsonManifests) {
           if ("@graph" in d) // Extract from the JSON-LD manifest format.
             d = d["@graph"][0].entries.map(function (t) {
               var options = Object.assign({}, ValidatorOptions);
-              t.trait.forEach(function (tStr) {
+              (t.trait || []).forEach(function (tStr) {
                 tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
                 if (tStr in TraitToOption)
                   options[TraitToOption[tStr]] = tStr;
