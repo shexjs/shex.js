@@ -3635,6 +3635,12 @@ var ShExUtil = {
       return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
     } else if (val.type === "ShapeOrResults") {
       return _ShExUtil.walkVal(val.solution, cb);
+    } else if (val.type === "ShapeAndResults") {
+      // return _ShExUtil.walkVal(val.solutions, cb);
+      return val.solutions.reduce((ret, sln) => {
+        Object.assign(ret, _ShExUtil.walkVal(sln, cb));
+        return ret;
+      }, {});
     } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
       return val.solutions.reduce((ret, sln) => {
         sln.expressions.forEach(exp => {
@@ -3695,7 +3701,9 @@ var ShExUtil = {
               vals.push(newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced);
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                          ? rest.referenced.solution
+                          : rest.referenced);
             }
           }
         });
@@ -3703,6 +3711,8 @@ var ShExUtil = {
       } else {
         return null;
       }
+    } else if (val.type === "NodeConstraintTest") {
+      return null;
     } else if (val.type === "Recursion") {
       return null;
     } else {
@@ -5084,12 +5094,12 @@ function ShExValidator_constructor(schema, options) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     if (shapeExpr.type === "NodeConstraint") {
-      var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-      return errors.length ? {
+      var sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      return sub.errors && sub.errors.length ? {
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
-        errors: errors.map(function (miss) {
+        errors: sub.errors.map(function (miss) { // !!! just sub.errors?
           return {
             type: "NodeConstraintViolation",
             shapeExpr: shapeExpr
@@ -5175,7 +5185,7 @@ function ShExValidator_constructor(schema, options) {
     var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     var constraintList = inheritedTCs.concat(this.indexTripleConstraints(shape.expression)); // !! adds tcis to shape.expression
-    var tripleList = constraintList.reduce(function (ret, constraint, ord) {
+    var tripleList = constraintList.reduce(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
       var searchSubject = constraint.inverse ? null : point;
@@ -5186,31 +5196,24 @@ function ShExValidator_constructor(schema, options) {
       var matchPredicate = index.byPredicate[constraint.predicate] ||
         []; // empty list when no triple matches that constraint
 
-      function _errorsByShapeLabel (focus, shapeLabel) {
-        var sub = _ShExValidator.validate(db, focus, shapeLabel, tracker, seen);
-        return "errors" in sub ? sub.errors : [];
-      }
-      function _errorsByShapeExpr (focus, shapeExpr) {
-        var sub = _ShExValidator._validateShapeDecl(db, focus, shapeExpr, shapeLabel, depth, tracker, seen);
-        return "errors" in sub ? sub.errors : [];
-      }
       // strip to triples matching value constraints (apart from @<someShape>)
       var matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
         matchPredicate,
-        constraint.valueExpr,
-        constraint.inverse,
-        /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeLabel,
-        /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeExpr
+        constraint,
+        { db: db, shapeLabel: shapeLabel, depth: depth, tracker: tracker, seen: seen }
       );
 
-      matchConstraints.hits.forEach(function (t) {
-        ret.constraintList[neighborhood.indexOf(t)].push(ord);
+      matchConstraints.hits.forEach(function (evidence) {
+        var tNo = neighborhood.indexOf(evidence.triple);
+        ret.constraintList[tNo].push(cNo);
+        ret.results[cNo][tNo] = evidence.sub;
       });
-      matchConstraints.misses.forEach(function (t) {
-        ret.misses[neighborhood.indexOf(t.triple)] = {constraintNo: ord, errors: t.errors};
+      matchConstraints.misses.forEach(function (evidence) {
+        var tNo = neighborhood.indexOf(evidence.triple);
+        ret.misses[tNo] = {constraintNo: cNo, errors: evidence.errors};
       });
       return ret;
-    }, { misses: {}, constraintList:_seq(neighborhood.length).map(function () { return []; }) }); // start with [[],[]...]
+    }, { misses: {}, results: _alist(constraintList.length), constraintList:_alist(neighborhood.length) }); // start with [[],[]...]
 
     // @@ add to tracker: f("constraints by triple: ", JSON.stringify(tripleList.constraintList));
 
@@ -5273,9 +5276,9 @@ function ShExValidator_constructor(schema, options) {
       function _constraintToTriples () {
         var cll = constraintList.length;
         return tripleToConstraintMapping.slice().
-          reduce(function (ret, c, ord) {
-            if (c !== undefined)
-              ret[c].push(ord);
+          reduce(function (ret, cNo, tNo) {
+            if (cNo !== undefined)
+              ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
             return ret;
           }, _seq(cll).map(function () { return []; }));
       }
@@ -5284,22 +5287,7 @@ function ShExValidator_constructor(schema, options) {
         return i !== undefined;
       }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
 
-      function _recurse (point, shapeLabel, subGraph) {
-        return _ShExValidator.validate(db, point, shapeLabel, tracker, seen, subGraph);
-      }
-      function _direct (point, shapeExpr, subgraph) {
-        return _ShExValidator._validateShapeDecl(db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
-      }
-      function _testExpr (term, valueExpr, recurse, direct, subgraph) {
-        return _ShExValidator._errorsMatchingShapeExpr(term, valueExpr, recurse, direct, subgraph)
-      }
-      var results = regexEngine.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
-      if (false) {// testing parity between two engines
-        var nfa = require("../lib/regex/nfax-val-1err").compile(schema, shape);
-        var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
-        if ("errors" in fromNFA !== "errors" in results)
-          { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
-      }
+      var results = regexEngine.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, this.semActHandler, null);
       if ("errors" in results) {
         partitionErrors.push({
           errors: results.errors
@@ -5364,49 +5352,80 @@ function ShExValidator_constructor(schema, options) {
     }
   };
 
-  this._triplesMatchingShapeExpr = function (triples, valueExpr, inverse, recurse, direct) {
+  this._triplesMatchingShapeExpr = function (triples, constraint, valParms) {
     var _ShExValidator = this;
     var misses = [];
     var hits = [];
     triples.forEach(function (triple) {
-      var value = inverse ? triple.subject : triple.object;
-      var errors = valueExpr === undefined ?
-          [] :
-          _ShExValidator._errorsMatchingShapeExpr(value, valueExpr, recurse, direct);
-      if (errors.length === 0) {
-        hits.push(triple);
+      var value = constraint.inverse ? triple.subject : triple.object;
+      var sub;
+      var oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
+      var errors = constraint.valueExpr === undefined ?
+          undefined :
+          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms)).errors;
+      if (!errors && "semActs" in constraint &&
+          !_ShExValidator.semActHandler.dispatchAll(constraint.semActs, triple,
+                                    {
+                                      type: "TestedTriple", subject: triple.subject, predicate: triple.predicate, object: ldify(triple.object)
+                                    })) {
+        errors = [{ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }] // some semAct aborted
+      }
+      if (!errors) {
+        hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
+        _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
         misses.push({triple: triple, errors: errors});
       }
     });
     return { hits: hits, misses: misses };
   }
-  this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct, subgraph) {
+  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, subgraph) {
     var _ShExValidator = this;
     if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
-      return direct === undefined ? [] : direct(value, valueExpr, subgraph);
+      return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, subgraph)
+      return validateBySExpr(value, valueExpr);
     } else if (valueExpr.type === "ShapeRef") {
-      return recurse ? recurse(value, valueExpr.reference) : [];
+      return _ShExValidator.validate(valParms.db, value, valueExpr.reference, valParms.tracker, valParms.seen);
     } else if (valueExpr.type === "ShapeOr") {
-      var ret = [];
+      var errors = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct, subgraph);
-        if (nested.length === 0)
-          return nested;
-        ret = ret.concat(nested);
+        var nested = valueExpr.shapeExprs[i];
+        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, subgraph);
+        if ("errors" in sub)
+          errors.push(sub);
+        else
+          return { type: "ShapeOrResults", solution: sub };
+      }
+      return { type: "ShapeOrFailure", errors: errors };
+    } else if (valueExpr.type === "ShapeAnd") {
+      var passes = [];
+      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        var nested = valueExpr.shapeExprs[i];
+        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, subgraph);
+        if ("errors" in sub)
+          return { type: "ShapeAndFailure", errors: [sub] };
+        else
+          passes.push(sub);
+      }
+      return { type: "ShapeAndResults", solutions: passes };
+    } else if (valueExpr.type === "ShapeNot") {
+      var sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, subgraph);
+      // return sub.errors && sub.errors.length ? {} : {
+      //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
+      var ret = Object.assign({
+        type: null,
+        focus: value
+      }, valueExpr);
+      if (sub.errors && sub.errors.length) {
+        ret.type = "ShapeNotTest";
+        // ret = {};
+      } else {
+        ret.type = "ShapeNotFailure";
+        ret.errors = ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"]
       }
       return ret;
-    } else if (valueExpr.type === "ShapeAnd") {
-      return valueExpr.shapeExprs.reduce(function (ret, nested, iter) {
-        return ret.concat(_ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, subgraph, true));
-      }, []);
-    } else if (valueExpr.type === "ShapeNot") {
-      var ret = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, recurse, direct, subgraph, true);
-      return ret.length ?
-        [] :
-        ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"];
     } else {
       throw Error("unknown value expression type '" + valueExpr.type + "'");
     }
@@ -5604,7 +5623,18 @@ function ShExValidator_constructor(schema, options) {
         }
       }
     });
-    return errors;
+    var ret = {
+      type: null,
+      focus: value,
+      shapeExpr: valueExpr
+    };
+    if (errors.length) {
+      ret.type = "NodeConstraintViolation";
+      ret.errors = errors;
+    } else {
+      ret.type = "NodeConstraintTest";
+    }
+    return ret;
   };
 
   this.semActHandler = {
@@ -6017,6 +6047,10 @@ function runtimeError () {
   throw e;
 }
 
+  function _alist (len) {
+    return _seq(len).map(() => [])
+  }
+
   return {
     construct: ShExValidator_constructor,
     start: Start,
@@ -6029,7 +6063,7 @@ if (typeof require !== "undefined" && typeof exports !== "undefined")
   module.exports = ShExValidator;
 
 }).call(this,require('_process'))
-},{"../lib/ShExWriter":6,"../lib/regex/nfax-val-1err":10,"../lib/regex/threaded-val-nerr":11,"./ShExUtil":4,"_process":281,"n3":247}],6:[function(require,module,exports){
+},{"../lib/ShExWriter":6,"../lib/regex/threaded-val-nerr":11,"./ShExUtil":4,"_process":281,"n3":247}],6:[function(require,module,exports){
 // **ShExWriter** writes ShEx documents.
 
 var ShExWriter = (function () {
@@ -8105,7 +8139,7 @@ var NFAXVal1Err = (function () {
       };
     }
 
-    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
+    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
       var rbenx = this;
       var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
 
@@ -8117,7 +8151,7 @@ var NFAXVal1Err = (function () {
       }
 
       if (rbenx.states.length === 1)
-        return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+        return matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
 
       var chosen = null;
       // var dump = nfaToString();
@@ -8138,18 +8172,18 @@ var NFAXVal1Err = (function () {
           if (constraintNo === -1) {
             var scoped = state.c.scopedTripleConstraints.reduce(
               (acc, tci) => acc.concat(constraintToTripleMapping[tci]), []);
-            addStates(rbenx, nlist, thread, scoped, constraintToTripleMapping, neighborhood, direct, node);
+            addStates(rbenx, nlist, thread, scoped, constraintToTripleMapping, neighborhood, null, node);
           } else {
             var min = "min" in state.c ? state.c.min : 1;
             var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
             if ("negated" in state.c && state.c.negated)
               min = max = 0;
             if (thread.avail[constraintNo] === undefined)
-              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
             var taken = thread.avail[constraintNo].splice(0, max);
             if (taken.length >= min) {
               do {
-                addStates(rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, direct, node);
+                addStates(rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, null, node);
               } while ((function () {
                 if (thread.avail[constraintNo].length > 0 && taken.length < max) {
                   taken.push(thread.avail[constraintNo].shift());
@@ -8217,7 +8251,7 @@ var NFAXVal1Err = (function () {
       // console.log("chosen:", dump.thread(chosen));
       return "errors" in chosen.matched ?
         chosen.matched :
-        matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+        matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
     }
 
     function addStates (rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, direct, node) {
@@ -8343,7 +8377,7 @@ var NFAXVal1Err = (function () {
       return rs.length ? state + "-" + rs : ""+state;
     }
 
-    function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
+    function matchedToResult (matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler) {
       var last = [];
       var errors = [];
       var skips = [];
@@ -8443,31 +8477,25 @@ var NFAXVal1Err = (function () {
             var sub = dive(focus, shape);
             if ("errors" in sub) {
               // console.dir(sub);
-              var err = {
-                type: "ReferenceError", focus: focus,
-                shape: shape, errors: sub
-              };
+              sub.type = "ReferenceError";
+              // var err = {
+              //   type: "ReferenceError", focus: focus,
+              //   shape: shape, errors: sub
+              // };
               if (typeof shapeLabel === "string" && N3Util.isBlank(shapeLabel))
-                err.referencedShape = shape;
-              return [err];
+                sub.referencedShape = shape;
+              return sub;
             }
             if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
                 sub.type === "Recursion")
               ret.referenced = sub; // !!! needs to aggregate errors and solutions
-            return [];
+            return sub
           }
-          function diveRecurse (focus, shapeLabel) {
-            return diver(focus, shapeLabel, recurse);
-          }
-          function diveDirect (focus, shapeLabel) {
-            return diver(focus, shapeLabel, direct);
-          }
-          if ("valueExpr" in ptr)
-            errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
+          var constraintNo = constraintList.indexOf(m.c);
+                      var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tno);
+                      if (hit.res && Object.keys(hit.res).length > 0)
+                        ret.referenced = hit.res;
 
-          if (errors.length === 0 && "semActs" in m.c &&
-              !semActHandler.dispatchAll(m.c.semActs, triple, ret))
-            errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
           return ret;
         })
         if ("annotations" in m.c)
@@ -8534,7 +8562,7 @@ function vpEngine (schema, shape) {
       match:match
     };
 
-    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
+    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
 
       /*
        * returns: list of passing or failing threads (no heterogeneous lists)
@@ -8603,7 +8631,7 @@ function vpEngine (schema, shape) {
           if (negated)
             min = max = Infinity;
           if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
           var minmax = {  };
           if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
             minmax.min = expr.min;
@@ -8630,10 +8658,7 @@ function vpEngine (schema, shape) {
                 expression: extend(
                   {
                     type: "TripleConstraintSolutions",
-                    predicate: expr.predicate,
-                    solutions: taken.map(tripleNo =>  {
-                      return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
-                    })
+                    predicate: expr.predicate
                     // map(triple => {
                     //   var t = neighborhood[triple];
                     //   return {
@@ -8643,15 +8668,22 @@ function vpEngine (schema, shape) {
                   },
                   "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
                   "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
-                  minmax)
+                  minmax,
+                  {
+                    solutions: taken.map(tripleNo =>  {
+                      var t = neighborhood[tripleNo];
+                      var ret = { type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object) };
+                      passScoped(expr, newThread);
+                      var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
+                      if (hit.res && Object.keys(hit.res).length > 0)
+                        ret.referenced = hit.res;
+                      return ret;
+                      // return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
+                    })
+                  }
+                )
               };
-
-              var scope0 = passScoped(expr, newThread);
-              if (newThread.errors.length === 0)
-                ret.push(newThread);
-              else
-                ret.push(newThread);
-
+              ret.push(newThread);
             } while ((function () {
               if (thread.avail[constraintNo].length > 0 && taken.length < max) {
                 // build another thread.
@@ -8899,7 +8931,7 @@ function vpEngine (schema, shape) {
           }, null);
       return longerChosen !== null ?
         finish(longerChosen.expression, constraintList,
-               neighborhood, recurse, direct, semActHandler, checkValueExpr) :
+               neighborhood, semActHandler) :
         ret.length > 1 ? {
           type: "PossibleErrors",
           errors: ret.reduce((all, e) => {
@@ -8908,7 +8940,22 @@ function vpEngine (schema, shape) {
         } : ret[0];
     }
 
-    function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: N3Util.getLiteralValue(term) };
+          var dt = N3Util.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = N3Util.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
+
+    function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
       function _dive (solns) {
         if (solns.type === "OneOfSolutions" ||
             solns.type === "EachOfSolutions") {
@@ -8926,36 +8973,14 @@ function vpEngine (schema, shape) {
             var ret = {
               type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
             };
-            function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel);
-              if ("errors" in sub) {
-                // console.dir(sub);
-                var err = {
-                  type: "ReferenceError", focus: focus,
-                  shape: shapeLabel
-                };
-                if (typeof shapeLabel === "string" && N3Util.isBlank(shapeLabel))
-                  err.referencedShape = shape;
-                err.errors = sub;
-                return [err];
-              }
-              if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
-                  sub.type === "Recursion")
-                ret.referenced = sub; // !!! needs to aggregate errors and solutions
-              return [];
-            }
-            function diveRecurse (focus, shapeLabel) {
-              return diver(focus, shapeLabel, recurse);
-            }
-            function diveDirect (focus, shapeLabel) {
-              return diver(focus, shapeLabel, direct);
-            }
-            var subErrors = "valueExpr" in expr ?
-                checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
-                [];
-            if (subErrors.length === 0 && "semActs" in expr &&
-                !semActHandler.dispatchAll(expr.semActs, t, ret))
-              subErrors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
+            var subErrors = [];
+            if ("semActs" in expr && !semActHandler.dispatchAll(expr.semActs, t, ret))
+              subErrors.push({
+                type: "SemActFailure",
+                errors: [{
+                  type: "UntrackedSemActFailure"
+                }]
+              }) // some semAct aborted
             if (subErrors.length > 0) {
               fromValidatePoint.errors = fromValidatePoint.errors || [];
               fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
@@ -8966,8 +8991,8 @@ function vpEngine (schema, shape) {
           throw Error("unexpected expr type in " + JSON.stringify(solns));
         }
       }
-      if (Object.keys(fromValidatePoint).length > 0) // guard against {}
-        _dive(fromValidatePoint);
+      // if (Object.keys(fromValidatePoint).length > 0) // guard against {}
+      //   _dive(fromValidatePoint);
       if ("semActs" in shape)
         fromValidatePoint.semActs = shape.semActs;
       return fromValidatePoint;
@@ -44560,7 +44585,7 @@ var HierarchyClosure = (function () {
         updateClosure(children, parents, child, parent)
         updateClosure(parents, children, parent, child)
         function updateClosure (container, members, near, far) {
-          container[far] = container[far].concat(near, container[near])
+          container[far] = container[far].concat(near, container[near]);debugger
           container[near].forEach(
             n => (members[n] = members[n].concat(far, members[far]))
           )

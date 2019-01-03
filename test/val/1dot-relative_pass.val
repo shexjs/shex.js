@@ -9,7 +9,18 @@
       "values": [ "o1" ]
     },
     "solutions":[
-      {"type":"TestedTriple","subject":"s1","predicate":"p1","object":"o1"}
+      { "type":"TestedTriple","subject":"s1","predicate":"p1","object":"o1",
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "file:///home/eric/checkouts/shexSpec/shexTest/validation/o1",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              "file:///home/eric/checkouts/shexSpec/shexTest/validation/o1"
+            ]
+          }
+        }
+      }
     ]
   }
 }
