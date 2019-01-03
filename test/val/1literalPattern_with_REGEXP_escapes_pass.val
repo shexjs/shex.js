@@ -17,16 +17,22 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "\/\t\n\r-\\\u0061\uD835\uDCB8" },
         "referenced": {
+          "type": "NodeConstraintTest",
           "focus": "\"/\t\n\r-\\a𝒸\"",
-          "nodeKind": "literal",
-          "pattern": "^/\\t\\n\\r\\-\\\\a𝒸$",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "nodeKind": "literal",
+            "pattern": "^/\\t\\n\\r\\-\\\\a𝒸$"
+          }
         },
         "referenced": {
+          "type": "NodeConstraintTest",
           "focus": "\"/\t\n\r-\\a𝒸\"",
-          "nodeKind": "literal",
-          "pattern": "^/\\t\\n\\r\\-\\\\a𝒸$",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "nodeKind": "literal",
+            "pattern": "^/\\t\\n\\r\\-\\\\a𝒸$"
+          }
         }
       }
     ]

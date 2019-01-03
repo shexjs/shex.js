@@ -18,13 +18,16 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "\t\b\n\r\f\\\"'\u0061\uD835\uDCB8" },
         "referenced": {
-          "focus": "\"\t\b\n\r\f\\\"'a𝒸\"",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "value": "\t\b\n\r\f\\\"'a𝒸"
-            }
-          ]
+          "focus": "\"\t\b\n\r\f\\\"'a𝒸\"",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "value": "\t\b\n\r\f\\\"'a𝒸"
+              }
+            ]
+          }
         }
       }
     ]

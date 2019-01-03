@@ -20,9 +20,12 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"septante\"@fr",
-          "values": [
-            { "type": "Language", "languageTag": "fr" }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              { "type": "Language", "languageTag": "fr" }
+            ]
+          }
         }
       }
     ]

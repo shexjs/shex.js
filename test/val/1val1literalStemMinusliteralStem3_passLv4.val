@@ -35,19 +35,22 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "v4" },
         "referenced": {
-          "focus": "\"v4\"",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "type": "LiteralStemRange",
-              "stem": "v",
-              "exclusions": [
-                { "stem": "v1", "type": "LiteralStem" },
-                { "stem": "v2", "type": "LiteralStem" },
-                { "stem": "v3", "type": "LiteralStem" }
-              ]
-            }
-          ]
+          "focus": "\"v4\"",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "LiteralStemRange",
+                "stem": "v",
+                "exclusions": [
+                  { "stem": "v1", "type": "LiteralStem" },
+                  { "stem": "v2", "type": "LiteralStem" },
+                  { "stem": "v3", "type": "LiteralStem" }
+                ]
+              }
+            ]
+          }
         }
       }
     ]

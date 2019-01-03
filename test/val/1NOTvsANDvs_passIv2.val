@@ -24,11 +24,14 @@
               "type": "ShapeNotTest"
             },
             {
-              "focus": "http://a.example/v2",
               "type": "NodeConstraintTest",
-              "values": [
-                "http://a.example/v2"
-              ]
+              "focus": "http://a.example/v2",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://a.example/v2"
+                ]
+              }
             }
           ],
           "type": "ShapeAndResults"

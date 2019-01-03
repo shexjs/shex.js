@@ -18,7 +18,10 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/o1",
-          "nodeKind": "iri"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "nodeKind": "iri"
+          }
         }
       }
     ]

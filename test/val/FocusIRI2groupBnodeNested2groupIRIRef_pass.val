@@ -37,7 +37,10 @@
                     "referenced": {
                       "type": "NodeConstraintTest",
                       "focus": "\"ab\"^^http://a.example/dt1",
-                      "datatype": "http://a.example/dt1"
+                      "shapeExpr": {
+                        "type": "NodeConstraint",
+                        "datatype": "http://a.example/dt1"
+                      }
                     }
                   }
                 ]
@@ -119,7 +122,10 @@
                         {
                           "type": "NodeConstraintTest",
                           "focus": "_:n2",
-                          "nodeKind": "bnode"
+                          "shapeExpr": {
+                            "type": "NodeConstraint",
+                            "nodeKind": "bnode"
+                          }
                         },
                         {
                           "type": "ShapeTest",
@@ -149,7 +155,10 @@
                                         "referenced": {
                                           "type": "NodeConstraintTest",
                                           "focus": "\"ab\"",
-                                          "nodeKind": "literal"
+                                          "shapeExpr": {
+                                            "type": "NodeConstraint",
+                                            "nodeKind": "literal"
+                                          }
                                         }
                                       }
                                     ]
@@ -185,8 +194,11 @@
                                             {
                                               "type": "NodeConstraintTest",
                                               "focus": "http://a.example/n1",
-                                              "nodeKind": "iri",
-                                              "pattern": "^https?://"
+                                              "shapeExpr": {
+                                                "type": "NodeConstraint",
+                                                "nodeKind": "iri",
+                                                "pattern": "^https?://"
+                                              }
                                             },
                                             {
                                               "type": "Recursion",

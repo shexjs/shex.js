@@ -10,7 +10,10 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"ab\"^^http://a.example/dt1",
-          "datatype": "http://a.example/dt1"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://a.example/dt1"
+          }
         }
       }
     ]

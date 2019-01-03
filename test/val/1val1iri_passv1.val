@@ -14,9 +14,12 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/v1",
-          "values": [
-            "http://a.example/v1"
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              "http://a.example/v1"
+            ]
+          }
         }
       }
     ],

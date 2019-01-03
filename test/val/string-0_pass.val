@@ -14,9 +14,12 @@
           "value": "0"
         },
         "referenced": {
-          "datatype": "http://www.w3.org/2001/XMLSchema#string",
+          "type": "NodeConstraintTest",
           "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#string",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#string"
+          }
         }
       }
     ],

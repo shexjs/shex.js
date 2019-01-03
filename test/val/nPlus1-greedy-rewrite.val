@@ -19,12 +19,15 @@
                 "referenced": {
                   "type": "NodeConstraintTest",
                   "focus": "\"1\"^^http://www.w3.org/2001/XMLSchema#integer",
-                  "values": [
-                    {
-                      "value": "1",
-                      "type": "http://www.w3.org/2001/XMLSchema#integer"
-                    }
-                  ]
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      {
+                        "value": "1",
+                        "type": "http://www.w3.org/2001/XMLSchema#integer"
+                      }
+                    ]
+                  }
                 }
               }
             ]
@@ -46,12 +49,15 @@
                         "referenced": {
                           "type": "NodeConstraintTest",
                           "focus": "\"3\"^^http://www.w3.org/2001/XMLSchema#integer",
-                          "values": [
-                            {
-                              "value": "3",
-                              "type": "http://www.w3.org/2001/XMLSchema#integer"
-                            }
-                          ]
+                          "shapeExpr": {
+                            "type": "NodeConstraint",
+                            "values": [
+                              {
+                                "value": "3",
+                                "type": "http://www.w3.org/2001/XMLSchema#integer"
+                              }
+                            ]
+                          }
                         }
                       }
                     ]

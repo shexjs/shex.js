@@ -15,9 +15,12 @@
           "type": "http://www.w3.org/2001/XMLSchema#decimal"
         },
         "referenced": {
-          "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+          "type": "NodeConstraintTest",
           "focus": "\"-1.0\"^^http://www.w3.org/2001/XMLSchema#decimal",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#decimal"
+          }
         }
       }
     ],

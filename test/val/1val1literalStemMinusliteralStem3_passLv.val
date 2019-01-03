@@ -37,17 +37,20 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"v\"",
-          "values": [
-            {
-              "type": "LiteralStemRange",
-              "stem": "v",
-              "exclusions": [
-                { "stem": "v1", "type": "LiteralStem" },
-                { "stem": "v2", "type": "LiteralStem" },
-                { "stem": "v3", "type": "LiteralStem" }
-              ]
-            }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "LiteralStemRange",
+                "stem": "v",
+                "exclusions": [
+                  { "stem": "v1", "type": "LiteralStem" },
+                  { "stem": "v2", "type": "LiteralStem" },
+                  { "stem": "v3", "type": "LiteralStem" }
+                ]
+              }
+            ]
+          }
         }
       }
     ]

@@ -34,22 +34,31 @@
         "referenced": {
           "solutions": [
             {
+              "type": "NodeConstraintTest",
               "focus": "\"abab\"",
-              "minlength": 4,
-              "nodeKind": "literal",
-              "type": "NodeConstraintTest"
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "minlength": 4,
+                "nodeKind": "literal"
+              }
             },
             {
+              "type": "NodeConstraintTest",
               "focus": "\"abab\"",
-              "maxlength": 5,
-              "nodeKind": "literal",
-              "type": "NodeConstraintTest"
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "maxlength": 5,
+                "nodeKind": "literal"
+              }
             },
             {
+              "type": "NodeConstraintTest",
               "focus": "\"abab\"",
-              "nodeKind": "literal",
-              "pattern": "^(ab)+$",
-              "type": "NodeConstraintTest"
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "pattern": "^(ab)+$"
+              }
             }
           ],
           "type": "ShapeAndResults"

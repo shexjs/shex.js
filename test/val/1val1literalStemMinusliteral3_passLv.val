@@ -28,13 +28,16 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"v\"",
-          "values": [
-            {
-              "type": "LiteralStemRange",
-              "stem": "v",
-              "exclusions": [ "v1", "v2", "v3" ]
-            }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "LiteralStemRange",
+                "stem": "v",
+                "exclusions": [ "v1", "v2", "v3" ]
+              }
+            ]
+          }
         }
       }
     ]

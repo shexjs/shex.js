@@ -15,9 +15,12 @@
           "type": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger"
         },
         "referenced": {
-          "datatype": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger",
+          "type": "NodeConstraintTest",
           "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#nonPositiveInteger",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger"
+          }
         }
       }
     ],

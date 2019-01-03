@@ -17,10 +17,13 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "4", "type": "http://www.w3.org/2001/XMLSchema#integer" },
         "referenced": {
-          "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+          "type": "NodeConstraintTest",
           "focus": "\"4\"^^http://www.w3.org/2001/XMLSchema#integer",
-          "maxinclusive": 5,
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+            "maxinclusive": 5
+          }
         }
       }
     ]

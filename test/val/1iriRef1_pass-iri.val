@@ -30,7 +30,10 @@
             {
               "type": "NodeConstraintTest",
               "focus": "http://a.example/n2",
-              "nodeKind": "iri"
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              }
             },
             {
               "type": "ShapeTest",

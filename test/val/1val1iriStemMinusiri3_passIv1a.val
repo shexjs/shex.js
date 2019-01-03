@@ -28,17 +28,20 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/v1a",
-          "values": [
-            {
-              "type": "IriStemRange",
-              "stem": "http://a.example/v",
-              "exclusions": [
-                "http://a.example/v1",
-                "http://a.example/v2",
-                "http://a.example/v3"
-              ]
-            }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "IriStemRange",
+                "stem": "http://a.example/v",
+                "exclusions": [
+                  "http://a.example/v1",
+                  "http://a.example/v2",
+                  "http://a.example/v3"
+                ]
+              }
+            ]
+          }
         }
       }
     ]

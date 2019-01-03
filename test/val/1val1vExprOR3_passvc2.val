@@ -33,10 +33,13 @@
         "object": { "value": "cd" },
         "referenced": {
           "solution": {
+            "type": "NodeConstraintTest",
             "focus": "\"cd\"",
-            "nodeKind": "literal",
-            "pattern": ".*cd.*",
-            "type": "NodeConstraintTest"
+            "shapeExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "literal",
+              "pattern": ".*cd.*"
+            }
           },
           "type": "ShapeOrResults"
         }

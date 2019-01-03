@@ -17,10 +17,13 @@
         "predicate": "http://a.example/p1",
         "object": "_:abcde",
         "referenced": {
+          "type": "NodeConstraintTest",
           "focus": "_:abcde",
-          "length": 5,
-          "nodeKind": "bnode",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "length": 5,
+            "nodeKind": "bnode"
+          }
         }
       }
     ]

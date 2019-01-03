@@ -15,9 +15,12 @@
           "type": "http://www.w3.org/2001/XMLSchema#byte"
         },
         "referenced": {
-          "datatype": "http://www.w3.org/2001/XMLSchema#byte",
+          "type": "NodeConstraintTest",
           "focus": "\"127\"^^http://www.w3.org/2001/XMLSchema#byte",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#byte"
+          }
         }
       }
     ],

@@ -27,8 +27,11 @@
             "referenced": {
               "type": "NodeConstraintTest",
               "focus": "http://a.example/o1",
-              "nodeKind": "nonliteral",
-              "length": 19
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "nonliteral",
+                "length": 19
+              }
             }
           }
         ],

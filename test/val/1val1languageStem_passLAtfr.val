@@ -18,14 +18,17 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "septante", "language": "fr" },
         "referenced": {
-          "focus": "\"septante\"@fr",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "stem": "fr",
-              "type": "LanguageStem"
-            }
-          ]
+          "focus": "\"septante\"@fr",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "stem": "fr",
+                "type": "LanguageStem"
+              }
+            ]
+          }
         }
       }
     ]

@@ -33,10 +33,13 @@
         "object": { "value": "abcdef" },
         "referenced": {
           "solution": {
+            "type": "NodeConstraintTest",
             "focus": "\"abcdef\"",
-            "nodeKind": "literal",
-            "pattern": "ab.*",
-            "type": "NodeConstraintTest"
+            "shapeExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "literal",
+              "pattern": "ab.*"
+            }
           },
           "type": "ShapeOrResults"
         }

@@ -11,19 +11,25 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/o1",
-          "values": [
-            "http://a.example/o1",
-            "http://a.example/o2"
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              "http://a.example/o1",
+              "http://a.example/o2"
+            ]
+          }
         } },
       { "type": "TestedTriple", "subject": "http://a.example/s1", "predicate": "http://a.example/p1", "object": "http://a.example/o2",
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/o2",
-          "values": [
-            "http://a.example/o1",
-            "http://a.example/o2"
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              "http://a.example/o1",
+              "http://a.example/o2"
+            ]
+          }
         } }
     ]
   }

@@ -26,9 +26,12 @@
                 "referenced": {
                   "type": "NodeConstraintTest",
                   "focus": "http://a.example/o1",
-                  "values": [
-                    "http://a.example/o1"
-                  ]
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      "http://a.example/o1"
+                    ]
+                  }
                 }
               }
             ]
@@ -51,9 +54,12 @@
                 "referenced": {
                   "type": "NodeConstraintTest",
                   "focus": "http://a.example/o2",
-                  "values": [
-                    "http://a.example/o2"
-                  ]
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      "http://a.example/o2"
+                    ]
+                  }
                 }
               }
             ]
@@ -76,9 +82,12 @@
                 "referenced": {
                   "type": "NodeConstraintTest",
                   "focus": "http://a.example/o3",
-                  "values": [
-                    "http://a.example/o3"
-                  ]
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      "http://a.example/o3"
+                    ]
+                  }
                 }
               }
             ]

@@ -18,13 +18,16 @@
         "predicate": "http://a.example/p1",
         "object": { "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~" },
         "referenced": {
-          "focus": "\" !\"#$%&'()/:;<=>?@[]^_`{|}~\"",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~"
-            }
-          ]
+          "focus": "\" !\"#$%&'()/:;<=>?@[]^_`{|}~\"",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~"
+              }
+            ]
+          }
         }
       }
     ]

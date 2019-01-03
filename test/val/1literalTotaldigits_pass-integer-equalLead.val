@@ -8,10 +8,13 @@
     "solutions":[
       { "type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "012345", "type": "http://www.w3.org/2001/XMLSchema#integer" },
         "referenced": {
+          "type": "NodeConstraintTest",
           "focus": "\"012345\"^^http://www.w3.org/2001/XMLSchema#integer",
-          "nodeKind": "literal",
-          "totaldigits": 5,
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "nodeKind": "literal",
+            "totaldigits": 5
+          }
         }
       }
     ]

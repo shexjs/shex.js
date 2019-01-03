@@ -28,17 +28,20 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"septante\"@fr",
-          "values": [
-            {
-              "type": "LanguageStemRange",
-              "stem": "",
-              "exclusions": [
-                "fr-be",
-                "fr-cd",
-                "fr-ch"
-              ]
-            }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "LanguageStemRange",
+                "stem": "",
+                "exclusions": [
+                  "fr-be",
+                  "fr-cd",
+                  "fr-ch"
+                ]
+              }
+            ]
+          }
         }
       }
     ]

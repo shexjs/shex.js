@@ -30,9 +30,12 @@
                     "referenced": {
                       "type": "NodeConstraintTest",
                       "focus": "http://schema.example/testingRole",
-                      "values": [
-                        "http://schema.example/testingRole"
-                      ]
+                      "shapeExpr": {
+                        "type": "NodeConstraint",
+                        "values": [
+                          "http://schema.example/testingRole"
+                        ]
+                      }
                     }
                   }
                 ],
@@ -68,9 +71,12 @@
             "referenced": {
               "type": "NodeConstraintTest",
               "focus": "http://schema.example/testingRole",
-              "values": [
-                "http://schema.example/testingRole"
-              ]
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://schema.example/testingRole"
+                ]
+              }
             }
           }
         ],

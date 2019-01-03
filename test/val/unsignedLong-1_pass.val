@@ -15,9 +15,12 @@
           "type": "http://www.w3.org/2001/XMLSchema#unsignedLong"
         },
         "referenced": {
-          "datatype": "http://www.w3.org/2001/XMLSchema#unsignedLong",
+          "type": "NodeConstraintTest",
           "focus": "\"1\"^^http://www.w3.org/2001/XMLSchema#unsignedLong",
-          "type": "NodeConstraintTest"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#unsignedLong"
+          }
         }
       }
     ],

@@ -22,8 +22,11 @@
             "referenced": {
               "type": "NodeConstraintTest",
               "focus": "\"abab\"",
-              "nodeKind": "literal",
-              "minlength": 4
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "minlength": 4
+              }
             }
           }
         ]
@@ -50,8 +53,11 @@
             "referenced": {
               "type": "NodeConstraintTest",
               "focus": "\"abab\"",
-              "nodeKind": "literal",
-              "maxlength": 5
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "maxlength": 5
+              }
             }
           }
         ]
@@ -78,8 +84,11 @@
             "referenced": {
               "type": "NodeConstraintTest",
               "focus": "\"abab\"",
-              "nodeKind": "literal",
-              "pattern": "(ab)+"
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "pattern": "(ab)+"
+              }
             }
           }
         ]

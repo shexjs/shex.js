@@ -22,12 +22,15 @@
               "type": "ShapeNotTest"
             },
             {
-              "focus": "http://a.example/v1",
               "type": "NodeConstraintTest",
-              "values": [
-                "http://a.example/v1",
-                "http://a.example/v2"
-              ]
+              "focus": "http://a.example/v1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://a.example/v1",
+                  "http://a.example/v2"
+                ]
+              }
             }
           ],
           "type": "ShapeAndResults"

@@ -33,10 +33,13 @@
         "object": { "value": "ef" },
         "referenced": {
           "solution": {
+            "type": "NodeConstraintTest",
             "focus": "\"ef\"",
-            "nodeKind": "literal",
-            "pattern": ".*ef",
-            "type": "NodeConstraintTest"
+            "shapeExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "literal",
+              "pattern": ".*ef"
+            }
           },
           "type": "ShapeOrResults"
         }

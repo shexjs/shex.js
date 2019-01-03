@@ -23,12 +23,15 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/v1",
-          "values": [
-            {
-              "type": "IriStem",
-              "stem": "http://a.example/v"
-            }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "IriStem",
+                "stem": "http://a.example/v"
+              }
+            ]
+          }
         }
       }
     ]

@@ -31,8 +31,11 @@
             {
               "type": "NodeConstraintTest",
               "focus": "http://a.example/o1",
-              "nodeKind": "iri",
-              "length": 19
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri",
+                "length": 19
+              }
             },
             {
               "type": "ShapeTest",

@@ -23,9 +23,12 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"v1\"",
-          "values": [
-            { "type": "LiteralStem", "stem": "v" }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              { "type": "LiteralStem", "stem": "v" }
+            ]
+          }
         }
       }
     ]

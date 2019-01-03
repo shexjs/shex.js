@@ -50,7 +50,10 @@
               {
                 "type": "NodeConstraintTest",
                 "focus": "_:n2",
-                "nodeKind": "bnode"
+                "shapeExpr": {
+                  "type": "NodeConstraint",
+                  "nodeKind": "bnode"
+                }
               },
               {
                 "type": "ShapeTest",
@@ -104,7 +107,10 @@
                             {
                               "type": "NodeConstraintTest",
                               "focus": "http://a.example/n1a",
-                              "minlength": 20
+                              "shapeExpr": {
+                                "type": "NodeConstraint",
+                                "minlength": 20
+                              }
                             },
                             {
                               "type": "Recursion",

@@ -14,9 +14,12 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"v\"",
-          "values": [
-            { "value": "v" }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              { "value": "v" }
+            ]
+          }
         }
       }
     ],

@@ -30,7 +30,10 @@
             {
               "type": "NodeConstraintTest",
               "focus": "_:n2",
-              "nodeKind": "bnode"
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "bnode"
+              }
             },
             {
               "type": "ShapeTest",

@@ -18,14 +18,17 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#integer" },
         "referenced": {
-          "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#integer",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "type": "http://www.w3.org/2001/XMLSchema#integer",
-              "value": "0"
-            }
-          ]
+          "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#integer",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "http://www.w3.org/2001/XMLSchema#integer",
+                "value": "0"
+              }
+            ]
+          }
         }
       }
     ]

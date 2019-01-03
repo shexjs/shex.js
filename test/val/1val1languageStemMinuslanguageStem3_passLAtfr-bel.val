@@ -35,28 +35,31 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "septante", "language": "fr-bel" },
         "referenced": {
-          "focus": "\"septante\"@fr-bel",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "exclusions": [
-                {
-                  "stem": "fr-be",
-                  "type": "LanguageStem"
-                },
-                {
-                  "stem": "fr-cd",
-                  "type": "LanguageStem"
-                },
-                {
-                  "stem": "fr-ch",
-                  "type": "LanguageStem"
-                }
-              ],
-              "stem": "fr",
-              "type": "LanguageStemRange"
-            }
-          ]
+          "focus": "\"septante\"@fr-bel",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "exclusions": [
+                  {
+                    "stem": "fr-be",
+                    "type": "LanguageStem"
+                  },
+                  {
+                    "stem": "fr-cd",
+                    "type": "LanguageStem"
+                  },
+                  {
+                    "stem": "fr-ch",
+                    "type": "LanguageStem"
+                  }
+                ],
+                "stem": "fr",
+                "type": "LanguageStemRange"
+              }
+            ]
+          }
         }
       }
     ]

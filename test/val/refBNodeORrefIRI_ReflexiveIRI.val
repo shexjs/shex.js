@@ -50,7 +50,10 @@
               {
                 "type": "NodeConstraintTest",
                 "focus": "http://a.example/n1a",
-                "minlength": 20
+                "shapeExpr": {
+                  "type": "NodeConstraint",
+                  "minlength": 20
+                }
               },
               {
                 "type": "Recursion",

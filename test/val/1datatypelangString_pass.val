@@ -10,7 +10,10 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "\"ab\"@en",
-          "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+          }
         }
       }
     ]

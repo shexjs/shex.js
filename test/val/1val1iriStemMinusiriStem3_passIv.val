@@ -37,17 +37,20 @@
         "referenced": {
           "type": "NodeConstraintTest",
           "focus": "http://a.example/v",
-          "values": [
-            {
-              "type": "IriStemRange",
-              "stem": "http://a.example/v",
-              "exclusions": [
-                { "type": "IriStem", "stem": "http://a.example/v1" },
-                { "type": "IriStem", "stem": "http://a.example/v2" },
-                { "type": "IriStem", "stem": "http://a.example/v3" }
-              ]
-            }
-          ]
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "IriStemRange",
+                "stem": "http://a.example/v",
+                "exclusions": [
+                  { "type": "IriStem", "stem": "http://a.example/v1" },
+                  { "type": "IriStem", "stem": "http://a.example/v2" },
+                  { "type": "IriStem", "stem": "http://a.example/v3" }
+                ]
+              }
+            ]
+          }
         }
       }
     ]

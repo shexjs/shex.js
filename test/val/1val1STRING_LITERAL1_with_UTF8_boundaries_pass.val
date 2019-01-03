@@ -18,13 +18,16 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽" },
         "referenced": {
-          "focus": "\"߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽\"",
           "type": "NodeConstraintTest",
-          "values": [
-            {
-              "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽"
-            }
-          ]
+          "focus": "\"߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽\"",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽"
+              }
+            ]
+          }
         }
       }
     ]
