@@ -5014,20 +5014,11 @@ function ShExValidator_constructor(schema, options) {
       var matchPredicate = index.byPredicate[constraint.predicate] ||
         []; // empty list when no triple matches that constraint
 
-      function _errorsByShapeLabel (focus, shapeLabel) {
-        var sub = _ShExValidator.validate(db, focus, shapeLabel, tracker, seen);
-        return sub;
-      }
-      function _errorsByShapeExpr (focus, shapeExpr) {
-        var sub = _ShExValidator._validateShapeExpr(db, focus, shapeExpr, shapeLabel, tracker, seen);
-        return sub;
-      }
       // strip to triples matching value constraints (apart from @<someShape>)
       var matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
         matchPredicate,
         constraint,
-        /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeLabel,
-        /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeExpr
+        { db: db, shapeLabel: shapeLabel, tracker: tracker, seen: seen }
       );
 
       matchConstraints.hits.forEach(function (evidence) {
@@ -5180,7 +5171,7 @@ function ShExValidator_constructor(schema, options) {
     }
   };
 
-  this._triplesMatchingShapeExpr = function (triples, constraint, recurse, direct) {
+  this._triplesMatchingShapeExpr = function (triples, constraint, valParms) {
     var _ShExValidator = this;
     var misses = [];
     var hits = [];
@@ -5190,7 +5181,7 @@ function ShExValidator_constructor(schema, options) {
       var oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
       var errors = constraint.valueExpr === undefined ?
           undefined :
-          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, recurse, direct)).errors;
+          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms)).errors;
       if (!errors && "semActs" in constraint &&
           !_ShExValidator.semActHandler.dispatchAll(constraint.semActs, triple,
                                     {
@@ -5207,19 +5198,20 @@ function ShExValidator_constructor(schema, options) {
     });
     return { hits: hits, misses: misses };
   }
-  this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
+  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms) {
     var _ShExValidator = this;
     if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
-      return direct(value, valueExpr);
+      return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.tracker, valParms.seen)
+      return validateBySExpr(value, valueExpr);
     } else if (valueExpr.type === "ShapeRef") {
-      return recurse(value, valueExpr.reference);
+      return _ShExValidator.validate(valParms.db, value, valueExpr.reference, valParms.tracker, valParms.seen);
     } else if (valueExpr.type === "ShapeOr") {
       var errors = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
         var nested = valueExpr.shapeExprs[i];
-        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, true);
+        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, true);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -5230,7 +5222,7 @@ function ShExValidator_constructor(schema, options) {
       var passes = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
         var nested = valueExpr.shapeExprs[i];
-        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, true);
+        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, true);
         if ("errors" in sub)
           return { type: "ShapeAndFailure", errors: [sub] };
         else
@@ -5238,7 +5230,7 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else if (valueExpr.type === "ShapeNot") {
-      var sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, recurse, direct, true);
+      var sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, true);
       // return sub.errors && sub.errors.length ? {} : {
       //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
       var ret = Object.assign({
