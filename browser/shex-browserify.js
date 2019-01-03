@@ -44092,7 +44092,7 @@ var HierarchyClosure = (function () {
         updateClosure(children, parents, child, parent)
         updateClosure(parents, children, parent, child)
         function updateClosure (container, members, near, far) {
-          container[far] = container[far].concat(near, container[near])
+          container[far] = container[far].concat(near, container[near]);debugger
           container[near].forEach(
             n => (members[n] = members[n].concat(far, members[far]))
           )
