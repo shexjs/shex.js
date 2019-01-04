@@ -4414,7 +4414,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
-      return  {
+      return {
         outgoing: outgoing,
         incoming: incoming
       };
@@ -4439,6 +4439,7 @@ var ShExUtil = {
       // }
     };
   },
+
   /** emulate N3Store().getTriplesByIRI() with additional parm.
    */
   makeQueryDB: function (endpoint, queryTracker) {
@@ -4533,6 +4534,41 @@ var ShExUtil = {
       getPredicates: function () { return ["!Query DB can't index predicates"] },
       getObjects: function () { return ["!Query DB can't index objects"] },
       get size() { return undefined; }
+    };
+  },
+
+  /** Directly construct a DB from triples.
+   */
+  makeTriplesDB: function (queryTracker) {
+    var _ShExUtil = this;
+    var incoming = [];
+    var outgoing = [];
+
+    function getTriplesByIRI(s, p, o, g) {
+      return incoming.concat(outgoing).filter(
+        t =>
+          (!s || s === t.subject) &&
+          (!p || p === t.predicate) &&
+          (!s || s === t.object)
+      );
+    }
+
+    function getNeighborhood (point, shapeLabel, shape) {
+      return {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      getNeighborhood: getNeighborhood,
+      getTriplesByIRI: getTriplesByIRI,
+      getSubjects: function () { return ["!Triples DB can't index subjects"] },
+      getPredicates: function () { return ["!Triples DB can't index predicates"] },
+      getObjects: function () { return ["!Triples DB can't index objects"] },
+      get size() { return undefined; },
+      addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
+      addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
     };
   },
 
@@ -5156,10 +5192,11 @@ function ShExValidator_constructor(schema, options) {
 
   this._validateShape = function (db, point, shape, shapeLabel, depth, tracker, seen, subgraph) {
     var _ShExValidator = this;
+    var valParms = { db: db, shapeLabel: shapeLabel, depth: depth, tracker: tracker, seen: seen };
 
-    var inheritedTCs = [];
-    shape = effectiveShapeExpression(shape, inheritedTCs);
-    var regexEngine = regexModule.compile(schema, shape);
+    var extendedTCs = [];
+    var constraintToExtends = [];
+    effectiveShapeExpression(shape, extendedTCs, constraintToExtends);
       // var tempShape = new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join('');
       // console.log(JSON.stringify(effectiveExpr, null, 2))
       // console.log(tempShape)
@@ -5184,7 +5221,8 @@ function ShExValidator_constructor(schema, options) {
     var outgoingLength = fromDB.outgoing.length;
     var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
-    var constraintList = inheritedTCs.concat(this.indexTripleConstraints(shape.expression)); // !! adds tcis to shape.expression
+    var localTCs = this.indexTripleConstraints(shape.expression);
+    var constraintList = extendedTCs.concat(localTCs); // !! adds tcis to shape.expression
     var tripleList = constraintList.reduce(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
@@ -5198,9 +5236,7 @@ function ShExValidator_constructor(schema, options) {
 
       // strip to triples matching value constraints (apart from @<someShape>)
       var matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
-        matchPredicate,
-        constraint,
-        { db: db, shapeLabel: shapeLabel, depth: depth, tracker: tracker, seen: seen }
+        matchPredicate, constraint, valParms
       );
 
       matchConstraints.hits.forEach(function (evidence) {
@@ -5219,9 +5255,9 @@ function ShExValidator_constructor(schema, options) {
 
     var extras = []; // triples accounted for by EXTRA
     var misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
-      if (constraints.length === 0 &&                       // matches no constraints
-          ord < outgoingLength &&                           // not an incoming triple
-          ord in tripleList.misses) {                       // predicate matched some constraint(s)
+      if (constraints.length === 0 &&   // matches no constraints
+          ord < outgoingLength &&       // not an incoming triple
+          ord in tripleList.misses) {   // predicate matched some constraint(s)
         if (shape.extra !== undefined &&
             shape.extra.indexOf(neighborhood[ord].predicate) !== -1) {
           extras.push(ord);
@@ -5238,17 +5274,32 @@ function ShExValidator_constructor(schema, options) {
 
     var xp = crossProduct(tripleList.constraintList);
     var partitionErrors = [];
+    var regexEngine = regexModule.compile(schema, shape);
     while (misses.length === 0 && xp.next() && ret === null) {
       // caution: early continues
 
       var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
       var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
         _seq(neighborhood.length).map(function () { return 0; });
-      var tripleToConstraintMapping = xp.get(); // [0,1,0,3] mapping from triple to constraint
+      var tripleToConstraintMapping0 = xp.get(); // [0,1,0,3] mapping from triple to constraint
+      var tripleToConstraintMapping = []
+      var tripleToExtendsMapping = []
+      var extendsToTriples = _seq((shape.extends || []).length).map(() => [])
+      tripleToConstraintMapping0.forEach((cNo, tNo) => {
+        if (cNo < extendedTCs.length) {
+          extendsToTriples[constraintToExtends[cNo]].push(neighborhood[tNo]);
+          tripleToExtendsMapping[tNo] = cNo;
+          tripleToConstraintMapping[tNo] = undefined;
+        } else {
+          tripleToExtendsMapping[tNo] = undefined;
+          tripleToConstraintMapping[tNo] = cNo;
+        }
+      });
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         var unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return tripleToConstraintMapping[i] === undefined && // didn't match a constraint
+          return tripleToExtendsMapping[i] === undefined && // didn't match an EXTENDS
+          tripleToConstraintMapping[i] === undefined && // didn't match a constraint
           extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0) {
@@ -5274,20 +5325,28 @@ function ShExValidator_constructor(schema, options) {
 
       // Pivot to triples by constraint.
       function _constraintToTriples () {
-        var cll = constraintList.length;
         return tripleToConstraintMapping.slice().
           reduce(function (ret, cNo, tNo) {
             if (cNo !== undefined)
               ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
             return ret;
-          }, _seq(cll).map(function () { return []; }));
+          }, _seq(constraintList.length).map(() => [])); // [length][]
       }
+      var constraintToTriplesMapping = _constraintToTriples(); // e.g. [[t0, t2], [t1, t3]]
 
       tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
         return i !== undefined;
       }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
 
-      var results = regexEngine.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, this.semActHandler, null);
+      var results = passScoped(shape, extendsToTriples, valParms);
+      if (results === null || !("errors" in results)) {
+        var sub = regexEngine.match(db, point, constraintList, constraintToTriplesMapping, tripleToConstraintMapping, neighborhood, this.semActHandler, null);
+        if (!("errors" in sub) && results) {
+          results = { type: "ExtendedResults", extensions: results, local: sub };
+        } else {
+          results = sub;
+        }
+      }
       if ("errors" in results) {
         partitionErrors.push({
           errors: results.errors
@@ -5318,6 +5377,25 @@ function ShExValidator_constructor(schema, options) {
 
       ret = possibleRet;
       // alts.push(tripleToConstraintMapping);
+
+      function passScoped (expr, extendsToTriples, valParms) {
+        if (!("extends" in expr))
+          return null;
+        var passes = [];
+        for (var eNo = 0; eNo < expr.extends.length; ++eNo) {
+          var extend = expr.extends[eNo];
+          var subgraph = ShExUtil.makeTriplesDB(null); // tracker?
+          extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+          var sub = _ShExValidator._errorsMatchingShapeExpr(point, extend, valParms, subgraph);
+          if ("errors" in sub)
+            return { type: "ExtensionFailure", errors: [sub] };
+          else
+            passes.push(sub);
+        }
+
+        return { type: "ExtensionResults", solutions: passes };
+      }
+
     }
     if (ret === null/* !! && this.options.diagnose */) {
       var missErrors = misses.map(function (miss) {
@@ -5387,7 +5465,7 @@ function ShExValidator_constructor(schema, options) {
       return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, subgraph)
       return validateBySExpr(value, valueExpr);
     } else if (valueExpr.type === "ShapeRef") {
-      return _ShExValidator.validate(valParms.db, value, valueExpr.reference, valParms.tracker, valParms.seen);
+      return _ShExValidator.validate(valParms.db, value, valueExpr.reference, valParms.tracker, valParms.seen, subgraph);
     } else if (valueExpr.type === "ShapeOr") {
       var errors = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
@@ -5681,40 +5759,31 @@ function ShExValidator_constructor(schema, options) {
     }
   };
 
-  function effectiveShapeExpression (shape, tcs) {
-    const AND = { type: "ShapeAnd", prop: "shapeExprs" };
-    const EACH = { type: "EachOf", prop: "expressions" };
-    var ret = Object.assign({}, shape);
-    var conjuncts = [];
+  function effectiveShapeExpression (shape, tcs, constraintToExtends) {
     if ("extends" in shape) {
-      delete ret.extends;
-      shape.extends.forEach(se => {
+      shape.extends.forEach((se, extendsNo) => {
         // build NestedShape.scopedTripleConstraints = indexes of the TCs in se
-        var ins = {}, outs = {}, scopedTCs = [];
+        var ins = {}, outs = {};
+        // constraintToExtends[extendsNo] = [];
         mergeEffectiveTripleConstraints(se, ins, outs);
         [ins, outs].forEach(direction => {
           Object.keys(direction).forEach(p => {
-            scopedTCs.push(tcs.length)
+            // constraintToExtends[extendsNo].push(tcs.length);
+            constraintToExtends[tcs.length] = extendsNo;
             tcs.push(direction[p])
           })
         });
-        conjuncts.push({
-          type: "NestedShape",
-          onShapeExpression: se,
-          scopedTripleConstraints: scopedTCs,
-          shape: shape
-        });
       })
     }
-    if ("expression" in shape)
-      conjuncts.push(shape.expression);
-    if (conjuncts.length)
-      ret.expression = maybe(EACH, conjuncts);
-    return ret;
+    return;
 
     /** mergeEffectiveTripleConstraints - turn a ShapeExpression with
      * a projection te into TripleExpression with an optional SE'
      * where shapes contributing to te are NOPs.
+
+     * @expr - shape expression to walk
+     * @ins - incoming arcs: map from IRI to {min, max, seen}
+     * @outs - outgoing arcs
      */
     function mergeEffectiveTripleConstraints (expr, ins, outs) {
       var visitor = ShExUtil.Visitor();
@@ -5748,7 +5817,7 @@ function ShExValidator_constructor(schema, options) {
       }
 
       visitor.visitTripleConstraint = function (expr) {
-        idx = expr.inverse ? ins : outs;
+        idx = expr.inverse ? ins : outs; // pick an index
         var min = "min" in expr ? expr.min : 1; min = min * outerMin;
         var max = "max" in expr ? expr.max : 1; max = max * outerMax;
         idx[expr.predicate] = {
@@ -5762,17 +5831,6 @@ function ShExValidator_constructor(schema, options) {
       };
 
       visitor.visitShapeExpr(expr);
-    }
-
-    function maybe (kind, exprs, oneMore) {
-      var ret = { type: kind.type };
-      ret[kind.prop] = exprs.slice();
-      ret[kind.prop] = ret[kind.prop].filter(e => e)
-      if (oneMore)
-        ret[kind.prop].push(oneMore);
-      return ret[kind.prop].length > 1 ?
-        ret :
-        ret[kind.prop][0];
     }
   }
 }
@@ -6015,7 +6073,7 @@ function byObject (t1, t2) {
   var l = t1.object, r = t2.object;
   var lprec = N3Util.isBlank(l) ? 1 : N3Util.isLiteral(l) ? 2 : 3;
   var rprec = N3Util.isBlank(r) ? 1 : N3Util.isLiteral(r) ? 2 : 3;
-  return lprec === rprec ? l > r : lprec > rprec;
+  return lprec === rprec ? l.localeCompare(r) : lprec > rprec;
 }
 
 /* Return a list of n ""s.
@@ -8273,42 +8331,8 @@ var NFAXVal1Err = (function () {
       };
       thread.matched = thread.matched.concat(withIndexes);
       state.outs.forEach(o => { // single out if NFA includes epsilons
-        var n = rbenx.states[o];
-        // Find all terminating expressions.
-        var finishedExprs = state.stack.filter(
-          (elt, i) =>
-            !("stack" in n) || i >= n.stack.length || n.stack[i].c !== state.stack[i].c
-        ).map(elt => elt.c);
-        // Test those expressions for scoped shape expressions.
-        var errors = [state.c].concat(finishedExprs).find(
-          expr => passScoped(expr, thread)
-        )
-        if (errors)
-          console.log("@@ need to do something with nested errors: " + errors);
-        else
-          addstate(rbenx, nlist, o, thread);
+        addstate(rbenx, nlist, o, thread);
       });
-
-      function passScoped (expr, thread) {
-        if (!("onShapeExpression" in expr))
-          return null;
-        var subgraph = N3Store();
-        expr.scopedTripleConstraints.reduce(
-          (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
-            ti => neighborhood[ti]
-          )), [])
-          .forEach(t => subgraph.addTriple(t));
-
-        var res =
-            direct(node, expr.onShapeExpression, ShExUtil.makeN3DB(subgraph));
-
-        if ("errors" in res) {
-          return res.errors;
-        } else {
-          ret = res; // !!! needs to aggregate errors and solutions
-          return null;
-        }
-      }
     }
 
     function addstate (rbenx, list, stateNo, thread, seen) {
@@ -8450,8 +8474,8 @@ var NFAXVal1Err = (function () {
           ptr.valueExpr = m.c.valueExpr;
         if ("productionLabel" in m.c)
           ptr.productionLabel = m.c.productionLabel;
-        ptr.solutions = m.triples.map(tno => {
-          var triple = neighborhood[tno];
+        ptr.solutions = m.triples.map(tNo => {
+          var triple = neighborhood[tNo];
           var ret = {
             type: "TestedTriple",
             subject: triple.subject,
@@ -8473,26 +8497,8 @@ var NFAXVal1Err = (function () {
             ret.language = lang;
           return ret;
         }
-          function diver (focus, shape, dive) {
-            var sub = dive(focus, shape);
-            if ("errors" in sub) {
-              // console.dir(sub);
-              sub.type = "ReferenceError";
-              // var err = {
-              //   type: "ReferenceError", focus: focus,
-              //   shape: shape, errors: sub
-              // };
-              if (typeof shapeLabel === "string" && N3Util.isBlank(shapeLabel))
-                sub.referencedShape = shape;
-              return sub;
-            }
-            if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
-                sub.type === "Recursion")
-              ret.referenced = sub; // !!! needs to aggregate errors and solutions
-            return sub
-          }
           var constraintNo = constraintList.indexOf(m.c);
-                      var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tno);
+                      var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
                       if (hit.res && Object.keys(hit.res).length > 0)
                         ret.referenced = hit.res;
 
@@ -8549,8 +8555,6 @@ if (typeof require !== "undefined" && typeof exports !== "undefined")
   module.exports = NFAXVal1Err;
 
 },{"n3":247}],11:[function(require,module,exports){
-var ShEx = require('../../shex');
-
 var ThreadedValNErr = (function () {
 var N3Util = require("n3").Util;
 var N3Store = require("n3").Store;
@@ -8673,7 +8677,6 @@ function vpEngine (schema, shape) {
                     solutions: taken.map(tripleNo =>  {
                       var t = neighborhood[tripleNo];
                       var ret = { type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object) };
-                      passScoped(expr, newThread);
                       var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
                       if (hit.res && Object.keys(hit.res).length > 0)
                         ret.referenced = hit.res;
@@ -8728,7 +8731,6 @@ function vpEngine (schema, shape) {
                 matched: th.matched//.slice() ever needed??
               };
               var sub = validateExpr(nested, thcopy);
-              var scope1 = passScoped(expr, sub[0]);
               if (sub[0].errors.length === 0) { // all subs pass or all fail
                 matched = matched.concat(sub);
                 sub.forEach(newThread => {
@@ -8761,7 +8763,6 @@ function vpEngine (schema, shape) {
                 var sub = validateExpr(nested, exprThread);
                 // Move newThread.expression into a hierarchical solution structure.
                 sub.forEach(newThread => {
-                  var scope = passScoped(expr, newThread);
                   if (newThread.errors.length === 0) {
                     var expressions =
                         "solution" in exprThread ? exprThread.solution.expressions : [];
@@ -8783,95 +8784,15 @@ function vpEngine (schema, shape) {
 
         else if (expr.type === "Inclusion") {
           var included = schema.productions[expr.include];
-          return validateExpr(included, thread).map(
-            thread => passScoped(expr, thread)
-          );
+          return validateExpr(included, thread);
         }
 
         else if (expr.type === "NestedShape") {
           var newThreads = [thread]
-          var scope1 = passScoped(expr, newThreads[0]);
           return newThreads;
         }
 
         runtimeError("unexpected expr type: " + expr.type);
-
-        /** passScoped - add errors to thread if the triples allocated to a
-         * thread don't match a onShapeExpression.
-         */
-        function passScoped (expr, thread) {
-          if (!("onShapeExpression" in expr))
-            return thread;
-          var subgraph = N3Store();
-          var myTriples = expr.scopedTripleConstraints.reduce(
-            (acc, tci) => acc.concat(constraintToTripleMapping[tci].map(
-              ti => ({ti: ti, triple: neighborhood[ti]})
-            )), []);
-          myTriples.forEach(pair => subgraph.addTriple(pair.triple));
-
-          var res =
-              direct(node, expr.onShapeExpression, ShExUtil.makeN3DB(subgraph));
-
-          if ("errors" in res) {
-            var err = {
-              type: "RestrictionError",
-              errors: res
-            };
-            thread.errors = thread.errors.concat(err);
-          } else {
-            // thread.expression.scopedShapeSolution = res; !!! TODO
-            var tNos = [];
-            function _dive1 (solns) {
-              if (solns.type === "ShapeAndResults" ||
-                  solns.type === "ShapeOrResults") {
-                solns.solutions.forEach(s => {
-                  _dive1(s.solution);
-                });
-              } else if (solns.type === "ShapeTest") {
-                _dive1(solns.solution);
-              } else if (solns.type === "OneOfSolutions" ||
-                  solns.type === "EachOfSolutions") {
-                solns.solutions.forEach(s => {
-                  s.expressions.forEach(e => {
-                    _dive1(e);
-                  });
-                });
-              } else if (solns.type === "TripleConstraintSolutions") {
-                solns.solutions = solns.solutions.map(x => {
-                  if (x.type !== "TestedTriple") // already done
-                    throw Error("unexpected result type: " + x.type);
-                  var pair = myTriples.find(
-                    pair =>
-                      pair.triple.subject === x.subject &&
-                      pair.triple.predicate === x.predicate &&
-                      sameLdTerm(ldify(pair.triple.object), x.object)
-                  );
-
-                  if (tNos.indexOf(pair.ti) === -1)
-                    tNos.push(pair.ti);
-                });
-              } else {
-                throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
-              }
-            }
-            _dive1(res);
-            thread.matched.push({
-              tNos: tNos
-            })
-          }
-          return thread;
-
-          function sameLdTerm (l, r) {
-            if (typeof l === "object") {
-              return typeof r === "object"
-                ? l.value === r.value && l.type === r.type && l.language === r.language
-                : false;
-            }
-            return typeof r === "object"
-              ? false
-              : l === r;
-          }
-        }
 
         function homogenize (list) {
           return list.reduce((acc, elt) => {
@@ -9032,7 +8953,7 @@ return {
 if (typeof require !== "undefined" && typeof exports !== "undefined")
   module.exports = ThreadedValNErr;
 
-},{"../../shex":404,"n3":247}],12:[function(require,module,exports){
+},{"n3":247}],12:[function(require,module,exports){
 'use strict';
 
 var KEYWORDS = [
@@ -44585,7 +44506,7 @@ var HierarchyClosure = (function () {
         updateClosure(children, parents, child, parent)
         updateClosure(parents, children, parent, child)
         function updateClosure (container, members, near, far) {
-          container[far] = container[far].concat(near, container[near]);debugger
+          container[far] = container[far].concat(near, container[near]);
           container[near].forEach(
             n => (members[n] = members[n].concat(far, members[far]))
           )

@@ -1,4 +1,4 @@
-{
+ {
   "type": "ShapeTest",
   "node": "Issue1",
   "shape": "IssueShape",
@@ -11,22 +11,32 @@
           {
             "type": "TripleConstraintSolutions",
             "predicate": "http://ex.example/#reportedBy",
+            "valueExpr": {
+              "type": "ShapeRef",
+              "reference": "PersonShape"
+            },
             "solutions": [
               {
                 "type": "TestedTriple",
                 "subject": "Issue1",
                 "predicate": "http://ex.example/#reportedBy",
-                "object": "User2"
+                "object": "User2",
+                "referenced": {
+                  "type": "AbstractShapeFailure",
+                  "shape": "PersonShape"
+                }
               }
-            ],
-            "valueExpr": {
-              "type": "ShapeRef",
-              "reference": "PersonShape"
-            }
+            ]
           },
           {
             "type": "TripleConstraintSolutions",
+            "min": 0,
+            "max": 1,
             "predicate": "http://ex.example/#reproducedBy",
+            "valueExpr": {
+              "type": "ShapeRef",
+              "reference": "EmployeeShape"
+            },
             "solutions": [
               {
                 "type": "TestedTriple",
@@ -38,134 +48,25 @@
                   "node": "Thompson.J",
                   "shape": "EmployeeShape",
                   "solution": {
-                    "type": "EachOfSolutions",
-                    "solutions": [
-                      {
-                        "type": "EachOfSolution",
-                        "expressions": [
-                          {
-                            "type": "EachOfSolutions",
-                            "solutions": [
-                              {
-                                "type": "EachOfSolution",
-                                "expressions": [
-                                  {
-                                    "type": "OneOfSolutions",
-                                    "solutions": [
-                                      {
-                                        "type": "OneOfSolution",
-                                        "expressions": [
-                                          {
-                                            "type": "EachOfSolutions",
-                                            "solutions": [
-                                              {
-                                                "type": "EachOfSolution",
-                                                "expressions": [
-                                                  {
-                                                    "type": "TripleConstraintSolutions",
-                                                    "predicate": "http://xmlns.com/foaf/givenName",
-                                                    "solutions": [
-                                                      {
-                                                        "type": "TestedTriple",
-                                                        "subject": "Thompson.J",
-                                                        "predicate": "http://xmlns.com/foaf/givenName",
-                                                        "object": {
-                                                          "value": "Joe"
-                                                        }
-                                                      },
-                                                      {
-                                                        "type": "TestedTriple",
-                                                        "subject": "Thompson.J",
-                                                        "predicate": "http://xmlns.com/foaf/givenName",
-                                                        "object": {
-                                                          "value": "Joseph"
-                                                        }
-                                                      }
-                                                    ],
-                                                    "valueExpr": {
-                                                      "type": "NodeConstraint",
-                                                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
-                                                    },
-                                                    "min": 1,
-                                                    "max": -1
-                                                  },
-                                                  {
-                                                    "type": "TripleConstraintSolutions",
-                                                    "predicate": "http://xmlns.com/foaf/familyName",
-                                                    "solutions": [
-                                                      {
-                                                        "type": "TestedTriple",
-                                                        "subject": "Thompson.J",
-                                                        "predicate": "http://xmlns.com/foaf/familyName",
-                                                        "object": {
-                                                          "value": "Thompson"
-                                                        }
-                                                      }
-                                                    ],
-                                                    "valueExpr": {
-                                                      "type": "NodeConstraint",
-                                                      "datatype": "http://www.w3.org/2001/XMLSchema#string"
-                                                    }
-                                                  }
-                                                ]
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "type": "TripleConstraintSolutions",
-                                    "predicate": "http://xmlns.com/foaf/mbox",
-                                    "solutions": [
-                                      {
-                                        "type": "TestedTriple",
-                                        "subject": "Thompson.J",
-                                        "predicate": "http://xmlns.com/foaf/mbox",
-                                        "object": "mail:joe@example.org"
-                                      }
-                                    ],
-                                    "valueExpr": {
-                                      "type": "NodeConstraint",
-                                      "nodeKind": "iri"
-                                    }
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          {
-                            "type": "TripleConstraintSolutions",
-                            "predicate": "http://xmlns.com/foaf/phone",
-                            "solutions": [
-                              {
-                                "type": "TestedTriple",
-                                "subject": "Thompson.J",
-                                "predicate": "http://xmlns.com/foaf/phone",
-                                "object": "tel:+456"
-                              }
-                            ],
-                            "valueExpr": {
-                              "type": "NodeConstraint",
-                              "nodeKind": "iri"
-                            },
-                            "min": 1,
-                            "max": -1
-                          }
-                        ]
-                      }
-                    ]
+                    "type": "ExtendedResults",
+                    "extensions": {
+                      "type": "ExtensionResults",
+                      "solutions": [
+                        {
+                          "type": "AbstractShapeFailure",
+                          "shape": "PersonShape"
+                        },
+                        {
+                          "type": "AbstractShapeFailure",
+                          "shape": "RepShape"
+                        }
+                      ]
+                    },
+                    "local": {}
                   }
                 }
               }
-            ],
-            "valueExpr": {
-              "type": "ShapeRef",
-              "reference": "EmployeeShape"
-            },
-            "min": 0,
-            "max": 1
+            ]
           }
         ]
       }
