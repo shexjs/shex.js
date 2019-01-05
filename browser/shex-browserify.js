@@ -4687,6 +4687,7 @@ var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedErr
 var N3Util = require("n3").Util;
 var ShExUtil = require("./ShExUtil");
 var ShExWriter = require("../lib/ShExWriter");
+const Hierarchy = require('hierarchy-closure')
 
 function getLexicalValue (term) {
   return N3Util.isIRI(term) ? term :
@@ -4970,7 +4971,7 @@ function ShExValidator_constructor(schema, options) {
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
-  this.validate = function (db, point, label, tracker, seen, subGraph) {
+  this.validate = function (db, point, label, tracker, seen, subGraph, ignoreInheritance) {
     // default to schema's start shape
     if (typeof point === "object") {
       var shapeMap = point;
@@ -5056,41 +5057,53 @@ function ShExValidator_constructor(schema, options) {
     seen[seenKey] = { point: point, shape: label };
     tracker.enter(point, label);
  
-    var S = this.schema.shapes || { };
-    function restrictionsAndExtensions (l) {
-      return Object.keys(S).reduce(
-        (subs, k) =>
-          subs.concat(restrictions(k), extensions(S[k], k)),
-        []
-      )
-      function restrictions (k) {
-        return S[k].restricts && S[k].restricts.indexOf(l) !== -1 ?
-          [k].concat(restrictionsAndExtensions(k)) :
-          [];
-      }
-      function extensions (se, k) {
-        return se.type === "Shape" ?
-          (se.extends && se.extends.indexOf(l) !== -1 ?
-           [k].concat(restrictionsAndExtensions(k)) :
-           []) :
-        se.type === "ShapeDecl" ?
-          extensions(se.shapeExpr, k) :
-        se.type === "ShapeAnd" ?
-        se.shapeExprs.reduce((acc, expr) => {
-          return acc.concat(extensions(expr, k));
-        }, []) :
-        [];
+    function schemaExtensions (schema) {
+      var abstractness = {};
+      var extensions = Hierarchy.create();
+      makeSchemaVisitor().visitSchema(schema);
+      return extensions.children;
+
+      function makeSchemaVisitor (schema) {
+        var schemaVisitor = ShExUtil.Visitor();
+        var curLabel;
+        var curAbstract;
+        var oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
+        schemaVisitor.visitShapeDecl = function (decl, labelP) {
+          curLabel = labelP;
+          curAbstract = decl.abstract;
+          abstractness[labelP] = decl.abstract;
+          return oldVisitShapeDecl.call(schemaVisitor, decl, labelP);
+        };
+        var oldVisitShape = schemaVisitor.visitShape;
+        schemaVisitor.visitShape = function (shape) {
+          if ("extends" in shape) {
+            shape.extends.forEach(ext => {
+              var extendsVisitor = ShExUtil.Visitor();
+              extendsVisitor.visitShapeRef = function (parent) {
+                extensions.add(parent.reference, curLabel);
+                // makeSchemaVisitor().visitSchema(schema);
+                return "null";
+              };
+              extendsVisitor.visitShapeExpr(ext);
+            })
+          }
+          return "null";
+        };
+        return schemaVisitor;
       }
     }
     // Get derived shapes.
-    var candidates = [label].concat(restrictionsAndExtensions(label));
-    // Uniquify list.
-    for (var i = candidates.length - 1; i >= 0; --i) {
-      if (candidates.indexOf(candidates[i]) < i)
-        candidates.splice(i, 1);
+    var candidates = [label];
+    if (!ignoreInheritance) {
+      candidates = candidates.concat(schemaExtensions(this.schema)[label] || []);
+      // Uniquify list.
+      for (var i = candidates.length - 1; i >= 0; --i) {
+        if (candidates.indexOf(candidates[i]) < i)
+          candidates.splice(i, 1);
+      }
+      // Filter out abstract shapes.
+      candidates = candidates.filter(l => !schema.shapes[l].abstract);
     }
-    // Filter out abstract shapes.
-    candidates = candidates.filter(l => !schema.shapes[l].abstract);
     var results = candidates.reduce((ret, label) => {
       var shapeExpr = schema.shapes[label];
       var res = this._validateShapeDecl(db, point, shapeExpr, label, 0, tracker, seen, subGraph);
@@ -5109,7 +5122,11 @@ function ShExValidator_constructor(schema, options) {
         { type: "FailureList", errors: results.failures } :
       results.failures [0];
     } else {
-      ret = { type: "AbstractShapeFailure", shape: label };
+      ret = {
+        type: "AbstractShapeFailure",
+        shape: label,
+        errors: label + " has no non-abstract children"
+      };
     }
     tracker.exit(point, label, ret);
     delete seen[seenKey];
@@ -5342,7 +5359,9 @@ function ShExValidator_constructor(schema, options) {
       if (results === null || !("errors" in results)) {
         var sub = regexEngine.match(db, point, constraintList, constraintToTriplesMapping, tripleToConstraintMapping, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
-          results = { type: "ExtendedResults", extensions: results, local: sub };
+          results = { type: "ExtendedResults", extensions: results };
+          if (Object.keys(sub).length > 0) // no empty objects from {}s.
+            results.local = sub;
         } else {
           results = sub;
         }
@@ -5384,8 +5403,9 @@ function ShExValidator_constructor(schema, options) {
         var passes = [];
         for (var eNo = 0; eNo < expr.extends.length; ++eNo) {
           var extend = expr.extends[eNo];
-          var subgraph = ShExUtil.makeTriplesDB(null); // tracker?
+          var subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
           extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+          var newParms = Object.assign({ignoreInheritance: true}, valParms);
           var sub = _ShExValidator._errorsMatchingShapeExpr(point, extend, valParms, subgraph);
           if ("errors" in sub)
             return { type: "ExtensionFailure", errors: [sub] };
@@ -5465,7 +5485,7 @@ function ShExValidator_constructor(schema, options) {
       return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, subgraph)
       return validateBySExpr(value, valueExpr);
     } else if (valueExpr.type === "ShapeRef") {
-      return _ShExValidator.validate(valParms.db, value, valueExpr.reference, valParms.tracker, valParms.seen, subgraph);
+      return _ShExValidator.validate(valParms.db, value, valueExpr.reference, valParms.tracker, valParms.seen, subgraph, valParms.ignoreInheritance);
     } else if (valueExpr.type === "ShapeOr") {
       var errors = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
@@ -6121,7 +6141,7 @@ if (typeof require !== "undefined" && typeof exports !== "undefined")
   module.exports = ShExValidator;
 
 }).call(this,require('_process'))
-},{"../lib/ShExWriter":6,"../lib/regex/threaded-val-nerr":11,"./ShExUtil":4,"_process":281,"n3":247}],6:[function(require,module,exports){
+},{"../lib/ShExWriter":6,"../lib/regex/threaded-val-nerr":11,"./ShExUtil":4,"_process":281,"hierarchy-closure":206,"n3":247}],6:[function(require,module,exports){
 // **ShExWriter** writes ShEx documents.
 
 var ShExWriter = (function () {

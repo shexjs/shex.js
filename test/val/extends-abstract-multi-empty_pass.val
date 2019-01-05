@@ -93,13 +93,11 @@
                                                     "shape": "RepShape"
                                                   }
                                                 ]
-                                              },
-                                              "local": {}
+                                              }
                                             }
                                           }
                                         ]
-                                      },
-                                      "local": {}
+                                      }
                                     }
                                   },
                                   {
@@ -122,13 +120,11 @@
                                             "shape": "RepShape"
                                           }
                                         ]
-                                      },
-                                      "local": {}
+                                      }
                                     }
                                   }
                                 ]
-                              },
-                              "local": {}
+                              }
                             }
                           }
                         }
@@ -197,13 +193,11 @@
                                           "shape": "RepShape"
                                         }
                                       ]
-                                    },
-                                    "local": {}
+                                    }
                                   }
                                 }
                               ]
-                            },
-                            "local": {}
+                            }
                           }
                         },
                         {
@@ -226,13 +220,11 @@
                                   "shape": "RepShape"
                                 }
                               ]
-                            },
-                            "local": {}
+                            }
                           }
                         }
                       ]
-                    },
-                    "local": {}
+                    }
                   }
                 }
               }
