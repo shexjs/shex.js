@@ -1,4 +1,4 @@
- {
+{
   "type": "ShapeTest",
   "node": "Issue1",
   "shape": "IssueShape",
@@ -22,8 +22,119 @@
                 "predicate": "http://ex.example/#reportedBy",
                 "object": "User2",
                 "referenced": {
-                  "type": "AbstractShapeFailure",
-                  "shape": "PersonShape"
+                  "type": "ShapeTest",
+                  "node": "User2",
+                  "shape": "UserShape",
+                  "solution": {
+                    "type": "ExtendedResults",
+                    "extensions": {
+                      "type": "ExtensionResults",
+                      "solutions": [
+                        {
+                          "type": "Recursion",
+                          "node": "User2",
+                          "shape": "PersonShape"
+                        }
+                      ]
+                    },
+                    "local": {
+                      "type": "TripleConstraintSolutions",
+                      "predicate": "http://ex.example/#representative",
+                      "valueExpr": {
+                        "type": "ShapeRef",
+                        "reference": "EmployeeShape"
+                      },
+                      "solutions": [
+                        {
+                          "type": "TestedTriple",
+                          "subject": "User2",
+                          "predicate": "http://ex.example/#representative",
+                          "object": "Thompson.J",
+                          "referenced": {
+                            "type": "ShapeTest",
+                            "node": "Thompson.J",
+                            "shape": "EmployeeShape",
+                            "solution": {
+                              "type": "ExtendedResults",
+                              "extensions": {
+                                "type": "ExtensionResults",
+                                "solutions": [
+                                  {
+                                    "type": "ShapeTest",
+                                    "node": "Thompson.J",
+                                    "shape": "EmployeeShape",
+                                    "solution": {
+                                      "type": "ExtendedResults",
+                                      "extensions": {
+                                        "type": "ExtensionResults",
+                                        "solutions": [
+                                          {
+                                            "type": "Recursion",
+                                            "node": "Thompson.J",
+                                            "shape": "PersonShape"
+                                          },
+                                          {
+                                            "type": "ShapeTest",
+                                            "node": "Thompson.J",
+                                            "shape": "EmployeeShape",
+                                            "solution": {
+                                              "type": "ExtendedResults",
+                                              "extensions": {
+                                                "type": "ExtensionResults",
+                                                "solutions": [
+                                                  {
+                                                    "type": "Recursion",
+                                                    "node": "Thompson.J",
+                                                    "shape": "PersonShape"
+                                                  },
+                                                  {
+                                                    "type": "Recursion",
+                                                    "node": "Thompson.J",
+                                                    "shape": "RepShape"
+                                                  }
+                                                ]
+                                              },
+                                              "local": {}
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "local": {}
+                                    }
+                                  },
+                                  {
+                                    "type": "ShapeTest",
+                                    "node": "Thompson.J",
+                                    "shape": "EmployeeShape",
+                                    "solution": {
+                                      "type": "ExtendedResults",
+                                      "extensions": {
+                                        "type": "ExtensionResults",
+                                        "solutions": [
+                                          {
+                                            "type": "Recursion",
+                                            "node": "Thompson.J",
+                                            "shape": "PersonShape"
+                                          },
+                                          {
+                                            "type": "Recursion",
+                                            "node": "Thompson.J",
+                                            "shape": "RepShape"
+                                          }
+                                        ]
+                                      },
+                                      "local": {}
+                                    }
+                                  }
+                                ]
+                              },
+                              "local": {}
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
                 }
               }
             ]
@@ -53,12 +164,71 @@
                       "type": "ExtensionResults",
                       "solutions": [
                         {
-                          "type": "AbstractShapeFailure",
-                          "shape": "PersonShape"
+                          "type": "ShapeTest",
+                          "node": "Thompson.J",
+                          "shape": "EmployeeShape",
+                          "solution": {
+                            "type": "ExtendedResults",
+                            "extensions": {
+                              "type": "ExtensionResults",
+                              "solutions": [
+                                {
+                                  "type": "Recursion",
+                                  "node": "Thompson.J",
+                                  "shape": "PersonShape"
+                                },
+                                {
+                                  "type": "ShapeTest",
+                                  "node": "Thompson.J",
+                                  "shape": "EmployeeShape",
+                                  "solution": {
+                                    "type": "ExtendedResults",
+                                    "extensions": {
+                                      "type": "ExtensionResults",
+                                      "solutions": [
+                                        {
+                                          "type": "Recursion",
+                                          "node": "Thompson.J",
+                                          "shape": "PersonShape"
+                                        },
+                                        {
+                                          "type": "Recursion",
+                                          "node": "Thompson.J",
+                                          "shape": "RepShape"
+                                        }
+                                      ]
+                                    },
+                                    "local": {}
+                                  }
+                                }
+                              ]
+                            },
+                            "local": {}
+                          }
                         },
                         {
-                          "type": "AbstractShapeFailure",
-                          "shape": "RepShape"
+                          "type": "ShapeTest",
+                          "node": "Thompson.J",
+                          "shape": "EmployeeShape",
+                          "solution": {
+                            "type": "ExtendedResults",
+                            "extensions": {
+                              "type": "ExtensionResults",
+                              "solutions": [
+                                {
+                                  "type": "Recursion",
+                                  "node": "Thompson.J",
+                                  "shape": "PersonShape"
+                                },
+                                {
+                                  "type": "Recursion",
+                                  "node": "Thompson.J",
+                                  "shape": "RepShape"
+                                }
+                              ]
+                            },
+                            "local": {}
+                          }
                         }
                       ]
                     },
