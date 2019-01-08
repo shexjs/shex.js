@@ -142,12 +142,12 @@ this.$ = appendTo($$[$0-1], $$[$0]) // t: startCode3;
 break;
 case 26:
  // t: 1dot 1val1vsMinusiri3??
-        addShape($$[$0-1],  nonest($$[$0]));
+        addShape($$[$0-1],  $$[$0]);
       
 break;
 case 27:
 
-        this.$ = $$[$0];
+        this.$ = nonest($$[$0]);
       
 break;
 case 28:
@@ -156,9 +156,13 @@ break;
 case 29:
 
         if ($$[$0-2])
-          $$[$0-1] = { type: "ShapeNot", "shapeExpr": $$[$0-1] };
-        if ($$[$0]) {
-          $$[$0].shapeExprs.unshift($$[$0-1]);
+          $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) }; // t:@@
+        if ($$[$0]) { // If there were disjuncts,
+          //           shapeOr will have $$[$0].set needsAtom.
+          //           Prepend $$[$0].needsAtom with $$[$0-1].
+          //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
+          $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+          delete $$[$0].needsAtom;
           this.$ = $$[$0];
         } else {
           this.$ = $$[$0-1];
@@ -166,11 +170,24 @@ case 29:
       
 break;
 case 30:
-this.$ = { type: "ShapeNot", "shapeExpr": $$[$0-1] };
+
+        $$[$0-1] = { type: "ShapeNot", "shapeExpr": nonest($$[$0-1]) } // !!! opt
+        if ($$[$0]) { // If there were disjuncts,
+          //           shapeOr will have $$[$0].set needsAtom.
+          //           Prepend $$[$0].needsAtom with $$[$0-1].
+          //           Note that $$[$0] may be a ShapeOr or a ShapeAnd.
+          $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+          delete $$[$0].needsAtom;
+          this.$ = $$[$0];
+        } else {
+          this.$ = $$[$0-1];
+        }
+      
 break;
 case 31:
 
-        $$[$0].shapeExprs.unshift($$[$0-1]);
+        $$[$0].needsAtom.unshift(nonest($$[$0-1]));
+        delete $$[$0].needsAtom;
         this.$ = $$[$0]; // { type: "ShapeOr", "shapeExprs": [$$[$0-1]].concat($$[$0]) };
       
 break;
@@ -181,13 +198,24 @@ case 33: case 37: case 40: case 46: case 53: case 162: case 184: case 243:
 this.$ = $$[$0];
 break;
 case 35:
-
-        this.$ = { type: "ShapeOr", shapeExprs: $$[$0] };
+ // returns a ShapeOr
+        var disjuncts = $$[$0].map(nonest);
+        this.$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
       
 break;
 case 36:
-
-        this.$ = $$[$0].length > 0 ? shapeJunction("ShapeAnd", $$[$0-1], $$[$0]) : { type: "ShapeAnd", shapeExprs:$$[$0-1] };
+ // returns a ShapeAnd
+        // $$[$0-1] could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
+        $$[$0-1].filter(c => c.type === "ShapeAnd").length === $$[$0-1].length
+        var and = {
+          type: "ShapeAnd",
+          shapeExprs: $$[$0-1].reduce(
+            (acc, elt) =>
+              acc.concat(elt.type === 'ShapeAnd' && !elt.nested ? elt.shapeExprs : nonest(elt)), []
+          )
+        };
+        this.$ = $$[$0].length > 0 ? { type: "ShapeOr", shapeExprs: [and].concat($$[$0].map(nonest)) } : and; // t: @@
+        this.$.needsAtom = and.shapeExprs;
       
 break;
 case 38: case 41:
@@ -203,16 +231,19 @@ case 45:
 this.$ = shapeJunction("ShapeOr", $$[$0-1], $$[$0]);
 break;
 case 49: case 52:
-this.$ = shapeJunction("ShapeAnd", $$[$0-1], $$[$0]);
+this.$ = shapeJunction("ShapeAnd", $$[$0-1], $$[$0]) // t: @@;
 break;
-case 56: case 59:
-this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } : $$[$0];
+case 56:
+this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } /* t:@@ */ : $$[$0];
 break;
 case 57:
 this.$ = false;
 break;
 case 58:
 this.$ = true;
+break;
+case 59:
+this.$ = $$[$0-1] ? { type: "ShapeNot", "shapeExpr": nonest($$[$0]) } /* t: 1NOTNOTdot, 1NOTNOTIRI, 1NOTNOTvs */ : $$[$0];
 break;
 case 60: case 69: case 74:
 this.$ = $$[$0] ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $$[$0-1]), $$[$0] ] } : $$[$0-1];
@@ -488,7 +519,7 @@ case 170:
         // $$[$0]: t: 1dotCode1
 	if ($$[$0-3] !== EmptyShape && false) {
 	  var t = blank();
-	  addShape(t, nonest($$[$0-3]));
+	  addShape(t, $$[$0-3]);
 	  $$[$0-3] = { type: "ShapeRef", reference: t };
 	}
         // %6: t: 1inversedotCode1
@@ -1227,20 +1258,28 @@ parse: function parse(input) {
       Parser.productions[label] = production;
   }
 
-  function shapeJunction (type, container, elts) {
-    if (elts.length === 0) {
-      return nonest(container);
-    } else if (container.type === type && !container.nested) {
-      nonest(container).shapeExprs = nonest(container).shapeExprs.concat(elts.map(nonest));
-      return container;
+  // shapeJunction judiciously takes a shapeAtom and an optional list of con/disjuncts.
+  // No created Shape{And,Or,Not} will have a `nested` shapeExpr.
+  // Don't nonest arguments to shapeJunction.
+  // shapeAtom emits `nested` so nonest every argument that can be a shapeAtom, i.e.
+  //   shapeAtom, inlineShapeAtom, shapeAtomNoRef
+  //   {,inline}shape{And,Or,Not}
+  //   this does NOT include shapeOrRef or nodeConstraint.
+  function shapeJunction (type, shapeAtom, juncts) {
+    if (juncts.length === 0) {
+      return nonest(shapeAtom);
+    } else if (shapeAtom.type === type && !shapeAtom.nested) {
+      nonest(shapeAtom).shapeExprs = nonest(shapeAtom).shapeExprs.concat(juncts);
+      return shapeAtom;
     } else {
-      return { type: type, shapeExprs: [nonest(container)].concat(elts.map(nonest)) };
+      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts) };
     }
   }
 
-  function nonest (container) {
-    delete container.nested;
-    return container;
+  // strip out .nested attribute
+  function nonest (shapeAtom) {
+    delete shapeAtom.nested;
+    return shapeAtom;
   }
 
   var EmptyObject = {  };
@@ -1925,7 +1964,13 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
   var allLoaded = DynamicPromise();
   function loadImports (schema) {
     if (!("imports" in schema))
-      return;
+      return schema;
+    if (schemaOptions.keepImports) {
+      return schema;
+    }
+    var ret = Object.assign({}, schema);
+    var imports = ret.imports;
+    delete ret.imports;
     schema.imports.map(function (i) {
       return transform ? transform(i) : i;
     }).filter(function (i) {
@@ -1944,6 +1989,7 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
                           returns.schema, meta, schemaOptions, loadImports);
       })); // addAfter would be after invoking schema.
     });
+    return ret;
   }
 
   // gather all the potentially remote inputs
@@ -2006,10 +2052,9 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     var s = parser.parse(text);
     // !! horrible hack until I set a variable to know if there's a BASE.
     if (s.base === url) delete s.base;
-    ShExUtil.merge(schema, s, true, true);
     meta.prefixes = schema.prefixes;
     meta.base = schema.base || meta.base;
-    loadImports(s);
+    ShExUtil.merge(schema, loadImports(s), true, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
     var e2 = Error("error parsing ShEx " + url + ": " + e);
@@ -2027,22 +2072,26 @@ function loadShExImports_NotUsed (from, parser, transform) {
   });
   function load999Imports (loaded) {
     var schema = parser.parse(loaded.text);
+    var imports = schema.imports;
+    delete schema.imports;
     ShExUtil.merge(ret, schema, false, true);
-    var rest = "imports" in schema ?
-        schema.imports.
-        map(function (i) {
-          return transform ? transform(i) : i;
-        }).
-        filter(function (i) {
-          return schemasSeen.indexOf(i) === -1;
-        }) :
-        [];
-    return rest.length ? Promise.all(rest.map(i => {
-      schemasSeen.push(i);
-      return GET(i).then(load999Imports);
-    })).then(a => {
-      return null;
-    }) : null;
+    if (imports) {
+      var rest = imports
+          .map(function (i) {
+            return transform ? transform(i) : i;
+          }).
+          filter(function (i) {
+            return schemasSeen.indexOf(i) === -1;
+          });
+      return Promise.all(rest.map(i => {
+        schemasSeen.push(i);
+        return GET(i).then(load999Imports);
+      })).then(a => {
+        return null;
+      });
+    } else {
+      return null
+    }
   }
 }
 
@@ -2177,10 +2226,15 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
       var t = Error(`${documentIRI}(${lineNo}): ${e.message}\n${pos}`);
       t.lineNo = lineNo;
       t.context = pos;
-      parser.yy.lexer.matched = parser.yy.lexer.matched || "";
-      t.offset = parser.yy.lexer.matched.length;
-      t.width = parser.yy.lexer.match.length
-      t.lloc = parser.yy.lexer.yylloc;
+      if ("lexer" in parser.yy) {
+        parser.yy.lexer.matched = parser.yy.lexer.matched || "";
+        t.offset = parser.yy.lexer.matched.length;
+        t.width = parser.yy.lexer.match.length
+        t.lloc = parser.yy.lexer.yylloc;
+      } else {
+        // Failed before the Jison call to `yy.parser.yy = { lexer: yy.lexer}`
+        t.offset = t.width = t.lloc = 0;
+      }
       Error.captureStackTrace(t, runParser);
       parser.reset();
       throw t;
@@ -2382,6 +2436,7 @@ var ShExUtil = {
 
       // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
       _visitShapeGroup: function (expr, label) {
+        this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
         var _Visitor = this;
         var r = { type: expr.type };
         if ("id" in expr)
@@ -2394,6 +2449,7 @@ var ShExUtil = {
 
       // _visitShapeNot: visit negated shape
       visitShapeNot: function (expr, label) {
+        this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
         var r = { type: expr.type };
         if ("id" in expr)
           r.id = expr.id;
@@ -2430,10 +2486,12 @@ var ShExUtil = {
       },
 
       visitShapeRef: function (expr) {
+        this._testUnknownAttributes(expr, ["reference"], "ShapeRef", this.visitShapeNot)
         return { type: "ShapeRef", reference: expr.reference };
       },
 
       visitShapeExternal: function (expr) {
+        this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
         return extend("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
       },
 
@@ -2533,18 +2591,7 @@ var ShExUtil = {
 
       _maybeSet: function (obj, ret, context, members, ignore) {
         var _Visitor = this;
-        var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
-          return k !== "type" && members.indexOf(k) === -1 && (!ignore || ignore.indexOf(k) === -1) ? ret.concat(k) : ret;
-        }, []);
-        if (unknownMembers.length > 0) {
-          var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
-                        unknownMembers.map(function (p) {
-                          return "\"" + p + "\"";
-                        }).join(",") +
-                        " in " + context + ": " + JSON.stringify(obj));
-          Error.captureStackTrace(e, this._maybeSet);
-          throw e;
-        }
+        this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
         members.forEach(function (member) {
           var methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
           if (member in obj) {
@@ -2565,7 +2612,22 @@ var ShExUtil = {
       },
       _visitList: function (l) {
         return l.slice();
+      },
+      _testUnknownAttributes: function (obj, expected, context, captureFrame) {
+        var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
+          return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
+        }, []);
+        if (unknownMembers.length > 0) {
+          var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
+                        unknownMembers.map(function (p) {
+                          return "\"" + p + "\"";
+                        }).join(",") +
+                        " in " + context + ": " + JSON.stringify(obj));
+          Error.captureStackTrace(e, captureFrame);
+          throw e;
+        }
       }
+
     };
     r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r._visitValue;
     r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
@@ -2575,7 +2637,7 @@ var ShExUtil = {
     r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
     r.visitOneOf = r.visitEachOf = r._visitGroup;
     r.visitShapeAnd = r.visitShapeOr = r._visitShapeGroup;
-    r.visitShapeRef = r.visitInclude = r._visitValue;
+    r.visitInclude = r._visitValue;
     r.visitValueExpr = r.visitShapeExpr;
     return r;
   },
@@ -3344,6 +3406,10 @@ var ShExUtil = {
 
     copy("prefixes");
 
+    if ("imports" in right)
+      if (!("imports" in left) || overwrite)
+        ret.imports = right.imports;
+
     // startActs
     if ("startActs" in left)
       ret.startActs = left.startActs;
@@ -3409,28 +3475,53 @@ var ShExUtil = {
   validateSchema: function (schema) { // obselete, but may need other validations in the future.
     var _ShExUtil = this;
     var visitor = this.Visitor();
-    var currentShape = null;
+    var currentLabel = currentExtra = null;
+    var currentNegated = false;
+    var dependsOn = { };
     var inTE = false;
+    var oldVisitShape = visitor.visitShape;
+    var negativeDeps = Hierarchy.create();
+    var positiveDeps = Hierarchy.create();
+
+    visitor.visitShape = function (shape, label) {
+      var lastExtra = currentExtra;
+      currentExtra = shape.extra;
+      var ret = oldVisitShape.call(visitor, shape, label);
+      currentExtra = lastExtra;
+      return ret;
+    }
+
+    var oldVisitShapeNot = visitor.visitShapeNot;
+    visitor.visitShapeNot = function (shapeNot, label) {
+      var lastNegated = currentNegated;
+      currentNegated ^= true;
+      var ret = oldVisitShapeNot.call(visitor, shapeNot, label);
+      currentNegated = lastNegated;
+      return ret;
+    }
+
     var oldVisitTripleConstraint = visitor.visitTripleConstraint;
     visitor.visitTripleConstraint = function (expr) {
+      var lastNegated = currentNegated;
+      if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
+        currentNegated ^= true;
       inTE = true;
       var ret = oldVisitTripleConstraint.call(visitor, expr);
       inTE = false;
+      currentNegated = lastNegated;
       return ret;
     };
+
     var oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef) {
       if (!(shapeRef.reference in schema.shapes))
         throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(schema.shapes) + ".");
-      if (!inTE && shapeRef.reference === currentShape) 
-        throw Error("Structural error: circular reference to " + currentShape + ".");
-      return oldVisitShapeRef.call(visitor, shapeRef.reference);
+      if (!inTE && shapeRef.reference === currentLabel)
+        throw Error("Structural error: circular reference to " + currentLabel + ".");
+      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef.reference)
+      return oldVisitShapeRef.call(visitor, shapeRef);
     }
-    var oldVisitShapeExpr = visitor.visitShapeExpr;
-    visitor.visitShapeExpr = function (expr, label) {
-      currentShape = label;
-      return oldVisitShapeExpr.call(visitor, expr, label);
-    }
+
     var oldVisitInclusion = visitor.visitInclusion;
     visitor.visitInclusion = function (inclusion) {
       var refd;
@@ -3441,7 +3532,18 @@ var ShExUtil = {
       return oldVisitInclusion.call(visitor, inclusion);
     };
 
-    visitor.visitSchema(schema);
+    Object.keys(schema.shapes || []).forEach(function (label) {
+      currentLabel = label;
+      visitor.visitShapeExpr(schema.shapes[label], label);
+    });
+    let circs = Object.keys(negativeDeps.children).filter(
+      k => negativeDeps.children[k].filter(
+        k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
+          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
+      ).length > 0
+    );
+    if (circs.length)
+      throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
 
     function dumpKeys (obj) {
       return obj ? Object.keys(obj).map(
@@ -3449,6 +3551,7 @@ var ShExUtil = {
       ).join("\n        ") : '- none defined -'
     }
   },
+
   /** isWellDefined: assert that schema is well-defined.
    *
    * @schema: input schema
@@ -3456,7 +3559,7 @@ var ShExUtil = {
    */
   isWellDefined: function (schema) {
     this.validateSchema(schema);
-    var deps = this.getDependencies(schema);
+    // var deps = this.getDependencies(schema);
     return schema;
   },
 
@@ -4220,6 +4323,7 @@ var ShExUtil = {
       getSubjects: getSubjects,
       getPredicates: getPredicates,
       getObjects: getObjects,
+      get size() { return db.size; }
       // getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
       //   // console.log(Error(s + p + o).stack)
       //   if (queryTracker)
@@ -4324,6 +4428,7 @@ var ShExUtil = {
       getSubjects: function () { return ["!Query DB can't index subjects"] },
       getPredicates: function () { return ["!Query DB can't index predicates"] },
       getObjects: function () { return ["!Query DB can't index objects"] },
+      get size() { return undefined; }
     };
   },
 
@@ -5769,17 +5874,45 @@ ShExWriter.prototype = {
     else if (shapeExpr.type === "ShapeAnd") {
       if (parentPrec >= 3)
         pieces.push("(");
+      var lastAndElided = false;
       shapeExpr.shapeExprs.forEach(function (expr, ord) {
-        if (ord > 0 && // !!! grammar rules too weird here
-	    !((shapeExpr.shapeExprs[ord-1].type === "NodeConstraint" &&
-               !("datatype" in shapeExpr.shapeExprs[ord-1]) &&
-	       (shapeExpr.shapeExprs[ord  ].type === "Shape" ||
-		shapeExpr.shapeExprs[ord  ].type === "ShapeRef")) ||
-	      (shapeExpr.shapeExprs[ord  ].type === "NodeConstraint" &&
-               !("datatype" in shapeExpr.shapeExprs[ord  ]) &&
-	       (shapeExpr.shapeExprs[ord-1].type === "Shape" ||
-		shapeExpr.shapeExprs[ord-1].type === "ShapeRef"))))
-          pieces.push(" AND ");
+        if (ord > 0) { // && !!! grammar rules too weird here
+          /*
+            shapeAtom:
+                  nonLitNodeConstraint shapeOrRef?
+                | shapeDecl nonLitNodeConstraint?
+
+            nonLitInlineNodeConstraint:
+                  nonLiteralKind stringFacet*
+          */
+          function nonLitNodeConstraint (idx) {
+            let c = shapeExpr.shapeExprs[idx];
+            return c.type !== "NodeConstraint"
+              || ("nodeKind" in c && c.nodeKind === "literal")
+              || "datatype" in c
+              || "values" in c
+              ? false
+              : true;
+          }
+
+          function shapeOrRef (idx) {
+            let c = shapeExpr.shapeExprs[idx];
+            return c.type === "Shape" || c.type === "ShapeRef";
+          }
+
+          function shapeDecl (idx) {
+            let c = shapeExpr.shapeExprs[idx];
+            return c.type === "Shape";
+          }
+
+          let elideAnd = !lastAndElided
+              && (nonLitNodeConstraint(ord-1) && shapeOrRef(ord)
+                  || shapeDecl(ord-1) && nonLitNodeConstraint(ord))
+          if (!elideAnd) {
+            pieces.push(" AND ");
+          }
+          lastAndElided = elideAnd;
+        }
         pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr, done, false, 3));
       });
       if (parentPrec >= 3)
@@ -5992,7 +6125,7 @@ ShExWriter.prototype = {
       pieces.push("[");
 
       v.values.forEach(function (t, ord) {
-        if (ord > 1)
+        if (ord > 0)
           pieces.push(" ");
 
         if (!isTerm(t)) {
@@ -6045,7 +6178,7 @@ ShExWriter.prototype = {
       // if (ESCAPE_1.test(pattern))
       //   pattern = pattern.replace(ESCAPE_g, characterReplacer);
       var flags = 'flags' in v ? v.flags : "";
-      pieces.push("/" + pattern + "/" + flags);
+      pieces.push("/" + pattern + "/" + flags + " ");
     }
     ['length', 'minlength', 'maxlength',
      'mininclusive', 'minexclusive', 'maxinclusive', 'maxexclusive',
@@ -7510,9 +7643,9 @@ var NFAXVal1Err = (function () {
   var Match = "<span class='keyword' title='Match'>␃</span>";
   /* compileNFA - compile regular expression and index triple constraints
    */
-var UNBOUNDED = -1;
+  var UNBOUNDED = -1;
 
-function compileNFA (schema, shape) {
+  function compileNFA (schema, shape) {
     var expression = shape.expression;
     return NFA();
 
@@ -7591,7 +7724,7 @@ function compileNFA (schema, shape) {
           return walkExpr(included, stack);
         }
 
-        runtimeError("unexpected expr type: " + expr.type);
+        throw Error("unexpected expr type: " + expr.type);
       };
 
       function State_make (c, outs, negated) {
@@ -7666,135 +7799,53 @@ function compileNFA (schema, shape) {
     }
 
     function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
-      var _this = this;
+      var rbenx = this;
       var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
-      function resetRepeat (thread, repeatedState) {
-        var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-          if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
-            r[k] = thread.repeats[k];
-          return r;
-        }, {});
-        return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-      }
-      function incrmRepeat (thread, repeatedState) {
-        var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-          r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
-          return r;
-        }, {});
-        return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-      }
-      function stateString (state, repeats) {
-        var rs = Object.keys(repeats).map(rpt => {
-          return rpt+":"+repeats[rpt];
-        }).join(",");
-        return rs.length ? state + "-" + rs : ""+state;
-      }
-
-      function addstate (list, stateNo, thread, seen) {
-        seen = seen || [];
-        var seenkey = stateString(stateNo, thread.repeats);
-        if (seen.indexOf(seenkey) !== -1)
-          return;
-        seen.push(seenkey);
-
-        var s = _this.states[stateNo];
-        if (s.c === Split) {
-          return s.outs.reduce((ret, o, idx) => {
-            return ret.concat(addstate(list, o, thread, seen));
-          }, []);
-        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
-        } else if (s.c === Rept) {
-          var ret = [];
-          // matched = [matched].concat("Rept" + s.expr);
-          if (!(stateNo in thread.repeats))
-            thread.repeats[stateNo] = 0;
-          var repetitions = thread.repeats[stateNo];
-          // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-          if (repetitions < s.max)
-            ret = ret.concat(addstate(list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-          if (repetitions >= s.min && repetitions <= s.max)
-            ret = ret.concat(addstate(list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
-          return ret;
-        } else {
-          // if (stateNo !== _this.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
-          //   return r2 || avail.length > 0;
-          // }, false))
-          return [list.push({ // return [new list element index]
-            state:stateNo,
-            repeats:thread.repeats,
-            avail:thread.avail.map(a => { // copy parent thread's avail vector
-              return a.slice();
-            }),
-            stack:thread.stack,
-            matched:thread.matched,
-            errors: thread.errors
-          }) - 1];
-        }
-      }
 
       function localExpect (list) {
         return list.map(st => {
-          var s = _this.states[st.state]; // simpler threads are a list of states.
+          var s = rbenx.states[st.state]; // simpler threads are a list of states.
           return renderAtom(s.c, s.negated);
         });
       }
 
-      if (_this.states.length === 1)
+      if (rbenx.states.length === 1)
         return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
 
       var chosen = null;
       // var dump = nfaToString();
       // console.log(dump.nfa(this.states, this.start));
-      addstate(clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
+      addstate(rbenx, clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
       while (clist.length) {
         nlist = [];
         if (trace)
           trace.push({threads:[]});
         for (var threadno = 0; threadno < clist.length; ++threadno) {
           var thread = clist[threadno];
-          if (thread.state === _this.end)
+          if (thread.state === rbenx.end)
             continue;
-          var state = _this.states[thread.state];
+          var state = rbenx.states[thread.state];
           var nlistlen = nlist.length;
           var constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
-          var min = "min" in state.c ? state.c.min : 1;
-          var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-          if ("negated" in state.c && state.c.negated)
-            min = max = 0;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
-          var taken = thread.avail[constraintNo].splice(0, max);
-          if (taken.length >= min) {
-            do {
-              // find the exprs that require repetition
-              var exprs = _this.states.map(x => { return x.c === Rept ? x.expr : null; });
-              var newStack = state.stack.map(e => {
-                var i = thread.repeats[exprs.indexOf(e.c)];
-                if (i === undefined)
-                  i = 0; // expr has no repeats
-                else
-                  i = i-1;
-                return { c:e.c, e:e.e, i:i };
-              });
-              var withIndexes = {
-                c: state.c,
-                triples: taken,
-                stack: newStack
-              };
-              thread.matched = thread.matched.concat(withIndexes);
-              state.outs.forEach(o => { // single out if NFA includes epsilons
-                addstate(nlist, o, thread);
-              });
-            } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                taken.push(thread.avail[constraintNo].shift());
-                return true; // stay in look to take more.
-              } else {
-                return false; // no more to take or we're already at max
-              }
-            })());
+            var min = "min" in state.c ? state.c.min : 1;
+            var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+            if ("negated" in state.c && state.c.negated)
+              min = max = 0;
+            if (thread.avail[constraintNo] === undefined)
+              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+            var taken = thread.avail[constraintNo].splice(0, max);
+            if (taken.length >= min) {
+              do {
+                addStates(rbenx, nlist, thread, taken);
+              } while ((function () {
+                if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                  taken.push(thread.avail[constraintNo].shift());
+                  return true; // stay in look to take more.
+                } else {
+                  return false; // no more to take or we're already at max
+                }
+              })());
           }
           if (trace)
             trace[trace.length-1].threads.push({
@@ -7806,7 +7857,7 @@ function compileNFA (schema, shape) {
         }
         // console.log(dump.threadList(nlist));
         if (nlist.length === 0 && chosen === null)
-          return reportError(localExpect(clist, _this.states));
+          return reportError(localExpect(clist, rbenx.states));
         var t = clist;
         clist = nlist;
         nlist = t;
@@ -7817,7 +7868,7 @@ function compileNFA (schema, shape) {
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
                 return t === undefined ? ret : ret + 1; // count expected
               }, 0);
-          return ret !== null ? ret : (elt.state === _this.end && matchedAll) ? elt : null;
+          return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)
         if (longerChosen)
           chosen = longerChosen;
@@ -7829,11 +7880,11 @@ function compileNFA (schema, shape) {
       function reportError () { return {
         type: "Failure",
         node: node,
-        errors: localExpect(clist, _this.states)
+        errors: localExpect(clist, rbenx.states)
       } }
       function localExpect () {
         return clist.map(t => {
-          var c = _this.states[t.state].c;
+          var c = rbenx.states[t.state].c;
           // if (c === Match)
           //   return { type: "EndState999" };
           var valueExpr = extend({}, c.valueExpr);
@@ -7844,7 +7895,7 @@ function compileNFA (schema, shape) {
           }
           return extend({
             type: state.c.negated ? "NegatedProperty" :
-              t.state === _this.end ? "ExcessTripleViolation" :
+              t.state === rbenx.end ? "ExcessTripleViolation" :
               "MissingProperty",
             property: state.c.predicate
           }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {});
@@ -7854,6 +7905,95 @@ function compileNFA (schema, shape) {
       return "errors" in chosen.matched ?
         chosen.matched :
         matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+    }
+
+    function addStates (rbenx, nlist, thread, taken) {
+      var state = rbenx.states[thread.state];
+      // find the exprs that require repetition
+      var exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
+      var newStack = state.stack.map(e => {
+        var i = thread.repeats[exprs.indexOf(e.c)];
+        if (i === undefined)
+          i = 0; // expr has no repeats
+        else
+          i = i-1;
+        return { c:e.c, e:e.e, i:i };
+      });
+      var withIndexes = {
+        c: state.c,
+        triples: taken,
+        stack: newStack
+      };
+      thread.matched = thread.matched.concat(withIndexes);
+      state.outs.forEach(o => { // single out if NFA includes epsilons
+        addstate(rbenx, nlist, o, thread);
+      });
+    }
+
+    function addstate (rbenx, list, stateNo, thread, seen) {
+      seen = seen || [];
+      var seenkey = stateString(stateNo, thread.repeats);
+      if (seen.indexOf(seenkey) !== -1)
+        return;
+      seen.push(seenkey);
+
+      var s = rbenx.states[stateNo];
+      if (s.c === Split) {
+        return s.outs.reduce((ret, o, idx) => {
+          return ret.concat(addstate(rbenx, list, o, thread, seen));
+        }, []);
+        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
+      } else if (s.c === Rept) {
+        var ret = [];
+        // matched = [matched].concat("Rept" + s.expr);
+        if (!(stateNo in thread.repeats))
+          thread.repeats[stateNo] = 0;
+        var repetitions = thread.repeats[stateNo];
+        // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
+        if (repetitions < s.max)
+          ret = ret.concat(addstate(rbenx, list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
+        if (repetitions >= s.min && repetitions <= s.max)
+          ret = ret.concat(addstate(rbenx, list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
+        return ret;
+      } else {
+        // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
+        //   return r2 || avail.length > 0;
+        // }, false))
+        return [list.push({ // return [new list element index]
+          state:stateNo,
+          repeats:thread.repeats,
+          avail:thread.avail.map(a => { // copy parent thread's avail vector
+            return a.slice();
+          }),
+          stack:thread.stack,
+          matched:thread.matched,
+          errors: thread.errors
+        }) - 1];
+      }
+    }
+
+    function resetRepeat (thread, repeatedState) {
+      var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+        if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
+          r[k] = thread.repeats[k];
+        return r;
+      }, {});
+      return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+    }
+
+    function incrmRepeat (thread, repeatedState) {
+      var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+        r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
+        return r;
+      }, {});
+      return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+    }
+
+    function stateString (state, repeats) {
+      var rs = Object.keys(repeats).map(rpt => {
+        return rpt+":"+repeats[rpt];
+      }).join(",");
+      return rs.length ? state + "-" + rs : ""+state;
     }
 
     function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
@@ -39880,30 +40020,36 @@ utils.intFromLE = intFromLE;
 
 },{"bn.js":85,"minimalistic-assert":245,"minimalistic-crypto-utils":246}],162:[function(require,module,exports){
 module.exports={
-  "_from": "elliptic@^6.0.0",
+  "_args": [
+    [
+      "elliptic@6.4.1",
+      "/home/eric/checkouts/shexSpec/shex.js"
+    ]
+  ],
+  "_development": true,
+  "_from": "elliptic@6.4.1",
   "_id": "elliptic@6.4.1",
   "_inBundle": false,
   "_integrity": "sha512-BsXLz5sqX8OHcsh7CqBMztyXARmGQ3LWPtGjJi6DiJHq5C/qvi9P3OqgswKSDftbu8+IoI/QDTAm2fFnQ9SZSQ==",
   "_location": "/elliptic",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "elliptic@^6.0.0",
+    "raw": "elliptic@6.4.1",
     "name": "elliptic",
     "escapedName": "elliptic",
-    "rawSpec": "^6.0.0",
+    "rawSpec": "6.4.1",
     "saveSpec": null,
-    "fetchSpec": "^6.0.0"
+    "fetchSpec": "6.4.1"
   },
   "_requiredBy": [
     "/browserify-sign",
     "/create-ecdh"
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.4.1.tgz",
-  "_shasum": "c2d0b7776911b86722c632c3c06c60f2f819939a",
-  "_spec": "elliptic@^6.0.0",
-  "_where": "/home/eric/checkouts/shexSpec/shex.js/node_modules/browserify-sign",
+  "_spec": "6.4.1",
+  "_where": "/home/eric/checkouts/shexSpec/shex.js",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -39911,7 +40057,6 @@ module.exports={
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "bundleDependencies": false,
   "dependencies": {
     "bn.js": "^4.4.0",
     "brorand": "^1.0.1",
@@ -39921,7 +40066,6 @@ module.exports={
     "minimalistic-assert": "^1.0.0",
     "minimalistic-crypto-utils": "^1.0.0"
   },
-  "deprecated": false,
   "description": "EC cryptography",
   "devDependencies": {
     "brfs": "^1.4.3",
@@ -43952,7 +44096,7 @@ var HierarchyClosure = (function () {
         updateClosure(children, parents, child, parent)
         updateClosure(parents, children, parent, child)
         function updateClosure (container, members, near, far) {
-          container[far] = container[far].concat(near, container[near])
+          container[far] = container[far].concat(near, container[near]);
           container[near].forEach(
             n => (members[n] = members[n].concat(far, members[far]))
           )
@@ -56276,10 +56420,10 @@ function isUndefined(value) {
 module.exports = isUndefined;
 
 },{}],240:[function(require,module,exports){
+(function (Buffer){
 'use strict'
 var inherits = require('inherits')
 var HashBase = require('hash-base')
-var Buffer = require('safe-buffer').Buffer
 
 var ARRAY16 = new Array(16)
 
@@ -56393,7 +56537,7 @@ MD5.prototype._digest = function () {
   this._update()
 
   // produce result
-  var buffer = Buffer.allocUnsafe(16)
+  var buffer = new Buffer(16)
   buffer.writeInt32LE(this._a, 0)
   buffer.writeInt32LE(this._b, 4)
   buffer.writeInt32LE(this._c, 8)
@@ -56423,7 +56567,8 @@ function fnI (a, b, c, d, m, k, s) {
 
 module.exports = MD5
 
-},{"hash-base":193,"inherits":216,"safe-buffer":341}],241:[function(require,module,exports){
+}).call(this,require("buffer").Buffer)
+},{"buffer":119,"hash-base":193,"inherits":216}],241:[function(require,module,exports){
 var bn = require('bn.js');
 var brorand = require('brorand');
 
@@ -73732,7 +73877,7 @@ module.exports = function (password, salt, iterations, keylen) {
 }).call(this,{"isBuffer":require("../../is-buffer/index.js")})
 },{"../../is-buffer/index.js":217}],278:[function(require,module,exports){
 var md5 = require('create-hash/md5')
-var RIPEMD160 = require('ripemd160')
+var rmd160 = require('ripemd160')
 var sha = require('sha.js')
 
 var checkParameters = require('./precondition')
@@ -73789,11 +73934,8 @@ function getDigest (alg) {
   function shaFunc (data) {
     return sha(alg).update(data).digest()
   }
-  function rmd160Func (data) {
-    return new RIPEMD160().update(data).digest()
-  }
 
-  if (alg === 'rmd160' || alg === 'ripemd160') return rmd160Func
+  if (alg === 'rmd160' || alg === 'ripemd160') return rmd160
   if (alg === 'md5') return md5
   return shaFunc
 }
@@ -74952,259 +75094,266 @@ exports.isValid = function (domain) {
 };
 
 },{"./data/rules.json":290,"punycode":298}],292:[function(require,module,exports){
-exports.publicEncrypt = require('./publicEncrypt')
-exports.privateDecrypt = require('./privateDecrypt')
+exports.publicEncrypt = require('./publicEncrypt');
+exports.privateDecrypt = require('./privateDecrypt');
 
-exports.privateEncrypt = function privateEncrypt (key, buf) {
-  return exports.publicEncrypt(key, buf, true)
-}
+exports.privateEncrypt = function privateEncrypt(key, buf) {
+  return exports.publicEncrypt(key, buf, true);
+};
 
-exports.publicDecrypt = function publicDecrypt (key, buf) {
-  return exports.privateDecrypt(key, buf, true)
-}
-
+exports.publicDecrypt = function publicDecrypt(key, buf) {
+  return exports.privateDecrypt(key, buf, true);
+};
 },{"./privateDecrypt":294,"./publicEncrypt":295}],293:[function(require,module,exports){
-var createHash = require('create-hash')
-var Buffer = require('safe-buffer').Buffer
-
+(function (Buffer){
+var createHash = require('create-hash');
 module.exports = function (seed, len) {
-  var t = Buffer.alloc(0)
-  var i = 0
-  var c
+  var t = new Buffer('');
+  var  i = 0, c;
   while (t.length < len) {
-    c = i2ops(i++)
-    t = Buffer.concat([t, createHash('sha1').update(seed).update(c).digest()])
+    c = i2ops(i++);
+    t = Buffer.concat([t, createHash('sha1').update(seed).update(c).digest()]);
   }
-  return t.slice(0, len)
+  return t.slice(0, len);
+};
+
+function i2ops(c) {
+  var out = new Buffer(4);
+  out.writeUInt32BE(c,0);
+  return out;
 }
-
-function i2ops (c) {
-  var out = Buffer.allocUnsafe(4)
-  out.writeUInt32BE(c, 0)
-  return out
-}
-
-},{"create-hash":128,"safe-buffer":341}],294:[function(require,module,exports){
-var parseKeys = require('parse-asn1')
-var mgf = require('./mgf')
-var xor = require('./xor')
-var BN = require('bn.js')
-var crt = require('browserify-rsa')
-var createHash = require('create-hash')
-var withPublic = require('./withPublic')
-var Buffer = require('safe-buffer').Buffer
-
-module.exports = function privateDecrypt (privateKey, enc, reverse) {
-  var padding
-  if (privateKey.padding) {
-    padding = privateKey.padding
+}).call(this,require("buffer").Buffer)
+},{"buffer":119,"create-hash":128}],294:[function(require,module,exports){
+(function (Buffer){
+var parseKeys = require('parse-asn1');
+var mgf = require('./mgf');
+var xor = require('./xor');
+var bn = require('bn.js');
+var crt = require('browserify-rsa');
+var createHash = require('create-hash');
+var withPublic = require('./withPublic');
+module.exports = function privateDecrypt(private_key, enc, reverse) {
+  var padding;
+  if (private_key.padding) {
+    padding = private_key.padding;
   } else if (reverse) {
-    padding = 1
+    padding = 1;
   } else {
-    padding = 4
+    padding = 4;
   }
-
-  var key = parseKeys(privateKey)
-  var k = key.modulus.byteLength()
-  if (enc.length > k || new BN(enc).cmp(key.modulus) >= 0) {
-    throw new Error('decryption error')
+  
+  var key = parseKeys(private_key);
+  var k = key.modulus.byteLength();
+  if (enc.length > k || new bn(enc).cmp(key.modulus) >= 0) {
+    throw new Error('decryption error');
   }
-  var msg
+  var msg;
   if (reverse) {
-    msg = withPublic(new BN(enc), key)
+    msg = withPublic(new bn(enc), key);
   } else {
-    msg = crt(enc, key)
+    msg = crt(enc, key);
   }
-  var zBuffer = Buffer.alloc(k - msg.length)
-  msg = Buffer.concat([zBuffer, msg], k)
+  var zBuffer = new Buffer(k - msg.length);
+  zBuffer.fill(0);
+  msg = Buffer.concat([zBuffer, msg], k);
   if (padding === 4) {
-    return oaep(key, msg)
+    return oaep(key, msg);
   } else if (padding === 1) {
-    return pkcs1(key, msg, reverse)
+    return pkcs1(key, msg, reverse);
   } else if (padding === 3) {
-    return msg
+    return msg;
   } else {
-    throw new Error('unknown padding')
+    throw new Error('unknown padding');
   }
-}
+};
 
-function oaep (key, msg) {
-  var k = key.modulus.byteLength()
-  var iHash = createHash('sha1').update(Buffer.alloc(0)).digest()
-  var hLen = iHash.length
+function oaep(key, msg){
+  var n = key.modulus;
+  var k = key.modulus.byteLength();
+  var mLen = msg.length;
+  var iHash = createHash('sha1').update(new Buffer('')).digest();
+  var hLen = iHash.length;
+  var hLen2 = 2 * hLen;
   if (msg[0] !== 0) {
-    throw new Error('decryption error')
+    throw new Error('decryption error');
   }
-  var maskedSeed = msg.slice(1, hLen + 1)
-  var maskedDb = msg.slice(hLen + 1)
-  var seed = xor(maskedSeed, mgf(maskedDb, hLen))
-  var db = xor(maskedDb, mgf(seed, k - hLen - 1))
+  var maskedSeed = msg.slice(1, hLen + 1);
+  var maskedDb =  msg.slice(hLen + 1);
+  var seed = xor(maskedSeed, mgf(maskedDb, hLen));
+  var db = xor(maskedDb, mgf(seed, k - hLen - 1));
   if (compare(iHash, db.slice(0, hLen))) {
-    throw new Error('decryption error')
+    throw new Error('decryption error');
   }
-  var i = hLen
+  var i = hLen;
   while (db[i] === 0) {
-    i++
+    i++;
   }
   if (db[i++] !== 1) {
-    throw new Error('decryption error')
+    throw new Error('decryption error');
   }
-  return db.slice(i)
+  return db.slice(i);
 }
 
-function pkcs1 (key, msg, reverse) {
-  var p1 = msg.slice(0, 2)
-  var i = 2
-  var status = 0
+function pkcs1(key, msg, reverse){
+  var p1 = msg.slice(0, 2);
+  var i = 2;
+  var status = 0;
   while (msg[i++] !== 0) {
     if (i >= msg.length) {
-      status++
-      break
+      status++;
+      break;
     }
   }
-  var ps = msg.slice(2, i - 1)
+  var ps = msg.slice(2, i - 1);
+  var p2 = msg.slice(i - 1, i);
 
-  if ((p1.toString('hex') !== '0002' && !reverse) || (p1.toString('hex') !== '0001' && reverse)) {
-    status++
+  if ((p1.toString('hex') !== '0002' && !reverse) || (p1.toString('hex') !== '0001' && reverse)){
+    status++;
   }
   if (ps.length < 8) {
-    status++
+    status++;
   }
   if (status) {
-    throw new Error('decryption error')
+    throw new Error('decryption error');
   }
-  return msg.slice(i)
+  return  msg.slice(i);
 }
-function compare (a, b) {
-  a = Buffer.from(a)
-  b = Buffer.from(b)
-  var dif = 0
-  var len = a.length
+function compare(a, b){
+  a = new Buffer(a);
+  b = new Buffer(b);
+  var dif = 0;
+  var len = a.length;
   if (a.length !== b.length) {
-    dif++
-    len = Math.min(a.length, b.length)
+    dif++;
+    len = Math.min(a.length, b.length);
   }
-  var i = -1
+  var i = -1;
   while (++i < len) {
-    dif += (a[i] ^ b[i])
+    dif += (a[i] ^ b[i]);
   }
-  return dif
+  return dif;
 }
+}).call(this,require("buffer").Buffer)
+},{"./mgf":293,"./withPublic":296,"./xor":297,"bn.js":85,"browserify-rsa":108,"buffer":119,"create-hash":128,"parse-asn1":272}],295:[function(require,module,exports){
+(function (Buffer){
+var parseKeys = require('parse-asn1');
+var randomBytes = require('randombytes');
+var createHash = require('create-hash');
+var mgf = require('./mgf');
+var xor = require('./xor');
+var bn = require('bn.js');
+var withPublic = require('./withPublic');
+var crt = require('browserify-rsa');
 
-},{"./mgf":293,"./withPublic":296,"./xor":297,"bn.js":85,"browserify-rsa":108,"create-hash":128,"parse-asn1":272,"safe-buffer":341}],295:[function(require,module,exports){
-var parseKeys = require('parse-asn1')
-var randomBytes = require('randombytes')
-var createHash = require('create-hash')
-var mgf = require('./mgf')
-var xor = require('./xor')
-var BN = require('bn.js')
-var withPublic = require('./withPublic')
-var crt = require('browserify-rsa')
-var Buffer = require('safe-buffer').Buffer
+var constants = {
+  RSA_PKCS1_OAEP_PADDING: 4,
+  RSA_PKCS1_PADDIN: 1,
+  RSA_NO_PADDING: 3
+};
 
-module.exports = function publicEncrypt (publicKey, msg, reverse) {
-  var padding
-  if (publicKey.padding) {
-    padding = publicKey.padding
+module.exports = function publicEncrypt(public_key, msg, reverse) {
+  var padding;
+  if (public_key.padding) {
+    padding = public_key.padding;
   } else if (reverse) {
-    padding = 1
+    padding = 1;
   } else {
-    padding = 4
+    padding = 4;
   }
-  var key = parseKeys(publicKey)
-  var paddedMsg
+  var key = parseKeys(public_key);
+  var paddedMsg;
   if (padding === 4) {
-    paddedMsg = oaep(key, msg)
+    paddedMsg = oaep(key, msg);
   } else if (padding === 1) {
-    paddedMsg = pkcs1(key, msg, reverse)
+    paddedMsg = pkcs1(key, msg, reverse);
   } else if (padding === 3) {
-    paddedMsg = new BN(msg)
+    paddedMsg = new bn(msg);
     if (paddedMsg.cmp(key.modulus) >= 0) {
-      throw new Error('data too long for modulus')
+      throw new Error('data too long for modulus');
     }
   } else {
-    throw new Error('unknown padding')
+    throw new Error('unknown padding');
   }
   if (reverse) {
-    return crt(paddedMsg, key)
+    return crt(paddedMsg, key);
   } else {
-    return withPublic(paddedMsg, key)
+    return withPublic(paddedMsg, key);
   }
-}
+};
 
-function oaep (key, msg) {
-  var k = key.modulus.byteLength()
-  var mLen = msg.length
-  var iHash = createHash('sha1').update(Buffer.alloc(0)).digest()
-  var hLen = iHash.length
-  var hLen2 = 2 * hLen
+function oaep(key, msg){
+  var k = key.modulus.byteLength();
+  var mLen = msg.length;
+  var iHash = createHash('sha1').update(new Buffer('')).digest();
+  var hLen = iHash.length;
+  var hLen2 = 2 * hLen;
   if (mLen > k - hLen2 - 2) {
-    throw new Error('message too long')
+    throw new Error('message too long');
   }
-  var ps = Buffer.alloc(k - mLen - hLen2 - 2)
-  var dblen = k - hLen - 1
-  var seed = randomBytes(hLen)
-  var maskedDb = xor(Buffer.concat([iHash, ps, Buffer.alloc(1, 1), msg], dblen), mgf(seed, dblen))
-  var maskedSeed = xor(seed, mgf(maskedDb, hLen))
-  return new BN(Buffer.concat([Buffer.alloc(1), maskedSeed, maskedDb], k))
+  var ps = new Buffer(k - mLen - hLen2 - 2);
+  ps.fill(0);
+  var dblen = k - hLen - 1;
+  var seed = randomBytes(hLen);
+  var maskedDb = xor(Buffer.concat([iHash, ps, new Buffer([1]), msg], dblen), mgf(seed, dblen));
+  var maskedSeed = xor(seed, mgf(maskedDb, hLen));
+  return new bn(Buffer.concat([new Buffer([0]), maskedSeed, maskedDb], k));
 }
-function pkcs1 (key, msg, reverse) {
-  var mLen = msg.length
-  var k = key.modulus.byteLength()
+function pkcs1(key, msg, reverse){
+  var mLen = msg.length;
+  var k = key.modulus.byteLength();
   if (mLen > k - 11) {
-    throw new Error('message too long')
+    throw new Error('message too long');
   }
-  var ps
+  var ps;
   if (reverse) {
-    ps = Buffer.alloc(k - mLen - 3, 0xff)
+    ps = new Buffer(k - mLen - 3);
+    ps.fill(0xff);
   } else {
-    ps = nonZero(k - mLen - 3)
+    ps = nonZero(k - mLen - 3);
   }
-  return new BN(Buffer.concat([Buffer.from([0, reverse ? 1 : 2]), ps, Buffer.alloc(1), msg], k))
+  return new bn(Buffer.concat([new Buffer([0, reverse?1:2]), ps, new Buffer([0]), msg], k));
 }
-function nonZero (len) {
-  var out = Buffer.allocUnsafe(len)
-  var i = 0
-  var cache = randomBytes(len * 2)
-  var cur = 0
-  var num
+function nonZero(len, crypto) {
+  var out = new Buffer(len);
+  var i = 0;
+  var cache = randomBytes(len*2);
+  var cur = 0;
+  var num;
   while (i < len) {
     if (cur === cache.length) {
-      cache = randomBytes(len * 2)
-      cur = 0
+      cache = randomBytes(len*2);
+      cur = 0;
     }
-    num = cache[cur++]
+    num = cache[cur++];
     if (num) {
-      out[i++] = num
+      out[i++] = num;
     }
   }
-  return out
+  return out;
 }
-
-},{"./mgf":293,"./withPublic":296,"./xor":297,"bn.js":85,"browserify-rsa":108,"create-hash":128,"parse-asn1":272,"randombytes":307,"safe-buffer":341}],296:[function(require,module,exports){
-var BN = require('bn.js')
-var Buffer = require('safe-buffer').Buffer
-
-function withPublic (paddedMsg, key) {
-  return Buffer.from(paddedMsg
-    .toRed(BN.mont(key.modulus))
-    .redPow(new BN(key.publicExponent))
+}).call(this,require("buffer").Buffer)
+},{"./mgf":293,"./withPublic":296,"./xor":297,"bn.js":85,"browserify-rsa":108,"buffer":119,"create-hash":128,"parse-asn1":272,"randombytes":307}],296:[function(require,module,exports){
+(function (Buffer){
+var bn = require('bn.js');
+function withPublic(paddedMsg, key) {
+  return new Buffer(paddedMsg
+    .toRed(bn.mont(key.modulus))
+    .redPow(new bn(key.publicExponent))
     .fromRed()
-    .toArray())
+    .toArray());
 }
 
-module.exports = withPublic
-
-},{"bn.js":85,"safe-buffer":341}],297:[function(require,module,exports){
-module.exports = function xor (a, b) {
-  var len = a.length
-  var i = -1
+module.exports = withPublic;
+}).call(this,require("buffer").Buffer)
+},{"bn.js":85,"buffer":119}],297:[function(require,module,exports){
+module.exports = function xor(a, b) {
+  var len = a.length;
+  var i = -1;
   while (++i < len) {
-    a[i] ^= b[i]
+    a[i] ^= b[i];
   }
   return a
-}
-
+};
 },{}],298:[function(require,module,exports){
 (function (global){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
@@ -93218,21 +93367,27 @@ Store.prototype.getAllCookies = function(cb) {
 
 },{}],390:[function(require,module,exports){
 module.exports={
-  "_from": "tough-cookie@~2.4.3",
+  "_args": [
+    [
+      "tough-cookie@2.4.3",
+      "/home/eric/checkouts/shexSpec/shex.js"
+    ]
+  ],
+  "_from": "tough-cookie@2.4.3",
   "_id": "tough-cookie@2.4.3",
   "_inBundle": false,
   "_integrity": "sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ==",
   "_location": "/tough-cookie",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "tough-cookie@~2.4.3",
+    "raw": "tough-cookie@2.4.3",
     "name": "tough-cookie",
     "escapedName": "tough-cookie",
-    "rawSpec": "~2.4.3",
+    "rawSpec": "2.4.3",
     "saveSpec": null,
-    "fetchSpec": "~2.4.3"
+    "fetchSpec": "2.4.3"
   },
   "_requiredBy": [
     "/jsdom",
@@ -93241,9 +93396,8 @@ module.exports={
     "/request-promise-native"
   ],
   "_resolved": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz",
-  "_shasum": "53f36da3f47783b0925afa06ff9f3b165280f781",
-  "_spec": "tough-cookie@~2.4.3",
-  "_where": "/home/eric/checkouts/shexSpec/shex.js/node_modules/request",
+  "_spec": "2.4.3",
+  "_where": "/home/eric/checkouts/shexSpec/shex.js",
   "author": {
     "name": "Jeremy Stashewsky",
     "email": "jstash@gmail.com"
@@ -93251,7 +93405,6 @@ module.exports={
   "bugs": {
     "url": "https://github.com/salesforce/tough-cookie/issues"
   },
-  "bundleDependencies": false,
   "contributors": [
     {
       "name": "Alexander Savin"
@@ -93276,7 +93429,6 @@ module.exports={
     "psl": "^1.1.24",
     "punycode": "^1.4.1"
   },
-  "deprecated": false,
   "description": "RFC6265 Cookies and Cookie Jar for node.js",
   "devDependencies": {
     "async": "^1.4.2",
