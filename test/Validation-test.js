@@ -83,7 +83,7 @@ describe("A ShEx validator", function () {
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
                // resolve relative URLs in results file
-               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object", "focus"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
                    N3Util.isIRI(obj[k])) {
                  obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
