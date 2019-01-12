@@ -4,7 +4,7 @@ env:
   - CLI_TIMEOUT=10000
 node_js:
   - "6.0"
-#  - "8.0"
+  - "8.10"
   - "stable"
 before_script:
   - npm run browser
@@ -17,8 +17,6 @@ cache:
     - ~/.npm
 notifications:
   email: false
-after_success:
-  - npm run travis-deploy-once "npm run semantic-release"
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
