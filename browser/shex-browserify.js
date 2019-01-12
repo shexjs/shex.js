@@ -2693,15 +2693,12 @@ var ShExUtil = {
       schema.start = v.visitShapeExpr(schema.start);
     }
     if ("shapes" in schema) {
-      schema.shapes = schema.shapes.map(
-        sh =>
-          _ShExUtil.ShExJVisitor(newProductions).visitShapeExpr(sh, sh.id)
-      );
       var newShapes = {}
       schema.shapes.forEach(sh => {
         var key = sh.id;
         delete sh.id;
-        newShapes[key] = sh;
+        var v = _ShExUtil.ShExJVisitor(newProductions);
+        newShapes[key] = v.visitShapeExpr(sh);
       });
       schema.shapes = newShapes;
     }
@@ -2903,7 +2900,6 @@ var ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     var v = ShExUtil.Visitor();
     var knownExpressions = [];
-    var productions = { };
     var oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion.include) === -1 &&
@@ -2918,9 +2914,7 @@ var ShExUtil = {
       if ("id" in expression) {
         if (knownExpressions.indexOf(expression.id) === -1) {
           knownExpressions.push(expression.id)
-          var ret = oldVisitExpression.call(v, schema.productions[expression.id]);
-          productions[expression.id] = ret;
-          return ret;
+          return oldVisitExpression.call(v, schema.productions[expression.id]);
         }
         return { type: "Inclusion", include: expression.id};
       }
@@ -2934,14 +2928,11 @@ var ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      delete ret.productions;
       Object.keys(ret.shapes).sort().forEach(k => {
         if ("extra" in ret.shapes[k])
           ret.shapes[k].extra.sort();
         ret.shapes[k] = v.visitShapeExpr(ret.shapes[k]);
       });
-      if (Object.keys(productions).length > 0)
-        ret.productions = productions;
     }
     return ret;
   },
