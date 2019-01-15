@@ -1,3 +1,6 @@
+For next major version:
+  ~ rename ShEx{,C}Writer
+
 + STRING_LITERAL2-ECHAR
 + STRING_LITERAL2-UCHAR1
 + STRING_LITERAL2-UCHAR2
