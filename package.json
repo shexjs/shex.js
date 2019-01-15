@@ -27,14 +27,15 @@
     "koa": "^1.6.2",
     "koa-body": "^1.4.0",
     "marked": "^0.3.19",
+    "mocha-teamcity-reporter": "^2.5.1",
     "n3": "^0.10.0",
     "nock": "^9.3.0",
     "promise": "^7.1.1",
-    "shex-test": "^2.0.1",
+    "shex-test": "^2.0.2",
     "underscore": "~1.8.3"
   },
   "devDependencies": {
-    "browserify": "^13.1.0",
+    "browserify": "^16.2.3",
     "chai": "1.9.x",
     "cross-spawn": "^5.0.1",
     "eslint": "^3.x",
@@ -56,7 +57,9 @@
   "scripts": {
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
-    "test-all": "mocha -C -R dot && TEST_cli=true mocha -C -R dot test/cli-test.js",
+    "test-all": "mocha -C -R dot && TEST_cli=true mocha -C -R dot test/cli-test.js && TEST_browser=true mocha -C -R dot test/browser-test.js",
+    "earl999": "mocha -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
+    "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",
