@@ -15,7 +15,7 @@ var ShExValidator = require("../lib/ShExValidator");
 var N3 = require("n3");
 
 var fs = require("fs");
-var expect = require("chai").expect;
+var {assert, expect} = require("chai");
 var findPath = require("./findPath.js");
 
 var schemasPath = findPath("schemas");
@@ -60,18 +60,102 @@ describe("A ShEx parser", function () {
   // Ensure the same blank node identifiers are used in every test
   beforeEach(function () { parser._resetBlanks(); });
 
+  function expectError (f, match) {
+    var error = null;
+    try {
+      f();
+    } catch (e) {
+      error = e;
+    }
+    assert(error, "should have thrown an Error");
+    expect(error).to.be.an.instanceof(Error);
+    expect(error.message).to.include(match);
+  }
 
-  if (!EARL && !TESTS)
+  if (!EARL && !TESTS) {
     // make sure errors are reported
     it("should throw an error on an invalid schema", function () {
-      var schema = "invalid", error = null;
-      try { parser.parse(schema); }
-      catch (e) { error = e; }
-
-      expect(error).to.exist;
-      expect(error).to.be.an.instanceof(Error);
-      expect(error.message).to.include("Parse error on line 1");
+      expectError(() => { parser.parse("this is an invalid ShEx schema"); },
+                  "Parse error on line 1");
     });
+
+    it("should throw an error on schema with \"nested\": in Shape", function () {
+      expectError(() => {
+        ShExUtil.Visitor().visitSchema({
+          "type": "Schema",
+          "shapes": {
+            "http://ex.example/S": {
+              "type": "Shape",
+              "nested": true
+            }
+          }
+        });
+      }, "unknown property: \"nested\"");
+    });
+
+    it("should throw an error on schema with \"nested\": in ShapeNot", function () {
+      expectError(() => {
+        ShExUtil.Visitor().visitSchema({
+          "type": "Schema",
+          "shapes": {
+            "http://ex.example/S": {
+              "type": "ShapeNot",
+              "nested": true,
+              "shapeExpr": {
+                "type": "ShapeRef",
+                "reference": "http://ex.example/S"
+              }
+            }
+          }
+        });
+      }, "unknown property: \"nested\"");
+    });
+
+    it("should throw an error on schema with \"nested\": in ShapeRef", function () {
+      expectError(() => {
+        ShExUtil.Visitor().visitSchema({
+          "type": "Schema",
+          "shapes": {
+            "http://ex.example/S": {
+              "type": "ShapeNot",
+              "shapeExpr": {
+                "type": "ShapeRef",
+                "nested": true,
+                "reference": "http://ex.example/S"
+              }
+            }
+          }
+        });
+      }, "unknown property: \"nested\"");
+    });
+
+    it("should throw an error on schema with \"nested\": in ShapeAnd", function () {
+      expectError(() => {
+        ShExUtil.Visitor().visitSchema({
+          "type": "Schema",
+          "shapes": {
+            "http://ex.example/S": {
+              "type": "ShapeAnd",
+              "shapeExprs": [
+                {
+                  "type": "ShapeNot",
+                  "shapeExpr": {
+                    "type": "ShapeRef",
+                    "reference": "http://ex.example/S"
+                  },
+                  "nested": true
+                },
+                {
+                  "type": "ShapeRef",
+                  "reference": "http://ex.example/S"
+                }
+              ]
+            }
+          }
+        });
+      }, "unknown property: \"nested\"");
+    });
+  }
 
   schemas.forEach(function (test) {
     var schema = test.name;
@@ -82,7 +166,9 @@ describe("A ShEx parser", function () {
       var shexCFile = schemasPath + test.shex;
       var shexRFile = schemasPath + test.ttl;
 
-      it("should correctly parse ShExC schema '" + shexCFile +
+      it(EARL
+         ? 'schemas/manifest\#' + test.name
+         : "should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
@@ -102,8 +188,10 @@ describe("A ShEx parser", function () {
            }
          });
 
-    if (TEST_ShExR) {
-      it("should correctly parse ShExR schema '" + shexRFile +
+    if (TEST_ShExR && !EARL) {
+      it(EARL
+         ? 'schemas/manifest\#' + test.name
+         : "should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
@@ -124,6 +212,9 @@ describe("A ShEx parser", function () {
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
              if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
+             // The order of nesting affects productions so don't look at them.
+             delete canonParsed.productions;
+             delete canonAbstractSyntax.productions;
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
@@ -148,7 +239,7 @@ describe("A ShEx parser", function () {
           parser._setFileName(shexCFile + " (generated)");
           try {
             parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
-            var parsed2 = ShExUtil.canonicalize(parser.parse(w), BASE);
+            var parsed2 = parser.parse(w);
             var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
             expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
@@ -192,7 +283,12 @@ describe("A ShEx parser", function () {
 
     negSchemas.forEach(function (test) {
       var path = testSet.path + test.shex;
-      it("should not parse schema '" + path + "'", function (report) {
+      var dir = testSet.path.replace(/\/$/, '');
+      dir = dir.substr(dir.lastIndexOf('/')+1);
+
+      it(EARL
+         ? dir + '/manifest#' + test.name
+         : "should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
         ShExLoader.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
@@ -270,7 +366,7 @@ describe("A ShEx parser", function () {
   }
 });
 
-if (TEST_Vestiges) {
+if (!EARL && TEST_Vestiges) {
   /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
    * want it in the API.
    */

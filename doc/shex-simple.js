@@ -227,7 +227,7 @@ function makeSchemaCache (selection) {
         {}
       );
       var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot); // start shape
+      var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot, ShEx.Validator.start); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -299,6 +299,9 @@ function makeManifestCache (selection) {
     $("#inputSchema .manifest li").remove();
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
+      if (url !== DefaultBase) {
+        this.url = url; // @@crappyHack1 -- parms should differntiate:
+      }
       try {
         // exceptions pass through to caller (asyncGet)
         textOrObj = JSON.parse(textOrObj);
