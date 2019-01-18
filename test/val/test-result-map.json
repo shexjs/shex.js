@@ -586,5 +586,6 @@
   "#3circRefS123-Icirc": "3circRefPlus1_pass-open.val",
   "#3circRefS1-Icirc": "3circRefPlus1_pass-open.val",
   "#3circRefS1-IS2-IS3-IS3": "3circRefPlus1_pass-open.val",
-  "#extends-abstract-multi-empty_pass": "extends-abstract-multi-empty_pass.val"
+  "#extends-abstract-multi-empty_pass": "extends-abstract-multi-empty_pass.val",
+  "#extends-abstract-multi-empty_pass-missingOptRef1": "extends-abstract-multi-empty_pass-missingOptRef1.val"
 }
