@@ -212,6 +212,9 @@ describe("A ShEx parser", function () {
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
              if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
+             // The order of nesting affects productions so don't look at them.
+             delete canonParsed.productions;
+             delete canonAbstractSyntax.productions;
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
