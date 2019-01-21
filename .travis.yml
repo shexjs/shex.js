@@ -4,10 +4,11 @@ env:
   - CLI_TIMEOUT=10000
 node_js:
   - "6.0"
-  - "8.0"
-  - "stable"
+  - "8.10"
+#  - "stable"
 before_script:
   - npm run browser
+  - git clone --depth=50 --branch=master https://github.com/shexSpec/shexTest.git ../shexTest
 script:
   - npm run test-all
 cache:
@@ -16,8 +17,6 @@ cache:
     - ~/.npm
 notifications:
   email: false
-after_success:
-  - npm run travis-deploy-once "npm run semantic-release"
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
