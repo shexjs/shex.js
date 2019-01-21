@@ -62,6 +62,7 @@
     "earl999": "mocha -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
+    "travisRepo": "./test/travisRepo.sh",
     "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",
     "coverage": "istanbul cover node_modules/.bin/_mocha -- -R spec --timeout 100",
@@ -88,7 +89,8 @@
   },
   "pre-commit": [
     "lint",
-    "test"
+    "test",
+    "travisRepo"
   ],
   "eslintConfig": {
     "rules": {
