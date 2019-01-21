@@ -6,6 +6,7 @@ start=@<Schema>
 
 <Schema> CLOSED {
   a [sx:Schema] ;
+  sx:imports @<IriList1Plus>? ;
   sx:startActs @<SemActList1Plus>? ;
   sx:start @<shapeExpr>?;
   sx:shapes @<shapeExpr>*
@@ -43,7 +44,7 @@ start=@<Schema>
   sx:extra IRI* ;
   sx:expression @<tripleExpression>? ;
   sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>* ;
+  sx:annotation @<AnnotationList1Plus>? ;
 }
 
 <ShapeExternal> CLOSED {
@@ -84,31 +85,32 @@ start=@<Schema>
 
 <valueSetValue> @<objectValue> OR @<IriStem> OR @<IriStemRange>
                                OR @<LiteralStem> OR @<LiteralStemRange>
-                               OR @<LanguageStem> OR @<LanguageStemRange>
+                OR @<Language> OR @<LanguageStem> OR @<LanguageStemRange>
 <objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
+<Language> CLOSED { a [sx:Language]; sx:languageTag xsd:string }
 <IriStem> CLOSED { a [sx:IriStem]; sx:stem xsd:string }
 <IriStemRange> CLOSED {
   a [sx:IriStemRange];
   sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<IriStem>*
+  sx:exclusion @<IriStemExclusionList1Plus>
 }
 <LiteralStem> CLOSED { a [sx:LiteralStem]; sx:stem xsd:string }
 <LiteralStemRange> CLOSED {
   a [sx:LiteralStemRange];
   sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<LiteralStem>*
+  sx:exclusion @<LiteralStemExclusionList1Plus>
 }
 <LanguageStem> CLOSED { a [sx:LanguageStem]; sx:stem xsd:string }
 <LanguageStemRange> CLOSED {
   a [sx:LanguageStemRange];
   sx:stem xsd:string OR @<Wildcard>;
-  sx:exclusion @<objectValue> OR @<LanguageStem>*
+  sx:exclusion @<LanguageStemExclusionList1Plus>
 }
 <Wildcard> BNODE CLOSED {
   a [sx:Wildcard]
 }
 
-<tripleExpression> @<TripleConstraint> OR @<OneOf> OR @<EachOf>
+<tripleExpression> @<TripleConstraint> OR @<OneOf> OR @<EachOf> OR CLOSED {  }
 
 <OneOf> CLOSED {
   a [sx:OneOf] ;
@@ -116,7 +118,7 @@ start=@<Schema>
   sx:max xsd:integer? ;
   sx:expressions @<tripleExpressionList2Plus> ;
   sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
+  sx:annotation @<AnnotationList1Plus>?
 }
 
 <EachOf> CLOSED {
@@ -125,7 +127,7 @@ start=@<Schema>
   sx:max xsd:integer? ;
   sx:expressions @<tripleExpressionList2Plus> ;
   sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
+  sx:annotation @<AnnotationList1Plus>?
 }
 
 <tripleExpressionList2Plus> CLOSED {
@@ -146,7 +148,12 @@ start=@<Schema>
   sx:predicate IRI ;
   sx:valueExpr @<shapeExpr>? ;
   sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<Annotation>*
+  sx:annotation @<AnnotationList1Plus>?
+}
+
+<IriList1Plus> CLOSED {
+  rdf:first IRI ;
+  rdf:rest  [rdf:nil] OR @<IriList1Plus>
 }
 
 <SemActList1Plus> CLOSED {
@@ -166,7 +173,28 @@ start=@<Schema>
 <valueSetValueList1Plus> CLOSED {
   rdf:first @<valueSetValue> ;
   rdf:rest  [rdf:nil] OR @<valueSetValueList1Plus>
-}`;
+}
+
+<AnnotationList1Plus> CLOSED {
+  rdf:first @<Annotation> ;
+  rdf:rest  [rdf:nil] OR @<AnnotationList1Plus>
+}
+
+<IriStemExclusionList1Plus> CLOSED {
+  rdf:first IRI OR @<IriStem> ;
+  rdf:rest  [rdf:nil] OR @<IriStemExclusionList1Plus>
+}
+
+<LiteralStemExclusionList1Plus> CLOSED {
+  rdf:first xsd:string OR @<LiteralStem> ;
+  rdf:rest  [rdf:nil] OR @<LiteralStemExclusionList1Plus>
+}
+
+<LanguageStemExclusionList1Plus> CLOSED {
+  rdf:first xsd:string OR @<LanguageStem> ;
+  rdf:rest  [rdf:nil] OR @<LanguageStemExclusionList1Plus>
+}
+`;
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = ShExRSchema;

@@ -1,7 +1,7 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS : null;
 var EARL = "EARL" in process.env;
 
 // var ShExUtil = require("../lib/ShExUtil");
@@ -48,17 +48,15 @@ describe("A ShEx validator", function () {
 
   if (TESTS) {
     tests = tests.filter(function (t) {
-      return TESTS.indexOf(t["@id"]) !== -1 ||
-        TESTS.indexOf(t["@id"].substr(1)) !== -1 ||
-        TESTS.indexOf(t.action.schema) !== -1 ||
-        TESTS.indexOf(t.action.data) !== -1 ||
-        TESTS.indexOf(t.result) !== -1;
+      return t["@id"].match(TESTS) ||
+        t["@id"].substr(1).match(TESTS) ||
+        t.action.schema.match(TESTS) ||
+        t.action.data.match(TESTS);
     });
   }
 
   tests = tests.filter(test => {
-    return test.trait.indexOf("OneOf") === -1 &&
-      TODO.indexOf(test.name) === -1;
+    return TODO.indexOf(test.name) === -1;
   });
 
   regexModules.forEach(regexModule => {
@@ -76,14 +74,16 @@ describe("A ShEx validator", function () {
         if (valFile) {
           valFile = "val/" + valFile;
         }
-        it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
+        it(EARL
+           ? 'validation/manifest\#' + test.name
+           : "should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
            "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
            "' and get 'test/" + valFile + "'" +
            " in test '" + test["@id"] + "'.",
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
                // resolve relative URLs in results file
-               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object", "focus"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
                    N3Util.isIRI(obj[k])) {
                  obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
@@ -94,12 +94,12 @@ describe("A ShEx validator", function () {
                    }
                  };
                }
-             }) : null; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
+             }) : valFile; // !! replace with ShExUtil.absolutizeResults(JSON.parse(fs.readFileSync(valFile, "utf8")))
 
              doIt(report, absoluteVal, {results: "val"}, true);
            });
 
-        if (test.result) {
+        if (!EARL && test.result) {
           var resultsFile = test.result ? path.resolve(validationPath, test.result) : null;
           it("should use " + regexModule.name + " to validate data '" + (TERSE ? test.action.data : dataFile) + // test title
              "' against schema '" + (TERSE ? test.action.schema : schemaFile) +
@@ -156,7 +156,7 @@ describe("A ShEx validator", function () {
               validator = ShExValidator.construct(schema, schemaOptions);
               var testResults = TestExtension.register(validator);
 
-              assert(referenceResult !== null || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
+              assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;
               // if (start === undefined && Object.keys(schema.action.shapes).length === 1)
               //   start = Object.keys(schema.action.shapes)[0];
@@ -203,7 +203,8 @@ describe("A ShEx validator", function () {
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-                          expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          if (referenceResult !== null)
+                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         }
                       }
                       var xr = test.extensionResults.filter(function (x) {
@@ -251,7 +252,7 @@ function parseJSONFile(filename, mapFunction) {
     var object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
-        if (typeof obj[k] === "object") {
+        if (typeof obj[k] === "object" && obj[k] !== null) {
           resolveRelativeURLs(obj[k]);
         }
         if (mapFunction) {
