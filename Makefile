@@ -1,7 +1,7 @@
 JISON?=./node_modules/jison/lib/cli.js
 
 ./lib/ShExJison.js: ./lib/ShExJison.jison
-	$(JISON) $^ -o $@ -p lalr
+	$(JISON) $^ -o $@ -p lr
 
 ./lib/ShapeMapJison.js: ./lib/ShapeMapJison.jison
 	$(JISON) $^ -o $@ -p lalr
