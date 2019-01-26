@@ -748,7 +748,14 @@ function callValidator (done) {
 
   function renderEntry (entry) {
     var fails = entry.status === "nonconformant";
-    var klass = fails ? "fails" : "passes";
+
+    // locate FixedMap entry
+    var shapeString = entry.shape === ShEx.Validator.start ? START_SHAPE_INDEX_ENTRY : entry.shape;
+    var fixedMapEntry = $("#fixedMap .pair"+
+                          "[data-node='"+entry.node+"']"+
+                          "[data-shape='"+shapeString+"']");
+
+    var klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
@@ -774,10 +781,6 @@ function callValidator (done) {
     results.append(elt);
 
     // update the FixedMap
-    var shapeString = entry.shape === ShEx.Validator.start ? START_SHAPE_INDEX_ENTRY : entry.shape;
-    var fixedMapEntry = $("#fixedMap .pair"+
-                          "[data-node='"+entry.node+"']"+
-                          "[data-shape='"+shapeString+"']");
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
     var nodeLex = fixedMapEntry.find("input.focus").val();
     var shapeLex = fixedMapEntry.find("input.inputShape").val();
@@ -861,6 +864,22 @@ function addEditMapPairs (pairs, target) {
       type: 'text',
       class: 'data focus'
     }).text(node).on("change", markEditMapDirty);
+    var joinerElt = $("<span>", {
+      class: 'shapeMap-joiner'
+    }).append("@").addClass(pair.status);
+    joinerElt.append(
+      $("<input>", {style: "border: none; width: .2em;", readonly: "readonly"}).val(pair.status === "nonconformant" ? "!" : " ").on("click", function (evt) {
+        var status = $(this).parent().hasClass("nonconformant") ? "conformant" : "nonconformant";
+        $(this).parent().removeClass("conformant nonconformant");
+        $(this).parent().addClass(status);
+        $(this).val(status === "nonconformant" ? "!" : "");
+        markEditMapDirty();
+        evt.preventDefault();
+      })
+    );
+    // if (pair.status === "nonconformant") {
+    //   joinerElt.append("!");
+    // }
     var shapeElt = $("<input/>", {
       type: 'text',
       value: shape,
@@ -874,7 +893,7 @@ function addEditMapPairs (pairs, target) {
       title: "remove this node/shape pair"}).text("-");
     addElt.on("click", addEmptyEditMapPair);
     removeElt.on("click", removeEditMapPair);
-    spanElt.append([focusElt, "@", shapeElt, addElt, removeElt].map(elt => {
+    spanElt.append([focusElt, joinerElt, shapeElt, addElt, removeElt].map(elt => {
       return $("<td/>").append(elt);
     }));
     if (target) {
@@ -1135,6 +1154,7 @@ function copyEditMapToFixedMap () {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     var node = $(queryPair).find(".focus").val();
     var shape = $(queryPair).find(".inputShape").val();
+    var status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "nonconformant" : "conformant";
     if (!node || !shape)
       return acc;
     var smparser = ShEx.ShapeMapParser.construct(
@@ -1143,8 +1163,8 @@ function copyEditMapToFixedMap () {
     try {
       var sm = smparser.parse(node + '@' + shape)[0];
       var added = typeof sm.node === "string" || "@value" in sm.node
-        ? Promise.resolve({nodes: [node], shape: shape})
-        : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
+        ? Promise.resolve({nodes: [node], shape: shape, status: status})
+        : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape, status: status});
       return acc.concat(added);
     } catch (e) {
       // find which cell was broken
@@ -1170,7 +1190,7 @@ function copyEditMapToFixedMap () {
       if (key in acc)
         return;
 
-      var spanElt = createEntry(node, nodeTerm, pair.shape, shapeTerm);
+      var spanElt = createEntry(node, nodeTerm, pair.shape, shapeTerm, pair.status);
       acc[key] = spanElt; // just needs the key so far.
     });
 
@@ -1195,7 +1215,7 @@ function copyEditMapToFixedMap () {
     }
   }
 
-      function createEntry (node, nodeTerm, shape, shapeTerm) {
+      function createEntry (node, nodeTerm, shape, shapeTerm, status) {
     var spanElt = $("<tr/>", {class: "pair"
                               ,"data-node": nodeTerm
                               ,"data-shape": shapeTerm
@@ -1206,6 +1226,13 @@ function copyEditMapToFixedMap () {
       class: 'data focus',
       disabled: "disabled"
     });
+    var joinerElt = $("<span>", {
+      class: 'shapeMap-joiner'
+    }).append("@").addClass(status);
+    if (status === "nonconformant") {
+      joinerElt.addClass("negated");
+      joinerElt.append("!");
+    }
     var shapeElt = $("<input/>", {
       type: 'text',
       value: shape,
@@ -1224,7 +1251,7 @@ function copyEditMapToFixedMap () {
       // Remove FixedMap entry.
       $(evt.target).closest("tr").remove();
     });
-      spanElt.append([focusElt, "@", shapeElt, removeElt, $("<a/>")].map(elt => {
+      spanElt.append([focusElt, joinerElt, shapeElt, removeElt, $("<a/>")].map(elt => {
       return $("<td/>").append(elt);
     }));
 
@@ -1245,7 +1272,8 @@ function copyEditMapToTextMap () {
       var shape = $(queryPair).find(".inputShape").val();
       if (!node || !shape)
         return acc;
-      return acc.concat([node+"@"+shape]);
+      var status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "!" : "";
+      return acc.concat([node+"@"+status+shape]);
     }, []).join(",\n");
     $("#textMap").empty().val(text);
     copyEditMapToFixedMap();

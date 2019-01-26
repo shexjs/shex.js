@@ -4,7 +4,7 @@
     "schemaURL": "B.shex",
     "dataLabel": "<s>@<B>",
     "data": "<sABxxxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxBxxxxxxxx> <p> 0 .",
-    "queryMap": "<sABxxxxxxxx>@<B>,\n<sAxxxxxxxxx>@<B>,\n<sxBxxxxxxxx>@<B>",
+    "queryMap": "<sABxxxxxxxx>@<B>,\n<sAxxxxxxxxx>@!<B>,\n<sxBxxxxxxxx>@!<B>",
     "status": "conformant"
   },
   {
