@@ -4,7 +4,7 @@
     "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
     "dataLabel": "with birthdate",
     "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .",
-    "queryMap": "{FOCUS :status _}@START,\n<Patient2>@<ObservationShape>",
+    "queryMap": "{FOCUS :status _}@START,\n<Patient2>@!<ObservationShape>",
     "status": "conformant"
   },
   {
