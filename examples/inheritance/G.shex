@@ -1,23 +1,23 @@
-abstract <A>           /sA.........$/
-                   and
+ABSTRACT <A>           /sA.........$/
+                   AND
                        { <p> [0 1 2 3 4 5 6 7 8 9]+}
-abstract <B> @<A>AND      /s.B........$/
-                   and
+ABSTRACT <B> @<A>AND      /s.B........$/
+                   AND
                        { <p> [0 1   3 4 5 6 7 8 9]+}
          <C>           /s..C.......$/
-                   and
+                   AND
                        { <p> [0 1 2   4 5 6 7 8 9]+}
-abstract <D> @<B>AND@<C>AND /s...D......$/
-                   and
+ABSTRACT <D> @<B>AND@<C>AND /s...D......$/
+                   AND
                        { <p> [0 1 2 3   5 6 7 8 9]+}
-abstract <E>           /s....E.....$/
-                   and&@<D>
+ABSTRACT <E>           /s....E.....$/
+                   AND&@<D>
                        { <p> [    2              ] }
          <F>           /s.....F....$/
-                   and
+                   AND
                        { <p> [      3            ] }
          <G>           /s......G...$/
-                   and&@<E>&@<F>
+                   AND&@<E>&@<F>
                        { <p> [        4          ] }
 
 # A: 0 1 2 3 4 5 6 7 8 9+                         

@@ -44,7 +44,7 @@
     "schemaURL": "J.shex",
     "dataLabel": "<s>@<J>",
     "dataURL": "sABCDEFGHIJ.ttl",
-    "queryMap": "<sABCDEFGHIJx>@<J>,\n<sABCDEFGHIJx>@!<A>,\n<sxBCDEFGHIJx>@!<J>,\n<sABCDEFxHIJx>@!<J>,\n<sABCDEFGxIJx>@!<J>,\n<sABCDEFGHxJx>@!<J>,\n<sABCDEFGHIxx>@!<J>,\n<sABCDEFGHIJ0>@!<J>,\n<sABCDEFGHIJ1>@!<J>,\n<sABCDEFGHIJ2>@!<J>,\n<sABCDEFGHIJ3>@!<J>,\n<sABCDEFGHIJ5>@<J>,\n<sABCDEFGHIJ6>@!<J>,\n",
+    "queryMap": "<sABCDEFGHIJx>@<J>,\n<sABCDEFGHIJx>@!<A>,\n<sxBCDEFGHIJx>@!<J>,\n<sABCDEFxHIJx>@!<J>,\n<sABCDEFGxIJx>@!<J>,\n<sABCDEFGHxJx>@!<J>,\n<sABCDEFGHIxx>@!<J>,\n<sABCDEFGHIJ0>@!<J>,\n<sABCDEFGHIJ1>@!<J>,\n<sABCDEFGHIJ2>@!<J>,\n<sABCDEFGHIJ3>@!<J>,\n<sABCDEFGHIJ5>@<J>,\n<sABCDEFGHIJ6>@!<J>,\n<sABCDEFGHIJ7>@!<J>,\n",
     "status": "conformant"
   },
   {
