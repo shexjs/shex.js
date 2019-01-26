@@ -1,0 +1,7 @@
+<sABCDEFGxxx> <p> 0, 2, 3, 4 .
+<sABCDEFGxx1> <p> 2 .
+<sABCDEFGxx3> <p> 0, 2, 3 .
+<sxBCDEFGxxx> <p> 0, 2 .
+<sABxDEFGxxx> <p> 0, 2 .
+<sABCxEFGxxx> <p> 0, 2 .
+<sABCDxFGxxx> <p> 0, 2 .

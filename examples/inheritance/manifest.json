@@ -3,7 +3,7 @@
     "schemaLabel": "B - 1 restriction",
     "schemaURL": "B.shex",
     "dataLabel": "<s>@<B>",
-    "data": "<sABxxxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxBxxxxxxxx> <p> 0 .",
+    "dataURL": "sAB.ttl",
     "queryMap": "<sABxxxxxxxx>@<B>,\n<sAxxxxxxxxx>@!<B>,\n<sxBxxxxxxxx>@!<B>",
     "status": "conformant"
   },
@@ -11,7 +11,7 @@
     "schemaLabel": "C - 2",
     "schemaURL": "2.shex",
     "dataLabel": "<s>@<C>",
-    "data": "<s> <p> 1, 2, 3; <q> 3 .",
+    "dataURL": "sP123q3.ttl",
     "queryMap": "<s>@<C>",
     "status": "conformant"
   },
@@ -19,32 +19,32 @@
     "schemaLabel": "D - multiple, transitive restrictions",
     "schemaURL": "D.shex",
     "dataLabel": "<s>@<D>",
-    "data": "<sABCDxxxxxx> <p> 0 .\n<sAxxxxxxxxx> <p> 0 .\n<sxxCxxxxxxx> <p> 0 .",
-    "queryMap": "<sABCDxxxxxx>@<D>,\n<sAxxxxxxxxx>@<D>,\n<sxxCxxxxxxx>@<D>",
+    "dataURL": "sABCD.ttl",
+    "queryMap": "<sABCDxxxxxx>@<D>,\n<sAxxxxxxxxx>@!<D>,\n<sxxCxxxxxxx>@!<D>",
     "status": "conformant"
   },
   {
     "schemaLabel": "E - 1 extension",
     "schemaURL": "E.shex",
     "dataLabel": "<s>@<E>",
-    "data": "<sABCDExxxxx> <p> 0, 2 .\n<sABCDExxxx1> <p> 2 .\n<sABCDExxxx3> <p> 0, 2, 3 .\n<sxBCDExxxxx> <p> 0, 2 .\n<sABxDExxxxx> <p> 0, 2 .\n<sABCxExxxxx> <p> 0, 2 .\n<sABCDxxxxxx> <p> 0, 2 .\n",
-    "queryMap": "<sABCDExxxxx>@<E>,\n<sABCDExxxx1>@<E>,\n<sABCDExxxx3>@<E>,\n<sxBCDExxxxx>@<E>,\n<sABxDExxxxx>@<E>,\n<sABCxExxxxx>@<E>,\n<sABCDxxxxxx>@<E>,\n",
+    "dataURL": "sABCDE.ttl",
+    "queryMap": "<sABCDExxxxx>@<E>,\n<sABCDExxxx1>@!<E>,\n<sABCDExxxx3>@!<E>,\n<sxBCDExxxxx>@!<E>,\n<sABxDExxxxx>@!<E>,\n<sABCxExxxxx>@!<E>,\n<sABCDxxxxxx>@!<E>,\n",
     "status": "conformant"
   },
   {
     "schemaLabel": "G - multiple, transitive extensions",
     "schemaURL": "G.shex",
     "dataLabel": "<s>@<G>",
-    "data": "<sABCDEFGxxx> <p> 0, 2, 3, 4 .\n<sABCDEFGxx1> <p> 2 .\n<sABCDEFGxx3> <p> 0, 2, 3 .\n<sxBCDEFGxxx> <p> 0, 2 .\n<sABxDEFGxxx> <p> 0, 2 .\n<sABCxEFGxxx> <p> 0, 2 .\n<sABCDxFGxxx> <p> 0, 2 .\n",
-    "queryMap": "<sABCDEFGxxx>@<G>,\n<sABCDEFGxx1>@<G>,\n<sABCDEFGxx3>@<G>,\n<sxBCDEFGxxx>@<G>,\n<sABxDEFGxxx>@<G>,\n<sABCxEFGxxx>@<G>,\n<sABCDxFGxxx>@<G>,\n",
+    "dataURL": "sABCDEFG.ttl",
+    "queryMap": "<sABCDEFGxxx>@<G>,\n<sABCDEFGxx1>@!<G>,\n<sABCDEFGxx3>@!<G>,\n<sxBCDEFGxxx>@!<G>,\n<sABxDEFGxxx>@!<G>,\n<sABCxEFGxxx>@!<G>,\n<sABCDxFGxxx>@!<G>,\n",
     "status": "conformant"
   },
   {
     "schemaLabel": "J - all",
     "schemaURL": "J.shex",
     "dataLabel": "<s>@<J>",
-    "data": "<sABCDEFGHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sxBCDEFGHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABxDEFGHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFxHIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGxIJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGHxJx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGHIxx> <p> 0, 2, 3, 4; <q> 5, 6.\n<sABCDEFGHIJ0> <r> 1.\n<sABCDEFGHIJ1> <p> 0            ; <q> 5, 6.\n<sABCDEFGHIJ2> <p> 0, 2         ; <q> 5, 6.\n<sABCDEFGHIJ3> <p> 0, 2, 3      ; <q> 5, 6.\n<sABCDEFGHIJ5> <p> 0, 2, 3, 4, 5; <q> 5, 6.\n<sABCDEFGHIJ6> <p> 0, 2, 3, 4   ; <q> 5.\n<sABCDEFGHIJ6> <p> 0, 2, 3, 4   ; <q> 5, 6, 7.\n",
-    "queryMap": "<sABCDEFGHIJx>@<J>,\n<sABCDEFGHIJx>@<A>,\n<sxBCDEFGHIJx>@<J>,\n<sABCDEFxHIJx>@<J>,\n<sABCDEFGxIJx>@<J>,\n<sABCDEFGHxJx>@<J>,\n<sABCDEFGHIxx>@<J>,\n<sABCDEFGHIJ0>@<J>,\n<sABCDEFGHIJ1>@<J>,\n<sABCDEFGHIJ2>@<J>,\n<sABCDEFGHIJ3>@<J>,\n<sABCDEFGHIJ5>@<J>,\n<sABCDEFGHIJ6>@<J>,\n<sABCDEFGHIJ6>@<J>,\n",
+    "dataURL": "sABCDEFGHIJ.ttl",
+    "queryMap": "<sABCDEFGHIJx>@<J>,\n<sABCDEFGHIJx>@!<A>,\n<sxBCDEFGHIJx>@!<J>,\n<sABCDEFxHIJx>@!<J>,\n<sABCDEFGxIJx>@!<J>,\n<sABCDEFGHxJx>@!<J>,\n<sABCDEFGHIxx>@!<J>,\n<sABCDEFGHIJ0>@!<J>,\n<sABCDEFGHIJ1>@!<J>,\n<sABCDEFGHIJ2>@!<J>,\n<sABCDEFGHIJ3>@!<J>,\n<sABCDEFGHIJ5>@<J>,\n<sABCDEFGHIJ6>@!<J>,\n",
     "status": "conformant"
   },
   {
