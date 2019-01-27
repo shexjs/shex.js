@@ -72,7 +72,15 @@
     "status": "conformant"
   },
   {
-    "schemaLabel": "vitals path",
+    "schemaLabel": "vitals RESTRICTS",
+    "schemaURL": "vitals-RESTRICTS.shex",
+    "dataLabel": "data",
+    "dataURL": "vitals.ttl",
+    "queryMapURL": "vitals.smap",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "XX - vitals path",
     "schemaURL": "vitals-path.shex",
     "dataLabel": "data",
     "dataURL": "vitals.ttl",
@@ -80,16 +88,8 @@
     "status": "conformant"
   },
   {
-    "schemaLabel": "vitals operators",
+    "schemaLabel": "XX - vitals operators",
     "schemaURL": "vitals-operator.shex",
-    "dataLabel": "data",
-    "dataURL": "vitals.ttl",
-    "queryMapURL": "vitals.smap",
-    "status": "conformant"
-  },
-  {
-    "schemaLabel": "vitals RESTRICTS",
-    "schemaURL": "vitals-RESTRICTS.shex",
     "dataLabel": "data",
     "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",
