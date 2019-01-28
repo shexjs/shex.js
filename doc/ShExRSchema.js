@@ -8,25 +8,34 @@ start=@<Schema>
   a [sx:Schema] ;
   sx:imports @<IriList1Plus>? ;
   sx:startActs @<SemActList1Plus>? ;
-  sx:start @<shapeExpr>?;
-  sx:shapes @<shapeExpr>*
+  sx:start @<shapeExpr>? ;
+  sx:shapes @<shapeDeclOrExpr>*
+}
+
+# <shapeDeclOrExpr> is a shortcut for always requriing a ShapeDecl
+<shapeDeclOrExpr> @<ShapeDecl> OR @<shapeExpr>
+
+<ShapeDecl> CLOSED {
+  a [sx:ShapeDecl] ;
+  sx:abstract [true false]? ;
+  sx:shapeExpr @<shapeExpr>
 }
 
 <shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
 
 <ShapeOr> CLOSED {
   a [sx:ShapeOr] ;
-  sx:shapeExprs @<shapeExprList2Plus>
+  sx:shapeExprs @<shapeDeclOrExprList2Plus>
 }
 
 <ShapeAnd> CLOSED {
   a [sx:ShapeAnd] ;
-  sx:shapeExprs @<shapeExprList2Plus>
+  sx:shapeExprs @<shapeDeclOrExprList2Plus>
 }
 
 <ShapeNot> CLOSED {
   a [sx:ShapeNot] ;
-  sx:shapeExpr @<shapeExpr>
+  sx:shapeExpr @<shapeDeclOrExpr>
 }
 
 <NodeConstraint> CLOSED {
@@ -39,7 +48,7 @@ start=@<Schema>
 
 <Shape> CLOSED {
   a [sx:Shape] ;
-  sx:abstract [true false]? ;
+  sx:extends @<shapeDeclOrExprList1Plus>? ;
   sx:closed [true false]? ;
   sx:extra IRI* ;
   sx:expression @<tripleExpression>? ;
@@ -146,7 +155,7 @@ start=@<Schema>
   sx:min xsd:integer? ;
   sx:max xsd:integer? ;
   sx:predicate IRI ;
-  sx:valueExpr @<shapeExpr>? ;
+  sx:valueExpr @<shapeDeclOrExpr>? ;
   sx:semActs @<SemActList1Plus>? ;
   sx:annotation @<AnnotationList1Plus>?
 }
@@ -161,13 +170,13 @@ start=@<Schema>
   rdf:rest  [rdf:nil] OR @<SemActList1Plus>
 }
 
-<shapeExprList2Plus> CLOSED {
-  rdf:first @<shapeExpr> ;
-  rdf:rest  @<shapeExprList1Plus>
+<shapeDeclOrExprList2Plus> CLOSED {
+  rdf:first @<shapeDeclOrExpr> ;
+  rdf:rest  @<shapeDeclOrExprList1Plus>
 }
-<shapeExprList1Plus> CLOSED {
-  rdf:first @<shapeExpr> ;
-  rdf:rest  [rdf:nil] OR @<shapeExprList1Plus>
+<shapeDeclOrExprList1Plus> CLOSED {
+  rdf:first @<shapeDeclOrExpr> ;
+  rdf:rest  [rdf:nil] OR @<shapeDeclOrExprList1Plus>
 }
 
 <valueSetValueList1Plus> CLOSED {
