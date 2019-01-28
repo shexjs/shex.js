@@ -1,18 +1,18 @@
 [
   {
     "schemaLabel": "repeated property",
-    "schemaURL": "2.shex",
-    "dataLabel": "<s>@<C>",
+    "schemaURL": "ExtendsRepeatedP.shex",
+    "dataLabel": "<s>@<#C>",
     "dataURL": "sP123q3.ttl",
-    "queryMap": "<s>@<C>",
+    "queryMap": "<s>@<#C>",
     "status": "conformant"
   },
   {
-    "schemaLabel": "2",
-    "schemaURL": "2.shex",
-    "dataLabel": "<s99>@<C>",
-    "data": "<s> <p> 1, 2, 3; <q> 99 .",
-    "queryMap": "<s>@<C>",
+    "schemaLabel": "repeated property",
+    "schemaURL": "ExtendsRepeatedP.shex",
+    "dataLabel": "<s>@!<#C>",
+    "dataURL": "sP123q99.ttl",
+    "queryMap": "<s>@<#C>",
     "status": "nonconformant"
   },
   {
