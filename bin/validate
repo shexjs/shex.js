@@ -761,7 +761,7 @@ function loadJSONmanifest (jsonManifests) {
             delete elt.options;
           } else
             elt.validatorOptions = ValidatorOptions;
-          if ("result" in elt && elt.result !== null)
+          if ("result" in elt && elt.result !== null && typeof elt.result !== "boolean")
             elt.result = ShExUtil.resolveRelativeIRI(p.url, elt.result);
           elt.jsonld = []; // @@ no way to specify jsonld in manifest
         });
