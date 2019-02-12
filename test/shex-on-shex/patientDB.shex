@@ -1,0 +1,14 @@
+PREFIX : <http://a.example/cds#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ucum: <http://unitsofmeasure.org/>
+BASE <http://a.example/neonatology>
+
+<#Patient> { # a [:Patient] ;
+  :id xsd:string ; # TC0
+  :birthDate @<#Date> ; # TC1
+  :lifeExpecancy xsd:float? // rdfs:label "years" ; # TC2
+}
+
+<#Date> xsd:dateTime OR xsd:date OR xsd:year
+

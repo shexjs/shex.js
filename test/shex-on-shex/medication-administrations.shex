@@ -1,0 +1,52 @@
+PREFIX : <http://a.example/cds#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ucum: <http://unitsofmeasure.org/>
+BASE <http://a.example/neonatology>
+
+<#Patient> { # a [:Patient] ;
+  :id xsd:string ; # TC0
+  :birthDate @<#Date> ; # TC1
+  :lifeExpecancy xsd:float? // rdfs:label "years" ; # TC2
+}
+
+<#SubstancceAdministration> {
+  :subject @<#Patient> ;
+  :date @<#Date> ;
+  :substanceCode @<#OurSubstanceCodes> ;
+  :dosage xsd:string ;
+  :schedule xsd:string ; # e.g. qid, tid, bid, q4h, q6h
+  :route @<#OurSnomedRoutes> ;
+}
+
+# The subset of SNOMED routes we care about
+<#OurSnomedRoutes> [
+  6064005 # Topical route
+  26643006 # Oral route
+  78421000 # Intramuscular route
+  47625008 # Intravenous route
+]
+
+<#OurSubstanceCodes> [
+  "human breast milk"
+  "breast milk substitute formula"
+  /* 
+   Our selection of SNOMED codes. For now, these are
+   upper-level codes for classes of drugs. Information
+   model data will have to map to these from typically
+   more specfic codes, ranging across code systems.
+  */
+  67866001 # Insulin (substance)
+  372711004 # Sulfonylurea (substance)
+# 346325008 # Product containing antibacterial (product)
+  31087008  # Product containing ampicillin
+            # (medicinal product)
+  373270004 # Substance with penicillin structure and
+            # antibacterial mechanism of action (substance)
+  372524001 # Substance with histamine H2 receptor
+            # antagonist mechanism of action (substance)
+  53875002  # Colostrum (substance)
+]
+
+<#Date> xsd:dateTime OR xsd:date OR xsd:year
+

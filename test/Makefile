@@ -62,5 +62,8 @@ hashmap-extension-test: ../lib/ShExJison.js hashmap-extension-test.js
 regex-extension-test: ../lib/ShExJison.js regex-extension-test.js
 	$(MOCHA) -C -R $(REPORTER) regex-extension-test.js
 
-test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js
+shex-on-shex-test: shex-on-shex-test.js
+	$(MOCHA) -C -R $(REPORTER) shex-on-shex-test.js
+
+test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js shex-on-shex-test
 

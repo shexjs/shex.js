@@ -1,0 +1,135 @@
+PREFIX : <http://a.example/cds#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ucum: <http://unitsofmeasure.org/>
+BASE <http://a.example/subscription>
+
+<#Patient> { # a [:Patient] ;
+  :id xsd:string ; # TC0
+  :birthDate @<#Date> ; # TC1
+  :lifeExpecancy xsd:float? // rdfs:label "years" ; # TC2
+}
+
+<#Neonate> EXTENDS @<#Patient> { # a [:Neonate] ;
+  :birthWeight ucum:g ;
+} AND { :birthdate xsd:dateTime }
+
+<#Diagnosis> {
+  :subject @<#Patient> ;
+  :diseaseCode @<#OurDiseaseCodes> ;
+  :dateDiagnosed @<#Date> ;
+}
+
+<#OurDiseaseCodes> [
+  52448006 # Dementia (disorder)
+  26929004 # Alzheimer's disease (disorder)
+  73211009 # Diabetes mellitus (disorder)
+  386805003 # Mild cognitive disorder (disorder)
+  2707005 # Necrotizing enterocolitis in
+          # fetus OR newborn (disorder)
+]
+
+<#Lab> {
+  :labCode IRI ;
+  :subject @<#Patient> ;
+  :collectionDate @<#Date> ;
+  :result @<#Numeric> OR xsd:string
+}
+
+<#HemoglobinA1C> @<#Lab> AND {
+  :labCode [<#HemoglobinA1CTest>] ;
+  :result ucum:%25%7BHemoglobinA1C%7D? ;
+}
+
+<#SerumCreatinine> @<#Lab> AND {
+  :labCode [<#SerumCreatinineTest>] ;
+  :result ucum:mg%2FdL ;
+}
+
+<#Culture> @<#Lab> AND {
+  :result ["negative" "positive"] ;
+}
+
+<#BloodCulture> @<#Culture> AND {
+  :labCode [<#BloodCultureTest>] ;
+}
+
+<#UrineCulture> @<#Culture> AND {
+  :labCode [<#UrineCultureTest>] ;
+}
+
+<#CSFCulture> @<#Culture> AND {
+  :labCode [<#CSFCultureTest>] ;
+}
+
+<#TrachealAspirateCulture> @<#Culture> AND {
+  :labCode [<#TrachealAspirateCultureTest>] ;
+}
+
+<#SubstancceAdministration> {
+  :subject @<#Patient> ;
+  :date @<#Date> ;
+  :substanceCode @<#OurSubstanceCodes> ;
+  :dosage xsd:string ;
+  :schedule xsd:string ; # e.g. qid, tid, bid, q4h, q6h
+  :route @<#OurSnomedRoutes> ;
+}
+
+# The subset of SNOMED routes we care about
+<#OurSnomedRoutes> [
+  6064005 # Topical route
+  26643006 # Oral route
+  78421000 # Intramuscular route
+  47625008 # Intravenous route
+]
+
+<#OurSubstanceCodes> [
+  "human breast milk"
+  "breast milk substitute formula"
+  /* 
+   Our selection of SNOMED codes. For now, these are
+   upper-level codes for classes of drugs. Information
+   model data will have to map to these from typically
+   more specfic codes, ranging across code systems.
+  */
+  67866001 # Insulin (substance)
+  372711004 # Sulfonylurea (substance)
+# 346325008 # Product containing antibacterial (product)
+  31087008  # Product containing ampicillin
+            # (medicinal product)
+  373270004 # Substance with penicillin structure and
+            # antibacterial mechanism of action (substance)
+  372524001 # Substance with histamine H2 receptor
+            # antagonist mechanism of action (substance)
+  53875002  # Colostrum (substance)
+]
+
+<#Observation> {
+  :observationCode . ;
+  :subject @<#Patient> ;
+  :obsevationDate @<#Date> ;
+  :value @<#Numeric> OR xsd:string
+}
+
+<#WeightObservation> @<#Observation> AND {
+  :observationCode [27113001] ; # Body weight (observable entity)
+  :result ucum:g ;
+}
+
+<#ExternalAdministrationEvent> {
+  :administrationCode @<#MyAdministrationCodes> ;
+  :subject @<#Patient> ;
+  :eventDate @<#Date> ;
+}
+  
+<#MyAdministrationCodes> [
+    <#GutCheckNECReg>
+    <#AHRQCohortReg>
+]
+
+# Vaccinations?
+
+<#Date> xsd:dateTime OR xsd:date OR xsd:year
+
+<#Numeric> xsd:integer OR xsd:double
+
