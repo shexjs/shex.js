@@ -64,8 +64,16 @@
     "status": "conformant"
   },
   {
-    "schemaLabel": "vitals diamond",
-    "schemaURL": "vitals.shex",
+    "schemaLabel": "vitals compiled",
+    "schemaURL": "vitals-compiled.shex",
+    "dataLabel": "data",
+    "dataURL": "vitals.ttl",
+    "queryMapURL": "vitals.smap",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "vitals EXTENDS",
+    "schemaURL": "vitals-EXTENDS.shex",
     "dataLabel": "data",
     "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",
@@ -82,14 +90,6 @@
   {
     "schemaLabel": "XX - vitals path",
     "schemaURL": "vitals-path.shex",
-    "dataLabel": "data",
-    "dataURL": "vitals.ttl",
-    "queryMapURL": "vitals.smap",
-    "status": "conformant"
-  },
-  {
-    "schemaLabel": "XX - vitals operators",
-    "schemaURL": "vitals-operator.shex",
     "dataLabel": "data",
     "dataURL": "vitals.ttl",
     "queryMapURL": "vitals.smap",
