@@ -79,11 +79,17 @@ Tests.forEach(function (test) {
                  if (candidates.length === 0) {
                    throw Error("no candidate for " + shapeLabel)
                  }
+                 let known = new Map()
                  candidates.forEach(candidate => {
                    shexDB.schema = candidate.desc.schema
                    let validationResult = validator.validate(shexDB, candidate.shapeLabel, shapeLabel)
                    shexDB.schema = null
-                   console.log(candidate.shapeLabel, shapeLabel, "\n", validationResult)
+                   let trying = candidate.shapeLabel + " as " + shapeLabel
+                   if (!(known.has(trying))) {
+                     let passed = !("errors" in validationResult)
+                     console.log("trying:", trying, passed ? "passed" : "failed")
+                     known.set(trying, passed)
+                   }
                  })
                })
                done()
@@ -182,6 +188,8 @@ Tests.forEach(function (test) {
         startTime = new Date()
         queryTracker.start(false, point, shapeLabel)
       }
+      if (!shapeLabelToTripleConstraints.has(point))
+        console.error(point)
       let outgoing = shapeLabelToTripleConstraints.get(point).map(
         pair => Object.assign({}, pair.tripleConstraint, pair.desc)
       )
