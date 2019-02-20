@@ -169,6 +169,18 @@ Tests.forEach(function (test) {
     function size () { return schemaDescriptors.length; }
 
     function getCandidates (shape, schema) {
+      return getShapeTCs(shape, schema).map(
+        tc =>
+          predToSchemaDesc.get(tc.predicate)).reduce(
+            // find intersection among all of the candidate shape labels.
+            (a, b, i) =>
+              a.filter(
+                c =>
+                  b.filter(
+                    d => d.shapeLabel === c.shapeLabel
+                  ).length === 1
+              )
+          )
       return getShapeTCs(shape, schema).reduce((acc, tc) => {
         return acc.concat(predToSchemaDesc.get(tc.predicate)/*.map(m => m.shapeLabel)*/)
       }, [])
@@ -188,11 +200,13 @@ Tests.forEach(function (test) {
         startTime = new Date()
         queryTracker.start(false, point, shapeLabel)
       }
-      if (!shapeLabelToTripleConstraints.has(point))
-        console.error(point)
-      let outgoing = shapeLabelToTripleConstraints.get(point).map(
-        pair => Object.assign({}, pair.tripleConstraint, pair.desc)
-      )
+      let outgoing = typeof point === "object"
+          ? getShapeTCs(point, this.schema)
+          : shapeLabelToTripleConstraints.get(point).map(
+            pair => Object.assign({}, pair.tripleConstraint, pair.desc)
+          )
+      // if (!shapeLabelToTripleConstraints.has(point))
+      //   console.error(point)
       if (queryTracker) {
         let time = new Date()
         queryTracker.end(outgoing, time - startTime)
