@@ -12,15 +12,15 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- super-classes --
-ABSTRACT <#Vital> RESTRICTS @<#Observation> .
+ABSTRACT <#Vital> RESTRICTS @<#Observation> {}
 
 
-ABSTRACT <#PostureVital> RESTRICTS @<#Vital> RESTRICTS @<#Posture> .
+ABSTRACT <#PostureVital>
+      EXTENDS @<#Vital> EXTENDS @<#Posture> {}
 
-
-ABSTRACT <#ReclinedVital> RESTRICTS @<#Reclined> RESTICTS @<#PostureVital> .
-
-
+ABSTRACT <#ReclinedVital>
+      RESTRICTS @<#Reclined>
+      RESTICTS @<#PostureVital> {}
 
 
 # -- BP --
@@ -31,13 +31,13 @@ ABSTRACT <#ReclinedVital> RESTRICTS @<#Reclined> RESTICTS @<#PostureVital> .
 
 
 
-<#PostureBP> EXTENDS @<#BP> EXTENDS @<#PostureVital> { }
+<#PostureBP>
+      EXTENDS @<#BP> EXTENDS @<#PostureVital> { }
 
 
 
-
-<#ReclinedBP> EXTENDS @<#BP> EXTENDS @<#ReclinedVital> { }
-
+<#ReclinedBP>
+      EXTENDS @<#BP> EXTENDS @<#ReclinedVital> { }
 
 
 
@@ -45,16 +45,16 @@ ABSTRACT <#ReclinedVital> RESTRICTS @<#Reclined> RESTICTS @<#PostureVital> .
 # -- Pulse --
 <#Pulse> RESTRICTS @<#Vital> {
 
-    fhir:code ["pulse"]
+  fhir:code ["pulse"]
 }
 
-<#PosturePulse> EXTENDS @<#Pulse> EXTENDS @<#PostureVital> { }
+<#PosturePulse>
+      EXTENDS @<#Pulse> EXTENDS @<#PostureVital> { }
 
 
 
-
-<#ReclinedPulse> EXTENDS @<#Pulse> EXTENDS @<#ReclinedVital> { }
-
+<#ReclinedPulse>
+      EXTENDS @<#Pulse> EXTENDS @<#ReclinedVital> { }
 
 
 
