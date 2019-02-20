@@ -12,19 +12,19 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- super-classes --
-ABSTRACT <#Vital> RESTRICTS @<#Observation> {}
-
+ABSTRACT <#Vital>
+      EXTENDS @<#Observation> {}
 
 ABSTRACT <#PostureVital>
       EXTENDS @<#Vital> EXTENDS @<#Posture> {}
 
 ABSTRACT <#ReclinedVital>
-      RESTRICTS @<#Reclined>
-      RESTICTS @<#PostureVital> {}
+      EXTENDS @<#PostureVital> {}
+  AND EXTENDS @<#Reclined> {}
 
 
 # -- BP --
-<#BP> RESTRICTS @<#Vital> {
+<#BP> EXTENDS @<#Vital> {} AND {
   fhir:component { fhir:code ["systolic"] } ;
   fhir:component { fhir:code ["diastolic"] }
 }
@@ -43,7 +43,7 @@ ABSTRACT <#ReclinedVital>
 
 
 # -- Pulse --
-<#Pulse> RESTRICTS @<#Vital> {
+<#Pulse> EXTENDS @<#Vital> {} AND {
 
   fhir:code ["pulse"]
 }
