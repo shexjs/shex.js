@@ -33,13 +33,13 @@ if (TESTS)
 
 function loadSchema (manifestDescription) {
   let filePath = __dirname + "/" + manifestDescription.schemaURL
-  return ShExLoader.GET(filePath).then(
+  return ShExLoader.load([filePath], [], [], [], {}, {}).then(
     // stick it all in one object
     loaded => Object.assign({}, {
       schemaLabel: manifestDescription.schemaLabel,
       schemaURL: filePath,
       shapes: manifestDescription.shapes,
-      schema: ShExParser.construct(manifestDescription.schemaURL, {}).parse(loaded.text)
+      schema: loaded.schema // ShExParser.construct(manifestDescription.schemaURL, {}).parse(loaded.text)
     }, loaded)
   )
 }
@@ -91,13 +91,14 @@ Tests.forEach(function (test) {
                var xp = crossProduct(components);
                let tryNo = 0;
                while (xp.next()) {
+                 let label = "aggregate try " + tryNo
                  var map = xp.get(); // [0,1,0,3] mapping from triple to constraint
                  let driverSchema = map.reduce(
                    (s, piece) => ShExUtil.merge(s, piece.desc.schema), { type: "Schema" }
                  )
                  // let subsValidator = ShExValidator.construct(schema)
                  let driverDB = makeShExDB([{
-                   schemaLabel: "aggregate try " + tryNo,
+                   schemaLabel: label,
                    shapes: Object.keys(driverSchema.shapes),
                    schema: driverSchema
                  }])
@@ -111,9 +112,9 @@ Tests.forEach(function (test) {
                        passes.push(driverLabel)
                    })
                    if (passes.length === 0) {
-                     console.warn("no match for " + subsLabel)
+                     console.warn("error: " + label + ": " + subsLabel + " no match")
                    } else {
-                     console.log(subsLabel + " match by " + passes)
+                     console.log(label + ": " + subsLabel + " matched by " + passes)
                    }
                  })
                  driverDB.schema = null
@@ -236,7 +237,10 @@ function crossProduct(sets) {
       //   return oldVisitExtends.call(v, ext);
       // }
       v.visitShapeRef = function (expr) {
-        v.visitShapeDecl(schema.shapes[expr.reference])
+        if (expr.reference in schema.shapes)
+          v.visitShapeDecl(schema.shapes[expr.reference])
+        else
+          throw Error("no shape " + expr.reference + " found in\n  " + Object.keys(schema.shapes).join("\n  "))
       }
       v.visitTripleConstraint = function (expr) {
         ret.push(expr)
