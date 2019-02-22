@@ -16,7 +16,7 @@ let should = chai.should;
 let fs = require("fs");
 
 let manifestFile = "shex-on-shex/manifest.json";
-let Tests = JSON.parse(fs.readFileSync(manifestFile, "UTF-8"));
+let Tests = JSON.parse(fs.readFileSync(__dirname + "/" + manifestFile, "UTF-8"));
 
 let last = new Date();
 let stamp = TIME ? function (s) {
@@ -32,11 +32,12 @@ if (TESTS)
   });
 
 function loadSchema (manifestDescription) {
-  return ShExLoader.GET(manifestDescription.schemaURL).then(
+  let filePath = __dirname + "/" + manifestDescription.schemaURL
+  return ShExLoader.GET(filePath).then(
     // stick it all in one object
     loaded => Object.assign({}, {
       schemaLabel: manifestDescription.schemaLabel,
-      schemaURL: manifestDescription.schemaURL,
+      schemaURL: filePath,
       shapes: manifestDescription.shapes,
       schema: ShExParser.construct(manifestDescription.schemaURL, {}).parse(loaded.text)
     }, loaded)
