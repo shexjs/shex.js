@@ -5,6 +5,9 @@ let TIME = "TIME" in process.env;
 let TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,,/) :
     null;
+let WHOLE_SHAPES = true // candidates have to provide complete shapes.
+// otherwise, it works much harder
+
 let ShExLoader = require("../lib/ShExLoader");
 let ShExParser = require("../lib/ShExParser");
 let ShExValidator = require("../lib/ShExValidator");
@@ -74,14 +77,16 @@ Tests.forEach(function (test) {
            targetAndCoverage => {
              expect(shexDB.size()).to.equal(test.coverageSchemas.length)
              try {
+               let solutions = 0
                let subsShapeLabels = []
                let components = []
-               Object.keys(target.schema.shapes).forEach(shapeLabel => {
+               let lookForShapes = Object.keys(target.schema.shapes)
+               lookForShapes.forEach(shapeLabel => {
                  let shape = target.schema.shapes[shapeLabel]
                  // @@ should be getTripleConstraints() so we know that no triples means no shapes.
                  let candidates = shexDB.getCandidates(shape, target.schema)
                  if (candidates.length === 0) {
-                   console.log("no candidate for " + shapeLabel)
+                   // console.log("no candidate for " + shapeLabel)
                    // throw Error("no candidate for " + shapeLabel)
                  } else {
                    subsShapeLabels.push(shapeLabel)
@@ -103,6 +108,7 @@ Tests.forEach(function (test) {
                    schema: driverSchema
                  }])
                  driverDB.schema = driverSchema
+                 let misses = 0
                  subsShapeLabels.forEach(subsLabel => {
                    let passes = []
                    Object.keys(driverSchema.shapes).forEach(driverLabel => {
@@ -112,15 +118,20 @@ Tests.forEach(function (test) {
                        passes.push(driverLabel)
                    })
                    if (passes.length === 0) {
-                     console.warn("error: " + label + ": " + subsLabel + " no match")
+                     console.error("error: " + label + ": " + subsLabel + " no match")
+                     ++misses
                    } else {
-                     console.log(label + ": " + subsLabel + " matched by " + passes)
+                     // console.log(label + ": " + subsLabel + " matched by " + passes)
                    }
                  })
                  driverDB.schema = null
+                 if (misses === 0) {
+                   // console.log("successful combination:", map.map(c => c.shapeLabel))
+                   ++solutions
+                 }
                  ++tryNo
                }
-               done()
+               done(solutions > 0 ? undefined : Error("no matches"))
              } catch (e) {
                // so we don't have to wait for  a timeout
                  done(e)
@@ -252,29 +263,32 @@ function crossProduct(sets) {
     function size () { return schemaDescriptors.length; }
 
     function getCandidates (shape, schema) {
-      let descSets = getShapeTCs(shape, schema).reduce((acc, tc) => {
-        let descSet = predToSchemaDesc.get(tc.predicate)
-        if (descSet === undefined) {
-          console.warn("no match for " + tc.predicate)
-          return acc
-        }
-        return acc.concat([descSet])
-      }, [])
-      return descSets.length > 1
-        ? descSets.reduce(
-          // find intersection among all of the candidate shape labels.
-          (a, b, i) =>
-            a.filter(
-              c =>
-                b.filter(
-                  d => d.shapeLabel === c.shapeLabel
-                ).length === 1
-            )
-        )
-        : descSets
-      return getShapeTCs(shape, schema).reduce((acc, tc) => {
-        return acc.concat(predToSchemaDesc.get(tc.predicate)/*.map(m => m.shapeLabel)*/)
-      }, [])
+      if (WHOLE_SHAPES) {
+        let descSets = getShapeTCs(shape, schema).reduce((acc, tc) => {
+          let descSet = predToSchemaDesc.get(tc.predicate)
+          if (descSet === undefined) {
+            console.warn("no match for " + tc.predicate)
+            return acc
+          }
+          return acc.concat([descSet])
+        }, [])
+        return descSets.length > 1
+          ? descSets.reduce(
+            // find intersection among all of the candidate shape labels.
+            (a, b, i) =>
+              a.filter(
+                c =>
+                  b.filter(
+                    d => d.shapeLabel === c.shapeLabel
+                  ).length === 1
+              )
+          )
+          : descSets
+      } else {
+        return getShapeTCs(shape, schema).reduce((acc, tc) => {
+          return acc.concat(predToSchemaDesc.get(tc.predicate)/*.map(m => m.shapeLabel)*/)
+        }, [])
+      }
     }
 
     function getQuads (s, p, o, g) {

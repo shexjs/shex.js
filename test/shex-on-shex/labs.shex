@@ -2,49 +2,15 @@ PREFIX : <http://a.example/cds#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ucum: <http://unitsofmeasure.org/>
+IMPORT <patientDB.shex>
 BASE <http://a.example/driver>
-
-<#Patient> { # a [:Patient] ;
-  :id xsd:string ; # TC0
-  :birthDate @<#Date> ; # TC1
-  :lifeExpecancy xsd:float? // rdfs:label "years" ; # TC2
-}
 
 <#Lab> {
   :labCode IRI ;
   :subject @<#Patient> ;
   :collectionDate @<#Date> ;
-  :result @<#Numeric> OR xsd:string
-}
-
-<#HemoglobinA1C> @<#Lab> AND {
-  :labCode [<#HemoglobinA1CTest>] ;
-  :result ucum:%25%7BHemoglobinA1C%7D? ;
-}
-
-<#SerumCreatinine> @<#Lab> AND {
-  :labCode [<#SerumCreatinineTest>] ;
-  :result ucum:mg%2FdL ;
-}
-
-<#Culture> @<#Lab> AND {
-  :result ["negative" "positive"] ;
-}
-
-<#BloodCulture> @<#Culture> AND {
-  :labCode [<#BloodCultureTest>] ;
-}
-
-<#UrineCulture> @<#Culture> AND {
-  :labCode [<#UrineCultureTest>] ;
-}
-
-<#CSFCulture> @<#Culture> AND {
-  :labCode [<#CSFCultureTest>] ;
-}
-
-<#TrachealAspirateCulture> @<#Culture> AND {
-  :labCode [<#TrachealAspirateCultureTest>] ;
+  :result @<#Numeric> OR LITERAL ;
+  :time xsd:dateTime ;
 }
 
 <#Date> xsd:dateTime OR xsd:date OR xsd:year
