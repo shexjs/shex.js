@@ -5,7 +5,7 @@ let TIME = "TIME" in process.env;
 let TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,,/) :
     null;
-let WHOLE_SHAPES = true // candidates have to provide complete shapes.
+let WHOLE_SHAPES = false // candidates have to provide complete shapes.
 // otherwise, it works much harder
 
 let ShExLoader = require("../lib/ShExLoader");
@@ -286,7 +286,7 @@ function crossProduct(sets) {
           : descSets
       } else {
         return getShapeTCs(shape, schema).reduce((acc, tc) => {
-          return acc.concat(predToSchemaDesc.get(tc.predicate)/*.map(m => m.shapeLabel)*/)
+          return acc.concat(predToSchemaDesc.get(tc.predicate)).filter(desc => acc.indexOf(desc) === -1)
         }, [])
       }
     }
