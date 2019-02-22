@@ -103,7 +103,7 @@ BASE <http://a.example/subscription>
             # antagonist mechanism of action (substance)
   53875002  # Colostrum (substance)
 ]
-
+/*
 <#Observation> {
   :observationCode . ;
   :subject @<#Patient> ;
@@ -126,7 +126,7 @@ BASE <http://a.example/subscription>
     <#GutCheckNECReg>
     <#AHRQCohortReg>
 ]
-
+*/
 # Vaccinations?
 
 <#Date> xsd:dateTime OR xsd:date OR xsd:year

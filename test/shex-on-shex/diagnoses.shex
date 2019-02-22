@@ -2,7 +2,7 @@ PREFIX : <http://a.example/cds#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ucum: <http://unitsofmeasure.org/>
-BASE <http://a.example/neonatology>
+BASE <http://a.example/driver>
 
 <#Patient> { # a [:Patient] ;
   :id xsd:string ; # TC0

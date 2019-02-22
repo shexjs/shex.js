@@ -6,32 +6,32 @@
       {
         "schemaLabel": "patient DB",
         "schemaURL": "shex-on-shex/patientDB.shex",
-        "shapes": ["http://a.example/neonatology#Patient"]
+        "shapes": ["http://a.example/driver#Patient"]
       },
       {
         "schemaLabel": "neonate DB",
         "schemaURL": "shex-on-shex/neonateDB.shex",
-        "shapes": ["http://a.example/neonatology#Neonate"]
+        "shapes": ["http://a.example/driver#Neonate"]
       },
       {
         "schemaLabel": "diagnoses",
         "schemaURL": "shex-on-shex/diagnoses.shex",
-        "shapes":[ "http://a.example/neonatology#Diagnosis"]
+        "shapes":[ "http://a.example/driver#Diagnosis"]
       },
       {
         "schemaLabel": "labs",
         "schemaURL": "shex-on-shex/labs.shex",
-        "shapes": ["http://a.example/neonatology#Lab"]
+        "shapes": ["http://a.example/driver#Lab"]
       },
       {
         "schemaLabel": "allergies",
         "schemaURL": "shex-on-shex/allergies.shex",
-        "shapes": ["http://a.example/neonatology#Allergies"]
+        "shapes": ["http://a.example/driver#Allergies"]
       },
       {
         "schemaLabel": "medications",
         "schemaURL": "shex-on-shex/medication-administrations.shex",
-        "shapes": ["http://a.example/neonatology#SubstancceAdministration"]
+        "shapes": ["http://a.example/driver#SubstancceAdministration"]
       }
     ]
   }

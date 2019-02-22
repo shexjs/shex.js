@@ -73,25 +73,51 @@ Tests.forEach(function (test) {
            targetAndCoverage => {
              expect(shexDB.size()).to.equal(test.coverageSchemas.length)
              try {
+               let subsShapeLabels = []
+               let components = []
                Object.keys(target.schema.shapes).forEach(shapeLabel => {
                  let shape = target.schema.shapes[shapeLabel]
+                 // @@ should be getTripleConstraints() so we know that no triples means no shapes.
                  let candidates = shexDB.getCandidates(shape, target.schema)
                  if (candidates.length === 0) {
-                   throw Error("no candidate for " + shapeLabel)
+                   console.log("no candidate for " + shapeLabel)
+                   // throw Error("no candidate for " + shapeLabel)
+                 } else {
+                   subsShapeLabels.push(shapeLabel)
+                   components.push(candidates)
                  }
-                 let known = new Map()
-                 candidates.forEach(candidate => {
-                   shexDB.schema = candidate.desc.schema
-                   let validationResult = validator.validate(shexDB, candidate.shapeLabel, shapeLabel)
-                   shexDB.schema = null
-                   let trying = candidate.shapeLabel + " as " + shapeLabel
-                   if (!(known.has(trying))) {
+               })
+               var xp = crossProduct(components);
+               let tryNo = 0;
+               while (xp.next()) {
+                 var map = xp.get(); // [0,1,0,3] mapping from triple to constraint
+                 let driverSchema = map.reduce(
+                   (s, piece) => ShExUtil.merge(s, piece.desc.schema), { type: "Schema" }
+                 )
+                 // let subsValidator = ShExValidator.construct(schema)
+                 let driverDB = makeShExDB([{
+                   schemaLabel: "aggregate try " + tryNo,
+                   shapes: Object.keys(driverSchema.shapes),
+                   schema: driverSchema
+                 }])
+                 driverDB.schema = driverSchema
+                 subsShapeLabels.forEach(subsLabel => {
+                   let passes = []
+                   Object.keys(driverSchema.shapes).forEach(driverLabel => {
+                     let validationResult = validator.validate(driverDB, driverLabel, subsLabel)
                      let passed = !("errors" in validationResult)
-                     console.log("trying:", trying, passed ? "passed" : "failed")
-                     known.set(trying, passed)
+                     if (passed)
+                       passes.push(driverLabel)
+                   })
+                   if (passes.length === 0) {
+                     console.warn("no match for " + subsLabel)
+                   } else {
+                     console.log(subsLabel + " match by " + passes)
                    }
                  })
-               })
+                 driverDB.schema = null
+                 ++tryNo
+               }
                done()
              } catch (e) {
                // so we don't have to wait for  a timeout
@@ -102,6 +128,58 @@ Tests.forEach(function (test) {
   })
 });
 
+// @@ duplicates local crossProduct function in ShExValidator
+// http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+function crossProduct(sets) {
+  var n = sets.length, carets = [], args = null;
+
+  function init() {
+    args = [];
+    for (var i = 0; i < n; i++) {
+      carets[i] = 0;
+      args[i] = sets[i][0];
+    }
+  }
+
+  function next() {
+
+    // special case: crossProduct([]).next().next() returns false.
+    if (args !== null && args.length === 0)
+      return false;
+
+    if (args === null) {
+      init();
+      return true;
+    }
+    var i = n - 1;
+    carets[i]++;
+    if (carets[i] < sets[i].length) {
+      args[i] = sets[i][carets[i]];
+      return true;
+    }
+    while (carets[i] >= sets[i].length) {
+      if (i == 0) {
+        return false;
+      }
+      carets[i] = 0;
+      args[i] = sets[i][0];
+      carets[--i]++;
+    }
+    args[i] = sets[i][carets[i]];
+    return true;
+  }
+
+  return {
+    next: next,
+    do: function (block, _context) { // old API
+      return block.apply(_context, args);
+    },
+    // new API because
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
+    // cautions about functions over arguments.
+    get: function () { return args; }
+  };
+}
 
   function makeShExDB (schemaDescriptors, queryTracker) {
     /* schemaDescriptors: [{
@@ -169,18 +247,26 @@ Tests.forEach(function (test) {
     function size () { return schemaDescriptors.length; }
 
     function getCandidates (shape, schema) {
-      return getShapeTCs(shape, schema).map(
-        tc =>
-          predToSchemaDesc.get(tc.predicate)).reduce(
-            // find intersection among all of the candidate shape labels.
-            (a, b, i) =>
-              a.filter(
-                c =>
-                  b.filter(
-                    d => d.shapeLabel === c.shapeLabel
-                  ).length === 1
-              )
-          )
+      let descSets = getShapeTCs(shape, schema).reduce((acc, tc) => {
+        let descSet = predToSchemaDesc.get(tc.predicate)
+        if (descSet === undefined) {
+          console.warn("no match for " + tc.predicate)
+          return acc
+        }
+        return acc.concat([descSet])
+      }, [])
+      return descSets.length > 1
+        ? descSets.reduce(
+          // find intersection among all of the candidate shape labels.
+          (a, b, i) =>
+            a.filter(
+              c =>
+                b.filter(
+                  d => d.shapeLabel === c.shapeLabel
+                ).length === 1
+            )
+        )
+        : descSets
       return getShapeTCs(shape, schema).reduce((acc, tc) => {
         return acc.concat(predToSchemaDesc.get(tc.predicate)/*.map(m => m.shapeLabel)*/)
       }, [])
