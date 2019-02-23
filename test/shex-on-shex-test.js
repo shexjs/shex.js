@@ -5,7 +5,7 @@ let TIME = "TIME" in process.env;
 let TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,,/) :
     null;
-let WHOLE_SHAPES = false // candidates have to provide complete shapes.
+let WHOLE_SHAPES = true // candidates have to provide complete shapes.
 // otherwise, it works much harder
 
 let ShExLoader = require("../lib/ShExLoader");
@@ -97,11 +97,14 @@ Tests.forEach(function (test) {
                let tryNo = 0;
                while (xp.next()) {
                  let label = "aggregate try " + tryNo
-                 var map = xp.get(); // [0,1,0,3] mapping from triple to constraint
+                 var map = xp.get().reduce( // unique schema descs in this product
+                   (acc, desc) => acc.indexOf(desc) === -1 ? acc.concat(desc) : acc,
+                   []
+                 );
                  let driverSchema = map.reduce(
-                   (s, piece) => ShExUtil.merge(s, piece.desc.schema), { type: "Schema" }
+                   (s, piece) => ShExUtil.merge(s, piece.desc.schema),
+                   { type: "Schema" } // empty schema
                  )
-                 // let subsValidator = ShExValidator.construct(schema)
                  let driverDB = makeShExDB([{
                    schemaLabel: label,
                    shapes: Object.keys(driverSchema.shapes),
@@ -126,7 +129,8 @@ Tests.forEach(function (test) {
                  })
                  driverDB.schema = null
                  if (misses === 0) {
-                   // console.log("successful combination:", map.map(c => c.shapeLabel))
+                   console.log("successful combination " + tryNo + ":\n ",
+                               map.map(c => c.shapeLabel).join("\n  "))
                    ++solutions
                  }
                  ++tryNo
