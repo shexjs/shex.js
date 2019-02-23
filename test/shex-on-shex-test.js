@@ -112,7 +112,11 @@ Tests.forEach(function (test) {
 
                  // driverList holds the arrangement currently being tested.
                  let driverList = xp.get().reduce(
-                   (acc, desc) => acc.indexOf(desc) === -1 ? acc.concat(desc) : acc,
+                   (acc, elt) =>
+                     // Strip out redundant driver list entries.
+                     acc.find(f => f.desc.schemaURL === elt.desc.schemaURL)
+                     ? acc
+                     : acc.concat(elt),
                    []
                  );
                  let prettyList = "\n  " + driverList.map(c => c.shapeLabel).join("\n  ")
@@ -343,7 +347,8 @@ function crossProduct(sets) {
           : descSets
       } else {
         return getShapeTCs(shape, schema).reduce((acc, tc) => {
-          return acc.concat(predToSchemaDesc.get(tc.predicate)).filter(desc => acc.indexOf(desc) === -1)
+          return acc.concat(predToSchemaDesc.get(tc.predicate))
+            .filter(desc => acc.indexOf(desc) === -1)
         }, [])
       }
     }
