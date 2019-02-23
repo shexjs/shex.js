@@ -33,6 +33,7 @@
         "schemaURL": "shex-on-shex/medication-administrations.shex",
         "shapes": ["http://a.example/driver#SubstancceAdministration"]
       }
-    ]
+    ],
+    "solutions": 2
   }
 ]

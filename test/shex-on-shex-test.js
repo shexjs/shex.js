@@ -1,12 +1,13 @@
 // Develop and test shex-on-shex.
 
 "use strict";
-let TIME = "TIME" in process.env;
-let TESTS = "TESTS" in process.env ?
-    process.env.TESTS.split(/,,/) :
+// Environment vars for extermal control
+let TIME = "TIME" in process.env; // render timestamps
+let TESTS = "TESTS" in process.env ? // filter tests to match supplied regex
+    new RegExp(process.env.TESTS) :
     null;
-let WHOLE_SHAPES = true // candidates have to provide complete shapes.
-// otherwise, it works much harder
+let WHOLE_SHAPES = false // Candidates have to provide complete shapes.
+// Otherwise, it works much harder (100ms vs 75ms, with neonatology).
 
 let ShExLoader = require("../lib/ShExLoader");
 let ShExParser = require("../lib/ShExParser");
@@ -18,9 +19,11 @@ let should = chai.should;
 
 let fs = require("fs");
 
+// All tests are listed in this manifest file.
 let manifestFile = "shex-on-shex/manifest.json";
 let Tests = JSON.parse(fs.readFileSync(__dirname + "/" + manifestFile, "UTF-8"));
 
+// Timestamp for benchmarking
 let last = new Date();
 let stamp = TIME ? function (s) {
   let t = new Date();
@@ -29,10 +32,148 @@ let stamp = TIME ? function (s) {
   console.warn(delta, s);
 } : function () {};
 
+// Limit tests if
 if (TESTS)
-  Tests = Tests.filter(function (t) {
-    return TESTS.indexOf(t.name) !== -1;
-  });
+  Tests = Tests.filter(t => TESTS.exec(t.schemaLabel));
+
+/** Set up test for each (remaining) entry in Tests
+ *
+ * subs<X> is short for subscription<X> -- refers to the goal schema
+ * <X>Desc is a schema descriptor a la: {
+         schemaLabel
+         schemaURL
+         shapes
+         schema
+         text
+         url
+       }
+ *
+ * TODO: `subs` and `drivers` are particular to CDS use case so
+ *       s/subs/goal/g s/driver/component/g
+ */
+stamp("setup");
+Tests.forEach(function (test) {
+  describe(test.schemaLabel, function () {
+    let targetSchemaPromise = loadSchema(test)
+    let coverageSchemaPromises = test.coverageSchemas.map(
+      cs => loadSchema(cs)
+    )
+    let pz = Promise.all([targetSchemaPromise, Promise.all(coverageSchemaPromises)]);
+    let driversDB = null, validator = null
+
+    it("should construct a ShExDB from all "
+       + test.coverageSchemas.length
+       + " coverage schemas", done => {
+         pz.then(
+           subsAndDrivers => {
+             // Index all of the driver schemas.
+             driversDB = makeShExDB(subsAndDrivers[1])
+
+             // Construct a validator for the  subscription schema.
+             validator = ShExValidator.construct(subsAndDrivers[0].schema);
+
+             expect(driversDB.size()).to.equal(test.coverageSchemas.length)
+             done()
+           })
+       })
+
+    it("ShExDB should have "
+       + test.coverageSchemas.length
+       + " schemas", done => {
+         pz.then(
+           subsAndDrivers => {
+             expect(driversDB.size()).to.equal(test.coverageSchemas.length)
+             try {
+               let solutions = 0
+               let subsShapeLabels = []
+               let components = []
+               let subsDesc = subsAndDrivers[0]
+
+               stamp("look for possible components");
+               Object.keys(subsDesc.schema.shapes).forEach(shapeLabel => {
+                 let shape = subsDesc.schema.shapes[shapeLabel]
+                 // @@ should be getTripleConstraints() so we know that no triples means no shapes.
+                 let candidates = driversDB.getCandidates(shape, subsDesc.schema)
+                 if (candidates.length === 0) {
+                   // Skip labels that don't have any arcs (i.e. only NodeConstraints).
+                   // console.log("no candidate for " + shapeLabel)
+                 } else {
+                   subsShapeLabels.push(shapeLabel) // look for shapeLabel in driver schema
+                   components.push(candidates)
+                 }
+               })
+
+               // Test each possible arrangement of the components.
+               var xp = crossProduct(components);
+               let tryNo = 0;
+               stamp("scanning " + xp.length + " possibilities");
+               while (xp.next()) {
+                 let label = "aggregation-" + tryNo
+
+                 // driverList holds the arrangement currently being tested.
+                 let driverList = xp.get().reduce(
+                   (acc, desc) => acc.indexOf(desc) === -1 ? acc.concat(desc) : acc,
+                   []
+                 );
+                 let prettyList = "\n  " + driverList.map(c => c.shapeLabel).join("\n  ")
+
+                 // Compose a schema from the driverList.
+                 let driverSchema = driverList.reduce(
+                   (s, piece) => ShExUtil.merge(s, piece.desc.schema),
+                   { type: "Schema" } // empty schema
+                 )
+
+                 // Index the driverSchema
+                 let driverDB = makeShExDB([{
+                   schemaLabel: label,
+                   shapes: Object.keys(driverSchema.shapes),
+                   schema: driverSchema
+                 }])
+                 driverDB.schema = driverSchema
+
+                 // Walk through the goal schema and find some satisfying shape in the drivers.
+                 let misses = 0
+                 subsShapeLabels.forEach(subsLabel => {
+                   let passes = []
+
+                   // See if some expression in the driverSchema satisfies subsLabel.
+                   Object.keys(driverSchema.shapes).forEach(driverLabel => {
+                     let validationResult = validator.validate(driverDB, driverLabel, subsLabel)
+                     let passed = !("errors" in validationResult)
+                     if (passed)
+                       passes.push(driverLabel)
+                   })
+
+                   if (passes.length === 0) {
+                     console.error("error: " + label + ": " + subsLabel
+                                   + " not matched in:" + prettyList)
+                     ++misses
+                   } else {
+                     // console.log(label + ": " + subsLabel + " matched by " + passes)
+                   }
+                 })
+                 driverDB.schema = null
+                 stamp("tested possibility " + tryNo + ": " + (misses === 0));
+
+                 // See if each goal shape was accounted for.
+                 if (misses === 0) {
+                   console.log(label + " successful:" + prettyList)
+                   ++solutions
+                 }
+                 ++tryNo
+               }
+
+               // The expected number of solutions is in the test.
+               stamp("found " + solutions + "/" + test.solutions + " solutions")
+               done(solutions === test.solutions ? undefined : Error("expected " + test.solutions + " matches, got " + solutions))
+             }
+             catch (e) {
+               done(e)
+             }
+           })
+       })
+  })
+});
 
 function loadSchema (manifestDescription) {
   let filePath = __dirname + "/" + manifestDescription.schemaURL
@@ -47,108 +188,14 @@ function loadSchema (manifestDescription) {
   )
 }
 
-stamp("setup");
-Tests.forEach(function (test) {
-  describe(test.schemaLabel, function () {
-    let targetSchemaPromise = loadSchema(test)
-    let coverageSchemaPromises = test.coverageSchemas.map(
-      cs => loadSchema(cs)
-    )
-    let pz = Promise.all([targetSchemaPromise, Promise.all(coverageSchemaPromises)]);
-    let shexDB = null, validator = null, target = null, coverage  = null
-    it("should construct a ShExDB from all "
-       + test.coverageSchemas.length
-       + " coverage schemas", done => {
-         pz.then(
-           targetAndCoverage => {
-             target = targetAndCoverage[0]
-             coverage = targetAndCoverage[1]
-             // console.log(JSON.stringify(targetAndCoverage, null, 2))
-             shexDB = makeShExDB(targetAndCoverage[1])
-             validator = ShExValidator.construct(target.schema);
-             expect(shexDB.size()).to.equal(test.coverageSchemas.length)
-             done()
-           })
-       })
-    it("ShExDB should have "
-       + test.coverageSchemas.length
-       + " schemas", done => {
-         pz.then(
-           targetAndCoverage => {
-             expect(shexDB.size()).to.equal(test.coverageSchemas.length)
-             try {
-               let solutions = 0
-               let subsShapeLabels = []
-               let components = []
-               let lookForShapes = Object.keys(target.schema.shapes)
-               lookForShapes.forEach(shapeLabel => {
-                 let shape = target.schema.shapes[shapeLabel]
-                 // @@ should be getTripleConstraints() so we know that no triples means no shapes.
-                 let candidates = shexDB.getCandidates(shape, target.schema)
-                 if (candidates.length === 0) {
-                   // console.log("no candidate for " + shapeLabel)
-                   // throw Error("no candidate for " + shapeLabel)
-                 } else {
-                   subsShapeLabels.push(shapeLabel)
-                   components.push(candidates)
-                 }
-               })
-               var xp = crossProduct(components);
-               let tryNo = 0;
-               while (xp.next()) {
-                 let label = "aggregate try " + tryNo
-                 var map = xp.get().reduce( // unique schema descs in this product
-                   (acc, desc) => acc.indexOf(desc) === -1 ? acc.concat(desc) : acc,
-                   []
-                 );
-                 let driverSchema = map.reduce(
-                   (s, piece) => ShExUtil.merge(s, piece.desc.schema),
-                   { type: "Schema" } // empty schema
-                 )
-                 let driverDB = makeShExDB([{
-                   schemaLabel: label,
-                   shapes: Object.keys(driverSchema.shapes),
-                   schema: driverSchema
-                 }])
-                 driverDB.schema = driverSchema
-                 let misses = 0
-                 subsShapeLabels.forEach(subsLabel => {
-                   let passes = []
-                   Object.keys(driverSchema.shapes).forEach(driverLabel => {
-                     let validationResult = validator.validate(driverDB, driverLabel, subsLabel)
-                     let passed = !("errors" in validationResult)
-                     if (passed)
-                       passes.push(driverLabel)
-                   })
-                   if (passes.length === 0) {
-                     console.error("error: " + label + ": " + subsLabel + " no match")
-                     ++misses
-                   } else {
-                     // console.log(label + ": " + subsLabel + " matched by " + passes)
-                   }
-                 })
-                 driverDB.schema = null
-                 if (misses === 0) {
-                   console.log("successful combination " + tryNo + ":\n ",
-                               map.map(c => c.shapeLabel).join("\n  "))
-                   ++solutions
-                 }
-                 ++tryNo
-               }
-               done(solutions > 0 ? undefined : Error("no matches"))
-             } catch (e) {
-               // so we don't have to wait for  a timeout
-                 done(e)
-             }
-           })
-       })
-  })
-});
-
-// @@ duplicates local crossProduct function in ShExValidator
+// @@ MOSTLY duplicates local crossProduct function in ShExValidator, modulo length getter
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function crossProduct(sets) {
-  var n = sets.length, carets = [], args = null;
+  var n = sets.length, carets = [], args = null, length = 1;
+
+  for (var i = 0; i < n; i++) {
+    length = length * (sets[i].length || 1);
+  }
 
   function init() {
     args = [];
@@ -187,6 +234,9 @@ function crossProduct(sets) {
   }
 
   return {
+    get length () {
+      return length
+    },
     next: next,
     do: function (block, _context) { // old API
       return block.apply(_context, args);
@@ -198,6 +248,9 @@ function crossProduct(sets) {
   };
 }
 
+/** index each triple constrain in each schema in schemaDescriptors
+ * getNeighborhood(shapeLabel) returns TCs reachable from shapeLabel
+ */
   function makeShExDB (schemaDescriptors, queryTracker) {
     /* schemaDescriptors: [{
          schemaLabel
@@ -354,70 +407,4 @@ function crossProduct(sets) {
       // }
     };
   }
-
-// describe("resolved promise", () => {
-//   let p = Promise.resolve(1)
-//   it('should equal 1', done => {
-//     p.then(result => {
-//       expect(result).to.equal(1)
-//       done()
-//     }, error => {
-//       done(Error(error))
-//     })
-//   })
-// })
-
-// describe("rejected promise", () => {
-//   let p = Promise.reject(1)
-//   it('should fail', done => {
-//     p.then(result => {
-//       done(Error("should reject"))
-//     }, error => {
-//       expect(error).to.equal(1)
-//       done()
-//     })
-//   })
-// })
-
-// describe("rejected promise chai expect", () => {
-//   let p = Promise.reject(1)
-//   it('should fail', done => {
-//     p.then(result => {
-//       done(Error("should reject"))
-//     }, error => {
-//       expect(error).to.equal(1)
-//       done()
-//     })
-//   })
-// })
-
-// xdescribe("resolve awaited promise", () => {
-//   let p = Promise.resolve(1)
-//   it('should equal 1', async () => {
-//     const result = await p;
-//     expect(result).to.equal(1); 
-//   });
-//   it('should still equal 1', async () => {
-//     const result = await p;
-//     expect(result).to.equal(1); 
-//   });
-// })
-
-// xdescribe("reject awaited promise", () => {
-//   let p = Promise.reject(Error("fail"))
-//   // let p = Promise.resolve(1)
-//   it('should fail', async () => {
-//     try {
-//       // should.fail("asdf")
-//       const result = await p;
-//       assert(false, "expected to fail");
-//     } catch (e) {
-//       expect(e.message).to.equal("fail");
-//     }
-//   });
-//   it('is still 1', async () => {
-//     const result = await p;
-//     expect(result).to.equal(1); 
-//   });
-// })
 
