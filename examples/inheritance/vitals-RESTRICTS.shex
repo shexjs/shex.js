@@ -12,15 +12,15 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 
 # -- super-classes --
-ABSTRACT <#Vital> RESTRICTS @<#Observation> {}
-
+ABSTRACT <#Vital>
+      RESTRICTS @<#Observation> {}
 
 ABSTRACT <#PostureVital>
       EXTENDS @<#Vital> EXTENDS @<#Posture> {}
 
 ABSTRACT <#ReclinedVital>
       RESTRICTS @<#Reclined>
-      RESTICTS @<#PostureVital> {}
+      RESTRICTS @<#PostureVital> {}
 
 
 # -- BP --
