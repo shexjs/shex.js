@@ -1,0 +1,44 @@
+{
+  "name": "@shex/parser",
+  "version": "0.1.0",
+  "description": "Shape Expressions Compact Syntax (ShExC) parser.",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "main": "./shex-parser.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "@shex/core": "^0.1.0"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.3",
+    "uglify-es": "^3.0.15",
+    "pre-commit": "~1.2.2"
+  },
+  "scripts": {
+    "test": "cd .. && mocha -C -R dot",
+    "browser": "browserify shex.js -s ShEx -o browser/shex-parser-browserify.js && uglifyjs browser/shex-parser-browserify.js --comments -mco browser/shex-parser-browserify.min.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexSpec/shex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  }
+}

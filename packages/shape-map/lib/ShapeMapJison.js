@@ -416,9 +416,10 @@ parse: function parse(input) {
 
   var UNBOUNDED = -1;
 
-  var ShExUtil = require("./ShExUtil");
-  var ShExValidator = require("./ShExValidator");
-  var ShapeMap = require("./ShapeMap");
+  var ShExCore = require("@shex/core");
+  var ShExUtil = ShExCore.Util;
+  var ShExValidator = ShExCore.Validator;
+  var ShapeMap = require("../shape-map.js");
 
   // Common namespaces and entities
   var XSD = 'http://www.w3.org/2001/XMLSchema#',

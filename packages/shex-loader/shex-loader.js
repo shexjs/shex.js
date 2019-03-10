@@ -3,10 +3,11 @@
 var LoadPromise = (function () {
 var FS = require("fs");
 var N3 = require("n3");
-var ShExUtil = require("../lib/ShExUtil");
-var ShExParser = require("../lib/ShExParser");
+var ShEx = require("@shex/core");
+var ShExUtil = ShEx.Util;
+var ShExParser = require("@shex/parser");
 var Request = require("request-promise");
-var Promise = require("promise");
+// var Promise = require("promise");
 var Path = require("path");
 var Jsonld = require("jsonld");
 

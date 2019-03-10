@@ -8,7 +8,6 @@
  * See https://github.com/shexSpec for more information.
  */
 
-var _ = require("underscore");
 var FS = require("fs");
 var N3 = require("n3");
 
@@ -69,13 +68,13 @@ if (cmds.help) {
    abort("");
 }
 
-if (_.isUndefined(cmds.target)) {
+if (typeof cmds.target === "undefined") {
   abort("\nNo ShEx target schema file specified.");
 }
 
 try {
   FS.accessSync(cmds.target, FS.r_OK);
-  if (!_.isUndefined(cmds.jsonvars)) {
+  if (typeof cmds.jsonvars !== "undefined") {
     FS.accessSync(cmds.jsonvars, FS.r_OK);
   }
 } catch (e) {

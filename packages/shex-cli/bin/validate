@@ -36,11 +36,14 @@ The regular expression engine is loaded from either:
 
 */
 
-var ShExUtil = require("../lib/ShExUtil");
-var ShExLoader = require("../lib/ShExLoader");
-var ShExWriter = require("../lib/ShExWriter"); // for verbose output
-var ShExValidator = require("../lib/ShExValidator");
-var ShEx = require("../shex");
+var ShExCore = require("@shex/core");
+var ShExUtil = ShExCore.Util;
+var ShExLoader = require("@shex/loader");
+var ShExWriter = ShExCore.Writer; // for verbose output
+var ShExValidator = ShExCore.Validator;
+var ShapeMap = require("shape-map");
+
+var N3 = require("n3");
 var Path = require("path");
 var Util = require("util");
 var ValidatorOptions = { diagnose: true };
@@ -171,12 +174,12 @@ function findNodesAndValidate (loaded, parms, options) {
     return triples.length > 0 ? triples.map(t => t.subject) : [ShExUtil.NotSupplied];
   };
   function getTriples (s, p, o) {
-    var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
+    var get = s === ShapeMap.focus ? "subject" : "object";
     return loaded.data.getTriplesByIRI(mine(s), mine(p), mine(o)).map(
       t => t[get]
     );
     function mine (term) {
-      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
+      return term === ShapeMap.focus || term === ShapeMap.wildcard
         ? null
         : term;
     }
@@ -358,7 +361,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
           valParms.map = ShExUtil.absolutizeShapeMap(JSON.parse(loadedAndResults[2].shapeMapBody),
                                                      loadedAndResults[0].dataMeta[0].base); // @@ relative to data[0]'s base instead of loadedAndResults[2].shapeMapBase -- is that good?
         } catch (e) {
-          valParms.map = ShEx.ShapeMapParser.construct(loadedAndResults[2].shapeMapBase,
+          valParms.map = ShapeMap.Parser.construct(loadedAndResults[2].shapeMapBase,
                                                        loadedAndResults[0].schemaMeta[0],
                                                        loadedAndResults[0].dataMeta[0])
             .parse(loadedAndResults[2].shapeMapBody);
@@ -462,7 +465,7 @@ function rdflib_termToLex (node, resolver) {
   }
   if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     return "a";
-  if (node === ShEx.Validator.start)
+  if (node === ShExValidator.start)
     return START_SHAPE_LABEL;
   if (node === resolver._base)
     return "<>";
@@ -472,7 +475,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  return N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 
 // Extract user commands

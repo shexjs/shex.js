@@ -12,6 +12,7 @@ var ShapeMap = (function () {
   return {
     focus: Focus,
     wildcard: Wildcard,
+    Parser: require("./lib/ShapeMapParser.js")
   };
 })();
 
