@@ -6,12 +6,12 @@
  */
 
 var ShExMap = (function () {
-var ShEx = require("../../shex");
 
-var _ = require('underscore');
-
-var ShExUtil = ShEx.Util;
+var ShExUtil = require("@shexjs/core").Util;
+var ShExValidator = require("@shexjs/core").Validator;
 var extensions = require("./lib/extensions");
+var N3 = require("n3");
+var _ = require('underscore');
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -104,13 +104,13 @@ function materializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = shape && shape !== ShEx.Validator.start? { type: "ShapeRef", reference: shape } : schema.start;
-      target = target || ShEx.N3.Store();
+      shape = shape && shape !== ShExValidator.start? { type: "ShapeRef", reference: shape } : schema.start;
+      target = target || N3.Store();
       target.addPrefixes(schema.prefixes); // not used, but seems polite
 
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return ShEx.N3.Util.expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return ShEx.N3.Util.createLiteral(value, modifier); }
+      function P (pname) { return N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
@@ -141,8 +141,8 @@ function materializer (schema, nextBNode) {
 }
 
 function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
-      function P (pname) { return ShEx.N3.Util.expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return ShEx.N3.Util.createLiteral(value, modifier); }
+      function P (pname) { return N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
@@ -402,6 +402,12 @@ return {
 };
 
 })();
+ShExMap.extension = {
+  hashmap: require("./lib/hashmap_extension.js"),
+  regex: require("./lib/regex_extension.js")
+};
+ShExMap.extensions = require("./lib/extensions.js");
+ShExMap.utils = require("./lib/extension-utils.js");
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = ShExMap;

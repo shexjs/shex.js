@@ -3,7 +3,6 @@ var ShapeMapParser = (function () {
 // stolen as much as possible from SPARQL.js
 if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
   ShapeMapJison = require('./ShapeMapJison').Parser; // node environment
-  ShExUtil = require('./ShExUtil'); // node environment
 } else {
   ShapeMapJison = ShapeMapJison.Parser; // browser environment
 }

@@ -4,10 +4,12 @@ var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
-var ShExLoader = require("../lib/ShExLoader");
-var ShExValidator = require("../lib/ShExValidator");
-var Mapper = require("../extensions/shex-map/module");
-var Promise = require("promise");
+var ShExCore = require("@shexjs/core");
+var ShExUtil = ShExCore.Util;
+var ShExValidator = ShExCore.Validator;
+var ShExLoader = require("@shexjs/loader");
+var Mapper = require("@shexjs/extension-map");
+// var Promise = require("promise");
 var expect = require("chai").expect;
 var Path = require("path");
 var n3 = require("n3");

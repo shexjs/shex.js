@@ -2,6 +2,8 @@
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
+const ShEx = ShExWebApp; // @@ rename globally
+ShEx.ShapeMap.start = ShEx.Validator.start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;

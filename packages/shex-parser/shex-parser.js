@@ -2,8 +2,7 @@ var ShExParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
-  ShExJison = require('./ShExJison').Parser; // node environment
-  ShExUtil = require('./ShExUtil'); // node environment
+  ShExJison = require('./lib/ShExJison').Parser; // node environment
 } else {
   ShExJison = ShExJison.Parser; // browser environment
 }

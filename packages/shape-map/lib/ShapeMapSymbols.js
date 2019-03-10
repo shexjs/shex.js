@@ -6,15 +6,14 @@
  *   testing.
  */
 
-var ShapeMap = (function () {
-  var Focus = { term: "FOCUS" }
-  var Wildcard = { term: "WILDCARD" }
+var ShapeMapSymbols = (function () {
   return {
-    focus: Focus,
-    wildcard: Wildcard,
-  };
+    focus: { term: "FOCUS" },
+    start: { term: "START" },
+    wildcard: { term: "WILDCARD" },
+  }
 })();
 
 // Export the `ShExValidator` class as a whole.
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShapeMap;
+  module.exports = ShapeMapSymbols;

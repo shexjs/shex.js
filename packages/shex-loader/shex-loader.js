@@ -3,10 +3,11 @@
 var LoadPromise = (function () {
 var FS = require("fs");
 var N3 = require("n3");
-var ShExUtil = require("../lib/ShExUtil");
-var ShExParser = require("../lib/ShExParser");
+var ShEx = require("@shexjs/core");
+var ShExUtil = ShEx.Util;
+var ShExParser = require("@shexjs/parser");
 var Request = require("request-promise");
-var Promise = require("promise");
+// var Promise = require("promise");
 var Path = require("path");
 var Jsonld = require("jsonld");
 
@@ -358,11 +359,12 @@ function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
   });
 }
 
-function LoadExtensions () {
-  return FS.
-    readdirSync(__dirname + "/../extensions").
-    reduce(function (ret, moduleDir) {
-      var path =__dirname + "/../extensions/" + moduleDir + "/module"
+function LoadExtensions (globs) {
+  return globs.reduce(
+    (list, glob) =>
+      list.concat(require("glob").glob.sync(glob))
+    , []).
+    reduce(function (ret, path) {
       try {
 	var t = require(path);
 	ret[t.url] = t;
