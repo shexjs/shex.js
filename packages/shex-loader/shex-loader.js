@@ -359,11 +359,12 @@ function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
   });
 }
 
-function LoadExtensions () {
-  return FS.
-    readdirSync(__dirname + "/../extensions").
-    reduce(function (ret, moduleDir) {
-      var path =__dirname + "/../extensions/" + moduleDir + "/module"
+function LoadExtensions (globs) {debugger
+  return globs.reduce(
+    (list, glob) =>
+      list.concat(require("glob").glob.sync(glob))
+    , []).
+    reduce(function (ret, path) {
       try {
 	var t = require(path);
 	ret[t.url] = t;

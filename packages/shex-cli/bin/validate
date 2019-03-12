@@ -71,6 +71,7 @@ var CommandLineOptions = [
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
@@ -590,7 +591,7 @@ function queueTests (tests, cmds) {
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
   var validator = ShExValidator.construct(schema, options);
-  var extensions = ShExLoader.loadExtensions();
+  var extensions = ShExLoader.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });

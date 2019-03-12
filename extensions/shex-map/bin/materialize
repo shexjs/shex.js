@@ -11,10 +11,11 @@
 var FS = require("fs");
 var N3 = require("n3");
 
-var ShExUtil = require("../../../lib/ShExUtil");
-var ShExLoader = require("../../../lib/ShExLoader");
-var ShExValidator = require("../../../lib/ShExValidator");
-var Mapper = require("../module");
+var ShExCore = require("@shex/core");
+var ShExUtil = ShExCore.Util;
+var ShExLoader = require("@shex/loader");
+var ShExValidator = ShExCore.Validator;
+var Mapper = require("../shex-extension-map.js");
 
 var CommandLineOptions = [
   { name: "help", alias: "h", type: Boolean },

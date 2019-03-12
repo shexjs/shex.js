@@ -21,12 +21,14 @@
   },
   "dependencies": {
     "@shex/core": "^0.1.0",
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5",
     "underscore": "~1.8.3"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
-    "uglify-es": "^3.0.15",
-    "pre-commit": "~1.2.2"
+    "pre-commit": "~1.2.2",
+    "uglify-es": "^3.0.15"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

@@ -10,6 +10,7 @@ var HTTPTEST = "HTTPTEST" in process.env ?
     process.env.HTTPTEST :
     "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
 
+var ShExUtil = require("@shex/core").Util;
 var ShExLoader = require("@shex/loader");
 var child_process = require('child_process');
 var chai = require("chai");
@@ -23,7 +24,7 @@ var fs = require("fs");
 var manifestFile = "cli/manifest.json";
 
 var AllTests = {
-  "validate": [
+  "packages/shex-cli/bin/validate": [
     // pleas for help
     { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
     { name: "help-simple" , args: ["--help", "-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>"], errorMatch: "example", status: 1 },
@@ -92,7 +93,7 @@ var AllTests = {
     { name: "results-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 }
   ],
 
-  "shex-to-json": [
+  "packages/shex-cli/bin/shex-to-json": [
     { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["-a", "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
@@ -101,7 +102,7 @@ var AllTests = {
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex999"], errorMatch: "Not Found", status: 1 },
   ],
 
-  "json-to-shex": [
+  "packages/shex-cli/bin/json-to-shex": [
     { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "simple" , args: ["cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
@@ -110,7 +111,7 @@ var AllTests = {
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], errorMatch: "Not Found", status: 1 },
   ],
 
-  "../../../../extensions/shex-map/bin/materialize": [
+  "extensions/shex-map/bin/materialize": [
     { name: "help", args: ["--help"], errorMatch: "Examples", status: 1 },
     { name: "garbage", args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
     { name: "no-target-file-specified", args: ["--jsonvars vars.json"], errorMatch: "No ShEx target schema file specified.", status: 1 },
@@ -156,7 +157,7 @@ Object.keys(AllTests).forEach(function (script) {
       test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
         process.chdir(__dirname); // the above paths are relative to this directory
 
-        var program = child_process.spawn("../node_modules/@shex/cli/bin/" + script, test.args);
+        var program = child_process.spawn("../" + script, test.args);
 
         if (typeof test.stdin !== "undefined") {  
           // redirecting stdin for this test
