@@ -66,7 +66,7 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "travisRepo": "./test/travisRepo.sh",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-browserify.js && uglifyjs browser/shex-browserify.js --comments -mco browser/shex-browserify.min.js",
+    "browser-all": "./browser-all.js",
     "skinny-browser-TODO": "node browser/build-browser-versions",
     "coverage": "nyc npm run test-all",
     "travis-deploy-once": "travis-deploy-once"

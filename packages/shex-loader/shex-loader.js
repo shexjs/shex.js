@@ -359,7 +359,7 @@ function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
   });
 }
 
-function LoadExtensions (globs) {debugger
+function LoadExtensions (globs) {
   return globs.reduce(
     (list, glob) =>
       list.concat(require("glob").glob.sync(glob))

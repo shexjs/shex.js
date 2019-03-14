@@ -8,11 +8,7 @@
     ShapeMap parser in the Jison parser generator format.
   */
 
-  var UNBOUNDED = -1;
-
-  var ShExUtil = require("./ShExUtil");
-  var ShExValidator = require("./ShExValidator");
-  var ShapeMap = require("./ShapeMap");
+  var ShapeMap = require("./ShapeMapSymbols");
 
   // Common namespaces and entities
   var XSD = 'http://www.w3.org/2001/XMLSchema#',
@@ -241,7 +237,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return obj("@value", ShExUtil.unescapeText(string, stringEscapeReplacements));
+    return obj("@value", unescapeText(string, stringEscapeReplacements));
   }
 
   function unescapeLangString(string, trimLength) {
@@ -307,6 +303,38 @@
 
   var EmptyObject = {  };
   var EmptyShape = { type: "Shape" };
+
+  // <?INCLUDE from ShExUtil. Factor into `rdf-token` module? ?>
+  /**
+   * unescape numerics and allowed single-character escapes.
+   * throws: if there are any unallowed sequences
+   */
+  function unescapeText (string, replacements) {
+    var regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
+    try {
+      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
+        var charCode;
+        if (unicode4) {
+          charCode = parseInt(unicode4, 16);
+          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
+          return String.fromCharCode(charCode);
+        }
+        else if (unicode8) {
+          charCode = parseInt(unicode8, 16);
+          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
+          if (charCode < 0xFFFF) return String.fromCharCode(charCode);
+          return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
+        }
+        else {
+          var replacement = replacements[escapedChar];
+          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
+          return replacement;
+        }
+      });
+      return string;
+    }
+    catch (error) { console.warn(error); return ''; }
+  }
 %}
 
 /* lexical grammar */
@@ -447,7 +475,7 @@ _QjsonAttributes_E_Opt:
 
 statusAndShape:
       GT_AT _Qstatus_E_Opt shapeSelector	-> extend({ shape: $3 }, $2)
-    | ATSTART	-> { shape: ShExValidator.start }
+    | ATSTART	-> { shape: ShapeMap.start }
     | ATPNAME_NS	{
         $1 = $1.substr(1, $1.length-1);
         $$ = { shape: expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1)) };
@@ -479,7 +507,7 @@ nodeSelector:
 
 shapeSelector:
       shapeIri	
-    | START	-> ShExValidator.start
+    | START	-> ShapeMap.start
     ;
 
 subjectTerm:
@@ -634,16 +662,16 @@ nodePredicate:
 
 nodeIri:
       IRIREF	{
-        var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        var unesc = unescapeText($1.slice(1,-1), {});
         $$ = Parser._dataBase === null || absoluteIRI.test(unesc) ? unesc : _resolveDataIRI(unesc)
       }
     | PNAME_LN	{
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | APPINFO_COLON	{
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | PNAME_NS	{
         $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, $1.length - 1));
@@ -652,16 +680,16 @@ nodeIri:
 
 shapeIri:
       IRIREF	{
-        var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        var unesc = unescapeText($1.slice(1,-1), {});
         $$ = Parser._schemaBase === null || absoluteIRI.test(unesc) ? unesc : _resolveSchemaIRI(unesc)
       }
     | PNAME_LN	{
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | APPINFO_COLON	{
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
     }
     | PNAME_NS	{
         $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1));

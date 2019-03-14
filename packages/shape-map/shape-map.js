@@ -1,19 +1,15 @@
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
  *
- * Status: Early implementation
- *
- * TODO:
- *   testing.
+ * See README for description.
  */
 
 var ShapeMap = (function () {
-  var Focus = { term: "FOCUS" }
-  var Wildcard = { term: "WILDCARD" }
-  return {
-    focus: Focus,
-    wildcard: Wildcard,
-    Parser: require("./lib/ShapeMapParser.js")
-  };
+  const symbols = require("./lib/ShapeMapSymbols")
+
+  // Write the parser object directly into the symbols so the caller shares a
+  // symbol space with ShapeMapJison for e.g. start and focus.
+  symbols.Parser = require("./lib/ShapeMapParser.js")
+  return symbols
 })();
 
 // Export the `ShExValidator` class as a whole.
