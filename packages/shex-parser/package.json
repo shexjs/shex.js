@@ -1,6 +1,6 @@
 {
   "name": "@shex/parser",
-  "version": "0.1.0",
+  "version": "0.0.9",
   "description": "Shape Expressions Compact Syntax (ShExC) parser.",
   "author": {
     "name": "Eric Prud'hommeaux",
