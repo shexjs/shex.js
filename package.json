@@ -1,7 +1,7 @@
 {
   "name": "furk",
   "private": true,
-  "version": "0.0.0-development",
+  "version": "1.0.0-alpha.0",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -28,16 +28,16 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "shape-map": "^0.1.0",
+    "@shex/cli": "^1.0.0-alpha.0",
     "@shex/core": "^0.1.0",
+    "@shex/extension-map": "^1.0.0-alpha.0",
+    "@shex/extension-test": "^1.0.0-alpha.0",
+    "@shex/loader": "^1.0.0-alpha.0",
     "@shex/parser": "^0.1.0",
-    "@shex/loader": "^0.1.0",
-    "@shex/cli": "^0.1.0",
-    "@shex/webapp": "^0.1.0",
-    "@shex/extension-test": "^0.1.0",
-    "@shex/extension-map": "^0.1.0",
+    "@shex/webapp": "^1.0.0-alpha.0",
     "marked": "^0.3.19",
     "nock": "^9.3.0",
+    "shape-map": "^1.0.0-alpha.0",
     "shex-test": "^2.0.2"
   },
   "devDependencies": {
@@ -49,8 +49,8 @@
     "jison": "0.4.16",
     "jsdom": "^11.11.0",
     "lerna": "^3.13.1",
-    "n3": "^0.10.0",
     "mocha": "^5.2.0",
+    "n3": "^0.10.0",
     "nyc": "^13.3.0",
     "pre-commit": "~1.1.3",
     "request-promise": "^4.2.2",

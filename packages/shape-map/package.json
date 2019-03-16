@@ -1,6 +1,6 @@
 {
   "name": "shape-map",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.0",
   "description": "RDF Node/ShEx Shape mapping format.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -19,12 +19,10 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {
-  },
   "devDependencies": {
     "browserify": "^16.2.3",
-    "uglify-es": "^3.0.15",
-    "pre-commit": "~1.2.2"
+    "pre-commit": "~1.2.2",
+    "uglify-es": "^3.0.15"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

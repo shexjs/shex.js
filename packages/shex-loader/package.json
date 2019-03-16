@@ -1,6 +1,6 @@
 {
   "name": "@shex/loader",
-  "version": "0.1.1",
+  "version": "1.0.0-alpha.0",
   "description": "Shape Expressions resource loader.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,16 +20,16 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "@shex/core": "^0.1.0",
     "jsonld": "^0.4.11",
     "n3": "^0.10.0",
     "promise": "^7.1.1",
-    "shape-map": "^0.1.0",
-    "@shex/core": "^0.1.0"
+    "shape-map": "^1.0.0-alpha.0"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
-    "uglify-es": "^3.0.15",
-    "pre-commit": "~1.2.2"
+    "pre-commit": "~1.2.2",
+    "uglify-es": "^3.0.15"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
