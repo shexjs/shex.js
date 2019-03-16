@@ -4,11 +4,11 @@ var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env;
 
-var ShExParser = require("@shex/parser");
-var ShExLoader = require("@shex/loader");
-var ShExUtil = require("@shex/core").Util;
-var ShExValidator = require("@shex/core").Validator;
-var TestExtension = require("@shex/extension-test")
+var ShExParser = require("@shexjs/parser");
+var ShExLoader = require("@shexjs/loader");
+var ShExUtil = require("@shexjs/core").Util;
+var ShExValidator = require("@shexjs/core").Validator;
+var TestExtension = require("@shexjs/extension-test")
 
 var N3 = require("n3");
 var N3Util = N3.Util;
@@ -23,8 +23,8 @@ var schemasPath = findPath("schemas");
 var validationPath = findPath("validation");
 var manifestFile = validationPath + "manifest.jsonld";
 var regexModules = [
-  require("@shex/core")["nfax-val-1err"],
-  require("@shex/core")["threaded-val-nerr"]
+  require("@shexjs/core")["nfax-val-1err"],
+  require("@shexjs/core")["threaded-val-nerr"]
 ];
 if (EARL)
   regexModules = regexModules.slice(1);

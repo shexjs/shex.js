@@ -1,6 +1,6 @@
 {
-  "name": "@shex/webapp",
-  "version": "1.0.0-alpha.0",
+  "name": "@shexjs/webapp",
+  "version": "0.1.0",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -19,8 +19,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shex/core": "^0.1.0",
-    "@shex/loader": "^1.0.0-alpha.0",
+    "@shexjs/core": "^1.0.0-alpha.0",
+    "@shexjs/loader": "^1.0.0-alpha.0",
     "jsonld": "^0.4.11",
     "koa": "^1.6.2",
     "koa-body": "^1.4.0",

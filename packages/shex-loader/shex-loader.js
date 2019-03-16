@@ -3,9 +3,9 @@
 var LoadPromise = (function () {
 var FS = require("fs");
 var N3 = require("n3");
-var ShEx = require("@shex/core");
+var ShEx = require("@shexjs/core");
 var ShExUtil = ShEx.Util;
-var ShExParser = require("@shex/parser");
+var ShExParser = require("@shexjs/parser");
 var Request = require("request-promise");
 // var Promise = require("promise");
 var Path = require("path");

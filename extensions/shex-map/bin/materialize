@@ -11,9 +11,9 @@
 var FS = require("fs");
 var N3 = require("n3");
 
-var ShExCore = require("@shex/core");
+var ShExCore = require("@shexjs/core");
 var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shex/loader");
+var ShExLoader = require("@shexjs/loader");
 var ShExValidator = ShExCore.Validator;
 var Mapper = require("../shex-extension-map.js");
 

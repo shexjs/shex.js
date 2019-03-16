@@ -36,9 +36,9 @@ The regular expression engine is loaded from either:
 
 */
 
-var ShExCore = require("@shex/core");
+var ShExCore = require("@shexjs/core");
 var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shex/loader");
+var ShExLoader = require("@shexjs/loader");
 var ShExWriter = ShExCore.Writer; // for verbose output
 var ShExValidator = ShExCore.Validator;
 var ShapeMap = require("shape-map");

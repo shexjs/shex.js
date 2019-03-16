@@ -7,8 +7,8 @@
 
 var ShExMap = (function () {
 
-var ShExUtil = require("@shex/core").Util;
-var ShExValidator = require("@shex/core").Validator;
+var ShExUtil = require("@shexjs/core").Util;
+var ShExValidator = require("@shexjs/core").Validator;
 var extensions = require("./lib/extensions");
 var N3 = require("n3");
 var _ = require('underscore');

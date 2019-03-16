@@ -1,5 +1,5 @@
 {
-  "name": "@shex/parser",
+  "name": "@shexjs/parser",
   "version": "1.0.0-alpha.0",
   "description": "Shape Expressions Compact Syntax (ShExC) parser.",
   "author": {
@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shex/core": "^0.1.0"
+    "@shexjs/core": "^1.0.0-alpha.0"
   },
   "devDependencies": {
     "browserify": "^16.2.3",

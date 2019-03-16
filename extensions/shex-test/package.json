@@ -1,6 +1,6 @@
 {
-  "name": "@shex/extension-test",
-  "version": "1.0.0-alpha.0",
+  "name": "@shexjs/extension-test",
+  "version": "0.1.0",
   "description": "Shape Expressions simple semantic action module.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shex/core": "^0.1.0"
+    "@shexjs/core": "^1.0.0-alpha.0"
   },
   "devDependencies": {
     "browserify": "^16.2.3",
