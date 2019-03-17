@@ -30,12 +30,12 @@
   "devDependencies": {
     "pre-commit": "~1.2.2"
   },
-  "bin": [
-    "bin/json-to-shex",
-    "bin/shex-to-json",
-    "bin/validate",
-    "bin/partition"
-  ],
+  "bin": {
+    "json-to-shex": "bin/json-to-shex",
+    "shex-to-json": "bin/shex-to-json",
+    "shex-validate": "bin/validate",
+    "shex-partition": "bin/partition"
+  },
   "scripts": {
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot"
