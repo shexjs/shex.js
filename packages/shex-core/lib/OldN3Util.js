@@ -103,6 +103,53 @@ var OldN3Util = (function () {
     return result + iri.substring(segmentStart);
   }
 
+  function internalTerm (node) {
+    switch (node.termType) {
+    case ("NamedNode"):
+      return node.value;
+    case ("BlankNode"):
+      return "_:" + node.value;
+    case ("Literal"):
+      return "\"" + node.value + "\"" + (
+        node.datatypeString === OldN3Util.RdfLangString
+          ? "@" + node.language
+          : node.datatypeString === OldN3Util.XsdString
+          ? ""
+          : "^^" + node.datatypeString
+      );
+    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
+    }
+  }
+
+  function internalTriple (triple) {
+    return {
+      subject: internalTerm(triple.subject),
+      predicate: internalTerm(triple.predicate),
+      object: internalTerm(triple.object)
+    };
+  }
+
+  function externalTerm (node, factory) {
+    if (OldN3Util.isIRI(node)) {
+      return factory.namedNode(node);
+    } else if (OldN3Util.isBlank(node)) {
+      return factory.blankNode(node.substr(2));
+    } else if (OldN3Util.isLiteral(node)) {
+      return factory.literal(OldN3Util.getLiteralValue(node),
+                                 OldN3Util.getLiteralLanguage(node) ||
+                                 factory.namedNode(OldN3Util.getLiteralType(node)))
+    } else {
+      throw Error("Unknown internal term type: " + JSON.stringify(node));
+    }
+  }
+
+  function externalTriple (triple, factory) {
+    return {
+      subject: externalTerm(triple.subject, factory),
+      predicate: externalTerm(triple.predicate, factory),
+      object: externalTerm(triple.object, factory)
+    };
+  }
 
   return {
   RdfLangString: RdfLangString,
@@ -163,6 +210,10 @@ var OldN3Util = (function () {
     return match[1] ? match[1].toLowerCase() : '';
   },
 
+  internalTerm: internalTerm,
+  internalTriple: internalTriple,
+  externalTerm: externalTerm,
+  externalTriple: externalTriple,
 }
 })();
 

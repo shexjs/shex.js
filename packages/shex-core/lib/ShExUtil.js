@@ -1999,10 +1999,10 @@ var ShExUtil = {
     function getTriplesByIRI (s, p, o, g) {
       return db.getTriplesByIRI(s, p, o, g);
     }
-    function getSubjects () { return db.getSubjects().map(internalTerm); }
-    function getPredicates () { return db.getPredicates().map(internalTerm); }
-    function getObjects () { return db.getObjects().map(internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(internalTriple); }
+    function getSubjects () { return db.getSubjects().map(OldN3Util.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(OldN3Util.internalTerm); }
+    function getObjects () { return db.getObjects().map(OldN3Util.internalTerm); }
+    function getQuads () { return db.getQuads.apply(db, arguments).map(OldN3Util.internalTriple); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -2011,7 +2011,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getQuads(point, null, null, null).map(internalTriple);
+      var outgoing = db.getQuads(point, null, null, null).map(OldN3Util.internalTriple);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -2020,7 +2020,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getQuads(null, null, point, null).map(internalTriple);
+      var incoming = db.getQuads(null, null, point, null).map(OldN3Util.internalTriple);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
@@ -2194,32 +2194,6 @@ var ShExUtil = {
 
 };
 
-
-  function internalTerm (node) {
-    switch (node.termType) {
-    case ("NamedNode"):
-      return node.value;
-    case ("BlankNode"):
-      return "_:" + node.value;
-    case ("Literal"):
-      return "\"" + node.value + "\"" + (
-        node.datatypeString === OldN3Util.RdfLangString
-          ? "@" + node.language
-          : node.datatypeString === OldN3Util.XsdString
-          ? ""
-          : "^^" + node.datatypeString
-      );
-    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
-    }
-  }
-
-  function internalTriple (triple) {
-    return {
-      subject: internalTerm(triple.subject),
-      predicate: internalTerm(triple.predicate),
-      object: internalTerm(triple.object)
-    };
-  }
 
 function n3ify (ldterm) {
   if (typeof ldterm !== "object")
