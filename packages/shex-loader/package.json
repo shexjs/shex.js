@@ -22,7 +22,7 @@
   "dependencies": {
     "@shexjs/core": "^1.0.0-alpha.0",
     "jsonld": "^1.5.4",
-    "n3": "^0.10.0",
+    "n3": "^1.0.4",
     "promise": "^8.0.2",
     "shape-map": "^1.0.0-alpha.0"
   },

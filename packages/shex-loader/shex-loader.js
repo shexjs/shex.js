@@ -313,12 +313,12 @@ function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
           function (error, triple, prefixes) {
             if (prefixes) {
               meta.prefixes = prefixes;
-              data.addPrefixes(prefixes);
+              // data.addPrefixes(prefixes);
             }
             if (error) {
               reject("error parsing " + url + ": " + error);
             } else if (triple) {
-              data.addTriple(triple)
+              data.addQuad(triple)
             } else {
               meta.base = this._base;
               resolve([mediaType, url]);

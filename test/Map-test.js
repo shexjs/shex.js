@@ -12,7 +12,7 @@ var Mapper = require("@shexjs/extension-map");
 // var Promise = require("promise");
 var expect = require("chai").expect;
 var Path = require("path");
-var n3 = require("n3");
+var N3 = ShExCore.OldN3Util;
 
 var maybeLog = VERBOSE ? console.log : function () {};
 

@@ -24,7 +24,7 @@
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "jsonld": "^0.4.11",
-    "n3": "^0.10.0",
+    "n3": "^1.0.4",
     "shape-map": "^1.0.0-alpha.0"
   },
   "devDependencies": {

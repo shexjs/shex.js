@@ -1,4 +1,5 @@
 var ShEx_Core = {
+  OldN3Util:    require('./lib/OldN3Util'),
   Util:         require('./lib/ShExUtil'),
   Validator:    require('./lib/ShExValidator'),
   Writer:    require('./lib/ShExWriter'),

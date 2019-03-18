@@ -28,11 +28,11 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var N3Util = require("n3").Util;
+var OldN3Util = require("./OldN3Util");
 
 function getLexicalValue (term) {
-  return N3Util.isIRI(term) ? term :
-    N3Util.isLiteral(term) ? N3Util.getLiteralValue(term) :
+  return OldN3Util.isIRI(term) ? term :
+    OldN3Util.isLiteral(term) ? OldN3Util.getLiteralValue(term) :
     term.substr(2); // bnodes start with "_:"
 }
 
@@ -197,13 +197,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: N3Util.getLiteralValue(term) };
-          var dt = N3Util.getLiteralType(term);
+          var ret = { value: OldN3Util.getLiteralValue(term) };
+          var dt = OldN3Util.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = N3Util.getLiteralLanguage(term)
+          var lang = OldN3Util.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -724,10 +724,10 @@ function ShExValidator_constructor(schema, options) {
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     var errors = [];
-    var label = N3Util.isLiteral(value) ? N3Util.getLiteralValue(value) :
-      N3Util.isBlank(value) ? value.substring(2) :
+    var label = OldN3Util.isLiteral(value) ? OldN3Util.getLiteralValue(value) :
+      OldN3Util.isBlank(value) ? value.substring(2) :
       value;
-    var dt = N3Util.isLiteral(value) ? N3Util.getLiteralType(value) : null;
+    var dt = OldN3Util.isLiteral(value) ? OldN3Util.getLiteralType(value) : null;
     var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
@@ -743,11 +743,11 @@ function ShExValidator_constructor(schema, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (N3Util.isBlank(value)) {
+        if (OldN3Util.isBlank(value)) {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (N3Util.isLiteral(value)) {
+        } else if (OldN3Util.isLiteral(value)) {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -759,11 +759,11 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
 
       if (valueExpr.datatype) {
-        if (!N3Util.isLiteral(value)) {
+        if (!OldN3Util.isLiteral(value)) {
           validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (N3Util.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + N3Util.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (OldN3Util.getLiteralType(value) !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + OldN3Util.getLiteralType(value) + " !== " + valueExpr.datatype);
         }
         else if (numeric) {
           testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
@@ -779,7 +779,7 @@ function ShExValidator_constructor(schema, options) {
       }
 
       if (valueExpr.values) {
-        if (N3Util.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (OldN3Util.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           var ld = ldify(value);
           if (v.type === "Language") {
@@ -811,11 +811,11 @@ function ShExValidator_constructor(schema, options) {
                *       or non-literals with IriStemRange
                */
               function normalizedTest (val, ref, func) {
-                if (N3Util.isLiteral(val)) {
+                if (OldN3Util.isLiteral(val)) {
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(N3Util.getLiteralValue(val), ref);
+                    return func(OldN3Util.getLiteralValue(val), ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(N3Util.getLiteralLanguage(val) || null, ref);
+                    return func(OldN3Util.getLiteralLanguage(val) || null, ref);
                   } else {
                     return validationError("literal " + val + " not comparable with non-literal " + ref);
                   }
@@ -1130,14 +1130,14 @@ function crossProduct(sets) {
  */
 var N3jsTripleToString = function () {
   function fmt (n) {
-    return N3Util.isLiteral(n) ?
+    return OldN3Util.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(N3Util.getLiteralType(n)) !== -1 ?
-      parseInt(N3Util.getLiteralValue(n)) :
+      ].indexOf(OldN3Util.getLiteralType(n)) !== -1 ?
+      parseInt(OldN3Util.getLiteralValue(n)) :
       n :
-    N3Util.isBlank(n) ?
+    OldN3Util.isBlank(n) ?
       n :
       "<" + n + ">";
   }
@@ -1182,7 +1182,7 @@ function indexNeighborhood (triples) {
  */
 function sparqlOrder (l, r) {
   var [lprec, rprec] = [l, r].map(
-    x => N3Util.isBlank(x) ? 1 : N3Util.isLiteral(x) ? 2 : 3
+    x => OldN3Util.isBlank(x) ? 1 : OldN3Util.isLiteral(x) ? 2 : 3
   );
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
 }
