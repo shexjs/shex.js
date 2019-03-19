@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/core",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0-alpha.1",
   "description": "Shape Expressions validation and utilities.",
   "author": {
     "name": "Eric Prud'hommeaux",
