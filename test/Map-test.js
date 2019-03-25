@@ -4,13 +4,15 @@ var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
-var ShExLoader = require("../lib/ShExLoader");
-var ShExValidator = require("../lib/ShExValidator");
-var Mapper = require("../extensions/shex-map/module");
-var Promise = require("promise");
+var ShExCore = require("@shexjs/core");
+var ShExUtil = ShExCore.Util;
+var ShExValidator = ShExCore.Validator;
+var ShExLoader = require("@shexjs/loader");
+var Mapper = require("@shexjs/extension-map");
+// var Promise = require("promise");
 var expect = require("chai").expect;
 var Path = require("path");
-var n3 = require("n3");
+var RdfTerm = ShExCore.RdfTerm;
 
 var maybeLog = VERBOSE ? console.log : function () {};
 
@@ -109,10 +111,10 @@ describe('A ShEx Mapper', function () {
 
 function graphToString () {
   var output = '';
-  var w = n3.Writer({
+  var w = require("n3").Writer({
       write: function (chunk, encoding, done) { output += chunk; done && done(); },
   });
-  w.addTriples(this.getTriples(null, null, null)); // is this kosher with no end method?
+  w.addQuads(this.getQuads(null, null, null)); // is this kosher with no end method?
   return "{\n" + output + "\n}";
 }
 
@@ -137,7 +139,7 @@ function graphEquals (right, m) {
   function match (g) {
     function val (term, mapping) {
       mapping = mapping || m;                     // Mostly used for left→right mappings.
-      if (n3.Util.isBlank(term))
+      if (RdfTerm.isBlank(term))
         return (term in mapping) ? mapping[term] : null // Bnodes get current binding or null.
       else
         return term;                              // Other terms evaluate to themselves.
@@ -146,8 +148,11 @@ function graphEquals (right, m) {
     if (g.length == 0)                            // Success if there's nothing left to match.
       return true;
     var t = g.pop(), s = val(t.subject), o = val(t.object); // Take the first triple in left.
-    var tm = right.getTriplesByIRI(s, t.predicate, o);  // Find candidates in right.
-
+    var tm = right.getQuads(
+      s ? RdfTerm.externalTerm(s, require("n3").DataFactory) : null,
+      RdfTerm.externalTerm(t.predicate, require("n3").DataFactory),
+      o ? RdfTerm.externalTerm(o, require("n3").DataFactory) : null  // Find candidates in right.
+    ).map(RdfTerm.internalTriple);
     var r = tm.reduce(function (ret, triple) {    // Walk through candidates in right.
       if (ret) return true;                       // Only examine first successful mapping.
       var adds = [];                              // List of candidate mappings.
@@ -181,15 +186,16 @@ function graphEquals (right, m) {
     }
     return r;
   }
-  return match(this.getTriples(null, null, null));     // Start with all triples.
+  return match(this.getQuads(null, null, null)     // Start with all triples.
+               .map(RdfTerm.internalTriple));
 }
 
   function testEquiv (name, g1, g2, equals, mapping) {
     it("should test " + name + " to be " + equals, function () {
-      var l = n3.Store(); l.toString = graphToString; l.equals = graphEquals;
-      var r = n3.Store(); r.toString = graphToString;
-      g1.forEach(function (triple) { l.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
-      g2.forEach(function (triple) { r.addTriple({subject: triple[0], predicate: triple[1], object: triple[2]}); });
+      var l = require("n3").Store(); l.toString = graphToString; l.equals = graphEquals;
+      var r = require("n3").Store(); r.toString = graphToString;
+      g1.forEach(function (triple) { l.addQuad(RdfTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
+      g2.forEach(function (triple) { r.addQuad(RdfTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
       var m = {};
       var ret = l.equals(r, m);
       expect(ret).to.equal(equals, m);

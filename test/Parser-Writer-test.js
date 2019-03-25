@@ -6,11 +6,12 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generation an EARL report.
 var BASE = "http://a.example/application/base/";
 
-var ShExParser = require("../lib/ShExParser");
-var ShExLoader = require("../lib/ShExLoader");
-var ShExWriter = require("../lib/ShExWriter");
-var ShExUtil = require("../lib/ShExUtil");
-var ShExValidator = require("../lib/ShExValidator");
+var ShExCore = require("@shexjs/core");
+var ShExParser = require("@shexjs/parser");
+var ShExLoader = require("@shexjs/loader");
+var ShExWriter = ShExCore.Writer;
+var ShExUtil = ShExCore.Util;
+var ShExValidator = ShExCore.Validator;
 
 var N3 = require("n3");
 
@@ -198,15 +199,16 @@ describe("A ShEx parser", function () {
            var schema = fs.readFileSync(shexRFile, "utf8");
            try {
              var schemaGraph = N3.Store();
-             schemaGraph.addTriples(N3.Parser({documentIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
-             // console.log(schemaGraph.getTriples());
-             var schemaRoot = schemaGraph.getTriples(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
+             schemaGraph.addQuads(N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
+             // console.log(schemaGraph.getQuads());
+             var schemaDriver = ShExUtil.makeN3DB(schemaGraph);
+             var schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
                GraphSchema,
                {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
              );
-             var val = graphParser.validate(ShExUtil.makeN3DB(schemaGraph), schemaRoot, ShExValidator.start); // start shape
+             var val = graphParser.validate(schemaDriver, schemaRoot, ShExValidator.start); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
              var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
@@ -338,7 +340,7 @@ describe("A ShEx parser", function () {
           .to.deep.equal("http://a.example/def#b");
       });
 
-      ShExParser.construct(); // !!! horrible hack to reset no documentIRI
+      ShExParser.construct(); // !!! horrible hack to reset no baseIRI
       // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
 
@@ -360,7 +362,7 @@ describe("A ShEx parser", function () {
           .to.deep.equal("http://a.example/def#");
       });
 
-      ShExParser.construct(); // !!! horrible hack to reset no documentIRI
+      ShExParser.construct(); // !!! horrible hack to reset no baseIRI
       // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
     });
   }
