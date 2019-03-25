@@ -770,7 +770,7 @@ function callValidator (done) {
           },
           ("endpoint" in Caches.inputData ?
            { endpoint: Caches.inputData.endpoint, slurp: $("#slurp").is(":checked") } :
-           { data: inputData.getTriplesByIRI() })
+           { data: inputData.getQuads() })
         ));
       }
 
