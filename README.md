@@ -120,11 +120,11 @@ GET(shexc, function (b) {
 GET(data, function (b) {
   // callback parses the triples and tries to validate.
   var db = n3.Store();
-  n3.Parser({documentIRI: data, format: "text/turtle"}).parse(b, function (error, triple, prefixes) {
+  n3.Parser({baseIRI: data, format: "text/turtle"}).parse(b, function (error, triple, prefixes) {
     if (error) {
       throw Error("error parsing " + data + ": " + error);
     } else if (triple) {
-      db.addTriple(triple)
+      db.addQuad(triple)
     } else {
       Triples = db;
       validateWhenEverythingsLoaded();

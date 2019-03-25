@@ -1,0 +1,109 @@
+[
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "with birthdate",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .",
+    "queryMap": "{FOCUS :status _}@START,\n<Patient2>@!<ObservationShape>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "without birthdate",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"preliminary\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" .",
+    "queryMap": "<Obs1>@START",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "no subject name",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :birthdate \"1999-12-31\"^^xsd:date .",
+    "queryMap": "<Obs1>@START",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "bad status",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"finally\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n\n",
+    "queryMap": "<Obs1>@START",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "no subject",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31\"^^xsd:date .\n\n",
+    "queryMap": "<Obs1>@START",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "clinical observation",
+    "schema": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\nstart = @<ObservationShape>\n\n<ObservationShape> {               # An Observation has:\n  :status [\"preliminary\" \"final\"]; #   status in this value set\n  :subject @<PatientShape>         #   a subject matching <PatientShape>.\n}\n\n<PatientShape> {                   # A Patient has:\n :name xsd:string*;                #   one or more names\n :birthdate xsd:date?              #   and an optional birthdate.\n}\n",
+    "dataLabel": "wrong birthdate datatype",
+    "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .",
+    "queryMap": "<Obs1>@START",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "Each Wikidata item on Cancer should have a NCI Thesaurus ID",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\n\nstart = @<wikidata_item>\n\n<wikidata_item> {\n  p:P1748 {\n    ps:P1748 LITERAL ;\n    prov:wasDerivedFrom @<reference>\n  }+\n}\n\n<reference> {\n  pr:P248  IRI ;\n  pr:P813  xsd:dateTime ;\n  pr:P699  LITERAL\n}\n",
+    "dataLabel": "Get all Wikidata items on Cancers (SPARQL)",
+    "data": "\n\n  Endpoint: https://query.wikidata.org/sparql\n",
+    "queryMap": "SPARQL '''SELECT ?item WHERE {\n  ?item wdt:P279* wd:Q12078 .\n} LIMIT 10'''@START",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "protein record",
+    "schema": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\nLABEL [ rdfs:label skos:label ]\n<S> {\n  ex1:`protein name` LITERAL;\n  ex2:`protein type` [ `signaling` `regulatory` `transport` ];\n  `protein width` `ucum microns`\n}",
+    "meta": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\nPREFIX foo: <http://foo.example/>\n\nfoo:otherProtName rdfs:label \"protein name\" .\nex1:protName rdfs:label \"protein name\" .\nex1:protType skos:label \"protein type\" .\nex2:protName rdfs:label \"protein name\" .\nex2:protType skos:label \"protein type\" .\nex1:Signaling rdfs:label \"signaling\" .\nex1:Regulatory skos:label \"regulatory\" .\nex1:Transport rdfs:label \"transport\" ; skos:label \"transport\" .\nex1:protWidth rdfs:label \"protein width\" ; skos:label \"protein width\" .\nex1:microns rdfs:label \"ucum microns\" .\n",
+    "dataLabel": "good",
+    "data": "PREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\n<s>\n  ex1:protName \"Dracula\" ;\n  ex2:protType ex1:Regulatory ;\n  ex1:protWidth \"30\"^^ex1:microns .",
+    "queryMap": "<s>@<S>",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "protein record",
+    "schema": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\nLABEL [ rdfs:label skos:label ]\n<S> {\n  ex1:`protein name` LITERAL;\n  ex2:`protein type` [ `signaling` `regulatory` `transport` ];\n  `protein width` `ucum microns`\n}",
+    "meta": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\nPREFIX foo: <http://foo.example/>\n\nfoo:otherProtName rdfs:label \"protein name\" .\nex1:protName rdfs:label \"protein name\" .\nex1:protType skos:label \"protein type\" .\nex2:protName rdfs:label \"protein name\" .\nex2:protType skos:label \"protein type\" .\nex1:Signaling rdfs:label \"signaling\" .\nex1:Regulatory skos:label \"regulatory\" .\nex1:Transport rdfs:label \"transport\" ; skos:label \"transport\" .\nex1:protWidth rdfs:label \"protein width\" ; skos:label \"protein width\" .\nex1:microns rdfs:label \"ucum microns\" .\n",
+    "dataLabel": "bad label",
+    "data": "PREFIX ex: <http://a.example/>\n\n<s>\n  ex:protName999 \"Dracula\" ;\n  ex:protType ex:Regulatory ;\n  ex:protWidth \"30\"^^ex:microns .\n",
+    "queryMap": "<s>@<S>",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "protein record",
+    "schema": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\nLABEL [ rdfs:label skos:label ]\n<S> {\n  ex1:`protein name` LITERAL;\n  ex2:`protein type` [ `signaling` `regulatory` `transport` ];\n  `protein width` `ucum microns`\n}",
+    "meta": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\nPREFIX foo: <http://foo.example/>\n\nfoo:otherProtName rdfs:label \"protein name\" .\nex1:protName rdfs:label \"protein name\" .\nex1:protType skos:label \"protein type\" .\nex2:protName rdfs:label \"protein name\" .\nex2:protType skos:label \"protein type\" .\nex1:Signaling rdfs:label \"signaling\" .\nex1:Regulatory skos:label \"regulatory\" .\nex1:Transport rdfs:label \"transport\" ; skos:label \"transport\" .\nex1:protWidth rdfs:label \"protein width\" ; skos:label \"protein width\" .\nex1:microns rdfs:label \"ucum microns\" .\n",
+    "dataLabel": "bad datatype",
+    "data": "PREFIX ex: <http://a.example/>\n\n<s>\n  ex:protName \"Dracula\" ;\n  ex:protType ex:Regulatory ;\n  ex:protWidth \"30\"^^ex:microns999 .\n",
+    "queryMap": "<s>@<S>",
+    "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "basic information about humans",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX wikibase: <http://wikiba.se/ontology#>\nPREFIX wd: <http://www.wikidata.org/entity/>\nPREFIX wdt: <http://www.wikidata.org/prop/direct/>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\nPREFIX pq: <http://www.wikidata.org/prop/statement/qualifier/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\n\nstart = @<human>\n\n# A good human item should have one or more non-deprecated gender statements (plus any number of deprecated ones),\n# exactly one best-rank date of birth (plus any other non-best ones),\n# and zero or one best-rank dates of death (plus any other non-best ones).\n<human> EXTRA p:P569 p:P570 {\n  wdt:P31 [wd:Q5]; # instance of human\n  p:P21 @<genderStatement>+;\n  p:P21 @<genderDeprecatedStatement>*;\n  p:P569 @<dateOfBirthBestStatement>;\n  p:P570 @<dateOfDeathBestStatement>?;\n}\n\n# A non-deprecated gender statement should point to a Wikidata item or “unknown value”,\n# and optionally has references (good ones or other ones).\n<genderStatement> EXTRA prov:wasDerivedFrom {\n  wikibase:rank [wikibase:NormalRank wikibase:PreferredRank];\n  (ps:P21 [wd:~] | ps:P21 BNode );\n  prov:wasDerivedFrom @<reference>*;\n}\n\n# We make no constraints at all on a deprecated gender statement.\n<genderDeprecatedStatement> {\n  wikibase:rank [wikibase:DeprecatedRank];\n}\n\n# A date of birth statement should have a dateTime value or “unknown value”\n# and at least one good reference (plus any other references).\n<dateOfBirthBestStatement> EXTRA prov:wasDerivedFrom {\n  a [wikibase:BestRank];\n  (ps:P569 xsd:dateTime | ps:P569 BNode);\n  prov:wasDerivedFrom @<reference>+;\n}\n\n# A date of death statement should have a dateTime value or “unknown value”\n# and at least one good reference (plus any other references).\n<dateOfDeathBestStatement> EXTRA prov:wasDerivedFrom {\n  a [wikibase:BestRank];\n  ps:P570 xsd:dateTime;\n  prov:wasDerivedFrom @<reference>+;\n}\n\n# A good reference should have been “stated in” some work (optionally with a “retrieved” date),\n# or have a reference URL with a “retrieved” date (not optional here),\n# or both.\n<reference> {\n  pr:P248 [wd:~]; # stated in\n  pr:P813 xsd:dateTime?; # retrieved\n  |\n  pr:P854 IRI; # reference URL\n  pr:P813 xsd:dateTime; # retrieved\n  |\n  pr:P248 [wd:~]; # stated in\n  pr:P854 IRI; # reference URL\n  pr:P813 xsd:dateTime; # retrieved\n}",
+    "dataLabel": "US presidents",
+    "data": "Endpoint: https://query.wikidata.org/sparql\n",
+    "queryMap": "SPARQL '''SELECT DISTINCT ?item WHERE { ?item wdt:P31 wd:Q5; wdt:P39 wd:Q11696. }'''@START",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "basic information about humans",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX wikibase: <http://wikiba.se/ontology#>\nPREFIX wd: <http://www.wikidata.org/entity/>\nPREFIX wdt: <http://www.wikidata.org/prop/direct/>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\nPREFIX pq: <http://www.wikidata.org/prop/statement/qualifier/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\n\nstart = @<human>\n\n# A good human item should have one or more non-deprecated gender statements (plus any number of deprecated ones),\n# exactly one best-rank date of birth (plus any other non-best ones),\n# and zero or one best-rank dates of death (plus any other non-best ones).\n<human> EXTRA p:P569 p:P570 {\n  wdt:P31 [wd:Q5]; # instance of human\n  p:P21 @<genderStatement>+;\n  p:P21 @<genderDeprecatedStatement>*;\n  p:P569 @<dateOfBirthBestStatement>;\n  p:P570 @<dateOfDeathBestStatement>?;\n}\n\n# A non-deprecated gender statement should point to a Wikidata item or “unknown value”,\n# and optionally has references (good ones or other ones).\n<genderStatement> EXTRA prov:wasDerivedFrom {\n  wikibase:rank [wikibase:NormalRank wikibase:PreferredRank];\n  (ps:P21 [wd:~] | ps:P21 BNode );\n  prov:wasDerivedFrom @<reference>*;\n}\n\n# We make no constraints at all on a deprecated gender statement.\n<genderDeprecatedStatement> {\n  wikibase:rank [wikibase:DeprecatedRank];\n}\n\n# A date of birth statement should have a dateTime value or “unknown value”\n# and at least one good reference (plus any other references).\n<dateOfBirthBestStatement> EXTRA prov:wasDerivedFrom {\n  a [wikibase:BestRank];\n  (ps:P569 xsd:dateTime | ps:P569 BNode);\n  prov:wasDerivedFrom @<reference>+;\n}\n\n# A date of death statement should have a dateTime value or “unknown value”\n# and at least one good reference (plus any other references).\n<dateOfDeathBestStatement> EXTRA prov:wasDerivedFrom {\n  a [wikibase:BestRank];\n  ps:P570 xsd:dateTime;\n  prov:wasDerivedFrom @<reference>+;\n}\n\n# A good reference should have been “stated in” some work (optionally with a “retrieved” date),\n# or have a reference URL with a “retrieved” date (not optional here),\n# or both.\n<reference> {\n  pr:P248 [wd:~]; # stated in\n  pr:P813 xsd:dateTime?; # retrieved\n  |\n  pr:P854 IRI; # reference URL\n  pr:P813 xsd:dateTime; # retrieved\n  |\n  pr:P248 [wd:~]; # stated in\n  pr:P854 IRI; # reference URL\n  pr:P813 xsd:dateTime; # retrieved\n}",
+    "dataLabel": "German federal chancellors",
+    "data": "Endpoint: https://query.wikidata.org/sparql\n",
+    "queryMap": "SPARQL '''SELECT DISTINCT ?item WHERE { ?item wdt:P31 wd:Q5; wdt:P39 wd:Q4970706. }'''@START",
+    "status": "conformant"
+  },
+  {
+    "schemaLabel": "basic information about humans",
+    "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX wikibase: <http://wikiba.se/ontology#>\nPREFIX wd: <http://www.wikidata.org/entity/>\nPREFIX wdt: <http://www.wikidata.org/prop/direct/>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\nPREFIX pq: <http://www.wikidata.org/prop/statement/qualifier/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\n\nstart = @<human>\n\n# A good human item should have one or more non-deprecated gender statements (plus any number of deprecated ones),\n# exactly one best-rank date of birth (plus any other non-best ones),\n# and zero or one best-rank dates of death (plus any other non-best ones).\n<human> EXTRA p:P569 p:P570 {\n  wdt:P31 [wd:Q5]; # instance of human\n  p:P21 @<genderStatement>+;\n  p:P21 @<genderDeprecatedStatement>*;\n  p:P569 @<dateOfBirthBestStatement>;\n  p:P570 @<dateOfDeathBestStatement>?;\n}\n\n# A non-deprecated gender statement should point to a Wikidata item or “unknown value”,\n# and optionally has references (good ones or other ones).\n<genderStatement> EXTRA prov:wasDerivedFrom {\n  wikibase:rank [wikibase:NormalRank wikibase:PreferredRank];\n  (ps:P21 [wd:~] | ps:P21 BNode );\n  prov:wasDerivedFrom @<reference>*;\n}\n\n# We make no constraints at all on a deprecated gender statement.\n<genderDeprecatedStatement> {\n  wikibase:rank [wikibase:DeprecatedRank];\n}\n\n# A date of birth statement should have a dateTime value or “unknown value”\n# and at least one good reference (plus any other references).\n<dateOfBirthBestStatement> EXTRA prov:wasDerivedFrom {\n  a [wikibase:BestRank];\n  (ps:P569 xsd:dateTime | ps:P569 BNode);\n  prov:wasDerivedFrom @<reference>+;\n}\n\n# A date of death statement should have a dateTime value or “unknown value”\n# and at least one good reference (plus any other references).\n<dateOfDeathBestStatement> EXTRA prov:wasDerivedFrom {\n  a [wikibase:BestRank];\n  ps:P570 xsd:dateTime;\n  prov:wasDerivedFrom @<reference>+;\n}\n\n# A good reference should have been “stated in” some work (optionally with a “retrieved” date),\n# or have a reference URL with a “retrieved” date (not optional here),\n# or both.\n<reference> {\n  pr:P248 [wd:~]; # stated in\n  pr:P813 xsd:dateTime?; # retrieved\n  |\n  pr:P854 IRI; # reference URL\n  pr:P813 xsd:dateTime; # retrieved\n  |\n  pr:P248 [wd:~]; # stated in\n  pr:P854 IRI; # reference URL\n  pr:P813 xsd:dateTime; # retrieved\n}",
+    "dataLabel": "French presidents",
+    "data": "Endpoint: https://query.wikidata.org/sparql\n",
+    "queryMap": "SPARQL '''SELECT DISTINCT ?item WHERE { ?item wdt:P31 wd:Q5; wdt:P39 wd:Q191954. }'''@START",
+    "status": "nonconformant"
+  }
+]

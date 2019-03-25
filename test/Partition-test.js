@@ -1,8 +1,8 @@
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
-var ShExParser = require('../lib/ShExParser');
-var ShExUtil = require('../lib/ShExUtil');
+var ShExParser = require("@shexjs/parser");
+var ShExUtil = require("@shexjs/core").Util;
 
 var fs = require('fs');
 var expect = require('chai').expect;
