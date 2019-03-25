@@ -8,7 +8,7 @@ if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
 }
 
 // Creates a ShEx parser with the given pre-defined prefixes
-var prepareParser = function (documentIRI, prefixes, schemaOptions) {
+var prepareParser = function (baseIRI, prefixes, schemaOptions) {
   schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
   var prefixesCopy = {};
@@ -20,20 +20,20 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
   var parser = new ShExJison();
 
   function runParser () {
-    // ShExJison.base = documentIRI || "";
+    // ShExJison.base = baseIRI || "";
     // ShExJison.basePath = ShExJison.base.replace(/[^\/]*$/, '');
     // ShExJison.baseRoot = ShExJison.base.match(/^(?:[a-z]+:\/*)?[^\/]*/)[0];
     ShExJison._prefixes = Object.create(prefixesCopy);
     ShExJison._imports = [];
-    ShExJison._setBase(documentIRI);
-    ShExJison._setFileName(documentIRI);
+    ShExJison._setBase(baseIRI);
+    ShExJison._setFileName(baseIRI);
     try {
       return ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
       // use the lexer's pretty-printing
       var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
       var pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      var t = Error(`${documentIRI}(${lineNo}): ${e.message}\n${pos}`);
+      var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
       t.lineNo = lineNo;
       t.context = pos;
       if ("lexer" in parser.yy) {
@@ -53,7 +53,7 @@ var prepareParser = function (documentIRI, prefixes, schemaOptions) {
   parser.parse = runParser;
   parser._setBase = function (base) {
     ShExJison._setBase;
-    documentIRI = base;
+    baseIRI = base;
   }
   parser._setFileName = ShExJison._setFileName;
   parser._setOptions = function (opts) { ShExJison.options = opts; };

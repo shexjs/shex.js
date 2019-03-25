@@ -125,7 +125,7 @@ Promise.all([ShExLoader.load([cmds.target], [], [], []),
     }
     var outputGraph = map.materialize(Mapper.binder(resultBindings2), cmds.root);
     var writer = N3.Writer({ prefixes: {} });
-    outputGraph.getTriples().forEach(t => { writer.addTriple(t); });
+    outputGraph.getQuads().forEach(t => { writer.addQuad(t); });
     writer.end(function (error, result) { console.log(result); });
   }).catch(e => { console.error("stack" in e ? e.stack : e); });
 

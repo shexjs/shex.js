@@ -8,7 +8,7 @@ if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
 }
 
 // Creates a ShEx parser with the given pre-defined prefixes
-var prepareParser = function (documentIRI, schemaMeta, dataMeta) {
+var prepareParser = function (baseIRI, schemaMeta, dataMeta) {
   // Create a copy of the prefixes
   var schemaBase = schemaMeta.base;
   var schemaPrefixesCopy = {};
@@ -28,14 +28,14 @@ var prepareParser = function (documentIRI, schemaMeta, dataMeta) {
     ShapeMapJison._setSchemaBase(schemaBase);
     ShapeMapJison._dataPrefixes = Object.create(dataPrefixesCopy);
     ShapeMapJison._setDataBase(dataBase);
-    ShapeMapJison._setFileName(documentIRI);
+    ShapeMapJison._setFileName(baseIRI);
     try {
       return ShapeMapJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
       // use the lexer's pretty-printing
       var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
       var pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      var t = Error(`${documentIRI}(${lineNo}): ${e.message}\n${pos}`);
+      var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
       Error.captureStackTrace(t, runParser);
       parser.reset();
       throw t;

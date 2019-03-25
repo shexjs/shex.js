@@ -122,21 +122,21 @@ app.
             return Object.keys(loaded.schema.shapes)[0];
           }
           function knownNode (label) {
-            return (loaded.data.getTriplesByIRI(label, null, null).length > 0 ||
-                    loaded.data.getTriplesByIRI(null, null, label).length > 0);
+            return (loaded.data.getQuads(label, null, null).length > 0 ||
+                    loaded.data.getQuads(null, null, label).length > 0);
           }
           function knownType (label) {
-            return (loaded.data.getTriplesByIRI(null, RDF_TYPE, label).length > 0);
+            return (loaded.data.getQuads(null, RDF_TYPE, label).length > 0);
           }
           function someIRInode () {
-            var triples = loaded.data.getTriplesByIRI(null, null, null);
+            var triples = loaded.data.getQuads(null, null, null);
             for (var i = 0; i < triples.length; ++i)
               if (N3.Util.isIRI(triples[i].subject))
                 return triples[i].subject;
             return triples.length > 0 ? triples[0].subject : NotSupplied;
           };
           function someNodeWithType (type) {
-            var triples = loaded.data.getTriplesByIRI(null, RDF_TYPE, type)
+            var triples = loaded.data.getQuads(null, RDF_TYPE, type)
             return triples.length > 0 ? triples[0].subject : NotSupplied;
           };
           if (!parms.start && loaded.schema.start)

@@ -1,5 +1,5 @@
 var ThreadedValNErr = (function () {
-var N3Util = require("n3").Util;
+var RdfTerm = require("../RdfTerm");
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape) {
@@ -131,7 +131,7 @@ function vpEngine (schema, shape) {
             var valueExpr = extend({}, expr.valueExpr);
             if ("reference" in valueExpr) {
               var ref = valueExpr.reference;
-              if (N3Util.isBlank(ref))
+              if (RdfTerm.isBlank(ref))
                 valueExpr.reference = schema.shapes[ref];
             }
             ret.push({
@@ -274,13 +274,13 @@ function vpEngine (schema, shape) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: N3Util.getLiteralValue(term) };
-          var dt = N3Util.getLiteralType(term);
+          var ret = { value: RdfTerm.getLiteralValue(term) };
+          var dt = RdfTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = N3Util.getLiteralLanguage(term)
+          var lang = RdfTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -309,7 +309,7 @@ function vpEngine (schema, shape) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && N3Util.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];

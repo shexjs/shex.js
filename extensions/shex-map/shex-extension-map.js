@@ -7,7 +7,8 @@
 
 var ShExMap = (function () {
 
-var ShExUtil = require("@shexjs/core").Util;
+var ShExCore = require("@shexjs/core"); var RdfTerm = ShExCore.RdfTerm;
+var ShExUtil = ShExCore.Util;
 var ShExValidator = require("@shexjs/core").Validator;
 var extensions = require("./lib/extensions");
 var N3 = require("n3");
@@ -97,6 +98,20 @@ function n3ify (ldterm) {
   return ret;
 }
 
+  // Expands the prefixed name to a full IRI (also when it occurs as a literal's type)
+  function expandPrefixedName (prefixedName, prefixes) {
+    var match = /(?:^|"\^\^)([^:\/#"'\^_]*):[^\/]*$/.exec(prefixedName), prefix, base, index;
+    if (match)
+      prefix = match[1], base = prefixes[prefix], index = match.index;
+    if (base === undefined)
+      return prefixedName;
+
+    // The match index is non-zero when expanding a literal's type
+    return index === 0 ? base + prefixedName.substr(prefix.length + 1)
+                       : prefixedName.substr(0, index + 3) +
+                         base + prefixedName.substr(index + prefix.length + 4);
+  }
+
 function materializer (schema, nextBNode) {
   var blankNodeCount = 0;
   nextBNode = nextBNode || function () {
@@ -106,10 +121,10 @@ function materializer (schema, nextBNode) {
     materialize: function (bindings, createRoot, shape, target) {
       shape = shape && shape !== ShExValidator.start? { type: "ShapeRef", reference: shape } : schema.start;
       target = target || N3.Store();
-      target.addPrefixes(schema.prefixes); // not used, but seems polite
+      // target.addPrefixes(schema.prefixes); // not used, but seems polite
 
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
       function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
@@ -141,11 +156,18 @@ function materializer (schema, nextBNode) {
 }
 
 function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
-      function P (pname) { return N3.Util.expandPrefixedName(pname, schema.prefixes); }
+      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
       function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
+      function add (s, p, o) {
+        target.addQuad(RdfTerm.externalTriple({
+          subject: s,
+          predicate: p,
+          object: n3ify(o)
+        }, N3.DataFactory));
+        return s;
+      }
 
         var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
         if (mapExts.length) {

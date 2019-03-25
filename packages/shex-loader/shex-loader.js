@@ -308,17 +308,17 @@ function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImpo
 
 function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
   return new Promise(function (resolve, reject) {
-  N3.Parser({documentIRI: url, blankNodePrefix: "", format: "text/turtle"}).
+  N3.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
     parse(text,
           function (error, triple, prefixes) {
             if (prefixes) {
               meta.prefixes = prefixes;
-              data.addPrefixes(prefixes);
+              // data.addPrefixes(prefixes);
             }
             if (error) {
               reject("error parsing " + url + ": " + error);
             } else if (triple) {
-              data.addTriple(triple)
+              data.addQuad(triple)
             } else {
               meta.base = this._base;
               resolve([mediaType, url]);
@@ -332,7 +332,7 @@ function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
  */
 function parseTurtle999 (text, mediaType, url, data, meta, dataOptions) {
   try {
-    var p = N3.Parser({documentIRI: url, blankNodePrefix: "", format: "text/turtle"});
+    var p = N3.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"});
     var triples = p.parse(text);
     meta.prefixes = p._prefixes;
     meta.base = p._base;

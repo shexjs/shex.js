@@ -1,8 +1,8 @@
 // **ShExUtil** provides ShEx utility functions
 
 var ShExUtil = (function () {
-var N3 = require("n3");
-var util = require('util');
+var RdfTerm = require("./RdfTerm");
+// var util = require('util');
 const Hierarchy = require('hierarchy-closure')
 
 const SX = {};
@@ -511,7 +511,7 @@ var ShExUtil = {
     v.cleanIds = function () {
       for (var k in knownExpressions) {
         var known = knownExpressions[k];
-        if (known.refCount === 1 && N3.Util.isBlank(known.expr.id))
+        if (known.refCount === 1 && RdfTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
     }
@@ -583,8 +583,8 @@ var ShExUtil = {
           "language" in node ? "@" + node.language :
           ""
       )) :
-      N3.Util.isIRI(node) ? "<" + node + ">" :
-      N3.Util.isBlank(node) ? node :
+      RdfTerm.isIRI(node) ? "<" + node + ">" :
+      RdfTerm.isBlank(node) ? node :
       "???";
     }
     return this.valGrep(res, "TestedTriple", function (t) {
@@ -609,13 +609,13 @@ var ShExUtil = {
 
   n3jsToTurtle: function (n3js) {
     function termToLex (node) {
-      if (N3.Util.isIRI(node))
+      if (RdfTerm.isIRI(node))
         return "<" + node + ">";
-      if (N3.Util.isBlank(node))
+      if (RdfTerm.isBlank(node))
         return node;
-      var t = N3.Util.getLiteralType(node);
+      var t = RdfTerm.getLiteralType(node);
       if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + N3.Util.getLiteralValue(node) + "\"" +
+        return "\"" + RdfTerm.getLiteralValue(node) + "\"" +
         "^^<" + t + ">";
       return node;
     }
@@ -1178,20 +1178,12 @@ var ShExUtil = {
   },
 
   absolutizeResults: function (parsed, base) {
-    function resolveRelativeIRI (baseIri, relativeIri) {
-      if (typeof relativeIri === "object")
-        return relativeIri;
-      var p = N3.Parser({ documentIRI: baseIri });
-      p._readSubject({type: "IRI", value: relativeIri});
-      return p._subject;
-    }
-
     // !! duplicate of Validation-test.js:84: var referenceResult = parseJSONFile(resultsFile...)
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          N3.Util.isIRI(obj[k])) {
-        obj[k] = resolveRelativeIRI(base, obj[k]);
+          RdfTerm.isIRI(obj[k])) {
+        obj[k] = RdfTerm.resolveRelativeIRI(base, obj[k]);
       }}
 
     function resolveRelativeURLs (obj) {
@@ -1789,19 +1781,10 @@ var ShExUtil = {
   },
 
   absolutizeShapeMap: function (parsed, base) {
-    // !! duplicate of absolutizeResults:resolveRelativeIRI
-    function resolveRelativeIRI (baseIri, relativeIri) {
-      if (typeof relativeIri === "object")
-        return relativeIri;
-      var p = N3.Parser({ documentIRI: baseIri });
-      p._readSubject({type: "IRI", value: relativeIri});
-      return p._subject;
-    }
-
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: resolveRelativeIRI(base, elt.node),
-        shape: resolveRelativeIRI(base, elt.shape)
+        node: RdfTerm.resolveRelativeIRI(base, elt.node),
+        shape: RdfTerm.resolveRelativeIRI(base, elt.shape)
       });
     });
   },
@@ -1878,13 +1861,7 @@ var ShExUtil = {
     }
   },
 
-  resolveRelativeIRI: function (baseIri, relativeIri) {
-    if (!N3.Util.isIRI(relativeIri))
-      return relativeIri; // not really an IRI
-    var p = N3.Parser({ documentIRI: baseIri });
-    p._readSubject({type: "IRI", value: relativeIri});
-    return p._subject;
-  },
+  resolveRelativeIRI: RdfTerm.resolveRelativeIRI,
 
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     var colon = prefixedIri.indexOf(":");
@@ -1914,7 +1891,7 @@ var ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + this.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + RdfTerm.resolveRelativeIRI(meta.base, rel);
       return quoted;
     }
     if (!meta)
@@ -1922,7 +1899,7 @@ var ShExUtil = {
     var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    var t = this.resolveRelativeIRI(meta.base, passedValue);
+    var t = RdfTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
@@ -2019,12 +1996,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getTriplesByIRI (s, p, o, g) {
-      return db.getTriplesByIRI(s, p, o, g);
-    }
-    function getSubjects () { return db.getSubjects(); }
-    function getPredicates () { return db.getPredicates(); }
-    function getObjects () { return db.getObjects(); }
+    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
+    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
+    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -2033,7 +2008,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getTriplesByIRI(point, null, null, null);
+      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -2042,7 +2017,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getTriplesByIRI(null, null, point, null);
+      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
@@ -2055,28 +2030,28 @@ var ShExUtil = {
     return {
       // size: db.size,
       getNeighborhood: getNeighborhood,
-      getTriplesByIRI: getTriplesByIRI,
       getSubjects: getSubjects,
       getPredicates: getPredicates,
       getObjects: getObjects,
-      get size() { return db.size; }
-      // getTriplesByIRI: function (s, p, o, graph, shapeLabel) {
+      getQuads: getQuads,
+      get size() { return db.size; },
+      // getQuads: function (s, p, o, graph, shapeLabel) {
       //   // console.log(Error(s + p + o).stack)
       //   if (queryTracker)
       //     queryTracker.start(!!s, s ? s : o, shapeLabel);
-      //   var triples = db.getTriplesByIRI(s, p, o, graph)
+      //   var quads = db.getQuads(s, p, o, graph)
       //   if (queryTracker)
-      //     queryTracker.end(triples, new Date() - startTime);
-      //   return triples;
+      //     queryTracker.end(quads, new Date() - startTime);
+      //   return quads;
       // }
-    };
+    }
   },
-  /** emulate N3Store().getTriplesByIRI() with additional parm.
+  /** emulate N3Store().getQuads() with additional parm.
    */
   makeQueryDB: function (endpoint, queryTracker) {
     var _ShExUtil = this;
 
-    function getTriplesByIRI(s, p, o, g) {
+    function getQuads(s, p, o, g) {
       return mapQueryToTriples("SELECT " + [
         (s?"":"?s"), (p?"":"?p"), (o?"":"?o"),
         "{",
@@ -2160,7 +2135,7 @@ var ShExUtil = {
 
     return {
       getNeighborhood: getNeighborhood,
-      getTriplesByIRI: getTriplesByIRI,
+      getQuads: getQuads,
       getSubjects: function () { return ["!Query DB can't index subjects"] },
       getPredicates: function () { return ["!Query DB can't index predicates"] },
       getObjects: function () { return ["!Query DB can't index objects"] },
@@ -2214,6 +2189,7 @@ var ShExUtil = {
   }
 
 };
+
 
 function n3ify (ldterm) {
   if (typeof ldterm !== "object")
