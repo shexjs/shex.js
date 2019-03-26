@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require('fs')
+const path = require('path')
 const glob = require('glob')
 const browserify = require("browserify")
 
@@ -15,12 +16,13 @@ const directories = packageGlobs.reduce(
 
 // https://github.com/browserify/browserify-handbook#using-the-api-directly
 const res = directories.map(dir => {
-  const baseName =  // Could drag it out of package.json but so far we're pretty consistent about reusing the directory name.
-        dir.substr(dir.lastIndexOf('/') + 1)
-  const fullPath = dir + '/' + baseName + '.js'
-  console.log(fullPath)
-  let os = fs.createWriteStream(dir + '/browser/' + baseName + '-browserify.js')
-  let b = browserify(fullPath, {standalone: baseName}).bundle()
+  const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
+  const baseName = pkg.main.replace(/\.js$/, '')
+  const mainPath = path.join(dir, baseName)
+  const outPath = path.join(dir, 'browser', baseName + '-browserify.js')
+  console.log(mainPath, "->", outPath)
+  let os = fs.createWriteStream(outPath)
+  let b = browserify(mainPath, {standalone: path.basename(baseName)}).bundle()
   b.on('error', console.error)
   b.pipe(os)
 })
