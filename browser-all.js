@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
 const browserify = require("browserify")
+const uglify = require("uglify-es")
 
 const packageGlobs = JSON.parse(
   fs.readFileSync(__dirname + '/lerna.json', 'utf-8')
@@ -20,9 +21,23 @@ const res = directories.map(dir => {
   const baseName = pkg.main.replace(/\.js$/, '')
   const mainPath = path.join(dir, baseName)
   const outPath = path.join(dir, 'browser', baseName + '-browserify.js')
+  const outMinPath = path.join(dir, 'browser', baseName + '-browserify.min.js')
   console.log(mainPath, "->", outPath)
-  let os = fs.createWriteStream(outPath)
+
+  let outStream = fs.createWriteStream(outPath)
   let b = browserify(mainPath, {standalone: path.basename(baseName)}).bundle()
   b.on('error', console.error)
-  b.pipe(os)
+  // b.pipe(outStream)
+  const chunks = [];
+  b.on("data", function (chunk) {
+    chunks.push(chunk.toString());
+    outStream.write(chunk);
+  });
+  b.on("end", function () {
+    outStream.end();
+    let min = uglify.minify(chunks.join(''));
+    let outMinStream = fs.createWriteStream(outMinPath);
+    outMinStream.write(min.code);
+    outMinStream.end();
+  });
 })

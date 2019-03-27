@@ -109134,7 +109134,7 @@ arguments[4][430][0].apply(exports,arguments)
 },{"./IRIs":458,"buffer":68,"dup":430,"timers":369}],461:[function(require,module,exports){
 // **N3Parser** parses N3 documents.
 var n3Lexer = require('./N3Lexer'),
-    dataFactory = require('./N3DataFactory'),
+    DataFactory = require('./N3DataFactory'),
     namespaces = require('./IRIs');
 
 // The next ID for new blank nodes
@@ -110091,7 +110091,7 @@ function initDataFactory(parser, factory) {
   };
   parser.QUANTIFIERS_GRAPH = namedNode('urn:n3:quantifiers');
 }
-initDataFactory(N3Parser.prototype, dataFactory);
+initDataFactory(N3Parser.prototype, DataFactory);
 
 // ## Exports
 module.exports = N3Parser;
