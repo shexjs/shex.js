@@ -68,7 +68,7 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "travisRepo": "./test/travisRepo.sh",
-    "browser-all": "./browser-all.js",
+    "browser-all": "./browser-all.js ; mkdir -p packages/shex-webapp/node_modules/n3/browser ; npx browserify -s N3 -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.js node_modules/n3/N3.js ; npx uglifyjs packages/shex-webapp/node_modules/n3/browser/n3-browserify.js -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.min.js -c",
     "skinny-browser-TODO": "node browser/build-browser-versions",
     "coverage": "nyc npm run test-all",
     "travis-deploy-once": "travis-deploy-once"
