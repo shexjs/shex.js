@@ -4,7 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
 const browserify = require("browserify")
-const uglify = require("uglify-es")
+const uglify = require("terser")
 
 const packageGlobs = JSON.parse(
   fs.readFileSync(__dirname + '/lerna.json', 'utf-8')
@@ -35,7 +35,9 @@ const res = directories.map(dir => {
   });
   b.on("end", function () {
     outStream.end();
-    let min = uglify.minify(chunks.join(''));
+    let min = uglify.minify(chunks.join(''), {
+      "keep_classnames": true
+    });
     let outMinStream = fs.createWriteStream(outMinPath);
     outMinStream.write(min.code);
     outMinStream.end();

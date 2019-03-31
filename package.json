@@ -59,7 +59,7 @@
   },
   "scripts": {
     "clean-all": "find . -name node_modules -exec rm -r {} \\; ; find . -name package-lock.json -exec rm -r {} \\; || true",
-    "rebuild": "npx clean-all ; npx lerna bootstrap",
+    "rebuild": "npm run clean-all ; npx lerna bootstrap",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
@@ -68,7 +68,9 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "travisRepo": "./test/travisRepo.sh",
-    "browser-all": "./browser-all.js ; mkdir -p packages/shex-webapp/node_modules/n3/browser ; npx browserify -s N3 -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.js node_modules/n3/N3.js ; npx uglifyjs packages/shex-webapp/node_modules/n3/browser/n3-browserify.js -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.min.js -c",
+    "browser-webpack": "npx webpack --config webpack.config.js --mode production ; npm run n3-browserify",
+    "n3-browserify": "mkdir -p packages/shex-webapp/node_modules/n3/browser ; npx browserify -s N3 -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.js node_modules/n3/N3.js ; npx uglifyjs packages/shex-webapp/node_modules/n3/browser/n3-browserify.js -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.min.js -c",
+    "browser-all": "./browser-all.js ; npm run n3-browserify",
     "skinny-browser-TODO": "node browser/build-browser-versions",
     "coverage": "nyc npm run test-all",
     "travis-deploy-once": "travis-deploy-once"
