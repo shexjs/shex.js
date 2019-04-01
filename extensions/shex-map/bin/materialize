@@ -124,7 +124,7 @@ Promise.all([ShExLoader.load([cmds.target], [], [], []),
       resultBindings2.unshift(_t);
     }
     var outputGraph = map.materialize(Mapper.binder(resultBindings2), cmds.root);
-    var writer = N3.Writer({ prefixes: {} });
+    var writer = new N3.Writer({ prefixes: {} });
     outputGraph.getQuads().forEach(t => { writer.addQuad(t); });
     writer.end(function (error, result) { console.log(result); });
   }).catch(e => { console.error("stack" in e ? e.stack : e); });

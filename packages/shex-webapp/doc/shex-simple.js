@@ -54,9 +54,9 @@ var QueryParams = Getables.concat([
 
 // utility functions
 function parseTurtle (text, meta, base) {
-  var ret = ShEx.N3.Store();
+  var ret = new ShEx.N3.Store();
   ShEx.N3.Parser._resetBlankNodeIds();
-  var parser = ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
+  var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
     ret.addQuads(quads);
@@ -102,7 +102,7 @@ function rdflib_termToLex (node, resolver) {
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
-    ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
+    new ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
     .map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :

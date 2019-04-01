@@ -495,7 +495,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  return new N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 
 // Extract user commands

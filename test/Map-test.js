@@ -111,7 +111,7 @@ describe('A ShEx Mapper', function () {
 
 function graphToString () {
   var output = '';
-  var w = require("n3").Writer({
+  var w = new (require("n3")).Writer({
       write: function (chunk, encoding, done) { output += chunk; done && done(); },
   });
   w.addQuads(this.getQuads(null, null, null)); // is this kosher with no end method?
@@ -192,8 +192,8 @@ function graphEquals (right, m) {
 
   function testEquiv (name, g1, g2, equals, mapping) {
     it("should test " + name + " to be " + equals, function () {
-      var l = require("n3").Store(); l.toString = graphToString; l.equals = graphEquals;
-      var r = require("n3").Store(); r.toString = graphToString;
+      var l = new (require("n3")).Store(); l.toString = graphToString; l.equals = graphEquals;
+      var r = new (require("n3")).Store(); r.toString = graphToString;
       g1.forEach(function (triple) { l.addQuad(RdfTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
       g2.forEach(function (triple) { r.addQuad(RdfTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
       var m = {};
