@@ -53,9 +53,9 @@ var QueryParams = Getables.concat([
 
 // utility functions
 function parseTurtle (text, meta, base) {
-  var ret = ShEx.N3.Store();
+  var ret = new ShEx.N3.Store();
   ShEx.N3.Parser._resetBlankNodeIds();
-  var parser = ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
+  var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
     ret.addQuads(quads);
@@ -69,9 +69,9 @@ function parseShEx (text, meta, base) {
   $("#schemaDialect").text(Caches.inputSchema.language);
   var resolverText = $("#meta textarea").val();
   if (resolverText) {
-    var resolverStore = ShEx.N3.Store();
+    var resolverStore = new ShEx.N3.Store();
     shexParser._setTermResolver(ShEx.Parser.dbTermResolver(resolverStore));
-    resolverStore.addQuads(ShEx.N3.Parser({baseIRI:DefaultBase}).parse(resolverText));
+    resolverStore.addQuads(new ShEx.N3.Parser({baseIRI:DefaultBase}).parse(resolverText));
   } else {
     shexParser._setTermResolver(ShEx.Parser.disabledTermResolver());
   }
@@ -111,7 +111,7 @@ function rdflib_termToLex (node, resolver) {
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
-    ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
+    new ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
     .map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :

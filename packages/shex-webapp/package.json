@@ -15,6 +15,7 @@
     "parser"
   ],
   "license": "MIT",
+  "main": "./shex-webapp.js",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -30,9 +31,6 @@
     "nock": "^9.3.0",
     "promise": "^7.1.1",
     "shape-map": "^1.0.0-alpha.1"
-  },
-  "devDependencies": {
-    "pre-commit": "~1.2.2"
   },
   "scripts": {
     "make": "(cd test/ && make test)",

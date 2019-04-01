@@ -50,7 +50,7 @@ if ("regex-module" in cmds) {
 function resolveRelativeIRI (baseIri, relativeIri) {
   if (!N3.Util.isIRI(relativeIri))
     return relativeIri; // not really an IRI
-  var p = N3.Parser({ baseIRI: baseIri });
+  var p = new N3.Parser({ baseIRI: baseIri });
   p._readSubject({type: "IRI", value: relativeIri});
   return p._subject;
 }

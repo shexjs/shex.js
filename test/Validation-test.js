@@ -137,7 +137,7 @@ describe("A ShEx validator", function () {
 
             var resolverStore = new N3.Store();
             var resolverText = fs.readFileSync(resolverFile, "utf8");
-            resolverStore.addQuads(N3.Parser({baseIRI: resolverURL, blankNodePrefix: ""}).parse(fs.readFileSync(resolverFile, "utf8")));
+            resolverStore.addQuads(new N3.Parser({baseIRI: resolverURL, blankNodePrefix: ""}).parse(fs.readFileSync(resolverFile, "utf8")));
             resolverOptions = ShExParser.dbTermResolver(resolverStore);
           }
           var schemaOptions = Object.assign({

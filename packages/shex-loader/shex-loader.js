@@ -142,7 +142,7 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
 function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
   var returns = {
     schema: ShExUtil.emptySchema(),
-    data: N3.Store(),
+    data: new N3.Store(),
     schemaMeta: [],
     dataMeta: []
   };
@@ -191,7 +191,7 @@ function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
   // gather all the potentially remote inputs
   // If there's a termResolver,
   if (schemaOptions && "termResolver" in schemaOptions) {
-    returns.resolver = N3.Store();
+    returns.resolver = new N3.Store();
     returns.resolverMeta = [];
     // load the resolver then the schema sources,
     promises = [Promise.all(loadList(schemaOptions.termResolver, returns.resolverMeta, "text/turtle",
@@ -323,7 +323,7 @@ function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImpo
 
 function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
   return new Promise(function (resolve, reject) {
-  N3.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
+  new N3.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
     parse(text,
           function (error, triple, prefixes) {
             if (prefixes) {
@@ -347,7 +347,7 @@ function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
  */
 function parseTurtle999 (text, mediaType, url, data, meta, dataOptions) {
   try {
-    var p = N3.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"});
+    var p = new N3.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"});
     var triples = p.parse(text);
     meta.prefixes = p._prefixes;
     meta.base = p._base;
