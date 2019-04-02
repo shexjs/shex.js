@@ -716,7 +716,8 @@ function callValidator (done) {
       if ($("#slurp").is(":checked")) {
         // .set() sets inputData's dirty bit.
         Caches.inputData.set("# slurping from <" + Caches.inputData.endpoint + ">...\n\n\n");
-        Caches.inputData.slurpWriter = ShEx.N3.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
+        Caches.inputData.slurpWriter = new ShEx.N3.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
+        inputData = ShEx.Util.makeQueryDB(Caches.inputData.endpoint, queryTracker());
       }
 
       currentAction = "creating validator";
@@ -979,33 +980,6 @@ function callValidator (done) {
     fixedMapEntry.attr("title", entry.elapsed + " ms")
   }
 
-  /** attempt to disable scrolling if not at bottom of target.
-   * tried both selectionState and scrollTop.
-   */
-  function noScrollAppend (target, toAdd) {
-    var e = target.get(0);
-    // var oldLen = target.val().length
-    // var oldSel = target.prop("selectionStart");
-    // var oldScrollTop = e.scrollTop;
-    // var oldScrollHeight = e.scrollHeight;
-    target.val((i, text) => {
-      return text + toAdd;
-    });
-    // console.log(oldScrollTop, oldScrollHeight);
-    // if (oldScrollTop === oldScrollHeight) {
-      e.scrollTop = e.scrollHeight;
-    //   target.prop("selectionStart", target.val().length);
-    // } else {
-    //   target.prop("selectionStart", oldScrollTop);
-    // }
-    // if (oldSel === oldLen) {
-    //   e.scrollTop = e.scrollHeight;
-    //   target.prop("selectionStart", target.val().length);
-    // } else {
-    //   target.prop("selectionStart", oldSel);
-    // }
-  }
-
   function finishRendering (done) {
     if ("slurpWriter" in Caches.inputData) {
       Caches.inputData.slurpWriter.end((err, chunk) => {
@@ -1040,6 +1014,34 @@ function callValidator (done) {
       // }
       results.finish();
   }
+}
+
+
+/** attempt to disable scrolling if not at bottom of target.
+ * tried both selectionState and scrollTop.
+ */
+function noScrollAppend (target, toAdd) {
+  var e = target.get(0);
+  // var oldLen = target.val().length
+  // var oldSel = target.prop("selectionStart");
+  // var oldScrollTop = e.scrollTop;
+  // var oldScrollHeight = e.scrollHeight;
+  target.val((i, text) => {
+    return text + toAdd;
+  });
+  // console.log(oldScrollTop, oldScrollHeight);
+  // if (oldScrollTop === oldScrollHeight) {
+  e.scrollTop = e.scrollHeight;
+  //   target.prop("selectionStart", target.val().length);
+  // } else {
+  //   target.prop("selectionStart", oldScrollTop);
+  // }
+  // if (oldSel === oldLen) {
+  //   e.scrollTop = e.scrollHeight;
+  //   target.prop("selectionStart", target.val().length);
+  // } else {
+  //   target.prop("selectionStart", oldSel);
+  // }
 }
 
 var LastFailTime = 0;
@@ -1311,6 +1313,23 @@ function toggleControls (evt) {
     $("#permalink a").attr("href", getPermalink());
   }
   return false;
+}
+
+function queryTracker () {
+  return {
+    start: function (isOut, term, shapeLabel) {
+      var node = Caches.inputSchema.meta.termToLex(term);
+      var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
+      var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
+      noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+    },
+    end: function (triples, time) {
+      noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
+      Caches.inputData.slurpWriter.addQuads(triples.map(
+        t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
+      ));
+    }
+  }
 }
 
 function toggleControlsArrow (which) {
