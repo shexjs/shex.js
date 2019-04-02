@@ -1,5 +1,5 @@
-if (false) {
-importScripts("../browser/shex-browserify.js");
+if (true) {
+importScripts("../browser/shex-webapp-webpack.js");
 } else {
 importScripts("../doc/require.js"      );
 

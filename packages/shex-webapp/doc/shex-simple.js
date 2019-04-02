@@ -853,8 +853,10 @@ function callValidator (done) {
           break;
 
         case "finishQuery":
-          noScrollAppend($("#inputData textarea"), " " + msg.data.triples.length + " triples (" + msg.data.time + " μs)\n");
-          Caches.inputData.slurpWriter.addTriples(msg.data.triples);
+          noScrollAppend($("#inputData textarea"), " " + msg.data.quads.length + " triples (" + msg.data.time + " μs)\n");
+          Caches.inputData.slurpWriter.addQuads(msg.data.quads.map(
+            t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
+          ));
           break;
 
         case "error":
@@ -1323,9 +1325,9 @@ function queryTracker () {
       var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
       noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
     },
-    end: function (triples, time) {
-      noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
-      Caches.inputData.slurpWriter.addQuads(triples.map(
+    end: function (quads, time) {
+      noScrollAppend($("#inputData textarea"), " " + quads.length + " triples (" + time + " μs)\n");
+      Caches.inputData.slurpWriter.addQuads(quads.map(
         t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
       ));
     }
