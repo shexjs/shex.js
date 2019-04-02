@@ -1,5 +1,5 @@
-if (false) {
-importScripts("../browser/shex-browserify.js");
+if (true) {
+importScripts("../browser/shex-webapp-webpack.js");
 } else {
 importScripts("../doc/require.js"      );
 
@@ -63,8 +63,9 @@ onmessage = function (msg) {
   case "validate":
     var errorText = undefined;
     try {
-    var db =
-      ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
+    var db = "endpoint" in msg.data
+      ? ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+      : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
     var results = Util.createResults();
@@ -107,7 +108,7 @@ onmessage = function (msg) {
 }
 
 function makeStaticDB (quads) {
-  var ret = ShEx.N3.Store();
+  var ret = new ShEx.N3.Store();
   ret.addQuads(quads);
   return ret;
 }
@@ -121,4 +122,15 @@ function makeStaticDB (quads) {
     };
     return logger;
   }
+
+function queryTracker () {
+  return {
+    start: function (isOut, term, shapeLabel) {
+      postMessage ({ response: "startQuery", isOut: isOut, term: term, shape: shapeLabel });
+    },
+    end: function (quads, time) {
+      postMessage({ response: "finishQuery", quads: quads, time: time });
+    }
+  }
+}
 

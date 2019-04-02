@@ -120,7 +120,7 @@ function materializer (schema, nextBNode) {
   return {
     materialize: function (bindings, createRoot, shape, target) {
       shape = shape && shape !== ShExValidator.start? { type: "ShapeRef", reference: shape } : schema.start;
-      target = target || N3.Store();
+      target = target || new N3.Store();
       // target.addPrefixes(schema.prefixes); // not used, but seems polite
 
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
