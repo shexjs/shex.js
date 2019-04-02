@@ -20,8 +20,12 @@ const res = directories.map(dir => {
   const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json')))
   const baseName = pkg.main.replace(/\.js$/, '')
   const mainPath = path.join(dir, baseName)
-  const outPath = path.join(dir, 'browser', baseName + '-browserify.js')
-  const outMinPath = path.join(dir, 'browser', baseName + '-browserify.min.js')
+  const browser = path.join(dir, 'browser')
+  if (!fs.existsSync(browser)){
+    fs.mkdirSync(browser);
+  }
+  const outPath = path.join(browser, baseName + '-browserify.js')
+  const outMinPath = path.join(browser, baseName + '-browserify.min.js')
   console.log(mainPath, "->", outPath)
 
   let outStream = fs.createWriteStream(outPath)
