@@ -108,7 +108,7 @@ onmessage = function (msg) {
 }
 
 function makeStaticDB (quads) {
-  var ret = ShEx.N3.Store();
+  var ret = new ShEx.N3.Store();
   ret.addQuads(quads);
   return ret;
 }

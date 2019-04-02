@@ -135,9 +135,11 @@ var RdfTerm = (function () {
     } else if (isBlank(node)) {
       return factory.blankNode(node.substr(2));
     } else if (isLiteral(node)) {
-      return factory.literal(getLiteralValue(node),
-                                 getLiteralLanguage(node) ||
-                                 factory.namedNode(getLiteralType(node)))
+      let dtOrLang = getLiteralLanguage(node) ||
+          (getLiteralType(node) === XsdString
+           ? null // seems to screw up N3.js
+           : factory.namedNode(getLiteralType(node)))
+      return factory.literal(getLiteralValue(node), dtOrLang)
     } else {
       throw Error("Unknown internal term type: " + JSON.stringify(node));
     }
@@ -147,7 +149,8 @@ var RdfTerm = (function () {
     return {
       subject: externalTerm(triple.subject, factory),
       predicate: externalTerm(triple.predicate, factory),
-      object: externalTerm(triple.object, factory)
+      object: externalTerm(triple.object, factory),
+      graph: triple.graph ? externalTerm(triple.graph, factory) : factory.defaultGraph()
     };
   }
 

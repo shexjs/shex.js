@@ -381,8 +381,29 @@ ul {
 
     <!-- #if browserify -->
 <!-- -->
-    <script src="../browser/shex-webapp-browserify.js"></script>
+    <script src="../browser/shex-webapp-webpack.js"></script>
 <!-- -->
+
+    <!-- #else -->
+<!--
+    <script src="../node_modules/n3/browser/n3-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/core/node_modules/hierarchy-closure/hierarchy-closure.js"></script>
+    <script src="../node_modules/shape-map/browser/shape-map-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/core/browser/shex-core-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/parser/browser/shex-parser-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/loader/browser/shex-loader-browserify.min.js"></script>
+    <script>
+ShExWebApp = (function () {
+  return Object.assign(shexCore, {
+    Loader: shexLoader,
+    Parser: shexParser,
+    ShapeMap: shapeMap,
+    ShapeMapParser: shapeMap.Parser,
+    N3: N3
+  })
+})()
+    </script>
+ -->
 
     <!-- #else -->
 <!--
