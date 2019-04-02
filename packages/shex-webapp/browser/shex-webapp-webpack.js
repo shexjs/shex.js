@@ -13768,7 +13768,8 @@ var RdfTerm = (function () {
     return {
       subject: externalTerm(triple.subject, factory),
       predicate: externalTerm(triple.predicate, factory),
-      object: externalTerm(triple.object, factory)
+      object: externalTerm(triple.object, factory),
+      graph: triple.graph ? externalTerm(triple.graph, factory) : factory.defaultGraph()
     };
   }
 
