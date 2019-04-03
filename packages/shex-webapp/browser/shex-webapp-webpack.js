@@ -13765,12 +13765,11 @@ var RdfTerm = (function () {
   }
 
   function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return {
-      subject: externalTerm(triple.subject, factory),
-      predicate: externalTerm(triple.predicate, factory),
-      object: externalTerm(triple.object, factory),
-      graph: triple.graph ? externalTerm(triple.graph, factory) : factory.defaultGraph()
-    };
+    return factory.quad(
+      externalTerm(triple.subject, factory),
+      externalTerm(triple.predicate, factory),
+      externalTerm(triple.object, factory)
+    );
   }
 
   function intermalTermToTurtle (node, base, prefixes) {
