@@ -4,11 +4,12 @@ var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env;
 
-// var ShExUtil = require("../lib/ShExUtil");
-var ShExParser = require("../lib/ShExParser");
-var ShExLoader = require("../lib/ShExLoader");
-var ShExValidator = require("../lib/ShExValidator");
-var TestExtension = require("../extensions/shex-test/module");
+var ShExCore = require("@shexjs/core");
+var ShExParser = require("@shexjs/parser");
+var ShExLoader = require("@shexjs/loader");
+var ShExUtil = ShExCore.Util;
+var ShExValidator = ShExCore.Validator;
+var TestExtension = require("@shexjs/extension-test")
 
 var N3 = require("n3");
 var N3Util = N3.Util;
@@ -23,8 +24,8 @@ var schemasPath = findPath("schemas");
 var validationPath = findPath("validation");
 var manifestFile = validationPath + "manifest.jsonld";
 var regexModules = [
-  require("../lib/regex/nfax-val-1err"),
-  require("../lib/regex/threaded-val-nerr")
+  ShExCore["nfax-val-1err"],
+  ShExCore["threaded-val-nerr"]
 ];
 if (EARL)
   regexModules = regexModules.slice(1);
@@ -86,12 +87,12 @@ describe("A ShEx validator", function () {
                // resolve relative URLs in results file
                if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
-                   N3Util.isIRI(obj[k])) {
-                 obj[k] = resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+                   ShExCore.RdfTerm.isIRI(obj[k])) {
+                 obj[k] = ShExCore.RdfTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
                } else if (["values"].indexOf(k) !== -1) {
                  for (var i = 0; i < obj[k].length; ++i) {
-                   if (typeof obj[k][i] !== "object" && N3Util.isIRI(obj[k][i])) {
-                     obj[k][i] = resolveRelativeIRI(dataURL, obj[k][i]);
+                   if (typeof obj[k][i] !== "object" && ShExCore.RdfTerm.isIRI(obj[k][i])) {
+                     obj[k][i] = ShExCore.RdfTerm.resolveRelativeIRI(dataURL, obj[k][i]);
                    }
                  };
                }
@@ -163,14 +164,14 @@ describe("A ShEx validator", function () {
               //   start = Object.keys(schema.action.shapes)[0];
 
               var store = new N3.Store();
-              var turtleParser = new N3.Parser({documentIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
+              var turtleParser = new N3.Parser({baseIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
               turtleParser.parse(
                 fs.readFileSync(dataFile, "utf8"),
                 function (error, triple, prefixes) {
                   if (error) {
                     report("error parsing " + dataFile + ": " + error);
                   } else if (triple) {
-                    store.addTriple(triple);
+                    store.addQuad(triple);
                   } else {
                     try {
                       function maybeGetTerm (base, s) {
@@ -181,7 +182,7 @@ describe("A ShEx validator", function () {
                               ""
                           ):
                         s.substr(0, 2) === "_:" ? s :
-                          resolveRelativeIRI(base, s);
+                          ShExCore.RdfTerm.resolveRelativeIRI(base, s);
                       }
                       var map = maybeGetTerm(manifestFile, test.action.map);
                       if (map) {
@@ -235,15 +236,6 @@ describe("A ShEx validator", function () {
     });
   });
 });
-
-/* Leverage n3.js's relative IRI parsing.
- * !! requires intimate (so intimate it makes me blush) knowledge of n3.
- */
-function resolveRelativeIRI (baseIri, relativeIri) {
-  var p = N3.Parser({ documentIRI: baseIri });
-  p._readSubject({type: "IRI", value: relativeIri});
-  return p._subject;
-}
 
 // Parses a JSON object, restoring `undefined` values
 function parseJSONFile(filename, mapFunction) {

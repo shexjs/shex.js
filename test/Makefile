@@ -20,19 +20,19 @@ ValidationCorpus=$(join $(TESTDIR), schemas/corpus.json) # isn't there an easier
 SHEXSCHEMAS = $(wildcard $(join $(TESTDIR), schemas/*.shex))
 JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 
-../lib/ShExJison.js: ../lib/ShExJison.jison
+../packages/shex-parser/lib/ShExJison.js: ../packages/shex-parser/lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lr
 
-../lib/ShapeMapJison.js: ../lib/ShapeMapJison.jison
+../packages/shape-map/lib/ShapeMapJison.js: ../packages/shape-map/lib/ShapeMapJison.jison
 	$(JISON) $^ -o $@ -p lalr
 
-Parser-Writer-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Parser-Writer-test.js
+Parser-Writer-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Parser-Writer-test.js
 	$(MOCHA) -C -R $(REPORTER) Parser-Writer-test.js
 
-Partition-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Partition-test.js
+Partition-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Partition-test.js
 	$(MOCHA) -C -R $(REPORTER) Partition-test.js
 
-Compilation-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js ../lib/ShExUtil.js Compilation-test.js
+Compilation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../packages/shex-core/lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
 $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
@@ -41,25 +41,25 @@ $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
 $(ValidationCorpus): $(GENCorpus) $(JSONSCHEMAS)
 	$(GENCorpus) $< -d $(join $(TESTDIR), schemas/) -o $@ -e # suppress output if there are errors
 
-Validation-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js ../lib/ShExValidator.js Validation-test.js $(ValidationManifest)
+Validation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../node_modules/@shexjs/core/lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
-Map-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js Map-test.js
+Map-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Map-test.js
 	$(MOCHA) -C -R $(REPORTER) Map-test.js
 
-cli-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js cli-test.js
+cli-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js cli-test.js
 	$(MOCHA) -C -R $(REPORTER) cli-test.js
 
-browser-test: ../lib/ShExJison.js ../lib/ShapeMapJison.js browser-test.js
+browser-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js browser-test.js
 	$(MOCHA) -C -R $(REPORTER) browser-test.js
 
-map-extensions-test: ../lib/ShExJison.js map-extensions-test.js
+map-extensions-test: ../packages/shex-parser/lib/ShExJison.js map-extensions-test.js
 	$(MOCHA) -C -R $(REPORTER) map-extensions-test.js
 
-hashmap-extension-test: ../lib/ShExJison.js hashmap-extension-test.js
+hashmap-extension-test: ../packages/shex-parser/lib/ShExJison.js hashmap-extension-test.js
 	$(MOCHA) -C -R $(REPORTER) hashmap-extension-test.js
 
-regex-extension-test: ../lib/ShExJison.js regex-extension-test.js
+regex-extension-test: ../packages/shex-parser/lib/ShExJison.js regex-extension-test.js
 	$(MOCHA) -C -R $(REPORTER) regex-extension-test.js
 
 test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js
