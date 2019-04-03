@@ -68,8 +68,8 @@ function parseShEx (text, meta, base) {
   shexParser._setBase(base);
   var ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
-  meta.base = ret.base;
-  meta.prefixes = ret.prefixes;
+  meta.base = ret.base; // base set above.
+  meta.prefixes = ret.prefixes || {}; // @@ revisit after separating shexj from meta and indexes
   return ret;
 }
 
