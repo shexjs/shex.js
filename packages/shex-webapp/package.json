@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/webapp",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -15,24 +15,21 @@
     "parser"
   ],
   "license": "MIT",
+  "main": "./shex-webapp.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "shape-map": "^1.0.0-alpha.1",
-    "@shexjs/core": "^1.0.0-alpha.1",
-    "@shexjs/loader": "^1.0.0-alpha.1",
-    "@shexjs/parser": "^1.0.0-alpha.1",
+    "@shexjs/core": "^1.0.0-alpha.2",
+    "@shexjs/loader": "^1.0.0-alpha.2",
+    "@shexjs/parser": "^1.0.0-alpha.2",
     "jsonld": "^0.4.11",
     "koa": "^1.6.2",
     "koa-body": "^1.4.0",
     "n3": "^1.0.4",
     "nock": "^9.3.0",
     "promise": "^7.1.1",
-    "shape-map": "^1.0.0-alpha.1"
-  },
-  "devDependencies": {
-    "pre-commit": "~1.2.2"
+    "shape-map": "^1.0.0-alpha.2"
   },
   "scripts": {
     "make": "(cd test/ && make test)",

@@ -135,20 +135,22 @@ var RdfTerm = (function () {
     } else if (isBlank(node)) {
       return factory.blankNode(node.substr(2));
     } else if (isLiteral(node)) {
-      return factory.literal(getLiteralValue(node),
-                                 getLiteralLanguage(node) ||
-                                 factory.namedNode(getLiteralType(node)))
+      let dtOrLang = getLiteralLanguage(node) ||
+          (getLiteralType(node) === XsdString
+           ? null // seems to screw up N3.js
+           : factory.namedNode(getLiteralType(node)))
+      return factory.literal(getLiteralValue(node), dtOrLang)
     } else {
       throw Error("Unknown internal term type: " + JSON.stringify(node));
     }
   }
 
   function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return {
-      subject: externalTerm(triple.subject, factory),
-      predicate: externalTerm(triple.predicate, factory),
-      object: externalTerm(triple.object, factory)
-    };
+    return factory.quad(
+      externalTerm(triple.subject, factory),
+      externalTerm(triple.predicate, factory),
+      externalTerm(triple.object, factory)
+    );
   }
 
   function intermalTermToTurtle (node, base, prefixes) {

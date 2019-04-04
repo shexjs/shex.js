@@ -198,8 +198,8 @@ describe("A ShEx parser", function () {
            if (VERBOSE) console.log(schema);
            var schema = fs.readFileSync(shexRFile, "utf8");
            try {
-             var schemaGraph = N3.Store();
-             schemaGraph.addQuads(N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
+             var schemaGraph = new N3.Store();
+             schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
              // console.log(schemaGraph.getQuads());
              var schemaDriver = ShExUtil.makeN3DB(schemaGraph);
              var schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;

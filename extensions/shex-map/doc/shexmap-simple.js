@@ -55,9 +55,9 @@ var QueryParams = Getables.concat([
 
 // utility functions
 function parseTurtle (text, meta, base) {
-  var ret = ShEx.N3.Store();
+  var ret = new ShEx.N3.Store();
   ShEx.N3.Parser._resetBlankNodeIds();
-  var parser = ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
+  var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var triples = parser.parse(text);
   if (triples !== undefined)
     ret.addTriples(triples);
@@ -98,7 +98,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  return new ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -893,7 +893,7 @@ function materialize () {
     Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = ShExMap.binder(resultBindings);
-    var writer = ShEx.N3.Writer({ prefixes: {} });
+    var writer = new ShEx.N3.Writer({ prefixes: {} });
     outputShapeMap.forEach(pair => {
       try {
         var mapper2 = ShExMaterializer.construct(outputSchema);
