@@ -106,8 +106,8 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
     var meta = addMeta(obj.url, mediaType);
     try {
       ShExUtil.merge(target, obj.schema, true, true);
-      meta.prefixes = target.prefixes;
-      meta.base = target.base;
+      meta.prefixes = target._prefixes;
+      meta.base = target._base;
       loadImports(obj.schema);
       return Promise.resolve([mediaType, obj.url]);
     } catch (e) {
@@ -248,8 +248,8 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     var s = parser.parse(text);
     // !! horrible hack until I set a variable to know if there's a BASE.
     if (s.base === url) delete s.base;
-    meta.prefixes = schema.prefixes;
-    meta.base = schema.base || meta.base;
+    meta.prefixes = schema._prefixes;
+    meta.base = schema._base || meta.base;
     ShExUtil.merge(schema, loadImports(s), true, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
@@ -295,7 +295,7 @@ function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImpo
   try {
     var s = ShExUtil.ShExJtoAS(JSON.parse(text));
     ShExUtil.merge(schema, s, true, true);
-    meta.prefixes = schema.prefixes;
+    meta.prefixes = schema._prefixes;
     meta.base = schema.base;
     loadImports(s);
     return Promise.resolve([mediaType, url]);

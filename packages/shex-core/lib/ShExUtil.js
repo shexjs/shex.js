@@ -55,6 +55,11 @@ function extend (base) {
       }, true);
     }
 
+  function isShapeRef (expr) {
+    return typeof expr === "string" // test for JSON-LD @ID
+  }
+  let isInclusion = isShapeRef;
+
 var ShExUtil = {
 
   SX: SX,
@@ -82,7 +87,9 @@ var ShExUtil = {
         var ret = { type: "Schema" };
         _ShExUtil._expect(schema, "type", "Schema");
         this._maybeSet(schema, ret, "Schema",
-                       ["prefixes", "base", "imports", "startActs", "start", "shapes", "productions"]);
+                       ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
+                       ["_base", "_prefixes", "_index"]
+                      );
         return ret;
       },
 
@@ -136,14 +143,13 @@ var ShExUtil = {
         var _Visitor = this;
         if (shapes === undefined)
           return undefined;
-        var ret = {}
-        Object.keys(shapes).forEach(function (label) {
-          ret[label] = _Visitor.visitShapeExpr(shapes[label], label);
-        });
-        return ret;
+        return shapes.map(
+          shapeExpr =>
+            _Visitor.visitShapeExpr(shapeExpr)
+        );
       },
 
-      visitProductions: function (productions) {
+      visitProductions999: function (productions) { // !! DELETE
         var _Visitor = this;
         if (productions === undefined)
           return undefined;
@@ -155,13 +161,14 @@ var ShExUtil = {
       },
 
       visitShapeExpr: function (expr, label) {
+        if (isShapeRef(expr))
+          return this.visitShapeRef(expr)
         var r =
             expr.type === "Shape" ? this.visitShape(expr, label) :
             expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
             expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
             expr.type === "ShapeOr" ? this.visitShapeOr(expr, label) :
             expr.type === "ShapeNot" ? this.visitShapeNot(expr, label) :
-            expr.type === "ShapeRef" ? this.visitShapeRef(expr) :
             expr.type === "ShapeExternal" ? this.visitShapeExternal(expr) :
             null;// if (expr.type === "ShapeRef") r = 0; // console.warn("visitShapeExpr:", r);
         if (r === null)
@@ -221,9 +228,13 @@ var ShExUtil = {
         return ret;
       },
 
-      visitShapeRef: function (expr) {
-        this._testUnknownAttributes(expr, ["reference"], "ShapeRef", this.visitShapeNot)
-        return { type: "ShapeRef", reference: expr.reference };
+      visitShapeRef: function (reference) {
+        if (typeof reference !== "string") {
+          let ex = Exception("visitShapeRef expected a string, not " + JSON.stringify(reference));
+          console.warn(ex);
+          throw ex;
+        }
+        return reference;
       },
 
       visitShapeExternal: function (expr) {
@@ -259,10 +270,11 @@ var ShExUtil = {
       },
 
       visitExpression: function (expr) {
+        if (typeof expr === "string")
+          return this.visitInclusion(expr);
         var r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
           expr.type === "OneOf" ? this.visitOneOf(expr) :
           expr.type === "EachOf" ? this.visitEachOf(expr) :
-          expr.type === "Inclusion" ? this.visitInclusion(expr) :
           null;
         if (r === null)
           throw Error("unexpected expression type: " + expr.type);
@@ -317,12 +329,12 @@ var ShExUtil = {
       },
 
       visitInclusion: function (inclusion) {
-        var ret = { type: "Inclusion" };
-        _ShExUtil._expect(inclusion, "type", "Inclusion");
-
-        this._maybeSet(inclusion, ret, "Inclusion",
-                       ["include"]);
-        return ret;
+        if (typeof inclusion !== "string") {
+          let ex = Exception("visitInclusion expected a string, not " + JSON.stringify(inclusion));
+          console.warn(ex);
+          throw ex;
+        }
+        return inclusion;
       },
 
       _maybeSet: function (obj, ret, context, members, ignore) {
@@ -365,7 +377,7 @@ var ShExUtil = {
       }
 
     };
-    r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r._visitValue;
+    r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
     r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
     r.visitInverse = r.visitPredicate = r._visitValue;
     r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
@@ -422,19 +434,20 @@ var ShExUtil = {
 
   ShExJtoAS: function (schema) {
     var _ShExUtil = this;
-    delete schema["@context"];
+    schema._prefixes = schema.prefixes || {  };
+    schema._index = this.index(schema);
+    return schema;
     var newProductions = {};
     if ("start" in schema) {
-      var v = _ShExUtil.ShExJVisitor(newProductions);
-      schema.start = v.visitShapeExpr(schema.start);
+      _ShExUtil.ShExJVisitor(newProductions);
     }
     if ("shapes" in schema) {
       var newShapes = {}
       schema.shapes.forEach(sh => {
         var key = sh.id;
-        delete sh.id;
         var v = _ShExUtil.ShExJVisitor(newProductions);
-        newShapes[key] = v.visitShapeExpr(sh);
+        v.visitShapeExpr(sh)
+        ret.shapeIndex[key] = sh;
       });
       schema.shapes = newShapes;
     }
@@ -444,6 +457,7 @@ var ShExUtil = {
   },
 
   AStoShExJ: function (schema, abbreviate) {
+    return schema.shexj;
     if (!abbreviate) {
       delete schema.prefixes;
       delete schema.base;
@@ -626,31 +640,60 @@ var ShExUtil = {
     });
   },
 
+  /** create indexes for schema
+   */
+  index: function (schema) {
+    let index = {
+      shapeExprs: new Map(),
+      tripleExprs: new Map()
+    };
+    let v = ShExUtil.Visitor();
+
+    let oldVisitExpression = v.visitExpression;
+    v.visitExpression = function (expression) {
+      if (typeof expression === "object" && "id" in expression)
+        index.tripleExprs[expression.id] = expression;
+      return oldVisitExpression.call(v, expression);
+    };
+
+    let oldVisitShapeExpr = v.visitShapeExpr;
+    v.visitShapeExpr = v.visitValueExpr = function (shapeExpr, label) {
+      if (typeof shapeExpr === "object" && "id" in shapeExpr)
+        index.shapeExprs[shapeExpr.id] = shapeExpr;
+      return oldVisitShapeExpr.call(v, shapeExpr, label);
+    };
+
+    v.visitSchema(schema);
+    return index;
+  },
+
   /* canonicalize: move all tripleExpression references to their first expression.
    *
    */
   canonicalize: function (schema, trimIRI) {
     var ret = JSON.parse(JSON.stringify(schema));
-    delete ret.prefixes;
-    delete ret.base;
+    ret["@context"] = ret["@context"] || "http://www.w3.org/ns/shex.jsonld";
+    delete ret._prefixes;
+    delete ret._base;
+    let index = ret._index || this.index(schema);
+    delete ret._index;
     // Don't delete ret.productions as it's part of the AS.
     var v = ShExUtil.Visitor();
     var knownExpressions = [];
     var oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
     v.visitInclusion = function (inclusion) {
-      if (knownExpressions.indexOf(inclusion.include) === -1 &&
-          "productions" in schema &&
-          inclusion.include in schema.productions) {
-        knownExpressions.push(inclusion.include)
-        return oldVisitExpression.call(v, schema.productions[inclusion.include]);
+      if (knownExpressions.indexOf(inclusion) === -1 &&
+          inclusion in index.tripleExprs) {
+        knownExpressions.push(inclusion)
+        return oldVisitExpression.call(v, index.tripleExprs[inclusion]);
       }
       return oldVisitInclusion.call(v, inclusion);
     };
     v.visitExpression = function (expression) {
-      if ("id" in expression) {
+      if (typeof expression === "object" && "id" in expression) {
         if (knownExpressions.indexOf(expression.id) === -1) {
           knownExpressions.push(expression.id)
-          return oldVisitExpression.call(v, schema.productions[expression.id]);
+          return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
         }
         return { type: "Inclusion", include: expression.id};
       }
@@ -664,10 +707,10 @@ var ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      Object.keys(ret.shapes).sort().forEach(k => {
-        if ("extra" in ret.shapes[k])
-          ret.shapes[k].extra.sort();
-        ret.shapes[k] = v.visitShapeExpr(ret.shapes[k]);
+      Object.keys(index.shapeExprs).sort().forEach(k => {
+        if ("extra" in index.shapeExprs[k])
+          index.shapeExprs[k].extra.sort();
+        v.visitShapeExpr(index.shapeExprs[k]);
       });
     }
     return ret;
@@ -994,7 +1037,9 @@ var ShExUtil = {
     ret = ret || this.BiDiClosure();
     Object.keys(schema.shapes || []).forEach(function (label) {
       function _walkShapeExpression (shapeExpr, negated) {
-        if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
+        if (typeof shapeExpr === "string") { // ShapeRef
+          ret.add(label, shapeExpr);
+        } else if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
           shapeExpr.shapeExprs.forEach(function (expr) {
             _walkShapeExpression(expr, negated);
           });
@@ -1004,11 +1049,9 @@ var ShExUtil = {
           _walkShape(shapeExpr, negated);
         } else if (shapeExpr.type === "NodeConstraint") {
           // no impact on dependencies
-        } else if (shapeExpr.type === "ShapeRef") {
-          ret.add(label, shapeExpr.reference);
         } else if (shapeExpr.type === "ShapeExternal") {
         } else
-          throw Error("expected Shape{And,Or,Ref,External} or NodeConstraint in " + util.inspect(shapeExpr));
+          throw Error("expected Shape{And,Or,Ref,External} or NodeConstraint in " + JSON.stringify(shapeExpr));
       }
       
       function _walkShape (shape, negated) {
@@ -1033,7 +1076,7 @@ var ShExUtil = {
           } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
             _exprGroup(tripleExpr.expressions);
           } else if (tripleExpr.type === "Inclusion") {
-            ret.add(label, tripleExpr.include);
+            ret.add(label, tripleExpr);
           } else
             throw Error("expected {TripleConstraint,OneOf,EachOf,Inclusion} in " + tripleExpr);
         }
@@ -1078,7 +1121,7 @@ var ShExUtil = {
               partition.shapes[n] = schema.shapes[n];
             else if (n in schema.productions) {
               var s = deps.foundIn[n]
-              partition.shapes[s] = schema.shapes[s];
+              partition.shapes[s] = schema.shapes[s];  // !! EXAMINE
               partition.productions[n] = schema.productions[n];
             } else
               cantFind(n, i);
@@ -1126,21 +1169,14 @@ var ShExUtil = {
       });
     }
 
-    // productions
-    if ("productions" in left)
-      ret.productions = left.productions;
-    if ("productions" in right)
-      if (!("productions" in left) || overwrite)
-        ret.productions = right.productions;
-
     // base
-    if ("base" in left)
-      ret.base = left.base;
-    if ("base" in right)
-      if (!("base" in left) || overwrite)
-        ret.base = right.base;
+    if ("_base" in left)
+      ret._base = left._base;
+    if ("_base" in right)
+      if (!("_base" in left) || overwrite)
+        ret._base = right._base;
 
-    copy("prefixes");
+    copy("_prefixes");
 
     if ("imports" in right)
       if (!("imports" in left) || overwrite)
@@ -1160,19 +1196,25 @@ var ShExUtil = {
       if (!("start" in left) || overwrite)
         ret.start = right.start;
 
+    let lindex = left._index || this.index(left);
+
     // shapes
-    Object.keys(left.shapes || {}).forEach(function (key) {
-      if (!("shapes" in ret))
-        ret.shapes = {};
-      ret.shapes[key] = left.shapes[key];
-    });
-    Object.keys(right.shapes || {}).forEach(function (key) {
-      if (!("shapes"  in left) || !(key in left.shapes) || overwrite) {
+    if (!inPlace)
+      (left.shapes || []).forEach(function (lshape) {
         if (!("shapes" in ret))
-          ret.shapes = {};
-        ret.shapes[key] = right.shapes[key];
+          ret.shapes = [];
+        ret.shapes.push(lshape);
+      });
+    (right.shapes || []).forEach(function (rshape) {
+      if (!("shapes"  in left) || !(rshape.id in lindex.shapeExprs) || overwrite) {
+        if (!("shapes" in ret))
+          ret.shapes = [];
+        ret.shapes.push(rshape)
       }
     });
+
+    if (left._index || right._index)
+      ret._index = this.index(ret); // inefficient; could build above
 
     return ret;
   },
@@ -1210,6 +1252,7 @@ var ShExUtil = {
     var oldVisitShape = visitor.visitShape;
     var negativeDeps = Hierarchy.create();
     var positiveDeps = Hierarchy.create();
+    let index = schema.index || this.index(schema);
 
     visitor.visitShape = function (shape, label) {
       var lastExtra = currentExtra;
@@ -1242,27 +1285,27 @@ var ShExUtil = {
 
     var oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef) {
-      if (!(shapeRef.reference in schema.shapes))
-        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(schema.shapes) + ".");
-      if (!inTE && shapeRef.reference === currentLabel)
+      if (!(shapeRef in index.shapeExprs))
+        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + ".");
+      if (!inTE && shapeRef === currentLabel)
         throw Error("Structural error: circular reference to " + currentLabel + ".");
-      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef.reference)
+      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
       return oldVisitShapeRef.call(visitor, shapeRef);
     }
 
     var oldVisitInclusion = visitor.visitInclusion;
     visitor.visitInclusion = function (inclusion) {
       var refd;
-      if (!("productions" in schema) || !(refd = schema.productions[inclusion.include]))
-        throw Error("Structural error: included shape " + inclusion.include + " not found in schema triple expressions:\n" + dumpKeys(schema.productions) + ".");
+      if (!(refd = index.tripleExprs[inclusion]))
+        throw Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + ".");
       // if (refd.type !== "Shape")
-      //   throw Error("Structural error: " + inclusion.include + " is not a simple shape.");
+      //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
       return oldVisitInclusion.call(visitor, inclusion);
     };
 
-    Object.keys(schema.shapes || []).forEach(function (label) {
-      currentLabel = label;
-      visitor.visitShapeExpr(schema.shapes[label], label);
+    (schema.shapes || []).forEach(function (shape) {
+      currentLabel = shape.id;
+      visitor.visitShapeExpr(shape, shape.id);
     });
     let circs = Object.keys(negativeDeps.children).filter(
       k => negativeDeps.children[k].filter(
