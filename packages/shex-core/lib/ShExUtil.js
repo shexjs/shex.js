@@ -792,12 +792,13 @@ var ShExUtil = {
    */
   nestShapes: function (schema, options = {}) {
     var _ShExUtil = this;
+    const index = schema._index || this.index(schema);
     if (!('no' in options)) { options.no = false }
 
-    let shapeLabels = Object.keys(schema.shapes || [])
+    let shapeLabels = Object.keys(index.shapeExprs || [])
     let shapeReferences = {}
     shapeLabels.forEach(label => {
-      let shape = schema.shapes[label]
+      let shape = index.shapeExprs[label]
       noteReference(label, null) // just note the shape so we have a complete list at the end
       shape = _ShExUtil.skipDecl(shape)
       if (shape.type === 'Shape') {
@@ -821,7 +822,7 @@ var ShExUtil = {
     let nestables = Object.keys(shapeReferences).filter(
       label => shapeReferences[label].length === 1
         && shapeReferences[label][0].type === 'tc' // no inheritance support yet
-        && _ShExUtil.skipDecl(schema.shapes[label]).type === 'Shape' // Don't nest e.g. valuesets for now
+        && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now
     ).reduce((acc, label) => {
       acc[label] = {
         referrer: shapeReferences[label][0].shapeLabel,
@@ -845,15 +846,15 @@ var ShExUtil = {
         })()
       }
       Object.keys(nestables).forEach(oldName => {
-        let shapeExpr = schema.shapes[oldName]
+        let shapeExpr = index.shapeExprs[oldName]
         let newName = options.transform(oldName, shapeExpr)
         oldToNew[oldName] = newName
         shapeLabels[shapeLabels.indexOf(oldName)] = newName
         nestables[newName] = nestables[oldName]
         nestables[newName].was = oldName
         delete nestables[oldName]
-        schema.shapes[newName] = schema.shapes[oldName]
-        delete schema.shapes[oldName]
+        index.shapeExprs[newName] = index.shapeExprs[oldName]
+        delete index.shapeExprs[oldName]
         if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
         let ref = shapeReferences[oldName][0]
         if (ref.type === 'tc') {
@@ -879,12 +880,12 @@ var ShExUtil = {
 
       // Restore old order for more concise diffs.
       let shapesCopy = {}
-      shapeLabels.forEach(label => shapesCopy[label] = schema.shapes[label])
-      schema.shapes = shapesCopy
+      shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
+      index.shapeExprs = shapesCopy
       } else {
         Object.keys(nestables).forEach(oldName => {
-          shapeReferences[oldName][0].tc.valueExpr = schema.shapes[oldName].shapeExpr
-          delete schema.shapes[oldName]
+          shapeReferences[oldName][0].tc.valueExpr = index.shapeExprs[oldName].shapeExpr
+          delete index.shapeExprs[oldName]
         })
       }
     }
@@ -1035,10 +1036,10 @@ var ShExUtil = {
    */
   getDependencies: function (schema, ret) {
     ret = ret || this.BiDiClosure();
-    Object.keys(schema.shapes || []).forEach(function (label) {
+    (schema.shapes || []).forEach(function (shape) {
       function _walkShapeExpression (shapeExpr, negated) {
         if (typeof shapeExpr === "string") { // ShapeRef
-          ret.add(label, shapeExpr);
+          ret.add(shape.id, shapeExpr);
         } else if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
           shapeExpr.shapeExprs.forEach(function (expr) {
             _walkShapeExpression(expr, negated);
@@ -1065,30 +1066,33 @@ var ShExUtil = {
           function _walkTripleConstraint (tc, negated) {
             if (tc.valueExpr)
               _walkShapeExpression(tc.valueExpr, negated);
-            if (negated && ret.inCycle.indexOf(label) !== -1) // illDefined/negatedRefCycle.err
-              throw Error("Structural error: " + label + " appears in negated cycle");
+            if (negated && ret.inCycle.indexOf(shape.id) !== -1) // illDefined/negatedRefCycle.err
+              throw Error("Structural error: " + shape.id + " appears in negated cycle");
           }
 
-          if ("id" in tripleExpr)
-            ret.addIn(tripleExpr.id, label)
-          if (tripleExpr.type === "TripleConstraint") {
-            _walkTripleConstraint(tripleExpr, negated);
-          } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
-            _exprGroup(tripleExpr.expressions);
-          } else if (tripleExpr.type === "Inclusion") {
-            ret.add(label, tripleExpr);
-          } else
-            throw Error("expected {TripleConstraint,OneOf,EachOf,Inclusion} in " + tripleExpr);
+          if (typeof tripleExpr === "string") { // Inclusion
+            ret.add(shape.id, tripleExpr);
+          } else {
+            if ("id" in tripleExpr)
+              ret.addIn(tripleExpr.id, shape.id)
+            if (tripleExpr.type === "TripleConstraint") {
+              _walkTripleConstraint(tripleExpr, negated);
+            } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
+              _exprGroup(tripleExpr.expressions);
+            } else {
+              throw Error("expected {TripleConstraint,OneOf,EachOf,Inclusion} in " + tripleExpr);
+            }
+          }
         }
 
         if (shape.inherit && shape.inherit.length > 0)
           shape.inherit.forEach(function (i) {
-            ret.add(label, i);
+            ret.add(shape.id, i);
           });
         if (shape.expression)
           _walkTripleExpression(shape.expression, negated);
       }
-      _walkShapeExpression(schema.shapes[label], 0); // 0 means false for bitwise XOR
+      _walkShapeExpression(shape, 0); // 0 means false for bitwise XOR
     });
     return ret;
   },
@@ -1099,35 +1103,47 @@ var ShExUtil = {
    * @schema: input schema
    * @partition: shape name or array of desired shape names
    * @deps: (optional) dependency tree from getDependencies.
+   *        map(shapeLabel -> [shapeLabel])
    */
   partition: function (schema, includes, deps, cantFind) {
+    const inputIndex = schema._index || this.index(schema)
+    const outputIndex = { shapeExprs: new Map(), tripleExprs: new Map() };
     includes = includes instanceof Array ? includes : [includes];
+
+    // build dependency tree if not passed one
     deps = deps || this.getDependencies(schema);
     cantFind = cantFind || function (what, why) {
-      throw new Error("Error: can't find shape "+
+      throw new Error("Error: can't find shape " +
                       (why ?
                        why + " dependency " + what :
                        what));
     };
     var partition = {};
     for (var k in schema)
-      partition[k] = k === "shapes" ? {} : schema[k];
+      partition[k] = k === "shapes" ? [] : schema[k];
     includes.forEach(function (i) {
-      if (i in schema.shapes) {
-        partition.shapes[i] = schema.shapes[i];
+      if (i in outputIndex.shapeExprs) {
+        // already got it.
+      } else if (i in inputIndex.shapeExprs) {
+        const adding = inputIndex.shapeExprs[i];
+        partition.shapes.push(adding);
+        outputIndex.shapeExprs[adding.id] = adding;
         if (i in deps.needs)
           deps.needs[i].forEach(function (n) {
-            if (n in schema.shapes)
-              partition.shapes[n] = schema.shapes[n];
-            else if (n in schema.productions) {
-              var s = deps.foundIn[n]
-              partition.shapes[s] = schema.shapes[s];  // !! EXAMINE
-              partition.productions[n] = schema.productions[n];
+            // Turn any needed TE into an SE.
+            if (n in deps.foundIn)
+              n = deps.foundIn[n];
+
+            if (n in outputIndex.shapeExprs) {
+            } else if (n in inputIndex.shapeExprs) {
+              const needed = inputIndex.shapeExprs[n];
+              partition.shapes.push(needed);
+              outputIndex.shapeExprs[needed.id] = needed;
             } else
               cantFind(n, i);
           });
       } else {
-        cantFind(i);
+        cantFind(i, "supplied");
       }
     });
     return partition;
