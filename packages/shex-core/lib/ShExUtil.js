@@ -457,13 +457,13 @@ var ShExUtil = {
   },
 
   AStoShExJ: function (schema, abbreviate) {
-    return schema.shexj;
+    schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
+    return schema;
     if (!abbreviate) {
       delete schema.prefixes;
       delete schema.base;
     }
     delete schema.productions;
-    schema["@context"] = "http://www.w3.org/ns/shex.jsonld";
 
     var v = ShExUtil.Visitor();
     // change { "type": "ShapeRef", "reference": X } to X

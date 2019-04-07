@@ -105,8 +105,8 @@ var AllTests = {
   "json-to-shex": [
     { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
     { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
-    { name: "simple" , args: ["cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
-    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.json"], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
+    { name: "simple" , args: ["cli/1dotOr2dot.json", "--prefixes", '{ "": "http://a.example/" }'], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
+    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.json", "--prefixes", '{ "": "http://a.example/" }'], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
     { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], errorMatch: "ENOENT", status: 1 },
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], errorMatch: "Not Found", status: 1 },
   ],
