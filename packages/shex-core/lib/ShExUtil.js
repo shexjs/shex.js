@@ -390,41 +390,6 @@ var ShExUtil = {
     return r;
   },
 
-  ShExJVisitor: function (idMap) {
-    var v = ShExUtil.Visitor();
-    var oldVisitShapeExpr = v.visitShapeExpr,
-        oldVisitShape = v.visitShape,
-        oldVisitExpression = v.visitExpression;
-
-    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
-      var ret =
-          (typeof expr === "string") ?
-          { type: "ShapeRef", reference: expr } :
-          oldVisitShapeExpr.call(this, expr, label);
-      return ret;
-    };
-
-    v.visitShape = function (shape, label) {
-      var ret =
-        oldVisitShape.call(this, shape, label);
-      if ("extra" in shape)
-        ret.extra.sort();
-      return ret;
-    };
-
-    v.visitExpression = function (expr) {
-      var ret =
-          (typeof expr === "string") ?
-          { type: "Inclusion", include: expr } :
-          oldVisitExpression.call(this, expr);
-      if (typeof expr === "object" && "id" in expr)
-        idMap[expr.id] = ret;
-      return ret;
-    };
-    return v;
-  },
-
-
   // tests
   // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
   //  { "id":"http://all.example/S1e", "type":"EachOf","expressions":[ ] },
@@ -437,54 +402,10 @@ var ShExUtil = {
     schema._prefixes = schema.prefixes || {  };
     schema._index = this.index(schema);
     return schema;
-    var newProductions = {};
-    if ("start" in schema) {
-      _ShExUtil.ShExJVisitor(newProductions);
-    }
-    if ("shapes" in schema) {
-      var newShapes = {}
-      schema.shapes.forEach(sh => {
-        var key = sh.id;
-        var v = _ShExUtil.ShExJVisitor(newProductions);
-        v.visitShapeExpr(sh)
-        ret.shapeIndex[key] = sh;
-      });
-      schema.shapes = newShapes;
-    }
-    if (Object.keys(newProductions).length > 0) // should they always be present?
-      schema.productions = newProductions;
-    return schema;
   },
 
   AStoShExJ: function (schema, abbreviate) {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
-    return schema;
-    if (!abbreviate) {
-      delete schema.prefixes;
-      delete schema.base;
-    }
-    delete schema.productions;
-
-    var v = ShExUtil.Visitor();
-    // change { "type": "ShapeRef", "reference": X } to X
-    v.visitShapeRef = function (inclusion) { return inclusion.reference; };
-    // change { "type": "Inclusion", "include": X } to X
-    v.visitInclusion = function (inclusion) { return inclusion.include; };
-
-    if ("start" in schema)
-      schema.start = v.visitShapeExpr(schema.start);
-
-    if ("shapes" in schema) {
-      var newShapes = []
-      for (var key in schema.shapes) {
-        newShapes.push(Object.assign(
-          {id: key},
-          v.visitShapeExpr(schema.shapes[key])
-        ));
-      };
-      schema.shapes = newShapes;
-    }
-
     return schema;
   },
 
