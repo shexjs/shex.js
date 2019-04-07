@@ -695,7 +695,7 @@ var ShExUtil = {
           knownExpressions.push(expression.id)
           return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
         }
-        return { type: "Inclusion", include: expression.id};
+        return expression.id; // Inclusion
       }
       return oldVisitExpression.call(v, expression);
     };
@@ -707,10 +707,10 @@ var ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      Object.keys(index.shapeExprs).sort().forEach(k => {
+      ret.shapes = Object.keys(index.shapeExprs).sort().map(k => {
         if ("extra" in index.shapeExprs[k])
           index.shapeExprs[k].extra.sort();
-        v.visitShapeExpr(index.shapeExprs[k]);
+        return v.visitShapeExpr(index.shapeExprs[k]);
       });
     }
     return ret;
