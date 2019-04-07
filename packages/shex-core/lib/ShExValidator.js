@@ -250,10 +250,10 @@ function ShExValidator_constructor(schema, options) {
   this.getAST = function () {
     return {
       type: "AST",
-      shapes: Object.keys(index.shapeExprs).reduce(function (ret, label) {
-        ret[label] = {
+      shapes: schema.shapes.reduce(function (ret, shape) {
+        ret[shape.id] = {
           type: "ASTshape",
-          expression: _compileShapeToAST(_ShExValidator.schema._index.tripleExprs[label].expression, [], _ShExValidator.schema)
+          expression: _compileShapeToAST(shape.expression, [], _ShExValidator.schema)
         };
         return ret;
       }, {})
