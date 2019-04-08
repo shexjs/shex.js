@@ -93,8 +93,8 @@ ShExWriter.prototype = {
     if (schema.start)
       _ShExWriter._write("start = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
     if ("shapes" in schema)
-      Object.keys(schema.shapes).forEach(function (label) {
-        var shapeExpr = schema.shapes[label];
+      schema.shapes.forEach(function (shapeExpr) {
+        let id = shapeExpr.id;
         var abstract = "";
         if (shapeExpr.type === "ShapeDecl") {
           if (shapeExpr.abstract)
@@ -103,7 +103,7 @@ ShExWriter.prototype = {
         }
         _ShExWriter._write(
           abstract +
-          _ShExWriter._encodeShapeName(label, false) +
+          _ShExWriter._encodeShapeName(id, false) +
             " " +
             _ShExWriter._writeShapeExpr(shapeExpr, done, true, 0).join("")+"\n",
           done
@@ -114,8 +114,8 @@ ShExWriter.prototype = {
   _writeShapeExpr: function (shapeExpr, done, forceBraces, parentPrec) {
     var _ShExWriter = this;
     var pieces = [];
-    if (shapeExpr.type === "ShapeRef")
-      pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr.reference));
+    if (typeof shapeExpr === "string") // ShapeRef
+      pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr));
     // !!! []s for precedence!
     else if (shapeExpr.type === "ShapeDecl")
       pieces.push(_ShExWriter._writeShapeExpr(shapeExpr.shapeExpr, done, false, 3));
@@ -288,6 +288,11 @@ ShExWriter.prototype = {
           }
         }
 
+        if (typeof expr === "string") {
+          pieces.push("&");
+          pieces.push(_ShExWriter._encodeShapeName(expr, false));
+        } else {
+
         if ("id" in expr) {
           pieces.push("$");
           pieces.push(_ShExWriter._encodeIriOrBlankNode(expr.id, true));
@@ -331,12 +336,8 @@ ShExWriter.prototype = {
           _writeExpressionActions(expr.semActs);
         }
 
-        else if (expr.type === "Inclusion") {
-          pieces.push("&");
-          pieces.push(_ShExWriter._encodeShapeName(expr.include, false));
-        }
-
         else throw Error("unexpected expr type: " + expr.type);
+        }
       }
 
       if (shape.expression) // t: 0, 0Extend1

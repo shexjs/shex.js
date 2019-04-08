@@ -124,8 +124,7 @@ describe("A ShEx validator", function () {
           }
           if (shapeExternsFile) {
             shexParser._setBase(shapeExternsURL);
-            shapeExterns = shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8")).
-              shapes;
+            shapeExterns = ShExUtil.index(shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8"))).shapeExprs;
           }
           shexParser._setBase(schemaURL);
           var validator;
@@ -270,10 +269,14 @@ function restoreUndefined(object) {
   for (var key in object) {
     var item = object[key];
     if (typeof item === "object") {
-      object[key] = restoreUndefined(item);
+      object[key] = item.type === "ShapeRef"
+        ? item.reference
+        : restoreUndefined(item);
     } else if (item === "{undefined}") {
       object[key] = undefined;
     }
   }
+  if ("shape" in object && "shapeExpr" in object && "id" in object.shapeExpr)
+    delete object.shapeExpr.id
   return object;
 }
