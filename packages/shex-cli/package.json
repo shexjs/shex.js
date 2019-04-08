@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/cli",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.4",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -19,13 +19,13 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/core": "^1.0.0-alpha.3",
-    "@shexjs/loader": "^1.0.0-alpha.3",
+    "@shexjs/core": "^1.0.0-alpha.4",
+    "@shexjs/loader": "^1.0.0-alpha.4",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "jsonld": "^0.4.11",
     "n3": "^1.0.4",
-    "shape-map": "^1.0.0-alpha.2"
+    "shape-map": "^1.0.0-alpha.4"
   },
   "bin": {
     "json-to-shex": "bin/json-to-shex",
