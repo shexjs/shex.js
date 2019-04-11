@@ -7,7 +7,6 @@ node_js:
   - "lts/*"
   - "stable"
 before_script:
-  - npm run browser
   - git clone --depth=50 --branch=master https://github.com/shexSpec/shexTest.git ../shexTest
 script:
   - npm run test-all
