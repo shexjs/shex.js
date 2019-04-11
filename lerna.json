@@ -1,6 +1,5 @@
 {
   "packages": [
-    ".",
     "extensions/*",
     "packages/*"
   ],
