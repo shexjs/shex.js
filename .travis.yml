@@ -4,11 +4,8 @@ env:
   - CLI_TIMEOUT=10000
 node_js:
   - "8"
-  - "10"
   - "lts/*"
-  - "node"
   - "stable"
-#  - "stable"
 before_script:
   - git clone --depth=50 --branch=extends https://github.com/shexSpec/shexTest.git ../shexTest
 script:

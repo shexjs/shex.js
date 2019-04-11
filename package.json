@@ -27,21 +27,20 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {
-    "@shexjs/cli": "^1.0.0-alpha.4",
-    "@shexjs/core": "^1.0.0-alpha.4",
-    "@shexjs/extension-map": "^1.0.0-alpha.4",
-    "@shexjs/extension-test": "^1.0.0-alpha.4",
-    "@shexjs/loader": "^1.0.0-alpha.4",
-    "@shexjs/parser": "^1.0.0-alpha.4",
-    "@shexjs/webapp": "^1.0.0-alpha.4",
+  "dependencies": {},
+  "devDependencies": {
+    "shape-map": "file:packages/shape-map",
+    "@shexjs/cli": "file:packages/shex-cli",
+    "@shexjs/core": "file:packages/shex-core",
+    "@shexjs/loader": "file:packages/shex-loader",
+    "@shexjs/parser": "file:packages/shex-parser",
+    "@shexjs/webapp": "file:packages/shex-webapp",
+    "@shexjs/extension-map": "file:extensions/shex-map",
+    "@shexjs/extension-test": "file:extensions/shex-test",
     "marked": "^0.3.19",
     "n3": "^1.0.4",
     "nock": "^9.3.0",
-    "shape-map": "^1.0.0-alpha.4",
-    "shex-test": "^2.0.2"
-  },
-  "devDependencies": {
+    "shex-test": "^2.0.2",
     "browserify": "^16.2.3",
     "chai": "1.9.x",
     "cross-spawn": "^5.0.1",
@@ -66,7 +65,7 @@
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
-    "test-all": "mocha -C -R dot && TEST_cli=true mocha -C -R dot test/cli-test.js && TEST_browser=true mocha -C -R dot test/browser-test.js",
+    "test-all": "mocha && TEST_cli=true mocha test/cli-test.js && TEST_browser=true mocha test/browser-test.js",
     "earl999": "mocha -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
