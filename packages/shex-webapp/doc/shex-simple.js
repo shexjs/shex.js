@@ -1558,6 +1558,9 @@ function copyEditMapToTextMap () {
 function copyTextMapToEditMap () {
   $("#textMap").removeClass("error");
   var shapeMap = $("#textMap").val();
+  if ($("#textMap").data("isSparqlQuery")) {
+    shapeMap = "SPARQL '''" + shapeMap + "'''@START";
+  }
   try { Caches.inputSchema.refresh(); } catch (e) { }
   try { Caches.inputData.refresh(); } catch (e) { }
   try {
@@ -1614,6 +1617,9 @@ function loadSearchParameters () {
   }
   if ("hideData" in iface) {
     $("#inputData textarea").css("visibility", "hidden");
+  }
+  if ("textMapIsSparqlQuery" in iface) {
+    $("#textMap").data("isSparqlQuery", true)
   }
 
   // Load all known query parameters.
@@ -1719,6 +1725,9 @@ function loadSearchParameters () {
     }, []));
     if ($("#inputData textarea").css("visibility") === "hidden") {
       parms.push("hideData");
+    }
+    if ($("#textMap").data("isSparqlQuery")) {
+      parms.push('textMapIsSparqlQuery');
     }
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
