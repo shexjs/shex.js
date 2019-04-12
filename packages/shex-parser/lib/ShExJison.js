@@ -85,20 +85,24 @@ var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
 
-        var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
+        let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        var ret = extend({ type: "Schema"},
-                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Properties ordered here to
-                         Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}, // build return object from
-                         valueExprDefns, startActs, startObj,                  // components in parser state
-                         Parser.shapes ? {shapes: Parser.shapes} : {},         // maintaining intuitve order.
-                         Parser.productions ? {productions: Parser.productions} : {});
-        if (Parser._base !== null)
-          ret.base = Parser._base;
+        let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
+        var shexj = Object.assign(
+          { type: "Schema" }, imports, startActs, startObj, shapes
+        )
+        if (Parser.options.index) {
+          if (Parser._base !== null)
+            shexj._base = Parser._base;
+          shexj._prefixes = Parser._prefixes;
+          shexj._index = {
+            shapeExprs: Parser.shapes || new Map(),
+            tripleExprs: Parser.productions || new Map()
+          };
+        }
         Parser.reset();
-//console.log(JSON.stringify(ret));
-        return ret;
+        return shexj;
       
 break;
 case 2:
@@ -265,17 +269,17 @@ case 87:
  // t: 1dotRefLNex@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         var namePos = $$[$0].indexOf(':');
-        this.$ = { type: "ShapeRef", reference: expandPrefix($$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1) };
+        this.$ = expandPrefix($$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1); // ShapeRef
       
 break;
 case 88:
  // t: 1dotRefNS1@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = { type: "ShapeRef", reference: expandPrefix($$[$0].substr(0, $$[$0].length - 1)) };
+        this.$ = expandPrefix($$[$0].substr(0, $$[$0].length - 1)); // ShapeRef
       
 break;
 case 89:
-this.$ = { type: "ShapeRef", reference: $$[$0] } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
+this.$ = $$[$0] // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
 break;
 case 90: case 93:
  // t: !!
@@ -411,7 +415,7 @@ this.$ = "fractiondigits" // t: 1literalFractiondigits;
 break;
 case 130:
  // t: 1dotInherit3
-        this.$ = $$[$0-2]
+        this.$ = $$[$0-2] === EmptyShape ? { type: "Shape" } : $$[$0-2]; // t: 0
         if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
       
@@ -518,7 +522,7 @@ case 170:
 	if ($$[$0-3] !== EmptyShape && false) {
 	  var t = blank();
 	  addShape(t, $$[$0-3]);
-	  $$[$0-3] = { type: "ShapeRef", reference: t };
+	  $$[$0-3] = t; // ShapeRef
 	}
         // %6: t: 1inversedotCode1
         this.$ = extend({ type: "TripleConstraint" }, $$[$0-5] ? $$[$0-5] : {}, { predicate: $$[$0-4] }, ($$[$0-3] === EmptyShape ? {} : { valueExpr: $$[$0-3] }), $$[$0-2], $$[$0]); // t: 1dot // t: 1inversedot, 1negatedinversedot
@@ -685,7 +689,7 @@ case 220:
 this.$ = $$[$0] ? { type: "LanguageStem", stem: $$[$0-1] } /* t: 1val1languageStemMinuslanguageStem3 */ : $$[$0-1] // t: 1val1languageStemMinuslanguage3;
 break;
 case 221:
-this.$ = { type: "Inclusion", "include": $$[$0] } // t: 2groupInclude1;
+this.$ = $$[$0] // Inclusion // t: 2groupInclude1;
 break;
 case 222:
 this.$ = { type: "Annotation", predicate: $$[$0-1], object: $$[$0] } // t: 1dotAnnotIRIREF;
@@ -1154,7 +1158,7 @@ parse: function parse(input) {
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -1240,14 +1244,16 @@ parse: function parse(input) {
     if (Parser.productions && label in Parser.productions)
       error("Structural error: "+label+" is a shape");
     if (!Parser.shapes)
-      Parser.shapes = {};
+      Parser.shapes = new Map();
     if (label in Parser.shapes) {
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
         error("Parse error: "+label+" already defined");
-    } else
+    } else {
+      shape.id = label;
       Parser.shapes[label] = shape;
+    }
   }
 
   // Add a production to the map
@@ -1255,7 +1261,7 @@ parse: function parse(input) {
     if (Parser.shapes && label in Parser.shapes)
       error("Structural error: "+label+" is a shape");
     if (!Parser.productions)
-      Parser.productions = {};
+      Parser.productions = new Map();
     if (label in Parser.productions) {
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;

@@ -62,14 +62,14 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-var shexParser = ShEx.Parser.construct(DefaultBase);
+var shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
 function parseShEx (text, meta, base) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   shexParser._setBase(base);
   var ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
-  meta.base = ret.base;
-  meta.prefixes = ret.prefixes;
+  meta.base = ret._base; // base set above.
+  meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
   return ret;
 }
 
