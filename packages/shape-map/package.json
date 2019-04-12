@@ -1,6 +1,6 @@
 {
   "name": "shape-map",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "RDF Node/ShEx Shape mapping format.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -18,8 +18,6 @@
   "main": "./shape-map.js",
   "engines": {
     "node": ">=0.10.0"
-  },
-  "dependencies": {
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
