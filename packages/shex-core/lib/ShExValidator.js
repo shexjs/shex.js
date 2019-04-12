@@ -29,6 +29,7 @@ var VERBOSE = "VERBOSE" in process.env;
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 var RdfTerm = require("./RdfTerm");
+let ShExUtil = require("./ShExUtil");
 
 function getLexicalValue (term) {
   return RdfTerm.isIRI(term) ? term :
@@ -225,6 +226,7 @@ var decimalLexicalTests = {
 function ShExValidator_constructor(schema, options) {
   if (!(this instanceof ShExValidator_constructor))
     return new ShExValidator_constructor(schema, options);
+  let index = schema._index || ShExUtil.index(schema)
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -248,10 +250,10 @@ function ShExValidator_constructor(schema, options) {
   this.getAST = function () {
     return {
       type: "AST",
-      shapes: Object.keys(this.schema.shapes).reduce(function (ret, label) {
-        ret[label] = {
+      shapes: schema.shapes.reduce(function (ret, shape) {
+        ret[shape.id] = {
           type: "ASTshape",
-          expression: _compileShapeToAST(_ShExValidator.schema.shapes[label].expression, [], _ShExValidator.schema)
+          expression: _compileShapeToAST(shape.expression, [], _ShExValidator.schema)
         };
         return ret;
       }, {})
@@ -269,16 +271,16 @@ function ShExValidator_constructor(schema, options) {
     return tripleConstraints;
 
     function indexTripleConstraints_dive (expr) {
-      if (expr.type === "TripleConstraint")
+      if (typeof expr === "string") // Inclusion
+        indexTripleConstraints_dive(index.tripleExprs[expr]);
+
+      else if (expr.type === "TripleConstraint")
         tripleConstraints.push(expr)-1;
 
       else if (expr.type === "OneOf" || expr.type === "EachOf")
         expr.expressions.forEach(function (nested) {
           indexTripleConstraints_dive(nested);
         });
-
-      else if (expr.type === "Inclusion")
-        indexTripleConstraints_dive(schema.productions[expr.include]);
 
       // @@TODO shape.virtual, shape.inherit
       else if (expr.type !== "ValueComparison" && expr.type !== "Unique")
@@ -372,10 +374,10 @@ function ShExValidator_constructor(schema, options) {
       shape = schema.start;
     } else if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
       runtimeError("shape " + label + " not found; no shapes in schema");
-    } else if (label in this.schema.shapes) {
-      shape = schema.shapes[label]
+    } else if (label in index.shapeExprs) {
+      shape = index.shapeExprs[label]
     } else {
-      runtimeError("shape " + label + " not found in:\n" + Object.keys(this.schema.shapes || []).map(s => "  " + s).join("\n"));
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
 
     var seenKey = point + "@" + (label === Start ? "_: -start-" : label);
@@ -403,7 +405,9 @@ function ShExValidator_constructor(schema, options) {
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, uniques) {
     if (point === "")
       throw Error("validation needs a valid focus node");
-    if (shapeExpr.type === "NodeConstraint") {
+    if (typeof shapeExpr === "string") { // ShapeRef
+      return this._validateShapeExpr(db, point, index.shapeExprs[shapeExpr], shapeExpr, depth, tracker, seen, uniques);
+    } else if (shapeExpr.type === "NodeConstraint") {
       var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       return errors.length ? {
         type: "Failure",
@@ -423,10 +427,8 @@ function ShExValidator_constructor(schema, options) {
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      return this._validateShape(db, point, regexModule.compile(schema, shapeExpr),
+      return this._validateShape(db, point, regexModule.compile(schema, shapeExpr, index),
                                  shapeExpr, shapeLabel, depth, tracker, seen, uniques);
-    } else if (shapeExpr.type === "ShapeRef") {
-      return this._validateShapeExpr(db, point, schema.shapes[shapeExpr.reference], shapeExpr.reference, depth, tracker, seen, uniques);
     } else if (shapeExpr.type === "ShapeExternal") {
       return this.options.validateExtern(db, point, shapeLabel, depth, tracker, seen, uniques);
     } else if (shapeExpr.type === "ShapeOr") {
@@ -695,12 +697,12 @@ function ShExValidator_constructor(schema, options) {
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
     var _ShExValidator = this;
-    if (valueExpr.type === "NodeConstraint") {
+    if (typeof valueExpr === "string") { // ShapeRef
+      return recurse ? recurse(value, valueExpr) : [];
+    } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
       return direct === undefined ? [] : direct(value, valueExpr);
-    } else if (valueExpr.type === "ShapeRef") {
-      return recurse ? recurse(value, valueExpr.reference) : [];
     } else if (valueExpr.type === "ShapeOr") {
       var ret = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
@@ -1040,7 +1042,12 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
       return reqd;
     }
 
-    if (expr.type === "TripleConstraint") {
+    if (typeof expr === "string") { // Inclusion
+      var included = schema._index.tripleExprs[expr].expression;
+      return _compileExpression(included, schema);
+    }
+
+    else if (expr.type === "TripleConstraint") {
       // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
       var valueExpr = "valueExprRef" in expr ?
         schema.valueExprDefns[expr.valueExprRef] :
@@ -1065,11 +1072,6 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
       }));
       repeated = _repeat(container, expr.min, expr.max);
       return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else if (expr.type === "Inclusion") {
-      var included = schema.shapes[expr.include].expression;
-      return _compileExpression(included, schema);
     }
 
     else throw Error("unexpected expr type: " + expr.type);

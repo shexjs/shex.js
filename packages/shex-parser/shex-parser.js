@@ -27,6 +27,7 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     ShExJison._imports = [];
     ShExJison._setBase(baseIRI);
     ShExJison._setFileName(baseIRI);
+    ShExJison.options = schemaOptions;
     try {
       return ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {

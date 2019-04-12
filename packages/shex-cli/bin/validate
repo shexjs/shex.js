@@ -148,14 +148,15 @@ function abort (msg) {
 var N3 = require("n3");
 
 function findNodesAndValidate (loaded, parms, options) {
+  let shapeIndex = loaded.schema._shapes || ShExUtil.index(loaded.schema)
   function knownShape (label) {
-    return label in loaded.schema.shapes;
+    return label in shapeIndex.shapeExprs;
   }
   function unknownShape (label) {
-    throw Error(label + " not found in\n" + Object.keys(loaded.schema.shapes).map(n => "  " + n + "\n").join(''));
+    throw Error(label + " not found in\n" + Object.keys(shapeIndex.shapeExprs).map(n => "  " + n + "\n").join(''));
   }
   function someShape () {
-    return Object.keys(loaded.schema.shapes)[0];
+    return Object.keys(shapeIndex.shapeExprs)[0];
   }
   function knownNode (label) {
     return (loaded.data.getQuads(label, null, null).length > 0 ||
