@@ -8,6 +8,7 @@ node_js:
   - "stable"
 before_script:
   - git clone --depth=50 --branch=extends https://github.com/shexSpec/shexTest.git ../shexTest
+  - cat packages/shex-core/lib/ShExUtil.js
 script:
   - npm run test-all
 cache:
