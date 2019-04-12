@@ -1612,6 +1612,9 @@ function loadSearchParameters () {
   if (!("manifest" in iface) && !("manifestURL" in iface)) {
     iface.manifestURL = ["../examples/manifest.json"];
   }
+  if ("hideData" in iface) {
+    $("#inputData textarea").css("visibility", "hidden");
+  }
 
   // Load all known query parameters.
   return Promise.all(QueryParams.reduce((promises, input) => {
@@ -1714,6 +1717,9 @@ function loadSearchParameters () {
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
+    if ($("#inputData textarea").css("visibility") === "hidden") {
+      parms.push("hideData");
+    }
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
