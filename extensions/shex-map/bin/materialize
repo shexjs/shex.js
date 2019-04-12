@@ -83,7 +83,7 @@ try {
   process.exit(1);
 }
 
-Promise.all([ShExLoader.load([cmds.target], [], [], []),
+Promise.all([ShExLoader.load([cmds.target], [], [], [], {index: true}),
              new Promise((resolve, reject) => {
                var inputChunks = [];
                process.stdin.resume();
