@@ -10,7 +10,8 @@ var ShExWriter = ShExCore.Writer; // for verbose output
 var CommandLineOptions = [
     { name: "help",  alias: "h", type: Boolean },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
-    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] }
+    { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
+    { name: "prefixes",          type: String, multiple:  true, defaultValue:   [] }
 ];
 var CLI = require("command-line-args")(CommandLineOptions);
 function abort (msg) {
@@ -36,9 +37,17 @@ if (cmds.help)
     abort("");
 if (cmds.json.length === 0 && cmds.shex.length === 0) abort("no shex specified");
 
+let options = { simplifyParentheses: true };
+if (cmds.prefixes.length > 0) {
+  let prefixes = cmds.prefixes.reduce(
+    (pz, decl) => Object.assign(pz, JSON.parse(decl)), {}
+  )
+  options.prefixes = prefixes;
+}
+
 
 ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
-  new ShExWriter(null, { simplifyParentheses: true }).
+  new ShExWriter(null, options).
     writeSchema(loaded.schema,
                 function (error, text, prefixes) {
                   if (error) throw error;
