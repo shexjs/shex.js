@@ -3,7 +3,7 @@ const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_Sh
 const TEST_Vestiges = true;
 var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
-var EARL = "EARL" in process.env; // We're generation an EARL report.
+var EARL = "EARL" in process.env; // We're generating an EARL report.
 var BASE = "http://a.example/application/base/";
 
 var ShExCore = require("@shexjs/core");
@@ -29,19 +29,18 @@ var negativeTests = [
 ];
 var illDefinedTestsPath = findPath("illDefined");
 
-var parser = ShExParser.construct(BASE);
+var parser = ShExParser.construct(BASE, null, {index: true});
 
 if (TEST_ShExR) {
   var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
   var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
-  var valueExpr_tripleCnstrnt = GraphSchema.shapes[nsPath + "TripleConstraint"].
+  var valueExpr_tripleCnstrnt = GraphSchema._index.shapeExprs[nsPath + "TripleConstraint"].
       expression.expressions.find(e => {
         return e.predicate === nsPath + "shex#valueExpr";
       });
   valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",
                                         shapeExprs:
-                                        [ { type: "ShapeRef",
-                                            reference: nsPath + "shapeExpr" },
+                                        [ nsPath + "shapeExpr",
                                           { type: "Shape", closed: true } ] }
 } else {
   console.warn("ShExR tests disabled");
@@ -84,12 +83,12 @@ describe("A ShEx parser", function () {
       expectError(() => {
         ShExUtil.Visitor().visitSchema({
           "type": "Schema",
-          "shapes": {
-            "http://ex.example/S": {
+          "shapes": [
+            { "id": "http://ex.example/S",
               "type": "Shape",
               "nested": true
             }
-          }
+          ]
         });
       }, "unknown property: \"nested\"");
     });
@@ -98,16 +97,16 @@ describe("A ShEx parser", function () {
       expectError(() => {
         ShExUtil.Visitor().visitSchema({
           "type": "Schema",
-          "shapes": {
-            "http://ex.example/S": {
+          "shapes": [
+            { "id": "http://ex.example/S",
               "type": "ShapeNot",
               "nested": true,
               "shapeExpr": {
-                "type": "ShapeRef",
-                "reference": "http://ex.example/S"
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
               }
             }
-          }
+          ]
         });
       }, "unknown property: \"nested\"");
     });
@@ -116,16 +115,16 @@ describe("A ShEx parser", function () {
       expectError(() => {
         ShExUtil.Visitor().visitSchema({
           "type": "Schema",
-          "shapes": {
-            "http://ex.example/S": {
+          "shapes": [
+            { "id": "http://ex.example/S",
               "type": "ShapeNot",
               "shapeExpr": {
-                "type": "ShapeRef",
+                "type": "NodeConstraint",
                 "nested": true,
-                "reference": "http://ex.example/S"
+                "nodeKind": "iri"
               }
             }
-          }
+          ]
         });
       }, "unknown property: \"nested\"");
     });
@@ -134,25 +133,19 @@ describe("A ShEx parser", function () {
       expectError(() => {
         ShExUtil.Visitor().visitSchema({
           "type": "Schema",
-          "shapes": {
-            "http://ex.example/S": {
+          "shapes": [
+            { "id": "http://ex.example/S",
               "type": "ShapeAnd",
               "shapeExprs": [
                 {
                   "type": "ShapeNot",
-                  "shapeExpr": {
-                    "type": "ShapeRef",
-                    "reference": "http://ex.example/S"
-                  },
+                  "shapeExpr": "http://ex.example/S",
                   "nested": true
                 },
-                {
-                  "type": "ShapeRef",
-                  "reference": "http://ex.example/S"
-                }
+                "http://ex.example/S"
               ]
             }
-          }
+          ]
         });
       }, "unknown property: \"nested\"");
     });
@@ -163,7 +156,7 @@ describe("A ShEx parser", function () {
 
     var jsonSchemaFile = jsonSchemasPath + test.json;
     try {
-      var abstractSyntax = ShExUtil.ShExJtoAS(JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8")));
+      var abstractSyntax = JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8"));
       var shexCFile = schemasPath + test.shex;
       var shexRFile = schemasPath + test.ttl;
 
@@ -312,21 +305,37 @@ describe("A ShEx parser", function () {
 
 
   if (!EARL && (!TESTS || TESTS.indexOf("prefix") !== -1)) {
-    describe("with pre-defined prefixes", function () {
+    describe("with indexing", function () {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = ShExParser.construct("http://a.example/", prefixes);
+      var parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
 
       it("should use those prefixes", function () {
         var schema = "a:a { b:b .+ }";
-        expect(parser.parse(schema).shapes["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+          .to.deep.equal("http://a.example/def#b");
+      });
+
+      ShExParser.construct(); // !!! horrible hack to reset no baseIRI
+      // this is a serious bug affecting reentrancy -- need to figure out how to get _setBase into yy
+    });
+  }
+
+  if (!EARL && (!TESTS || TESTS.indexOf("prefix") !== -1)) {
+    describe("with pre-defined prefixes", function () {
+      var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
+      var parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
+
+      it("should use those prefixes", function () {
+        var schema = "a:a { b:b .+ }";
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
       it("should allow temporarily overriding prefixes", function () {
         var schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
-        expect(parser.parse(schema).shapes["http://a.example/xyz#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
-        expect(parser.parse("a:a { b:b .+ }").shapes["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -336,7 +345,7 @@ describe("A ShEx parser", function () {
 
       it("should not take over changes to the original prefixes", function () {
         prefixes.a = "http://a.example/xyz#";
-        expect(parser.parse("a:a { b:b .+ }").shapes["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -346,19 +355,19 @@ describe("A ShEx parser", function () {
 
     describe("with pre-defined PNAME_NS prefixes", function () {
       var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = ShExParser.construct("http://a.example/", prefixes);
+      var parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
 
       it("should use those prefixes", function () {
         var schema = "a: { b: .+ }";
-        expect(parser.parse(schema).shapes["http://a.example/abc#"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#"].expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
       it("should allow temporarily overriding prefixes", function () {
         var schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
-        expect(parser.parse(schema).shapes["http://a.example/xyz#"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#"].expression.predicate)
           .to.deep.equal("http://a.example/def#");
-        expect(parser.parse("a: { b: .+ }").shapes["http://a.example/abc#"].expression.predicate)
+        expect(parser.parse("a: { b: .+ }")._index.shapeExprs["http://a.example/abc#"].expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
