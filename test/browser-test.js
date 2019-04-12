@@ -10,7 +10,7 @@ const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
 const PATH = '/shex.js/'
-const PAGE = 'doc/shex-simple.html'
+const PAGE = 'packages/shex-webapp/doc/shex-simple.html'
 
 let fs = require('fs')
 let expect = require("chai").expect

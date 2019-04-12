@@ -28,6 +28,7 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     ShExJison._imports = [];
     ShExJison._setBase(baseIRI);
     ShExJison._setFileName(baseIRI);
+    ShExJison.options = schemaOptions;
     if (!ShExJison._termResolver)
       ShExJison._termResolver = termResolver;
     try {

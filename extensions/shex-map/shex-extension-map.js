@@ -21,8 +21,8 @@ var UNBOUNDED = -1;
 const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
 function register (validator) {
-  var prefixes = "prefixes" in validator.schema ?
-      validator.schema.prefixes :
+  var prefixes = "_prefixes" in validator.schema ?
+      validator.schema._prefixes :
       {};
 
   validator.semActHandler.results[MapExt] = {};
@@ -114,12 +114,13 @@ function n3ify (ldterm) {
 
 function materializer (schema, nextBNode) {
   var blankNodeCount = 0;
+  const index = schema._index || ShExUtil.index(schema)
   nextBNode = nextBNode || function () {
     return '_:b' + blankNodeCount++;
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = shape && shape !== ShExValidator.start? { type: "ShapeRef", reference: shape } : schema.start;
+      shape = !shape || shape === ShExValidator.start ? schema.start : shape;
       target = target || new N3.Store();
       // target.addPrefixes(schema.prefixes); // not used, but seems polite
 
@@ -136,7 +137,7 @@ function materializer (schema, nextBNode) {
       var oldVisitShapeRef = v.visitShapeRef;
 
       v.visitShapeRef = function (shapeRef) {
-        this.visitShapeExpr(schema.shapes[shapeRef.reference], shapeRef.reference);
+        this.visitShapeExpr(index.shapeExprs[shapeRef], shapeRef);
         return oldVisitShapeRef.call(v, shapeRef);
       };
 
@@ -156,7 +157,7 @@ function materializer (schema, nextBNode) {
 }
 
 function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
-      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
+      function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
       function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
@@ -200,7 +201,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
               add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
-        } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
+        } else if (typeof expr.valueExpr !== "string" && "values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
           if (expr.inverse)
             add(expr.valueExpr.values[0], expr.predicate, curSubjectx.cs);
           else
