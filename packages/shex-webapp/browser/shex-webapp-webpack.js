@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 201);
+/******/ 	return __webpack_require__(__webpack_require__.s = 202);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -388,7 +388,7 @@ process.umask = function() { return 0; };
 
 var base64 = __webpack_require__(213)
 var ieee754 = __webpack_require__(214)
-var isArray = __webpack_require__(113)
+var isArray = __webpack_require__(114)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3190,7 +3190,7 @@ module.exports = safer
 
 exports.randomBytes = exports.rng = exports.pseudoRandomBytes = exports.prng = __webpack_require__(37)
 exports.createHash = exports.Hash = __webpack_require__(45)
-exports.createHmac = exports.Hmac = __webpack_require__(134)
+exports.createHmac = exports.Hmac = __webpack_require__(135)
 
 var algos = __webpack_require__(256)
 var algoKeys = Object.keys(algos)
@@ -3199,7 +3199,7 @@ exports.getHashes = function () {
   return hashes
 }
 
-var p = __webpack_require__(137)
+var p = __webpack_require__(138)
 exports.pbkdf2 = p.pbkdf2
 exports.pbkdf2Sync = p.pbkdf2Sync
 
@@ -6765,7 +6765,7 @@ var PrivateKey = __webpack_require__(12);
 var edCompat;
 
 try {
-	edCompat = __webpack_require__(165);
+	edCompat = __webpack_require__(166);
 } catch (e) {
 	/* Just continue through, and bail out if we try to use it. */
 }
@@ -6774,16 +6774,16 @@ var InvalidAlgorithmError = errs.InvalidAlgorithmError;
 var KeyParseError = errs.KeyParseError;
 
 var formats = {};
-formats['auto'] = __webpack_require__(166);
+formats['auto'] = __webpack_require__(167);
 formats['pem'] = __webpack_require__(31);
 formats['pkcs1'] = __webpack_require__(95);
 formats['pkcs8'] = __webpack_require__(55);
 formats['rfc4253'] = __webpack_require__(32);
-formats['ssh'] = __webpack_require__(168);
+formats['ssh'] = __webpack_require__(169);
 formats['ssh-private'] = __webpack_require__(73);
 formats['openssh'] = formats['ssh-private'];
 formats['dnssec'] = __webpack_require__(96);
-formats['putty'] = __webpack_require__(169);
+formats['putty'] = __webpack_require__(170);
 formats['ppk'] = formats['putty'];
 
 function Key(opts) {
@@ -7476,7 +7476,7 @@ var utils = __webpack_require__(11);
 var dhe = __webpack_require__(94);
 var generateECDSA = dhe.generateECDSA;
 var generateED25519 = dhe.generateED25519;
-var edCompat = __webpack_require__(165);
+var edCompat = __webpack_require__(166);
 var nacl = __webpack_require__(53);
 
 var Key = __webpack_require__(10);
@@ -7486,7 +7486,7 @@ var KeyParseError = errs.KeyParseError;
 var KeyEncryptedError = errs.KeyEncryptedError;
 
 var formats = {};
-formats['auto'] = __webpack_require__(166);
+formats['auto'] = __webpack_require__(167);
 formats['pem'] = __webpack_require__(31);
 formats['pkcs1'] = __webpack_require__(95);
 formats['pkcs8'] = __webpack_require__(55);
@@ -8032,7 +8032,7 @@ var elliptic = exports;
 
 elliptic.version = __webpack_require__(282).version;
 elliptic.utils = __webpack_require__(283);
-elliptic.rand = __webpack_require__(148);
+elliptic.rand = __webpack_require__(149);
 elliptic.curve = __webpack_require__(68);
 elliptic.curves = __webpack_require__(288);
 
@@ -11703,7 +11703,7 @@ var util = __webpack_require__(36);
 util.inherits = __webpack_require__(0);
 /*</replacement>*/
 
-var Readable = __webpack_require__(116);
+var Readable = __webpack_require__(117);
 var Writable = __webpack_require__(77);
 
 util.inherits(Duplex, Readable);
@@ -14708,12 +14708,12 @@ function unwrapListeners(arr) {
 /* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(116);
+exports = module.exports = __webpack_require__(117);
 exports.Stream = exports;
 exports.Readable = exports;
 exports.Writable = __webpack_require__(77);
 exports.Duplex = __webpack_require__(33);
-exports.Transform = __webpack_require__(119);
+exports.Transform = __webpack_require__(120);
 exports.PassThrough = __webpack_require__(221);
 
 
@@ -14880,7 +14880,7 @@ asn1.bignum = __webpack_require__(8);
 
 asn1.define = __webpack_require__(304).define;
 asn1.base = __webpack_require__(49);
-asn1.constants = __webpack_require__(154);
+asn1.constants = __webpack_require__(155);
 asn1.decoders = __webpack_require__(310);
 asn1.encoders = __webpack_require__(312);
 
@@ -14892,8 +14892,8 @@ asn1.encoders = __webpack_require__(312);
 var base = exports;
 
 base.Reporter = __webpack_require__(307).Reporter;
-base.DecoderBuffer = __webpack_require__(153).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(153).EncoderBuffer;
+base.DecoderBuffer = __webpack_require__(154).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(154).EncoderBuffer;
 base.Node = __webpack_require__(308);
 
 
@@ -14902,7 +14902,7 @@ base.Node = __webpack_require__(308);
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(324)
-var response = __webpack_require__(162)
+var response = __webpack_require__(163)
 var extend = __webpack_require__(326)
 var statusCodes = __webpack_require__(327)
 var url = __webpack_require__(20)
@@ -19783,7 +19783,7 @@ var Identity = __webpack_require__(57);
 
 var formats = {};
 formats['openssh'] = __webpack_require__(349);
-formats['x509'] = __webpack_require__(170);
+formats['x509'] = __webpack_require__(171);
 formats['pem'] = __webpack_require__(350);
 
 var CertificateParseError = errs.CertificateParseError;
@@ -22174,7 +22174,7 @@ var asn1 = __webpack_require__(303)
 var aesid = __webpack_require__(315)
 var fixProc = __webpack_require__(316)
 var ciphers = __webpack_require__(86)
-var compat = __webpack_require__(137)
+var compat = __webpack_require__(138)
 var Buffer = __webpack_require__(1).Buffer
 module.exports = parseKeys
 
@@ -23149,7 +23149,7 @@ function readSSHPrivate(type, buf, options) {
 		var rounds = kdfOptsBuf.readInt();
 		var cinf = utils.opensshCipherInfo(cipher);
 		if (bcrypt === undefined) {
-			bcrypt = __webpack_require__(167);
+			bcrypt = __webpack_require__(168);
 		}
 
 		if (typeof (options.passphrase) === 'string') {
@@ -23270,7 +23270,7 @@ function write(key, options) {
 		kdfopts = kdfssh.toBuffer();
 
 		if (bcrypt === undefined) {
-			bcrypt = __webpack_require__(167);
+			bcrypt = __webpack_require__(168);
 		}
 		var pass = new Uint8Array(passphrase);
 		var salti = new Uint8Array(salt);
@@ -23671,11 +23671,11 @@ module.exports = {
 
 var ShExCore = {
   RdfTerm:    __webpack_require__(41),
-  Util:         __webpack_require__(205),
+  Util:         __webpack_require__(110),
   Validator:    __webpack_require__(208),
-  Writer:    __webpack_require__(110),
+  Writer:    __webpack_require__(111),
   'nfax-val-1err':     __webpack_require__(209),
-  'threaded-val-nerr': __webpack_require__(111)
+  'threaded-val-nerr': __webpack_require__(112)
 };
 
 if (true)
@@ -23765,7 +23765,7 @@ var internalUtil = {
 /*</replacement>*/
 
 /*<replacement>*/
-var Stream = __webpack_require__(117);
+var Stream = __webpack_require__(118);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -23781,7 +23781,7 @@ function _isUint8Array(obj) {
 
 /*</replacement>*/
 
-var destroyImpl = __webpack_require__(118);
+var destroyImpl = __webpack_require__(119);
 
 util.inherits(Writable, Stream);
 
@@ -24919,7 +24919,7 @@ exports.defer = defer
 "use strict";
 
 var inherits = __webpack_require__(0)
-var HashBase = __webpack_require__(131)
+var HashBase = __webpack_require__(132)
 var Buffer = __webpack_require__(1).Buffer
 
 var ARRAY16 = new Array(16)
@@ -25073,7 +25073,7 @@ module.exports = MD5
 
 var Buffer = __webpack_require__(3).Buffer
 var inherits = __webpack_require__(0)
-var HashBase = __webpack_require__(131)
+var HashBase = __webpack_require__(132)
 
 var ARRAY16 = new Array(16)
 
@@ -25251,9 +25251,9 @@ var exports = module.exports = function SHA (algorithm) {
 exports.sha = __webpack_require__(251)
 exports.sha1 = __webpack_require__(252)
 exports.sha224 = __webpack_require__(253)
-exports.sha256 = __webpack_require__(132)
+exports.sha256 = __webpack_require__(133)
 exports.sha384 = __webpack_require__(254)
-exports.sha512 = __webpack_require__(133)
+exports.sha512 = __webpack_require__(134)
 
 
 /***/ }),
@@ -25276,7 +25276,7 @@ exports.EDE = __webpack_require__(264);
 
 var ciphers = __webpack_require__(265)
 var deciphers = __webpack_require__(273)
-var modes = __webpack_require__(143)
+var modes = __webpack_require__(144)
 
 function getCiphers () {
   return Object.keys(modes)
@@ -25300,11 +25300,11 @@ var modeModules = {
   CFB8: __webpack_require__(269),
   CFB1: __webpack_require__(270),
   OFB: __webpack_require__(271),
-  CTR: __webpack_require__(141),
-  GCM: __webpack_require__(141)
+  CTR: __webpack_require__(142),
+  GCM: __webpack_require__(142)
 }
 
-var modes = __webpack_require__(143)
+var modes = __webpack_require__(144)
 
 for (var key in modes) {
   modes[key].module = modeModules[modes[key].mode]
@@ -26683,7 +26683,7 @@ module.exports.httpify = function (resp, headers) {
 var URI = __webpack_require__(370)
   , equal = __webpack_require__(99)
   , util = __webpack_require__(39)
-  , SchemaObject = __webpack_require__(176)
+  , SchemaObject = __webpack_require__(177)
   , traverse = __webpack_require__(372);
 
 module.exports = resolve;
@@ -27130,9 +27130,9 @@ module.exports = v4;
 
 
 const util = __webpack_require__(34);
-const URDNA2015 = __webpack_require__(188);
+const URDNA2015 = __webpack_require__(189);
 const URGNA2012 = __webpack_require__(445);
-const URDNA2015Sync = __webpack_require__(192);
+const URDNA2015Sync = __webpack_require__(193);
 const URGNA2012Sync = __webpack_require__(446);
 
 // optional native support
@@ -28772,6 +28772,2217 @@ if (true)
 /* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
+// **ShExUtil** provides ShEx utility functions
+
+var ShExUtil = (function () {
+var RdfTerm = __webpack_require__(41);
+// var util = require('util');
+const Hierarchy = __webpack_require__(206)
+
+const SX = {};
+SX._namespace = "http://www.w3.org/ns/shex#";
+["Schema", "@context", "imports", "startActs", "start", "shapes",
+ "ShapeOr", "ShapeAnd", "shapeExprs", "nodeKind",
+ "NodeConstraint", "iri", "bnode", "nonliteral", "literal", "datatype", "length", "minlength", "maxlength", "pattern", "flags", "mininclusive", "minexclusive", "maxinclusive", "maxexclusive", "totaldigits", "fractiondigits", "values",
+ "ShapeNot", "shapeExpr",
+ "Shape", "virtual", "closed", "extra", "expression", "inherit", "semActs",
+ "ShapeRef", "reference", "ShapeExternal",
+ "EachOf", "OneOf", "expressions", "min", "max", "annotation",
+ "TripleConstraint", "inverse", "negated", "predicate", "valueExpr",
+ "Inclusion", "include", "Language", "languageTag",
+ "IriStem", "LiteralStem", "LanguageStem", "stem",
+ "IriStemRange", "LiteralStemRange", "LanguageStemRange", "exclusion",
+ "Wildcard", "SemAct", "name", "code",
+ "Annotation", "object"].forEach(p => {
+  SX[p] = SX._namespace+p;
+});
+const RDF = {};
+RDF._namespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+["type", "first", "rest", "nil"].forEach(p => {
+  RDF[p] = RDF._namespace+p;
+});
+const XSD = {}
+XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
+["anyURI"].forEach(p => {
+  XSD[p] = XSD._namespace+p;
+});
+const OWL = {}
+OWL._namespace = "http://www.w3.org/2002/07/owl#";
+["Thing"].forEach(p => {
+  OWL[p] = OWL._namespace+p;
+});
+
+const Missed = {}; // singleton
+var UNBOUNDED = -1;
+
+function extend (base) {
+  if (!base) base = {};
+  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+    for (var name in arg)
+      base[name] = arg[name];
+  return base;
+}
+
+    function isTerm (t) {
+      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
+        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
+      }, true);
+    }
+
+  function isShapeRef (expr) {
+    return typeof expr === "string" // test for JSON-LD @ID
+  }
+  let isInclusion = isShapeRef;
+
+var ShExUtil = {
+
+  SX: SX,
+  RDF: RDF,
+  version: function () {
+    return "0.5.0";
+  },
+
+  Visitor: function () {
+    // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
+    var _ShExUtil = this;
+    function visitMap (map, val) {
+      var ret = {};
+      Object.keys(map).forEach(function (item) {
+        ret[item] = val(map[item]);
+      });
+      return ret;
+    }
+    var r = {
+      runtimeError: function (e) {
+        throw e;
+      },
+
+      visitSchema: function (schema) {
+        var ret = { type: "Schema" };
+        _ShExUtil._expect(schema, "type", "Schema");
+        this._maybeSet(schema, ret, "Schema",
+                       ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
+                       ["_base", "_prefixes", "_index"]
+                      );
+        return ret;
+      },
+
+      visitPrefixes: function (prefixes) {
+        return prefixes === undefined ?
+          undefined :
+          visitMap(prefixes, function (val) {
+            return val;
+          });
+      },
+
+      visitIRI: function (i) {
+        return i;
+      },
+
+      visitImports: function (imports) {
+        var _Visitor = this;
+        return imports.map(function (imp) {
+          return _Visitor.visitIRI(imp);
+        });
+      },
+
+      visitStartActs: function (startActs) {
+        var _Visitor = this;
+        return startActs === undefined ?
+          undefined :
+          startActs.map(function (act) {
+            return _Visitor.visitSemAct(act);
+          });
+      },
+      visitSemActs: function (semActs) {
+        var _Visitor = this;
+        if (semActs === undefined)
+          return undefined;
+        var ret = []
+        Object.keys(semActs).forEach(function (label) {
+          ret.push(_Visitor.visitSemAct(semActs[label], label));
+        });
+        return ret;
+      },
+      visitSemAct: function (semAct, label) {
+        var ret = { type: "SemAct" };
+        _ShExUtil._expect(semAct, "type", "SemAct");
+
+        this._maybeSet(semAct, ret, "SemAct",
+                       ["name", "code"]);
+        return ret;
+      },
+
+      visitShapes: function (shapes) {
+        var _Visitor = this;
+        if (shapes === undefined)
+          return undefined;
+        return shapes.map(
+          shapeExpr =>
+            _Visitor.visitShapeExpr(shapeExpr)
+        );
+      },
+
+      visitProductions999: function (productions) { // !! DELETE
+        var _Visitor = this;
+        if (productions === undefined)
+          return undefined;
+        var ret = {}
+        Object.keys(productions).forEach(function (label) {
+          ret[label] = _Visitor.visitExpression(productions[label], label);
+        });
+        return ret;
+      },
+
+      visitShapeExpr: function (expr, label) {
+        if (isShapeRef(expr))
+          return this.visitShapeRef(expr)
+        var r =
+            expr.type === "Shape" ? this.visitShape(expr, label) :
+            expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
+            expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
+            expr.type === "ShapeOr" ? this.visitShapeOr(expr, label) :
+            expr.type === "ShapeNot" ? this.visitShapeNot(expr, label) :
+            expr.type === "ShapeExternal" ? this.visitShapeExternal(expr) :
+            null;// if (expr.type === "ShapeRef") r = 0; // console.warn("visitShapeExpr:", r);
+        if (r === null)
+          throw Error("unexpected shapeExpr type: " + expr.type);
+        else
+          return r;
+      },
+
+      // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
+      _visitShapeGroup: function (expr, label) {
+        this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
+        var _Visitor = this;
+        var r = { type: expr.type };
+        if ("id" in expr)
+          r.id = expr.id;
+        r.shapeExprs = expr.shapeExprs.map(function (nested) {
+          return _Visitor.visitShapeExpr(nested, label);
+        });
+        return r;
+      },
+
+      // _visitShapeNot: visit negated shape
+      visitShapeNot: function (expr, label) {
+        this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
+        var r = { type: expr.type };
+        if ("id" in expr)
+          r.id = expr.id;
+        r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, label);
+        return r;
+      },
+
+      // ### `visitNodeConstraint` deep-copies the structure of a shape
+      visitShape: function (shape, label) {
+        var ret = { type: "Shape" };
+        _ShExUtil._expect(shape, "type", "Shape");
+
+        this._maybeSet(shape, ret, "Shape",
+                       [ "id",
+                         // "virtual", "inherit", -- futureWork
+                         "closed",
+                         "expression", "extra", "semActs", "annotations"]);
+        return ret;
+      },
+
+      // ### `visitNodeConstraint` deep-copies the structure of a shape
+      visitNodeConstraint: function (shape, label) {
+        var ret = { type: "NodeConstraint" };
+        _ShExUtil._expect(shape, "type", "NodeConstraint");
+
+        this._maybeSet(shape, ret, "NodeConstraint",
+                       [ "id",
+                         // "virtual", "inherit", -- futureWork
+                         "nodeKind", "datatype", "pattern", "flags", "length",
+                         "reference", "minlength", "maxlength",
+                         "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
+                         "totaldigits", "fractiondigits", "values", "annotations", "semActs"]);
+        return ret;
+      },
+
+      visitShapeRef: function (reference) {
+        if (typeof reference !== "string") {
+          let ex = Exception("visitShapeRef expected a string, not " + JSON.stringify(reference));
+          console.warn(ex);
+          throw ex;
+        }
+        return reference;
+      },
+
+      visitShapeExternal: function (expr) {
+        this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
+        return extend("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
+      },
+
+      // _visitGroup: visit a grouping expression (someOf or eachOf)
+      _visitGroup: function (expr, type) {
+        var _Visitor = this;
+        var r = Object.assign(
+          // pre-declare an id so it sorts to the top
+          "id" in expr ? { id: null } : { },
+          { type: expr.type }
+        );
+        r.expressions = expr.expressions.map(function (nested) {
+          return _Visitor.visitExpression(nested);
+        });
+        return this._maybeSet(expr, r, "expr",
+                              ["id", "min", "max", "annotations", "semActs"], ["expressions"]);
+      },
+
+      visitTripleConstraint: function (expr) {
+        return this._maybeSet(expr,
+                              Object.assign(
+                                // pre-declare an id so it sorts to the top
+                                "id" in expr ? { id: null } : { },
+                                { type: "TripleConstraint" }
+                              ),
+                              "TripleConstraint",
+                              ["id", "inverse", "predicate", "valueExpr",
+                               "min", "max", "annotations", "semActs"])
+      },
+
+      visitExpression: function (expr) {
+        if (typeof expr === "string")
+          return this.visitInclusion(expr);
+        var r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
+          expr.type === "OneOf" ? this.visitOneOf(expr) :
+          expr.type === "EachOf" ? this.visitEachOf(expr) :
+          null;
+        if (r === null)
+          throw Error("unexpected expression type: " + expr.type);
+        else
+          return r;
+      },
+
+      visitValues: function (values) {
+        var _Visitor = this;
+        return values.map(function (t) {
+          return isTerm(t) || t.type === "Language" ?
+            t :
+            _Visitor.visitStemRange(t);
+        });
+      },
+
+      visitStemRange: function (t) {
+        var _Visitor = this; // console.log(Error(t.type).stack);
+        // _ShExUtil._expect(t, "type", "IriStemRange");
+              if (!("type" in t))
+                _Visitor.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
+        var stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
+              if (stemRangeTypes.indexOf(t.type) === -1)
+                _Visitor.runtimeError(Error("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'."));
+        var stem;
+        if (isTerm(t)) {
+          _ShExUtil._expect(t.stem, "type", "Wildcard");
+          stem = { type: t.type, stem: { type: "Wildcard" } };
+        } else {
+          stem = { type: t.type, stem: t.stem };
+        }
+        if (t.exclusions) {
+          stem.exclusions = t.exclusions.map(function (c) {
+            return _Visitor.visitExclusion(c);
+          });
+        }
+        return stem;
+      },
+
+      visitExclusion: function (c) {
+        if (!isTerm(c)) {
+          // _ShExUtil._expect(c, "type", "IriStem");
+                    if (!("type" in c))
+                      _Visitor.runtimeError(Error("expected "+JSON.stringify(c)+" to have a 'type' attribute."));
+                    var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+                    if (stemTypes.indexOf(c.type) === -1)
+                      _Visitor.runtimeError(Error("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'."));
+          return { type: c.type, stem: c.stem };
+        } else {
+          return c;
+        }
+      },
+
+      visitInclusion: function (inclusion) {
+        if (typeof inclusion !== "string") {
+          let ex = Exception("visitInclusion expected a string, not " + JSON.stringify(inclusion));
+          console.warn(ex);
+          throw ex;
+        }
+        return inclusion;
+      },
+
+      _maybeSet: function (obj, ret, context, members, ignore) {
+        var _Visitor = this;
+        this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
+        members.forEach(function (member) {
+          var methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
+          if (member in obj) {
+            var f = _Visitor[methodName];
+            if (typeof f !== "function") {
+              throw Error(methodName + " not found in Visitor");
+            }
+            var t = f.call(_Visitor, obj[member]);
+            if (t !== undefined) {
+              ret[member] = t;
+            }
+          }
+        });
+        return ret;
+      },
+      _visitValue: function (v) {
+        return v;
+      },
+      _visitList: function (l) {
+        return l.slice();
+      },
+      _testUnknownAttributes: function (obj, expected, context, captureFrame) {
+        var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
+          return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
+        }, []);
+        if (unknownMembers.length > 0) {
+          var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
+                        unknownMembers.map(function (p) {
+                          return "\"" + p + "\"";
+                        }).join(",") +
+                        " in " + context + ": " + JSON.stringify(obj));
+          Error.captureStackTrace(e, captureFrame);
+          throw e;
+        }
+      }
+
+    };
+    r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
+    r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
+    r.visitInverse = r.visitPredicate = r._visitValue;
+    r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
+
+    r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
+    r.visitOneOf = r.visitEachOf = r._visitGroup;
+    r.visitShapeAnd = r.visitShapeOr = r._visitShapeGroup;
+    r.visitInclude = r._visitValue;
+    r.visitValueExpr = r.visitShapeExpr;
+    return r;
+  },
+
+  // tests
+  // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
+  //  { "id":"http://all.example/S1e", "type":"EachOf","expressions":[ ] },
+  // // { "id":"http://all.example/S1e","type":"TripleConstraint","predicate":"http://all.example/p1"},
+  // "extra":["http://all.example/p3","http://all.example/p1","http://all.example/p2"]
+  // }]}).shapes['http://all.example/S1']);
+
+  ShExJtoAS: function (schema) {
+    var _ShExUtil = this;
+    schema._prefixes = schema.prefixes || {  };
+    schema._index = this.index(schema);
+    return schema;
+  },
+
+  AStoShExJ: function (schema, abbreviate) {
+    schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
+    return schema;
+  },
+
+  ShExRVisitor: function (knownShapeExprs) {
+    var v = ShExUtil.Visitor();
+    var knownExpressions = {};
+    var oldVisitShapeExpr = v.visitShapeExpr,
+        oldVisitValueExpr = v.visitValueExpr,
+        oldVisitExpression = v.visitExpression;
+    v.keepShapeExpr = oldVisitShapeExpr;
+
+    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
+      if (typeof expr === "string")
+        return expr;
+      if ("id" in expr) {
+        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
+          return expr.id;
+        delete expr.id;
+      }
+      return oldVisitShapeExpr.call(this, expr, label);
+    };
+
+    v.visitExpression = function (expr) {
+      if (typeof expr === "string") // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
+        return expr;
+      if ("id" in expr) {
+        if (expr.id in knownExpressions) {
+          knownExpressions[expr.id].refCount++;
+          return expr.id;
+        }
+      }
+      var ret = oldVisitExpression.call(this, expr);
+      // Everything from RDF has an ID, usually a BNode.
+      knownExpressions[expr.id] = { refCount: 1, expr: ret };
+      return ret;
+    }
+
+    v.cleanIds = function () {
+      for (var k in knownExpressions) {
+        var known = knownExpressions[k];
+        if (known.refCount === 1 && RdfTerm.isBlank(known.expr.id))
+          delete known.expr.id;
+      };
+    }
+
+    return v;
+  },
+
+
+  // tests
+  // var shexr = ShExUtil.ShExRtoShExJ({ "type": "Schema", "shapes": [
+  //   { "id": "http://a.example/S1", "type": "Shape",
+  //     "expression": {
+  //       "type": "TripleConstraint", "predicate": "http://a.example/p1",
+  //       "valueExpr": {
+  //         "type": "ShapeAnd", "shapeExprs": [
+  //           { "type": "NodeConstraint", "nodeKind": "bnode" },
+  //           { "id": "http://a.example/S2", "type": "Shape",
+  //             "expression": {
+  //               "type": "TripleConstraint", "predicate": "http://a.example/p2" } }
+  //           //            "http://a.example/S2"
+  //         ] } } },
+  //   { "id": "http://a.example/S2", "type": "Shape",
+  //     "expression": {
+  //       "type": "TripleConstraint", "predicate": "http://a.example/p2" } }
+  // ] });
+  // console.warn("HERE:", shexr.shapes[0].expression.valueExpr);
+  // ShExUtil.ShExJtoAS(shexr);
+  // console.warn("THERE:", shexr.shapes["http://a.example/S1"].expression.valueExpr);
+
+
+  ShExRtoShExJ: function (schema) {
+    // compile a list of known shapeExprs
+    var knownShapeExprs = [];
+    if ("shapes" in schema)
+      knownShapeExprs = knownShapeExprs.concat(schema.shapes.map(sh => { return sh.id; }));
+
+    // normalize references to those shapeExprs
+    var v = this.ShExRVisitor(knownShapeExprs);
+    if ("start" in schema)
+      schema.start = v.visitShapeExpr(schema.start);
+    if ("shapes" in schema)
+      schema.shapes = schema.shapes.map(sh => {
+        return v.keepShapeExpr(sh);
+      });
+
+    // remove extraneous BNode IDs
+    v.cleanIds();
+    return schema;
+  },
+
+  valGrep: function (obj, type, f) {
+    var _ShExUtil = this;
+    var ret = [];
+    for (var i in obj) {
+      var o = obj[i];
+      if (typeof o === "object") {
+        if ("type" in o && o.type === type)
+          ret.push(f(o));
+        ret.push.apply(ret, _ShExUtil.valGrep(o, type, f));
+      }
+    }
+    return ret;
+  },
+
+  n3jsToTurtle: function (res) {
+    function termToLex (node) {
+      return typeof node === "object" ? ("\"" + node.value + "\"" + (
+        "type" in node ? "^^<" + node.type + ">" :
+          "language" in node ? "@" + node.language :
+          ""
+      )) :
+      RdfTerm.isIRI(node) ? "<" + node + ">" :
+      RdfTerm.isBlank(node) ? node :
+      "???";
+    }
+    return this.valGrep(res, "TestedTriple", function (t) {
+      return ["subject", "predicate", "object"].map(k => {
+        return termToLex(t[k]);
+      }).join(" ")+" .";
+    });
+  },
+
+  valToN3js: function (res) {
+    return this.valGrep(res, "TestedTriple", function (t) {
+      var ret = JSON.parse(JSON.stringify(t));
+      if (typeof t.object === "object")
+        ret.object = ("\"" + t.object.value + "\"" + (
+          "type" in t.object ? "^^" + t.object.type :
+            "language" in t.object ? "@" + t.object.language :
+            ""
+        ));
+      return ret;
+    });
+  },
+
+  n3jsToTurtle: function (n3js) {
+    function termToLex (node) {
+      if (RdfTerm.isIRI(node))
+        return "<" + node + ">";
+      if (RdfTerm.isBlank(node))
+        return node;
+      var t = RdfTerm.getLiteralType(node);
+      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
+        return "\"" + RdfTerm.getLiteralValue(node) + "\"" +
+        "^^<" + t + ">";
+      return node;
+    }
+    return n3js.map(function (t) {
+      return ["subject", "predicate", "object"].map(k => {
+        return termToLex(t[k]);
+      }).join(" ")+" .";
+    });
+  },
+
+  /** create indexes for schema
+   */
+  index: function (schema) {
+    let index = {
+      shapeExprs: new Map(),
+      tripleExprs: new Map()
+    };
+    let v = ShExUtil.Visitor();
+
+    let oldVisitExpression = v.visitExpression;
+    v.visitExpression = function (expression) {
+      if (typeof expression === "object" && "id" in expression)
+        index.tripleExprs[expression.id] = expression;
+      return oldVisitExpression.call(v, expression);
+    };
+
+    let oldVisitShapeExpr = v.visitShapeExpr;
+    v.visitShapeExpr = v.visitValueExpr = function (shapeExpr, label) {
+      if (typeof shapeExpr === "object" && "id" in shapeExpr)
+        index.shapeExprs[shapeExpr.id] = shapeExpr;
+      return oldVisitShapeExpr.call(v, shapeExpr, label);
+    };
+
+    v.visitSchema(schema);
+    return index;
+  },
+
+  /* canonicalize: move all tripleExpression references to their first expression.
+   *
+   */
+  canonicalize: function (schema, trimIRI) {
+    var ret = JSON.parse(JSON.stringify(schema));
+    ret["@context"] = ret["@context"] || "http://www.w3.org/ns/shex.jsonld";
+    delete ret._prefixes;
+    delete ret._base;
+    let index = ret._index || this.index(schema);
+    delete ret._index;
+    // Don't delete ret.productions as it's part of the AS.
+    var v = ShExUtil.Visitor();
+    var knownExpressions = [];
+    var oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
+    v.visitInclusion = function (inclusion) {
+      if (knownExpressions.indexOf(inclusion) === -1 &&
+          inclusion in index.tripleExprs) {
+        knownExpressions.push(inclusion)
+        return oldVisitExpression.call(v, index.tripleExprs[inclusion]);
+      }
+      return oldVisitInclusion.call(v, inclusion);
+    };
+    v.visitExpression = function (expression) {
+      if (typeof expression === "object" && "id" in expression) {
+        if (knownExpressions.indexOf(expression.id) === -1) {
+          knownExpressions.push(expression.id)
+          return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
+        }
+        return expression.id; // Inclusion
+      }
+      return oldVisitExpression.call(v, expression);
+    };
+    if (trimIRI) {
+      v.visitIRI = function (i) {
+        return i.replace(trimIRI, "");
+      }
+      if ("imports" in ret)
+        ret.imports = v.visitImports(ret.imports);
+    }
+    if ("shapes" in ret) {
+      ret.shapes = Object.keys(index.shapeExprs).sort().map(k => {
+        if ("extra" in index.shapeExprs[k])
+          index.shapeExprs[k].extra.sort();
+        return v.visitShapeExpr(index.shapeExprs[k]);
+      });
+    }
+    return ret;
+  },
+
+  BiDiClosure: function () {
+    return {
+      needs: {},
+      neededBy: {},
+      inCycle: [],
+      test: function () {
+        function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
+        // this.add(1, 2); expect(this.needs, { 1:[2]                     }); expect(this.neededBy, { 2:[1]                     });
+        // this.add(3, 4); expect(this.needs, { 1:[2], 3:[4]              }); expect(this.neededBy, { 2:[1], 4:[3]              });
+        // this.add(2, 3); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1] });
+
+        this.add(2, 3); expect(this.needs, { 2:[3]                     }); expect(this.neededBy, { 3:[2]                     });
+        this.add(1, 2); expect(this.needs, { 1:[2,3], 2:[3]            }); expect(this.neededBy, { 3:[2,1], 2:[1]            });
+        this.add(1, 3); expect(this.needs, { 1:[2,3], 2:[3]            }); expect(this.neededBy, { 3:[2,1], 2:[1]            });
+        this.add(3, 4); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(6, 7); expect(this.needs, { 6:[7]                    , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6]                    , 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(5, 6); expect(this.needs, { 5:[6,7], 6:[7]           , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5]           , 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(5, 7); expect(this.needs, { 5:[6,7], 6:[7]           , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5]           , 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(7, 8); expect(this.needs, { 5:[6,7,8], 6:[7,8], 7:[8], 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5], 8:[7,6,5], 3:[2,1], 2:[1], 4:[3,2,1] });
+        this.add(4, 5);
+        expect(this.needs,    { 1:[2,3,4,5,6,7,8], 2:[3,4,5,6,7,8], 3:[4,5,6,7,8], 4:[5,6,7,8], 5:[6,7,8], 6:[7,8], 7:[8] });
+        expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1], 5:[4,3,2,1], 6:[5,4,3,2,1], 7:[6,5,4,3,2,1], 8:[7,6,5,4,3,2,1] });
+      },
+      add: function (needer, needie, negated) {
+        var r = this;
+        if (!(needer in r.needs))
+          r.needs[needer] = [];
+        if (!(needie in r.neededBy))
+          r.neededBy[needie] = [];
+
+        // // [].concat.apply(r.needs[needer], [needie], r.needs[needie]). emitted only last element
+        r.needs[needer] = r.needs[needer].concat([needie], r.needs[needie]).
+          filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+        // // [].concat.apply(r.neededBy[needie], [needer], r.neededBy[needer]). emitted only last element
+        r.neededBy[needie] = r.neededBy[needie].concat([needer], r.neededBy[needer]).
+          filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+
+        if (needer in this.neededBy) this.neededBy[needer].forEach(function (e) {
+          r.needs[e] = r.needs[e].concat([needie], r.needs[needie]).
+            filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
+        });
+
+        if (needie in this.needs) this.needs[needie].forEach(function (e) {
+          r.neededBy[e] = r.neededBy[e].concat([needer], r.neededBy[needer]).
+            filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; })
+        });
+        // this.neededBy[needie].push(needer);
+
+        if (r.needs[needer].indexOf(needer) !== -1)
+          r.inCycle = r.inCycle.concat(r.needs[needer]);
+      },
+      trim: function () {
+        function _trim (a) {
+          // filter(function (el, ord, l) { return l.indexOf(el) === ord; })
+          for (var i = a.length-1; i > -1; --i)
+            if (a.indexOf(a[i]) < i)
+              a.splice(i, i+1);
+        }
+        for (k in this.needs)
+          _trim(this.needs[k]);
+        for (k in this.neededBy)
+          _trim(this.neededBy[k]);
+      },
+      foundIn: {},
+      addIn: function (tripleExpr, shapeExpr) {
+        this.foundIn[tripleExpr] = shapeExpr;
+      }
+    }
+  },
+  /** @@TODO tests
+   * options:
+   *   no: don't do anything; just report nestable shapes
+   *   transform: function to change shape labels
+   */
+  nestShapes: function (schema, options = {}) {
+    var _ShExUtil = this;
+    const index = schema._index || this.index(schema);
+    if (!('no' in options)) { options.no = false }
+
+    let shapeLabels = Object.keys(index.shapeExprs || [])
+    let shapeReferences = {}
+    shapeLabels.forEach(label => {
+      let shape = index.shapeExprs[label]
+      noteReference(label, null) // just note the shape so we have a complete list at the end
+      shape = _ShExUtil.skipDecl(shape)
+      if (shape.type === 'Shape') {
+        if ('extends' in shape) {
+          shape.extends.forEach(
+            parent => noteReference(parent, shape)
+          )
+        }
+        if ('expression' in shape) {
+          (_ShExUtil.simpleTripleConstraints(shape) || []).forEach(tc => {
+            let target = _ShExUtil.getValueType(tc.valueExpr, true)
+            noteReference(target, {type: 'tc', shapeLabel: label, tc: tc})
+          })
+        }
+      } else if (shape.type === 'NodeConstraint') {
+        // can't have any refs to other shapes
+      } else {
+        throw Error('nestShapes currently only supports Shapes and NodeConstraints')
+      }
+    })
+    let nestables = Object.keys(shapeReferences).filter(
+      label => shapeReferences[label].length === 1
+        && shapeReferences[label][0].type === 'tc' // no inheritance support yet
+        && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now
+    ).reduce((acc, label) => {
+      acc[label] = {
+        referrer: shapeReferences[label][0].shapeLabel,
+        predicate: shapeReferences[label][0].tc.predicate
+      }
+      return acc
+    }, {})
+    if (!options.no) {
+      let oldToNew = {}
+
+      if (options.rename) {
+      if (!('transform' in options)) {
+        options.transform = (function () {
+          let map = shapeLabels.reduce((acc, k, idx) => {
+            acc[k] = '_:transformed' + idx
+            return acc
+          }, {})
+          return function (id, shapeExpr) {
+            return map[id]
+          }
+        })()
+      }
+      Object.keys(nestables).forEach(oldName => {
+        let shapeExpr = index.shapeExprs[oldName]
+        let newName = options.transform(oldName, shapeExpr)
+        oldToNew[oldName] = newName
+        shapeLabels[shapeLabels.indexOf(oldName)] = newName
+        nestables[newName] = nestables[oldName]
+        nestables[newName].was = oldName
+        delete nestables[oldName]
+        index.shapeExprs[newName] = index.shapeExprs[oldName]
+        delete index.shapeExprs[oldName]
+        if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
+        let ref = shapeReferences[oldName][0]
+        if (ref.type === 'tc') {
+          if (ref.tc.valueExpr.type === 'ShapeRef') {
+            ref.tc.valueExpr.reference = newName
+          } else {
+            throw Error('assertion: rename not implemented for TripleConstraint expr: ' + ref.tc.valueExpr)
+            // _ShExUtil.setValueType(ref, newName)
+          }
+        } else if (ref.type === 'Shape') {
+          throw Error('assertion: rename not implemented for Shape: ' + ref)
+        } else {
+          throw Error('assertion: ' + ref.type + ' not TripleConstraint or Shape')
+        }
+      })
+
+      Object.keys(nestables).forEach(k => {
+        let n = nestables[k]
+        if (n.referrer in oldToNew) {
+          n.newReferrer = oldToNew[n.referrer]
+        }
+      })
+
+      // Restore old order for more concise diffs.
+      let shapesCopy = {}
+      shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
+      index.shapeExprs = shapesCopy
+      } else {
+        Object.keys(nestables).forEach(oldName => {
+          shapeReferences[oldName][0].tc.valueExpr = index.shapeExprs[oldName].shapeExpr
+          delete index.shapeExprs[oldName]
+        })
+      }
+    }
+    // console.dir(nestables)
+    // console.dir(shapeReferences)
+    return nestables
+
+    function noteReference (id, reference) {
+      if (!(id in shapeReferences)) {
+        shapeReferences[id] = []
+      }
+      if (reference) {
+        shapeReferences[id].push(reference)
+      }
+    }
+  },
+
+  /** @@TODO tests
+   *
+   */
+  getPredicateUsage: function (schema, untyped = {}) {
+    var _ShExUtil = this;
+
+    // populate shapeHierarchy
+    let shapeHierarchy = Hierarchy.create()
+    Object.keys(schema.shapes).forEach(label => {
+      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[label])
+      if (shapeExpr.type === 'Shape') {
+        (shapeExpr.extends || []).forEach(
+          superShape => shapeHierarchy.add(superShape, label)
+        )
+      }
+    })
+    Object.keys(schema.shapes).forEach(label => {
+      if (!(label in shapeHierarchy.parents))
+        shapeHierarchy.parents[label] = []
+    })
+
+    let predicates = { } // IRI->{ uses: [shapeLabel], commonType: shapeExpr }
+    Object.keys(schema.shapes).forEach(shapeLabel => {
+      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[shapeLabel])
+      if (shapeExpr.type === 'Shape') {
+        let tcs = _ShExUtil.simpleTripleConstraints(shapeExpr) || []
+        tcs.forEach(tc => {
+          let newType = _ShExUtil.getValueType(tc.valueExpr)
+          if (!(tc.predicate in predicates)) {
+            predicates[tc.predicate] = {
+              uses: [shapeLabel],
+              commonType: newType,
+              polymorphic: false
+            }
+            if (typeof newType === 'object') {
+              untyped[tc.predicate] = {
+                shapeLabel,
+                predicate: tc.predicate,
+                newType,
+                references: []
+              }
+            }
+          } else {
+            predicates[tc.predicate].uses.push(shapeLabel)
+            let curType = predicates[tc.predicate].commonType
+            if (typeof curType === 'object' || curType === null) {
+              // another use of a predicate with no commonType
+              // console.warn(`${shapeLabel} ${tc.predicate}:${newType} uses untypable predicate`)
+              untyped[tc.predicate].references.push({ shapeLabel, newType })
+            } else if (typeof newType === 'object') {
+              // first use of a predicate with no detectable commonType
+              predicates[tc.predicate].commonType = null
+              untyped[tc.predicate] = {
+                shapeLabel,
+                predicate: tc.predicate,
+                curType,
+                newType,
+                references: []
+              }
+            } else if (curType === newType) {
+              ; // same type again
+            } else if (shapeHierarchy.parents[curType].indexOf(newType) !== -1) {
+              predicates[tc.predicate].polymorphic = true; // already covered by current commonType
+            } else {
+              let idx = shapeHierarchy.parents[newType].indexOf(curType)
+              if (idx === -1) {
+                let intersection = shapeHierarchy.parents[curType].filter(
+                  lab => -1 !== shapeHierarchy.parents[newType].indexOf(lab)
+                )
+                if (intersection.length === 0) {
+                  untyped[tc.predicate] = {
+                    shapeLabel,
+                    predicate: tc.predicate,
+                    curType,
+                    newType,
+                    references: []
+                  }
+                  // console.warn(`${shapeLabel} ${tc.predicate} : ${newType} isn\'t related to ${curType}`)
+                  predicates[tc.predicate].commonType = null
+                } else {
+                  predicates[tc.predicate].commonType = intersection[0]
+                  predicates[tc.predicate].polymorphic = true
+                }
+              } else {
+                predicates[tc.predicate].commonType = shapeHierarchy.parents[newType][idx]
+                predicates[tc.predicate].polymorphic = true
+              }
+            }
+          }
+        })
+      }
+    })
+    return predicates
+  },
+
+  /** @@TODO tests
+   *
+   */
+  simpleTripleConstraints: function (shape) {
+    if (!('expression' in shape)) {
+      return []
+    }
+    if (shape.expression.type === 'TripleConstraint') {
+      return [ shape.expression ]
+    }
+    if (shape.expression.type === 'EachOf' &&
+        !(shape.expression.expressions.find(
+          expr => expr.type !== 'TripleConstraint'
+        ))) {
+          return shape.expression.expressions
+        }
+    throw Error('can\'t (yet) express ' + JSON.stringify(shape))
+  },
+
+  skipDecl: function (shapeExpr) {
+    return shapeExpr.type === 'ShapeDecl' ? shapeExpr.shapeExpr : shapeExpr
+  },
+
+  getValueType: function (valueExpr) {
+    if (typeof valueExpr === 'string') { return valueExpr }
+    if (valueExpr.reference) { return valueExpr.reference }
+    if (valueExpr.nodeKind === 'iri') { return OWL.Thing } // !! push this test to callers
+    if (valueExpr.datatype) { return valueExpr.datatype }
+    // if (valueExpr.extends && valueExpr.extends.length === 1) { return valueExpr.extends[0] }
+    return valueExpr // throw Error('no value type for ' + JSON.stringify(valueExpr))
+  },
+
+  /** getDependencies: find which shappes depend on other shapes by inheritance
+   * or inclusion.
+   * TODO: rewrite in terms of Visitor.
+   */
+  getDependencies: function (schema, ret) {
+    ret = ret || this.BiDiClosure();
+    (schema.shapes || []).forEach(function (shape) {
+      function _walkShapeExpression (shapeExpr, negated) {
+        if (typeof shapeExpr === "string") { // ShapeRef
+          ret.add(shape.id, shapeExpr);
+        } else if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
+          shapeExpr.shapeExprs.forEach(function (expr) {
+            _walkShapeExpression(expr, negated);
+          });
+        } else if (shapeExpr.type === "ShapeNot") {
+          _walkShapeExpression(shapeExpr.shapeExpr, negated ^ 1); // !!! test negation
+        } else if (shapeExpr.type === "Shape") {
+          _walkShape(shapeExpr, negated);
+        } else if (shapeExpr.type === "NodeConstraint") {
+          // no impact on dependencies
+        } else if (shapeExpr.type === "ShapeExternal") {
+        } else
+          throw Error("expected Shape{And,Or,Ref,External} or NodeConstraint in " + JSON.stringify(shapeExpr));
+      }
+      
+      function _walkShape (shape, negated) {
+        function _walkTripleExpression (tripleExpr, negated) {
+          function _exprGroup (exprs, negated) {
+            exprs.forEach(function (nested) {
+              _walkTripleExpression(nested, negated) // ?? negation allowed?
+            });
+          }
+
+          function _walkTripleConstraint (tc, negated) {
+            if (tc.valueExpr)
+              _walkShapeExpression(tc.valueExpr, negated);
+            if (negated && ret.inCycle.indexOf(shape.id) !== -1) // illDefined/negatedRefCycle.err
+              throw Error("Structural error: " + shape.id + " appears in negated cycle");
+          }
+
+          if (typeof tripleExpr === "string") { // Inclusion
+            ret.add(shape.id, tripleExpr);
+          } else {
+            if ("id" in tripleExpr)
+              ret.addIn(tripleExpr.id, shape.id)
+            if (tripleExpr.type === "TripleConstraint") {
+              _walkTripleConstraint(tripleExpr, negated);
+            } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
+              _exprGroup(tripleExpr.expressions);
+            } else {
+              throw Error("expected {TripleConstraint,OneOf,EachOf,Inclusion} in " + tripleExpr);
+            }
+          }
+        }
+
+        if (shape.inherit && shape.inherit.length > 0)
+          shape.inherit.forEach(function (i) {
+            ret.add(shape.id, i);
+          });
+        if (shape.expression)
+          _walkTripleExpression(shape.expression, negated);
+      }
+      _walkShapeExpression(shape, 0); // 0 means false for bitwise XOR
+    });
+    return ret;
+  },
+
+  /** partition: create subset of a schema with only desired shapes and
+   * their dependencies.
+   *
+   * @schema: input schema
+   * @partition: shape name or array of desired shape names
+   * @deps: (optional) dependency tree from getDependencies.
+   *        map(shapeLabel -> [shapeLabel])
+   */
+  partition: function (schema, includes, deps, cantFind) {
+    const inputIndex = schema._index || this.index(schema)
+    const outputIndex = { shapeExprs: new Map(), tripleExprs: new Map() };
+    includes = includes instanceof Array ? includes : [includes];
+
+    // build dependency tree if not passed one
+    deps = deps || this.getDependencies(schema);
+    cantFind = cantFind || function (what, why) {
+      throw new Error("Error: can't find shape " +
+                      (why ?
+                       why + " dependency " + what :
+                       what));
+    };
+    var partition = {};
+    for (var k in schema)
+      partition[k] = k === "shapes" ? [] : schema[k];
+    includes.forEach(function (i) {
+      if (i in outputIndex.shapeExprs) {
+        // already got it.
+      } else if (i in inputIndex.shapeExprs) {
+        const adding = inputIndex.shapeExprs[i];
+        partition.shapes.push(adding);
+        outputIndex.shapeExprs[adding.id] = adding;
+        if (i in deps.needs)
+          deps.needs[i].forEach(function (n) {
+            // Turn any needed TE into an SE.
+            if (n in deps.foundIn)
+              n = deps.foundIn[n];
+
+            if (n in outputIndex.shapeExprs) {
+            } else if (n in inputIndex.shapeExprs) {
+              const needed = inputIndex.shapeExprs[n];
+              partition.shapes.push(needed);
+              outputIndex.shapeExprs[needed.id] = needed;
+            } else
+              cantFind(n, i);
+          });
+      } else {
+        cantFind(i, "supplied");
+      }
+    });
+    return partition;
+  },
+
+
+  /** @@TODO flatten: return copy of input schema with all shape and value class
+   * references substituted by a copy of their referent.
+   *
+   * @schema: input schema
+   */
+  flatten: function (schema, deps, cantFind) {
+    var v = this.Visitor();
+    return v.visitSchema(schema);
+  },
+
+  // @@ put predicateUsage here
+
+  emptySchema: function () {
+    return {
+      type: "Schema"
+    };
+  },
+  merge: function (left, right, overwrite, inPlace) {
+    var ret = inPlace ? left : this.emptySchema();
+
+    function copy (attr) {
+      Object.keys(left[attr] || {}).forEach(function (key) {
+        if (!(attr in ret))
+          ret[attr] = {};
+        ret[attr][key] = left[attr][key];
+      });
+      Object.keys(right[attr] || {}).forEach(function (key) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite) {
+          if (!(attr in ret))
+            ret[attr] = {};
+          ret[attr][key] = right[attr][key];
+        }
+      });
+    }
+
+    // base
+    if ("_base" in left)
+      ret._base = left._base;
+    if ("_base" in right)
+      if (!("_base" in left) || overwrite)
+        ret._base = right._base;
+
+    copy("_prefixes");
+
+    if ("imports" in right)
+      if (!("imports" in left) || overwrite)
+        ret.imports = right.imports;
+
+    // startActs
+    if ("startActs" in left)
+      ret.startActs = left.startActs;
+    if ("startActs" in right)
+      if (!("startActs" in left) || overwrite)
+        ret.startActs = right.startActs;
+
+    // start
+    if ("start" in left)
+      ret.start = left.start;
+    if ("start" in right)
+      if (!("start" in left) || overwrite)
+        ret.start = right.start;
+
+    let lindex = left._index || this.index(left);
+
+    // shapes
+    if (!inPlace)
+      (left.shapes || []).forEach(function (lshape) {
+        if (!("shapes" in ret))
+          ret.shapes = [];
+        ret.shapes.push(lshape);
+      });
+    (right.shapes || []).forEach(function (rshape) {
+      if (!("shapes"  in left) || !(rshape.id in lindex.shapeExprs) || overwrite) {
+        if (!("shapes" in ret))
+          ret.shapes = [];
+        ret.shapes.push(rshape)
+      }
+    });
+
+    if (left._index || right._index)
+      ret._index = this.index(ret); // inefficient; could build above
+
+    return ret;
+  },
+
+  absolutizeResults: function (parsed, base) {
+    // !! duplicate of Validation-test.js:84: var referenceResult = parseJSONFile(resultsFile...)
+    function mapFunction (k, obj) {
+      // resolve relative URLs in results file
+      if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+          RdfTerm.isIRI(obj[k])) {
+        obj[k] = RdfTerm.resolveRelativeIRI(base, obj[k]);
+      }}
+
+    function resolveRelativeURLs (obj) {
+      Object.keys(obj).forEach(function (k) {
+        if (typeof obj[k] === "object") {
+          resolveRelativeURLs(obj[k]);
+        }
+        if (mapFunction) {
+          mapFunction(k, obj);
+        }
+      });
+    }
+    resolveRelativeURLs(parsed);
+    return parsed;
+  },
+
+  validateSchema: function (schema) { // obselete, but may need other validations in the future.
+    var _ShExUtil = this;
+    var visitor = this.Visitor();
+    var currentLabel = currentExtra = null;
+    var currentNegated = false;
+    var dependsOn = { };
+    var inTE = false;
+    var oldVisitShape = visitor.visitShape;
+    var negativeDeps = Hierarchy.create();
+    var positiveDeps = Hierarchy.create();
+    let index = schema.index || this.index(schema);
+
+    visitor.visitShape = function (shape, label) {
+      var lastExtra = currentExtra;
+      currentExtra = shape.extra;
+      var ret = oldVisitShape.call(visitor, shape, label);
+      currentExtra = lastExtra;
+      return ret;
+    }
+
+    var oldVisitShapeNot = visitor.visitShapeNot;
+    visitor.visitShapeNot = function (shapeNot, label) {
+      var lastNegated = currentNegated;
+      currentNegated ^= true;
+      var ret = oldVisitShapeNot.call(visitor, shapeNot, label);
+      currentNegated = lastNegated;
+      return ret;
+    }
+
+    var oldVisitTripleConstraint = visitor.visitTripleConstraint;
+    visitor.visitTripleConstraint = function (expr) {
+      var lastNegated = currentNegated;
+      if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
+        currentNegated ^= true;
+      inTE = true;
+      var ret = oldVisitTripleConstraint.call(visitor, expr);
+      inTE = false;
+      currentNegated = lastNegated;
+      return ret;
+    };
+
+    var oldVisitShapeRef = visitor.visitShapeRef;
+    visitor.visitShapeRef = function (shapeRef) {
+      if (!(shapeRef in index.shapeExprs))
+        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + ".");
+      if (!inTE && shapeRef === currentLabel)
+        throw Error("Structural error: circular reference to " + currentLabel + ".");
+      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
+      return oldVisitShapeRef.call(visitor, shapeRef);
+    }
+
+    var oldVisitInclusion = visitor.visitInclusion;
+    visitor.visitInclusion = function (inclusion) {
+      var refd;
+      if (!(refd = index.tripleExprs[inclusion]))
+        throw Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + ".");
+      // if (refd.type !== "Shape")
+      //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
+      return oldVisitInclusion.call(visitor, inclusion);
+    };
+
+    (schema.shapes || []).forEach(function (shape) {
+      currentLabel = shape.id;
+      visitor.visitShapeExpr(shape, shape.id);
+    });
+    let circs = Object.keys(negativeDeps.children).filter(
+      k => negativeDeps.children[k].filter(
+        k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
+          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
+      ).length > 0
+    );
+    if (circs.length)
+      throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
+
+    function dumpKeys (obj) {
+      return obj ? Object.keys(obj).map(
+        u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
+      ).join("\n        ") : '- none defined -'
+    }
+  },
+
+  /** isWellDefined: assert that schema is well-defined.
+   *
+   * @schema: input schema
+   * @@TODO
+   */
+  isWellDefined: function (schema) {
+    this.validateSchema(schema);
+    // var deps = this.getDependencies(schema);
+    return schema;
+  },
+
+  walkVal: function (val, cb) {
+    var _ShExUtil = this;
+    if (val.type === "NodeTest") {
+      return null;
+    } else if (val.type === "ShapeTest") {
+      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+    } else if (val.type === "ShapeOrResults") {
+      return _ShExUtil.walkVal(val.solution, cb);
+    } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
+      return val.solutions.reduce((ret, sln) => {
+        sln.expressions.forEach(exp => {
+          var n = _ShExUtil.walkVal(exp, cb);
+          if (n)
+            Object.keys(n).forEach(k => {
+              if (k in ret)
+                ret[k] = ret[k].concat(n[k]);
+              else
+                ret[k] = n[k];
+            })
+        });
+        return ret;
+      }, {});
+    } else if (val.type === "OneOfSolutions") {
+      return val.solutions.reduce((ret, sln) => {
+        Object.assign(ret, _ShExUtil.walkVal(sln, cb));
+        return ret;
+      }, {});
+    } else if (val.type === "TripleConstraintSolutions") {
+      if ("solutions" in val) {
+        var ret = {};
+        var vals = [];
+        ret[val.predicate] = vals;
+        val.solutions.forEach(sln => {
+          var toAdd = [];
+          if (chaseList(sln.referenced, toAdd)) {
+            vals = vals.concat(toAdd);
+          } else {
+            var newElt = cb(sln);
+            if ("referenced" in sln) {
+              var t = _ShExUtil.walkVal(sln.referenced, cb);
+              if (t)
+                newElt.nested = t;
+            }
+            vals.push(newElt);
+          }
+          function chaseList (li) {
+            if (!li) return false;
+            if (li.node === RDF.nil) return true;
+            if ("solution" in li && "solutions" in li.solution &&
+                li.solution.solutions.length === 1 &&
+                "expressions" in li.solution.solutions[0] &&
+                li.solution.solutions[0].expressions.length === 2 &&
+                "predicate" in li.solution.solutions[0].expressions[0] &&
+                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
+                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
+              var expressions = li.solution.solutions[0].expressions;
+              var ent = expressions[0];
+              var rest = expressions[1].solutions[0];
+              var member = ent.solutions[0];
+              var newElt = cb(member);
+              if ("referenced" in member) {
+                var t = _ShExUtil.walkVal(member.referenced, cb);
+                if (t)
+                  newElt.nested = t;
+              }
+              vals.push(newElt);
+              return rest.object === RDF.nil ?
+                true :
+                chaseList(rest.referenced);
+            }
+          }
+        });
+        return vals.length ? ret : null;
+      } else {
+        return null;
+      }
+    } else if (val.type === "Recursion") {
+      return null;
+    } else {
+      // console.log(val);
+      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    return val;
+  },
+
+  /**
+   * Convert val results to a property tree.
+   * @exports
+   * @returns {@code {p1:[{p2: v2},{p3: v3}]}}
+   */
+  valToValues: function (val) {
+    return this.walkVal (val, function (sln) {
+      return { ldterm: sln.object };
+    });
+  },
+
+  valToExtension: function (val, lookfor) {
+    var map = this.walkVal (val, function (sln) {
+      return { extensions: sln.extensions };
+    });
+    function extensions (obj) {
+      var list = [];
+      var crushed = {};
+      function crush (elt) {
+        if (crushed === null)
+          return elt;
+        if (elt.constructor === Array) {
+          crushed = null;
+          return elt;
+        }
+        for (k in elt) {
+          if (k in crushed) {
+            crushed = null
+            return elt;
+          }
+          crushed[k] = elt[k];
+        }
+        return elt;
+      }
+      for (var k in obj) {
+        if (k === "extensions") {
+          if (obj[k])
+            list.push(crush(obj[k][lookfor]));
+        } else if (k === "nested") {
+          var nested = extensions(obj[k]);
+          if (nested.constructor === Array)
+            nested.forEach(crush);
+          else
+            crush(nested);
+          list = list.concat(nested);
+        } else {
+          list.push(crush(extensions(obj[k])));
+        }
+      }
+      return list.length === 1 ? list[0] :
+        crushed ? crushed :
+        list;
+    }
+    return extensions(map);
+  },
+
+  valuesToSchema: function (values) {
+    // console.log(JSON.stringify(values, null, "  "));
+    var v = values;
+    var t = values[RDF.type][0].ldterm;
+    if (t === SX.Schema) {
+      /* Schema { "@context":"http://www.w3.org/ns/shex.jsonld"
+       *           startActs:[SemAct+]? start:(shapeExpr|labeledShapeExpr)?
+       *           shapes:[labeledShapeExpr+]? }
+       */
+      var ret = {
+        "@context": "http://www.w3.org/ns/shex.jsonld",
+        type: "Schema"
+      }
+      if (SX.startActs in v)
+        ret.startActs = v[SX.startActs].map(e => {
+          var ret = {
+            type: "SemAct",
+            name: e.nested[SX.name][0].ldterm
+          };
+          if (SX.code in e.nested)
+            ret.code = e.nested[SX.code][0].ldterm.value;
+          return ret;
+        });
+      if (SX.imports in v)
+        ret.imports = v[SX.imports].map(e => {
+          return e.ldterm;
+        });
+      if (values[SX.start])
+        ret.start = extend({id: values[SX.start][0].ldterm}, shapeExpr(values[SX.start][0].nested));
+      var shapes = values[SX.shapes];
+      if (shapes) {
+        ret.shapes = shapes.map(v => {
+          return extend({id: v.ldterm}, shapeExpr(v.nested));
+        });
+      }
+      // console.log(ret);
+      return ret;
+    } else {
+      throw Error("unknown schema type in " + JSON.stringify(values));
+    }
+    function findType (v, elts, f) {
+      var t = v[RDF.type][0].ldterm.substr(SX._namespace.length);
+      var elt = elts[t];
+      if (!elt)
+        return Missed;
+      if (elt.nary) {
+        var ret = {
+          type: t,
+        };
+        ret[elt.prop] = v[SX[elt.prop]].map(e => {
+          return valueOf(e);
+        });
+        return ret;
+      } else {
+        var ret = {
+          type: t
+        };
+        if (elt.prop) {
+          ret[elt.prop] = valueOf(v[SX[elt.prop]][0]);
+        }
+        return ret;
+      }
+
+      function valueOf (x) {
+        return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
+      }
+    }
+    function shapeExpr (v) {
+      // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
+      var elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
+                   "ShapeOr"      : { nary: true , expr: true , prop: "shapeExprs" },
+                   "ShapeNot"     : { nary: false, expr: true , prop: "shapeExpr"  },
+                   "ShapeRef"     : { nary: false, expr: false, prop: "reference"  },
+                   "ShapeExternal": { nary: false, expr: false, prop: null         } };
+      var ret = findType(v, elts, shapeExpr);
+      if (ret !== Missed)
+        return ret;
+
+      var t = v[RDF.type][0].ldterm;
+      if (t === SX.Shape) {
+        var ret = { type: "Shape" };
+        ["closed"].forEach(a => {
+          if (SX[a] in v)
+            ret[a] = !!v[SX[a]][0].ldterm.value;
+        });
+        if (SX.extra in v)
+          ret.extra = v[SX.extra].map(e => { return e.ldterm; });
+        if (SX.expression in v) {
+          ret.expression =
+            "nested" in v[SX.expression][0] ?
+            extend({id: v[SX.expression][0].ldterm}, tripleExpr(v[SX.expression][0].nested)) :
+            v[SX.expression][0].ldterm;
+        }
+        if (SX.annotation in v)
+          ret.annotations = v[SX.annotation].map(e => {
+            return {
+              type: "Annotation",
+              predicate: e.nested[SX.predicate][0].ldterm,
+              object: e.nested[SX.object][0].ldterm
+            };
+          });
+        if (SX.semActs in v)
+          ret.semActs = v[SX.semActs].map(e => {
+            var ret = {
+              type: "SemAct",
+              name: e.nested[SX.name][0].ldterm
+            };
+            if (SX.code in e.nested)
+              ret.code = e.nested[SX.code][0].ldterm.value;
+            return ret;
+          });
+        return ret;
+      } else if (t === SX.NodeConstraint) {
+        var ret = { type: "NodeConstraint" };
+        if (SX.values in v)
+          ret.values = v[SX.values].map(v1 => { return objectValue(v1); });
+        if (SX.nodeKind in v)
+          ret.nodeKind = v[SX.nodeKind][0].ldterm.substr(SX._namespace.length);
+        ["length", "minlength", "maxlength", "mininclusive", "maxinclusive", "minexclusive", "maxexclusive", "totaldigits", "fractiondigits"].forEach(a => {
+          if (SX[a] in v)
+            ret[a] = parseFloat(v[SX[a]][0].ldterm.value);
+        });
+        if (SX.pattern in v)
+          ret.pattern = v[SX.pattern][0].ldterm.value;
+        if (SX.flags in v)
+          ret.flags = v[SX.flags][0].ldterm.value;
+        if (SX.datatype in v)
+          ret.datatype = v[SX.datatype][0].ldterm;
+        return ret;
+      } else {
+        throw Error("unknown shapeExpr type in " + JSON.stringify(v));
+      }
+
+    }
+
+    function objectValue (v, expectString) {
+      if ("nested" in v) {
+        var t = v.nested[RDF.type][0].ldterm;
+        if ([SX.IriStem, SX.LiteralStem, SX.LanguageStem].indexOf(t) !== -1) {
+          var ldterm = v.nested[SX.stem][0].ldterm.value;
+          return {
+            type: t.substr(SX._namespace.length),
+            stem: ldterm
+          };
+        } else if ([SX.Language].indexOf(t) !== -1) {
+          return {
+            type: "Language",
+            languageTag: v.nested[SX.languageTag][0].ldterm.value
+          };
+        } else if ([SX.IriStemRange, SX.LiteralStemRange, SX.LanguageStemRange].indexOf(t) !== -1) {
+          var st = v.nested[SX.stem][0];
+          var stem = st;
+          if (typeof st === "object") {
+            if (typeof st.ldterm === "object") {
+              stem = st.ldterm;
+            } else if (st.ldterm.startsWith("_:")) {
+              stem = { type: "Wildcard" };
+            }
+          }
+          var ret = {
+            type: t.substr(SX._namespace.length),
+            stem: stem.type !== "Wildcard" ? stem.value : stem
+          };
+          if (SX.exclusion in v.nested) {
+            // IriStemRange:
+            // * [{"ldterm":"http://a.example/v1"},{"ldterm":"http://a.example/v3"}] <-- no value
+            // * [{"ldterm":"_:b836","nested":{a:[{"ldterm":sx:IriStem}],
+            //                                 sx:stem:[{"ldterm":{"value":"http://a.example/v1"}}]}},
+            //    {"ldterm":"_:b838","nested":{a:[{"ldterm":sx:IriStem}],
+            //                                 sx:stem:[{"ldterm":{"value":"http://a.example/v3"}}]}}]
+
+            // LiteralStemRange:
+            // * [{"ldterm":{"value":"v1"}},{"ldterm":{"value":"v3"}}]
+            // * [{"ldterm":"_:b866","nested":{a:[{"ldterm":sx:LiteralStem}],
+            //                                 sx:stem:[{"ldterm":{"value":"v1"}}]}},
+            //    {"ldterm":"_:b868","nested":{a:[{"ldterm":sx:LiteralStem}],
+            //                                 sx:stem:[{"ldterm":{"value":"v3"}}]}}]
+
+            // LanguageStemRange:
+            // * [{"ldterm":{"value":"fr-be"}},{"ldterm":{"value":"fr-ch"}}]
+            // * [{"ldterm":"_:b851","nested":{a:[{"ldterm":sx:LanguageStem}],
+            //                                 sx:stem:[{"ldterm":{"value":"fr-be"}}]}},
+            //    {"ldterm":"_:b853","nested":{a:[{"ldterm":sx:LanguageStem}],
+            //                                 sx:stem:[{"ldterm":{"value":"fr-ch"}}]}}]
+            ret.exclusions = v.nested[SX.exclusion].map(v1 => {
+              return objectValue(v1, t !== SX.IriStemRange);
+            });
+          }
+          return ret;
+        } else {
+          throw Error("unknown objectValue type in " + JSON.stringify(v));
+        }
+      } else {
+        return expectString ? v.ldterm.value : v.ldterm;
+      }
+    }
+
+    function tripleExpr (v) {
+      // tripleExpr = EachOf | OneOf | TripleConstraint | Inclusion ;
+      var elts = { "EachOf"   : { nary: true , expr: true , prop: "expressions" },
+                   "OneOf"    : { nary: true , expr: true , prop: "expressions" },
+                   "Inclusion": { nary: false, expr: false, prop: "include"     } };
+      var ret = findType(v, elts, tripleExpr);
+      if (ret !== Missed) {
+        minMaxAnnotSemActs(v, ret);
+        return ret;
+      }
+
+      var t = v[RDF.type][0].ldterm;
+      if (t === SX.TripleConstraint) {
+        var ret = {
+          type: "TripleConstraint",
+          predicate: v[SX.predicate][0].ldterm
+        };
+        ["inverse"].forEach(a => {
+          if (SX[a] in v)
+            ret[a] = !!v[SX[a]][0].ldterm.value;
+        });
+        if (SX.valueExpr in v)
+          ret.valueExpr = extend({id: v[SX.valueExpr][0].ldterm}, "nested" in v[SX.valueExpr][0] ? shapeExpr(v[SX.valueExpr][0].nested) : {});
+        minMaxAnnotSemActs(v, ret);
+        return ret;
+      } else {
+        throw Error("unknown tripleExpr type in " + JSON.stringify(v));
+      }
+    }
+    function minMaxAnnotSemActs (v, ret) {
+      if (SX.min in v)
+        ret.min = parseInt(v[SX.min][0].ldterm.value);
+      if (SX.max in v) {
+        ret.max = parseInt(v[SX.max][0].ldterm.value);
+        if (isNaN(ret.max))
+          ret.max = UNBOUNDED;
+      }
+      if (SX.annotation in v)
+        ret.annotations = v[SX.annotation].map(e => {
+          return {
+            type: "Annotation",
+            predicate: e.nested[SX.predicate][0].ldterm,
+            object: e.nested[SX.object][0].ldterm
+          };
+        });
+      if (SX.semActs in v)
+        ret.semActs = v[SX.semActs].map(e => {
+          var ret = {
+            type: "SemAct",
+            name: e.nested[SX.name][0].ldterm
+          };
+          if (SX.code in e.nested)
+            ret.code = e.nested[SX.code][0].ldterm.value;
+          return ret;
+        });
+      return ret;
+    }
+  },
+
+  valToSimple: function (val) {
+    var _ShExUtil = this;
+    function _join (list) {
+      return list.reduce((ret, elt) => {
+        Object.keys(elt).forEach(k => {
+          if (k in ret) {
+            ret[k] = Array.from(new Set(ret[k].concat(elt[k])));
+          } else {
+            ret[k] = elt[k];
+          }
+        });
+        return ret;
+      }, {});
+    }
+    if (val.type === "TripleConstraintSolutions") {
+      if ("solutions" in val) {
+        return val.solutions.reduce((ret, sln) => {
+          if (!("referenced" in sln))
+            return {};
+          var toAdd = {};
+          if (chaseList(sln.referenced, toAdd)) {
+            return _join(ret, toAdd);
+          } else {
+            return _join(ret, _ShExUtil.valToSimple(sln.referenced));
+          }
+          function chaseList (li) {
+            if (!li) return false;
+            if (li.node === RDF.nil) return true;
+            if ("solution" in li && "solutions" in li.solution &&
+                li.solution.solutions.length === 1 &&
+                "expressions" in li.solution.solutions[0] &&
+                li.solution.solutions[0].expressions.length === 2 &&
+                "predicate" in li.solution.solutions[0].expressions[0] &&
+                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
+                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
+              var expressions = li.solution.solutions[0].expressions;
+              var ent = expressions[0];
+              var rest = expressions[1].solutions[0];
+              var member = ent.solutions[0];
+              var newElt = { ldterm: member.object };
+              if ("referenced" in member) {
+                var t = _ShExUtil.valToSimple(member.referenced);
+                if (t)
+                  newElt.nested = t;
+              }
+              toAdd = _join(toAdd, newElt);
+              return rest.object === RDF.nil ?
+                true :
+                chaseList(rest.referenced);
+            }
+          }
+        }, []);
+      } else {
+        return [];
+      }
+    } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
+      return {  };
+    } else if (val.type === "NodeTest") {
+      var thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return thisNode;
+    } else if (val.type === "ShapeTest") {
+      var thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return "solution" in val ? _join([thisNode].concat(_ShExUtil.valToSimple(val.solution))) : thisNode;
+    } else if (val.type === "Recursion") {
+      return {  };
+    } else if ("solutions" in val) {
+      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
+      return _join(val.solutions.map(sln => {
+        return _ShExUtil.valToSimple(sln);
+      }));
+    } else if ("expressions" in val) {
+      return _join(val.expressions.map(sln => {
+        return _ShExUtil.valToSimple(sln);
+      }));
+    } else {
+      // console.log(val);
+      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    return val;
+  },
+
+  simpleToShapeMap: function (x) {
+    return Object.keys(x).reduce((ret, k) => {
+      x[k].forEach(s => {
+        ret.push({node: k, shape: s });
+      });
+      return ret;
+    }, []);
+  },
+
+  absolutizeShapeMap: function (parsed, base) {
+    return parsed.map(elt => {
+      return Object.assign(elt, {
+        node: RdfTerm.resolveRelativeIRI(base, elt.node),
+        shape: RdfTerm.resolveRelativeIRI(base, elt.shape)
+      });
+    });
+  },
+
+  errsToSimple: function (val, node, shape) {
+    var _ShExUtil = this;
+    if (val.type === "FailureList") {
+      return val.errors.reduce((ret, e) => {
+        return ret.concat(_ShExUtil.errsToSimple(e));
+      }, []);
+    } else if (val.type === "Failure") {
+      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
+        var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
+        return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
+      }, []));
+    } else if (val.type === "TypeMismatch") {
+      var nested = val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+      return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
+    } else if (val.type === "ShapeAndFailure") {
+      return val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+    } else if (val.type === "ShapeOrFailure") {
+      return val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
+          }, []) :
+          " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+    } else if (val.type === "ShapeNotFailure") {
+      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
+    } else if (val.type === "ExcessTripleViolation") {
+      return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
+    } else if (val.type === "ClosedShapeViolation") {
+      return ["ClosedShapeError: unexpected: {"].concat(
+        val.unexpectedTriples.map(t => {
+          return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
+        })
+      ).concat(["}"]);
+    } else if (val.type === "NodeConstraintViolation") {
+      var w = __webpack_require__(111)();
+      w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
+      var txt;
+      w.end((err, res) => {
+        txt = res;
+      });
+      return ["NodeConstraintError: expected to match " + txt];
+    } else if (val.type === "MissingProperty") {
+      return ["Missing property: " + val.property];
+    } else if (val.type === "NegatedProperty") {
+      return ["Unexpected property: " + val.property];
+    } else if (val.constructor === Array) {debugger;
+      return val.reduce((ret, e) => {
+        var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
+        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
+      }, []);
+    } else {
+      debugger; // console.log(val);
+      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    function errorList (errors) {
+      return errors.reduce(function (acc, e) {
+        var attrs = Object.keys(e);
+        return acc.concat(
+          (attrs.length === 1 && attrs[0] === "errors")
+            ? errorList(e.errors)
+            : e);
+      }, []);
+    }
+  },
+
+  resolveRelativeIRI: RdfTerm.resolveRelativeIRI,
+
+  resolvePrefixedIRI: function (prefixedIri, prefixes) {
+    var colon = prefixedIri.indexOf(":");
+    if (colon === -1)
+      return null;
+    var prefix = prefixes[prefixedIri.substr(0, colon)];
+    return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
+  },
+
+  parsePassedNode: function (passedValue, meta, deflt, known, reportUnknown) {
+    if (passedValue === undefined || passedValue.length === 0)
+      return known && known(meta.base) ? meta.base : deflt ? deflt() : this.NotSupplied;
+    if (passedValue[0] === "_" && passedValue[1] === ":")
+      return passedValue;
+    if (passedValue[0] === "\"") {
+      var m = passedValue.match(/^"((?:[^"\\]|\\")*)"(?:@(.+)|\^\^(?:<(.*)>|([^:]*):(.*)))?$/);
+      if (!m)
+        throw Error("malformed literal: " + passedValue);
+      var lex = m[1], lang = m[2], rel = m[3], pre = m[4], local = m[5];
+      // Turn the literal into an N3.js atom.
+      var quoted = "\""+lex+"\"";
+      if (lang !== undefined)
+        return quoted + "@" + lang;
+      if (pre !== undefined) {
+        if (!(pre in meta.prefixes))
+          throw Error("error parsing node "+passedValue+" no prefix for \"" + pre + "\"");
+        return quoted + "^^" + meta.prefixes[pre] + local;
+      }
+      if (rel !== undefined)
+        return quoted + "^^" + RdfTerm.resolveRelativeIRI(meta.base, rel);
+      return quoted;
+    }
+    if (!meta)
+      return known(passedValue) ? passedValue : this.UnknownIRI;
+    var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
+    if (relIRI)
+      passedValue = passedValue.substr(1, passedValue.length-2);
+    var t = RdfTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    if (known(t))
+      return t;
+    if (!relIRI) {
+      var t2 = this.resolvePrefixedIRI(passedValue, meta.prefixes);
+      if (t2 !== null && known(t2))
+        return t2;
+    }
+    return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
+  },
+
+  executeQueryPromise: function (query, endpoint) {
+    var rows;
+
+    var queryURL = endpoint + "?query=" + encodeURIComponent(query);
+    return fetch(queryURL, {
+      headers: {
+        'Accept': 'application/sparql-results+json'
+      }}).then(resp => resp.json()).then(t => {
+        var selects = t.head.vars;
+        return t.results.bindings.map(row => {
+          return selects.map(sel => {
+            var elt = row[sel];
+            switch (elt.type) {
+            case "uri": return elt.value;
+            case "bnode": return "_:" + elt.value;
+            case "literal":
+              var datatype = elt.datatype;
+              var lang = elt["xml:lang"];
+              return "\"" + elt.value + "\"" + (
+                datatype ? "^^" + datatype :
+                  lang ? "@" + lang :
+                  "");
+            default: throw "unknown XML results type: " + elt.prop("tagName");
+            }
+            return row[sel];
+          })
+        });
+      })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
+  },
+
+  executeQuery: function (query, endpoint) {
+    var rows, t, j;
+    var queryURL = endpoint + "?query=" + encodeURIComponent(query);
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", queryURL, false);
+    xhr.setRequestHeader('Accept', 'application/sparql-results+json');
+    xhr.send();
+    // var selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
+    // var selects = selectsBlock.match(/\?[^\s?]+/g);
+    var t = JSON.parse(xhr.responseText);
+    var selects = t.head.vars;
+    return t.results.bindings.map(row => {
+      return selects.map(sel => {
+        var elt = row[sel];
+        switch (elt.type) {
+        case "uri": return elt.value;
+        case "bnode": return "_:" + elt.value;
+        case "literal":
+          var datatype = elt.datatype;
+          var lang = elt["xml:lang"];
+          return "\"" + elt.value + "\"" + (
+            datatype ? "^^" + datatype :
+              lang ? "@" + lang :
+              "");
+        default: throw "unknown XML results type: " + elt.prop("tagName");
+        }
+        return row[sel];
+      })
+    });
+
+/* TO ADD? XML results format parsed with jquery:
+        $(data).find("sparql > results > result").
+          each((_, row) => {
+            rows.push($(row).find("binding > *:nth-child(1)").
+              map((idx, elt) => {
+                elt = $(elt);
+                var text = elt.text();
+                switch (elt.prop("tagName")) {
+                case "uri": return text;
+                case "bnode": return "_:" + text;
+                case "literal":
+                  var datatype = elt.attr("datatype");
+                  var lang = elt.attr("xml:lang");
+                  return "\"" + text + "\"" + (
+                    datatype ? "^^" + datatype :
+                    lang ? "@" + lang :
+                      "");
+                default: throw "unknown XML results type: " + elt.prop("tagName");
+                }
+              }).get());
+          });
+*/
+  },
+
+  makeN3DB: function (db, queryTracker) {
+
+    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
+    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
+    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
+
+    function getNeighborhood (point, shapeLabel/*, shape */) {
+      // I'm guessing a local DB doesn't benefit from shape optimization.
+      var startTime;
+      if (queryTracker) {
+        startTime = new Date();
+        queryTracker.start(false, point, shapeLabel);
+      }
+      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
+      if (queryTracker) {
+        var time = new Date();
+        queryTracker.end(outgoing, time - startTime);
+        startTime = time;
+      }
+      if (queryTracker) {
+        queryTracker.start(true, point, shapeLabel);
+      }
+      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
+      if (queryTracker) {
+        queryTracker.end(incoming, new Date() - startTime);
+      }
+      return  {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      // size: db.size,
+      getNeighborhood: getNeighborhood,
+      getSubjects: getSubjects,
+      getPredicates: getPredicates,
+      getObjects: getObjects,
+      getQuads: getQuads,
+      get size() { return db.size; },
+      // getQuads: function (s, p, o, graph, shapeLabel) {
+      //   // console.log(Error(s + p + o).stack)
+      //   if (queryTracker)
+      //     queryTracker.start(!!s, s ? s : o, shapeLabel);
+      //   var quads = db.getQuads(s, p, o, graph)
+      //   if (queryTracker)
+      //     queryTracker.end(quads, new Date() - startTime);
+      //   return quads;
+      // }
+    }
+  },
+  /** emulate N3Store().getQuads() with additional parm.
+   */
+  makeQueryDB: function (endpoint, queryTracker) {
+    var _ShExUtil = this;
+
+    function getQuads(s, p, o, g) {
+      return mapQueryToTriples("SELECT " + [
+        (s?"":"?s"), (p?"":"?p"), (o?"":"?o"),
+        "{",
+        (s?s:"?s"), (p?p:"?s"), (o?o:"?s"),
+        "}"].join(" "), s, o)
+    }
+
+    function mapQueryToTriples (query, s, o) {
+      var rows = _ShExUtil.executeQuery(query, endpoint);
+      var triples = rows.map(row =>  {
+        return s ? {
+          subject: s,
+          predicate: row[0],
+          object: row[1]
+        } : {
+          subject: row[0],
+          predicate: row[1],
+          object: o
+        };
+      });
+      return triples;
+    }
+
+    function getTripleConstraints (tripleExpr) {
+      var visitor = _ShExUtil.Visitor();
+      var ret = {
+        out: [],
+        inc: []
+      };
+      visitor.visitTripleConstraint = function (expr) {
+        ret[expr.inverse ? "inc" : "out"].push(expr);
+        return expr;
+      };
+
+      if (tripleExpr)
+        visitor.visitExpression(tripleExpr);
+      return ret;
+    }
+
+    function getNeighborhood (point, shapeLabel, shape) {
+      // I'm guessing a local DB doesn't benefit from shape optimization.
+      var startTime;
+      var tcs = getTripleConstraints(shape.expression);
+      var pz = tcs.out.map(t => t.predicate);
+      pz = pz.filter((p, idx) => pz.lastIndexOf(p) === idx);
+      if (queryTracker) {
+        startTime = new Date();
+        queryTracker.start(false, point, shapeLabel);
+      }
+      var outgoing = (tcs.out.length > 0 || shape.closed)
+          ? mapQueryToTriples(
+            shape.closed
+              ? `SELECT ?p ?o { <${point}> ?p ?o }`
+              : "SELECT ?p ?o {\n" +
+              pz.map(
+                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
+              ).join(" UNION\n") +
+              "\n}",
+            point, null
+          )
+          : [];
+      if (queryTracker) {
+        var time = new Date();
+        queryTracker.end(outgoing, time - startTime);
+        startTime = time;
+      }
+      if (queryTracker) {
+        queryTracker.start(true, point, shapeLabel);
+      }
+      var incoming = tcs.inc.length > 0
+          ? mapQueryToTriples(`SELECT ?s ?p { ?s ?p <${point}> }`, null, point)
+          : []
+      if (queryTracker) {
+        queryTracker.end(incoming, new Date() - startTime);
+      }
+      return  {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      getNeighborhood: getNeighborhood,
+      getQuads: getQuads,
+      getSubjects: function () { return ["!Query DB can't index subjects"] },
+      getPredicates: function () { return ["!Query DB can't index predicates"] },
+      getObjects: function () { return ["!Query DB can't index objects"] },
+      get size() { return undefined; }
+    };
+  },
+
+  NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
+
+  // Expect property p with value v in object o
+  _expect: function (o, p, v) {
+    if (!(p in o))
+      this._error("expected "+JSON.stringify(o)+" to have a ."+p);
+    if (arguments.length > 2 && o[p] !== v)
+      this._error("expected "+o[o]+" to equal ."+v);
+  },
+
+  _error: function (str) {
+    throw new Error(str);
+  },
+
+  /**
+   * unescape numerics and allowed single-character escapes.
+   * throws: if there are any unallowed sequences
+   */
+  unescapeText: function (string, replacements) {
+    var regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
+    try {
+      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
+        var charCode;
+        if (unicode4) {
+          charCode = parseInt(unicode4, 16);
+          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
+          return String.fromCharCode(charCode);
+        }
+        else if (unicode8) {
+          charCode = parseInt(unicode8, 16);
+          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
+          if (charCode < 0xFFFF) return String.fromCharCode(charCode);
+          return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
+        }
+        else {
+          var replacement = replacements[escapedChar];
+          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
+          return replacement;
+        }
+      });
+      return string;
+    }
+    catch (error) { console.warn(error); return ''; }
+  }
+
+};
+
+
+function n3ify (ldterm) {
+  if (typeof ldterm !== "object")
+    return ldterm;
+  var ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
+// Add the ShExUtil functions to the given object or its prototype
+function AddShExUtil(parent, toPrototype) {
+  for (var name in ShExUtil)
+    if (!toPrototype)
+      parent[name] = ShExUtil[name];
+    else
+      parent.prototype[name] = ApplyToThis(ShExUtil[name]);
+
+  return parent;
+}
+
+// Returns a function that applies `f` to the `this` object
+function ApplyToThis(f) {
+  return function (a) { return f(this, a); };
+}
+
+return AddShExUtil(AddShExUtil);
+})();
+
+if (true)
+  module.exports = ShExUtil; // node environment
+
+
+/***/ }),
+/* 111 */
+/***/ (function(module, exports, __webpack_require__) {
+
 // **ShExWriter** writes ShEx documents.
 
 var ShExWriter = (function () {
@@ -28867,11 +31078,11 @@ ShExWriter.prototype = {
     if (schema.start)
       _ShExWriter._write("start = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
     if ("shapes" in schema)
-      Object.keys(schema.shapes).forEach(function (label) {
+      schema.shapes.forEach(function (shapeExpr) {
         _ShExWriter._write(
-          _ShExWriter._encodeShapeName(label, false) +
+          _ShExWriter._encodeShapeName(shapeExpr.id, false) +
             " " +
-            _ShExWriter._writeShapeExpr(schema.shapes[label], done, true, 0).join("")+"\n",
+            _ShExWriter._writeShapeExpr(shapeExpr, done, true, 0).join("")+"\n",
           done
         );
       })
@@ -28880,8 +31091,8 @@ ShExWriter.prototype = {
   _writeShapeExpr: function (shapeExpr, done, forceBraces, parentPrec) {
     var _ShExWriter = this;
     var pieces = [];
-    if (shapeExpr.type === "ShapeRef")
-      pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr.reference));
+    if (typeof shapeExpr === "string") // ShapeRef
+      pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr));
     // !!! []s for precedence!
     else if (shapeExpr.type === "ShapeExternal")
       pieces.push("EXTERNAL");
@@ -29038,6 +31249,11 @@ ShExWriter.prototype = {
           }
         }
 
+        if (typeof expr === "string") {
+          pieces.push("&");
+          pieces.push(_ShExWriter._encodeShapeName(expr, false));
+        } else {
+
         if ("id" in expr) {
           pieces.push("$");
           pieces.push(_ShExWriter._encodeIriOrBlankNode(expr.id, true));
@@ -29078,12 +31294,8 @@ ShExWriter.prototype = {
           _writeExpressionActions(expr.semActs);
         }
 
-        else if (expr.type === "Inclusion") {
-          pieces.push("&");
-          pieces.push(_ShExWriter._encodeShapeName(expr.include, false));
-        }
-
         else throw Error("unexpected expr type: " + expr.type);
+        }
       }
 
       if (shape.expression) // t: 0, 0Inherit1
@@ -29401,14 +31613,14 @@ if (true)
 
 
 /***/ }),
-/* 111 */
+/* 112 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ThreadedValNErr = (function () {
 var RdfTerm = __webpack_require__(41);
 var UNBOUNDED = -1;
 
-function vpEngine (schema, shape) {
+function vpEngine (schema, shape, index) {
     var outerExpression = shape.expression;
     return {
       match:match
@@ -29420,6 +31632,11 @@ function vpEngine (schema, shape) {
        * returns: list of passing or failing threads (no heterogeneous lists)
        */
       function validateExpr (expr, thread) {
+        if (typeof expr === "string") { // Inclusion
+          var included = index.tripleExprs[expr];
+          return validateExpr(included, thread);
+        }
+
         var constraintNo = constraintList.indexOf(expr);
         var min = "min" in expr ? expr.min : 1;
         var max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
@@ -29538,7 +31755,7 @@ function vpEngine (schema, shape) {
             if ("reference" in valueExpr) {
               var ref = valueExpr.reference;
               if (RdfTerm.isBlank(ref))
-                valueExpr.reference = schema.shapes[ref];
+                valueExpr.reference = index.shapeExprs[ref];
             }
             ret.push({
               avail: thread.avail,
@@ -29616,11 +31833,6 @@ function vpEngine (schema, shape) {
               }, []);
             }, [th]);
           });
-        }
-
-        else if (expr.type === "Inclusion") {
-          var included = schema.productions[expr.include];
-          return validateExpr(included, thread);
         }
 
         runtimeError("unexpected expr type: " + expr.type);
@@ -29775,7 +31987,7 @@ if (true)
 
 
 /***/ }),
-/* 112 */
+/* 113 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(setImmediate, Buffer) {// **N3Lexer** tokenizes N3 documents.
@@ -30247,7 +32459,7 @@ module.exports = N3Lexer;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(24).setImmediate, __webpack_require__(3).Buffer))
 
 /***/ }),
-/* 113 */
+/* 114 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -30258,11 +32470,11 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 114 */
+/* 115 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3Parser** parses N3 documents.
-var N3Lexer = __webpack_require__(112),
+var N3Lexer = __webpack_require__(113),
     DataFactory = __webpack_require__(42),
     namespaces = __webpack_require__(62);
 
@@ -31227,7 +33439,7 @@ module.exports = N3Parser;
 
 
 /***/ }),
-/* 115 */
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3Writer** writes N3 documents.
@@ -31564,7 +33776,7 @@ module.exports = N3Writer;
 
 
 /***/ }),
-/* 116 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -31599,7 +33811,7 @@ var pna = __webpack_require__(63);
 module.exports = Readable;
 
 /*<replacement>*/
-var isArray = __webpack_require__(113);
+var isArray = __webpack_require__(114);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -31617,7 +33829,7 @@ var EElistenerCount = function (emitter, type) {
 /*</replacement>*/
 
 /*<replacement>*/
-var Stream = __webpack_require__(117);
+var Stream = __webpack_require__(118);
 /*</replacement>*/
 
 /*<replacement>*/
@@ -31649,7 +33861,7 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 var BufferList = __webpack_require__(218);
-var destroyImpl = __webpack_require__(118);
+var destroyImpl = __webpack_require__(119);
 var StringDecoder;
 
 util.inherits(Readable, Stream);
@@ -32590,14 +34802,14 @@ function indexOf(xs, x) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(2)))
 
 /***/ }),
-/* 117 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(43).EventEmitter;
 
 
 /***/ }),
-/* 118 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -32677,7 +34889,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 119 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -32897,7 +35109,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 120 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ShExParser = (function () {
@@ -32927,6 +35139,7 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     ShExJison._imports = [];
     ShExJison._setBase(baseIRI);
     ShExJison._setFileName(baseIRI);
+    ShExJison.options = schemaOptions;
     try {
       return ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
@@ -32973,10 +35186,10 @@ if (true)
 
 
 /***/ }),
-/* 121 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(122),
+var baseGetTag = __webpack_require__(123),
     isObject = __webpack_require__(238);
 
 /** `Object#toString` result references. */
@@ -33016,10 +35229,10 @@ module.exports = isFunction;
 
 
 /***/ }),
-/* 122 */
+/* 123 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Symbol = __webpack_require__(123),
+var Symbol = __webpack_require__(124),
     getRawTag = __webpack_require__(236),
     objectToString = __webpack_require__(237);
 
@@ -33050,7 +35263,7 @@ module.exports = baseGetTag;
 
 
 /***/ }),
-/* 123 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var root = __webpack_require__(234);
@@ -33062,7 +35275,7 @@ module.exports = Symbol;
 
 
 /***/ }),
-/* 124 */
+/* 125 */
 /***/ (function(module, exports) {
 
 /**
@@ -33094,7 +35307,7 @@ module.exports = isArray;
 
 
 /***/ }),
-/* 125 */
+/* 126 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33139,7 +35352,7 @@ exports.jar = function (store) {
 
 
 /***/ }),
-/* 126 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33174,7 +35387,7 @@ exports.jar = function (store) {
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var psl = __webpack_require__(127);
+var psl = __webpack_require__(128);
 
 function getPublicSuffix(domain) {
   return psl.get(domain);
@@ -33184,7 +35397,7 @@ exports.getPublicSuffix = getPublicSuffix;
 
 
 /***/ }),
-/* 127 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33460,7 +35673,7 @@ exports.isValid = function (domain) {
 
 
 /***/ }),
-/* 128 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33538,7 +35751,7 @@ Store.prototype.getAllCookies = function(cb) {
 
 
 /***/ }),
-/* 129 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33573,7 +35786,7 @@ Store.prototype.getAllCookies = function(cb) {
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var pubsuffix = __webpack_require__(126);
+var pubsuffix = __webpack_require__(127);
 
 // Gives the permutation of all possible domainMatch()es of a given domain. The
 // array is in shortest-to-longest order.  Handy for indexing.
@@ -33601,7 +35814,7 @@ exports.permuteDomain = permuteDomain;
 
 
 /***/ }),
-/* 130 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33669,7 +35882,7 @@ exports.pathMatch = pathMatch;
 
 
 /***/ }),
-/* 131 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -33771,7 +35984,7 @@ module.exports = HashBase
 
 
 /***/ }),
-/* 132 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -33912,7 +36125,7 @@ module.exports = Sha256
 
 
 /***/ }),
-/* 133 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var inherits = __webpack_require__(0)
@@ -34178,7 +36391,7 @@ module.exports = Sha512
 
 
 /***/ }),
-/* 134 */
+/* 135 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -34187,7 +36400,7 @@ var inherits = __webpack_require__(0)
 var Legacy = __webpack_require__(255)
 var Base = __webpack_require__(30)
 var Buffer = __webpack_require__(1).Buffer
-var md5 = __webpack_require__(135)
+var md5 = __webpack_require__(136)
 var RIPEMD160 = __webpack_require__(83)
 
 var sha = __webpack_require__(84)
@@ -34247,7 +36460,7 @@ module.exports = function createHmac (alg, key) {
 
 
 /***/ }),
-/* 135 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var MD5 = __webpack_require__(82)
@@ -34258,21 +36471,21 @@ module.exports = function (buffer) {
 
 
 /***/ }),
-/* 136 */
+/* 137 */
 /***/ (function(module) {
 
 module.exports = {"sha224WithRSAEncryption":{"sign":"rsa","hash":"sha224","id":"302d300d06096086480165030402040500041c"},"RSA-SHA224":{"sign":"ecdsa/rsa","hash":"sha224","id":"302d300d06096086480165030402040500041c"},"sha256WithRSAEncryption":{"sign":"rsa","hash":"sha256","id":"3031300d060960864801650304020105000420"},"RSA-SHA256":{"sign":"ecdsa/rsa","hash":"sha256","id":"3031300d060960864801650304020105000420"},"sha384WithRSAEncryption":{"sign":"rsa","hash":"sha384","id":"3041300d060960864801650304020205000430"},"RSA-SHA384":{"sign":"ecdsa/rsa","hash":"sha384","id":"3041300d060960864801650304020205000430"},"sha512WithRSAEncryption":{"sign":"rsa","hash":"sha512","id":"3051300d060960864801650304020305000440"},"RSA-SHA512":{"sign":"ecdsa/rsa","hash":"sha512","id":"3051300d060960864801650304020305000440"},"RSA-SHA1":{"sign":"rsa","hash":"sha1","id":"3021300906052b0e03021a05000414"},"ecdsa-with-SHA1":{"sign":"ecdsa","hash":"sha1","id":""},"sha256":{"sign":"ecdsa","hash":"sha256","id":""},"sha224":{"sign":"ecdsa","hash":"sha224","id":""},"sha384":{"sign":"ecdsa","hash":"sha384","id":""},"sha512":{"sign":"ecdsa","hash":"sha512","id":""},"DSA-SHA":{"sign":"dsa","hash":"sha1","id":""},"DSA-SHA1":{"sign":"dsa","hash":"sha1","id":""},"DSA":{"sign":"dsa","hash":"sha1","id":""},"DSA-WITH-SHA224":{"sign":"dsa","hash":"sha224","id":""},"DSA-SHA224":{"sign":"dsa","hash":"sha224","id":""},"DSA-WITH-SHA256":{"sign":"dsa","hash":"sha256","id":""},"DSA-SHA256":{"sign":"dsa","hash":"sha256","id":""},"DSA-WITH-SHA384":{"sign":"dsa","hash":"sha384","id":""},"DSA-SHA384":{"sign":"dsa","hash":"sha384","id":""},"DSA-WITH-SHA512":{"sign":"dsa","hash":"sha512","id":""},"DSA-SHA512":{"sign":"dsa","hash":"sha512","id":""},"DSA-RIPEMD160":{"sign":"dsa","hash":"rmd160","id":""},"ripemd160WithRSA":{"sign":"rsa","hash":"rmd160","id":"3021300906052b2403020105000414"},"RSA-RIPEMD160":{"sign":"rsa","hash":"rmd160","id":"3021300906052b2403020105000414"},"md5WithRSAEncryption":{"sign":"rsa","hash":"md5","id":"3020300c06082a864886f70d020505000410"},"RSA-MD5":{"sign":"rsa","hash":"md5","id":"3020300c06082a864886f70d020505000410"}};
 
 /***/ }),
-/* 137 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports.pbkdf2 = __webpack_require__(257)
-exports.pbkdf2Sync = __webpack_require__(140)
+exports.pbkdf2Sync = __webpack_require__(141)
 
 
 /***/ }),
-/* 138 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var MAX_ALLOC = Math.pow(2, 30) - 1 // default in iojs
@@ -34307,7 +36520,7 @@ module.exports = function (password, salt, iterations, keylen) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(3).Buffer))
 
 /***/ }),
-/* 139 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {var defaultEncoding
@@ -34324,15 +36537,15 @@ module.exports = defaultEncoding
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2)))
 
 /***/ }),
-/* 140 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var md5 = __webpack_require__(135)
+var md5 = __webpack_require__(136)
 var RIPEMD160 = __webpack_require__(83)
 var sha = __webpack_require__(84)
 
-var checkParameters = __webpack_require__(138)
-var defaultEncoding = __webpack_require__(139)
+var checkParameters = __webpack_require__(139)
+var defaultEncoding = __webpack_require__(140)
 var Buffer = __webpack_require__(1).Buffer
 var ZEROS = Buffer.alloc(128)
 var sizes = {
@@ -34434,12 +36647,12 @@ module.exports = pbkdf2
 
 
 /***/ }),
-/* 141 */
+/* 142 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var xor = __webpack_require__(46)
 var Buffer = __webpack_require__(1).Buffer
-var incr32 = __webpack_require__(142)
+var incr32 = __webpack_require__(143)
 
 function getBlock (self) {
   var out = self._cipher.encryptBlockRaw(self._prev)
@@ -34470,7 +36683,7 @@ exports.encrypt = function (self, chunk) {
 
 
 /***/ }),
-/* 142 */
+/* 143 */
 /***/ (function(module, exports) {
 
 function incr32 (iv) {
@@ -34491,13 +36704,13 @@ module.exports = incr32
 
 
 /***/ }),
-/* 143 */
+/* 144 */
 /***/ (function(module) {
 
 module.exports = {"aes-128-ecb":{"cipher":"AES","key":128,"iv":0,"mode":"ECB","type":"block"},"aes-192-ecb":{"cipher":"AES","key":192,"iv":0,"mode":"ECB","type":"block"},"aes-256-ecb":{"cipher":"AES","key":256,"iv":0,"mode":"ECB","type":"block"},"aes-128-cbc":{"cipher":"AES","key":128,"iv":16,"mode":"CBC","type":"block"},"aes-192-cbc":{"cipher":"AES","key":192,"iv":16,"mode":"CBC","type":"block"},"aes-256-cbc":{"cipher":"AES","key":256,"iv":16,"mode":"CBC","type":"block"},"aes128":{"cipher":"AES","key":128,"iv":16,"mode":"CBC","type":"block"},"aes192":{"cipher":"AES","key":192,"iv":16,"mode":"CBC","type":"block"},"aes256":{"cipher":"AES","key":256,"iv":16,"mode":"CBC","type":"block"},"aes-128-cfb":{"cipher":"AES","key":128,"iv":16,"mode":"CFB","type":"stream"},"aes-192-cfb":{"cipher":"AES","key":192,"iv":16,"mode":"CFB","type":"stream"},"aes-256-cfb":{"cipher":"AES","key":256,"iv":16,"mode":"CFB","type":"stream"},"aes-128-cfb8":{"cipher":"AES","key":128,"iv":16,"mode":"CFB8","type":"stream"},"aes-192-cfb8":{"cipher":"AES","key":192,"iv":16,"mode":"CFB8","type":"stream"},"aes-256-cfb8":{"cipher":"AES","key":256,"iv":16,"mode":"CFB8","type":"stream"},"aes-128-cfb1":{"cipher":"AES","key":128,"iv":16,"mode":"CFB1","type":"stream"},"aes-192-cfb1":{"cipher":"AES","key":192,"iv":16,"mode":"CFB1","type":"stream"},"aes-256-cfb1":{"cipher":"AES","key":256,"iv":16,"mode":"CFB1","type":"stream"},"aes-128-ofb":{"cipher":"AES","key":128,"iv":16,"mode":"OFB","type":"stream"},"aes-192-ofb":{"cipher":"AES","key":192,"iv":16,"mode":"OFB","type":"stream"},"aes-256-ofb":{"cipher":"AES","key":256,"iv":16,"mode":"OFB","type":"stream"},"aes-128-ctr":{"cipher":"AES","key":128,"iv":16,"mode":"CTR","type":"stream"},"aes-192-ctr":{"cipher":"AES","key":192,"iv":16,"mode":"CTR","type":"stream"},"aes-256-ctr":{"cipher":"AES","key":256,"iv":16,"mode":"CTR","type":"stream"},"aes-128-gcm":{"cipher":"AES","key":128,"iv":12,"mode":"GCM","type":"auth"},"aes-192-gcm":{"cipher":"AES","key":192,"iv":12,"mode":"GCM","type":"auth"},"aes-256-gcm":{"cipher":"AES","key":256,"iv":12,"mode":"GCM","type":"auth"}};
 
 /***/ }),
-/* 144 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var aes = __webpack_require__(66)
@@ -34506,7 +36719,7 @@ var Transform = __webpack_require__(30)
 var inherits = __webpack_require__(0)
 var GHASH = __webpack_require__(272)
 var xor = __webpack_require__(46)
-var incr32 = __webpack_require__(142)
+var incr32 = __webpack_require__(143)
 
 function xorTest (a, b) {
   var out = 0
@@ -34620,7 +36833,7 @@ module.exports = StreamCipher
 
 
 /***/ }),
-/* 145 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var aes = __webpack_require__(66)
@@ -34653,7 +36866,7 @@ module.exports = StreamCipher
 
 
 /***/ }),
-/* 146 */
+/* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var randomBytes = __webpack_require__(37);
@@ -34662,7 +36875,7 @@ findPrime.simpleSieve = simpleSieve;
 findPrime.fermatTest = fermatTest;
 var BN = __webpack_require__(8);
 var TWENTYFOUR = new BN(24);
-var MillerRabin = __webpack_require__(147);
+var MillerRabin = __webpack_require__(148);
 var millerRabin = new MillerRabin();
 var ONE = new BN(1);
 var TWO = new BN(2);
@@ -34764,11 +36977,11 @@ function findPrime(bits, gen) {
 
 
 /***/ }),
-/* 147 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var bn = __webpack_require__(8);
-var brorand = __webpack_require__(148);
+var brorand = __webpack_require__(149);
 
 function MillerRabin(rand) {
   this.rand = rand || new brorand.Rand();
@@ -34885,7 +37098,7 @@ MillerRabin.prototype.getDivisor = function getDivisor(n, k) {
 
 
 /***/ }),
-/* 148 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var r;
@@ -34956,7 +37169,7 @@ if (typeof self === 'object') {
 
 
 /***/ }),
-/* 149 */
+/* 150 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35021,7 +37234,7 @@ utils.encode = function encode(arr, enc) {
 
 
 /***/ }),
-/* 150 */
+/* 151 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35077,7 +37290,7 @@ exports.g1_256 = g1_256;
 
 
 /***/ }),
-/* 151 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35085,7 +37298,7 @@ exports.g1_256 = g1_256;
 
 var utils = __webpack_require__(21);
 var common = __webpack_require__(47);
-var shaCommon = __webpack_require__(150);
+var shaCommon = __webpack_require__(151);
 var assert = __webpack_require__(18);
 
 var sum32 = utils.sum32;
@@ -35189,7 +37402,7 @@ SHA256.prototype._digest = function digest(enc) {
 
 
 /***/ }),
-/* 152 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -35526,7 +37739,7 @@ function g1_512_lo(xh, xl) {
 
 
 /***/ }),
-/* 153 */
+/* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var inherits = __webpack_require__(0);
@@ -35648,7 +37861,7 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 
 
 /***/ }),
-/* 154 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var constants = exports;
@@ -35673,7 +37886,7 @@ constants.der = __webpack_require__(309);
 
 
 /***/ }),
-/* 155 */
+/* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var inherits = __webpack_require__(0);
@@ -36003,7 +38216,7 @@ function derDecodeLen(buf, primitive, fail) {
 
 
 /***/ }),
-/* 156 */
+/* 157 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var inherits = __webpack_require__(0);
@@ -36304,13 +38517,13 @@ function encodeTag(tag, primitive, cls, reporter) {
 
 
 /***/ }),
-/* 157 */
+/* 158 */
 /***/ (function(module) {
 
 module.exports = {"1.3.132.0.10":"secp256k1","1.3.132.0.33":"p224","1.2.840.10045.3.1.1":"p192","1.2.840.10045.3.1.7":"p256","1.3.132.0.34":"p384","1.3.132.0.35":"p521"};
 
 /***/ }),
-/* 158 */
+/* 159 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var createHash = __webpack_require__(45)
@@ -36335,7 +38548,7 @@ function i2ops (c) {
 
 
 /***/ }),
-/* 159 */
+/* 160 */
 /***/ (function(module, exports) {
 
 module.exports = function xor (a, b) {
@@ -36349,7 +38562,7 @@ module.exports = function xor (a, b) {
 
 
 /***/ }),
-/* 160 */
+/* 161 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var BN = __webpack_require__(8)
@@ -36367,7 +38580,7 @@ module.exports = withPublic
 
 
 /***/ }),
-/* 161 */
+/* 162 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
@@ -36447,10 +38660,10 @@ xhr = null // Help gc
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 162 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(161)
+/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(162)
 var inherits = __webpack_require__(0)
 var stream = __webpack_require__(44)
 
@@ -36678,7 +38891,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2), __webpack_require__(3).Buffer, __webpack_require__(9)))
 
 /***/ }),
-/* 163 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -36736,7 +38949,7 @@ module.exports = adler32;
 
 
 /***/ }),
-/* 164 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -36802,7 +39015,7 @@ module.exports = crc32;
 
 
 /***/ }),
-/* 165 */
+/* 166 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright 2015 Joyent, Inc.
@@ -36900,7 +39113,7 @@ Signer.prototype.sign = function () {
 
 
 /***/ }),
-/* 166 */
+/* 167 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright 2018 Joyent, Inc.
@@ -36917,10 +39130,10 @@ var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
 
 var pem = __webpack_require__(31);
-var ssh = __webpack_require__(168);
+var ssh = __webpack_require__(169);
 var rfc4253 = __webpack_require__(32);
 var dnssec = __webpack_require__(96);
-var putty = __webpack_require__(169);
+var putty = __webpack_require__(170);
 
 var DNSSEC_PRIVKEY_HEADER_PREFIX = 'Private-key-format: v1';
 
@@ -37030,7 +39243,7 @@ function write(key, options) {
 
 
 /***/ }),
-/* 167 */
+/* 168 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -37593,7 +39806,7 @@ module.exports = {
 
 
 /***/ }),
-/* 168 */
+/* 169 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright 2015 Joyent, Inc.
@@ -37714,7 +39927,7 @@ function write(key, options) {
 
 
 /***/ }),
-/* 169 */
+/* 170 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright 2018 Joyent, Inc.
@@ -37819,7 +40032,7 @@ function wrap(txt, len) {
 
 
 /***/ }),
-/* 170 */
+/* 171 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Copyright 2017 Joyent, Inc.
@@ -38577,7 +40790,7 @@ function writeBitField(setBits, bitIndex) {
 
 
 /***/ }),
-/* 171 */
+/* 172 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/*
@@ -38767,7 +40980,7 @@ function dumpException(ex)
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2)))
 
 /***/ }),
-/* 172 */
+/* 173 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var stream = __webpack_require__(15)
@@ -38800,7 +41013,7 @@ module.exports.isDuplex   = isDuplex
 
 
 /***/ }),
-/* 173 */
+/* 174 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -38808,7 +41021,7 @@ module.exports.isDuplex   = isDuplex
 
 var stringify = __webpack_require__(364);
 var parse = __webpack_require__(365);
-var formats = __webpack_require__(175);
+var formats = __webpack_require__(176);
 
 module.exports = {
     formats: formats,
@@ -38818,7 +41031,7 @@ module.exports = {
 
 
 /***/ }),
-/* 174 */
+/* 175 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39038,7 +41251,7 @@ module.exports = {
 
 
 /***/ }),
-/* 175 */
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39063,7 +41276,7 @@ module.exports = {
 
 
 /***/ }),
-/* 176 */
+/* 177 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39079,7 +41292,7 @@ function SchemaObject(obj) {
 
 
 /***/ }),
-/* 177 */
+/* 178 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39145,7 +41358,7 @@ module.exports = function (data, opts) {
 
 
 /***/ }),
-/* 178 */
+/* 179 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39646,7 +41859,7 @@ module.exports = function generate_validate(it, $keyword, $ruleType) {
 
 
 /***/ }),
-/* 179 */
+/* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39810,7 +42023,7 @@ module.exports = function generate__limit(it, $keyword, $ruleType) {
 
 
 /***/ }),
-/* 180 */
+/* 181 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39894,7 +42107,7 @@ module.exports = function generate__limitItems(it, $keyword, $ruleType) {
 
 
 /***/ }),
-/* 181 */
+/* 182 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -39983,7 +42196,7 @@ module.exports = function generate__limitLength(it, $keyword, $ruleType) {
 
 
 /***/ }),
-/* 182 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40067,13 +42280,13 @@ module.exports = function generate__limitProperties(it, $keyword, $ruleType) {
 
 
 /***/ }),
-/* 183 */
+/* 184 */
 /***/ (function(module) {
 
 module.exports = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"http://json-schema.org/draft-07/schema#","title":"Core schema meta-schema","definitions":{"schemaArray":{"type":"array","minItems":1,"items":{"$ref":"#"}},"nonNegativeInteger":{"type":"integer","minimum":0},"nonNegativeIntegerDefault0":{"allOf":[{"$ref":"#/definitions/nonNegativeInteger"},{"default":0}]},"simpleTypes":{"enum":["array","boolean","integer","null","number","object","string"]},"stringArray":{"type":"array","items":{"type":"string"},"uniqueItems":true,"default":[]}},"type":["object","boolean"],"properties":{"$id":{"type":"string","format":"uri-reference"},"$schema":{"type":"string","format":"uri"},"$ref":{"type":"string","format":"uri-reference"},"$comment":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"default":true,"readOnly":{"type":"boolean","default":false},"examples":{"type":"array","items":true},"multipleOf":{"type":"number","exclusiveMinimum":0},"maximum":{"type":"number"},"exclusiveMaximum":{"type":"number"},"minimum":{"type":"number"},"exclusiveMinimum":{"type":"number"},"maxLength":{"$ref":"#/definitions/nonNegativeInteger"},"minLength":{"$ref":"#/definitions/nonNegativeIntegerDefault0"},"pattern":{"type":"string","format":"regex"},"additionalItems":{"$ref":"#"},"items":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/schemaArray"}],"default":true},"maxItems":{"$ref":"#/definitions/nonNegativeInteger"},"minItems":{"$ref":"#/definitions/nonNegativeIntegerDefault0"},"uniqueItems":{"type":"boolean","default":false},"contains":{"$ref":"#"},"maxProperties":{"$ref":"#/definitions/nonNegativeInteger"},"minProperties":{"$ref":"#/definitions/nonNegativeIntegerDefault0"},"required":{"$ref":"#/definitions/stringArray"},"additionalProperties":{"$ref":"#"},"definitions":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"properties":{"type":"object","additionalProperties":{"$ref":"#"},"default":{}},"patternProperties":{"type":"object","additionalProperties":{"$ref":"#"},"propertyNames":{"format":"regex"},"default":{}},"dependencies":{"type":"object","additionalProperties":{"anyOf":[{"$ref":"#"},{"$ref":"#/definitions/stringArray"}]}},"propertyNames":{"$ref":"#"},"const":true,"enum":{"type":"array","items":true,"minItems":1,"uniqueItems":true},"type":{"anyOf":[{"$ref":"#/definitions/simpleTypes"},{"type":"array","items":{"$ref":"#/definitions/simpleTypes"},"minItems":1,"uniqueItems":true}]},"format":{"type":"string"},"contentMediaType":{"type":"string"},"contentEncoding":{"type":"string"},"if":{"$ref":"#"},"then":{"$ref":"#"},"else":{"$ref":"#"},"allOf":{"$ref":"#/definitions/schemaArray"},"anyOf":{"$ref":"#/definitions/schemaArray"},"oneOf":{"$ref":"#/definitions/schemaArray"},"not":{"$ref":"#"}},"default":true};
 
 /***/ }),
-/* 184 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40108,7 +42321,7 @@ module.exports = {"$schema":"http://json-schema.org/draft-07/schema#","$id":"htt
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var psl = __webpack_require__(127);
+var psl = __webpack_require__(128);
 
 function getPublicSuffix(domain) {
   return psl.get(domain);
@@ -40118,7 +42331,7 @@ exports.getPublicSuffix = getPublicSuffix;
 
 
 /***/ }),
-/* 185 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40200,7 +42413,7 @@ Store.prototype.getAllCookies = function(cb) {
 
 
 /***/ }),
-/* 186 */
+/* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40235,7 +42448,7 @@ Store.prototype.getAllCookies = function(cb) {
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var pubsuffix = __webpack_require__(184);
+var pubsuffix = __webpack_require__(185);
 
 // Gives the permutation of all possible domainMatch()es of a given domain. The
 // array is in shortest-to-longest order.  Handy for indexing.
@@ -40263,7 +42476,7 @@ exports.permuteDomain = permuteDomain;
 
 
 /***/ }),
-/* 187 */
+/* 188 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40331,7 +42544,7 @@ exports.pathMatch = pathMatch;
 
 
 /***/ }),
-/* 188 */
+/* 189 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40342,8 +42555,8 @@ exports.pathMatch = pathMatch;
 
 const AsyncAlgorithm = __webpack_require__(441);
 const IdentifierIssuer = __webpack_require__(103);
-const MessageDigest = __webpack_require__(189);
-const Permutator = __webpack_require__(191);
+const MessageDigest = __webpack_require__(190);
+const Permutator = __webpack_require__(192);
 const NQuads = __webpack_require__(105);
 const util = __webpack_require__(34);
 
@@ -40901,7 +43114,7 @@ module.exports = class URDNA2015 extends AsyncAlgorithm {
 
 
 /***/ }),
-/* 189 */
+/* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -40936,7 +43149,7 @@ module.exports = class MessageDigest {
 
 
 /***/ }),
-/* 190 */
+/* 191 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, setImmediate, global, Buffer) {/**
@@ -43936,7 +46149,7 @@ util.estimateCores = function(options, callback) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2), __webpack_require__(24).setImmediate, __webpack_require__(9), __webpack_require__(3).Buffer))
 
 /***/ }),
-/* 191 */
+/* 192 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44028,7 +46241,7 @@ module.exports = class Permutator {
 
 
 /***/ }),
-/* 192 */
+/* 193 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44038,8 +46251,8 @@ module.exports = class Permutator {
 
 
 const IdentifierIssuer = __webpack_require__(103);
-const MessageDigest = __webpack_require__(189);
-const Permutator = __webpack_require__(191);
+const MessageDigest = __webpack_require__(190);
+const Permutator = __webpack_require__(192);
 const NQuads = __webpack_require__(105);
 const util = __webpack_require__(34);
 
@@ -44525,7 +46738,7 @@ module.exports = class URDNA2015Sync {
 
 
 /***/ }),
-/* 193 */
+/* 194 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -44571,7 +46784,7 @@ module.exports = class URDNA2015Sync {
 module.exports = glob
 
 var fs = __webpack_require__(14)
-var rp = __webpack_require__(194)
+var rp = __webpack_require__(195)
 var minimatch = __webpack_require__(107)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(0)
@@ -44580,7 +46793,7 @@ var path = __webpack_require__(23)
 var assert = __webpack_require__(25)
 var isAbsolute = __webpack_require__(108)
 var globSync = __webpack_require__(467)
-var common = __webpack_require__(195)
+var common = __webpack_require__(196)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -44590,7 +46803,7 @@ var util = __webpack_require__(5)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(197)
+var once = __webpack_require__(198)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -45322,7 +47535,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2)))
 
 /***/ }),
-/* 194 */
+/* 195 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -45395,7 +47608,7 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2)))
 
 /***/ }),
-/* 195 */
+/* 196 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -45642,7 +47855,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2)))
 
 /***/ }),
-/* 196 */
+/* 197 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -45681,10 +47894,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 197 */
+/* 198 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(196)
+var wrappy = __webpack_require__(197)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -45729,7 +47942,7 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 198 */
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(setImmediate, Buffer) {// **N3Lexer** tokenizes N3 documents.
@@ -46201,11 +48414,11 @@ module.exports = N3Lexer;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(24).setImmediate, __webpack_require__(3).Buffer))
 
 /***/ }),
-/* 199 */
+/* 200 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3Parser** parses N3 documents.
-var N3Lexer = __webpack_require__(198),
+var N3Lexer = __webpack_require__(199),
     DataFactory = __webpack_require__(61),
     namespaces = __webpack_require__(75);
 
@@ -47170,7 +49383,7 @@ module.exports = N3Parser;
 
 
 /***/ }),
-/* 200 */
+/* 201 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3Writer** writes N3 documents.
@@ -47507,14 +49720,14 @@ module.exports = N3Writer;
 
 
 /***/ }),
-/* 201 */
+/* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  let shapeMap = __webpack_require__(202)
+  let shapeMap = __webpack_require__(203)
   return Object.assign(__webpack_require__(76), {
     Loader: __webpack_require__(210),
-    Parser: __webpack_require__(120),
+    Parser: __webpack_require__(121),
     ShapeMap: shapeMap,
     ShapeMapParser: shapeMap.Parser,
     N3: __webpack_require__(470)
@@ -47526,7 +49739,7 @@ if (true)
 
 
 /***/ }),
-/* 202 */
+/* 203 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -47539,7 +49752,7 @@ var ShapeMap = (function () {
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(203)
+  symbols.Parser = __webpack_require__(204)
   return symbols
 })();
 
@@ -47549,14 +49762,14 @@ if (true)
 
 
 /***/ }),
-/* 203 */
+/* 204 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(204).Parser; // node environment
+  ShapeMapJison = __webpack_require__(205).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -47617,7 +49830,7 @@ if (true)
 
 
 /***/ }),
-/* 204 */
+/* 205 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.16 */
@@ -48808,2237 +51021,6 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2), __webpack_require__(40)(module)))
 
 /***/ }),
-/* 205 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// **ShExUtil** provides ShEx utility functions
-
-var ShExUtil = (function () {
-var RdfTerm = __webpack_require__(41);
-// var util = require('util');
-const Hierarchy = __webpack_require__(206)
-
-const SX = {};
-SX._namespace = "http://www.w3.org/ns/shex#";
-["Schema", "@context", "imports", "startActs", "start", "shapes",
- "ShapeOr", "ShapeAnd", "shapeExprs", "nodeKind",
- "NodeConstraint", "iri", "bnode", "nonliteral", "literal", "datatype", "length", "minlength", "maxlength", "pattern", "flags", "mininclusive", "minexclusive", "maxinclusive", "maxexclusive", "totaldigits", "fractiondigits", "values",
- "ShapeNot", "shapeExpr",
- "Shape", "virtual", "closed", "extra", "expression", "inherit", "semActs",
- "ShapeRef", "reference", "ShapeExternal",
- "EachOf", "OneOf", "expressions", "min", "max", "annotation",
- "TripleConstraint", "inverse", "negated", "predicate", "valueExpr",
- "Inclusion", "include", "Language", "languageTag",
- "IriStem", "LiteralStem", "LanguageStem", "stem",
- "IriStemRange", "LiteralStemRange", "LanguageStemRange", "exclusion",
- "Wildcard", "SemAct", "name", "code",
- "Annotation", "object"].forEach(p => {
-  SX[p] = SX._namespace+p;
-});
-const RDF = {};
-RDF._namespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-["type", "first", "rest", "nil"].forEach(p => {
-  RDF[p] = RDF._namespace+p;
-});
-const XSD = {}
-XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
-["anyURI"].forEach(p => {
-  XSD[p] = XSD._namespace+p;
-});
-const OWL = {}
-OWL._namespace = "http://www.w3.org/2002/07/owl#";
-["Thing"].forEach(p => {
-  OWL[p] = OWL._namespace+p;
-});
-
-const Missed = {}; // singleton
-var UNBOUNDED = -1;
-
-function extend (base) {
-  if (!base) base = {};
-  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (var name in arg)
-      base[name] = arg[name];
-  return base;
-}
-
-    function isTerm (t) {
-      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
-        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
-      }, true);
-    }
-
-var ShExUtil = {
-
-  SX: SX,
-  RDF: RDF,
-  version: function () {
-    return "0.5.0";
-  },
-
-  Visitor: function () {
-    // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
-    var _ShExUtil = this;
-    function visitMap (map, val) {
-      var ret = {};
-      Object.keys(map).forEach(function (item) {
-        ret[item] = val(map[item]);
-      });
-      return ret;
-    }
-    var r = {
-      runtimeError: function (e) {
-        throw e;
-      },
-
-      visitSchema: function (schema) {
-        var ret = { type: "Schema" };
-        _ShExUtil._expect(schema, "type", "Schema");
-        this._maybeSet(schema, ret, "Schema",
-                       ["prefixes", "base", "imports", "startActs", "start", "shapes", "productions"]);
-        return ret;
-      },
-
-      visitPrefixes: function (prefixes) {
-        return prefixes === undefined ?
-          undefined :
-          visitMap(prefixes, function (val) {
-            return val;
-          });
-      },
-
-      visitIRI: function (i) {
-        return i;
-      },
-
-      visitImports: function (imports) {
-        var _Visitor = this;
-        return imports.map(function (imp) {
-          return _Visitor.visitIRI(imp);
-        });
-      },
-
-      visitStartActs: function (startActs) {
-        var _Visitor = this;
-        return startActs === undefined ?
-          undefined :
-          startActs.map(function (act) {
-            return _Visitor.visitSemAct(act);
-          });
-      },
-      visitSemActs: function (semActs) {
-        var _Visitor = this;
-        if (semActs === undefined)
-          return undefined;
-        var ret = []
-        Object.keys(semActs).forEach(function (label) {
-          ret.push(_Visitor.visitSemAct(semActs[label], label));
-        });
-        return ret;
-      },
-      visitSemAct: function (semAct, label) {
-        var ret = { type: "SemAct" };
-        _ShExUtil._expect(semAct, "type", "SemAct");
-
-        this._maybeSet(semAct, ret, "SemAct",
-                       ["name", "code"]);
-        return ret;
-      },
-
-      visitShapes: function (shapes) {
-        var _Visitor = this;
-        if (shapes === undefined)
-          return undefined;
-        var ret = {}
-        Object.keys(shapes).forEach(function (label) {
-          ret[label] = _Visitor.visitShapeExpr(shapes[label], label);
-        });
-        return ret;
-      },
-
-      visitProductions: function (productions) {
-        var _Visitor = this;
-        if (productions === undefined)
-          return undefined;
-        var ret = {}
-        Object.keys(productions).forEach(function (label) {
-          ret[label] = _Visitor.visitExpression(productions[label], label);
-        });
-        return ret;
-      },
-
-      visitShapeExpr: function (expr, label) {
-        var r =
-            expr.type === "Shape" ? this.visitShape(expr, label) :
-            expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
-            expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
-            expr.type === "ShapeOr" ? this.visitShapeOr(expr, label) :
-            expr.type === "ShapeNot" ? this.visitShapeNot(expr, label) :
-            expr.type === "ShapeRef" ? this.visitShapeRef(expr) :
-            expr.type === "ShapeExternal" ? this.visitShapeExternal(expr) :
-            null;// if (expr.type === "ShapeRef") r = 0; // console.warn("visitShapeExpr:", r);
-        if (r === null)
-          throw Error("unexpected shapeExpr type: " + expr.type);
-        else
-          return r;
-      },
-
-      // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
-      _visitShapeGroup: function (expr, label) {
-        this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
-        var _Visitor = this;
-        var r = { type: expr.type };
-        if ("id" in expr)
-          r.id = expr.id;
-        r.shapeExprs = expr.shapeExprs.map(function (nested) {
-          return _Visitor.visitShapeExpr(nested, label);
-        });
-        return r;
-      },
-
-      // _visitShapeNot: visit negated shape
-      visitShapeNot: function (expr, label) {
-        this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
-        var r = { type: expr.type };
-        if ("id" in expr)
-          r.id = expr.id;
-        r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, label);
-        return r;
-      },
-
-      // ### `visitNodeConstraint` deep-copies the structure of a shape
-      visitShape: function (shape, label) {
-        var ret = { type: "Shape" };
-        _ShExUtil._expect(shape, "type", "Shape");
-
-        this._maybeSet(shape, ret, "Shape",
-                       [ "id",
-                         // "virtual", "inherit", -- futureWork
-                         "closed",
-                         "expression", "extra", "semActs", "annotations"]);
-        return ret;
-      },
-
-      // ### `visitNodeConstraint` deep-copies the structure of a shape
-      visitNodeConstraint: function (shape, label) {
-        var ret = { type: "NodeConstraint" };
-        _ShExUtil._expect(shape, "type", "NodeConstraint");
-
-        this._maybeSet(shape, ret, "NodeConstraint",
-                       [ "id",
-                         // "virtual", "inherit", -- futureWork
-                         "nodeKind", "datatype", "pattern", "flags", "length",
-                         "reference", "minlength", "maxlength",
-                         "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
-                         "totaldigits", "fractiondigits", "values", "annotations", "semActs"]);
-        return ret;
-      },
-
-      visitShapeRef: function (expr) {
-        this._testUnknownAttributes(expr, ["reference"], "ShapeRef", this.visitShapeNot)
-        return { type: "ShapeRef", reference: expr.reference };
-      },
-
-      visitShapeExternal: function (expr) {
-        this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
-        return extend("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
-      },
-
-      // _visitGroup: visit a grouping expression (someOf or eachOf)
-      _visitGroup: function (expr, type) {
-        var _Visitor = this;
-        var r = Object.assign(
-          // pre-declare an id so it sorts to the top
-          "id" in expr ? { id: null } : { },
-          { type: expr.type }
-        );
-        r.expressions = expr.expressions.map(function (nested) {
-          return _Visitor.visitExpression(nested);
-        });
-        return this._maybeSet(expr, r, "expr",
-                              ["id", "min", "max", "annotations", "semActs"], ["expressions"]);
-      },
-
-      visitTripleConstraint: function (expr) {
-        return this._maybeSet(expr,
-                              Object.assign(
-                                // pre-declare an id so it sorts to the top
-                                "id" in expr ? { id: null } : { },
-                                { type: "TripleConstraint" }
-                              ),
-                              "TripleConstraint",
-                              ["id", "inverse", "predicate", "valueExpr",
-                               "min", "max", "annotations", "semActs"])
-      },
-
-      visitExpression: function (expr) {
-        var r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
-          expr.type === "OneOf" ? this.visitOneOf(expr) :
-          expr.type === "EachOf" ? this.visitEachOf(expr) :
-          expr.type === "Inclusion" ? this.visitInclusion(expr) :
-          null;
-        if (r === null)
-          throw Error("unexpected expression type: " + expr.type);
-        else
-          return r;
-      },
-
-      visitValues: function (values) {
-        var _Visitor = this;
-        return values.map(function (t) {
-          return isTerm(t) || t.type === "Language" ?
-            t :
-            _Visitor.visitStemRange(t);
-        });
-      },
-
-      visitStemRange: function (t) {
-        var _Visitor = this; // console.log(Error(t.type).stack);
-        // _ShExUtil._expect(t, "type", "IriStemRange");
-              if (!("type" in t))
-                _Visitor.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
-        var stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
-              if (stemRangeTypes.indexOf(t.type) === -1)
-                _Visitor.runtimeError(Error("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'."));
-        var stem;
-        if (isTerm(t)) {
-          _ShExUtil._expect(t.stem, "type", "Wildcard");
-          stem = { type: t.type, stem: { type: "Wildcard" } };
-        } else {
-          stem = { type: t.type, stem: t.stem };
-        }
-        if (t.exclusions) {
-          stem.exclusions = t.exclusions.map(function (c) {
-            return _Visitor.visitExclusion(c);
-          });
-        }
-        return stem;
-      },
-
-      visitExclusion: function (c) {
-        if (!isTerm(c)) {
-          // _ShExUtil._expect(c, "type", "IriStem");
-                    if (!("type" in c))
-                      _Visitor.runtimeError(Error("expected "+JSON.stringify(c)+" to have a 'type' attribute."));
-                    var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
-                    if (stemTypes.indexOf(c.type) === -1)
-                      _Visitor.runtimeError(Error("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'."));
-          return { type: c.type, stem: c.stem };
-        } else {
-          return c;
-        }
-      },
-
-      visitInclusion: function (inclusion) {
-        var ret = { type: "Inclusion" };
-        _ShExUtil._expect(inclusion, "type", "Inclusion");
-
-        this._maybeSet(inclusion, ret, "Inclusion",
-                       ["include"]);
-        return ret;
-      },
-
-      _maybeSet: function (obj, ret, context, members, ignore) {
-        var _Visitor = this;
-        this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
-        members.forEach(function (member) {
-          var methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
-          if (member in obj) {
-            var f = _Visitor[methodName];
-            if (typeof f !== "function") {
-              throw Error(methodName + " not found in Visitor");
-            }
-            var t = f.call(_Visitor, obj[member]);
-            if (t !== undefined) {
-              ret[member] = t;
-            }
-          }
-        });
-        return ret;
-      },
-      _visitValue: function (v) {
-        return v;
-      },
-      _visitList: function (l) {
-        return l.slice();
-      },
-      _testUnknownAttributes: function (obj, expected, context, captureFrame) {
-        var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
-          return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
-        }, []);
-        if (unknownMembers.length > 0) {
-          var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
-                        unknownMembers.map(function (p) {
-                          return "\"" + p + "\"";
-                        }).join(",") +
-                        " in " + context + ": " + JSON.stringify(obj));
-          Error.captureStackTrace(e, captureFrame);
-          throw e;
-        }
-      }
-
-    };
-    r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r._visitValue;
-    r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
-    r.visitInverse = r.visitPredicate = r._visitValue;
-    r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
-
-    r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
-    r.visitOneOf = r.visitEachOf = r._visitGroup;
-    r.visitShapeAnd = r.visitShapeOr = r._visitShapeGroup;
-    r.visitInclude = r._visitValue;
-    r.visitValueExpr = r.visitShapeExpr;
-    return r;
-  },
-
-  ShExJVisitor: function (idMap) {
-    var v = ShExUtil.Visitor();
-    var oldVisitShapeExpr = v.visitShapeExpr,
-        oldVisitShape = v.visitShape,
-        oldVisitExpression = v.visitExpression;
-
-    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
-      var ret =
-          (typeof expr === "string") ?
-          { type: "ShapeRef", reference: expr } :
-          oldVisitShapeExpr.call(this, expr, label);
-      return ret;
-    };
-
-    v.visitShape = function (shape, label) {
-      var ret =
-        oldVisitShape.call(this, shape, label);
-      if ("extra" in shape)
-        ret.extra.sort();
-      return ret;
-    };
-
-    v.visitExpression = function (expr) {
-      var ret =
-          (typeof expr === "string") ?
-          { type: "Inclusion", include: expr } :
-          oldVisitExpression.call(this, expr);
-      if (typeof expr === "object" && "id" in expr)
-        idMap[expr.id] = ret;
-      return ret;
-    };
-    return v;
-  },
-
-
-  // tests
-  // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
-  //  { "id":"http://all.example/S1e", "type":"EachOf","expressions":[ ] },
-  // // { "id":"http://all.example/S1e","type":"TripleConstraint","predicate":"http://all.example/p1"},
-  // "extra":["http://all.example/p3","http://all.example/p1","http://all.example/p2"]
-  // }]}).shapes['http://all.example/S1']);
-
-  ShExJtoAS: function (schema) {
-    var _ShExUtil = this;
-    delete schema["@context"];
-    var newProductions = {};
-    if ("start" in schema) {
-      var v = _ShExUtil.ShExJVisitor(newProductions);
-      schema.start = v.visitShapeExpr(schema.start);
-    }
-    if ("shapes" in schema) {
-      var newShapes = {}
-      schema.shapes.forEach(sh => {
-        var key = sh.id;
-        delete sh.id;
-        var v = _ShExUtil.ShExJVisitor(newProductions);
-        newShapes[key] = v.visitShapeExpr(sh);
-      });
-      schema.shapes = newShapes;
-    }
-    if (Object.keys(newProductions).length > 0) // should they always be present?
-      schema.productions = newProductions;
-    return schema;
-  },
-
-  AStoShExJ: function (schema, abbreviate) {
-    if (!abbreviate) {
-      delete schema.prefixes;
-      delete schema.base;
-    }
-    delete schema.productions;
-    schema["@context"] = "http://www.w3.org/ns/shex.jsonld";
-
-    var v = ShExUtil.Visitor();
-    // change { "type": "ShapeRef", "reference": X } to X
-    v.visitShapeRef = function (inclusion) { return inclusion.reference; };
-    // change { "type": "Inclusion", "include": X } to X
-    v.visitInclusion = function (inclusion) { return inclusion.include; };
-
-    if ("start" in schema)
-      schema.start = v.visitShapeExpr(schema.start);
-
-    if ("shapes" in schema) {
-      var newShapes = []
-      for (var key in schema.shapes) {
-        newShapes.push(Object.assign(
-          {id: key},
-          v.visitShapeExpr(schema.shapes[key])
-        ));
-      };
-      schema.shapes = newShapes;
-    }
-
-    return schema;
-  },
-
-  ShExRVisitor: function (knownShapeExprs) {
-    var v = ShExUtil.Visitor();
-    var knownExpressions = {};
-    var oldVisitShapeExpr = v.visitShapeExpr,
-        oldVisitValueExpr = v.visitValueExpr,
-        oldVisitExpression = v.visitExpression;
-    v.keepShapeExpr = oldVisitShapeExpr;
-
-    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
-      if (typeof expr === "string")
-        return expr;
-      if ("id" in expr) {
-        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
-          return expr.id;
-        delete expr.id;
-      }
-      return oldVisitShapeExpr.call(this, expr, label);
-    };
-
-    v.visitExpression = function (expr) {
-      if (typeof expr === "string") // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
-        return expr;
-      if ("id" in expr) {
-        if (expr.id in knownExpressions) {
-          knownExpressions[expr.id].refCount++;
-          return expr.id;
-        }
-      }
-      var ret = oldVisitExpression.call(this, expr);
-      // Everything from RDF has an ID, usually a BNode.
-      knownExpressions[expr.id] = { refCount: 1, expr: ret };
-      return ret;
-    }
-
-    v.cleanIds = function () {
-      for (var k in knownExpressions) {
-        var known = knownExpressions[k];
-        if (known.refCount === 1 && RdfTerm.isBlank(known.expr.id))
-          delete known.expr.id;
-      };
-    }
-
-    return v;
-  },
-
-
-  // tests
-  // var shexr = ShExUtil.ShExRtoShExJ({ "type": "Schema", "shapes": [
-  //   { "id": "http://a.example/S1", "type": "Shape",
-  //     "expression": {
-  //       "type": "TripleConstraint", "predicate": "http://a.example/p1",
-  //       "valueExpr": {
-  //         "type": "ShapeAnd", "shapeExprs": [
-  //           { "type": "NodeConstraint", "nodeKind": "bnode" },
-  //           { "id": "http://a.example/S2", "type": "Shape",
-  //             "expression": {
-  //               "type": "TripleConstraint", "predicate": "http://a.example/p2" } }
-  //           //            "http://a.example/S2"
-  //         ] } } },
-  //   { "id": "http://a.example/S2", "type": "Shape",
-  //     "expression": {
-  //       "type": "TripleConstraint", "predicate": "http://a.example/p2" } }
-  // ] });
-  // console.warn("HERE:", shexr.shapes[0].expression.valueExpr);
-  // ShExUtil.ShExJtoAS(shexr);
-  // console.warn("THERE:", shexr.shapes["http://a.example/S1"].expression.valueExpr);
-
-
-  ShExRtoShExJ: function (schema) {
-    // compile a list of known shapeExprs
-    var knownShapeExprs = [];
-    if ("shapes" in schema)
-      knownShapeExprs = knownShapeExprs.concat(schema.shapes.map(sh => { return sh.id; }));
-
-    // normalize references to those shapeExprs
-    var v = this.ShExRVisitor(knownShapeExprs);
-    if ("start" in schema)
-      schema.start = v.visitShapeExpr(schema.start);
-    if ("shapes" in schema)
-      schema.shapes = schema.shapes.map(sh => {
-        return v.keepShapeExpr(sh);
-      });
-
-    // remove extraneous BNode IDs
-    v.cleanIds();
-    return schema;
-  },
-
-  valGrep: function (obj, type, f) {
-    var _ShExUtil = this;
-    var ret = [];
-    for (var i in obj) {
-      var o = obj[i];
-      if (typeof o === "object") {
-        if ("type" in o && o.type === type)
-          ret.push(f(o));
-        ret.push.apply(ret, _ShExUtil.valGrep(o, type, f));
-      }
-    }
-    return ret;
-  },
-
-  n3jsToTurtle: function (res) {
-    function termToLex (node) {
-      return typeof node === "object" ? ("\"" + node.value + "\"" + (
-        "type" in node ? "^^<" + node.type + ">" :
-          "language" in node ? "@" + node.language :
-          ""
-      )) :
-      RdfTerm.isIRI(node) ? "<" + node + ">" :
-      RdfTerm.isBlank(node) ? node :
-      "???";
-    }
-    return this.valGrep(res, "TestedTriple", function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
-    });
-  },
-
-  valToN3js: function (res) {
-    return this.valGrep(res, "TestedTriple", function (t) {
-      var ret = JSON.parse(JSON.stringify(t));
-      if (typeof t.object === "object")
-        ret.object = ("\"" + t.object.value + "\"" + (
-          "type" in t.object ? "^^" + t.object.type :
-            "language" in t.object ? "@" + t.object.language :
-            ""
-        ));
-      return ret;
-    });
-  },
-
-  n3jsToTurtle: function (n3js) {
-    function termToLex (node) {
-      if (RdfTerm.isIRI(node))
-        return "<" + node + ">";
-      if (RdfTerm.isBlank(node))
-        return node;
-      var t = RdfTerm.getLiteralType(node);
-      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + RdfTerm.getLiteralValue(node) + "\"" +
-        "^^<" + t + ">";
-      return node;
-    }
-    return n3js.map(function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
-    });
-  },
-
-  /* canonicalize: move all tripleExpression references to their first expression.
-   *
-   */
-  canonicalize: function (schema, trimIRI) {
-    var ret = JSON.parse(JSON.stringify(schema));
-    delete ret.prefixes;
-    delete ret.base;
-    // Don't delete ret.productions as it's part of the AS.
-    var v = ShExUtil.Visitor();
-    var knownExpressions = [];
-    var oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
-    v.visitInclusion = function (inclusion) {
-      if (knownExpressions.indexOf(inclusion.include) === -1 &&
-          "productions" in schema &&
-          inclusion.include in schema.productions) {
-        knownExpressions.push(inclusion.include)
-        return oldVisitExpression.call(v, schema.productions[inclusion.include]);
-      }
-      return oldVisitInclusion.call(v, inclusion);
-    };
-    v.visitExpression = function (expression) {
-      if ("id" in expression) {
-        if (knownExpressions.indexOf(expression.id) === -1) {
-          knownExpressions.push(expression.id)
-          return oldVisitExpression.call(v, schema.productions[expression.id]);
-        }
-        return { type: "Inclusion", include: expression.id};
-      }
-      return oldVisitExpression.call(v, expression);
-    };
-    if (trimIRI) {
-      v.visitIRI = function (i) {
-        return i.replace(trimIRI, "");
-      }
-      if ("imports" in ret)
-        ret.imports = v.visitImports(ret.imports);
-    }
-    if ("shapes" in ret) {
-      Object.keys(ret.shapes).sort().forEach(k => {
-        if ("extra" in ret.shapes[k])
-          ret.shapes[k].extra.sort();
-        ret.shapes[k] = v.visitShapeExpr(ret.shapes[k]);
-      });
-    }
-    return ret;
-  },
-
-  BiDiClosure: function () {
-    return {
-      needs: {},
-      neededBy: {},
-      inCycle: [],
-      test: function () {
-        function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
-        // this.add(1, 2); expect(this.needs, { 1:[2]                     }); expect(this.neededBy, { 2:[1]                     });
-        // this.add(3, 4); expect(this.needs, { 1:[2], 3:[4]              }); expect(this.neededBy, { 2:[1], 4:[3]              });
-        // this.add(2, 3); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1] });
-
-        this.add(2, 3); expect(this.needs, { 2:[3]                     }); expect(this.neededBy, { 3:[2]                     });
-        this.add(1, 2); expect(this.needs, { 1:[2,3], 2:[3]            }); expect(this.neededBy, { 3:[2,1], 2:[1]            });
-        this.add(1, 3); expect(this.needs, { 1:[2,3], 2:[3]            }); expect(this.neededBy, { 3:[2,1], 2:[1]            });
-        this.add(3, 4); expect(this.needs, { 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 3:[2,1], 2:[1], 4:[3,2,1] });
-        this.add(6, 7); expect(this.needs, { 6:[7]                    , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6]                    , 3:[2,1], 2:[1], 4:[3,2,1] });
-        this.add(5, 6); expect(this.needs, { 5:[6,7], 6:[7]           , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5]           , 3:[2,1], 2:[1], 4:[3,2,1] });
-        this.add(5, 7); expect(this.needs, { 5:[6,7], 6:[7]           , 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5]           , 3:[2,1], 2:[1], 4:[3,2,1] });
-        this.add(7, 8); expect(this.needs, { 5:[6,7,8], 6:[7,8], 7:[8], 1:[2,3,4], 2:[3,4], 3:[4] }); expect(this.neededBy, { 7:[6,5], 6:[5], 8:[7,6,5], 3:[2,1], 2:[1], 4:[3,2,1] });
-        this.add(4, 5);
-        expect(this.needs,    { 1:[2,3,4,5,6,7,8], 2:[3,4,5,6,7,8], 3:[4,5,6,7,8], 4:[5,6,7,8], 5:[6,7,8], 6:[7,8], 7:[8] });
-        expect(this.neededBy, { 2:[1], 3:[2,1], 4:[3,2,1], 5:[4,3,2,1], 6:[5,4,3,2,1], 7:[6,5,4,3,2,1], 8:[7,6,5,4,3,2,1] });
-      },
-      add: function (needer, needie, negated) {
-        var r = this;
-        if (!(needer in r.needs))
-          r.needs[needer] = [];
-        if (!(needie in r.neededBy))
-          r.neededBy[needie] = [];
-
-        // // [].concat.apply(r.needs[needer], [needie], r.needs[needie]). emitted only last element
-        r.needs[needer] = r.needs[needer].concat([needie], r.needs[needie]).
-          filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
-        // // [].concat.apply(r.neededBy[needie], [needer], r.neededBy[needer]). emitted only last element
-        r.neededBy[needie] = r.neededBy[needie].concat([needer], r.neededBy[needer]).
-          filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
-
-        if (needer in this.neededBy) this.neededBy[needer].forEach(function (e) {
-          r.needs[e] = r.needs[e].concat([needie], r.needs[needie]).
-            filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; });
-        });
-
-        if (needie in this.needs) this.needs[needie].forEach(function (e) {
-          r.neededBy[e] = r.neededBy[e].concat([needer], r.neededBy[needer]).
-            filter(function (el, ord, l) { return el !== undefined && l.indexOf(el) === ord; })
-        });
-        // this.neededBy[needie].push(needer);
-
-        if (r.needs[needer].indexOf(needer) !== -1)
-          r.inCycle = r.inCycle.concat(r.needs[needer]);
-      },
-      trim: function () {
-        function _trim (a) {
-          // filter(function (el, ord, l) { return l.indexOf(el) === ord; })
-          for (var i = a.length-1; i > -1; --i)
-            if (a.indexOf(a[i]) < i)
-              a.splice(i, i+1);
-        }
-        for (k in this.needs)
-          _trim(this.needs[k]);
-        for (k in this.neededBy)
-          _trim(this.neededBy[k]);
-      },
-      foundIn: {},
-      addIn: function (tripleExpr, shapeExpr) {
-        this.foundIn[tripleExpr] = shapeExpr;
-      }
-    }
-  },
-  /** @@TODO tests
-   * options:
-   *   no: don't do anything; just report nestable shapes
-   *   transform: function to change shape labels
-   */
-  nestShapes: function (schema, options = {}) {
-    var _ShExUtil = this;
-    if (!('no' in options)) { options.no = false }
-
-    let shapeLabels = Object.keys(schema.shapes || [])
-    let shapeReferences = {}
-    shapeLabels.forEach(label => {
-      let shape = schema.shapes[label]
-      noteReference(label, null) // just note the shape so we have a complete list at the end
-      shape = _ShExUtil.skipDecl(shape)
-      if (shape.type === 'Shape') {
-        if ('extends' in shape) {
-          shape.extends.forEach(
-            parent => noteReference(parent, shape)
-          )
-        }
-        if ('expression' in shape) {
-          (_ShExUtil.simpleTripleConstraints(shape) || []).forEach(tc => {
-            let target = _ShExUtil.getValueType(tc.valueExpr, true)
-            noteReference(target, {type: 'tc', shapeLabel: label, tc: tc})
-          })
-        }
-      } else if (shape.type === 'NodeConstraint') {
-        // can't have any refs to other shapes
-      } else {
-        throw Error('nestShapes currently only supports Shapes and NodeConstraints')
-      }
-    })
-    let nestables = Object.keys(shapeReferences).filter(
-      label => shapeReferences[label].length === 1
-        && shapeReferences[label][0].type === 'tc' // no inheritance support yet
-        && _ShExUtil.skipDecl(schema.shapes[label]).type === 'Shape' // Don't nest e.g. valuesets for now
-    ).reduce((acc, label) => {
-      acc[label] = {
-        referrer: shapeReferences[label][0].shapeLabel,
-        predicate: shapeReferences[label][0].tc.predicate
-      }
-      return acc
-    }, {})
-    if (!options.no) {
-      let oldToNew = {}
-
-      if (options.rename) {
-      if (!('transform' in options)) {
-        options.transform = (function () {
-          let map = shapeLabels.reduce((acc, k, idx) => {
-            acc[k] = '_:transformed' + idx
-            return acc
-          }, {})
-          return function (id, shapeExpr) {
-            return map[id]
-          }
-        })()
-      }
-      Object.keys(nestables).forEach(oldName => {
-        let shapeExpr = schema.shapes[oldName]
-        let newName = options.transform(oldName, shapeExpr)
-        oldToNew[oldName] = newName
-        shapeLabels[shapeLabels.indexOf(oldName)] = newName
-        nestables[newName] = nestables[oldName]
-        nestables[newName].was = oldName
-        delete nestables[oldName]
-        schema.shapes[newName] = schema.shapes[oldName]
-        delete schema.shapes[oldName]
-        if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
-        let ref = shapeReferences[oldName][0]
-        if (ref.type === 'tc') {
-          if (ref.tc.valueExpr.type === 'ShapeRef') {
-            ref.tc.valueExpr.reference = newName
-          } else {
-            throw Error('assertion: rename not implemented for TripleConstraint expr: ' + ref.tc.valueExpr)
-            // _ShExUtil.setValueType(ref, newName)
-          }
-        } else if (ref.type === 'Shape') {
-          throw Error('assertion: rename not implemented for Shape: ' + ref)
-        } else {
-          throw Error('assertion: ' + ref.type + ' not TripleConstraint or Shape')
-        }
-      })
-
-      Object.keys(nestables).forEach(k => {
-        let n = nestables[k]
-        if (n.referrer in oldToNew) {
-          n.newReferrer = oldToNew[n.referrer]
-        }
-      })
-
-      // Restore old order for more concise diffs.
-      let shapesCopy = {}
-      shapeLabels.forEach(label => shapesCopy[label] = schema.shapes[label])
-      schema.shapes = shapesCopy
-      } else {
-        Object.keys(nestables).forEach(oldName => {
-          shapeReferences[oldName][0].tc.valueExpr = schema.shapes[oldName].shapeExpr
-          delete schema.shapes[oldName]
-        })
-      }
-    }
-    // console.dir(nestables)
-    // console.dir(shapeReferences)
-    return nestables
-
-    function noteReference (id, reference) {
-      if (!(id in shapeReferences)) {
-        shapeReferences[id] = []
-      }
-      if (reference) {
-        shapeReferences[id].push(reference)
-      }
-    }
-  },
-
-  /** @@TODO tests
-   *
-   */
-  getPredicateUsage: function (schema, untyped = {}) {
-    var _ShExUtil = this;
-
-    // populate shapeHierarchy
-    let shapeHierarchy = Hierarchy.create()
-    Object.keys(schema.shapes).forEach(label => {
-      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[label])
-      if (shapeExpr.type === 'Shape') {
-        (shapeExpr.extends || []).forEach(
-          superShape => shapeHierarchy.add(superShape, label)
-        )
-      }
-    })
-    Object.keys(schema.shapes).forEach(label => {
-      if (!(label in shapeHierarchy.parents))
-        shapeHierarchy.parents[label] = []
-    })
-
-    let predicates = { } // IRI->{ uses: [shapeLabel], commonType: shapeExpr }
-    Object.keys(schema.shapes).forEach(shapeLabel => {
-      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[shapeLabel])
-      if (shapeExpr.type === 'Shape') {
-        let tcs = _ShExUtil.simpleTripleConstraints(shapeExpr) || []
-        tcs.forEach(tc => {
-          let newType = _ShExUtil.getValueType(tc.valueExpr)
-          if (!(tc.predicate in predicates)) {
-            predicates[tc.predicate] = {
-              uses: [shapeLabel],
-              commonType: newType,
-              polymorphic: false
-            }
-            if (typeof newType === 'object') {
-              untyped[tc.predicate] = {
-                shapeLabel,
-                predicate: tc.predicate,
-                newType,
-                references: []
-              }
-            }
-          } else {
-            predicates[tc.predicate].uses.push(shapeLabel)
-            let curType = predicates[tc.predicate].commonType
-            if (typeof curType === 'object' || curType === null) {
-              // another use of a predicate with no commonType
-              // console.warn(`${shapeLabel} ${tc.predicate}:${newType} uses untypable predicate`)
-              untyped[tc.predicate].references.push({ shapeLabel, newType })
-            } else if (typeof newType === 'object') {
-              // first use of a predicate with no detectable commonType
-              predicates[tc.predicate].commonType = null
-              untyped[tc.predicate] = {
-                shapeLabel,
-                predicate: tc.predicate,
-                curType,
-                newType,
-                references: []
-              }
-            } else if (curType === newType) {
-              ; // same type again
-            } else if (shapeHierarchy.parents[curType].indexOf(newType) !== -1) {
-              predicates[tc.predicate].polymorphic = true; // already covered by current commonType
-            } else {
-              let idx = shapeHierarchy.parents[newType].indexOf(curType)
-              if (idx === -1) {
-                let intersection = shapeHierarchy.parents[curType].filter(
-                  lab => -1 !== shapeHierarchy.parents[newType].indexOf(lab)
-                )
-                if (intersection.length === 0) {
-                  untyped[tc.predicate] = {
-                    shapeLabel,
-                    predicate: tc.predicate,
-                    curType,
-                    newType,
-                    references: []
-                  }
-                  // console.warn(`${shapeLabel} ${tc.predicate} : ${newType} isn\'t related to ${curType}`)
-                  predicates[tc.predicate].commonType = null
-                } else {
-                  predicates[tc.predicate].commonType = intersection[0]
-                  predicates[tc.predicate].polymorphic = true
-                }
-              } else {
-                predicates[tc.predicate].commonType = shapeHierarchy.parents[newType][idx]
-                predicates[tc.predicate].polymorphic = true
-              }
-            }
-          }
-        })
-      }
-    })
-    return predicates
-  },
-
-  /** @@TODO tests
-   *
-   */
-  simpleTripleConstraints: function (shape) {
-    if (!('expression' in shape)) {
-      return []
-    }
-    if (shape.expression.type === 'TripleConstraint') {
-      return [ shape.expression ]
-    }
-    if (shape.expression.type === 'EachOf' &&
-        !(shape.expression.expressions.find(
-          expr => expr.type !== 'TripleConstraint'
-        ))) {
-          return shape.expression.expressions
-        }
-    throw Error('can\'t (yet) express ' + JSON.stringify(shape))
-  },
-
-  skipDecl: function (shapeExpr) {
-    return shapeExpr.type === 'ShapeDecl' ? shapeExpr.shapeExpr : shapeExpr
-  },
-
-  getValueType: function (valueExpr) {
-    if (typeof valueExpr === 'string') { return valueExpr }
-    if (valueExpr.reference) { return valueExpr.reference }
-    if (valueExpr.nodeKind === 'iri') { return OWL.Thing } // !! push this test to callers
-    if (valueExpr.datatype) { return valueExpr.datatype }
-    // if (valueExpr.extends && valueExpr.extends.length === 1) { return valueExpr.extends[0] }
-    return valueExpr // throw Error('no value type for ' + JSON.stringify(valueExpr))
-  },
-
-  /** getDependencies: find which shappes depend on other shapes by inheritance
-   * or inclusion.
-   * TODO: rewrite in terms of Visitor.
-   */
-  getDependencies: function (schema, ret) {
-    ret = ret || this.BiDiClosure();
-    Object.keys(schema.shapes || []).forEach(function (label) {
-      function _walkShapeExpression (shapeExpr, negated) {
-        if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
-          shapeExpr.shapeExprs.forEach(function (expr) {
-            _walkShapeExpression(expr, negated);
-          });
-        } else if (shapeExpr.type === "ShapeNot") {
-          _walkShapeExpression(shapeExpr.shapeExpr, negated ^ 1); // !!! test negation
-        } else if (shapeExpr.type === "Shape") {
-          _walkShape(shapeExpr, negated);
-        } else if (shapeExpr.type === "NodeConstraint") {
-          // no impact on dependencies
-        } else if (shapeExpr.type === "ShapeRef") {
-          ret.add(label, shapeExpr.reference);
-        } else if (shapeExpr.type === "ShapeExternal") {
-        } else
-          throw Error("expected Shape{And,Or,Ref,External} or NodeConstraint in " + util.inspect(shapeExpr));
-      }
-      
-      function _walkShape (shape, negated) {
-        function _walkTripleExpression (tripleExpr, negated) {
-          function _exprGroup (exprs, negated) {
-            exprs.forEach(function (nested) {
-              _walkTripleExpression(nested, negated) // ?? negation allowed?
-            });
-          }
-
-          function _walkTripleConstraint (tc, negated) {
-            if (tc.valueExpr)
-              _walkShapeExpression(tc.valueExpr, negated);
-            if (negated && ret.inCycle.indexOf(label) !== -1) // illDefined/negatedRefCycle.err
-              throw Error("Structural error: " + label + " appears in negated cycle");
-          }
-
-          if ("id" in tripleExpr)
-            ret.addIn(tripleExpr.id, label)
-          if (tripleExpr.type === "TripleConstraint") {
-            _walkTripleConstraint(tripleExpr, negated);
-          } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
-            _exprGroup(tripleExpr.expressions);
-          } else if (tripleExpr.type === "Inclusion") {
-            ret.add(label, tripleExpr.include);
-          } else
-            throw Error("expected {TripleConstraint,OneOf,EachOf,Inclusion} in " + tripleExpr);
-        }
-
-        if (shape.inherit && shape.inherit.length > 0)
-          shape.inherit.forEach(function (i) {
-            ret.add(label, i);
-          });
-        if (shape.expression)
-          _walkTripleExpression(shape.expression, negated);
-      }
-      _walkShapeExpression(schema.shapes[label], 0); // 0 means false for bitwise XOR
-    });
-    return ret;
-  },
-
-  /** partition: create subset of a schema with only desired shapes and
-   * their dependencies.
-   *
-   * @schema: input schema
-   * @partition: shape name or array of desired shape names
-   * @deps: (optional) dependency tree from getDependencies.
-   */
-  partition: function (schema, includes, deps, cantFind) {
-    includes = includes instanceof Array ? includes : [includes];
-    deps = deps || this.getDependencies(schema);
-    cantFind = cantFind || function (what, why) {
-      throw new Error("Error: can't find shape "+
-                      (why ?
-                       why + " dependency " + what :
-                       what));
-    };
-    var partition = {};
-    for (var k in schema)
-      partition[k] = k === "shapes" ? {} : schema[k];
-    includes.forEach(function (i) {
-      if (i in schema.shapes) {
-        partition.shapes[i] = schema.shapes[i];
-        if (i in deps.needs)
-          deps.needs[i].forEach(function (n) {
-            if (n in schema.shapes)
-              partition.shapes[n] = schema.shapes[n];
-            else if (n in schema.productions) {
-              var s = deps.foundIn[n]
-              partition.shapes[s] = schema.shapes[s];
-              partition.productions[n] = schema.productions[n];
-            } else
-              cantFind(n, i);
-          });
-      } else {
-        cantFind(i);
-      }
-    });
-    return partition;
-  },
-
-
-  /** @@TODO flatten: return copy of input schema with all shape and value class
-   * references substituted by a copy of their referent.
-   *
-   * @schema: input schema
-   */
-  flatten: function (schema, deps, cantFind) {
-    var v = this.Visitor();
-    return v.visitSchema(schema);
-  },
-
-  // @@ put predicateUsage here
-
-  emptySchema: function () {
-    return {
-      type: "Schema"
-    };
-  },
-  merge: function (left, right, overwrite, inPlace) {
-    var ret = inPlace ? left : this.emptySchema();
-
-    function copy (attr) {
-      Object.keys(left[attr] || {}).forEach(function (key) {
-        if (!(attr in ret))
-          ret[attr] = {};
-        ret[attr][key] = left[attr][key];
-      });
-      Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite) {
-          if (!(attr in ret))
-            ret[attr] = {};
-          ret[attr][key] = right[attr][key];
-        }
-      });
-    }
-
-    // productions
-    if ("productions" in left)
-      ret.productions = left.productions;
-    if ("productions" in right)
-      if (!("productions" in left) || overwrite)
-        ret.productions = right.productions;
-
-    // base
-    if ("base" in left)
-      ret.base = left.base;
-    if ("base" in right)
-      if (!("base" in left) || overwrite)
-        ret.base = right.base;
-
-    copy("prefixes");
-
-    if ("imports" in right)
-      if (!("imports" in left) || overwrite)
-        ret.imports = right.imports;
-
-    // startActs
-    if ("startActs" in left)
-      ret.startActs = left.startActs;
-    if ("startActs" in right)
-      if (!("startActs" in left) || overwrite)
-        ret.startActs = right.startActs;
-
-    // start
-    if ("start" in left)
-      ret.start = left.start;
-    if ("start" in right)
-      if (!("start" in left) || overwrite)
-        ret.start = right.start;
-
-    // shapes
-    Object.keys(left.shapes || {}).forEach(function (key) {
-      if (!("shapes" in ret))
-        ret.shapes = {};
-      ret.shapes[key] = left.shapes[key];
-    });
-    Object.keys(right.shapes || {}).forEach(function (key) {
-      if (!("shapes"  in left) || !(key in left.shapes) || overwrite) {
-        if (!("shapes" in ret))
-          ret.shapes = {};
-        ret.shapes[key] = right.shapes[key];
-      }
-    });
-
-    return ret;
-  },
-
-  absolutizeResults: function (parsed, base) {
-    // !! duplicate of Validation-test.js:84: var referenceResult = parseJSONFile(resultsFile...)
-    function mapFunction (k, obj) {
-      // resolve relative URLs in results file
-      if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          RdfTerm.isIRI(obj[k])) {
-        obj[k] = RdfTerm.resolveRelativeIRI(base, obj[k]);
-      }}
-
-    function resolveRelativeURLs (obj) {
-      Object.keys(obj).forEach(function (k) {
-        if (typeof obj[k] === "object") {
-          resolveRelativeURLs(obj[k]);
-        }
-        if (mapFunction) {
-          mapFunction(k, obj);
-        }
-      });
-    }
-    resolveRelativeURLs(parsed);
-    return parsed;
-  },
-
-  validateSchema: function (schema) { // obselete, but may need other validations in the future.
-    var _ShExUtil = this;
-    var visitor = this.Visitor();
-    var currentLabel = currentExtra = null;
-    var currentNegated = false;
-    var dependsOn = { };
-    var inTE = false;
-    var oldVisitShape = visitor.visitShape;
-    var negativeDeps = Hierarchy.create();
-    var positiveDeps = Hierarchy.create();
-
-    visitor.visitShape = function (shape, label) {
-      var lastExtra = currentExtra;
-      currentExtra = shape.extra;
-      var ret = oldVisitShape.call(visitor, shape, label);
-      currentExtra = lastExtra;
-      return ret;
-    }
-
-    var oldVisitShapeNot = visitor.visitShapeNot;
-    visitor.visitShapeNot = function (shapeNot, label) {
-      var lastNegated = currentNegated;
-      currentNegated ^= true;
-      var ret = oldVisitShapeNot.call(visitor, shapeNot, label);
-      currentNegated = lastNegated;
-      return ret;
-    }
-
-    var oldVisitTripleConstraint = visitor.visitTripleConstraint;
-    visitor.visitTripleConstraint = function (expr) {
-      var lastNegated = currentNegated;
-      if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
-        currentNegated ^= true;
-      inTE = true;
-      var ret = oldVisitTripleConstraint.call(visitor, expr);
-      inTE = false;
-      currentNegated = lastNegated;
-      return ret;
-    };
-
-    var oldVisitShapeRef = visitor.visitShapeRef;
-    visitor.visitShapeRef = function (shapeRef) {
-      if (!(shapeRef.reference in schema.shapes))
-        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(schema.shapes) + ".");
-      if (!inTE && shapeRef.reference === currentLabel)
-        throw Error("Structural error: circular reference to " + currentLabel + ".");
-      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef.reference)
-      return oldVisitShapeRef.call(visitor, shapeRef);
-    }
-
-    var oldVisitInclusion = visitor.visitInclusion;
-    visitor.visitInclusion = function (inclusion) {
-      var refd;
-      if (!("productions" in schema) || !(refd = schema.productions[inclusion.include]))
-        throw Error("Structural error: included shape " + inclusion.include + " not found in schema triple expressions:\n" + dumpKeys(schema.productions) + ".");
-      // if (refd.type !== "Shape")
-      //   throw Error("Structural error: " + inclusion.include + " is not a simple shape.");
-      return oldVisitInclusion.call(visitor, inclusion);
-    };
-
-    Object.keys(schema.shapes || []).forEach(function (label) {
-      currentLabel = label;
-      visitor.visitShapeExpr(schema.shapes[label], label);
-    });
-    let circs = Object.keys(negativeDeps.children).filter(
-      k => negativeDeps.children[k].filter(
-        k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
-          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
-      ).length > 0
-    );
-    if (circs.length)
-      throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
-
-    function dumpKeys (obj) {
-      return obj ? Object.keys(obj).map(
-        u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
-      ).join("\n        ") : '- none defined -'
-    }
-  },
-
-  /** isWellDefined: assert that schema is well-defined.
-   *
-   * @schema: input schema
-   * @@TODO
-   */
-  isWellDefined: function (schema) {
-    this.validateSchema(schema);
-    // var deps = this.getDependencies(schema);
-    return schema;
-  },
-
-  walkVal: function (val, cb) {
-    var _ShExUtil = this;
-    if (val.type === "NodeTest") {
-      return null;
-    } else if (val.type === "ShapeTest") {
-      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
-    } else if (val.type === "ShapeOrResults") {
-      return _ShExUtil.walkVal(val.solution, cb);
-    } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
-      return val.solutions.reduce((ret, sln) => {
-        sln.expressions.forEach(exp => {
-          var n = _ShExUtil.walkVal(exp, cb);
-          if (n)
-            Object.keys(n).forEach(k => {
-              if (k in ret)
-                ret[k] = ret[k].concat(n[k]);
-              else
-                ret[k] = n[k];
-            })
-        });
-        return ret;
-      }, {});
-    } else if (val.type === "OneOfSolutions") {
-      return val.solutions.reduce((ret, sln) => {
-        Object.assign(ret, _ShExUtil.walkVal(sln, cb));
-        return ret;
-      }, {});
-    } else if (val.type === "TripleConstraintSolutions") {
-      if ("solutions" in val) {
-        var ret = {};
-        var vals = [];
-        ret[val.predicate] = vals;
-        val.solutions.forEach(sln => {
-          var toAdd = [];
-          if (chaseList(sln.referenced, toAdd)) {
-            vals = vals.concat(toAdd);
-          } else {
-            var newElt = cb(sln);
-            if ("referenced" in sln) {
-              var t = _ShExUtil.walkVal(sln.referenced, cb);
-              if (t)
-                newElt.nested = t;
-            }
-            vals.push(newElt);
-          }
-          function chaseList (li) {
-            if (!li) return false;
-            if (li.node === RDF.nil) return true;
-            if ("solution" in li && "solutions" in li.solution &&
-                li.solution.solutions.length === 1 &&
-                "expressions" in li.solution.solutions[0] &&
-                li.solution.solutions[0].expressions.length === 2 &&
-                "predicate" in li.solution.solutions[0].expressions[0] &&
-                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
-                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
-              var expressions = li.solution.solutions[0].expressions;
-              var ent = expressions[0];
-              var rest = expressions[1].solutions[0];
-              var member = ent.solutions[0];
-              var newElt = cb(member);
-              if ("referenced" in member) {
-                var t = _ShExUtil.walkVal(member.referenced, cb);
-                if (t)
-                  newElt.nested = t;
-              }
-              vals.push(newElt);
-              return rest.object === RDF.nil ?
-                true :
-                chaseList(rest.referenced);
-            }
-          }
-        });
-        return vals.length ? ret : null;
-      } else {
-        return null;
-      }
-    } else if (val.type === "Recursion") {
-      return null;
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
-  },
-
-  /**
-   * Convert val results to a property tree.
-   * @exports
-   * @returns {@code {p1:[{p2: v2},{p3: v3}]}}
-   */
-  valToValues: function (val) {
-    return this.walkVal (val, function (sln) {
-      return { ldterm: sln.object };
-    });
-  },
-
-  valToExtension: function (val, lookfor) {
-    var map = this.walkVal (val, function (sln) {
-      return { extensions: sln.extensions };
-    });
-    function extensions (obj) {
-      var list = [];
-      var crushed = {};
-      function crush (elt) {
-        if (crushed === null)
-          return elt;
-        if (elt.constructor === Array) {
-          crushed = null;
-          return elt;
-        }
-        for (k in elt) {
-          if (k in crushed) {
-            crushed = null
-            return elt;
-          }
-          crushed[k] = elt[k];
-        }
-        return elt;
-      }
-      for (var k in obj) {
-        if (k === "extensions") {
-          if (obj[k])
-            list.push(crush(obj[k][lookfor]));
-        } else if (k === "nested") {
-          var nested = extensions(obj[k]);
-          if (nested.constructor === Array)
-            nested.forEach(crush);
-          else
-            crush(nested);
-          list = list.concat(nested);
-        } else {
-          list.push(crush(extensions(obj[k])));
-        }
-      }
-      return list.length === 1 ? list[0] :
-        crushed ? crushed :
-        list;
-    }
-    return extensions(map);
-  },
-
-  valuesToSchema: function (values) {
-    // console.log(JSON.stringify(values, null, "  "));
-    var v = values;
-    var t = values[RDF.type][0].ldterm;
-    if (t === SX.Schema) {
-      /* Schema { "@context":"http://www.w3.org/ns/shex.jsonld"
-       *           startActs:[SemAct+]? start:(shapeExpr|labeledShapeExpr)?
-       *           shapes:[labeledShapeExpr+]? }
-       */
-      var ret = {
-        "@context": "http://www.w3.org/ns/shex.jsonld",
-        type: "Schema"
-      }
-      if (SX.startActs in v)
-        ret.startActs = v[SX.startActs].map(e => {
-          var ret = {
-            type: "SemAct",
-            name: e.nested[SX.name][0].ldterm
-          };
-          if (SX.code in e.nested)
-            ret.code = e.nested[SX.code][0].ldterm.value;
-          return ret;
-        });
-      if (SX.imports in v)
-        ret.imports = v[SX.imports].map(e => {
-          return e.ldterm;
-        });
-      if (values[SX.start])
-        ret.start = extend({id: values[SX.start][0].ldterm}, shapeExpr(values[SX.start][0].nested));
-      var shapes = values[SX.shapes];
-      if (shapes) {
-        ret.shapes = shapes.map(v => {
-          return extend({id: v.ldterm}, shapeExpr(v.nested));
-        });
-      }
-      // console.log(ret);
-      return ret;
-    } else {
-      throw Error("unknown schema type in " + JSON.stringify(values));
-    }
-    function findType (v, elts, f) {
-      var t = v[RDF.type][0].ldterm.substr(SX._namespace.length);
-      var elt = elts[t];
-      if (!elt)
-        return Missed;
-      if (elt.nary) {
-        var ret = {
-          type: t,
-        };
-        ret[elt.prop] = v[SX[elt.prop]].map(e => {
-          return valueOf(e);
-        });
-        return ret;
-      } else {
-        var ret = {
-          type: t
-        };
-        if (elt.prop) {
-          ret[elt.prop] = valueOf(v[SX[elt.prop]][0]);
-        }
-        return ret;
-      }
-
-      function valueOf (x) {
-        return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
-      }
-    }
-    function shapeExpr (v) {
-      // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
-      var elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
-                   "ShapeOr"      : { nary: true , expr: true , prop: "shapeExprs" },
-                   "ShapeNot"     : { nary: false, expr: true , prop: "shapeExpr"  },
-                   "ShapeRef"     : { nary: false, expr: false, prop: "reference"  },
-                   "ShapeExternal": { nary: false, expr: false, prop: null         } };
-      var ret = findType(v, elts, shapeExpr);
-      if (ret !== Missed)
-        return ret;
-
-      var t = v[RDF.type][0].ldterm;
-      if (t === SX.Shape) {
-        var ret = { type: "Shape" };
-        ["closed"].forEach(a => {
-          if (SX[a] in v)
-            ret[a] = !!v[SX[a]][0].ldterm.value;
-        });
-        if (SX.extra in v)
-          ret.extra = v[SX.extra].map(e => { return e.ldterm; });
-        if (SX.expression in v) {
-          ret.expression =
-            "nested" in v[SX.expression][0] ?
-            extend({id: v[SX.expression][0].ldterm}, tripleExpr(v[SX.expression][0].nested)) :
-            v[SX.expression][0].ldterm;
-        }
-        if (SX.annotation in v)
-          ret.annotations = v[SX.annotation].map(e => {
-            return {
-              type: "Annotation",
-              predicate: e.nested[SX.predicate][0].ldterm,
-              object: e.nested[SX.object][0].ldterm
-            };
-          });
-        if (SX.semActs in v)
-          ret.semActs = v[SX.semActs].map(e => {
-            var ret = {
-              type: "SemAct",
-              name: e.nested[SX.name][0].ldterm
-            };
-            if (SX.code in e.nested)
-              ret.code = e.nested[SX.code][0].ldterm.value;
-            return ret;
-          });
-        return ret;
-      } else if (t === SX.NodeConstraint) {
-        var ret = { type: "NodeConstraint" };
-        if (SX.values in v)
-          ret.values = v[SX.values].map(v1 => { return objectValue(v1); });
-        if (SX.nodeKind in v)
-          ret.nodeKind = v[SX.nodeKind][0].ldterm.substr(SX._namespace.length);
-        ["length", "minlength", "maxlength", "mininclusive", "maxinclusive", "minexclusive", "maxexclusive", "totaldigits", "fractiondigits"].forEach(a => {
-          if (SX[a] in v)
-            ret[a] = parseFloat(v[SX[a]][0].ldterm.value);
-        });
-        if (SX.pattern in v)
-          ret.pattern = v[SX.pattern][0].ldterm.value;
-        if (SX.flags in v)
-          ret.flags = v[SX.flags][0].ldterm.value;
-        if (SX.datatype in v)
-          ret.datatype = v[SX.datatype][0].ldterm;
-        return ret;
-      } else {
-        throw Error("unknown shapeExpr type in " + JSON.stringify(v));
-      }
-
-    }
-
-    function objectValue (v, expectString) {
-      if ("nested" in v) {
-        var t = v.nested[RDF.type][0].ldterm;
-        if ([SX.IriStem, SX.LiteralStem, SX.LanguageStem].indexOf(t) !== -1) {
-          var ldterm = v.nested[SX.stem][0].ldterm.value;
-          return {
-            type: t.substr(SX._namespace.length),
-            stem: ldterm
-          };
-        } else if ([SX.Language].indexOf(t) !== -1) {
-          return {
-            type: "Language",
-            languageTag: v.nested[SX.languageTag][0].ldterm.value
-          };
-        } else if ([SX.IriStemRange, SX.LiteralStemRange, SX.LanguageStemRange].indexOf(t) !== -1) {
-          var st = v.nested[SX.stem][0];
-          var stem = st;
-          if (typeof st === "object") {
-            if (typeof st.ldterm === "object") {
-              stem = st.ldterm;
-            } else if (st.ldterm.startsWith("_:")) {
-              stem = { type: "Wildcard" };
-            }
-          }
-          var ret = {
-            type: t.substr(SX._namespace.length),
-            stem: stem.type !== "Wildcard" ? stem.value : stem
-          };
-          if (SX.exclusion in v.nested) {
-            // IriStemRange:
-            // * [{"ldterm":"http://a.example/v1"},{"ldterm":"http://a.example/v3"}] <-- no value
-            // * [{"ldterm":"_:b836","nested":{a:[{"ldterm":sx:IriStem}],
-            //                                 sx:stem:[{"ldterm":{"value":"http://a.example/v1"}}]}},
-            //    {"ldterm":"_:b838","nested":{a:[{"ldterm":sx:IriStem}],
-            //                                 sx:stem:[{"ldterm":{"value":"http://a.example/v3"}}]}}]
-
-            // LiteralStemRange:
-            // * [{"ldterm":{"value":"v1"}},{"ldterm":{"value":"v3"}}]
-            // * [{"ldterm":"_:b866","nested":{a:[{"ldterm":sx:LiteralStem}],
-            //                                 sx:stem:[{"ldterm":{"value":"v1"}}]}},
-            //    {"ldterm":"_:b868","nested":{a:[{"ldterm":sx:LiteralStem}],
-            //                                 sx:stem:[{"ldterm":{"value":"v3"}}]}}]
-
-            // LanguageStemRange:
-            // * [{"ldterm":{"value":"fr-be"}},{"ldterm":{"value":"fr-ch"}}]
-            // * [{"ldterm":"_:b851","nested":{a:[{"ldterm":sx:LanguageStem}],
-            //                                 sx:stem:[{"ldterm":{"value":"fr-be"}}]}},
-            //    {"ldterm":"_:b853","nested":{a:[{"ldterm":sx:LanguageStem}],
-            //                                 sx:stem:[{"ldterm":{"value":"fr-ch"}}]}}]
-            ret.exclusions = v.nested[SX.exclusion].map(v1 => {
-              return objectValue(v1, t !== SX.IriStemRange);
-            });
-          }
-          return ret;
-        } else {
-          throw Error("unknown objectValue type in " + JSON.stringify(v));
-        }
-      } else {
-        return expectString ? v.ldterm.value : v.ldterm;
-      }
-    }
-
-    function tripleExpr (v) {
-      // tripleExpr = EachOf | OneOf | TripleConstraint | Inclusion ;
-      var elts = { "EachOf"   : { nary: true , expr: true , prop: "expressions" },
-                   "OneOf"    : { nary: true , expr: true , prop: "expressions" },
-                   "Inclusion": { nary: false, expr: false, prop: "include"     } };
-      var ret = findType(v, elts, tripleExpr);
-      if (ret !== Missed) {
-        minMaxAnnotSemActs(v, ret);
-        return ret;
-      }
-
-      var t = v[RDF.type][0].ldterm;
-      if (t === SX.TripleConstraint) {
-        var ret = {
-          type: "TripleConstraint",
-          predicate: v[SX.predicate][0].ldterm
-        };
-        ["inverse"].forEach(a => {
-          if (SX[a] in v)
-            ret[a] = !!v[SX[a]][0].ldterm.value;
-        });
-        if (SX.valueExpr in v)
-          ret.valueExpr = extend({id: v[SX.valueExpr][0].ldterm}, "nested" in v[SX.valueExpr][0] ? shapeExpr(v[SX.valueExpr][0].nested) : {});
-        minMaxAnnotSemActs(v, ret);
-        return ret;
-      } else {
-        throw Error("unknown tripleExpr type in " + JSON.stringify(v));
-      }
-    }
-    function minMaxAnnotSemActs (v, ret) {
-      if (SX.min in v)
-        ret.min = parseInt(v[SX.min][0].ldterm.value);
-      if (SX.max in v) {
-        ret.max = parseInt(v[SX.max][0].ldterm.value);
-        if (isNaN(ret.max))
-          ret.max = UNBOUNDED;
-      }
-      if (SX.annotation in v)
-        ret.annotations = v[SX.annotation].map(e => {
-          return {
-            type: "Annotation",
-            predicate: e.nested[SX.predicate][0].ldterm,
-            object: e.nested[SX.object][0].ldterm
-          };
-        });
-      if (SX.semActs in v)
-        ret.semActs = v[SX.semActs].map(e => {
-          var ret = {
-            type: "SemAct",
-            name: e.nested[SX.name][0].ldterm
-          };
-          if (SX.code in e.nested)
-            ret.code = e.nested[SX.code][0].ldterm.value;
-          return ret;
-        });
-      return ret;
-    }
-  },
-
-  valToSimple: function (val) {
-    var _ShExUtil = this;
-    function _join (list) {
-      return list.reduce((ret, elt) => {
-        Object.keys(elt).forEach(k => {
-          if (k in ret) {
-            ret[k] = Array.from(new Set(ret[k].concat(elt[k])));
-          } else {
-            ret[k] = elt[k];
-          }
-        });
-        return ret;
-      }, {});
-    }
-    if (val.type === "TripleConstraintSolutions") {
-      if ("solutions" in val) {
-        return val.solutions.reduce((ret, sln) => {
-          if (!("referenced" in sln))
-            return {};
-          var toAdd = {};
-          if (chaseList(sln.referenced, toAdd)) {
-            return _join(ret, toAdd);
-          } else {
-            return _join(ret, _ShExUtil.valToSimple(sln.referenced));
-          }
-          function chaseList (li) {
-            if (!li) return false;
-            if (li.node === RDF.nil) return true;
-            if ("solution" in li && "solutions" in li.solution &&
-                li.solution.solutions.length === 1 &&
-                "expressions" in li.solution.solutions[0] &&
-                li.solution.solutions[0].expressions.length === 2 &&
-                "predicate" in li.solution.solutions[0].expressions[0] &&
-                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
-                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
-              var expressions = li.solution.solutions[0].expressions;
-              var ent = expressions[0];
-              var rest = expressions[1].solutions[0];
-              var member = ent.solutions[0];
-              var newElt = { ldterm: member.object };
-              if ("referenced" in member) {
-                var t = _ShExUtil.valToSimple(member.referenced);
-                if (t)
-                  newElt.nested = t;
-              }
-              toAdd = _join(toAdd, newElt);
-              return rest.object === RDF.nil ?
-                true :
-                chaseList(rest.referenced);
-            }
-          }
-        }, []);
-      } else {
-        return [];
-      }
-    } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
-      return {  };
-    } else if (val.type === "NodeTest") {
-      var thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return thisNode;
-    } else if (val.type === "ShapeTest") {
-      var thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return "solution" in val ? _join([thisNode].concat(_ShExUtil.valToSimple(val.solution))) : thisNode;
-    } else if (val.type === "Recursion") {
-      return {  };
-    } else if ("solutions" in val) {
-      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
-      return _join(val.solutions.map(sln => {
-        return _ShExUtil.valToSimple(sln);
-      }));
-    } else if ("expressions" in val) {
-      return _join(val.expressions.map(sln => {
-        return _ShExUtil.valToSimple(sln);
-      }));
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
-  },
-
-  simpleToShapeMap: function (x) {
-    return Object.keys(x).reduce((ret, k) => {
-      x[k].forEach(s => {
-        ret.push({node: k, shape: s });
-      });
-      return ret;
-    }, []);
-  },
-
-  absolutizeShapeMap: function (parsed, base) {
-    return parsed.map(elt => {
-      return Object.assign(elt, {
-        node: RdfTerm.resolveRelativeIRI(base, elt.node),
-        shape: RdfTerm.resolveRelativeIRI(base, elt.shape)
-      });
-    });
-  },
-
-  errsToSimple: function (val, node, shape) {
-    var _ShExUtil = this;
-    if (val.type === "FailureList") {
-      return val.errors.reduce((ret, e) => {
-        return ret.concat(_ShExUtil.errsToSimple(e));
-      }, []);
-    } else if (val.type === "Failure") {
-      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
-        var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
-      }, []));
-    } else if (val.type === "TypeMismatch") {
-      var nested = val.errors.constructor === Array ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
-    } else if (val.type === "ShapeAndFailure") {
-      return val.errors.constructor === Array ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    } else if (val.type === "ShapeOrFailure") {
-      return val.errors.constructor === Array ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
-          }, []) :
-          " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    } else if (val.type === "ShapeNotFailure") {
-      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-    } else if (val.type === "ExcessTripleViolation") {
-      return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-    } else if (val.type === "ClosedShapeViolation") {
-      return ["ClosedShapeError: unexpected: {"].concat(
-        val.unexpectedTriples.map(t => {
-          return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
-        })
-      ).concat(["}"]);
-    } else if (val.type === "NodeConstraintViolation") {
-      var w = __webpack_require__(110)();
-      w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
-      var txt;
-      w.end((err, res) => {
-        txt = res;
-      });
-      return ["NodeConstraintError: expected to match " + txt];
-    } else if (val.type === "MissingProperty") {
-      return ["Missing property: " + val.property];
-    } else if (val.type === "NegatedProperty") {
-      return ["Unexpected property: " + val.property];
-    } else if (val.constructor === Array) {debugger;
-      return val.reduce((ret, e) => {
-        var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
-      }, []);
-    } else {
-      debugger; // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    function errorList (errors) {
-      return errors.reduce(function (acc, e) {
-        var attrs = Object.keys(e);
-        return acc.concat(
-          (attrs.length === 1 && attrs[0] === "errors")
-            ? errorList(e.errors)
-            : e);
-      }, []);
-    }
-  },
-
-  resolveRelativeIRI: RdfTerm.resolveRelativeIRI,
-
-  resolvePrefixedIRI: function (prefixedIri, prefixes) {
-    var colon = prefixedIri.indexOf(":");
-    if (colon === -1)
-      return null;
-    var prefix = prefixes[prefixedIri.substr(0, colon)];
-    return prefix === undefined ? null : prefix + prefixedIri.substr(colon+1);
-  },
-
-  parsePassedNode: function (passedValue, meta, deflt, known, reportUnknown) {
-    if (passedValue === undefined || passedValue.length === 0)
-      return known && known(meta.base) ? meta.base : deflt ? deflt() : this.NotSupplied;
-    if (passedValue[0] === "_" && passedValue[1] === ":")
-      return passedValue;
-    if (passedValue[0] === "\"") {
-      var m = passedValue.match(/^"((?:[^"\\]|\\")*)"(?:@(.+)|\^\^(?:<(.*)>|([^:]*):(.*)))?$/);
-      if (!m)
-        throw Error("malformed literal: " + passedValue);
-      var lex = m[1], lang = m[2], rel = m[3], pre = m[4], local = m[5];
-      // Turn the literal into an N3.js atom.
-      var quoted = "\""+lex+"\"";
-      if (lang !== undefined)
-        return quoted + "@" + lang;
-      if (pre !== undefined) {
-        if (!(pre in meta.prefixes))
-          throw Error("error parsing node "+passedValue+" no prefix for \"" + pre + "\"");
-        return quoted + "^^" + meta.prefixes[pre] + local;
-      }
-      if (rel !== undefined)
-        return quoted + "^^" + RdfTerm.resolveRelativeIRI(meta.base, rel);
-      return quoted;
-    }
-    if (!meta)
-      return known(passedValue) ? passedValue : this.UnknownIRI;
-    var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
-    if (relIRI)
-      passedValue = passedValue.substr(1, passedValue.length-2);
-    var t = RdfTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
-    if (known(t))
-      return t;
-    if (!relIRI) {
-      var t2 = this.resolvePrefixedIRI(passedValue, meta.prefixes);
-      if (t2 !== null && known(t2))
-        return t2;
-    }
-    return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
-  },
-
-  executeQueryPromise: function (query, endpoint) {
-    var rows;
-
-    var queryURL = endpoint + "?query=" + encodeURIComponent(query);
-    return fetch(queryURL, {
-      headers: {
-        'Accept': 'application/sparql-results+json'
-      }}).then(resp => resp.json()).then(t => {
-        var selects = t.head.vars;
-        return t.results.bindings.map(row => {
-          return selects.map(sel => {
-            var elt = row[sel];
-            switch (elt.type) {
-            case "uri": return elt.value;
-            case "bnode": return "_:" + elt.value;
-            case "literal":
-              var datatype = elt.datatype;
-              var lang = elt["xml:lang"];
-              return "\"" + elt.value + "\"" + (
-                datatype ? "^^" + datatype :
-                  lang ? "@" + lang :
-                  "");
-            default: throw "unknown XML results type: " + elt.prop("tagName");
-            }
-            return row[sel];
-          })
-        });
-      })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
-  },
-
-  executeQuery: function (query, endpoint) {
-    var rows, t, j;
-    var queryURL = endpoint + "?query=" + encodeURIComponent(query);
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", queryURL, false);
-    xhr.setRequestHeader('Accept', 'application/sparql-results+json');
-    xhr.send();
-    // var selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
-    // var selects = selectsBlock.match(/\?[^\s?]+/g);
-    var t = JSON.parse(xhr.responseText);
-    var selects = t.head.vars;
-    return t.results.bindings.map(row => {
-      return selects.map(sel => {
-        var elt = row[sel];
-        switch (elt.type) {
-        case "uri": return elt.value;
-        case "bnode": return "_:" + elt.value;
-        case "literal":
-          var datatype = elt.datatype;
-          var lang = elt["xml:lang"];
-          return "\"" + elt.value + "\"" + (
-            datatype ? "^^" + datatype :
-              lang ? "@" + lang :
-              "");
-        default: throw "unknown XML results type: " + elt.prop("tagName");
-        }
-        return row[sel];
-      })
-    });
-
-/* TO ADD? XML results format parsed with jquery:
-        $(data).find("sparql > results > result").
-          each((_, row) => {
-            rows.push($(row).find("binding > *:nth-child(1)").
-              map((idx, elt) => {
-                elt = $(elt);
-                var text = elt.text();
-                switch (elt.prop("tagName")) {
-                case "uri": return text;
-                case "bnode": return "_:" + text;
-                case "literal":
-                  var datatype = elt.attr("datatype");
-                  var lang = elt.attr("xml:lang");
-                  return "\"" + text + "\"" + (
-                    datatype ? "^^" + datatype :
-                    lang ? "@" + lang :
-                      "");
-                default: throw "unknown XML results type: " + elt.prop("tagName");
-                }
-              }).get());
-          });
-*/
-  },
-
-  makeN3DB: function (db, queryTracker) {
-
-    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
-
-    function getNeighborhood (point, shapeLabel/*, shape */) {
-      // I'm guessing a local DB doesn't benefit from shape optimization.
-      var startTime;
-      if (queryTracker) {
-        startTime = new Date();
-        queryTracker.start(false, point, shapeLabel);
-      }
-      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
-      if (queryTracker) {
-        var time = new Date();
-        queryTracker.end(outgoing, time - startTime);
-        startTime = time;
-      }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
-      }
-      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
-      }
-      return  {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      // size: db.size,
-      getNeighborhood: getNeighborhood,
-      getSubjects: getSubjects,
-      getPredicates: getPredicates,
-      getObjects: getObjects,
-      getQuads: getQuads,
-      get size() { return db.size; },
-      // getQuads: function (s, p, o, graph, shapeLabel) {
-      //   // console.log(Error(s + p + o).stack)
-      //   if (queryTracker)
-      //     queryTracker.start(!!s, s ? s : o, shapeLabel);
-      //   var quads = db.getQuads(s, p, o, graph)
-      //   if (queryTracker)
-      //     queryTracker.end(quads, new Date() - startTime);
-      //   return quads;
-      // }
-    }
-  },
-  /** emulate N3Store().getQuads() with additional parm.
-   */
-  makeQueryDB: function (endpoint, queryTracker) {
-    var _ShExUtil = this;
-
-    function getQuads(s, p, o, g) {
-      return mapQueryToTriples("SELECT " + [
-        (s?"":"?s"), (p?"":"?p"), (o?"":"?o"),
-        "{",
-        (s?s:"?s"), (p?p:"?s"), (o?o:"?s"),
-        "}"].join(" "), s, o)
-    }
-
-    function mapQueryToTriples (query, s, o) {
-      var rows = _ShExUtil.executeQuery(query, endpoint);
-      var triples = rows.map(row =>  {
-        return s ? {
-          subject: s,
-          predicate: row[0],
-          object: row[1]
-        } : {
-          subject: row[0],
-          predicate: row[1],
-          object: o
-        };
-      });
-      return triples;
-    }
-
-    function getTripleConstraints (tripleExpr) {
-      var visitor = _ShExUtil.Visitor();
-      var ret = {
-        out: [],
-        inc: []
-      };
-      visitor.visitTripleConstraint = function (expr) {
-        ret[expr.inverse ? "inc" : "out"].push(expr);
-        return expr;
-      };
-
-      if (tripleExpr)
-        visitor.visitExpression(tripleExpr);
-      return ret;
-    }
-
-    function getNeighborhood (point, shapeLabel, shape) {
-      // I'm guessing a local DB doesn't benefit from shape optimization.
-      var startTime;
-      var tcs = getTripleConstraints(shape.expression);
-      var pz = tcs.out.map(t => t.predicate);
-      pz = pz.filter((p, idx) => pz.lastIndexOf(p) === idx);
-      if (queryTracker) {
-        startTime = new Date();
-        queryTracker.start(false, point, shapeLabel);
-      }
-      var outgoing = (tcs.out.length > 0 || shape.closed)
-          ? mapQueryToTriples(
-            shape.closed
-              ? `SELECT ?p ?o { <${point}> ?p ?o }`
-              : "SELECT ?p ?o {\n" +
-              pz.map(
-                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
-              ).join(" UNION\n") +
-              "\n}",
-            point, null
-          )
-          : [];
-      if (queryTracker) {
-        var time = new Date();
-        queryTracker.end(outgoing, time - startTime);
-        startTime = time;
-      }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
-      }
-      var incoming = tcs.inc.length > 0
-          ? mapQueryToTriples(`SELECT ?s ?p { ?s ?p <${point}> }`, null, point)
-          : []
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
-      }
-      return  {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      getNeighborhood: getNeighborhood,
-      getQuads: getQuads,
-      getSubjects: function () { return ["!Query DB can't index subjects"] },
-      getPredicates: function () { return ["!Query DB can't index predicates"] },
-      getObjects: function () { return ["!Query DB can't index objects"] },
-      get size() { return undefined; }
-    };
-  },
-
-  NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
-
-  // Expect property p with value v in object o
-  _expect: function (o, p, v) {
-    if (!(p in o))
-      this._error("expected "+JSON.stringify(o)+" to have a ."+p);
-    if (arguments.length > 2 && o[p] !== v)
-      this._error("expected "+o[o]+" to equal ."+v);
-  },
-
-  _error: function (str) {
-    throw new Error(str);
-  },
-
-  /**
-   * unescape numerics and allowed single-character escapes.
-   * throws: if there are any unallowed sequences
-   */
-  unescapeText: function (string, replacements) {
-    var regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
-    try {
-      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
-        var charCode;
-        if (unicode4) {
-          charCode = parseInt(unicode4, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          return String.fromCharCode(charCode);
-        }
-        else if (unicode8) {
-          charCode = parseInt(unicode8, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          if (charCode < 0xFFFF) return String.fromCharCode(charCode);
-          return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
-        }
-        else {
-          var replacement = replacements[escapedChar];
-          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
-          return replacement;
-        }
-      });
-      return string;
-    }
-    catch (error) { console.warn(error); return ''; }
-  }
-
-};
-
-
-function n3ify (ldterm) {
-  if (typeof ldterm !== "object")
-    return ldterm;
-  var ret = "\"" + ldterm.value + "\"";
-  if ("language" in ldterm)
-    return ret + "@" + ldterm.language;
-  if ("type" in ldterm)
-    return ret + "^^" + ldterm.type;
-  return ret;
-}
-
-// Add the ShExUtil functions to the given object or its prototype
-function AddShExUtil(parent, toPrototype) {
-  for (var name in ShExUtil)
-    if (!toPrototype)
-      parent[name] = ShExUtil[name];
-    else
-      parent.prototype[name] = ApplyToThis(ShExUtil[name]);
-
-  return parent;
-}
-
-// Returns a function that applies `f` to the `this` object
-function ApplyToThis(f) {
-  return function (a) { return f(this, a); };
-}
-
-return AddShExUtil(AddShExUtil);
-})();
-
-if (true)
-  module.exports = ShExUtil; // node environment
-
-
-/***/ }),
 /* 206 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -51160,6 +51142,7 @@ var VERBOSE = "VERBOSE" in process.env;
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 var RdfTerm = __webpack_require__(41);
+let ShExUtil = __webpack_require__(110);
 
 function getLexicalValue (term) {
   return RdfTerm.isIRI(term) ? term :
@@ -51356,6 +51339,7 @@ var decimalLexicalTests = {
 function ShExValidator_constructor(schema, options) {
   if (!(this instanceof ShExValidator_constructor))
     return new ShExValidator_constructor(schema, options);
+  let index = schema._index || ShExUtil.index(schema)
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -51371,7 +51355,7 @@ function ShExValidator_constructor(schema, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err");
-  var regexModule = this.options.regexModule || __webpack_require__(111);
+  var regexModule = this.options.regexModule || __webpack_require__(112);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -51379,10 +51363,10 @@ function ShExValidator_constructor(schema, options) {
   this.getAST = function () {
     return {
       type: "AST",
-      shapes: Object.keys(this.schema.shapes).reduce(function (ret, label) {
-        ret[label] = {
+      shapes: schema.shapes.reduce(function (ret, shape) {
+        ret[shape.id] = {
           type: "ASTshape",
-          expression: _compileShapeToAST(_ShExValidator.schema.shapes[label].expression, [], _ShExValidator.schema)
+          expression: _compileShapeToAST(shape.expression, [], _ShExValidator.schema)
         };
         return ret;
       }, {})
@@ -51400,16 +51384,16 @@ function ShExValidator_constructor(schema, options) {
     return tripleConstraints;
 
     function indexTripleConstraints_dive (expr) {
-      if (expr.type === "TripleConstraint")
+      if (typeof expr === "string") // Inclusion
+        indexTripleConstraints_dive(index.tripleExprs[expr]);
+
+      else if (expr.type === "TripleConstraint")
         tripleConstraints.push(expr)-1;
 
       else if (expr.type === "OneOf" || expr.type === "EachOf")
         expr.expressions.forEach(function (nested) {
           indexTripleConstraints_dive(nested);
         });
-
-      else if (expr.type === "Inclusion")
-        indexTripleConstraints_dive(schema.productions[expr.include]);
 
       // @@TODO shape.virtual, shape.inherit
       else
@@ -51483,10 +51467,10 @@ function ShExValidator_constructor(schema, options) {
       shape = schema.start;
     } else if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
       runtimeError("shape " + label + " not found; no shapes in schema");
-    } else if (label in this.schema.shapes) {
-      shape = schema.shapes[label]
+    } else if (label in index.shapeExprs) {
+      shape = index.shapeExprs[label]
     } else {
-      runtimeError("shape " + label + " not found in:\n" + Object.keys(this.schema.shapes || []).map(s => "  " + s).join("\n"));
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
 
     if (seen === undefined)
@@ -51516,7 +51500,9 @@ function ShExValidator_constructor(schema, options) {
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, tracker, seen) {
     if (point === "")
       throw Error("validation needs a valid focus node");
-    if (shapeExpr.type === "NodeConstraint") {
+    if (typeof shapeExpr === "string") { // ShapeRef
+      return this._validateShapeExpr(db, point, index.shapeExprs[shapeExpr], shapeExpr, tracker, seen);
+    } else if (shapeExpr.type === "NodeConstraint") {
       var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       return errors.length ? {
         type: "Failure",
@@ -51536,10 +51522,8 @@ function ShExValidator_constructor(schema, options) {
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      return this._validateShape(db, point, regexModule.compile(schema, shapeExpr),
+      return this._validateShape(db, point, regexModule.compile(schema, shapeExpr, index),
                                  shapeExpr, shapeLabel, tracker, seen);
-    } else if (shapeExpr.type === "ShapeRef") {
-      return this._validateShapeExpr(db, point, schema.shapes[shapeExpr.reference], shapeExpr.reference, tracker, seen);
     } else if (shapeExpr.type === "ShapeExternal") {
       return this.options.validateExtern(db, point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
@@ -51803,12 +51787,12 @@ function ShExValidator_constructor(schema, options) {
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
     var _ShExValidator = this;
-    if (valueExpr.type === "NodeConstraint") {
+    if (typeof valueExpr === "string") { // ShapeRef
+      return recurse ? recurse(value, valueExpr) : [];
+    } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
       return direct === undefined ? [] : direct(value, valueExpr);
-    } else if (valueExpr.type === "ShapeRef") {
-      return recurse ? recurse(value, valueExpr.reference) : [];
     } else if (valueExpr.type === "ShapeOr") {
       var ret = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
@@ -52146,7 +52130,12 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
       return reqd;
     }
 
-    if (expr.type === "TripleConstraint") {
+    if (typeof expr === "string") { // Inclusion
+      var included = schema._index.tripleExprs[expr].expression;
+      return _compileExpression(included, schema);
+    }
+
+    else if (expr.type === "TripleConstraint") {
       // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
       var valueExpr = "valueExprRef" in expr ?
         schema.valueExprDefns[expr.valueExprRef] :
@@ -52171,11 +52160,6 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
       }));
       repeated = _repeat(container, expr.min, expr.max);
       return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else if (expr.type === "Inclusion") {
-      var included = schema.shapes[expr.include].expression;
-      return _compileExpression(included, schema);
     }
 
     else throw Error("unexpected expr type: " + expr.type);
@@ -52354,7 +52338,7 @@ var NFAXVal1Err = (function () {
    */
   var UNBOUNDED = -1;
 
-  function compileNFA (schema, shape) {
+  function compileNFA (schema, shape, index) {
     var expression = shape.expression;
     return NFA();
 
@@ -52396,7 +52380,12 @@ var NFAXVal1Err = (function () {
           return {start: s, tail: [s]}
         }
 
-        if (expr.type === "TripleConstraint") {
+        if (typeof expr === "string") { // Inclusion
+          var included = index.tripleExprs[expr];
+          return walkExpr(included, stack);
+        }
+
+        else if (expr.type === "TripleConstraint") {
           s = State_make(expr, []);
           states[s].stack = stack;
           return {start: s, tail: [s]};
@@ -52426,11 +52415,6 @@ var NFAXVal1Err = (function () {
             lastTail = pair.tail;
           });
           return maybeAddRept(s, lastTail);
-        }
-
-        else if (expr.type === "Inclusion") {
-          var included = schema.productions[expr.include];
-          return walkExpr(included, stack);
         }
 
         throw Error("unexpected expr type: " + expr.type);
@@ -52894,7 +52878,7 @@ var FS = __webpack_require__(14);
 var N3 = __webpack_require__(211);
 var ShEx = __webpack_require__(76);
 var ShExUtil = ShEx.Util;
-var ShExParser = __webpack_require__(120);
+var ShExParser = __webpack_require__(121);
 var Request = __webpack_require__(229);
 // var Promise = require("promise");
 var Path = __webpack_require__(23);
@@ -52995,8 +52979,8 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
     var meta = addMeta(obj.url, mediaType);
     try {
       ShExUtil.merge(target, obj.schema, true, true);
-      meta.prefixes = target.prefixes;
-      meta.base = target.base;
+      meta.prefixes = target._prefixes;
+      meta.base = target._base;
       loadImports(obj.schema);
       return Promise.resolve([mediaType, obj.url]);
     } catch (e) {
@@ -53137,8 +53121,8 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     var s = parser.parse(text);
     // !! horrible hack until I set a variable to know if there's a BASE.
     if (s.base === url) delete s.base;
-    meta.prefixes = schema.prefixes;
-    meta.base = schema.base || meta.base;
+    meta.prefixes = s._prefixes;
+    meta.base = s._base || meta.base;
     ShExUtil.merge(schema, loadImports(s), true, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
@@ -53184,7 +53168,7 @@ function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImpo
   try {
     var s = ShExUtil.ShExJtoAS(JSON.parse(text));
     ShExUtil.merge(schema, s, true, true);
-    meta.prefixes = schema.prefixes;
+    meta.prefixes = schema._prefixes;
     meta.base = schema.base;
     loadImports(s);
     return Promise.resolve([mediaType, url]);
@@ -53251,7 +53235,7 @@ function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
 function LoadExtensions (globs) {
   return globs.reduce(
     (list, glob) =>
-      list.concat(__webpack_require__(193).glob.sync(glob))
+      list.concat(__webpack_require__(194).glob.sync(glob))
     , []).
     reduce(function (ret, path) {
       try {
@@ -53279,9 +53263,9 @@ if (true)
 
 module.exports = {
   DataFactory:  __webpack_require__(42),
-  Lexer:        __webpack_require__(112),
-  Parser:       __webpack_require__(114),
-  Writer:       __webpack_require__(115),
+  Lexer:        __webpack_require__(113),
+  Parser:       __webpack_require__(115),
+  Writer:       __webpack_require__(116),
   Store:        __webpack_require__(215),
   StreamParser: __webpack_require__(216),
   StreamWriter: __webpack_require__(226),
@@ -54416,7 +54400,7 @@ module.exports = N3Store;
 
 // **N3StreamParser** parses a text stream into a quad stream.
 var Transform = __webpack_require__(15).Transform,
-    N3Parser = __webpack_require__(114);
+    N3Parser = __webpack_require__(115);
 
 // ## Constructor
 class N3StreamParser extends Transform {
@@ -54664,7 +54648,7 @@ function config (name) {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(119);
+var Transform = __webpack_require__(120);
 
 /*<replacement>*/
 var util = __webpack_require__(36);
@@ -54717,7 +54701,7 @@ module.exports = __webpack_require__(44).PassThrough
 
 // **N3StreamWriter** serializes a quad stream into a text stream.
 var Transform = __webpack_require__(15).Transform,
-    N3Writer = __webpack_require__(115);
+    N3Writer = __webpack_require__(116);
 
 // ## Constructor
 class N3StreamWriter extends Transform {
@@ -54910,7 +54894,7 @@ module.exports = N3Util;
 */
 var ShExJison = (function(){
 var o=function(k,v,o,l){for(o=o||{},l=k.length;l--;o[k[l]]=v);return o},$V0=[7,18,19,20,21,23,26,189,211,212],$V1=[1,25],$V2=[1,29],$V3=[1,24],$V4=[1,28],$V5=[1,27],$V6=[2,12],$V7=[2,13],$V8=[2,14],$V9=[7,18,19,20,21,23,26,211,212],$Va=[1,35],$Vb=[1,38],$Vc=[1,37],$Vd=[2,18],$Ve=[2,19],$Vf=[19,21,65,67,81,92,93,94,97,98,99,100,108,109,110,111,112,113,115,121,123,157,185,211,215],$Vg=[2,57],$Vh=[1,47],$Vi=[1,48],$Vj=[1,49],$Vk=[19,21,35,39,65,67,75,76,77,81,92,93,94,97,98,99,100,108,109,110,111,112,113,115,121,123,157,185,211,215],$Vl=[2,234],$Vm=[2,235],$Vn=[1,51],$Vo=[1,54],$Vp=[1,53],$Vq=[2,256],$Vr=[2,257],$Vs=[2,260],$Vt=[2,258],$Vu=[2,259],$Vv=[2,15],$Vw=[2,17],$Vx=[19,21,65,67,75,76,77,81,92,93,94,97,98,99,100,108,109,110,111,112,113,115,121,123,157,185,211,215],$Vy=[1,72],$Vz=[2,26],$VA=[2,27],$VB=[2,28],$VC=[115,121,123,185,215],$VD=[2,135],$VE=[1,98],$VF=[1,106],$VG=[1,84],$VH=[1,89],$VI=[1,90],$VJ=[1,91],$VK=[1,97],$VL=[1,102],$VM=[1,103],$VN=[1,104],$VO=[1,107],$VP=[1,108],$VQ=[1,109],$VR=[1,110],$VS=[1,111],$VT=[1,112],$VU=[1,94],$VV=[1,105],$VW=[2,58],$VX=[1,114],$VY=[1,115],$VZ=[1,116],$V_=[1,122],$V$=[1,123],$V01=[47,49],$V11=[2,87],$V21=[2,88],$V31=[189,191],$V41=[1,138],$V51=[1,141],$V61=[1,140],$V71=[2,16],$V81=[7,18,19,20,21,23,26,47,211,212],$V91=[2,43],$Va1=[7,18,19,20,21,23,26,47,49,211,212],$Vb1=[2,50],$Vc1=[2,32],$Vd1=[2,65],$Ve1=[2,70],$Vf1=[2,67],$Vg1=[1,175],$Vh1=[1,176],$Vi1=[1,177],$Vj1=[1,180],$Vk1=[1,183],$Vl1=[2,73],$Vm1=[7,18,19,20,21,23,26,47,49,75,76,77,115,121,123,185,186,189,211,212,215],$Vn1=[2,91],$Vo1=[7,18,19,20,21,23,26,47,49,186,189,211,212],$Vp1=[7,18,19,20,21,23,26,47,49,92,93,94,97,98,99,100,186,189,211,212],$Vq1=[7,18,19,20,21,23,26,47,49,75,76,77,97,98,99,100,115,121,123,185,186,189,211,212,215],$Vr1=[2,104],$Vs1=[2,103],$Vt1=[7,18,19,20,21,23,26,47,49,97,98,99,100,108,109,110,111,112,113,186,189,211,212],$Vu1=[2,98],$Vv1=[2,97],$Vw1=[1,198],$Vx1=[1,200],$Vy1=[1,202],$Vz1=[1,201],$VA1=[2,108],$VB1=[2,109],$VC1=[2,110],$VD1=[2,106],$VE1=[2,233],$VF1=[19,21,67,77,96,104,105,159,181,200,201,202,203,204,205,206,207,208,209,211],$VG1=[2,179],$VH1=[7,18,19,20,21,23,26,47,49,108,109,110,111,112,113,186,189,211,212],$VI1=[2,100],$VJ1=[2,114],$VK1=[1,210],$VL1=[1,211],$VM1=[1,212],$VN1=[1,213],$VO1=[96,104,105,202,203,204,205],$VP1=[2,31],$VQ1=[2,35],$VR1=[2,38],$VS1=[2,41],$VT1=[2,89],$VU1=[2,225],$VV1=[2,226],$VW1=[2,227],$VX1=[1,261],$VY1=[1,266],$VZ1=[1,247],$V_1=[1,252],$V$1=[1,253],$V02=[1,254],$V12=[1,260],$V22=[1,257],$V32=[1,265],$V42=[1,268],$V52=[1,269],$V62=[1,270],$V72=[1,276],$V82=[1,277],$V92=[2,20],$Va2=[2,49],$Vb2=[2,56],$Vc2=[2,61],$Vd2=[2,64],$Ve2=[7,18,19,20,21,23,26,47,49,92,93,94,97,98,99,100,211,212],$Vf2=[2,83],$Vg2=[2,84],$Vh2=[2,29],$Vi2=[2,33],$Vj2=[2,69],$Vk2=[2,66],$Vl2=[2,71],$Vm2=[2,68],$Vn2=[7,18,19,20,21,23,26,47,49,97,98,99,100,186,189,211,212],$Vo2=[1,322],$Vp2=[1,330],$Vq2=[1,331],$Vr2=[1,332],$Vs2=[1,338],$Vt2=[1,339],$Vu2=[7,18,19,20,21,23,26,47,49,75,76,77,115,121,123,185,189,211,212,215],$Vv2=[2,223],$Vw2=[7,18,19,20,21,23,26,47,49,189,211,212],$Vx2=[1,347],$Vy2=[7,18,19,20,21,23,26,47,49,92,93,94,97,98,99,100,189,211,212],$Vz2=[2,102],$VA2=[2,107],$VB2=[2,94],$VC2=[1,357],$VD2=[2,95],$VE2=[2,96],$VF2=[2,101],$VG2=[19,21,65,156,195,211],$VH2=[2,163],$VI2=[2,137],$VJ2=[1,372],$VK2=[1,371],$VL2=[1,377],$VM2=[1,381],$VN2=[1,380],$VO2=[1,379],$VP2=[1,386],$VQ2=[1,389],$VR2=[1,385],$VS2=[1,388],$VT2=[19,21,211,212],$VU2=[1,400],$VV2=[1,406],$VW2=[1,395],$VX2=[1,399],$VY2=[1,409],$VZ2=[1,410],$V_2=[1,411],$V$2=[1,398],$V03=[1,412],$V13=[1,413],$V23=[1,418],$V33=[1,419],$V43=[1,420],$V53=[1,421],$V63=[1,414],$V73=[1,415],$V83=[1,416],$V93=[1,417],$Va3=[1,405],$Vb3=[2,113],$Vc3=[2,118],$Vd3=[2,120],$Ve3=[2,121],$Vf3=[2,122],$Vg3=[2,248],$Vh3=[2,249],$Vi3=[2,250],$Vj3=[2,251],$Vk3=[2,119],$Vl3=[2,30],$Vm3=[2,39],$Vn3=[2,36],$Vo3=[2,42],$Vp3=[2,37],$Vq3=[1,453],$Vr3=[2,40],$Vs3=[1,489],$Vt3=[1,522],$Vu3=[1,523],$Vv3=[1,524],$Vw3=[1,527],$Vx3=[2,44],$Vy3=[2,51],$Vz3=[2,60],$VA3=[2,62],$VB3=[2,72],$VC3=[47,49,66],$VD3=[1,587],$VE3=[47,49,66,75,76,77,115,121,123,185,186,189,215],$VF3=[47,49,66,186,189],$VG3=[47,49,66,92,93,94,97,98,99,100,186,189],$VH3=[47,49,66,75,76,77,97,98,99,100,115,121,123,185,186,189,215],$VI3=[47,49,66,97,98,99,100,108,109,110,111,112,113,186,189],$VJ3=[47,49,66,108,109,110,111,112,113,186,189],$VK3=[47,66],$VL3=[7,18,19,20,21,23,26,47,49,75,76,77,115,121,123,185,211,212,215],$VM3=[2,93],$VN3=[2,92],$VO3=[2,222],$VP3=[1,629],$VQ3=[1,632],$VR3=[1,628],$VS3=[1,631],$VT3=[2,90],$VU3=[2,130],$VV3=[2,105],$VW3=[2,99],$VX3=[2,111],$VY3=[2,112],$VZ3=[2,142],$V_3=[2,143],$V$3=[1,649],$V04=[2,144],$V14=[117,131],$V24=[2,149],$V34=[2,150],$V44=[2,152],$V54=[1,652],$V64=[1,653],$V74=[19,21,195,211],$V84=[2,171],$V94=[1,661],$Va4=[117,131,136,137],$Vb4=[2,161],$Vc4=[19,21,115,121,123,185,211,212,215],$Vd4=[19,21,115,121,123,185,195,211,215],$Ve4=[2,231],$Vf4=[2,232],$Vg4=[2,178],$Vh4=[1,696],$Vi4=[19,21,67,77,96,104,105,159,174,181,200,201,202,203,204,205,206,207,208,209,211],$Vj4=[2,228],$Vk4=[2,229],$Vl4=[2,230],$Vm4=[2,241],$Vn4=[2,244],$Vo4=[2,238],$Vp4=[2,239],$Vq4=[2,240],$Vr4=[2,246],$Vs4=[2,247],$Vt4=[2,252],$Vu4=[2,253],$Vv4=[2,254],$Vw4=[2,255],$Vx4=[19,21,67,77,96,104,105,107,159,174,181,200,201,202,203,204,205,206,207,208,209,211],$Vy4=[1,728],$Vz4=[1,775],$VA4=[1,830],$VB4=[1,840],$VC4=[1,876],$VD4=[1,912],$VE4=[2,63],$VF4=[47,49,66,97,98,99,100,186,189],$VG4=[47,49,66,75,76,77,115,121,123,185,189,215],$VH4=[47,49,66,189],$VI4=[1,934],$VJ4=[47,49,66,92,93,94,97,98,99,100,189],$VK4=[1,944],$VL4=[1,981],$VM4=[1,1017],$VN4=[2,224],$VO4=[1,1028],$VP4=[1,1034],$VQ4=[1,1033],$VR4=[19,21,96,104,105,200,201,202,203,204,205,206,207,208,209,211],$VS4=[1,1054],$VT4=[1,1060],$VU4=[1,1059],$VV4=[1,1080],$VW4=[1,1086],$VX4=[1,1085],$VY4=[2,131],$VZ4=[2,145],$V_4=[2,147],$V$4=[2,151],$V05=[2,153],$V15=[2,154],$V25=[2,158],$V35=[2,160],$V45=[2,165],$V55=[2,166],$V65=[1,1112],$V75=[1,1115],$V85=[1,1111],$V95=[1,1114],$Va5=[1,1125],$Vb5=[2,218],$Vc5=[2,236],$Vd5=[2,237],$Ve5=[1,1127],$Vf5=[1,1129],$Vg5=[1,1131],$Vh5=[19,21,67,77,96,104,105,159,175,181,200,201,202,203,204,205,206,207,208,209,211],$Vi5=[1,1135],$Vj5=[1,1141],$Vk5=[1,1144],$Vl5=[1,1145],$Vm5=[1,1146],$Vn5=[1,1134],$Vo5=[1,1147],$Vp5=[1,1148],$Vq5=[1,1153],$Vr5=[1,1154],$Vs5=[1,1155],$Vt5=[1,1156],$Vu5=[1,1149],$Vv5=[1,1150],$Vw5=[1,1151],$Vx5=[1,1152],$Vy5=[1,1140],$Vz5=[2,242],$VA5=[2,245],$VB5=[2,123],$VC5=[1,1186],$VD5=[1,1192],$VE5=[1,1224],$VF5=[1,1230],$VG5=[1,1289],$VH5=[1,1336],$VI5=[47,49,66,75,76,77,115,121,123,185,215],$VJ5=[47,49,66,92,93,94,97,98,99,100],$VK5=[1,1412],$VL5=[1,1459],$VM5=[2,219],$VN5=[2,220],$VO5=[2,221],$VP5=[7,18,19,20,21,23,26,47,49,75,76,77,107,115,121,123,185,186,189,211,212,215],$VQ5=[7,18,19,20,21,23,26,47,49,107,186,189,211,212],$VR5=[7,18,19,20,21,23,26,47,49,92,93,94,97,98,99,100,107,186,189,211,212],$VS5=[2,148],$VT5=[2,146],$VU5=[2,155],$VV5=[2,159],$VW5=[2,156],$VX5=[2,157],$VY5=[19,21,39,65,67,75,76,77,81,92,93,94,97,98,99,100,108,109,110,111,112,113,115,121,123,157,185,211,215],$VZ5=[1,1519],$V_5=[66,131],$V$5=[1,1522],$V06=[1,1523],$V16=[66,131,136,137],$V26=[2,201],$V36=[1,1539],$V46=[19,21,67,77,96,104,105,159,174,175,181,200,201,202,203,204,205,206,207,208,209,211],$V56=[19,21,67,77,96,104,105,107,159,174,175,181,200,201,202,203,204,205,206,207,208,209,211],$V66=[2,243],$V76=[1,1577],$V86=[1,1643],$V96=[1,1649],$Va6=[1,1648],$Vb6=[1,1669],$Vc6=[1,1675],$Vd6=[1,1674],$Ve6=[1,1695],$Vf6=[1,1701],$Vg6=[1,1700],$Vh6=[1,1742],$Vi6=[1,1748],$Vj6=[1,1780],$Vk6=[1,1786],$Vl6=[1,1801],$Vm6=[1,1807],$Vn6=[1,1806],$Vo6=[1,1827],$Vp6=[1,1833],$Vq6=[1,1832],$Vr6=[1,1853],$Vs6=[1,1859],$Vt6=[1,1858],$Vu6=[1,1900],$Vv6=[1,1906],$Vw6=[1,1938],$Vx6=[1,1944],$Vy6=[117,131,136,137,186,189],$Vz6=[2,168],$VA6=[1,1962],$VB6=[1,1963],$VC6=[1,1964],$VD6=[1,1965],$VE6=[117,131,136,137,152,153,154,155,186,189],$VF6=[2,34],$VG6=[47,117,131,136,137,152,153,154,155,186,189],$VH6=[2,47],$VI6=[47,49,117,131,136,137,152,153,154,155,186,189],$VJ6=[2,54],$VK6=[1,1994],$VL6=[1,2031],$VM6=[1,2064],$VN6=[1,2070],$VO6=[1,2069],$VP6=[1,2090],$VQ6=[1,2096],$VR6=[1,2095],$VS6=[1,2117],$VT6=[1,2123],$VU6=[1,2122],$VV6=[1,2144],$VW6=[1,2150],$VX6=[1,2149],$VY6=[1,2170],$VZ6=[1,2176],$V_6=[1,2175],$V$6=[1,2197],$V07=[1,2203],$V17=[1,2202],$V27=[1,2272],$V37=[47,49,66,75,76,77,107,115,121,123,185,186,189,215],$V47=[47,49,66,107,186,189],$V57=[47,49,66,92,93,94,97,98,99,100,107,186,189],$V67=[1,2386],$V77=[2,169],$V87=[2,173],$V97=[2,174],$Va7=[2,175],$Vb7=[2,176],$Vc7=[2,45],$Vd7=[2,52],$Ve7=[2,59],$Vf7=[2,79],$Vg7=[2,75],$Vh7=[2,81],$Vi7=[1,2469],$Vj7=[2,78],$Vk7=[47,49,75,76,77,97,98,99,100,115,117,121,123,131,136,137,152,153,154,155,185,186,189,215],$Vl7=[47,49,75,76,77,115,117,121,123,131,136,137,152,153,154,155,185,186,189,215],$Vm7=[47,49,97,98,99,100,108,109,110,111,112,113,117,131,136,137,152,153,154,155,186,189],$Vn7=[47,49,92,93,94,97,98,99,100,117,131,136,137,152,153,154,155,186,189],$Vo7=[2,85],$Vp7=[2,86],$Vq7=[47,49,108,109,110,111,112,113,117,131,136,137,152,153,154,155,186,189],$Vr7=[1,2523],$Vs7=[1,2529],$Vt7=[1,2612],$Vu7=[1,2645],$Vv7=[1,2651],$Vw7=[1,2650],$Vx7=[1,2671],$Vy7=[1,2677],$Vz7=[1,2676],$VA7=[1,2698],$VB7=[1,2704],$VC7=[1,2703],$VD7=[1,2725],$VE7=[1,2731],$VF7=[1,2730],$VG7=[1,2751],$VH7=[1,2757],$VI7=[1,2756],$VJ7=[1,2778],$VK7=[1,2784],$VL7=[1,2783],$VM7=[1,2825],$VN7=[1,2858],$VO7=[1,2864],$VP7=[1,2863],$VQ7=[1,2884],$VR7=[1,2890],$VS7=[1,2889],$VT7=[1,2911],$VU7=[1,2917],$VV7=[1,2916],$VW7=[1,2938],$VX7=[1,2944],$VY7=[1,2943],$VZ7=[1,2964],$V_7=[1,2970],$V$7=[1,2969],$V08=[1,2991],$V18=[1,2997],$V28=[1,2996],$V38=[117,131,136,137,189],$V48=[1,3016],$V58=[2,48],$V68=[2,55],$V78=[2,74],$V88=[2,80],$V98=[2,76],$Va8=[2,82],$Vb8=[47,49,97,98,99,100,117,131,136,137,152,153,154,155,186,189],$Vc8=[1,3040],$Vd8=[66,131,136,137,186,189],$Ve8=[1,3049],$Vf8=[1,3050],$Vg8=[1,3051],$Vh8=[1,3052],$Vi8=[66,131,136,137,152,153,154,155,186,189],$Vj8=[47,66,131,136,137,152,153,154,155,186,189],$Vk8=[47,49,66,131,136,137,152,153,154,155,186,189],$Vl8=[1,3081],$Vm8=[1,3150],$Vn8=[1,3156],$Vo8=[1,3236],$Vp8=[1,3242],$Vq8=[2,170],$Vr8=[2,46],$Vs8=[1,3330],$Vt8=[2,53],$Vu8=[1,3363],$Vv8=[2,77],$Vw8=[2,167],$Vx8=[1,3408],$Vy8=[47,49,66,75,76,77,97,98,99,100,115,121,123,131,136,137,152,153,154,155,185,186,189,215],$Vz8=[47,49,66,75,76,77,115,121,123,131,136,137,152,153,154,155,185,186,189,215],$VA8=[47,49,66,97,98,99,100,108,109,110,111,112,113,131,136,137,152,153,154,155,186,189],$VB8=[47,49,66,92,93,94,97,98,99,100,131,136,137,152,153,154,155,186,189],$VC8=[47,49,66,108,109,110,111,112,113,131,136,137,152,153,154,155,186,189],$VD8=[1,3439],$VE8=[1,3445],$VF8=[1,3444],$VG8=[1,3465],$VH8=[1,3471],$VI8=[1,3470],$VJ8=[1,3492],$VK8=[1,3498],$VL8=[1,3497],$VM8=[1,3596],$VN8=[1,3602],$VO8=[1,3601],$VP8=[1,3637],$VQ8=[1,3679],$VR8=[66,131,136,137,189],$VS8=[1,3709],$VT8=[47,49,66,97,98,99,100,131,136,137,152,153,154,155,186,189],$VU8=[1,3733],$VV8=[1,3769],$VW8=[1,3775],$VX8=[1,3774],$VY8=[1,3795],$VZ8=[1,3801],$V_8=[1,3800],$V$8=[1,3822],$V09=[1,3828],$V19=[1,3827],$V29=[1,3849],$V39=[1,3855],$V49=[1,3854],$V59=[1,3875],$V69=[1,3881],$V79=[1,3880],$V89=[1,3902],$V99=[1,3908],$Va9=[1,3907],$Vb9=[107,117,131,136,137,186,189],$Vc9=[1,3950],$Vd9=[1,3974],$Ve9=[1,4016],$Vf9=[1,4049],$Vg9=[1,4154],$Vh9=[1,4197],$Vi9=[1,4203],$Vj9=[1,4202],$Vk9=[1,4238],$Vl9=[1,4280],$Vm9=[1,4336],$Vn9=[66,107,131,136,137,186,189],$Vo9=[1,4391],$Vp9=[1,4415],$Vq9=[1,4445],$Vr9=[1,4491],$Vs9=[1,4563],$Vt9=[1,4612];
-var parser = {trace: function trace() { },
+var parser = {trace: function trace () { },
 yy: {},
 symbols_: {"error":2,"shexDoc":3,"initParser":4,"Qdirective_E_Star":5,"Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt":6,"EOF":7,"directive":8,"O_QnotStartAction_E_Or_QstartActions_E_C":9,"notStartAction":10,"startActions":11,"Qstatement_E_Star":12,"statement":13,"O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C":14,"baseDecl":15,"prefixDecl":16,"importDecl":17,"IT_BASE":18,"IRIREF":19,"IT_PREFIX":20,"PNAME_NS":21,"iri":22,"IT_IMPORT":23,"start":24,"shapeExprDecl":25,"IT_start":26,"=":27,"shapeAnd":28,"Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star":29,"QcodeDecl_E_Plus":30,"codeDecl":31,"shapeExprLabel":32,"O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C":33,"shapeExpression":34,"IT_EXTERNAL":35,"QIT_NOT_E_Opt":36,"shapeAtomNoRef":37,"QshapeOr_E_Opt":38,"IT_NOT":39,"shapeRef":40,"shapeOr":41,"inlineShapeExpression":42,"inlineShapeOr":43,"Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus":44,"Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus":45,"O_QIT_OR_E_S_QshapeAnd_E_C":46,"IT_OR":47,"O_QIT_AND_E_S_QshapeNot_E_C":48,"IT_AND":49,"shapeNot":50,"inlineShapeAnd":51,"Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star":52,"O_QIT_OR_E_S_QinlineShapeAnd_E_C":53,"Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star":54,"inlineShapeNot":55,"Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star":56,"O_QIT_AND_E_S_QinlineShapeNot_E_C":57,"shapeAtom":58,"inlineShapeAtom":59,"nonLitNodeConstraint":60,"QshapeOrRef_E_Opt":61,"litNodeConstraint":62,"shapeOrRef":63,"QnonLitNodeConstraint_E_Opt":64,"(":65,")":66,".":67,"shapeDefinition":68,"nonLitInlineNodeConstraint":69,"QinlineShapeOrRef_E_Opt":70,"litInlineNodeConstraint":71,"inlineShapeOrRef":72,"QnonLitInlineNodeConstraint_E_Opt":73,"inlineShapeDefinition":74,"ATPNAME_LN":75,"ATPNAME_NS":76,"@":77,"Qannotation_E_Star":78,"semanticActions":79,"annotation":80,"IT_LITERAL":81,"QxsFacet_E_Star":82,"datatype":83,"valueSet":84,"QnumericFacet_E_Plus":85,"xsFacet":86,"numericFacet":87,"nonLiteralKind":88,"QstringFacet_E_Star":89,"QstringFacet_E_Plus":90,"stringFacet":91,"IT_IRI":92,"IT_BNODE":93,"IT_NONLITERAL":94,"stringLength":95,"INTEGER":96,"REGEXP":97,"IT_LENGTH":98,"IT_MINLENGTH":99,"IT_MAXLENGTH":100,"numericRange":101,"rawNumeric":102,"numericLength":103,"DECIMAL":104,"DOUBLE":105,"string":106,"^^":107,"IT_MININCLUSIVE":108,"IT_MINEXCLUSIVE":109,"IT_MAXINCLUSIVE":110,"IT_MAXEXCLUSIVE":111,"IT_TOTALDIGITS":112,"IT_FRACTIONDIGITS":113,"Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star":114,"{":115,"QtripleExpression_E_Opt":116,"}":117,"O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C":118,"extension":119,"extraPropertySet":120,"IT_CLOSED":121,"tripleExpression":122,"IT_EXTRA":123,"Qpredicate_E_Plus":124,"predicate":125,"oneOfTripleExpr":126,"groupTripleExpr":127,"multiElementOneOf":128,"Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus":129,"O_QGT_PIPE_E_S_QgroupTripleExpr_E_C":130,"|":131,"singleElementGroup":132,"multiElementGroup":133,"unaryTripleExpr":134,"QGT_SEMI_E_Opt":135,",":136,";":137,"Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus":138,"O_QGT_SEMI_E_S_QunaryTripleExpr_E_C":139,"Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt":140,"O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C":141,"include":142,"O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C":143,"$":144,"tripleExprLabel":145,"tripleConstraint":146,"bracketedTripleExpr":147,"Qcardinality_E_Opt":148,"cardinality":149,"QsenseFlags_E_Opt":150,"senseFlags":151,"*":152,"+":153,"?":154,"REPEAT_RANGE":155,"^":156,"[":157,"QvalueSetValue_E_Star":158,"]":159,"valueSetValue":160,"iriRange":161,"literalRange":162,"languageRange":163,"O_QiriExclusion_E_Plus_Or_QliteralExclusion_E_Plus_Or_QlanguageExclusion_E_Plus_C":164,"QiriExclusion_E_Plus":165,"iriExclusion":166,"QliteralExclusion_E_Plus":167,"literalExclusion":168,"QlanguageExclusion_E_Plus":169,"languageExclusion":170,"Q_O_QGT_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt":171,"QiriExclusion_E_Star":172,"O_QGT_TILDE_E_S_QiriExclusion_E_Star_C":173,"~":174,"-":175,"QGT_TILDE_E_Opt":176,"literal":177,"Q_O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt":178,"QliteralExclusion_E_Star":179,"O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C":180,"LANGTAG":181,"Q_O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt":182,"O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C":183,"QlanguageExclusion_E_Star":184,"&":185,"//":186,"O_Qiri_E_Or_Qliteral_E_C":187,"QcodeDecl_E_Star":188,"%":189,"O_QCODE_E_Or_QGT_MODULO_E_C":190,"CODE":191,"rdfLiteral":192,"numericLiteral":193,"booleanLiteral":194,"a":195,"blankNode":196,"langString":197,"Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt":198,"O_QGT_DTYPE_E_S_Qdatatype_E_C":199,"IT_true":200,"IT_false":201,"STRING_LITERAL1":202,"STRING_LITERAL_LONG1":203,"STRING_LITERAL2":204,"STRING_LITERAL_LONG2":205,"LANG_STRING_LITERAL1":206,"LANG_STRING_LITERAL_LONG1":207,"LANG_STRING_LITERAL2":208,"LANG_STRING_LITERAL_LONG2":209,"prefixedName":210,"PNAME_LN":211,"BLANK_NODE_LABEL":212,"O_QIT_EXTENDS_E_Or_QGT_AMP_E_C":213,"QshapeExprLabel_E_Plus":214,"IT_EXTENDS":215,"$accept":0,"$end":1},
 terminals_: {2:"error",7:"EOF",18:"IT_BASE",19:"IRIREF",20:"IT_PREFIX",21:"PNAME_NS",23:"IT_IMPORT",26:"IT_start",27:"=",35:"IT_EXTERNAL",39:"IT_NOT",47:"IT_OR",49:"IT_AND",65:"(",66:")",67:".",75:"ATPNAME_LN",76:"ATPNAME_NS",77:"@",81:"IT_LITERAL",92:"IT_IRI",93:"IT_BNODE",94:"IT_NONLITERAL",96:"INTEGER",97:"REGEXP",98:"IT_LENGTH",99:"IT_MINLENGTH",100:"IT_MAXLENGTH",104:"DECIMAL",105:"DOUBLE",107:"^^",108:"IT_MININCLUSIVE",109:"IT_MINEXCLUSIVE",110:"IT_MAXINCLUSIVE",111:"IT_MAXEXCLUSIVE",112:"IT_TOTALDIGITS",113:"IT_FRACTIONDIGITS",115:"{",117:"}",121:"IT_CLOSED",123:"IT_EXTRA",131:"|",136:",",137:";",144:"$",152:"*",153:"+",154:"?",155:"REPEAT_RANGE",156:"^",157:"[",159:"]",174:"~",175:"-",181:"LANGTAG",185:"&",186:"//",189:"%",191:"CODE",195:"a",200:"IT_true",201:"IT_false",202:"STRING_LITERAL1",203:"STRING_LITERAL_LONG1",204:"STRING_LITERAL2",205:"STRING_LITERAL_LONG2",206:"LANG_STRING_LITERAL1",207:"LANG_STRING_LITERAL_LONG1",208:"LANG_STRING_LITERAL2",209:"LANG_STRING_LITERAL_LONG2",211:"PNAME_LN",212:"BLANK_NODE_LABEL",215:"IT_EXTENDS"},
@@ -54922,20 +54906,24 @@ var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
 
-        var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
+        let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        var ret = extend({ type: "Schema"},
-                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Properties ordered here to
-                         Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}, // build return object from
-                         valueExprDefns, startActs, startObj,                  // components in parser state
-                         Parser.shapes ? {shapes: Parser.shapes} : {},         // maintaining intuitve order.
-                         Parser.productions ? {productions: Parser.productions} : {});
-        if (Parser._base !== null)
-          ret.base = Parser._base;
+        let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
+        var shexj = Object.assign(
+          { type: "Schema" }, imports, startActs, startObj, shapes
+        )
+        if (Parser.options.index) {
+          if (Parser._base !== null)
+            shexj._base = Parser._base;
+          shexj._prefixes = Parser._prefixes;
+          shexj._index = {
+            shapeExprs: Parser.shapes || new Map(),
+            tripleExprs: Parser.productions || new Map()
+          };
+        }
         Parser.reset();
-//console.log(JSON.stringify(ret));
-        return ret;
+        return shexj;
       
 break;
 case 2:
@@ -55102,17 +55090,17 @@ case 87:
  // t: 1dotRefLNex@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         var namePos = $$[$0].indexOf(':');
-        this.$ = { type: "ShapeRef", reference: expandPrefix($$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1) };
+        this.$ = expandPrefix($$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1); // ShapeRef
       
 break;
 case 88:
  // t: 1dotRefNS1@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = { type: "ShapeRef", reference: expandPrefix($$[$0].substr(0, $$[$0].length - 1)) };
+        this.$ = expandPrefix($$[$0].substr(0, $$[$0].length - 1)); // ShapeRef
       
 break;
 case 89:
-this.$ = { type: "ShapeRef", reference: $$[$0] } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
+this.$ = $$[$0] // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
 break;
 case 90: case 93:
  // t: !!
@@ -55248,7 +55236,7 @@ this.$ = "fractiondigits" // t: 1literalFractiondigits;
 break;
 case 130:
  // t: 1dotInherit3
-        this.$ = $$[$0-2]
+        this.$ = $$[$0-2] === EmptyShape ? { type: "Shape" } : $$[$0-2]; // t: 0
         if ($$[$0-1].length) { this.$.annotations = $$[$0-1]; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($$[$0]) { this.$.semActs = $$[$0].semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
       
@@ -55355,7 +55343,7 @@ case 170:
 	if ($$[$0-3] !== EmptyShape && false) {
 	  var t = blank();
 	  addShape(t, $$[$0-3]);
-	  $$[$0-3] = { type: "ShapeRef", reference: t };
+	  $$[$0-3] = t; // ShapeRef
 	}
         // %6: t: 1inversedotCode1
         this.$ = extend({ type: "TripleConstraint" }, $$[$0-5] ? $$[$0-5] : {}, { predicate: $$[$0-4] }, ($$[$0-3] === EmptyShape ? {} : { valueExpr: $$[$0-3] }), $$[$0-2], $$[$0]); // t: 1dot // t: 1inversedot
@@ -55513,7 +55501,7 @@ case 217:
 this.$ = $$[$0] ? { type: "LanguageStem", stem: $$[$0-1] } /* t: 1val1languageStemMinuslanguageStem3 */ : $$[$0-1] // t: 1val1languageStemMinuslanguage3;
 break;
 case 218:
-this.$ = { type: "Inclusion", "include": $$[$0] } // t: 2groupInclude1;
+this.$ = $$[$0] // Inclusion // t: 2groupInclude1;
 break;
 case 219:
 this.$ = { type: "Annotation", predicate: $$[$0-1], object: $$[$0] } // t: 1dotAnnotIRIREF;
@@ -55605,7 +55593,7 @@ break;
 },
 table: [o($V0,[2,2],{3:1,4:2}),{1:[3]},o($V0,[2,3],{5:3}),{6:4,7:[2,10],8:5,9:10,10:14,11:15,14:6,15:7,16:8,17:9,18:[1,11],19:$V1,20:[1,12],21:$V2,22:22,23:[1,13],24:16,25:17,26:[1,19],30:18,31:21,32:20,189:$V3,196:23,210:26,211:$V4,212:$V5},{7:[1,30]},o($V0,[2,4]),{7:[2,11]},o($V0,$V6),o($V0,$V7),o($V0,$V8),o($V9,[2,7],{12:31}),{19:[1,32]},{21:[1,33]},{19:$Va,21:$Vb,22:34,210:36,211:$Vc},o($V9,[2,5]),o($V9,[2,6]),o($V9,$Vd),o($V9,$Ve),o($V9,[2,21],{31:39,189:$V3}),{27:[1,40]},o($Vf,$Vg,{33:41,34:42,36:44,40:46,35:[1,43],39:[1,45],75:$Vh,76:$Vi,77:$Vj}),o($V0,[2,22]),o($Vk,$Vl),o($Vk,$Vm),{19:$Vn,21:$Vo,22:50,210:52,211:$Vp},o($Vk,$Vq),o($Vk,$Vr),o($Vk,$Vs),o($Vk,$Vt),o($Vk,$Vu),{1:[2,1]},{7:[2,9],8:56,10:57,13:55,15:58,16:59,17:60,18:[1,63],19:$V1,20:[1,64],21:$V2,22:22,23:[1,65],24:61,25:62,26:[1,66],32:67,196:23,210:26,211:$V4,212:$V5},o($V0,$Vv),{19:$Va,21:$Vb,22:68,210:36,211:$Vc},o($V0,$Vw),o($V0,$Vq),o($V0,$Vr),o($V0,$Vt),o($V0,$Vu),o($V0,[2,23]),o($Vx,$Vg,{28:69,50:70,36:71,39:$Vy}),o($V9,$Vz),o($V9,$VA),o($V9,$VB),o($VC,$VD,{37:73,60:74,62:75,68:76,69:79,71:80,74:81,88:82,90:83,83:85,84:86,85:87,114:88,91:92,22:93,87:95,95:96,210:99,101:100,103:101,19:$VE,21:$VF,65:[1,77],67:[1,78],81:$VG,92:$VH,93:$VI,94:$VJ,97:$VK,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:$VU,211:$VV}),o($Vf,$VW,{40:113,75:$VX,76:$VY,77:$VZ}),{41:117,44:118,45:119,46:120,47:$V_,48:121,49:$V$},o($V01,$V11),o($V01,$V21),{19:[1,127],21:[1,131],22:125,32:124,196:126,210:128,211:[1,130],212:[1,129]},{189:[1,134],190:132,191:[1,133]},o($V31,$Vq),o($V31,$Vr),o($V31,$Vt),o($V31,$Vu),o($V9,[2,8]),o($V9,[2,24]),o($V9,[2,25]),o($V9,$V6),o($V9,$V7),o($V9,$V8),o($V9,$Vd),o($V9,$Ve),{19:[1,135]},{21:[1,136]},{19:$V41,21:$V51,22:137,210:139,211:$V61},{27:[1,142]},o($Vf,$Vg,{33:143,34:144,36:146,40:148,35:[1,145],39:[1,147],75:$Vh,76:$Vi,77:$Vj}),o($V0,$V71),o($V81,$V91,{29:149}),o($Va1,$Vb1,{54:150}),o($VC,$VD,{69:79,71:80,74:81,88:82,90:83,83:85,84:86,85:87,114:88,91:92,22:93,87:95,95:96,210:99,101:100,103:101,58:151,60:152,62:153,63:154,68:157,40:158,19:$VE,21:$VF,65:[1,155],67:[1,156],75:[1,159],76:[1,160],77:[1,161],81:$VG,92:$VH,93:$VI,94:$VJ,97:$VK,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:$VU,211:$VV}),o($Vx,$VW),o($V9,$Vc1,{44:118,45:119,46:120,48:121,38:162,41:163,47:$V_,49:$V$}),o($Va1,$Vd1,{61:164,63:165,68:166,40:167,74:168,114:169,75:$VX,76:$VY,77:$VZ,115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Ve1),o($Va1,$Vf1,{64:170,60:171,69:172,88:173,90:174,91:178,95:179,92:$Vg1,93:$Vh1,94:$Vi1,97:$Vj1,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{34:181,36:182,40:184,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vl1),o($Vm1,$Vn1,{78:185}),o($Vo1,$Vn1,{78:186}),o($Vp1,$Vn1,{78:187}),o($Vq1,$Vr1,{89:188}),o($Vm1,$Vs1,{95:96,91:189,97:$VK,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:190}),o($Vt1,$Vu1,{82:191}),o($Vt1,$Vu1,{82:192}),o($Vo1,$Vv1,{101:100,103:101,87:193,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),{115:[1,194],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:203}),o($VH1,$VI1),{96:[1,204]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,206],102:205,104:[1,207],105:[1,208],106:209,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,214]},{96:[2,115]},{96:[2,116]},{96:[2,117]},o($Vt1,$Vt),o($Vt1,$Vu),o($VO1,[2,124]),o($VO1,[2,125]),o($VO1,[2,126]),o($VO1,[2,127]),{96:[2,128]},{96:[2,129]},o($V9,$Vc1,{44:118,45:119,46:120,48:121,41:163,38:215,47:$V_,49:$V$}),o($Va1,$V11),o($Va1,$V21),{19:[1,219],21:[1,223],22:217,32:216,196:218,210:220,211:[1,222],212:[1,221]},o($V9,$VP1),o($V9,$VQ1,{46:224,47:$V_}),o($V81,$V91,{29:225,48:226,49:$V$}),o($V81,$VR1),o($Va1,$VS1),o($Vx,$Vg,{28:227,50:228,36:229,39:$Vy}),o($Vx,$Vg,{50:230,36:231,39:$Vy}),o($V01,$VT1),o($V01,$Vl),o($V01,$Vm),o($V01,$Vq),o($V01,$Vr),o($V01,$Vs),o($V01,$Vt),o($V01,$Vu),o($V0,$VU1),o($V0,$VV1),o($V0,$VW1),o($V9,$Vv),{19:$V41,21:$V51,22:232,210:139,211:$V61},o($V9,$Vw),o($V9,$Vq),o($V9,$Vr),o($V9,$Vt),o($V9,$Vu),o($Vx,$Vg,{28:233,50:234,36:235,39:$Vy}),o($V9,$Vz),o($V9,$VA),o($V9,$VB),o($VC,$VD,{37:236,60:237,62:238,68:239,69:242,71:243,74:244,88:245,90:246,83:248,84:249,85:250,114:251,91:255,22:256,87:258,95:259,210:262,101:263,103:264,19:$VX1,21:$VY1,65:[1,240],67:[1,241],81:$VZ1,92:$V_1,93:$V$1,94:$V02,97:$V12,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:$V22,211:$V32}),o($Vf,$VW,{40:267,75:$V42,76:$V52,77:$V62}),{41:271,44:272,45:273,46:274,47:$V72,48:275,49:$V82},o($V9,$V92,{46:278,47:$V_}),o($V81,$Va2,{48:279,49:$V$}),o($Va1,$Vb2),o($Va1,$Vd1,{63:165,68:166,40:167,74:168,114:169,61:280,75:$VX,76:$VY,77:$VZ,115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{60:171,69:172,88:173,90:174,91:178,95:179,64:281,92:$Vg1,93:$Vh1,94:$Vi1,97:$Vj1,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:282,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Ve2,$V11),o($Ve2,$V21),{19:[1,286],21:[1,290],22:284,32:283,196:285,210:287,211:[1,289],212:[1,288]},o($V9,$Vh2),o($V9,$Vi2),o($Va1,$Vj2),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:291}),{115:[1,292],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$Vl2),o($Va1,$Vm2),o($Vo1,$Vn1,{78:293}),o($Vn2,$Vr1,{89:294}),o($Vo1,$Vs1,{95:179,91:295,97:$Vj1,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,296]},o($Vn2,$VJ1),{66:[1,297]},o($VC,$VD,{37:298,60:299,62:300,68:301,69:304,71:305,74:306,88:307,90:308,83:310,84:311,85:312,114:313,91:317,22:318,87:320,95:321,210:324,101:325,103:326,19:[1,323],21:[1,328],65:[1,302],67:[1,303],81:[1,309],92:[1,314],93:[1,315],94:[1,316],97:$Vo2,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,319],211:[1,327]}),o($Vf,$VW,{40:329,75:$Vp2,76:$Vq2,77:$Vr2}),{41:333,44:334,45:335,46:336,47:$Vs2,48:337,49:$Vt2},o($Vu2,$Vv2,{79:340,80:341,188:342,186:[1,343]}),o($Vw2,$Vv2,{79:344,80:345,188:346,186:$Vx2}),o($Vy2,$Vv2,{79:348,80:349,188:350,186:[1,351]}),o($Vm1,$Vz2,{95:96,91:352,97:$VK,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:353,91:354,87:355,95:356,101:358,103:359,97:$VC2,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:353,91:354,87:355,95:356,101:358,103:359,97:$VC2,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:353,91:354,87:355,95:356,101:358,103:359,97:$VC2,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($VG2,$VH2,{116:360,122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,117:$VI2,144:$VJ2,185:$VK2}),o($VC,[2,136]),o($VC,[2,132]),o($VC,[2,133]),o($VC,[2,134]),{19:$VL2,21:$VM2,22:375,32:374,196:376,210:378,211:$VN2,212:$VO2,214:373},{19:$VP2,21:$VQ2,22:384,124:382,125:383,195:$VR2,210:387,211:$VS2},o($VT2,[2,262]),o($VT2,[2,263]),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,390],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,422]},{107:$Vg3},{107:$Vh3},{107:$Vi3},{107:$Vj3},o($VH1,$Vk3),o($V9,$Vl3),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($V81,$Vm3),o($V9,$Vn3,{46:278,47:$V_}),o($Va1,$Vo3),o($V81,$Vp3),o($Va1,$Vb1,{54:423}),o($VC,$VD,{58:424,60:425,62:426,63:427,69:430,71:431,68:432,40:433,88:434,90:435,83:437,84:438,85:439,74:440,91:447,22:448,87:450,114:451,95:452,210:455,101:456,103:457,19:[1,454],21:[1,459],65:[1,428],67:[1,429],75:[1,441],76:[1,442],77:[1,443],81:[1,436],92:[1,444],93:[1,445],94:[1,446],97:$Vq3,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,449],211:[1,458]}),o($Va1,$Vr3),o($VC,$VD,{58:460,60:461,62:462,63:463,69:466,71:467,68:468,40:469,88:470,90:471,83:473,84:474,85:475,74:476,91:483,22:484,87:486,114:487,95:488,210:491,101:492,103:493,19:[1,490],21:[1,495],65:[1,464],67:[1,465],75:[1,477],76:[1,478],77:[1,479],81:[1,472],92:[1,480],93:[1,481],94:[1,482],97:$Vs3,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,485],211:[1,494]}),o($V9,$V71),o($V81,$V91,{29:496}),o($Va1,$Vb1,{54:497}),o($VC,$VD,{69:242,71:243,74:244,88:245,90:246,83:248,84:249,85:250,114:251,91:255,22:256,87:258,95:259,210:262,101:263,103:264,58:498,60:499,62:500,63:501,68:504,40:505,19:$VX1,21:$VY1,65:[1,502],67:[1,503],75:[1,506],76:[1,507],77:[1,508],81:$VZ1,92:$V_1,93:$V$1,94:$V02,97:$V12,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:$V22,211:$V32}),o($V9,$Vc1,{44:272,45:273,46:274,48:275,38:509,41:510,47:$V72,49:$V82}),o($Va1,$Vd1,{61:511,63:512,68:513,40:514,74:515,114:516,75:$V42,76:$V52,77:$V62,115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Ve1),o($Va1,$Vf1,{64:517,60:518,69:519,88:520,90:521,91:525,95:526,92:$Vt3,93:$Vu3,94:$Vv3,97:$Vw3,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:528,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vl1),o($Vm1,$Vn1,{78:529}),o($Vo1,$Vn1,{78:530}),o($Vp1,$Vn1,{78:531}),o($Vq1,$Vr1,{89:532}),o($Vm1,$Vs1,{95:259,91:533,97:$V12,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:534}),o($Vt1,$Vu1,{82:535}),o($Vt1,$Vu1,{82:536}),o($Vo1,$Vv1,{101:263,103:264,87:537,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),{115:[1,538],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:539}),o($VH1,$VI1),{96:[1,540]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,542],102:541,104:[1,543],105:[1,544],106:545,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,546]},o($Vt1,$Vt),o($Vt1,$Vu),o($V9,$Vc1,{44:272,45:273,46:274,48:275,41:510,38:547,47:$V72,49:$V82}),o($Va1,$V11),o($Va1,$V21),{19:[1,551],21:[1,555],22:549,32:548,196:550,210:552,211:[1,554],212:[1,553]},o($V9,$VP1),o($V9,$VQ1,{46:556,47:$V72}),o($V81,$V91,{29:557,48:558,49:$V82}),o($V81,$VR1),o($Va1,$VS1),o($Vx,$Vg,{28:559,50:560,36:561,39:$Vy}),o($Vx,$Vg,{50:562,36:563,39:$Vy}),o($V81,$Vx3),o($Va1,$Vy3),o($Va1,$Vz3),o($Va1,$VA3),{66:[1,564]},o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),o($Vw2,$Vv2,{80:345,188:346,79:565,186:$Vx2}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:566,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:345,188:346,79:567,186:$Vx2}),o($Vo1,$Vz2,{95:179,91:568,97:$Vj1,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VB3),{38:569,41:570,44:334,45:335,46:336,47:$Vs2,48:337,49:$Vt2,66:$Vc1},o($VC,$VD,{61:571,63:572,68:573,40:574,74:575,114:576,47:$Vd1,49:$Vd1,66:$Vd1,75:$Vp2,76:$Vq2,77:$Vr2}),o($VC3,$Ve1),o($VC3,$Vf1,{64:577,60:578,69:579,88:580,90:581,91:585,95:586,92:[1,582],93:[1,583],94:[1,584],97:$VD3,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:588,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VC3,$Vl1),o($VE3,$Vn1,{78:589}),o($VF3,$Vn1,{78:590}),o($VG3,$Vn1,{78:591}),o($VH3,$Vr1,{89:592}),o($VE3,$Vs1,{95:321,91:593,97:$Vo2,98:$VL,99:$VM,100:$VN}),o($VI3,$Vu1,{82:594}),o($VI3,$Vu1,{82:595}),o($VI3,$Vu1,{82:596}),o($VF3,$Vv1,{101:325,103:326,87:597,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),{115:[1,598],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VH3,$VA1),o($VH3,$VB1),o($VH3,$VC1),o($VH3,$VD1),o($VI3,$VE1),o($VF1,$VG1,{158:599}),o($VJ3,$VI1),{96:[1,600]},o($VH3,$VJ1),o($VI3,$Vq),o($VI3,$Vr),{96:[1,602],102:601,104:[1,603],105:[1,604],106:605,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,606]},o($VI3,$Vt),o($VI3,$Vu),{38:607,41:570,44:334,45:335,46:336,47:$Vs2,48:337,49:$Vt2,66:$Vc1},o($VC3,$V11),o($VC3,$V21),{19:[1,611],21:[1,615],22:609,32:608,196:610,210:612,211:[1,614],212:[1,613]},{66:$VP1},{46:616,47:$Vs2,66:$VQ1},o($VK3,$V91,{29:617,48:618,49:$Vt2}),o($VK3,$VR1),o($VC3,$VS1),o($Vx,$Vg,{28:619,50:620,36:621,39:$Vy}),o($Vx,$Vg,{50:622,36:623,39:$Vy}),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:624,189:[1,625]}),{19:$VP3,21:$VQ3,22:627,125:626,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:633,189:[1,634]}),{19:$VP3,21:$VQ3,22:627,125:635,195:$VR3,210:630,211:$VS3},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:636,189:[1,637]}),{19:$VP3,21:$VQ3,22:627,125:638,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,639]},o($Vt1,$VJ1),{96:[1,641],102:640,104:[1,642],105:[1,643],106:644,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,645]},{117:[1,646]},{117:[2,138]},{117:$VZ3},{117:$V_3,129:647,130:648,131:$V$3},{117:$V04},o($V14,$V24),o($V14,$V34),o($V14,$V44,{135:650,138:651,139:654,136:$V54,137:$V64}),o($V74,$V84,{141:655,146:656,147:657,150:658,151:660,65:[1,659],156:$V94}),o($Va4,$Vb4),o($VG2,[2,164]),{19:[1,665],21:[1,669],22:663,145:662,196:664,210:666,211:[1,668],212:[1,667]},{19:[1,673],21:[1,677],22:671,145:670,196:672,210:674,211:[1,676],212:[1,675]},o($VC,[2,261],{22:375,196:376,210:378,32:678,19:$VL2,21:$VM2,211:$VN2,212:$VO2}),o($Vc4,[2,264]),o($Vc4,$Vl),o($Vc4,$Vm),o($Vc4,$Vq),o($Vc4,$Vr),o($Vc4,$Vs),o($Vc4,$Vt),o($Vc4,$Vu),o($VC,[2,139],{22:384,210:387,125:679,19:$VP2,21:$VQ2,195:$VR2,211:$VS2}),o($Vd4,[2,140]),o($Vd4,$Ve4),o($Vd4,$Vf4),o($Vd4,$Vq),o($Vd4,$Vr),o($Vd4,$Vt),o($Vd4,$Vu),o($Vt1,$Vg4),o($VF1,[2,180]),o($VF1,[2,181]),o($VF1,[2,182]),o($VF1,[2,183]),{164:680,165:681,166:684,167:682,168:685,169:683,170:686,175:[1,687]},o($VF1,[2,198],{171:688,173:689,174:[1,690]}),o($VF1,[2,207],{178:691,180:692,174:[1,693]}),o($VF1,[2,215],{182:694,183:695,174:$Vh4}),{174:$Vh4,183:697},o($Vi4,$Vq),o($Vi4,$Vr),o($Vi4,$Vj4),o($Vi4,$Vk4),o($Vi4,$Vl4),o($Vi4,$Vt),o($Vi4,$Vu),o($Vi4,$Vm4),o($Vi4,$Vn4,{198:698,199:699,107:[1,700]}),o($Vi4,$Vo4),o($Vi4,$Vp4),o($Vi4,$Vq4),o($Vi4,$Vr4),o($Vi4,$Vs4),o($Vi4,$Vt4),o($Vi4,$Vu4),o($Vi4,$Vv4),o($Vi4,$Vw4),o($Vx4,$Vg3),o($Vx4,$Vh3),o($Vx4,$Vi3),o($Vx4,$Vj3),{19:[1,703],21:[1,706],22:702,83:701,210:704,211:[1,705]},o($V81,$Va2,{48:707,49:[1,708]}),o($Va1,$Vb2),o($Va1,$Vd1,{61:709,63:710,68:711,40:712,74:713,114:717,75:[1,714],76:[1,715],77:[1,716],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{64:718,60:719,69:720,88:721,90:722,91:726,95:727,92:[1,723],93:[1,724],94:[1,725],97:$Vy4,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:729,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Vm1,$Vn1,{78:730}),o($Vo1,$Vn1,{78:731}),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Vq1,$Vr1,{89:732}),o($Vm1,$Vs1,{95:452,91:733,97:$Vq3,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:734}),o($Vt1,$Vu1,{82:735}),o($Vt1,$Vu1,{82:736}),o($Vo1,$Vv1,{101:456,103:457,87:737,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vp1,$Vn1,{78:738}),o($Ve2,$V11),o($Ve2,$V21),{19:[1,742],21:[1,746],22:740,32:739,196:741,210:743,211:[1,745],212:[1,744]},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:747}),o($VH1,$VI1),{115:[1,748],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,749]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,751],102:750,104:[1,752],105:[1,753],106:754,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,755]},o($Vt1,$Vt),o($Vt1,$Vu),o($Va1,$Vb2),o($Va1,$Vd1,{61:756,63:757,68:758,40:759,74:760,114:764,75:[1,761],76:[1,762],77:[1,763],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{64:765,60:766,69:767,88:768,90:769,91:773,95:774,92:[1,770],93:[1,771],94:[1,772],97:$Vz4,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:776,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Vm1,$Vn1,{78:777}),o($Vo1,$Vn1,{78:778}),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Vq1,$Vr1,{89:779}),o($Vm1,$Vs1,{95:488,91:780,97:$Vs3,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:781}),o($Vt1,$Vu1,{82:782}),o($Vt1,$Vu1,{82:783}),o($Vo1,$Vv1,{101:492,103:493,87:784,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vp1,$Vn1,{78:785}),o($Ve2,$V11),o($Ve2,$V21),{19:[1,789],21:[1,793],22:787,32:786,196:788,210:790,211:[1,792],212:[1,791]},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:794}),o($VH1,$VI1),{115:[1,795],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,796]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,798],102:797,104:[1,799],105:[1,800],106:801,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,802]},o($Vt1,$Vt),o($Vt1,$Vu),o($V9,$V92,{46:803,47:$V72}),o($V81,$Va2,{48:804,49:$V82}),o($Va1,$Vb2),o($Va1,$Vd1,{63:512,68:513,40:514,74:515,114:516,61:805,75:$V42,76:$V52,77:$V62,115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{60:518,69:519,88:520,90:521,91:525,95:526,64:806,92:$Vt3,93:$Vu3,94:$Vv3,97:$Vw3,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:807,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Ve2,$V11),o($Ve2,$V21),{19:[1,811],21:[1,815],22:809,32:808,196:810,210:812,211:[1,814],212:[1,813]},o($V9,$Vh2),o($V9,$Vi2),o($Va1,$Vj2),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:816}),{115:[1,817],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$Vl2),o($Va1,$Vm2),o($Vo1,$Vn1,{78:818}),o($Vn2,$Vr1,{89:819}),o($Vo1,$Vs1,{95:526,91:820,97:$Vw3,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,821]},o($Vn2,$VJ1),{66:[1,822]},o($Vu2,$Vv2,{79:823,80:824,188:825,186:[1,826]}),o($Vw2,$Vv2,{79:827,80:828,188:829,186:$VA4}),o($Vy2,$Vv2,{79:831,80:832,188:833,186:[1,834]}),o($Vm1,$Vz2,{95:259,91:835,97:$V12,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:836,91:837,87:838,95:839,101:841,103:842,97:$VB4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:836,91:837,87:838,95:839,101:841,103:842,97:$VB4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:836,91:837,87:838,95:839,101:841,103:842,97:$VB4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:843,117:$VI2,144:$VJ2,185:$VK2}),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,844],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,845]},o($VH1,$Vk3),o($V9,$Vl3),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($V81,$Vm3),o($V9,$Vn3,{46:803,47:$V72}),o($Va1,$Vo3),o($V81,$Vp3),o($Va1,$Vb1,{54:846}),o($VC,$VD,{58:847,60:848,62:849,63:850,69:853,71:854,68:855,40:856,88:857,90:858,83:860,84:861,85:862,74:863,91:870,22:871,87:873,114:874,95:875,210:878,101:879,103:880,19:[1,877],21:[1,882],65:[1,851],67:[1,852],75:[1,864],76:[1,865],77:[1,866],81:[1,859],92:[1,867],93:[1,868],94:[1,869],97:$VC4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,872],211:[1,881]}),o($Va1,$Vr3),o($VC,$VD,{58:883,60:884,62:885,63:886,69:889,71:890,68:891,40:892,88:893,90:894,83:896,84:897,85:898,74:899,91:906,22:907,87:909,114:910,95:911,210:914,101:915,103:916,19:[1,913],21:[1,918],65:[1,887],67:[1,888],75:[1,900],76:[1,901],77:[1,902],81:[1,895],92:[1,903],93:[1,904],94:[1,905],97:$VD4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,908],211:[1,917]}),o($Va1,$VE4),o($Va1,$VU3),{117:[1,919]},o($Va1,$VM3),o($Vn2,$VV3),{66:$Vh2},{66:$Vi2},o($VC3,$Vj2),o($VC3,$Vk2),o($VC3,$Vf2),o($VC3,$Vg2),o($VF3,$Vn1,{78:920}),{115:[1,921],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VC3,$Vl2),o($VC3,$Vm2),o($VF3,$Vn1,{78:922}),o($VF4,$Vr1,{89:923}),o($VF3,$Vs1,{95:586,91:924,97:$VD3,98:$VL,99:$VM,100:$VN}),o($VF4,$VA1),o($VF4,$VB1),o($VF4,$VC1),o($VF4,$VD1),{96:[1,925]},o($VF4,$VJ1),{66:[1,926]},o($VG4,$Vv2,{79:927,80:928,188:929,186:[1,930]}),o($VH4,$Vv2,{79:931,80:932,188:933,186:$VI4}),o($VJ4,$Vv2,{79:935,80:936,188:937,186:[1,938]}),o($VE3,$Vz2,{95:321,91:939,97:$Vo2,98:$VL,99:$VM,100:$VN}),o($VH3,$VA2),o($VF3,$VB2,{86:940,91:941,87:942,95:943,101:945,103:946,97:$VK4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VD2,{86:940,91:941,87:942,95:943,101:945,103:946,97:$VK4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VE2,{86:940,91:941,87:942,95:943,101:945,103:946,97:$VK4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VJ3,$VF2),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:947,117:$VI2,144:$VJ2,185:$VK2}),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,948],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VH3,$Vb3),o($VJ3,$Vc3),o($VJ3,$Vd3),o($VJ3,$Ve3),o($VJ3,$Vf3),{107:[1,949]},o($VJ3,$Vk3),{66:$Vl3},o($VC3,$VT1),o($VC3,$Vl),o($VC3,$Vm),o($VC3,$Vq),o($VC3,$Vr),o($VC3,$Vs),o($VC3,$Vt),o($VC3,$Vu),o($VK3,$Vm3),{46:950,47:$Vs2,66:$Vn3},o($VC3,$Vo3),o($VK3,$Vp3),o($VC3,$Vb1,{54:951}),o($VC,$VD,{58:952,60:953,62:954,63:955,69:958,71:959,68:960,40:961,88:962,90:963,83:965,84:966,85:967,74:968,91:975,22:976,87:978,114:979,95:980,210:983,101:984,103:985,19:[1,982],21:[1,987],65:[1,956],67:[1,957],75:[1,969],76:[1,970],77:[1,971],81:[1,964],92:[1,972],93:[1,973],94:[1,974],97:$VL4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,977],211:[1,986]}),o($VC3,$Vr3),o($VC,$VD,{58:988,60:989,62:990,63:991,69:994,71:995,68:996,40:997,88:998,90:999,83:1001,84:1002,85:1003,74:1004,91:1011,22:1012,87:1014,114:1015,95:1016,210:1019,101:1020,103:1021,19:[1,1018],21:[1,1023],65:[1,992],67:[1,993],75:[1,1005],76:[1,1006],77:[1,1007],81:[1,1000],92:[1,1008],93:[1,1009],94:[1,1010],97:$VM4,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,1013],211:[1,1022]}),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:1024,210:52,211:$Vp},{19:$VO4,21:$VP4,22:1026,96:[1,1037],104:[1,1038],105:[1,1039],106:1036,177:1027,187:1025,192:1030,193:1031,194:1032,197:1035,200:[1,1040],201:[1,1041],202:[1,1046],203:[1,1047],204:[1,1048],205:[1,1049],206:[1,1042],207:[1,1043],208:[1,1044],209:[1,1045],210:1029,211:$VQ4},o($VR4,$Ve4),o($VR4,$Vf4),o($VR4,$Vq),o($VR4,$Vr),o($VR4,$Vt),o($VR4,$Vu),o($Vw2,$VN4),{19:$Vn,21:$Vo,22:1050,210:52,211:$Vp},{19:$VS4,21:$VT4,22:1052,96:[1,1063],104:[1,1064],105:[1,1065],106:1062,177:1053,187:1051,192:1056,193:1057,194:1058,197:1061,200:[1,1066],201:[1,1067],202:[1,1072],203:[1,1073],204:[1,1074],205:[1,1075],206:[1,1068],207:[1,1069],208:[1,1070],209:[1,1071],210:1055,211:$VU4},o($Vy2,$VN4),{19:$Vn,21:$Vo,22:1076,210:52,211:$Vp},{19:$VV4,21:$VW4,22:1078,96:[1,1089],104:[1,1090],105:[1,1091],106:1088,177:1079,187:1077,192:1082,193:1083,194:1084,197:1087,200:[1,1092],201:[1,1093],202:[1,1098],203:[1,1099],204:[1,1100],205:[1,1101],206:[1,1094],207:[1,1095],208:[1,1096],209:[1,1097],210:1081,211:$VX4},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,1102]},o($Vt1,$Vk3),o($Vp1,$VY4),{117:$VZ4,130:1103,131:$V$3},o($V14,$V_4),o($VG2,$VH2,{132:365,133:366,134:367,140:368,142:369,143:370,127:1104,144:$VJ2,185:$VK2}),o($V14,$V$4),o($V14,$V44,{135:1105,139:1106,136:$V54,137:$V64}),o($VG2,$VH2,{140:368,142:369,143:370,134:1107,117:$V05,131:$V05,144:$VJ2,185:$VK2}),o($VG2,$VH2,{140:368,142:369,143:370,134:1108,117:$V15,131:$V15,144:$VJ2,185:$VK2}),o($Va4,$V25),o($Va4,$V35),o($Va4,$V45),o($Va4,$V55),{19:$V65,21:$V75,22:1110,125:1109,195:$V85,210:1113,211:$V95},o($VG2,$VH2,{143:370,122:1116,126:1117,127:1118,128:1119,132:1120,133:1121,134:1122,140:1123,142:1124,144:$VJ2,185:$Va5}),o($V74,[2,172]),o($V74,[2,177]),o($Va4,$Vb5),o($Va4,$Vc5),o($Va4,$Vd5),o($Va4,$Vq),o($Va4,$Vr),o($Va4,$Vs),o($Va4,$Vt),o($Va4,$Vu),o($VG2,[2,162]),o($VG2,$Vc5),o($VG2,$Vd5),o($VG2,$Vq),o($VG2,$Vr),o($VG2,$Vs),o($VG2,$Vt),o($VG2,$Vu),o($Vc4,[2,265]),o($Vd4,[2,141]),o($VF1,[2,184]),o($VF1,[2,191],{166:1126,175:$Ve5}),o($VF1,[2,192],{168:1128,175:$Vf5}),o($VF1,[2,193],{170:1130,175:$Vg5}),o($Vh5,[2,185]),o($Vh5,[2,187]),o($Vh5,[2,189]),{19:$Vi5,21:$Vj5,22:1132,96:$Vk5,104:$Vl5,105:$Vm5,106:1143,177:1133,181:$Vn5,192:1137,193:1138,194:1139,197:1142,200:$Vo5,201:$Vp5,202:$Vq5,203:$Vr5,204:$Vs5,205:$Vt5,206:$Vu5,207:$Vv5,208:$Vw5,209:$Vx5,210:1136,211:$Vy5},o($VF1,[2,194]),o($VF1,[2,199]),o($Vh5,[2,195],{172:1157}),o($VF1,[2,203]),o($VF1,[2,208]),o($Vh5,[2,204],{179:1158}),o($VF1,[2,210]),o($VF1,[2,216]),o($Vh5,[2,212],{184:1159}),o($VF1,[2,211]),o($Vi4,$Vz5),o($Vi4,$VA5),{19:$VU2,21:$VV2,22:1161,83:1160,210:401,211:$Va3},o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Va1,$Vy3),o($Vx,$Vg,{50:1162,36:1163,39:$Vy}),o($Va1,$Vz3),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:1164}),o($Va1,$V11),o($Va1,$V21),{19:[1,1168],21:[1,1172],22:1166,32:1165,196:1167,210:1169,211:[1,1171],212:[1,1170]},{115:[1,1173],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$VA3),o($Va1,$Vm2),o($Vo1,$Vn1,{78:1174}),o($Vn2,$Vr1,{89:1175}),o($Vo1,$Vs1,{95:727,91:1176,97:$Vy4,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,1177]},o($Vn2,$VJ1),{66:[1,1178]},o($Vu2,$Vv2,{79:1179,80:1180,188:1181,186:[1,1182]}),o($Vw2,$Vv2,{79:1183,80:1184,188:1185,186:$VC5}),o($Vm1,$Vz2,{95:452,91:1187,97:$Vq3,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:1188,91:1189,87:1190,95:1191,101:1193,103:1194,97:$VD5,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:1188,91:1189,87:1190,95:1191,101:1193,103:1194,97:$VD5,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:1188,91:1189,87:1190,95:1191,101:1193,103:1194,97:$VD5,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($Vy2,$Vv2,{79:1195,80:1196,188:1197,186:[1,1198]}),o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,1199],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1200,117:$VI2,144:$VJ2,185:$VK2}),o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,1201]},o($VH1,$Vk3),o($Va1,$Vz3),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:1202}),o($Va1,$V11),o($Va1,$V21),{19:[1,1206],21:[1,1210],22:1204,32:1203,196:1205,210:1207,211:[1,1209],212:[1,1208]},{115:[1,1211],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$VA3),o($Va1,$Vm2),o($Vo1,$Vn1,{78:1212}),o($Vn2,$Vr1,{89:1213}),o($Vo1,$Vs1,{95:774,91:1214,97:$Vz4,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,1215]},o($Vn2,$VJ1),{66:[1,1216]},o($Vu2,$Vv2,{79:1217,80:1218,188:1219,186:[1,1220]}),o($Vw2,$Vv2,{79:1221,80:1222,188:1223,186:$VE5}),o($Vm1,$Vz2,{95:488,91:1225,97:$Vs3,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:1226,91:1227,87:1228,95:1229,101:1231,103:1232,97:$VF5,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:1226,91:1227,87:1228,95:1229,101:1231,103:1232,97:$VF5,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:1226,91:1227,87:1228,95:1229,101:1231,103:1232,97:$VF5,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($Vy2,$Vv2,{79:1233,80:1234,188:1235,186:[1,1236]}),o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,1237],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1238,117:$VI2,144:$VJ2,185:$VK2}),o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,1239]},o($VH1,$Vk3),o($V81,$Vx3),o($Va1,$Vy3),o($Va1,$Vz3),o($Va1,$VA3),{66:[1,1240]},o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),o($Vw2,$Vv2,{80:828,188:829,79:1241,186:$VA4}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1242,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:828,188:829,79:1243,186:$VA4}),o($Vo1,$Vz2,{95:526,91:1244,97:$Vw3,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VB3),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:1245,189:[1,1246]}),{19:$VP3,21:$VQ3,22:627,125:1247,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:1248,189:[1,1249]}),{19:$VP3,21:$VQ3,22:627,125:1250,195:$VR3,210:630,211:$VS3},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:1251,189:[1,1252]}),{19:$VP3,21:$VQ3,22:627,125:1253,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,1254]},o($Vt1,$VJ1),{96:[1,1256],102:1255,104:[1,1257],105:[1,1258],106:1259,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1260]},{117:[1,1261]},o($Vt1,$Vg4),{19:[1,1264],21:[1,1267],22:1263,83:1262,210:1265,211:[1,1266]},o($V81,$Va2,{48:1268,49:[1,1269]}),o($Va1,$Vb2),o($Va1,$Vd1,{61:1270,63:1271,68:1272,40:1273,74:1274,114:1278,75:[1,1275],76:[1,1276],77:[1,1277],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{64:1279,60:1280,69:1281,88:1282,90:1283,91:1287,95:1288,92:[1,1284],93:[1,1285],94:[1,1286],97:$VG5,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:1290,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Vm1,$Vn1,{78:1291}),o($Vo1,$Vn1,{78:1292}),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Vq1,$Vr1,{89:1293}),o($Vm1,$Vs1,{95:875,91:1294,97:$VC4,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:1295}),o($Vt1,$Vu1,{82:1296}),o($Vt1,$Vu1,{82:1297}),o($Vo1,$Vv1,{101:879,103:880,87:1298,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vp1,$Vn1,{78:1299}),o($Ve2,$V11),o($Ve2,$V21),{19:[1,1303],21:[1,1307],22:1301,32:1300,196:1302,210:1304,211:[1,1306],212:[1,1305]},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:1308}),o($VH1,$VI1),{115:[1,1309],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,1310]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,1312],102:1311,104:[1,1313],105:[1,1314],106:1315,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1316]},o($Vt1,$Vt),o($Vt1,$Vu),o($Va1,$Vb2),o($Va1,$Vd1,{61:1317,63:1318,68:1319,40:1320,74:1321,114:1325,75:[1,1322],76:[1,1323],77:[1,1324],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{64:1326,60:1327,69:1328,88:1329,90:1330,91:1334,95:1335,92:[1,1331],93:[1,1332],94:[1,1333],97:$VH5,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:1337,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Vm1,$Vn1,{78:1338}),o($Vo1,$Vn1,{78:1339}),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Vq1,$Vr1,{89:1340}),o($Vm1,$Vs1,{95:911,91:1341,97:$VD4,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:1342}),o($Vt1,$Vu1,{82:1343}),o($Vt1,$Vu1,{82:1344}),o($Vo1,$Vv1,{101:915,103:916,87:1345,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vp1,$Vn1,{78:1346}),o($Ve2,$V11),o($Ve2,$V21),{19:[1,1350],21:[1,1354],22:1348,32:1347,196:1349,210:1351,211:[1,1353],212:[1,1352]},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:1355}),o($VH1,$VI1),{115:[1,1356],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,1357]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,1359],102:1358,104:[1,1360],105:[1,1361],106:1362,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1363]},o($Vt1,$Vt),o($Vt1,$Vu),o($Vo1,$VY4),o($VH4,$Vv2,{80:932,188:933,79:1364,186:$VI4}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1365,117:$VI2,144:$VJ2,185:$VK2}),o($VH4,$Vv2,{80:932,188:933,79:1366,186:$VI4}),o($VF3,$Vz2,{95:586,91:1367,97:$VD3,98:$VL,99:$VM,100:$VN}),o($VF4,$VA2),o($VF4,$Vb3),o($VC3,$VB3),o($VI5,$VM3),o($VE3,$VN3),o($VI5,$VO3,{31:1368,189:[1,1369]}),{19:$VP3,21:$VQ3,22:627,125:1370,195:$VR3,210:630,211:$VS3},o($VC3,$VT3),o($VF3,$VN3),o($VC3,$VO3,{31:1371,189:[1,1372]}),{19:$VP3,21:$VQ3,22:627,125:1373,195:$VR3,210:630,211:$VS3},o($VJ5,$VU3),o($VG3,$VN3),o($VJ5,$VO3,{31:1374,189:[1,1375]}),{19:$VP3,21:$VQ3,22:627,125:1376,195:$VR3,210:630,211:$VS3},o($VH3,$VV3),o($VI3,$VW3),o($VI3,$VX3),o($VI3,$VY3),{96:[1,1377]},o($VI3,$VJ1),{96:[1,1379],102:1378,104:[1,1380],105:[1,1381],106:1382,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1383]},{117:[1,1384]},o($VI3,$Vg4),{19:[1,1387],21:[1,1390],22:1386,83:1385,210:1388,211:[1,1389]},o($VK3,$Vx3),o($VK3,$Va2,{48:1391,49:[1,1392]}),o($VC3,$Vb2),o($VC,$VD,{61:1393,63:1394,68:1395,40:1396,74:1397,114:1401,47:$Vd1,49:$Vd1,66:$Vd1,75:[1,1398],76:[1,1399],77:[1,1400]}),o($VC3,$Vc2),o($VC3,$Vf1,{64:1402,60:1403,69:1404,88:1405,90:1406,91:1410,95:1411,92:[1,1407],93:[1,1408],94:[1,1409],97:$VK5,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:1413,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VC3,$Vd2),o($VE3,$Vn1,{78:1414}),o($VF3,$Vn1,{78:1415}),o($VJ5,$Vf2),o($VJ5,$Vg2),o($VH3,$Vr1,{89:1416}),o($VE3,$Vs1,{95:980,91:1417,97:$VL4,98:$VL,99:$VM,100:$VN}),o($VI3,$Vu1,{82:1418}),o($VI3,$Vu1,{82:1419}),o($VI3,$Vu1,{82:1420}),o($VF3,$Vv1,{101:984,103:985,87:1421,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VG3,$Vn1,{78:1422}),o($VJ5,$V11),o($VJ5,$V21),{19:[1,1426],21:[1,1430],22:1424,32:1423,196:1425,210:1427,211:[1,1429],212:[1,1428]},o($VH3,$VA1),o($VH3,$VB1),o($VH3,$VC1),o($VH3,$VD1),o($VI3,$VE1),o($VF1,$VG1,{158:1431}),o($VJ3,$VI1),{115:[1,1432],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,1433]},o($VH3,$VJ1),o($VI3,$Vq),o($VI3,$Vr),{96:[1,1435],102:1434,104:[1,1436],105:[1,1437],106:1438,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1439]},o($VI3,$Vt),o($VI3,$Vu),o($VC3,$Vb2),o($VC,$VD,{61:1440,63:1441,68:1442,40:1443,74:1444,114:1448,47:$Vd1,49:$Vd1,66:$Vd1,75:[1,1445],76:[1,1446],77:[1,1447]}),o($VC3,$Vc2),o($VC3,$Vf1,{64:1449,60:1450,69:1451,88:1452,90:1453,91:1457,95:1458,92:[1,1454],93:[1,1455],94:[1,1456],97:$VL5,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:1460,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VC3,$Vd2),o($VE3,$Vn1,{78:1461}),o($VF3,$Vn1,{78:1462}),o($VJ5,$Vf2),o($VJ5,$Vg2),o($VH3,$Vr1,{89:1463}),o($VE3,$Vs1,{95:1016,91:1464,97:$VM4,98:$VL,99:$VM,100:$VN}),o($VI3,$Vu1,{82:1465}),o($VI3,$Vu1,{82:1466}),o($VI3,$Vu1,{82:1467}),o($VF3,$Vv1,{101:1020,103:1021,87:1468,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VG3,$Vn1,{78:1469}),o($VJ5,$V11),o($VJ5,$V21),{19:[1,1473],21:[1,1477],22:1471,32:1470,196:1472,210:1474,211:[1,1476],212:[1,1475]},o($VH3,$VA1),o($VH3,$VB1),o($VH3,$VC1),o($VH3,$VD1),o($VI3,$VE1),o($VF1,$VG1,{158:1478}),o($VJ3,$VI1),{115:[1,1479],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,1480]},o($VH3,$VJ1),o($VI3,$Vq),o($VI3,$Vr),{96:[1,1482],102:1481,104:[1,1483],105:[1,1484],106:1485,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1486]},o($VI3,$Vt),o($VI3,$Vu),{189:[1,1489],190:1487,191:[1,1488]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:1490,199:1491,107:[1,1492]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,1495],190:1493,191:[1,1494]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:1496,199:1497,107:[1,1498]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{189:[1,1501],190:1499,191:[1,1500]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:1502,199:1503,107:[1,1504]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),{19:[1,1507],21:[1,1510],22:1506,83:1505,210:1508,211:[1,1509]},o($V14,$VS5),o($V14,$VT5),o($V14,$VU5),o($Va4,$VV5),o($Va4,$VW5),o($Va4,$VX5),o($Vx,$Vg,{42:1511,43:1512,51:1513,55:1514,36:1515,39:$Vy}),o($VY5,$Ve4),o($VY5,$Vf4),o($VY5,$Vq),o($VY5,$Vr),o($VY5,$Vt),o($VY5,$Vu),{66:[1,1516]},{66:$VZ3},{66:$V_3,129:1517,130:1518,131:$VZ5},{66:$V04},o($V_5,$V24),o($V_5,$V34),o($V_5,$V44,{135:1520,138:1521,139:1524,136:$V$5,137:$V06}),o($V74,$V84,{151:660,141:1525,146:1526,147:1527,150:1528,65:[1,1529],156:$V94}),o($V16,$Vb4),{19:[1,1533],21:[1,1537],22:1531,145:1530,196:1532,210:1534,211:[1,1536],212:[1,1535]},o($Vh5,[2,186]),{19:$Vi5,21:$Vj5,22:1132,210:1136,211:$Vy5},o($Vh5,[2,188]),{96:$Vk5,104:$Vl5,105:$Vm5,106:1143,177:1133,192:1137,193:1138,194:1139,197:1142,200:$Vo5,201:$Vp5,202:$Vq5,203:$Vr5,204:$Vs5,205:$Vt5,206:$Vu5,207:$Vv5,208:$Vw5,209:$Vx5},o($Vh5,[2,190]),{181:$Vn5},o($Vh5,$V26,{176:1538,174:$V36}),o($Vh5,$V26,{176:1540,174:$V36}),o($Vh5,$V26,{176:1541,174:$V36}),o($V46,$Vq),o($V46,$Vr),o($V46,$Vj4),o($V46,$Vk4),o($V46,$Vl4),o($V46,$Vt),o($V46,$Vu),o($V46,$Vm4),o($V46,$Vn4,{198:1542,199:1543,107:[1,1544]}),o($V46,$Vo4),o($V46,$Vp4),o($V46,$Vq4),o($V46,$Vr4),o($V46,$Vs4),o($V46,$Vt4),o($V46,$Vu4),o($V46,$Vv4),o($V46,$Vw4),o($V56,$Vg3),o($V56,$Vh3),o($V56,$Vi3),o($V56,$Vj3),o($VF1,[2,197],{166:1545,175:$Ve5}),o($VF1,[2,206],{168:1546,175:$Vf5}),o($VF1,[2,214],{170:1547,175:$Vg5}),o($Vi4,$V66),o($Vi4,$VE1),o($Va1,$Vr3),o($VC,$VD,{58:1548,60:1549,62:1550,63:1551,69:1554,71:1555,68:1556,40:1557,88:1558,90:1559,83:1561,84:1562,85:1563,74:1564,91:1571,22:1572,87:1574,114:1575,95:1576,210:1579,101:1580,103:1581,19:[1,1578],21:[1,1583],65:[1,1552],67:[1,1553],75:[1,1565],76:[1,1566],77:[1,1567],81:[1,1560],92:[1,1568],93:[1,1569],94:[1,1570],97:$V76,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,1573],211:[1,1582]}),o($Vw2,$Vv2,{80:1184,188:1185,79:1584,186:$VC5}),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1585,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:1184,188:1185,79:1586,186:$VC5}),o($Vo1,$Vz2,{95:727,91:1587,97:$Vy4,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VE4),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:1588,189:[1,1589]}),{19:$VP3,21:$VQ3,22:627,125:1590,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:1591,189:[1,1592]}),{19:$VP3,21:$VQ3,22:627,125:1593,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,1594]},o($Vt1,$VJ1),{96:[1,1596],102:1595,104:[1,1597],105:[1,1598],106:1599,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1600]},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:1601,189:[1,1602]}),{19:$VP3,21:$VQ3,22:627,125:1603,195:$VR3,210:630,211:$VS3},o($Vt1,$Vg4),{117:[1,1604]},{19:[1,1607],21:[1,1610],22:1606,83:1605,210:1608,211:[1,1609]},o($Vw2,$Vv2,{80:1222,188:1223,79:1611,186:$VE5}),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1612,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:1222,188:1223,79:1613,186:$VE5}),o($Vo1,$Vz2,{95:774,91:1614,97:$Vz4,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VE4),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:1615,189:[1,1616]}),{19:$VP3,21:$VQ3,22:627,125:1617,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:1618,189:[1,1619]}),{19:$VP3,21:$VQ3,22:627,125:1620,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,1621]},o($Vt1,$VJ1),{96:[1,1623],102:1622,104:[1,1624],105:[1,1625],106:1626,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,1627]},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:1628,189:[1,1629]}),{19:$VP3,21:$VQ3,22:627,125:1630,195:$VR3,210:630,211:$VS3},o($Vt1,$Vg4),{117:[1,1631]},{19:[1,1634],21:[1,1637],22:1633,83:1632,210:1635,211:[1,1636]},o($Va1,$VE4),o($Va1,$VU3),{117:[1,1638]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:1639,210:52,211:$Vp},{19:$V86,21:$V96,22:1641,96:[1,1652],104:[1,1653],105:[1,1654],106:1651,177:1642,187:1640,192:1645,193:1646,194:1647,197:1650,200:[1,1655],201:[1,1656],202:[1,1661],203:[1,1662],204:[1,1663],205:[1,1664],206:[1,1657],207:[1,1658],208:[1,1659],209:[1,1660],210:1644,211:$Va6},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:1665,210:52,211:$Vp},{19:$Vb6,21:$Vc6,22:1667,96:[1,1678],104:[1,1679],105:[1,1680],106:1677,177:1668,187:1666,192:1671,193:1672,194:1673,197:1676,200:[1,1681],201:[1,1682],202:[1,1687],203:[1,1688],204:[1,1689],205:[1,1690],206:[1,1683],207:[1,1684],208:[1,1685],209:[1,1686],210:1670,211:$Vd6},o($Vy2,$VN4),{19:$Vn,21:$Vo,22:1691,210:52,211:$Vp},{19:$Ve6,21:$Vf6,22:1693,96:[1,1704],104:[1,1705],105:[1,1706],106:1703,177:1694,187:1692,192:1697,193:1698,194:1699,197:1702,200:[1,1707],201:[1,1708],202:[1,1713],203:[1,1714],204:[1,1715],205:[1,1716],206:[1,1709],207:[1,1710],208:[1,1711],209:[1,1712],210:1696,211:$Vg6},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,1717]},o($Vt1,$Vk3),o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Va1,$Vy3),o($Vx,$Vg,{50:1718,36:1719,39:$Vy}),o($Va1,$Vz3),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:1720}),o($Va1,$V11),o($Va1,$V21),{19:[1,1724],21:[1,1728],22:1722,32:1721,196:1723,210:1725,211:[1,1727],212:[1,1726]},{115:[1,1729],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$VA3),o($Va1,$Vm2),o($Vo1,$Vn1,{78:1730}),o($Vn2,$Vr1,{89:1731}),o($Vo1,$Vs1,{95:1288,91:1732,97:$VG5,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,1733]},o($Vn2,$VJ1),{66:[1,1734]},o($Vu2,$Vv2,{79:1735,80:1736,188:1737,186:[1,1738]}),o($Vw2,$Vv2,{79:1739,80:1740,188:1741,186:$Vh6}),o($Vm1,$Vz2,{95:875,91:1743,97:$VC4,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:1744,91:1745,87:1746,95:1747,101:1749,103:1750,97:$Vi6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:1744,91:1745,87:1746,95:1747,101:1749,103:1750,97:$Vi6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:1744,91:1745,87:1746,95:1747,101:1749,103:1750,97:$Vi6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($Vy2,$Vv2,{79:1751,80:1752,188:1753,186:[1,1754]}),o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,1755],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1756,117:$VI2,144:$VJ2,185:$VK2}),o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,1757]},o($VH1,$Vk3),o($Va1,$Vz3),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:1758}),o($Va1,$V11),o($Va1,$V21),{19:[1,1762],21:[1,1766],22:1760,32:1759,196:1761,210:1763,211:[1,1765],212:[1,1764]},{115:[1,1767],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$VA3),o($Va1,$Vm2),o($Vo1,$Vn1,{78:1768}),o($Vn2,$Vr1,{89:1769}),o($Vo1,$Vs1,{95:1335,91:1770,97:$VH5,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,1771]},o($Vn2,$VJ1),{66:[1,1772]},o($Vu2,$Vv2,{79:1773,80:1774,188:1775,186:[1,1776]}),o($Vw2,$Vv2,{79:1777,80:1778,188:1779,186:$Vj6}),o($Vm1,$Vz2,{95:911,91:1781,97:$VD4,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:1782,91:1783,87:1784,95:1785,101:1787,103:1788,97:$Vk6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:1782,91:1783,87:1784,95:1785,101:1787,103:1788,97:$Vk6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:1782,91:1783,87:1784,95:1785,101:1787,103:1788,97:$Vk6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($Vy2,$Vv2,{79:1789,80:1790,188:1791,186:[1,1792]}),o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,1793],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1794,117:$VI2,144:$VJ2,185:$VK2}),o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,1795]},o($VH1,$Vk3),o($VC3,$VU3),{117:[1,1796]},o($VC3,$VM3),o($VF4,$VV3),o($VG4,$VN4),{19:$Vn,21:$Vo,22:1797,210:52,211:$Vp},{19:$Vl6,21:$Vm6,22:1799,96:[1,1810],104:[1,1811],105:[1,1812],106:1809,177:1800,187:1798,192:1803,193:1804,194:1805,197:1808,200:[1,1813],201:[1,1814],202:[1,1819],203:[1,1820],204:[1,1821],205:[1,1822],206:[1,1815],207:[1,1816],208:[1,1817],209:[1,1818],210:1802,211:$Vn6},o($VH4,$VN4),{19:$Vn,21:$Vo,22:1823,210:52,211:$Vp},{19:$Vo6,21:$Vp6,22:1825,96:[1,1836],104:[1,1837],105:[1,1838],106:1835,177:1826,187:1824,192:1829,193:1830,194:1831,197:1834,200:[1,1839],201:[1,1840],202:[1,1845],203:[1,1846],204:[1,1847],205:[1,1848],206:[1,1841],207:[1,1842],208:[1,1843],209:[1,1844],210:1828,211:$Vq6},o($VJ4,$VN4),{19:$Vn,21:$Vo,22:1849,210:52,211:$Vp},{19:$Vr6,21:$Vs6,22:1851,96:[1,1862],104:[1,1863],105:[1,1864],106:1861,177:1852,187:1850,192:1855,193:1856,194:1857,197:1860,200:[1,1865],201:[1,1866],202:[1,1871],203:[1,1872],204:[1,1873],205:[1,1874],206:[1,1867],207:[1,1868],208:[1,1869],209:[1,1870],210:1854,211:$Vt6},o($VI3,$Vb3),o($VI3,$Vc3),o($VI3,$Vd3),o($VI3,$Ve3),o($VI3,$Vf3),{107:[1,1875]},o($VI3,$Vk3),o($VG3,$VY4),o($VJ3,$VB5),o($VJ3,$VE1),o($VJ3,$Vq),o($VJ3,$Vr),o($VJ3,$Vt),o($VJ3,$Vu),o($VC3,$Vy3),o($Vx,$Vg,{50:1876,36:1877,39:$Vy}),o($VC3,$Vz3),o($VC3,$Vk2),o($VC3,$Vf2),o($VC3,$Vg2),o($VF3,$Vn1,{78:1878}),o($VC3,$V11),o($VC3,$V21),{19:[1,1882],21:[1,1886],22:1880,32:1879,196:1881,210:1883,211:[1,1885],212:[1,1884]},{115:[1,1887],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VC3,$VA3),o($VC3,$Vm2),o($VF3,$Vn1,{78:1888}),o($VF4,$Vr1,{89:1889}),o($VF3,$Vs1,{95:1411,91:1890,97:$VK5,98:$VL,99:$VM,100:$VN}),o($VF4,$VA1),o($VF4,$VB1),o($VF4,$VC1),o($VF4,$VD1),{96:[1,1891]},o($VF4,$VJ1),{66:[1,1892]},o($VG4,$Vv2,{79:1893,80:1894,188:1895,186:[1,1896]}),o($VH4,$Vv2,{79:1897,80:1898,188:1899,186:$Vu6}),o($VE3,$Vz2,{95:980,91:1901,97:$VL4,98:$VL,99:$VM,100:$VN}),o($VH3,$VA2),o($VF3,$VB2,{86:1902,91:1903,87:1904,95:1905,101:1907,103:1908,97:$Vv6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VD2,{86:1902,91:1903,87:1904,95:1905,101:1907,103:1908,97:$Vv6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VE2,{86:1902,91:1903,87:1904,95:1905,101:1907,103:1908,97:$Vv6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VJ3,$VF2),o($VJ4,$Vv2,{79:1909,80:1910,188:1911,186:[1,1912]}),o($VJ5,$VT1),o($VJ5,$Vl),o($VJ5,$Vm),o($VJ5,$Vq),o($VJ5,$Vr),o($VJ5,$Vs),o($VJ5,$Vt),o($VJ5,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,1913],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1914,117:$VI2,144:$VJ2,185:$VK2}),o($VH3,$Vb3),o($VJ3,$Vc3),o($VJ3,$Vd3),o($VJ3,$Ve3),o($VJ3,$Vf3),{107:[1,1915]},o($VJ3,$Vk3),o($VC3,$Vz3),o($VC3,$Vk2),o($VC3,$Vf2),o($VC3,$Vg2),o($VF3,$Vn1,{78:1916}),o($VC3,$V11),o($VC3,$V21),{19:[1,1920],21:[1,1924],22:1918,32:1917,196:1919,210:1921,211:[1,1923],212:[1,1922]},{115:[1,1925],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VC3,$VA3),o($VC3,$Vm2),o($VF3,$Vn1,{78:1926}),o($VF4,$Vr1,{89:1927}),o($VF3,$Vs1,{95:1458,91:1928,97:$VL5,98:$VL,99:$VM,100:$VN}),o($VF4,$VA1),o($VF4,$VB1),o($VF4,$VC1),o($VF4,$VD1),{96:[1,1929]},o($VF4,$VJ1),{66:[1,1930]},o($VG4,$Vv2,{79:1931,80:1932,188:1933,186:[1,1934]}),o($VH4,$Vv2,{79:1935,80:1936,188:1937,186:$Vw6}),o($VE3,$Vz2,{95:1016,91:1939,97:$VM4,98:$VL,99:$VM,100:$VN}),o($VH3,$VA2),o($VF3,$VB2,{86:1940,91:1941,87:1942,95:1943,101:1945,103:1946,97:$Vx6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VD2,{86:1940,91:1941,87:1942,95:1943,101:1945,103:1946,97:$Vx6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VE2,{86:1940,91:1941,87:1942,95:1943,101:1945,103:1946,97:$Vx6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VJ3,$VF2),o($VJ4,$Vv2,{79:1947,80:1948,188:1949,186:[1,1950]}),o($VJ5,$VT1),o($VJ5,$Vl),o($VJ5,$Vm),o($VJ5,$Vq),o($VJ5,$Vr),o($VJ5,$Vs),o($VJ5,$Vt),o($VJ5,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,1951],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:1952,117:$VI2,144:$VJ2,185:$VK2}),o($VH3,$Vb3),o($VJ3,$Vc3),o($VJ3,$Vd3),o($VJ3,$Ve3),o($VJ3,$Vf3),{107:[1,1953]},o($VJ3,$Vk3),o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$VO4,21:$VP4,22:1955,83:1954,210:1029,211:$VQ4},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$VS4,21:$VT4,22:1957,83:1956,210:1055,211:$VU4},o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$VV4,21:$VW4,22:1959,83:1958,210:1081,211:$VX4},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy6,$Vz6,{148:1960,149:1961,152:$VA6,153:$VB6,154:$VC6,155:$VD6}),o($VE6,$VF6),o($VG6,$VH6,{52:1966}),o($VI6,$VJ6,{56:1967}),o($VC,$VD,{59:1968,69:1969,71:1970,72:1971,88:1974,90:1975,83:1977,84:1978,85:1979,74:1980,40:1981,91:1985,22:1986,87:1988,114:1989,95:1993,210:1996,101:1997,103:1998,19:[1,1995],21:[1,2000],65:[1,1972],67:[1,1973],75:[1,1990],76:[1,1991],77:[1,1992],81:[1,1976],92:[1,1982],93:[1,1983],94:[1,1984],97:$VK6,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,1987],211:[1,1999]}),o($Vy6,$Vz6,{149:1961,148:2001,152:$VA6,153:$VB6,154:$VC6,155:$VD6}),{66:$VZ4,130:2002,131:$VZ5},o($V_5,$V_4),o($VG2,$VH2,{143:370,132:1120,133:1121,134:1122,140:1123,142:1124,127:2003,144:$VJ2,185:$Va5}),o($V_5,$V$4),o($V_5,$V44,{135:2004,139:2005,136:$V$5,137:$V06}),o($VG2,$VH2,{143:370,140:1123,142:1124,134:2006,66:$V05,131:$V05,144:$VJ2,185:$Va5}),o($VG2,$VH2,{143:370,140:1123,142:1124,134:2007,66:$V15,131:$V15,144:$VJ2,185:$Va5}),o($V16,$V25),o($V16,$V35),o($V16,$V45),o($V16,$V55),{19:$V65,21:$V75,22:1110,125:2008,195:$V85,210:1113,211:$V95},o($VG2,$VH2,{143:370,126:1117,127:1118,128:1119,132:1120,133:1121,134:1122,140:1123,142:1124,122:2009,144:$VJ2,185:$Va5}),o($V16,$Vb5),o($V16,$Vc5),o($V16,$Vd5),o($V16,$Vq),o($V16,$Vr),o($V16,$Vs),o($V16,$Vt),o($V16,$Vu),o($Vh5,[2,200]),o($Vh5,[2,202]),o($Vh5,[2,209]),o($Vh5,[2,217]),o($V46,$Vz5),o($V46,$VA5),{19:$Vi5,21:$Vj5,22:2011,83:2010,210:1136,211:$Vy5},o($Vh5,[2,196]),o($Vh5,[2,205]),o($Vh5,[2,213]),o($Va1,$Vb2),o($Va1,$Vd1,{61:2012,63:2013,68:2014,40:2015,74:2016,114:2020,75:[1,2017],76:[1,2018],77:[1,2019],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{64:2021,60:2022,69:2023,88:2024,90:2025,91:2029,95:2030,92:[1,2026],93:[1,2027],94:[1,2028],97:$VL6,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:2032,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Vm1,$Vn1,{78:2033}),o($Vo1,$Vn1,{78:2034}),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Vq1,$Vr1,{89:2035}),o($Vm1,$Vs1,{95:1576,91:2036,97:$V76,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:2037}),o($Vt1,$Vu1,{82:2038}),o($Vt1,$Vu1,{82:2039}),o($Vo1,$Vv1,{101:1580,103:1581,87:2040,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vp1,$Vn1,{78:2041}),o($Ve2,$V11),o($Ve2,$V21),{19:[1,2045],21:[1,2049],22:2043,32:2042,196:2044,210:2046,211:[1,2048],212:[1,2047]},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:2050}),o($VH1,$VI1),{115:[1,2051],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,2052]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,2054],102:2053,104:[1,2055],105:[1,2056],106:2057,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2058]},o($Vt1,$Vt),o($Vt1,$Vu),o($Va1,$VU3),{117:[1,2059]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:2060,210:52,211:$Vp},{19:$VM6,21:$VN6,22:2062,96:[1,2073],104:[1,2074],105:[1,2075],106:2072,177:2063,187:2061,192:2066,193:2067,194:2068,197:2071,200:[1,2076],201:[1,2077],202:[1,2082],203:[1,2083],204:[1,2084],205:[1,2085],206:[1,2078],207:[1,2079],208:[1,2080],209:[1,2081],210:2065,211:$VO6},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:2086,210:52,211:$Vp},{19:$VP6,21:$VQ6,22:2088,96:[1,2099],104:[1,2100],105:[1,2101],106:2098,177:2089,187:2087,192:2092,193:2093,194:2094,197:2097,200:[1,2102],201:[1,2103],202:[1,2108],203:[1,2109],204:[1,2110],205:[1,2111],206:[1,2104],207:[1,2105],208:[1,2106],209:[1,2107],210:2091,211:$VR6},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,2112]},o($Vt1,$Vk3),o($Vy2,$VN4),{19:$Vn,21:$Vo,22:2113,210:52,211:$Vp},{19:$VS6,21:$VT6,22:2115,96:[1,2126],104:[1,2127],105:[1,2128],106:2125,177:2116,187:2114,192:2119,193:2120,194:2121,197:2124,200:[1,2129],201:[1,2130],202:[1,2135],203:[1,2136],204:[1,2137],205:[1,2138],206:[1,2131],207:[1,2132],208:[1,2133],209:[1,2134],210:2118,211:$VU6},o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Va1,$VU3),{117:[1,2139]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:2140,210:52,211:$Vp},{19:$VV6,21:$VW6,22:2142,96:[1,2153],104:[1,2154],105:[1,2155],106:2152,177:2143,187:2141,192:2146,193:2147,194:2148,197:2151,200:[1,2156],201:[1,2157],202:[1,2162],203:[1,2163],204:[1,2164],205:[1,2165],206:[1,2158],207:[1,2159],208:[1,2160],209:[1,2161],210:2145,211:$VX6},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:2166,210:52,211:$Vp},{19:$VY6,21:$VZ6,22:2168,96:[1,2179],104:[1,2180],105:[1,2181],106:2178,177:2169,187:2167,192:2172,193:2173,194:2174,197:2177,200:[1,2182],201:[1,2183],202:[1,2188],203:[1,2189],204:[1,2190],205:[1,2191],206:[1,2184],207:[1,2185],208:[1,2186],209:[1,2187],210:2171,211:$V_6},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,2192]},o($Vt1,$Vk3),o($Vy2,$VN4),{19:$Vn,21:$Vo,22:2193,210:52,211:$Vp},{19:$V$6,21:$V07,22:2195,96:[1,2206],104:[1,2207],105:[1,2208],106:2205,177:2196,187:2194,192:2199,193:2200,194:2201,197:2204,200:[1,2209],201:[1,2210],202:[1,2215],203:[1,2216],204:[1,2217],205:[1,2218],206:[1,2211],207:[1,2212],208:[1,2213],209:[1,2214],210:2198,211:$V17},o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Vo1,$VY4),{189:[1,2221],190:2219,191:[1,2220]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:2222,199:2223,107:[1,2224]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,2227],190:2225,191:[1,2226]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:2228,199:2229,107:[1,2230]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{189:[1,2233],190:2231,191:[1,2232]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:2234,199:2235,107:[1,2236]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),{19:[1,2239],21:[1,2242],22:2238,83:2237,210:2240,211:[1,2241]},o($Va1,$Vr3),o($VC,$VD,{58:2243,60:2244,62:2245,63:2246,69:2249,71:2250,68:2251,40:2252,88:2253,90:2254,83:2256,84:2257,85:2258,74:2259,91:2266,22:2267,87:2269,114:2270,95:2271,210:2274,101:2275,103:2276,19:[1,2273],21:[1,2278],65:[1,2247],67:[1,2248],75:[1,2260],76:[1,2261],77:[1,2262],81:[1,2255],92:[1,2263],93:[1,2264],94:[1,2265],97:$V27,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,2268],211:[1,2277]}),o($Vw2,$Vv2,{80:1740,188:1741,79:2279,186:$Vh6}),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:2280,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:1740,188:1741,79:2281,186:$Vh6}),o($Vo1,$Vz2,{95:1288,91:2282,97:$VG5,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VE4),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:2283,189:[1,2284]}),{19:$VP3,21:$VQ3,22:627,125:2285,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:2286,189:[1,2287]}),{19:$VP3,21:$VQ3,22:627,125:2288,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,2289]},o($Vt1,$VJ1),{96:[1,2291],102:2290,104:[1,2292],105:[1,2293],106:2294,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2295]},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:2296,189:[1,2297]}),{19:$VP3,21:$VQ3,22:627,125:2298,195:$VR3,210:630,211:$VS3},o($Vt1,$Vg4),{117:[1,2299]},{19:[1,2302],21:[1,2305],22:2301,83:2300,210:2303,211:[1,2304]},o($Vw2,$Vv2,{80:1778,188:1779,79:2306,186:$Vj6}),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:2307,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:1778,188:1779,79:2308,186:$Vj6}),o($Vo1,$Vz2,{95:1335,91:2309,97:$VH5,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VE4),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:2310,189:[1,2311]}),{19:$VP3,21:$VQ3,22:627,125:2312,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:2313,189:[1,2314]}),{19:$VP3,21:$VQ3,22:627,125:2315,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,2316]},o($Vt1,$VJ1),{96:[1,2318],102:2317,104:[1,2319],105:[1,2320],106:2321,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2322]},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:2323,189:[1,2324]}),{19:$VP3,21:$VQ3,22:627,125:2325,195:$VR3,210:630,211:$VS3},o($Vt1,$Vg4),{117:[1,2326]},{19:[1,2329],21:[1,2332],22:2328,83:2327,210:2330,211:[1,2331]},o($VF3,$VY4),{189:[1,2335],190:2333,191:[1,2334]},o($VE3,$VM5),o($VE3,$VN5),o($VE3,$VO5),o($VE3,$Vq),o($VE3,$Vr),o($VE3,$Vj4),o($VE3,$Vk4),o($VE3,$Vl4),o($VE3,$Vt),o($VE3,$Vu),o($VE3,$Vm4),o($VE3,$Vn4,{198:2336,199:2337,107:[1,2338]}),o($VE3,$Vo4),o($VE3,$Vp4),o($VE3,$Vq4),o($VE3,$Vr4),o($VE3,$Vs4),o($VE3,$Vt4),o($VE3,$Vu4),o($VE3,$Vv4),o($VE3,$Vw4),o($V37,$Vg3),o($V37,$Vh3),o($V37,$Vi3),o($V37,$Vj3),{189:[1,2341],190:2339,191:[1,2340]},o($VF3,$VM5),o($VF3,$VN5),o($VF3,$VO5),o($VF3,$Vq),o($VF3,$Vr),o($VF3,$Vj4),o($VF3,$Vk4),o($VF3,$Vl4),o($VF3,$Vt),o($VF3,$Vu),o($VF3,$Vm4),o($VF3,$Vn4,{198:2342,199:2343,107:[1,2344]}),o($VF3,$Vo4),o($VF3,$Vp4),o($VF3,$Vq4),o($VF3,$Vr4),o($VF3,$Vs4),o($VF3,$Vt4),o($VF3,$Vu4),o($VF3,$Vv4),o($VF3,$Vw4),o($V47,$Vg3),o($V47,$Vh3),o($V47,$Vi3),o($V47,$Vj3),{189:[1,2347],190:2345,191:[1,2346]},o($VG3,$VM5),o($VG3,$VN5),o($VG3,$VO5),o($VG3,$Vq),o($VG3,$Vr),o($VG3,$Vj4),o($VG3,$Vk4),o($VG3,$Vl4),o($VG3,$Vt),o($VG3,$Vu),o($VG3,$Vm4),o($VG3,$Vn4,{198:2348,199:2349,107:[1,2350]}),o($VG3,$Vo4),o($VG3,$Vp4),o($VG3,$Vq4),o($VG3,$Vr4),o($VG3,$Vs4),o($VG3,$Vt4),o($VG3,$Vu4),o($VG3,$Vv4),o($VG3,$Vw4),o($V57,$Vg3),o($V57,$Vh3),o($V57,$Vi3),o($V57,$Vj3),{19:[1,2353],21:[1,2356],22:2352,83:2351,210:2354,211:[1,2355]},o($VC3,$Vr3),o($VC,$VD,{58:2357,60:2358,62:2359,63:2360,69:2363,71:2364,68:2365,40:2366,88:2367,90:2368,83:2370,84:2371,85:2372,74:2373,91:2380,22:2381,87:2383,114:2384,95:2385,210:2388,101:2389,103:2390,19:[1,2387],21:[1,2392],65:[1,2361],67:[1,2362],75:[1,2374],76:[1,2375],77:[1,2376],81:[1,2369],92:[1,2377],93:[1,2378],94:[1,2379],97:$V67,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,2382],211:[1,2391]}),o($VH4,$Vv2,{80:1898,188:1899,79:2393,186:$Vu6}),o($VC3,$VT1),o($VC3,$Vl),o($VC3,$Vm),o($VC3,$Vq),o($VC3,$Vr),o($VC3,$Vs),o($VC3,$Vt),o($VC3,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:2394,117:$VI2,144:$VJ2,185:$VK2}),o($VH4,$Vv2,{80:1898,188:1899,79:2395,186:$Vu6}),o($VF3,$Vz2,{95:1411,91:2396,97:$VK5,98:$VL,99:$VM,100:$VN}),o($VF4,$VA2),o($VF4,$Vb3),o($VC3,$VE4),o($VI5,$VM3),o($VE3,$VN3),o($VI5,$VO3,{31:2397,189:[1,2398]}),{19:$VP3,21:$VQ3,22:627,125:2399,195:$VR3,210:630,211:$VS3},o($VC3,$VT3),o($VF3,$VN3),o($VC3,$VO3,{31:2400,189:[1,2401]}),{19:$VP3,21:$VQ3,22:627,125:2402,195:$VR3,210:630,211:$VS3},o($VH3,$VV3),o($VI3,$VW3),o($VI3,$VX3),o($VI3,$VY3),{96:[1,2403]},o($VI3,$VJ1),{96:[1,2405],102:2404,104:[1,2406],105:[1,2407],106:2408,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2409]},o($VJ5,$VU3),o($VG3,$VN3),o($VJ5,$VO3,{31:2410,189:[1,2411]}),{19:$VP3,21:$VQ3,22:627,125:2412,195:$VR3,210:630,211:$VS3},o($VI3,$Vg4),{117:[1,2413]},{19:[1,2416],21:[1,2419],22:2415,83:2414,210:2417,211:[1,2418]},o($VH4,$Vv2,{80:1936,188:1937,79:2420,186:$Vw6}),o($VC3,$VT1),o($VC3,$Vl),o($VC3,$Vm),o($VC3,$Vq),o($VC3,$Vr),o($VC3,$Vs),o($VC3,$Vt),o($VC3,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:2421,117:$VI2,144:$VJ2,185:$VK2}),o($VH4,$Vv2,{80:1936,188:1937,79:2422,186:$Vw6}),o($VF3,$Vz2,{95:1458,91:2423,97:$VL5,98:$VL,99:$VM,100:$VN}),o($VF4,$VA2),o($VF4,$Vb3),o($VC3,$VE4),o($VI5,$VM3),o($VE3,$VN3),o($VI5,$VO3,{31:2424,189:[1,2425]}),{19:$VP3,21:$VQ3,22:627,125:2426,195:$VR3,210:630,211:$VS3},o($VC3,$VT3),o($VF3,$VN3),o($VC3,$VO3,{31:2427,189:[1,2428]}),{19:$VP3,21:$VQ3,22:627,125:2429,195:$VR3,210:630,211:$VS3},o($VH3,$VV3),o($VI3,$VW3),o($VI3,$VX3),o($VI3,$VY3),{96:[1,2430]},o($VI3,$VJ1),{96:[1,2432],102:2431,104:[1,2433],105:[1,2434],106:2435,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2436]},o($VJ5,$VU3),o($VG3,$VN3),o($VJ5,$VO3,{31:2437,189:[1,2438]}),{19:$VP3,21:$VQ3,22:627,125:2439,195:$VR3,210:630,211:$VS3},o($VI3,$Vg4),{117:[1,2440]},{19:[1,2443],21:[1,2446],22:2442,83:2441,210:2444,211:[1,2445]},o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($Vy6,$Vn1,{78:2447}),o($Vy6,$V77),o($Vy6,$V87),o($Vy6,$V97),o($Vy6,$Va7),o($Vy6,$Vb7),o($VE6,$Vc7,{53:2448,47:[1,2449]}),o($VG6,$Vd7,{57:2450,49:[1,2451]}),o($VI6,$Ve7),o($VI6,$Vf7,{70:2452,72:2453,74:2454,40:2455,114:2456,75:[1,2457],76:[1,2458],77:[1,2459],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($VI6,$Vg7),o($VI6,$Vh7,{73:2460,69:2461,88:2462,90:2463,91:2467,95:2468,92:[1,2464],93:[1,2465],94:[1,2466],97:$Vi7,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:2470,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VI6,$Vj7),o($Vk7,$Vr1,{89:2471}),o($Vl7,$Vs1,{95:1993,91:2472,97:$VK6,98:$VL,99:$VM,100:$VN}),o($Vm7,$Vu1,{82:2473}),o($Vm7,$Vu1,{82:2474}),o($Vm7,$Vu1,{82:2475}),o($VI6,$Vv1,{101:1997,103:1998,87:2476,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vn7,$Vo7),o($Vn7,$Vp7),o($Vk7,$VA1),o($Vk7,$VB1),o($Vk7,$VC1),o($Vk7,$VD1),o($Vm7,$VE1),o($VF1,$VG1,{158:2477}),o($Vq7,$VI1),{115:[1,2478],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vn7,$V11),o($Vn7,$V21),{19:[1,2482],21:[1,2486],22:2480,32:2479,196:2481,210:2483,211:[1,2485],212:[1,2484]},{96:[1,2487]},o($Vk7,$VJ1),o($Vm7,$Vq),o($Vm7,$Vr),{96:[1,2489],102:2488,104:[1,2490],105:[1,2491],106:2492,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2493]},o($Vm7,$Vt),o($Vm7,$Vu),o($Vy6,$Vn1,{78:2494}),o($V_5,$VS5),o($V_5,$VT5),o($V_5,$VU5),o($V16,$VV5),o($V16,$VW5),o($V16,$VX5),o($Vx,$Vg,{42:2495,43:2496,51:2497,55:2498,36:2499,39:$Vy}),{66:[1,2500]},o($V46,$V66),o($V46,$VE1),o($Va1,$Vz3),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:2501}),o($Va1,$V11),o($Va1,$V21),{19:[1,2505],21:[1,2509],22:2503,32:2502,196:2504,210:2506,211:[1,2508],212:[1,2507]},{115:[1,2510],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$VA3),o($Va1,$Vm2),o($Vo1,$Vn1,{78:2511}),o($Vn2,$Vr1,{89:2512}),o($Vo1,$Vs1,{95:2030,91:2513,97:$VL6,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,2514]},o($Vn2,$VJ1),{66:[1,2515]},o($Vu2,$Vv2,{79:2516,80:2517,188:2518,186:[1,2519]}),o($Vw2,$Vv2,{79:2520,80:2521,188:2522,186:$Vr7}),o($Vm1,$Vz2,{95:1576,91:2524,97:$V76,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:2525,91:2526,87:2527,95:2528,101:2530,103:2531,97:$Vs7,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:2525,91:2526,87:2527,95:2528,101:2530,103:2531,97:$Vs7,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:2525,91:2526,87:2527,95:2528,101:2530,103:2531,97:$Vs7,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($Vy2,$Vv2,{79:2532,80:2533,188:2534,186:[1,2535]}),o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,2536],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:2537,117:$VI2,144:$VJ2,185:$VK2}),o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,2538]},o($VH1,$Vk3),o($Vo1,$VY4),{189:[1,2541],190:2539,191:[1,2540]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:2542,199:2543,107:[1,2544]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,2547],190:2545,191:[1,2546]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:2548,199:2549,107:[1,2550]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{19:[1,2553],21:[1,2556],22:2552,83:2551,210:2554,211:[1,2555]},{189:[1,2559],190:2557,191:[1,2558]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:2560,199:2561,107:[1,2562]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),o($Vo1,$VY4),{189:[1,2565],190:2563,191:[1,2564]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:2566,199:2567,107:[1,2568]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,2571],190:2569,191:[1,2570]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:2572,199:2573,107:[1,2574]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{19:[1,2577],21:[1,2580],22:2576,83:2575,210:2578,211:[1,2579]},{189:[1,2583],190:2581,191:[1,2582]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:2584,199:2585,107:[1,2586]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$V86,21:$V96,22:2588,83:2587,210:1644,211:$Va6},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$Vb6,21:$Vc6,22:2590,83:2589,210:1670,211:$Vd6},o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$Ve6,21:$Vf6,22:2592,83:2591,210:1696,211:$Vg6},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Va1,$Vb2),o($Va1,$Vd1,{61:2593,63:2594,68:2595,40:2596,74:2597,114:2601,75:[1,2598],76:[1,2599],77:[1,2600],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Va1,$Vc2),o($Va1,$Vf1,{64:2602,60:2603,69:2604,88:2605,90:2606,91:2610,95:2611,92:[1,2607],93:[1,2608],94:[1,2609],97:$Vt7,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:2613,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Va1,$Vd2),o($Vm1,$Vn1,{78:2614}),o($Vo1,$Vn1,{78:2615}),o($Ve2,$Vf2),o($Ve2,$Vg2),o($Vq1,$Vr1,{89:2616}),o($Vm1,$Vs1,{95:2271,91:2617,97:$V27,98:$VL,99:$VM,100:$VN}),o($Vt1,$Vu1,{82:2618}),o($Vt1,$Vu1,{82:2619}),o($Vt1,$Vu1,{82:2620}),o($Vo1,$Vv1,{101:2275,103:2276,87:2621,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vp1,$Vn1,{78:2622}),o($Ve2,$V11),o($Ve2,$V21),{19:[1,2626],21:[1,2630],22:2624,32:2623,196:2625,210:2627,211:[1,2629],212:[1,2628]},o($Vq1,$VA1),o($Vq1,$VB1),o($Vq1,$VC1),o($Vq1,$VD1),o($Vt1,$VE1),o($VF1,$VG1,{158:2631}),o($VH1,$VI1),{115:[1,2632],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,2633]},o($Vq1,$VJ1),o($Vt1,$Vq),o($Vt1,$Vr),{96:[1,2635],102:2634,104:[1,2636],105:[1,2637],106:2638,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2639]},o($Vt1,$Vt),o($Vt1,$Vu),o($Va1,$VU3),{117:[1,2640]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:2641,210:52,211:$Vp},{19:$Vu7,21:$Vv7,22:2643,96:[1,2654],104:[1,2655],105:[1,2656],106:2653,177:2644,187:2642,192:2647,193:2648,194:2649,197:2652,200:[1,2657],201:[1,2658],202:[1,2663],203:[1,2664],204:[1,2665],205:[1,2666],206:[1,2659],207:[1,2660],208:[1,2661],209:[1,2662],210:2646,211:$Vw7},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:2667,210:52,211:$Vp},{19:$Vx7,21:$Vy7,22:2669,96:[1,2680],104:[1,2681],105:[1,2682],106:2679,177:2670,187:2668,192:2673,193:2674,194:2675,197:2678,200:[1,2683],201:[1,2684],202:[1,2689],203:[1,2690],204:[1,2691],205:[1,2692],206:[1,2685],207:[1,2686],208:[1,2687],209:[1,2688],210:2672,211:$Vz7},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,2693]},o($Vt1,$Vk3),o($Vy2,$VN4),{19:$Vn,21:$Vo,22:2694,210:52,211:$Vp},{19:$VA7,21:$VB7,22:2696,96:[1,2707],104:[1,2708],105:[1,2709],106:2706,177:2697,187:2695,192:2700,193:2701,194:2702,197:2705,200:[1,2710],201:[1,2711],202:[1,2716],203:[1,2717],204:[1,2718],205:[1,2719],206:[1,2712],207:[1,2713],208:[1,2714],209:[1,2715],210:2699,211:$VC7},o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Va1,$VU3),{117:[1,2720]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:2721,210:52,211:$Vp},{19:$VD7,21:$VE7,22:2723,96:[1,2734],104:[1,2735],105:[1,2736],106:2733,177:2724,187:2722,192:2727,193:2728,194:2729,197:2732,200:[1,2737],201:[1,2738],202:[1,2743],203:[1,2744],204:[1,2745],205:[1,2746],206:[1,2739],207:[1,2740],208:[1,2741],209:[1,2742],210:2726,211:$VF7},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:2747,210:52,211:$Vp},{19:$VG7,21:$VH7,22:2749,96:[1,2760],104:[1,2761],105:[1,2762],106:2759,177:2750,187:2748,192:2753,193:2754,194:2755,197:2758,200:[1,2763],201:[1,2764],202:[1,2769],203:[1,2770],204:[1,2771],205:[1,2772],206:[1,2765],207:[1,2766],208:[1,2767],209:[1,2768],210:2752,211:$VI7},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,2773]},o($Vt1,$Vk3),o($Vy2,$VN4),{19:$Vn,21:$Vo,22:2774,210:52,211:$Vp},{19:$VJ7,21:$VK7,22:2776,96:[1,2787],104:[1,2788],105:[1,2789],106:2786,177:2777,187:2775,192:2780,193:2781,194:2782,197:2785,200:[1,2790],201:[1,2791],202:[1,2796],203:[1,2797],204:[1,2798],205:[1,2799],206:[1,2792],207:[1,2793],208:[1,2794],209:[1,2795],210:2779,211:$VL7},o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($VG4,$VU1),o($VG4,$VV1),o($VG4,$VW1),o($VE3,$Vz5),o($VE3,$VA5),{19:$Vl6,21:$Vm6,22:2801,83:2800,210:1802,211:$Vn6},o($VH4,$VU1),o($VH4,$VV1),o($VH4,$VW1),o($VF3,$Vz5),o($VF3,$VA5),{19:$Vo6,21:$Vp6,22:2803,83:2802,210:1828,211:$Vq6},o($VJ4,$VU1),o($VJ4,$VV1),o($VJ4,$VW1),o($VG3,$Vz5),o($VG3,$VA5),{19:$Vr6,21:$Vs6,22:2805,83:2804,210:1854,211:$Vt6},o($VI3,$VB5),o($VI3,$VE1),o($VI3,$Vq),o($VI3,$Vr),o($VI3,$Vt),o($VI3,$Vu),o($VC3,$Vb2),o($VC,$VD,{61:2806,63:2807,68:2808,40:2809,74:2810,114:2814,47:$Vd1,49:$Vd1,66:$Vd1,75:[1,2811],76:[1,2812],77:[1,2813]}),o($VC3,$Vc2),o($VC3,$Vf1,{64:2815,60:2816,69:2817,88:2818,90:2819,91:2823,95:2824,92:[1,2820],93:[1,2821],94:[1,2822],97:$VM7,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:2826,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VC3,$Vd2),o($VE3,$Vn1,{78:2827}),o($VF3,$Vn1,{78:2828}),o($VJ5,$Vf2),o($VJ5,$Vg2),o($VH3,$Vr1,{89:2829}),o($VE3,$Vs1,{95:2385,91:2830,97:$V67,98:$VL,99:$VM,100:$VN}),o($VI3,$Vu1,{82:2831}),o($VI3,$Vu1,{82:2832}),o($VI3,$Vu1,{82:2833}),o($VF3,$Vv1,{101:2389,103:2390,87:2834,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VG3,$Vn1,{78:2835}),o($VJ5,$V11),o($VJ5,$V21),{19:[1,2839],21:[1,2843],22:2837,32:2836,196:2838,210:2840,211:[1,2842],212:[1,2841]},o($VH3,$VA1),o($VH3,$VB1),o($VH3,$VC1),o($VH3,$VD1),o($VI3,$VE1),o($VF1,$VG1,{158:2844}),o($VJ3,$VI1),{115:[1,2845],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},{96:[1,2846]},o($VH3,$VJ1),o($VI3,$Vq),o($VI3,$Vr),{96:[1,2848],102:2847,104:[1,2849],105:[1,2850],106:2851,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,2852]},o($VI3,$Vt),o($VI3,$Vu),o($VC3,$VU3),{117:[1,2853]},o($VC3,$VM3),o($VF4,$VV3),o($VG4,$VN4),{19:$Vn,21:$Vo,22:2854,210:52,211:$Vp},{19:$VN7,21:$VO7,22:2856,96:[1,2867],104:[1,2868],105:[1,2869],106:2866,177:2857,187:2855,192:2860,193:2861,194:2862,197:2865,200:[1,2870],201:[1,2871],202:[1,2876],203:[1,2877],204:[1,2878],205:[1,2879],206:[1,2872],207:[1,2873],208:[1,2874],209:[1,2875],210:2859,211:$VP7},o($VH4,$VN4),{19:$Vn,21:$Vo,22:2880,210:52,211:$Vp},{19:$VQ7,21:$VR7,22:2882,96:[1,2893],104:[1,2894],105:[1,2895],106:2892,177:2883,187:2881,192:2886,193:2887,194:2888,197:2891,200:[1,2896],201:[1,2897],202:[1,2902],203:[1,2903],204:[1,2904],205:[1,2905],206:[1,2898],207:[1,2899],208:[1,2900],209:[1,2901],210:2885,211:$VS7},o($VI3,$Vb3),o($VI3,$Vc3),o($VI3,$Vd3),o($VI3,$Ve3),o($VI3,$Vf3),{107:[1,2906]},o($VI3,$Vk3),o($VJ4,$VN4),{19:$Vn,21:$Vo,22:2907,210:52,211:$Vp},{19:$VT7,21:$VU7,22:2909,96:[1,2920],104:[1,2921],105:[1,2922],106:2919,177:2910,187:2908,192:2913,193:2914,194:2915,197:2918,200:[1,2923],201:[1,2924],202:[1,2929],203:[1,2930],204:[1,2931],205:[1,2932],206:[1,2925],207:[1,2926],208:[1,2927],209:[1,2928],210:2912,211:$VV7},o($VG3,$VY4),o($VJ3,$VB5),o($VJ3,$VE1),o($VJ3,$Vq),o($VJ3,$Vr),o($VJ3,$Vt),o($VJ3,$Vu),o($VC3,$VU3),{117:[1,2933]},o($VC3,$VM3),o($VF4,$VV3),o($VG4,$VN4),{19:$Vn,21:$Vo,22:2934,210:52,211:$Vp},{19:$VW7,21:$VX7,22:2936,96:[1,2947],104:[1,2948],105:[1,2949],106:2946,177:2937,187:2935,192:2940,193:2941,194:2942,197:2945,200:[1,2950],201:[1,2951],202:[1,2956],203:[1,2957],204:[1,2958],205:[1,2959],206:[1,2952],207:[1,2953],208:[1,2954],209:[1,2955],210:2939,211:$VY7},o($VH4,$VN4),{19:$Vn,21:$Vo,22:2960,210:52,211:$Vp},{19:$VZ7,21:$V_7,22:2962,96:[1,2973],104:[1,2974],105:[1,2975],106:2972,177:2963,187:2961,192:2966,193:2967,194:2968,197:2971,200:[1,2976],201:[1,2977],202:[1,2982],203:[1,2983],204:[1,2984],205:[1,2985],206:[1,2978],207:[1,2979],208:[1,2980],209:[1,2981],210:2965,211:$V$7},o($VI3,$Vb3),o($VI3,$Vc3),o($VI3,$Vd3),o($VI3,$Ve3),o($VI3,$Vf3),{107:[1,2986]},o($VI3,$Vk3),o($VJ4,$VN4),{19:$Vn,21:$Vo,22:2987,210:52,211:$Vp},{19:$V08,21:$V18,22:2989,96:[1,3000],104:[1,3001],105:[1,3002],106:2999,177:2990,187:2988,192:2993,193:2994,194:2995,197:2998,200:[1,3003],201:[1,3004],202:[1,3009],203:[1,3010],204:[1,3011],205:[1,3012],206:[1,3005],207:[1,3006],208:[1,3007],209:[1,3008],210:2992,211:$V28},o($VG3,$VY4),o($VJ3,$VB5),o($VJ3,$VE1),o($VJ3,$Vq),o($VJ3,$Vr),o($VJ3,$Vt),o($VJ3,$Vu),o($V38,$Vv2,{79:3013,80:3014,188:3015,186:$V48}),o($VG6,$V58),o($Vx,$Vg,{51:3017,55:3018,36:3019,39:$Vy}),o($VI6,$V68),o($Vx,$Vg,{55:3020,36:3021,39:$Vy}),o($VI6,$V78),o($VI6,$V88),o($VI6,$Vo7),o($VI6,$Vp7),{115:[1,3022],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VI6,$V11),o($VI6,$V21),{19:[1,3026],21:[1,3030],22:3024,32:3023,196:3025,210:3027,211:[1,3029],212:[1,3028]},o($VI6,$V98),o($VI6,$Va8),o($Vb8,$Vr1,{89:3031}),o($VI6,$Vs1,{95:2468,91:3032,97:$Vi7,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA1),o($Vb8,$VB1),o($Vb8,$VC1),o($Vb8,$VD1),{96:[1,3033]},o($Vb8,$VJ1),{66:[1,3034]},o($Vl7,$Vz2,{95:1993,91:3035,97:$VK6,98:$VL,99:$VM,100:$VN}),o($Vk7,$VA2),o($VI6,$VB2,{86:3036,91:3037,87:3038,95:3039,101:3041,103:3042,97:$Vc8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VD2,{86:3036,91:3037,87:3038,95:3039,101:3041,103:3042,97:$Vc8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VE2,{86:3036,91:3037,87:3038,95:3039,101:3041,103:3042,97:$Vc8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vq7,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,3043],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3044,117:$VI2,144:$VJ2,185:$VK2}),o($Vn7,$VT1),o($Vn7,$Vl),o($Vn7,$Vm),o($Vn7,$Vq),o($Vn7,$Vr),o($Vn7,$Vs),o($Vn7,$Vt),o($Vn7,$Vu),o($Vk7,$Vb3),o($Vq7,$Vc3),o($Vq7,$Vd3),o($Vq7,$Ve3),o($Vq7,$Vf3),{107:[1,3045]},o($Vq7,$Vk3),o($V38,$Vv2,{80:3014,188:3015,79:3046,186:$V48}),o($Vd8,$Vz6,{148:3047,149:3048,152:$Ve8,153:$Vf8,154:$Vg8,155:$Vh8}),o($Vi8,$VF6),o($Vj8,$VH6,{52:3053}),o($Vk8,$VJ6,{56:3054}),o($VC,$VD,{59:3055,69:3056,71:3057,72:3058,88:3061,90:3062,83:3064,84:3065,85:3066,74:3067,40:3068,91:3072,22:3073,87:3075,114:3076,95:3080,210:3083,101:3084,103:3085,19:[1,3082],21:[1,3087],65:[1,3059],67:[1,3060],75:[1,3077],76:[1,3078],77:[1,3079],81:[1,3063],92:[1,3069],93:[1,3070],94:[1,3071],97:$Vl8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,3074],211:[1,3086]}),o($Vd8,$Vz6,{149:3048,148:3088,152:$Ve8,153:$Vf8,154:$Vg8,155:$Vh8}),o($Vw2,$Vv2,{80:2521,188:2522,79:3089,186:$Vr7}),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3090,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:2521,188:2522,79:3091,186:$Vr7}),o($Vo1,$Vz2,{95:2030,91:3092,97:$VL6,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VE4),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:3093,189:[1,3094]}),{19:$VP3,21:$VQ3,22:627,125:3095,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:3096,189:[1,3097]}),{19:$VP3,21:$VQ3,22:627,125:3098,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,3099]},o($Vt1,$VJ1),{96:[1,3101],102:3100,104:[1,3102],105:[1,3103],106:3104,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3105]},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:3106,189:[1,3107]}),{19:$VP3,21:$VQ3,22:627,125:3108,195:$VR3,210:630,211:$VS3},o($Vt1,$Vg4),{117:[1,3109]},{19:[1,3112],21:[1,3115],22:3111,83:3110,210:3113,211:[1,3114]},o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$VM6,21:$VN6,22:3117,83:3116,210:2065,211:$VO6},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$VP6,21:$VQ6,22:3119,83:3118,210:2091,211:$VR6},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$VS6,21:$VT6,22:3121,83:3120,210:2118,211:$VU6},o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$VV6,21:$VW6,22:3123,83:3122,210:2145,211:$VX6},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$VY6,21:$VZ6,22:3125,83:3124,210:2171,211:$V_6},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$V$6,21:$V07,22:3127,83:3126,210:2198,211:$V17},o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($Va1,$Vz3),o($Va1,$Vk2),o($Va1,$Vf2),o($Va1,$Vg2),o($Vo1,$Vn1,{78:3128}),o($Va1,$V11),o($Va1,$V21),{19:[1,3132],21:[1,3136],22:3130,32:3129,196:3131,210:3133,211:[1,3135],212:[1,3134]},{115:[1,3137],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Va1,$VA3),o($Va1,$Vm2),o($Vo1,$Vn1,{78:3138}),o($Vn2,$Vr1,{89:3139}),o($Vo1,$Vs1,{95:2611,91:3140,97:$Vt7,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA1),o($Vn2,$VB1),o($Vn2,$VC1),o($Vn2,$VD1),{96:[1,3141]},o($Vn2,$VJ1),{66:[1,3142]},o($Vu2,$Vv2,{79:3143,80:3144,188:3145,186:[1,3146]}),o($Vw2,$Vv2,{79:3147,80:3148,188:3149,186:$Vm8}),o($Vm1,$Vz2,{95:2271,91:3151,97:$V27,98:$VL,99:$VM,100:$VN}),o($Vq1,$VA2),o($Vo1,$VB2,{86:3152,91:3153,87:3154,95:3155,101:3157,103:3158,97:$Vn8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VD2,{86:3152,91:3153,87:3154,95:3155,101:3157,103:3158,97:$Vn8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vo1,$VE2,{86:3152,91:3153,87:3154,95:3155,101:3157,103:3158,97:$Vn8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VH1,$VF2),o($Vy2,$Vv2,{79:3159,80:3160,188:3161,186:[1,3162]}),o($Ve2,$VT1),o($Ve2,$Vl),o($Ve2,$Vm),o($Ve2,$Vq),o($Ve2,$Vr),o($Ve2,$Vs),o($Ve2,$Vt),o($Ve2,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,3163],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3164,117:$VI2,144:$VJ2,185:$VK2}),o($Vq1,$Vb3),o($VH1,$Vc3),o($VH1,$Vd3),o($VH1,$Ve3),o($VH1,$Vf3),{107:[1,3165]},o($VH1,$Vk3),o($Vo1,$VY4),{189:[1,3168],190:3166,191:[1,3167]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:3169,199:3170,107:[1,3171]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,3174],190:3172,191:[1,3173]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:3175,199:3176,107:[1,3177]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{19:[1,3180],21:[1,3183],22:3179,83:3178,210:3181,211:[1,3182]},{189:[1,3186],190:3184,191:[1,3185]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:3187,199:3188,107:[1,3189]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),o($Vo1,$VY4),{189:[1,3192],190:3190,191:[1,3191]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:3193,199:3194,107:[1,3195]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,3198],190:3196,191:[1,3197]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:3199,199:3200,107:[1,3201]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{19:[1,3204],21:[1,3207],22:3203,83:3202,210:3205,211:[1,3206]},{189:[1,3210],190:3208,191:[1,3209]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:3211,199:3212,107:[1,3213]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),o($VE3,$V66),o($VE3,$VE1),o($VF3,$V66),o($VF3,$VE1),o($VG3,$V66),o($VG3,$VE1),o($VC3,$Vz3),o($VC3,$Vk2),o($VC3,$Vf2),o($VC3,$Vg2),o($VF3,$Vn1,{78:3214}),o($VC3,$V11),o($VC3,$V21),{19:[1,3218],21:[1,3222],22:3216,32:3215,196:3217,210:3219,211:[1,3221],212:[1,3220]},{115:[1,3223],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VC3,$VA3),o($VC3,$Vm2),o($VF3,$Vn1,{78:3224}),o($VF4,$Vr1,{89:3225}),o($VF3,$Vs1,{95:2824,91:3226,97:$VM7,98:$VL,99:$VM,100:$VN}),o($VF4,$VA1),o($VF4,$VB1),o($VF4,$VC1),o($VF4,$VD1),{96:[1,3227]},o($VF4,$VJ1),{66:[1,3228]},o($VG4,$Vv2,{79:3229,80:3230,188:3231,186:[1,3232]}),o($VH4,$Vv2,{79:3233,80:3234,188:3235,186:$Vo8}),o($VE3,$Vz2,{95:2385,91:3237,97:$V67,98:$VL,99:$VM,100:$VN}),o($VH3,$VA2),o($VF3,$VB2,{86:3238,91:3239,87:3240,95:3241,101:3243,103:3244,97:$Vp8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VD2,{86:3238,91:3239,87:3240,95:3241,101:3243,103:3244,97:$Vp8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VF3,$VE2,{86:3238,91:3239,87:3240,95:3241,101:3243,103:3244,97:$Vp8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VJ3,$VF2),o($VJ4,$Vv2,{79:3245,80:3246,188:3247,186:[1,3248]}),o($VJ5,$VT1),o($VJ5,$Vl),o($VJ5,$Vm),o($VJ5,$Vq),o($VJ5,$Vr),o($VJ5,$Vs),o($VJ5,$Vt),o($VJ5,$Vu),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,3249],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3250,117:$VI2,144:$VJ2,185:$VK2}),o($VH3,$Vb3),o($VJ3,$Vc3),o($VJ3,$Vd3),o($VJ3,$Ve3),o($VJ3,$Vf3),{107:[1,3251]},o($VJ3,$Vk3),o($VF3,$VY4),{189:[1,3254],190:3252,191:[1,3253]},o($VE3,$VM5),o($VE3,$VN5),o($VE3,$VO5),o($VE3,$Vq),o($VE3,$Vr),o($VE3,$Vj4),o($VE3,$Vk4),o($VE3,$Vl4),o($VE3,$Vt),o($VE3,$Vu),o($VE3,$Vm4),o($VE3,$Vn4,{198:3255,199:3256,107:[1,3257]}),o($VE3,$Vo4),o($VE3,$Vp4),o($VE3,$Vq4),o($VE3,$Vr4),o($VE3,$Vs4),o($VE3,$Vt4),o($VE3,$Vu4),o($VE3,$Vv4),o($VE3,$Vw4),o($V37,$Vg3),o($V37,$Vh3),o($V37,$Vi3),o($V37,$Vj3),{189:[1,3260],190:3258,191:[1,3259]},o($VF3,$VM5),o($VF3,$VN5),o($VF3,$VO5),o($VF3,$Vq),o($VF3,$Vr),o($VF3,$Vj4),o($VF3,$Vk4),o($VF3,$Vl4),o($VF3,$Vt),o($VF3,$Vu),o($VF3,$Vm4),o($VF3,$Vn4,{198:3261,199:3262,107:[1,3263]}),o($VF3,$Vo4),o($VF3,$Vp4),o($VF3,$Vq4),o($VF3,$Vr4),o($VF3,$Vs4),o($VF3,$Vt4),o($VF3,$Vu4),o($VF3,$Vv4),o($VF3,$Vw4),o($V47,$Vg3),o($V47,$Vh3),o($V47,$Vi3),o($V47,$Vj3),{19:[1,3266],21:[1,3269],22:3265,83:3264,210:3267,211:[1,3268]},{189:[1,3272],190:3270,191:[1,3271]},o($VG3,$VM5),o($VG3,$VN5),o($VG3,$VO5),o($VG3,$Vq),o($VG3,$Vr),o($VG3,$Vj4),o($VG3,$Vk4),o($VG3,$Vl4),o($VG3,$Vt),o($VG3,$Vu),o($VG3,$Vm4),o($VG3,$Vn4,{198:3273,199:3274,107:[1,3275]}),o($VG3,$Vo4),o($VG3,$Vp4),o($VG3,$Vq4),o($VG3,$Vr4),o($VG3,$Vs4),o($VG3,$Vt4),o($VG3,$Vu4),o($VG3,$Vv4),o($VG3,$Vw4),o($V57,$Vg3),o($V57,$Vh3),o($V57,$Vi3),o($V57,$Vj3),o($VF3,$VY4),{189:[1,3278],190:3276,191:[1,3277]},o($VE3,$VM5),o($VE3,$VN5),o($VE3,$VO5),o($VE3,$Vq),o($VE3,$Vr),o($VE3,$Vj4),o($VE3,$Vk4),o($VE3,$Vl4),o($VE3,$Vt),o($VE3,$Vu),o($VE3,$Vm4),o($VE3,$Vn4,{198:3279,199:3280,107:[1,3281]}),o($VE3,$Vo4),o($VE3,$Vp4),o($VE3,$Vq4),o($VE3,$Vr4),o($VE3,$Vs4),o($VE3,$Vt4),o($VE3,$Vu4),o($VE3,$Vv4),o($VE3,$Vw4),o($V37,$Vg3),o($V37,$Vh3),o($V37,$Vi3),o($V37,$Vj3),{189:[1,3284],190:3282,191:[1,3283]},o($VF3,$VM5),o($VF3,$VN5),o($VF3,$VO5),o($VF3,$Vq),o($VF3,$Vr),o($VF3,$Vj4),o($VF3,$Vk4),o($VF3,$Vl4),o($VF3,$Vt),o($VF3,$Vu),o($VF3,$Vm4),o($VF3,$Vn4,{198:3285,199:3286,107:[1,3287]}),o($VF3,$Vo4),o($VF3,$Vp4),o($VF3,$Vq4),o($VF3,$Vr4),o($VF3,$Vs4),o($VF3,$Vt4),o($VF3,$Vu4),o($VF3,$Vv4),o($VF3,$Vw4),o($V47,$Vg3),o($V47,$Vh3),o($V47,$Vi3),o($V47,$Vj3),{19:[1,3290],21:[1,3293],22:3289,83:3288,210:3291,211:[1,3292]},{189:[1,3296],190:3294,191:[1,3295]},o($VG3,$VM5),o($VG3,$VN5),o($VG3,$VO5),o($VG3,$Vq),o($VG3,$Vr),o($VG3,$Vj4),o($VG3,$Vk4),o($VG3,$Vl4),o($VG3,$Vt),o($VG3,$Vu),o($VG3,$Vm4),o($VG3,$Vn4,{198:3297,199:3298,107:[1,3299]}),o($VG3,$Vo4),o($VG3,$Vp4),o($VG3,$Vq4),o($VG3,$Vr4),o($VG3,$Vs4),o($VG3,$Vt4),o($VG3,$Vu4),o($VG3,$Vv4),o($VG3,$Vw4),o($V57,$Vg3),o($V57,$Vh3),o($V57,$Vi3),o($V57,$Vj3),o($Va4,$Vq8),o($Vy6,$VN3),o($Va4,$VO3,{31:3300,189:[1,3301]}),{19:$VP3,21:$VQ3,22:627,125:3302,195:$VR3,210:630,211:$VS3},o($VG6,$Vr8),o($VI6,$VJ6,{56:3303}),o($VC,$VD,{59:3304,69:3305,71:3306,72:3307,88:3310,90:3311,83:3313,84:3314,85:3315,74:3316,40:3317,91:3321,22:3322,87:3324,114:3325,95:3329,210:3332,101:3333,103:3334,19:[1,3331],21:[1,3336],65:[1,3308],67:[1,3309],75:[1,3326],76:[1,3327],77:[1,3328],81:[1,3312],92:[1,3318],93:[1,3319],94:[1,3320],97:$Vs8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,3323],211:[1,3335]}),o($VI6,$Vt8),o($VC,$VD,{59:3337,69:3338,71:3339,72:3340,88:3343,90:3344,83:3346,84:3347,85:3348,74:3349,40:3350,91:3354,22:3355,87:3357,114:3358,95:3362,210:3365,101:3366,103:3367,19:[1,3364],21:[1,3369],65:[1,3341],67:[1,3342],75:[1,3359],76:[1,3360],77:[1,3361],81:[1,3345],92:[1,3351],93:[1,3352],94:[1,3353],97:$Vu8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,3356],211:[1,3368]}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3370,117:$VI2,144:$VJ2,185:$VK2}),o($VI6,$VT1),o($VI6,$Vl),o($VI6,$Vm),o($VI6,$Vq),o($VI6,$Vr),o($VI6,$Vs),o($VI6,$Vt),o($VI6,$Vu),o($VI6,$Vz2,{95:2468,91:3371,97:$Vi7,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA2),o($Vb8,$Vb3),o($VI6,$Vv8),o($Vk7,$VV3),o($Vm7,$VW3),o($Vm7,$VX3),o($Vm7,$VY3),{96:[1,3372]},o($Vm7,$VJ1),{96:[1,3374],102:3373,104:[1,3375],105:[1,3376],106:3377,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3378]},o($Vm7,$Vg4),{117:[1,3379]},{19:[1,3382],21:[1,3385],22:3381,83:3380,210:3383,211:[1,3384]},o($Va4,$Vw8),o($Vd8,$Vn1,{78:3386}),o($Vd8,$V77),o($Vd8,$V87),o($Vd8,$V97),o($Vd8,$Va7),o($Vd8,$Vb7),o($Vi8,$Vc7,{53:3387,47:[1,3388]}),o($Vj8,$Vd7,{57:3389,49:[1,3390]}),o($Vk8,$Ve7),o($Vk8,$Vf7,{70:3391,72:3392,74:3393,40:3394,114:3395,75:[1,3396],76:[1,3397],77:[1,3398],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Vk8,$Vg7),o($Vk8,$Vh7,{73:3399,69:3400,88:3401,90:3402,91:3406,95:3407,92:[1,3403],93:[1,3404],94:[1,3405],97:$Vx8,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:3409,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Vk8,$Vj7),o($Vy8,$Vr1,{89:3410}),o($Vz8,$Vs1,{95:3080,91:3411,97:$Vl8,98:$VL,99:$VM,100:$VN}),o($VA8,$Vu1,{82:3412}),o($VA8,$Vu1,{82:3413}),o($VA8,$Vu1,{82:3414}),o($Vk8,$Vv1,{101:3084,103:3085,87:3415,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VB8,$Vo7),o($VB8,$Vp7),o($Vy8,$VA1),o($Vy8,$VB1),o($Vy8,$VC1),o($Vy8,$VD1),o($VA8,$VE1),o($VF1,$VG1,{158:3416}),o($VC8,$VI1),{115:[1,3417],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VB8,$V11),o($VB8,$V21),{19:[1,3421],21:[1,3425],22:3419,32:3418,196:3420,210:3422,211:[1,3424],212:[1,3423]},{96:[1,3426]},o($Vy8,$VJ1),o($VA8,$Vq),o($VA8,$Vr),{96:[1,3428],102:3427,104:[1,3429],105:[1,3430],106:3431,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3432]},o($VA8,$Vt),o($VA8,$Vu),o($Vd8,$Vn1,{78:3433}),o($Va1,$VU3),{117:[1,3434]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:3435,210:52,211:$Vp},{19:$VD8,21:$VE8,22:3437,96:[1,3448],104:[1,3449],105:[1,3450],106:3447,177:3438,187:3436,192:3441,193:3442,194:3443,197:3446,200:[1,3451],201:[1,3452],202:[1,3457],203:[1,3458],204:[1,3459],205:[1,3460],206:[1,3453],207:[1,3454],208:[1,3455],209:[1,3456],210:3440,211:$VF8},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:3461,210:52,211:$Vp},{19:$VG8,21:$VH8,22:3463,96:[1,3474],104:[1,3475],105:[1,3476],106:3473,177:3464,187:3462,192:3467,193:3468,194:3469,197:3472,200:[1,3477],201:[1,3478],202:[1,3483],203:[1,3484],204:[1,3485],205:[1,3486],206:[1,3479],207:[1,3480],208:[1,3481],209:[1,3482],210:3466,211:$VI8},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,3487]},o($Vt1,$Vk3),o($Vy2,$VN4),{19:$Vn,21:$Vo,22:3488,210:52,211:$Vp},{19:$VJ8,21:$VK8,22:3490,96:[1,3501],104:[1,3502],105:[1,3503],106:3500,177:3491,187:3489,192:3494,193:3495,194:3496,197:3499,200:[1,3504],201:[1,3505],202:[1,3510],203:[1,3511],204:[1,3512],205:[1,3513],206:[1,3506],207:[1,3507],208:[1,3508],209:[1,3509],210:3493,211:$VL8},o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($Vw2,$Vv2,{80:3148,188:3149,79:3514,186:$Vm8}),o($Va1,$VT1),o($Va1,$Vl),o($Va1,$Vm),o($Va1,$Vq),o($Va1,$Vr),o($Va1,$Vs),o($Va1,$Vt),o($Va1,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3515,117:$VI2,144:$VJ2,185:$VK2}),o($Vw2,$Vv2,{80:3148,188:3149,79:3516,186:$Vm8}),o($Vo1,$Vz2,{95:2611,91:3517,97:$Vt7,98:$VL,99:$VM,100:$VN}),o($Vn2,$VA2),o($Vn2,$Vb3),o($Va1,$VE4),o($VL3,$VM3),o($Vm1,$VN3),o($VL3,$VO3,{31:3518,189:[1,3519]}),{19:$VP3,21:$VQ3,22:627,125:3520,195:$VR3,210:630,211:$VS3},o($Va1,$VT3),o($Vo1,$VN3),o($Va1,$VO3,{31:3521,189:[1,3522]}),{19:$VP3,21:$VQ3,22:627,125:3523,195:$VR3,210:630,211:$VS3},o($Vq1,$VV3),o($Vt1,$VW3),o($Vt1,$VX3),o($Vt1,$VY3),{96:[1,3524]},o($Vt1,$VJ1),{96:[1,3526],102:3525,104:[1,3527],105:[1,3528],106:3529,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3530]},o($Ve2,$VU3),o($Vp1,$VN3),o($Ve2,$VO3,{31:3531,189:[1,3532]}),{19:$VP3,21:$VQ3,22:627,125:3533,195:$VR3,210:630,211:$VS3},o($Vt1,$Vg4),{117:[1,3534]},{19:[1,3537],21:[1,3540],22:3536,83:3535,210:3538,211:[1,3539]},o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$Vu7,21:$Vv7,22:3542,83:3541,210:2646,211:$Vw7},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$Vx7,21:$Vy7,22:3544,83:3543,210:2672,211:$Vz7},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$VA7,21:$VB7,22:3546,83:3545,210:2699,211:$VC7},o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$VD7,21:$VE7,22:3548,83:3547,210:2726,211:$VF7},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$VG7,21:$VH7,22:3550,83:3549,210:2752,211:$VI7},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$VJ7,21:$VK7,22:3552,83:3551,210:2779,211:$VL7},o($VH4,$Vv2,{80:3234,188:3235,79:3553,186:$Vo8}),o($VC3,$VT1),o($VC3,$Vl),o($VC3,$Vm),o($VC3,$Vq),o($VC3,$Vr),o($VC3,$Vs),o($VC3,$Vt),o($VC3,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3554,117:$VI2,144:$VJ2,185:$VK2}),o($VH4,$Vv2,{80:3234,188:3235,79:3555,186:$Vo8}),o($VF3,$Vz2,{95:2824,91:3556,97:$VM7,98:$VL,99:$VM,100:$VN}),o($VF4,$VA2),o($VF4,$Vb3),o($VC3,$VE4),o($VI5,$VM3),o($VE3,$VN3),o($VI5,$VO3,{31:3557,189:[1,3558]}),{19:$VP3,21:$VQ3,22:627,125:3559,195:$VR3,210:630,211:$VS3},o($VC3,$VT3),o($VF3,$VN3),o($VC3,$VO3,{31:3560,189:[1,3561]}),{19:$VP3,21:$VQ3,22:627,125:3562,195:$VR3,210:630,211:$VS3},o($VH3,$VV3),o($VI3,$VW3),o($VI3,$VX3),o($VI3,$VY3),{96:[1,3563]},o($VI3,$VJ1),{96:[1,3565],102:3564,104:[1,3566],105:[1,3567],106:3568,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3569]},o($VJ5,$VU3),o($VG3,$VN3),o($VJ5,$VO3,{31:3570,189:[1,3571]}),{19:$VP3,21:$VQ3,22:627,125:3572,195:$VR3,210:630,211:$VS3},o($VI3,$Vg4),{117:[1,3573]},{19:[1,3576],21:[1,3579],22:3575,83:3574,210:3577,211:[1,3578]},o($VG4,$VU1),o($VG4,$VV1),o($VG4,$VW1),o($VE3,$Vz5),o($VE3,$VA5),{19:$VN7,21:$VO7,22:3581,83:3580,210:2859,211:$VP7},o($VH4,$VU1),o($VH4,$VV1),o($VH4,$VW1),o($VF3,$Vz5),o($VF3,$VA5),{19:$VQ7,21:$VR7,22:3583,83:3582,210:2885,211:$VS7},o($VI3,$VB5),o($VI3,$VE1),o($VI3,$Vq),o($VI3,$Vr),o($VI3,$Vt),o($VI3,$Vu),o($VJ4,$VU1),o($VJ4,$VV1),o($VJ4,$VW1),o($VG3,$Vz5),o($VG3,$VA5),{19:$VT7,21:$VU7,22:3585,83:3584,210:2912,211:$VV7},o($VG4,$VU1),o($VG4,$VV1),o($VG4,$VW1),o($VE3,$Vz5),o($VE3,$VA5),{19:$VW7,21:$VX7,22:3587,83:3586,210:2939,211:$VY7},o($VH4,$VU1),o($VH4,$VV1),o($VH4,$VW1),o($VF3,$Vz5),o($VF3,$VA5),{19:$VZ7,21:$V_7,22:3589,83:3588,210:2965,211:$V$7},o($VI3,$VB5),o($VI3,$VE1),o($VI3,$Vq),o($VI3,$Vr),o($VI3,$Vt),o($VI3,$Vu),o($VJ4,$VU1),o($VJ4,$VV1),o($VJ4,$VW1),o($VG3,$Vz5),o($VG3,$VA5),{19:$V08,21:$V18,22:3591,83:3590,210:2992,211:$V28},o($V38,$VN4),{19:$Vn,21:$Vo,22:3592,210:52,211:$Vp},{19:$VM8,21:$VN8,22:3594,96:[1,3605],104:[1,3606],105:[1,3607],106:3604,177:3595,187:3593,192:3598,193:3599,194:3600,197:3603,200:[1,3608],201:[1,3609],202:[1,3614],203:[1,3615],204:[1,3616],205:[1,3617],206:[1,3610],207:[1,3611],208:[1,3612],209:[1,3613],210:3597,211:$VO8},o($VG6,$Vd7,{57:3618,49:[1,3619]}),o($VI6,$Ve7),o($VI6,$Vf7,{70:3620,72:3621,74:3622,40:3623,114:3624,75:[1,3625],76:[1,3626],77:[1,3627],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($VI6,$Vg7),o($VI6,$Vh7,{73:3628,69:3629,88:3630,90:3631,91:3635,95:3636,92:[1,3632],93:[1,3633],94:[1,3634],97:$VP8,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:3638,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VI6,$Vj7),o($Vk7,$Vr1,{89:3639}),o($Vl7,$Vs1,{95:3329,91:3640,97:$Vs8,98:$VL,99:$VM,100:$VN}),o($Vm7,$Vu1,{82:3641}),o($Vm7,$Vu1,{82:3642}),o($Vm7,$Vu1,{82:3643}),o($VI6,$Vv1,{101:3333,103:3334,87:3644,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vn7,$Vo7),o($Vn7,$Vp7),o($Vk7,$VA1),o($Vk7,$VB1),o($Vk7,$VC1),o($Vk7,$VD1),o($Vm7,$VE1),o($VF1,$VG1,{158:3645}),o($Vq7,$VI1),{115:[1,3646],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vn7,$V11),o($Vn7,$V21),{19:[1,3650],21:[1,3654],22:3648,32:3647,196:3649,210:3651,211:[1,3653],212:[1,3652]},{96:[1,3655]},o($Vk7,$VJ1),o($Vm7,$Vq),o($Vm7,$Vr),{96:[1,3657],102:3656,104:[1,3658],105:[1,3659],106:3660,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3661]},o($Vm7,$Vt),o($Vm7,$Vu),o($VI6,$Ve7),o($VI6,$Vf7,{70:3662,72:3663,74:3664,40:3665,114:3666,75:[1,3667],76:[1,3668],77:[1,3669],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($VI6,$Vg7),o($VI6,$Vh7,{73:3670,69:3671,88:3672,90:3673,91:3677,95:3678,92:[1,3674],93:[1,3675],94:[1,3676],97:$VQ8,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:3680,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VI6,$Vj7),o($Vk7,$Vr1,{89:3681}),o($Vl7,$Vs1,{95:3362,91:3682,97:$Vu8,98:$VL,99:$VM,100:$VN}),o($Vm7,$Vu1,{82:3683}),o($Vm7,$Vu1,{82:3684}),o($Vm7,$Vu1,{82:3685}),o($VI6,$Vv1,{101:3366,103:3367,87:3686,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vn7,$Vo7),o($Vn7,$Vp7),o($Vk7,$VA1),o($Vk7,$VB1),o($Vk7,$VC1),o($Vk7,$VD1),o($Vm7,$VE1),o($VF1,$VG1,{158:3687}),o($Vq7,$VI1),{115:[1,3688],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vn7,$V11),o($Vn7,$V21),{19:[1,3692],21:[1,3696],22:3690,32:3689,196:3691,210:3693,211:[1,3695],212:[1,3694]},{96:[1,3697]},o($Vk7,$VJ1),o($Vm7,$Vq),o($Vm7,$Vr),{96:[1,3699],102:3698,104:[1,3700],105:[1,3701],106:3702,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,3703]},o($Vm7,$Vt),o($Vm7,$Vu),{117:[1,3704]},o($Vb8,$VV3),o($Vm7,$Vb3),o($Vm7,$Vc3),o($Vm7,$Vd3),o($Vm7,$Ve3),o($Vm7,$Vf3),{107:[1,3705]},o($Vm7,$Vk3),o($Vn7,$VY4),o($Vq7,$VB5),o($Vq7,$VE1),o($Vq7,$Vq),o($Vq7,$Vr),o($Vq7,$Vt),o($Vq7,$Vu),o($VR8,$Vv2,{79:3706,80:3707,188:3708,186:$VS8}),o($Vj8,$V58),o($Vx,$Vg,{51:3710,55:3711,36:3712,39:$Vy}),o($Vk8,$V68),o($Vx,$Vg,{55:3713,36:3714,39:$Vy}),o($Vk8,$V78),o($Vk8,$V88),o($Vk8,$Vo7),o($Vk8,$Vp7),{115:[1,3715],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vk8,$V11),o($Vk8,$V21),{19:[1,3719],21:[1,3723],22:3717,32:3716,196:3718,210:3720,211:[1,3722],212:[1,3721]},o($Vk8,$V98),o($Vk8,$Va8),o($VT8,$Vr1,{89:3724}),o($Vk8,$Vs1,{95:3407,91:3725,97:$Vx8,98:$VL,99:$VM,100:$VN}),o($VT8,$VA1),o($VT8,$VB1),o($VT8,$VC1),o($VT8,$VD1),{96:[1,3726]},o($VT8,$VJ1),{66:[1,3727]},o($Vz8,$Vz2,{95:3080,91:3728,97:$Vl8,98:$VL,99:$VM,100:$VN}),o($Vy8,$VA2),o($Vk8,$VB2,{86:3729,91:3730,87:3731,95:3732,101:3734,103:3735,97:$VU8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VD2,{86:3729,91:3730,87:3731,95:3732,101:3734,103:3735,97:$VU8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VE2,{86:3729,91:3730,87:3731,95:3732,101:3734,103:3735,97:$VU8,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VC8,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,3736],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3737,117:$VI2,144:$VJ2,185:$VK2}),o($VB8,$VT1),o($VB8,$Vl),o($VB8,$Vm),o($VB8,$Vq),o($VB8,$Vr),o($VB8,$Vs),o($VB8,$Vt),o($VB8,$Vu),o($Vy8,$Vb3),o($VC8,$Vc3),o($VC8,$Vd3),o($VC8,$Ve3),o($VC8,$Vf3),{107:[1,3738]},o($VC8,$Vk3),o($VR8,$Vv2,{80:3707,188:3708,79:3739,186:$VS8}),o($Vo1,$VY4),{189:[1,3742],190:3740,191:[1,3741]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:3743,199:3744,107:[1,3745]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,3748],190:3746,191:[1,3747]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:3749,199:3750,107:[1,3751]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{19:[1,3754],21:[1,3757],22:3753,83:3752,210:3755,211:[1,3756]},{189:[1,3760],190:3758,191:[1,3759]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:3761,199:3762,107:[1,3763]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),o($Va1,$VU3),{117:[1,3764]},o($Va1,$VM3),o($Vn2,$VV3),o($Vu2,$VN4),{19:$Vn,21:$Vo,22:3765,210:52,211:$Vp},{19:$VV8,21:$VW8,22:3767,96:[1,3778],104:[1,3779],105:[1,3780],106:3777,177:3768,187:3766,192:3771,193:3772,194:3773,197:3776,200:[1,3781],201:[1,3782],202:[1,3787],203:[1,3788],204:[1,3789],205:[1,3790],206:[1,3783],207:[1,3784],208:[1,3785],209:[1,3786],210:3770,211:$VX8},o($Vw2,$VN4),{19:$Vn,21:$Vo,22:3791,210:52,211:$Vp},{19:$VY8,21:$VZ8,22:3793,96:[1,3804],104:[1,3805],105:[1,3806],106:3803,177:3794,187:3792,192:3797,193:3798,194:3799,197:3802,200:[1,3807],201:[1,3808],202:[1,3813],203:[1,3814],204:[1,3815],205:[1,3816],206:[1,3809],207:[1,3810],208:[1,3811],209:[1,3812],210:3796,211:$V_8},o($Vt1,$Vb3),o($Vt1,$Vc3),o($Vt1,$Vd3),o($Vt1,$Ve3),o($Vt1,$Vf3),{107:[1,3817]},o($Vt1,$Vk3),o($Vy2,$VN4),{19:$Vn,21:$Vo,22:3818,210:52,211:$Vp},{19:$V$8,21:$V09,22:3820,96:[1,3831],104:[1,3832],105:[1,3833],106:3830,177:3821,187:3819,192:3824,193:3825,194:3826,197:3829,200:[1,3834],201:[1,3835],202:[1,3840],203:[1,3841],204:[1,3842],205:[1,3843],206:[1,3836],207:[1,3837],208:[1,3838],209:[1,3839],210:3823,211:$V19},o($Vp1,$VY4),o($VH1,$VB5),o($VH1,$VE1),o($VH1,$Vq),o($VH1,$Vr),o($VH1,$Vt),o($VH1,$Vu),o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($VC3,$VU3),{117:[1,3844]},o($VC3,$VM3),o($VF4,$VV3),o($VG4,$VN4),{19:$Vn,21:$Vo,22:3845,210:52,211:$Vp},{19:$V29,21:$V39,22:3847,96:[1,3858],104:[1,3859],105:[1,3860],106:3857,177:3848,187:3846,192:3851,193:3852,194:3853,197:3856,200:[1,3861],201:[1,3862],202:[1,3867],203:[1,3868],204:[1,3869],205:[1,3870],206:[1,3863],207:[1,3864],208:[1,3865],209:[1,3866],210:3850,211:$V49},o($VH4,$VN4),{19:$Vn,21:$Vo,22:3871,210:52,211:$Vp},{19:$V59,21:$V69,22:3873,96:[1,3884],104:[1,3885],105:[1,3886],106:3883,177:3874,187:3872,192:3877,193:3878,194:3879,197:3882,200:[1,3887],201:[1,3888],202:[1,3893],203:[1,3894],204:[1,3895],205:[1,3896],206:[1,3889],207:[1,3890],208:[1,3891],209:[1,3892],210:3876,211:$V79},o($VI3,$Vb3),o($VI3,$Vc3),o($VI3,$Vd3),o($VI3,$Ve3),o($VI3,$Vf3),{107:[1,3897]},o($VI3,$Vk3),o($VJ4,$VN4),{19:$Vn,21:$Vo,22:3898,210:52,211:$Vp},{19:$V89,21:$V99,22:3900,96:[1,3911],104:[1,3912],105:[1,3913],106:3910,177:3901,187:3899,192:3904,193:3905,194:3906,197:3909,200:[1,3914],201:[1,3915],202:[1,3920],203:[1,3921],204:[1,3922],205:[1,3923],206:[1,3916],207:[1,3917],208:[1,3918],209:[1,3919],210:3903,211:$Va9},o($VG3,$VY4),o($VJ3,$VB5),o($VJ3,$VE1),o($VJ3,$Vq),o($VJ3,$Vr),o($VJ3,$Vt),o($VJ3,$Vu),o($VE3,$V66),o($VE3,$VE1),o($VF3,$V66),o($VF3,$VE1),o($VG3,$V66),o($VG3,$VE1),o($VE3,$V66),o($VE3,$VE1),o($VF3,$V66),o($VF3,$VE1),o($VG3,$V66),o($VG3,$VE1),{189:[1,3926],190:3924,191:[1,3925]},o($Vy6,$VM5),o($Vy6,$VN5),o($Vy6,$VO5),o($Vy6,$Vq),o($Vy6,$Vr),o($Vy6,$Vj4),o($Vy6,$Vk4),o($Vy6,$Vl4),o($Vy6,$Vt),o($Vy6,$Vu),o($Vy6,$Vm4),o($Vy6,$Vn4,{198:3927,199:3928,107:[1,3929]}),o($Vy6,$Vo4),o($Vy6,$Vp4),o($Vy6,$Vq4),o($Vy6,$Vr4),o($Vy6,$Vs4),o($Vy6,$Vt4),o($Vy6,$Vu4),o($Vy6,$Vv4),o($Vy6,$Vw4),o($Vb9,$Vg3),o($Vb9,$Vh3),o($Vb9,$Vi3),o($Vb9,$Vj3),o($VI6,$V68),o($Vx,$Vg,{55:3930,36:3931,39:$Vy}),o($VI6,$V78),o($VI6,$V88),o($VI6,$Vo7),o($VI6,$Vp7),{115:[1,3932],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VI6,$V11),o($VI6,$V21),{19:[1,3936],21:[1,3940],22:3934,32:3933,196:3935,210:3937,211:[1,3939],212:[1,3938]},o($VI6,$V98),o($VI6,$Va8),o($Vb8,$Vr1,{89:3941}),o($VI6,$Vs1,{95:3636,91:3942,97:$VP8,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA1),o($Vb8,$VB1),o($Vb8,$VC1),o($Vb8,$VD1),{96:[1,3943]},o($Vb8,$VJ1),{66:[1,3944]},o($Vl7,$Vz2,{95:3329,91:3945,97:$Vs8,98:$VL,99:$VM,100:$VN}),o($Vk7,$VA2),o($VI6,$VB2,{86:3946,91:3947,87:3948,95:3949,101:3951,103:3952,97:$Vc9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VD2,{86:3946,91:3947,87:3948,95:3949,101:3951,103:3952,97:$Vc9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VE2,{86:3946,91:3947,87:3948,95:3949,101:3951,103:3952,97:$Vc9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vq7,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,3953],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3954,117:$VI2,144:$VJ2,185:$VK2}),o($Vn7,$VT1),o($Vn7,$Vl),o($Vn7,$Vm),o($Vn7,$Vq),o($Vn7,$Vr),o($Vn7,$Vs),o($Vn7,$Vt),o($Vn7,$Vu),o($Vk7,$Vb3),o($Vq7,$Vc3),o($Vq7,$Vd3),o($Vq7,$Ve3),o($Vq7,$Vf3),{107:[1,3955]},o($Vq7,$Vk3),o($VI6,$V78),o($VI6,$V88),o($VI6,$Vo7),o($VI6,$Vp7),{115:[1,3956],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VI6,$V11),o($VI6,$V21),{19:[1,3960],21:[1,3964],22:3958,32:3957,196:3959,210:3961,211:[1,3963],212:[1,3962]},o($VI6,$V98),o($VI6,$Va8),o($Vb8,$Vr1,{89:3965}),o($VI6,$Vs1,{95:3678,91:3966,97:$VQ8,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA1),o($Vb8,$VB1),o($Vb8,$VC1),o($Vb8,$VD1),{96:[1,3967]},o($Vb8,$VJ1),{66:[1,3968]},o($Vl7,$Vz2,{95:3362,91:3969,97:$Vu8,98:$VL,99:$VM,100:$VN}),o($Vk7,$VA2),o($VI6,$VB2,{86:3970,91:3971,87:3972,95:3973,101:3975,103:3976,97:$Vd9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VD2,{86:3970,91:3971,87:3972,95:3973,101:3975,103:3976,97:$Vd9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VE2,{86:3970,91:3971,87:3972,95:3973,101:3975,103:3976,97:$Vd9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vq7,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,3977],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:3978,117:$VI2,144:$VJ2,185:$VK2}),o($Vn7,$VT1),o($Vn7,$Vl),o($Vn7,$Vm),o($Vn7,$Vq),o($Vn7,$Vr),o($Vn7,$Vs),o($Vn7,$Vt),o($Vn7,$Vu),o($Vk7,$Vb3),o($Vq7,$Vc3),o($Vq7,$Vd3),o($Vq7,$Ve3),o($Vq7,$Vf3),{107:[1,3979]},o($Vq7,$Vk3),o($VI6,$VY4),{19:[1,3982],21:[1,3985],22:3981,83:3980,210:3983,211:[1,3984]},o($V16,$Vq8),o($Vd8,$VN3),o($V16,$VO3,{31:3986,189:[1,3987]}),{19:$VP3,21:$VQ3,22:627,125:3988,195:$VR3,210:630,211:$VS3},o($Vj8,$Vr8),o($Vk8,$VJ6,{56:3989}),o($VC,$VD,{59:3990,69:3991,71:3992,72:3993,88:3996,90:3997,83:3999,84:4000,85:4001,74:4002,40:4003,91:4007,22:4008,87:4010,114:4011,95:4015,210:4018,101:4019,103:4020,19:[1,4017],21:[1,4022],65:[1,3994],67:[1,3995],75:[1,4012],76:[1,4013],77:[1,4014],81:[1,3998],92:[1,4004],93:[1,4005],94:[1,4006],97:$Ve9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,4009],211:[1,4021]}),o($Vk8,$Vt8),o($VC,$VD,{59:4023,69:4024,71:4025,72:4026,88:4029,90:4030,83:4032,84:4033,85:4034,74:4035,40:4036,91:4040,22:4041,87:4043,114:4044,95:4048,210:4051,101:4052,103:4053,19:[1,4050],21:[1,4055],65:[1,4027],67:[1,4028],75:[1,4045],76:[1,4046],77:[1,4047],81:[1,4031],92:[1,4037],93:[1,4038],94:[1,4039],97:$Vf9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,4042],211:[1,4054]}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4056,117:$VI2,144:$VJ2,185:$VK2}),o($Vk8,$VT1),o($Vk8,$Vl),o($Vk8,$Vm),o($Vk8,$Vq),o($Vk8,$Vr),o($Vk8,$Vs),o($Vk8,$Vt),o($Vk8,$Vu),o($Vk8,$Vz2,{95:3407,91:4057,97:$Vx8,98:$VL,99:$VM,100:$VN}),o($VT8,$VA2),o($VT8,$Vb3),o($Vk8,$Vv8),o($Vy8,$VV3),o($VA8,$VW3),o($VA8,$VX3),o($VA8,$VY3),{96:[1,4058]},o($VA8,$VJ1),{96:[1,4060],102:4059,104:[1,4061],105:[1,4062],106:4063,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4064]},o($VA8,$Vg4),{117:[1,4065]},{19:[1,4068],21:[1,4071],22:4067,83:4066,210:4069,211:[1,4070]},o($V16,$Vw8),o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$VD8,21:$VE8,22:4073,83:4072,210:3440,211:$VF8},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$VG8,21:$VH8,22:4075,83:4074,210:3466,211:$VI8},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$VJ8,21:$VK8,22:4077,83:4076,210:3493,211:$VL8},o($Vo1,$VY4),{189:[1,4080],190:4078,191:[1,4079]},o($Vm1,$VM5),o($Vm1,$VN5),o($Vm1,$VO5),o($Vm1,$Vq),o($Vm1,$Vr),o($Vm1,$Vj4),o($Vm1,$Vk4),o($Vm1,$Vl4),o($Vm1,$Vt),o($Vm1,$Vu),o($Vm1,$Vm4),o($Vm1,$Vn4,{198:4081,199:4082,107:[1,4083]}),o($Vm1,$Vo4),o($Vm1,$Vp4),o($Vm1,$Vq4),o($Vm1,$Vr4),o($Vm1,$Vs4),o($Vm1,$Vt4),o($Vm1,$Vu4),o($Vm1,$Vv4),o($Vm1,$Vw4),o($VP5,$Vg3),o($VP5,$Vh3),o($VP5,$Vi3),o($VP5,$Vj3),{189:[1,4086],190:4084,191:[1,4085]},o($Vo1,$VM5),o($Vo1,$VN5),o($Vo1,$VO5),o($Vo1,$Vq),o($Vo1,$Vr),o($Vo1,$Vj4),o($Vo1,$Vk4),o($Vo1,$Vl4),o($Vo1,$Vt),o($Vo1,$Vu),o($Vo1,$Vm4),o($Vo1,$Vn4,{198:4087,199:4088,107:[1,4089]}),o($Vo1,$Vo4),o($Vo1,$Vp4),o($Vo1,$Vq4),o($Vo1,$Vr4),o($Vo1,$Vs4),o($Vo1,$Vt4),o($Vo1,$Vu4),o($Vo1,$Vv4),o($Vo1,$Vw4),o($VQ5,$Vg3),o($VQ5,$Vh3),o($VQ5,$Vi3),o($VQ5,$Vj3),{19:[1,4092],21:[1,4095],22:4091,83:4090,210:4093,211:[1,4094]},{189:[1,4098],190:4096,191:[1,4097]},o($Vp1,$VM5),o($Vp1,$VN5),o($Vp1,$VO5),o($Vp1,$Vq),o($Vp1,$Vr),o($Vp1,$Vj4),o($Vp1,$Vk4),o($Vp1,$Vl4),o($Vp1,$Vt),o($Vp1,$Vu),o($Vp1,$Vm4),o($Vp1,$Vn4,{198:4099,199:4100,107:[1,4101]}),o($Vp1,$Vo4),o($Vp1,$Vp4),o($Vp1,$Vq4),o($Vp1,$Vr4),o($Vp1,$Vs4),o($Vp1,$Vt4),o($Vp1,$Vu4),o($Vp1,$Vv4),o($Vp1,$Vw4),o($VR5,$Vg3),o($VR5,$Vh3),o($VR5,$Vi3),o($VR5,$Vj3),o($VF3,$VY4),{189:[1,4104],190:4102,191:[1,4103]},o($VE3,$VM5),o($VE3,$VN5),o($VE3,$VO5),o($VE3,$Vq),o($VE3,$Vr),o($VE3,$Vj4),o($VE3,$Vk4),o($VE3,$Vl4),o($VE3,$Vt),o($VE3,$Vu),o($VE3,$Vm4),o($VE3,$Vn4,{198:4105,199:4106,107:[1,4107]}),o($VE3,$Vo4),o($VE3,$Vp4),o($VE3,$Vq4),o($VE3,$Vr4),o($VE3,$Vs4),o($VE3,$Vt4),o($VE3,$Vu4),o($VE3,$Vv4),o($VE3,$Vw4),o($V37,$Vg3),o($V37,$Vh3),o($V37,$Vi3),o($V37,$Vj3),{189:[1,4110],190:4108,191:[1,4109]},o($VF3,$VM5),o($VF3,$VN5),o($VF3,$VO5),o($VF3,$Vq),o($VF3,$Vr),o($VF3,$Vj4),o($VF3,$Vk4),o($VF3,$Vl4),o($VF3,$Vt),o($VF3,$Vu),o($VF3,$Vm4),o($VF3,$Vn4,{198:4111,199:4112,107:[1,4113]}),o($VF3,$Vo4),o($VF3,$Vp4),o($VF3,$Vq4),o($VF3,$Vr4),o($VF3,$Vs4),o($VF3,$Vt4),o($VF3,$Vu4),o($VF3,$Vv4),o($VF3,$Vw4),o($V47,$Vg3),o($V47,$Vh3),o($V47,$Vi3),o($V47,$Vj3),{19:[1,4116],21:[1,4119],22:4115,83:4114,210:4117,211:[1,4118]},{189:[1,4122],190:4120,191:[1,4121]},o($VG3,$VM5),o($VG3,$VN5),o($VG3,$VO5),o($VG3,$Vq),o($VG3,$Vr),o($VG3,$Vj4),o($VG3,$Vk4),o($VG3,$Vl4),o($VG3,$Vt),o($VG3,$Vu),o($VG3,$Vm4),o($VG3,$Vn4,{198:4123,199:4124,107:[1,4125]}),o($VG3,$Vo4),o($VG3,$Vp4),o($VG3,$Vq4),o($VG3,$Vr4),o($VG3,$Vs4),o($VG3,$Vt4),o($VG3,$Vu4),o($VG3,$Vv4),o($VG3,$Vw4),o($V57,$Vg3),o($V57,$Vh3),o($V57,$Vi3),o($V57,$Vj3),o($V38,$VU1),o($V38,$VV1),o($V38,$VW1),o($Vy6,$Vz5),o($Vy6,$VA5),{19:$VM8,21:$VN8,22:4127,83:4126,210:3597,211:$VO8},o($VI6,$Vt8),o($VC,$VD,{59:4128,69:4129,71:4130,72:4131,88:4134,90:4135,83:4137,84:4138,85:4139,74:4140,40:4141,91:4145,22:4146,87:4148,114:4149,95:4153,210:4156,101:4157,103:4158,19:[1,4155],21:[1,4160],65:[1,4132],67:[1,4133],75:[1,4150],76:[1,4151],77:[1,4152],81:[1,4136],92:[1,4142],93:[1,4143],94:[1,4144],97:$Vg9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,4147],211:[1,4159]}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4161,117:$VI2,144:$VJ2,185:$VK2}),o($VI6,$VT1),o($VI6,$Vl),o($VI6,$Vm),o($VI6,$Vq),o($VI6,$Vr),o($VI6,$Vs),o($VI6,$Vt),o($VI6,$Vu),o($VI6,$Vz2,{95:3636,91:4162,97:$VP8,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA2),o($Vb8,$Vb3),o($VI6,$Vv8),o($Vk7,$VV3),o($Vm7,$VW3),o($Vm7,$VX3),o($Vm7,$VY3),{96:[1,4163]},o($Vm7,$VJ1),{96:[1,4165],102:4164,104:[1,4166],105:[1,4167],106:4168,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4169]},o($Vm7,$Vg4),{117:[1,4170]},{19:[1,4173],21:[1,4176],22:4172,83:4171,210:4174,211:[1,4175]},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4177,117:$VI2,144:$VJ2,185:$VK2}),o($VI6,$VT1),o($VI6,$Vl),o($VI6,$Vm),o($VI6,$Vq),o($VI6,$Vr),o($VI6,$Vs),o($VI6,$Vt),o($VI6,$Vu),o($VI6,$Vz2,{95:3678,91:4178,97:$VQ8,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA2),o($Vb8,$Vb3),o($VI6,$Vv8),o($Vk7,$VV3),o($Vm7,$VW3),o($Vm7,$VX3),o($Vm7,$VY3),{96:[1,4179]},o($Vm7,$VJ1),{96:[1,4181],102:4180,104:[1,4182],105:[1,4183],106:4184,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4185]},o($Vm7,$Vg4),{117:[1,4186]},{19:[1,4189],21:[1,4192],22:4188,83:4187,210:4190,211:[1,4191]},o($Vm7,$VB5),o($Vm7,$VE1),o($Vm7,$Vq),o($Vm7,$Vr),o($Vm7,$Vt),o($Vm7,$Vu),o($VR8,$VN4),{19:$Vn,21:$Vo,22:4193,210:52,211:$Vp},{19:$Vh9,21:$Vi9,22:4195,96:[1,4206],104:[1,4207],105:[1,4208],106:4205,177:4196,187:4194,192:4199,193:4200,194:4201,197:4204,200:[1,4209],201:[1,4210],202:[1,4215],203:[1,4216],204:[1,4217],205:[1,4218],206:[1,4211],207:[1,4212],208:[1,4213],209:[1,4214],210:4198,211:$Vj9},o($Vj8,$Vd7,{57:4219,49:[1,4220]}),o($Vk8,$Ve7),o($Vk8,$Vf7,{70:4221,72:4222,74:4223,40:4224,114:4225,75:[1,4226],76:[1,4227],77:[1,4228],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Vk8,$Vg7),o($Vk8,$Vh7,{73:4229,69:4230,88:4231,90:4232,91:4236,95:4237,92:[1,4233],93:[1,4234],94:[1,4235],97:$Vk9,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:4239,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Vk8,$Vj7),o($Vy8,$Vr1,{89:4240}),o($Vz8,$Vs1,{95:4015,91:4241,97:$Ve9,98:$VL,99:$VM,100:$VN}),o($VA8,$Vu1,{82:4242}),o($VA8,$Vu1,{82:4243}),o($VA8,$Vu1,{82:4244}),o($Vk8,$Vv1,{101:4019,103:4020,87:4245,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VB8,$Vo7),o($VB8,$Vp7),o($Vy8,$VA1),o($Vy8,$VB1),o($Vy8,$VC1),o($Vy8,$VD1),o($VA8,$VE1),o($VF1,$VG1,{158:4246}),o($VC8,$VI1),{115:[1,4247],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VB8,$V11),o($VB8,$V21),{19:[1,4251],21:[1,4255],22:4249,32:4248,196:4250,210:4252,211:[1,4254],212:[1,4253]},{96:[1,4256]},o($Vy8,$VJ1),o($VA8,$Vq),o($VA8,$Vr),{96:[1,4258],102:4257,104:[1,4259],105:[1,4260],106:4261,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4262]},o($VA8,$Vt),o($VA8,$Vu),o($Vk8,$Ve7),o($Vk8,$Vf7,{70:4263,72:4264,74:4265,40:4266,114:4267,75:[1,4268],76:[1,4269],77:[1,4270],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Vk8,$Vg7),o($Vk8,$Vh7,{73:4271,69:4272,88:4273,90:4274,91:4278,95:4279,92:[1,4275],93:[1,4276],94:[1,4277],97:$Vl9,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:4281,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Vk8,$Vj7),o($Vy8,$Vr1,{89:4282}),o($Vz8,$Vs1,{95:4048,91:4283,97:$Vf9,98:$VL,99:$VM,100:$VN}),o($VA8,$Vu1,{82:4284}),o($VA8,$Vu1,{82:4285}),o($VA8,$Vu1,{82:4286}),o($Vk8,$Vv1,{101:4052,103:4053,87:4287,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VB8,$Vo7),o($VB8,$Vp7),o($Vy8,$VA1),o($Vy8,$VB1),o($Vy8,$VC1),o($Vy8,$VD1),o($VA8,$VE1),o($VF1,$VG1,{158:4288}),o($VC8,$VI1),{115:[1,4289],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VB8,$V11),o($VB8,$V21),{19:[1,4293],21:[1,4297],22:4291,32:4290,196:4292,210:4294,211:[1,4296],212:[1,4295]},{96:[1,4298]},o($Vy8,$VJ1),o($VA8,$Vq),o($VA8,$Vr),{96:[1,4300],102:4299,104:[1,4301],105:[1,4302],106:4303,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4304]},o($VA8,$Vt),o($VA8,$Vu),{117:[1,4305]},o($VT8,$VV3),o($VA8,$Vb3),o($VA8,$Vc3),o($VA8,$Vd3),o($VA8,$Ve3),o($VA8,$Vf3),{107:[1,4306]},o($VA8,$Vk3),o($VB8,$VY4),o($VC8,$VB5),o($VC8,$VE1),o($VC8,$Vq),o($VC8,$Vr),o($VC8,$Vt),o($VC8,$Vu),o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($Vu2,$VU1),o($Vu2,$VV1),o($Vu2,$VW1),o($Vm1,$Vz5),o($Vm1,$VA5),{19:$VV8,21:$VW8,22:4308,83:4307,210:3770,211:$VX8},o($Vw2,$VU1),o($Vw2,$VV1),o($Vw2,$VW1),o($Vo1,$Vz5),o($Vo1,$VA5),{19:$VY8,21:$VZ8,22:4310,83:4309,210:3796,211:$V_8},o($Vt1,$VB5),o($Vt1,$VE1),o($Vt1,$Vq),o($Vt1,$Vr),o($Vt1,$Vt),o($Vt1,$Vu),o($Vy2,$VU1),o($Vy2,$VV1),o($Vy2,$VW1),o($Vp1,$Vz5),o($Vp1,$VA5),{19:$V$8,21:$V09,22:4312,83:4311,210:3823,211:$V19},o($VG4,$VU1),o($VG4,$VV1),o($VG4,$VW1),o($VE3,$Vz5),o($VE3,$VA5),{19:$V29,21:$V39,22:4314,83:4313,210:3850,211:$V49},o($VH4,$VU1),o($VH4,$VV1),o($VH4,$VW1),o($VF3,$Vz5),o($VF3,$VA5),{19:$V59,21:$V69,22:4316,83:4315,210:3876,211:$V79},o($VI3,$VB5),o($VI3,$VE1),o($VI3,$Vq),o($VI3,$Vr),o($VI3,$Vt),o($VI3,$Vu),o($VJ4,$VU1),o($VJ4,$VV1),o($VJ4,$VW1),o($VG3,$Vz5),o($VG3,$VA5),{19:$V89,21:$V99,22:4318,83:4317,210:3903,211:$Va9},o($Vy6,$V66),o($Vy6,$VE1),o($VI6,$Ve7),o($VI6,$Vf7,{70:4319,72:4320,74:4321,40:4322,114:4323,75:[1,4324],76:[1,4325],77:[1,4326],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($VI6,$Vg7),o($VI6,$Vh7,{73:4327,69:4328,88:4329,90:4330,91:4334,95:4335,92:[1,4331],93:[1,4332],94:[1,4333],97:$Vm9,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:4337,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($VI6,$Vj7),o($Vk7,$Vr1,{89:4338}),o($Vl7,$Vs1,{95:4153,91:4339,97:$Vg9,98:$VL,99:$VM,100:$VN}),o($Vm7,$Vu1,{82:4340}),o($Vm7,$Vu1,{82:4341}),o($Vm7,$Vu1,{82:4342}),o($VI6,$Vv1,{101:4157,103:4158,87:4343,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vn7,$Vo7),o($Vn7,$Vp7),o($Vk7,$VA1),o($Vk7,$VB1),o($Vk7,$VC1),o($Vk7,$VD1),o($Vm7,$VE1),o($VF1,$VG1,{158:4344}),o($Vq7,$VI1),{115:[1,4345],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vn7,$V11),o($Vn7,$V21),{19:[1,4349],21:[1,4353],22:4347,32:4346,196:4348,210:4350,211:[1,4352],212:[1,4351]},{96:[1,4354]},o($Vk7,$VJ1),o($Vm7,$Vq),o($Vm7,$Vr),{96:[1,4356],102:4355,104:[1,4357],105:[1,4358],106:4359,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4360]},o($Vm7,$Vt),o($Vm7,$Vu),{117:[1,4361]},o($Vb8,$VV3),o($Vm7,$Vb3),o($Vm7,$Vc3),o($Vm7,$Vd3),o($Vm7,$Ve3),o($Vm7,$Vf3),{107:[1,4362]},o($Vm7,$Vk3),o($Vn7,$VY4),o($Vq7,$VB5),o($Vq7,$VE1),o($Vq7,$Vq),o($Vq7,$Vr),o($Vq7,$Vt),o($Vq7,$Vu),{117:[1,4363]},o($Vb8,$VV3),o($Vm7,$Vb3),o($Vm7,$Vc3),o($Vm7,$Vd3),o($Vm7,$Ve3),o($Vm7,$Vf3),{107:[1,4364]},o($Vm7,$Vk3),o($Vn7,$VY4),o($Vq7,$VB5),o($Vq7,$VE1),o($Vq7,$Vq),o($Vq7,$Vr),o($Vq7,$Vt),o($Vq7,$Vu),{189:[1,4367],190:4365,191:[1,4366]},o($Vd8,$VM5),o($Vd8,$VN5),o($Vd8,$VO5),o($Vd8,$Vq),o($Vd8,$Vr),o($Vd8,$Vj4),o($Vd8,$Vk4),o($Vd8,$Vl4),o($Vd8,$Vt),o($Vd8,$Vu),o($Vd8,$Vm4),o($Vd8,$Vn4,{198:4368,199:4369,107:[1,4370]}),o($Vd8,$Vo4),o($Vd8,$Vp4),o($Vd8,$Vq4),o($Vd8,$Vr4),o($Vd8,$Vs4),o($Vd8,$Vt4),o($Vd8,$Vu4),o($Vd8,$Vv4),o($Vd8,$Vw4),o($Vn9,$Vg3),o($Vn9,$Vh3),o($Vn9,$Vi3),o($Vn9,$Vj3),o($Vk8,$V68),o($Vx,$Vg,{55:4371,36:4372,39:$Vy}),o($Vk8,$V78),o($Vk8,$V88),o($Vk8,$Vo7),o($Vk8,$Vp7),{115:[1,4373],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vk8,$V11),o($Vk8,$V21),{19:[1,4377],21:[1,4381],22:4375,32:4374,196:4376,210:4378,211:[1,4380],212:[1,4379]},o($Vk8,$V98),o($Vk8,$Va8),o($VT8,$Vr1,{89:4382}),o($Vk8,$Vs1,{95:4237,91:4383,97:$Vk9,98:$VL,99:$VM,100:$VN}),o($VT8,$VA1),o($VT8,$VB1),o($VT8,$VC1),o($VT8,$VD1),{96:[1,4384]},o($VT8,$VJ1),{66:[1,4385]},o($Vz8,$Vz2,{95:4015,91:4386,97:$Ve9,98:$VL,99:$VM,100:$VN}),o($Vy8,$VA2),o($Vk8,$VB2,{86:4387,91:4388,87:4389,95:4390,101:4392,103:4393,97:$Vo9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VD2,{86:4387,91:4388,87:4389,95:4390,101:4392,103:4393,97:$Vo9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VE2,{86:4387,91:4388,87:4389,95:4390,101:4392,103:4393,97:$Vo9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VC8,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,4394],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4395,117:$VI2,144:$VJ2,185:$VK2}),o($VB8,$VT1),o($VB8,$Vl),o($VB8,$Vm),o($VB8,$Vq),o($VB8,$Vr),o($VB8,$Vs),o($VB8,$Vt),o($VB8,$Vu),o($Vy8,$Vb3),o($VC8,$Vc3),o($VC8,$Vd3),o($VC8,$Ve3),o($VC8,$Vf3),{107:[1,4396]},o($VC8,$Vk3),o($Vk8,$V78),o($Vk8,$V88),o($Vk8,$Vo7),o($Vk8,$Vp7),{115:[1,4397],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vk8,$V11),o($Vk8,$V21),{19:[1,4401],21:[1,4405],22:4399,32:4398,196:4400,210:4402,211:[1,4404],212:[1,4403]},o($Vk8,$V98),o($Vk8,$Va8),o($VT8,$Vr1,{89:4406}),o($Vk8,$Vs1,{95:4279,91:4407,97:$Vl9,98:$VL,99:$VM,100:$VN}),o($VT8,$VA1),o($VT8,$VB1),o($VT8,$VC1),o($VT8,$VD1),{96:[1,4408]},o($VT8,$VJ1),{66:[1,4409]},o($Vz8,$Vz2,{95:4048,91:4410,97:$Vf9,98:$VL,99:$VM,100:$VN}),o($Vy8,$VA2),o($Vk8,$VB2,{86:4411,91:4412,87:4413,95:4414,101:4416,103:4417,97:$Vp9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VD2,{86:4411,91:4412,87:4413,95:4414,101:4416,103:4417,97:$Vp9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VE2,{86:4411,91:4412,87:4413,95:4414,101:4416,103:4417,97:$Vp9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VC8,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,4418],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4419,117:$VI2,144:$VJ2,185:$VK2}),o($VB8,$VT1),o($VB8,$Vl),o($VB8,$Vm),o($VB8,$Vq),o($VB8,$Vr),o($VB8,$Vs),o($VB8,$Vt),o($VB8,$Vu),o($Vy8,$Vb3),o($VC8,$Vc3),o($VC8,$Vd3),o($VC8,$Ve3),o($VC8,$Vf3),{107:[1,4420]},o($VC8,$Vk3),o($Vk8,$VY4),{19:[1,4423],21:[1,4426],22:4422,83:4421,210:4424,211:[1,4425]},o($Vm1,$V66),o($Vm1,$VE1),o($Vo1,$V66),o($Vo1,$VE1),o($Vp1,$V66),o($Vp1,$VE1),o($VE3,$V66),o($VE3,$VE1),o($VF3,$V66),o($VF3,$VE1),o($VG3,$V66),o($VG3,$VE1),o($VI6,$V78),o($VI6,$V88),o($VI6,$Vo7),o($VI6,$Vp7),{115:[1,4427],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VI6,$V11),o($VI6,$V21),{19:[1,4431],21:[1,4435],22:4429,32:4428,196:4430,210:4432,211:[1,4434],212:[1,4433]},o($VI6,$V98),o($VI6,$Va8),o($Vb8,$Vr1,{89:4436}),o($VI6,$Vs1,{95:4335,91:4437,97:$Vm9,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA1),o($Vb8,$VB1),o($Vb8,$VC1),o($Vb8,$VD1),{96:[1,4438]},o($Vb8,$VJ1),{66:[1,4439]},o($Vl7,$Vz2,{95:4153,91:4440,97:$Vg9,98:$VL,99:$VM,100:$VN}),o($Vk7,$VA2),o($VI6,$VB2,{86:4441,91:4442,87:4443,95:4444,101:4446,103:4447,97:$Vq9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VD2,{86:4441,91:4442,87:4443,95:4444,101:4446,103:4447,97:$Vq9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VI6,$VE2,{86:4441,91:4442,87:4443,95:4444,101:4446,103:4447,97:$Vq9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vq7,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,4448],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4449,117:$VI2,144:$VJ2,185:$VK2}),o($Vn7,$VT1),o($Vn7,$Vl),o($Vn7,$Vm),o($Vn7,$Vq),o($Vn7,$Vr),o($Vn7,$Vs),o($Vn7,$Vt),o($Vn7,$Vu),o($Vk7,$Vb3),o($Vq7,$Vc3),o($Vq7,$Vd3),o($Vq7,$Ve3),o($Vq7,$Vf3),{107:[1,4450]},o($Vq7,$Vk3),o($VI6,$VY4),{19:[1,4453],21:[1,4456],22:4452,83:4451,210:4454,211:[1,4455]},o($VI6,$VY4),{19:[1,4459],21:[1,4462],22:4458,83:4457,210:4460,211:[1,4461]},o($VR8,$VU1),o($VR8,$VV1),o($VR8,$VW1),o($Vd8,$Vz5),o($Vd8,$VA5),{19:$Vh9,21:$Vi9,22:4464,83:4463,210:4198,211:$Vj9},o($Vk8,$Vt8),o($VC,$VD,{59:4465,69:4466,71:4467,72:4468,88:4471,90:4472,83:4474,84:4475,85:4476,74:4477,40:4478,91:4482,22:4483,87:4485,114:4486,95:4490,210:4493,101:4494,103:4495,19:[1,4492],21:[1,4497],65:[1,4469],67:[1,4470],75:[1,4487],76:[1,4488],77:[1,4489],81:[1,4473],92:[1,4479],93:[1,4480],94:[1,4481],97:$Vr9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT,157:[1,4484],211:[1,4496]}),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4498,117:$VI2,144:$VJ2,185:$VK2}),o($Vk8,$VT1),o($Vk8,$Vl),o($Vk8,$Vm),o($Vk8,$Vq),o($Vk8,$Vr),o($Vk8,$Vs),o($Vk8,$Vt),o($Vk8,$Vu),o($Vk8,$Vz2,{95:4237,91:4499,97:$Vk9,98:$VL,99:$VM,100:$VN}),o($VT8,$VA2),o($VT8,$Vb3),o($Vk8,$Vv8),o($Vy8,$VV3),o($VA8,$VW3),o($VA8,$VX3),o($VA8,$VY3),{96:[1,4500]},o($VA8,$VJ1),{96:[1,4502],102:4501,104:[1,4503],105:[1,4504],106:4505,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4506]},o($VA8,$Vg4),{117:[1,4507]},{19:[1,4510],21:[1,4513],22:4509,83:4508,210:4511,211:[1,4512]},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4514,117:$VI2,144:$VJ2,185:$VK2}),o($Vk8,$VT1),o($Vk8,$Vl),o($Vk8,$Vm),o($Vk8,$Vq),o($Vk8,$Vr),o($Vk8,$Vs),o($Vk8,$Vt),o($Vk8,$Vu),o($Vk8,$Vz2,{95:4279,91:4515,97:$Vl9,98:$VL,99:$VM,100:$VN}),o($VT8,$VA2),o($VT8,$Vb3),o($Vk8,$Vv8),o($Vy8,$VV3),o($VA8,$VW3),o($VA8,$VX3),o($VA8,$VY3),{96:[1,4516]},o($VA8,$VJ1),{96:[1,4518],102:4517,104:[1,4519],105:[1,4520],106:4521,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4522]},o($VA8,$Vg4),{117:[1,4523]},{19:[1,4526],21:[1,4529],22:4525,83:4524,210:4527,211:[1,4528]},o($VA8,$VB5),o($VA8,$VE1),o($VA8,$Vq),o($VA8,$Vr),o($VA8,$Vt),o($VA8,$Vu),o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4530,117:$VI2,144:$VJ2,185:$VK2}),o($VI6,$VT1),o($VI6,$Vl),o($VI6,$Vm),o($VI6,$Vq),o($VI6,$Vr),o($VI6,$Vs),o($VI6,$Vt),o($VI6,$Vu),o($VI6,$Vz2,{95:4335,91:4531,97:$Vm9,98:$VL,99:$VM,100:$VN}),o($Vb8,$VA2),o($Vb8,$Vb3),o($VI6,$Vv8),o($Vk7,$VV3),o($Vm7,$VW3),o($Vm7,$VX3),o($Vm7,$VY3),{96:[1,4532]},o($Vm7,$VJ1),{96:[1,4534],102:4533,104:[1,4535],105:[1,4536],106:4537,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4538]},o($Vm7,$Vg4),{117:[1,4539]},{19:[1,4542],21:[1,4545],22:4541,83:4540,210:4543,211:[1,4544]},o($Vm7,$VB5),o($Vm7,$VE1),o($Vm7,$Vq),o($Vm7,$Vr),o($Vm7,$Vt),o($Vm7,$Vu),o($Vm7,$VB5),o($Vm7,$VE1),o($Vm7,$Vq),o($Vm7,$Vr),o($Vm7,$Vt),o($Vm7,$Vu),o($Vd8,$V66),o($Vd8,$VE1),o($Vk8,$Ve7),o($Vk8,$Vf7,{70:4546,72:4547,74:4548,40:4549,114:4550,75:[1,4551],76:[1,4552],77:[1,4553],115:$VD,121:$VD,123:$VD,185:$VD,215:$VD}),o($Vk8,$Vg7),o($Vk8,$Vh7,{73:4554,69:4555,88:4556,90:4557,91:4561,95:4562,92:[1,4558],93:[1,4559],94:[1,4560],97:$Vs9,98:$VL,99:$VM,100:$VN}),o($Vf,$Vg,{36:182,40:184,34:4564,39:$Vk1,75:$Vh,76:$Vi,77:$Vj}),o($Vk8,$Vj7),o($Vy8,$Vr1,{89:4565}),o($Vz8,$Vs1,{95:4490,91:4566,97:$Vr9,98:$VL,99:$VM,100:$VN}),o($VA8,$Vu1,{82:4567}),o($VA8,$Vu1,{82:4568}),o($VA8,$Vu1,{82:4569}),o($Vk8,$Vv1,{101:4494,103:4495,87:4570,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VB8,$Vo7),o($VB8,$Vp7),o($Vy8,$VA1),o($Vy8,$VB1),o($Vy8,$VC1),o($Vy8,$VD1),o($VA8,$VE1),o($VF1,$VG1,{158:4571}),o($VC8,$VI1),{115:[1,4572],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($VB8,$V11),o($VB8,$V21),{19:[1,4576],21:[1,4580],22:4574,32:4573,196:4575,210:4577,211:[1,4579],212:[1,4578]},{96:[1,4581]},o($Vy8,$VJ1),o($VA8,$Vq),o($VA8,$Vr),{96:[1,4583],102:4582,104:[1,4584],105:[1,4585],106:4586,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4587]},o($VA8,$Vt),o($VA8,$Vu),{117:[1,4588]},o($VT8,$VV3),o($VA8,$Vb3),o($VA8,$Vc3),o($VA8,$Vd3),o($VA8,$Ve3),o($VA8,$Vf3),{107:[1,4589]},o($VA8,$Vk3),o($VB8,$VY4),o($VC8,$VB5),o($VC8,$VE1),o($VC8,$Vq),o($VC8,$Vr),o($VC8,$Vt),o($VC8,$Vu),{117:[1,4590]},o($VT8,$VV3),o($VA8,$Vb3),o($VA8,$Vc3),o($VA8,$Vd3),o($VA8,$Ve3),o($VA8,$Vf3),{107:[1,4591]},o($VA8,$Vk3),o($VB8,$VY4),o($VC8,$VB5),o($VC8,$VE1),o($VC8,$Vq),o($VC8,$Vr),o($VC8,$Vt),o($VC8,$Vu),{117:[1,4592]},o($Vb8,$VV3),o($Vm7,$Vb3),o($Vm7,$Vc3),o($Vm7,$Vd3),o($Vm7,$Ve3),o($Vm7,$Vf3),{107:[1,4593]},o($Vm7,$Vk3),o($Vn7,$VY4),o($Vq7,$VB5),o($Vq7,$VE1),o($Vq7,$Vq),o($Vq7,$Vr),o($Vq7,$Vt),o($Vq7,$Vu),o($Vk8,$V78),o($Vk8,$V88),o($Vk8,$Vo7),o($Vk8,$Vp7),{115:[1,4594],118:195,119:196,120:197,121:$Vw1,123:$Vx1,185:$Vy1,213:199,215:$Vz1},o($Vk8,$V11),o($Vk8,$V21),{19:[1,4598],21:[1,4602],22:4596,32:4595,196:4597,210:4599,211:[1,4601],212:[1,4600]},o($Vk8,$V98),o($Vk8,$Va8),o($VT8,$Vr1,{89:4603}),o($Vk8,$Vs1,{95:4562,91:4604,97:$Vs9,98:$VL,99:$VM,100:$VN}),o($VT8,$VA1),o($VT8,$VB1),o($VT8,$VC1),o($VT8,$VD1),{96:[1,4605]},o($VT8,$VJ1),{66:[1,4606]},o($Vz8,$Vz2,{95:4490,91:4607,97:$Vr9,98:$VL,99:$VM,100:$VN}),o($Vy8,$VA2),o($Vk8,$VB2,{86:4608,91:4609,87:4610,95:4611,101:4613,103:4614,97:$Vt9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VD2,{86:4608,91:4609,87:4610,95:4611,101:4613,103:4614,97:$Vt9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($Vk8,$VE2,{86:4608,91:4609,87:4610,95:4611,101:4613,103:4614,97:$Vt9,98:$VL,99:$VM,100:$VN,108:$VO,109:$VP,110:$VQ,111:$VR,112:$VS,113:$VT}),o($VC8,$VF2),{19:$VU2,21:$VV2,22:396,67:$VW2,77:$VX2,96:$VY2,104:$VZ2,105:$V_2,106:408,159:[1,4615],160:391,161:392,162:393,163:394,177:397,181:$V$2,192:402,193:403,194:404,197:407,200:$V03,201:$V13,202:$V23,203:$V33,204:$V43,205:$V53,206:$V63,207:$V73,208:$V83,209:$V93,210:401,211:$Va3},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4616,117:$VI2,144:$VJ2,185:$VK2}),o($VB8,$VT1),o($VB8,$Vl),o($VB8,$Vm),o($VB8,$Vq),o($VB8,$Vr),o($VB8,$Vs),o($VB8,$Vt),o($VB8,$Vu),o($Vy8,$Vb3),o($VC8,$Vc3),o($VC8,$Vd3),o($VC8,$Ve3),o($VC8,$Vf3),{107:[1,4617]},o($VC8,$Vk3),o($Vk8,$VY4),{19:[1,4620],21:[1,4623],22:4619,83:4618,210:4621,211:[1,4622]},o($Vk8,$VY4),{19:[1,4626],21:[1,4629],22:4625,83:4624,210:4627,211:[1,4628]},o($VI6,$VY4),{19:[1,4632],21:[1,4635],22:4631,83:4630,210:4633,211:[1,4634]},o($VG2,$VH2,{122:361,126:362,127:363,128:364,132:365,133:366,134:367,140:368,142:369,143:370,116:4636,117:$VI2,144:$VJ2,185:$VK2}),o($Vk8,$VT1),o($Vk8,$Vl),o($Vk8,$Vm),o($Vk8,$Vq),o($Vk8,$Vr),o($Vk8,$Vs),o($Vk8,$Vt),o($Vk8,$Vu),o($Vk8,$Vz2,{95:4562,91:4637,97:$Vs9,98:$VL,99:$VM,100:$VN}),o($VT8,$VA2),o($VT8,$Vb3),o($Vk8,$Vv8),o($Vy8,$VV3),o($VA8,$VW3),o($VA8,$VX3),o($VA8,$VY3),{96:[1,4638]},o($VA8,$VJ1),{96:[1,4640],102:4639,104:[1,4641],105:[1,4642],106:4643,202:$VK1,203:$VL1,204:$VM1,205:$VN1},{96:[1,4644]},o($VA8,$Vg4),{117:[1,4645]},{19:[1,4648],21:[1,4651],22:4647,83:4646,210:4649,211:[1,4650]},o($VA8,$VB5),o($VA8,$VE1),o($VA8,$Vq),o($VA8,$Vr),o($VA8,$Vt),o($VA8,$Vu),o($VA8,$VB5),o($VA8,$VE1),o($VA8,$Vq),o($VA8,$Vr),o($VA8,$Vt),o($VA8,$Vu),o($Vm7,$VB5),o($Vm7,$VE1),o($Vm7,$Vq),o($Vm7,$Vr),o($Vm7,$Vt),o($Vm7,$Vu),{117:[1,4652]},o($VT8,$VV3),o($VA8,$Vb3),o($VA8,$Vc3),o($VA8,$Vd3),o($VA8,$Ve3),o($VA8,$Vf3),{107:[1,4653]},o($VA8,$Vk3),o($VB8,$VY4),o($VC8,$VB5),o($VC8,$VE1),o($VC8,$Vq),o($VC8,$Vr),o($VC8,$Vt),o($VC8,$Vu),o($Vk8,$VY4),{19:[1,4656],21:[1,4659],22:4655,83:4654,210:4657,211:[1,4658]},o($VA8,$VB5),o($VA8,$VE1),o($VA8,$Vq),o($VA8,$Vr),o($VA8,$Vt),o($VA8,$Vu)],
 defaultActions: {6:[2,11],30:[2,1],102:[2,115],103:[2,116],104:[2,117],111:[2,128],112:[2,129],210:[2,248],211:[2,249],212:[2,250],213:[2,251],333:[2,31],361:[2,138],362:[2,142],364:[2,144],569:[2,29],570:[2,33],607:[2,30],1117:[2,142],1119:[2,144]},
-parseError: function parseError(str, hash) {
+parseError: function parseError (str, hash) {
     if (hash.recoverable) {
         this.trace(str);
     } else {
@@ -55982,7 +55970,7 @@ parse: function parse(input) {
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -56068,14 +56056,16 @@ parse: function parse(input) {
     if (Parser.productions && label in Parser.productions)
       error("Structural error: "+label+" is a shape");
     if (!Parser.shapes)
-      Parser.shapes = {};
+      Parser.shapes = new Map();
     if (label in Parser.shapes) {
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
         error("Parse error: "+label+" already defined");
-    } else
+    } else {
+      shape.id = label;
       Parser.shapes[label] = shape;
+    }
   }
 
   // Add a production to the map
@@ -56083,7 +56073,7 @@ parse: function parse(input) {
     if (Parser.shapes && label in Parser.shapes)
       error("Structural error: "+label+" is a shape");
     if (!Parser.productions)
-      Parser.productions = {};
+      Parser.productions = new Map();
     if (label in Parser.productions) {
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;
@@ -56261,7 +56251,7 @@ showPosition:function () {
     },
 
 // test the lexed token: return FALSE when not a match, otherwise return token
-test_match:function (match, indexed_rule) {
+test_match:function(match, indexed_rule) {
         var token,
             lines,
             backup;
@@ -56391,7 +56381,7 @@ next:function () {
     },
 
 // return next match that has a token
-lex:function lex() {
+lex:function lex () {
         var r = this.next();
         if (r) {
             return r;
@@ -56401,12 +56391,12 @@ lex:function lex() {
     },
 
 // activates a new lexer condition state (pushes the new lexer condition state onto the condition stack)
-begin:function begin(condition) {
+begin:function begin (condition) {
         this.conditionStack.push(condition);
     },
 
 // pop the previously active lexer condition state off the condition stack
-popState:function popState() {
+popState:function popState () {
         var n = this.conditionStack.length - 1;
         if (n > 0) {
             return this.conditionStack.pop();
@@ -56416,7 +56406,7 @@ popState:function popState() {
     },
 
 // produce the lexer rule set which is active for the currently active lexer condition state
-_currentRules:function _currentRules() {
+_currentRules:function _currentRules () {
         if (this.conditionStack.length && this.conditionStack[this.conditionStack.length - 1]) {
             return this.conditions[this.conditionStack[this.conditionStack.length - 1]].rules;
         } else {
@@ -56425,7 +56415,7 @@ _currentRules:function _currentRules() {
     },
 
 // return the currently active lexer condition state; when an index argument is provided it produces the N-th previous condition state, if available
-topState:function topState(n) {
+topState:function topState (n) {
         n = this.conditionStack.length - 1 - Math.abs(n || 0);
         if (n >= 0) {
             return this.conditionStack[n];
@@ -56435,7 +56425,7 @@ topState:function topState(n) {
     },
 
 // alias for begin(condition)
-pushState:function pushState(condition) {
+pushState:function pushState (condition) {
         this.begin(condition);
     },
 
@@ -56623,7 +56613,7 @@ if (true) {
 exports.parser = ShExJison;
 exports.Parser = ShExJison.Parser;
 exports.parse = function () { return ShExJison.parse.apply(ShExJison, arguments); };
-exports.main = function commonjsMain(args) {
+exports.main = function commonjsMain (args) {
     if (!args[1]) {
         console.log('Usage: '+args[0]+' FILE');
         process.exit(1);
@@ -56635,7 +56625,6 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
-
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(2), __webpack_require__(40)(module)))
 
 /***/ }),
@@ -56727,7 +56716,7 @@ module.exports = request;
  * 
  */
 /**
- * bluebird build version 3.5.3
+ * bluebird build version 3.5.4
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 */
 !function(e){if(true)module.exports=e();else { var f; }}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -60021,7 +60010,7 @@ _dereq_("./synchronous_inspection")(Promise);
 _dereq_("./join")(
     Promise, PromiseArray, tryConvertToPromise, INTERNAL, async, getDomain);
 Promise.Promise = Promise;
-Promise.version = "3.5.3";
+Promise.version = "3.5.4";
 _dereq_('./map.js')(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
 _dereq_('./call_get.js')(Promise);
 _dereq_('./using.js')(Promise, apiRejection, tryConvertToPromise, createContext, INTERNAL, debug);
@@ -62016,7 +62005,12 @@ var ret = {
     domainBind: domainBind
 };
 ret.isRecentNode = ret.isNode && (function() {
-    var version = process.versions.node.split(".").map(Number);
+    var version;
+    if (process.versions && process.versions.node) {    
+        version = process.versions.node.split(".").map(Number);
+    } else if (process.version) {
+        version = process.version.split(".").map(Number);
+    }
     return (version[0] === 0 && version[1] > 10) || (version[0] > 0);
 })();
 
@@ -62037,8 +62031,8 @@ module.exports = ret;
 
 
 var core = __webpack_require__(232),
-    isArray = __webpack_require__(124),
-    isFunction = __webpack_require__(121),
+    isArray = __webpack_require__(125),
+    isFunction = __webpack_require__(122),
     isObjectLike = __webpack_require__(79);
 
 
@@ -62118,7 +62112,7 @@ module.exports = function (options) {
 
 
 var errors = __webpack_require__(233),
-    isFunction = __webpack_require__(121),
+    isFunction = __webpack_require__(122),
     isObjectLike = __webpack_require__(79),
     isString = __webpack_require__(239),
     isUndefined = __webpack_require__(240);
@@ -62383,7 +62377,7 @@ module.exports = freeGlobal;
 /* 236 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Symbol = __webpack_require__(123);
+var Symbol = __webpack_require__(124);
 
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
@@ -62500,8 +62494,8 @@ module.exports = isObject;
 /* 239 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(122),
-    isArray = __webpack_require__(124),
+var baseGetTag = __webpack_require__(123),
+    isArray = __webpack_require__(125),
     isObjectLike = __webpack_require__(79);
 
 /** `Object#toString` result references. */
@@ -62670,7 +62664,7 @@ module.exports = function (requireCache, callback, callbackForModulesToKeep, mod
 
 
 var extend = __webpack_require__(80)
-var cookies = __webpack_require__(125)
+var cookies = __webpack_require__(126)
 var helpers = __webpack_require__(81)
 
 var paramsHaveRequestBody = helpers.paramsHaveRequestBody
@@ -62849,10 +62843,10 @@ Object.defineProperty(request, 'debug', {
 var net = __webpack_require__(14);
 var urlParse = __webpack_require__(20).parse;
 var util = __webpack_require__(5);
-var pubsuffix = __webpack_require__(126);
-var Store = __webpack_require__(128).Store;
+var pubsuffix = __webpack_require__(127);
+var Store = __webpack_require__(129).Store;
 var MemoryCookieStore = __webpack_require__(248).MemoryCookieStore;
-var pathMatch = __webpack_require__(130).pathMatch;
+var pathMatch = __webpack_require__(131).pathMatch;
 var VERSION = __webpack_require__(249).version;
 
 var punycode;
@@ -64243,7 +64237,7 @@ exports.defaultPath = defaultPath;
 exports.pathMatch = pathMatch;
 exports.getPublicSuffix = pubsuffix.getPublicSuffix;
 exports.cookieCompare = cookieCompare;
-exports.permuteDomain = __webpack_require__(129).permuteDomain;
+exports.permuteDomain = __webpack_require__(130).permuteDomain;
 exports.permutePath = permutePath;
 exports.canonicalDomain = canonicalDomain;
 
@@ -64496,9 +64490,9 @@ module.exports = ["ac","com.ac","edu.ac","gov.ac","net.ac","mil.ac","org.ac","ad
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var Store = __webpack_require__(128).Store;
-var permuteDomain = __webpack_require__(129).permuteDomain;
-var pathMatch = __webpack_require__(130).pathMatch;
+var Store = __webpack_require__(129).Store;
+var permuteDomain = __webpack_require__(130).permuteDomain;
+var pathMatch = __webpack_require__(131).pathMatch;
 var util = __webpack_require__(5);
 
 function MemoryCookieStore() {
@@ -64900,7 +64894,7 @@ module.exports = Sha1
  */
 
 var inherits = __webpack_require__(0)
-var Sha256 = __webpack_require__(132)
+var Sha256 = __webpack_require__(133)
 var Hash = __webpack_require__(38)
 var Buffer = __webpack_require__(1).Buffer
 
@@ -64951,7 +64945,7 @@ module.exports = Sha224
 /***/ (function(module, exports, __webpack_require__) {
 
 var inherits = __webpack_require__(0)
-var SHA512 = __webpack_require__(133)
+var SHA512 = __webpack_require__(134)
 var Hash = __webpack_require__(38)
 var Buffer = __webpack_require__(1).Buffer
 
@@ -65066,16 +65060,16 @@ module.exports = Hmac
 /* 256 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(136)
+module.exports = __webpack_require__(137)
 
 
 /***/ }),
 /* 257 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global, process) {var checkParameters = __webpack_require__(138)
-var defaultEncoding = __webpack_require__(139)
-var sync = __webpack_require__(140)
+/* WEBPACK VAR INJECTION */(function(global, process) {var checkParameters = __webpack_require__(139)
+var defaultEncoding = __webpack_require__(140)
+var sync = __webpack_require__(141)
 var Buffer = __webpack_require__(1).Buffer
 
 var ZERO_BUF
@@ -66005,9 +65999,9 @@ EDE.prototype._unpad = DES.prototype._unpad;
 /***/ (function(module, exports, __webpack_require__) {
 
 var MODES = __webpack_require__(87)
-var AuthCipher = __webpack_require__(144)
+var AuthCipher = __webpack_require__(145)
 var Buffer = __webpack_require__(1).Buffer
-var StreamCipher = __webpack_require__(145)
+var StreamCipher = __webpack_require__(146)
 var Transform = __webpack_require__(30)
 var aes = __webpack_require__(66)
 var ebtk = __webpack_require__(67)
@@ -66396,10 +66390,10 @@ module.exports = GHASH
 /* 273 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var AuthCipher = __webpack_require__(144)
+var AuthCipher = __webpack_require__(145)
 var Buffer = __webpack_require__(1).Buffer
 var MODES = __webpack_require__(87)
-var StreamCipher = __webpack_require__(145)
+var StreamCipher = __webpack_require__(146)
 var Transform = __webpack_require__(30)
 var aes = __webpack_require__(66)
 var ebtk = __webpack_require__(67)
@@ -66556,7 +66550,7 @@ exports['des-ede'] = {
 /* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer) {var generatePrime = __webpack_require__(146)
+/* WEBPACK VAR INJECTION */(function(Buffer) {var generatePrime = __webpack_require__(147)
 var primes = __webpack_require__(278)
 
 var DH = __webpack_require__(279)
@@ -66624,14 +66618,14 @@ module.exports = {"modp1":{"gen":"02","prime":"ffffffffffffffffc90fdaa22168c234c
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var BN = __webpack_require__(8);
-var MillerRabin = __webpack_require__(147);
+var MillerRabin = __webpack_require__(148);
 var millerRabin = new MillerRabin();
 var TWENTYFOUR = new BN(24);
 var ELEVEN = new BN(11);
 var TEN = new BN(10);
 var THREE = new BN(3);
 var SEVEN = new BN(7);
-var primes = __webpack_require__(146);
+var primes = __webpack_require__(147);
 var randomBytes = __webpack_require__(37);
 module.exports = DH;
 
@@ -66800,7 +66794,7 @@ var inherits = __webpack_require__(0)
 var sign = __webpack_require__(281)
 var verify = __webpack_require__(317)
 
-var algorithms = __webpack_require__(136)
+var algorithms = __webpack_require__(137)
 Object.keys(algorithms).forEach(function (key) {
   algorithms[key].id = new Buffer(algorithms[key].id, 'hex')
   algorithms[key.toLowerCase()] = algorithms[key]
@@ -66893,12 +66887,12 @@ module.exports = {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {// much of this based on https://github.com/indutny/self-signed/blob/gh-pages/lib/rsa.js
-var createHmac = __webpack_require__(134)
+var createHmac = __webpack_require__(135)
 var crt = __webpack_require__(88)
 var EC = __webpack_require__(16).ec
 var BN = __webpack_require__(8)
 var parseKeys = __webpack_require__(69)
-var curves = __webpack_require__(157)
+var curves = __webpack_require__(158)
 
 function sign (hash, key, hashType, signType, tag) {
   var priv = parseKeys(key)
@@ -67056,7 +67050,7 @@ module.exports = {"_from":"elliptic@^6.0.0","_id":"elliptic@6.4.1","_inBundle":f
 var utils = exports;
 var BN = __webpack_require__(8);
 var minAssert = __webpack_require__(18);
-var minUtils = __webpack_require__(149);
+var minUtils = __webpack_require__(150);
 
 utils.assert = minAssert;
 utils.toArray = minUtils.toArray;
@@ -69347,9 +69341,9 @@ defineCurve('secp256k1', {
 
 exports.sha1 = __webpack_require__(290);
 exports.sha224 = __webpack_require__(291);
-exports.sha256 = __webpack_require__(151);
+exports.sha256 = __webpack_require__(152);
 exports.sha384 = __webpack_require__(292);
-exports.sha512 = __webpack_require__(152);
+exports.sha512 = __webpack_require__(153);
 
 
 /***/ }),
@@ -69361,7 +69355,7 @@ exports.sha512 = __webpack_require__(152);
 
 var utils = __webpack_require__(21);
 var common = __webpack_require__(47);
-var shaCommon = __webpack_require__(150);
+var shaCommon = __webpack_require__(151);
 
 var rotl32 = utils.rotl32;
 var sum32 = utils.sum32;
@@ -69441,7 +69435,7 @@ SHA1.prototype._digest = function digest(enc) {
 
 
 var utils = __webpack_require__(21);
-var SHA256 = __webpack_require__(151);
+var SHA256 = __webpack_require__(152);
 
 function SHA224() {
   if (!(this instanceof SHA224))
@@ -69479,7 +69473,7 @@ SHA224.prototype._digest = function digest(enc) {
 
 var utils = __webpack_require__(21);
 
-var SHA512 = __webpack_require__(152);
+var SHA512 = __webpack_require__(153);
 
 function SHA384() {
   if (!(this instanceof SHA384))
@@ -70760,7 +70754,7 @@ EC.prototype.getKeyRecoveryParam = function(e, signature, Q, enc) {
 
 
 var hash = __webpack_require__(89);
-var utils = __webpack_require__(149);
+var utils = __webpack_require__(150);
 var assert = __webpack_require__(18);
 
 function HmacDRBG(options) {
@@ -72567,7 +72561,7 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 /* 309 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var constants = __webpack_require__(154);
+var constants = __webpack_require__(155);
 
 exports.tagClass = {
   0: 'universal',
@@ -72617,7 +72611,7 @@ exports.tagByName = constants._reverse(exports.tag);
 
 var decoders = exports;
 
-decoders.der = __webpack_require__(155);
+decoders.der = __webpack_require__(156);
 decoders.pem = __webpack_require__(311);
 
 
@@ -72628,7 +72622,7 @@ decoders.pem = __webpack_require__(311);
 var inherits = __webpack_require__(0);
 var Buffer = __webpack_require__(3).Buffer;
 
-var DERDecoder = __webpack_require__(155);
+var DERDecoder = __webpack_require__(156);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -72682,7 +72676,7 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 
 var encoders = exports;
 
-encoders.der = __webpack_require__(156);
+encoders.der = __webpack_require__(157);
 encoders.pem = __webpack_require__(313);
 
 
@@ -72692,7 +72686,7 @@ encoders.pem = __webpack_require__(313);
 
 var inherits = __webpack_require__(0);
 
-var DEREncoder = __webpack_require__(156);
+var DEREncoder = __webpack_require__(157);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -72860,7 +72854,7 @@ module.exports = function (okey, password) {
 var BN = __webpack_require__(8)
 var EC = __webpack_require__(16).ec
 var parseKeys = __webpack_require__(69)
-var curves = __webpack_require__(157)
+var curves = __webpack_require__(158)
 
 function verify (sig, hash, key, signType, tag) {
   var pub = parseKeys(key)
@@ -73096,10 +73090,10 @@ exports.publicDecrypt = function publicDecrypt (key, buf) {
 var parseKeys = __webpack_require__(69)
 var randomBytes = __webpack_require__(37)
 var createHash = __webpack_require__(45)
-var mgf = __webpack_require__(158)
-var xor = __webpack_require__(159)
+var mgf = __webpack_require__(159)
+var xor = __webpack_require__(160)
 var BN = __webpack_require__(8)
-var withPublic = __webpack_require__(160)
+var withPublic = __webpack_require__(161)
 var crt = __webpack_require__(88)
 var Buffer = __webpack_require__(1).Buffer
 
@@ -73188,12 +73182,12 @@ function nonZero (len) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var parseKeys = __webpack_require__(69)
-var mgf = __webpack_require__(158)
-var xor = __webpack_require__(159)
+var mgf = __webpack_require__(159)
+var xor = __webpack_require__(160)
 var BN = __webpack_require__(8)
 var crt = __webpack_require__(88)
 var createHash = __webpack_require__(45)
-var withPublic = __webpack_require__(160)
+var withPublic = __webpack_require__(161)
 var Buffer = __webpack_require__(1).Buffer
 
 module.exports = function privateDecrypt (privateKey, enc, reverse) {
@@ -73431,10 +73425,10 @@ var caseless = __webpack_require__(97)
 var ForeverAgent = __webpack_require__(359)
 var FormData = __webpack_require__(360)
 var extend = __webpack_require__(80)
-var isstream = __webpack_require__(172)
+var isstream = __webpack_require__(173)
 var isTypedArray = __webpack_require__(361).strict
 var helpers = __webpack_require__(81)
-var cookies = __webpack_require__(125)
+var cookies = __webpack_require__(126)
 var getProxyFromURI = __webpack_require__(362)
 var Querystring = __webpack_require__(363).Querystring
 var Har = __webpack_require__(366).Har
@@ -74973,9 +74967,9 @@ module.exports = Request
 /* 324 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(161)
+/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(162)
 var inherits = __webpack_require__(0)
-var response = __webpack_require__(162)
+var response = __webpack_require__(163)
 var stream = __webpack_require__(44)
 var toArrayBuffer = __webpack_require__(325)
 
@@ -76545,8 +76539,8 @@ module.exports = ZStream;
 
 var utils   = __webpack_require__(70);
 var trees   = __webpack_require__(332);
-var adler32 = __webpack_require__(163);
-var crc32   = __webpack_require__(164);
+var adler32 = __webpack_require__(164);
+var crc32   = __webpack_require__(165);
 var msg     = __webpack_require__(333);
 
 /* Public constants ==========================================================*/
@@ -79693,8 +79687,8 @@ module.exports = {
 // 3. This notice may not be removed or altered from any source distribution.
 
 var utils         = __webpack_require__(70);
-var adler32       = __webpack_require__(163);
-var crc32         = __webpack_require__(164);
+var adler32       = __webpack_require__(164);
+var crc32         = __webpack_require__(165);
 var inflate_fast  = __webpack_require__(335);
 var inflate_table = __webpack_require__(336);
 
@@ -84255,7 +84249,7 @@ function getCertType(key) {
 
 // Copyright 2016 Joyent, Inc.
 
-var x509 = __webpack_require__(170);
+var x509 = __webpack_require__(171);
 
 module.exports = {
 	read: read,
@@ -84762,7 +84756,7 @@ module.exports = {
 var mod_assert = __webpack_require__(4);
 var mod_util = __webpack_require__(5);
 
-var mod_extsprintf = __webpack_require__(171);
+var mod_extsprintf = __webpack_require__(172);
 var mod_verror = __webpack_require__(353);
 var mod_jsonschema = __webpack_require__(354);
 
@@ -85503,7 +85497,7 @@ function mergeObjects(provided, overrides, defaults)
 var mod_assertplus = __webpack_require__(4);
 var mod_util = __webpack_require__(5);
 
-var mod_extsprintf = __webpack_require__(171);
+var mod_extsprintf = __webpack_require__(172);
 var mod_isError = __webpack_require__(36).isError;
 var sprintf = mod_extsprintf.sprintf;
 
@@ -86827,7 +86821,7 @@ module.exports = getProxyFromURI
 "use strict";
 
 
-var qs = __webpack_require__(173)
+var qs = __webpack_require__(174)
 var querystring = __webpack_require__(65)
 
 function Querystring (request) {
@@ -86884,8 +86878,8 @@ exports.Querystring = Querystring
 "use strict";
 
 
-var utils = __webpack_require__(174);
-var formats = __webpack_require__(175);
+var utils = __webpack_require__(175);
+var formats = __webpack_require__(176);
 
 var arrayPrefixGenerators = {
     brackets: function brackets(prefix) { // eslint-disable-line func-name-matching
@@ -87101,7 +87095,7 @@ module.exports = function (object, opts) {
 "use strict";
 
 
-var utils = __webpack_require__(174);
+var utils = __webpack_require__(175);
 
 var has = Object.prototype.hasOwnProperty;
 
@@ -87605,8 +87599,8 @@ exports.timings = function (data) {
 var compileSchema = __webpack_require__(369)
   , resolve = __webpack_require__(98)
   , Cache = __webpack_require__(373)
-  , SchemaObject = __webpack_require__(176)
-  , stableStringify = __webpack_require__(177)
+  , SchemaObject = __webpack_require__(177)
+  , stableStringify = __webpack_require__(178)
   , formats = __webpack_require__(374)
   , rules = __webpack_require__(375)
   , $dataMetaSchema = __webpack_require__(396)
@@ -88046,7 +88040,7 @@ function addDefaultMetaSchema(self) {
     self.addMetaSchema($dataSchema, $dataSchema.$id, true);
   }
   if (self._opts.meta === false) return;
-  var metaSchema = __webpack_require__(183);
+  var metaSchema = __webpack_require__(184);
   if (self._opts.$data) metaSchema = $dataMetaSchema(metaSchema, META_SUPPORT_DATA);
   self.addMetaSchema(metaSchema, META_SCHEMA_ID, true);
   self._refs['http://json-schema.org/schema'] = META_SCHEMA_ID;
@@ -88109,9 +88103,9 @@ function noop() {}
 var resolve = __webpack_require__(98)
   , util = __webpack_require__(39)
   , errorClasses = __webpack_require__(100)
-  , stableStringify = __webpack_require__(177);
+  , stableStringify = __webpack_require__(178);
 
-var validateGenerator = __webpack_require__(178);
+var validateGenerator = __webpack_require__(179);
 
 /**
  * Functions below are used inside compiled validations function
@@ -90292,14 +90286,14 @@ module.exports = {
   format: __webpack_require__(385),
   'if': __webpack_require__(386),
   items: __webpack_require__(387),
-  maximum: __webpack_require__(179),
-  minimum: __webpack_require__(179),
-  maxItems: __webpack_require__(180),
-  minItems: __webpack_require__(180),
-  maxLength: __webpack_require__(181),
-  minLength: __webpack_require__(181),
-  maxProperties: __webpack_require__(182),
-  minProperties: __webpack_require__(182),
+  maximum: __webpack_require__(180),
+  minimum: __webpack_require__(180),
+  maxItems: __webpack_require__(181),
+  minItems: __webpack_require__(181),
+  maxLength: __webpack_require__(182),
+  minLength: __webpack_require__(182),
+  maxProperties: __webpack_require__(183),
+  minProperties: __webpack_require__(183),
   multipleOf: __webpack_require__(388),
   not: __webpack_require__(389),
   oneOf: __webpack_require__(390),
@@ -90308,7 +90302,7 @@ module.exports = {
   propertyNames: __webpack_require__(393),
   required: __webpack_require__(394),
   uniqueItems: __webpack_require__(395),
-  validate: __webpack_require__(178)
+  validate: __webpack_require__(179)
 };
 
 
@@ -92706,7 +92700,7 @@ function compileAsync(schema, meta, callback) {
 
 var IDENTIFIER = /^[a-z_$][a-z0-9_$-]*$/i;
 var customRuleCode = __webpack_require__(399);
-var metaSchema = __webpack_require__(183);
+var metaSchema = __webpack_require__(184);
 
 module.exports = {
   add: addKeyword,
@@ -93541,7 +93535,7 @@ module.exports = bytesToUuid;
 
 
 var url = __webpack_require__(20)
-var qs = __webpack_require__(173)
+var qs = __webpack_require__(174)
 var caseless = __webpack_require__(97)
 var uuid = __webpack_require__(101)
 var oauth = __webpack_require__(426)
@@ -93944,7 +93938,7 @@ exports.header = function (uri, method, opts) {
 
 var uuid = __webpack_require__(101)
 var CombinedStream = __webpack_require__(429)
-var isstream = __webpack_require__(172)
+var isstream = __webpack_require__(173)
 var Buffer = __webpack_require__(1).Buffer
 
 function Multipart (request) {
@@ -95073,10 +95067,10 @@ exports.debug = debug // for test
 var net = __webpack_require__(14);
 var urlParse = __webpack_require__(20).parse;
 var util = __webpack_require__(5);
-var pubsuffix = __webpack_require__(184);
-var Store = __webpack_require__(185).Store;
+var pubsuffix = __webpack_require__(185);
+var Store = __webpack_require__(186).Store;
 var MemoryCookieStore = __webpack_require__(437).MemoryCookieStore;
-var pathMatch = __webpack_require__(187).pathMatch;
+var pathMatch = __webpack_require__(188).pathMatch;
 var VERSION = __webpack_require__(438);
 
 var punycode;
@@ -96518,7 +96512,7 @@ exports.defaultPath = defaultPath;
 exports.pathMatch = pathMatch;
 exports.getPublicSuffix = pubsuffix.getPublicSuffix;
 exports.cookieCompare = cookieCompare;
-exports.permuteDomain = __webpack_require__(186).permuteDomain;
+exports.permuteDomain = __webpack_require__(187).permuteDomain;
 exports.permutePath = permutePath;
 exports.canonicalDomain = canonicalDomain;
 
@@ -96559,9 +96553,9 @@ exports.canonicalDomain = canonicalDomain;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var Store = __webpack_require__(185).Store;
-var permuteDomain = __webpack_require__(186).permuteDomain;
-var pathMatch = __webpack_require__(187).pathMatch;
+var Store = __webpack_require__(186).Store;
+var permuteDomain = __webpack_require__(187).permuteDomain;
+var pathMatch = __webpack_require__(188).pathMatch;
 var util = __webpack_require__(5);
 
 function MemoryCookieStore() {
@@ -98004,7 +97998,7 @@ module.exports = class AsyncAlgorithm {
  */
 var forge = __webpack_require__(58);
 __webpack_require__(104);
-__webpack_require__(190);
+__webpack_require__(191);
 
 var sha1 = module.exports = forge.sha1 = forge.sha1 || {};
 forge.md.sha1 = forge.md.algorithms.sha1 = sha1;
@@ -98524,7 +98518,7 @@ function _encodeWithByteBuffer(input, alphabet) {
  */
 var forge = __webpack_require__(58);
 __webpack_require__(104);
-__webpack_require__(190);
+__webpack_require__(191);
 
 var sha256 = module.exports = forge.sha256 = forge.sha256 || {};
 forge.md.sha256 = forge.md.algorithms.sha256 = sha256;
@@ -98852,7 +98846,7 @@ function _update(s, w, bytes) {
  */
 
 
-const URDNA2015 = __webpack_require__(188);
+const URDNA2015 = __webpack_require__(189);
 const util = __webpack_require__(34);
 
 module.exports = class URDNA2012 extends URDNA2015 {
@@ -98946,7 +98940,7 @@ module.exports = class URDNA2012 extends URDNA2015 {
  */
 
 
-const URDNA2015Sync = __webpack_require__(192);
+const URDNA2015Sync = __webpack_require__(193);
 const util = __webpack_require__(34);
 
 module.exports = class URDNA2012Sync extends URDNA2015Sync {
@@ -103487,15 +103481,15 @@ function range(a, b, str) {
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(14)
-var rp = __webpack_require__(194)
+var rp = __webpack_require__(195)
 var minimatch = __webpack_require__(107)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(193).Glob
+var Glob = __webpack_require__(194).Glob
 var util = __webpack_require__(5)
 var path = __webpack_require__(23)
 var assert = __webpack_require__(25)
 var isAbsolute = __webpack_require__(108)
-var common = __webpack_require__(195)
+var common = __webpack_require__(196)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -103976,9 +103970,9 @@ GlobSync.prototype._makeAbs = function (f) {
 /* 468 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(196)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(197)
 var reqs = Object.create(null)
-var once = __webpack_require__(197)
+var once = __webpack_require__(198)
 
 module.exports = wrappy(inflight)
 
@@ -104053,9 +104047,9 @@ webpackEmptyContext.id = 469;
 
 module.exports = {
   DataFactory:  __webpack_require__(61),
-  Lexer:        __webpack_require__(198),
-  Parser:       __webpack_require__(199),
-  Writer:       __webpack_require__(200),
+  Lexer:        __webpack_require__(199),
+  Parser:       __webpack_require__(200),
+  Writer:       __webpack_require__(201),
   Store:        __webpack_require__(471),
   StreamParser: __webpack_require__(472),
   StreamWriter: __webpack_require__(473),
@@ -104749,7 +104743,7 @@ module.exports = N3Store;
 
 // **N3StreamParser** parses a text stream into a quad stream.
 var Transform = __webpack_require__(15).Transform,
-    N3Parser = __webpack_require__(199);
+    N3Parser = __webpack_require__(200);
 
 // ## Constructor
 class N3StreamParser extends Transform {
@@ -104798,7 +104792,7 @@ module.exports = N3StreamParser;
 
 // **N3StreamWriter** serializes a quad stream into a text stream.
 var Transform = __webpack_require__(15).Transform,
-    N3Writer = __webpack_require__(200);
+    N3Writer = __webpack_require__(201);
 
 // ## Constructor
 class N3StreamWriter extends Transform {
