@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 var VERBOSE = "VERBOSE" in process.env;
-var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 var ShExCore = require("@shexjs/core");
@@ -9,6 +8,7 @@ var ShExUtil = ShExCore.Util;
 var ShExValidator = ShExCore.Validator;
 var ShExLoader = require("@shexjs/loader");
 var Mapper = require("@shexjs/extension-map");
+const F = require("n3").DataFactory
 // var Promise = require("promise");
 var expect = require("chai").expect;
 var Path = require("path");
@@ -66,13 +66,18 @@ var Harness = {
 };
 
 function geq (l, r) { // graphEquals needs a this
+  if (VERBOSE) {
+    console.log(([[l, "l"], [r, "r"]]).map(
+      p => p[1] + ":\n" + p[0].getQuads().map(RdfTerm.jStoTurtle).sort().join("\n")
+    ).join("\n--\n"))
+  }
   return graphEquals.call(l, r);
 }
 
 describe('A ShEx Mapper', function () {
   var tests = [
-    ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"],
-    ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl"],
+    // ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"],
+    // ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl"],
 //    ["bifer", ["Map/BPDAMFHIR/BPFHIRsys.shex", "Map/BPDAMFHIR/BPFHIRdia.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
 //    ["bifb" , ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
   ];
@@ -139,8 +144,8 @@ function graphEquals (right, m) {
   function match (g) {
     function val (term, mapping) {
       mapping = mapping || m;                     // Mostly used for left→right mappings.
-      if (RdfTerm.isBlank(term))
-        return (term in mapping) ? mapping[term] : null // Bnodes get current binding or null.
+      if (term.termType === "BlankNode")
+        return (term.value in mapping) ? F.blankNode(mapping[term.value]) : null // Bnodes get current binding or null.
       else
         return term;                              // Other terms evaluate to themselves.
     }
@@ -148,20 +153,17 @@ function graphEquals (right, m) {
     if (g.length == 0)                            // Success if there's nothing left to match.
       return true;
     var t = g.pop(), s = val(t.subject), o = val(t.object); // Take the first triple in left.
-    var tm = right.getQuads(
-      s ? RdfTerm.externalTerm(s, require("n3").DataFactory) : null,
-      RdfTerm.externalTerm(t.predicate, require("n3").DataFactory),
-      o ? RdfTerm.externalTerm(o, require("n3").DataFactory) : null  // Find candidates in right.
-    ).map(RdfTerm.internalTriple);
+    var tm = right.getQuads(s, t.predicate, o);   // Find candidates in right.
+
     var r = tm.reduce(function (ret, triple) {    // Walk through candidates in right.
       if (ret) return true;                       // Only examine first successful mapping.
       var adds = [];                              // List of candidate mappings.
       function add (from, to) {
         if (val(from) === null) {                   // If there's no binding from tₗ to tᵣ,
-          if (val(to, back) === null) {                // If we can bind to to the object
-            adds.push(from);                           //  add a candidate binding.
-            m[from] = to;
-            back[to] = from;
+          if (val(to, back) === null) {                // If we can bind to to the object,
+            adds.push(from.value);                     //  add a candidate binding.
+            m[from.value] = to.value;
+            back[to.value] = from.value;
             return true;
           } else {                                     // Otherwise,
             return false;                              //  it's not a viable mapping.
@@ -182,20 +184,22 @@ function graphEquals (right, m) {
         return true;
     }, false);                                    // Empty tm returns failure.
     if (!r) {
-      g.push(t);                                  // No binding for t in cancidate mapping.
+      g.push(t);                                  // No binding for t in candidate mapping.
     }
     return r;
   }
-  return match(this.getQuads(null, null, null)     // Start with all triples.
-               .map(RdfTerm.internalTriple));
+  return match(this.getQuads(null, null, null));     // Start with all triples.
 }
 
   function testEquiv (name, g1, g2, equals, mapping) {
     it("should test " + name + " to be " + equals, function () {
       var l = new (require("n3")).Store(); l.toString = graphToString; l.equals = graphEquals;
       var r = new (require("n3")).Store(); r.toString = graphToString;
-      g1.forEach(function (triple) { l.addQuad(RdfTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
-      g2.forEach(function (triple) { r.addQuad(RdfTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
+      function myTripleToJS(triple) {
+        return F.quad.apply(F, triple.map(term => RdfTerm.lDtoJS(term, F, "http://a.example/")))
+      }
+      g1.forEach(triple => { l.addQuad(myTripleToJS(triple)); });
+      g2.forEach(triple => { r.addQuad(myTripleToJS(triple)); });
       var m = {};
       var ret = l.equals(r, m);
       expect(ret).to.equal(equals, m);
@@ -220,15 +224,15 @@ function graphEquals (right, m) {
 
 describe("Graph equivalence", function () {
   var p12Permute = [
-    {"_:l1": "_:r1", "_:l2": "_:r2"},
-    {"_:l1": "_:r2", "_:l2": "_:r1"}];
-  var p123Permute = [ // note intentional _:r3 on left side
-    {"_:l1": "_:r1", "_:l2": "_:r2", "_:r3": "_:r3"},
-    {"_:l1": "_:r1", "_:l2": "_:r3", "_:r3": "_:r2"},
-    {"_:l1": "_:r2", "_:l2": "_:r1", "_:r3": "_:r3"},
-    {"_:l1": "_:r2", "_:l2": "_:r3", "_:r3": "_:r1"},
-    {"_:l1": "_:r3", "_:l2": "_:r1", "_:r3": "_:r2"},
-    {"_:l1": "_:r3", "_:l2": "_:r2", "_:r3": "_:r1"}];
+    {"l1": "r1", "l2": "r2"},
+    {"l1": "r2", "l2": "r1"}];
+  var p123Permute = [ // note intentional r3 on left side
+    {"l1": "r1", "l2": "r2", "r3": "r3"},
+    {"l1": "r1", "l2": "r3", "r3": "r2"},
+    {"l1": "r2", "l2": "r1", "r3": "r3"},
+    {"l1": "r2", "l2": "r3", "r3": "r1"},
+    {"l1": "r3", "l2": "r1", "r3": "r2"},
+    {"l1": "r3", "l2": "r2", "r3": "r1"}];
   var tests = [
     {name:"spo123=spo123", p:true, m:{},
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
@@ -242,16 +246,16 @@ describe("Graph equivalence", function () {
     {name:"r<l", p:false, m:null,
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"1-bnode-no-rewrite", p:true, m:{"_:x1": "_:x1"},
+    {name:"1-bnode-no-rewrite", p:true, m:{"x1": "x1"},
      l:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:x1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"1-bnode-rewrite", p:true, m:{"_:l1": "_:r1"},
+    {name:"1-bnode-rewrite", p:true, m:{"l1": "r1"},
      l:[["s", "p", "_:l1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "o2"], ["s", "p", "o3"]]},
-    {name:"tall3", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
+    {name:"tall3", p:true, m:{"l1": "r1", "l2": "r2", "l3": "r3"},
      l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
      r:[["s", "p1", "_:r1"], ["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"]]},
-    {name:"tall3-rotated1", p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2", "_:l3": "_:r3"},
+    {name:"tall3-rotated1", p:true, m:{"l1": "r1", "l2": "r2", "l3": "r3"},
      l:[["s", "p1", "_:l1"], ["_:l1", "p2", "_:l2"], ["_:l2", "p", "_:l3"]],
      r:[["_:r1", "p2", "_:r2"], ["_:r2", "p", "_:r3"], ["s", "p1", "_:r1"]]},
     {name:"s p _:l1, o2 != s p _:r1, _:r2", p:false, m:null,
@@ -267,19 +271,19 @@ describe("Graph equivalence", function () {
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
     {name:"s p _:l1, _:l2, o3 = s p _:r1, _:r2, o3", p:true, m:
-     [{"_:l1": "_:r1", "_:l2": "_:r2"}, {"_:l1": "_:r2", "_:l2": "_:r1"}],
+     [{"l1": "r1", "l2": "r2"}, {"l1": "r2", "l2": "r1"}],
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "o3"]]},
     {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3",
-     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
+     p:true, m:{"l1": "r1", "l2": "r2"},
      l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p2", "_:r2"], ["s", "p2", "o3"]]},
     {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated1",
-     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
+     p:true, m:{"l1": "r1", "l2": "r2"},
      l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
      r:[["s", "p2", "o3"], ["s", "p", "_:r1"], ["s", "p2", "_:r2"]]},
     {name:"s p _:l1. s p2 _:l2, p3 = s p _:r1. s p2 _:r2, o3 - rotated2",
-     p:true, m:{"_:l1": "_:r1", "_:l2": "_:r2"},
+     p:true, m:{"l1": "r1", "l2": "r2"},
      l:[["s", "p", "_:l1"], ["s", "p2", "_:l2"], ["s", "p2", "o3"]],
      r:[["s", "p2", "_:r2"], ["s", "p2", "o3"], ["s", "p", "_:r1"]]},
     {name:"s p _:l1, _:l2, _:l3 = s p _:r1, _:r2, _:r3", p:true, m:p123Permute,
@@ -293,23 +297,23 @@ describe("Graph equivalence", function () {
      r:[["s", "p", "_:r2"], ["s", "p", "_:r3"], ["s", "p", "_:r1"]]},
     // literals
     {name:"s p _:l1, _:l2, 'o3' = s p _:r1, _:r2, 'o3'", p:true, m:p12Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\""]]},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", {value:"o3"}]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", {value:"o3"}]]},
     {name:"s p _:l1, _:l2, 'o3' != s p _:r1, _:r2, 'o4'", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\""]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o4\""]]},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", {value:"o3"}]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", {value:"o4"}]]},
     {name:"s p _:l1, _:l2, 'o3'@fr = s p _:r1, _:r2, 'o3'@fr", p:true, m:p12Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@fr"]]},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", {value:"o3",language:"fr"}]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", {value:"o3",language:"fr"}]]},
     {name:"s p _:l1, _:l2, 'o3'@fr != s p _:r1, _:r2, 'o3'@en-FR", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"@fr"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"@en-FR"]]},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", {value:"o3",language:"fr"}]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", {value:"o3",language:"en-FR"}]]},
     {name:"s p _:l1, _:l2, 'o3'^^dt1 = s p _:r1, _:r2, 'o3'^^dt1", p:true, m:p12Permute,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt1"]]},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", {value:"o3",type:"dt1"}]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", {value:"o3",type:"dt1"}]]},
     {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:false, m:null,
-     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
-     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt2"]]},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", {value:"o3",type:"dt1"}]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", {value:"o3",type:"dt2"}]]},
   ];
   if (TESTS)
     tests = tests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });

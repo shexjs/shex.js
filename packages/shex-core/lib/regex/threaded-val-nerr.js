@@ -136,7 +136,7 @@ function vpEngine (schema, shape, index) {
             var valueExpr = extend({}, expr.valueExpr);
             if ("reference" in valueExpr) {
               var ref = valueExpr.reference;
-              if (RdfTerm.isBlank(ref))
+              if (ref.termType === "BlankNode")
                 valueExpr.reference = index.shapeExprs[ref];
             }
             ret.push({
@@ -271,20 +271,6 @@ function vpEngine (schema, shape, index) {
 
     function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
       function _dive (solns) {
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
         if (solns.type === "OneOfSolutions" ||
             solns.type === "EachOfSolutions") {
           solns.solutions.forEach(s => {
@@ -299,7 +285,7 @@ function vpEngine (schema, shape, index) {
             var t = neighborhood[x.tripleNo];
             var expr = constraintList[x.constraintNo];
             var ret = {
-              type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
+              type: "TestedTriple", subject: RdfTerm.jStoLD(t.subject), predicate: RdfTerm.jStoLD(t.predicate), object: RdfTerm.jStoLD(t.object)
             };
             function diver (focus, shapeLabel, dive) {
               var sub = dive(focus, shapeLabel);
@@ -309,7 +295,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && shapeLabel.termType === "BlankNode")
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];

@@ -1976,10 +1976,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects(); }
+    function getPredicates () { return db.getPredicates(); }
+    function getObjects () { return db.getObjects(); }
+    function getQuads () { return db.getQuads.apply(db, arguments); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -1988,7 +1988,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
+      var outgoing = db.getQuads(point, null, null, null);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -1997,7 +1997,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
+      var incoming = db.getQuads(null, null, point, null);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }

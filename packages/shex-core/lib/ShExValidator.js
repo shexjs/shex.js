@@ -32,9 +32,7 @@ var RdfTerm = require("./RdfTerm");
 let ShExUtil = require("./ShExUtil");
 
 function getLexicalValue (term) {
-  return RdfTerm.isIRI(term) ? term :
-    RdfTerm.isLiteral(term) ? RdfTerm.getLiteralValue(term) :
-    term.substr(2); // bnodes start with "_:"
+  return term.value
 }
 
 
@@ -195,21 +193,6 @@ var decimalLexicalTests = {
   }
 };
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
-
     function isTerm (t) {
       return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
         return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
@@ -306,7 +289,7 @@ function ShExValidator_constructor(schema, options) {
    */
   this.validate = function (db, point, label, tracker, seen) {
     // default to schema's start shape
-    if (typeof point === "object") {
+    if (point.constructor === Array ) {
       var shapeMap = point;
       if (this.options.results === "api") {
         return shapeMap.map(pair => {
@@ -361,6 +344,8 @@ function ShExValidator_constructor(schema, options) {
     if (!label || label === Start) {
       if (!schema.start)
         runtimeError("start production not defined");
+    } else if (typeof label === "object" && "termType" in label) {
+      label = RdfTerm.jStoLD(label)
     }
 
     var shape = null;
@@ -376,19 +361,19 @@ function ShExValidator_constructor(schema, options) {
 
     if (seen === undefined)
       seen = {};
-    var seenKey = point + "@" + (label === Start ? "_: -start-" : label);
+    var seenKey = RdfTerm.jStoLD(point) + "@" + (label === Start ? "_: -start-" : label);
     if (seenKey in seen)
       return tracker.recurse({
         type: "Recursion",
-        node: ldify(point),
+        node: RdfTerm.jStoLD(point),
         shape: label
       });
     if ("known" in this && seenKey in this.known)
       return tracker.known(this.known[seenKey]);
-    seen[seenKey] = { point: point, shape: label };
-    tracker.enter(point, label);
+    seen[seenKey] = { point: RdfTerm.jStoLD(point), shape: label };
+    tracker.enter(point, RdfTerm.jStoLD(label));
     var ret = this._validateShapeExpr(db, point, shape, label, tracker, seen);
-    tracker.exit(point, label, ret);
+    tracker.exit(point, RdfTerm.jStoLD(label), ret);
     delete seen[seenKey];
     if ("known" in this)
       this.known[seenKey] = ret;
@@ -407,7 +392,7 @@ function ShExValidator_constructor(schema, options) {
       var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       return errors.length ? {
         type: "Failure",
-        node: ldify(point),
+        node: RdfTerm.jStoLD(point),
         shape: shapeLabel,
         errors: errors.map(function (error) {
           return {
@@ -418,7 +403,7 @@ function ShExValidator_constructor(schema, options) {
         })
       } : {
         type: "NodeTest",
-        node: ldify(point),
+        node: RdfTerm.jStoLD(point),
         shape: shapeLabel,
         shapeExpr: shapeExpr
       };
@@ -467,7 +452,7 @@ function ShExValidator_constructor(schema, options) {
     if ("startActs" in schema && !this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage))
       return {
         type: "Failure",
-        node: ldify(point),
+        node: RdfTerm.jStoLD(point),
         shape: shapeLabel,
         errors: ['semact failure']
       }; // some semAct aborted !! return real error
@@ -529,7 +514,7 @@ function ShExValidator_constructor(schema, options) {
           ord < outgoingLength &&                           // not an incoming triple
           ord in tripleList.misses) {                       // predicate matched some constraint(s)
         if (shape.extra !== undefined &&
-            shape.extra.indexOf(neighborhood[ord].predicate) !== -1) {
+            shape.extra.indexOf(neighborhood[ord].predicate.value) !== -1) {
           extras.push(ord);
         } else {                                            // not declared extra
           ret.push({                                        // so it's a missed triple.
@@ -622,7 +607,7 @@ function ShExValidator_constructor(schema, options) {
 
       // @@ add to tracker: f("post-regexp " + usedTriples.join(" "));
 
-      var possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+      var possibleRet = { type: "ShapeTest", node: RdfTerm.jStoLD(point), shape: shapeLabel };
       if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape &&
@@ -646,14 +631,14 @@ function ShExValidator_constructor(schema, options) {
         var t = neighborhood[miss.tripleNo];
         return {
           type: "TypeMismatch",
-          triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+          triple: {type: "TestedTriple", subject: RdfTerm.jStoLD(t.subject), predicate: RdfTerm.jStoLD(t.predicate), object: RdfTerm.jStoLD(t.object)},
           constraint: constraintList[miss.constraintNo],
           errors: miss.errors
         };
       });
       ret = {
         type: "Failure",
-        node: ldify(point),
+        node: RdfTerm.jStoLD(point),
         shape: shapeLabel,
         errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
       };
@@ -716,7 +701,7 @@ function ShExValidator_constructor(schema, options) {
       var ret = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, recurse, direct, true);
       return ret.length ?
         [] :
-        ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"];
+        ["Error validating " + RdfTerm.jStoLD(value) + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"];
     } else {
       throw Error("unknown value expression type '" + valueExpr.type + "'");
     }
@@ -727,15 +712,13 @@ function ShExValidator_constructor(schema, options) {
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     var errors = [];
-    var label = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralValue(value) :
-      RdfTerm.isBlank(value) ? value.substring(2) :
-      value;
-    var dt = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralType(value) : null;
+    var label = value.value;
+    var dt = value.termType === "Literal" ? value.datatypeString : null;
     var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
       var errorStr = Array.prototype.join.call(arguments, "");
-      errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      errors.push("Error validating " + RdfTerm.jStoTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
       return false;
     }
     // if (negated) ;
@@ -746,11 +729,11 @@ function ShExValidator_constructor(schema, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (RdfTerm.isBlank(value)) {
+        if (value.termType === "BlankNode") {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (RdfTerm.isLiteral(value)) {
+        } else if (value.termType === "Literal") {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -762,11 +745,11 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
 
       if (valueExpr.datatype) {
-        if (!RdfTerm.isLiteral(value)) {
+        if (!value.termType === "Literal") {
           validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (RdfTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + RdfTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (value.datatypeString !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + value.datatypeString + " !== " + valueExpr.datatype);
         }
         else if (numeric) {
           testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
@@ -782,9 +765,9 @@ function ShExValidator_constructor(schema, options) {
       }
 
       if (valueExpr.values) {
-        if (RdfTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (value.termType === "Literal" && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          var ld = ldify(value);
+          var ld = RdfTerm.jStoLD(value);
           if (v.type === "Language") {
             return v.languageTag === ld.language; // @@ use equals/normalizeTest
           }
@@ -795,7 +778,7 @@ function ShExValidator_constructor(schema, options) {
             v.language === ld.language;
         }, false)) {
           // literal match
-        } else if (valueExpr.values.indexOf(value) !== -1) {
+        } else if (valueExpr.values.indexOf(RdfTerm.jStoLD(value)) !== -1) {
           // trivial match
         } else {
           if (!(valueExpr.values.some(function (valueConstraint) {
@@ -814,11 +797,11 @@ function ShExValidator_constructor(schema, options) {
                *       or non-literals with IriStemRange
                */
               function normalizedTest (val, ref, func) {
-                if (RdfTerm.isLiteral(val)) {
+                if (val.termType === "Literal") {
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralValue(val), ref);
+                    return func(val.value, ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralLanguage(val) || null, ref);
+                    return func(val.language || null, ref);
                   } else {
                     return validationError("literal " + val + " not comparable with non-literal " + ref);
                   }
@@ -826,7 +809,7 @@ function ShExValidator_constructor(schema, options) {
                   if (["IriStem", "IriStemRange"].indexOf(valueConstraint.type) === -1) {
                     return validationError("nonliteral " + val + " not comparable with literal " + JSON.stringify(ref));
                   } else {
-                    return func(val, ref);
+                    return func(val.value, ref);
                   }
                 }
               }
@@ -871,7 +854,7 @@ function ShExValidator_constructor(schema, options) {
               // ignore -- would have caught it above
             }
           }))) {
-            validationError("value " + value + " not found in set " + JSON.stringify(valueExpr.values));
+            validationError("value " + RdfTerm.jStoLD(value) + " not found in set " + JSON.stringify(valueExpr.values));
           }
         }
       }
@@ -1133,14 +1116,14 @@ function crossProduct(sets) {
  */
 var N3jsTripleToString = function () {
   function fmt (n) {
-    return RdfTerm.isLiteral(n) ?
+    return n.termType === "Literal" ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(RdfTerm.getLiteralType(n)) !== -1 ?
-      parseInt(RdfTerm.getLiteralValue(n)) :
+      ].indexOf(n.datatypeString) !== -1 ?
+      parseInt(n.value) :
       n :
-    RdfTerm.isBlank(n) ?
+    n.termType === "BlankNode" ?
       n :
       "<" + n + ">";
   }
@@ -1163,7 +1146,7 @@ var N3jsTripleToString = function () {
 function indexNeighborhood (triples) {
   return {
     byPredicate: triples.reduce(function (ret, t) {
-      var p = t.predicate;
+      var p = t.predicate.value;
       if (!(p in ret))
         ret[p] = [];
       ret[p].push(t);
@@ -1185,9 +1168,9 @@ function indexNeighborhood (triples) {
  */
 function sparqlOrder (l, r) {
   var [lprec, rprec] = [l, r].map(
-    x => RdfTerm.isBlank(x) ? 1 : RdfTerm.isLiteral(x) ? 2 : 3
+    x => x.termType === "BlankNode" ? 1 : x.termType === "Literal" ? 2 : 3
   );
-  return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
+  return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
 
 /* Return a list of n ""s.

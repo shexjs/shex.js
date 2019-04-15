@@ -97,9 +97,9 @@ function GET (f, mediaType) {
   }
 }
 
-function loadList (src, metaList, mediaType, parserWrapper, target, options, loadImports) {
+  function loadList (src, metaList, mediaType, parserWrapper, target, options, loadImports) {
   return src.map(function (p) {
-    return typeof p === "object" ? mergeSchema(p) : loadParseMergeSchema(p);
+    return typeof p === "object" && "schema" in p ? mergeSchema(p) : loadParseMergeSchema(p);
   });
 
   function mergeSchema (obj) {
@@ -117,8 +117,8 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
     }
   }
 
-  function loadParseMergeSchema (p) {
-    return GET(p, mediaType).then(function (loaded) {
+    function loadParseMergeSchema (p) {
+    return GET(p).then(function (loaded) {
       return parserWrapper(loaded.text, mediaType, loaded.url, target,
                            addMeta(loaded.url, mediaType), options, loadImports);
     });

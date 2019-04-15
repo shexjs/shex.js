@@ -94,7 +94,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.RdfTerm.intermalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
+  return ShEx.RdfTerm.jStoTurtle(ShEx.RdfTerm.lDtoJS(node, ShEx.N3.DataFactory), resolver.meta.base, resolver.meta.prefixes);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -1214,7 +1214,7 @@ function copyEditMapToFixedMap () {
   function getQuads (s, p, o) {
     var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
     return Caches.inputData.refresh().getQuads(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);// !!check
+      return Caches.inputData.meta.termToLex(ShEx.RdfTerm.jStoLD(t[get]));// !!check
     });
     function mine (term) {
       return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
