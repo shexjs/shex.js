@@ -550,11 +550,17 @@ function pickData (name, dataTest, elt, listItems, side) {
 
     function queryMapLoaded (text) {
       dataTest.entry.queryMap = text;
-      try {
-        $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
-      } catch (e) {
-        $("#textMap").val(dataTest.entry.queryMap);
+      let val = null
+      if (dataTest.entry.queryMap.match(/^\s*\{\s*"/)) {
+        try {
+          val = JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n");
+        } catch (e) {
+          val = dataTest.entry.queryMap;
+        }
+      } else {
+        val = dataTest.entry.queryMap;
       }
+      $("#textMap").val(val);
       copyTextMapToEditMap();
       // callValidator();
     }
