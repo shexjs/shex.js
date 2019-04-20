@@ -162,12 +162,17 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) {
-        target.addQuad(RdfTerm.externalTriple({
-          subject: s,
-          predicate: p,
-          object: n3ify(o)
-        }, N3.DataFactory));
+        target.addQuad(myTripleToJS([
+          s,
+          p,
+          o
+        ]))
         return s;
+      }
+      function myTripleToJS(triple) {
+        return N3.DataFactory.quad.apply(N3.DataFactory, triple.map(
+          term => RdfTerm.lDtoJS(term, N3.DataFactory, "http://a.example/")
+        ))
       }
 
         var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
@@ -181,7 +186,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
               var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
               var val = bindings.get(arg);
               if (!_.isUndefined(val)) {
-                tripleObject = val;
+                tripleObject = RdfTerm.jStoLD(val, N3.DataFactory);
               }
             }
 

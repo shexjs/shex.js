@@ -59,7 +59,7 @@ function extend (base) {
     return typeof expr === "string" // test for JSON-LD @ID
   }
   let isInclusion = isShapeRef;
-
+let Request = null
 var ShExUtil = {
 
   SX: SX,
@@ -1920,12 +1920,13 @@ var ShExUtil = {
       })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
   },
 
-  executeQuery: function (query, endpoint) {
+  executeQuery: function (query, endpoint, factory) {
     var rows, t, j;
     var queryURL = endpoint + "?query=" + encodeURIComponent(query);
-    if (require('sync-request')) {
-      var request = require('sync-request');
-      var res = request('GET', queryURL, {
+    if (Request === null)
+      Request = require('sync-request');
+    if (Request) {
+      var res = Request('GET', queryURL, {
         headers: {
           'Accept': 'application/sparql-results+json'
         },
@@ -1946,15 +1947,15 @@ var ShExUtil = {
       return selects.map(sel => {
         var elt = row[sel];
         switch (elt.type) {
-        case "uri": return elt.value;
-        case "bnode": return "_:" + elt.value;
+        case "uri": return factory.namedNode(elt.value);
+        case "bnode": return factory.blankNode(elt.value);
         case "literal":
           var datatype = elt.datatype;
           var lang = elt["xml:lang"];
-          return "\"" + elt.value + "\"" + (
-            datatype ? "^^" + datatype :
-              lang ? "@" + lang :
-              "");
+          return factory.literal(elt.value, (
+            datatype ? factory.namedNode(datatype) :
+              lang ? lang :
+              null));
         default: throw "unknown XML results type: " + elt.prop("tagName");
         }
         return row[sel];
@@ -1987,10 +1988,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects(); }
+    function getPredicates () { return db.getPredicates(); }
+    function getObjects () { return db.getObjects(); }
+    function getQuads () { return db.getQuads.apply(db, arguments); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -1999,7 +2000,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
+      var outgoing = db.getQuads(point, null, null, null);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -2008,7 +2009,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
+      var incoming = db.getQuads(null, null, point, null);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
@@ -2039,7 +2040,7 @@ var ShExUtil = {
   },
   /** emulate N3Store().getQuads() with additional parm.
    */
-  makeQueryDB: function (endpoint, queryTracker) {
+  makeQueryDB: function (endpoint, factory, queryTracker) {
     var _ShExUtil = this;
 
     function getQuads(s, p, o, g) {
@@ -2051,18 +2052,19 @@ var ShExUtil = {
     }
 
     function mapQueryToTriples (query, s, o) {
-      var rows = _ShExUtil.executeQuery(query, endpoint);
-      var triples = rows.map(row =>  {
-        return s ? {
-          subject: s,
-          predicate: row[0],
-          object: row[1]
-        } : {
-          subject: row[0],
-          predicate: row[1],
-          object: o
-        };
-      });
+      var rows = _ShExUtil.executeQuery(query, endpoint, factory);
+      var triples = rows.map(
+        row =>
+          s ? factory.quad(
+            s,
+            row[0],
+            row[1]
+          ) : factory.quad(
+            row[0],
+            row[1],
+            o
+          )
+      );
       return triples;
     }
 
@@ -2092,16 +2094,20 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
+      let pointJS = typeof point === "object" && "termType" in point
+          ? point
+          : RdfTerm.lDtoJS(point, factory)
+      let pointT = RdfTerm.jStoTurtle(pointJS)
       var outgoing = (tcs.out.length > 0 || shape.closed)
           ? mapQueryToTriples(
             shape.closed
-              ? `SELECT ?p ?o { <${point}> ?p ?o }`
+              ? `SELECT ?p ?o { ${pointT} ?p ?o }`
               : "SELECT ?p ?o {\n" +
               pz.map(
-                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
+                p => `  {${pointT} ${RdfTerm.jStoTurtle(RdfTerm.lDtoJS(p, factory))} ?o BIND(${RdfTerm.jStoTurtle(RdfTerm.lDtoJS(p, factory))} AS ?p)}`
               ).join(" UNION\n") +
               "\n}",
-            point, null
+            pointJS, null
           )
           : [];
       if (queryTracker) {

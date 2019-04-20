@@ -253,7 +253,7 @@ var NFAXVal1Err = (function () {
           var valueExpr = extend({}, c.valueExpr);
           if ("reference" in valueExpr) {
             var ref = valueExpr.reference;
-            if (RdfTerm.isBlank(ref))
+            if (ref.termType === "BlankNode")
               valueExpr.reference = schema.shapes[ref];
           }
           return extend({
@@ -436,25 +436,11 @@ var NFAXVal1Err = (function () {
           var triple = neighborhood[tno];
           var ret = {
             type: "TestedTriple",
-            subject: triple.subject,
-            predicate: triple.predicate,
-            object: ldify(triple.object)
+            subject: RdfTerm.jStoLD(triple.subject),
+            predicate: RdfTerm.jStoLD(triple.predicate),
+            object: RdfTerm.jStoLD(triple.object)
           };
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
           function diver (focus, shape, dive) {
             var sub = dive(focus, shape);
             if ("errors" in sub) {
@@ -463,7 +449,7 @@ var NFAXVal1Err = (function () {
                 type: "ReferenceError", focus: focus,
                 shape: shape, errors: sub
               };
-              if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+              if (typeof shapeLabel === "string" && shapeLabel.termType === "BlankNode")
                 err.referencedShape = shape;
               return [err];
             }

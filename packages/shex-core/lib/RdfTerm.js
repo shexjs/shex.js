@@ -103,91 +103,82 @@ var RdfTerm = (function () {
     return result + iri.substring(segmentStart);
   }
 
-  function internalTerm (node) { // !!rdfjsTermToInternal
-    switch (node.termType) {
-    case ("NamedNode"):
-      return node.value;
-    case ("BlankNode"):
-      return "_:" + node.value;
-    case ("Literal"):
-      return "\"" + node.value + "\"" + (
-        node.datatypeString === RdfLangString
-          ? "@" + node.language
-          : node.datatypeString === XsdString
-          ? ""
-          : "^^" + node.datatypeString
-      );
-    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
-    }
-  }
-
-  function internalTriple (triple) { // !!rdfjsTripleToInternal
-    return {
-      subject: internalTerm(triple.subject),
-      predicate: internalTerm(triple.predicate),
-      object: internalTerm(triple.object)
-    };
-  }
-
-  function externalTerm (node, factory) { // !!intermalTermToRdfjs
-    if (isIRI(node)) {
-      return factory.namedNode(node);
-    } else if (isBlank(node)) {
-      return factory.blankNode(node.substr(2));
-    } else if (isLiteral(node)) {
-      let dtOrLang = getLiteralLanguage(node) ||
-          (getLiteralType(node) === XsdString
-           ? null // seems to screw up N3.js
-           : factory.namedNode(getLiteralType(node)))
-      return factory.literal(getLiteralValue(node), dtOrLang)
+  const defaultLDattributes = ["value", "type", "language"]
+  const VALUE = 0, TYPE = 1, LANGUAGE = 2
+  function lDtoJS (s, factory, base, attrs = defaultLDattributes) {
+    if (typeof s === "object") {
+      let langOrDt =
+          attrs[LANGUAGE] in s ? s[attrs[LANGUAGE]]
+          : attrs[TYPE] in s && s[attrs[TYPE]] !== XsdString ? factory.namedNode(s[attrs[TYPE]])
+          : null
+      return factory.literal(s[attrs[VALUE]], langOrDt)
+    } else if (s.substr(0, 2) === "_:") {
+      return factory.blankNode(s.substr(2))
     } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
+      return factory.namedNode(this.resolveRelativeIRI(base, s))
     }
   }
 
-  function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return factory.quad(
-      externalTerm(triple.subject, factory),
-      externalTerm(triple.predicate, factory),
-      externalTerm(triple.object, factory)
-    );
+  function jStoLD (term) {
+    if (term.termType === "Literal") {
+      let ret = { value: term.value }
+      if (term.language)
+        ret.language = term.language
+      else if (term.datatypeString && term.datatypeString !== XsdString)
+        ret.type = term.datatypeString
+      return ret
+    } else if (term.termType === "BlankNode") {
+      return "_:" + term.value
+    } else {
+      return term.value
+    }
   }
 
-  function intermalTermToTurtle (node, base, prefixes) {
-    if (isIRI(node)) {
+  function jStoTurtle (node, base, prefixes) {
+    if (!(typeof node === "object")) {
+      throw new Error("jStoTurtle expects a JSAPI Quad or Term -- called with non-object " + JSON.stringify(node))
+    } else if ("subject" in node) {
+      return (["subject", "predicate", "object"]).map(
+        term =>
+          jStoTurtle(node[term], base, prefixes) + " "
+      ).join("") + " .";
+    } else if (node.termType === "NamedNode") {
       // if (node === RDF_TYPE) // only valid in Turtle predicates
       //   return "a";
+      let iri = node.value;
 
       // Escape special characters
-      if (escape.test(node))
-        node = node.replace(escapeAll, characterReplacer);
-      var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
-      if (pref) {
-        return pref + node.substr(prefixes[pref].length);
+      if (escape.test(iri))
+        iri = iri.replace(escapeAll, characterReplacer);
+      if (prefixes) {
+        var pref = Object.keys(prefixes).find(pref => iri.startsWith(prefixes[pref]));
+        if (pref) {
+          return pref + iri.substr(prefixes[pref].length);
+        }
       }
-      if (node.startsWith(base)) {
-        return "<" + node.substr(base.length) + ">";
+      if (base && iri.startsWith(base)) {
+        return "<" + iri.substr(base.length) + ">";
       } else {
-        return "<" + node + ">";
+        return "<" + iri + ">";
       }
-    } else if (isBlank(node)) {
-      return node;
-    } else if (isLiteral(node)) {
-      var value = getLiteralValue(node);
-      var type = getLiteralType(node);
-      var language = getLiteralLanguage(node);
+    } else if (node.termType === "BlankNode") {
+      return "_:" + node.value;
+    } else if (node.termType === "Literal") {
+      var value = node.value;
+      var type = node.datatypeString;
+      var language = node.language;
       // Escape special characters
       if (escape.test(value))
         value = value.replace(escapeAll, characterReplacer);
       // Write the literal, possibly with type or language
       if (language)
         return '"' + value + '"@' + language;
-      else if (type)
-        return '"' + value + '"^^' + this._encodeIriOrBlankNode(type);
+      else if (type && type !== XsdString)
+        return '"' + value + '"^^' + jStoTurtle({termType: "NamedNode", value: type}, base, prefixes);
       else
         return '"' + value + '"';
     } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
+      throw new Error("jStoTurtle expects a JSAPI Quad or Term -- called with object " + JSON.stringify(node))
     }
   }
 
@@ -292,11 +283,9 @@ var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralValue: getLiteralValue,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
-    internalTerm: internalTerm,
-    internalTriple: internalTriple,
-    externalTerm: externalTerm,
-    externalTriple: externalTriple,
-    intermalTermToTurtle: intermalTermToTurtle,
+    lDtoJS: lDtoJS,
+    jStoLD: jStoLD,
+    jStoTurtle: jStoTurtle,
   }
 })();
 

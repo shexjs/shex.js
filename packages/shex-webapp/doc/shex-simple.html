@@ -380,9 +380,9 @@ ul {
     </script>
 
     <!-- #if browserify -->
-<!-- -->
+<!--
     <script src="../browser/shex-webapp-webpack.js"></script>
-<!-- -->
+ -->
 
     <!-- #else -->
 <!--
@@ -406,36 +406,37 @@ ShExWebApp = (function () {
  -->
 
     <!-- #else -->
-<!--
+<!-- -->
     <script src="../doc/require.js"                      ></script>
     <script src="../node_modules/n3/lib/IRIs.js"         ></script><script>modules["./IRIs"]          = module.exports;</script>
-    <script src="../node_modules/n3/lib/N3DataFactory.js"></script><script>modules["./N3DataFactory"] = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3DataFactory.js"></script><script>modules["n3"]["DataFactory"] = modules["./N3DataFactory"] = module.exports;</script>
     <script src="../node_modules/n3/lib/N3Util.js"       ></script><script>modules["./N3Util"]        = module.exports;</script>
     <script src="../node_modules/n3/lib/N3Lexer.js"      ></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = module.exports;</script>
     <script src="../node_modules/n3/lib/N3Parser.js"     ></script><script>modules["n3"]["Parser"]    = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Writer.js"     ></script><script>modules["n3"]["Writer"]    = module.exports;</script>
     <script src="../node_modules/n3/lib/N3Store.js"      ></script><script>modules["n3"]["Store"]     = module.exports;</script>
 
-    <script src="../node_modules/@shexjs/core/node_modules/hierarchy-closure/hierarchy-closure.js"></script><script>modules["hierarchy-closure"] = module.exports;</script>
+    <script src="../../shex-core/node_modules/hierarchy-closure/hierarchy-closure.js"></script><script>modules["hierarchy-closure"] = module.exports;</script>
 
-    <script src="../node_modules/shape-map/lib/ShapeMapSymbols.js"    ></script><script>modules["./lib/ShapeMapSymbols"] = modules["./ShapeMapSymbols"] = module.exports;</script>
-    <script>module.exports = exports;</script><script src="../node_modules/shape-map/lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
-    <script src="../node_modules/shape-map/lib/ShapeMapParser.js"   ></script><script>modules["../node_modules/shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
-    <script src="../node_modules/shape-map/shape-map.js"   ></script><script>modules["../node_modules/shape-map/shape-map"] = modules["shape-map"] = module.exports;</script>
+    <script src="../../shape-map/lib/ShapeMapSymbols.js"    ></script><script>modules["./lib/ShapeMapSymbols"] = modules["./ShapeMapSymbols"] = module.exports;</script>
+    <script>module.exports = exports;</script><script src="../../shape-map/lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
+    <script src="../../shape-map/lib/ShapeMapParser.js"   ></script><script>modules["../../shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
+    <script src="../../shape-map/shape-map.js"   ></script><script>modules["../../shape-map/shape-map"] = modules["shape-map"] = module.exports;</script>
 
-    <script src="../node_modules/@shexjs/core/lib/RdfTerm.js"     ></script><script>modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;</script>
-    <script src="../node_modules/@shexjs/core/lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../node_modules/@shexjs/core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;</script>
-    <script src="../node_modules/@shexjs/core/lib/regex/threaded-val-nerr.js"></script><script>modules["../node_modules/@shexjs/core/lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
-    <script src="../node_modules/@shexjs/core/lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
-    <script src="../node_modules/@shexjs/core/lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
-    <script src="../node_modules/@shexjs/core/lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../node_modules/@shexjs/core/lib/ShExWriter"] = module.exports;</script>
-    <script src="../node_modules/@shexjs/core/shex-core.js"     ></script><script>modules["@shexjs/core"] = ShExCore;</script>
+    <script src="../../shex-core/lib/RdfTerm.js"     ></script><script>modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;</script>
+    <script src="../../shex-core/lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../../shex-core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;</script>
+    <script src="../../shex-core/lib/regex/threaded-val-nerr.js"></script><script>modules["../../shex-core/lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../../shex-core/lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
+    <script src="../../shex-core/lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
+    <script src="../../shex-core/lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../../shex-core/lib/ShExWriter"] = module.exports;</script>
+    <script src="../../shex-core/shex-core.js"     ></script><script>modules["@shexjs/core"] = ShExCore;</script>
 
-    <script>module.exports = exports;</script><script src="../node_modules/@shexjs/parser/lib/ShExJison.js"    ></script><script>modules["./lib/ShExJison"] = module.exports;</script>
-    <script src="../node_modules/@shexjs/parser/shex-parser.js"   ></script><script>modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;</script>
+    <script>module.exports = exports;</script><script src="../../shex-parser/lib/ShExJison.js"    ></script><script>modules["./lib/ShExJison"] = module.exports;</script>
+    <script src="../../shex-parser/shex-parser.js"   ></script><script>modules["../../shex-parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;</script>
 
-    <script src="../node_modules/@shexjs/loader/shex-loader.js"></script><script>modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;</script>
+    <script src="../../shex-loader/shex-loader.js"></script><script>modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;</script>
     <script src="../shex-webapp.js"></script>
- -->
+<!-- -->
 
     <!-- #endif -->
 

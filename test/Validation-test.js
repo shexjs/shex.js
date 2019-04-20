@@ -1,7 +1,7 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,,/) : null;
 var EARL = "EARL" in process.env;
 
 var ShExCore = require("@shexjs/core");
@@ -184,19 +184,16 @@ describe("A ShEx validator", function () {
                     store.addQuad(triple);
                   } else {
                     try {
+                      const AtLdAttributes = ["@value", "@type", "@language"];
                       function maybeGetTerm (base, s) {
-                        return s === undefined ? null :
-                          typeof(s) === "object" ? "\""+s["@value"]+"\""+(
-                            "@type" in s ? "^^"+s["@type"] :
-                              "@language" in s ? "@"+s["@language"] :
-                              ""
-                          ):
-                        s.substr(0, 2) === "_:" ? s :
-                          ShExCore.RdfTerm.resolveRelativeIRI(base, s);
+                        return s === undefined ? null : ShExCore.RdfTerm.lDtoJS(s, N3.DataFactory, base, AtLdAttributes)
                       }
                       var map = maybeGetTerm(manifestFile, test.action.map);
                       if (map) {
-                        map = JSON.parse(fs.readFileSync(map, "utf8"));
+                        map = JSON.parse(fs.readFileSync(map.value, "utf8")).map(pair => ({
+                          node : ShExCore.RdfTerm.lDtoJS(pair.node , N3.DataFactory, null, AtLdAttributes),
+                          shape: ShExCore.RdfTerm.lDtoJS(pair.shape, N3.DataFactory, null, AtLdAttributes)
+                        }));
                         // map = Object.keys(map).reduce((r, k) => {
                         //   return r.concat({node: k, shape: map[k]});
                         // }, [])

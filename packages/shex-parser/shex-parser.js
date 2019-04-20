@@ -80,9 +80,9 @@ var makeDBTermResolver = function (db) {
         var found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
         if (found1.length)
           return pair.prefix === null ?
-          {prefix: null, length: null, term: RdfTerm.internalTerm(found1[0].subject)}:
+          {prefix: null, length: null, term: RdfTerm.jStoLD(found1[0].subject)}:
           found1.reduce((tripacc, triple) => {
-            var s = RdfTerm.internalTerm(triple.subject);
+            var s = RdfTerm.jStoLD(triple.subject);
             return Object.keys(prefixes).reduce((prefacc, prefix) => {
               var ns = prefixes[prefix];
               var sw = s.startsWith(ns);

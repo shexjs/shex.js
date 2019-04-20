@@ -98,6 +98,7 @@ function sum (s) { // cheap way to identify identical strings
 
 // <n3.js-specific>
 function rdflib_termToLex (node, resolver) {
+  if (typeof node === "string") {
   if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     return "a";
   if (node === ShEx.Validator.start)
@@ -110,7 +111,8 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.RdfTerm.intermalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
+  }
+  return ShEx.RdfTerm.jStoTurtle(ShEx.RdfTerm.lDtoJS(node, ShEx.N3.DataFactory), resolver.meta.base, resolver.meta.prefixes);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -287,7 +289,7 @@ function makeTurtleCache (selection) {
       $("#slurpSpan").remove();
     }
     if (ret.endpoint) {
-      return ShEx.Util.makeQueryDB(ret.endpoint,
+      return ShEx.Util.makeQueryDB(ret.endpoint, ShEx.N3.DataFactory,
                                    $("#slurp").is(":checked") ? queryTracker() : null);
     }
     return ShEx.Util.makeN3DB(parseTurtle(text, ret.meta, base));
@@ -619,11 +621,17 @@ function pickData (name, dataTest, elt, listItems, side) {
 
     function queryMapLoaded (text) {
       dataTest.entry.queryMap = text;
-      try {
-        $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
-      } catch (e) {
-        $("#textMap").val(dataTest.entry.queryMap);
+      let val = null
+      if (dataTest.entry.queryMap.match(/^\s*\{\s*"/)) {
+        try {
+          val = JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n");
+        } catch (e) {
+          val = dataTest.entry.queryMap;
+        }
+      } else {
+        val = dataTest.entry.queryMap;
       }
+      $("#textMap").val(val);
       copyTextMapToEditMap();
       // callValidator();
     }
@@ -717,7 +725,7 @@ function callValidator (done) {
         // .set() sets inputData's dirty bit.
         Caches.inputData.set("# slurping from <" + Caches.inputData.endpoint + ">...\n\n\n");
         Caches.inputData.slurpWriter = new ShEx.N3.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
-        inputData = ShEx.Util.makeQueryDB(Caches.inputData.endpoint, queryTracker());
+        inputData = ShEx.Util.makeQueryDB(Caches.inputData.endpoint, ShEx.N3.DataFactory, queryTracker());
       }
 
       currentAction = "creating validator";
@@ -771,7 +779,7 @@ function callValidator (done) {
           },
           ("endpoint" in Caches.inputData ?
            { endpoint: Caches.inputData.endpoint, slurp: $("#slurp").is(":checked") } :
-           { data: inputData.getQuads() })
+           { data: inputData.getQuads().map(q => (["subject", "predicate", "object"]).map(part => ShEx.RdfTerm.jStoLD(q[part]))) })
         ));
       }
 
@@ -854,9 +862,9 @@ function callValidator (done) {
 
         case "finishQuery":
           noScrollAppend($("#inputData textarea"), " " + msg.data.quads.length + " triples (" + msg.data.time + " μs)\n");
-          Caches.inputData.slurpWriter.addQuads(msg.data.quads.map(
-            t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
-          ));
+          Caches.inputData.slurpWriter.addQuads(msg.data.quads.map( // for quads: /\s*(<[^>]*>|_:[A-Za-z][A-Za-z0-9]*)\s*(<[^>]*>)\s*(".*"?|<[^>]*>|_:[A-Za-z][A-Za-z0-9]*)\s*(<[^>]*>)?.*\s*\.\s*$/
+        q => ShEx.N3.DataFactory.quad.apply(ShEx.N3.DataFactory, (["subject", "predicate", "object"]).map((part, ord) => ShEx.RdfTerm.lDtoJS(q[ord], ShEx.N3.DataFactory)))
+      ));
           break;
 
         case "error":
@@ -1327,8 +1335,8 @@ function queryTracker () {
     },
     end: function (quads, time) {
       noScrollAppend($("#inputData textarea"), " " + quads.length + " triples (" + time + " μs)\n");
-      Caches.inputData.slurpWriter.addQuads(quads.map(
-        t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
+      Caches.inputData.slurpWriter.addQuads(quads.map( // for quads: /\s*(<[^>]*>|_:[A-Za-z][A-Za-z0-9]*)\s*(<[^>]*>)\s*(".*"?|<[^>]*>|_:[A-Za-z][A-Za-z0-9]*)\s*(<[^>]*>)?.*\s*\.\s*$/
+        q => ShEx.N3.DataFactory.quad.apply(ShEx.N3.DataFactory, (["subject", "predicate", "object"]).map((part, ord) => ShEx.RdfTerm.lDtoJS(q[ord], ShEx.N3.DataFactory)))
       ));
     }
   }
@@ -1476,7 +1484,7 @@ function copyEditMapToFixedMap () {
   function getQuads (s, p, o) {
     var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
     return Caches.inputData.refresh().getQuads(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);// !!check
+      return Caches.inputData.meta.termToLex(ShEx.RdfTerm.jStoLD(t[get]));// !!check
     });
     function mine (term) {
       return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard

@@ -1,34 +1,34 @@
-if (true) {
+if (false) {
 importScripts("../browser/shex-webapp-webpack.js");
 } else {
 importScripts("../doc/require.js"      );
 
 importScripts("../node_modules/n3/lib/IRIs.js"         ); modules["./IRIs"]          = module.exports;
-importScripts("../node_modules/n3/lib/N3DataFactory.js"); modules["./N3DataFactory"] = module.exports;
+importScripts("../node_modules/n3/lib/N3DataFactory.js"); modules["n3"]["DataFactory"] = modules["./N3DataFactory"] = module.exports;
 importScripts("../node_modules/n3/lib/N3Util.js"       ); modules["./N3Util"]        = module.exports;
 importScripts("../node_modules/n3/lib/N3Lexer.js"      ); modules["n3"]["Lexer"] = modules["./N3Lexer"] = module.exports;
 importScripts("../node_modules/n3/lib/N3Parser.js"     ); modules["n3"]["Parser"]    = module.exports;
 importScripts("../node_modules/n3/lib/N3Store.js"      ); modules["n3"]["Store"]     = module.exports;
 
-importScripts("../node_modules/@shexjs/core/node_modules/hierarchy-closure/hierarchy-closure.js"); modules["hierarchy-closure"] = module.exports;
+importScripts("../../shex-core/node_modules/hierarchy-closure/hierarchy-closure.js"); modules["hierarchy-closure"] = module.exports;
 
-importScripts("../node_modules/shape-map/lib/ShapeMapSymbols.js"    ); modules["./lib/ShapeMapSymbols"] = modules["./ShapeMapSymbols"] = module.exports;
-module.exports = exports; importScripts("../node_modules/shape-map/lib/ShapeMapJison.js"    ); modules["./ShapeMapJison"] = module.exports;
-importScripts("../node_modules/shape-map/lib/ShapeMapParser.js"   ); modules["../node_modules/shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;
-importScripts("../node_modules/shape-map/shape-map.js"   ); modules["../node_modules/shape-map/shape-map"] = modules["shape-map"] = module.exports;
+importScripts("../../shape-map/lib/ShapeMapSymbols.js"    ); modules["./lib/ShapeMapSymbols"] = modules["./ShapeMapSymbols"] = module.exports;
+module.exports = exports; importScripts("../../shape-map/lib/ShapeMapJison.js"    ); modules["./ShapeMapJison"] = module.exports;
+importScripts("../../shape-map/lib/ShapeMapParser.js"   ); modules["../../shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;
+importScripts("../../shape-map/shape-map.js"   ); modules["../../shape-map/shape-map"] = modules["shape-map"] = module.exports;
 
-importScripts("../node_modules/@shexjs/core/lib/RdfTerm.js"     ); modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;
-importScripts("../node_modules/@shexjs/core/lib/ShExUtil.js"     ); modules["./ShExUtil"] = modules["../node_modules/@shexjs/core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;
-importScripts("../node_modules/@shexjs/core/lib/regex/threaded-val-nerr.js"); modules["../node_modules/@shexjs/core/lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = modules["../lib/regex/threaded-val-nerr"] = module.exports;
-importScripts("../node_modules/@shexjs/core/lib/regex/nfax-val-1err.js"); modules["./lib/regex/nfax-val-1err"] = module.exports;
-importScripts("../node_modules/@shexjs/core/lib/ShExValidator.js"); modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;
-importScripts("../node_modules/@shexjs/core/lib/ShExWriter.js"   ); modules["./lib/ShExWriter"] = modules["../node_modules/@shexjs/core/lib/ShExWriter"] = module.exports;
-importScripts("../node_modules/@shexjs/core/shex-core.js"     ); modules["@shexjs/core"] = ShExCore;
+importScripts("../../shex-core/lib/RdfTerm.js"     ); modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;
+importScripts("../../shex-core/lib/ShExUtil.js"     ); modules["./ShExUtil"] = modules["../../shex-core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;
+importScripts("../../shex-core/lib/regex/threaded-val-nerr.js"); modules["../../shex-core/lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = modules["../lib/regex/threaded-val-nerr"] = module.exports;
+importScripts("../../shex-core/lib/regex/nfax-val-1err.js"); modules["./lib/regex/nfax-val-1err"] = module.exports;
+importScripts("../../shex-core/lib/ShExValidator.js"); modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;
+importScripts("../../shex-core/lib/ShExWriter.js"   ); modules["./lib/ShExWriter"] = modules["../../shex-core/lib/ShExWriter"] = module.exports;
+importScripts("../../shex-core/shex-core.js"     ); modules["@shexjs/core"] = ShExCore;
 
-module.exports = exports; importScripts("../node_modules/@shexjs/parser/lib/ShExJison.js"    ); modules["./lib/ShExJison"] = module.exports;
-importScripts("../node_modules/@shexjs/parser/shex-parser.js"   ); modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;
+module.exports = exports; importScripts("../../shex-parser/lib/ShExJison.js"    ); modules["./lib/ShExJison"] = module.exports;
+importScripts("../../shex-parser/shex-parser.js"   ); modules["../../shex-parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;
 
-importScripts("../node_modules/@shexjs/loader/shex-loader.js"); modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;
+importScripts("../../shex-loader/shex-loader.js"); modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;
 importScripts("../shex-webapp.js"); 
 }
 importScripts("Util.js");
@@ -62,10 +62,13 @@ onmessage = function (msg) {
 
   case "validate":
     var errorText = undefined;
+    validator.known = {}; // clear out cache
     try {
     var db = "endpoint" in msg.data
-      ? ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-      : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
+      ? ShEx.Util.makeQueryDB(msg.data.endpoint, ShEx.N3.DataFactory, msg.data.slurp ? queryTracker() : null)
+      : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data.map( // for quads: /\s*(<[^>]*>|_:[A-Za-z][A-Za-z0-9]*)\s*(<[^>]*>)\s*(".*"?|<[^>]*>|_:[A-Za-z][A-Za-z0-9]*)\s*(<[^>]*>)?.*\s*\.\s*$/
+        q => ShEx.N3.DataFactory.quad.apply(ShEx.N3.DataFactory, (["subject", "predicate", "object"]).map((part, ord) => ShEx.RdfTerm.lDtoJS(q[ord], ShEx.N3.DataFactory)))
+      )));
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
     var results = Util.createResults();
@@ -126,10 +129,10 @@ function makeStaticDB (quads) {
 function queryTracker () {
   return {
     start: function (isOut, term, shapeLabel) {
-      postMessage ({ response: "startQuery", isOut: isOut, term: term, shape: shapeLabel });
+      postMessage ({ response: "startQuery", isOut: isOut, term: typeof term === "object" && "termType" in term ? ShEx.RdfTerm.jStoLD(term) : term, shape: shapeLabel });
     },
     end: function (quads, time) {
-      postMessage({ response: "finishQuery", quads: quads, time: time });
+      postMessage({ response: "finishQuery", quads: quads.map(q => (["subject", "predicate", "object"]).map(part => ShEx.RdfTerm.jStoLD(q[part]))), time: time });
     }
   }
 }
