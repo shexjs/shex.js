@@ -1964,6 +1964,7 @@ function prepareManifest (demoList, base) {
   }, {});
   var nestingAsList = Object.keys(nesting).map(e => nesting[e]);
   paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
+  $("#inputSchema .manifest").css("visibility", nestingAsList.length > 0 ? "visible" : "hidden");
   var timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
