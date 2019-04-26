@@ -2191,7 +2191,115 @@ var ShExUtil = {
       return string;
     }
     catch (error) { console.warn(error); return ''; }
-  }
+  },
+
+  shexPath: function (schema, iriResolver) {
+    var _ShExUtil = this;
+    const navigation = new Map()
+    navigation.set(schema, []) // schema has no parents
+
+    const parents = [schema]
+    const visitor = _ShExUtil.Visitor()
+
+    const oldVisitExpression = visitor.visitExpression
+    visitor.visitExpression = function (expr) {
+      navigation.set(expr, parents.slice())
+      parents.push(expr)
+      let ret = oldVisitExpression.call(visitor, expr)
+      parents.pop()
+      return ret
+    }
+
+    const oldVisitShapeExpr = visitor.visitShapeExpr
+    visitor.visitShapeExpr = function (expr, label) {
+      navigation.set(expr, parents.slice())
+      parents.push(expr)
+      let ret = oldVisitShapeExpr.call(visitor, expr, label)
+      parents.pop()
+      return ret
+    }
+
+    visitor.visitSchema(schema)
+
+    return {
+      search: search
+    }
+
+    /**
+     * invocation:
+     *   .search("/my:path")
+     *   .search("/my:path", schema.shapes[1])
+     *   .search("/my:path", [schema.shapes[1]])
+     */
+    function search (path, context = schema) {
+      if (context.constructor !== Array) {
+        context = [context]
+      }
+      if (path[0] === '/') {
+        context = [schema]
+        path = path.substr(1)
+      }
+      let m;
+      while(m = path.match(/^\s*(@?)\s*(?:([1-9][0-9]*)|<([^>]+)>\s*([1-9][0-9]*)?)\s*((?:\.[a-zA-Z_][a-zA-Z_0-9]*)*)\s*\/?/)) {
+        path = path.substr(m[0].length)
+        context = context.reduce(
+          (newValue, I) => newValue.concat(attr(m[1], m[5].split(/\./).splice(1), evaluateIndex(I, m[2] ? parseInt(m[2]) : null, m[3], m[4]))), []
+        )
+      }
+      return context
+
+      function evaluateIndex (I, i, N, Ni) {
+        if (I.type === "Schema") {
+          if (i) return [I.shapes[i-1]]
+          else if ("shapes" in I && (!Ni || Ni === 1)) return [N]
+        } else if (I.type === "ShapeOr" || I.type === "ShapeAnd") {
+          if (i && i - 1 >= 0 && i - 1 < I.shapeExprs.length) return [I.shapeExprs[i - 1]]
+        } else if (I.type === "ShapeNot") {
+          if (i && i === 1) return [I.shapeExpr]
+        } else if (I.type === "NodeConstraint") {
+        } else if (I.type === "Shape") {
+          if ("expression" in I) return evaluateIndex(I.expression, i, N, Ni)
+        } else if (I.type === "EachOf" || I.type === "OneOf") {
+          if (i) return [I.expressions[i-1]]
+          else {
+            let TCs = findByPredicate(N, I.expressions)
+            if (Ni) return [TCs[Ni-1]]
+            else return TCs
+          }
+        } if (I.type === "TripleConstraint") {
+          if (i && i === 1) return [I]
+          else if (N === I.predicate && (!Ni || Ni === 1)) return [I]
+        }
+        return []
+      }
+
+      function attr (follow, As, elts) {
+        const withAttrs = elts.map(
+          elt => As.reduce(
+            (acc, A) => typeof elt === "object" ? acc[A] : undefined, elt
+          )
+        ).filter(elt => elt)
+        return follow ? withAttrs.map(
+          elt => schema.shapes.find(se => se.id === elt), []
+        ).filter(elt => elt) : withAttrs
+      }
+    }
+
+    // return set of triple constraints the shape expression I.expressions with a predicate of N.
+    function findByPredicate (N, expressions) {
+      const visitor = _ShExUtil.Visitor()
+      let ret = []
+
+      const oldVisitTripleConstraint = visitor.visitTripleConstraint
+      visitor.visitTripleConstraint = function (expr) {
+        if (expr.predicate === N)
+          ret.push(expr)
+        return oldVisitTripleConstraint.call(visitor, expr)
+      }
+      visitor.visitExpression(schema)
+      return ret
+    }
+  },
 
 };
 

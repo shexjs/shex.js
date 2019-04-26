@@ -1,0 +1,9 @@
+[   {
+      "id": "http://a.example/S4",
+      "type": "Shape",
+      "expression": {
+        "type": "TripleConstraint",
+        "predicate": "http://a.example/p4"
+      }
+    }
+]

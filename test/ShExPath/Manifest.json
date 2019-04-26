@@ -1,0 +1,60 @@
+{
+  "description": "collection of partition tests",
+  "tests": [
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>",
+      "expect": "1dotRefOR3_S1"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S4>",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>",
+      "expect": "1dotRefOR3_p1"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr",
+      "expect": "1dotRefOR3_p1_valueExpr"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr.type",
+      "expect": "1dotRefOR3_p1_valueExpr_type"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr/@3",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/1",
+      "expect": "1dotRefOR3_S1"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/4",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/1/1",
+      "expect": "1dotRefOR3_p1"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/1/1.valueExpr",
+      "expect": "1dotRefOR3_p1_valueExpr"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/1/1.valueExpr/@3",
+      "expect": "1dotRefOR3_S4"
+    }
+  ]
+}
