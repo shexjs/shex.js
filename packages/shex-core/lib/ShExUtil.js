@@ -2240,15 +2240,17 @@ var ShExUtil = {
         path = path.substr(1)
       }
       let m;
-      while(m = path.match(/^\s*(@?)\s*(?:([1-9][0-9]*)|<([^>]+)>\s*([1-9][0-9]*)?)\s*((?:\.[a-zA-Z_][a-zA-Z_0-9]*)*)\s*\/?/)) {
+      while(m = path.match(/^\s*(@?)\s*(ShapeOr|ShapeAnd|ShapeNot|NodeConstraint|Shape|EachOf|OneOf|TripleConstraint)?(?:([1-9][0-9]*)|<([^>]+)>\s*([1-9][0-9]*)?)\s*((?:\.[a-zA-Z_][a-zA-Z_0-9]*)*)\s*\/?/)) {
         path = path.substr(m[0].length)
         context = context.reduce(
-          (newValue, I) => newValue.concat(attr(m[1], m[5].split(/\./).splice(1), evaluateIndex(I, m[2] ? parseInt(m[2]) : null, m[3], m[4]))), []
+          (newValue, I) => newValue.concat(attr(m[1], m[6].split(/\./).splice(1), evaluateIndex(I, m[2], m[3] ? parseInt(m[3]) : null, m[4], m[5]))), []
         )
       }
       return context
 
-      function evaluateIndex (I, i, N, Ni) {
+      function evaluateIndex (I, axis, i, N, Ni) {
+        if (axis && I.type !== axis)
+          return []
         if (I.type === "Schema") {
           if (i) return [I.shapes[i-1]]
           else if ("shapes" in I && (!Ni || Ni === 1)) return [N]
@@ -2258,7 +2260,7 @@ var ShExUtil = {
           if (i && i === 1) return [I.shapeExpr]
         } else if (I.type === "NodeConstraint") {
         } else if (I.type === "Shape") {
-          if ("expression" in I) return evaluateIndex(I.expression, i, N, Ni)
+          if ("expression" in I) return evaluateIndex(I.expression, axis, i, N, Ni)
         } else if (I.type === "EachOf" || I.type === "OneOf") {
           if (i) return [I.expressions[i-1]]
           else {

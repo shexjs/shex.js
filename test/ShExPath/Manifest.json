@@ -33,6 +33,16 @@
     },
     {
       "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr/@ShapeOr3",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr/@ShapeAnd3",
+      "expect": "empty"
+    },
+    {
+      "from": "1dotRefOR3",
       "shexPath": "/1",
       "expect": "1dotRefOR3_S1"
     },
