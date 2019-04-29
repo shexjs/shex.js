@@ -1620,6 +1620,7 @@ function loadSearchParameters () {
   }
   if ("textMapIsSparqlQuery" in iface) {
     $("#textMap").data("isSparqlQuery", true)
+      .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
   }
 
   // Load all known query parameters.
