@@ -671,7 +671,10 @@ function disableResultsAndValidate (evt, done) {
     results.append(
       $("<div/>").addClass("warning").append(
         $("<h2/>").text("see shape map errors above"),
-        $("<button/>").text("validate (ctl-enter)").on("click", disableResultsAndValidate),
+        $("<button/>").append(
+          $("<span/>").addClass("validate-label").text("validate"),
+          " (ctl-enter)"
+        ).on("click", disableResultsAndValidate),
         " again to continue."
       )
     );
@@ -747,7 +750,8 @@ function callValidator (done) {
           return;
         } else if (msg.data.response !== "created")
           throw "expected created: " + JSON.stringify(msg.data);
-        $("#validate").addClass("stoppable").text("abort (ctl-enter)");
+        $("#validate").addClass("stoppable");
+        $("#validate .validate-label").text("abort");
         $("#validate").off("click", disableResultsAndValidate);
         $("#validate").on("click", terminateWorker);
 
@@ -784,7 +788,8 @@ function callValidator (done) {
       }
 
       function workerUICleanup () {
-        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
+        $("#validate").removeClass("stoppable");
+        $("#validate .validate-label").text("validate");
         $("#validate").off("click", terminateWorker);
         $("#validate").on("click", disableResultsAndValidate);
       }
