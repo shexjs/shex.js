@@ -1700,6 +1700,9 @@ function loadSearchParameters () {
          iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
        && shapeMapErrors.length === 0) {
       callValidator();
+      if (!hasFocusNode()) {
+        $("#textMap").focus();
+      }
     }
   });
 }
