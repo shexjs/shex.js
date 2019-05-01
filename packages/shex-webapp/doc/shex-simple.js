@@ -671,7 +671,10 @@ function disableResultsAndValidate (evt, done) {
     results.append(
       $("<div/>").addClass("warning").append(
         $("<h2/>").text("see shape map errors above"),
-        $("<button/>").text("validate (ctl-enter)").on("click", disableResultsAndValidate),
+        $("<button/>").append(
+          $("<span/>").addClass("validate-label").text("validate"),
+          " (ctl-enter)"
+        ).on("click", disableResultsAndValidate),
         " again to continue."
       )
     );
@@ -747,7 +750,8 @@ function callValidator (done) {
           return;
         } else if (msg.data.response !== "created")
           throw "expected created: " + JSON.stringify(msg.data);
-        $("#validate").addClass("stoppable").text("abort (ctl-enter)");
+        $("#validate").addClass("stoppable");
+        $("#validate .validate-label").text("abort");
         $("#validate").off("click", disableResultsAndValidate);
         $("#validate").on("click", terminateWorker);
 
@@ -784,7 +788,8 @@ function callValidator (done) {
       }
 
       function workerUICleanup () {
-        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
+        $("#validate").removeClass("stoppable");
+        $("#validate .validate-label").text("validate");
         $("#validate").off("click", terminateWorker);
         $("#validate").on("click", disableResultsAndValidate);
       }
@@ -1100,7 +1105,7 @@ function addEditMapPairs (pairs, target) {
       rows: '1',
       type: 'text',
       class: 'data focus'
-    }).text(node).on("change", markEditMapDirty);
+    }).text(node).on("input", markEditMapDirty);
     var joinerElt = $("<span>", {
       class: 'shapeMap-joiner'
     }).append("@").addClass(pair.status);
@@ -1121,7 +1126,7 @@ function addEditMapPairs (pairs, target) {
       type: 'text',
       value: shape,
       class: 'schema inputShape'
-    }).on("change", markEditMapDirty);
+    }).on("input", markEditMapDirty);
     var addElt = $("<button/>", {
       class: "addPair",
       title: "add a node/shape pair"}).text("+");
@@ -1259,6 +1264,7 @@ function prepareControls () {
         copyEditMapToTextMap();
     }
   });
+  $("#textMap").on("input", markEditMapDirty);
   $("#textMap").on("change", evt => {
     results.clear();
     copyTextMapToEditMap();
@@ -1403,6 +1409,10 @@ var parseQueryString = function(query) {
 
 function markEditMapDirty () {
   $("#editMap").attr("data-dirty", true);
+  if ($("#textMap").data("isSparqlQuery")) {
+    // query results have to be fetched first before validation can happen
+    $("#validate .validate-label").text("run query to fetch entities");
+  }
 }
 
 function markEditMapClean () {
@@ -1471,6 +1481,7 @@ function copyEditMapToFixedMap () {
       focusElt.scrollLeft = focusElt.scrollWidth;
     });
     fixedMapTab.text(restoreText).removeClass("running");
+    $("#validate .validate-label").text("validate");
   });
 
   function getQuads (s, p, o) {
@@ -1621,6 +1632,7 @@ function loadSearchParameters () {
   if ("textMapIsSparqlQuery" in iface) {
     $("#textMap").data("isSparqlQuery", true)
       .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
+    $("#validate .validate-label").text("run query to fetch entities");
   }
 
   // Load all known query parameters.
