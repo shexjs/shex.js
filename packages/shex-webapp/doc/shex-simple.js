@@ -1185,7 +1185,7 @@ function removeEditMapPair (evt) {
 }
 
 function prepareControls () {
-  $("#menu-button").on("click", toggleControls);
+  $("#about-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
@@ -1308,13 +1308,13 @@ function toggleControls (evt) {
     var target = evt.target;
     while (target.tagName !== "BUTTON")
       target = target.parentElement;
-    if ($("#menuForm").css("position") === "absolute") {
+    if ($("#aboutForm").css("position") === "absolute") {
       $("#controls").
         css("top", 0).
-        css("left", $("#menu-button").css("margin-left"));
+        css("left", $("#about-button").css("margin-left"));
     } else {
       var bottonBBox = target.getBoundingClientRect();
-      var controlsBBox = $("#menuForm").get(0).getBoundingClientRect();
+      var controlsBBox = $("#aboutForm").get(0).getBoundingClientRect();
       var left = bottonBBox.right - bottonBBox.width; // - controlsBBox.width;
       $("#controls").css("top", bottonBBox.bottom).css("left", left);
     }
@@ -1342,11 +1342,11 @@ function queryTracker () {
 
 function toggleControlsArrow (which) {
   // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
-  if (document.getElementById("menu-button") === null)
+  if (document.getElementById("about-button") === null)
     return;
-  var down = $(document.getElementById("menu-button").
+  var down = $(document.getElementById("about-button").
                querySelectorAll('use[*|href="#down-arrow"]'));
-  var up = $(document.getElementById("menu-button").
+  var up = $(document.getElementById("about-button").
              querySelectorAll('use[*|href="#up-arrow"]'));
 
   switch (which) {
@@ -1755,10 +1755,10 @@ function customizeInterface () {
     $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").show();
     $("#actions").parent().children().not("#actions").hide();
     $("#title img, #title h1").hide();
-    $("#menuForm").css("position", "absolute").css(
+    $("#aboutForm").css("position", "absolute").css(
       "left",
       $("#inputSchema .status").get(0).getBoundingClientRect().width -
-        $("#menuForm").get(0).getBoundingClientRect().width
+        $("#aboutForm").get(0).getBoundingClientRect().width
     );
     $("#controls").css("position", "relative");
   } else {
@@ -1766,7 +1766,7 @@ function customizeInterface () {
     $("#inputData .status").html("data (<span id=\"dataDialect\">Turtle</span>)").hide();
     $("#actions").parent().children().not("#actions").show();
     $("#title img, #title h1").show();
-    $("#menuForm").removeAttr("style");
+    $("#aboutForm").removeAttr("style");
     $("#controls").css("position", "absolute");
   }
 }
