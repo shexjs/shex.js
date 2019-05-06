@@ -1633,6 +1633,7 @@ function loadSearchParameters () {
     $("#textMap").data("isSparqlQuery", true)
       .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
     $("#validate .validate-label").text("run query to fetch entities");
+    changeInputTabs();
   }
 
   // Load all known query parameters.
@@ -1719,7 +1720,15 @@ function loadSearchParameters () {
   });
 }
 
-  /**
+function changeInputTabs() {
+  $("#query a").text('Query');
+  $("#queryEditor").remove();
+  $("#fixMap a").text('Entities to check');
+}
+
+
+
+/**
    * update location with a current values of some inputs
    */
   function getPermalink () {
