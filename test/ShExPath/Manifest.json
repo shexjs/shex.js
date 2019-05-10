@@ -2,6 +2,67 @@
   "description": "collection of partition tests",
   "tests": [
     {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/2/1*",
+      "throws": true,
+      "expect": "Error: unable to parse at offset 15: *"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/2/1",
+      "expect": "nested_S0_p2_valueExpr"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 2/TripleConstraint/Shape/TripleConstraint",
+      "expect": "nested_S0_p2_valueExpr_TC"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 2/TripleConstraint/",
+      "expect": "nested_S0_p2"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 2",
+      "expect": "nested_S0_p2"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 2/TripleConstraint",
+      "expect": "nested_S0_p2"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 2/.valueExpr",
+      "expect": "nested_S0_p2_valueExpr"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/1",
+      "expect": "nested_S0_p1"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 1",
+      "expect": "nested_S0_p1"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/1.valueExpr",
+      "expect": "nested_S0_p1_valueExpr"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 1.valueExpr",
+      "expect": "nested_S0_p1_valueExpr"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<base:/S0>/EachOf 2.valueExpr",
+      "expect": "nested_S0_p2_valueExpr"
+    },
+    {
       "from": "1dotRefOR3",
       "shexPath": "/@<http://a.example/S1>",
       "expect": "1dotRefOR3_S1"
@@ -33,12 +94,42 @@
     },
     {
       "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>/@3",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
       "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr/@ShapeOr3",
       "expect": "1dotRefOR3_S4"
     },
     {
       "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>/@ShapeOr3",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
       "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>.valueExpr/@ShapeAnd3",
+      "expect": "empty"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>/@ShapeAnd3",
+      "expect": "empty"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>/@3",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>/@ShapeOr3",
+      "expect": "1dotRefOR3_S4"
+    },
+    {
+      "from": "1dotRefOR3",
+      "shexPath": "/@<http://a.example/S1>/<http://a.example/p1>/@ShapeAnd3",
       "expect": "empty"
     },
     {

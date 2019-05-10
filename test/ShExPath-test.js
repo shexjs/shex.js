@@ -25,22 +25,45 @@ describe('Resolving ShExPaths', function () {
 
   manifest.tests.forEach(function (test) {
 
-    const schemaFile = schemasPath + test.from + ".shex";
+    const schemaFile = (test.from.startsWith("./") ? shexPathTestDir : schemasPath) + test.from + (test.from.endsWith(".json") ? "" : ".shex");
     const expectedFile = shexPathTestDir + test.expect + ".json";
-    const schema = parser.parse(fs.readFileSync(schemaFile, 'utf8')); parser._resetBlanks();
+    const schemaStr = fs.readFileSync(schemaFile, 'utf8');
+    const schema = test.from.endsWith(".json")
+          ? JSON.parse(schemaStr)
+          : parser.parse(schemaStr); parser._resetBlanks();
     const shexPath = ShExUtil.shexPath(schema, null) // IRI resolver
-    const target = shexPath.search(test.shexPath);
-    const expected = JSON.parse(fs.readFileSync(expectedFile, 'utf8'));
+    const blurb = (VERBOSE ? schemaFile : test.from) +
+          ' for ' + test.shexPath
+    if (test.throws) {
+      let message = undefined
+      try {
+        shexPath.search(test.shexPath)
+      } catch (e) {
+        message = e.message
+      }
 
-    it((VERBOSE ? schemaFile : test.from) + 
-       ' for ' + test.shexPath + ' should match ' + 
-       (VERBOSE ? expectedFile : test.expect), function () {
-      if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
-      if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
-      if (VERBOSE) console.log("target: ", JSON.stringify(target));
-      if (VERBOSE) console.log("expect: ", JSON.stringify(expected));
-      expect(target).to.deep.equal(expected);
-    });
+
+      it(blurb + ' should fail witl ' +
+         (VERBOSE ? expectedFile : test.expect), function () {
+           if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
+           if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
+           if (VERBOSE) console.log("message: ", message);
+           if (VERBOSE) console.log("expect: ", expectedFile);
+           expect(expectedFile).to.contain(message);
+         });
+    } else {
+      const target = shexPath.search(test.shexPath);
+      const expected = JSON.parse(fs.readFileSync(expectedFile, 'utf8'));
+
+      it(blurb + ' should match ' +
+         (VERBOSE ? expectedFile : test.expect), function () {
+           if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
+           if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
+           if (VERBOSE) console.log("target: ", JSON.stringify(target));
+           if (VERBOSE) console.log("expect: ", JSON.stringify(expected));
+           expect(target).to.deep.equal(expected);
+         });
+    }
   });
 });
 

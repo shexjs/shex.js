@@ -2240,17 +2240,40 @@ var ShExUtil = {
         path = path.substr(1)
       }
       let m;
-      while(m = path.match(/^\s*(@?)\s*(ShapeOr|ShapeAnd|ShapeNot|NodeConstraint|Shape|EachOf|OneOf|TripleConstraint)?(?:([1-9][0-9]*)|<([^>]+)>\s*([1-9][0-9]*)?)\s*((?:\.[a-zA-Z_][a-zA-Z_0-9]*)*)\s*\/?/)) {
-        path = path.substr(m[0].length)
+      let consumed = 0;
+      const TESTS = "("
+            + [ "ShapeOr", "ShapeAnd", "ShapeNot",
+                "NodeConstraint", "Shape",
+                "EachOf", "OneOf", "TripleConstraint" ].join("|")
+            + ")";
+      const INT = "([1-9][0-9]*)"
+      const IRI = "<([^>]+)>"
+      const ATTRS = "((?:\\.[a-zA-Z_][a-zA-Z_0-9]*)*)"
+      const R = new RegExp(`^\\s*(@?)\\s*${TESTS}?\\s*(?:${INT}|${IRI}\\s*${INT}?)?\\s*${ATTRS}\\s*\\/?`)
+      while(path && (m = path.match(R)) && m[0].length) {
+        const len = m[0].length;
+        path = path.substr(len);
+        consumed += len;
         context = context.reduce(
           (newValue, I) => newValue.concat(attr(m[1], m[6].split(/\./).splice(1), evaluateIndex(I, m[2], m[3] ? parseInt(m[3]) : null, m[4], m[5]))), []
         )
       }
+      if (path.length)
+        throw Error("unable to parse at offset " + consumed + ": " + path)
       return context
 
       function evaluateIndex (I, axis, i, N, Ni) {
+        // if (i || N /*|| axis*/) {
+        if (i || N || axis) {
+          if (I.type === "Shape" && axis !== "Shape" && "expression" in I)
+            I = I.expression;
+          else if (I.type === "TripleConstraint" && axis !== "TripleConstraint" && "valueExpr" in I)
+            I = I.valueExpr;
+        }
         if (axis && I.type !== axis)
           return []
+        if (!i && !N)
+          return [I]
         if (I.type === "Schema") {
           if (i) return [I.shapes[i-1]]
           else if ("shapes" in I && (!Ni || Ni === 1)) return [N]
@@ -2260,7 +2283,8 @@ var ShExUtil = {
           if (i && i === 1) return [I.shapeExpr]
         } else if (I.type === "NodeConstraint") {
         } else if (I.type === "Shape") {
-          if ("expression" in I) return evaluateIndex(I.expression, axis, i, N, Ni)
+          // if ("expression" in I) return evaluateIndex(I.expression, axis, i, N, Ni)
+          if (i && i === 1) return [I]
         } else if (I.type === "EachOf" || I.type === "OneOf") {
           if (i) return [I.expressions[i-1]]
           else {
