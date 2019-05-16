@@ -31,7 +31,7 @@ describe('Resolving ShExPaths', function () {
     const schema = test.from.endsWith(".json")
           ? JSON.parse(schemaStr)
           : parser.parse(schemaStr); parser._resetBlanks();
-    const shexPath = ShExUtil.shexPath(schema, null) // IRI resolver
+    const shexPath = ShExUtil.shexPath(schema, {base: "base:/", prefixes: {"": "default:/", "x": "x:/"}})
     const blurb = (VERBOSE ? schemaFile : test.from) +
           ' for ' + test.shexPath
     if (test.throws) {

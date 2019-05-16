@@ -2193,7 +2193,7 @@ var ShExUtil = {
     catch (error) { console.warn(error); return ''; }
   },
 
-  shexPath: function (schema, iriResolver) {
+  shexPath: function (schema, const_iriResolver) {
     var _ShExUtil = this;
     const navigation = new Map()
     navigation.set(schema, []) // schema has no parents
@@ -2231,7 +2231,7 @@ var ShExUtil = {
      *   .search("/my:path", schema.shapes[1])
      *   .search("/my:path", [schema.shapes[1]])
      */
-    function search (path, context = schema) {
+    function search (path, context = [schema], iriResolver = const_iriResolver) {
       if (context.constructor !== Array) {
         context = [context]
       }
@@ -2288,7 +2288,7 @@ var ShExUtil = {
         } else if (I.type === "EachOf" || I.type === "OneOf") {
           if (i) return [I.expressions[i-1]]
           else {
-            let TCs = findByPredicate(N, I.expressions)
+            let TCs = findByPredicate(N, I)
             if (Ni) return [TCs[Ni-1]]
             else return TCs
           }
@@ -2306,13 +2306,13 @@ var ShExUtil = {
           )
         ).filter(elt => elt)
         return follow ? withAttrs.map(
-          elt => schema.shapes.find(se => se.id === elt), []
+          elt => schema.shapes.find(se => se.id === RdfTerm.resolveRelativeIRI(iriResolver.base, elt)), []
         ).filter(elt => elt) : withAttrs
       }
     }
 
     // return set of triple constraints the shape expression I.expressions with a predicate of N.
-    function findByPredicate (N, expressions) {
+    function findByPredicate (N, expression) {
       const visitor = _ShExUtil.Visitor()
       let ret = []
 
@@ -2322,7 +2322,7 @@ var ShExUtil = {
           ret.push(expr)
         return oldVisitTripleConstraint.call(visitor, expr)
       }
-      visitor.visitExpression(schema)
+      visitor.visitExpression(expression)
       return ret
     }
   },

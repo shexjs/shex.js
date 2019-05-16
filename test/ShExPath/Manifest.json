@@ -2,6 +2,21 @@
   "description": "collection of partition tests",
   "tests": [
     {
+      "from": "2Eachdot",
+      "shexPath": "/@<http://a.example/S>/<http://a.example/a>",
+      "expect": "2Eachdot_S_a"
+    },
+    {
+      "from": "2Eachdot",
+      "shexPath": "/@<http://a.example/S>/<http://a.example/b>",
+      "expect": "2Eachdot_S_b"
+    },
+    {
+      "from": "./nested.json",
+      "shexPath": "@<S0>/2/1",
+      "expect": "nested_S0_p2_valueExpr"
+    },
+    {
       "from": "./nested.json",
       "shexPath": "@<base:/S0>/2/1*",
       "throws": true,
