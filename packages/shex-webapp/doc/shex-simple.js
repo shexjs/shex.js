@@ -1614,6 +1614,7 @@ function loadSearchParameters () {
     $("#textMap").data("isSparqlQuery", true)
         .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
     $("#validate .validate-label").text("run query to fetch entities");
+    changeInputTabs();
   }
 
   // Load all known query parameters.
@@ -1700,23 +1701,29 @@ function loadSearchParameters () {
   });
 }
 
-/**
- * update location with a current values of some inputs
- */
-function getPermalink () {
-  var parms = [];
-  copyEditMapToTextMap();
-  parms = parms.concat(QueryParams.reduce((acc, input) => {
-    var parm = input.queryStringParm;
-    var val = input.location.val();
-    if (input.cache && input.cache.url &&
-        // Specifically avoid loading from DefaultBase?schema=blah
-        // because that will load the HTML page.
-        !input.cache.url.startsWith(DefaultBase)) {
-      parm += "URL";
-      val = input.cache.url;
-    }
-    return val.length > 0 ?
+function changeInputTabs() {
+  $("#query").html("<a href=\"#textMap\">Query</a>");
+  $("#queryEditor").remove();
+  $("#fixMap").html("<a href=\"#fixedMap-tab\">Entities to check</a>");
+}
+
+  /**
+   * update location with a current values of some inputs
+   */
+  function getPermalink () {
+    var parms = [];
+    copyEditMapToTextMap();
+    parms = parms.concat(QueryParams.reduce((acc, input) => {
+      var parm = input.queryStringParm;
+      var val = input.location.val();
+      if (input.cache && input.cache.url &&
+          // Specifically avoid loading from DefaultBase?schema=blah
+          // because that will load the HTML page.
+          !input.cache.url.startsWith(DefaultBase)) {
+        parm += "URL";
+        val = input.cache.url;
+      }
+      return val.length > 0 ?
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
   }, []));
