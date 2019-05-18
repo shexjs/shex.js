@@ -3,10 +3,8 @@
  * Unit tests for extensions/shex-map/lib/extensions.js
  */
 
-var _ = require('underscore');
-
-var mapper = require('../extensions/shex-map/module');
-var mapExtensions = require('../extensions/shex-map/lib/extensions');
+var mapper = require("@shexjs/extension-map");
+var mapExtensions = mapper.extensions;
 
 describe('Map extensions', function() {
 

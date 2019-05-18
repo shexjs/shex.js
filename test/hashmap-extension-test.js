@@ -3,10 +3,8 @@
  * Unit tests for extensions/shex-map/lib/hashmap-extension.js
  */
 
-var _ = require('underscore');
-
-var mapper = require('../extensions/shex-map/module');
-var hmExtension = require('../extensions/shex-map/lib/hashmap_extension');
+var mapper = require("@shexjs/extension-map");
+var hmExtension = mapper.extension.hashmap;
 
 describe('Hashmap extension', function() {
 
