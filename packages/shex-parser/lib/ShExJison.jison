@@ -26,7 +26,7 @@
 
   var UNBOUNDED = -1;
 
-  var ShExUtil = require("./ShExUtil");
+  var ShExUtil = require("@shexjs/core").Util;
 
   // Common namespaces and entities
   var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -246,7 +246,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -332,14 +332,16 @@
     if (Parser.productions && label in Parser.productions)
       error("Structural error: "+label+" is a shape");
     if (!Parser.shapes)
-      Parser.shapes = {};
+      Parser.shapes = new Map();
     if (label in Parser.shapes) {
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
         error("Parse error: "+label+" already defined");
-    } else
+    } else {
+      shape.id = label;
       Parser.shapes[label] = shape;
+    }
   }
 
   // Add a production to the map
@@ -347,7 +349,7 @@
     if (Parser.shapes && label in Parser.shapes)
       error("Structural error: "+label+" is a shape");
     if (!Parser.productions)
-      Parser.productions = {};
+      Parser.productions = new Map();
     if (label in Parser.productions) {
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;
@@ -567,20 +569,24 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 shexDoc:
       _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        var valueExprDefns = Parser.valueExprDefns ? { valueExprDefns: Parser.valueExprDefns } : {};
+        let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
         var startObj = Parser.start ? { start: Parser.start } : {};
         var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        var ret = extend({ type: "Schema"},
-                         Object.keys(Parser._prefixes).length ? { prefixes: Parser._prefixes } : {}, // Properties ordered here to
-                         Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}, // build return object from
-                         valueExprDefns, startActs, startObj,                  // components in parser state
-                         Parser.shapes ? {shapes: Parser.shapes} : {},         // maintaining intuitve order.
-                         Parser.productions ? {productions: Parser.productions} : {});
-        if (Parser._base !== null)
-          ret.base = Parser._base;
+        let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
+        var shexj = Object.assign(
+          { type: "Schema" }, imports, startActs, startObj, shapes
+        )
+        if (Parser.options.index) {
+          if (Parser._base !== null)
+            shexj._base = Parser._base;
+          shexj._prefixes = Parser._prefixes;
+          shexj._index = {
+            shapeExprs: Parser.shapes || new Map(),
+            tripleExprs: Parser.productions || new Map()
+          };
+        }
         Parser.reset();
-//console.log(JSON.stringify(ret));
-        return ret;
+        return shexj;
       }
     ;
 
@@ -888,13 +894,13 @@ shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
-        $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1) };
+        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1@@
         $1 = $1.substr(1, $1.length-1);
-        $$ = { type: "ShapeRef", reference: expandPrefix($1.substr(0, $1.length - 1)) };
+        $$ = expandPrefix($1.substr(0, $1.length - 1)); // ShapeRef
       }
-    | '@' shapeExprLabel	-> { type: "ShapeRef", reference: $2 } // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> $2 // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 litNodeConstraint:
@@ -1033,7 +1039,7 @@ numericLength:
 
 shapeDefinition:
       inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
-        $$ = $1
+        $$ = $1 === EmptyShape ? { type: "Shape" } : $1; // t: 0
         if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
       }
@@ -1183,7 +1189,7 @@ tripleConstraint:
 	if ($3 !== EmptyShape && false) {
 	  var t = blank();
 	  addShape(t, $3);
-	  $3 = { type: "ShapeRef", reference: t };
+	  $3 = t; // ShapeRef
 	}
         // %6: t: 1inversedotCode1
         $$ = extend({ type: "TripleConstraint" }, $1 ? $1 : {}, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot // t: 1inversedot
@@ -1371,7 +1377,7 @@ languageExclusion:
     ;
 
 include:
-      '&' tripleExprLabel	-> { type: "Inclusion", "include": $2 } // t: 2groupInclude1
+      '&' tripleExprLabel	-> $2 // Inclusion // t: 2groupInclude1
     ;
 
 annotation:

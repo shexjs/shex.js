@@ -1,6 +1,6 @@
 { "type": "ShapeTest",
   "node": "s0",
-  "shape": "http://a.example.org/S",
+  "shape": "http://a.example/S",
   "solution": {
     "type": "EachOfSolutions",
     "solutions": [

@@ -1,8 +1,5 @@
 {
   "@context": "http://www.w3.org/ns/shex.jsonld",
-  "prefixes": {
-    "": "http://a.example/"
-  },
   "type": "Schema",
   "shapes": [
     {

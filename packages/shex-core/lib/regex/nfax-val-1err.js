@@ -8,7 +8,7 @@ var NFAXVal1Err = (function () {
    */
   var UNBOUNDED = -1;
 
-  function compileNFA (schema, shape) {
+  function compileNFA (schema, shape, index) {
     var expression = shape.expression;
     return NFA();
 
@@ -50,7 +50,12 @@ var NFAXVal1Err = (function () {
           return {start: s, tail: [s]}
         }
 
-        if (expr.type === "TripleConstraint") {
+        if (typeof expr === "string") { // Inclusion
+          var included = index.tripleExprs[expr];
+          return walkExpr(included, stack);
+        }
+
+        else if (expr.type === "TripleConstraint") {
           s = State_make(expr, []);
           states[s].stack = stack;
           return {start: s, tail: [s]};
@@ -80,11 +85,6 @@ var NFAXVal1Err = (function () {
             lastTail = pair.tail;
           });
           return maybeAddRept(s, lastTail);
-        }
-
-        else if (expr.type === "Inclusion") {
-          var included = schema.productions[expr.include];
-          return walkExpr(included, stack);
         }
 
         throw Error("unexpected expr type: " + expr.type);
@@ -250,18 +250,20 @@ var NFAXVal1Err = (function () {
           var c = rbenx.states[t.state].c;
           // if (c === Match)
           //   return { type: "EndState999" };
-          var valueExpr = extend({}, c.valueExpr);
-          if ("reference" in valueExpr) {
-            var ref = valueExpr.reference;
-            if (RdfTerm.isBlank(ref))
-              valueExpr.reference = schema.shapes[ref];
+          var valueExpr = null;
+          if (typeof c.valueExpr === "string") { // ShapeRef
+            valueExpr = c.valueExpr;
+            if (RdfTerm.isBlank(valueExpr))
+              valueExpr = schema.shapes[valueExpr];
+          } else if (c.valueExpr) {
+            valueExpr = extend({}, c.valueExpr)
           }
           return extend({
             type: state.c.negated ? "NegatedProperty" :
               t.state === rbenx.end ? "ExcessTripleViolation" :
               "MissingProperty",
             property: state.c.predicate
-          }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {});
+          }, valueExpr ? { valueExpr: valueExpr } : {});
         });
       }
       // console.log("chosen:", dump.thread(chosen));
