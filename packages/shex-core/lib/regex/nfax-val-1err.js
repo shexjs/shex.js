@@ -341,18 +341,20 @@ var NFAXVal1Err = (function () {
               type: "ValueComparisonFailure",
               left: c.left, comparator: c.comparator, right: c.right
             };
-          var valueExpr = extend({}, c.valueExpr);
-          if ("reference" in valueExpr) {
-            var ref = valueExpr.reference;
-            if (RdfTerm.isBlank(ref))
-              valueExpr.reference = schema.shapes[ref];
+          var valueExpr = null;
+          if (typeof c.valueExpr === "string") { // ShapeRef
+            valueExpr = c.valueExpr;
+            if (RdfTerm.isBlank(valueExpr))
+              valueExpr = schema.shapes[valueExpr]; // extend({}, ...)?
+          } else if (c.valueExpr) {
+            valueExpr = c.valueExpr
           }
           return extend({
             type: state.c.negated ? "NegatedProperty" :
               t.state === rbenx.end ? "ExcessTripleViolation" :
               "MissingProperty",
             property: state.c.predicate
-          }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {});
+          }, valueExpr ? { valueExpr: valueExpr } : {});
         });
       }
       // console.log("chosen:", dump.thread(chosen));

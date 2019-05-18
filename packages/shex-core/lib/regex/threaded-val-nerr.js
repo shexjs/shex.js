@@ -133,11 +133,13 @@ function vpEngine (schema, shape, index) {
               }
             })());
           } else {
-            var valueExpr = extend({}, expr.valueExpr);
-            if ("reference" in valueExpr) {
-              var ref = valueExpr.reference;
-              if (RdfTerm.isBlank(ref))
-                valueExpr.reference = index.shapeExprs[ref];
+            var valueExpr = null;
+            if (typeof expr.valueExpr === "string") { // ShapeRef
+              valueExpr = expr.valueExpr;
+              if (RdfTerm.isBlank(valueExpr))
+                valueExpr = index.shapeExprs[valueExpr];
+            } else if (expr.valueExpr) {
+              valueExpr = extend({}, expr.valueExpr)
             }
             ret.push({
               avail: thread.avail,
@@ -145,7 +147,7 @@ function vpEngine (schema, shape, index) {
                 extend({
                   type: negated ? "NegatedProperty" : "MissingProperty",
                   property: expr.predicate
-                }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {})
+                }, valueExpr ? { valueExpr: valueExpr } : {})
               ]),
               matched: matched
             });
