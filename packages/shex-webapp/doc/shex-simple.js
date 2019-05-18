@@ -249,7 +249,7 @@ function makeSchemaCache (selection) {
   ret.getItems = function () {
     var obj = this.refresh();
     var start = "start" in obj ? [START_SHAPE_LABEL] : [];
-    var rest = "shapes" in obj ? Object.keys(obj.shapes).map(Caches.inputSchema.meta.termToLex) : [];
+    var rest = "shapes" in obj ? obj.shapes.map(se => Caches.inputSchema.meta.termToLex(se.id)) : [];
     return start.concat(rest);
   };
   return ret;
