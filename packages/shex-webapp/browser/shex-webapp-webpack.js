@@ -13910,7 +13910,7 @@ var RdfTerm = (function () {
         node = node.replace(escapeAll, characterReplacer);
       var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
       if (pref) {
-        return pref + node.substr(prefixes[pref].length);
+        return pref + ":" + node.substr(prefixes[pref].length);
       }
       if (node.startsWith(base)) {
         return "<" + node.substr(base.length) + ">";
@@ -52481,6 +52481,9 @@ function ShExValidator_constructor(schema, options) {
    */
   this.validate = function (db, point, label, tracker, seen) {
     // default to schema's start shape
+    if (typeof point === "object" && "termType" in point) {
+      point = RdfTerm.internalTerm(point)
+    }
     if (typeof point === "object") {
       var shapeMap = point;
       if (this.options.results === "api") {
