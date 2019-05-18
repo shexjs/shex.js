@@ -2,11 +2,15 @@
 
 // shex-to-json http://tracker.example/schemas/Issue.shex
 
-let Path = require('path');
-var ShExUtil = require("../lib/ShExUtil"); // translate back and forth to AS
-var ShExLoader = require("../lib/ShExLoader"); // for verbose output
-var ShExRWriter = require('../lib/ShExRWriter');
-var Jsonld = require("jsonld");
+const Path = require('path');
+const Fs = require('fs');
+const ShExCore = require("@shexjs/core");
+const ShExUtil = ShExCore.Util;
+const ShExLoader = require("@shexjs/loader"); // for verbose output
+const ShExRWriter = require('../../../lib/ShExRWriter');
+const Jsonld = require("jsonld");
+const N3 = require("n3");
+
 
 // Generate command line interface
 var CommandLineOptions = [
@@ -51,7 +55,7 @@ if (cmds['schema-keep-imports']) {
 }
 
 ShExLoader.load(cmds.shex, cmds.json, [], [], schemaOptions).then(function (loaded) {
-  if (true) {
+  if (false) {
     var w;
     new ShExRWriter({ base: cmds['schema-base'] || loaded.schemaMeta[0].base }).
       writeSchema(loaded.schema, function (error, text, prefixes) {
@@ -60,13 +64,26 @@ ShExLoader.load(cmds.shex, cmds.json, [], [], schemaOptions).then(function (load
       });
     console.log(w);
   } else {
-  let struct = ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate);
-  struct['@context'] = 'file://' + Path.resolve(process.argv[1], '../../doc/shex.jsonld');
-  Jsonld.toRDF(struct, {format: "application/nquads"}, function (lderr, nquads) {
+    let struct = loaded.schema; // ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate);
+    let ctx = JSON.parse(Fs.readFileSync(Path.resolve(process.argv[1], '../../../../doc/shex.jsonld')));
+    struct['@context'] = ctx // 'file://' + Path.resolve(process.argv[1], '../../../../doc/shex.jsonld');
+    Jsonld.toRDF(struct, {format: "application/nquads"}, function (lderr, nquads) {
     if (lderr) {
       throw Error("error parsing JSON-ld " + loaded.schemaMeta[0].url + ": " + lderr);
     } else {
-      console.log('%s', nquads)
+      const p = new N3.Parser({ format: 'N-Triples' })
+      const w = new N3.Writer(null, {
+        base: loaded.schemaMeta[0].base,
+        prefixes: loaded.schemaMeta[0].prefixes
+      })
+      p.parse(nquads, function (error, quad, prefixes) {
+        if (error)
+          throw error
+        else if (quad)
+          w.addQuad(quad)
+        else
+          w.end((error, result) => console.log(result))
+      })
     }
   });
   }
