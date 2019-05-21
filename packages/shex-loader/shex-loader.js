@@ -253,9 +253,8 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     ShExUtil.merge(schema, loadImports(s), true, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
-    var e2 = Error("error parsing ShEx " + url + ": " + e);
-    // e2.stack = e.stack;console.error(e2);
-    return Promise.reject(e2);
+    e.message = "error parsing ShEx " + url + ": " + e.message;
+    return Promise.reject(e);
   }
 }
 

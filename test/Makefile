@@ -22,9 +22,11 @@ JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 
 ../packages/shex-parser/lib/ShExJison.js: ../packages/shex-parser/lib/ShExJison.jison
 	$(JISON) $^ -o $@ -p lr
+	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@ # yyloc is reset by lex()->next()->test_match() [[ this.yylloc = {...} ]]
 
 ../packages/shape-map/lib/ShapeMapJison.js: ../packages/shape-map/lib/ShapeMapJison.jison
 	$(JISON) $^ -o $@ -p lalr
+	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@
 
 Parser-Writer-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Parser-Writer-test.js
 	$(MOCHA) -C -R $(REPORTER) Parser-Writer-test.js
