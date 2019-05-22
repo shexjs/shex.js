@@ -100,9 +100,8 @@ case 1:
             shapeExprs: Parser.shapes || new Map(),
             tripleExprs: Parser.productions || new Map()
           };
-          shexj._sourceMap = Parser.sourceMap;
+          shexj._sourceMap = Parser._sourceMap;
         }
-        Parser.reset();
         return shexj;
       
 break;
@@ -128,7 +127,7 @@ break;
 case 20:
 
         if (Parser.start)
-          error("Parse error: start already defined", yy);
+          error(new Error("Parse error: start already defined"), yy);
         Parser.start = shapeJunction("ShapeOr", $$[$0-1], $$[$0]); // t: startInline
       
 break;
@@ -303,7 +302,7 @@ case 95:
         if (numericDatatypes.indexOf($$[$0-1]) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $$[$0])
-              error("Parse error: facet " + facet + " not allowed for unknown datatype " + $$[$0-1], yy);
+              error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $$[$0-1]), yy);
           });
         this.$ = extend({ type: "NodeConstraint", datatype: $$[$0-1] }, $$[$0]) // t: 1datatype
       
@@ -320,7 +319,7 @@ break;
 case 99:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times", yy);
+          error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"), yy);
         }
         this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength
       
@@ -328,7 +327,7 @@ break;
 case 101: case 107:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times", yy);
+          error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"), yy);
         }
         this.$ = extend($$[$0-1], $$[$0]) // t: !! look to 1literalLength
       
@@ -345,7 +344,7 @@ break;
 case 105:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times", yy);
+          error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"), yy);
         }
         this.$ = extend($$[$0-1], $$[$0])
       
@@ -393,7 +392,7 @@ case 123:
         else if (numericDatatypes.indexOf($$[$0]) !== -1)
           this.$ = parseInt($$[$0-2].value)
         else
-          error("Parse error: numeric range facet expected numeric datatype instead of " + $$[$0], yy);
+          error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $$[$0]), yy);
       
 break;
 case 124:
@@ -1149,7 +1148,7 @@ parse: function parse(input) {
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser._sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -1218,38 +1217,42 @@ parse: function parse(input) {
     };
   }
 
-  function error (msg, yy) {
+  function error (e, yy) {
     const hash = {
       text: yy.lexer.match,
       // token: this.terminals_[symbol] || symbol,
       line: yy.lexer.yylineno,
       loc: yy.lexer.yylloc,
       // expected: expected
+      pos: yy.lexer.showPosition()
     }
-    Parser.reset();
-    let e = new Error(msg);
     e.hash = hash;
-    throw e;
+    if (Parser.recoverable) {
+      Parser.recoverable(e)
+    } else {
+      throw e;
+      Parser.reset();
+    }
   }
 
   // Expand declared prefix or throw Error
   function expandPrefix (prefix, yy) {
     if (!(prefix in Parser._prefixes))
-      error('Parse error; unknown prefix: ' + prefix, yy);
+      error(new Error('Parse error; unknown prefix: ' + prefix), yy);
     return Parser._prefixes[prefix];
   }
 
   // Add a shape to the map
   function addShape (label, shape, yy) {
     if (Parser.productions && label in Parser.productions)
-      error("Structural error: "+label+" is a triple expression", yy);
+      error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!Parser.shapes)
       Parser.shapes = new Map();
     if (label in Parser.shapes) {
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" already defined", yy);
+        error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
       shape.id = label;
       Parser.shapes[label] = shape;
@@ -1259,24 +1262,24 @@ parse: function parse(input) {
   // Add a production to the map
   function addProduction (label, production, yy) {
     if (Parser.shapes && label in Parser.shapes)
-      error("Structural error: "+label+" is a shape expression", yy);
+      error(new Error("Structural error: "+label+" is a shape expression"), yy);
     if (!Parser.productions)
       Parser.productions = new Map();
     if (label in Parser.productions) {
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" already defined", yy);
+        error(new Error("Parse error: "+label+" already defined"), yy);
     } else
       Parser.productions[label] = production;
   }
 
   function addSourceMap (obj, yy) {
-    if (!Parser.sourceMap)
-      Parser.sourceMap = new Map();
-    let list = Parser.sourceMap.get(obj)
+    if (!Parser._sourceMap)
+      Parser._sourceMap = new Map();
+    let list = Parser._sourceMap.get(obj)
     if (!list)
-      Parser.sourceMap.set(obj, list = []);
+      Parser._sourceMap.set(obj, list = []);
     list.push(yy.lexer.yylloc);
     return obj;
   }
