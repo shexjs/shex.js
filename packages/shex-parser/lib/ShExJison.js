@@ -100,6 +100,7 @@ case 1:
             shapeExprs: Parser.shapes || new Map(),
             tripleExprs: Parser.productions || new Map()
           };
+          shexj._sourceMap = Parser.sourceMap;
         }
         Parser.reset();
         return shexj;
@@ -196,7 +197,7 @@ break;
 case 32: case 227: case 244:
 this.$ = null;
 break;
-case 33: case 37: case 40: case 46: case 53: case 162: case 184: case 243:
+case 33: case 37: case 40: case 46: case 53: case 184: case 243:
 this.$ = $$[$0];
 break;
 case 35:
@@ -269,17 +270,17 @@ case 87:
  // t: 1dotRefLNex@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1); // ShapeRef
+        this.$ = addSourceMap(expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1), yy); // ShapeRef
       
 break;
 case 88:
  // t: 1dotRefNS1@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy); // ShapeRef
+        this.$ = addSourceMap(expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy), yy); // ShapeRef
       
 break;
 case 89:
-this.$ = $$[$0] // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
+this.$ = addSourceMap($$[$0], yy) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
 break;
 case 90: case 93:
  // t: !!
@@ -502,6 +503,9 @@ case 160:
         }
       
 break;
+case 162:
+this.$ = addSourceMap($$[$0], yy);
+break;
 case 167:
 
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
@@ -680,7 +684,7 @@ case 217:
 this.$ = $$[$0] ? { type: "LanguageStem", stem: $$[$0-1] } /* t: 1val1languageStemMinuslanguageStem3 */ : $$[$0-1] // t: 1val1languageStemMinuslanguage3;
 break;
 case 218:
-this.$ = $$[$0] // Inclusion // t: 2groupInclude1;
+this.$ = addSourceMap($$[$0], yy) // Inclusion // t: 2groupInclude1;
 break;
 case 219:
 this.$ = { type: "Annotation", predicate: $$[$0-1], object: $$[$0] } // t: 1dotAnnotIRIREF;
@@ -1145,7 +1149,7 @@ parse: function parse(input) {
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -1238,7 +1242,7 @@ parse: function parse(input) {
   // Add a shape to the map
   function addShape (label, shape, yy) {
     if (Parser.productions && label in Parser.productions)
-      error("Structural error: "+label+" is a shape", yy);
+      error("Structural error: "+label+" is a triple expression", yy);
     if (!Parser.shapes)
       Parser.shapes = new Map();
     if (label in Parser.shapes) {
@@ -1255,7 +1259,7 @@ parse: function parse(input) {
   // Add a production to the map
   function addProduction (label, production, yy) {
     if (Parser.shapes && label in Parser.shapes)
-      error("Structural error: "+label+" is a shape", yy);
+      error("Structural error: "+label+" is a shape expression", yy);
     if (!Parser.productions)
       Parser.productions = new Map();
     if (label in Parser.productions) {
@@ -1265,6 +1269,16 @@ parse: function parse(input) {
         error("Parse error: "+label+" already defined", yy);
     } else
       Parser.productions[label] = production;
+  }
+
+  function addSourceMap (obj, yy) {
+    if (!Parser.sourceMap)
+      Parser.sourceMap = new Map();
+    let list = Parser.sourceMap.get(obj)
+    if (!list)
+      Parser.sourceMap.set(obj, list = []);
+    list.push(yy.lexer.yylloc);
+    return obj;
   }
 
   // shapeJunction judiciously takes a shapeAtom and an optional list of con/disjuncts.

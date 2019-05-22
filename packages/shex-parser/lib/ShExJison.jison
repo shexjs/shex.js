@@ -246,7 +246,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser.sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -339,7 +339,7 @@
   // Add a shape to the map
   function addShape (label, shape, yy) {
     if (Parser.productions && label in Parser.productions)
-      error("Structural error: "+label+" is a shape", yy);
+      error("Structural error: "+label+" is a triple expression", yy);
     if (!Parser.shapes)
       Parser.shapes = new Map();
     if (label in Parser.shapes) {
@@ -356,7 +356,7 @@
   // Add a production to the map
   function addProduction (label, production, yy) {
     if (Parser.shapes && label in Parser.shapes)
-      error("Structural error: "+label+" is a shape", yy);
+      error("Structural error: "+label+" is a shape expression", yy);
     if (!Parser.productions)
       Parser.productions = new Map();
     if (label in Parser.productions) {
@@ -366,6 +366,16 @@
         error("Parse error: "+label+" already defined", yy);
     } else
       Parser.productions[label] = production;
+  }
+
+  function addSourceMap (obj, yy) {
+    if (!Parser.sourceMap)
+      Parser.sourceMap = new Map();
+    let list = Parser.sourceMap.get(obj)
+    if (!list)
+      Parser.sourceMap.set(obj, list = []);
+    list.push(yy.lexer.yylloc);
+    return obj;
   }
 
   // shapeJunction judiciously takes a shapeAtom and an optional list of con/disjuncts.
@@ -593,6 +603,7 @@ shexDoc:
             shapeExprs: Parser.shapes || new Map(),
             tripleExprs: Parser.productions || new Map()
           };
+          shexj._sourceMap = Parser.sourceMap;
         }
         Parser.reset();
         return shexj;
@@ -903,13 +914,13 @@ shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1); // ShapeRef
+        $$ = addSourceMap(expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), yy); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1@@
         $1 = $1.substr(1, $1.length-1);
-        $$ = expandPrefix($1.substr(0, $1.length - 1), yy); // ShapeRef
+        $$ = addSourceMap(expandPrefix($1.substr(0, $1.length - 1), yy), yy); // ShapeRef
       }
-    | '@' shapeExprLabel	-> $2 // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> addSourceMap($2, yy) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 litNodeConstraint:
@@ -1162,7 +1173,7 @@ unaryTripleExpr:
     ;
 
 _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C:
-      '$' tripleExprLabel	-> $2
+      '$' tripleExprLabel	-> addSourceMap($2, yy)
     ;
 
 _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt:
@@ -1386,7 +1397,7 @@ languageExclusion:
     ;
 
 include:
-      '&' tripleExprLabel	-> $2 // Inclusion // t: 2groupInclude1
+      '&' tripleExprLabel	-> addSourceMap($2, yy) // Inclusion // t: 2groupInclude1
     ;
 
 annotation:
