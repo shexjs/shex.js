@@ -1633,7 +1633,9 @@ function loadSearchParameters () {
     $("#textMap").data("isSparqlQuery", true)
       .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
     $("#validate .validate-label").text("run query to fetch entities");
-    changeInputTabs();
+    $("textMap-tab-header a").text('Query');
+    $("#editMap-tab-header").remove();
+    $("#fixedMap-tab-header a").text('Entities to check');
   }
 
   // Load all known query parameters.
@@ -1718,12 +1720,6 @@ function loadSearchParameters () {
       }
     }
   });
-}
-
-function changeInputTabs() {
-  $("#query").html("<a href=\"#textMap\">Query</a>");
-  $("#queryEditor").remove();
-  $("#fixMap").html("<a href=\"#fixedMap-tab\">Entities to check</a>");
 }
 
   /**
