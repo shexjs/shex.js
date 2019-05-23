@@ -50,10 +50,7 @@ var Getables = [
   {queryStringParm: "meta",         location: Caches.inputMeta.selection,   cache: Caches.inputMeta  },
 ];
 
-var QueryParams = Getables.concat([
-  {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
-]);
+var QueryParams = Getables.concat([]);
 
 // utility functions
 function parseTurtle (text, meta, base) {
