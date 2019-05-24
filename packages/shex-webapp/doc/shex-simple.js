@@ -1617,7 +1617,6 @@ function loadSearchParameters () {
 
   var iface = parseQueryString(location.search);
   if (!("ui" in iface) || iface.ui[iface.ui.length -1] !== "full") {
-    $("#results").hide();
     $("#menuForm").hide();
   }
 
