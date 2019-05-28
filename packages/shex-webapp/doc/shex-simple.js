@@ -50,10 +50,7 @@ var Getables = [
   {queryStringParm: "meta",         location: Caches.inputMeta.selection,   cache: Caches.inputMeta  },
 ];
 
-var QueryParams = Getables.concat([
-  {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
-]);
+var QueryParams = Getables;
 
 // utility functions
 function parseTurtle (text, meta, base) {
@@ -1591,10 +1588,6 @@ function loadSearchParameters () {
     return;
 
   var iface = parseQueryString(location.search);
-  if (!("ui" in iface) || iface.ui[iface.ui.length -1] !== "full") {
-    $("#menuForm").hide();
-  }
-
   toggleControlsArrow("down");
   $(".manifest li").text("no manifest schemas loaded");
   if ("examples" in iface) { // deprecated ?examples= interface

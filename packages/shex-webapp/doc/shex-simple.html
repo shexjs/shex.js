@@ -150,7 +150,7 @@
 #controls h3 {
     margin: 0;
 }
-#menu-button { margin-left: 1em; }
+#about-button { margin-left: 1em; }
 #menu-button svg { width: 1em; height: 1.5ex; }
 #about {
   margin: 3em;
@@ -227,36 +227,9 @@ ul {
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
-      <form id="menuForm">
-          <button id="menu-button" title="click for menu">
-            controls <svg><use xlink:href="#down-arrow"/><use xlink:href="#up-arrow" /></svg>
-          </button>
-        <div id="controls">
-          <div>
-            <ul>
-              <li class="        "><h3>user interface</h3></li>
-              <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
-              <li class="menuitem"><input type="checkbox" id="showMeta"/><label for="showMeta">show metadata pane</label></li>
-              <li class="menuitem"><a id="download-results-button">download <span class="results">results</span></a></li>
-              <li class="        "><hr/></li>
-              <li class="        "><h3>HTTP</h3></li>
-              <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
-              <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
-              <li class="menuitem" id="load-manifest-button">load <span class="manifest">manifest</span></li>
-              <li class="        "><hr/></li>
-              <li class="        "><h3>drag and drop</h3></li>
-              <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
-              <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
-              <li class="        "><hr/></li>
-              <li class="        "><h3>performance</h3></li>
-              <li class="menuitem"><label for="regexpEngine">error reporting:</label><select id="regexpEngine"><option value="threaded-val-nerr">thorough</option><option value="nfax-val-1err">fast</option></select></li>
-              <li class="        "><hr/></li>
-              <li class="menuitem" id="permalink"><a>Permalink</a></li>
-              <li class="menuitem" id="about-button">About</li>
-            </ul>
-          </div>
-        </div>
-      </form>
+      <button id="about-button" title="click for about">
+        <span class="menuitem">About</span>
+      </button>
       <div id="loadForm" style="cursor: default; text-align: left; ">
         <h1>Load <span></span></h1>
         <p class="menuitem"><label for="loadInput" style="float: left;">from </label><input id="loadInput" style="width: 80%;"/></p>
