@@ -294,6 +294,24 @@ describe("A ShEx parser", function () {
               expect(error).to.exist;
               expect(error).to.be.an.instanceof(Error);
               expect(error.message).to.include(testSet.include);
+              if ("startRow" in test) {
+                expect("lloc" in error).to.be.true;
+                let x = " ../shexTest/negativeSyntax/" + test.shex;
+                if (false && // for debugging and building tests
+                    (!(error.lloc.first_line === test.startRow
+                       ? error.lloc.first_column + 1 >= test.startColumn
+                       : error.lloc.first_line > test.startRow) ||
+                     !(error.lloc.last_line === test.endRow
+                       ? error.lloc.last_column <= test.endColumn
+                       : error.lloc.last_line < test.endRow)))
+                  console.log(x, error.lloc, error.message)
+                expect(error.lloc.first_line === test.startRow
+                       ? error.lloc.first_column + 1 >= test.startColumn
+                       : error.lloc.first_line > test.startRow).to.be.true;
+                expect(error.lloc.last_line === test.endRow
+                       ? error.lloc.last_column <= test.endColumn
+                       : error.lloc.last_line < test.endRow).to.be.true;
+              }
               report();
             } catch (e) {
               report(e);
