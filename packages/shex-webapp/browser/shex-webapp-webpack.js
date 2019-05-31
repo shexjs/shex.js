@@ -53234,7 +53234,7 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
 /* LoadPromise - load shex and json files into a single Schema and turtle into
  * a graph (Data).
  */
-function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
+  function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
   var returns = {
     schema: ShExUtil.emptySchema(),
     data: new N3.Store(),
