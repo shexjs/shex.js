@@ -31,27 +31,28 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     ShExJison.options = schemaOptions;
     if (!ShExJison._termResolver)
       ShExJison._termResolver = termResolver;
+    let errors = [];
+    ShExJison.recoverable = e => errors.push(e);
+    let ret = null;
     try {
-      return ShExJison.prototype.parse.apply(parser, arguments);
+      ret = ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
-      // use the lexer's pretty-printing
-      var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
-      var pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
-      t.lineNo = lineNo;
-      t.context = pos;
-      if ("lexer" in parser.yy) {
-        parser.yy.lexer.matched = parser.yy.lexer.matched || "";
-        t.offset = parser.yy.lexer.matched.length;
-        t.width = parser.yy.lexer.match.length
-        t.lloc = parser.yy.lexer.yylloc;
-      } else {
-        // Failed before the Jison call to `yy.parser.yy = { lexer: yy.lexer}`
-        t.offset = t.width = t.lloc = 0;
-      }
-      Error.captureStackTrace(t, runParser);
-      parser.reset();
-      throw t;
+      throw contextError(e, parser.yy.lexer);
+    }
+    ShExJison.reset();
+    if (errors.length == 1) {
+      let e = contextError(errors[0], parser.yy.lexer);
+      e.parsed = ret;
+      throw e;
+    } else if (errors.length) {
+      const all = new Error("" + errors.length  + "parser errors:\n" + errors.map(
+        e => contextError(e, parser.yy.lexer)
+      ).join("\n"));
+      all.errors = errors;
+      all.parsed = ret;
+      throw all;
+    } else {
+      return ret;
     }
   }
   parser.parse = runParser;
@@ -66,6 +67,21 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
   parser.reset = ShExJison.reset;
   ShExJison.options = schemaOptions;
   return parser;
+
+  function contextError (e, lexer) {
+    // use the lexer's pretty-printing
+    var lineNo = e.hash.loc.first_line + 1;
+    var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${e.hash.pos}`);
+    t.lineNo = lineNo;
+    t.context = e.hash.pos;
+    lexer.matched = lexer.matched || "";
+    t.offset = lexer.matched.length;
+    t.width = lexer.match.length;
+    t.lloc = e.hash.loc;
+    Error.captureStackTrace(t, runParser);
+    parser.reset();
+    return t;
+  }
 }
 
 var makeDBTermResolver = function (db) {
