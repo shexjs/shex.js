@@ -881,31 +881,6 @@ function callValidator (done) {
       }
 
     } else {
-      var outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
-      $("#results .status").
-        text("parsed "+Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
-        append($("<button>(copy to input)</button>").
-               css("border-radius", ".5em").
-               on("click", function () {
-                 Caches.inputSchema.set($("#results div").text(), DefaultBase);
-               })).
-        append(":").
-        show();
-      var parsedSchema;
-      if (Caches.inputSchema.language === "ShExJ") {
-        new ShEx.Writer({simplifyParentheses: false}).writeSchema(Caches.inputSchema.parsed, (error, text) => {
-          if (error) {
-            $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
-            // res.addClass("error");
-          } else {
-            results.append($("<pre/>").text(text).addClass("passes"));
-          }
-        });
-      } else {
-        var pre = $("<pre/>");
-        pre.text(JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
-        results.append(pre);
-      }
       results.finish();
       if (done) { done() }
     }
