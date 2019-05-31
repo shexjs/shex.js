@@ -250,7 +250,7 @@
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser._termResolver = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser._sourceMap = Parser._termResolver = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -319,29 +319,42 @@
     };
   }
 
-  function error (msg) {
-    Parser.reset();
-    throw new Error(msg);
+  function error (e, yy) {
+    const hash = {
+      text: yy.lexer.match,
+      // token: this.terminals_[symbol] || symbol,
+      line: yy.lexer.yylineno,
+      loc: yy.lexer.yylloc,
+      // expected: expected
+      pos: yy.lexer.showPosition()
+    }
+    e.hash = hash;
+    if (Parser.recoverable) {
+      Parser.recoverable(e)
+    } else {
+      throw e;
+      Parser.reset();
+    }
   }
 
   // Expand declared prefix or throw Error
-  function expandPrefix (prefix) {
+  function expandPrefix (prefix, yy) {
     if (!(prefix in Parser._prefixes))
-      error('Parse error; unknown prefix: ' + prefix);
+      error(new Error('Parse error; unknown prefix: ' + prefix), yy);
     return Parser._prefixes[prefix];
   }
 
   // Add a shape to the map
-  function addShape (label, shape) {
+  function addShape (label, shape, yy) {
     if (Parser.productions && label in Parser.productions)
-      error("Structural error: "+label+" is a shape");
+      error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!Parser.shapes)
       Parser.shapes = new Map();
     if (label in Parser.shapes) {
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" already defined");
+        error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
       shape.id = label;
       Parser.shapes[label] = shape;
@@ -349,18 +362,28 @@
   }
 
   // Add a production to the map
-  function addProduction (label, production) {
+  function addProduction (label, production, yy) {
     if (Parser.shapes && label in Parser.shapes)
-      error("Structural error: "+label+" is a shape");
+      error(new Error("Structural error: "+label+" is a shape expression"), yy);
     if (!Parser.productions)
       Parser.productions = new Map();
     if (label in Parser.productions) {
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" already defined");
+        error(new Error("Parse error: "+label+" already defined"), yy);
     } else
       Parser.productions[label] = production;
+  }
+
+  function addSourceMap (obj, yy) {
+    if (!Parser._sourceMap)
+      Parser._sourceMap = new Map();
+    let list = Parser._sourceMap.get(obj)
+    if (!list)
+      Parser._sourceMap.set(obj, list = []);
+    list.push(yy.lexer.yylloc);
+    return obj;
   }
 
   // shapeJunction judiciously takes a shapeAtom and an optional list of con/disjuncts.
@@ -603,8 +626,8 @@ shexDoc:
             shapeExprs: Parser.shapes || new Map(),
             tripleExprs: Parser.productions || new Map()
           };
+          shexj._sourceMap = Parser._sourceMap;
         }
-        Parser.reset();
         return shexj;
       }
     ;
@@ -689,7 +712,7 @@ notStartAction:
 start:
       IT_start '=' shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
         if (Parser.start)
-          error("Parse error: start already defined");
+          error(new Error("Parse error: start already defined"), yy);
         Parser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
       }
     ;
@@ -712,7 +735,7 @@ statement:
 
 shapeExprDecl:
       shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        addShape($1,  $2);
+        addShape($1,  $2, yy);
       }
     ;
 
@@ -932,13 +955,13 @@ shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1); // ShapeRef
+        $$ = addSourceMap(expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), yy); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1@@
         $1 = $1.substr(1, $1.length-1);
-        $$ = expandPrefix($1.substr(0, $1.length - 1)); // ShapeRef
+        $$ = addSourceMap(expandPrefix($1.substr(0, $1.length - 1), yy), yy); // ShapeRef
       }
-    | '@' shapeExprLabel	-> $2 // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> addSourceMap($2, yy) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 litNodeConstraint:
@@ -968,7 +991,7 @@ litInlineNodeConstraint:
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $2)
-              error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1);
+              error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1), yy);
           });
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
@@ -980,7 +1003,7 @@ _QxsFacet_E_Star:
       	-> {} // t: 1literalPattern
     | _QxsFacet_E_Star xsFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
         }
         $$ = extend($1, $2) // t: 1literalLength
       }
@@ -990,7 +1013,7 @@ _QnumericFacet_E_Plus:
       numericFacet	// t: !! look to 1literalPattern
     | _QnumericFacet_E_Plus numericFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
         }
         $$ = extend($1, $2) // t: !! look to 1literalLength
       }
@@ -1006,7 +1029,7 @@ _QstringFacet_E_Star:
       	-> {}
     | _QstringFacet_E_Star stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
         }
         $$ = extend($1, $2)
       }
@@ -1016,7 +1039,7 @@ _QstringFacet_E_Plus:
       stringFacet	// t: !! look to 1literalPattern
     | _QstringFacet_E_Plus stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
         }
         $$ = extend($1, $2) // t: !! look to 1literalLength
       }
@@ -1059,7 +1082,7 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
         else if (numericDatatypes.indexOf($3) !== -1)
           $$ = parseInt($1.value)
         else
-          error("Parse error: numeric range facet expected numeric datatype instead of " + $3);
+          error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $3), yy);
       }
     ;
 
@@ -1182,7 +1205,7 @@ unaryTripleExpr:
       _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C	{
         if ($1) {
           $$ = extend({ id: $1 }, $2);
-          addProduction($1,  $$);
+          addProduction($1,  $$, yy);
         } else {
           $$ = $2
         }
@@ -1191,7 +1214,7 @@ unaryTripleExpr:
     ;
 
 _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C:
-      '$' tripleExprLabel	-> $2
+      '$' tripleExprLabel	-> addSourceMap($2, yy)
     ;
 
 _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt:
@@ -1226,7 +1249,7 @@ tripleConstraint:
         // $6: t: 1dotCode1
 	if ($3 !== EmptyShape && false) {
 	  var t = blank();
-	  addShape(t, $3);
+	  addShape(t, $3, yy);
 	  $3 = t; // ShapeRef
 	}
         // %6: t: 1inversedotCode1
@@ -1416,7 +1439,7 @@ languageExclusion:
     ;
 
 include:
-      '&' tripleExprLabel	-> $2 // Inclusion // t: 2groupInclude1
+      '&' tripleExprLabel	-> addSourceMap($2, yy) // Inclusion // t: 2groupInclude1
     ;
 
 annotation:
@@ -1523,10 +1546,10 @@ iri:
 prefixedName:
       PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos)) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        $$ = expandPrefix($1.substr(0, namePos), yy) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
       }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
-        $$ = expandPrefix($1.substr(0, $1.length - 1));
+        $$ = expandPrefix($1.substr(0, $1.length - 1), yy);
       }
     ;
 
@@ -1534,10 +1557,10 @@ iriOrLabel:
       IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? ShExUtil.unescapeText($1.slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($1.slice(1,-1), {})) // t: 1dot
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos)) + $1.substr(namePos + 1);
+      $$ = expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1);
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
-        $$ = expandPrefix($1.substr(0, $1.length - 1));
+      $$ = expandPrefix($1.substr(0, $1.length - 1), yy);
     }
     | STRING_GRAVE {
         $$ = Parser._termResolver.resolve($1, Parser._prefixes);
