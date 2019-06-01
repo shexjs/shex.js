@@ -1238,7 +1238,7 @@ parse: function parse(input) {
   // Expand declared prefix or throw Error
   function expandPrefix (prefix, yy) {
     if (!(prefix in Parser._prefixes))
-      error(new Error('Parse error; unknown prefix: ' + prefix), yy);
+      error(new Error('Parse error; unknown prefix "' + prefix + ':"'), yy);
     return Parser._prefixes[prefix];
   }
 
