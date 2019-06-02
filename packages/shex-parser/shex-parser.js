@@ -32,20 +32,26 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     if (!ShExJison._termResolver)
       ShExJison._termResolver = termResolver;
     let errors = [];
-    ShExJison.recoverable = e => errors.push(e);
+    ShExJison.recoverable = e =>
+      errors.push(e);
     let ret = null;
     try {
       ret = ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
-      throw contextError(e, parser.yy.lexer);
+      errors.push(e);
     }
     ShExJison.reset();
+    errors.forEach(e => {
+      const hash = e.hash;
+      const location = hash.loc;
+      delete hash.loc;
+      Object.assign(e, hash, {location: location});
+    })
     if (errors.length == 1) {
-      let e = contextError(errors[0], parser.yy.lexer);
-      e.parsed = ret;
-      throw e;
+      errors[0].parsed = ret;
+      throw errors[0];
     } else if (errors.length) {
-      const all = new Error("" + errors.length  + "parser errors:\n" + errors.map(
+      const all = new Error("" + errors.length  + " parser errors:\n" + errors.map(
         e => contextError(e, parser.yy.lexer)
       ).join("\n"));
       all.errors = errors;
@@ -70,17 +76,10 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
 
   function contextError (e, lexer) {
     // use the lexer's pretty-printing
-    var lineNo = e.hash.loc.first_line + 1;
-    var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${e.hash.pos}`);
-    t.lineNo = lineNo;
-    t.context = e.hash.pos;
-    lexer.matched = lexer.matched || "";
-    t.offset = lexer.matched.length;
-    t.width = lexer.match.length;
-    t.lloc = e.hash.loc;
-    Error.captureStackTrace(t, runParser);
-    parser.reset();
-    return t;
+    var line = e.location.first_line;
+    var col  = e.location.first_column + 1;
+    var posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
+    return `${baseIRI}\n line: ${line}, column: ${col}: ${e.message}${posStr}`;
   }
 }
 

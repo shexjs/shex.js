@@ -52,6 +52,7 @@ onmessage = function (msg) {
       schema: msg.data.schema,
       url: msg.data.schemaURL
     };
+    // shex-loader loads IMPORTs and tests the schema for structural faults.
     ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
       validator = ShEx.Validator.construct(loaded.schema, options);
       postMessage({ response: "created" });
