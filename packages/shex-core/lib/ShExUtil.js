@@ -1280,7 +1280,7 @@ var ShExUtil = {
 
     function firstError (e, obj) {
       if ("_sourceMap" in schema)
-        e.lloc = (schema._sourceMap.get(obj) || [undefined])[0];
+        e.location = (schema._sourceMap.get(obj) || [undefined])[0];
       return e;
     }
   },
