@@ -673,6 +673,7 @@ function callValidator (done) {
         schema: Caches.inputSchema.refresh(),
         url: Caches.inputSchema.url || DefaultBase
       };
+      // shex-loader loads imports and tests the schema for structural faults.
       ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
         var time;
         var validator = ShEx.Validator.construct(
