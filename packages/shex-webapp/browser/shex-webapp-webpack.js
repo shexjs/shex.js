@@ -13926,7 +13926,9 @@ var RdfTerm = (function () {
         node = node.replace(escapeAll, characterReplacer);
       var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
       if (pref) {
-        return pref + ":" + node.substr(prefixes[pref].length);
+        var rest = node.substr(prefixes[pref].length);
+        if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
+          return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
       }
       if (node.startsWith(base)) {
         return "<" + node.substr(base.length) + ">";
@@ -29034,7 +29036,7 @@ var ShExUtil = {
         _ShExUtil._expect(schema, "type", "Schema");
         this._maybeSet(schema, ret, "Schema",
                        ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
-                       ["_base", "_prefixes", "_index"]
+                       ["_base", "_prefixes", "_index", "_sourceMap"]
                       );
         return ret;
       },
@@ -29585,6 +29587,8 @@ var ShExUtil = {
     delete ret._base;
     let index = ret._index || this.index(schema);
     delete ret._index;
+    let sourceMap = ret._sourceMap;
+    delete ret._sourceMap;
     // Don't delete ret.productions as it's part of the AS.
     var v = ShExUtil.Visitor();
     var knownExpressions = [];
@@ -30080,7 +30084,7 @@ var ShExUtil = {
   merge: function (left, right, overwrite, inPlace) {
     var ret = inPlace ? left : this.emptySchema();
 
-    function copy (attr) {
+    function mergeArray (attr) {
       Object.keys(left[attr] || {}).forEach(function (key) {
         if (!(attr in ret))
           ret[attr] = {};
@@ -30095,6 +30099,21 @@ var ShExUtil = {
       });
     }
 
+    function mergeMap (attr) {
+      (left[attr] || new Map()).forEach(function (value, key, map) {
+        if (!(attr in ret))
+          ret[attr] = new Map();
+        ret[attr].set(key, left[attr].get(key));
+      });
+      (right[attr] || new Map()).forEach(function (value, key, map) {
+        if (!(attr  in left) || !(left[attr].has(key)) || overwrite) {
+          if (!(attr in ret))
+            ret[attr] = new Map();
+          ret[attr].set(key, right[attr].get(key));
+        }
+      });
+    }
+
     // base
     if ("_base" in left)
       ret._base = left._base;
@@ -30102,7 +30121,9 @@ var ShExUtil = {
       if (!("_base" in left) || overwrite)
         ret._base = right._base;
 
-    copy("_prefixes");
+    mergeArray("_prefixes");
+
+    mergeMap("_sourceMap");
 
     if ("imports" in right)
       if (!("imports" in left) || overwrite)
@@ -30212,9 +30233,9 @@ var ShExUtil = {
     var oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef) {
       if (!(shapeRef in index.shapeExprs))
-        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + ".");
+        throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
       if (!inTE && shapeRef === currentLabel)
-        throw Error("Structural error: circular reference to " + currentLabel + ".");
+        throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
       return oldVisitShapeRef.call(visitor, shapeRef);
     }
@@ -30223,7 +30244,7 @@ var ShExUtil = {
     visitor.visitInclusion = function (inclusion) {
       var refd;
       if (!(refd = index.tripleExprs[inclusion]))
-        throw Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + ".");
+        throw firstError(Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + "."), inclusion);
       // if (refd.type !== "Shape")
       //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
       return oldVisitInclusion.call(visitor, inclusion);
@@ -30240,12 +30261,18 @@ var ShExUtil = {
       ).length > 0
     );
     if (circs.length)
-      throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
+      throw firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
 
     function dumpKeys (obj) {
       return obj ? Object.keys(obj).map(
         u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
       ).join("\n        ") : '- none defined -'
+    }
+
+    function firstError (e, obj) {
+      if ("_sourceMap" in schema)
+        e.location = (schema._sourceMap.get(obj) || [undefined])[0];
+      return e;
     }
   },
 
@@ -35452,27 +35479,34 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     ShExJison._setBase(baseIRI);
     ShExJison._setFileName(baseIRI);
     ShExJison.options = schemaOptions;
+    let errors = [];
+    ShExJison.recoverable = e =>
+      errors.push(e);
+    let ret = null;
     try {
-      return ShExJison.prototype.parse.apply(parser, arguments);
+      ret = ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
-      // use the lexer's pretty-printing
-      var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
-      var pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
-      t.lineNo = lineNo;
-      t.context = pos;
-      if ("lexer" in parser.yy) {
-        parser.yy.lexer.matched = parser.yy.lexer.matched || "";
-        t.offset = parser.yy.lexer.matched.length;
-        t.width = parser.yy.lexer.match.length
-        t.lloc = parser.yy.lexer.yylloc;
-      } else {
-        // Failed before the Jison call to `yy.parser.yy = { lexer: yy.lexer}`
-        t.offset = t.width = t.lloc = 0;
-      }
-      Error.captureStackTrace(t, runParser);
-      parser.reset();
-      throw t;
+      errors.push(e);
+    }
+    ShExJison.reset();
+    errors.forEach(e => {
+      const hash = e.hash;
+      const location = hash.loc;
+      delete hash.loc;
+      Object.assign(e, hash, {location: location});
+    })
+    if (errors.length == 1) {
+      errors[0].parsed = ret;
+      throw errors[0];
+    } else if (errors.length) {
+      const all = new Error("" + errors.length  + " parser errors:\n" + errors.map(
+        e => contextError(e, parser.yy.lexer)
+      ).join("\n"));
+      all.errors = errors;
+      all.parsed = ret;
+      throw all;
+    } else {
+      return ret;
     }
   }
   parser.parse = runParser;
@@ -35486,6 +35520,14 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
   parser.reset = ShExJison.reset;
   ShExJison.options = schemaOptions;
   return parser;
+
+  function contextError (e, lexer) {
+    // use the lexer's pretty-printing
+    var line = e.location.first_line;
+    var col  = e.location.first_column + 1;
+    var posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
+    return `${baseIRI}\n line: ${line}, column: ${col}: ${e.message}${posStr}`;
+  }
 }
 
 return {
@@ -53424,7 +53466,7 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
 /* LoadPromise - load shex and json files into a single Schema and turtle into
  * a graph (Data).
  */
-function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
+  function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
   var returns = {
     schema: ShExUtil.emptySchema(),
     data: new N3.Store(),
@@ -53538,9 +53580,8 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     ShExUtil.merge(schema, loadImports(s), true, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
-    var e2 = Error("error parsing ShEx " + url + ": " + e);
-    // e2.stack = e.stack;console.error(e2);
-    return Promise.reject(e2);
+    e.message = "error parsing ShEx " + url + ": " + e.message;
+    return Promise.reject(e);
   }
 }
 
@@ -55262,7 +55303,7 @@ module.exports = N3Util;
 /* 228 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.16 */
+/* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
 /*
   Returns a Parser object of the following structure:
 
@@ -55364,8 +55405,8 @@ case 1:
             shapeExprs: Parser.shapes || new Map(),
             tripleExprs: Parser.productions || new Map()
           };
+          shexj._sourceMap = Parser._sourceMap;
         }
-        Parser.reset();
         return shexj;
       
 break;
@@ -55391,7 +55432,7 @@ break;
 case 20:
 
         if (Parser.start)
-          error("Parse error: start already defined");
+          error(new Error("Parse error: start already defined"), yy);
         Parser.start = shapeJunction("ShapeOr", $$[$0-1], $$[$0]); // t: startInline
       
 break;
@@ -55408,7 +55449,7 @@ this.$ = appendTo($$[$0-1], $$[$0]) // t: startCode3;
 break;
 case 26:
  // t: 1dot 1val1vsMinusiri3??
-        addShape($$[$0-1],  $$[$0]);
+        addShape($$[$0-1],  $$[$0], yy);
       
 break;
 case 27:
@@ -55460,7 +55501,7 @@ break;
 case 32: case 246: case 263:
 this.$ = null;
 break;
-case 33: case 37: case 40: case 46: case 53: case 163: case 188: case 227: case 262:
+case 33: case 37: case 40: case 46: case 53: case 188: case 227: case 262:
 this.$ = $$[$0];
 break;
 case 35:
@@ -55533,17 +55574,17 @@ case 87:
  // t: 1dotRefLNex@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix($$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1); // ShapeRef
+        this.$ = addSourceMap(expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1), yy); // ShapeRef
       
 break;
 case 88:
  // t: 1dotRefNS1@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = expandPrefix($$[$0].substr(0, $$[$0].length - 1)); // ShapeRef
+        this.$ = addSourceMap(expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy), yy); // ShapeRef
       
 break;
 case 89:
-this.$ = $$[$0] // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
+this.$ = addSourceMap($$[$0], yy) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1;
 break;
 case 90: case 93:
  // t: !!
@@ -55566,7 +55607,7 @@ case 95:
         if (numericDatatypes.indexOf($$[$0-1]) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $$[$0])
-              error("Parse error: facet " + facet + " not allowed for unknown datatype " + $$[$0-1]);
+              error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $$[$0-1]), yy);
           });
         this.$ = extend({ type: "NodeConstraint", datatype: $$[$0-1] }, $$[$0]) // t: 1datatype
       
@@ -55583,7 +55624,7 @@ break;
 case 99:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"), yy);
         }
         this.$ = extend($$[$0-1], $$[$0]) // t: 1literalLength
       
@@ -55591,7 +55632,7 @@ break;
 case 101: case 107:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"), yy);
         }
         this.$ = extend($$[$0-1], $$[$0]) // t: !! look to 1literalLength
       
@@ -55608,7 +55649,7 @@ break;
 case 105:
 
         if (Object.keys($$[$0-1]).indexOf(Object.keys($$[$0])[0]) !== -1) {
-          error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times");
+          error(new Error("Parse error: facet "+Object.keys($$[$0])[0]+" defined multiple times"), yy);
         }
         this.$ = extend($$[$0-1], $$[$0])
       
@@ -55656,7 +55697,7 @@ case 123:
         else if (numericDatatypes.indexOf($$[$0]) !== -1)
           this.$ = parseInt($$[$0-2].value)
         else
-          error("Parse error: numeric range facet expected numeric datatype instead of " + $$[$0]);
+          error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $$[$0]), yy);
       
 break;
 case 124:
@@ -55760,11 +55801,14 @@ case 160:
 
         if ($$[$0-1]) {
           this.$ = extend({ id: $$[$0-1] }, $$[$0]);
-          addProduction($$[$0-1],  this.$);
+          addProduction($$[$0-1],  this.$, yy);
         } else {
           this.$ = $$[$0]
         }
       
+break;
+case 163:
+this.$ = addSourceMap($$[$0], yy);
 break;
 case 168:
 
@@ -55785,7 +55829,7 @@ case 171:
         // $$[$0]: t: 1dotCode1
 	if ($$[$0-3] !== EmptyShape && false) {
 	  var t = blank();
-	  addShape(t, $$[$0-3]);
+	  addShape(t, $$[$0-3], yy);
 	  $$[$0-3] = t; // ShapeRef
 	}
         // %6: t: 1inversedotCode1
@@ -55972,7 +56016,7 @@ case 236:
 this.$ = { type: "DatatypeAccessor", name: $$[$0-1] };
 break;
 case 237:
-this.$ = $$[$0] // Inclusion // t: 2groupInclude1;
+this.$ = addSourceMap($$[$0], yy) // Inclusion // t: 2groupInclude1;
 break;
 case 238:
 this.$ = { type: "Annotation", predicate: $$[$0-1], object: $$[$0] } // t: 1dotAnnotIRIREF;
@@ -56043,12 +56087,12 @@ break;
 case 277:
  // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix($$[$0].substr(0, namePos)) + ShExUtil.unescapeText($$[$0].substr(namePos + 1), pnameEscapeReplacements);
+        this.$ = expandPrefix($$[$0].substr(0, namePos), yy) + ShExUtil.unescapeText($$[$0].substr(namePos + 1), pnameEscapeReplacements);
       
 break;
 case 278:
  // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
-        this.$ = expandPrefix($$[$0].substr(0, $$[$0].length - 1));
+        this.$ = expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy);
       
 break;
 case 280:
@@ -56068,13 +56112,9 @@ parseError: function parseError (str, hash) {
     if (hash.recoverable) {
         this.trace(str);
     } else {
-        function _parseError (msg, hash) {
-            this.message = msg;
-            this.hash = hash;
-        }
-        _parseError.prototype = new Error();
-
-        throw new _parseError(str, hash);
+        var error = new Error(str);
+        error.hash = hash;
+        throw error;
     }
 },
 parse: function parse(input) {
@@ -56143,7 +56183,7 @@ parse: function parse(input) {
                     text: lexer.match,
                     token: this.terminals_[symbol] || symbol,
                     line: lexer.yylineno,
-                    loc: yyloc,
+                    loc: lexer.yylloc,
                     expected: expected
                 });
             }
@@ -56441,7 +56481,7 @@ parse: function parse(input) {
   var blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
+    Parser._prefixes = Parser._imports = Parser._sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
   var _fileName; // for debugging
@@ -56510,29 +56550,42 @@ parse: function parse(input) {
     };
   }
 
-  function error (msg) {
-    Parser.reset();
-    throw new Error(msg);
+  function error (e, yy) {
+    const hash = {
+      text: yy.lexer.match,
+      // token: this.terminals_[symbol] || symbol,
+      line: yy.lexer.yylineno,
+      loc: yy.lexer.yylloc,
+      // expected: expected
+      pos: yy.lexer.showPosition()
+    }
+    e.hash = hash;
+    if (Parser.recoverable) {
+      Parser.recoverable(e)
+    } else {
+      throw e;
+      Parser.reset();
+    }
   }
 
   // Expand declared prefix or throw Error
-  function expandPrefix (prefix) {
+  function expandPrefix (prefix, yy) {
     if (!(prefix in Parser._prefixes))
-      error('Parse error; unknown prefix: ' + prefix);
+      error(new Error('Parse error; unknown prefix "' + prefix + ':"'), yy);
     return Parser._prefixes[prefix];
   }
 
   // Add a shape to the map
-  function addShape (label, shape) {
+  function addShape (label, shape, yy) {
     if (Parser.productions && label in Parser.productions)
-      error("Structural error: "+label+" is a shape");
+      error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!Parser.shapes)
       Parser.shapes = new Map();
     if (label in Parser.shapes) {
       if (Parser.options.duplicateShape === "replace")
         Parser.shapes[label] = shape;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" already defined");
+        error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
       shape.id = label;
       Parser.shapes[label] = shape;
@@ -56540,18 +56593,28 @@ parse: function parse(input) {
   }
 
   // Add a production to the map
-  function addProduction (label, production) {
+  function addProduction (label, production, yy) {
     if (Parser.shapes && label in Parser.shapes)
-      error("Structural error: "+label+" is a shape");
+      error(new Error("Structural error: "+label+" is a shape expression"), yy);
     if (!Parser.productions)
       Parser.productions = new Map();
     if (label in Parser.productions) {
       if (Parser.options.duplicateShape === "replace")
         Parser.productions[label] = production;
       else if (Parser.options.duplicateShape !== "ignore")
-        error("Parse error: "+label+" already defined");
+        error(new Error("Parse error: "+label+" already defined"), yy);
     } else
       Parser.productions[label] = production;
+  }
+
+  function addSourceMap (obj, yy) {
+    if (!Parser._sourceMap)
+      Parser._sourceMap = new Map();
+    let list = Parser._sourceMap.get(obj)
+    if (!list)
+      Parser._sourceMap.set(obj, list = []);
+    list.push(yy.lexer.yylloc);
+    return obj;
   }
 
   // shapeJunction judiciously takes a shapeAtom and an optional list of con/disjuncts.
