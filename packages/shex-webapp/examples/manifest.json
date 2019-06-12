@@ -46,5 +46,13 @@
     "data": "PREFIX : <http://hl7.org/fhir/>\nPREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n\n<Obs1>\n  :status    \"final\" ;\n  :subject   <Patient2> .\n\n<Patient2>\n  :name \"Bob\" ;\n  :birthdate \"1999-12-31T01:23:45\"^^xsd:dateTime .",
     "queryMap": "<Obs1>@START",
     "status": "nonconformant"
+  },
+  {
+    "schemaLabel": "GO-CAM example",
+    "schemaURL": "GO-CAM-schema.shex",
+    "dataLabel": "1 instance with parents",
+    "dataURL": "GO-CAM-instance.ttl",
+    "queryMap": "<http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>",
+    "status": "conformant"
   }
 ]
