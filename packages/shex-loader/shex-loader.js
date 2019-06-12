@@ -265,7 +265,7 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     if (s.base === url) delete s.base;
     meta.prefixes = s._prefixes;
     meta.base = s._base || meta.base;
-    ShExUtil.merge(schema, loadImports(s), true, true);
+    ShExUtil.merge(schema, loadImports(s), false, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
     e.message = "error parsing ShEx " + url + ": " + e.message;

@@ -48,6 +48,14 @@
     "status": "nonconformant"
   },
   {
+    "schemaLabel": "GO-CAM example",
+    "schemaURL": "GO-CAM-schema.shex",
+    "dataLabel": "1 instance with parents",
+    "dataURL": "GO-CAM-instance.ttl",
+    "queryMap": "<http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>",
+    "status": "conformant"
+  },
+  {
     "schemaLabel": "protein record",
     "schema": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nPREFIX ex1: <http://ex1.example/>\nPREFIX ex2: <http://ex2.example/>\n\nLABEL [ rdfs:label skos:label ]\n<S> {\n  ex1:`protein name` LITERAL;\n  ex2:`protein type` [ `signaling` `regulatory` `transport` ];\n  `protein width` `ucum microns`\n}",
     "dataLabel": "good",

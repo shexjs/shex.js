@@ -139,13 +139,15 @@ OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
 <a name="loader-script"/>
 ```js
 var shexc = "http://shex.io/examples/Issue.shex";
-var shape = "http://shex.io/examples/IssueShape";
 var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
 
 var shex = require("shex");
 shex.Loader.load([shexc], [], [data], []).then(function (loaded) {
-    console.log(shex.Validator.construct(loaded.schema).validate(loaded.data, node, shape));
+    var db = shex.Util.makeN3DB(loaded.data);
+    var validator = shex.Validator.construct(loaded.schema, { results: "api" });
+    var result = validator.validate(db, [{node: node, shape: shex.Validator.start}]);
+    console.log(result);
 });
 ```
 
