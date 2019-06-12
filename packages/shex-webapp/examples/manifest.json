@@ -48,6 +48,14 @@
     "status": "nonconformant"
   },
   {
+    "schemaLabel": "GO-CAM example",
+    "schemaURL": "GO-CAM-schema.shex",
+    "dataLabel": "1 instance with parents",
+    "dataURL": "GO-CAM-instance.ttl",
+    "queryMap": "<http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>",
+    "status": "conformant"
+  },
+  {
     "schemaLabel": "Each Wikidata item on Cancer should have a NCI Thesaurus ID",
     "schema": "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\nPREFIX prov: <http://www.w3.org/ns/prov#>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX pr: <http://www.wikidata.org/prop/reference/>\nPREFIX ps: <http://www.wikidata.org/prop/statement/>\n\nstart = @<wikidata_item>\n\n<wikidata_item> {\n  p:P1748 {\n    ps:P1748 LITERAL ;\n    prov:wasDerivedFrom @<reference>+\n  }+\n}\n\n<reference> {\n  pr:P248  IRI ;\n  pr:P813  xsd:dateTime ;\n  # pr:P699  LITERAL\n}\n",
     "dataLabel": "Get all Wikidata items on Cancers (SPARQL)",

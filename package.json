@@ -48,6 +48,7 @@
     "mocha": "^6.1.4",
     "n3": "^1.0.4",
     "nock": "^10.0.6",
+    "node-fetch": "^2.6.0",
     "nyc": "^14.1.1",
     "pre-commit": "^1.2.2",
     "request-promise": "^4.2.4",
@@ -73,8 +74,7 @@
     "travisRepo": "./test/travisRepo.sh",
     "browser-webpack": "npx webpack --config webpack.config.js --mode production ; npm run n3-browserify",
     "n3-browserify": "mkdir -p packages/shex-webapp/node_modules/n3/browser ; npx browserify -s N3 -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.js node_modules/n3/N3.js ; npx uglifyjs packages/shex-webapp/node_modules/n3/browser/n3-browserify.js -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.min.js -c",
-    "browser-all": "./browser-all.js ; npm run n3-browserify",
-    "skinny-browser-TODO": "node browser/build-browser-versions",
+    "browserify-all": "./browserify-all.js ; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "travis-deploy-once": "travis-deploy-once"
   },
