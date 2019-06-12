@@ -1574,10 +1574,10 @@ function prepareDragAndDrop () {
                       var action = "action" in elt ? elt.action: elt;
                       action.schemaURL = action.schema; delete action.schema;
                       action.dataURL = action.data; delete action.data;
+                      if ("termResolver" in action) {
+                        action.termResolverURL = action.termResolver; delete action.termResolver;
+                      }
                     });
-                    if ("termResolver" in action) {
-                      action.termResolverURL = action.termResolver; delete action.termResolver;
-                    }
                     Caches.manifest.set(parsed, DefaultBase, "drag and drop");
                   } else {
                     inject(desc.targets, DefaultBase, val, l.type);
