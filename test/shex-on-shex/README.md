@@ -1,4 +1,4 @@
-# Shapes For Clinical Decision Support
+# ShEx For Clinical Decision Support
 
 Given a [manifest](manifest.json) with
 * a **[subscription schema](manifest.json#L4)** ([file](neonatology-subscription.shex)) and
