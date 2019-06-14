@@ -11,10 +11,10 @@ Given a [manifest](manifest.json) with
   * **medication exposures** ([file](medication-administrations.shex))
 
 algorithm:
-1. [walk](shex-on-shex-test.js#L93) the subscribed shapes.
-* 1. [get any service shapes](shex-on-shex-test.js#L326) which included satisfied the subscription shape. This used two strategies:
+1. [walk](shex-on-shex-test.js/shex-on-shex-test.js#L93) the subscribed shapes.
+* 1. [get any service shapes](shex-on-shex-test.js/shex-on-shex-test.js#L326) which included satisfied the subscription shape. This used two strategies:
 * * * **WHOLE_SHAPES** - only accept service shapes that could satisfy that entire subscription shape
 * * * **!WHOLE_SHAPES** - accept any service with any matching predicate.
-2. create a [cartesian product](shex-on-shex-test.js#L107) of all the ways matching services could be combined.
-3. [simulate a database](shex-on-shex-test.js#L131-L135) with that combination of shapes.
-4. [announce solutions](shex-on-shex-test.js#L171-L172)
+2. create a [cartesian product](shex-on-shex-test.js/shex-on-shex-test.js#L107) of all the ways matching services could be combined.
+3. [simulate a database](shex-on-shex-test.js/shex-on-shex-test.js#L131-L135) with that combination of shapes.
+4. [announce solutions](shex-on-shex-test.js/shex-on-shex-test.js#L171-L172)
