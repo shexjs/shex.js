@@ -36,6 +36,7 @@ importScripts("Util.js");
 const ShEx = ShExWebApp; // @@ rename globally
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 var validator = null;
+var loadedSchema = null;
 onmessage = function (msg) {
   switch (msg.data.request) {
   case "create":
@@ -54,6 +55,7 @@ onmessage = function (msg) {
     };
     // shex-loader loads IMPORTs and tests the schema for structural faults.
     ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+      loadedSchema = loaded.schema;
       validator = ShEx.Validator.construct(loaded.schema, options);
       postMessage({ response: "created" });
     }).catch(e => {
@@ -67,6 +69,10 @@ onmessage = function (msg) {
     var db = "endpoint" in msg.data
       ? ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
       : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
+      // Some DBs need to be able to inspect the schema to calculate the neighborhood.
+      if ("setSchema" in db)
+        db.setSchema(loadedSchema);
+
     var queryMap = msg.data.queryMap;
     var currentEntry = 0, options = msg.data.options || {};
     var results = Util.createResults();

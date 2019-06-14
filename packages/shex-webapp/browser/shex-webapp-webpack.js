@@ -31032,6 +31032,8 @@ var ShExUtil = {
    */
   makeQueryDB: function (endpoint, queryTracker) {
     var _ShExUtil = this;
+    // Need to inspect the schema to calculate the relevant neighborhood.
+    var schemaIndex = null
 
     function getQuads(s, p, o, g) {
       return mapQueryToTriples("SELECT " + [
@@ -31067,6 +31069,10 @@ var ShExUtil = {
         ret[expr.inverse ? "inc" : "out"].push(expr);
         return expr;
       };
+
+      visitor.visitInclusion = function (inclusion) {
+        return visitor.visitExpression(schemaIndex.tripleExprs[inclusion]);
+      }
 
       if (tripleExpr)
         visitor.visitExpression(tripleExpr);
@@ -31121,7 +31127,8 @@ var ShExUtil = {
       getSubjects: function () { return ["!Query DB can't index subjects"] },
       getPredicates: function () { return ["!Query DB can't index predicates"] },
       getObjects: function () { return ["!Query DB can't index objects"] },
-      get size() { return undefined; }
+      get size() { return undefined; },
+      setSchema: function (schema) { schemaIndex = schema._index || _ShExUtil.index(schema) },
     };
   },
 
