@@ -712,6 +712,10 @@ function callValidator (done) {
           loaded.schema,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 
+        // Some DBs need to be able to inspect the schema to calculate the neighborhood.
+        if ("setSchema" in inputData)
+          inputData.setSchema(loaded.schema);
+
         currentAction = "validating";
         $("#results .status").text("validating...").show();
         time = new Date();
