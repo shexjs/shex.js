@@ -30943,8 +30943,8 @@ var ShExUtil = {
           var datatype = elt.datatype;
           var lang = elt["xml:lang"];
           return "\"" + elt.value + "\"" + (
-            datatype ? "^^" + datatype :
-              lang ? "@" + lang :
+            lang ? "@" + lang :
+              datatype ? "^^" + datatype :
               "");
         default: throw "unknown XML results type: " + elt.prop("tagName");
         }
