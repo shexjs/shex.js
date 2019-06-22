@@ -48,6 +48,14 @@
     "status": "nonconformant"
   },
   {
+    "schemaLabel": "GO-CAM example",
+    "schemaURL": "GO-CAM-schema.shex",
+    "dataLabel": "1 instance with parents",
+    "dataURL": "GO-CAM-instance.ttl",
+    "queryMap": "<http://model.geneontology.org/5b528b1100001416/5b528b1100001522>@<#S1>",
+    "status": "conformant"
+  },
+  {
     "schemaLabel": "ordered objects",
     "schema": "<#S1> {\n  $<l1> <p1> . +;\n  $<l2> <p2> . +;\n  $<l1> < $<l2>\n}",
     "dataLabel": "passing and failing",
