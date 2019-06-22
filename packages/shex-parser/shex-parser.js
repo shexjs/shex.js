@@ -28,27 +28,34 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     ShExJison._setBase(baseIRI);
     ShExJison._setFileName(baseIRI);
     ShExJison.options = schemaOptions;
+    let errors = [];
+    ShExJison.recoverable = e =>
+      errors.push(e);
+    let ret = null;
     try {
-      return ShExJison.prototype.parse.apply(parser, arguments);
+      ret = ShExJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
-      // use the lexer's pretty-printing
-      var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
-      var pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
-      t.lineNo = lineNo;
-      t.context = pos;
-      if ("lexer" in parser.yy) {
-        parser.yy.lexer.matched = parser.yy.lexer.matched || "";
-        t.offset = parser.yy.lexer.matched.length;
-        t.width = parser.yy.lexer.match.length
-        t.lloc = parser.yy.lexer.yylloc;
-      } else {
-        // Failed before the Jison call to `yy.parser.yy = { lexer: yy.lexer}`
-        t.offset = t.width = t.lloc = 0;
-      }
-      Error.captureStackTrace(t, runParser);
-      parser.reset();
-      throw t;
+      errors.push(e);
+    }
+    ShExJison.reset();
+    errors.forEach(e => {
+      const hash = e.hash;
+      const location = hash.loc;
+      delete hash.loc;
+      Object.assign(e, hash, {location: location});
+    })
+    if (errors.length == 1) {
+      errors[0].parsed = ret;
+      throw errors[0];
+    } else if (errors.length) {
+      const all = new Error("" + errors.length  + " parser errors:\n" + errors.map(
+        e => contextError(e, parser.yy.lexer)
+      ).join("\n"));
+      all.errors = errors;
+      all.parsed = ret;
+      throw all;
+    } else {
+      return ret;
     }
   }
   parser.parse = runParser;
@@ -62,6 +69,14 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
   parser.reset = ShExJison.reset;
   ShExJison.options = schemaOptions;
   return parser;
+
+  function contextError (e, lexer) {
+    // use the lexer's pretty-printing
+    var line = e.location.first_line;
+    var col  = e.location.first_column + 1;
+    var posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
+    return `${baseIRI}\n line: ${line}, column: ${col}: ${e.message}${posStr}`;
+  }
 }
 
 return {
