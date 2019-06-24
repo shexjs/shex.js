@@ -88,7 +88,7 @@ var ShExUtil = {
         _ShExUtil._expect(schema, "type", "Schema");
         this._maybeSet(schema, ret, "Schema",
                        ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
-                       ["_base", "_prefixes", "_index"]
+                       ["_base", "_prefixes", "_index", "_sourceMap"]
                       );
         return ret;
       },
@@ -598,6 +598,8 @@ var ShExUtil = {
     delete ret._base;
     let index = ret._index || this.index(schema);
     delete ret._index;
+    let sourceMap = ret._sourceMap;
+    delete ret._sourceMap;
     // Don't delete ret.productions as it's part of the AS.
     var v = ShExUtil.Visitor();
     var knownExpressions = [];
@@ -1091,7 +1093,7 @@ var ShExUtil = {
   merge: function (left, right, overwrite, inPlace) {
     var ret = inPlace ? left : this.emptySchema();
 
-    function copy (attr) {
+    function mergeArray (attr) {
       Object.keys(left[attr] || {}).forEach(function (key) {
         if (!(attr in ret))
           ret[attr] = {};
@@ -1106,6 +1108,21 @@ var ShExUtil = {
       });
     }
 
+    function mergeMap (attr) {
+      (left[attr] || new Map()).forEach(function (value, key, map) {
+        if (!(attr in ret))
+          ret[attr] = new Map();
+        ret[attr].set(key, left[attr].get(key));
+      });
+      (right[attr] || new Map()).forEach(function (value, key, map) {
+        if (!(attr  in left) || !(left[attr].has(key)) || overwrite) {
+          if (!(attr in ret))
+            ret[attr] = new Map();
+          ret[attr].set(key, right[attr].get(key));
+        }
+      });
+    }
+
     // base
     if ("_base" in left)
       ret._base = left._base;
@@ -1113,7 +1130,9 @@ var ShExUtil = {
       if (!("_base" in left) || overwrite)
         ret._base = right._base;
 
-    copy("_prefixes");
+    mergeArray("_prefixes");
+
+    mergeMap("_sourceMap");
 
     if ("imports" in right)
       if (!("imports" in left) || overwrite)
@@ -1223,9 +1242,9 @@ var ShExUtil = {
     var oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef) {
       if (!(shapeRef in index.shapeExprs))
-        throw Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + ".");
+        throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
       if (!inTE && shapeRef === currentLabel)
-        throw Error("Structural error: circular reference to " + currentLabel + ".");
+        throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
       return oldVisitShapeRef.call(visitor, shapeRef);
     }
@@ -1234,7 +1253,7 @@ var ShExUtil = {
     visitor.visitInclusion = function (inclusion) {
       var refd;
       if (!(refd = index.tripleExprs[inclusion]))
-        throw Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + ".");
+        throw firstError(Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + "."), inclusion);
       // if (refd.type !== "Shape")
       //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
       return oldVisitInclusion.call(visitor, inclusion);
@@ -1251,12 +1270,18 @@ var ShExUtil = {
       ).length > 0
     );
     if (circs.length)
-      throw Error("Structural error: circular negative dependencies on " + circs.join(',') + ".");
+      throw firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
 
     function dumpKeys (obj) {
       return obj ? Object.keys(obj).map(
         u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
       ).join("\n        ") : '- none defined -'
+    }
+
+    function firstError (e, obj) {
+      if ("_sourceMap" in schema)
+        e.location = (schema._sourceMap.get(obj) || [undefined])[0];
+      return e;
     }
   },
 
