@@ -12,6 +12,7 @@ const PAGE = 'packages/shex-webapp/doc/shex-simple.html'
 
 let fs = require('fs')
 let expect = require("chai").expect
+const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const { JSDOM } = jsdom
 process.chdir(__dirname + '/..');
@@ -94,6 +95,7 @@ function setup (done, ready, searchParms) {
   }, SCRIPT_CALLBACK_TIMEOUT)
   let dom = getDom(searchParms)
   // stamp('dom')
+  dom.window.fetch = node_fetch
   dom.window._testCallback = e => {
     // stamp('hear')
     clearTimeout(timer)
