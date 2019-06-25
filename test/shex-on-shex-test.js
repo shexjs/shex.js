@@ -9,9 +9,12 @@ let TESTS = "TESTS" in process.env ? // filter tests to match supplied regex
 let WHOLE_SHAPES = false // Candidates have to provide complete shapes.
 // Otherwise, it works much harder (100ms vs 75ms, with neonatology).
 
-let ShExLoader = require("../lib/ShExLoader");
-let ShExParser = require("../lib/ShExParser");
-let ShExValidator = require("../lib/ShExValidator");
+
+var ShExLoader = require("@shexjs/loader");
+var ShExParser = require("@shexjs/parser");
+var ShExCore = require("@shexjs/core");
+var ShExUtil = ShExCore.Util;
+var ShExValidator = ShExCore.Validator;
 let chai = require("chai");
 let expect = chai.expect;
 let assert = chai.assert;
@@ -89,9 +92,9 @@ Tests.forEach(function (test) {
                let components = []
                let subsDesc = subsAndDrivers[0]
 
-               stamp("look for possible components");
-               Object.keys(subsDesc.schema.shapes).forEach(shapeLabel => {
-                 let shape = subsDesc.schema.shapes[shapeLabel]
+               stamp("look for possible components")
+               Object.keys(subsDesc.schema._index.shapeExprs).forEach(shapeLabel => {console.log(shapeLabel)
+                 let shape = subsDesc.schema._index.shapeExprs[shapeLabel]
                  // @@ should be getTripleConstraints() so we know that no triples means no shapes.
                  let candidates = driversDB.getCandidates(shape, subsDesc.schema)
                  if (candidates.length === 0) {
@@ -130,7 +133,7 @@ Tests.forEach(function (test) {
                  // Index the driverSchema
                  let driverDB = makeShExDB([{
                    schemaLabel: label,
-                   shapes: Object.keys(driverSchema.shapes),
+                   shapes: Object.keys(driverSchema._index.shapeExprs),
                    schema: driverSchema
                  }])
                  driverDB.schema = driverSchema
@@ -141,7 +144,7 @@ Tests.forEach(function (test) {
                    let passes = []
 
                    // See if some expression in the driverSchema satisfies subsLabel.
-                   Object.keys(driverSchema.shapes).forEach(driverLabel => {
+                   Object.keys(driverSchema._index.shapeExprs).forEach(driverLabel => {
                      let validationResult = validator.validate(driverDB, driverLabel, subsLabel)
                      let passed = !("errors" in validationResult)
                      if (passed)
@@ -181,7 +184,7 @@ Tests.forEach(function (test) {
 
 function loadSchema (manifestDescription) {
   let filePath = __dirname + "/" + manifestDescription.schemaURL
-  return ShExLoader.load([filePath], [], [], [], {}, {}).then(
+  return ShExLoader.load([filePath], [], [], [], {index: true}, {}).then(
     // stick it all in one object
     loaded => Object.assign({}, {
       schemaLabel: manifestDescription.schemaLabel,
@@ -270,12 +273,12 @@ function crossProduct(sets) {
 
     schemaDescriptors.forEach(desc => {
       desc.shapes.forEach(shapeLabel => {
-        if (!(shapeLabel in desc.schema.shapes))
-          throw Error("Error in " + desc.schemaLabel + ": " + shapeLabel + " not found in\n  " + Object.keys(desc.schema.shapes).join("\n  "))
+        if (!(shapeLabel in desc.schema._index.shapeExprs))
+          throw Error("Error in " + desc.schemaLabel + ": " + shapeLabel + " not found in\n  " + Object.keys(desc.schema._index.shapeExprs).join("\n  "))
         if (shapeLabelToTripleConstraints.has(shapeLabel))
           throw Error("hmm")
         shapeLabelToTripleConstraints.set(shapeLabel, [])
-        getShapeTCs(desc.schema.shapes[shapeLabel], desc.schema).forEach(tc => {
+        getShapeTCs(desc.schema._index.shapeExprs[shapeLabel], desc.schema).forEach(tc => {
           if (!(predToSchemaDesc.has(tc.predicate)))
             predToSchemaDesc.set(tc.predicate, [])
           predToSchemaDesc.get(tc.predicate).push({
@@ -309,10 +312,10 @@ function crossProduct(sets) {
       //   return oldVisitExtends.call(v, ext);
       // }
       v.visitShapeRef = function (expr) {
-        if (expr.reference in schema.shapes)
-          v.visitShapeDecl(schema.shapes[expr.reference])
+        if (expr in schema._index.shapeExprs)
+          v.visitShapeDecl(schema._index.shapeExprs[expr])
         else
-          throw Error("no shape " + expr.reference + " found in\n  " + Object.keys(schema.shapes).join("\n  "))
+          throw Error("no shape " + expr + " found in\n  " + Object.keys(schema._index.shapeExprs).join("\n  "))
       }
       v.visitTripleConstraint = function (expr) {
         ret.push(expr)

@@ -8,7 +8,7 @@ var NFAXVal1Err = (function () {
    */
   var UNBOUNDED = -1;
 
-  function compileNFA (schema, shape) {
+  function compileNFA (schema, shape, index) {
     var expression = shape.expression;
     return NFA();
 
@@ -50,7 +50,12 @@ var NFAXVal1Err = (function () {
           return {start: s, tail: [s]}
         }
 
-        if (expr.type === "TripleConstraint") {
+        if (typeof expr === "string") { // Inclusion
+          var included = index.tripleExprs[expr];
+          return walkExpr(included, stack);
+        }
+
+        else if (expr.type === "TripleConstraint") {
           s = State_make(expr, []);
           states[s].stack = stack;
           return {start: s, tail: [s]};
@@ -87,11 +92,6 @@ var NFAXVal1Err = (function () {
             lastTail = pair.tail;
           });
           return maybeAddRept(s, lastTail);
-        }
-
-        else if (expr.type === "Inclusion") {
-          var included = schema.productions[expr.include];
-          return walkExpr(included, stack);
         }
 
         throw Error("unexpected expr type: " + expr.type);

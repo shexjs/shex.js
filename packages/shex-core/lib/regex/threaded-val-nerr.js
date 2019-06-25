@@ -2,7 +2,7 @@ var ThreadedValNErr = (function () {
 var RdfTerm = require("../RdfTerm");
 var UNBOUNDED = -1;
 
-function vpEngine (schema, shape) {
+function vpEngine (schema, shape, index) {
     var outerExpression = shape.expression;
     return {
       match:match
@@ -14,6 +14,11 @@ function vpEngine (schema, shape) {
        * returns: list of passing or failing threads (no heterogeneous lists)
        */
       function validateExpr (expr, thread) {
+        if (typeof expr === "string") { // Inclusion
+          var included = index.tripleExprs[expr];
+          return validateExpr(included, thread);
+        }
+
         var constraintNo = constraintList.indexOf(expr);
         var min = "min" in expr ? expr.min : 1;
         var max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
@@ -147,7 +152,7 @@ function vpEngine (schema, shape) {
             if ("reference" in valueExpr) {
               var ref = valueExpr.reference;
               if (RdfTerm.isBlank(ref))
-                valueExpr.reference = schema.shapes[ref];
+                valueExpr.reference = index.shapeExprs[ref];
             }
             ret.push({
               avail: thread.avail,
@@ -227,15 +232,15 @@ function vpEngine (schema, shape) {
           }));
         }
 
-        else if (expr.type === "Inclusion") {
-          var included = schema.productions[expr.include];
-          return validateExpr(included, thread);
-        }
+        // else if (expr.type === "Inclusion") {
+        //   var included = schema.productions[expr.include];
+        //   return validateExpr(included, thread);
+        // }
 
-        else if (expr.type === "NestedShape") {
-          var newThreads = [thread]
-          return newThreads;
-        }
+        // else if (expr.type === "NestedShape") {
+        //   var newThreads = [thread]
+        //   return newThreads;
+        // }
 
         runtimeError("unexpected expr type: " + expr.type);
 
