@@ -38,7 +38,7 @@ You can validate RDF data using the `bin/validate` executable or the `lib/ShExVa
 
 Validate something in HTTP-land:
 
-```
+```sh
 ./node_modules/shex/bin/validate \
     -x http://shex.io/examples/Issue.shex \
     -d http://shex.io/examples/Issue1.ttl \
@@ -49,7 +49,7 @@ Validate something in HTTP-land:
 That validates node `http://shex.io/examples/Issue` in `http://shex.io/examples/Issue1.ttl` against shape `http://shex.io/examples/IssueShape` in `http://shex.io/examples/Issue.shex`.
 The result is a JSON structure which tells you exactly how the data matched the schema.
 
-```
+```json
 {
   "type": "test",
   "node": "http://shex.io/examples/Issue1",
@@ -69,7 +69,7 @@ See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validat
 The above invocation validates the node `<Issue1>` in `http://shex.io/examples/Issue1.ttl`.
 This and the shape can be written as relative IRIs:
 
-```
+```sh
 ./node_modules/shex/bin/validate \
     -x http://shex.io/examples/Issue.shex \
     -d http://shex.io/examples/Issue1.ttl \
@@ -82,7 +82,7 @@ This and the shape can be written as relative IRIs:
 
 Parsing from the old interwebs involves a painful mix of asynchronous callbacks for getting the schema and the data and parsing the data (shorter path below):
 <a id="long-script"/>
-```
+```js
 var shexc = "http://shex.io/examples/Issue.shex";
 var shape = "http://shex.io/examples/IssueShape";
 var data = "http://shex.io/examples/Issue1.ttl";
@@ -120,7 +120,7 @@ GET(shexc, function (b) {
 GET(data, function (b) {
   // callback parses the triples and tries to validate.
   var db = n3.Store();
-  n3.Parser({documentIRI: data, format: "text/turtle"}).parse(b, function (error, triple, prefixes) {
+  n3.Parser({baseIRI: data, format: "text/turtle"}).parse(b, function (error, triple, prefixes) {
     if (error) {
       throw Error("error parsing " + data + ": " + error);
     } else if (triple) {
@@ -137,15 +137,17 @@ See? That's all there was too it!
 
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
 <a name="loader-script"/>
-```
+```js
 var shexc = "http://shex.io/examples/Issue.shex";
-var shape = "http://shex.io/examples/IssueShape";
 var data = "http://shex.io/examples/Issue1.ttl";
 var node = "http://shex.io/examples/Issue1";
 
 var shex = require("shex");
 shex.Loader.load([shexc], [], [data], []).then(function (loaded) {
-    console.log(shex.Validator.construct(loaded.schema).validate(loaded.data, node, shape));    
+    var db = shex.Util.makeN3DB(loaded.data);
+    var validator = shex.Validator.construct(loaded.schema, { results: "api" });
+    var result = validator.validate(db, [{node: node, shape: shex.Validator.start}]);
+    console.log(result);
 });
 ```
 
@@ -167,7 +169,7 @@ PREFIX ex: <http://ex.example/#>
 }
 ```
 or in JSON:
-```
+```json
 { "type": "schema", "start": "http://shex.io/examples/IssueShape",
   "shapes": {
     "http://shex.io/examples/IssueShape": { "type": "shape",
@@ -184,7 +186,7 @@ or in JSON:
 ```
 
 You can convert between them with shex-to-json:
-```
+```sh
 ./node_modules/shex/bin/shex-to-json http://shex.io/examples/Issue.shex
 ```
 and, less elegantly, back with json-to-shex.
@@ -193,7 +195,7 @@ and, less elegantly, back with json-to-shex.
 
 As with validation, the ShExLoader wrapes callbacks and simplifies parsing the libraries:
 
-```
+```js
 var shexc = "http://shex.io/examples/Issue.shex";
 
 var shex = require("shex");
@@ -209,11 +211,11 @@ There's no actual conversion; the JSON representation is just the stringificatio
 
 Command line arguments which don't start with http:// or https:// are assumed to be file paths.
 We can create a local JSON version of the Issues schema:
-```
+```sh
 ./node_modules/shex/bin/shex-to-json http://shex.io/examples/Issue.shex > Issue.json
 ```
 and use it to validate the Issue1.ttl as we did above:
-```
+```sh
 ./node_modules/shex/bin/validate \
     -j Issue.json \
     -d http://shex.io/examples/Issue1.ttl \
@@ -227,38 +229,38 @@ Happy validating!
 
 ## materialize
 
-Materialize is used to transform from a source schema to a target schema after validation is done. 
+Materialize is used to transform from a source schema to a target schema after validation is done.
 
-The syntax is: 
+The syntax is:
+```sh
+materialize `-t <target schema>`|-h [-j `<JSON Vars File>`] [-r `<RDF root IRI>`]
 ```
-materialize `-t <target schema>`|-h [-j `<JSON Vars File>`] [-r `<RDF root IRI>`] 
-```
-Materialize reads the output from the validate tool from STDIN and maps it to the specified target schema.  
+Materialize reads the output from the validate tool from STDIN and maps it to the specified target schema.
 
-If supplied, a JSON vars file will be referenced to fill in constant values not specified from the source.  
-This is useful in assigning default fields to the target when there is no equivalent value in the source schema 
+If supplied, a JSON vars file will be referenced to fill in constant values not specified from the source.
+This is useful in assigning default fields to the target when there is no equivalent value in the source schema
 and source data.
 
-Here is an example of a simple JSON vars file: 
-```
+Here is an example of a simple JSON vars file:
+```json
 {
   "urn:local:Demographics:constSys": "System",
 }
 ```
-If this vars file content is used, then any time a variable in the target file with 
+If this vars file content is used, then any time a variable in the target file with
 value "urn:local:Demographics:constSys" is seen, the value "System will be substituted.
 
-The RDF root IRI specifies the root node from which all nodes in the schema will descend.  
+The RDF root IRI specifies the root node from which all nodes in the schema will descend.
 The default root if none is specified is: ` tag:eric@w3.org/2016/root `
 
-Here are some examples: 
-```
+Here are some examples:
+```sh
 materialize -h
 ```
-```
+```sh
 validate -x source_schema.shex -l data.jsonld -s ProblemShape | materialize -t target_schema.shex -j vars.json
 ```
-```
+```sh
 cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.org/fhir/shape/problem
 ```
 # ShEx2 features

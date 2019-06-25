@@ -15,7 +15,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"a\"^^http://www.w3.org/2001/XMLSchema#string",
+          "focus": "\"a\"",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#string"

@@ -55,9 +55,9 @@ var QueryParams = Getables.concat([
 
 // utility functions
 function parseTurtle (text, meta, base) {
-  var ret = ShEx.N3.Store();
+  var ret = new ShEx.N3.Store();
   ShEx.N3.Parser._resetBlankNodeIds();
-  var parser = ShEx.N3.Parser({documentIRI: base, format: "text/turtle" });
+  var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var triples = parser.parse(text);
   if (triples !== undefined)
     ret.addTriples(triples);
@@ -98,7 +98,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  return new ShEx.N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -216,7 +216,7 @@ function makeSchemaCache (selection) {
         if (text.match(/^\s*$/))
           return null;
         var db = parseTurtle (text, ret.meta, DefaultBase); // interpret empty schema as ShExC
-        if (db.getTriples().length === 0)
+        if (db.getQuads().length === 0)
           return null;
         return db;
       } catch (e) {
@@ -229,7 +229,7 @@ function makeSchemaCache (selection) {
         parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         {}
       );
-      var schemaRoot = graph.getTriples(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+      var schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
       var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
@@ -250,7 +250,7 @@ function makeTurtleCache (selection) {
   };
   ret.getItems = function () {
     var data = this.refresh();
-    return data.getTriplesByIRI().map(t => {
+    return data.getQuads().map(t => {
       return Caches.inputData.meta.termToLex(t.subject);
     });
   };
@@ -893,7 +893,7 @@ function materialize () {
     Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       // var outputGraph = mapper.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = ShExMap.binder(resultBindings);
-    var writer = ShEx.N3.Writer({ prefixes: {} });
+    var writer = new ShEx.N3.Writer({ prefixes: {} });
     outputShapeMap.forEach(pair => {
       try {
         var mapper2 = ShExMaterializer.construct(outputSchema);
@@ -1237,7 +1237,7 @@ function copyEditMapToFixedMap () {
       var sm = smparser.parse(node + '@' + shape)[0];
       var added = typeof sm.node === "string" || "@value" in sm.node
         ? Promise.resolve({nodes: [node], shape: shape})
-        : Promise.resolve({nodes: getTriples(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
+        : Promise.resolve({nodes: getQuads(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape});
       return acc.concat(added);
     } catch (e) {
       // find which cell was broken
@@ -1276,9 +1276,9 @@ function copyEditMapToFixedMap () {
     fixedMapTab.text(restoreText).removeClass("running");
   });
 
-  function getTriples (s, p, o) {
+  function getQuads (s, p, o) {
     var get = s === ShEx.ShapeMap.focus ? "subject" : "object";
-    return Caches.inputData.refresh().getTriplesByIRI(mine(s), mine(p), mine(o)).map(t => {
+    return Caches.inputData.refresh().getQuads(mine(s), mine(p), mine(o)).map(t => {
       return Caches.inputData.meta.termToLex(t[get]);
     });
     function mine (term) {
