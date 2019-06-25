@@ -1,0 +1,52 @@
+{
+  "name": "@shexjs/webapp",
+  "version": "1.0.0-alpha.2",
+  "description": "Shape Expressions command line interface",
+  "author": {
+    "name": "Eric Prud'hommeaux",
+    "email": "eric@w3.org",
+    "url": "http://www.w3.org/People/Eric/"
+  },
+  "keywords": [
+    "shex",
+    "shape expressions",
+    "rdf",
+    "query",
+    "parser"
+  ],
+  "license": "MIT",
+  "main": "./shex-webapp.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "@shexjs/core": "^1.0.0-alpha.2",
+    "@shexjs/loader": "^1.0.0-alpha.2",
+    "@shexjs/parser": "^1.0.0-alpha.2",
+    "jsonld": "^0.4.11",
+    "koa": "^1.6.2",
+    "koa-body": "^1.4.0",
+    "n3": "^1.0.4",
+    "nock": "^9.3.0",
+    "promise": "^7.1.1",
+    "shape-map": "^1.0.0-alpha.2"
+  },
+  "scripts": {
+    "make": "(cd test/ && make test)",
+    "test": "mocha -C -R dot"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shexSpec/grammar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ]
+}
