@@ -8,10 +8,11 @@ const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
 const PATH = '/shex.js/'
-const PAGE = 'doc/shex-simple.html'
+const PAGE = 'packages/shex-webapp/doc/shex-simple.html'
 
 let fs = require('fs')
 let expect = require("chai").expect
+const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const { JSDOM } = jsdom
 
@@ -93,6 +94,7 @@ function setup (done, ready, searchParms) {
   }, SCRIPT_CALLBACK_TIMEOUT)
   let dom = getDom(searchParms)
   // stamp('dom')
+  dom.window.fetch = node_fetch
   dom.window._testCallback = e => {
     // stamp('hear')
     clearTimeout(timer)
