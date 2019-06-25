@@ -318,12 +318,15 @@ function ShExValidator_constructor(schema, options) {
    */
   this.validate = function (db, point, label, tracker, seen, subGraph) {
     // default to schema's start shape
-    if (typeof point === "object" && "type" in point) { // !!!
-      // if (point.type === "ShapeRef") {
-      //   point = point.reference
-      // }
+    if (typeof point === "object" && "termType" in point) {
+      point = RdfTerm.internalTerm(point)
     }
-    else if (point !== null && typeof point === "object") {
+    else if (typeof point === "object" && "type" in point) {
+      if (point.type === "ShapeRef") {
+        point = point.reference
+      }
+    }
+    else if (typeof point === "object") {
       var shapeMap = point;
       if (this.options.results === "api") {
         return shapeMap.map(pair => {

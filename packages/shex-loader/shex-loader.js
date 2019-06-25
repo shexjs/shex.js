@@ -139,7 +139,7 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
 /* LoadPromise - load shex and json files into a single Schema and turtle into
  * a graph (Data).
  */
-function LoadPromise (shex, json, turtle, jsonld, schemaOptions, dataOptions) {
+  function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
   var returns = {
     schema: ShExUtil.emptySchema(),
     data: new N3.Store(),
@@ -250,12 +250,11 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     if (s.base === url) delete s.base;
     meta.prefixes = s._prefixes;
     meta.base = s._base || meta.base;
-    ShExUtil.merge(schema, loadImports(s), true, true);
+    ShExUtil.merge(schema, loadImports(s), false, true);
     return Promise.resolve([mediaType, url]);
   } catch (e) {
-    var e2 = Error("error parsing ShEx " + url + ": " + e);
-    // e2.stack = e.stack;console.error(e2);
-    return Promise.reject(e2);
+    e.message = "error parsing ShEx " + url + ": " + e.message;
+    return Promise.reject(e);
   }
 }
 

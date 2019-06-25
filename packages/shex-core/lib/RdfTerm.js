@@ -163,7 +163,9 @@ var RdfTerm = (function () {
         node = node.replace(escapeAll, characterReplacer);
       var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
       if (pref) {
-        return pref + node.substr(prefixes[pref].length);
+        var rest = node.substr(prefixes[pref].length);
+        if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
+          return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
       }
       if (node.startsWith(base)) {
         return "<" + node.substr(base.length) + ">";

@@ -62,14 +62,14 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-var shexParser = ShEx.Parser.construct(DefaultBase);
+var shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
 function parseShEx (text, meta, base) {
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   shexParser._setBase(base);
   var ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
-  meta.base = ret.base; // base set above.
-  meta.prefixes = ret.prefixes || {}; // @@ revisit after separating shexj from meta and indexes
+  meta.base = ret._base; // base set above.
+  meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
   return ret;
 }
 
@@ -233,7 +233,7 @@ function makeSchemaCache (selection) {
   ret.getItems = function () {
     var obj = this.refresh();
     var start = "start" in obj ? [START_SHAPE_LABEL] : [];
-    var rest = "shapes" in obj ? Object.keys(obj.shapes).map(Caches.inputSchema.meta.termToLex) : [];
+    var rest = "shapes" in obj ? obj.shapes.map(se => Caches.inputSchema.meta.termToLex(se.id)) : [];
     return start.concat(rest);
   };
   return ret;
@@ -655,6 +655,7 @@ function callValidator (done) {
         schema: Caches.inputSchema.refresh(),
         url: Caches.inputSchema.url || DefaultBase
       };
+      // shex-loader loads IMPORTs and tests the schema for structural faults.
       ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
         var time;
         var validator = ShEx.Validator.construct(
