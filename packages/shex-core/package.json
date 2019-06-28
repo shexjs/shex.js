@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "hierarchy-closure": "^1.1.0"
+    "hierarchy-closure": "^1.2.1"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
