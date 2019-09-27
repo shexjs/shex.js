@@ -1590,13 +1590,6 @@ function loadSearchParameters () {
   if (!("manifest" in iface) && !("manifestURL" in iface)) {
     iface.manifestURL = ["../examples/manifest.json"];
   }
-  if ("hideData" in iface) {
-    $("#inputData textarea").css("visibility", "hidden");
-  }
-  if ("textMapIsSparqlQuery" in iface) {
-    $("#textMap").data("isSparqlQuery", true)
-      .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
-  }
 
   // Load all known query parameters.
   return Promise.all(QueryParams.reduce((promises, input) => {
@@ -1702,6 +1695,7 @@ function loadSearchParameters () {
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
+<<<<<<< HEAD
 <<<<<<< variant A
     if ($("#inputData textarea").css("visibility") === "hidden") {
       parms.push("hideData");
@@ -1711,6 +1705,8 @@ function loadSearchParameters () {
     }
 >>>>>>> variant B
 ======= end
+=======
+>>>>>>> parent of 313e357... Add textMapIsSparqlQuery URL parameter to shex-simple
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
