@@ -1075,7 +1075,7 @@ function addEditMapPairs (pairs, target) {
       rows: '1',
       type: 'text',
       class: 'data focus'
-    }).text(node).on("input", markEditMapDirty);
+    }).text(node).on("change", markEditMapDirty);
     var joinerElt = $("<span>", {
       class: 'shapeMap-joiner'
     }).append("@").addClass(pair.status);
@@ -1096,7 +1096,7 @@ function addEditMapPairs (pairs, target) {
       type: 'text',
       value: shape,
       class: 'schema inputShape'
-    }).on("input", markEditMapDirty);
+    }).on("change", markEditMapDirty);
     var addElt = $("<button/>", {
       class: "addPair",
       title: "add a node/shape pair"}).text("+");
@@ -1234,7 +1234,6 @@ function prepareControls () {
         copyEditMapToTextMap();
     }
   });
-  $("#textMap").on("input", markEditMapDirty);
   $("#textMap").on("change", evt => {
     results.clear();
     copyTextMapToEditMap();
@@ -1379,10 +1378,6 @@ var parseQueryString = function(query) {
 
 function markEditMapDirty () {
   $("#editMap").attr("data-dirty", true);
-  if ($("#textMap").data("isSparqlQuery")) {
-    // query results have to be fetched first before validation can happen
-    $("#validate .validate-label").text("run query to fetch entities");
-  }
 }
 
 function markEditMapClean () {
@@ -1451,7 +1446,6 @@ function copyEditMapToFixedMap () {
       focusElt.scrollLeft = focusElt.scrollWidth;
     });
     fixedMapTab.text(restoreText).removeClass("running");
-    $("#validate .validate-label").text("validate");
   });
 
   function getQuads (s, p, o) {
@@ -1605,10 +1599,6 @@ function loadSearchParameters () {
   if ("textMapIsSparqlQuery" in iface) {
     $("#textMap").data("isSparqlQuery", true)
       .attr("placeholder", "SELECT ?id WHERE {\n    # ...\n}");
-    $("#validate .validate-label").text("run query to fetch entities");
-    $("#textMap-tab-header a").text('Query');
-    $("#editMap-tab-header").remove();
-    $("#fixedMap-tab-header a").text('Entities to check');
   }
 
   // Load all known query parameters.
