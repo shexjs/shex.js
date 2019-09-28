@@ -1698,18 +1698,12 @@ function changeInputTabs() {
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
-<<<<<<< HEAD
-<<<<<<< variant A
     if ($("#inputData textarea").css("visibility") === "hidden") {
       parms.push("hideData");
     }
     if ($("#textMap").data("isSparqlQuery")) {
       parms.push('textMapIsSparqlQuery');
     }
->>>>>>> variant B
-======= end
-=======
->>>>>>> parent of 313e357... Add textMapIsSparqlQuery URL parameter to shex-simple
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
