@@ -1675,6 +1675,12 @@ function loadSearchParameters () {
   });
 }
 
+function changeInputTabs() {
+  $("#query").html("<a href=\"#textMap\">Query</a>");
+  $("#queryEditor").remove();
+  $("#fixMap").html("<a href=\"#fixedMap-tab\">Entities to check</a>");
+}
+
   /**
    * update location with a current values of some inputs
    */
