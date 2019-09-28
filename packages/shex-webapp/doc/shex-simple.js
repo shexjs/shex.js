@@ -1698,12 +1698,6 @@ function changeInputTabs() {
         acc.concat(parm + "=" + encodeURIComponent(val)) :
         acc;
     }, []));
-    if ($("#inputData textarea").css("visibility") === "hidden") {
-      parms.push("hideData");
-    }
-    if ($("#textMap").data("isSparqlQuery")) {
-      parms.push('textMapIsSparqlQuery');
-    }
     var s = parms.join("&");
     return location.origin + location.pathname + "?" + s;
   }
