@@ -2176,7 +2176,7 @@ function isnan (val) {
 // Copyright 2015 Joyent, Inc.
 
 var assert = __webpack_require__(24);
-var Stream = __webpack_require__(13).Stream;
+var Stream = __webpack_require__(15).Stream;
 var util = __webpack_require__(5);
 
 
@@ -6754,7 +6754,7 @@ module.exports = g;
 module.exports = Key;
 
 var assert = __webpack_require__(4);
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var crypto = __webpack_require__(7);
 var Fingerprint = __webpack_require__(51);
 var Signature = __webpack_require__(25);
@@ -7078,7 +7078,7 @@ var Buffer = __webpack_require__(6).Buffer;
 var PrivateKey = __webpack_require__(12);
 var Key = __webpack_require__(10);
 var crypto = __webpack_require__(7);
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var asn1 = __webpack_require__(26);
 
 var ec = __webpack_require__(72);
@@ -7466,7 +7466,7 @@ module.exports = PrivateKey;
 
 var assert = __webpack_require__(4);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var crypto = __webpack_require__(7);
 var Fingerprint = __webpack_require__(51);
 var Signature = __webpack_require__(25);
@@ -7712,139 +7712,6 @@ PrivateKey._oldVersionDetect = function (obj) {
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-module.exports = Stream;
-
-var EE = __webpack_require__(43).EventEmitter;
-var inherits = __webpack_require__(0);
-
-inherits(Stream, EE);
-Stream.Readable = __webpack_require__(44);
-Stream.Writable = __webpack_require__(221);
-Stream.Duplex = __webpack_require__(222);
-Stream.Transform = __webpack_require__(223);
-Stream.PassThrough = __webpack_require__(224);
-
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream;
-
-
-
-// old-style streams.  Note that the pipe method (the only relevant
-// part of this class) is overridden in the Readable class.
-
-function Stream() {
-  EE.call(this);
-}
-
-Stream.prototype.pipe = function(dest, options) {
-  var source = this;
-
-  function ondata(chunk) {
-    if (dest.writable) {
-      if (false === dest.write(chunk) && source.pause) {
-        source.pause();
-      }
-    }
-  }
-
-  source.on('data', ondata);
-
-  function ondrain() {
-    if (source.readable && source.resume) {
-      source.resume();
-    }
-  }
-
-  dest.on('drain', ondrain);
-
-  // If the 'end' option is not supplied, dest.end() will be called when
-  // source gets the 'end' or 'close' events.  Only dest.end() once.
-  if (!dest._isStdio && (!options || options.end !== false)) {
-    source.on('end', onend);
-    source.on('close', onclose);
-  }
-
-  var didOnEnd = false;
-  function onend() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    dest.end();
-  }
-
-
-  function onclose() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    if (typeof dest.destroy === 'function') dest.destroy();
-  }
-
-  // don't leave dangling pipes when there are errors.
-  function onerror(er) {
-    cleanup();
-    if (EE.listenerCount(this, 'error') === 0) {
-      throw er; // Unhandled stream error in pipe.
-    }
-  }
-
-  source.on('error', onerror);
-  dest.on('error', onerror);
-
-  // remove all the event listeners that were added.
-  function cleanup() {
-    source.removeListener('data', ondata);
-    dest.removeListener('drain', ondrain);
-
-    source.removeListener('end', onend);
-    source.removeListener('close', onclose);
-
-    source.removeListener('error', onerror);
-    dest.removeListener('error', onerror);
-
-    source.removeListener('end', cleanup);
-    source.removeListener('close', cleanup);
-
-    dest.removeListener('close', cleanup);
-  }
-
-  source.on('end', cleanup);
-  source.on('close', cleanup);
-
-  dest.on('close', cleanup);
-
-  dest.emit('pipe', source);
-
-  // Allow for unix-like usage: A.pipe(B).pipe(C)
-  return dest;
-};
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
 // Copyright 2015 Joyent, Inc.
 
 var Buffer = __webpack_require__(6).Buffer;
@@ -8016,9 +7883,142 @@ module.exports = {
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports) {
 
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+module.exports = Stream;
+
+var EE = __webpack_require__(43).EventEmitter;
+var inherits = __webpack_require__(0);
+
+inherits(Stream, EE);
+Stream.Readable = __webpack_require__(44);
+Stream.Writable = __webpack_require__(222);
+Stream.Duplex = __webpack_require__(223);
+Stream.Transform = __webpack_require__(224);
+Stream.PassThrough = __webpack_require__(225);
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream;
+
+
+
+// old-style streams.  Note that the pipe method (the only relevant
+// part of this class) is overridden in the Readable class.
+
+function Stream() {
+  EE.call(this);
+}
+
+Stream.prototype.pipe = function(dest, options) {
+  var source = this;
+
+  function ondata(chunk) {
+    if (dest.writable) {
+      if (false === dest.write(chunk) && source.pause) {
+        source.pause();
+      }
+    }
+  }
+
+  source.on('data', ondata);
+
+  function ondrain() {
+    if (source.readable && source.resume) {
+      source.resume();
+    }
+  }
+
+  dest.on('drain', ondrain);
+
+  // If the 'end' option is not supplied, dest.end() will be called when
+  // source gets the 'end' or 'close' events.  Only dest.end() once.
+  if (!dest._isStdio && (!options || options.end !== false)) {
+    source.on('end', onend);
+    source.on('close', onclose);
+  }
+
+  var didOnEnd = false;
+  function onend() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    dest.end();
+  }
+
+
+  function onclose() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    if (typeof dest.destroy === 'function') dest.destroy();
+  }
+
+  // don't leave dangling pipes when there are errors.
+  function onerror(er) {
+    cleanup();
+    if (EE.listenerCount(this, 'error') === 0) {
+      throw er; // Unhandled stream error in pipe.
+    }
+  }
+
+  source.on('error', onerror);
+  dest.on('error', onerror);
+
+  // remove all the event listeners that were added.
+  function cleanup() {
+    source.removeListener('data', ondata);
+    dest.removeListener('drain', ondrain);
+
+    source.removeListener('end', onend);
+    source.removeListener('close', onclose);
+
+    source.removeListener('error', onerror);
+    dest.removeListener('error', onerror);
+
+    source.removeListener('end', cleanup);
+    source.removeListener('close', cleanup);
+
+    dest.removeListener('close', cleanup);
+  }
+
+  source.on('end', cleanup);
+  source.on('close', cleanup);
+
+  dest.on('close', cleanup);
+
+  dest.emit('pipe', source);
+
+  // Allow for unix-like usage: A.pipe(B).pipe(C)
+  return dest;
+};
 
 
 /***/ }),
@@ -8093,8 +8093,8 @@ if(typeof process === 'object' && typeof process.nextTick === 'function') {
 api.setImmediate = _setImmediate ? _delay : api.nextTick;
 
 /**
- * Clones an object, array, Map, Set, or string/number. If a typed JavaScript
- * object is given, such as a Date, it will be converted to a string.
+ * Clones an object, array, or string/number. If a typed JavaScript object
+ * is given, such as a Date, it will be converted to a string.
  *
  * @param value the value to clone.
  *
@@ -8107,16 +8107,6 @@ api.clone = function(value) {
       rval = [];
       for(let i = 0; i < value.length; ++i) {
         rval[i] = api.clone(value[i]);
-      }
-    } else if(value instanceof Map) {
-      rval = new Map();
-      for(const [k, v] of value) {
-        rval.set(k, api.clone(v));
-      }
-    } else if(value instanceof Set) {
-      rval = new Set();
-      for(const v of value) {
-        rval.add(api.clone(v));
       }
     } else if(types.isObject(value)) {
       rval = {};
@@ -8200,7 +8190,7 @@ api.parseLinkHeader = header => {
     const rel = result['rel'] || '';
     if(Array.isArray(rval[rel])) {
       rval[rel].push(result);
-    } else if(rval.hasOwnProperty(rel)) {
+    } else if(rel in rval) {
       rval[rel] = [rval[rel], result];
     } else {
       rval[rel] = result;
@@ -8250,7 +8240,7 @@ api.validateTypeValue = v => {
  * @return true if the subject has the given property, false if not.
  */
 api.hasProperty = (subject, property) => {
-  if(subject.hasOwnProperty(property)) {
+  if(property in subject) {
     const value = subject[property];
     return (!types.isArray(value) || value.length > 0);
   }
@@ -8311,13 +8301,13 @@ api.addValue = (subject, property, value, options) => {
 
   if(types.isArray(value)) {
     if(value.length === 0 && options.propertyIsArray &&
-      !subject.hasOwnProperty(property)) {
+      !(property in subject)) {
       subject[property] = [];
     }
     for(let i = 0; i < value.length; ++i) {
       api.addValue(subject, property, value[i], options);
     }
-  } else if(subject.hasOwnProperty(property)) {
+  } else if(property in subject) {
     // check if subject already has value if duplicates not allowed
     const hasValue = (!options.allowDuplicate &&
       api.hasValue(subject, property, value));
@@ -10540,7 +10530,7 @@ module.exports = Signature;
 
 var assert = __webpack_require__(4);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var crypto = __webpack_require__(7);
 var errs = __webpack_require__(22);
 var utils = __webpack_require__(11);
@@ -11107,7 +11097,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /***/ (function(module, exports, __webpack_require__) {
 
 var Buffer = __webpack_require__(1).Buffer
-var Transform = __webpack_require__(13).Transform
+var Transform = __webpack_require__(15).Transform
 var StringDecoder = __webpack_require__(78).StringDecoder
 var inherits = __webpack_require__(0)
 
@@ -11222,7 +11212,7 @@ var assert = __webpack_require__(4);
 var asn1 = __webpack_require__(26);
 var crypto = __webpack_require__(7);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
@@ -11524,7 +11514,7 @@ module.exports = {
 
 var assert = __webpack_require__(4);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
@@ -11979,19 +11969,16 @@ api.cache = new ActiveContextCache();
  * @param activeCtx the current active context.
  * @param localCtx the local context to process.
  * @param options the context processing options.
- * @param isPropertyTermScopedContext `true` if `localCtx` is a scoped context
- *   from a property term.
  *
  * @return the new active context.
  */
-api.process = (
-  {activeCtx, localCtx, options, isPropertyTermScopedContext = false}) => {
+api.process = ({activeCtx, localCtx, options}) => {
   // normalize local context to an array of @context objects
   if(_isObject(localCtx) && '@context' in localCtx &&
     _isArray(localCtx['@context'])) {
     localCtx = localCtx['@context'];
   }
-  const ctxs = _asArray(localCtx);
+  const ctxs = _isArray(localCtx) ? localCtx : [localCtx];
 
   // no contexts in array, return current active context w/o changes
   if(ctxs.length === 0) {
@@ -12004,58 +11991,8 @@ api.process = (
   for(let i = 0; i < ctxs.length; ++i) {
     let ctx = ctxs[i];
 
-    // update active context to one computed from last iteration
-    activeCtx = rval;
-
-    // get context from cache if available
-    if(api.cache) {
-      const cached = api.cache.get(activeCtx, ctx);
-      if(cached) {
-        rval = activeCtx = cached;
-        continue;
-      }
-    }
-
     // reset to initial context
     if(ctx === null) {
-      // We can't nullify if there are protected terms and we're
-      // not processing a property term scoped context
-      if(!isPropertyTermScopedContext &&
-        Object.keys(activeCtx.protected).length !== 0) {
-        const protectedMode = (options && options.protectedMode) || 'error';
-        if(protectedMode === 'error') {
-          throw new JsonLdError(
-            'Tried to nullify a context with protected terms outside of ' +
-            'a term definition.',
-            'jsonld.SyntaxError',
-            {code: 'invalid context nullification'});
-        } else if(protectedMode === 'warn') {
-          // FIXME: remove logging and use a handler
-          console.warn('WARNING: invalid context nullification');
-          const oldActiveCtx = activeCtx;
-          // copy all protected term definitions to fresh initial context
-          rval = activeCtx = api.getInitialContext(options);
-          for(const [term, _protected] of
-            Object.entries(oldActiveCtx.protected)) {
-            if(_protected) {
-              activeCtx.mappings[term] =
-                util.clone(oldActiveCtx.mappings[term]);
-            }
-          }
-          activeCtx.protected = util.clone(oldActiveCtx.protected);
-
-          // cache result
-          if(api.cache) {
-            api.cache.set(oldActiveCtx, ctx, rval);
-          }
-
-          continue;
-        }
-        throw new JsonLdError(
-          'Invalid protectedMode.',
-          'jsonld.SyntaxError',
-          {code: 'invalid protected mode', context: localCtx, protectedMode});
-      }
       rval = activeCtx = api.getInitialContext(options);
       continue;
     }
@@ -12072,11 +12009,21 @@ api.process = (
         'jsonld.SyntaxError', {code: 'invalid local context', context: ctx});
     }
 
-    // clone context before updating it
+    // get context from cache if available
+    if(api.cache) {
+      const cached = api.cache.get(activeCtx, ctx);
+      if(cached) {
+        rval = activeCtx = cached;
+        continue;
+      }
+    }
+
+    // update active context and clone new one before updating
+    activeCtx = rval;
     rval = rval.clone();
 
     // define context mappings for keys in local context
-    const defined = new Map();
+    const defined = {};
 
     // handle @version
     if('@version' in ctx) {
@@ -12096,7 +12043,7 @@ api.process = (
       }
       rval.processingMode = 'json-ld-1.1';
       rval['@version'] = ctx['@version'];
-      defined.set('@version', true);
+      defined['@version'] = true;
     }
 
     // if not set explicitly, set processingMode to "json-ld-1.0"
@@ -12121,7 +12068,7 @@ api.process = (
       }
 
       rval['@base'] = base;
-      defined.set('@base', true);
+      defined['@base'] = true;
     }
 
     // handle @vocab
@@ -12142,7 +12089,7 @@ api.process = (
       } else {
         rval['@vocab'] = value;
       }
-      defined.set('@vocab', true);
+      defined['@vocab'] = true;
     }
 
     // handle @language
@@ -12159,18 +12106,12 @@ api.process = (
       } else {
         rval['@language'] = value.toLowerCase();
       }
-      defined.set('@language', true);
+      defined['@language'] = true;
     }
-
-    // handle @protected; determine whether this sub-context is declaring
-    // all its terms to be "protected" (exceptions can be made on a
-    // per-definition basis)
-    defined.set('@protected', ctx['@protected'] || false);
 
     // process all other keys
     for(const key in ctx) {
-      api.createTermDefinition(
-        rval, ctx, key, defined, options, isPropertyTermScopedContext);
+      api.createTermDefinition(rval, ctx, key, defined);
     }
 
     // cache result
@@ -12190,19 +12131,11 @@ api.process = (
  * @param term the term in the local context to define the mapping for.
  * @param defined a map of defining/defined keys to detect cycles and prevent
  *          double definitions.
- * @param {Object} [options] - creation options.
- * @param {string} [options.protectedMode="error"] - "error" to throw error
- *   on `@protected` constraint violation, "warn" to allow violations and
- *   signal a warning.
- * @param isPropertyTermScopedContext `true` if `localCtx` is a scoped context
- *   from a property term.
  */
-api.createTermDefinition = (
-  activeCtx, localCtx, term, defined, options,
-  isPropertyTermScopedContext = false) => {
-  if(defined.has(term)) {
+api.createTermDefinition = (activeCtx, localCtx, term, defined) => {
+  if(term in defined) {
     // term already defined
-    if(defined.get(term)) {
+    if(defined[term]) {
       return;
     }
     // cycle detected
@@ -12213,7 +12146,7 @@ api.createTermDefinition = (
   }
 
   // now defining term
-  defined.set(term, false);
+  defined[term] = false;
 
   if(api.isKeyword(term)) {
     throw new JsonLdError(
@@ -12229,42 +12162,18 @@ api.createTermDefinition = (
       {code: 'invalid term definition', context: localCtx});
   }
 
-  // FIXME if(1.1) ... ?
-  if(activeCtx.protected.hasOwnProperty(term) &&
-    !isPropertyTermScopedContext) {
-    const protectedMode = (options && options.protectedMode) || 'error';
-    if(protectedMode === 'error') {
-      throw new JsonLdError(
-        'Invalid JSON-LD syntax; tried to redefine a protected term.',
-        'jsonld.SyntaxError',
-        {code: 'protected term redefinition', context: localCtx, term});
-    } else if(protectedMode === 'warn') {
-      // FIXME: remove logging and use a handler
-      console.warn('WARNING: protected term redefinition', {term});
-      return;
-    }
-    throw new JsonLdError(
-      'Invalid protectedMode.',
-      'jsonld.SyntaxError',
-      {code: 'invalid protected mode', context: localCtx, term,
-        protectedMode});
-  }
-
   // remove old mapping
-  if(activeCtx.mappings.has(term)) {
-    activeCtx.mappings.delete(term);
+  if(activeCtx.mappings[term]) {
+    delete activeCtx.mappings[term];
   }
 
   // get context term value
-  let value;
-  if(localCtx.hasOwnProperty(term)) {
-    value = localCtx[term];
-  }
+  let value = localCtx[term];
 
   // clear context entry
   if(value === null || (_isObject(value) && value['@id'] === null)) {
-    activeCtx.mappings.set(term, null);
-    defined.set(term, true);
+    activeCtx.mappings[term] = null;
+    defined[term] = true;
     return;
   }
 
@@ -12284,8 +12193,7 @@ api.createTermDefinition = (
   }
 
   // create new mapping
-  const mapping = {};
-  activeCtx.mappings.set(term, mapping);
+  const mapping = activeCtx.mappings[term] = {};
   mapping.reverse = false;
 
   // make sure term definition only has expected keywords
@@ -12293,7 +12201,7 @@ api.createTermDefinition = (
 
   // JSON-LD 1.1 support
   if(api.processingMode(activeCtx, 1.1)) {
-    validKeys.push('@context', '@nest', '@prefix', '@protected');
+    validKeys.push('@context', '@nest', '@prefix');
   }
 
   for(const kw in value) {
@@ -12331,9 +12239,8 @@ api.createTermDefinition = (
     }
 
     // expand and add @id mapping
-    const id = _expandIri(
-      activeCtx, reverse, {vocab: true, base: false}, localCtx, defined,
-      options);
+    const id = api.expandIri(
+      activeCtx, reverse, {vocab: true, base: false}, localCtx, defined);
     if(!_isAbsoluteIri(id)) {
       throw new JsonLdError(
         'Invalid JSON-LD syntax; a @context @reverse value must be an ' +
@@ -12352,8 +12259,8 @@ api.createTermDefinition = (
     }
     if(id !== term) {
       // expand and add @id mapping
-      id = _expandIri(
-        activeCtx, id, {vocab: true, base: false}, localCtx, defined, options);
+      id = api.expandIri(
+        activeCtx, id, {vocab: true, base: false}, localCtx, defined);
       if(!_isAbsoluteIri(id) && !api.isKeyword(id)) {
         throw new JsonLdError(
           'Invalid JSON-LD syntax; a @context @id value must be an ' +
@@ -12373,15 +12280,15 @@ api.createTermDefinition = (
     // see if the term has a prefix
     if(mapping._termHasColon) {
       const prefix = term.substr(0, colon);
-      if(localCtx.hasOwnProperty(prefix)) {
+      if(prefix in localCtx) {
         // define parent prefix
-        api.createTermDefinition(activeCtx, localCtx, prefix, defined, options);
+        api.createTermDefinition(activeCtx, localCtx, prefix, defined);
       }
 
-      if(activeCtx.mappings.has(prefix)) {
+      if(activeCtx.mappings[prefix]) {
         // set @id based on prefix parent
         const suffix = term.substr(colon + 1);
-        mapping['@id'] = activeCtx.mappings.get(prefix)['@id'] + suffix;
+        mapping['@id'] = activeCtx.mappings[prefix]['@id'] + suffix;
       } else {
         // term is an absolute IRI
         mapping['@id'] = term;
@@ -12399,14 +12306,8 @@ api.createTermDefinition = (
     }
   }
 
-  // Handle term protection
-  if(value['@protected'] === true ||
-    (defined.get('@protected') === true && value['@protected'] !== false)) {
-    activeCtx.protected[term] = true;
-  }
-
   // IRI mapping now defined
-  defined.set(term, true);
+  defined[term] = true;
 
   if('@type' in value) {
     let type = value['@type'];
@@ -12419,9 +12320,8 @@ api.createTermDefinition = (
 
     if(type !== '@id' && type !== '@vocab') {
       // expand @type to full IRI
-      type = _expandIri(
-        activeCtx, type, {vocab: true, base: false}, localCtx, defined,
-        options);
+      type = api.expandIri(
+        activeCtx, type, {vocab: true, base: false}, localCtx, defined);
       if(!_isAbsoluteIri(type)) {
         throw new JsonLdError(
           'Invalid JSON-LD syntax; an @context @type value must be an ' +
@@ -12582,48 +12482,27 @@ api.createTermDefinition = (
  * @param relativeTo options for how to resolve relative IRIs:
  *          base: true to resolve against the base IRI, false not to.
  *          vocab: true to concatenate after @vocab, false not to.
- * @param {Object} [options] - processing options.
- *
- * @return the expanded value.
- */
-api.expandIri = (activeCtx, value, relativeTo, options) => {
-  return _expandIri(activeCtx, value, relativeTo, undefined, undefined,
-    options);
-};
-
-/**
- * Expands a string to a full IRI. The string may be a term, a prefix, a
- * relative IRI, or an absolute IRI. The associated absolute IRI will be
- * returned.
- *
- * @param activeCtx the current active context.
- * @param value the string to expand.
- * @param relativeTo options for how to resolve relative IRIs:
- *          base: true to resolve against the base IRI, false not to.
- *          vocab: true to concatenate after @vocab, false not to.
  * @param localCtx the local context being processed (only given if called
  *          during context processing).
  * @param defined a map for tracking cycles in context definitions (only given
  *          if called during context processing).
- * @param {Object} [options] - processing options.
  *
  * @return the expanded value.
  */
-function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
+api.expandIri = (activeCtx, value, relativeTo, localCtx, defined) => {
   // already expanded
   if(value === null || !_isString(value) || api.isKeyword(value)) {
     return value;
   }
 
   // define term dependency if not defined
-  if(localCtx && localCtx.hasOwnProperty(value) &&
-    defined.get(value) !== true) {
-    api.createTermDefinition(activeCtx, localCtx, value, defined, options);
+  if(localCtx && value in localCtx && defined[value] !== true) {
+    api.createTermDefinition(activeCtx, localCtx, value, defined);
   }
 
   relativeTo = relativeTo || {};
   if(relativeTo.vocab) {
-    const mapping = activeCtx.mappings.get(value);
+    const mapping = activeCtx.mappings[value];
 
     // value is explicitly ignored with a null mapping
     if(mapping === null) {
@@ -12649,13 +12528,13 @@ function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
     }
 
     // prefix dependency not defined, define it
-    if(localCtx && localCtx.hasOwnProperty(prefix)) {
-      api.createTermDefinition(activeCtx, localCtx, prefix, defined, options);
+    if(localCtx && prefix in localCtx) {
+      api.createTermDefinition(activeCtx, localCtx, prefix, defined);
     }
 
     // use mapping if prefix is defined
-    if(activeCtx.mappings.has(prefix)) {
-      const mapping = activeCtx.mappings.get(prefix);
+    const mapping = activeCtx.mappings[prefix];
+    if(mapping) {
       return mapping['@id'] + suffix;
     }
 
@@ -12674,7 +12553,7 @@ function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
   }
 
   return value;
-}
+};
 
 /**
  * Gets the initial context.
@@ -12695,11 +12574,10 @@ api.getInitialContext = options => {
   const initialContext = {
     '@base': base,
     processingMode: options.processingMode,
-    mappings: new Map(),
+    mappings: {},
     inverse: null,
     getInverse: _createInverseContext,
-    clone: _cloneActiveContext,
-    protected: {}
+    clone: _cloneActiveContext
   };
   // TODO: consider using LRU cache instead
   if(INITIAL_CONTEXT_CACHE.size === INITIAL_CONTEXT_CACHE_MAX_SIZE) {
@@ -12735,9 +12613,10 @@ api.getInitialContext = options => {
     // create term selections for each mapping in the context, ordered by
     // shortest and then lexicographically least
     const mappings = activeCtx.mappings;
-    const terms = [...mappings.keys()].sort(_compareShortestLeast);
-    for(const term of terms) {
-      const mapping = mappings.get(term);
+    const terms = Object.keys(mappings).sort(_compareShortestLeast);
+    for(let i = 0; i < terms.length; ++i) {
+      const term = terms[i];
+      const mapping = mappings[term];
       if(mapping === null) {
         continue;
       }
@@ -12747,7 +12626,8 @@ api.getInitialContext = options => {
 
       // iterate over every IRI in the mapping
       const ids = _asArray(mapping['@id']);
-      for(const iri of ids) {
+      for(let ii = 0; ii < ids.length; ++ii) {
+        const iri = ids[ii];
         let entry = inverse[iri];
         const isKeyword = api.isKeyword(iri);
 
@@ -12826,17 +12706,17 @@ api.getInitialContext = options => {
 
     let iri;
     let letter;
-    for(const entry of entries) {
-      iri = entry.iri;
+    for(let i = 0; i < entries.length; ++i) {
+      iri = entries[i].iri;
       if(idx >= iri.length) {
         letter = '';
       } else {
         letter = iri[idx];
       }
       if(letter in next) {
-        next[letter].push(entry);
+        next[letter].push(entries[i]);
       } else {
-        next[letter] = [entry];
+        next[letter] = [entries[i]];
       }
     }
 
@@ -12856,7 +12736,7 @@ api.getInitialContext = options => {
    * @param typeOrLanguageValue the key in the entry to add to.
    */
   function _addPreferredTerm(term, entry, typeOrLanguageValue) {
-    if(!entry.hasOwnProperty(typeOrLanguageValue)) {
+    if(!(typeOrLanguageValue in entry)) {
       entry[typeOrLanguageValue] = term;
     }
   }
@@ -12873,7 +12753,6 @@ api.getInitialContext = options => {
     child.clone = this.clone;
     child.inverse = null;
     child.getInverse = this.getInverse;
-    child.protected = util.clone(this.protected);
     if('@language' in this) {
       child['@language'] = this['@language'];
     }
@@ -12886,46 +12765,40 @@ api.getInitialContext = options => {
 
 /**
  * Gets the value for the given active context key and type, null if none is
- * set or undefined if none is set and type is '@context'.
+ * set.
  *
  * @param ctx the active context.
  * @param key the context key.
  * @param [type] the type of value to get (eg: '@id', '@type'), if not
  *          specified gets the entire entry for a key, null if not found.
  *
- * @return the value, null, or undefined.
+ * @return the value.
  */
 api.getContextValue = (ctx, key, type) => {
-  // invalid key
+  // return null for invalid key
   if(key === null) {
-    if(type === '@context') {
-      return undefined;
-    }
     return null;
   }
 
   // get specific entry information
-  if(ctx.mappings.has(key)) {
-    const entry = ctx.mappings.get(key);
+  if(ctx.mappings[key]) {
+    const entry = ctx.mappings[key];
 
     if(_isUndefined(type)) {
       // return whole entry
       return entry;
     }
-    if(entry.hasOwnProperty(type)) {
+    if(type in entry) {
       // return entry value for type
       return entry[type];
     }
   }
 
   // get default language
-  if(type === '@language' && ctx.hasOwnProperty(type)) {
+  if(type === '@language' && (type in ctx)) {
     return ctx[type];
   }
 
-  if(type === '@context') {
-    return undefined;
-  }
   return null;
 };
 
@@ -12989,7 +12862,6 @@ api.isKeyword = v => {
     case '@omitDefault':
     case '@prefix':
     case '@preserve':
-    case '@protected':
     case '@requireAll':
     case '@reverse':
     case '@set':
@@ -14089,6 +13961,11 @@ class Term {
     this.id = id;
   }
 
+  // ### The term type of this term
+  get termType() {
+    return this.constructor.name;
+  }
+
   // ### The value of this term
   get value() {
     return this.id;
@@ -14116,20 +13993,12 @@ class Term {
 
 
 // ## NamedNode constructor
-class NamedNode extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'NamedNode';
-  }
-}
+class NamedNode extends Term {}
+NamedNode.name = 'NamedNode';
+
 
 // ## Literal constructor
 class Literal extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'Literal';
-  }
-
   // ### The text value of this literal
   get value() {
     return this.id.substring(1, this.id.lastIndexOf('"'));
@@ -14181,6 +14050,7 @@ class Literal extends Term {
     };
   }
 }
+Literal.name = 'Literal';
 
 // ## BlankNode constructor
 class BlankNode extends Term {
@@ -14188,25 +14058,16 @@ class BlankNode extends Term {
     super('_:' + name);
   }
 
-  // ### The term type of this term
-  get termType() {
-    return 'BlankNode';
-  }
-
   // ### The name of this blank node
   get value() {
     return this.id.substr(2);
   }
 }
+BlankNode.name = 'BlankNode';
 
 class Variable extends Term {
   constructor(name) {
     super('?' + name);
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'Variable';
   }
 
   // ### The name of this variable
@@ -14214,17 +14075,13 @@ class Variable extends Term {
     return this.id.substr(1);
   }
 }
+Variable.name = 'Variable';
 
 // ## DefaultGraph constructor
 class DefaultGraph extends Term {
   constructor() {
     super('');
     return DEFAULTGRAPH || this;
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'DefaultGraph';
   }
 
   // ### Returns whether this object represents the same term as the other
@@ -14235,6 +14092,7 @@ class DefaultGraph extends Term {
     return (this === other) || (!!other && (this.termType === other.termType));
   }
 }
+DefaultGraph.name = 'DefaultGraph';
 
 // ## DefaultGraph singleton
 DEFAULTGRAPH = new DefaultGraph();
@@ -14874,7 +14732,7 @@ exports.Readable = exports;
 exports.Writable = __webpack_require__(77);
 exports.Duplex = __webpack_require__(33);
 exports.Transform = __webpack_require__(120);
-exports.PassThrough = __webpack_require__(220);
+exports.PassThrough = __webpack_require__(221);
 
 
 /***/ }),
@@ -15158,7 +15016,7 @@ module.exports = Fingerprint;
 
 var assert = __webpack_require__(4);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var crypto = __webpack_require__(7);
 var errs = __webpack_require__(22);
 var Key = __webpack_require__(10);
@@ -19303,7 +19161,7 @@ module.exports = {
 var assert = __webpack_require__(4);
 var asn1 = __webpack_require__(26);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
@@ -19930,7 +19788,7 @@ module.exports = Certificate;
 
 var assert = __webpack_require__(4);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var crypto = __webpack_require__(7);
 var Fingerprint = __webpack_require__(51);
 var Signature = __webpack_require__(25);
@@ -20345,7 +20203,7 @@ Certificate._oldVersionDetect = function (obj) {
 module.exports = Identity;
 
 var assert = __webpack_require__(4);
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var crypto = __webpack_require__(7);
 var Fingerprint = __webpack_require__(51);
 var Signature = __webpack_require__(25);
@@ -21095,6 +20953,11 @@ class Term {
     this.id = id;
   }
 
+  // ### The term type of this term
+  get termType() {
+    return this.constructor.name;
+  }
+
   // ### The value of this term
   get value() {
     return this.id;
@@ -21122,20 +20985,12 @@ class Term {
 
 
 // ## NamedNode constructor
-class NamedNode extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'NamedNode';
-  }
-}
+class NamedNode extends Term {}
+NamedNode.name = 'NamedNode';
+
 
 // ## Literal constructor
 class Literal extends Term {
-  // ### The term type of this term
-  get termType() {
-    return 'Literal';
-  }
-
   // ### The text value of this literal
   get value() {
     return this.id.substring(1, this.id.lastIndexOf('"'));
@@ -21187,6 +21042,7 @@ class Literal extends Term {
     };
   }
 }
+Literal.name = 'Literal';
 
 // ## BlankNode constructor
 class BlankNode extends Term {
@@ -21194,25 +21050,16 @@ class BlankNode extends Term {
     super('_:' + name);
   }
 
-  // ### The term type of this term
-  get termType() {
-    return 'BlankNode';
-  }
-
   // ### The name of this blank node
   get value() {
     return this.id.substr(2);
   }
 }
+BlankNode.name = 'BlankNode';
 
 class Variable extends Term {
   constructor(name) {
     super('?' + name);
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'Variable';
   }
 
   // ### The name of this variable
@@ -21220,17 +21067,13 @@ class Variable extends Term {
     return this.id.substr(1);
   }
 }
+Variable.name = 'Variable';
 
 // ## DefaultGraph constructor
 class DefaultGraph extends Term {
   constructor() {
     super('');
     return DEFAULTGRAPH || this;
-  }
-
-  // ### The term type of this term
-  get termType() {
-    return 'DefaultGraph';
   }
 
   // ### Returns whether this object represents the same term as the other
@@ -21241,6 +21084,7 @@ class DefaultGraph extends Term {
     return (this === other) || (!!other && (this.termType === other.termType));
   }
 }
+DefaultGraph.name = 'DefaultGraph';
 
 // ## DefaultGraph singleton
 DEFAULTGRAPH = new DefaultGraph();
@@ -23265,7 +23109,7 @@ module.exports = {
 var assert = __webpack_require__(4);
 var asn1 = __webpack_require__(26);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var crypto = __webpack_require__(7);
 
@@ -23934,7 +23778,7 @@ util.inherits = __webpack_require__(0);
 
 /*<replacement>*/
 var internalUtil = {
-  deprecate: __webpack_require__(219)
+  deprecate: __webpack_require__(220)
 };
 /*</replacement>*/
 
@@ -25714,7 +25558,7 @@ module.exports = {
 var assert = __webpack_require__(4);
 var crypto = __webpack_require__(7);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var nacl = __webpack_require__(53);
 
@@ -26118,7 +25962,7 @@ module.exports = {
 var assert = __webpack_require__(4);
 var asn1 = __webpack_require__(26);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 
 var Key = __webpack_require__(10);
@@ -32675,7 +32519,7 @@ module.exports = Array.isArray || function (arr) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3Parser** parses N3 documents.
-var Lexer = __webpack_require__(113),
+var N3Lexer = __webpack_require__(113),
     DataFactory = __webpack_require__(42),
     namespaces = __webpack_require__(62);
 
@@ -32708,7 +32552,7 @@ class N3Parser {
       this._resolveRelativeIRI = function (iri) { return ''; };
     this._blankNodePrefix = typeof options.blankNodePrefix !== 'string' ? '' :
                               options.blankNodePrefix.replace(/^(?!_:)/, '_:');
-    this._lexer = options.lexer || new Lexer({ lineMode: isLineMode, n3: isN3 });
+    this._lexer = options.lexer || new N3Lexer({ lineMode: isLineMode, n3: isN3 });
     // Disable explicit quantifiers by default
     this._explicitQuantifiers = !!options.explicitQuantifiers;
   }
@@ -34052,7 +33896,7 @@ util.inherits = __webpack_require__(0);
 /*</replacement>*/
 
 /*<replacement>*/
-var debugUtil = __webpack_require__(216);
+var debugUtil = __webpack_require__(217);
 var debug = void 0;
 if (debugUtil && debugUtil.debuglog) {
   debug = debugUtil.debuglog('stream');
@@ -34061,7 +33905,7 @@ if (debugUtil && debugUtil.debuglog) {
 }
 /*</replacement>*/
 
-var BufferList = __webpack_require__(217);
+var BufferList = __webpack_require__(218);
 var destroyImpl = __webpack_require__(119);
 var StringDecoder;
 
@@ -35352,10 +35196,13 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     }
     ShExJison.reset();
     errors.forEach(e => {
-      const hash = e.hash;
-      const location = hash.loc;
-      delete hash.loc;
-      Object.assign(e, hash, {location: location});
+      if ("hash" in e) {
+        const hash = e.hash;
+        const location = hash.loc;
+        delete hash.loc;
+        return Object.assign(e, hash, {location: location});
+      }
+      return e;
     })
     if (errors.length == 1) {
       errors[0].parsed = ret;
@@ -36104,7 +35951,7 @@ exports.pathMatch = pathMatch;
 "use strict";
 
 var Buffer = __webpack_require__(1).Buffer
-var Transform = __webpack_require__(13).Transform
+var Transform = __webpack_require__(15).Transform
 var inherits = __webpack_require__(0)
 
 function throwIfNotStringOrBuffer (val, prefix) {
@@ -39242,7 +39089,7 @@ module.exports = {
 };
 
 var nacl = __webpack_require__(53);
-var stream = __webpack_require__(13);
+var stream = __webpack_require__(15);
 var util = __webpack_require__(5);
 var assert = __webpack_require__(4);
 var Buffer = __webpack_require__(6).Buffer;
@@ -40264,7 +40111,7 @@ module.exports = {
 var assert = __webpack_require__(4);
 var asn1 = __webpack_require__(26);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
@@ -41199,7 +41046,7 @@ function dumpException(ex)
 /* 173 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var stream = __webpack_require__(13)
+var stream = __webpack_require__(15)
 
 
 function isStream (obj) {
@@ -46999,7 +46846,7 @@ module.exports = class URDNA2015Sync {
 
 module.exports = glob
 
-var fs = __webpack_require__(15)
+var fs = __webpack_require__(14)
 var rp = __webpack_require__(195)
 var minimatch = __webpack_require__(107)
 var Minimatch = minimatch.Minimatch
@@ -47761,7 +47608,7 @@ realpath.realpathSync = realpathSync
 realpath.monkeypatch = monkeypatch
 realpath.unmonkeypatch = unmonkeypatch
 
-var fs = __webpack_require__(15)
+var fs = __webpack_require__(14)
 var origRealpath = fs.realpath
 var origRealpathSync = fs.realpathSync
 
@@ -48634,7 +48481,7 @@ module.exports = N3Lexer;
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3Parser** parses N3 documents.
-var Lexer = __webpack_require__(199),
+var N3Lexer = __webpack_require__(199),
     DataFactory = __webpack_require__(61),
     namespaces = __webpack_require__(75);
 
@@ -48667,7 +48514,7 @@ class N3Parser {
       this._resolveRelativeIRI = function (iri) { return ''; };
     this._blankNodePrefix = typeof options.blankNodePrefix !== 'string' ? '' :
                               options.blankNodePrefix.replace(/^(?!_:)/, '_:');
-    this._lexer = options.lexer || new Lexer({ lineMode: isLineMode, n3: isN3 });
+    this._lexer = options.lexer || new N3Lexer({ lineMode: isLineMode, n3: isN3 });
     // Disable explicit quantifiers by default
     this._explicitQuantifiers = !!options.explicitQuantifiers;
   }
@@ -51227,7 +51074,7 @@ exports.main = function commonjsMain (args) {
         console.log('Usage: '+args[0]+' FILE');
         process.exit(1);
     }
-    var source = __webpack_require__(15).readFileSync(__webpack_require__(23).normalize(args[1]), "utf8");
+    var source = __webpack_require__(14).readFileSync(__webpack_require__(23).normalize(args[1]), "utf8");
     return exports.parser.parse(source);
 };
 if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
@@ -53098,7 +52945,7 @@ if (true)
 /* WEBPACK VAR INJECTION */(function(process) {// **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
 var LoadPromise = (function () {
-var FS = __webpack_require__(15);
+var FS = __webpack_require__(14);
 var N3 = __webpack_require__(211);
 var ShEx = __webpack_require__(76);
 var ShExUtil = ShEx.Util;
@@ -53490,7 +53337,7 @@ module.exports = {
   Parser:       __webpack_require__(115),
   Writer:       __webpack_require__(116),
   Store:        __webpack_require__(215),
-  StreamParser: __webpack_require__(225),
+  StreamParser: __webpack_require__(216),
   StreamWriter: __webpack_require__(226),
   Util:         __webpack_require__(227),
 };
@@ -53943,8 +53790,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 // **N3Store** objects store N3 quads by graph in memory.
 
-var DataFactory = __webpack_require__(42),
-    Readable = __webpack_require__(13).Readable;
+var DataFactory = __webpack_require__(42);
 var toId = DataFactory.internal.toId,
     fromId = DataFactory.internal.fromId;
 
@@ -54257,17 +54103,6 @@ class N3Store {
     return stream;
   }
 
-  // ### `removeMatches` removes all matching quads from the store
-  // Setting any field to `undefined` or `null` indicates a wildcard.
-  removeMatches(subject, predicate, object, graph) {
-    return this.remove(this.match(subject, predicate, object, graph));
-  }
-
-  // ### `deleteGraph` removes all triples with the given graph from the store
-  deleteGraph(graph) {
-    return this.removeMatches(null, null, null, graph);
-  }
-
   // ### `getQuads` returns an array of quads matching a pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getQuads(subject, predicate, object, graph) {
@@ -54315,25 +54150,6 @@ class N3Store {
       }
     }
     return quads;
-  }
-
-  // ### `match` returns a stream of quads matching a pattern.
-  // Setting any field to `undefined` or `null` indicates a wildcard.
-  match(subject, predicate, object, graph) {
-    var self = this;
-    var stream = new Readable({ objectMode: true });
-
-    // Initialize stream once it is being read
-    stream._read = function () {
-      stream._read = function () {};
-      var quads = self.getQuads(subject, predicate, object, graph);
-      for (var quad of quads) {
-        stream.push(quad);
-      }
-      stream.push(null);
-    };
-
-    return stream;
   }
 
   // ### `countQuads` returns the number of quads matching a pattern.
@@ -54650,12 +54466,61 @@ module.exports = N3Store;
 
 /***/ }),
 /* 216 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// **N3StreamParser** parses a text stream into a quad stream.
+var Transform = __webpack_require__(15).Transform,
+    N3Parser = __webpack_require__(115);
+
+// ## Constructor
+class N3StreamParser extends Transform {
+  constructor(options) {
+    super({ decodeStrings: true });
+    this._readableState.objectMode = true;
+
+    // Set up parser with dummy stream to obtain `data` and `end` callbacks
+    var self = this, parser = new N3Parser(options), onData, onEnd;
+    parser.parse({
+      on: function (event, callback) {
+        switch (event) {
+        case 'data': onData = callback; break;
+        case 'end':   onEnd = callback; break;
+        }
+      },
+    },
+      // Handle quads by pushing them down the pipeline
+      function (error, quad) { error && self.emit('error', error) || quad && self.push(quad); },
+      // Emit prefixes through the `prefix` event
+      function (prefix, uri) { self.emit('prefix', prefix, uri); }
+    );
+
+    // Implement Transform methods through parser callbacks
+    this._transform = function (chunk, encoding, done) { onData(chunk); done(); };
+    this._flush = function (done) { onEnd(); done(); };
+  }
+
+  // ### Parses a stream of strings
+  import(stream) {
+    var self = this;
+    stream.on('data',  function (chunk) { self.write(chunk); });
+    stream.on('end',   function ()      { self.end(); });
+    stream.on('error', function (error) { self.emit('error', error); });
+    return this;
+  }
+}
+
+// ## Exports
+module.exports = N3StreamParser;
+
+
+/***/ }),
+/* 217 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 217 */
+/* 218 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -54664,7 +54529,7 @@ module.exports = N3Store;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Buffer = __webpack_require__(1).Buffer;
-var util = __webpack_require__(218);
+var util = __webpack_require__(219);
 
 function copyBuffer(src, target, offset) {
   src.copy(target, offset);
@@ -54740,13 +54605,13 @@ if (util && util.inspect && util.inspect.custom) {
 }
 
 /***/ }),
-/* 218 */
+/* 219 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 219 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -54820,7 +54685,7 @@ function config (name) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 220 */
+/* 221 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -54873,80 +54738,31 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 221 */
+/* 222 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(77);
 
 
 /***/ }),
-/* 222 */
+/* 223 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(33);
 
 
 /***/ }),
-/* 223 */
+/* 224 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(44).Transform
 
 
 /***/ }),
-/* 224 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(44).PassThrough
-
-
-/***/ }),
 /* 225 */
 /***/ (function(module, exports, __webpack_require__) {
 
-// **N3StreamParser** parses a text stream into a quad stream.
-var Transform = __webpack_require__(13).Transform,
-    N3Parser = __webpack_require__(115);
-
-// ## Constructor
-class N3StreamParser extends Transform {
-  constructor(options) {
-    super({ decodeStrings: true });
-    this._readableState.objectMode = true;
-
-    // Set up parser with dummy stream to obtain `data` and `end` callbacks
-    var self = this, parser = new N3Parser(options), onData, onEnd;
-    parser.parse({
-      on: function (event, callback) {
-        switch (event) {
-        case 'data': onData = callback; break;
-        case 'end':   onEnd = callback; break;
-        }
-      },
-    },
-      // Handle quads by pushing them down the pipeline
-      function (error, quad) { error && self.emit('error', error) || quad && self.push(quad); },
-      // Emit prefixes through the `prefix` event
-      function (prefix, uri) { self.emit('prefix', prefix, uri); }
-    );
-
-    // Implement Transform methods through parser callbacks
-    this._transform = function (chunk, encoding, done) { onData(chunk); done(); };
-    this._flush = function (done) { onEnd(); done(); };
-  }
-
-  // ### Parses a stream of strings
-  import(stream) {
-    var self = this;
-    stream.on('data',  function (chunk) { self.write(chunk); });
-    stream.on('end',   function ()      { self.end(); });
-    stream.on('error', function (error) { self.emit('error', error); });
-    return this;
-  }
-}
-
-// ## Exports
-module.exports = N3StreamParser;
+module.exports = __webpack_require__(44).PassThrough
 
 
 /***/ }),
@@ -54954,7 +54770,7 @@ module.exports = N3StreamParser;
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3StreamWriter** serializes a quad stream into a text stream.
-var Transform = __webpack_require__(13).Transform,
+var Transform = __webpack_require__(15).Transform,
     N3Writer = __webpack_require__(116);
 
 // ## Constructor
@@ -56894,7 +56710,7 @@ exports.main = function commonjsMain (args) {
         console.log('Usage: '+args[0]+' FILE');
         process.exit(1);
     }
-    var source = __webpack_require__(15).readFileSync(__webpack_require__(23).normalize(args[1]), "utf8");
+    var source = __webpack_require__(14).readFileSync(__webpack_require__(23).normalize(args[1]), "utf8");
     return exports.parser.parse(source);
 };
 if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
@@ -63116,7 +62932,7 @@ Object.defineProperty(request, 'debug', {
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var net = __webpack_require__(15);
+var net = __webpack_require__(14);
 var urlParse = __webpack_require__(20).parse;
 var util = __webpack_require__(5);
 var pubsuffix = __webpack_require__(127);
@@ -67065,7 +66881,7 @@ function formatReturnValue(bn, enc) {
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(45)
-var stream = __webpack_require__(13)
+var stream = __webpack_require__(15)
 var inherits = __webpack_require__(0)
 var sign = __webpack_require__(281)
 var verify = __webpack_require__(317)
@@ -73691,7 +73507,7 @@ var http = __webpack_require__(50)
 var https = __webpack_require__(90)
 var url = __webpack_require__(20)
 var util = __webpack_require__(5)
-var stream = __webpack_require__(13)
+var stream = __webpack_require__(15)
 var zlib = __webpack_require__(328)
 var aws2 = __webpack_require__(339)
 var aws4 = __webpack_require__(340)
@@ -75709,7 +75525,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var Buffer = __webpack_require__(3).Buffer;
-var Transform = __webpack_require__(13).Transform;
+var Transform = __webpack_require__(15).Transform;
 var binding = __webpack_require__(329);
 var util = __webpack_require__(5);
 var assert = __webpack_require__(24).ok;
@@ -84280,7 +84096,7 @@ var assert = __webpack_require__(4);
 var SSHBuffer = __webpack_require__(54);
 var crypto = __webpack_require__(7);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
 var Identity = __webpack_require__(57);
@@ -84634,7 +84450,7 @@ module.exports = {
 var assert = __webpack_require__(4);
 var asn1 = __webpack_require__(26);
 var Buffer = __webpack_require__(6).Buffer;
-var algs = __webpack_require__(14);
+var algs = __webpack_require__(13);
 var utils = __webpack_require__(11);
 var Key = __webpack_require__(10);
 var PrivateKey = __webpack_require__(12);
@@ -86910,8 +86726,8 @@ ForeverAgent.SSL = ForeverAgentSSL
 
 var util = __webpack_require__(5)
   , Agent = __webpack_require__(50).Agent
-  , net = __webpack_require__(15)
-  , tls = __webpack_require__(15)
+  , net = __webpack_require__(14)
+  , tls = __webpack_require__(14)
   , AgentSSL = __webpack_require__(90).Agent
   
 function getConnectionName(host, port) {  
@@ -87649,7 +87465,7 @@ module.exports = function (str, opts) {
 "use strict";
 
 
-var fs = __webpack_require__(15)
+var fs = __webpack_require__(14)
 var qs = __webpack_require__(65)
 var validate = __webpack_require__(368)
 var extend = __webpack_require__(80)
@@ -94426,7 +94242,7 @@ exports.Multipart = Multipart
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var util = __webpack_require__(5);
-var Stream = __webpack_require__(13).Stream;
+var Stream = __webpack_require__(15).Stream;
 var DelayedStream = __webpack_require__(431);
 
 module.exports = CombinedStream;
@@ -94640,7 +94456,7 @@ CombinedStream.prototype._emitError = function(err) {
 /* 431 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Stream = __webpack_require__(13).Stream;
+var Stream = __webpack_require__(15).Stream;
 var util = __webpack_require__(5);
 
 module.exports = DelayedStream;
@@ -95099,8 +94915,8 @@ exports.Tunnel = Tunnel
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {
 
-var net = __webpack_require__(15)
-  , tls = __webpack_require__(15)
+var net = __webpack_require__(14)
+  , tls = __webpack_require__(14)
   , http = __webpack_require__(50)
   , https = __webpack_require__(90)
   , events = __webpack_require__(43)
@@ -95423,7 +95239,7 @@ exports.debug = debug // for test
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-var net = __webpack_require__(15);
+var net = __webpack_require__(14);
 var urlParse = __webpack_require__(20).parse;
 var util = __webpack_require__(5);
 var pubsuffix = __webpack_require__(185);
@@ -97195,7 +97011,8 @@ const {
 const {
   getInitialContext: _getInitialContext,
   process: _processContext,
-  getAllContexts: _getAllContexts
+  getAllContexts: _getAllContexts,
+  expandIri: _expandIri
 } = __webpack_require__(35);
 
 const {
@@ -99568,8 +99385,7 @@ const {
   isArray: _isArray,
   isObject: _isObject,
   isEmptyObject: _isEmptyObject,
-  isString: _isString,
-  isUndefined: _isUndefined
+  isString: _isString
 } = __webpack_require__(19);
 
 const {
@@ -99637,8 +99453,7 @@ api.expand = ({
   if(!_isArray(element) && !_isObject(element)) {
     // drop free-floating scalars that are not in lists unless custom mapped
     if(!insideList && (activeProperty === null ||
-      _expandIri(activeCtx, activeProperty, {vocab: true},
-        options) === '@graph')) {
+      _expandIri(activeCtx, activeProperty, {vocab: true}) === '@graph')) {
       // TODO: use `await` to support async
       const mapped = expansionMap({
         unmappedValue: element,
@@ -99654,7 +99469,7 @@ api.expand = ({
     }
 
     // expand element according to value expansion rules
-    return _expandValue({activeCtx, activeProperty, value: element, options});
+    return _expandValue({activeCtx, activeProperty, value: element});
   }
 
   // recursively expand array
@@ -99716,7 +99531,7 @@ api.expand = ({
   // look for scoped context on @type
   let keys = Object.keys(element).sort();
   for(const key of keys) {
-    const expandedProperty = _expandIri(activeCtx, key, {vocab: true}, options);
+    const expandedProperty = _expandIri(activeCtx, key, {vocab: true});
     if(expandedProperty === '@type') {
       // set scopped contexts from @type
       // avoid sorting if possible
@@ -99726,7 +99541,7 @@ api.expand = ({
           (value.length > 1 ? value.slice().sort() : value) : [value];
       for(const type of types) {
         const ctx = _getContextValue(activeCtx, type, '@context');
-        if(!_isUndefined(ctx)) {
+        if(ctx) {
           activeCtx = _processContext({activeCtx, localCtx: ctx, options});
         }
       }
@@ -99735,7 +99550,7 @@ api.expand = ({
 
   // expand the active property
   const expandedActiveProperty = _expandIri(
-    activeCtx, activeProperty, {vocab: true}, options);
+    activeCtx, activeProperty, {vocab: true});
 
   // process each key and value in element, ignoring @nest content
   let rval = {};
@@ -99913,7 +99728,7 @@ function _expandObject({
     }
 
     // expand property
-    let expandedProperty = _expandIri(activeCtx, key, {vocab: true}, options);
+    let expandedProperty = _expandIri(activeCtx, key, {vocab: true});
 
     // drop non-absolute IRI keys that aren't keywords unless custom mapped
     if(expandedProperty === null ||
@@ -99983,7 +99798,7 @@ function _expandObject({
       _addValue(
         expandedParent, '@id',
         _asArray(value).map(v =>
-          _isString(v) ? _expandIri(activeCtx, v, {base: true}, options) : v),
+          _isString(v) ? _expandIri(activeCtx, v, {base: true}) : v),
         {propertyIsArray: options.isFrame});
       continue;
     }
@@ -99994,7 +99809,7 @@ function _expandObject({
         expandedParent, '@type',
         _asArray(value).map(v =>
           _isString(v) ?
-            _expandIri(activeCtx, v, {base: true, vocab: true}, options) : v),
+            _expandIri(activeCtx, v, {base: true, vocab: true}) : v),
         {propertyIsArray: options.isFrame});
       continue;
     }
@@ -100116,21 +99931,15 @@ function _expandObject({
     // use potential scoped context for key
     let termCtx = activeCtx;
     const ctx = _getContextValue(activeCtx, key, '@context');
-    if(!_isUndefined(ctx)) {
-      // Note: spec's `from term` var is named `isPropertyTermScopedContext`
-      termCtx = _processContext({
-        activeCtx,
-        localCtx: ctx,
-        isPropertyTermScopedContext: true,
-        options
-      });
+    if(ctx) {
+      termCtx = _processContext({activeCtx, localCtx: ctx, options});
     }
 
     const container = _getContextValue(termCtx, key, '@container') || [];
 
     if(container.includes('@language') && _isObject(value)) {
       // handle language map container (skip if value is not an object)
-      expandedValue = _expandLanguageMap(termCtx, value, options);
+      expandedValue = _expandLanguageMap(termCtx, value);
     } else if(container.includes('@index') && _isObject(value)) {
       // handle index container (skip if value is not an object)
       const asGraph = container.includes('@graph');
@@ -100238,7 +100047,7 @@ function _expandObject({
 
     // FIXME: can this be merged with code above to simplify?
     // merge in reverse properties
-    if(termCtx.mappings.has(key) && termCtx.mappings.get(key).reverse) {
+    if(termCtx.mappings[key] && termCtx.mappings[key].reverse) {
       const reverseMap =
         expandedParent['@reverse'] = expandedParent['@reverse'] || {};
       expandedValue = _asArray(expandedValue);
@@ -100270,7 +100079,7 @@ function _expandObject({
     const nestedValues = _isArray(element[key]) ? element[key] : [element[key]];
     for(const nv of nestedValues) {
       if(!_isObject(nv) || Object.keys(nv).some(k =>
-        _expandIri(activeCtx, k, {vocab: true}, options) === '@value')) {
+        _expandIri(activeCtx, k, {vocab: true}) === '@value')) {
         throw new JsonLdError(
           'Invalid JSON-LD syntax; nested value must be a node object.',
           'jsonld.SyntaxError',
@@ -100296,23 +100105,21 @@ function _expandObject({
  * @param activeCtx the active context to use.
  * @param activeProperty the active property the value is associated with.
  * @param value the value to expand.
- * @param {Object} [options] - processing options.
  *
  * @return the expanded value.
  */
-function _expandValue({activeCtx, activeProperty, value, options}) {
+function _expandValue({activeCtx, activeProperty, value}) {
   // nothing to expand
   if(value === null || value === undefined) {
     return null;
   }
 
   // special-case expand @id and @type (skips '@id' expansion)
-  const expandedProperty = _expandIri(
-    activeCtx, activeProperty, {vocab: true}, options);
+  const expandedProperty = _expandIri(activeCtx, activeProperty, {vocab: true});
   if(expandedProperty === '@id') {
-    return _expandIri(activeCtx, value, {base: true}, options);
+    return _expandIri(activeCtx, value, {base: true});
   } else if(expandedProperty === '@type') {
-    return _expandIri(activeCtx, value, {vocab: true, base: true}, options);
+    return _expandIri(activeCtx, value, {vocab: true, base: true});
   }
 
   // get type definition from context
@@ -100320,13 +100127,11 @@ function _expandValue({activeCtx, activeProperty, value, options}) {
 
   // do @id expansion (automatic for @graph)
   if((type === '@id' || expandedProperty === '@graph') && _isString(value)) {
-    return {'@id': _expandIri(activeCtx, value, {base: true}, options)};
+    return {'@id': _expandIri(activeCtx, value, {base: true})};
   }
   // do @id expansion w/vocab
   if(type === '@vocab' && _isString(value)) {
-    return {
-      '@id': _expandIri(activeCtx, value, {vocab: true, base: true}, options)
-    };
+    return {'@id': _expandIri(activeCtx, value, {vocab: true, base: true})};
   }
 
   // do not expand keyword values
@@ -100360,15 +100165,14 @@ function _expandValue({activeCtx, activeProperty, value, options}) {
  *
  * @param activeCtx the active context to use.
  * @param languageMap the language map to expand.
- * @param {Object} [options] - processing options.
  *
  * @return the expanded language map.
  */
-function _expandLanguageMap(activeCtx, languageMap, options) {
+function _expandLanguageMap(activeCtx, languageMap) {
   const rval = [];
   const keys = Object.keys(languageMap).sort();
   for(const key of keys) {
-    const expandedKey = _expandIri(activeCtx, key, {vocab: true}, options);
+    const expandedKey = _expandIri(activeCtx, key, {vocab: true});
     let val = languageMap[key];
     if(!_isArray(val)) {
       val = [val];
@@ -100402,7 +100206,7 @@ function _expandIndexMap(
   for(let key of keys) {
     // if indexKey is @type, there may be a context defined for it
     const ctx = _getContextValue(activeCtx, key, '@context');
-    if(!_isUndefined(ctx)) {
+    if(ctx) {
       activeCtx = _processContext({activeCtx, localCtx: ctx, options});
     }
 
@@ -100412,10 +100216,10 @@ function _expandIndexMap(
     }
 
     // expand for @type, but also for @none
-    const expandedKey = _expandIri(activeCtx, key, {vocab: true}, options);
+    const expandedKey = _expandIri(activeCtx, key, {vocab: true});
     if(indexKey === '@id') {
       // expand document relative
-      key = _expandIri(activeCtx, key, {base: true}, options);
+      key = _expandIri(activeCtx, key, {base: true});
     } else if(indexKey === '@type') {
       key = expandedKey;
     }
@@ -101829,8 +101633,7 @@ const JsonLdError = __webpack_require__(28);
 const {
   isArray: _isArray,
   isObject: _isObject,
-  isString: _isString,
-  isUndefined: _isUndefined
+  isString: _isString
 } = __webpack_require__(19);
 
 const {
@@ -101922,20 +101725,13 @@ api.compact = ({
 
   // use any scoped context on activeProperty
   const ctx = _getContextValue(activeCtx, activeProperty, '@context');
-  if(!_isUndefined(ctx)) {
-    // Note: spec's `from term` var is named `isPropertyTermScopedContext`
-    activeCtx = _processContext({
-      activeCtx,
-      localCtx: ctx,
-      isPropertyTermScopedContext: true,
-      options
-    });
+  if(ctx) {
+    activeCtx = _processContext({activeCtx, localCtx: ctx, options});
   }
 
   // recursively compact object
   if(_isObject(element)) {
-    if(options.link && '@id' in element &&
-      options.link.hasOwnProperty(element['@id'])) {
+    if(options.link && '@id' in element && element['@id'] in options.link) {
       // check for a linked element to reuse
       const linked = options.link[element['@id']];
       for(let i = 0; i < linked.length; ++i) {
@@ -101948,10 +101744,10 @@ api.compact = ({
     // do value compaction on @values and subject references
     if(_isValue(element) || _isSubjectReference(element)) {
       const rval =
-        api.compactValue({activeCtx, activeProperty, value: element, options});
+        api.compactValue({activeCtx, activeProperty, value: element});
       if(options.link && _isSubjectReference(element)) {
         // store linked element
-        if(!(options.link.hasOwnProperty(element['@id']))) {
+        if(!(element['@id'] in options.link)) {
           options.link[element['@id']] = [];
         }
         options.link[element['@id']].push({expanded: element, compacted: rval});
@@ -101966,7 +101762,7 @@ api.compact = ({
 
     if(options.link && '@id' in element) {
       // store linked element
-      if(!options.link.hasOwnProperty(element['@id'])) {
+      if(!(element['@id'] in options.link)) {
         options.link[element['@id']] = [];
       }
       options.link[element['@id']].push({expanded: element, compacted: rval});
@@ -101985,7 +101781,7 @@ api.compact = ({
 
       // Use any scoped context defined on this value
       const ctx = _getContextValue(activeCtx, compactedType, '@context');
-      if(!_isUndefined(ctx)) {
+      if(ctx) {
         activeCtx = _processContext({activeCtx, localCtx: ctx, options});
       }
     }
@@ -102030,8 +101826,8 @@ api.compact = ({
 
         // handle double-reversed properties
         for(const compactedProperty in compactedValue) {
-          if(activeCtx.mappings.has(compactedProperty) &&
-            activeCtx.mappings.get(compactedProperty).reverse) {
+          if(activeCtx.mappings[compactedProperty] &&
+            activeCtx.mappings[compactedProperty].reverse) {
             const value = compactedValue[compactedProperty];
             const container = _getContextValue(
               activeCtx, compactedProperty, '@container') || [];
@@ -102119,11 +101915,11 @@ api.compact = ({
           relativeTo: {vocab: true},
           reverse: insideReverse
         });
-        const nestProperty = activeCtx.mappings.has(itemActiveProperty) ?
-          activeCtx.mappings.get(itemActiveProperty)['@nest'] : null;
+        const nestProperty = (itemActiveProperty in activeCtx.mappings) ?
+          activeCtx.mappings[itemActiveProperty]['@nest'] : null;
         let nestResult = rval;
         if(nestProperty) {
-          _checkNestProperty(activeCtx, nestProperty, options);
+          _checkNestProperty(activeCtx, nestProperty);
           if(!_isObject(rval[nestProperty])) {
             rval[nestProperty] = {};
           }
@@ -102148,11 +101944,11 @@ api.compact = ({
 
         // if itemActiveProperty is a @nest property, add values to nestResult,
         // otherwise rval
-        const nestProperty = activeCtx.mappings.has(itemActiveProperty) ?
-          activeCtx.mappings.get(itemActiveProperty)['@nest'] : null;
+        const nestProperty = (itemActiveProperty in activeCtx.mappings) ?
+          activeCtx.mappings[itemActiveProperty]['@nest'] : null;
         let nestResult = rval;
         if(nestProperty) {
-          _checkNestProperty(activeCtx, nestProperty, options);
+          _checkNestProperty(activeCtx, nestProperty);
           if(!_isObject(rval[nestProperty])) {
             rval[nestProperty] = {};
           }
@@ -102206,7 +102002,7 @@ api.compact = ({
                 relativeTo: {vocab: true}
               })] = expandedItem['@index'];
             }
-          } else if(nestResult.hasOwnProperty(itemActiveProperty)) {
+          } else if(itemActiveProperty in nestResult) {
             // can't use @list container for more than 1 list
             throw new JsonLdError(
               'JSON-LD compact error; property has a "@list" @container ' +
@@ -102223,7 +102019,7 @@ api.compact = ({
             container.includes('@index') && _isSimpleGraph(expandedItem))) {
             // get or create the map object
             let mapObject;
-            if(nestResult.hasOwnProperty(itemActiveProperty)) {
+            if(itemActiveProperty in nestResult) {
               mapObject = nestResult[itemActiveProperty];
             } else {
               nestResult[itemActiveProperty] = mapObject = {};
@@ -102294,7 +102090,7 @@ api.compact = ({
           // handle language and index maps
           // get or create the map object
           let mapObject;
-          if(nestResult.hasOwnProperty(itemActiveProperty)) {
+          if(itemActiveProperty in nestResult) {
             mapObject = nestResult[itemActiveProperty];
           } else {
             nestResult[itemActiveProperty] = mapObject = {};
@@ -102558,7 +102354,7 @@ api.compactIri = ({
       if(iri.indexOf(vocab) === 0 && iri !== vocab) {
         // use suffix as relative iri if it is not a term in the active context
         const suffix = iri.substr(vocab.length);
-        if(!activeCtx.mappings.has(suffix)) {
+        if(!(suffix in activeCtx.mappings)) {
           return suffix;
         }
       }
@@ -102589,9 +102385,9 @@ api.compactIri = ({
       // 2. value is null, which means we're not compacting an @value, AND
       //   the mapping matches the IRI
       const curie = term + ':' + iri.substr(entry.iri.length);
-      const isUsableCurie = (activeCtx.mappings.get(term)._prefix &&
-        (!activeCtx.mappings.has(curie) ||
-        (value === null && activeCtx.mappings.get(curie)['@id'] === iri)));
+      const isUsableCurie = (activeCtx.mappings[term]._prefix &&
+        (!(curie in activeCtx.mappings) ||
+        (value === null && activeCtx.mappings[curie]['@id'] === iri)));
 
       // select curie if it is shorter or the same length but lexicographically
       // less than the current choice
@@ -102623,11 +102419,10 @@ api.compactIri = ({
  * @param activeCtx the active context.
  * @param activeProperty the active property that points to the value.
  * @param value the value to compact.
- * @param {Object} [options] - processing options.
  *
  * @return the compaction result.
  */
-api.compactValue = ({activeCtx, activeProperty, value, options}) => {
+api.compactValue = ({activeCtx, activeProperty, value}) => {
   // value is a @value
   if(_isValue(value)) {
     // get context rules
@@ -102656,8 +102451,8 @@ api.compactValue = ({activeCtx, activeProperty, value, options}) => {
       (keyCount === 2 && '@index' in value && !preserveIndex));
     const hasDefaultLanguage = ('@language' in activeCtx);
     const isValueString = _isString(value['@value']);
-    const hasNullMapping = (activeCtx.mappings.has(activeProperty) &&
-      activeCtx.mappings.get(activeProperty)['@language'] === null);
+    const hasNullMapping = (activeCtx.mappings[activeProperty] &&
+      activeCtx.mappings[activeProperty]['@language'] === null);
     if(isValueOnlyKey &&
       (!hasDefaultLanguage || !isValueString || hasNullMapping)) {
       return value['@value'];
@@ -102702,8 +102497,7 @@ api.compactValue = ({activeCtx, activeProperty, value, options}) => {
   }
 
   // value is a subject reference
-  const expandedProperty = _expandIri(activeCtx, activeProperty, {vocab: true},
-    options);
+  const expandedProperty = _expandIri(activeCtx, activeProperty, {vocab: true});
   const type = _getContextValue(activeCtx, activeProperty, '@type');
   const compacted = api.compactIri(
     {activeCtx, iri: value['@id'], relativeTo: {vocab: type === '@vocab'}});
@@ -102770,9 +102564,9 @@ api.removePreserve = (ctx, input, options) => {
       iri: '@id',
       relativeTo: {vocab: true}
     });
-    if(input.hasOwnProperty(idAlias)) {
+    if(idAlias in input) {
       const id = input[idAlias];
-      if(options.link.hasOwnProperty(id)) {
+      if(id in options.link) {
         const idx = options.link[id].indexOf(input);
         if(idx !== -1) {
           // already visited
@@ -102842,9 +102636,9 @@ function _selectTerm(
     // try to compact value to a term
     const term = api.compactIri(
       {activeCtx, iri: value['@id'], relativeTo: {vocab: true}});
-    if(activeCtx.mappings.has(term) &&
-      activeCtx.mappings.get(term) &&
-      activeCtx.mappings.get(term)['@id'] === value['@id']) {
+    if(term in activeCtx.mappings &&
+      activeCtx.mappings[term] &&
+      activeCtx.mappings[term]['@id'] === value['@id']) {
       // prefer @vocab
       prefs.push.apply(prefs, ['@vocab', '@id']);
     } else {
@@ -102886,10 +102680,9 @@ function _selectTerm(
  *
  * @param activeCtx the active context.
  * @param nestProperty a term in the active context or `@nest`.
- * @param {Object} [options] - processing options.
  */
-function _checkNestProperty(activeCtx, nestProperty, options) {
-  if(_expandIri(activeCtx, nestProperty, {vocab: true}, options) !== '@nest') {
+function _checkNestProperty(activeCtx, nestProperty) {
+  if(_expandIri(activeCtx, nestProperty, {vocab: true}) !== '@nest') {
     throw new JsonLdError(
       'JSON-LD compact error; nested property must have an @nest value ' +
       'resolving to @nest.',
@@ -103280,7 +103073,7 @@ module.exports = jsonld => {
 
 var pathModule = __webpack_require__(23);
 var isWindows = process.platform === 'win32';
-var fs = __webpack_require__(15);
+var fs = __webpack_require__(14);
 
 // JavaScript implementation of realpath, ported from node pre-v6
 
@@ -103862,7 +103655,7 @@ function range(a, b, str) {
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
-var fs = __webpack_require__(15)
+var fs = __webpack_require__(14)
 var rp = __webpack_require__(195)
 var minimatch = __webpack_require__(107)
 var Minimatch = minimatch.Minimatch
@@ -104445,8 +104238,7 @@ module.exports = {
 
 // **N3Store** objects store N3 quads by graph in memory.
 
-var DataFactory = __webpack_require__(61),
-    Readable = __webpack_require__(13).Readable;
+var DataFactory = __webpack_require__(61);
 var toId = DataFactory.internal.toId,
     fromId = DataFactory.internal.fromId;
 
@@ -104759,17 +104551,6 @@ class N3Store {
     return stream;
   }
 
-  // ### `removeMatches` removes all matching quads from the store
-  // Setting any field to `undefined` or `null` indicates a wildcard.
-  removeMatches(subject, predicate, object, graph) {
-    return this.remove(this.match(subject, predicate, object, graph));
-  }
-
-  // ### `deleteGraph` removes all triples with the given graph from the store
-  deleteGraph(graph) {
-    return this.removeMatches(null, null, null, graph);
-  }
-
   // ### `getQuads` returns an array of quads matching a pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getQuads(subject, predicate, object, graph) {
@@ -104817,25 +104598,6 @@ class N3Store {
       }
     }
     return quads;
-  }
-
-  // ### `match` returns a stream of quads matching a pattern.
-  // Setting any field to `undefined` or `null` indicates a wildcard.
-  match(subject, predicate, object, graph) {
-    var self = this;
-    var stream = new Readable({ objectMode: true });
-
-    // Initialize stream once it is being read
-    stream._read = function () {
-      stream._read = function () {};
-      var quads = self.getQuads(subject, predicate, object, graph);
-      for (var quad of quads) {
-        stream.push(quad);
-      }
-      stream.push(null);
-    };
-
-    return stream;
   }
 
   // ### `countQuads` returns the number of quads matching a pattern.
@@ -105155,7 +104917,7 @@ module.exports = N3Store;
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3StreamParser** parses a text stream into a quad stream.
-var Transform = __webpack_require__(13).Transform,
+var Transform = __webpack_require__(15).Transform,
     N3Parser = __webpack_require__(200);
 
 // ## Constructor
@@ -105204,7 +104966,7 @@ module.exports = N3StreamParser;
 /***/ (function(module, exports, __webpack_require__) {
 
 // **N3StreamWriter** serializes a quad stream into a text stream.
-var Transform = __webpack_require__(13).Transform,
+var Transform = __webpack_require__(15).Transform,
     N3Writer = __webpack_require__(201);
 
 // ## Constructor
