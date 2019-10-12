@@ -686,8 +686,10 @@ startActions:
     ;
 
 _QcodeDecl_E_Plus:
-      codeDecl	-> [$1] // t: startCode1
-    | _QcodeDecl_E_Plus codeDecl	-> appendTo($1, $2) // t: startCode3
+      codeDecl	-> [$1]
+// CONT  t: startCode1
+    | _QcodeDecl_E_Plus codeDecl	-> appendTo($1, $2)
+// CONT  t: startCode3
     ;
 
 statement:
@@ -819,7 +821,8 @@ _Q_O_QIT_OR_E_S_QinlineShapeAnd_E_C_E_Star:
     ;
 
 shapeAnd:
-      shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2) // t: @@
+      shapeNot _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
+// CONT  t: @@
     ;
 
 _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star:
@@ -828,7 +831,8 @@ _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Star:
     ;
 
 inlineShapeAnd:
-      inlineShapeNot _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2) // t: @@
+      inlineShapeNot _Q_O_QIT_AND_E_S_QinlineShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
+// CONT  t: @@
     ;
 
 _O_QIT_AND_E_S_QinlineShapeNot_E_C:
@@ -858,9 +862,12 @@ shapeAtom:
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint	
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
-        -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
-    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+        -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1
+// CONT  t:@@
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true})
+// CONT  t: 1val1vsMinusiri3
+    | '.'	-> EmptyShape
+// CONT  t: 1dot
     ;
 
 _QshapeOrRef_E_Opt:
@@ -878,9 +885,12 @@ shapeAtomNoRef:
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litNodeConstraint	
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
-	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
-    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	
+// CONT  t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true})
+// CONT  t: 1val1vsMinusiri3
+    | '.'	-> EmptyShape
+// CONT  t: 1dot
     ;
 
 inlineShapeAtom:
@@ -888,9 +898,12 @@ inlineShapeAtom:
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
     | litInlineNodeConstraint	
     | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
-        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
-    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+// CONT  t: !! look to 1dotRef1
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true})
+// CONT  t: 1val1vsMinusiri3
+    | '.'	-> EmptyShape
+// CONT  t: 1dot
     ;
 
 _QinlineShapeOrRef_E_Opt:
@@ -923,7 +936,8 @@ shapeRef:
         $1 = $1.substr(1, $1.length-1);
         $$ = addSourceMap(expandPrefix($1.substr(0, $1.length - 1), yy), yy); // ShapeRef
       }
-    | '@' shapeExprLabel	-> addSourceMap($2, yy) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> addSourceMap($2, yy)
+// CONT  ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 litNodeConstraint:
@@ -935,8 +949,10 @@ litNodeConstraint:
     ;
 
 _Qannotation_E_Star:
-      	-> [] // t: 1dot, 1dotAnnot3
-    | _Qannotation_E_Star annotation	-> appendTo($1, $2) // t: 1dotAnnot3
+      	-> []
+// CONT  t: 1dot, 1dotAnnot3
+    | _Qannotation_E_Star annotation	-> appendTo($1, $2)
+// CONT  t: 1dotAnnot3
     ;
 
 nonLitNodeConstraint:
@@ -948,7 +964,8 @@ nonLitNodeConstraint:
     ;
 
 litInlineNodeConstraint:
-      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2) // t: 1literalPattern
+      IT_LITERAL _QxsFacet_E_Star	-> extend({ type: "NodeConstraint", nodeKind: "literal" }, $2)
+// CONT  t: 1literalPattern
     | datatype _QxsFacet_E_Star	{
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
@@ -957,12 +974,14 @@ litInlineNodeConstraint:
           });
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
-    | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 } // t: 1val1IRIREF
+    | valueSet _QxsFacet_E_Star	-> { type: "NodeConstraint", values: $1 }
+// CONT  t: 1val1IRIREF
     | _QnumericFacet_E_Plus	-> extend({ type: "NodeConstraint"}, $1)
     ;
 
 _QxsFacet_E_Star:
-      	-> {} // t: 1literalPattern
+      	-> {}
+// CONT  t: 1literalPattern
     | _QxsFacet_E_Star xsFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
           error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
@@ -983,8 +1002,10 @@ _QnumericFacet_E_Plus:
 
 nonLitInlineNodeConstraint:
       nonLiteralKind _QstringFacet_E_Star	
-        -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {}) // t: 1iriPattern
-    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1) // t: @@
+        -> extend({ type: "NodeConstraint" }, $1, $2 ? $2 : {})
+// CONT  t: 1iriPattern
+    | _QstringFacet_E_Plus	-> extend({ type: "NodeConstraint" }, $1)
+// CONT  t: @@
     ;
 
 _QstringFacet_E_Star:
@@ -1008,9 +1029,12 @@ _QstringFacet_E_Plus:
     ;
 
 nonLiteralKind:
-      IT_IRI	-> { nodeKind: "iri" } // t: 1iriPattern
-    | IT_BNODE	-> { nodeKind: "bnode" } // t: 1bnodeLength
-    | IT_NONLITERAL	-> { nodeKind: "nonliteral" } // t: 1nonliteralLength
+      IT_IRI	-> { nodeKind: "iri" }
+// CONT  t: 1iriPattern
+    | IT_BNODE	-> { nodeKind: "bnode" }
+// CONT  t: 1bnodeLength
+    | IT_NONLITERAL	-> { nodeKind: "nonliteral" }
+// CONT  t: 1nonliteralLength
     ;
 
 xsFacet:
@@ -1019,19 +1043,26 @@ xsFacet:
     ;
 
 stringFacet:
-      stringLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalLength
-    | REGEXP	-> unescapeRegexp($1) // t: 1literalPattern
+      stringLength INTEGER	-> keyValObject($1, parseInt($2, 10))
+// CONT  t: 1literalLength
+    | REGEXP	-> unescapeRegexp($1)
+// CONT  t: 1literalPattern
     ;
 
 stringLength:
-      IT_LENGTH	-> "length" // t: 1literalLength
-    | IT_MINLENGTH	-> "minlength" // t: 1literalMinlength
-    | IT_MAXLENGTH	-> "maxlength" // t: 1literalMaxlength
+      IT_LENGTH	-> "length"
+// CONT  t: 1literalLength
+    | IT_MINLENGTH	-> "minlength"
+// CONT  t: 1literalMinlength
+    | IT_MAXLENGTH	-> "maxlength"
+// CONT  t: 1literalMaxlength
     ;
 
 numericFacet:
-      numericRange _rawNumeric	-> keyValObject($1, $2) // t: 1literalMininclusive
-    | numericLength INTEGER	-> keyValObject($1, parseInt($2, 10)) // t: 1literalTotaldigits
+      numericRange _rawNumeric	-> keyValObject($1, $2)
+// CONT  t: 1literalMininclusive
+    | numericLength INTEGER	-> keyValObject($1, parseInt($2, 10))
+// CONT  t: 1literalTotaldigits
     ;
 
 _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
@@ -1049,15 +1080,21 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
     ;
 
 numericRange:
-      IT_MININCLUSIVE	-> "mininclusive" // t: 1literalMininclusive
-    | IT_MINEXCLUSIVE	-> "minexclusive" // t: 1literalMinexclusive
-    | IT_MAXINCLUSIVE	-> "maxinclusive" // t: 1literalMaxinclusive
-    | IT_MAXEXCLUSIVE	-> "maxexclusive" // t: 1literalMaxexclusive
+      IT_MININCLUSIVE	-> "mininclusive"
+// CONT  t: 1literalMininclusive
+    | IT_MINEXCLUSIVE	-> "minexclusive"
+// CONT  t: 1literalMinexclusive
+    | IT_MAXINCLUSIVE	-> "maxinclusive"
+// CONT  t: 1literalMaxinclusive
+    | IT_MAXEXCLUSIVE	-> "maxexclusive"
+// CONT  t: 1literalMaxexclusive
     ;
 
 numericLength:
-      IT_TOTALDIGITS	-> "totaldigits" // t: 1literalTotaldigits
-    | IT_FRACTIONDIGITS	-> "fractiondigits" // t: 1literalFractiondigits
+      IT_TOTALDIGITS	-> "totaldigits"
+// CONT  t: 1literalTotaldigits
+    | IT_FRACTIONDIGITS	-> "fractiondigits"
+// CONT  t: 1literalFractiondigits
     ;
 
 shapeDefinition:
@@ -1078,9 +1115,12 @@ inlineShapeDefinition:
     ;
 
 _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      extension	-> [ "inherit", $1 ] // t: 1dotInherit1
-    | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
-    | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
+      extension	-> [ "inherit", $1 ]
+// CONT  t: 1dotInherit1
+    | extraPropertySet	-> [ "extra", $1 ]
+// CONT  t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
+    | IT_CLOSED	-> [ "closed", true ]
+// CONT  t: 1dotClosed
     ;
 
 _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
@@ -1104,12 +1144,15 @@ _QtripleExpression_E_Opt:
     ;
 
 extraPropertySet:
-      IT_EXTRA _Qpredicate_E_Plus	-> $2 // t: 1dotExtra1, 3groupdot3Extra
+      IT_EXTRA _Qpredicate_E_Plus	-> $2
+// CONT  t: 1dotExtra1, 3groupdot3Extra
     ;
 
 _Qpredicate_E_Plus:
-      predicate	-> [$1] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
-    | _Qpredicate_E_Plus predicate	-> appendTo($1, $2) // t: 3groupdotExtra3
+      predicate	-> [$1]
+// CONT  t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
+    | _Qpredicate_E_Plus predicate	-> appendTo($1, $2)
+// CONT  t: 3groupdotExtra3
     ;
 
 tripleExpression:
@@ -1122,16 +1165,20 @@ oneOfTripleExpr:
     ;
 
 multiElementOneOf:
-      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "OneOf", expressions: unionAll([$1], $2) } // t: 2oneOfdot
+      groupTripleExpr _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus	-> { type: "OneOf", expressions: unionAll([$1], $2) }
+// CONT  t: 2oneOfdot
     ;
 
 _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C:
-      '|' groupTripleExpr	-> $2 // t: 2oneOfdot
+      '|' groupTripleExpr	-> $2
+// CONT  t: 2oneOfdot
     ;
 
 _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus:
-      _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> [$1] // t: 2oneOfdot
-    | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2) // t: 2oneOfdot
+      _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> [$1]
+// CONT  t: 2oneOfdot
+    | _Q_O_QGT_PIPE_E_S_QgroupTripleExpr_E_C_E_Plus _O_QGT_PIPE_E_S_QgroupTripleExpr_E_C	-> appendTo($1, $2)
+// CONT  t: 2oneOfdot
     ;
 
 groupTripleExpr:
@@ -1150,17 +1197,22 @@ _QGT_SEMI_E_Opt:
     ;
 
 multiElementGroup:
-      unaryTripleExpr _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_SEMI_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) } // t: 2groupOfdot
+      unaryTripleExpr _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _QGT_SEMI_E_Opt	-> { type: "EachOf", expressions: unionAll([$1], $2) }
+// CONT  t: 2groupOfdot
     ;
 
 _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C:
-      ',' unaryTripleExpr	-> $2 // ## deprecated // t: 2groupOfdot
-    | ';' unaryTripleExpr	-> $2 // t: 2groupOfdot
+      ',' unaryTripleExpr	-> $2
+// CONT  ## deprecated // t: 2groupOfdot
+    | ';' unaryTripleExpr	-> $2
+// CONT  t: 2groupOfdot
     ;
 
 _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus:
-      _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> [$1] // t: 2groupOfdot
-    | _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2) // t: 2groupOfdot
+      _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> [$1]
+// CONT  t: 2groupOfdot
+    | _Q_O_QGT_SEMI_E_S_QunaryTripleExpr_E_C_E_Plus _O_QGT_SEMI_E_S_QunaryTripleExpr_E_C	-> appendTo($1, $2)
+// CONT  t: 2groupOfdot
     ;
 
 unaryTripleExpr:
@@ -1202,7 +1254,8 @@ bracketedTripleExpr:
     ;
 
 _Qcardinality_E_Opt:
-      	-> {} // t: 1dot
+      	-> {}
+// CONT  t: 1dot
     | cardinality	// t: 1cardOpt
     ;
 
@@ -1227,9 +1280,12 @@ _QsenseFlags_E_Opt:
     ;
 
 cardinality:
-      '*'	-> { min:0, max:UNBOUNDED } // t: 1cardStar
-    | '+'	-> { min:1, max:UNBOUNDED } // t: 1cardPlus
-    | '?'	-> { min:0, max:1 } // t: 1cardOpt
+      '*'	-> { min:0, max:UNBOUNDED }
+// CONT  t: 1cardStar
+    | '+'	-> { min:1, max:UNBOUNDED }
+// CONT  t: 1cardPlus
+    | '?'	-> { min:0, max:1 }
+// CONT  t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
         var nums = $1.match(/(\d+)/g);
@@ -1244,16 +1300,20 @@ cardinality:
     ;
 
 senseFlags:
-      '^'	-> { inverse: true } // t: 1inversedot
+      '^'	-> { inverse: true }
+// CONT  t: 1inversedot
     ;
 
 valueSet:
-      '[' _QvalueSetValue_E_Star ']'	-> $2 // t: 1val1IRIREF
+      '[' _QvalueSetValue_E_Star ']'	-> $2
+// CONT  t: 1val1IRIREF
     ;
 
 _QvalueSetValue_E_Star:
-      	-> [] // t: 1val1IRIREF
-    | _QvalueSetValue_E_Star valueSetValue	-> appendTo($1, $2) // t: 1val1IRIREF
+      	-> []
+// CONT  t: 1val1IRIREF
+    | _QvalueSetValue_E_Star valueSetValue	-> appendTo($1, $2)
+// CONT  t: 1val1IRIREF
     ;
 
 valueSetValue:
@@ -1264,18 +1324,24 @@ valueSetValue:
     ;
 
 _QiriExclusion_E_Plus:
-      iriExclusion	-> [$1] // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
-    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2) // t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+      iriExclusion	-> [$1]
+// CONT  t:1val1dotMinusiri3, 1val1dotMinusiriStem3
+    | _QiriExclusion_E_Plus iriExclusion	-> appendTo($1, $2)
+// CONT  t:1val1dotMinusiri3, 1val1dotMinusiriStem3
     ;
 
 _QliteralExclusion_E_Plus:
-      literalExclusion	-> [$1] // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
-    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2) // t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+      literalExclusion	-> [$1]
+// CONT  t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
+    | _QliteralExclusion_E_Plus literalExclusion	-> appendTo($1, $2)
+// CONT  t:1val1dotMinusliteral3, 1val1dotMinusliteralStem3
     ;
 
 _QlanguageExclusion_E_Plus:
-      languageExclusion	-> [$1] // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
-    | _QlanguageExclusion_E_Plus languageExclusion	-> appendTo($1, $2) // t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+      languageExclusion	-> [$1]
+// CONT  t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
+    | _QlanguageExclusion_E_Plus languageExclusion	-> appendTo($1, $2)
+// CONT  t:1val1dotMinuslanguage3, 1val1dotMinuslanguageStem3
     ;
 
 _O_QiriExclusion_E_Plus_Or_QliteralExclusion_E_Plus_Or_QlanguageExclusion_E_Plus_C:
@@ -1303,12 +1369,15 @@ iriRange:
     ;
 
 _QiriExclusion_E_Star:
-      	-> [] // t: 1val1iriStem, 1val1iriStemMinusiri3
-    | _QiriExclusion_E_Star iriExclusion	-> appendTo($1, $2) // t: 1val1iriStemMinusiri3
+      	-> []
+// CONT  t: 1val1iriStem, 1val1iriStemMinusiri3
+    | _QiriExclusion_E_Star iriExclusion	-> appendTo($1, $2)
+// CONT  t: 1val1iriStemMinusiri3
     ;
 
 _O_QGT_TILDE_E_S_QiriExclusion_E_Star_C:
-      '~' _QiriExclusion_E_Star	-> $2 // t: 1val1iriStemMinusiri3
+      '~' _QiriExclusion_E_Star	-> $2
+// CONT  t: 1val1iriStemMinusiri3
     ;
 
 _Q_O_QGT_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
@@ -1317,7 +1386,8 @@ _Q_O_QGT_TILDE_E_S_QiriExclusion_E_Star_C_E_Opt:
     ;
 
 iriExclusion:
-      '-' iri _QGT_TILDE_E_Opt	-> $3 ? { type: "IriStem", stem: $2 } /* t: 1val1iriStemMinusiriStem3 */ : $2 // t: 1val1iriStemMinusiri3
+      '-' iri _QGT_TILDE_E_Opt	-> $3 ? { type: "IriStem", stem: $2 } /* t: 1val1iriStemMinusiriStem3 */ : $2
+// CONT  t: 1val1iriStemMinusiri3
     ;
 
 _QGT_TILDE_E_Opt:
@@ -1341,12 +1411,15 @@ literalRange:
     ;
 
 _QliteralExclusion_E_Star:
-      	-> [] // t: 1val1literalStem, 1val1literalStemMinusliteral3
-    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2) // t: 1val1literalStemMinusliteral3
+      	-> []
+// CONT  t: 1val1literalStem, 1val1literalStemMinusliteral3
+    | _QliteralExclusion_E_Star literalExclusion	-> appendTo($1, $2)
+// CONT  t: 1val1literalStemMinusliteral3
     ;
 
 _O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C:
-      '~' _QliteralExclusion_E_Star	-> $2 // t: 1val1literalStemMinusliteral3
+      '~' _QliteralExclusion_E_Star	-> $2
+// CONT  t: 1val1literalStemMinusliteral3
     ;
 
 _Q_O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
@@ -1355,7 +1428,8 @@ _Q_O_QGT_TILDE_E_S_QliteralExclusion_E_Star_C_E_Opt:
     ;
 
 literalExclusion:
-      '-' literal _QGT_TILDE_E_Opt	-> $3 ? { type: "LiteralStem", stem: $2.value } /* t: 1val1literalStemMinusliteral3 */ : $2.value // t: 1val1literalStemMinusliteralStem3
+      '-' literal _QGT_TILDE_E_Opt	-> $3 ? { type: "LiteralStem", stem: $2.value } /* t: 1val1literalStemMinusliteral3 */ : $2.value
+// CONT  t: 1val1literalStemMinusliteralStem3
     ;
 
 languageRange:
@@ -1382,12 +1456,15 @@ languageRange:
     ;
 
 _QlanguageExclusion_E_Star:
-      	-> [] // t: 1val1languageStem, 1val1languageStemMinuslanguage3
-    | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2) // t: 1val1languageStemMinuslanguage3
+      	-> []
+// CONT  t: 1val1languageStem, 1val1languageStemMinuslanguage3
+    | _QlanguageExclusion_E_Star languageExclusion	-> appendTo($1, $2)
+// CONT  t: 1val1languageStemMinuslanguage3
     ;
 
 _O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C:
-      '~' _QlanguageExclusion_E_Star	-> $2 // t: 1val1languageStemMinuslanguage3
+      '~' _QlanguageExclusion_E_Star	-> $2
+// CONT  t: 1val1languageStemMinuslanguage3
     ;
 
 _Q_O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
@@ -1396,15 +1473,18 @@ _Q_O_QGT_TILDE_E_S_QlanguageExclusion_E_Star_C_E_Opt:
     ;
 
 languageExclusion:
-      '-' LANGTAG _QGT_TILDE_E_Opt	-> $3 ? { type: "LanguageStem", stem: $2 } /* t: 1val1languageStemMinuslanguageStem3 */ : $2 // t: 1val1languageStemMinuslanguage3
+      '-' LANGTAG _QGT_TILDE_E_Opt	-> $3 ? { type: "LanguageStem", stem: $2 } /* t: 1val1languageStemMinuslanguageStem3 */ : $2
+// CONT  t: 1val1languageStemMinuslanguage3
     ;
 
 include:
-      '&' tripleExprLabel	-> addSourceMap($2, yy) // Inclusion // t: 2groupInclude1
+      '&' tripleExprLabel	-> addSourceMap($2, yy)
+// CONT  Inclusion // t: 2groupInclude1
     ;
 
 annotation:
-      "//" predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 } // t: 1dotAnnotIRIREF
+      "//" predicate _O_Qiri_E_Or_Qliteral_E_C	-> { type: "Annotation", predicate: $2, object: $3 }
+// CONT  t: 1dotAnnotIRIREF
     ;
 
 _O_Qiri_E_Or_Qliteral_E_C:
@@ -1413,18 +1493,23 @@ _O_Qiri_E_Or_Qliteral_E_C:
     ;
 
 semanticActions:
-      _QcodeDecl_E_Star	-> $1.length ? { semActs: $1 } : null // t: 1dotCode1/2oneOfDot
+      _QcodeDecl_E_Star	-> $1.length ? { semActs: $1 } : null
+// CONT  t: 1dotCode1/2oneOfDot
     ;
 
 _QcodeDecl_E_Star:
-      	-> [] // t: 1dot, 1dotCode1
-    | _QcodeDecl_E_Star codeDecl	-> appendTo($1, $2) // t: 1dotCode1
+      	-> []
+// CONT  t: 1dot, 1dotCode1
+    | _QcodeDecl_E_Star codeDecl	-> appendTo($1, $2)
+// CONT  t: 1dotCode1
     ;
 
 codeDecl:
-     // XXX '%' CODE	-> unescapeSemanticAction("", $2) // t: 1dotUnlabeledCode1
+     // XXX '%' CODE	-> unescapeSemanticAction("", $2)
+// CONT  t: 1dotUnlabeledCode1
       '%' iri _O_QCODE_E_Or_QGT_MODULO_E_C	
-        -> $3 ? unescapeSemanticAction($2, $3) /* t: 1dotCode1 */ : { type: "SemAct", name: $2 } // t: 1dotNoCode1
+        -> $3 ? unescapeSemanticAction($2, $3) /* t: 1dotCode1 */ : { type: "SemAct", name: $2 }
+// CONT  t: 1dotNoCode1
     ;
 
 _O_QCODE_E_Or_QGT_MODULO_E_C:
@@ -1440,7 +1525,8 @@ literal:
 
 predicate:
       iri	// t: 1dot
-    | 'a'	-> RDF_TYPE // t: 1AvalA
+    | 'a'	-> RDF_TYPE
+// CONT  t: 1AvalA
     ;
 
 datatype:
@@ -1458,14 +1544,18 @@ tripleExprLabel:
     ;
 
 numericLiteral:
-      INTEGER	-> createLiteral($1, XSD_INTEGER) // t: 1val1INTEGER
-    | DECIMAL	-> createLiteral($1, XSD_DECIMAL) // t: 1val1DECIMAL
-    | DOUBLE	-> createLiteral($1, XSD_DOUBLE) // t: 1val1DOUBLE
+      INTEGER	-> createLiteral($1, XSD_INTEGER)
+// CONT  t: 1val1INTEGER
+    | DECIMAL	-> createLiteral($1, XSD_DECIMAL)
+// CONT  t: 1val1DECIMAL
+    | DOUBLE	-> createLiteral($1, XSD_DOUBLE)
+// CONT  t: 1val1DOUBLE
     ;
 
 rdfLiteral:
       langString	// t: 1val1STRING_LITERAL1
-    | string _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1 // t: 1val1Datatype
+    | string _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1
+// CONT  t: 1val1Datatype
     ;
 
 _O_QGT_DTYPE_E_S_Qdatatype_E_C:
@@ -1478,22 +1568,32 @@ _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt:
     ;
 
 booleanLiteral:
-      IT_true	-> { value: "true", type: XSD_BOOLEAN } // t: 1val1true
-    | IT_false	-> { value: "false", type: XSD_BOOLEAN } // t: 1val1false
+      IT_true	-> { value: "true", type: XSD_BOOLEAN }
+// CONT  t: 1val1true
+    | IT_false	-> { value: "false", type: XSD_BOOLEAN }
+// CONT  t: 1val1false
     ;
 
 string:
-      STRING_LITERAL1	-> unescapeString($1, 1)	// t: 1val1STRING_LITERAL2
-    | STRING_LITERAL_LONG1	-> unescapeString($1, 3)	// t: 1val1STRING_LITERAL1
-    | STRING_LITERAL2	-> unescapeString($1, 1)	// t: 1val1STRING_LITERAL_LONG2
-    | STRING_LITERAL_LONG2	-> unescapeString($1, 3)	// t: 1val1STRING_LITERAL_LONG1
+      STRING_LITERAL1	-> unescapeString($1, 1)	
+// CONT t: 1val1STRING_LITERAL2
+    | STRING_LITERAL_LONG1	-> unescapeString($1, 3)	
+// CONT t: 1val1STRING_LITERAL1
+    | STRING_LITERAL2	-> unescapeString($1, 1)	
+// CONT t: 1val1STRING_LITERAL_LONG2
+    | STRING_LITERAL_LONG2	-> unescapeString($1, 3)	
+// CONT t: 1val1STRING_LITERAL_LONG1
     ;
 
 langString:
-      LANG_STRING_LITERAL1	-> unescapeLangString($1, 1)	// t: @@
-    | LANG_STRING_LITERAL_LONG1	-> unescapeLangString($1, 3)	// t: @@
-    | LANG_STRING_LITERAL2	-> unescapeLangString($1, 1)	// t: 1val1LANGTAG
-    | LANG_STRING_LITERAL_LONG2	-> unescapeLangString($1, 3)	// t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
+      LANG_STRING_LITERAL1	-> unescapeLangString($1, 1)	
+// CONT t: @@
+    | LANG_STRING_LITERAL_LONG1	-> unescapeLangString($1, 3)	
+// CONT t: @@
+    | LANG_STRING_LITERAL2	-> unescapeLangString($1, 1)	
+// CONT t: 1val1LANGTAG
+    | LANG_STRING_LITERAL_LONG2	-> unescapeLangString($1, 3)	
+// CONT t: 1val1STRING_LITERAL_LONG2_with_LANGTAG
     ;
 
 iri:
@@ -1519,7 +1619,8 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C _QshapeExprLabel_E_Plus	-> $2
+// CONT  t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
@@ -1528,7 +1629,9 @@ _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
     ;
 
 _QshapeExprLabel_E_Plus:
-      shapeExprLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
-    | _QshapeExprLabel_E_Plus shapeExprLabel	-> appendTo($1, $2) // t: 1dotInherit3
+      shapeExprLabel	-> [$1]
+// CONT  t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+    | _QshapeExprLabel_E_Plus shapeExprLabel	-> appendTo($1, $2)
+// CONT  t: 1dotInherit3
     ;
 
