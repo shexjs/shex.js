@@ -12063,16 +12063,11 @@ api.cache = new ActiveContextCache();
  * @param options the context processing options.
  * @param isPropertyTermScopedContext `true` if `localCtx` is a scoped context
  *   from a property term.
- * @param isTypeScopedContext `true` if `localCtx` is a scoped context
- *   from a type.
  *
  * @return the new active context.
  */
-api.process = ({
-  activeCtx, localCtx, options,
-  isPropertyTermScopedContext = false,
-  isTypeScopedContext = false
-}) => {
+api.process = (
+  {activeCtx, localCtx, options, isPropertyTermScopedContext = false}) => {
   // normalize local context to an array of @context objects
   if(_isObject(localCtx) && '@context' in localCtx &&
     _isArray(localCtx['@context'])) {
@@ -12085,24 +12080,6 @@ api.process = ({
     return activeCtx;
   }
 
-  // track the previous context
-  const previousContext = activeCtx.previousContext || activeCtx;
-
-  // if context is property scoped and there's a previous context, amend it,
-  // not the current one
-  if(isPropertyTermScopedContext && activeCtx.previousContext) {
-    // TODO: consider optimizing to a shallow copy
-    activeCtx = activeCtx.clone();
-    activeCtx.isPropertyTermScoped = true;
-    activeCtx.previousContext = api.process({
-      activeCtx: activeCtx.previousContext,
-      localCtx: ctxs,
-      options,
-      isPropertyTermScopedContext
-    });
-    return activeCtx;
-  }
-
   // process each context in order, update active context
   // on each iteration to ensure proper caching
   let rval = activeCtx;
@@ -12111,6 +12088,15 @@ api.process = ({
 
     // update active context to one computed from last iteration
     activeCtx = rval;
+
+    // get context from cache if available
+    if(api.cache) {
+      const cached = api.cache.get(activeCtx, ctx);
+      if(cached) {
+        rval = activeCtx = cached;
+        continue;
+      }
+    }
 
     // reset to initial context
     if(ctx === null) {
@@ -12130,7 +12116,7 @@ api.process = ({
           console.warn('WARNING: invalid context nullification');
           const oldActiveCtx = activeCtx;
           // copy all protected term definitions to fresh initial context
-          rval = activeCtx = api.getInitialContext(options).clone();
+          rval = activeCtx = api.getInitialContext(options);
           for(const [term, _protected] of
             Object.entries(oldActiveCtx.protected)) {
             if(_protected) {
@@ -12152,21 +12138,8 @@ api.process = ({
           'jsonld.SyntaxError',
           {code: 'invalid protected mode', context: localCtx, protectedMode});
       }
-      rval = activeCtx = api.getInitialContext(options).clone();
-      // if context is type-scoped, ensure previous context has been set
-      if(isTypeScopedContext) {
-        rval.previousContext = previousContext.clone();
-      }
+      rval = activeCtx = api.getInitialContext(options);
       continue;
-    }
-
-    // get context from cache if available
-    if(api.cache) {
-      const cached = api.cache.get(activeCtx, ctx);
-      if(cached) {
-        rval = activeCtx = cached;
-        continue;
-      }
     }
 
     // dereference @context key if present
@@ -12180,9 +12153,6 @@ api.process = ({
         'Invalid JSON-LD syntax; @context must be an object.',
         'jsonld.SyntaxError', {code: 'invalid local context', context: ctx});
     }
-
-    // TODO: there is likely a `preivousContext` cloning optimization that
-    // could be applied here (no need to copy it under certain conditions)
 
     // clone context before updating it
     rval = rval.clone();
@@ -12282,13 +12252,7 @@ api.process = ({
     // process all other keys
     for(const key in ctx) {
       api.createTermDefinition(
-        rval, ctx, key, defined, options,
-        isPropertyTermScopedContext);
-    }
-
-    // if context is type-scoped, ensure previous context has been set
-    if(isTypeScopedContext && !rval.previousContext) {
-      rval.previousContext = previousContext.clone();
+        rval, ctx, key, defined, options, isPropertyTermScopedContext);
     }
 
     // cache result
@@ -12347,8 +12311,26 @@ api.createTermDefinition = (
       {code: 'invalid term definition', context: localCtx});
   }
 
-  // keep reference to previous mapping for potential `@protected` check
-  const previousMapping = activeCtx.mappings.get(term);
+  // FIXME if(1.1) ... ?
+  if(activeCtx.protected.hasOwnProperty(term) &&
+    !isPropertyTermScopedContext) {
+    const protectedMode = (options && options.protectedMode) || 'error';
+    if(protectedMode === 'error') {
+      throw new JsonLdError(
+        'Invalid JSON-LD syntax; tried to redefine a protected term.',
+        'jsonld.SyntaxError',
+        {code: 'protected term redefinition', context: localCtx, term});
+    } else if(protectedMode === 'warn') {
+      // FIXME: remove logging and use a handler
+      console.warn('WARNING: protected term redefinition', {term});
+      return;
+    }
+    throw new JsonLdError(
+      'Invalid protectedMode.',
+      'jsonld.SyntaxError',
+      {code: 'invalid protected mode', context: localCtx, term,
+        protectedMode});
+  }
 
   // remove old mapping
   if(activeCtx.mappings.has(term)) {
@@ -12503,7 +12485,6 @@ api.createTermDefinition = (
   if(value['@protected'] === true ||
     (defined.get('@protected') === true && value['@protected'] !== false)) {
     activeCtx.protected[term] = true;
-    mapping.protected = true;
   }
 
   // IRI mapping now defined
@@ -12513,7 +12494,7 @@ api.createTermDefinition = (
     let type = value['@type'];
     if(!_isString(type)) {
       throw new JsonLdError(
-        'Invalid JSON-LD syntax; an @context @type value must be a string.',
+        'Invalid JSON-LD syntax; an @context @type values must be a string.',
         'jsonld.SyntaxError',
         {code: 'invalid type mapping', context: localCtx});
     }
@@ -12532,7 +12513,7 @@ api.createTermDefinition = (
       }
       if(type.indexOf('_:') === 0) {
         throw new JsonLdError(
-          'Invalid JSON-LD syntax; an @context @type value must be an IRI, ' +
+          'Invalid JSON-LD syntax; an @context @type values must be an IRI, ' +
           'not a blank node identifier.',
           'jsonld.SyntaxError',
           {code: 'invalid type mapping', context: localCtx});
@@ -12671,33 +12652,6 @@ api.createTermDefinition = (
       'Invalid JSON-LD syntax; @context and @preserve cannot be aliased.',
       'jsonld.SyntaxError', {code: 'invalid keyword alias', context: localCtx});
   }
-
-  // FIXME if(1.1) ... ?
-  if(previousMapping && previousMapping.protected &&
-    !isPropertyTermScopedContext) {
-    // force new term to continue to be protected and see if the mappings would
-    // be equal
-    activeCtx.protected[term] = true;
-    mapping.protected = true;
-    if(!_deepCompare(previousMapping, mapping)) {
-      const protectedMode = (options && options.protectedMode) || 'error';
-      if(protectedMode === 'error') {
-        throw new JsonLdError(
-          'Invalid JSON-LD syntax; tried to redefine a protected term.',
-          'jsonld.SyntaxError',
-          {code: 'protected term redefinition', context: localCtx, term});
-      } else if(protectedMode === 'warn') {
-        // FIXME: remove logging and use a handler
-        console.warn('WARNING: protected term redefinition', {term});
-        return;
-      }
-      throw new JsonLdError(
-        'Invalid protectedMode.',
-        'jsonld.SyntaxError',
-        {code: 'invalid protected mode', context: localCtx, term,
-          protectedMode});
-    }
-  }
 };
 
 /**
@@ -12747,12 +12701,6 @@ function _expandIri(activeCtx, value, relativeTo, localCtx, defined, options) {
   if(localCtx && localCtx.hasOwnProperty(value) &&
     defined.get(value) !== true) {
     api.createTermDefinition(activeCtx, localCtx, value, defined, options);
-  }
-
-  // if context is from a property term scoped context composed with a
-  // type-scoped context, then use previous context instead
-  if(activeCtx.isPropertyTermScoped && activeCtx.previousContext) {
-    activeCtx = activeCtx.previousContext;
   }
 
   relativeTo = relativeTo || {};
@@ -12833,7 +12781,6 @@ api.getInitialContext = options => {
     inverse: null,
     getInverse: _createInverseContext,
     clone: _cloneActiveContext,
-    revertTypeScopedContext: _revertTypeScopedContext,
     protected: {}
   };
   // TODO: consider using LRU cache instead
@@ -13009,11 +12956,6 @@ api.getInitialContext = options => {
     child.inverse = null;
     child.getInverse = this.getInverse;
     child.protected = util.clone(this.protected);
-    if(this.previousContext) {
-      child.isPropertyTermScoped = this.previousContext.isPropertyTermScoped;
-      child.previousContext = this.previousContext.clone();
-    }
-    child.revertTypeScopedContext = this.revertTypeScopedContext;
     if('@language' in this) {
       child['@language'] = this['@language'];
     }
@@ -13021,17 +12963,6 @@ api.getInitialContext = options => {
       child['@vocab'] = this['@vocab'];
     }
     return child;
-  }
-
-  /**
-   * Reverts any type-scoped context in this active context to the previous
-   * context.
-   */
-  function _revertTypeScopedContext() {
-    if(!this.previousContext) {
-      return this;
-    }
-    return this.previousContext.clone();
   }
 };
 
@@ -13337,51 +13268,6 @@ function _findContextUrls(input, urls, replace, base) {
       }
     }
   }
-}
-
-function _deepCompare(x1, x2) {
-  // compare `null` or primitive types directly
-  if((!(x1 && typeof x1 === 'object')) ||
-     (!(x2 && typeof x2 === 'object'))) {
-    return x1 === x2;
-  }
-  // x1 and x2 are objects (also potentially arrays)
-  const x1Array = Array.isArray(x1);
-  if(x1Array !== Array.isArray(x2)) {
-    return false;
-  }
-  if(x1Array) {
-    if(x1.length !== x2.length) {
-      return false;
-    }
-    for(let i = 0; i < x1.length; ++i) {
-      if(!_deepCompare(x1[i], x2[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
-  // x1 and x2 are non-array objects
-  const k1s = Object.keys(x1);
-  const k2s = Object.keys(x2);
-  if(k1s.length !== k2s.length) {
-    return false;
-  }
-  for(const k1 in x1) {
-    let v1 = x1[k1];
-    let v2 = x2[k1];
-    // special case: `@container` can be in any order
-    if(k1 === '@container') {
-      if(Array.isArray(v1) && Array.isArray(v2)) {
-        v1 = v1.slice().sort();
-        v2 = v2.slice().sort();
-      }
-    }
-    if(!_deepCompare(v1, v2)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 
@@ -35549,10 +35435,13 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     }
     ShExJison.reset();
     errors.forEach(e => {
-      const hash = e.hash;
-      const location = hash.loc;
-      delete hash.loc;
-      Object.assign(e, hash, {location: location});
+      if ("hash" in e) {
+        const hash = e.hash;
+        const location = hash.loc;
+        delete hash.loc;
+        Object.assign(e, hash, {location: location});
+      }
+      return e;
     })
     if (errors.length == 1) {
       errors[0].parsed = ret;
@@ -52342,8 +52231,8 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var HierarchyClosure = (function () {
-  /**
-   * @@ should be its own package
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
    */
   function makeHierarchy () {
     let roots = {}
@@ -52352,8 +52241,8 @@ var HierarchyClosure = (function () {
     let holders = {}
     return {
       add: function (parent, child) {
-        if (parent in children && children[parent].indexOf(child) !== -1) {
-          // already seen
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
           return
         }
         let target = parent in holders
@@ -52362,9 +52251,7 @@ var HierarchyClosure = (function () {
         let value = getNode(child)
 
         target[child] = value
-        if (child in roots) {
-          delete roots[child]
-        }
+        delete roots[child]
 
         // // maintain hierarchy (direct and confusing)
         // children[parent] = children[parent].concat(child, children[child])
@@ -52376,9 +52263,13 @@ var HierarchyClosure = (function () {
         updateClosure(children, parents, child, parent)
         updateClosure(parents, children, parent, child)
         function updateClosure (container, members, near, far) {
-          container[far] = container[far].concat(near, container[near])
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
           container[near].forEach(
-            n => (members[n] = members[n].concat(far, members[far]))
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
           )
         }
 
@@ -52397,17 +52288,18 @@ var HierarchyClosure = (function () {
     }
   }
 
-  function walkHierarchy (n, f, p) {
+  function depthFirst (n, f, p) {
     return Object.keys(n).reduce((ret, k) => {
       return ret.concat(
-        walkHierarchy(n[k], f, k),
+        depthFirst(n[k], f, k),
         p ? f(k, p) : []) // outer invocation can have null parent
     }, [])
   }
 
-  return { create: makeHierarchy, walk: walkHierarchy }
+  return { create: makeHierarchy, depthFirst }
 })()
 
+/* istanbul ignore next */
 if (true) {
   module.exports = HierarchyClosure
 }
@@ -64896,7 +64788,7 @@ MemoryCookieStore.prototype.getAllCookies = function(cb) {
 /* 246 */
 /***/ (function(module) {
 
-module.exports = {"_from":"tough-cookie@~2.4.3","_id":"tough-cookie@2.4.3","_inBundle":false,"_integrity":"sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ==","_location":"/tough-cookie","_phantomChildren":{},"_requested":{"type":"range","registry":true,"raw":"tough-cookie@~2.4.3","name":"tough-cookie","escapedName":"tough-cookie","rawSpec":"~2.4.3","saveSpec":null,"fetchSpec":"~2.4.3"},"_requiredBy":["/jest-environment-jsdom/jsdom","/request","/request-promise","/request-promise-native"],"_resolved":"https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz","_shasum":"53f36da3f47783b0925afa06ff9f3b165280f781","_spec":"tough-cookie@~2.4.3","_where":"/home/eric/checkouts/shexSpec/shex.js/node_modules/request","author":{"name":"Jeremy Stashewsky","email":"jstash@gmail.com"},"bugs":{"url":"https://github.com/salesforce/tough-cookie/issues"},"bundleDependencies":false,"contributors":[{"name":"Alexander Savin"},{"name":"Ian Livingstone"},{"name":"Ivan Nikulin"},{"name":"Lalit Kapoor"},{"name":"Sam Thompson"},{"name":"Sebastian Mayr"}],"dependencies":{"psl":"^1.1.24","punycode":"^1.4.1"},"deprecated":false,"description":"RFC6265 Cookies and Cookie Jar for node.js","devDependencies":{"async":"^1.4.2","nyc":"^11.6.0","string.prototype.repeat":"^0.2.0","vows":"^0.8.1"},"engines":{"node":">=0.8"},"files":["lib"],"homepage":"https://github.com/salesforce/tough-cookie","keywords":["HTTP","cookie","cookies","set-cookie","cookiejar","jar","RFC6265","RFC2965"],"license":"BSD-3-Clause","main":"./lib/cookie","name":"tough-cookie","repository":{"type":"git","url":"git://github.com/salesforce/tough-cookie.git"},"scripts":{"cover":"nyc --reporter=lcov --reporter=html vows test/*_test.js","test":"vows test/*_test.js"},"version":"2.4.3"};
+module.exports = {"_args":[["tough-cookie@2.4.3","/home/eric/checkouts/shexSpec/shex.js"]],"_development":true,"_from":"tough-cookie@2.4.3","_id":"tough-cookie@2.4.3","_inBundle":false,"_integrity":"sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ==","_location":"/tough-cookie","_phantomChildren":{},"_requested":{"type":"version","registry":true,"raw":"tough-cookie@2.4.3","name":"tough-cookie","escapedName":"tough-cookie","rawSpec":"2.4.3","saveSpec":null,"fetchSpec":"2.4.3"},"_requiredBy":["/jest-environment-jsdom/jsdom","/request","/request-promise","/request-promise-native"],"_resolved":"https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.4.3.tgz","_spec":"2.4.3","_where":"/home/eric/checkouts/shexSpec/shex.js","author":{"name":"Jeremy Stashewsky","email":"jstash@gmail.com"},"bugs":{"url":"https://github.com/salesforce/tough-cookie/issues"},"contributors":[{"name":"Alexander Savin"},{"name":"Ian Livingstone"},{"name":"Ivan Nikulin"},{"name":"Lalit Kapoor"},{"name":"Sam Thompson"},{"name":"Sebastian Mayr"}],"dependencies":{"psl":"^1.1.24","punycode":"^1.4.1"},"description":"RFC6265 Cookies and Cookie Jar for node.js","devDependencies":{"async":"^1.4.2","nyc":"^11.6.0","string.prototype.repeat":"^0.2.0","vows":"^0.8.1"},"engines":{"node":">=0.8"},"files":["lib"],"homepage":"https://github.com/salesforce/tough-cookie","keywords":["HTTP","cookie","cookies","set-cookie","cookiejar","jar","RFC6265","RFC2965"],"license":"BSD-3-Clause","main":"./lib/cookie","name":"tough-cookie","repository":{"type":"git","url":"git://github.com/salesforce/tough-cookie.git"},"scripts":{"cover":"nyc --reporter=lcov --reporter=html vows test/*_test.js","test":"vows test/*_test.js"},"version":"2.4.3"};
 
 /***/ }),
 /* 247 */
@@ -97899,11 +97791,6 @@ module.exports = api;
  * @param element the element to expand.
  * @param options the expansion options.
  * @param insideList true if the element is a list, false if not.
- * @param insideIndex true if the element is inside an index container,
- *          false if not.
- * @param typeScopedContext an optional type-scoped active context for
- *          expanding values of nodes that were expressed according to
- *          a type-scoped context.
  * @param expansionMap(info) a function that can be used to custom map
  *          unmappable values (or to throw an error when they are detected);
  *          if this function returns `undefined` then the default behavior
@@ -97917,8 +97804,6 @@ api.expand = ({
   element,
   options = {},
   insideList = false,
-  insideIndex = false,
-  typeScopedContext = null,
   expansionMap = () => undefined
 }) => {
   // nothing to expand
@@ -97967,9 +97852,7 @@ api.expand = ({
         activeProperty,
         element: element[i],
         options,
-        expansionMap,
-        insideIndex,
-        typeScopedContext
+        expansionMap
       });
       if(insideList && (_isArray(e) || _isList(e))) {
         // lists of lists are illegal
@@ -98006,72 +97889,35 @@ api.expand = ({
 
   // recursively expand object:
 
-  // first, expand the active property
-  const expandedActiveProperty = _expandIri(
-    activeCtx, activeProperty, {vocab: true}, options);
-
-  // second, determine if any type-scoped context should be reverted; it
-  // should only be reverted when the following are all true:
-  // 1. `element` is not a value or subject reference
-  // 2. `insideIndex` is false
-  typeScopedContext = typeScopedContext ||
-    (activeCtx.previousContext ? activeCtx : null);
-  let keys = Object.keys(element).sort();
-  let mustRevert = !insideIndex;
-  if(mustRevert && typeScopedContext && keys.length <= 2 &&
-    !keys.includes('@context')) {
-    for(const key of keys) {
-      const expandedProperty = _expandIri(
-        typeScopedContext, key, {vocab: true}, options);
-      if(expandedProperty === '@value') {
-        // value found, ensure type-scoped context is used to expand it
-        mustRevert = false;
-        activeCtx = typeScopedContext;
-        break;
-      }
-      if(expandedProperty === '@id' && keys.length === 1) {
-        // subject reference found, do not revert
-        mustRevert = false;
-        break;
-      }
-    }
-  }
-
-  if(mustRevert) {
-    // revert type scoped context
-    activeCtx = activeCtx.revertTypeScopedContext();
-  }
-
   // if element has a context, process it
   if('@context' in element) {
     activeCtx = _processContext(
       {activeCtx, localCtx: element['@context'], options});
   }
 
-  // look for scoped contexts on `@type`
+  // look for scoped context on @type
+  let keys = Object.keys(element).sort();
   for(const key of keys) {
     const expandedProperty = _expandIri(activeCtx, key, {vocab: true}, options);
     if(expandedProperty === '@type') {
-      // set scoped contexts from @type
+      // set scopped contexts from @type
       // avoid sorting if possible
       const value = element[key];
       const types =
         Array.isArray(value) ?
           (value.length > 1 ? value.slice().sort() : value) : [value];
       for(const type of types) {
-        const ctx = _getContextValue(
-          activeCtx.previousContext || activeCtx, type, '@context');
+        const ctx = _getContextValue(activeCtx, type, '@context');
         if(!_isUndefined(ctx)) {
-          activeCtx = _processContext({
-            activeCtx,
-            localCtx: ctx,
-            options,
-            isTypeScopedContext: true
-          });
+          activeCtx = _processContext({activeCtx, localCtx: ctx, options});
         }
       }
     }
   }
+
+  // expand the active property
+  const expandedActiveProperty = _expandIri(
+    activeCtx, activeProperty, {vocab: true}, options);
 
   // process each key and value in element, ignoring @nest content
   let rval = {};
@@ -98083,7 +97929,6 @@ api.expand = ({
     expandedParent: rval,
     options,
     insideList,
-    typeScopedContext,
     expansionMap});
 
   // get property count on expanded output
@@ -98331,8 +98176,7 @@ function _expandObject({
         expandedParent, '@type',
         _asArray(value).map(v =>
           _isString(v) ?
-            _expandIri(activeCtx.previousContext || activeCtx, v,
-              {base: true, vocab: true}, options) : v),
+            _expandIri(activeCtx, v, {base: true, vocab: true}, options) : v),
         {propertyIsArray: options.isFrame});
       continue;
     }
@@ -98496,8 +98340,7 @@ function _expandObject({
     } else if(container.includes('@type') && _isObject(value)) {
       // handle type container (skip if value is not an object)
       expandedValue = _expandIndexMap({
-        // since container is `@type`, revert type scoped context when expanding
-        activeCtx: termCtx.revertTypeScopedContext(),
+        activeCtx: termCtx,
         options,
         activeProperty: key,
         value,
@@ -98738,19 +98581,11 @@ function _expandIndexMap(
     indexKey}) {
   const rval = [];
   const keys = Object.keys(value).sort();
-  const isTypeIndex = indexKey === '@type';
   for(let key of keys) {
     // if indexKey is @type, there may be a context defined for it
-    if(isTypeIndex) {
-      const ctx = _getContextValue(activeCtx, key, '@context');
-      if(!_isUndefined(ctx)) {
-        activeCtx = _processContext({
-          activeCtx,
-          localCtx: ctx,
-          isTypeScopedContext: true,
-          options
-        });
-      }
+    const ctx = _getContextValue(activeCtx, key, '@context');
+    if(!_isUndefined(ctx)) {
+      activeCtx = _processContext({activeCtx, localCtx: ctx, options});
     }
 
     let val = value[key];
@@ -98763,7 +98598,7 @@ function _expandIndexMap(
     if(indexKey === '@id') {
       // expand document relative
       key = _expandIri(activeCtx, key, {base: true}, options);
-    } else if(isTypeIndex) {
+    } else if(indexKey === '@type') {
       key = expandedKey;
     }
 
@@ -98773,7 +98608,6 @@ function _expandIndexMap(
       element: val,
       options,
       insideList: false,
-      insideIndex: true,
       expansionMap
     });
     for(let item of val) {
@@ -100312,9 +100146,6 @@ api.compact = ({
 
     const rval = {};
 
-    // revert type scoped context
-    activeCtx = activeCtx.revertTypeScopedContext();
-
     if(options.link && '@id' in element) {
       // store linked element
       if(!options.link.hasOwnProperty(element['@id'])) {
@@ -100330,22 +100161,14 @@ api.compact = ({
     if(types.length > 1) {
       types = Array.from(types).sort();
     }
-    // find all type-scoped contexts based on current context, prior to
-    // updating it
-    const typeContext = activeCtx;
     for(const type of types) {
       const compactedType = api.compactIri(
-        {activeCtx: typeContext, iri: type, relativeTo: {vocab: true}});
+        {activeCtx, iri: type, relativeTo: {vocab: true}});
 
-      // Use any type-scoped context defined on this value
-      const ctx = _getContextValue(typeContext, compactedType, '@context');
+      // Use any scoped context defined on this value
+      const ctx = _getContextValue(activeCtx, compactedType, '@context');
       if(!_isUndefined(ctx)) {
-        activeCtx = _processContext({
-          activeCtx,
-          localCtx: ctx,
-          options,
-          isTypeScopedContext: true
-        });
+        activeCtx = _processContext({activeCtx, localCtx: ctx, options});
       }
     }
 
@@ -100356,16 +100179,13 @@ api.compact = ({
 
       // compact @id and @type(s)
       if(expandedProperty === '@id' || expandedProperty === '@type') {
-        // if using a type-scoped context, resolve type values against previous
-        // context
-        const isType = expandedProperty === '@type';
-        const valueContext = isType ?
-          (activeCtx.previousContext || activeCtx) : activeCtx;
         let compactedValue = _asArray(expandedValue).map(
           expandedIri => api.compactIri({
-            activeCtx: valueContext,
+            activeCtx,
             iri: expandedIri,
-            relativeTo: {vocab: isType}
+            relativeTo: {
+              vocab: expandedProperty === '@type'
+            }
           }));
         if(compactedValue.length === 1) {
           compactedValue = compactedValue[0];
@@ -100754,12 +100574,6 @@ api.compactIri = ({
   // can't compact null
   if(iri === null) {
     return iri;
-  }
-
-  // if context is from a property term scoped context composed with a
-  // type-scoped context, then use the previous context instead
-  if(activeCtx.isPropertyTermScoped && activeCtx.previousContext) {
-    activeCtx = activeCtx.previousContext;
   }
 
   const inverseCtx = activeCtx.getInverse();
