@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/path",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "Shape Expressions Path Utilities.",
   "author": {
     "name": "Eric Prud'hommeaux",
