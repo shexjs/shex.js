@@ -35,6 +35,7 @@
     "@shexjs/extension-test": "file:extensions/shex-test",
     "@shexjs/loader": "file:packages/shex-loader",
     "@shexjs/parser": "file:packages/shex-parser",
+    "@shexjs/path": "file:packages/shex-path",
     "@shexjs/webapp": "file:packages/shex-webapp",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",

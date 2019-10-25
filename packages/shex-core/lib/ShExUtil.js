@@ -2191,7 +2191,7 @@ var ShExUtil = {
       return string;
     }
     catch (error) { console.warn(error); return ''; }
-  }
+  },
 
 };
 
