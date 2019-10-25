@@ -1,4 +1,6 @@
-var ShExUtil = require("@shexjs/core").Util;
+const ShExCore = require("@shexjs/core");
+const RdfTerm = ShExCore.RdfTerm;
+const ShExUtil = ShExCore.Util;
 
 const ShExPath = function (schema, const_iriResolver) {
     const navigation = new Map()

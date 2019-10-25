@@ -2,7 +2,8 @@ const VERBOSE = "VERBOSE" in process.env;
 const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
 const ShExParser = require("@shexjs/parser");
-const ShExUtil = require("@shexjs/core").Util;
+const RdfTerm = require("@shexjs/core").RdfTerm;
+const ShExPath = require("@shexjs/path");
 
 const fs = require('fs');
 const expect = require('chai').expect;
@@ -31,7 +32,7 @@ describe('Resolving ShExPaths', function () {
     const schema = test.from.endsWith(".json")
           ? JSON.parse(schemaStr)
           : parser.parse(schemaStr); parser._resetBlanks();
-    const shexPath = ShExUtil.shexPath(schema, {base: "base:/", prefixes: {"": "default:/", "x": "x:/"}})
+    const shexPath = ShExPath(schema, {base: "base:/", prefixes: {"": "default:/", "x": "x:/"}})
     const blurb = (VERBOSE ? schemaFile : test.from) +
           ' for ' + test.shexPath
     if (test.throws) {
