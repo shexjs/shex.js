@@ -342,6 +342,8 @@
 
   // Add a shape to the map
   function addShape (label, shape, yy) {
+    if (shape === EmptyShape)
+      shape = { type: "Shape" };
     if (Parser.productions && label in Parser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!Parser.shapes)

@@ -326,7 +326,7 @@ function ShExValidator_constructor(schema, options) {
         });
       }
       var results = shapeMap.reduce((ret, pair) => {
-        var res = this.validate(db, pair.node, pair.shape, tracker, seen);
+        var res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
