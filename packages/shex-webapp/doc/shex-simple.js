@@ -46,6 +46,7 @@ var Getables = [
 
 var QueryParams = Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
+  {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
 ]);
 
@@ -670,6 +671,23 @@ function callValidator (done) {
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
         // var dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
+
+        ret.forEach(entry => {
+          if (entry.status === "conformant") {
+            if ($("#success").val() === "query" || $("#success").val() === "remainder") {
+              var proofStore = new ShEx.N3.Store();
+              ShEx.Util.getProofGraph(entry.appinfo, proofStore, ShEx.N3.DataFactory);
+              entry.graph = proofStore.getQuads();
+            }
+            if ($("#success").val() === "remainder") {
+              var remainder = new ShEx.N3.Store();
+              remainder.addQuads(inputData.getQuads());
+              entry.graph.forEach(q => remainder.removeQuad(q));
+              entry.graph = remainder.getQuads();
+            }
+          }
+        });
+
         ret.forEach(renderEntry);
         // for debugging values and schema formats:
         // try {
@@ -762,24 +780,39 @@ function callValidator (done) {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
-    switch ($("#interface").val()) {
-    case "human":
-      elt = $("<div class='human'/>").append(
-        $("<span/>").text(resultStr),
-        $("<span/>").text(
-        `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
-        )).addClass(klass);
-      if (fails)
-        elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
-      break;
+    if (entry.graph) {
+      var wr = new ShEx.N3.Writer(Caches.inputData.meta);
+      wr.addQuads(entry.graph);
+      wr.end((error, results) => {
+        if (error)
+          throw error;
+        entry.turtle = ""
+          + "# node: " + entry.node + "\n"
+          + "# shape: " + entry.shape + "\n"
+          + results.trim();
+        elt = $("<pre/>").text(entry.turtle).addClass(klass);
+      });
+      delete entry.graph;
+    } else {
+      switch ($("#interface").val()) {
+      case "human":
+        elt = $("<div class='human'/>").append(
+          $("<span/>").text(resultStr),
+          $("<span/>").text(
+            `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
+          )).addClass(klass);
+        if (fails)
+          elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
+        break;
 
-    case "minimal":
-      if (fails)
-        entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
-      delete entry.appinfo;
-      // fall through to default
-    default:
-      elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
+      case "minimal":
+        if (fails)
+          entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
+        delete entry.appinfo;
+        // fall through to default
+      default:
+        elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
+      }
     }
     results.append(elt);
 
@@ -948,6 +981,7 @@ function removeEditMapPair (evt) {
 function prepareControls () {
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
+  $("#success").on("change", setInterface);
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);

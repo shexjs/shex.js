@@ -31464,6 +31464,50 @@ var ShExUtil = {
     return parsed;
   },
 
+  getProofGraph: function (res, db, dataFactory) {
+    function _dive1 (solns) {
+      if (solns.type === "SolutionList" ||
+          solns.type === "ShapeOrResults" ||
+          solns.type === "ShapeAndResults") {
+        solns.solutions.forEach(s => {
+          if (s.solution) // no .solution for <S> {}
+            _dive1(s.solution);
+        });
+      } else if (solns.type === "ShapeTest") {
+        _dive1(solns.solution);
+      } else if (solns.type === "OneOfSolutions" ||
+                 solns.type === "EachOfSolutions") {
+        solns.solutions.forEach(s => {
+          _dive1(s);
+        });
+      } else if (solns.type === "OneOfSolution" ||
+                 solns.type === "EachOfSolution") {
+        solns.expressions.forEach(s => {
+          _dive1(s);
+        });
+      } else if (solns.type === "TripleConstraintSolutions") {
+        solns.solutions.map(s => {
+          if (s.type !== "TestedTriple")
+            throw Error("unexpected result type: " + s.type);
+          var s2 = s;
+          if (typeof s2.object === "object")
+            s2.object = "\"" + s2.object.value.replace(/"/g, "\\\"") + "\""
+            + (s2.object.language ? ("@" + s2.object.language) : 
+               s2.object.type ? ("^^" + s2.object.type) :
+               "");
+          db.addQuad(RdfTerm.externalTriple(s2, dataFactory))
+          if ("referenced" in s) {
+            _dive1(s.referenced);
+          }
+        });
+      } else {
+        throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
+      }
+    }
+    _dive1(res);
+    return db;
+  },
+
   validateSchema: function (schema) { // obselete, but may need other validations in the future.
     var _ShExUtil = this;
     var visitor = this.Visitor();
@@ -33451,7 +33495,7 @@ function vpEngine (schema, shape, index) {
                 err.errors = sub;
                 return [err];
               }
-              if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
                   sub.type === "Recursion")
                 ret.referenced = sub; // !!! needs to aggregate errors and solutions
               return [];
@@ -51663,7 +51707,7 @@ var NFAXVal1Err = (function () {
                 err.referencedShape = shape;
               return [err];
             }
-            if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+            if (("solution" in sub || "solutions" in sub) && Object.keys(sub.solution).length !== 0 ||
                 sub.type === "Recursion")
               ret.referenced = sub; // !!! needs to aggregate errors and solutions
             return [];
