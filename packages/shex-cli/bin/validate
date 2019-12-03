@@ -283,7 +283,11 @@ function findNodesAndValidate (loaded, parms, options) {
   if (typeof ret.results === 'object' && !("errors" in ret.results)) {
     if (cmds.query || cmds.remainder) {
       ret.results.graph = new N3.Store();
-      ShExUtil.getProofGraph(ret.results.solution, ret.results.graph, N3.DataFactory);
+
+      // Test for .solution because `<S> .` or `<S> {}` will pass with no sollutions.
+      // This is analogous to testing for `("referenced" in s)` in a TestedTriple.
+      if ("solution" in ret.results)
+        ShExUtil.getProofGraph(ret.results.solution, ret.results.graph, N3.DataFactory);
     }
     if (cmds.remainder) {
       var remainder = new N3.Store();
