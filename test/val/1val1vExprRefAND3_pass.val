@@ -16,45 +16,48 @@
         "predicate": "http://a.example/p1",
         "object": { "value": "abab" },
         "referenced": {
+          "type": "ShapeAndResults",
           "solutions": [
             {
+              "type": "NodeTest",
               "node": {
                 "value": "abab"
               },
               "shape": "http://a.example/vc1",
               "shapeExpr": {
-                "minlength": 4,
+                "type": "NodeConstraint",
                 "nodeKind": "literal",
-                "type": "NodeConstraint"
-              },
-              "type": "NodeTest"
+                "minlength": 4,
+                "id": "http://a.example/vc1"
+              }
             },
             {
+              "type": "NodeTest",
               "node": {
                 "value": "abab"
               },
               "shape": "http://a.example/vc2",
               "shapeExpr": {
-                "maxlength": 5,
+                "type": "NodeConstraint",
                 "nodeKind": "literal",
-                "type": "NodeConstraint"
-              },
-              "type": "NodeTest"
+                "maxlength": 5,
+                "id": "http://a.example/vc2"
+              }
             },
             {
+              "type": "NodeTest",
               "node": {
                 "value": "abab"
               },
               "shape": "http://a.example/vc3",
               "shapeExpr": {
+                "type": "NodeConstraint",
                 "nodeKind": "literal",
                 "pattern": "^(ab)+$",
-                "type": "NodeConstraint"
-              },
-              "type": "NodeTest"
+                "id": "http://a.example/vc3"
+              }
             }
-          ],
-          "type": "ShapeAndResults"
+          ]
         }
       }
     ]

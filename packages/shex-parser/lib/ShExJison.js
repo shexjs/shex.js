@@ -392,10 +392,10 @@ case 123:
 this.$ = keyValObject($$[$0-1], parseInt($$[$0], 10)) // t: 1literalTotaldigits;
 break;
 case 124:
-this.$ = parseInt($$[$0], 10);;
+this.$ = parseInt($$[$0], 10);
 break;
 case 125: case 126:
-this.$ = parseFloat($$[$0]);;
+this.$ = parseFloat($$[$0]);
 break;
 case 127:
  // ## deprecated
@@ -710,7 +710,7 @@ case 227:
 this.$ = { type: "Annotation", predicate: $$[$0-1], object: $$[$0] } // t: 1dotAnnotIRIREF;
 break;
 case 230:
-this.$ = $$[$0].length ? { semActs: $$[$0] } : null; // t: 1dotCode1/2oneOfDot;
+this.$ = $$[$0].length ? { semActs: $$[$0] } : null // t: 1dotCode1/2oneOfDot;
 break;
 case 231:
 this.$ = [] // t: 1dot, 1dotCode1;
@@ -734,7 +734,7 @@ case 248:
 this.$ = createLiteral($$[$0], XSD_DOUBLE) // t: 1val1DOUBLE;
 break;
 case 250:
-this.$ = $$[$0] ? extend($$[$0-1], { type: $$[$0] }) : $$[$0-1]; // t: 1val1Datatype;
+this.$ = $$[$0] ? extend($$[$0-1], { type: $$[$0] }) : $$[$0-1] // t: 1val1Datatype;
 break;
 case 254:
 this.$ = { value: "true", type: XSD_BOOLEAN } // t: 1val1true;
@@ -1262,6 +1262,8 @@ parse: function parse(input) {
 
   // Add a shape to the map
   function addShape (label, shape, yy) {
+    if (shape === EmptyShape)
+      shape = { type: "Shape" };
     if (Parser.productions && label in Parser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!Parser.shapes)

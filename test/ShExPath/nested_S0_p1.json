@@ -1,0 +1,7 @@
+[
+          {
+            "type": "TripleConstraint",
+            "predicate": "base:/p1",
+            "valueExpr": "base:/S1"
+          }
+]
