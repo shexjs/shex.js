@@ -1,6 +1,6 @@
 {
   "name": "shape-map",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.7",
   "description": "RDF Node/ShEx Shape mapping format.",
   "author": {
     "name": "Eric Prud'hommeaux",
