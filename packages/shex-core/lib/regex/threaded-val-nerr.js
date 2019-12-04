@@ -343,8 +343,35 @@ function vpEngine (schema, shape, index) {
             var ret = {
               type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
             };
-            var subErrors = [];
-            if ("semActs" in expr && !semActHandler.dispatchAll(expr.semActs, t, ret))
+            function diver (focus, shapeLabel, dive) {
+              var sub = dive(focus, shapeLabel);
+              if ("errors" in sub) {
+                // console.dir(sub);
+                var err = {
+                  type: "ReferenceError", focus: focus,
+                  shape: shapeLabel
+                };
+                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                  err.referencedShape = shape;
+                err.errors = sub;
+                return [err];
+              }
+              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
+                  sub.type === "Recursion")
+                ret.referenced = sub; // !!! needs to aggregate errors and solutions
+              return [];
+            }
+            function diveRecurse (focus, shapeLabel) {
+              return diver(focus, shapeLabel, recurse);
+            }
+            function diveDirect (focus, shapeLabel) {
+              return diver(focus, shapeLabel, direct);
+            }
+            var subErrors = "valueExpr" in expr ?
+                checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
+                [];
+            if (subErrors.length === 0 && "semActs" in expr &&
+                !semActHandler.dispatchAll(expr.semActs, t, ret))
               subErrors.push({
                 type: "SemActFailure",
                 errors: [{

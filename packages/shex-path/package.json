@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/core",
+  "name": "@shexjs/path",
   "version": "1.0.0-alpha.6",
-  "description": "Shape Expressions validation and utilities.",
+  "description": "Shape Expressions Path Utilities.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,16 +15,16 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-core.js",
+  "main": "./shex-path.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "hierarchy-closure": "^1.2.1"
+    "@shexjs/core": "file:../shex-core"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-core-browserify.js && uglifyjs browser/shex-core-browserify.js --comments -mco browser/shex-core-browserify.min.js"
+    "browser": "browserify shex.js -s ShEx -o browser/shex-path-browserify.js && uglifyjs browser/shex-path-browserify.js --comments -mco browser/shex-path-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"
