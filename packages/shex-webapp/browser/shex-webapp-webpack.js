@@ -52775,33 +52775,6 @@ var NFAXVal1Err = (function () {
             ret.language = lang;
           return ret;
         }
-/*
-          function diver (focus, shape, dive) {
-            var sub = dive(focus, shape);
-            if ("errors" in sub) {
-              // console.dir(sub);
-              var err = {
-                type: "ReferenceError", focus: focus,
-                shape: shape, errors: sub
-              };
-              if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
-                err.referencedShape = shape;
-              return [err];
-            }
-            if (("solution" in sub || "solutions" in sub) && Object.keys(sub.solution || sub.solutions).length !== 0 ||
-                sub.type === "Recursion")
-              ret.referenced = sub; // !!! needs to aggregate errors and solutions
-            return [];
-          }
-          function diveRecurse (focus, shapeLabel) {
-            return diver(focus, shapeLabel, recurse);
-          }
-          function diveDirect (focus, shapeLabel) {
-            return diver(focus, shapeLabel, direct);
-          }
-          if ("valueExpr" in ptr)
-            errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
-*/
           var constraintNo = constraintList.indexOf(m.c);
                       var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
                       if (hit.res && Object.keys(hit.res).length > 0)
