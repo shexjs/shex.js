@@ -1242,15 +1242,18 @@ var ShExUtil = {
 
   getProofGraph: function (res, db, dataFactory) {
     function _dive1 (solns) {
-      if (solns.type === "SolutionList" ||
-          solns.type === "ShapeOrResults" ||
+      if (solns.type === "NodeTest" || solns.type === "NodeConstraintTest") {
+      } else if (solns.type === "SolutionList" ||
           solns.type === "ShapeAndResults") {
         solns.solutions.forEach(s => {
           if (s.solution) // no .solution for <S> {}
             _dive1(s.solution);
         });
-      } else if (solns.type === "ShapeTest") {
+      } else if (solns.type === "ShapeOrResults") {
         _dive1(solns.solution);
+      } else if (solns.type === "ShapeTest") {
+        if ("solution" in solns)
+          _dive1(solns.solution);
       } else if (solns.type === "OneOfSolutions" ||
                  solns.type === "EachOfSolutions") {
         solns.solutions.forEach(s => {
