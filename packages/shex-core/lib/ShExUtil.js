@@ -758,11 +758,8 @@ var ShExUtil = {
       if (shape.type === 'Shape') {
         if ('extends' in shape) {
           shape.extends.forEach(
-            parent => {
-              if (parent.type === 'ShapeRef') { // !!! assumes simple reference, not e.g. AND
-                noteReference(parent.reference, shape)
-              }
-            }
+             // !!! assumes simple reference, not e.g. AND
+            parent => noteReference(parent, shape)
           )
         }
         if ('expression' in shape) {
