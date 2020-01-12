@@ -421,6 +421,8 @@ var ShExUtil = {
 
   AStoShExJ: function (schema, abbreviate) {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
+    delete schema["_index"];
+    delete schema["_prefixes"];
     return schema;
   },
 
@@ -842,9 +844,21 @@ var ShExUtil = {
       shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
       index.shapeExprs = shapesCopy
       } else {
+        const doomed = []
+        const ids = schema.shapes.map(s => s.id)
         Object.keys(nestables).forEach(oldName => {
           shapeReferences[oldName][0].tc.valueExpr = index.shapeExprs[oldName].shapeExpr
+          const delme = ids.indexOf(oldName)
+          if (schema.shapes[delme].id !== oldName)
+            throw Error('assertion: found ' + schema.shapes[delme].id + ' instead of ' + oldName)
+          doomed.push(delme)
           delete index.shapeExprs[oldName]
+        })
+        doomed.sort((l, r) => r - l).forEach(delme => {
+          const id = schema.shapes[delme].id
+          if (!nestables[id])
+            throw Error('deleting unexpected shape ' + id)
+          schema.shapes.splice(delme, 1)
         })
       }
     }
