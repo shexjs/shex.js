@@ -23,6 +23,7 @@
     "@shexjs/core": "file:../shex-core",
     "jsonld": "^1.5.4",
     "n3": "^1.0.4",
+    "request-promise": "^4.2.5",
     "shape-map": "file:../shape-map"
   },
   "scripts": {
