@@ -565,8 +565,8 @@ var ShExUtil = {
    */
   index: function (schema) {
     let index = {
-      shapeExprs: new Map(),
-      tripleExprs: new Map()
+      shapeExprs: {},
+      tripleExprs: {}
     };
     let v = ShExUtil.Visitor();
 
