@@ -449,13 +449,17 @@ function ShExValidator_constructor(schema, options) {
           return { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
       var passes = [];
+      var errors = [];
       for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         var nested = shapeExpr.shapeExprs[i];
         var sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen);
         if ("errors" in sub)
-          return { type: "ShapeAndFailure", errors: [sub] };
+          errors.push(sub);
         else
           passes.push(sub);
+      }
+      if (errors.length > 0) {
+        return  { type: "ShapeAndFailure", errors: errors};
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else
@@ -547,7 +551,7 @@ function ShExValidator_constructor(schema, options) {
 
     var xp = crossProduct(tripleList.constraintList);
     var partitionErrors = [];
-    while (misses.length === 0 && xp.next() && ret === null) {
+    while (xp.next()) {
       // caution: early continues
 
       var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
