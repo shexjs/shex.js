@@ -551,7 +551,7 @@ function ShExValidator_constructor(schema, options) {
 
     var xp = crossProduct(tripleList.constraintList);
     var partitionErrors = [];
-    while (xp.next()) {
+    while ((misses.length === 0 || this.options.partition !== "greedy") && xp.next() && ret === null) {
       // caution: early continues
 
       var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
@@ -599,7 +599,7 @@ function ShExValidator_constructor(schema, options) {
 
       tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
         return i !== undefined;
-      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
+      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3
 
       function _recurse (point, shapeLabel) {
         return _ShExValidator.validate(db, point, shapeLabel, tracker, seen);
@@ -646,23 +646,25 @@ function ShExValidator_constructor(schema, options) {
       // @@ add to tracker: f("final " + usedTriples.join(" "));
 
       ret = possibleRet;
+      partitionErrors = [];
       // alts.push(tripleToConstraintMapping);
     }
-    if (ret === null/* !! && this.options.diagnose */) {
-      var missErrors = misses.map(function (miss) {
-        var t = neighborhood[miss.tripleNo];
-        return {
-          type: "TypeMismatch",
-          triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
-          constraint: constraintList[miss.constraintNo],
-          errors: miss.errors
-        };
-      });
+    var missErrors = misses.map(function (miss) {
+      var t = neighborhood[miss.tripleNo];
+      return {
+        type: "TypeMismatch",
+        triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+        constraint: constraintList[miss.constraintNo],
+        errors: miss.errors
+      };
+    });
+    let errors = missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors);
+    if (errors.length > 0) {
       ret = {
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
-        errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
+        errors: errors
       };
     }
 
