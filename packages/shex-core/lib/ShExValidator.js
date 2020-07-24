@@ -545,13 +545,17 @@ function ShExValidator_constructor(schema, options) {
           return { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
       var passes = [];
+      var errors = [];
       for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         var nested = shapeExpr.shapeExprs[i];
         var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, tracker, seen, subgraph);
         if ("errors" in sub)
-          return { type: "ShapeAndFailure", errors: [sub] };
+          errors.push(sub);
         else
           passes.push(sub);
+      }
+      if (errors.length > 0) {
+        return  { type: "ShapeAndFailure", errors: errors};
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else
@@ -710,7 +714,7 @@ function ShExValidator_constructor(schema, options) {
 
       tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
         return i !== undefined;
-      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
+      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3
 
       var results = passScoped(shape, extendsToTriples, valParms);
       if (results === null || !("errors" in results)) {
@@ -752,6 +756,7 @@ function ShExValidator_constructor(schema, options) {
       // @@ add to tracker: f("final " + usedTriples.join(" "));
 
       ret = possibleRet;
+      partitionErrors = [];
       // alts.push(tripleToConstraintMapping);
 
       function passScoped (expr, extendsToTriples, valParms) {
@@ -773,21 +778,22 @@ function ShExValidator_constructor(schema, options) {
       }
 
     }
-    if (ret === null/* !! && this.options.diagnose */) {
-      var missErrors = misses.map(function (miss) {
-        var t = neighborhood[miss.tripleNo];
-        return {
-          type: "TypeMismatch",
-          triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
-          constraint: constraintList[miss.constraintNo],
-          errors: miss.errors
-        };
-      });
+    var missErrors = misses.map(function (miss) {
+      var t = neighborhood[miss.tripleNo];
+      return {
+        type: "TypeMismatch",
+        triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+        constraint: constraintList[miss.constraintNo],
+        errors: miss.errors
+      };
+    });
+    let errors = missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors);
+    if (errors.length > 0) {
       ret = {
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
-        errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
+        errors: errors
       };
     }
 
