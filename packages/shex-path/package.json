@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/loader",
+  "name": "@shexjs/path",
   "version": "1.0.0-alpha.6",
-  "description": "Shape Expressions resource loader.",
+  "description": "Shape Expressions Path Utilities.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,20 +15,16 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-loader.js",
+  "main": "./shex-path.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/core": "file:../shex-core",
-    "jsonld": "^1.5.4",
-    "n3": "^1.0.4",
-    "request-promise": "^4.2.5",
-    "shape-map": "file:../shape-map"
+    "@shexjs/core": "file:../shex-core"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-loader-browserify.js && uglifyjs browser/shex-loader-browserify.js --comments -mco browser/shex-loader-browserify.min.js"
+    "browser": "browserify shex.js -s ShEx -o browser/shex-path-browserify.js && uglifyjs browser/shex-path-browserify.js --comments -mco browser/shex-path-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"

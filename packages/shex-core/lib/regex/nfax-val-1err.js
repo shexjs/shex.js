@@ -560,7 +560,7 @@ var NFAXVal1Err = (function () {
                 err.referencedShape = shape;
               return [err];
             }
-            if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+            if (("solution" in sub || "solutions" in sub) && Object.keys(sub.solution || sub.solutions).length !== 0 ||
                 sub.type === "Recursion")
               ret.referenced = sub; // !!! needs to aggregate errors and solutions
             return [];

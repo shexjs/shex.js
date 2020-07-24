@@ -447,6 +447,8 @@ var ShExUtil = {
 
   AStoShExJ: function (schema, abbreviate) {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
+    delete schema["_index"];
+    delete schema["_prefixes"];
     return schema;
   },
 
@@ -606,8 +608,8 @@ var ShExUtil = {
    */
   index: function (schema) {
     let index = {
-      shapeExprs: new Map(),
-      tripleExprs: new Map()
+      shapeExprs: {},
+      tripleExprs: {}
     };
     let v = ShExUtil.Visitor();
 
@@ -787,6 +789,9 @@ var ShExUtil = {
       label => shapeReferences[label].length === 1
         && shapeReferences[label][0].type === 'tc' // no inheritance support yet
         && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now
+    ).filter(
+      nestable => !('noNestPattern' in options)
+        || !nestable.match(RegExp(options.noNestPattern))
     ).reduce((acc, label) => {
       acc[label] = {
         referrer: shapeReferences[label][0].shapeLabel,
@@ -847,9 +852,21 @@ var ShExUtil = {
       shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
       index.shapeExprs = shapesCopy
       } else {
+        const doomed = []
+        const ids = schema.shapes.map(s => s.id)
         Object.keys(nestables).forEach(oldName => {
           shapeReferences[oldName][0].tc.valueExpr = index.shapeExprs[oldName].shapeExpr
+          const delme = ids.indexOf(oldName)
+          if (schema.shapes[delme].id !== oldName)
+            throw Error('assertion: found ' + schema.shapes[delme].id + ' instead of ' + oldName)
+          doomed.push(delme)
           delete index.shapeExprs[oldName]
+        })
+        doomed.sort((l, r) => r - l).forEach(delme => {
+          const id = schema.shapes[delme].id
+          if (!nestables[id])
+            throw Error('deleting unexpected shape ' + id)
+          schema.shapes.splice(delme, 1)
         })
       }
     }
@@ -1241,6 +1258,53 @@ var ShExUtil = {
     return parsed;
   },
 
+  getProofGraph: function (res, db, dataFactory) {
+    function _dive1 (solns) {
+      if (solns.type === "NodeTest" || solns.type === "NodeConstraintTest") {
+      } else if (solns.type === "SolutionList" ||
+          solns.type === "ShapeAndResults") {
+        solns.solutions.forEach(s => {
+          if (s.solution) // no .solution for <S> {}
+            _dive1(s.solution);
+        });
+      } else if (solns.type === "ShapeOrResults") {
+        _dive1(solns.solution);
+      } else if (solns.type === "ShapeTest") {
+        if ("solution" in solns)
+          _dive1(solns.solution);
+      } else if (solns.type === "OneOfSolutions" ||
+                 solns.type === "EachOfSolutions") {
+        solns.solutions.forEach(s => {
+          _dive1(s);
+        });
+      } else if (solns.type === "OneOfSolution" ||
+                 solns.type === "EachOfSolution") {
+        solns.expressions.forEach(s => {
+          _dive1(s);
+        });
+      } else if (solns.type === "TripleConstraintSolutions") {
+        solns.solutions.map(s => {
+          if (s.type !== "TestedTriple")
+            throw Error("unexpected result type: " + s.type);
+          var s2 = s;
+          if (typeof s2.object === "object")
+            s2.object = "\"" + s2.object.value.replace(/"/g, "\\\"") + "\""
+            + (s2.object.language ? ("@" + s2.object.language) : 
+               s2.object.type ? ("^^" + s2.object.type) :
+               "");
+          db.addQuad(RdfTerm.externalTriple(s2, dataFactory))
+          if ("referenced" in s) {
+            _dive1(s.referenced);
+          }
+        });
+      } else {
+        throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
+      }
+    }
+    _dive1(res);
+    return db;
+  },
+
   validateSchema: function (schema) { // obselete, but may need other validations in the future.
     var _ShExUtil = this;
     var visitor = this.Visitor();
@@ -1346,7 +1410,19 @@ var ShExUtil = {
     } else if (val.type === "ShapeTest") {
       return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
     } else if (val.type === "ShapeOrResults") {
-      return _ShExUtil.walkVal(val.solution, cb);
+      return _ShExUtil.walkVal(val.solution || val.solutions, cb);
+    } else if (val.type === "ShapeAndResults") {
+      return val.solutions.reduce((ret, exp) => {
+        var n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
     } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
       return val.solutions.reduce((ret, sln) => {
         sln.expressions.forEach(exp => {
@@ -2071,7 +2147,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
-      return  {
+      return {
         outgoing: outgoing,
         incoming: incoming
       };
@@ -2236,7 +2312,7 @@ var ShExUtil = {
       return string;
     }
     catch (error) { console.warn(error); return ''; }
-  }
+  },
 
 };
 

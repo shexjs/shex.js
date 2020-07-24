@@ -326,7 +326,7 @@ function ShExValidator_constructor(schema, options) {
         });
       }
       var results = shapeMap.reduce((ret, pair) => {
-        var res = this.validate(db, pair.node, pair.shape, tracker, seen);
+        var res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
@@ -453,13 +453,17 @@ function ShExValidator_constructor(schema, options) {
           return { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
       var passes = [];
+      var errors = [];
       for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         var nested = shapeExpr.shapeExprs[i];
         var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, tracker, seen, uniques);
         if ("errors" in sub)
-          return { type: "ShapeAndFailure", errors: [sub] };
+          errors.push(sub);
         else
           passes.push(sub);
+      }
+      if (errors.length > 0) {
+        return  { type: "ShapeAndFailure", errors: errors};
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else
@@ -551,7 +555,7 @@ function ShExValidator_constructor(schema, options) {
 
     var xp = crossProduct(tripleList.constraintList);
     var partitionErrors = [];
-    while (misses.length === 0 && xp.next() && ret === null) {
+    while ((misses.length === 0 || this.options.partition !== "greedy") && xp.next() && ret === null) {
       // caution: early continues
 
       var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
@@ -599,7 +603,7 @@ function ShExValidator_constructor(schema, options) {
 
       tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
         return i !== undefined;
-      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
+      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3
 
       function _recurse (point, shapeLabel) {
         return _ShExValidator.validate(db, point, shapeLabel, depth+1, tracker, seen, uniques);
@@ -646,23 +650,25 @@ function ShExValidator_constructor(schema, options) {
       // @@ add to tracker: f("final " + usedTriples.join(" "));
 
       ret = possibleRet;
+      partitionErrors = [];
       // alts.push(tripleToConstraintMapping);
     }
-    if (ret === null/* !! && this.options.diagnose */) {
-      var missErrors = misses.map(function (miss) {
-        var t = neighborhood[miss.tripleNo];
-        return {
-          type: "TypeMismatch",
-          triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
-          constraint: constraintList[miss.constraintNo],
-          errors: miss.errors
-        };
-      });
+    var missErrors = misses.map(function (miss) {
+      var t = neighborhood[miss.tripleNo];
+      return {
+        type: "TypeMismatch",
+        triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+        constraint: constraintList[miss.constraintNo],
+        errors: miss.errors
+      };
+    });
+    let errors = missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors);
+    if (errors.length > 0) {
       ret = {
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
-        errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
+        errors: errors
       };
     }
 
