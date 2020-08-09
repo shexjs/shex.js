@@ -662,6 +662,10 @@ function callValidator (done) {
         var validator = ShEx.Validator.construct(
           loaded.schema,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
+        (['test', 'js']).forEach(
+          ext =>
+            ShEx.Extensions[ext].register(validator)
+        );
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();

@@ -33,6 +33,7 @@
     "@shexjs/core": "file:packages/shex-core",
     "@shexjs/extension-map": "file:extensions/shex-map",
     "@shexjs/extension-test": "file:extensions/shex-test",
+    "@shexjs/extension-js": "file:extensions/shex-js",
     "@shexjs/loader": "file:packages/shex-loader",
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",
