@@ -32447,8 +32447,10 @@ var ShExUtil = {
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["rejected by semantic action:"].concat(nested);
-    } else if (val.type === "UntrackedSemActFailure") {
-      return ["No further information"];
+    } else if (val.type === "SemActViolation") {
+      return [val.message];
+    } else if (val.type === "BooleanSemActFailure") {
+      return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     } else {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
@@ -33532,10 +33534,11 @@ function vpEngine (schema, shape, index) {
             var passes = [];
             var failures = [];
             newThreads.forEach(newThread => {
-              if (semActHandler.dispatchAll(expr.semActs, "???", newThread)) {
+              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
+              if (semActErrors.length === 0) {
                 passes.push(newThread)
               } else {
-                newThread.errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] });
+                [].push.apply(newThread.errors, semActErrors);
                 failures.push(newThread);
               }
             });
@@ -33797,9 +33800,8 @@ function vpEngine (schema, shape, index) {
             var subErrors = "valueExpr" in expr ?
                 checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
                 [];
-            if (subErrors.length === 0 && "semActs" in expr &&
-                !semActHandler.dispatchAll(expr.semActs, t, ret))
-              subErrors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
+            if (subErrors.length === 0 && "semActs" in expr)
+              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
             if (subErrors.length > 0) {
               fromValidatePoint.errors = fromValidatePoint.errors || [];
               fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
@@ -51179,13 +51181,16 @@ function ShExValidator_constructor(schema, options) {
 
     var ret = null;
     var startAcionStorage = {}; // !!! need test to see this write to results structure.
-    if ("startActs" in schema && !this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage))
-      return {
-        type: "Failure",
-        node: ldify(point),
-        shape: shapeLabel,
-        errors: ['semact failure']
-      }; // some semAct aborted !! return real error
+    if ("startActs" in schema) {
+      const semActErrors = this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage)
+      if (semActErrors.length)
+        return {
+          type: "Failure",
+          node: ldify(point),
+          shape: shapeLabel,
+          errors: semActErrors
+        }; // some semAct aborted !! return real error
+    }
     // @@ add to tracker: f("validating <" + point + "> as <" + shapeLabel + ">");
 
     var fromDB  = db.getNeighborhood(point, shapeLabel, shape);
@@ -51335,16 +51340,18 @@ function ShExValidator_constructor(schema, options) {
       var possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
-      if ("semActs" in shape &&
-          !this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)) {
-        // some semAct aborted
-        partitionErrors.push({
-          errors: [ { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] } ]
-        });
-        if (_ShExValidator.options.partition !== "exhaustive")
-          break;
-        else
-          continue;
+      if ("semActs" in shape) {
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        if (semActErrors.length) {
+          // some semAct aborted
+          partitionErrors.push({
+            errors: semActErrors
+          });
+          if (_ShExValidator.options.partition !== "exhaustive")
+            break;
+          else
+            continue;
+        }
       }
       // @@ add to tracker: f("final " + usedTriples.join(" "));
 
@@ -51654,11 +51661,20 @@ function ShExValidator_constructor(schema, options) {
     dispatchAll: function (semActs, ctx, resultsArtifact) {
       var _semActHanlder = this;
       return semActs.reduce(function (ret, semAct) {
-        if (ret && semAct.name in _semActHanlder.handlers) {
+        if (ret.length === 0 && semAct.name in _semActHanlder.handlers) {
           var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
           var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
           var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-          ret = ret && _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
+          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage); debugger
+          if (typeof response === 'boolean') {
+            if (!response)
+              ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
+          } else if (typeof response === 'object' && response.constructor === Array) {
+            if (response.length > 0)
+              ret.push({ type: "SemActFailure", errors: response })
+          } else {
+            throw Error("unsupported response from semantic action handler: " + JSON.stringify(response))
+          }
           if (!existing && Object.keys(extensionStorage).length > 0) {
             if (!("extensions" in resultsArtifact))
               resultsArtifact.extensions = {};
@@ -51667,7 +51683,7 @@ function ShExValidator_constructor(schema, options) {
           return ret;
         }
         return ret;
-      }, true);
+      }, []);
     }
   };
 }
@@ -52342,8 +52358,9 @@ var NFAXVal1Err = (function () {
             last[mis].i = null;
             // !!! on the way out to call after valueExpr test
             if ("semActs" in m.stack[mis].c) {
-              if (!semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr))
-                throw { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] };
+              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
+              if (errors.length)
+                throw errors;
             }
             if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
           } else {
@@ -52431,9 +52448,8 @@ var NFAXVal1Err = (function () {
           if ("valueExpr" in ptr)
             errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
 
-          if (errors.length === 0 && "semActs" in m.c &&
-              !semActHandler.dispatchAll(m.c.semActs, triple, ret))
-            errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
+          if (errors.length === 0 && "semActs" in m.c)
+            [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
           return ret;
         })
         if ("annotations" in m.c)

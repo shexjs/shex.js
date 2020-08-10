@@ -1934,8 +1934,10 @@ var ShExUtil = {
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["rejected by semantic action:"].concat(nested);
-    } else if (val.type === "UntrackedSemActFailure") {
-      return ["No further information"];
+    } else if (val.type === "SemActViolation") {
+      return [val.message];
+    } else if (val.type === "BooleanSemActFailure") {
+      return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     } else {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));

@@ -471,13 +471,16 @@ function ShExValidator_constructor(schema, options) {
 
     var ret = null;
     var startAcionStorage = {}; // !!! need test to see this write to results structure.
-    if ("startActs" in schema && !this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage))
-      return {
-        type: "Failure",
-        node: ldify(point),
-        shape: shapeLabel,
-        errors: ['semact failure']
-      }; // some semAct aborted !! return real error
+    if ("startActs" in schema) {
+      const semActErrors = this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage)
+      if (semActErrors.length)
+        return {
+          type: "Failure",
+          node: ldify(point),
+          shape: shapeLabel,
+          errors: semActErrors
+        }; // some semAct aborted !! return real error
+    }
     // @@ add to tracker: f("validating <" + point + "> as <" + shapeLabel + ">");
 
     var fromDB  = db.getNeighborhood(point, shapeLabel, shape);
@@ -632,16 +635,18 @@ function ShExValidator_constructor(schema, options) {
       var possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
-      if ("semActs" in shape &&
-          !this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)) {
-        // some semAct aborted
-        partitionErrors.push({
-          errors: [ { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] } ]
-        });
-        if (_ShExValidator.options.partition !== "exhaustive")
-          break;
-        else
-          continue;
+      if ("semActs" in shape) {
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        if (semActErrors.length) {
+          // some semAct aborted
+          partitionErrors.push({
+            errors: semActErrors
+          });
+          if (_ShExValidator.options.partition !== "exhaustive")
+            break;
+          else
+            continue;
+        }
       }
       // @@ add to tracker: f("final " + usedTriples.join(" "));
 
@@ -953,11 +958,20 @@ function ShExValidator_constructor(schema, options) {
     dispatchAll: function (semActs, ctx, resultsArtifact) {
       var _semActHanlder = this;
       return semActs.reduce(function (ret, semAct) {
-        if (ret && semAct.name in _semActHanlder.handlers) {
+        if (ret.length === 0 && semAct.name in _semActHanlder.handlers) {
           var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
           var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
           var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-          ret = ret && _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
+          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage); debugger
+          if (typeof response === 'boolean') {
+            if (!response)
+              ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
+          } else if (typeof response === 'object' && response.constructor === Array) {
+            if (response.length > 0)
+              ret.push({ type: "SemActFailure", errors: response })
+          } else {
+            throw Error("unsupported response from semantic action handler: " + JSON.stringify(response))
+          }
           if (!existing && Object.keys(extensionStorage).length > 0) {
             if (!("extensions" in resultsArtifact))
               resultsArtifact.extensions = {};
@@ -966,7 +980,7 @@ function ShExValidator_constructor(schema, options) {
           return ret;
         }
         return ret;
-      }, true);
+      }, []);
     }
   };
 }
