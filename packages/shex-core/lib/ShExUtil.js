@@ -1927,6 +1927,15 @@ var ShExUtil = {
         var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
+    } else if (val.type === "SemActFailure") {
+      var nested = val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+      return ["rejected by semantic action:"].concat(nested);
+    } else if (val.type === "UntrackedSemActFailure") {
+      return ["No further information"];
     } else {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
