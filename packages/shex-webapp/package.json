@@ -21,8 +21,6 @@
   },
   "dependencies": {
     "@shexjs/core": "file:../shex-core",
-    "@shexjs/extension-js": "file:../../extensions/shex-js",
-    "@shexjs/extension-test": "file:../../extensions/shex-test/",
     "@shexjs/loader": "file:../shex-loader",
     "@shexjs/parser": "file:../shex-parser",
     "jsonld": "^0.4.11",

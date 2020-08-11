@@ -16,6 +16,7 @@ var Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
+Caches.extension = makeExtensionCache($("#extensionDrop"));
 Caches.shapeMap = makeShapeMapCache($("#textMap")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
@@ -41,6 +42,7 @@ var Getables = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema},
   {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData  },
   {queryStringParm: "manifest",     location: Caches.manifest.selection,    cache: Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+  {queryStringParm: "extension",    location: Caches.extension.selection,   cache: Caches.extension  },
   {queryStringParm: "shape-map",    location: $("#textMap"),                cache: Caches.shapeMap   },
 ];
 
@@ -388,6 +390,43 @@ function makeManifestCache (selection) {
 }
 
 
+function makeExtensionCache (selection) {
+  var ret = _makeCache(selection);
+  ret.set = function (code, url, source) {
+    this.url = url; // @@crappyHack1 -- parms should differntiate:
+    try {
+      // exceptions pass through to caller (asyncGet)
+      const module = {}, exports = {};
+      eval(code);
+      const name = module.exports.name;
+      const id = "extension_" + name;
+      const elt = $("<li/>", { class: "menuItem", title: module.exports.description }).append(
+        $("<input/>", { type: "checkbox", checked: "checked", class: "extensionControl", id: id, "data-name": name }),
+        $("<label/>", { for: "extension_" + name }).append(
+          $("<a/>", {href: module.exports.url, text: name})
+        )
+      );
+      elt.insertBefore("#load-extension-button");
+      $("#" + id).data("code", module.exports);
+      Caches.extension.url = url; // @@ cheesy hack that only works to remember one extension URL
+    } catch (e) {
+      // $("#inputSchema .extension").append($("<li/>").text(NO_EXTENSION_LOADED));
+      var throwMe = Error(e + '\n' + code);
+      throwMe.action = 'load extension'
+      throw throwMe
+    }
+    // $("#extensionDrop").show(); // may have been hidden if no extension loaded.
+  };
+  ret.parse = function (text, base) {
+    throw Error("should not try to parse extension cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get extension cache items");
+  };
+  return ret;
+}
+
+
         function ldToTurtle (ld, termToLex) {
           return typeof ld === "object" ? lit(ld) : termToLex(ld);
           function lit (o) {
@@ -662,10 +701,9 @@ function callValidator (done) {
         var validator = ShEx.Validator.construct(
           loaded.schema,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
-        (['test', 'js']).forEach(
-          ext =>
-            ShEx.Extensions[ext].register(validator)
-        );
+        $(".extensionControl:checked").each(function () {
+          $(this).data("code").register(validator);
+        })
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();
