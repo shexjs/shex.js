@@ -156,32 +156,30 @@ function _makeCache (selection) {
       _dirty = false;
       return this.parsed;
     },
-    asyncGet: function (url) {
+    asyncGet: async function (url) {
       var _cache = this;
-      return new Promise(function (resolve, reject) {
-        $.ajax({
-          accepts: {
-            mycustomtype: 'text/shex,text/turtle,*/*'
-          },
-          url: url,
-          cache: false, // force reload
-          dataType: "text"
-        }).fail(function (jqXHR, textStatus) {
-          var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-          reject(Error("GET <" + url + "> failed: " + error));
-        }).done(function (data) {
-          try {
-            _cache.meta.base = url;
-            resolver._setBase(url);
-            _cache.set(data, url);
-            $("#loadForm").dialog("close");
-            toggleControls();
-            resolve({ url: url, data: data });
-          } catch (e) {
-            reject(Error("unable to " + (e.action || "evaluate") + " <" + url + ">: " + '\n' + e.message));
-          }
-        });
-      });
+      let resp
+      try {
+        resp = await fetch(url, {headers: {
+          accept: 'text/shex,text/turtle,*/*;q=0.9, test/html;q=0.8',
+          cache: 'no-cache'
+        }})
+      } catch (e) {
+        throw Error("unable to fetch <" + url + ">: " + '\n' + e.message);
+      }
+      if (!resp.ok)
+        throw Error("fetch <" + url + "> got error response " + resp.status + ": " + resp.statusText);
+      const data = await resp.text();
+      _cache.meta.base = url;
+      resolver._setBase(url);
+      try {
+        _cache.set(data, url, undefined, resp.headers.get('content-type'));
+      } catch (e) {
+        throw Error("error setting " + this.queryStringParm + " with <" + url + ">: " + '\n' + e.message);
+      }
+      $("#loadForm").dialog("close");
+      toggleControls();
+      return { url: url, data: data };
     },
     url: undefined // only set if inputarea caches some web resource.
   };
@@ -392,10 +390,47 @@ function makeManifestCache (selection) {
 
 function makeExtensionCache (selection) {
   var ret = _makeCache(selection);
-  ret.set = function (code, url, source) {
+  ret.set = function (code, url, source, mediaType) {
     this.url = url; // @@crappyHack1 -- parms should differntiate:
     try {
       // exceptions pass through to caller (asyncGet)
+
+  // const resp = await fetch('http://localhost/checkouts/shexSpec/extensions/Eval/')
+      // const text = await resp.text();
+      if (mediaType.startsWith('text/html')) return (async function () {
+        const jq = $($.parseHTML(code));
+        debugger
+        const impls = $(jq.find('table.implementations'))
+        if (impls.length !== 1) {
+          results.append($("<div/>").append(
+            $("<span/>").text("unparsable extension index at " + url)
+          ).addClass("error"));
+          return;
+        }
+        const tr = $(impls).find('tr td:contains("shexjs")').parent()
+        if (tr.length !== 1) {
+          results.append($("<div/>").append(
+            $("<span/>").text("no entry for shexjs in index HTML at " + url)
+          ).addClass("error"));
+          return;
+        }
+        const href = tr.find('[property="shex:package"]').attr('href')
+        if (!href) {
+          results.append($("<div/>").append(
+            $("<span/>").text("no package for shexjs in index HTML at " + url)
+          ).addClass("error"));
+          return;
+        }
+        const refd = await fetch(href);
+        if (!refd.ok) {
+          results.append($("<div/>").append(
+            $("<span/>").text(`error fetching implementation: ${refd.status} (${refd.statusText}) for URL <${href}>`)
+          ).addClass("error"));
+        } else {
+          code = await refd.text();
+          this.set(code, url, source, refd.headers.get('content-type'));
+        }
+      }).call(this)
       const module = {}, exports = {};
       eval(code);
       const name = module.exports.name;
@@ -409,6 +444,9 @@ function makeExtensionCache (selection) {
       elt.insertBefore("#load-extension-button");
       $("#" + id).data("code", module.exports);
       Caches.extension.url = url; // @@ cheesy hack that only works to remember one extension URL
+      results.append($("<div/>").append(
+        $("<span/>").text(`extension ${name} loaded from <${url}>`)
+      ));
     } catch (e) {
       // $("#inputSchema .extension").append($("<li/>").text(NO_EXTENSION_LOADED));
       var throwMe = Error(e + '\n' + code);

@@ -1,4 +1,4 @@
-var JsExt = "http://shex.io/extensions/javascript/";
+var JsExt = "http://shex.io/extensions/Eval/";
 
 function register (validator) {
 
@@ -28,14 +28,14 @@ function done (validator) {
 }
 
 module.exports = {
-  name: "js-extension",
+  name: "Eval",
   description: `Simple javascript eval.
 Each SemAct should return either:
   bool - false if the extension failed or did not accept the ctx object.
   [{type: "SemActViolation", msg: "..."}] - (ideally empty) list of structured errors
 
 url: ${JsExt}`,
-  name: "js-extension",
+  name: "Eval",
   register: register,
   done: done,
   url: JsExt
