@@ -14,21 +14,44 @@ var log              = console.log,
     RDF_TYPE         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
     ValidatorOptions = { diagnose: true };
 
-var CLI = require("command-line-args")([
-    { name: "help",  alias: "h", type: Boolean },
-    { name: "regex-module", type: String },
-]);
+const cli = require("command-line-args")
+const cliUsage = require('command-line-usage')
 
-var cmds = CLI.parse();
+const optionDefinitions = [
+    { name: "help",  alias: "h", type: Boolean, description: "print this usage guide" },
+    { name: "regex-module", type: String, description: "select a regex module" },
+];
+
+const sections = [
+  {
+    header: 'Validate',
+    content: [
+      'validate Turtle files with respect to ShEx schemas, for example:',
+      '',
+      '     validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex']
+  },
+  {
+    header: 'Options',
+    optionList: optionDefinitions
+  },
+  {
+    header: 'Further information',
+    content: 'Project home: {underline https://github.com/shexSpec/shex.js}'
+  },
+]
+
+const usage = cliUsage(sections)
+cmds = ""
+try {
+  cmds = cli(optionDefinitions)
+} catch (err) {
+  abort(err, console.error);
+}
 
 function abort (msg, output) {
   output = output || console.error;
   output(msg);
-  output(CLI.getUsage({
-    title: "validate",
-    description: "validate Turtle files with respect to ShEx schemas, for example:\n    validate -n http://a.example/Issue1 -d issues.ttl -s http://b.example/IssueShape -x http://tracker.example/schemas/Issue.shex",
-    footer: "Project home: [underline]{https://github.com/shexSpec/shex.js}"
-  }));
+  output(usage);
   process.exit(1);
 }
 
