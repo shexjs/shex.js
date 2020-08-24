@@ -1,5 +1,5 @@
 {
-  "name": "@shexjs/extension-test",
+  "name": "@shexjs/extension-js",
   "version": "1.0.0-alpha.6",
   "description": "Shape Expressions simple semantic action module.",
   "author": {
@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-extension-test.js",
+  "main": "./shex-extension-js.js",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -24,7 +24,7 @@
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "../../node_modules/.bin/browserify shex-extension-test.js -s testExtension -o browser/shex-extension-test-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-test-browserify.js --comments -mco browser/shex-extension-test-browserify.min.js"
+    "browser": "../../node_modules/.bin/browserify shex-extension-js.js -s jsExtension -o browser/shex-extension-js-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-js-browserify.js --comments -mco browser/shex-extension-js-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"

@@ -65,10 +65,11 @@ function vpEngine (schema, shape, index) {
             var passes = [];
             var failures = [];
             newThreads.forEach(newThread => {
-              if (semActHandler.dispatchAll(expr.semActs, "???", newThread)) {
+              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
+              if (semActErrors.length === 0) {
                 passes.push(newThread)
               } else {
-                newThread.errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] });
+                [].push.apply(newThread.errors, semActErrors);
                 failures.push(newThread);
               }
             });
@@ -98,42 +99,75 @@ function vpEngine (schema, shape, index) {
           var matched = thread.matched;
           if (passed) {
             do {
-              var newThread = {
-                avail: thread.avail.map(a => { // copy parent thread's avail vector
-                  return a.slice();
-                }), // was: extend({}, thread.avail)
-                errors: thread.errors.slice(),
-                matched: matched.concat({
-                  tNos: taken.slice()
-                }),
-                expression: extend(
-                  {
-                    type: "TripleConstraintSolutions",
-                    predicate: expr.predicate
-                    // map(triple => {
-                    //   var t = neighborhood[triple];
-                    //   return {
-                    //     type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: t.object
-                    //   }
-                    // })
-                  },
-                  "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                  "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
-                  minmax,
-                  {
-                    solutions: taken.map(tripleNo =>  {
-                      var t = neighborhood[tripleNo];
-                      var ret = { type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object) };
-                      var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
-                      if (hit.res && Object.keys(hit.res).length > 0)
-                        ret.referenced = hit.res;
-                      return ret;
-                      // return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
-                    })
-                  }
+              const passFail = taken.reduce((acc, tripleNo) => {
+                const t = neighborhood[tripleNo]
+                const tested = {
+                  type: "TestedTriple",
+                  subject: t.subject,
+                  predicate: t.predicate,
+                  object: ldify(t.object)
+                }
+                var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
+                if (hit.res && Object.keys(hit.res).length > 0)
+                  tested.referenced = hit.res;
+                const semActErrors = thread.errors.concat(
+                  "semActs" in expr
+                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
+                    : []
                 )
-              };
-              ret.push(newThread);
+                if (semActErrors.length > 0)
+                  acc.fail.push({tripleNo, tested, semActErrors})
+                else
+                  acc.pass.push({tripleNo, tested, semActErrors})
+                return acc
+              }, {pass: [], fail: []})
+
+
+              // return an empty solution if min card was 0
+              if (passFail.fail.length === 0) {
+                // If we didn't take anything, fall back to old errors.
+                // Could do something fancy here with a semAct registration for negative matches.
+                const totalErrors = taken.length === 0 ? thread.errors.slice() : []
+                const myThread = makeThread(passFail.pass.map(p => p.tripleNo), totalErrors)
+                ret.push(myThread);
+                // ret.push();
+              } else {
+                passFail.fail.forEach(
+                  f => ret.push(makeThread([f.tripleNo], f.semActErrors))
+                )
+              }
+
+              function makeThread (tripleNos, errors) {
+                return {
+                  avail: thread.avail.map(a => { // copy parent thread's avail vector
+                    return a.slice();
+                  }),
+                  errors: errors,
+                  matched: matched.concat({
+                    tNos: tripleNos
+                  }),
+                  expression: extend(
+                    {
+                      type: "TripleConstraintSolutions",
+                      predicate: expr.predicate
+                    },
+                    "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
+                    "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                    minmax,
+                    {
+                      solutions: tripleNos.map(tripleNo =>  {
+                        var t = neighborhood[tripleNo];
+                        var ret = { type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object) };
+                        var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
+                        if (hit.res && Object.keys(hit.res).length > 0)
+                          ret.referenced = hit.res;
+                        return ret;
+                        // return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
+                      })
+                    }
+                  )
+                }
+              }
             } while ((function () {
               if (thread.avail[constraintNo].length > 0 && taken.length < max) {
                 // build another thread.
@@ -370,14 +404,8 @@ function vpEngine (schema, shape, index) {
             var subErrors = "valueExpr" in expr ?
                 checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
                 [];
-            if (subErrors.length === 0 && "semActs" in expr &&
-                !semActHandler.dispatchAll(expr.semActs, t, ret))
-              subErrors.push({
-                type: "SemActFailure",
-                errors: [{
-                  type: "UntrackedSemActFailure"
-                }]
-              }) // some semAct aborted
+            if (subErrors.length === 0 && "semActs" in expr)
+              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
             if (subErrors.length > 0) {
               fromValidatePoint.errors = fromValidatePoint.errors || [];
               fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
@@ -388,8 +416,8 @@ function vpEngine (schema, shape, index) {
           throw Error("unexpected expr type in " + JSON.stringify(solns));
         }
       }
-      // if (Object.keys(fromValidatePoint).length > 0) // guard against {}
-      //   _dive(fromValidatePoint);
+      if (Object.keys(fromValidatePoint).length > 0) // guard against {}
+        _dive(fromValidatePoint);
       if ("semActs" in shape)
         fromValidatePoint.semActs = shape.semActs;
       return fromValidatePoint;
