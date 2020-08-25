@@ -31,6 +31,7 @@
   "devDependencies": {
     "@shexjs/cli": "file:packages/shex-cli",
     "@shexjs/core": "file:packages/shex-core",
+    "@shexjs/extension-js": "file:extensions/shex-js",
     "@shexjs/extension-map": "file:extensions/shex-map",
     "@shexjs/extension-test": "file:extensions/shex-test",
     "@shexjs/loader": "file:packages/shex-loader",
@@ -46,7 +47,7 @@
     "jsdom": "^15.1.0",
     "lerna": "^3.14.1",
     "marked": "^0.7.0",
-    "mocha": "^6.1.4",
+    "mocha": "^6.2.3",
     "n3": "^1.2.1",
     "nock": "^10.0.6",
     "node-fetch": "^2.6.0",

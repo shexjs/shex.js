@@ -33,7 +33,7 @@ function GET (f, mediaType) {
       process.stdin.on("error", function (e) {
         reject(e);
       });
-    }) : (f.match("^[a-z]+://.") && !f.match("^file://.")) ?
+    }) : (f.match("^(blob:)?[a-z]+://.") && !f.match("^file://.")) ?
     // Read from http or whatever Request handles.
     myHttpRequest(f, mediaType) : (m = f.match("^data:([^,]+),(.*)$")) ?
     // Read from data: URL

@@ -589,8 +589,8 @@ var ShExUtil = {
    */
   index: function (schema) {
     let index = {
-      shapeExprs: new Map(),
-      tripleExprs: new Map()
+      shapeExprs: {},
+      tripleExprs: {}
     };
     let v = ShExUtil.Visitor();
 
@@ -1999,6 +1999,17 @@ var ShExUtil = {
         var nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
+    } else if (val.type === "SemActFailure") {
+      var nested = val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
+      return ["rejected by semantic action:"].concat(nested);
+    } else if (val.type === "SemActViolation") {
+      return [val.message];
+    } else if (val.type === "BooleanSemActFailure") {
+      return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     } else {
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));

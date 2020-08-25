@@ -407,8 +407,9 @@ var NFAXVal1Err = (function () {
             last[mis].i = null;
             // !!! on the way out to call after valueExpr test
             if ("semActs" in m.stack[mis].c) {
-              if (!semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr))
-                throw { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] };
+              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
+              if (errors.length)
+                throw errors;
             }
             if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
           } else {
@@ -474,7 +475,8 @@ var NFAXVal1Err = (function () {
                       var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
                       if (hit.res && Object.keys(hit.res).length > 0)
                         ret.referenced = hit.res;
-
+          if (errors.length === 0 && "semActs" in m.c)
+            [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
           return ret;
         })
         if ("annotations" in m.c)

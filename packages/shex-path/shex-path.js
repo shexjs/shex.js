@@ -63,21 +63,33 @@ const ShExPath = function (schema, const_iriResolver) {
         path = path.substr(len);
         consumed += len;
         context = context.reduce(
-          (newValue, I) => newValue.concat(attr(m[1], m[6].split(/\./).splice(1), evaluateIndex(I, m[2], m[3] ? parseInt(m[3]) : null, m[4], m[5]))), []
+          (newValue, I) => newValue.concat(attr(m[1], m[6].split(/\./).splice(1), skipAssumedAxes(I, m[2], m[3] ? parseInt(m[3]) : null, m[4], m[5]))), []
         )
       }
       if (path.length)
         throw Error("unable to parse at offset " + consumed + ": " + path)
       return context
 
-      function evaluateIndex (I, axis, i, N, Ni) {
-        // if (i || N /*|| axis*/) {
+      function skipAssumedAxes (I, axis, i, N, Ni) {
         if (i || N || axis) {
-          if (I.type === "Shape" && axis !== "Shape" && "expression" in I)
-            I = I.expression;
-          else if (I.type === "TripleConstraint" && axis !== "TripleConstraint" && "valueExpr" in I)
-            I = I.valueExpr;
+          if (I.type === "Shape" && axis !== "Shape" && "expression" in I) {
+            return (I.extends || []).map(e => schema.shapes.find(
+              se => se.id === RdfTerm.resolveRelativeIRI(iriResolver.base, e)
+            )).concat(I).map(
+              se => se.type === 'ShapeDecl' ? se.shapeExpr : se
+            ).map(
+              se => se.type === 'Shape' ? se.expression : se
+            ).reduce(
+              (acc, se) => acc.concat(evaluateIndex(se, axis, i, N, Ni)), []
+            )
+          } else if (I.type === "TripleConstraint" && axis !== "TripleConstraint" && "valueExpr" in I) {
+            return evaluateIndex(I.valueExpr, axis, i, N, Ni)
+          }
         }
+        return evaluateIndex(I, axis, i, N, Ni)
+      }
+
+      function evaluateIndex (I, axis, i, N, Ni) {
         if (axis && I.type !== axis)
           return []
         if (!i && !N)

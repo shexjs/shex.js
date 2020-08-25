@@ -413,6 +413,8 @@ if (!EARL && TEST_Vestiges) {
 function loadGraphSchema () {
   if (TEST_ShExR) {
     const ret = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
+
+    // @@ What the heck is this for?
     const valueExpr_tripleCnstrnt = ret._index.shapeExprs[nsPath + "TripleConstraint"].
           expression.expressions.find(e => {
             return e.predicate === nsPath + "shex#valueExpr";
@@ -421,6 +423,7 @@ function loadGraphSchema () {
                                           shapeExprs:
                                           [ nsPath + "shapeExpr",
                                             { type: "Shape", closed: true } ] }
+
     return ret;
   } else {
     console.warn("ShExR tests disabled");
