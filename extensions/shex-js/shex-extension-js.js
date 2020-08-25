@@ -1,10 +1,11 @@
-var JsExt = "http://shex.io/extensions/Eval/";
+var EvalExt = "http://shex.io/extensions/Eval/";
+const ShEx = require('@shexjs/core')
 
 function register (validator) {
 
-  validator.semActHandler.results[JsExt] = [];
+  validator.semActHandler.results[EvalExt] = [];
   validator.semActHandler.register(
-    JsExt,
+    EvalExt,
     {
       /**
        * Callback for extension invocation.
@@ -19,12 +20,12 @@ function register (validator) {
       }
     }
   );
-  return validator.semActHandler.results[JsExt];
+  return validator.semActHandler.results[EvalExt];
 }
 
 function done (validator) {
-  if (validator.semActHandler.results[JsExt].length === 0)
-    delete validator.semActHandler.results[JsExt];
+  if (validator.semActHandler.results[EvalExt].length === 0)
+    delete validator.semActHandler.results[EvalExt];
 }
 
 module.exports = {
@@ -34,9 +35,9 @@ Each SemAct should return either:
   bool - false if the extension failed or did not accept the ctx object.
   [{type: "SemActViolation", msg: "..."}] - (ideally empty) list of structured errors
 
-url: ${JsExt}`,
+url: ${EvalExt}`,
   name: "Eval",
   register: register,
   done: done,
-  url: JsExt
+  url: EvalExt
 };

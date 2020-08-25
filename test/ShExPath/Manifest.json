@@ -1,5 +1,5 @@
 {
-  "description": "collection of partition tests",
+  "description": "collection of ShExPath tests",
   "tests": [
     {
       "from": "2Eachdot",
