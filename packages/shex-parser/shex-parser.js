@@ -39,10 +39,13 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
     }
     ShExJison.reset();
     errors.forEach(e => {
-      const hash = e.hash;
-      const location = hash.loc;
-      delete hash.loc;
-      Object.assign(e, hash, {location: location});
+      if ("hash" in e) {
+        const hash = e.hash;
+        const location = hash.loc;
+        delete hash.loc;
+        Object.assign(e, hash, {location: location});
+      }
+      return e;
     })
     if (errors.length == 1) {
       errors[0].parsed = ret;
