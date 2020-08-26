@@ -65,10 +65,11 @@ function vpEngine (schema, shape, index) {
             var passes = [];
             var failures = [];
             newThreads.forEach(newThread => {
-              if (semActHandler.dispatchAll(expr.semActs, "???", newThread)) {
+              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
+              if (semActErrors.length === 0) {
                 passes.push(newThread)
               } else {
-                newThread.errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] });
+                [].push.apply(newThread.errors, semActErrors);
                 failures.push(newThread);
               }
             });
@@ -316,7 +317,7 @@ function vpEngine (schema, shape, index) {
                 err.errors = sub;
                 return [err];
               }
-              if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
                   sub.type === "Recursion")
                 ret.referenced = sub; // !!! needs to aggregate errors and solutions
               return [];
@@ -330,9 +331,8 @@ function vpEngine (schema, shape, index) {
             var subErrors = "valueExpr" in expr ?
                 checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
                 [];
-            if (subErrors.length === 0 && "semActs" in expr &&
-                !semActHandler.dispatchAll(expr.semActs, t, ret))
-              subErrors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
+            if (subErrors.length === 0 && "semActs" in expr)
+              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
             if (subErrors.length > 0) {
               fromValidatePoint.errors = fromValidatePoint.errors || [];
               fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
