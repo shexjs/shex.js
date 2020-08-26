@@ -10,25 +10,40 @@ shex.js javascript implementation of Shape Expressions ([try online](https://raw
 
 ## install
 
-```
+``` shell
 npm install --save shex
 ```
 
 ## test
 
-First you need to install the testing framework (mocha, chai, shex-test for the actual tests):
-`npm explore shex 'npm install'`
+There are two ways to run tests. You can run the default tests for whichever branch you have checked out (including master):
+``` shell
+npm checkout shex-next
+npm test
+```
+or you can clone shexSpec/shexTest next to your shex.js clone:
+``` shell
+(cd .. && git clone https://github.com/shexSpec/shexTest --branch extends)
+npm test
+```
 
-Now you can run the tests:
-`npm explore shex 'npm test'`
+The [test harness](test/findPath.js) first looks for a sibling shexTest repo and if it doesn't find it, uses `node_modules/shexTest`.
 
-(BTW, `npm explore shex` executes a command in the shex directory so you can also `cd node_modules/shex && npm install && npm test`)
-
-This runs `mocha -R dot` (the *dot* reporter because there are around three thousand tests).
+`test` runs `mocha -R dot` (the *dot* reporter because there are around three thousand tests).
 
 There are slower tests (command line interface, HTTP, etc) which you can run with the `SLOW=<timeout in milliseconds>` environment variable set. For the HTTP tests you will have to specifiy a git repository in `$BRANCH`, e.g.
-`SLOW=10000 BRANCH=master npm explore shex 'npm test'`
+`SLOW=10000 BRANCH=master TEST-cli=true'npm test`
 
+
+### branch-specific tests
+
+The `shex.js` repo includes several branches for features that are in-flight in the ShEx Community Group. NPM `@shexjs/*` packages are published from the `shex-next` repo. Each of these repos depends on some branch of the test suite. The package.json file for each branch SHOULD have that corresponding shexTest branch à la:
+``` json
+  "shex-test": "shexSpec/shexTest#extends"
+```
+If you are running tests from the automatically checked out shexTest module, you'll have to `npm install` every time you change branches. If you are running from a sibling clone of shexTest, you'll have to cd to that sibling and checkout the branch which corresponds to the shex.js branch you have checked out.
+
+There is a post-commit hook which will probably whine at you if they are misaligned, though it will simply fail to test some features if e.g. shexTest is on master while shex.js is on extends.
 
 ## validation
 
