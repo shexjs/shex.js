@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/loader",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.6",
   "description": "Shape Expressions resource loader.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -23,6 +23,7 @@
     "@shexjs/core": "file:../shex-core",
     "jsonld": "^1.5.4",
     "n3": "^1.0.4",
+    "request-promise": "^4.2.5",
     "shape-map": "file:../shape-map"
   },
   "scripts": {

@@ -38,6 +38,9 @@ function done (validator) {
 }
 
 module.exports = {
+  name: "Test",
+  description: `Simple test extension used in the shexTest test suite
+url: ${TestExt}`,
   register: register,
   done: done,
   url: TestExt
