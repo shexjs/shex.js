@@ -157,6 +157,7 @@ function _makeCache (selection) {
       return this.parsed;
     },
     asyncGet: async function (url) {
+      url = new URL(url, window.location).href
       var _cache = this;
       let resp
       try {
