@@ -1,6 +1,6 @@
 /**
  * File: regex-extension-test.js
- * Unit tests for extensions/shex-map/lib/regex-extension.js
+ * Unit tests for extensions/extension-map/lib/regex-extension.js
  */
 
 var chai = require('chai');

@@ -7,7 +7,7 @@ const ShapeMapParser = require("shape-map").Parser
 const RdfTerm = require("@shexjs/core").RdfTerm
 const Extensions = [
   // http://shex.io/extensions/javascript/
-  require("../extensions/shex-js")
+  require("../extensions/extension-eval")
 ]
 const Fs = require('fs')
 const N3 = require('n3')
