@@ -135,7 +135,7 @@
 +    <script src="../lib/extensions.js"         ></script><script>modules["./lib/extensions"] = module.exports;</script>
 +    <script src="../../../lib/regex/nfax-val-1err-materializer.js"></script><script>modules["../lib/regex/nfax-val-1err-materializer.js"] = module.exports;</script>
 +
-+    <script src="../module.js"                 ></script><script>modules["../extensions/shex-map/module"] = ShExMap = module.exports;</script>
++    <script src="../module.js"                 ></script><script>modules["../extensions/extension-map/module"] = ShExMap = module.exports;</script>
 +    <script src="../../../lib/ShExMaterializer.js"></script><script>ShExMaterializer = module.exports;</script>
 +    <script src="../../../doc/ShExRSchema.js"></script>
 +    <script src="./shexmap-simple.js"></script>
