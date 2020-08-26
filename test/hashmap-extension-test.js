@@ -1,6 +1,6 @@
 /**
  * File: hashmap-extension-test.js
- * Unit tests for extensions/shex-map/lib/hashmap-extension.js
+ * Unit tests for extensions/extension-map/lib/hashmap-extension.js
  */
 
 var chai = require('chai');
