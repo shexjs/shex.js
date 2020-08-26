@@ -47,6 +47,7 @@
       #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
       #manifestDrop { border-color: white; width: 100%; }
       #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
+      #extensionDrop { border-color: #00ffff; width: 88%; border-width: thin; }
       #inputSchema li button, #inputData li button {
         font-size: .7em;
         padding: 0em 2ex;
@@ -232,6 +233,7 @@ ul {
             <ul>
               <li class="        "><h3>user interface</h3></li>
               <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
+              <li class="menuitem"><label for="success">on success:</label><select id="success"><option value="proof">proof</option><option value="query">matched graph</option><option value="remainder">remaining graph</option></select></li>
               <li class="menuitem"><input type="checkbox" id="showMeta"/><label for="showMeta">show metadata pane</label></li>
               <li class="menuitem"><a id="download-results-button">download <span class="results">results</span></a></li>
               <li class="        "><hr/></li>
@@ -239,6 +241,8 @@ ul {
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
               <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
               <li class="menuitem" id="load-manifest-button">load <span class="manifest">manifest</span></li>
+              <li id="extensionDrop" class="droparea"><h3>Extensions</h3></li>
+              <li class="menuitem" id="load-extension-button">load <span class="extension">extension</span></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>drag and drop</h3></li>
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>

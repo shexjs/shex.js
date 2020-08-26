@@ -394,8 +394,9 @@ var NFAXVal1Err = (function () {
             last[mis].i = null;
             // !!! on the way out to call after valueExpr test
             if ("semActs" in m.stack[mis].c) {
-              if (!semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr))
-                throw { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] };
+              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
+              if (errors.length)
+                throw errors;
             }
             if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
           } else {
@@ -469,7 +470,7 @@ var NFAXVal1Err = (function () {
                 err.referencedShape = shape;
               return [err];
             }
-            if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+            if (("solution" in sub || "solutions" in sub) && Object.keys(sub.solution || sub.solutions).length !== 0 ||
                 sub.type === "Recursion")
               ret.referenced = sub; // !!! needs to aggregate errors and solutions
             return [];
@@ -483,9 +484,8 @@ var NFAXVal1Err = (function () {
           if ("valueExpr" in ptr)
             errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
 
-          if (errors.length === 0 && "semActs" in m.c &&
-              !semActHandler.dispatchAll(m.c.semActs, triple, ret))
-            errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
+          if (errors.length === 0 && "semActs" in m.c)
+            [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
           return ret;
         })
         if ("annotations" in m.c)

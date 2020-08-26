@@ -33,7 +33,7 @@ function GET (f, mediaType) {
       process.stdin.on("error", function (e) {
         reject(e);
       });
-    }) : (f.match("^[a-z]+://.") && !f.match("^file://.")) ?
+    }) : (f.match("^(blob:)?[a-z]+://.") && !f.match("^file://.")) ?
     // Read from http or whatever Request handles.
     myHttpRequest(f, mediaType) : (m = f.match("^data:([^,]+),(.*)$")) ?
     // Read from data: URL
@@ -106,7 +106,7 @@ function loadList (src, metaList, mediaType, parserWrapper, target, options, loa
     var meta = addMeta(obj.url, mediaType);
     try {
       ShExUtil.merge(target, obj.schema, true, true);
-      meta.prefixes = target._prefixes;
+      meta._prefixes = target._prefixes || {};
       meta.base = target._base;
       loadImports(obj.schema);
       return Promise.resolve([mediaType, obj.url]);
@@ -263,7 +263,7 @@ function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImpo
     var s = parser.parse(text);
     // !! horrible hack until I set a variable to know if there's a BASE.
     if (s.base === url) delete s.base;
-    meta.prefixes = s._prefixes;
+    meta.prefixes = s._prefixes || {};
     meta.base = s._base || meta.base;
     ShExUtil.merge(schema, loadImports(s), false, true);
     return Promise.resolve([mediaType, url]);
