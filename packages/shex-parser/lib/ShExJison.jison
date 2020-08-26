@@ -342,6 +342,8 @@
 
   // Add a shape to the map
   function addShape (label, shape, yy) {
+    if (shape === EmptyShape)
+      shape = { type: "Shape" };
     if (Parser.productions && label in Parser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!Parser.shapes)
@@ -1046,9 +1048,9 @@ numericFacet:
     ;
 
 _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
-      INTEGER	-> parseInt($1, 10);
-    | DECIMAL	-> parseFloat($1);
-    | DOUBLE	-> parseFloat($1);
+      INTEGER	-> parseInt($1, 10)
+    | DECIMAL	-> parseFloat($1)
+    | DOUBLE	-> parseFloat($1)
     | string '^^' datatype	{ // ## deprecated
         if ($3 === XSD_DECIMAL || $3 === XSD_FLOAT || $3 === XSD_DOUBLE)
           $$ = parseFloat($1.value);
@@ -1468,7 +1470,7 @@ _O_Qiri_E_Or_Qliteral_E_C:
     ;
 
 semanticActions:
-      _QcodeDecl_E_Star	-> $1.length ? { semActs: $1 } : null; // t: 1dotCode1/2oneOfDot
+      _QcodeDecl_E_Star	-> $1.length ? { semActs: $1 } : null // t: 1dotCode1/2oneOfDot
     ;
 
 _QcodeDecl_E_Star:
@@ -1520,7 +1522,7 @@ numericLiteral:
 
 rdfLiteral:
       langString	// t: 1val1STRING_LITERAL1
-    | string _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1; // t: 1val1Datatype
+    | string _Q_O_QGT_DTYPE_E_S_Qdatatype_E_C_E_Opt	-> $2 ? extend($1, { type: $2 }) : $1 // t: 1val1Datatype
     ;
 
 _O_QGT_DTYPE_E_S_Qdatatype_E_C:
