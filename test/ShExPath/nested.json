@@ -1,0 +1,114 @@
+{
+  "type": "Schema",
+  "shapes": [
+    {
+      "type": "Shape",
+      "id": "base:/S0",
+      "expression": {
+        "type": "EachOf",
+        "expressions": [
+          {
+            "type": "TripleConstraint",
+            "predicate": "base:/p1",
+            "valueExpr": "base:/S1"
+          },
+          {
+            "type": "TripleConstraint",
+            "predicate": "base:/p2",
+            "valueExpr": {
+              "type": "Shape",
+              "expression": {
+                "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+                "valueExpr": {
+                  "type": "NodeConstraint",
+                  "values": [
+                    "base:/foo"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "ShapeOr",
+      "id": "base:/S1",
+      "shapeExprs": [
+        {
+          "type": "ShapeAnd",
+          "shapeExprs": [
+            {
+              "type": "NodeConstraint",
+              "nodeKind": "iri"
+            },
+            {
+              "type": "Shape",
+              "closed": true,
+              "expression": {
+                "type": "EachOf",
+                "expressions": [
+                  {
+                    "type": "OneOf",
+                    "expressions": [
+                      {
+                        "type": "OneOf",
+                        "expressions": [
+                          {
+                            "type": "TripleConstraint",
+                            "predicate": "base:/name"
+                          },
+                          {
+                            "type": "EachOf",
+                            "expressions": [
+                              {
+                                "type": "TripleConstraint",
+                                "predicate": "base:/givenName",
+                                "min": 1,
+                                "max": -1
+                              },
+                              {
+                                "type": "TripleConstraint",
+                                "predicate": "base:/familyName"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "TripleConstraint",
+                        "predicate": "base:/xname"
+                      }
+                    ],
+                    "min": 0,
+                    "max": 1
+                  },
+                  {
+                    "type": "TripleConstraint",
+                    "predicate": "base:/mbox",
+                    "valueExpr": {
+                      "type": "NodeConstraint",
+                      "nodeKind": "iri"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "NodeConstraint",
+              "nodeKind": "iri"
+            }
+          ]
+        },
+        {
+          "type": "ShapeNot",
+          "shapeExpr": {
+            "type": "Shape"
+          }
+        }
+      ]
+    }
+  ],
+  "@context": "http://www.w3.org/ns/shex.jsonld"
+}
