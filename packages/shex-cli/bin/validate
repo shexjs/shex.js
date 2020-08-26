@@ -597,7 +597,7 @@ function runValidator (graph, shapeMap, schema, options) {
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
        return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("../extensions/shex-map").materializer(loaded.schema).
+       var db = require("../extensions/extension-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
        getQuads(null, null, null);
        var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
