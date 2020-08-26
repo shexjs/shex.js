@@ -11,6 +11,7 @@ const Extensions = [
 ]
 const Fs = require('fs')
 const N3 = require('n3')
+const URL = require('url').URL
 const expect = require('chai').expect
 const findPath = require('./findPath.js')
 const Base = new URL('http://localhost/')
