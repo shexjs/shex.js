@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@shexjs/core": "file:../shex-core",
-    "@shexjs/loader": "file:../shex-loader",
+    "@shexjs/api": "file:../shex-api",
     "@shexjs/parser": "file:../shex-parser",
     "n3": "^1.6.2",
     "shape-map": "file:../shape-map"
