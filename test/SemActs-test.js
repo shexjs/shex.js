@@ -4,7 +4,7 @@ const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null
 const ShExCore = require("@shexjs/core")
 const ShExParser = require("@shexjs/parser")
 const ShapeMapParser = require("shape-map").Parser
-const RdfTerm = require("@shexjs/core").RdfTerm
+const RdfTerm = require("@shexjs/term")
 const Extensions = [
   // http://shex.io/extensions/javascript/
   require("../extensions/extension-eval")

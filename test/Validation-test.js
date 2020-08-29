@@ -24,8 +24,8 @@ var schemasPath = findPath("schemas");
 var validationPath = findPath("validation");
 var manifestFile = validationPath + "manifest.jsonld";
 var regexModules = [
-  ShExCore["nfax-val-1err"],
-  ShExCore["threaded-val-nerr"]
+  require("@shexjs/eval-simple-1err"),
+  require("@shexjs/eval-threaded-nerr")
 ];
 if (EARL)
   regexModules = regexModules.slice(1);

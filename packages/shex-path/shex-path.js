@@ -1,5 +1,5 @@
 const ShExCore = require("@shexjs/core");
-const RdfTerm = ShExCore.RdfTerm;
+const RdfTerm = require("@shexjs/term");
 const ShExUtil = ShExCore.Util;
 
 const ShExPath = function (schema, const_iriResolver) {

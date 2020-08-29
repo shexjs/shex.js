@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/core",
+  "name": "@shexjs/validator",
   "version": "1.0.0-alpha.6",
-  "description": "Shape Expressions validation and utilities.",
+  "description": "Shape Expressions Validator and schema index generator.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,19 +15,18 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-core.js",
+  "main": "./shex-validator.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "file:../shex-term",
-    "@shexjs/validator": "file:../shex-validator",
     "@shexjs/visitor": "file:../shex-visitor",
-    "hierarchy-closure": "^1.2.1"
+    "@shexjs/eval-simple-1err": "file:../eval-simple-1err",
+    "@shexjs/eval-threaded-nerr": "file:../eval-threaded-nerr"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-core-browserify.js && uglifyjs browser/shex-core-browserify.js --comments -mco browser/shex-core-browserify.min.js"
+    "browser999": "browserify shex.js -s ShEx -o browser/shex-validator-browserify.js && uglifyjs browser/shex-validator-browserify.js --comments -mco browser/shex-validator-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"

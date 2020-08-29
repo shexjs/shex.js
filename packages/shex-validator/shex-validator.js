@@ -28,7 +28,7 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var RdfTerm = require("./RdfTerm");
+var RdfTerm = require("@shexjs/term");
 let ShExVisitor = require("@shexjs/visitor");
 
 function getLexicalValue (term) {
@@ -241,8 +241,8 @@ function ShExValidator_constructor(schema, options) {
   this._optimize = {}; // optimizations:
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
-  // var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err");
-  var regexModule = this.options.regexModule || require("../lib/regex/threaded-val-nerr");
+  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+  var regexModule = this.options.regexModule || require("@shexjs/eval-threaded-nerr");
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -614,12 +614,12 @@ function ShExValidator_constructor(schema, options) {
         return _ShExValidator._errorsMatchingShapeExpr(term, valueExpr, recurse, direct)
       }
       var results = regexEngine.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
-      if (false) {// testing parity between two engines
-        var nfa = require("../lib/regex/nfax-val-1err").compile(schema, shape);
-        var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
-        if ("errors" in fromNFA !== "errors" in results)
-          { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
-      }
+      // {// testing parity between two engines
+      //   var nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
+      //   var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
+      //   if ("errors" in fromNFA !== "errors" in results)
+      //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
+      // }
       if ("errors" in results) {
         partitionErrors.push({
           errors: results.errors

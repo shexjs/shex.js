@@ -25,19 +25,19 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 
 The regular expression engine is loaded from either:
   absolute path, e.g. if you git cloned shex.js into /tmp:
-    --regex-module /tmp/shex.js/lib/regex/nfax-val-1err
-    --regex-module /tmp/shex.js/lib/regex/threaded-val-nerr
+    --regex-module /tmp/shex.js/packages/eval-simple-1err/eval-simple-1err
+    --regex-module /tmp/shex.js/packages/eval-threaded-nerr/eval-threaded-nerr
   or relative path to bin/validate directory:
-    --regex-module ../lib/regex/nfax-val-1err
-    --regex-module ../lib/regex/threaded-val-nerr
+    --regex-module ../packages/eval-simple-1err/eval-simple-1err
+    --regex-module ../packages/eval-threaded-nerr/eval-threaded-nerr
   or a module name in lib/regex:
-    --regex-module nfax-val-1err
-    --regex-module threaded-val-nerr
+    --regex-module eval-simple-1err
+    --regex-module eval-threaded-nerr
 
 */
 
 var ShExCore = require("@shexjs/core");
-var RdfTerm = ShExCore.RdfTerm;
+var RdfTerm = require("@shexjs/term");
 var ShExUtil = ShExCore.Util;
 var ShExNode = require("@shexjs/node");
 var ShExWriter = ShExCore.Writer; // for verbose output
@@ -485,7 +485,7 @@ function getInvocation (parms) {
              parms.map ? "-m " + parms.map : ''
             ];
   if ("options" in parms)
-    Object.keys(parms.options).forEach(k => { // e.g. --regex-module nfax-val-1err
+    Object.keys(parms.options).forEach(k => { // e.g. --regex-module eval-simple-1err
       res.push("--" + k.replace(/([A-Z])/g, function (c) {
         return "-" + c.toLowerCase();
       }) + " " + parms.options[k]);

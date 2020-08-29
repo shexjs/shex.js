@@ -7,7 +7,7 @@
 
 var ShExMap = (function () {
 
-var ShExCore = require("@shexjs/core"); var RdfTerm = ShExCore.RdfTerm;
+var ShExCore = require("@shexjs/core"); var RdfTerm = require("@shexjs/term");
 var ShExUtil = ShExCore.Util;
 var ShExValidator = require("@shexjs/core").Validator;
 var extensions = require("./lib/extensions");

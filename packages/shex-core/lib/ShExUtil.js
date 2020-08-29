@@ -1,7 +1,7 @@
 // **ShExUtil** provides ShEx utility functions
 
 var ShExUtil = (function () {
-var RdfTerm = require("./RdfTerm");
+var RdfTerm = require("@shexjs/term");
 const Visitor = require('@shexjs/visitor')  
 const Hierarchy = require('hierarchy-closure')
 

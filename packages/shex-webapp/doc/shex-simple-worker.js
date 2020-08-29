@@ -17,10 +17,10 @@ module.exports = exports; importScripts("../node_modules/shape-map/lib/ShapeMapJ
 importScripts("../node_modules/shape-map/lib/ShapeMapParser.js"   ); modules["../node_modules/shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;
 importScripts("../node_modules/shape-map/shape-map.js"   ); modules["../node_modules/shape-map/shape-map"] = modules["shape-map"] = module.exports;
 
-importScripts("../node_modules/@shexjs/core/lib/RdfTerm.js"     ); modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;
+importScripts("../node_modules/@shexjs/shex-term/shex-term.js"     ); modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;
 importScripts("../node_modules/@shexjs/core/lib/ShExUtil.js"     ); modules["./ShExUtil"] = modules["../node_modules/@shexjs/core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;
-importScripts("../node_modules/@shexjs/core/lib/regex/threaded-val-nerr.js"); modules["../node_modules/@shexjs/core/lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = modules["../lib/regex/threaded-val-nerr"] = module.exports;
-importScripts("../node_modules/@shexjs/core/lib/regex/nfax-val-1err.js"); modules["./lib/regex/nfax-val-1err"] = module.exports;
+importScripts("../node_modules/@shexjs/threaded-val-nerr/threaded-val-nerr.js"); modules["@shexjs/threaded-val-nerr"] = module.exports;
+importScripts("../node_modules/@shexjs/eval-simple-1err/eval-simple-1err.js"); modules["@shexjs/eval-simple-1err"] = module.exports;
 importScripts("../node_modules/@shexjs/core/lib/ShExValidator.js"); modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;
 importScripts("../node_modules/@shexjs/core/lib/ShExWriter.js"   ); modules["./lib/ShExWriter"] = modules["../node_modules/@shexjs/core/lib/ShExWriter"] = module.exports;
 importScripts("../node_modules/@shexjs/core/shex-core.js"     ); modules["@shexjs/core"] = ShExCore;

@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/core",
+  "name": "@shexjs/eval-simple-1err",
   "version": "1.0.0-alpha.6",
-  "description": "Shape Expressions validation and utilities.",
+  "description": "Shape Expressions triple expression evaluator - simple regexp returning 1 error.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,19 +15,16 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-core.js",
+  "main": "./eval-simple-1err.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "file:../shex-term",
-    "@shexjs/validator": "file:../shex-validator",
-    "@shexjs/visitor": "file:../shex-visitor",
-    "hierarchy-closure": "^1.2.1"
+    "@shexjs/term": "file:../shex-term"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-core-browserify.js && uglifyjs browser/shex-core-browserify.js --comments -mco browser/shex-core-browserify.min.js"
+    "browser999": "browserify shex.js -s ShEx -o browser/eval-simple-1err-browserify.js && uglifyjs browser/eval-simple-1err-browserify.js --comments -mco browser/eval-simple-1err-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"

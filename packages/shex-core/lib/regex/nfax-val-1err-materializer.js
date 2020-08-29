@@ -518,7 +518,7 @@ function extend(base) {
 }
 
 return {
-  name: "nfax-val-1err",
+  name: "eval-simple-1err",
   description: "simple regular expression engine with n out states",
   compile: compileNFA
 };

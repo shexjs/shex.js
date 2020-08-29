@@ -199,7 +199,7 @@ describe("A ShEx parser", function () {
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
                GraphSchema,
-               {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
+               {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
              var val = graphParser.validate(schemaDriver, schemaRoot, ShExValidator.start); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));

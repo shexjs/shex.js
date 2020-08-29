@@ -37,6 +37,8 @@
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",
     "@shexjs/webapp": "file:packages/shex-webapp",
+    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
+    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",
     "cross-spawn": "^6.0.5",
