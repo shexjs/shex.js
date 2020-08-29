@@ -67,11 +67,12 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "travisRepo": "./test/travisRepo.sh",
-    "browser-webpack": "cd packages/shex-webapp && npm run browser-webpack",
     "browserify-all": "./browserify-all.js ; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "travis-deploy-once": "travis-deploy-once",
-    "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer"
+    "webpack": "cd packages/shex-webapp && npm run webpack",
+    "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
+    "webpack-monitor": "cd packages/shex-webapp && npm run webpack-monitor"
   },
   "publishConfig": {
     "access": "private"

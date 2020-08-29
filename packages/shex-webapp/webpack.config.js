@@ -1,6 +1,17 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+
+// webpack-bundle-analyzer can be run after compilation.
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+// webpack-monitor is noisy so disabled by default (uses a deprecated API).
+const WebpackMonitor = !!JSON.parse(process.env["WEBPACK_MONITOR"] || "false")
+      ? new (require('webpack-monitor'))({
+        capture: true,
+        target: 'browser/webpack-monitor.json',
+        launch: true
+      })
+      : []
 
 module.exports = {
   entry: {
@@ -25,11 +36,11 @@ module.exports = {
     })]
   },
   node: {
-    fs: 'empty',
+    fs: 'empty',  // @@ webpack-monitor shows require('fs') errors. help?
     // net: 'empty',
     // tls: 'empty',
   },
   plugins: [
-  //   new BundleAnalyzerPlugin(/*{analyzerMode: 'json'}*/)
-  ],
+    // new BundleAnalyzerPlugin(/*{analyzerMode: 'json'}*/)
+  ].concat(WebpackMonitor)
 };
