@@ -29,7 +29,7 @@ var VERBOSE = "VERBOSE" in process.env;
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 var RdfTerm = require("./RdfTerm");
-let ShExUtil = require("./ShExUtil");
+let ShExVisitor = require("@shexjs/visitor");
 
 function getLexicalValue (term) {
   return RdfTerm.isIRI(term) ? term :
@@ -226,7 +226,7 @@ var decimalLexicalTests = {
 function ShExValidator_constructor(schema, options) {
   if (!(this instanceof ShExValidator_constructor))
     return new ShExValidator_constructor(schema, options);
-  let index = schema._index || ShExUtil.index(schema)
+  let index = schema._index || ShExVisitor.index(schema)
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
