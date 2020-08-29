@@ -28,9 +28,9 @@
   },
   "scripts": {
     "make": "(cd test/ && make test)",
-    "n3-browserify": "mkdir -p node_modules/n3/browser ; npx browserify -s N3 -o node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs node_modules/n3/browser/n3-browserify.js -o node_modules/n3/browser/n3-browserify.min.js -c",
+    "browserify-n3": "mkdir -p node_modules/n3/browser ; npx browserify -s N3 -o node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs node_modules/n3/browser/n3-browserify.js -o node_modules/n3/browser/n3-browserify.min.js -c",
     "test": "mocha -C -R dot",
-    "webpack": "npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json ; npm run n3-browserify",
+    "webpack": "npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json",
     "webpack-analyzer": "webpack-bundle-analyzer ./browser/compilation-stats.json",
     "webpack-monitor": "WEBPACK_MONITOR=true npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json ; npm run n3-browserify"
   },
