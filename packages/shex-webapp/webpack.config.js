@@ -26,10 +26,10 @@ module.exports = {
   },
   node: {
     fs: 'empty',
-    net: 'empty',
-    tls: 'empty',
+    // net: 'empty',
+    // tls: 'empty',
   },
-  // plugins: [
-  //   new BundleAnalyzerPlugin()
-  // ],
+  plugins: [
+  //   new BundleAnalyzerPlugin(/*{analyzerMode: 'json'}*/)
+  ],
 };

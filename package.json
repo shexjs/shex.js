@@ -70,7 +70,8 @@
     "browser-webpack": "cd packages/shex-webapp && npm run browser-webpack",
     "browserify-all": "./browserify-all.js ; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
-    "travis-deploy-once": "travis-deploy-once"
+    "travis-deploy-once": "travis-deploy-once",
+    "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer"
   },
   "publishConfig": {
     "access": "private"
