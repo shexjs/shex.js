@@ -1,6 +1,6 @@
 /**
  * File: map-extension-utils-test.js
- * Unit tests for extensions/shex-map/lib/extension-utils.js
+ * Unit tests for extensions/extension-map/lib/extension-utils.js
  */
 
 var chai = require('chai');

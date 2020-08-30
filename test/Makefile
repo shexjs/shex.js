@@ -34,6 +34,9 @@ Parser-Writer-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-m
 Partition-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Partition-test.js
 	$(MOCHA) -C -R $(REPORTER) Partition-test.js
 
+ShExPath-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ShExPath-test.js
+	$(MOCHA) -C -R $(REPORTER) ShExPath-test.js
+
 Compilation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../packages/shex-core/lib/ShExUtil.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
@@ -64,5 +67,5 @@ hashmap-extension-test: ../packages/shex-parser/lib/ShExJison.js hashmap-extensi
 regex-extension-test: ../packages/shex-parser/lib/ShExJison.js regex-extension-test.js
 	$(MOCHA) -C -R $(REPORTER) regex-extension-test.js
 
-test: Parser-Writer-test Partition-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js
+test: Parser-Writer-test Partition-test ShExPath-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js
 
