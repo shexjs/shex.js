@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/loader",
+  "name": "@shexjs/extension-eval",
   "version": "1.0.0-alpha.10",
-  "description": "Shape Expressions resource loader.",
+  "description": "Shape Expressions simple semantic action module.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,20 +15,13 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-loader.js",
+  "main": "./shex-extension-eval.js",
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {
-    "@shexjs/core": "file:../shex-core",
-    "jsonld": "^1.5.4",
-    "n3": "^1.0.4",
-    "request-promise": "^4.2.5",
-    "shape-map": "file:../shape-map"
-  },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-loader-browserify.js && uglifyjs browser/shex-loader-browserify.js --comments -mco browser/shex-loader-browserify.min.js"
+    "browser": "../../node_modules/.bin/browserify shex-extension-eval.js -s jsExtension -o browser/shex-extension-eval-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-eval-browserify.js --comments -mco browser/shex-extension-eval-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"
@@ -39,5 +32,8 @@
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "dependencies": {
+    "@shexjs/core": "file:../../packages/shex-core"
   }
 }

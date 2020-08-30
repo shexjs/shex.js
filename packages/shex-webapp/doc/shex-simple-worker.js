@@ -28,7 +28,7 @@ importScripts("../node_modules/@shexjs/core/shex-core.js"     ); modules["@shexj
 module.exports = exports; importScripts("../node_modules/@shexjs/parser/lib/ShExJison.js"    ); modules["./lib/ShExJison"] = module.exports;
 importScripts("../node_modules/@shexjs/parser/shex-parser.js"   ); modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;
 
-importScripts("../node_modules/@shexjs/loader/shex-loader.js"); modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;
+importScripts("../node_modules/@shexjs/node/shex-node.js"); modules["shex-node"] = modules["./lib/shex-node"] = modules["@shexjs/node"] = module.exports;
 importScripts("../shex-webapp.js"); 
 }
 importScripts("Util.js");
@@ -52,7 +52,7 @@ onmessage = function (msg) {
       schema: msg.data.schema,
       url: msg.data.schemaURL
     };
-    ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+    ShEx.Node.load([alreadLoaded], [], [], []).then(loaded => {
       validator = ShEx.Validator.construct(loaded.schema, options);
       postMessage({ response: "created" });
     }).catch(e => {

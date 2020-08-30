@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/extension-js",
+  "name": "@shexjs/node",
   "version": "1.0.0-alpha.10",
-  "description": "Shape Expressions simple semantic action module.",
+  "description": "Shape Expressions packages for node.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,16 +15,18 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-extension-js.js",
+  "main": "./shex-node.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/core": "file:../../packages/shex-core"
+    "@shexjs/api": "file:../shex-api",
+    "jsonld": "^1.5.4",
+    "n3": "^1.6.2",
+    "node-fetch": "^2.6.0"
   },
   "scripts": {
-    "test": "cd .. && mocha -C -R dot",
-    "browser": "../../node_modules/.bin/browserify shex-extension-js.js -s jsExtension -o browser/shex-extension-js-browserify.js && ../../node_modules/.bin/uglifyjs browser/shex-extension-js-browserify.js --comments -mco browser/shex-extension-js-browserify.min.js"
+    "test": "cd ../.. && npm run test"
   },
   "publishConfig": {
     "access": "public"

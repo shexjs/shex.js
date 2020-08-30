@@ -1,29 +1,29 @@
 //  "use strict";
 const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_ShExR"]) : true;
 const TEST_Vestiges = true;
-const VERBOSE = "VERBOSE" in process.env;
-const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
-const EARL = "EARL" in process.env; // We're generating an EARL report.
-const BASE = "http://a.example/application/base/";
+var VERBOSE = "VERBOSE" in process.env;
+var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var EARL = "EARL" in process.env; // We're generating an EARL report.
+var BASE = "http://a.example/application/base/";
 
-const ShExCore = require("@shexjs/core");
-const ShExParser = require("@shexjs/parser");
-const ShExLoader = require("@shexjs/loader");
-const ShExWriter = ShExCore.Writer;
-const ShExUtil = ShExCore.Util;
-const ShExValidator = ShExCore.Validator;
+var ShExCore = require("@shexjs/core");
+var ShExParser = require("@shexjs/parser");
+var ShExNode = require("@shexjs/node");
+var ShExWriter = ShExCore.Writer;
+var ShExUtil = ShExCore.Util;
+var ShExValidator = ShExCore.Validator;
 
-const N3 = require("n3");
+var N3 = require("n3");
 
-const fs = require("fs");
-const {assert, expect} = require("chai");
-const findPath = require("./findPath.js");
+var fs = require("fs");
+var {assert, expect} = require("chai");
+var findPath = require("./findPath.js");
 
-const schemasPath = findPath("schemas");
-const jsonSchemasPath = findPath("parsedSchemas");
-const manifestFile = schemasPath + "manifest.jsonld";
-const ShExRSchemaFile = findPath("doc") + "ShExR.shex";
-const negativeTests = [
+var schemasPath = findPath("schemas");
+var jsonSchemasPath = findPath("parsedSchemas");
+var manifestFile = schemasPath + "manifest.jsonld";
+var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
+var negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
   {path: findPath("negativeStructure"), include: "Structural error"}
 ];
@@ -273,7 +273,7 @@ describe("A ShEx parser", function () {
          ? dir + '/manifest#' + test.name
          : "should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
-        ShExLoader.load([path], [], [], [], { parser: parser }, {}).
+        ShExNode.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
           }).
@@ -393,12 +393,12 @@ if (!EARL && TEST_Vestiges) {
     }).filter(t => {
       return true;
     }).forEach(test => {
-      const path = schemasPath + test.shex;
-      it("should load the same imports as ShExLoader.load in '" + path + "'", function () {
+      var path = schemasPath + test.shex;
+      it("should load the same imports as ShExNode.load in '" + path + "'", function () {
         parser._setBase("file://"+path);
         return Promise.all([
-          ShExLoader.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
-          ShExLoader.loadShExImports_NotUsed(path, parser, pickShEx)
+          ShExNode.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
+          ShExNode.loadShExImports_NotUsed(path, parser, pickShEx)
         ]).then(function (loadedAndSchema) {
           expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).to.deep.equal(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
         });
