@@ -20,11 +20,11 @@
   },
   "dependencies": {
     "@shexjs/core": "file:../shex-core",
-    "@shexjs/loader": "file:../shex-loader",
+    "@shexjs/node": "file:../shex-node",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "jsonld": "^0.4.11",
-    "n3": "^1.0.4",
+    "n3": "^1.6.2",
     "shape-map": "file:../shape-map",
     "request-promise": "^4.2.2"
   },

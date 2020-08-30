@@ -3,7 +3,7 @@
 // json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json
 
 var ShExCore = require("@shexjs/core");
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var ShExWriter = ShExCore.Writer; // for verbose output
 
 // Generate command line interface
@@ -46,7 +46,7 @@ if (cmds.prefixes.length > 0) {
 }
 
 
-ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
+ShExNode.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
   new ShExWriter(null, options).
     writeSchema(loaded.schema,
                 function (error, text, prefixes) {
