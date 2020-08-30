@@ -15771,6 +15771,40 @@ function ShExValidator_constructor(schema, options) {
           if (!label.match(/^[+-]?\d{4}-[01]\d-[0-3]\dT[0-5]\d:[0-5]\d:[0-5]\d(\.\d+)?([+-][0-2]\d:[0-5]\d|Z)?$/))
             validationError("illegal dateTime value: " + label);
         }
+        else if (valueExpr.datatype === RdfTerm.RdfLangString) {
+          const lang = ldify(value).language;
+          // see https://stackoverflow.com/a/60899733/1243605
+          const grandfathered = "(?<grandfathered>" +
+                /* irregular */ (
+                  "en-GB-oed" +
+                    "|" + "i-(?:ami|bnn|default|enochian|hak|klingon|lux|mingo|navajo|pwn|tao|tay|tsu)" +
+                    "|" + "sgn-(?:BE-FR|BE-NL|CH-DE)"
+                ) +
+                "|" + /* regular */ (
+                  "art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang"
+                ) +
+                ")";
+          const langtag = "(" +
+                "(?<language>" + (
+                  "([A-Za-z]{2,3}(-" +
+                    "(?<extlang>[A-Za-z]{3}(-[A-Za-z]{3}){0,2})" +
+                    ")?)|[A-Za-z]{4,8})"
+                ) +
+                "(-" + "(?<script>[A-Za-z]{4})" + ")?" +
+                "(-" + "(?<region>[A-Za-z]{2}|[0-9]{3})" + ")?" +
+                "(-" + "(?<variant>[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3})" + ")*" +
+                "(-" + "(?<extension>" + (
+                  /* singleton */ "[0-9A-WY-Za-wy-z]" +
+                    "(-[A-Za-z0-9]{2,8})+)"
+                ) +
+                ")*" +
+                "(-" + "(?<privateUse>x(-[A-Za-z0-9]{1,8})+)" + ")?" +
+                ")";
+          const languageTag = RegExp("^(" + grandfathered + "|" + langtag + "|" + "(?<privateUse1>x(-[A-Za-z0-9]{1,8})+)" + ")$");
+
+          if (!lang.match(languageTag))
+            validationError("illegal language tag: " + lang);
+        }
       }
 
       if (valueExpr.values) {
