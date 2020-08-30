@@ -39,7 +39,7 @@ The regular expression engine is loaded from either:
 var ShExCore = require("@shexjs/core");
 var RdfTerm = ShExCore.RdfTerm;
 var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var ShExWriter = ShExCore.Writer; // for verbose output
 var ShExValidator = ShExCore.Validator;
 var ShapeMap = require("shape-map");
@@ -322,17 +322,17 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
-    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
+    ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
 
     // Expected results, if provided.
     !("result" in valParms) ? Promise.resolve(undefined) :
       typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
-      ShExLoader.GET(valParms.result).then(function (body) { 
+      ShExNode.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       }),
 
     // ShapeMap, if provided.
-    "mapURL" in valParms ? ShExLoader.GET(valParms.mapURL).then(function (body) {
+    "mapURL" in valParms ? ShExNode.GET(valParms.mapURL).then(function (body) {
       return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
     })
     : Promise.resolve("map" in valParms
@@ -573,7 +573,7 @@ function queueTests (tests, cmds) {
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
   var validator = ShExValidator.construct(schema, options);
-  var extensions = ShExLoader.loadExtensions(cmds.extension);
+  var extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
@@ -594,7 +594,7 @@ function runValidator (graph, shapeMap, schema, options) {
   if (cmds.exec) {
     /* example usage:
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
-       return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+       return require("../lib/ShExNode").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
        var db = require("../extensions/extension-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
@@ -632,7 +632,7 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExLoader.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
+  return ShExNode.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
 
     var testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
@@ -697,7 +697,7 @@ function useCommandLineDefaults (run) {
 
 function loadJSONmanifest (jsonManifests) {
   return jsonManifests.map(function (jm) {
-    return ShExLoader.GET(jm).then(function (p) {
+    return ShExNode.GET(jm).then(function (p) {
       try {
         var d = JSON.parse(p.text);
 
@@ -858,7 +858,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                   body.files[key] :
                   [body.files[key]]
                  ).map(pair => {
-                   return pair.path; // should ShExLoader accept [.name, .path]?
+                   return pair.path; // should ShExNode accept [.name, .path]?
                  });
         }
         var schemaFiles = makeArray("schema");
@@ -879,7 +879,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           });
 
         var httpResponse = this;
-        yield ShExLoader.
+        yield ShExNode.
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data
