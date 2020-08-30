@@ -3,6 +3,9 @@
 // Release under MIT License.
 
 const ShEx = ShExWebApp; // @@ rename globally
+const ShExApi = ShEx.Api({
+  fetch, rdfjs: ShEx.N3, jsonld: null
+})
 ShEx.ShapeMap.start = ShEx.Validator.start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -57,7 +60,7 @@ var QueryParams = Getables.concat([
 // utility functions
 function parseTurtle (text, meta, base) {
   var ret = new ShEx.N3.Store();
-  ShEx.N3.Parser._resetBlankNodeIds();
+  ShEx.N3.Parser._resetBlankNodePrefix();
   var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
@@ -752,8 +755,8 @@ function callValidator (done) {
         schema: Caches.inputSchema.refresh(),
         url: Caches.inputSchema.url || DefaultBase
       };
-      // shex-loader loads IMPORTs and tests the schema for structural faults.
-      ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+      // shex-node loads IMPORTs and tests the schema for structural faults.
+      ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
         var time;
         var validator = ShEx.Validator.construct(
           loaded.schema,

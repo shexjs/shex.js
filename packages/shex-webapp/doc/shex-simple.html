@@ -391,11 +391,11 @@ ul {
     <script src="../node_modules/shape-map/browser/shape-map-browserify.min.js"></script>
     <script src="../node_modules/@shexjs/core/browser/shex-core-browserify.min.js"></script>
     <script src="../node_modules/@shexjs/parser/browser/shex-parser-browserify.min.js"></script>
-    <script src="../node_modules/@shexjs/loader/browser/shex-loader-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/node/browser/shex-node-browserify.min.js"></script>
     <script>
 ShExWebApp = (function () {
   return Object.assign(shexCore, {
-    Loader: shexLoader,
+    Api: shexApi,
     Parser: shexParser,
     ShapeMap: shapeMap,
     ShapeMapParser: shapeMap.Parser,
@@ -433,7 +433,7 @@ ShExWebApp = (function () {
     <script>module.exports = exports;</script><script src="../node_modules/@shexjs/parser/lib/ShExJison.js"    ></script><script>modules["./lib/ShExJison"] = module.exports;</script>
     <script src="../node_modules/@shexjs/parser/shex-parser.js"   ></script><script>modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;</script>
 
-    <script src="../node_modules/@shexjs/loader/shex-loader.js"></script><script>modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;</script>
+    <script src="../node_modules/@shexjs/node/shex-node.js"></script><script>modules["shex-node"] = modules["./lib/shex-node"] = modules["@shexjs/node"] = module.exports;</script>
     <script src="../shex-webapp.js"></script>
  -->
 

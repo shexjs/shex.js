@@ -11,7 +11,7 @@ var HTTPTEST = "HTTPTEST" in process.env ?
     "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
 
 var ShExUtil = require("@shexjs/core").Util;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var child_process = require('child_process');
 var chai = require("chai");
 var expect = chai.expect;
@@ -173,10 +173,10 @@ Object.keys(AllTests).forEach(function (script) {
     try {
       test.ref =
         "resultText" in test ? { resultText: test.resultText } :
-      "resultNoSpace" in test ? ShExLoader.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
+      "resultNoSpace" in test ? ShExNode.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
       "resultMatch" in test ? { resultMatch: RegExp(test.resultMatch) } :
       "errorMatch" in test ? { errorMatch: RegExp(test.errorMatch) } :
-      ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
+      ShExNode.GET(test.result).then(function (loaded) { return { result: loaded }; });
 
       test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
         process.chdir(__dirname); // the above paths are relative to this directory
