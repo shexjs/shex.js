@@ -23,6 +23,7 @@
     "@shexjs/term": "file:../shex-term",
     "@shexjs/validator": "file:../shex-validator",
     "@shexjs/visitor": "file:../shex-visitor",
+    "@shexjs/writer": "file:../shex-writer",
     "hierarchy-closure": "^1.2.1"
   },
   "scripts": {

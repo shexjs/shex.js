@@ -1554,7 +1554,7 @@ var ShExUtil = {
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      var w = require("../lib/ShExWriter")();
+      var w = require("@shexjs/writer")();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       var txt;
       w.end((err, res) => {
