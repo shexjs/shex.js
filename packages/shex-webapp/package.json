@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/webapp",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.6",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -21,19 +21,18 @@
   },
   "dependencies": {
     "@shexjs/core": "file:../shex-core",
-    "@shexjs/loader": "file:../shex-loader",
+    "@shexjs/api": "file:../shex-api",
     "@shexjs/parser": "file:../shex-parser",
-    "jsonld": "^0.4.11",
-    "koa": "^1.6.2",
-    "koa-body": "^1.4.0",
-    "n3": "^1.0.4",
-    "nock": "^9.3.0",
-    "promise": "^7.1.1",
+    "n3": "^1.6.2",
     "shape-map": "file:../shape-map"
   },
   "scripts": {
     "make": "(cd test/ && make test)",
-    "test": "mocha -C -R dot"
+    "browserify-n3": "mkdir -p node_modules/n3/browser ; npx browserify -s N3 -o node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs node_modules/n3/browser/n3-browserify.js -o node_modules/n3/browser/n3-browserify.min.js -c",
+    "test": "mocha -C -R dot",
+    "webpack": "npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json",
+    "webpack-analyzer": "webpack-bundle-analyzer ./browser/compilation-stats.json",
+    "webpack-monitor": "WEBPACK_MONITOR=true npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json ; npm run n3-browserify"
   },
   "publishConfig": {
     "access": "public"
@@ -48,5 +47,13 @@
   "pre-commit": [
     "lint",
     "test"
-  ]
+  ],
+  "devDependencies": {
+    "terser-webpack-plugin": "^4.1.0",
+    "uglify-es": "^3.3.9",
+    "webpack": "^4.44.1",
+    "webpack-bundle-analyzer": "^3.8.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-monitor": "^1.0.14"
+  }
 }

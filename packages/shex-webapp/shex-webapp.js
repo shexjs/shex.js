@@ -1,7 +1,7 @@
 ShExWebApp = (function () {
   let shapeMap = require("shape-map")
   return Object.assign(require("@shexjs/core"), {
-    Loader: require("@shexjs/loader"),
+    Api: require("@shexjs/api"),
     Parser: require("@shexjs/parser"),
     ShapeMap: shapeMap,
     ShapeMapParser: shapeMap.Parser,
