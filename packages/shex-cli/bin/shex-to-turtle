@@ -6,7 +6,7 @@ const Path = require('path');
 const Fs = require('fs');
 const ShExCore = require("@shexjs/core");
 const ShExUtil = ShExCore.Util;
-const ShExLoader = require("@shexjs/loader"); // for verbose output
+const ShExNode = require("@shexjs/node"); // for verbose output
 const ShExRWriter = require('../../../lib/ShExRWriter');
 const Jsonld = require("jsonld");
 const N3 = require("n3");
@@ -54,7 +54,7 @@ if (cmds['schema-keep-imports']) {
   schemaOptions.keepImports = cmds['schema-keep-imports']
 }
 
-ShExLoader.load(cmds.shex, cmds.json, [], [], schemaOptions).then(function (loaded) {
+ShExNode.load(cmds.shex, cmds.json, [], [], schemaOptions).then(function (loaded) {
   if (false) {
     var shexj = ShExUtil.AStoShExJ(loaded.schema);
     var w;

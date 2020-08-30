@@ -7,7 +7,7 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var ShExCore = require("@shexjs/core");
 var ShExUtil = ShExCore.Util;
 var ShExValidator = ShExCore.Validator;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var Mapper = require("@shexjs/extension-map");
 // var Promise = require("promise");
 var expect = require("chai").expect;
@@ -25,9 +25,9 @@ var Harness = {
       targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
       inputData = Path.resolve(__dirname, inputData);
       expectedRDF = Path.resolve(__dirname, expectedRDF);
-      // Lean on ShExLoader to load all the schemas and data graphs.
-      Promise.all([ShExLoader.load(srcSchemas, [], [inputData], [], {index: true}),
-                   ShExLoader.load(targetSchemas, [], [expectedRDF], [], {index: true})]).
+      // Lean on ShExNode to load all the schemas and data graphs.
+      Promise.all([ShExNode.load(srcSchemas, [], [inputData], [], {index: true}),
+                   ShExNode.load(targetSchemas, [], [expectedRDF], [], {index: true})]).
         then(function (loads) {
           loads[0].data.toString = loads[1].data.toString = graphToString;
 

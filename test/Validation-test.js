@@ -6,7 +6,7 @@ var EARL = "EARL" in process.env;
 
 var ShExCore = require("@shexjs/core");
 var ShExParser = require("@shexjs/parser");
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var ShExUtil = ShExCore.Util;
 var ShExValidator = ShExCore.Validator;
 var TestExtension = require("@shexjs/extension-test")
@@ -150,7 +150,7 @@ describe("A ShEx validator", function () {
           function pickShEx (i) {
             return i + ".shex";
           }
-          ShExLoader.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
+          ShExNode.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
             then(function (loaded) {
               var schema = loaded.schema;
               validator = ShExValidator.construct(schema, schemaOptions);
