@@ -6,12 +6,11 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generating an EARL report.
 var BASE = "http://a.example/application/base/";
 
-var ShExCore = require("@shexjs/core");
-var ShExParser = require("@shexjs/parser");
-var ShExNode = require("@shexjs/node");
-var ShExWriter = ShExCore.Writer;
-var ShExUtil = ShExCore.Util;
-var ShExValidator = ShExCore.Validator;
+const ShExParser = require("@shexjs/parser");
+const ShExNode = require("@shexjs/node");
+const ShExUtil = require("@shexjs/util");
+const ShExValidator = require("@shexjs/validator");
+const ShExWriter = require("@shexjs/writer");
 
 var N3 = require("n3");
 

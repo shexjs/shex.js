@@ -4,8 +4,7 @@
 
 const Path = require('path');
 const Fs = require('fs');
-const ShExCore = require("@shexjs/core");
-const ShExUtil = ShExCore.Util;
+const ShExUtil = require("@shexjs/util");
 const ShExNode = require("@shexjs/node"); // for verbose output
 const ShExRWriter = require('../../../lib/ShExRWriter');
 const Jsonld = require("jsonld");

@@ -23,7 +23,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/core": "file:../../packages/shex-core",
+    "@shexjs/util": "file:../../packages/shex-util",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "underscore": "~1.8.3"

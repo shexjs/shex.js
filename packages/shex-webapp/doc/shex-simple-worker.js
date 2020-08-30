@@ -10,7 +10,7 @@ importScripts("../node_modules/n3/lib/N3Lexer.js"      ); modules["n3"]["Lexer"]
 importScripts("../node_modules/n3/lib/N3Parser.js"     ); modules["n3"]["Parser"]    = module.exports;
 importScripts("../node_modules/n3/lib/N3Store.js"      ); modules["n3"]["Store"]     = module.exports;
 
-importScripts("../node_modules/@shexjs/core/node_modules/hierarchy-closure/hierarchy-closure.js"); modules["hierarchy-closure"] = module.exports;
+importScripts("../node_modules/@shexjs/util/node_modules/hierarchy-closure/hierarchy-closure.js"); modules["hierarchy-closure"] = module.exports;
 
 importScripts("../node_modules/shape-map/lib/ShapeMapSymbols.js"    ); modules["./lib/ShapeMapSymbols"] = modules["./ShapeMapSymbols"] = module.exports;
 module.exports = exports; importScripts("../node_modules/shape-map/lib/ShapeMapJison.js"    ); modules["./ShapeMapJison"] = module.exports;
@@ -18,12 +18,12 @@ importScripts("../node_modules/shape-map/lib/ShapeMapParser.js"   ); modules["..
 importScripts("../node_modules/shape-map/shape-map.js"   ); modules["../node_modules/shape-map/shape-map"] = modules["shape-map"] = module.exports;
 
 importScripts("../node_modules/@shexjs/shex-term/shex-term.js"     ); modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;
-importScripts("../node_modules/@shexjs/core/lib/ShExUtil.js"     ); modules["./ShExUtil"] = modules["../node_modules/@shexjs/core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;
+importScripts("../node_modules/@!shexjs/util/lib/ShExUtil.js"     ); modules["./ShExUtil"] = modules["../node_modules/@shexjs/util/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/util/lib/ShExUtil"] = ShExUtil;
 importScripts("../node_modules/@shexjs/threaded-val-nerr/threaded-val-nerr.js"); modules["@shexjs/threaded-val-nerr"] = module.exports;
 importScripts("../node_modules/@shexjs/eval-simple-1err/eval-simple-1err.js"); modules["@shexjs/eval-simple-1err"] = module.exports;
-importScripts("../node_modules/@shexjs/core/lib/ShExValidator.js"); modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;
-importScripts("../node_modules/@shexjs/core/lib/ShExWriter.js"   ); modules["./lib/ShExWriter"] = modules["../node_modules/@shexjs/core/lib/ShExWriter"] = module.exports;
-importScripts("../node_modules/@shexjs/core/shex-core.js"     ); modules["@shexjs/core"] = ShExCore;
+importScripts("../node_modules/@!shexjs/util/lib/ShExValidator.js"); modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;
+importScripts("../node_modules/@!shexjs/util/lib/ShExWriter.js"   ); modules["./lib/ShExWriter"] = modules["../node_modules/@shexjs/util/lib/ShExWriter"] = module.exports;
+importScripts("../node_modules/@!shexjs/util/shex-util.js"     ); modules["@shexjs/util"] = ShExCore;
 
 module.exports = exports; importScripts("../node_modules/@shexjs/parser/lib/ShExJison.js"    ); modules["./lib/ShExJison"] = module.exports;
 importScripts("../node_modules/@shexjs/parser/shex-parser.js"   ); modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;

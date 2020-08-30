@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "shape-map": "file:../shape-map",
-    "@shexjs/core": "file:../shex-core",
+    "@shexjs/util": "file:../shex-util",
     "@shexjs/node": "file:../shex-node",
     "@shexjs/writer": "file:../shex-writer",
     "command-line-args": "^5.0.2",

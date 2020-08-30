@@ -1,5 +1,5 @@
 {
-  "name": "@shexjs/core",
+  "name": "@shexjs/util",
   "version": "1.0.0-alpha.6",
   "description": "Shape Expressions validation and utilities.",
   "author": {
@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-core.js",
+  "main": "./shex-util.js",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -28,7 +28,7 @@
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-core-browserify.js && uglifyjs browser/shex-core-browserify.js --comments -mco browser/shex-core-browserify.min.js"
+    "browser": "browserify shex.js -s ShEx -o browser/shex-util-browserify.js && uglifyjs browser/shex-util-browserify.js --comments -mco browser/shex-util-browserify.min.js"
   },
   "publishConfig": {
     "access": "public"
