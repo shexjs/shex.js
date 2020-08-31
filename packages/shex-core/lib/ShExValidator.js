@@ -216,6 +216,9 @@ var decimalLexicalTests = {
       }, true);
     }
 
+  // See ../../../bin/LanguageTagRe.js for derivation.
+  const LanguageTagRe = /^((en-GB-oed|i-(?:ami|bnn|default|enochian|hak|klingon|lux|mingo|navajo|pwn|tao|tay|tsu)|sgn-(?:BE-FR|BE-NL|CH-DE)|art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang)|((([A-Za-z]{2,3}(-([A-Za-z]{3}(-[A-Za-z]{3}){0,2}))?)|[A-Za-z]{4,8})(-([A-Za-z]{4}))?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*(-([0-9A-WY-Za-wy-z](-[A-Za-z0-9]{2,8})+))*(-(x(-[A-Za-z0-9]{1,8})+))?)|(x(-[A-Za-z0-9]{1,8})+))$/
+
 /* ShExValidator_constructor - construct an object for validating a schema.
  *
  * schema: a structure produced by a ShEx parser or equivalent.
@@ -794,37 +797,8 @@ function ShExValidator_constructor(schema, options) {
             validationError("illegal dateTime value: " + label);
         }
         else if (valueExpr.datatype === RdfTerm.RdfLangString) {
-          const lang = ldify(value).language;
-          // see https://stackoverflow.com/a/60899733/1243605
-          const grandfathered = "(?<grandfathered>" +
-                /* irregular */ (
-                  "en-GB-oed" +
-                    "|" + "i-(?:ami|bnn|default|enochian|hak|klingon|lux|mingo|navajo|pwn|tao|tay|tsu)" +
-                    "|" + "sgn-(?:BE-FR|BE-NL|CH-DE)"
-                ) +
-                "|" + /* regular */ (
-                  "art-lojban|cel-gaulish|no-bok|no-nyn|zh-guoyu|zh-hakka|zh-min|zh-min-nan|zh-xiang"
-                ) +
-                ")";
-          const langtag = "(" +
-                "(?<language>" + (
-                  "([A-Za-z]{2,3}(-" +
-                    "(?<extlang>[A-Za-z]{3}(-[A-Za-z]{3}){0,2})" +
-                    ")?)|[A-Za-z]{4,8})"
-                ) +
-                "(-" + "(?<script>[A-Za-z]{4})" + ")?" +
-                "(-" + "(?<region>[A-Za-z]{2}|[0-9]{3})" + ")?" +
-                "(-" + "(?<variant>[A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3})" + ")*" +
-                "(-" + "(?<extension>" + (
-                  /* singleton */ "[0-9A-WY-Za-wy-z]" +
-                    "(-[A-Za-z0-9]{2,8})+)"
-                ) +
-                ")*" +
-                "(-" + "(?<privateUse>x(-[A-Za-z0-9]{1,8})+)" + ")?" +
-                ")";
-          const languageTag = RegExp("^(" + grandfathered + "|" + langtag + "|" + "(?<privateUse1>x(-[A-Za-z0-9]{1,8})+)" + ")$");
-
-          if (!lang.match(languageTag))
+          const lang = RdfTerm.getLiteralLanguage(value);
+          if (!lang.match(LanguageTagRe))
             validationError("illegal language tag: " + lang);
         }
       }
@@ -866,7 +840,10 @@ function ShExValidator_constructor(schema, options) {
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
                     return func(RdfTerm.getLiteralValue(val), ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralLanguage(val) || null, ref);
+                    const lang = RdfTerm.getLiteralLanguage(val);
+                    if (!lang.match(LanguageTagRe))
+                      validationError("illegal language tag: " + lang);
+                    return func(lang || null, ref);
                   } else {
                     return validationError("literal " + val + " not comparable with non-literal " + ref);
                   }
