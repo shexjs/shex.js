@@ -4,6 +4,9 @@
 
 const USE_INCREMENTAL_RESULTS = true;
 const ShEx = ShExWebApp; // @@ rename globally
+const ShExApi = ShEx.Api({
+  fetch, rdfjs: ShEx.N3, jsonld: null
+})
 ShEx.ShapeMap.start = ShEx.Validator.start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -21,6 +24,7 @@ Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
 Caches.inputMeta = makeTurtleCache($("#meta textarea"));
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
+Caches.extension = makeExtensionCache($("#extensionDrop"));
 Caches.shapeMap = makeShapeMapCache($("#textMap")); // @@ rename to #shapeMap
 var ShExRSchema; // defined below
 
@@ -46,19 +50,21 @@ var Getables = [
   {queryStringParm: "schema",       location: Caches.inputSchema.selection, cache: Caches.inputSchema},
   {queryStringParm: "data",         location: Caches.inputData.selection,   cache: Caches.inputData  },
   {queryStringParm: "manifest",     location: Caches.manifest.selection,    cache: Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+  {queryStringParm: "extension",    location: Caches.extension.selection,   cache: Caches.extension  },
   {queryStringParm: "shape-map",    location: $("#textMap"),                cache: Caches.shapeMap   },
   {queryStringParm: "meta",         location: Caches.inputMeta.selection,   cache: Caches.inputMeta  },
 ];
 
 var QueryParams = Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
+  {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
 ]);
 
 // utility functions
 function parseTurtle (text, meta, base) {
   var ret = new ShEx.N3.Store();
-  ShEx.N3.Parser._resetBlankNodeIds();
+  ShEx.N3.Parser._resetBlankNodePrefix();
   var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
@@ -169,32 +175,31 @@ function _makeCache (selection) {
       _dirty = false;
       return this.parsed;
     },
-    asyncGet: function (url) {
+    asyncGet: async function (url) {
+      url = new URL(url, window.location).href
       var _cache = this;
-      return new Promise(function (resolve, reject) {
-        $.ajax({
-          accepts: {
-            mycustomtype: 'text/shex,text/turtle,*/*'
-          },
-          url: url,
-          cache: false, // force reload
-          dataType: "text"
-        }).fail(function (jqXHR, textStatus) {
-          var error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-          reject(Error("GET <" + url + "> failed: " + error));
-        }).done(function (data) {
-          try {
-            _cache.meta.base = url;
-            resolver._setBase(url);
-            _cache.set(data, url);
-            $("#loadForm").dialog("close");
-            toggleControls();
-            resolve({ url: url, data: data });
-          } catch (e) {
-            reject(Error("unable to " + (e.action || "evaluate") + " <" + url + ">: " + '\n' + e.message));
-          }
-        });
-      });
+      let resp
+      try {
+        resp = await fetch(url, {headers: {
+          accept: 'text/shex,text/turtle,*/*;q=0.9, test/html;q=0.8',
+          cache: 'no-cache'
+        }})
+      } catch (e) {
+        throw Error("unable to fetch <" + url + ">: " + '\n' + e.message);
+      }
+      if (!resp.ok)
+        throw Error("fetch <" + url + "> got error response " + resp.status + ": " + resp.statusText);
+      const data = await resp.text();
+      _cache.meta.base = url;
+      resolver._setBase(url);
+      try {
+        _cache.set(data, url, undefined, resp.headers.get('content-type'));
+      } catch (e) {
+        throw Error("error setting " + this.queryStringParm + " with <" + url + ">: " + '\n' + e.message);
+      }
+      $("#loadForm").dialog("close");
+      toggleControls();
+      return { url: url, data: data };
     },
     url: undefined // only set if inputarea caches some web resource.
   };
@@ -439,6 +444,83 @@ function makeManifestCache (selection) {
             obj[key] = Promise.resolve(obj[key]);
           }
         }
+}
+
+
+function makeExtensionCache (selection) {
+  var ret = _makeCache(selection);
+  ret.set = function (code, url, source, mediaType) {
+    this.url = url; // @@crappyHack1 -- parms should differntiate:
+    try {
+      // exceptions pass through to caller (asyncGet)
+
+  // const resp = await fetch('http://localhost/checkouts/shexSpec/extensions/Eval/')
+      // const text = await resp.text();
+      if (mediaType.startsWith('text/html')) return (async function () {
+        const jq = $($.parseHTML(code));
+        debugger
+        const impls = $(jq.find('table.implementations'))
+        if (impls.length !== 1) {
+          results.append($("<div/>").append(
+            $("<span/>").text("unparsable extension index at " + url)
+          ).addClass("error"));
+          return;
+        }
+        const tr = $(impls).find('tr td:contains("shexjs")').parent()
+        if (tr.length !== 1) {
+          results.append($("<div/>").append(
+            $("<span/>").text("no entry for shexjs in index HTML at " + url)
+          ).addClass("error"));
+          return;
+        }
+        const href = tr.find('[property="shex:package"]').attr('href')
+        if (!href) {
+          results.append($("<div/>").append(
+            $("<span/>").text("no package for shexjs in index HTML at " + url)
+          ).addClass("error"));
+          return;
+        }
+        const refd = await fetch(href);
+        if (!refd.ok) {
+          results.append($("<div/>").append(
+            $("<span/>").text(`error fetching implementation: ${refd.status} (${refd.statusText}) for URL <${href}>`)
+          ).addClass("error"));
+        } else {
+          code = await refd.text();
+          this.set(code, url, source, refd.headers.get('content-type'));
+        }
+      }).call(this)
+      const module = {}, exports = {};
+      eval(code);
+      const name = module.exports.name;
+      const id = "extension_" + name;
+      const elt = $("<li/>", { class: "menuItem", title: module.exports.description }).append(
+        $("<input/>", { type: "checkbox", checked: "checked", class: "extensionControl", id: id, "data-name": name }),
+        $("<label/>", { for: "extension_" + name }).append(
+          $("<a/>", {href: module.exports.url, text: name})
+        )
+      );
+      elt.insertBefore("#load-extension-button");
+      $("#" + id).data("code", module.exports);
+      Caches.extension.url = url; // @@ cheesy hack that only works to remember one extension URL
+      results.append($("<div/>").append(
+        $("<span/>").text(`extension ${name} loaded from <${url}>`)
+      ));
+    } catch (e) {
+      // $("#inputSchema .extension").append($("<li/>").text(NO_EXTENSION_LOADED));
+      var throwMe = Error(e + '\n' + code);
+      throwMe.action = 'load extension'
+      throw throwMe
+    }
+    // $("#extensionDrop").show(); // may have been hidden if no extension loaded.
+  };
+  ret.parse = function (text, base) {
+    throw Error("should not try to parse extension cache");
+  };
+  ret.getItems = function () {
+    throw Error("should not try to get extension cache items");
+  };
+  return ret;
 }
 
 
@@ -951,24 +1033,39 @@ function callValidator (done) {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
-    switch ($("#interface").val()) {
-    case "human":
-      elt = $("<div class='human'/>").append(
-        $("<span/>").text(resultStr),
-        $("<span/>").text(
-        `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
-        )).addClass(klass);
-      if (fails)
-        elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
-      break;
+    if (entry.graph) {
+      var wr = new ShEx.N3.Writer(Caches.inputData.meta);
+      wr.addQuads(entry.graph);
+      wr.end((error, results) => {
+        if (error)
+          throw error;
+        entry.turtle = ""
+          + "# node: " + entry.node + "\n"
+          + "# shape: " + entry.shape + "\n"
+          + results.trim();
+        elt = $("<pre/>").text(entry.turtle).addClass(klass);
+      });
+      delete entry.graph;
+    } else {
+      switch ($("#interface").val()) {
+      case "human":
+        elt = $("<div class='human'/>").append(
+          $("<span/>").text(resultStr),
+          $("<span/>").text(
+            `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
+          )).addClass(klass);
+        if (fails)
+          elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
+        break;
 
-    case "minimal":
-      if (fails)
-        entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
-      delete entry.appinfo;
-      // fall through to default
-    default:
-      elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
+      case "minimal":
+        if (fails)
+          entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
+        delete entry.appinfo;
+        // fall through to default
+      default:
+        elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
+      }
     }
     results.append(elt);
 
@@ -1182,6 +1279,7 @@ function removeEditMapPair (evt) {
 function prepareControls () {
   $("#menu-button").on("click", toggleControls);
   $("#interface").on("change", setInterface);
+  $("#success").on("change", setInterface);
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);

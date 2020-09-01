@@ -14,7 +14,51 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "abab" }
+        "object": { "value": "abab" },
+        "referenced": {
+          "type": "ShapeAndResults",
+          "solutions": [
+            {
+              "type": "NodeTest",
+              "node": {
+                "value": "abab"
+              },
+              "shape": "http://a.example/vc1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "minlength": 4,
+                "id": "http://a.example/vc1"
+              }
+            },
+            {
+              "type": "NodeTest",
+              "node": {
+                "value": "abab"
+              },
+              "shape": "http://a.example/vc2",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "maxlength": 5,
+                "id": "http://a.example/vc2"
+              }
+            },
+            {
+              "type": "NodeTest",
+              "node": {
+                "value": "abab"
+              },
+              "shape": "http://a.example/vc3",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "literal",
+                "pattern": "^(ab)+$",
+                "id": "http://a.example/vc3"
+              }
+            }
+          ]
+        }
       }
     ]
   }

@@ -11,7 +11,7 @@ var HTTPTEST = "HTTPTEST" in process.env ?
     "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
 
 var ShExUtil = require("@shexjs/core").Util;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var child_process = require('child_process');
 var chai = require("chai");
 var expect = chai.expect;
@@ -65,6 +65,8 @@ var AllTests = {
 
     // local file access
     { name: "simple-local" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
+    { name: "closed-local" , args: ["-x", "cli/1dotOr2dotCLOSED.shex", "-s", "<http://a.example/S1>", "-d", "cli/p2p3.ttl", "-n", "<x>"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 0 },
+    { name: "closed-fail" , args: ["-x", "cli/1dotOr2dotCLOSED.shex", "-s", "<http://a.example/S1>", "-d", "cli/p2p3p4.ttl", "-n", "<x>"], result: "cli/1dotOr2dotCLOSED_fail_p4.val", status: 2 },
     { name: "missing-node" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x999>"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
     { name: "missing-shape" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1999>", "-d", "cli/p1.ttl", "-n", "<x>"], errorMatch: "example/S1\n", status: 1 },
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -171,10 +173,10 @@ Object.keys(AllTests).forEach(function (script) {
     try {
       test.ref =
         "resultText" in test ? { resultText: test.resultText } :
-      "resultNoSpace" in test ? ShExLoader.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
+      "resultNoSpace" in test ? ShExNode.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
       "resultMatch" in test ? { resultMatch: RegExp(test.resultMatch) } :
       "errorMatch" in test ? { errorMatch: RegExp(test.errorMatch) } :
-      ShExLoader.GET(test.result).then(function (loaded) { return { result: loaded }; });
+      ShExNode.GET(test.result).then(function (loaded) { return { result: loaded }; });
 
       test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
         process.chdir(__dirname); // the above paths are relative to this directory

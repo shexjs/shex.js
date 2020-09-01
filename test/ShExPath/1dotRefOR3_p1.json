@@ -1,0 +1,14 @@
+[                   {
+        "type": "TripleConstraint",
+        "predicate": "http://a.example/p1",
+        "valueExpr": {
+          "type": "ShapeOr",
+          "shapeExprs": [
+            "http://a.example/S2",
+            "http://a.example/S3",
+            "http://a.example/S4"
+          ]
+        }
+      }
+]
+

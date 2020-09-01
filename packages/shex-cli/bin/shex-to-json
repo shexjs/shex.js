@@ -4,7 +4,7 @@
 
 var ShExCore = require("@shexjs/core");
 var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 
 // Generate command line interface
 var CommandLineOptions = [
@@ -38,7 +38,7 @@ if (cmds.help)
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
 
 
-ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
+ShExNode.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
   console.log('%s', JSON.stringify(ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate), null, '  '));
 }).catch(function (e) {
   console.error("aborting:", e.stack || e);

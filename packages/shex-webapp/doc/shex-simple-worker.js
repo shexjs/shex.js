@@ -28,12 +28,15 @@ importScripts("../node_modules/@shexjs/core/shex-core.js"     ); modules["@shexj
 module.exports = exports; importScripts("../node_modules/@shexjs/parser/lib/ShExJison.js"    ); modules["./lib/ShExJison"] = module.exports;
 importScripts("../node_modules/@shexjs/parser/shex-parser.js"   ); modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;
 
-importScripts("../node_modules/@shexjs/loader/shex-loader.js"); modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;
+importScripts("../node_modules/@shexjs/node/shex-node.js"); modules["shex-node"] = modules["./lib/shex-node"] = modules["@shexjs/node"] = module.exports;
 importScripts("../shex-webapp.js"); 
 }
 importScripts("Util.js");
 
 const ShEx = ShExWebApp; // @@ rename globally
+const ShExApi = ShEx.Api({
+  fetch, rdfjs: ShEx.N3, jsonld: null
+})
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 var validator = null;
 var loadedSchema = null;
@@ -54,7 +57,7 @@ onmessage = function (msg) {
       url: msg.data.schemaURL
     };
     // shex-loader loads IMPORTs and tests the schema for structural faults.
-    ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+    ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
       loadedSchema = loaded.schema;
       validator = ShEx.Validator.construct(loaded.schema, options);
       postMessage({ response: "created" });
