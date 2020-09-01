@@ -39,7 +39,7 @@ The regular expression engine is loaded from either:
 var ShExCore = require("@shexjs/core");
 var RdfTerm = ShExCore.RdfTerm;
 var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var ShExWriter = ShExCore.Writer; // for verbose output
 var ShExValidator = ShExCore.Validator;
 var ShapeMap = require("shape-map");
@@ -61,6 +61,7 @@ var CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean },
   { name: "quiet",     alias: "q", type: Boolean },
   { name: "query",                 type: Boolean },
+  { name: "remainder",             type: Boolean },
   { name: "grep",                  type: Boolean },
   { name: "help",      alias: "h", type: Boolean },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
@@ -279,6 +280,23 @@ function findNodesAndValidate (loaded, parms, options) {
   }
 
   ret.results = runValidator(loaded.data, shapeMap, loaded.schema, options);
+  if (typeof ret.results === 'object' && !("errors" in ret.results)) {
+    if (cmds.query || cmds.remainder) {
+      ret.results.graph = new N3.Store();
+
+      // Test for .solution because `<S> .` or `<S> {}` will pass with no sollutions.
+      // This is analogous to testing for `("referenced" in s)` in a TestedTriple.
+      if ("solution" in ret.results)
+        ShExUtil.getProofGraph(ret.results.solution, ret.results.graph, N3.DataFactory);
+    }
+    if (cmds.remainder) {
+      var remainder = new N3.Store();
+      remainder.addQuads(loaded.data.getQuads());
+      ret.results.graph.getQuads().forEach(q => remainder.removeQuad(q));
+      ret.results.graph = remainder;
+    }
+  }
+  return ret;
 
   function optsStr (key, dict) {
     var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
@@ -291,7 +309,6 @@ function findNodesAndValidate (loaded, parms, options) {
       opts.length === 1 ? ": try " + opts[0] :
       ": try one of " + opts.join(" , ");
   }
-  return ret;
 }
 
 function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
@@ -305,17 +322,17 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
-    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
+    ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
 
     // Expected results, if provided.
     !("result" in valParms) ? Promise.resolve(undefined) :
       typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
-      ShExLoader.GET(valParms.result).then(function (body) { 
+      ShExNode.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       }),
 
     // ShapeMap, if provided.
-    "mapURL" in valParms ? ShExLoader.GET(valParms.mapURL).then(function (body) {
+    "mapURL" in valParms ? ShExNode.GET(valParms.mapURL).then(function (body) {
       return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
     })
     : Promise.resolve("map" in valParms
@@ -386,59 +403,22 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         // Exit status 3 means match failure.
         return Promise.resolve(match ? 0 : 3);
       } else {
-        if (cmds.query) {
-          var seen = {};
-          function _dive1 (solns) {
-            if (solns.type === "SolutionList" ||
-                solns.type === "ShapeOrResults" ||
-                solns.type === "ShapeOrResults") {
-              solns.solutions.forEach(s => {
-                _dive1(s.solution);
-              });
-            } else if (solns.type === "ShapeTest") {
-              _dive1(solns.solution);
-            } else if (solns.type === "OneOfSolutions" ||
-                       solns.type === "EachOfSolutions") {
-              solns.solutions.forEach(s => {
-                _dive1(s);
-              });
-            } else if (solns.type === "OneOfSolution" ||
-                       solns.type === "EachOfSolution") {
-              solns.expressions.forEach(s => {
-                _dive1(s);
-              });
-            } else if (solns.type === "TripleConstraintSolutions") {
-              solns.solutions.map(s => {
-                if (s.type !== "TestedTriple")
-                  throw Error("unexpected result type: " + s.type);
-                var fakeResolver = {
-                  _base: "_base",
-                  _basePath: "_basePath",
-                  meta:{prefixes:{}}
-                };
-                var triple = [
-                  rdflib_termToLex(s.subject, fakeResolver),
-                  rdflib_termToLex(s.predicate, fakeResolver),
-                  rdflib_termToLex(s.object, fakeResolver),
-                  "."
-                ].join(" ");
-                if (triple in seen) {
-                  seen[triple]++; // in case we ever care how many times we skipped it.
-                } else {
-                  console.log(triple);
-                  seen[triple] = 0;
-                }
-                if ("referenced" in s) {
-                  _dive1(s.referenced.solution);
-                }
-              });
-            } else {
-              throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
-            }
-          }
-
-          if (Object.keys(res).length > 0)
-            _dive1(res);
+        if (res.graph) {
+          var wr = new N3.Writer();
+          wr.addQuads(res.graph.getQuads());
+          wr.end((error, results) => {
+            if (error)
+              throw error;
+            res.turtle = ""
+              + "# node: " + res.node + "\n"
+              + "# shape: " + res.shape + "\n"
+              + results.trim();
+          });
+          delete res.graph;
+          if (valParms.quiet)
+            console.log(res.turtle);
+          else
+            console.log(JSON.stringify(res, null, "  "));
         } else if (!valParms.quiet)
           console.log(JSON.stringify(res, null, "  "));
         // Exit status 2 means validation failure.
@@ -478,7 +458,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return new N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(node);
+  return new N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(N3.DataFactory.namedNode(node));
 }
 
 // Extract user commands
@@ -593,7 +573,7 @@ function queueTests (tests, cmds) {
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
   var validator = ShExValidator.construct(schema, options);
-  var extensions = ShExLoader.loadExtensions(cmds.extension);
+  var extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
@@ -614,9 +594,9 @@ function runValidator (graph, shapeMap, schema, options) {
   if (cmds.exec) {
     /* example usage:
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
-       return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+       return require("../lib/ShExNode").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("../extensions/shex-map").materializer(loaded.schema).
+       var db = require("../extensions/extension-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
        getQuads(null, null, null);
        var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
@@ -652,7 +632,7 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExLoader.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
+  return ShExNode.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
 
     var testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
@@ -708,9 +688,16 @@ function loadRDFmanifest (cmds) {
   });
 }
 
+function useCommandLineDefaults (run) {
+  const ret = Object.assign({}, run);
+  if ("quiet" in cmds)
+    ret.quiet = cmds.quiet;
+  return ret;
+}
+
 function loadJSONmanifest (jsonManifests) {
   return jsonManifests.map(function (jm) {
-    return ShExLoader.GET(jm).then(function (p) {
+    return ShExNode.GET(jm).then(function (p) {
       try {
         var d = JSON.parse(p.text);
 
@@ -737,6 +724,9 @@ function loadJSONmanifest (jsonManifests) {
           else // Hopefully an object like { shex: "t.shex" , shape: "S", data: "t.ttl", "node": "s" }
             d = [d];
         }
+
+        d = d.map(useCommandLineDefaults);
+
         if (cmds["test-name"].length) // Include only tests listed in --test-name.
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
@@ -745,6 +735,16 @@ function loadJSONmanifest (jsonManifests) {
             }, false);
           });
         d.forEach(function (elt) {
+          // Turn common ShEx manifest format into test manifest format
+          ([{from: "queryMap", to: "map"},
+            {from: "schemaURL", to: "shex"},
+            {from: "dataURL", to: "data"}]).forEach(pair => {
+              if (pair.from in elt) {
+                elt[pair.to] = elt[pair.from];
+                delete elt[pair.from];
+              }
+            });
+
           // FileURL parameters are lists of URLs relative to the manifest file.
           ["shex", "json", "data", "jsonld"].forEach(function (attr) {
             if (!(attr in elt))
@@ -858,7 +858,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                   body.files[key] :
                   [body.files[key]]
                  ).map(pair => {
-                   return pair.path; // should ShExLoader accept [.name, .path]?
+                   return pair.path; // should ShExNode accept [.name, .path]?
                  });
         }
         var schemaFiles = makeArray("schema");
@@ -879,7 +879,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           });
 
         var httpResponse = this;
-        yield ShExLoader.
+        yield ShExNode.
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data
@@ -962,3 +962,4 @@ function extend (base) {
       base[name] = arg[name];
   return base;
 }
+
