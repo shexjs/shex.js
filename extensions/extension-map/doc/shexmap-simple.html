@@ -45,6 +45,7 @@
       #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
       #manifestDrop { border-color: white; width: 100%; }
       #manifestDrop div.manifest { overflow: auto; max-height: 10ex; }
+      #extensionDrop { border-color: #00ffff; width: 88%; border-width: thin; }
       #inputSchema li button, #inputData li button {
         font-size: .7em;
         padding: 0em 2ex;
@@ -202,7 +203,7 @@ ul {
     </style>
 
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
-    <script src="https://www.w3.org/scripts/jquery/2.1.4/jquery.min.js"></script>
+    <script src="../../../packages/shex-webapp/doc/jquery.min.js"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   </head>
@@ -219,7 +220,7 @@ ul {
     </svg>
 
     <div id="title">
-      <img src="//www.w3.org/2015/ShEx-bones-min.svg" style="float:left; height:1.3em; padding-left: .3em;" alt="ShEx Icon"/><h1 style="float:left;">ShExMap — Simple Online Translator</h1>
+      <img src="//www.w3.org/2015/ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShExMap — Simple Online Translator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
       <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
@@ -232,12 +233,15 @@ ul {
             <ul>
               <li class="        "><h3>user interface</h3></li>
               <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
+              <li class="menuitem"><label for="success">on success:</label><select id="success"><option value="proof">proof</option><option value="query">matched graph</option><option value="remainder">remaining graph</option></select></li>
               <li class="menuitem"><a id="download-results-button">download <span class="results">results</span></a></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>HTTP</h3></li>
               <li class="menuitem" id="load-schema-button">load <span class="schema">schema</span></li>
               <li class="menuitem" id="load-data-button">load <span class="data">data</span></li>
               <li class="menuitem" id="load-manifest-button">load <span class="manifest">manifest</span></li>
+              <li id="extensionDrop" class="droparea"><h3>Extensions</h3></li>
+              <li class="menuitem" id="load-extension-button">load <span class="extension">extension</span></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>drag and drop</h3></li>
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
@@ -382,7 +386,7 @@ ul {
       <h2 class="status"> </h2>
       <div></div>
     </div>
-    <script src="../../../doc/iri.js"></script>
+    <script src="../../../packages/shex-webapp/doc/iri.js"></script>
     <script>
       if (!("captureStackTrace" in Error)) {
         Error.captureStackTrace = function () { };
@@ -391,47 +395,82 @@ ul {
 
     <!-- #if browserify -->
 <!-- -->
-    <script src="../../../browser/shex-browserify.js"></script>
-    <script src="../../../doc/require.js"      ></script>
+    <script src="../../../packages/shex-webapp/browser/shex-webapp-webpack.js"></script>
+    <script src="../../../packages/shex-webapp/doc/require.js"></script>
+    <script>
+      modules["@shexjs/core"] = ShExWebApp
+      modules["@shexjs/term"] = ShExWebApp.RdfTerm
+      modules["n3"] = ShExWebApp.N3
+    </script>
 <!-- -->
 
     <!-- #else -->
 <!--
-    <script src="../../../doc/require.js"      ></script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script><script>modules["n3"]["Util"] = modules["./N3Util"] = N3Util = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Lexer.js"></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = N3Lexer = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Parser.js"></script><script>modules["n3"]["Parser"] = N3Parser = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Store.js"></script><script>modules["n3"]["Store"] = N3Store = module.exports;</script>
-    <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Writer.js"></script><script>modules["n3"]["Writer"] = N3Writer = module.exports;</script>
-    <script src="../../../lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules["../../lib/ShExUtil"] = ShExUtil;</script>
-    <script>module.exports = exports;</script><script src="../../../lib/ShExJison.js"    ></script><script>modules["./ShExJison"] = module.exports;</script>
-    <script src="../../../lib/ShExParser.js"   ></script><script>modules["../lib/ShExParser"] = modules["./lib/ShExParser"] = module.exports;</script>
-    <script>module.exports = exports;</script><script src="../../../lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
-    <script src="../../../lib/ShapeMapParser.js"   ></script><script>modules["../lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
-    <script src="../../../lib/ShapeMap.js"   ></script><script>modules["../lib/ShapeMap"] = modules["./lib/ShapeMap"] = module.exports;</script>
-    <script src="../../../lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../lib/ShExWriter"] = module.exports;</script>
-    <script src="../../../lib/regex/threaded-val-nerr.js"></script><script>modules["../lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
-    <script src="../../../lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
-    <script src="../../../lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
-    <script src="../../../lib/ShExLoader.js"></script><script>modules["/lib/ShExLoader"] = modules["./lib/ShExLoader"] = module.exports;</script>
-    <script src="../../../shex.js"></script>
+    <script src="../node_modules/n3/browser/n3-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/core/node_modules/hierarchy-closure/hierarchy-closure.js"></script>
+    <script src="../node_modules/shape-map/browser/shape-map-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/core/browser/shex-core-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/parser/browser/shex-parser-browserify.min.js"></script>
+    <script src="../node_modules/@shexjs/loader/browser/shex-loader-browserify.min.js"></script>
+    <script>
+ShExWebApp = (function () {
+  return Object.assign(shexCore, {
+    Loader: shexLoader,
+    Parser: shexParser,
+    ShapeMap: shapeMap,
+    ShapeMapParser: shapeMap.Parser,
+    N3: N3
+  })
+})()
+    </script>
+ -->
+
+    <!-- #else -->
+<!--
+    <script src="../node_modules/n3/lib/IRIs.js"         ></script><script>modules["./IRIs"]          = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3DataFactory.js"></script><script>modules["./N3DataFactory"] = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Util.js"       ></script><script>modules["./N3Util"]        = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Lexer.js"      ></script><script>modules["n3"]["Lexer"] = modules["./N3Lexer"] = module.exports;</script>
+    <script src="../node_modules/n3/lib/N3Parser.js"     ></script><script>modules["n3"]["Parser"]    = module.exports;</script>
+    <script>modules["stream"] = {Readable: null}</script><script src="../node_modules/n3/lib/N3Store.js"      ></script><script>modules["n3"]["Store"]     = module.exports;</script>
+
+    <script src="../node_modules/@shexjs/core/node_modules/hierarchy-closure/hierarchy-closure.js"></script><script>modules["hierarchy-closure"] = module.exports;</script>
+
+    <script src="../node_modules/shape-map/lib/ShapeMapSymbols.js"    ></script><script>modules["./lib/ShapeMapSymbols"] = modules["./ShapeMapSymbols"] = module.exports;</script>
+    <script>module.exports = exports;</script><script src="../node_modules/shape-map/lib/ShapeMapJison.js"    ></script><script>modules["./ShapeMapJison"] = module.exports;</script>
+    <script src="../node_modules/shape-map/lib/ShapeMapParser.js"   ></script><script>modules["../node_modules/shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;</script>
+    <script src="../node_modules/shape-map/shape-map.js"   ></script><script>modules["../node_modules/shape-map/shape-map"] = modules["shape-map"] = module.exports;</script>
+
+    <script src="../node_modules/@shexjs/core/lib/RdfTerm.js"     ></script><script>modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;</script>
+    <script src="../node_modules/@shexjs/core/lib/ShExUtil.js"     ></script><script>modules["./ShExUtil"] = modules["../node_modules/@shexjs/core/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/core/lib/ShExUtil"] = ShExUtil;</script>
+    <script src="../node_modules/@shexjs/core/lib/regex/threaded-val-nerr.js"></script><script>modules["../node_modules/@shexjs/core/lib/regex/threaded-val-nerr"] = modules["./lib/regex/threaded-val-nerr"] = module.exports;</script>
+    <script src="../node_modules/@shexjs/core/lib/regex/nfax-val-1err.js"></script><script>modules["./lib/regex/nfax-val-1err"] = module.exports;</script>
+    <script src="../node_modules/@shexjs/core/lib/ShExValidator.js"></script><script>modules["/lib/ShExValidator"] = modules["./ShExValidator"] = modules["./lib/ShExValidator"] = ShExValidator = module.exports;</script>
+    <script src="../node_modules/@shexjs/core/lib/ShExWriter.js"   ></script><script>modules["./lib/ShExWriter"] = modules["../node_modules/@shexjs/core/lib/ShExWriter"] = module.exports;</script>
+    <script src="../node_modules/@shexjs/core/shex-core.js"     ></script><script>modules["@shexjs/core"] = ShExCore;</script>
+
+    <script>module.exports = exports;</script><script src="../node_modules/@shexjs/parser/lib/ShExJison.js"    ></script><script>modules["./lib/ShExJison"] = module.exports;</script>
+    <script src="../node_modules/@shexjs/parser/shex-parser.js"   ></script><script>modules["../node_modules/@shexjs/parser/shex-parser"] = modules["./shex-parser"] = modules["@shexjs/parser"] = module.exports;</script>
+
+    <script src="../node_modules/@shexjs/loader/shex-loader.js"></script><script>modules["shex-loader"] = modules["./lib/shex-loader"] = modules["@shexjs/loader"] = module.exports;</script>
+    <script src="../shex-webapp.js"></script>
  -->
 
     <!-- #endif -->
 
     <script>
-      modules["../../shex"] = ShEx;
+      modules["../../shex"] = ShEx = ShExWebApp;
     </script>
     <script src="../../../da-web/underscore-min.js"></script><script>modules["underscore"] = module.exports;</script>
-    <script src="../lib/extension-utils.js"    ></script><script>modules["./extension-utils"] = module.exports;</script>
-    <script src="../lib/regex_extension.js"    ></script><script>modules["./regex_extension"] = module.exports;</script>
-    <script src="../lib/hashmap_extension.js"  ></script><script>modules["./hashmap_extension"] = module.exports;</script>
-    <script src="../lib/extensions.js"         ></script><script>modules["./lib/extensions"] = module.exports;</script>
-    <script src="../../../lib/regex/nfax-val-1err-materializer.js"></script><script>modules["../lib/regex/nfax-val-1err-materializer.js"] = module.exports;</script>
+    <script src="../lib/extension-utils.js"    ></script><script>modules["./extension-utils"] = modules["./lib/extension-utils.js"] = module.exports;</script>
+    <script src="../lib/regex_extension.js"    ></script><script>modules["./regex_extension"] = modules["./lib/regex_extension.js"] = module.exports;</script>
+    <script src="../lib/hashmap_extension.js"  ></script><script>modules["./lib/hashmap_extension.js"] = modules["./hashmap_extension"] = module.exports;</script>
+    <script src="../lib/extensions.js"         ></script><script>modules["./lib/extensions.js"] = modules["./lib/extensions"] = module.exports;</script>
+    <script src="../../../packages/shex-core/lib/regex/nfax-val-1err-materializer.js"></script><script>modules["../lib/regex/nfax-val-1err-materializer.js"] = module.exports;</script>
 
-    <script src="../module.js"                 ></script><script>modules["../extensions/extension-map/module"] = ShExMap = module.exports;</script>
+    <script src="../shex-extension-map.js"                 ></script><script>modules["../extensions/extension-map/shex-extension-map"] = modules["../extensions/extension-map/module"] = ShExMap = module.exports;</script>
     <script src="../../../lib/ShExMaterializer.js"></script><script>ShExMaterializer = module.exports;</script>
-    <script src="../../../doc/ShExRSchema.js"></script>
+    <script src="../../../packages/shex-webapp/doc/ShExRSchema.js"></script>
     <script src="./shexmap-simple.js"></script>
   </body>
 </html>

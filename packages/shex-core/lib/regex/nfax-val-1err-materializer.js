@@ -1,6 +1,6 @@
 var NFAXVal1ErrMaterializer = (function () {
 
-var N3Util = ShEx.N3.Util;
+var RdfTerm = ShEx.RdfTerm;
 
   var Split = "<span class='keyword' title='Split'>|</span>";
   var Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -336,7 +336,7 @@ function compileNFA (schema, shape) {
           var valueExpr = extend({}, c.valueExpr);
           if ("reference" in valueExpr) {
             var ref = valueExpr.reference;
-            if (N3Util.isBlank(ref))
+            if (RdfTerm.isBlank(ref))
               valueExpr.reference = schema.shapes[ref];
           }
           return extend({
@@ -438,13 +438,13 @@ function compileNFA (schema, shape) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: N3Util.getLiteralValue(term) };
-          var dt = N3Util.getLiteralType(term);
+          var ret = { value: RdfTerm.getLiteralValue(term) };
+          var dt = RdfTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = N3Util.getLiteralLanguage(term)
+          var lang = RdfTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -457,7 +457,7 @@ function compileNFA (schema, shape) {
                 type: "ReferenceError", focus: focus,
                 shape: shape, errors: sub
               };
-              if (typeof shapeLabel === "string" && N3Util.isBlank(shapeLabel))
+              if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
                 err.referencedShape = shape;
               return [err];
             }

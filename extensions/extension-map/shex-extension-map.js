@@ -7,7 +7,8 @@
 
 var ShExMap = (function () {
 
-var ShExCore = require("@shexjs/core"); var RdfTerm = ShExCore.RdfTerm;
+var ShExCore = require("@shexjs/core");
+var RdfTerm = ShExCore.RdfTerm;
 var ShExUtil = ShExCore.Util;
 var ShExValidator = require("@shexjs/core").Validator;
 var extensions = require("./lib/extensions");
@@ -142,7 +143,7 @@ function materializer (schema, nextBNode) {
       };
 
       v.visitValueRef = function (r) {
-        this.visitExpression(schema.shapes[r.reference], r.reference);
+        this.visitExpression(schema.shapes[r], r);
         return this._visitValue(r);
       };
 
@@ -165,7 +166,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
         target.addQuad(RdfTerm.externalTriple({
           subject: s,
           predicate: p,
-          object: n3ify(o)
+          object: o
         }, N3.DataFactory));
         return s;
       }
@@ -179,7 +180,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
             var tripleObject;
             if (m) { 
               var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
-              var val = bindings.get(arg);
+              var val = n3ify(bindings.get(arg));
               if (!_.isUndefined(val)) {
                 tripleObject = val;
               }
@@ -205,7 +206,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
           if (expr.inverse)
             add(expr.valueExpr.values[0], expr.predicate, curSubjectx.cs);
           else
-            add(curSubjectx.cs, expr.predicate, expr.valueExpr.values[0]);
+            add(curSubjectx.cs, expr.predicate, n3ify(expr.valueExpr.values[0]));
 
         } else {
           var oldSubject = curSubjectx.cs;
