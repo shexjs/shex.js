@@ -52,7 +52,7 @@ var Getables = [
 var QueryParams = Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
 ]);
 
 // utility functions
@@ -850,6 +850,7 @@ function callValidator (done) {
     };
     return logger;
   }
+}
 
   function renderEntry (entry) {
     var fails = entry.status === "nonconformant";
@@ -932,7 +933,6 @@ function callValidator (done) {
       // }
       results.finish();
   }
-}
 
 var LastFailTime = 0;
 function failMessage (e, action, text) {
