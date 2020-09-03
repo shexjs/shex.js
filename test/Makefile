@@ -46,7 +46,7 @@ $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
 $(ValidationCorpus): $(GENCorpus) $(JSONSCHEMAS)
 	$(GENCorpus) $< -d $(join $(TESTDIR), schemas/) -o $@ -e # suppress output if there are errors
 
-Validation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../node_modules/@shexjs/core/lib/ShExValidator.js Validation-test.js $(ValidationManifest)
+Validation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../node_modules/@shexjs/util/lib/ShExValidator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
 Map-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Map-test.js

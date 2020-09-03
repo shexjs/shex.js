@@ -2,9 +2,9 @@
 
 // time ./lib/partition ~/checkouts/hcls/hcls-fhir-rdf/generic/fhir-shapes.shex MedicationPrescriptionShape
 
-var ShExLoader = require("../lib/ShExLoader"); // for verbose output
-var ShExUtil = require('../lib/ShExUtil');
-var ShExWriter = require('../lib/ShExWriter');
+var ShExLoader = require("@shexjs/node"); // for verbose output
+var ShExUtil = require('@shexjs/util');
+var ShExWriter = require('@shexjs/writer');
 
 // Generate command line interface
 var CLI = require("command-line-args")([
