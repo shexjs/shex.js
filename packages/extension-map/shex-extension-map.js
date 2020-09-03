@@ -426,11 +426,11 @@ return {
 
 })();
 ShExMapModule.extension = {
-  hashmap: require("./lib/hashmap_extension.js"),
-  regex: require("./lib/regex_extension.js")
+  hashmap: require("./lib/hashmap_extension"),
+  regex: require("./lib/regex_extension")
 };
-ShExMapModule.extensions = require("./lib/extensions.js");
-ShExMapModule.utils = require("./lib/extension-utils.js");
+ShExMapModule.extensions = require("./lib/extensions");
+ShExMapModule.utils = require("./lib/extension-utils");
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
   module.exports = ShExMapModule;

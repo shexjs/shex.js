@@ -18,8 +18,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "website",
-      "extensions/*"
+      "website"
     ]
   },
   "license": "MIT",
@@ -30,9 +29,9 @@
   "devDependencies": {
     "@shexjs/cli": "file:packages/shex-cli",
     "@shexjs/util": "file:packages/shex-util",
-    "@shexjs/extension-eval": "file:extensions/extension-eval",
-    "@shexjs/extension-map": "file:extensions/extension-map",
-    "@shexjs/extension-test": "file:extensions/extension-test",
+    "@shexjs/extension-eval": "file:packages/extension-eval",
+    "@shexjs/extension-map": "file:packages/extension-map",
+    "@shexjs/extension-test": "file:packages/extension-test",
     "@shexjs/node": "file:packages/shex-node",
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",

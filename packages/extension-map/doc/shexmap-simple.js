@@ -2108,7 +2108,7 @@ function bindingsToTable () {
       }
     })
   }
-  varsIn(d)
+  varsIn(d.constructor === Array ? d : [d])
 
   vars.forEach(v => {
     thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
