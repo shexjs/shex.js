@@ -128,23 +128,23 @@ function vpEngine (schema, shape, index) {
                 // If we didn't take anything, fall back to old errors.
                 // Could do something fancy here with a semAct registration for negative matches.
                 const totalErrors = taken.length === 0 ? thread.errors.slice() : []
-                const myThread = makeThread(passFail.pass.map(p => p.tripleNo), totalErrors)
+                const myThread = makeThread(passFail.pass, totalErrors)
                 ret.push(myThread);
                 // ret.push();
               } else {
                 passFail.fail.forEach(
-                  f => ret.push(makeThread([f.tripleNo], f.semActErrors))
+                  f => ret.push(makeThread([f], f.semActErrors))
                 )
               }
 
-              function makeThread (tripleNos, errors) {
+              function makeThread (tests, errors) {
                 return {
                   avail: thread.avail.map(a => { // copy parent thread's avail vector
                     return a.slice();
                   }),
                   errors: errors,
                   matched: matched.concat({
-                    tNos: tripleNos
+                    tNos: tests.map(p => p.tripleNo)
                   }),
                   expression: extend(
                     {
@@ -155,15 +155,7 @@ function vpEngine (schema, shape, index) {
                     "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
                     minmax,
                     {
-                      solutions: tripleNos.map(tripleNo =>  {
-                        var t = neighborhood[tripleNo];
-                        var ret = { type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object) };
-                        var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
-                        if (hit.res && Object.keys(hit.res).length > 0)
-                          ret.referenced = hit.res;
-                        return ret;
-                        // return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
-                      })
+                      solutions: tests.map(p => p.tested)
                     }
                   )
                 }
