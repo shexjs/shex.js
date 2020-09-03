@@ -2,9 +2,8 @@
 
 // json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json
 
-var ShExCore = require("@shexjs/core");
-var ShExNode = require("@shexjs/node");
-var ShExWriter = ShExCore.Writer; // for verbose output
+const ShExNode = require("@shexjs/node");
+const ShExWriter = require("@shexjs/writer"); // for verbose output
 
 // Generate command line interface
 var CommandLineOptions = [

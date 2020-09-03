@@ -2,7 +2,7 @@ var VERBOSE = "VERBOSE" in process.env;
 var TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
 var ShExParser = require("@shexjs/parser");
-var ShExUtil = require("@shexjs/core").Util;
+var ShExUtil = require("@shexjs/util");
 
 var fs = require('fs');
 var expect = require('chai').expect;

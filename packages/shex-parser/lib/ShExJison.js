@@ -928,7 +928,7 @@ parse: function parse(input) {
 
   var UNBOUNDED = -1;
 
-  var ShExUtil = require("@shexjs/core").Util;
+  var ShExUtil = require("@shexjs/util");
 
   // Common namespaces and entities
   var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
