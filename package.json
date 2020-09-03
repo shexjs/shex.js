@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@shexjs/cli": "file:packages/shex-cli",
-    "@shexjs/core": "file:packages/shex-core",
+    "@shexjs/util": "file:packages/shex-util",
     "@shexjs/extension-eval": "file:extensions/extension-eval",
     "@shexjs/extension-map": "file:extensions/extension-map",
     "@shexjs/extension-test": "file:extensions/extension-test",
@@ -37,6 +37,9 @@
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",
     "@shexjs/webapp": "file:packages/shex-webapp",
+    "@shexjs/writer": "file:packages/shex-writer",
+    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
+    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",
     "cross-spawn": "^6.0.5",

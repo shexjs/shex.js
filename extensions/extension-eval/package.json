@@ -34,6 +34,6 @@
     "url": "https://github.com/shexSpec/grammar/issues"
   },
   "dependencies": {
-    "@shexjs/core": "file:../../packages/shex-core"
+    "@shexjs/util": "file:../../packages/shex-util"
   }
 }

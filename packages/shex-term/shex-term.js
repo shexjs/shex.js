@@ -3,7 +3,7 @@
  * isIRI, isBlank, getLiteralType, getLiteralValue
  */
 
-var RdfTerm = (function () {
+var ShExTerm = (function () {
 
   var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
@@ -303,4 +303,4 @@ var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
 })();
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = RdfTerm; // node environment
+  module.exports = ShExTerm; // node environment

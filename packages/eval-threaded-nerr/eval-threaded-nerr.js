@@ -1,5 +1,5 @@
-var ThreadedValNErr = (function () {
-var RdfTerm = require("../RdfTerm");
+var EvalThreadedNErr = (function () {
+var RdfTerm = require("@shexjs/term");
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -360,11 +360,11 @@ function extend(base) {
 }
 
 return {
-  name: "threaded-val-nerr",
+  name: "eval-threaded-nerr",
   description: "emulation of regular expression engine with error permutations",
   compile: vpEngine
 };
 })();
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ThreadedValNErr;
+  module.exports = EvalThreadedNErr;

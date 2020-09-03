@@ -1,5 +1,5 @@
 var EvalExt = "http://shex.io/extensions/Eval/";
-const ShEx = require('@shexjs/core')
+const ShEx = {RdfTerm: require('@shexjs/term')} // !! temporary hack; construct semeacts with options/config/context/...
 
 function register (validator) {
 

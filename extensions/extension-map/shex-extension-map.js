@@ -5,13 +5,13 @@
  *   multiplicity: ...
  */
 
-var ShExMap = (function () {
+const ShExMap = (function () {
 
-var ShExCore = require("@shexjs/core"); var RdfTerm = ShExCore.RdfTerm;
-var ShExUtil = ShExCore.Util;
-var ShExValidator = require("@shexjs/core").Validator;
-var extensions = require("./lib/extensions");
-var N3 = require("n3");
+const ShExUtil = require("@shexjs/util");
+const RdfTerm = require("@shexjs/term");
+const ShExValidator = require("@shexjs/validator");
+const extensions = require("./lib/extensions");
+const N3 = require("n3");
 var _ = require('underscore');
 
 var MapExt = "http://shex.io/extensions/Map/#";
