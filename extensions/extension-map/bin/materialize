@@ -13,7 +13,7 @@ var N3 = require("n3");
 
 var ShExCore = require("@shexjs/core");
 var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shexjs/loader");
+var ShExNode = require("@shexjs/node");
 var ShExValidator = ShExCore.Validator;
 var Mapper = require("../shex-extension-map.js");
 
@@ -83,7 +83,7 @@ try {
   process.exit(1);
 }
 
-Promise.all([ShExLoader.load([cmds.target], [], [], [], {index: true}),
+Promise.all([ShExNode.load([cmds.target], [], [], [], {index: true}),
              new Promise((resolve, reject) => {
                var inputChunks = [];
                process.stdin.resume();

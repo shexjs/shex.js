@@ -3,7 +3,9 @@
 // Release under MIT License.
 
 const ShEx = ShExWebApp; // @@ rename globally
-const ShExUtil = ShEx.Util;
+const ShExApi = ShEx.Api({
+  fetch, rdfjs: ShEx.N3, jsonld: null
+})
 ShEx.ShapeMap.start = ShEx.Validator.start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -62,7 +64,7 @@ var QueryParams = Getables.concat([
 // utility functions
 function parseTurtle (text, meta, base) {
   var ret = new ShEx.N3.Store();
-  ShEx.N3.Parser._resetBlankNodeIds();
+  ShEx.N3.Parser._resetBlankNodePrefix();
   var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
@@ -762,7 +764,7 @@ function callValidator (done) {
         url: Caches.inputSchema.url || DefaultBase
       };
       // shex-loader loads IMPORTs and tests the schema for structural faults.
-      ShEx.Loader.load([alreadLoaded], [], [], []).then(loaded => {
+      ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
         var time;
         var validator = ShEx.Validator.construct(
           loaded.schema,
@@ -800,10 +802,10 @@ function callValidator (done) {
         ret.forEach(renderEntry);
         // for debugging values and schema formats:
         // try {
-        //   var x = ShExUtil.valToValues(ret);
-        //   // var x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
+        //   var x = ShEx.Util.valToValues(ret);
+        //   // var x = ShEx.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
         //   res = results.replace(JSON.stringify(x, null, "  "));
-        //   var y = ShExUtil.valuesToSchema(x);
+        //   var y = ShEx.Util.valuesToSchema(x);
         //   res = results.append(JSON.stringify(y, null, "  "));
         // } catch (e) {
         //   console.dir(e);
@@ -1041,8 +1043,8 @@ function materialize () {
           // $("#results .status").text("synthesis errors:").show();
           // failMessage(e, currentAction);
         } else {
-          // console.log("g:", ShExUtil.valToTurtle(res));
-          writer.addQuads(ShExUtil.valToN3js(res, ShEx.N3.DataFactory));
+          // console.log("g:", ShEx.Util.valToTurtle(res));
+          writer.addQuads(ShEx.Util.valToN3js(res, ShEx.N3.DataFactory));
         }
       } catch (e) {
         console.dir(e);

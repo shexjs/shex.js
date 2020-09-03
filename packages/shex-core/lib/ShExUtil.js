@@ -60,6 +60,20 @@ function extend (base) {
   }
   let isInclusion = isShapeRef;
 
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: RdfTerm.getLiteralValue(term) };
+          var dt = RdfTerm.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = RdfTerm.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
 var ShExUtil = {
 
   SX: SX,
@@ -531,7 +545,7 @@ var ShExUtil = {
     });
   },
 
-  valToN3js: function (res) {
+  valToN3js: function (res, factory) {
     return this.valGrep(res, "TestedTriple", function (t) {
       var ret = JSON.parse(JSON.stringify(t));
       if (typeof t.object === "object")
@@ -540,7 +554,7 @@ var ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return ret;
+      return RdfTerm.externalTriple(ret, factory);
     });
   },
 
@@ -1487,14 +1501,14 @@ var ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = elt[k];
+          crushed[k] = ldify(elt[k]);
         }
         return elt;
       }
       for (var k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(obj[k][lookfor]));
+            list.push(crush(ldify(obj[k][lookfor])));
         } else if (k === "nested") {
           var nested = extensions(obj[k]);
           if (nested.constructor === Array)

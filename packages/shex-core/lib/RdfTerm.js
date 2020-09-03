@@ -184,8 +184,8 @@ var RdfTerm = (function () {
       // Write the literal, possibly with type or language
       if (language)
         return '"' + value + '"@' + language;
-      else if (type)
-        return '"' + value + '"^^' + this._encodeIriOrBlankNode(type);
+      else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
+        return '"' + value + '"^^' + this.intermalTermToTurtle(type, base, prefixes);
       else
         return '"' + value + '"';
     } else {
