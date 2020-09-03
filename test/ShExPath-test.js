@@ -2,7 +2,7 @@ const VERBOSE = "VERBOSE" in process.env;
 const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
 const ShExParser = require("@shexjs/parser");
-const RdfTerm = require("@shexjs/core").RdfTerm;
+const RdfTerm = require("@shexjs/term");
 const ShExPath = require("@shexjs/path");
 
 const fs = require('fs');
