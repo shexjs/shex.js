@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 38);
+/******/ 	return __webpack_require__(__webpack_require__.s = 37);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -806,11 +806,11 @@ var objectKeys = Object.keys || function (obj) {
 
 module.exports = Duplex;
 
-var Readable = __webpack_require__(30);
+var Readable = __webpack_require__(29);
 
-var Writable = __webpack_require__(34);
+var Writable = __webpack_require__(33);
 
-__webpack_require__(10)(Duplex, Readable);
+__webpack_require__(9)(Duplex, Readable);
 
 {
   // Allow the keys array to be GC'ed.
@@ -910,331 +910,19 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 /* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(30);
+exports = module.exports = __webpack_require__(29);
 exports.Stream = exports;
 exports.Readable = exports;
-exports.Writable = __webpack_require__(34);
+exports.Writable = __webpack_require__(33);
 exports.Duplex = __webpack_require__(5);
-exports.Transform = __webpack_require__(36);
-exports.PassThrough = __webpack_require__(68);
+exports.Transform = __webpack_require__(35);
+exports.PassThrough = __webpack_require__(67);
 exports.finished = __webpack_require__(17);
-exports.pipeline = __webpack_require__(69);
+exports.pipeline = __webpack_require__(68);
 
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/**
- *
- * isIRI, isBlank, getLiteralType, getLiteralValue
- */
-
-var RdfTerm = (function () {
-
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
-    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
-    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
-
-  const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
-  const XsdString = "http://www.w3.org/2001/XMLSchema#string";
-
-  // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./Parser./g
-  //   s/token/iri/
-  // ### `_resolveIRI` resolves a relative IRI token against the base path,
-  // assuming that a base path has been set and that the IRI is indeed relative.
-  function resolveRelativeIRI (base, iri) {
-
-    if (absoluteIRI.test(iri))
-      return iri
-
-    switch (iri[0]) {
-    // An empty relative IRI indicates the base IRI
-    case undefined: return base;
-    // Resolve relative fragment IRIs against the base IRI
-    case '#': return base + iri;
-    // Resolve relative query string IRIs by replacing the query string
-    case '?': return base.replace(/(?:\?.*)?$/, iri);
-    // Resolve root-relative IRIs at the root of the base IRI
-    case '/':
-      let m = base.match(schemeAuthority);
-      // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? m[1] : m[0]) + _removeDotSegments(iri);
-    // Resolve all other IRIs at the base IRI's path
-    default: {
-      return _removeDotSegments(base.replace(/[^\/?]*(?:\?.*)?$/, '') + iri);
-    }
-    }
-  }
-
-  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
-  function _removeDotSegments (iri) {
-    // Don't modify the IRI if it does not contain any dot segments
-    if (!dotSegments.test(iri))
-      return iri;
-
-    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
-
-    while (i < length) {
-      switch (next) {
-      // The path starts with the first slash after the authority
-      case ':':
-        if (pathStart < 0) {
-          // Skip two slashes before the authority
-          if (iri[++i] === '/' && iri[++i] === '/')
-            // Skip to slash after the authority
-            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
-              i = pathStart;
-        }
-        break;
-      // Don't modify a query string or fragment
-      case '?':
-      case '#':
-        i = length;
-        break;
-      // Handle '/.' or '/..' path segments
-      case '/':
-        if (iri[i + 1] === '.') {
-          next = iri[++i + 1];
-          switch (next) {
-          // Remove a '/.' segment
-          case '/':
-            result += iri.substring(segmentStart, i - 1);
-            segmentStart = i + 1;
-            break;
-          // Remove a trailing '/.' segment
-          case undefined:
-          case '?':
-          case '#':
-            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
-          // Remove a '/..' segment
-          case '.':
-            next = iri[++i + 1];
-            if (next === undefined || next === '/' || next === '?' || next === '#') {
-              result += iri.substring(segmentStart, i - 2);
-              // Try to remove the parent path from result
-              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
-                result = result.substr(0, segmentStart);
-              // Remove a trailing '/..' segment
-              if (next !== '/')
-                return result + '/' + iri.substr(i + 1);
-              segmentStart = i + 1;
-            }
-          }
-        }
-      }
-      next = iri[++i];
-    }
-    return result + iri.substring(segmentStart);
-  }
-
-  function internalTerm (node) { // !!rdfjsTermToInternal
-    switch (node.termType) {
-    case ("NamedNode"):
-      return node.value;
-    case ("BlankNode"):
-      return "_:" + node.value;
-    case ("Literal"):
-      return "\"" + node.value + "\"" + (
-        node.datatypeString === RdfLangString
-          ? "@" + node.language
-          : node.datatypeString === XsdString
-          ? ""
-          : "^^" + node.datatypeString
-      );
-    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
-    }
-  }
-
-  function internalTriple (triple) { // !!rdfjsTripleToInternal
-    return {
-      subject: internalTerm(triple.subject),
-      predicate: internalTerm(triple.predicate),
-      object: internalTerm(triple.object)
-    };
-  }
-
-  function externalTerm (node, factory) { // !!intermalTermToRdfjs
-    if (isIRI(node)) {
-      return factory.namedNode(node);
-    } else if (isBlank(node)) {
-      return factory.blankNode(node.substr(2));
-    } else if (isLiteral(node)) {
-      let dtOrLang = getLiteralLanguage(node) ||
-          (getLiteralType(node) === XsdString
-           ? null // seems to screw up N3.js
-           : factory.namedNode(getLiteralType(node)))
-      return factory.literal(getLiteralValue(node), dtOrLang)
-    } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
-    }
-  }
-
-  function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return factory.quad(
-      externalTerm(triple.subject, factory),
-      externalTerm(triple.predicate, factory),
-      externalTerm(triple.object, factory)
-    );
-  }
-
-  function intermalTermToTurtle (node, base, prefixes) {
-    if (isIRI(node)) {
-      // if (node === RDF_TYPE) // only valid in Turtle predicates
-      //   return "a";
-
-      // Escape special characters
-      if (escape.test(node))
-        node = node.replace(escapeAll, characterReplacer);
-      var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
-      if (pref) {
-        var rest = node.substr(prefixes[pref].length);
-        if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
-          return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
-      }
-      if (node.startsWith(base)) {
-        return "<" + node.substr(base.length) + ">";
-      } else {
-        return "<" + node + ">";
-      }
-    } else if (isBlank(node)) {
-      return node;
-    } else if (isLiteral(node)) {
-      var value = getLiteralValue(node);
-      var type = getLiteralType(node);
-      var language = getLiteralLanguage(node);
-      // Escape special characters
-      if (escape.test(value))
-        value = value.replace(escapeAll, characterReplacer);
-      // Write the literal, possibly with type or language
-      if (language)
-        return '"' + value + '"@' + language;
-      else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.intermalTermToTurtle(type, base, prefixes);
-      else
-        return '"' + value + '"';
-    } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
-    }
-  }
-
-  // Tests whether the given entity (triple object) represents an IRI in the N3 library
-  function isIRI (entity) {
-    if (typeof entity !== 'string')
-      return false;
-    else if (entity.length === 0)
-      return true;
-    else {
-      var firstChar = entity[0];
-      return firstChar !== '"' && firstChar !== '_';
-    }
-  }
-
-  // Tests whether the given entity (triple object) represents a literal in the N3 library
-  function isLiteral (entity) {
-    return typeof entity === 'string' && entity[0] === '"';
-  }
-
-  // Tests whether the given entity (triple object) represents a blank node in the N3 library
-  function isBlank (entity) {
-    return typeof entity === 'string' && entity.substr(0, 2) === '_:';
-  }
-
-  // Tests whether the given entity represents the default graph
-  function isDefaultGraph (entity) {
-    return !entity;
-  }
-
-  // Tests whether the given triple is in the default graph
-  function inDefaultGraph (triple) {
-    return !triple.graph;
-  }
-
-  // Gets the string value of a literal in the N3 library
-  function getLiteralValue (literal) {
-    var match = /^"([^]*)"/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1];
-  }
-
-  // Gets the type of a literal in the N3 library
-  function getLiteralType (literal) {
-    var match = /^"[^]*"(?:\^\^([^"]+)|(@)[^@"]+)?$/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1] || (match[2] ? RdfLangString : XsdString);
-  }
-
-  // Gets the language of a literal in the N3 library
-  function getLiteralLanguage (literal) {
-    var match = /^"[^]*"(?:@([^@"]+)|\^\^[^"]+)?$/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1] ? match[1].toLowerCase() : '';
-  }
-
-
-// rdf:type predicate (for 'a' abbreviation)
-var RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    RDF_TYPE   = RDF_PREFIX + 'type';
-
-// Characters in literals that require escaping
-var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
-    escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
-    escapeReplacements = {
-      '\\': '\\\\', '"': '\\"', '\t': '\\t',
-      '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f',
-    };
-
-  // Replaces a character by its escaped version
-  function characterReplacer (character) {
-    // Replace a single character by its escaped version
-    var result = escapeReplacements[character];
-    if (result === undefined) {
-      // Replace a single character with its 4-bit unicode escape sequence
-      if (character.length === 1) {
-        result = character.charCodeAt(0).toString(16);
-        result = '\\u0000'.substr(0, 6 - result.length) + result;
-      }
-      // Replace a surrogate pair with its 8-bit unicode escape sequence
-      else {
-        result = ((character.charCodeAt(0) - 0xD800) * 0x400 +
-                  character.charCodeAt(1) + 0x2400).toString(16);
-        result = '\\U00000000'.substr(0, 10 - result.length) + result;
-      }
-    }
-    return result;
-  }
-
-  return {
-    RdfLangString: RdfLangString,
-    XsdString: XsdString,
-    resolveRelativeIRI: resolveRelativeIRI,
-    isIRI: isIRI,
-    isLiteral: isLiteral,
-    isBlank: isBlank,
-    isDefaultGraph: isDefaultGraph,
-    inDefaultGraph: inDefaultGraph,
-    getLiteralValue: getLiteralValue,
-    getLiteralType: getLiteralType,
-    getLiteralLanguage: getLiteralLanguage,
-    internalTerm: internalTerm,
-    internalTriple: internalTriple,
-    externalTerm: externalTerm,
-    externalTriple: externalTriple,
-    intermalTermToTurtle: intermalTermToTurtle,
-  }
-})();
-
-if (true)
-  module.exports = RdfTerm; // node environment
-
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports) {
 
 var g;
@@ -1260,7 +948,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1274,9 +962,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(58)
-var ieee754 = __webpack_require__(59)
-var isArray = __webpack_require__(60)
+var base64 = __webpack_require__(57)
+var ieee754 = __webpack_require__(58)
+var isArray = __webpack_require__(59)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3054,10 +2742,10 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -3087,6 +2775,318 @@ if (typeof Object.create === 'function') {
     }
   }
 }
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ *
+ * isIRI, isBlank, getLiteralType, getLiteralValue
+ */
+
+var ShExTerm = (function () {
+
+  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
+    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
+
+  const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
+  const XsdString = "http://www.w3.org/2001/XMLSchema#string";
+
+  // N3.js:lib/N3Parser.js<0.4.5>:576 with
+  //   s/this\./Parser./g
+  //   s/token/iri/
+  // ### `_resolveIRI` resolves a relative IRI token against the base path,
+  // assuming that a base path has been set and that the IRI is indeed relative.
+  function resolveRelativeIRI (base, iri) {
+
+    if (absoluteIRI.test(iri))
+      return iri
+
+    switch (iri[0]) {
+    // An empty relative IRI indicates the base IRI
+    case undefined: return base;
+    // Resolve relative fragment IRIs against the base IRI
+    case '#': return base + iri;
+    // Resolve relative query string IRIs by replacing the query string
+    case '?': return base.replace(/(?:\?.*)?$/, iri);
+    // Resolve root-relative IRIs at the root of the base IRI
+    case '/':
+      let m = base.match(schemeAuthority);
+      // Resolve scheme-relative IRIs to the scheme
+      return (iri[1] === '/' ? m[1] : m[0]) + _removeDotSegments(iri);
+    // Resolve all other IRIs at the base IRI's path
+    default: {
+      return _removeDotSegments(base.replace(/[^\/?]*(?:\?.*)?$/, '') + iri);
+    }
+    }
+  }
+
+  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
+  function _removeDotSegments (iri) {
+    // Don't modify the IRI if it does not contain any dot segments
+    if (!dotSegments.test(iri))
+      return iri;
+
+    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
+    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+
+    while (i < length) {
+      switch (next) {
+      // The path starts with the first slash after the authority
+      case ':':
+        if (pathStart < 0) {
+          // Skip two slashes before the authority
+          if (iri[++i] === '/' && iri[++i] === '/')
+            // Skip to slash after the authority
+            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
+              i = pathStart;
+        }
+        break;
+      // Don't modify a query string or fragment
+      case '?':
+      case '#':
+        i = length;
+        break;
+      // Handle '/.' or '/..' path segments
+      case '/':
+        if (iri[i + 1] === '.') {
+          next = iri[++i + 1];
+          switch (next) {
+          // Remove a '/.' segment
+          case '/':
+            result += iri.substring(segmentStart, i - 1);
+            segmentStart = i + 1;
+            break;
+          // Remove a trailing '/.' segment
+          case undefined:
+          case '?':
+          case '#':
+            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
+          // Remove a '/..' segment
+          case '.':
+            next = iri[++i + 1];
+            if (next === undefined || next === '/' || next === '?' || next === '#') {
+              result += iri.substring(segmentStart, i - 2);
+              // Try to remove the parent path from result
+              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
+                result = result.substr(0, segmentStart);
+              // Remove a trailing '/..' segment
+              if (next !== '/')
+                return result + '/' + iri.substr(i + 1);
+              segmentStart = i + 1;
+            }
+          }
+        }
+      }
+      next = iri[++i];
+    }
+    return result + iri.substring(segmentStart);
+  }
+
+  function internalTerm (node) { // !!rdfjsTermToInternal
+    switch (node.termType) {
+    case ("NamedNode"):
+      return node.value;
+    case ("BlankNode"):
+      return "_:" + node.value;
+    case ("Literal"):
+      return "\"" + node.value + "\"" + (
+        node.datatypeString === RdfLangString
+          ? "@" + node.language
+          : node.datatypeString === XsdString
+          ? ""
+          : "^^" + node.datatypeString
+      );
+    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
+    }
+  }
+
+  function internalTriple (triple) { // !!rdfjsTripleToInternal
+    return {
+      subject: internalTerm(triple.subject),
+      predicate: internalTerm(triple.predicate),
+      object: internalTerm(triple.object)
+    };
+  }
+
+  function externalTerm (node, factory) { // !!intermalTermToRdfjs
+    if (isIRI(node)) {
+      return factory.namedNode(node);
+    } else if (isBlank(node)) {
+      return factory.blankNode(node.substr(2));
+    } else if (isLiteral(node)) {
+      let dtOrLang = getLiteralLanguage(node) ||
+          (getLiteralType(node) === XsdString
+           ? null // seems to screw up N3.js
+           : factory.namedNode(getLiteralType(node)))
+      return factory.literal(getLiteralValue(node), dtOrLang)
+    } else {
+      throw Error("Unknown internal term type: " + JSON.stringify(node));
+    }
+  }
+
+  function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
+    return factory.quad(
+      externalTerm(triple.subject, factory),
+      externalTerm(triple.predicate, factory),
+      externalTerm(triple.object, factory)
+    );
+  }
+
+  function intermalTermToTurtle (node, base, prefixes) {
+    if (isIRI(node)) {
+      // if (node === RDF_TYPE) // only valid in Turtle predicates
+      //   return "a";
+
+      // Escape special characters
+      if (escape.test(node))
+        node = node.replace(escapeAll, characterReplacer);
+      var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
+      if (pref) {
+        var rest = node.substr(prefixes[pref].length);
+        if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
+          return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
+      }
+      if (node.startsWith(base)) {
+        return "<" + node.substr(base.length) + ">";
+      } else {
+        return "<" + node + ">";
+      }
+    } else if (isBlank(node)) {
+      return node;
+    } else if (isLiteral(node)) {
+      var value = getLiteralValue(node);
+      var type = getLiteralType(node);
+      var language = getLiteralLanguage(node);
+      // Escape special characters
+      if (escape.test(value))
+        value = value.replace(escapeAll, characterReplacer);
+      // Write the literal, possibly with type or language
+      if (language)
+        return '"' + value + '"@' + language;
+      else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
+        return '"' + value + '"^^' + this.intermalTermToTurtle(type, base, prefixes);
+      else
+        return '"' + value + '"';
+    } else {
+      throw Error("Unknown internal term type: " + JSON.stringify(node));
+    }
+  }
+
+  // Tests whether the given entity (triple object) represents an IRI in the N3 library
+  function isIRI (entity) {
+    if (typeof entity !== 'string')
+      return false;
+    else if (entity.length === 0)
+      return true;
+    else {
+      var firstChar = entity[0];
+      return firstChar !== '"' && firstChar !== '_';
+    }
+  }
+
+  // Tests whether the given entity (triple object) represents a literal in the N3 library
+  function isLiteral (entity) {
+    return typeof entity === 'string' && entity[0] === '"';
+  }
+
+  // Tests whether the given entity (triple object) represents a blank node in the N3 library
+  function isBlank (entity) {
+    return typeof entity === 'string' && entity.substr(0, 2) === '_:';
+  }
+
+  // Tests whether the given entity represents the default graph
+  function isDefaultGraph (entity) {
+    return !entity;
+  }
+
+  // Tests whether the given triple is in the default graph
+  function inDefaultGraph (triple) {
+    return !triple.graph;
+  }
+
+  // Gets the string value of a literal in the N3 library
+  function getLiteralValue (literal) {
+    var match = /^"([^]*)"/.exec(literal);
+    if (!match)
+      throw new Error(literal + ' is not a literal');
+    return match[1];
+  }
+
+  // Gets the type of a literal in the N3 library
+  function getLiteralType (literal) {
+    var match = /^"[^]*"(?:\^\^([^"]+)|(@)[^@"]+)?$/.exec(literal);
+    if (!match)
+      throw new Error(literal + ' is not a literal');
+    return match[1] || (match[2] ? RdfLangString : XsdString);
+  }
+
+  // Gets the language of a literal in the N3 library
+  function getLiteralLanguage (literal) {
+    var match = /^"[^]*"(?:@([^@"]+)|\^\^[^"]+)?$/.exec(literal);
+    if (!match)
+      throw new Error(literal + ' is not a literal');
+    return match[1] ? match[1].toLowerCase() : '';
+  }
+
+
+// rdf:type predicate (for 'a' abbreviation)
+var RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+    RDF_TYPE   = RDF_PREFIX + 'type';
+
+// Characters in literals that require escaping
+var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
+    escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
+    escapeReplacements = {
+      '\\': '\\\\', '"': '\\"', '\t': '\\t',
+      '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f',
+    };
+
+  // Replaces a character by its escaped version
+  function characterReplacer (character) {
+    // Replace a single character by its escaped version
+    var result = escapeReplacements[character];
+    if (result === undefined) {
+      // Replace a single character with its 4-bit unicode escape sequence
+      if (character.length === 1) {
+        result = character.charCodeAt(0).toString(16);
+        result = '\\u0000'.substr(0, 6 - result.length) + result;
+      }
+      // Replace a surrogate pair with its 8-bit unicode escape sequence
+      else {
+        result = ((character.charCodeAt(0) - 0xD800) * 0x400 +
+                  character.charCodeAt(1) + 0x2400).toString(16);
+        result = '\\U00000000'.substr(0, 10 - result.length) + result;
+      }
+    }
+    return result;
+  }
+
+  return {
+    RdfLangString: RdfLangString,
+    XsdString: XsdString,
+    resolveRelativeIRI: resolveRelativeIRI,
+    isIRI: isIRI,
+    isLiteral: isLiteral,
+    isBlank: isBlank,
+    isDefaultGraph: isDefaultGraph,
+    inDefaultGraph: inDefaultGraph,
+    getLiteralValue: getLiteralValue,
+    getLiteralType: getLiteralType,
+    getLiteralLanguage: getLiteralLanguage,
+    internalTerm: internalTerm,
+    internalTriple: internalTriple,
+    externalTerm: externalTerm,
+    externalTriple: externalTriple,
+    intermalTermToTurtle: intermalTermToTurtle,
+  }
+})();
+
+if (true)
+  module.exports = ShExTerm; // node environment
 
 
 /***/ }),
@@ -3628,7 +3628,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(43);
+exports.isBuffer = __webpack_require__(42);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -3672,7 +3672,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(44);
+exports.inherits = __webpack_require__(43);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -3806,7 +3806,7 @@ exports.callbackify = callbackify;
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return N3Lexer; });
 /* harmony import */ var _IRIs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(37);
+/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(36);
 /* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(queue_microtask__WEBPACK_IMPORTED_MODULE_1__);
 // **N3Lexer** tokenizes N3 documents.
 
@@ -4294,1639 +4294,18 @@ class N3Lexer {
   }
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8).Buffer))
 
 /***/ }),
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ShExCore = {
-  RdfTerm:    __webpack_require__(7),
-  Util:         __webpack_require__(20),
-  Validator:    __webpack_require__(45),
-  Writer:    __webpack_require__(21),
-  'nfax-val-1err':     __webpack_require__(46),
-  'threaded-val-nerr': __webpack_require__(22)
-};
-
-if (true)
-  module.exports = ShExCore;
-
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = minimatch
-minimatch.Minimatch = Minimatch
-
-var path = { sep: '/' }
-try {
-  path = __webpack_require__(2)
-} catch (er) {}
-
-var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(50)
-
-var plTypes = {
-  '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
-  '?': { open: '(?:', close: ')?' },
-  '+': { open: '(?:', close: ')+' },
-  '*': { open: '(?:', close: ')*' },
-  '@': { open: '(?:', close: ')' }
-}
-
-// any single thing other than /
-// don't need to escape / when using new RegExp()
-var qmark = '[^/]'
-
-// * => any number of characters
-var star = qmark + '*?'
-
-// ** when dots are allowed.  Anything goes, except .. and .
-// not (^ or / followed by one or two dots followed by $ or /),
-// followed by anything, any number of times.
-var twoStarDot = '(?:(?!(?:\\\/|^)(?:\\.{1,2})($|\\\/)).)*?'
-
-// not a ^ or / followed by a dot,
-// followed by anything, any number of times.
-var twoStarNoDot = '(?:(?!(?:\\\/|^)\\.).)*?'
-
-// characters that need to be escaped in RegExp.
-var reSpecials = charSet('().*{}+?[]^$\\!')
-
-// "abc" -> { a:true, b:true, c:true }
-function charSet (s) {
-  return s.split('').reduce(function (set, c) {
-    set[c] = true
-    return set
-  }, {})
-}
-
-// normalizes slashes.
-var slashSplit = /\/+/
-
-minimatch.filter = filter
-function filter (pattern, options) {
-  options = options || {}
-  return function (p, i, list) {
-    return minimatch(p, pattern, options)
-  }
-}
-
-function ext (a, b) {
-  a = a || {}
-  b = b || {}
-  var t = {}
-  Object.keys(b).forEach(function (k) {
-    t[k] = b[k]
-  })
-  Object.keys(a).forEach(function (k) {
-    t[k] = a[k]
-  })
-  return t
-}
-
-minimatch.defaults = function (def) {
-  if (!def || !Object.keys(def).length) return minimatch
-
-  var orig = minimatch
-
-  var m = function minimatch (p, pattern, options) {
-    return orig.minimatch(p, pattern, ext(def, options))
-  }
-
-  m.Minimatch = function Minimatch (pattern, options) {
-    return new orig.Minimatch(pattern, ext(def, options))
-  }
-
-  return m
-}
-
-Minimatch.defaults = function (def) {
-  if (!def || !Object.keys(def).length) return Minimatch
-  return minimatch.defaults(def).Minimatch
-}
-
-function minimatch (p, pattern, options) {
-  if (typeof pattern !== 'string') {
-    throw new TypeError('glob pattern string required')
-  }
-
-  if (!options) options = {}
-
-  // shortcut: comments match nothing.
-  if (!options.nocomment && pattern.charAt(0) === '#') {
-    return false
-  }
-
-  // "" only matches ""
-  if (pattern.trim() === '') return p === ''
-
-  return new Minimatch(pattern, options).match(p)
-}
-
-function Minimatch (pattern, options) {
-  if (!(this instanceof Minimatch)) {
-    return new Minimatch(pattern, options)
-  }
-
-  if (typeof pattern !== 'string') {
-    throw new TypeError('glob pattern string required')
-  }
-
-  if (!options) options = {}
-  pattern = pattern.trim()
-
-  // windows support: need to use /, not \
-  if (path.sep !== '/') {
-    pattern = pattern.split(path.sep).join('/')
-  }
-
-  this.options = options
-  this.set = []
-  this.pattern = pattern
-  this.regexp = null
-  this.negate = false
-  this.comment = false
-  this.empty = false
-
-  // make the set of regexps etc.
-  this.make()
-}
-
-Minimatch.prototype.debug = function () {}
-
-Minimatch.prototype.make = make
-function make () {
-  // don't do it more than once.
-  if (this._made) return
-
-  var pattern = this.pattern
-  var options = this.options
-
-  // empty patterns and comments match nothing.
-  if (!options.nocomment && pattern.charAt(0) === '#') {
-    this.comment = true
-    return
-  }
-  if (!pattern) {
-    this.empty = true
-    return
-  }
-
-  // step 1: figure out negation, etc.
-  this.parseNegate()
-
-  // step 2: expand braces
-  var set = this.globSet = this.braceExpand()
-
-  if (options.debug) this.debug = console.error
-
-  this.debug(this.pattern, set)
-
-  // step 3: now we have a set, so turn each one into a series of path-portion
-  // matching patterns.
-  // These will be regexps, except in the case of "**", which is
-  // set to the GLOBSTAR object for globstar behavior,
-  // and will not contain any / characters
-  set = this.globParts = set.map(function (s) {
-    return s.split(slashSplit)
-  })
-
-  this.debug(this.pattern, set)
-
-  // glob --> regexps
-  set = set.map(function (s, si, set) {
-    return s.map(this.parse, this)
-  }, this)
-
-  this.debug(this.pattern, set)
-
-  // filter out everything that didn't compile properly.
-  set = set.filter(function (s) {
-    return s.indexOf(false) === -1
-  })
-
-  this.debug(this.pattern, set)
-
-  this.set = set
-}
-
-Minimatch.prototype.parseNegate = parseNegate
-function parseNegate () {
-  var pattern = this.pattern
-  var negate = false
-  var options = this.options
-  var negateOffset = 0
-
-  if (options.nonegate) return
-
-  for (var i = 0, l = pattern.length
-    ; i < l && pattern.charAt(i) === '!'
-    ; i++) {
-    negate = !negate
-    negateOffset++
-  }
-
-  if (negateOffset) this.pattern = pattern.substr(negateOffset)
-  this.negate = negate
-}
-
-// Brace expansion:
-// a{b,c}d -> abd acd
-// a{b,}c -> abc ac
-// a{0..3}d -> a0d a1d a2d a3d
-// a{b,c{d,e}f}g -> abg acdfg acefg
-// a{b,c}d{e,f}g -> abdeg acdeg abdeg abdfg
-//
-// Invalid sets are not expanded.
-// a{2..}b -> a{2..}b
-// a{b}c -> a{b}c
-minimatch.braceExpand = function (pattern, options) {
-  return braceExpand(pattern, options)
-}
-
-Minimatch.prototype.braceExpand = braceExpand
-
-function braceExpand (pattern, options) {
-  if (!options) {
-    if (this instanceof Minimatch) {
-      options = this.options
-    } else {
-      options = {}
-    }
-  }
-
-  pattern = typeof pattern === 'undefined'
-    ? this.pattern : pattern
-
-  if (typeof pattern === 'undefined') {
-    throw new TypeError('undefined pattern')
-  }
-
-  if (options.nobrace ||
-    !pattern.match(/\{.*\}/)) {
-    // shortcut. no need to expand.
-    return [pattern]
-  }
-
-  return expand(pattern)
-}
-
-// parse a component of the expanded set.
-// At this point, no pattern may contain "/" in it
-// so we're going to return a 2d array, where each entry is the full
-// pattern, split on '/', and then turned into a regular expression.
-// A regexp is made at the end which joins each array with an
-// escaped /, and another full one which joins each regexp with |.
-//
-// Following the lead of Bash 4.1, note that "**" only has special meaning
-// when it is the *only* thing in a path portion.  Otherwise, any series
-// of * is equivalent to a single *.  Globstar behavior is enabled by
-// default, and can be disabled by setting options.noglobstar.
-Minimatch.prototype.parse = parse
-var SUBPARSE = {}
-function parse (pattern, isSub) {
-  if (pattern.length > 1024 * 64) {
-    throw new TypeError('pattern is too long')
-  }
-
-  var options = this.options
-
-  // shortcuts
-  if (!options.noglobstar && pattern === '**') return GLOBSTAR
-  if (pattern === '') return ''
-
-  var re = ''
-  var hasMagic = !!options.nocase
-  var escaping = false
-  // ? => one single character
-  var patternListStack = []
-  var negativeLists = []
-  var stateChar
-  var inClass = false
-  var reClassStart = -1
-  var classStart = -1
-  // . and .. never match anything that doesn't start with .,
-  // even when options.dot is set.
-  var patternStart = pattern.charAt(0) === '.' ? '' // anything
-  // not (start or / followed by . or .. followed by / or end)
-  : options.dot ? '(?!(?:^|\\\/)\\.{1,2}(?:$|\\\/))'
-  : '(?!\\.)'
-  var self = this
-
-  function clearStateChar () {
-    if (stateChar) {
-      // we had some state-tracking character
-      // that wasn't consumed by this pass.
-      switch (stateChar) {
-        case '*':
-          re += star
-          hasMagic = true
-        break
-        case '?':
-          re += qmark
-          hasMagic = true
-        break
-        default:
-          re += '\\' + stateChar
-        break
-      }
-      self.debug('clearStateChar %j %j', stateChar, re)
-      stateChar = false
-    }
-  }
-
-  for (var i = 0, len = pattern.length, c
-    ; (i < len) && (c = pattern.charAt(i))
-    ; i++) {
-    this.debug('%s\t%s %s %j', pattern, i, re, c)
-
-    // skip over any that are escaped.
-    if (escaping && reSpecials[c]) {
-      re += '\\' + c
-      escaping = false
-      continue
-    }
-
-    switch (c) {
-      case '/':
-        // completely not allowed, even escaped.
-        // Should already be path-split by now.
-        return false
-
-      case '\\':
-        clearStateChar()
-        escaping = true
-      continue
-
-      // the various stateChar values
-      // for the "extglob" stuff.
-      case '?':
-      case '*':
-      case '+':
-      case '@':
-      case '!':
-        this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c)
-
-        // all of those are literals inside a class, except that
-        // the glob [!a] means [^a] in regexp
-        if (inClass) {
-          this.debug('  in class')
-          if (c === '!' && i === classStart + 1) c = '^'
-          re += c
-          continue
-        }
-
-        // if we already have a stateChar, then it means
-        // that there was something like ** or +? in there.
-        // Handle the stateChar, then proceed with this one.
-        self.debug('call clearStateChar %j', stateChar)
-        clearStateChar()
-        stateChar = c
-        // if extglob is disabled, then +(asdf|foo) isn't a thing.
-        // just clear the statechar *now*, rather than even diving into
-        // the patternList stuff.
-        if (options.noext) clearStateChar()
-      continue
-
-      case '(':
-        if (inClass) {
-          re += '('
-          continue
-        }
-
-        if (!stateChar) {
-          re += '\\('
-          continue
-        }
-
-        patternListStack.push({
-          type: stateChar,
-          start: i - 1,
-          reStart: re.length,
-          open: plTypes[stateChar].open,
-          close: plTypes[stateChar].close
-        })
-        // negation is (?:(?!js)[^/]*)
-        re += stateChar === '!' ? '(?:(?!(?:' : '(?:'
-        this.debug('plType %j %j', stateChar, re)
-        stateChar = false
-      continue
-
-      case ')':
-        if (inClass || !patternListStack.length) {
-          re += '\\)'
-          continue
-        }
-
-        clearStateChar()
-        hasMagic = true
-        var pl = patternListStack.pop()
-        // negation is (?:(?!js)[^/]*)
-        // The others are (?:<pattern>)<type>
-        re += pl.close
-        if (pl.type === '!') {
-          negativeLists.push(pl)
-        }
-        pl.reEnd = re.length
-      continue
-
-      case '|':
-        if (inClass || !patternListStack.length || escaping) {
-          re += '\\|'
-          escaping = false
-          continue
-        }
-
-        clearStateChar()
-        re += '|'
-      continue
-
-      // these are mostly the same in regexp and glob
-      case '[':
-        // swallow any state-tracking char before the [
-        clearStateChar()
-
-        if (inClass) {
-          re += '\\' + c
-          continue
-        }
-
-        inClass = true
-        classStart = i
-        reClassStart = re.length
-        re += c
-      continue
-
-      case ']':
-        //  a right bracket shall lose its special
-        //  meaning and represent itself in
-        //  a bracket expression if it occurs
-        //  first in the list.  -- POSIX.2 2.8.3.2
-        if (i === classStart + 1 || !inClass) {
-          re += '\\' + c
-          escaping = false
-          continue
-        }
-
-        // handle the case where we left a class open.
-        // "[z-a]" is valid, equivalent to "\[z-a\]"
-        if (inClass) {
-          // split where the last [ was, make sure we don't have
-          // an invalid re. if so, re-walk the contents of the
-          // would-be class to re-translate any characters that
-          // were passed through as-is
-          // TODO: It would probably be faster to determine this
-          // without a try/catch and a new RegExp, but it's tricky
-          // to do safely.  For now, this is safe and works.
-          var cs = pattern.substring(classStart + 1, i)
-          try {
-            RegExp('[' + cs + ']')
-          } catch (er) {
-            // not a valid class!
-            var sp = this.parse(cs, SUBPARSE)
-            re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]'
-            hasMagic = hasMagic || sp[1]
-            inClass = false
-            continue
-          }
-        }
-
-        // finish up the class.
-        hasMagic = true
-        inClass = false
-        re += c
-      continue
-
-      default:
-        // swallow any state char that wasn't consumed
-        clearStateChar()
-
-        if (escaping) {
-          // no need
-          escaping = false
-        } else if (reSpecials[c]
-          && !(c === '^' && inClass)) {
-          re += '\\'
-        }
-
-        re += c
-
-    } // switch
-  } // for
-
-  // handle the case where we left a class open.
-  // "[abc" is valid, equivalent to "\[abc"
-  if (inClass) {
-    // split where the last [ was, and escape it
-    // this is a huge pita.  We now have to re-walk
-    // the contents of the would-be class to re-translate
-    // any characters that were passed through as-is
-    cs = pattern.substr(classStart + 1)
-    sp = this.parse(cs, SUBPARSE)
-    re = re.substr(0, reClassStart) + '\\[' + sp[0]
-    hasMagic = hasMagic || sp[1]
-  }
-
-  // handle the case where we had a +( thing at the *end*
-  // of the pattern.
-  // each pattern list stack adds 3 chars, and we need to go through
-  // and escape any | chars that were passed through as-is for the regexp.
-  // Go through and escape them, taking care not to double-escape any
-  // | chars that were already escaped.
-  for (pl = patternListStack.pop(); pl; pl = patternListStack.pop()) {
-    var tail = re.slice(pl.reStart + pl.open.length)
-    this.debug('setting tail', re, pl)
-    // maybe some even number of \, then maybe 1 \, followed by a |
-    tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, function (_, $1, $2) {
-      if (!$2) {
-        // the | isn't already escaped, so escape it.
-        $2 = '\\'
-      }
-
-      // need to escape all those slashes *again*, without escaping the
-      // one that we need for escaping the | character.  As it works out,
-      // escaping an even number of slashes can be done by simply repeating
-      // it exactly after itself.  That's why this trick works.
-      //
-      // I am sorry that you have to see this.
-      return $1 + $1 + $2 + '|'
-    })
-
-    this.debug('tail=%j\n   %s', tail, tail, pl, re)
-    var t = pl.type === '*' ? star
-      : pl.type === '?' ? qmark
-      : '\\' + pl.type
-
-    hasMagic = true
-    re = re.slice(0, pl.reStart) + t + '\\(' + tail
-  }
-
-  // handle trailing things that only matter at the very end.
-  clearStateChar()
-  if (escaping) {
-    // trailing \\
-    re += '\\\\'
-  }
-
-  // only need to apply the nodot start if the re starts with
-  // something that could conceivably capture a dot
-  var addPatternStart = false
-  switch (re.charAt(0)) {
-    case '.':
-    case '[':
-    case '(': addPatternStart = true
-  }
-
-  // Hack to work around lack of negative lookbehind in JS
-  // A pattern like: *.!(x).!(y|z) needs to ensure that a name
-  // like 'a.xyz.yz' doesn't match.  So, the first negative
-  // lookahead, has to look ALL the way ahead, to the end of
-  // the pattern.
-  for (var n = negativeLists.length - 1; n > -1; n--) {
-    var nl = negativeLists[n]
-
-    var nlBefore = re.slice(0, nl.reStart)
-    var nlFirst = re.slice(nl.reStart, nl.reEnd - 8)
-    var nlLast = re.slice(nl.reEnd - 8, nl.reEnd)
-    var nlAfter = re.slice(nl.reEnd)
-
-    nlLast += nlAfter
-
-    // Handle nested stuff like *(*.js|!(*.json)), where open parens
-    // mean that we should *not* include the ) in the bit that is considered
-    // "after" the negated section.
-    var openParensBefore = nlBefore.split('(').length - 1
-    var cleanAfter = nlAfter
-    for (i = 0; i < openParensBefore; i++) {
-      cleanAfter = cleanAfter.replace(/\)[+*?]?/, '')
-    }
-    nlAfter = cleanAfter
-
-    var dollar = ''
-    if (nlAfter === '' && isSub !== SUBPARSE) {
-      dollar = '$'
-    }
-    var newRe = nlBefore + nlFirst + nlAfter + dollar + nlLast
-    re = newRe
-  }
-
-  // if the re is not "" at this point, then we need to make sure
-  // it doesn't match against an empty path part.
-  // Otherwise a/* will match a/, which it should not.
-  if (re !== '' && hasMagic) {
-    re = '(?=.)' + re
-  }
-
-  if (addPatternStart) {
-    re = patternStart + re
-  }
-
-  // parsing just a piece of a larger pattern.
-  if (isSub === SUBPARSE) {
-    return [re, hasMagic]
-  }
-
-  // skip the regexp for non-magical patterns
-  // unescape anything in it, though, so that it'll be
-  // an exact match against a file etc.
-  if (!hasMagic) {
-    return globUnescape(pattern)
-  }
-
-  var flags = options.nocase ? 'i' : ''
-  try {
-    var regExp = new RegExp('^' + re + '$', flags)
-  } catch (er) {
-    // If it was an invalid regular expression, then it can't match
-    // anything.  This trick looks for a character after the end of
-    // the string, which is of course impossible, except in multi-line
-    // mode, but it's not a /m regex.
-    return new RegExp('$.')
-  }
-
-  regExp._glob = pattern
-  regExp._src = re
-
-  return regExp
-}
-
-minimatch.makeRe = function (pattern, options) {
-  return new Minimatch(pattern, options || {}).makeRe()
-}
-
-Minimatch.prototype.makeRe = makeRe
-function makeRe () {
-  if (this.regexp || this.regexp === false) return this.regexp
-
-  // at this point, this.set is a 2d array of partial
-  // pattern strings, or "**".
-  //
-  // It's better to use .match().  This function shouldn't
-  // be used, really, but it's pretty convenient sometimes,
-  // when you just want to work with a regex.
-  var set = this.set
-
-  if (!set.length) {
-    this.regexp = false
-    return this.regexp
-  }
-  var options = this.options
-
-  var twoStar = options.noglobstar ? star
-    : options.dot ? twoStarDot
-    : twoStarNoDot
-  var flags = options.nocase ? 'i' : ''
-
-  var re = set.map(function (pattern) {
-    return pattern.map(function (p) {
-      return (p === GLOBSTAR) ? twoStar
-      : (typeof p === 'string') ? regExpEscape(p)
-      : p._src
-    }).join('\\\/')
-  }).join('|')
-
-  // must match entire pattern
-  // ending in a * or ** will make it less strict.
-  re = '^(?:' + re + ')$'
-
-  // can match anything, as long as it's not this.
-  if (this.negate) re = '^(?!' + re + ').*$'
-
-  try {
-    this.regexp = new RegExp(re, flags)
-  } catch (ex) {
-    this.regexp = false
-  }
-  return this.regexp
-}
-
-minimatch.match = function (list, pattern, options) {
-  options = options || {}
-  var mm = new Minimatch(pattern, options)
-  list = list.filter(function (f) {
-    return mm.match(f)
-  })
-  if (mm.options.nonull && !list.length) {
-    list.push(pattern)
-  }
-  return list
-}
-
-Minimatch.prototype.match = match
-function match (f, partial) {
-  this.debug('match', f, this.pattern)
-  // short-circuit in the case of busted things.
-  // comments, etc.
-  if (this.comment) return false
-  if (this.empty) return f === ''
-
-  if (f === '/' && partial) return true
-
-  var options = this.options
-
-  // windows: need to use /, not \
-  if (path.sep !== '/') {
-    f = f.split(path.sep).join('/')
-  }
-
-  // treat the test path as a set of pathparts.
-  f = f.split(slashSplit)
-  this.debug(this.pattern, 'split', f)
-
-  // just ONE of the pattern sets in this.set needs to match
-  // in order for it to be valid.  If negating, then just one
-  // match means that we have failed.
-  // Either way, return on the first hit.
-
-  var set = this.set
-  this.debug(this.pattern, 'set', set)
-
-  // Find the basename of the path by looking for the last non-empty segment
-  var filename
-  var i
-  for (i = f.length - 1; i >= 0; i--) {
-    filename = f[i]
-    if (filename) break
-  }
-
-  for (i = 0; i < set.length; i++) {
-    var pattern = set[i]
-    var file = f
-    if (options.matchBase && pattern.length === 1) {
-      file = [filename]
-    }
-    var hit = this.matchOne(file, pattern, partial)
-    if (hit) {
-      if (options.flipNegate) return true
-      return !this.negate
-    }
-  }
-
-  // didn't get any hits.  this is success if it's a negative
-  // pattern, failure otherwise.
-  if (options.flipNegate) return false
-  return this.negate
-}
-
-// set partial to true to test if, for example,
-// "/a/b" matches the start of "/*/b/*/d"
-// Partial means, if you run out of file before you run
-// out of pattern, then that's fine, as long as all
-// the parts match.
-Minimatch.prototype.matchOne = function (file, pattern, partial) {
-  var options = this.options
-
-  this.debug('matchOne',
-    { 'this': this, file: file, pattern: pattern })
-
-  this.debug('matchOne', file.length, pattern.length)
-
-  for (var fi = 0,
-      pi = 0,
-      fl = file.length,
-      pl = pattern.length
-      ; (fi < fl) && (pi < pl)
-      ; fi++, pi++) {
-    this.debug('matchOne loop')
-    var p = pattern[pi]
-    var f = file[fi]
-
-    this.debug(pattern, p, f)
-
-    // should be impossible.
-    // some invalid regexp stuff in the set.
-    if (p === false) return false
-
-    if (p === GLOBSTAR) {
-      this.debug('GLOBSTAR', [pattern, p, f])
-
-      // "**"
-      // a/**/b/**/c would match the following:
-      // a/b/x/y/z/c
-      // a/x/y/z/b/c
-      // a/b/x/b/x/c
-      // a/b/c
-      // To do this, take the rest of the pattern after
-      // the **, and see if it would match the file remainder.
-      // If so, return success.
-      // If not, the ** "swallows" a segment, and try again.
-      // This is recursively awful.
-      //
-      // a/**/b/**/c matching a/b/x/y/z/c
-      // - a matches a
-      // - doublestar
-      //   - matchOne(b/x/y/z/c, b/**/c)
-      //     - b matches b
-      //     - doublestar
-      //       - matchOne(x/y/z/c, c) -> no
-      //       - matchOne(y/z/c, c) -> no
-      //       - matchOne(z/c, c) -> no
-      //       - matchOne(c, c) yes, hit
-      var fr = fi
-      var pr = pi + 1
-      if (pr === pl) {
-        this.debug('** at the end')
-        // a ** at the end will just swallow the rest.
-        // We have found a match.
-        // however, it will not swallow /.x, unless
-        // options.dot is set.
-        // . and .. are *never* matched by **, for explosively
-        // exponential reasons.
-        for (; fi < fl; fi++) {
-          if (file[fi] === '.' || file[fi] === '..' ||
-            (!options.dot && file[fi].charAt(0) === '.')) return false
-        }
-        return true
-      }
-
-      // ok, let's see if we can swallow whatever we can.
-      while (fr < fl) {
-        var swallowee = file[fr]
-
-        this.debug('\nglobstar while', file, fr, pattern, pr, swallowee)
-
-        // XXX remove this slice.  Just pass the start index.
-        if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
-          this.debug('globstar found match!', fr, fl, swallowee)
-          // found a match.
-          return true
-        } else {
-          // can't swallow "." or ".." ever.
-          // can only swallow ".foo" when explicitly asked.
-          if (swallowee === '.' || swallowee === '..' ||
-            (!options.dot && swallowee.charAt(0) === '.')) {
-            this.debug('dot detected!', file, fr, pattern, pr)
-            break
-          }
-
-          // ** swallows a segment, and continue.
-          this.debug('globstar swallow a segment, and continue')
-          fr++
-        }
-      }
-
-      // no match was found.
-      // However, in partial mode, we can't say this is necessarily over.
-      // If there's more *pattern* left, then
-      if (partial) {
-        // ran out of file
-        this.debug('\n>>> no match, partial?', file, fr, pattern, pr)
-        if (fr === fl) return true
-      }
-      return false
-    }
-
-    // something other than **
-    // non-magic patterns just have to match exactly
-    // patterns with magic have been turned into regexps.
-    var hit
-    if (typeof p === 'string') {
-      if (options.nocase) {
-        hit = f.toLowerCase() === p.toLowerCase()
-      } else {
-        hit = f === p
-      }
-      this.debug('string match', p, f, hit)
-    } else {
-      hit = f.match(p)
-      this.debug('pattern match', p, f, hit)
-    }
-
-    if (!hit) return false
-  }
-
-  // Note: ending in / means that we'll get a final ""
-  // at the end of the pattern.  This can only match a
-  // corresponding "" at the end of the file.
-  // If the file ends in /, then it can only match a
-  // a pattern that ends in /, unless the pattern just
-  // doesn't have any more for it. But, a/b/ should *not*
-  // match "a/b/*", even though "" matches against the
-  // [^/]*? pattern, except in partial mode, where it might
-  // simply not be reached yet.
-  // However, a/b/ should still satisfy a/*
-
-  // now either we fell off the end of the pattern, or we're done.
-  if (fi === fl && pi === pl) {
-    // ran out of pattern and filename at the same time.
-    // an exact hit!
-    return true
-  } else if (fi === fl) {
-    // ran out of file, but still had pattern left.
-    // this is ok if we're doing the match as part of
-    // a glob fs traversal.
-    return partial
-  } else if (pi === pl) {
-    // ran out of pattern, still have file left.
-    // this is only acceptable if we're on the very last
-    // empty segment of a file with a trailing slash.
-    // a/* should match a/b/
-    var emptyFileEnd = (fi === fl - 1) && (file[fi] === '')
-    return emptyFileEnd
-  }
-
-  // should be unreachable.
-  throw new Error('wtf?')
-}
-
-// replace stuff like \* with *
-function globUnescape (s) {
-  return s.replace(/\\(.)/g, '$1')
-}
-
-function regExpEscape (s) {
-  return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-}
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-var R = typeof Reflect === 'object' ? Reflect : null
-var ReflectApply = R && typeof R.apply === 'function'
-  ? R.apply
-  : function ReflectApply(target, receiver, args) {
-    return Function.prototype.apply.call(target, receiver, args);
-  }
-
-var ReflectOwnKeys
-if (R && typeof R.ownKeys === 'function') {
-  ReflectOwnKeys = R.ownKeys
-} else if (Object.getOwnPropertySymbols) {
-  ReflectOwnKeys = function ReflectOwnKeys(target) {
-    return Object.getOwnPropertyNames(target)
-      .concat(Object.getOwnPropertySymbols(target));
-  };
-} else {
-  ReflectOwnKeys = function ReflectOwnKeys(target) {
-    return Object.getOwnPropertyNames(target);
-  };
-}
-
-function ProcessEmitWarning(warning) {
-  if (console && console.warn) console.warn(warning);
-}
-
-var NumberIsNaN = Number.isNaN || function NumberIsNaN(value) {
-  return value !== value;
-}
-
-function EventEmitter() {
-  EventEmitter.init.call(this);
-}
-module.exports = EventEmitter;
-module.exports.once = once;
-
-// Backwards-compat with node 0.10.x
-EventEmitter.EventEmitter = EventEmitter;
-
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._eventsCount = 0;
-EventEmitter.prototype._maxListeners = undefined;
-
-// By default EventEmitters will print a warning if more than 10 listeners are
-// added to it. This is a useful default which helps finding memory leaks.
-var defaultMaxListeners = 10;
-
-function checkListener(listener) {
-  if (typeof listener !== 'function') {
-    throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
-  }
-}
-
-Object.defineProperty(EventEmitter, 'defaultMaxListeners', {
-  enumerable: true,
-  get: function() {
-    return defaultMaxListeners;
-  },
-  set: function(arg) {
-    if (typeof arg !== 'number' || arg < 0 || NumberIsNaN(arg)) {
-      throw new RangeError('The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ' + arg + '.');
-    }
-    defaultMaxListeners = arg;
-  }
-});
-
-EventEmitter.init = function() {
-
-  if (this._events === undefined ||
-      this._events === Object.getPrototypeOf(this)._events) {
-    this._events = Object.create(null);
-    this._eventsCount = 0;
-  }
-
-  this._maxListeners = this._maxListeners || undefined;
-};
-
-// Obviously not all Emitters should be limited to 10. This function allows
-// that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
-  if (typeof n !== 'number' || n < 0 || NumberIsNaN(n)) {
-    throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + '.');
-  }
-  this._maxListeners = n;
-  return this;
-};
-
-function _getMaxListeners(that) {
-  if (that._maxListeners === undefined)
-    return EventEmitter.defaultMaxListeners;
-  return that._maxListeners;
-}
-
-EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
-  return _getMaxListeners(this);
-};
-
-EventEmitter.prototype.emit = function emit(type) {
-  var args = [];
-  for (var i = 1; i < arguments.length; i++) args.push(arguments[i]);
-  var doError = (type === 'error');
-
-  var events = this._events;
-  if (events !== undefined)
-    doError = (doError && events.error === undefined);
-  else if (!doError)
-    return false;
-
-  // If there is no 'error' event listener then throw.
-  if (doError) {
-    var er;
-    if (args.length > 0)
-      er = args[0];
-    if (er instanceof Error) {
-      // Note: The comments on the `throw` lines are intentional, they show
-      // up in Node's output if this results in an unhandled exception.
-      throw er; // Unhandled 'error' event
-    }
-    // At least give some kind of context to the user
-    var err = new Error('Unhandled error.' + (er ? ' (' + er.message + ')' : ''));
-    err.context = er;
-    throw err; // Unhandled 'error' event
-  }
-
-  var handler = events[type];
-
-  if (handler === undefined)
-    return false;
-
-  if (typeof handler === 'function') {
-    ReflectApply(handler, this, args);
-  } else {
-    var len = handler.length;
-    var listeners = arrayClone(handler, len);
-    for (var i = 0; i < len; ++i)
-      ReflectApply(listeners[i], this, args);
-  }
-
-  return true;
-};
-
-function _addListener(target, type, listener, prepend) {
-  var m;
-  var events;
-  var existing;
-
-  checkListener(listener);
-
-  events = target._events;
-  if (events === undefined) {
-    events = target._events = Object.create(null);
-    target._eventsCount = 0;
-  } else {
-    // To avoid recursion in the case that type === "newListener"! Before
-    // adding it to the listeners, first emit "newListener".
-    if (events.newListener !== undefined) {
-      target.emit('newListener', type,
-                  listener.listener ? listener.listener : listener);
-
-      // Re-assign `events` because a newListener handler could have caused the
-      // this._events to be assigned to a new object
-      events = target._events;
-    }
-    existing = events[type];
-  }
-
-  if (existing === undefined) {
-    // Optimize the case of one listener. Don't need the extra array object.
-    existing = events[type] = listener;
-    ++target._eventsCount;
-  } else {
-    if (typeof existing === 'function') {
-      // Adding the second element, need to change to array.
-      existing = events[type] =
-        prepend ? [listener, existing] : [existing, listener];
-      // If we've already got an array, just append.
-    } else if (prepend) {
-      existing.unshift(listener);
-    } else {
-      existing.push(listener);
-    }
-
-    // Check for listener leak
-    m = _getMaxListeners(target);
-    if (m > 0 && existing.length > m && !existing.warned) {
-      existing.warned = true;
-      // No error code for this since it is a Warning
-      // eslint-disable-next-line no-restricted-syntax
-      var w = new Error('Possible EventEmitter memory leak detected. ' +
-                          existing.length + ' ' + String(type) + ' listeners ' +
-                          'added. Use emitter.setMaxListeners() to ' +
-                          'increase limit');
-      w.name = 'MaxListenersExceededWarning';
-      w.emitter = target;
-      w.type = type;
-      w.count = existing.length;
-      ProcessEmitWarning(w);
-    }
-  }
-
-  return target;
-}
-
-EventEmitter.prototype.addListener = function addListener(type, listener) {
-  return _addListener(this, type, listener, false);
-};
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-EventEmitter.prototype.prependListener =
-    function prependListener(type, listener) {
-      return _addListener(this, type, listener, true);
-    };
-
-function onceWrapper() {
-  if (!this.fired) {
-    this.target.removeListener(this.type, this.wrapFn);
-    this.fired = true;
-    if (arguments.length === 0)
-      return this.listener.call(this.target);
-    return this.listener.apply(this.target, arguments);
-  }
-}
-
-function _onceWrap(target, type, listener) {
-  var state = { fired: false, wrapFn: undefined, target: target, type: type, listener: listener };
-  var wrapped = onceWrapper.bind(state);
-  wrapped.listener = listener;
-  state.wrapFn = wrapped;
-  return wrapped;
-}
-
-EventEmitter.prototype.once = function once(type, listener) {
-  checkListener(listener);
-  this.on(type, _onceWrap(this, type, listener));
-  return this;
-};
-
-EventEmitter.prototype.prependOnceListener =
-    function prependOnceListener(type, listener) {
-      checkListener(listener);
-      this.prependListener(type, _onceWrap(this, type, listener));
-      return this;
-    };
-
-// Emits a 'removeListener' event if and only if the listener was removed.
-EventEmitter.prototype.removeListener =
-    function removeListener(type, listener) {
-      var list, events, position, i, originalListener;
-
-      checkListener(listener);
-
-      events = this._events;
-      if (events === undefined)
-        return this;
-
-      list = events[type];
-      if (list === undefined)
-        return this;
-
-      if (list === listener || list.listener === listener) {
-        if (--this._eventsCount === 0)
-          this._events = Object.create(null);
-        else {
-          delete events[type];
-          if (events.removeListener)
-            this.emit('removeListener', type, list.listener || listener);
-        }
-      } else if (typeof list !== 'function') {
-        position = -1;
-
-        for (i = list.length - 1; i >= 0; i--) {
-          if (list[i] === listener || list[i].listener === listener) {
-            originalListener = list[i].listener;
-            position = i;
-            break;
-          }
-        }
-
-        if (position < 0)
-          return this;
-
-        if (position === 0)
-          list.shift();
-        else {
-          spliceOne(list, position);
-        }
-
-        if (list.length === 1)
-          events[type] = list[0];
-
-        if (events.removeListener !== undefined)
-          this.emit('removeListener', type, originalListener || listener);
-      }
-
-      return this;
-    };
-
-EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
-
-EventEmitter.prototype.removeAllListeners =
-    function removeAllListeners(type) {
-      var listeners, events, i;
-
-      events = this._events;
-      if (events === undefined)
-        return this;
-
-      // not listening for removeListener, no need to emit
-      if (events.removeListener === undefined) {
-        if (arguments.length === 0) {
-          this._events = Object.create(null);
-          this._eventsCount = 0;
-        } else if (events[type] !== undefined) {
-          if (--this._eventsCount === 0)
-            this._events = Object.create(null);
-          else
-            delete events[type];
-        }
-        return this;
-      }
-
-      // emit removeListener for all listeners on all events
-      if (arguments.length === 0) {
-        var keys = Object.keys(events);
-        var key;
-        for (i = 0; i < keys.length; ++i) {
-          key = keys[i];
-          if (key === 'removeListener') continue;
-          this.removeAllListeners(key);
-        }
-        this.removeAllListeners('removeListener');
-        this._events = Object.create(null);
-        this._eventsCount = 0;
-        return this;
-      }
-
-      listeners = events[type];
-
-      if (typeof listeners === 'function') {
-        this.removeListener(type, listeners);
-      } else if (listeners !== undefined) {
-        // LIFO order
-        for (i = listeners.length - 1; i >= 0; i--) {
-          this.removeListener(type, listeners[i]);
-        }
-      }
-
-      return this;
-    };
-
-function _listeners(target, type, unwrap) {
-  var events = target._events;
-
-  if (events === undefined)
-    return [];
-
-  var evlistener = events[type];
-  if (evlistener === undefined)
-    return [];
-
-  if (typeof evlistener === 'function')
-    return unwrap ? [evlistener.listener || evlistener] : [evlistener];
-
-  return unwrap ?
-    unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
-}
-
-EventEmitter.prototype.listeners = function listeners(type) {
-  return _listeners(this, type, true);
-};
-
-EventEmitter.prototype.rawListeners = function rawListeners(type) {
-  return _listeners(this, type, false);
-};
-
-EventEmitter.listenerCount = function(emitter, type) {
-  if (typeof emitter.listenerCount === 'function') {
-    return emitter.listenerCount(type);
-  } else {
-    return listenerCount.call(emitter, type);
-  }
-};
-
-EventEmitter.prototype.listenerCount = listenerCount;
-function listenerCount(type) {
-  var events = this._events;
-
-  if (events !== undefined) {
-    var evlistener = events[type];
-
-    if (typeof evlistener === 'function') {
-      return 1;
-    } else if (evlistener !== undefined) {
-      return evlistener.length;
-    }
-  }
-
-  return 0;
-}
-
-EventEmitter.prototype.eventNames = function eventNames() {
-  return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
-};
-
-function arrayClone(arr, n) {
-  var copy = new Array(n);
-  for (var i = 0; i < n; ++i)
-    copy[i] = arr[i];
-  return copy;
-}
-
-function spliceOne(list, index) {
-  for (; index + 1 < list.length; index++)
-    list[index] = list[index + 1];
-  list.pop();
-}
-
-function unwrapListeners(arr) {
-  var ret = new Array(arr.length);
-  for (var i = 0; i < ret.length; ++i) {
-    ret[i] = arr[i].listener || arr[i];
-  }
-  return ret;
-}
-
-function once(emitter, name) {
-  return new Promise(function (resolve, reject) {
-    function eventListener() {
-      if (errorListener !== undefined) {
-        emitter.removeListener('error', errorListener);
-      }
-      resolve([].slice.call(arguments));
-    };
-    var errorListener;
-
-    // Adding an error listener is not optional because
-    // if an error is thrown on an event emitter we cannot
-    // guarantee that the actual event we are waiting will
-    // be fired. The result could be a silent way to create
-    // memory or file descriptor leaks, which is something
-    // we should avoid.
-    if (name !== 'error') {
-      errorListener = function errorListener(err) {
-        emitter.removeListener(name, eventListener);
-        reject(err);
-      };
-
-      emitter.once('error', errorListener);
-    }
-
-    emitter.once(name, eventListener);
-  });
-}
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-function posix(path) {
-	return path.charAt(0) === '/';
-}
-
-function win32(path) {
-	// https://github.com/nodejs/node/blob/b3fcc245fb25539909ef1d5eaa01dbf92e168633/lib/path.js#L56
-	var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
-	var result = splitDeviceRe.exec(path);
-	var device = result[1] || '';
-	var isUnc = Boolean(device && device.charAt(1) !== ':');
-
-	// UNC paths are always absolute
-	return Boolean(result[2] || isUnc);
-}
-
-module.exports = process.platform === 'win32' ? win32 : posix;
-module.exports.posix = posix;
-module.exports.win32 = win32;
-
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-// Ported from https://github.com/mafintosh/end-of-stream with
-// permission from the author, Mathias Buus (@mafintosh).
-
-
-var ERR_STREAM_PREMATURE_CLOSE = __webpack_require__(4).codes.ERR_STREAM_PREMATURE_CLOSE;
-
-function once(callback) {
-  var called = false;
-  return function () {
-    if (called) return;
-    called = true;
-
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    callback.apply(this, args);
-  };
-}
-
-function noop() {}
-
-function isRequest(stream) {
-  return stream.setHeader && typeof stream.abort === 'function';
-}
-
-function eos(stream, opts, callback) {
-  if (typeof opts === 'function') return eos(stream, null, opts);
-  if (!opts) opts = {};
-  callback = once(callback || noop);
-  var readable = opts.readable || opts.readable !== false && stream.readable;
-  var writable = opts.writable || opts.writable !== false && stream.writable;
-
-  var onlegacyfinish = function onlegacyfinish() {
-    if (!stream.writable) onfinish();
-  };
-
-  var writableEnded = stream._writableState && stream._writableState.finished;
-
-  var onfinish = function onfinish() {
-    writable = false;
-    writableEnded = true;
-    if (!readable) callback.call(stream);
-  };
-
-  var readableEnded = stream._readableState && stream._readableState.endEmitted;
-
-  var onend = function onend() {
-    readable = false;
-    readableEnded = true;
-    if (!writable) callback.call(stream);
-  };
-
-  var onerror = function onerror(err) {
-    callback.call(stream, err);
-  };
-
-  var onclose = function onclose() {
-    var err;
-
-    if (readable && !readableEnded) {
-      if (!stream._readableState || !stream._readableState.ended) err = new ERR_STREAM_PREMATURE_CLOSE();
-      return callback.call(stream, err);
-    }
-
-    if (writable && !writableEnded) {
-      if (!stream._writableState || !stream._writableState.ended) err = new ERR_STREAM_PREMATURE_CLOSE();
-      return callback.call(stream, err);
-    }
-  };
-
-  var onrequest = function onrequest() {
-    stream.req.on('finish', onfinish);
-  };
-
-  if (isRequest(stream)) {
-    stream.on('complete', onfinish);
-    stream.on('abort', onclose);
-    if (stream.req) onrequest();else stream.on('request', onrequest);
-  } else if (writable && !stream._writableState) {
-    // legacy streams
-    stream.on('end', onlegacyfinish);
-    stream.on('close', onlegacyfinish);
-  }
-
-  stream.on('end', onend);
-  stream.on('finish', onfinish);
-  if (opts.error !== false) stream.on('error', onerror);
-  stream.on('close', onclose);
-  return function () {
-    stream.removeListener('complete', onfinish);
-    stream.removeListener('abort', onclose);
-    stream.removeListener('request', onrequest);
-    if (stream.req) stream.req.removeListener('finish', onfinish);
-    stream.removeListener('end', onlegacyfinish);
-    stream.removeListener('close', onlegacyfinish);
-    stream.removeListener('finish', onfinish);
-    stream.removeListener('end', onend);
-    stream.removeListener('error', onerror);
-    stream.removeListener('close', onclose);
-  };
-}
-
-module.exports = eos;
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
- *
- * Status: Early implementation
- *
- * TODO:
- *   testing.
- */
-
-var ShapeMapSymbols = (function () {
-  return {
-    focus: { term: "FOCUS" },
-    start: { term: "START" },
-    wildcard: { term: "WILDCARD" },
-  }
-})();
-
-// Export the `ShExValidator` class as a whole.
-if (true)
-  module.exports = ShapeMapSymbols;
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if (!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if (!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
 // **ShExUtil** provides ShEx utility functions
 
 var ShExUtil = (function () {
-var RdfTerm = __webpack_require__(7);
-// var util = require('util');
-const Hierarchy = __webpack_require__(42)
+var RdfTerm = __webpack_require__(10);
+const Visitor = __webpack_require__(20)
+const Hierarchy = __webpack_require__(41)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -6005,327 +4384,8 @@ var ShExUtil = {
     return "0.5.0";
   },
 
-  Visitor: function () {
-    // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
-    var _ShExUtil = this;
-    function visitMap (map, val) {
-      var ret = {};
-      Object.keys(map).forEach(function (item) {
-        ret[item] = val(map[item]);
-      });
-      return ret;
-    }
-    var r = {
-      runtimeError: function (e) {
-        throw e;
-      },
-
-      visitSchema: function (schema) {
-        var ret = { type: "Schema" };
-        _ShExUtil._expect(schema, "type", "Schema");
-        this._maybeSet(schema, ret, "Schema",
-                       ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
-                       ["_base", "_prefixes", "_index", "_sourceMap"]
-                      );
-        return ret;
-      },
-
-      visitPrefixes: function (prefixes) {
-        return prefixes === undefined ?
-          undefined :
-          visitMap(prefixes, function (val) {
-            return val;
-          });
-      },
-
-      visitIRI: function (i) {
-        return i;
-      },
-
-      visitImports: function (imports) {
-        var _Visitor = this;
-        return imports.map(function (imp) {
-          return _Visitor.visitIRI(imp);
-        });
-      },
-
-      visitStartActs: function (startActs) {
-        var _Visitor = this;
-        return startActs === undefined ?
-          undefined :
-          startActs.map(function (act) {
-            return _Visitor.visitSemAct(act);
-          });
-      },
-      visitSemActs: function (semActs) {
-        var _Visitor = this;
-        if (semActs === undefined)
-          return undefined;
-        var ret = []
-        Object.keys(semActs).forEach(function (label) {
-          ret.push(_Visitor.visitSemAct(semActs[label], label));
-        });
-        return ret;
-      },
-      visitSemAct: function (semAct, label) {
-        var ret = { type: "SemAct" };
-        _ShExUtil._expect(semAct, "type", "SemAct");
-
-        this._maybeSet(semAct, ret, "SemAct",
-                       ["name", "code"]);
-        return ret;
-      },
-
-      visitShapes: function (shapes) {
-        var _Visitor = this;
-        if (shapes === undefined)
-          return undefined;
-        return shapes.map(
-          shapeExpr =>
-            _Visitor.visitShapeExpr(shapeExpr)
-        );
-      },
-
-      visitProductions999: function (productions) { // !! DELETE
-        var _Visitor = this;
-        if (productions === undefined)
-          return undefined;
-        var ret = {}
-        Object.keys(productions).forEach(function (label) {
-          ret[label] = _Visitor.visitExpression(productions[label], label);
-        });
-        return ret;
-      },
-
-      visitShapeExpr: function (expr, label) {
-        if (isShapeRef(expr))
-          return this.visitShapeRef(expr)
-        var r =
-            expr.type === "Shape" ? this.visitShape(expr, label) :
-            expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
-            expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
-            expr.type === "ShapeOr" ? this.visitShapeOr(expr, label) :
-            expr.type === "ShapeNot" ? this.visitShapeNot(expr, label) :
-            expr.type === "ShapeExternal" ? this.visitShapeExternal(expr) :
-            null;// if (expr.type === "ShapeRef") r = 0; // console.warn("visitShapeExpr:", r);
-        if (r === null)
-          throw Error("unexpected shapeExpr type: " + expr.type);
-        else
-          return r;
-      },
-
-      // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
-      _visitShapeGroup: function (expr, label) {
-        this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
-        var _Visitor = this;
-        var r = { type: expr.type };
-        if ("id" in expr)
-          r.id = expr.id;
-        r.shapeExprs = expr.shapeExprs.map(function (nested) {
-          return _Visitor.visitShapeExpr(nested, label);
-        });
-        return r;
-      },
-
-      // _visitShapeNot: visit negated shape
-      visitShapeNot: function (expr, label) {
-        this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
-        var r = { type: expr.type };
-        if ("id" in expr)
-          r.id = expr.id;
-        r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, label);
-        return r;
-      },
-
-      // ### `visitNodeConstraint` deep-copies the structure of a shape
-      visitShape: function (shape, label) {
-        var ret = { type: "Shape" };
-        _ShExUtil._expect(shape, "type", "Shape");
-
-        this._maybeSet(shape, ret, "Shape",
-                       [ "id",
-                         // "virtual", "inherit", -- futureWork
-                         "closed",
-                         "expression", "extra", "semActs", "annotations"]);
-        return ret;
-      },
-
-      // ### `visitNodeConstraint` deep-copies the structure of a shape
-      visitNodeConstraint: function (shape, label) {
-        var ret = { type: "NodeConstraint" };
-        _ShExUtil._expect(shape, "type", "NodeConstraint");
-
-        this._maybeSet(shape, ret, "NodeConstraint",
-                       [ "id",
-                         // "virtual", "inherit", -- futureWork
-                         "nodeKind", "datatype", "pattern", "flags", "length",
-                         "reference", "minlength", "maxlength",
-                         "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
-                         "totaldigits", "fractiondigits", "values", "annotations", "semActs"]);
-        return ret;
-      },
-
-      visitShapeRef: function (reference) {
-        if (typeof reference !== "string") {
-          let ex = Exception("visitShapeRef expected a string, not " + JSON.stringify(reference));
-          console.warn(ex);
-          throw ex;
-        }
-        return reference;
-      },
-
-      visitShapeExternal: function (expr) {
-        this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
-        return extend("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
-      },
-
-      // _visitGroup: visit a grouping expression (someOf or eachOf)
-      _visitGroup: function (expr, type) {
-        var _Visitor = this;
-        var r = Object.assign(
-          // pre-declare an id so it sorts to the top
-          "id" in expr ? { id: null } : { },
-          { type: expr.type }
-        );
-        r.expressions = expr.expressions.map(function (nested) {
-          return _Visitor.visitExpression(nested);
-        });
-        return this._maybeSet(expr, r, "expr",
-                              ["id", "min", "max", "annotations", "semActs"], ["expressions"]);
-      },
-
-      visitTripleConstraint: function (expr) {
-        return this._maybeSet(expr,
-                              Object.assign(
-                                // pre-declare an id so it sorts to the top
-                                "id" in expr ? { id: null } : { },
-                                { type: "TripleConstraint" }
-                              ),
-                              "TripleConstraint",
-                              ["id", "inverse", "predicate", "valueExpr",
-                               "min", "max", "annotations", "semActs"])
-      },
-
-      visitExpression: function (expr) {
-        if (typeof expr === "string")
-          return this.visitInclusion(expr);
-        var r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
-          expr.type === "OneOf" ? this.visitOneOf(expr) :
-          expr.type === "EachOf" ? this.visitEachOf(expr) :
-          null;
-        if (r === null)
-          throw Error("unexpected expression type: " + expr.type);
-        else
-          return r;
-      },
-
-      visitValues: function (values) {
-        var _Visitor = this;
-        return values.map(function (t) {
-          return isTerm(t) || t.type === "Language" ?
-            t :
-            _Visitor.visitStemRange(t);
-        });
-      },
-
-      visitStemRange: function (t) {
-        var _Visitor = this; // console.log(Error(t.type).stack);
-        // _ShExUtil._expect(t, "type", "IriStemRange");
-              if (!("type" in t))
-                _Visitor.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
-        var stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
-              if (stemRangeTypes.indexOf(t.type) === -1)
-                _Visitor.runtimeError(Error("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'."));
-        var stem;
-        if (isTerm(t)) {
-          _ShExUtil._expect(t.stem, "type", "Wildcard");
-          stem = { type: t.type, stem: { type: "Wildcard" } };
-        } else {
-          stem = { type: t.type, stem: t.stem };
-        }
-        if (t.exclusions) {
-          stem.exclusions = t.exclusions.map(function (c) {
-            return _Visitor.visitExclusion(c);
-          });
-        }
-        return stem;
-      },
-
-      visitExclusion: function (c) {
-        if (!isTerm(c)) {
-          // _ShExUtil._expect(c, "type", "IriStem");
-                    if (!("type" in c))
-                      _Visitor.runtimeError(Error("expected "+JSON.stringify(c)+" to have a 'type' attribute."));
-                    var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
-                    if (stemTypes.indexOf(c.type) === -1)
-                      _Visitor.runtimeError(Error("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'."));
-          return { type: c.type, stem: c.stem };
-        } else {
-          return c;
-        }
-      },
-
-      visitInclusion: function (inclusion) {
-        if (typeof inclusion !== "string") {
-          let ex = Exception("visitInclusion expected a string, not " + JSON.stringify(inclusion));
-          console.warn(ex);
-          throw ex;
-        }
-        return inclusion;
-      },
-
-      _maybeSet: function (obj, ret, context, members, ignore) {
-        var _Visitor = this;
-        this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
-        members.forEach(function (member) {
-          var methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
-          if (member in obj) {
-            var f = _Visitor[methodName];
-            if (typeof f !== "function") {
-              throw Error(methodName + " not found in Visitor");
-            }
-            var t = f.call(_Visitor, obj[member]);
-            if (t !== undefined) {
-              ret[member] = t;
-            }
-          }
-        });
-        return ret;
-      },
-      _visitValue: function (v) {
-        return v;
-      },
-      _visitList: function (l) {
-        return l.slice();
-      },
-      _testUnknownAttributes: function (obj, expected, context, captureFrame) {
-        var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
-          return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
-        }, []);
-        if (unknownMembers.length > 0) {
-          var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
-                        unknownMembers.map(function (p) {
-                          return "\"" + p + "\"";
-                        }).join(",") +
-                        " in " + context + ": " + JSON.stringify(obj));
-          Error.captureStackTrace(e, captureFrame);
-          throw e;
-        }
-      }
-
-    };
-    r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
-    r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
-    r.visitInverse = r.visitPredicate = r._visitValue;
-    r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
-
-    r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
-    r.visitOneOf = r.visitEachOf = r._visitGroup;
-    r.visitShapeAnd = r.visitShapeOr = r._visitShapeGroup;
-    r.visitInclude = r._visitValue;
-    r.visitValueExpr = r.visitShapeExpr;
-    return r;
-  },
+  Visitor: Visitor,
+  index: Visitor.index,
 
   // tests
   // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
@@ -6498,33 +4558,6 @@ var ShExUtil = {
         return termToLex(t[k]);
       }).join(" ")+" .";
     });
-  },
-
-  /** create indexes for schema
-   */
-  index: function (schema) {
-    let index = {
-      shapeExprs: {},
-      tripleExprs: {}
-    };
-    let v = ShExUtil.Visitor();
-
-    let oldVisitExpression = v.visitExpression;
-    v.visitExpression = function (expression) {
-      if (typeof expression === "object" && "id" in expression)
-        index.tripleExprs[expression.id] = expression;
-      return oldVisitExpression.call(v, expression);
-    };
-
-    let oldVisitShapeExpr = v.visitShapeExpr;
-    v.visitShapeExpr = v.visitValueExpr = function (shapeExpr, label) {
-      if (typeof shapeExpr === "object" && "id" in shapeExpr)
-        index.shapeExprs[shapeExpr.id] = shapeExpr;
-      return oldVisitShapeExpr.call(v, shapeExpr, label);
-    };
-
-    v.visitSchema(schema);
-    return index;
   },
 
   /* canonicalize: move all tripleExpression references to their first expression.
@@ -8174,18 +6207,6 @@ var ShExUtil = {
 
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
 
-  // Expect property p with value v in object o
-  _expect: function (o, p, v) {
-    if (!(p in o))
-      this._error("expected "+JSON.stringify(o)+" to have a ."+p);
-    if (arguments.length > 2 && o[p] !== v)
-      this._error("expected "+o[o]+" to equal ."+v);
-  },
-
-  _error: function (str) {
-    throw new Error(str);
-  },
-
   /**
    * unescape numerics and allowed single-character escapes.
    * throws: if there are any unallowed sequences
@@ -8219,7 +6240,6 @@ var ShExUtil = {
 
 };
 
-
 function n3ify (ldterm) {
   if (typeof ldterm !== "object")
     return ldterm;
@@ -8252,6 +6272,1993 @@ return AddShExUtil(AddShExUtil);
 
 if (true)
   module.exports = ShExUtil; // node environment
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = minimatch
+minimatch.Minimatch = Minimatch
+
+var path = { sep: '/' }
+try {
+  path = __webpack_require__(2)
+} catch (er) {}
+
+var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
+var expand = __webpack_require__(49)
+
+var plTypes = {
+  '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
+  '?': { open: '(?:', close: ')?' },
+  '+': { open: '(?:', close: ')+' },
+  '*': { open: '(?:', close: ')*' },
+  '@': { open: '(?:', close: ')' }
+}
+
+// any single thing other than /
+// don't need to escape / when using new RegExp()
+var qmark = '[^/]'
+
+// * => any number of characters
+var star = qmark + '*?'
+
+// ** when dots are allowed.  Anything goes, except .. and .
+// not (^ or / followed by one or two dots followed by $ or /),
+// followed by anything, any number of times.
+var twoStarDot = '(?:(?!(?:\\\/|^)(?:\\.{1,2})($|\\\/)).)*?'
+
+// not a ^ or / followed by a dot,
+// followed by anything, any number of times.
+var twoStarNoDot = '(?:(?!(?:\\\/|^)\\.).)*?'
+
+// characters that need to be escaped in RegExp.
+var reSpecials = charSet('().*{}+?[]^$\\!')
+
+// "abc" -> { a:true, b:true, c:true }
+function charSet (s) {
+  return s.split('').reduce(function (set, c) {
+    set[c] = true
+    return set
+  }, {})
+}
+
+// normalizes slashes.
+var slashSplit = /\/+/
+
+minimatch.filter = filter
+function filter (pattern, options) {
+  options = options || {}
+  return function (p, i, list) {
+    return minimatch(p, pattern, options)
+  }
+}
+
+function ext (a, b) {
+  a = a || {}
+  b = b || {}
+  var t = {}
+  Object.keys(b).forEach(function (k) {
+    t[k] = b[k]
+  })
+  Object.keys(a).forEach(function (k) {
+    t[k] = a[k]
+  })
+  return t
+}
+
+minimatch.defaults = function (def) {
+  if (!def || !Object.keys(def).length) return minimatch
+
+  var orig = minimatch
+
+  var m = function minimatch (p, pattern, options) {
+    return orig.minimatch(p, pattern, ext(def, options))
+  }
+
+  m.Minimatch = function Minimatch (pattern, options) {
+    return new orig.Minimatch(pattern, ext(def, options))
+  }
+
+  return m
+}
+
+Minimatch.defaults = function (def) {
+  if (!def || !Object.keys(def).length) return Minimatch
+  return minimatch.defaults(def).Minimatch
+}
+
+function minimatch (p, pattern, options) {
+  if (typeof pattern !== 'string') {
+    throw new TypeError('glob pattern string required')
+  }
+
+  if (!options) options = {}
+
+  // shortcut: comments match nothing.
+  if (!options.nocomment && pattern.charAt(0) === '#') {
+    return false
+  }
+
+  // "" only matches ""
+  if (pattern.trim() === '') return p === ''
+
+  return new Minimatch(pattern, options).match(p)
+}
+
+function Minimatch (pattern, options) {
+  if (!(this instanceof Minimatch)) {
+    return new Minimatch(pattern, options)
+  }
+
+  if (typeof pattern !== 'string') {
+    throw new TypeError('glob pattern string required')
+  }
+
+  if (!options) options = {}
+  pattern = pattern.trim()
+
+  // windows support: need to use /, not \
+  if (path.sep !== '/') {
+    pattern = pattern.split(path.sep).join('/')
+  }
+
+  this.options = options
+  this.set = []
+  this.pattern = pattern
+  this.regexp = null
+  this.negate = false
+  this.comment = false
+  this.empty = false
+
+  // make the set of regexps etc.
+  this.make()
+}
+
+Minimatch.prototype.debug = function () {}
+
+Minimatch.prototype.make = make
+function make () {
+  // don't do it more than once.
+  if (this._made) return
+
+  var pattern = this.pattern
+  var options = this.options
+
+  // empty patterns and comments match nothing.
+  if (!options.nocomment && pattern.charAt(0) === '#') {
+    this.comment = true
+    return
+  }
+  if (!pattern) {
+    this.empty = true
+    return
+  }
+
+  // step 1: figure out negation, etc.
+  this.parseNegate()
+
+  // step 2: expand braces
+  var set = this.globSet = this.braceExpand()
+
+  if (options.debug) this.debug = console.error
+
+  this.debug(this.pattern, set)
+
+  // step 3: now we have a set, so turn each one into a series of path-portion
+  // matching patterns.
+  // These will be regexps, except in the case of "**", which is
+  // set to the GLOBSTAR object for globstar behavior,
+  // and will not contain any / characters
+  set = this.globParts = set.map(function (s) {
+    return s.split(slashSplit)
+  })
+
+  this.debug(this.pattern, set)
+
+  // glob --> regexps
+  set = set.map(function (s, si, set) {
+    return s.map(this.parse, this)
+  }, this)
+
+  this.debug(this.pattern, set)
+
+  // filter out everything that didn't compile properly.
+  set = set.filter(function (s) {
+    return s.indexOf(false) === -1
+  })
+
+  this.debug(this.pattern, set)
+
+  this.set = set
+}
+
+Minimatch.prototype.parseNegate = parseNegate
+function parseNegate () {
+  var pattern = this.pattern
+  var negate = false
+  var options = this.options
+  var negateOffset = 0
+
+  if (options.nonegate) return
+
+  for (var i = 0, l = pattern.length
+    ; i < l && pattern.charAt(i) === '!'
+    ; i++) {
+    negate = !negate
+    negateOffset++
+  }
+
+  if (negateOffset) this.pattern = pattern.substr(negateOffset)
+  this.negate = negate
+}
+
+// Brace expansion:
+// a{b,c}d -> abd acd
+// a{b,}c -> abc ac
+// a{0..3}d -> a0d a1d a2d a3d
+// a{b,c{d,e}f}g -> abg acdfg acefg
+// a{b,c}d{e,f}g -> abdeg acdeg abdeg abdfg
+//
+// Invalid sets are not expanded.
+// a{2..}b -> a{2..}b
+// a{b}c -> a{b}c
+minimatch.braceExpand = function (pattern, options) {
+  return braceExpand(pattern, options)
+}
+
+Minimatch.prototype.braceExpand = braceExpand
+
+function braceExpand (pattern, options) {
+  if (!options) {
+    if (this instanceof Minimatch) {
+      options = this.options
+    } else {
+      options = {}
+    }
+  }
+
+  pattern = typeof pattern === 'undefined'
+    ? this.pattern : pattern
+
+  if (typeof pattern === 'undefined') {
+    throw new TypeError('undefined pattern')
+  }
+
+  if (options.nobrace ||
+    !pattern.match(/\{.*\}/)) {
+    // shortcut. no need to expand.
+    return [pattern]
+  }
+
+  return expand(pattern)
+}
+
+// parse a component of the expanded set.
+// At this point, no pattern may contain "/" in it
+// so we're going to return a 2d array, where each entry is the full
+// pattern, split on '/', and then turned into a regular expression.
+// A regexp is made at the end which joins each array with an
+// escaped /, and another full one which joins each regexp with |.
+//
+// Following the lead of Bash 4.1, note that "**" only has special meaning
+// when it is the *only* thing in a path portion.  Otherwise, any series
+// of * is equivalent to a single *.  Globstar behavior is enabled by
+// default, and can be disabled by setting options.noglobstar.
+Minimatch.prototype.parse = parse
+var SUBPARSE = {}
+function parse (pattern, isSub) {
+  if (pattern.length > 1024 * 64) {
+    throw new TypeError('pattern is too long')
+  }
+
+  var options = this.options
+
+  // shortcuts
+  if (!options.noglobstar && pattern === '**') return GLOBSTAR
+  if (pattern === '') return ''
+
+  var re = ''
+  var hasMagic = !!options.nocase
+  var escaping = false
+  // ? => one single character
+  var patternListStack = []
+  var negativeLists = []
+  var stateChar
+  var inClass = false
+  var reClassStart = -1
+  var classStart = -1
+  // . and .. never match anything that doesn't start with .,
+  // even when options.dot is set.
+  var patternStart = pattern.charAt(0) === '.' ? '' // anything
+  // not (start or / followed by . or .. followed by / or end)
+  : options.dot ? '(?!(?:^|\\\/)\\.{1,2}(?:$|\\\/))'
+  : '(?!\\.)'
+  var self = this
+
+  function clearStateChar () {
+    if (stateChar) {
+      // we had some state-tracking character
+      // that wasn't consumed by this pass.
+      switch (stateChar) {
+        case '*':
+          re += star
+          hasMagic = true
+        break
+        case '?':
+          re += qmark
+          hasMagic = true
+        break
+        default:
+          re += '\\' + stateChar
+        break
+      }
+      self.debug('clearStateChar %j %j', stateChar, re)
+      stateChar = false
+    }
+  }
+
+  for (var i = 0, len = pattern.length, c
+    ; (i < len) && (c = pattern.charAt(i))
+    ; i++) {
+    this.debug('%s\t%s %s %j', pattern, i, re, c)
+
+    // skip over any that are escaped.
+    if (escaping && reSpecials[c]) {
+      re += '\\' + c
+      escaping = false
+      continue
+    }
+
+    switch (c) {
+      case '/':
+        // completely not allowed, even escaped.
+        // Should already be path-split by now.
+        return false
+
+      case '\\':
+        clearStateChar()
+        escaping = true
+      continue
+
+      // the various stateChar values
+      // for the "extglob" stuff.
+      case '?':
+      case '*':
+      case '+':
+      case '@':
+      case '!':
+        this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c)
+
+        // all of those are literals inside a class, except that
+        // the glob [!a] means [^a] in regexp
+        if (inClass) {
+          this.debug('  in class')
+          if (c === '!' && i === classStart + 1) c = '^'
+          re += c
+          continue
+        }
+
+        // if we already have a stateChar, then it means
+        // that there was something like ** or +? in there.
+        // Handle the stateChar, then proceed with this one.
+        self.debug('call clearStateChar %j', stateChar)
+        clearStateChar()
+        stateChar = c
+        // if extglob is disabled, then +(asdf|foo) isn't a thing.
+        // just clear the statechar *now*, rather than even diving into
+        // the patternList stuff.
+        if (options.noext) clearStateChar()
+      continue
+
+      case '(':
+        if (inClass) {
+          re += '('
+          continue
+        }
+
+        if (!stateChar) {
+          re += '\\('
+          continue
+        }
+
+        patternListStack.push({
+          type: stateChar,
+          start: i - 1,
+          reStart: re.length,
+          open: plTypes[stateChar].open,
+          close: plTypes[stateChar].close
+        })
+        // negation is (?:(?!js)[^/]*)
+        re += stateChar === '!' ? '(?:(?!(?:' : '(?:'
+        this.debug('plType %j %j', stateChar, re)
+        stateChar = false
+      continue
+
+      case ')':
+        if (inClass || !patternListStack.length) {
+          re += '\\)'
+          continue
+        }
+
+        clearStateChar()
+        hasMagic = true
+        var pl = patternListStack.pop()
+        // negation is (?:(?!js)[^/]*)
+        // The others are (?:<pattern>)<type>
+        re += pl.close
+        if (pl.type === '!') {
+          negativeLists.push(pl)
+        }
+        pl.reEnd = re.length
+      continue
+
+      case '|':
+        if (inClass || !patternListStack.length || escaping) {
+          re += '\\|'
+          escaping = false
+          continue
+        }
+
+        clearStateChar()
+        re += '|'
+      continue
+
+      // these are mostly the same in regexp and glob
+      case '[':
+        // swallow any state-tracking char before the [
+        clearStateChar()
+
+        if (inClass) {
+          re += '\\' + c
+          continue
+        }
+
+        inClass = true
+        classStart = i
+        reClassStart = re.length
+        re += c
+      continue
+
+      case ']':
+        //  a right bracket shall lose its special
+        //  meaning and represent itself in
+        //  a bracket expression if it occurs
+        //  first in the list.  -- POSIX.2 2.8.3.2
+        if (i === classStart + 1 || !inClass) {
+          re += '\\' + c
+          escaping = false
+          continue
+        }
+
+        // handle the case where we left a class open.
+        // "[z-a]" is valid, equivalent to "\[z-a\]"
+        if (inClass) {
+          // split where the last [ was, make sure we don't have
+          // an invalid re. if so, re-walk the contents of the
+          // would-be class to re-translate any characters that
+          // were passed through as-is
+          // TODO: It would probably be faster to determine this
+          // without a try/catch and a new RegExp, but it's tricky
+          // to do safely.  For now, this is safe and works.
+          var cs = pattern.substring(classStart + 1, i)
+          try {
+            RegExp('[' + cs + ']')
+          } catch (er) {
+            // not a valid class!
+            var sp = this.parse(cs, SUBPARSE)
+            re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]'
+            hasMagic = hasMagic || sp[1]
+            inClass = false
+            continue
+          }
+        }
+
+        // finish up the class.
+        hasMagic = true
+        inClass = false
+        re += c
+      continue
+
+      default:
+        // swallow any state char that wasn't consumed
+        clearStateChar()
+
+        if (escaping) {
+          // no need
+          escaping = false
+        } else if (reSpecials[c]
+          && !(c === '^' && inClass)) {
+          re += '\\'
+        }
+
+        re += c
+
+    } // switch
+  } // for
+
+  // handle the case where we left a class open.
+  // "[abc" is valid, equivalent to "\[abc"
+  if (inClass) {
+    // split where the last [ was, and escape it
+    // this is a huge pita.  We now have to re-walk
+    // the contents of the would-be class to re-translate
+    // any characters that were passed through as-is
+    cs = pattern.substr(classStart + 1)
+    sp = this.parse(cs, SUBPARSE)
+    re = re.substr(0, reClassStart) + '\\[' + sp[0]
+    hasMagic = hasMagic || sp[1]
+  }
+
+  // handle the case where we had a +( thing at the *end*
+  // of the pattern.
+  // each pattern list stack adds 3 chars, and we need to go through
+  // and escape any | chars that were passed through as-is for the regexp.
+  // Go through and escape them, taking care not to double-escape any
+  // | chars that were already escaped.
+  for (pl = patternListStack.pop(); pl; pl = patternListStack.pop()) {
+    var tail = re.slice(pl.reStart + pl.open.length)
+    this.debug('setting tail', re, pl)
+    // maybe some even number of \, then maybe 1 \, followed by a |
+    tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, function (_, $1, $2) {
+      if (!$2) {
+        // the | isn't already escaped, so escape it.
+        $2 = '\\'
+      }
+
+      // need to escape all those slashes *again*, without escaping the
+      // one that we need for escaping the | character.  As it works out,
+      // escaping an even number of slashes can be done by simply repeating
+      // it exactly after itself.  That's why this trick works.
+      //
+      // I am sorry that you have to see this.
+      return $1 + $1 + $2 + '|'
+    })
+
+    this.debug('tail=%j\n   %s', tail, tail, pl, re)
+    var t = pl.type === '*' ? star
+      : pl.type === '?' ? qmark
+      : '\\' + pl.type
+
+    hasMagic = true
+    re = re.slice(0, pl.reStart) + t + '\\(' + tail
+  }
+
+  // handle trailing things that only matter at the very end.
+  clearStateChar()
+  if (escaping) {
+    // trailing \\
+    re += '\\\\'
+  }
+
+  // only need to apply the nodot start if the re starts with
+  // something that could conceivably capture a dot
+  var addPatternStart = false
+  switch (re.charAt(0)) {
+    case '.':
+    case '[':
+    case '(': addPatternStart = true
+  }
+
+  // Hack to work around lack of negative lookbehind in JS
+  // A pattern like: *.!(x).!(y|z) needs to ensure that a name
+  // like 'a.xyz.yz' doesn't match.  So, the first negative
+  // lookahead, has to look ALL the way ahead, to the end of
+  // the pattern.
+  for (var n = negativeLists.length - 1; n > -1; n--) {
+    var nl = negativeLists[n]
+
+    var nlBefore = re.slice(0, nl.reStart)
+    var nlFirst = re.slice(nl.reStart, nl.reEnd - 8)
+    var nlLast = re.slice(nl.reEnd - 8, nl.reEnd)
+    var nlAfter = re.slice(nl.reEnd)
+
+    nlLast += nlAfter
+
+    // Handle nested stuff like *(*.js|!(*.json)), where open parens
+    // mean that we should *not* include the ) in the bit that is considered
+    // "after" the negated section.
+    var openParensBefore = nlBefore.split('(').length - 1
+    var cleanAfter = nlAfter
+    for (i = 0; i < openParensBefore; i++) {
+      cleanAfter = cleanAfter.replace(/\)[+*?]?/, '')
+    }
+    nlAfter = cleanAfter
+
+    var dollar = ''
+    if (nlAfter === '' && isSub !== SUBPARSE) {
+      dollar = '$'
+    }
+    var newRe = nlBefore + nlFirst + nlAfter + dollar + nlLast
+    re = newRe
+  }
+
+  // if the re is not "" at this point, then we need to make sure
+  // it doesn't match against an empty path part.
+  // Otherwise a/* will match a/, which it should not.
+  if (re !== '' && hasMagic) {
+    re = '(?=.)' + re
+  }
+
+  if (addPatternStart) {
+    re = patternStart + re
+  }
+
+  // parsing just a piece of a larger pattern.
+  if (isSub === SUBPARSE) {
+    return [re, hasMagic]
+  }
+
+  // skip the regexp for non-magical patterns
+  // unescape anything in it, though, so that it'll be
+  // an exact match against a file etc.
+  if (!hasMagic) {
+    return globUnescape(pattern)
+  }
+
+  var flags = options.nocase ? 'i' : ''
+  try {
+    var regExp = new RegExp('^' + re + '$', flags)
+  } catch (er) {
+    // If it was an invalid regular expression, then it can't match
+    // anything.  This trick looks for a character after the end of
+    // the string, which is of course impossible, except in multi-line
+    // mode, but it's not a /m regex.
+    return new RegExp('$.')
+  }
+
+  regExp._glob = pattern
+  regExp._src = re
+
+  return regExp
+}
+
+minimatch.makeRe = function (pattern, options) {
+  return new Minimatch(pattern, options || {}).makeRe()
+}
+
+Minimatch.prototype.makeRe = makeRe
+function makeRe () {
+  if (this.regexp || this.regexp === false) return this.regexp
+
+  // at this point, this.set is a 2d array of partial
+  // pattern strings, or "**".
+  //
+  // It's better to use .match().  This function shouldn't
+  // be used, really, but it's pretty convenient sometimes,
+  // when you just want to work with a regex.
+  var set = this.set
+
+  if (!set.length) {
+    this.regexp = false
+    return this.regexp
+  }
+  var options = this.options
+
+  var twoStar = options.noglobstar ? star
+    : options.dot ? twoStarDot
+    : twoStarNoDot
+  var flags = options.nocase ? 'i' : ''
+
+  var re = set.map(function (pattern) {
+    return pattern.map(function (p) {
+      return (p === GLOBSTAR) ? twoStar
+      : (typeof p === 'string') ? regExpEscape(p)
+      : p._src
+    }).join('\\\/')
+  }).join('|')
+
+  // must match entire pattern
+  // ending in a * or ** will make it less strict.
+  re = '^(?:' + re + ')$'
+
+  // can match anything, as long as it's not this.
+  if (this.negate) re = '^(?!' + re + ').*$'
+
+  try {
+    this.regexp = new RegExp(re, flags)
+  } catch (ex) {
+    this.regexp = false
+  }
+  return this.regexp
+}
+
+minimatch.match = function (list, pattern, options) {
+  options = options || {}
+  var mm = new Minimatch(pattern, options)
+  list = list.filter(function (f) {
+    return mm.match(f)
+  })
+  if (mm.options.nonull && !list.length) {
+    list.push(pattern)
+  }
+  return list
+}
+
+Minimatch.prototype.match = match
+function match (f, partial) {
+  this.debug('match', f, this.pattern)
+  // short-circuit in the case of busted things.
+  // comments, etc.
+  if (this.comment) return false
+  if (this.empty) return f === ''
+
+  if (f === '/' && partial) return true
+
+  var options = this.options
+
+  // windows: need to use /, not \
+  if (path.sep !== '/') {
+    f = f.split(path.sep).join('/')
+  }
+
+  // treat the test path as a set of pathparts.
+  f = f.split(slashSplit)
+  this.debug(this.pattern, 'split', f)
+
+  // just ONE of the pattern sets in this.set needs to match
+  // in order for it to be valid.  If negating, then just one
+  // match means that we have failed.
+  // Either way, return on the first hit.
+
+  var set = this.set
+  this.debug(this.pattern, 'set', set)
+
+  // Find the basename of the path by looking for the last non-empty segment
+  var filename
+  var i
+  for (i = f.length - 1; i >= 0; i--) {
+    filename = f[i]
+    if (filename) break
+  }
+
+  for (i = 0; i < set.length; i++) {
+    var pattern = set[i]
+    var file = f
+    if (options.matchBase && pattern.length === 1) {
+      file = [filename]
+    }
+    var hit = this.matchOne(file, pattern, partial)
+    if (hit) {
+      if (options.flipNegate) return true
+      return !this.negate
+    }
+  }
+
+  // didn't get any hits.  this is success if it's a negative
+  // pattern, failure otherwise.
+  if (options.flipNegate) return false
+  return this.negate
+}
+
+// set partial to true to test if, for example,
+// "/a/b" matches the start of "/*/b/*/d"
+// Partial means, if you run out of file before you run
+// out of pattern, then that's fine, as long as all
+// the parts match.
+Minimatch.prototype.matchOne = function (file, pattern, partial) {
+  var options = this.options
+
+  this.debug('matchOne',
+    { 'this': this, file: file, pattern: pattern })
+
+  this.debug('matchOne', file.length, pattern.length)
+
+  for (var fi = 0,
+      pi = 0,
+      fl = file.length,
+      pl = pattern.length
+      ; (fi < fl) && (pi < pl)
+      ; fi++, pi++) {
+    this.debug('matchOne loop')
+    var p = pattern[pi]
+    var f = file[fi]
+
+    this.debug(pattern, p, f)
+
+    // should be impossible.
+    // some invalid regexp stuff in the set.
+    if (p === false) return false
+
+    if (p === GLOBSTAR) {
+      this.debug('GLOBSTAR', [pattern, p, f])
+
+      // "**"
+      // a/**/b/**/c would match the following:
+      // a/b/x/y/z/c
+      // a/x/y/z/b/c
+      // a/b/x/b/x/c
+      // a/b/c
+      // To do this, take the rest of the pattern after
+      // the **, and see if it would match the file remainder.
+      // If so, return success.
+      // If not, the ** "swallows" a segment, and try again.
+      // This is recursively awful.
+      //
+      // a/**/b/**/c matching a/b/x/y/z/c
+      // - a matches a
+      // - doublestar
+      //   - matchOne(b/x/y/z/c, b/**/c)
+      //     - b matches b
+      //     - doublestar
+      //       - matchOne(x/y/z/c, c) -> no
+      //       - matchOne(y/z/c, c) -> no
+      //       - matchOne(z/c, c) -> no
+      //       - matchOne(c, c) yes, hit
+      var fr = fi
+      var pr = pi + 1
+      if (pr === pl) {
+        this.debug('** at the end')
+        // a ** at the end will just swallow the rest.
+        // We have found a match.
+        // however, it will not swallow /.x, unless
+        // options.dot is set.
+        // . and .. are *never* matched by **, for explosively
+        // exponential reasons.
+        for (; fi < fl; fi++) {
+          if (file[fi] === '.' || file[fi] === '..' ||
+            (!options.dot && file[fi].charAt(0) === '.')) return false
+        }
+        return true
+      }
+
+      // ok, let's see if we can swallow whatever we can.
+      while (fr < fl) {
+        var swallowee = file[fr]
+
+        this.debug('\nglobstar while', file, fr, pattern, pr, swallowee)
+
+        // XXX remove this slice.  Just pass the start index.
+        if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
+          this.debug('globstar found match!', fr, fl, swallowee)
+          // found a match.
+          return true
+        } else {
+          // can't swallow "." or ".." ever.
+          // can only swallow ".foo" when explicitly asked.
+          if (swallowee === '.' || swallowee === '..' ||
+            (!options.dot && swallowee.charAt(0) === '.')) {
+            this.debug('dot detected!', file, fr, pattern, pr)
+            break
+          }
+
+          // ** swallows a segment, and continue.
+          this.debug('globstar swallow a segment, and continue')
+          fr++
+        }
+      }
+
+      // no match was found.
+      // However, in partial mode, we can't say this is necessarily over.
+      // If there's more *pattern* left, then
+      if (partial) {
+        // ran out of file
+        this.debug('\n>>> no match, partial?', file, fr, pattern, pr)
+        if (fr === fl) return true
+      }
+      return false
+    }
+
+    // something other than **
+    // non-magic patterns just have to match exactly
+    // patterns with magic have been turned into regexps.
+    var hit
+    if (typeof p === 'string') {
+      if (options.nocase) {
+        hit = f.toLowerCase() === p.toLowerCase()
+      } else {
+        hit = f === p
+      }
+      this.debug('string match', p, f, hit)
+    } else {
+      hit = f.match(p)
+      this.debug('pattern match', p, f, hit)
+    }
+
+    if (!hit) return false
+  }
+
+  // Note: ending in / means that we'll get a final ""
+  // at the end of the pattern.  This can only match a
+  // corresponding "" at the end of the file.
+  // If the file ends in /, then it can only match a
+  // a pattern that ends in /, unless the pattern just
+  // doesn't have any more for it. But, a/b/ should *not*
+  // match "a/b/*", even though "" matches against the
+  // [^/]*? pattern, except in partial mode, where it might
+  // simply not be reached yet.
+  // However, a/b/ should still satisfy a/*
+
+  // now either we fell off the end of the pattern, or we're done.
+  if (fi === fl && pi === pl) {
+    // ran out of pattern and filename at the same time.
+    // an exact hit!
+    return true
+  } else if (fi === fl) {
+    // ran out of file, but still had pattern left.
+    // this is ok if we're doing the match as part of
+    // a glob fs traversal.
+    return partial
+  } else if (pi === pl) {
+    // ran out of pattern, still have file left.
+    // this is only acceptable if we're on the very last
+    // empty segment of a file with a trailing slash.
+    // a/* should match a/b/
+    var emptyFileEnd = (fi === fl - 1) && (file[fi] === '')
+    return emptyFileEnd
+  }
+
+  // should be unreachable.
+  throw new Error('wtf?')
+}
+
+// replace stuff like \* with *
+function globUnescape (s) {
+  return s.replace(/\\(.)/g, '$1')
+}
+
+function regExpEscape (s) {
+  return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+}
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+var R = typeof Reflect === 'object' ? Reflect : null
+var ReflectApply = R && typeof R.apply === 'function'
+  ? R.apply
+  : function ReflectApply(target, receiver, args) {
+    return Function.prototype.apply.call(target, receiver, args);
+  }
+
+var ReflectOwnKeys
+if (R && typeof R.ownKeys === 'function') {
+  ReflectOwnKeys = R.ownKeys
+} else if (Object.getOwnPropertySymbols) {
+  ReflectOwnKeys = function ReflectOwnKeys(target) {
+    return Object.getOwnPropertyNames(target)
+      .concat(Object.getOwnPropertySymbols(target));
+  };
+} else {
+  ReflectOwnKeys = function ReflectOwnKeys(target) {
+    return Object.getOwnPropertyNames(target);
+  };
+}
+
+function ProcessEmitWarning(warning) {
+  if (console && console.warn) console.warn(warning);
+}
+
+var NumberIsNaN = Number.isNaN || function NumberIsNaN(value) {
+  return value !== value;
+}
+
+function EventEmitter() {
+  EventEmitter.init.call(this);
+}
+module.exports = EventEmitter;
+module.exports.once = once;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._eventsCount = 0;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+var defaultMaxListeners = 10;
+
+function checkListener(listener) {
+  if (typeof listener !== 'function') {
+    throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
+  }
+}
+
+Object.defineProperty(EventEmitter, 'defaultMaxListeners', {
+  enumerable: true,
+  get: function() {
+    return defaultMaxListeners;
+  },
+  set: function(arg) {
+    if (typeof arg !== 'number' || arg < 0 || NumberIsNaN(arg)) {
+      throw new RangeError('The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ' + arg + '.');
+    }
+    defaultMaxListeners = arg;
+  }
+});
+
+EventEmitter.init = function() {
+
+  if (this._events === undefined ||
+      this._events === Object.getPrototypeOf(this)._events) {
+    this._events = Object.create(null);
+    this._eventsCount = 0;
+  }
+
+  this._maxListeners = this._maxListeners || undefined;
+};
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
+  if (typeof n !== 'number' || n < 0 || NumberIsNaN(n)) {
+    throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + '.');
+  }
+  this._maxListeners = n;
+  return this;
+};
+
+function _getMaxListeners(that) {
+  if (that._maxListeners === undefined)
+    return EventEmitter.defaultMaxListeners;
+  return that._maxListeners;
+}
+
+EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
+  return _getMaxListeners(this);
+};
+
+EventEmitter.prototype.emit = function emit(type) {
+  var args = [];
+  for (var i = 1; i < arguments.length; i++) args.push(arguments[i]);
+  var doError = (type === 'error');
+
+  var events = this._events;
+  if (events !== undefined)
+    doError = (doError && events.error === undefined);
+  else if (!doError)
+    return false;
+
+  // If there is no 'error' event listener then throw.
+  if (doError) {
+    var er;
+    if (args.length > 0)
+      er = args[0];
+    if (er instanceof Error) {
+      // Note: The comments on the `throw` lines are intentional, they show
+      // up in Node's output if this results in an unhandled exception.
+      throw er; // Unhandled 'error' event
+    }
+    // At least give some kind of context to the user
+    var err = new Error('Unhandled error.' + (er ? ' (' + er.message + ')' : ''));
+    err.context = er;
+    throw err; // Unhandled 'error' event
+  }
+
+  var handler = events[type];
+
+  if (handler === undefined)
+    return false;
+
+  if (typeof handler === 'function') {
+    ReflectApply(handler, this, args);
+  } else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      ReflectApply(listeners[i], this, args);
+  }
+
+  return true;
+};
+
+function _addListener(target, type, listener, prepend) {
+  var m;
+  var events;
+  var existing;
+
+  checkListener(listener);
+
+  events = target._events;
+  if (events === undefined) {
+    events = target._events = Object.create(null);
+    target._eventsCount = 0;
+  } else {
+    // To avoid recursion in the case that type === "newListener"! Before
+    // adding it to the listeners, first emit "newListener".
+    if (events.newListener !== undefined) {
+      target.emit('newListener', type,
+                  listener.listener ? listener.listener : listener);
+
+      // Re-assign `events` because a newListener handler could have caused the
+      // this._events to be assigned to a new object
+      events = target._events;
+    }
+    existing = events[type];
+  }
+
+  if (existing === undefined) {
+    // Optimize the case of one listener. Don't need the extra array object.
+    existing = events[type] = listener;
+    ++target._eventsCount;
+  } else {
+    if (typeof existing === 'function') {
+      // Adding the second element, need to change to array.
+      existing = events[type] =
+        prepend ? [listener, existing] : [existing, listener];
+      // If we've already got an array, just append.
+    } else if (prepend) {
+      existing.unshift(listener);
+    } else {
+      existing.push(listener);
+    }
+
+    // Check for listener leak
+    m = _getMaxListeners(target);
+    if (m > 0 && existing.length > m && !existing.warned) {
+      existing.warned = true;
+      // No error code for this since it is a Warning
+      // eslint-disable-next-line no-restricted-syntax
+      var w = new Error('Possible EventEmitter memory leak detected. ' +
+                          existing.length + ' ' + String(type) + ' listeners ' +
+                          'added. Use emitter.setMaxListeners() to ' +
+                          'increase limit');
+      w.name = 'MaxListenersExceededWarning';
+      w.emitter = target;
+      w.type = type;
+      w.count = existing.length;
+      ProcessEmitWarning(w);
+    }
+  }
+
+  return target;
+}
+
+EventEmitter.prototype.addListener = function addListener(type, listener) {
+  return _addListener(this, type, listener, false);
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.prependListener =
+    function prependListener(type, listener) {
+      return _addListener(this, type, listener, true);
+    };
+
+function onceWrapper() {
+  if (!this.fired) {
+    this.target.removeListener(this.type, this.wrapFn);
+    this.fired = true;
+    if (arguments.length === 0)
+      return this.listener.call(this.target);
+    return this.listener.apply(this.target, arguments);
+  }
+}
+
+function _onceWrap(target, type, listener) {
+  var state = { fired: false, wrapFn: undefined, target: target, type: type, listener: listener };
+  var wrapped = onceWrapper.bind(state);
+  wrapped.listener = listener;
+  state.wrapFn = wrapped;
+  return wrapped;
+}
+
+EventEmitter.prototype.once = function once(type, listener) {
+  checkListener(listener);
+  this.on(type, _onceWrap(this, type, listener));
+  return this;
+};
+
+EventEmitter.prototype.prependOnceListener =
+    function prependOnceListener(type, listener) {
+      checkListener(listener);
+      this.prependListener(type, _onceWrap(this, type, listener));
+      return this;
+    };
+
+// Emits a 'removeListener' event if and only if the listener was removed.
+EventEmitter.prototype.removeListener =
+    function removeListener(type, listener) {
+      var list, events, position, i, originalListener;
+
+      checkListener(listener);
+
+      events = this._events;
+      if (events === undefined)
+        return this;
+
+      list = events[type];
+      if (list === undefined)
+        return this;
+
+      if (list === listener || list.listener === listener) {
+        if (--this._eventsCount === 0)
+          this._events = Object.create(null);
+        else {
+          delete events[type];
+          if (events.removeListener)
+            this.emit('removeListener', type, list.listener || listener);
+        }
+      } else if (typeof list !== 'function') {
+        position = -1;
+
+        for (i = list.length - 1; i >= 0; i--) {
+          if (list[i] === listener || list[i].listener === listener) {
+            originalListener = list[i].listener;
+            position = i;
+            break;
+          }
+        }
+
+        if (position < 0)
+          return this;
+
+        if (position === 0)
+          list.shift();
+        else {
+          spliceOne(list, position);
+        }
+
+        if (list.length === 1)
+          events[type] = list[0];
+
+        if (events.removeListener !== undefined)
+          this.emit('removeListener', type, originalListener || listener);
+      }
+
+      return this;
+    };
+
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+
+EventEmitter.prototype.removeAllListeners =
+    function removeAllListeners(type) {
+      var listeners, events, i;
+
+      events = this._events;
+      if (events === undefined)
+        return this;
+
+      // not listening for removeListener, no need to emit
+      if (events.removeListener === undefined) {
+        if (arguments.length === 0) {
+          this._events = Object.create(null);
+          this._eventsCount = 0;
+        } else if (events[type] !== undefined) {
+          if (--this._eventsCount === 0)
+            this._events = Object.create(null);
+          else
+            delete events[type];
+        }
+        return this;
+      }
+
+      // emit removeListener for all listeners on all events
+      if (arguments.length === 0) {
+        var keys = Object.keys(events);
+        var key;
+        for (i = 0; i < keys.length; ++i) {
+          key = keys[i];
+          if (key === 'removeListener') continue;
+          this.removeAllListeners(key);
+        }
+        this.removeAllListeners('removeListener');
+        this._events = Object.create(null);
+        this._eventsCount = 0;
+        return this;
+      }
+
+      listeners = events[type];
+
+      if (typeof listeners === 'function') {
+        this.removeListener(type, listeners);
+      } else if (listeners !== undefined) {
+        // LIFO order
+        for (i = listeners.length - 1; i >= 0; i--) {
+          this.removeListener(type, listeners[i]);
+        }
+      }
+
+      return this;
+    };
+
+function _listeners(target, type, unwrap) {
+  var events = target._events;
+
+  if (events === undefined)
+    return [];
+
+  var evlistener = events[type];
+  if (evlistener === undefined)
+    return [];
+
+  if (typeof evlistener === 'function')
+    return unwrap ? [evlistener.listener || evlistener] : [evlistener];
+
+  return unwrap ?
+    unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
+}
+
+EventEmitter.prototype.listeners = function listeners(type) {
+  return _listeners(this, type, true);
+};
+
+EventEmitter.prototype.rawListeners = function rawListeners(type) {
+  return _listeners(this, type, false);
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  if (typeof emitter.listenerCount === 'function') {
+    return emitter.listenerCount(type);
+  } else {
+    return listenerCount.call(emitter, type);
+  }
+};
+
+EventEmitter.prototype.listenerCount = listenerCount;
+function listenerCount(type) {
+  var events = this._events;
+
+  if (events !== undefined) {
+    var evlistener = events[type];
+
+    if (typeof evlistener === 'function') {
+      return 1;
+    } else if (evlistener !== undefined) {
+      return evlistener.length;
+    }
+  }
+
+  return 0;
+}
+
+EventEmitter.prototype.eventNames = function eventNames() {
+  return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
+};
+
+function arrayClone(arr, n) {
+  var copy = new Array(n);
+  for (var i = 0; i < n; ++i)
+    copy[i] = arr[i];
+  return copy;
+}
+
+function spliceOne(list, index) {
+  for (; index + 1 < list.length; index++)
+    list[index] = list[index + 1];
+  list.pop();
+}
+
+function unwrapListeners(arr) {
+  var ret = new Array(arr.length);
+  for (var i = 0; i < ret.length; ++i) {
+    ret[i] = arr[i].listener || arr[i];
+  }
+  return ret;
+}
+
+function once(emitter, name) {
+  return new Promise(function (resolve, reject) {
+    function eventListener() {
+      if (errorListener !== undefined) {
+        emitter.removeListener('error', errorListener);
+      }
+      resolve([].slice.call(arguments));
+    };
+    var errorListener;
+
+    // Adding an error listener is not optional because
+    // if an error is thrown on an event emitter we cannot
+    // guarantee that the actual event we are waiting will
+    // be fired. The result could be a silent way to create
+    // memory or file descriptor leaks, which is something
+    // we should avoid.
+    if (name !== 'error') {
+      errorListener = function errorListener(err) {
+        emitter.removeListener(name, eventListener);
+        reject(err);
+      };
+
+      emitter.once('error', errorListener);
+    }
+
+    emitter.once(name, eventListener);
+  });
+}
+
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+function posix(path) {
+	return path.charAt(0) === '/';
+}
+
+function win32(path) {
+	// https://github.com/nodejs/node/blob/b3fcc245fb25539909ef1d5eaa01dbf92e168633/lib/path.js#L56
+	var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
+	var result = splitDeviceRe.exec(path);
+	var device = result[1] || '';
+	var isUnc = Boolean(device && device.charAt(1) !== ':');
+
+	// UNC paths are always absolute
+	return Boolean(result[2] || isUnc);
+}
+
+module.exports = process.platform === 'win32' ? win32 : posix;
+module.exports.posix = posix;
+module.exports.win32 = win32;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+// Ported from https://github.com/mafintosh/end-of-stream with
+// permission from the author, Mathias Buus (@mafintosh).
+
+
+var ERR_STREAM_PREMATURE_CLOSE = __webpack_require__(4).codes.ERR_STREAM_PREMATURE_CLOSE;
+
+function once(callback) {
+  var called = false;
+  return function () {
+    if (called) return;
+    called = true;
+
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    callback.apply(this, args);
+  };
+}
+
+function noop() {}
+
+function isRequest(stream) {
+  return stream.setHeader && typeof stream.abort === 'function';
+}
+
+function eos(stream, opts, callback) {
+  if (typeof opts === 'function') return eos(stream, null, opts);
+  if (!opts) opts = {};
+  callback = once(callback || noop);
+  var readable = opts.readable || opts.readable !== false && stream.readable;
+  var writable = opts.writable || opts.writable !== false && stream.writable;
+
+  var onlegacyfinish = function onlegacyfinish() {
+    if (!stream.writable) onfinish();
+  };
+
+  var writableEnded = stream._writableState && stream._writableState.finished;
+
+  var onfinish = function onfinish() {
+    writable = false;
+    writableEnded = true;
+    if (!readable) callback.call(stream);
+  };
+
+  var readableEnded = stream._readableState && stream._readableState.endEmitted;
+
+  var onend = function onend() {
+    readable = false;
+    readableEnded = true;
+    if (!writable) callback.call(stream);
+  };
+
+  var onerror = function onerror(err) {
+    callback.call(stream, err);
+  };
+
+  var onclose = function onclose() {
+    var err;
+
+    if (readable && !readableEnded) {
+      if (!stream._readableState || !stream._readableState.ended) err = new ERR_STREAM_PREMATURE_CLOSE();
+      return callback.call(stream, err);
+    }
+
+    if (writable && !writableEnded) {
+      if (!stream._writableState || !stream._writableState.ended) err = new ERR_STREAM_PREMATURE_CLOSE();
+      return callback.call(stream, err);
+    }
+  };
+
+  var onrequest = function onrequest() {
+    stream.req.on('finish', onfinish);
+  };
+
+  if (isRequest(stream)) {
+    stream.on('complete', onfinish);
+    stream.on('abort', onclose);
+    if (stream.req) onrequest();else stream.on('request', onrequest);
+  } else if (writable && !stream._writableState) {
+    // legacy streams
+    stream.on('end', onlegacyfinish);
+    stream.on('close', onlegacyfinish);
+  }
+
+  stream.on('end', onend);
+  stream.on('finish', onfinish);
+  if (opts.error !== false) stream.on('error', onerror);
+  stream.on('close', onclose);
+  return function () {
+    stream.removeListener('complete', onfinish);
+    stream.removeListener('abort', onclose);
+    stream.removeListener('request', onrequest);
+    if (stream.req) stream.req.removeListener('finish', onfinish);
+    stream.removeListener('end', onlegacyfinish);
+    stream.removeListener('close', onlegacyfinish);
+    stream.removeListener('finish', onfinish);
+    stream.removeListener('end', onend);
+    stream.removeListener('error', onerror);
+    stream.removeListener('close', onclose);
+  };
+}
+
+module.exports = eos;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
+ *
+ * Status: Early implementation
+ *
+ * TODO:
+ *   testing.
+ */
+
+var ShapeMapSymbols = (function () {
+  return {
+    focus: { term: "FOCUS" },
+    start: { term: "START" },
+    wildcard: { term: "WILDCARD" },
+  }
+})();
+
+// Export the `ShExValidator` class as a whole.
+if (true)
+  module.exports = ShapeMapSymbols;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if (!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if (!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+    function isTerm (t) {
+      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
+        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
+      }, true);
+    }
+
+  function isShapeRef (expr) {
+    return typeof expr === "string" // test for JSON-LD @ID
+  }
+  let isInclusion = isShapeRef;
+
+
+function ShExVisitor () {
+  // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
+  var _ShExUtil = this;
+  function visitMap (map, val) {
+    var ret = {};
+    Object.keys(map).forEach(function (item) {
+      ret[item] = val(map[item]);
+    });
+    return ret;
+  }
+  var r = {
+    runtimeError: function (e) {
+      throw e;
+    },
+
+    visitSchema: function (schema) {
+      var ret = { type: "Schema" };
+      _expect(schema, "type", "Schema");
+      this._maybeSet(schema, ret, "Schema",
+                     ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
+                     ["_base", "_prefixes", "_index", "_sourceMap"]
+                    );
+      return ret;
+    },
+
+    visitPrefixes: function (prefixes) {
+      return prefixes === undefined ?
+        undefined :
+        visitMap(prefixes, function (val) {
+          return val;
+        });
+    },
+
+    visitIRI: function (i) {
+      return i;
+    },
+
+    visitImports: function (imports) {
+      var _Visitor = this;
+      return imports.map(function (imp) {
+        return _Visitor.visitIRI(imp);
+      });
+    },
+
+    visitStartActs: function (startActs) {
+      var _Visitor = this;
+      return startActs === undefined ?
+        undefined :
+        startActs.map(function (act) {
+          return _Visitor.visitSemAct(act);
+        });
+    },
+    visitSemActs: function (semActs) {
+      var _Visitor = this;
+      if (semActs === undefined)
+        return undefined;
+      var ret = []
+      Object.keys(semActs).forEach(function (label) {
+        ret.push(_Visitor.visitSemAct(semActs[label], label));
+      });
+      return ret;
+    },
+    visitSemAct: function (semAct, label) {
+      var ret = { type: "SemAct" };
+      _expect(semAct, "type", "SemAct");
+
+      this._maybeSet(semAct, ret, "SemAct",
+                     ["name", "code"]);
+      return ret;
+    },
+
+    visitShapes: function (shapes) {
+      var _Visitor = this;
+      if (shapes === undefined)
+        return undefined;
+      return shapes.map(
+        shapeExpr =>
+          _Visitor.visitShapeExpr(shapeExpr)
+      );
+    },
+
+    visitProductions999: function (productions) { // !! DELETE
+      var _Visitor = this;
+      if (productions === undefined)
+        return undefined;
+      var ret = {}
+      Object.keys(productions).forEach(function (label) {
+        ret[label] = _Visitor.visitExpression(productions[label], label);
+      });
+      return ret;
+    },
+
+    visitShapeExpr: function (expr, label) {
+      if (isShapeRef(expr))
+        return this.visitShapeRef(expr)
+      var r =
+          expr.type === "Shape" ? this.visitShape(expr, label) :
+          expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
+          expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
+          expr.type === "ShapeOr" ? this.visitShapeOr(expr, label) :
+          expr.type === "ShapeNot" ? this.visitShapeNot(expr, label) :
+          expr.type === "ShapeExternal" ? this.visitShapeExternal(expr) :
+          null;// if (expr.type === "ShapeRef") r = 0; // console.warn("visitShapeExpr:", r);
+      if (r === null)
+        throw Error("unexpected shapeExpr type: " + expr.type);
+      else
+        return r;
+    },
+
+    // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
+    _visitShapeGroup: function (expr, label) {
+      this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
+      var _Visitor = this;
+      var r = { type: expr.type };
+      if ("id" in expr)
+        r.id = expr.id;
+      r.shapeExprs = expr.shapeExprs.map(function (nested) {
+        return _Visitor.visitShapeExpr(nested, label);
+      });
+      return r;
+    },
+
+    // _visitShapeNot: visit negated shape
+    visitShapeNot: function (expr, label) {
+      this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
+      var r = { type: expr.type };
+      if ("id" in expr)
+        r.id = expr.id;
+      r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, label);
+      return r;
+    },
+
+    // ### `visitNodeConstraint` deep-copies the structure of a shape
+    visitShape: function (shape, label) {
+      var ret = { type: "Shape" };
+      _expect(shape, "type", "Shape");
+
+      this._maybeSet(shape, ret, "Shape",
+                     [ "id",
+                       // "virtual", "inherit", -- futureWork
+                       "closed",
+                       "expression", "extra", "semActs", "annotations"]);
+      return ret;
+    },
+
+    // ### `visitNodeConstraint` deep-copies the structure of a shape
+    visitNodeConstraint: function (shape, label) {
+      var ret = { type: "NodeConstraint" };
+      _expect(shape, "type", "NodeConstraint");
+
+      this._maybeSet(shape, ret, "NodeConstraint",
+                     [ "id",
+                       // "virtual", "inherit", -- futureWork
+                       "nodeKind", "datatype", "pattern", "flags", "length",
+                       "reference", "minlength", "maxlength",
+                       "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
+                       "totaldigits", "fractiondigits", "values", "annotations", "semActs"]);
+      return ret;
+    },
+
+    visitShapeRef: function (reference) {
+      if (typeof reference !== "string") {
+        let ex = Exception("visitShapeRef expected a string, not " + JSON.stringify(reference));
+        console.warn(ex);
+        throw ex;
+      }
+      return reference;
+    },
+
+    visitShapeExternal: function (expr) {
+      this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
+      return Object.assign("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
+    },
+
+    // _visitGroup: visit a grouping expression (someOf or eachOf)
+    _visitGroup: function (expr, type) {
+      var _Visitor = this;
+      var r = Object.assign(
+        // pre-declare an id so it sorts to the top
+        "id" in expr ? { id: null } : { },
+        { type: expr.type }
+      );
+      r.expressions = expr.expressions.map(function (nested) {
+        return _Visitor.visitExpression(nested);
+      });
+      return this._maybeSet(expr, r, "expr",
+                            ["id", "min", "max", "annotations", "semActs"], ["expressions"]);
+    },
+
+    visitTripleConstraint: function (expr) {
+      return this._maybeSet(expr,
+                            Object.assign(
+                              // pre-declare an id so it sorts to the top
+                              "id" in expr ? { id: null } : { },
+                              { type: "TripleConstraint" }
+                            ),
+                            "TripleConstraint",
+                            ["id", "inverse", "predicate", "valueExpr",
+                             "min", "max", "annotations", "semActs"])
+    },
+
+    visitExpression: function (expr) {
+      if (typeof expr === "string")
+        return this.visitInclusion(expr);
+      var r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
+          expr.type === "OneOf" ? this.visitOneOf(expr) :
+          expr.type === "EachOf" ? this.visitEachOf(expr) :
+          null;
+      if (r === null)
+        throw Error("unexpected expression type: " + expr.type);
+      else
+        return r;
+    },
+
+    visitValues: function (values) {
+      var _Visitor = this;
+      return values.map(function (t) {
+        return isTerm(t) || t.type === "Language" ?
+          t :
+          _Visitor.visitStemRange(t);
+      });
+    },
+
+    visitStemRange: function (t) {
+      var _Visitor = this; // console.log(Error(t.type).stack);
+      // _expect(t, "type", "IriStemRange");
+      if (!("type" in t))
+        _Visitor.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
+      var stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
+      if (stemRangeTypes.indexOf(t.type) === -1)
+        _Visitor.runtimeError(Error("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'."));
+      var stem;
+      if (isTerm(t)) {
+        _expect(t.stem, "type", "Wildcard");
+        stem = { type: t.type, stem: { type: "Wildcard" } };
+      } else {
+        stem = { type: t.type, stem: t.stem };
+      }
+      if (t.exclusions) {
+        stem.exclusions = t.exclusions.map(function (c) {
+          return _Visitor.visitExclusion(c);
+        });
+      }
+      return stem;
+    },
+
+    visitExclusion: function (c) {
+      if (!isTerm(c)) {
+        // _expect(c, "type", "IriStem");
+        if (!("type" in c))
+          _Visitor.runtimeError(Error("expected "+JSON.stringify(c)+" to have a 'type' attribute."));
+        var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+        if (stemTypes.indexOf(c.type) === -1)
+          _Visitor.runtimeError(Error("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'."));
+        return { type: c.type, stem: c.stem };
+      } else {
+        return c;
+      }
+    },
+
+    visitInclusion: function (inclusion) {
+      if (typeof inclusion !== "string") {
+        let ex = Exception("visitInclusion expected a string, not " + JSON.stringify(inclusion));
+        console.warn(ex);
+        throw ex;
+      }
+      return inclusion;
+    },
+
+    _maybeSet: function (obj, ret, context, members, ignore) {
+      var _Visitor = this;
+      this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
+      members.forEach(function (member) {
+        var methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
+        if (member in obj) {
+          var f = _Visitor[methodName];
+          if (typeof f !== "function") {
+            throw Error(methodName + " not found in Visitor");
+          }
+          var t = f.call(_Visitor, obj[member]);
+          if (t !== undefined) {
+            ret[member] = t;
+          }
+        }
+      });
+      return ret;
+    },
+    _visitValue: function (v) {
+      return v;
+    },
+    _visitList: function (l) {
+      return l.slice();
+    },
+    _testUnknownAttributes: function (obj, expected, context, captureFrame) {
+      var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
+        return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
+      }, []);
+      if (unknownMembers.length > 0) {
+        var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
+                      unknownMembers.map(function (p) {
+                        return "\"" + p + "\"";
+                      }).join(",") +
+                      " in " + context + ": " + JSON.stringify(obj));
+        Error.captureStackTrace(e, captureFrame);
+        throw e;
+      }
+    }
+
+  };
+  r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
+  r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
+  r.visitInverse = r.visitPredicate = r._visitValue;
+  r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
+
+  r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
+  r.visitOneOf = r.visitEachOf = r._visitGroup;
+  r.visitShapeAnd = r.visitShapeOr = r._visitShapeGroup;
+  r.visitInclude = r._visitValue;
+  r.visitValueExpr = r.visitShapeExpr;
+  return r;
+
+  // Expect property p with value v in object o
+  function _expect (o, p, v) {
+    if (!(p in o))
+      this._error("expected "+JSON.stringify(o)+" to have a ."+p);
+    if (arguments.length > 2 && o[p] !== v)
+      this._error("expected "+o[o]+" to equal ."+v);
+  }
+
+  function _error (str) {
+    throw new Error(str);
+  }
+}
+
+// The ShEx Vistor is here to minimize deps for ShExValidator.
+/** create indexes for schema
+ */
+ShExVisitor.index = function (schema) {
+  let index = {
+    shapeExprs: {},
+    tripleExprs: {}
+  };
+  let v = ShExVisitor();
+
+  let oldVisitExpression = v.visitExpression;
+  v.visitExpression = function (expression) {
+    if (typeof expression === "object" && "id" in expression)
+      index.tripleExprs[expression.id] = expression;
+    return oldVisitExpression.call(v, expression);
+  };
+
+  let oldVisitShapeExpr = v.visitShapeExpr;
+  v.visitShapeExpr = v.visitValueExpr = function (shapeExpr, label) {
+    if (typeof shapeExpr === "object" && "id" in shapeExpr)
+      index.shapeExprs[shapeExpr.id] = shapeExpr;
+    return oldVisitShapeExpr.call(v, shapeExpr, label);
+  };
+
+  v.visitSchema(schema);
+  return index;
+}
+
+if (true)
+  module.exports = ShExVisitor;
+
 
 
 /***/ }),
@@ -8891,387 +8898,11 @@ if (true)
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ThreadedValNErr = (function () {
-var RdfTerm = __webpack_require__(7);
-var UNBOUNDED = -1;
-
-function vpEngine (schema, shape, index) {
-    var outerExpression = shape.expression;
-    return {
-      match:match
-    };
-
-    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
-
-      /*
-       * returns: list of passing or failing threads (no heterogeneous lists)
-       */
-      function validateExpr (expr, thread) {
-        if (typeof expr === "string") { // Inclusion
-          var included = index.tripleExprs[expr];
-          return validateExpr(included, thread);
-        }
-
-        var constraintNo = constraintList.indexOf(expr);
-        var min = "min" in expr ? expr.min : 1;
-        var max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-
-        function validateRept (type, val) {
-          var repeated = 0, errOut = false;
-          var newThreads = [thread];
-          var minmax = {  };
-          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
-            minmax.min = expr.min;
-            minmax.max = expr.max;
-          }
-          if ("semActs" in expr)
-            minmax.semActs = expr.semActs;
-          if ("annotations" in expr)
-            minmax.annotations = expr.annotations;
-          for (; repeated < max && !errOut; ++repeated) {
-            var inner = [];
-            for (var t = 0; t < newThreads.length; ++t) {
-              var newt = newThreads[t];
-              var sub = val(newt);
-              if (sub.length > 0 && sub[0].errors.length === 0) {
-                sub.forEach(newThread => {
-                  var solutions =
-                      "expression" in newt ? newt.expression.solutions : [];
-                  if ("solution" in newThread)
-                    solutions = solutions.concat(newThread.solution);
-                  delete newThread.solution;
-                  newThread.expression = extend({
-                    type: type,
-                    solutions: solutions
-                  }, minmax);
-                });
-              }
-              if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
-                return repeated < min ? sub : newThreads;
-              else
-                inner = inner.concat(sub);
-              // newThreads.expressions.push(sub);
-            }
-            newThreads = inner;
-          }
-          if (newThreads.length > 0 && newThreads[0].errors.length === 0 && "semActs" in expr) {
-            var passes = [];
-            var failures = [];
-            newThreads.forEach(newThread => {
-              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
-              if (semActErrors.length === 0) {
-                passes.push(newThread)
-              } else {
-                [].push.apply(newThread.errors, semActErrors);
-                failures.push(newThread);
-              }
-            });
-            newThreads = passes.length > 0 ? passes : failures;
-          }
-          return newThreads;
-        }
-
-        if (expr.type === "TripleConstraint") {
-          var negated = "negated" in expr && expr.negated || max === 0;
-          if (negated)
-            min = max = Infinity;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
-          var minmax = {  };
-          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
-            minmax.min = expr.min;
-            minmax.max = expr.max;
-          }
-          if ("semActs" in expr)
-            minmax.semActs = expr.semActs;
-          if ("annotations" in expr)
-            minmax.annotations = expr.annotations;
-          var taken = thread.avail[constraintNo].splice(0, min);
-          var passed = negated ? taken.length === 0 : taken.length >= min;
-          var ret = [];
-          var matched = thread.matched;
-          if (passed) {
-            do {
-              ret.push({
-                avail: thread.avail.map(a => { // copy parent thread's avail vector
-                  return a.slice();
-                }), // was: extend({}, thread.avail)
-                errors: thread.errors.slice(),
-                matched: matched.concat({
-                  tNos: taken.slice()
-                }),
-                expression: extend(
-                  {
-                    type: "TripleConstraintSolutions",
-                    predicate: expr.predicate,
-                    solutions: taken.map(tripleNo =>  {
-                      return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
-                    })
-                    // map(triple => {
-                    //   var t = neighborhood[triple];
-                    //   return {
-                    //     type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: t.object
-                    //   }
-                    // })
-                  },
-                  "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                  "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
-                  minmax)
-              });
-            } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                taken.push(thread.avail[constraintNo].shift());
-                return true;
-              } else {
-                return false;
-              }
-            })());
-          } else {
-            var valueExpr = null;
-            if (typeof expr.valueExpr === "string") { // ShapeRef
-              valueExpr = expr.valueExpr;
-              if (RdfTerm.isBlank(valueExpr))
-                valueExpr = index.shapeExprs[valueExpr];
-            } else if (expr.valueExpr) {
-              valueExpr = extend({}, expr.valueExpr)
-            }
-            ret.push({
-              avail: thread.avail,
-              errors: thread.errors.concat([
-                extend({
-                  type: negated ? "NegatedProperty" : "MissingProperty",
-                  property: expr.predicate
-                }, valueExpr ? { valueExpr: valueExpr } : {})
-              ]),
-              matched: matched
-            });
-          }
-
-          return ret;
-        }
-
-        else if (expr.type === "OneOf") {
-          return validateRept("OneOfSolutions", (th) => {
-            var accept = null;
-            var matched = [];
-            var failed = [];
-            expr.expressions.forEach(nested => {
-              var thcopy = {
-                avail: th.avail.map(a => { return a.slice(); }),
-                errors: th.errors,
-                matched: th.matched//.slice() ever needed??
-              };
-              var sub = validateExpr(nested, thcopy);
-              if (sub[0].errors.length === 0) {
-                matched = matched.concat(sub);
-                sub.forEach(newThread => {
-                  var expressions =
-                      "solution" in thcopy ? thcopy.solution.expressions : [];
-                  if ("expression" in newThread) // undefined for no matches on min card:0
-                    expressions = expressions.concat([newThread.expression]);
-                  delete newThread.expression;
-                  newThread.solution = {
-                    type: "OneOfSolution",
-                    expressions: expressions
-                  };
-                });
-              } else
-                failed = failed.concat(sub);
-            });
-            return matched.length > 0 ? matched : failed;
-          });
-        }
-
-        else if (expr.type === "EachOf") {
-          return validateRept("EachOfSolutions", (th) => {
-            // Iterate through nested expressions, exprThreads starts as [th].
-            return expr.expressions.reduce((exprThreads, nested) => {
-              // Iterate through current thread list composing nextThreads.
-              // Consider e.g.
-              // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
-              // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-              return exprThreads.reduce((nextThreads, exprThread) => {
-                var sub = validateExpr(nested, exprThread);
-                // Move newThread.expression into a hierarchical solution structure.
-                sub.forEach(newThread => {
-                  if (newThread.errors.length === 0) {
-                    var expressions =
-                        "solution" in exprThread ? exprThread.solution.expressions : [];
-                    if ("expression" in newThread) // undefined for no matches on min card:0
-                      expressions = expressions.concat([newThread.expression]);
-                    // console.warn(threadMatched(newThread), " vs ", exprMatched(expressions));
-                    delete newThread.expression;
-                    newThread.solution = {
-                      type: "EachOfSolution",
-                      expressions: expressions // exprThread.expression + newThread.expression
-                    };
-                  }
-                });
-                return nextThreads.concat(sub);
-              }, []);
-            }, [th]);
-          });
-        }
-
-        runtimeError("unexpected expr type: " + expr.type);
-      }
-
-      var startingThread = {
-        avail:[],   // triples remaining by constraint number
-        matched:[], // triples matched in this thread
-        errors:[]   // errors encounted
-      };
-      if (!outerExpression)
-        return { }; // vapid match if no expression
-      var ret = validateExpr(outerExpression, startingThread);
-      // console.log(JSON.stringify(ret));
-      // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
-      var longerChosen =
-          ret.reduce((ret, elt) => {
-            if (elt.errors.length > 0)
-              return ret;              // early return
-            var unmatchedTriples = {};
-            // Collect triples assigned to some constraint.
-            Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== undefined)
-                unmatchedTriples[k] = tripleToConstraintMapping[k];
-            });
-            // Removed triples matched in this thread.
-            elt.matched.forEach(m => {
-              m.tNos.forEach(t => {
-                delete unmatchedTriples[t];
-              });
-            });
-            // Remaining triples are unaccounted for.
-            Object.keys(unmatchedTriples).forEach(t => {
-              elt.errors.push({
-                type: "ExcessTripleViolation",
-                triple: neighborhood[t],
-                constraint: constraintList[unmatchedTriples[t]]
-              });
-            });
-            return ret !== null ? ret : // keep first solution
-            // Accept thread with no unmatched triples.
-            Object.keys(unmatchedTriples).length > 0 ? null : elt;
-          }, null);
-      return longerChosen !== null ?
-        finish(longerChosen.expression, constraintList,
-               neighborhood, recurse, direct, semActHandler, checkValueExpr) :
-        ret.length > 1 ? {
-          type: "PossibleErrors",
-          errors: ret.reduce((all, e) => {
-            return all.concat([e.errors]);
-          }, [])
-        } : ret[0];
-    }
-
-    function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
-      function _dive (solns) {
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
-        if (solns.type === "OneOfSolutions" ||
-            solns.type === "EachOfSolutions") {
-          solns.solutions.forEach(s => {
-            s.expressions.forEach(e => {
-              _dive(e);
-            });
-          });
-        } else if (solns.type === "TripleConstraintSolutions") {
-          solns.solutions = solns.solutions.map(x => {
-            if (x.type === "TestedTriple") // already done
-              return x; // c.f. validation/3circularRef1_pass-open
-            var t = neighborhood[x.tripleNo];
-            var expr = constraintList[x.constraintNo];
-            var ret = {
-              type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
-            };
-            function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel);
-              if ("errors" in sub) {
-                // console.dir(sub);
-                var err = {
-                  type: "ReferenceError", focus: focus,
-                  shape: shapeLabel
-                };
-                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
-                  err.referencedShape = shape;
-                err.errors = sub;
-                return [err];
-              }
-              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
-                  sub.type === "Recursion")
-                ret.referenced = sub; // !!! needs to aggregate errors and solutions
-              return [];
-            }
-            function diveRecurse (focus, shapeLabel) {
-              return diver(focus, shapeLabel, recurse);
-            }
-            function diveDirect (focus, shapeLabel) {
-              return diver(focus, shapeLabel, direct);
-            }
-            var subErrors = "valueExpr" in expr ?
-                checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
-                [];
-            if (subErrors.length === 0 && "semActs" in expr)
-              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
-            if (subErrors.length > 0) {
-              fromValidatePoint.errors = fromValidatePoint.errors || [];
-              fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
-            }
-            return ret;
-          });
-        } else {
-          throw Error("unexpected expr type in " + JSON.stringify(solns));
-        }
-      }
-      if (Object.keys(fromValidatePoint).length > 0) // guard against {}
-        _dive(fromValidatePoint);
-      if ("semActs" in shape)
-        fromValidatePoint.semActs = shape.semActs;
-      return fromValidatePoint;
-    }
-  }
-
-function extend(base) {
-  if (!base) base = {};
-  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (var name in arg)
-      base[name] = arg[name];
-  return base;
-}
-
-return {
-  name: "threaded-val-nerr",
-  description: "emulation of regular expression engine with error permutations",
-  compile: vpEngine
-};
-})();
-
-if (true)
-  module.exports = ThreadedValNErr;
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var ShExParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShExJison = __webpack_require__(48).Parser; // node environment
+  ShExJison = __webpack_require__(47).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -9359,7 +8990,7 @@ if (true)
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -9405,26 +9036,26 @@ if (true)
 module.exports = glob
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(25)
+var rp = __webpack_require__(24)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
-var inherits = __webpack_require__(53)
+var inherits = __webpack_require__(52)
 var EE = __webpack_require__(15).EventEmitter
 var path = __webpack_require__(2)
-var assert = __webpack_require__(26)
+var assert = __webpack_require__(25)
 var isAbsolute = __webpack_require__(16)
-var globSync = __webpack_require__(55)
-var common = __webpack_require__(27)
+var globSync = __webpack_require__(54)
+var common = __webpack_require__(26)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(56)
+var inflight = __webpack_require__(55)
 var util = __webpack_require__(11)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(29)
+var once = __webpack_require__(28)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -10156,7 +9787,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -10172,7 +9803,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(49)
+var old = __webpack_require__(48)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -10229,13 +9860,13 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var objectAssign = __webpack_require__(54);
+var objectAssign = __webpack_require__(53);
 
 // compare and isBuffer taken from https://github.com/feross/buffer/blob/680e9e5e488f22aac27599a57dc844a6315928dd/index.js
 // original notice:
@@ -10740,10 +10371,10 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -10990,7 +10621,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -11029,10 +10660,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(28)
+var wrappy = __webpack_require__(27)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -11077,7 +10708,7 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11122,11 +10753,11 @@ var EElistenerCount = function EElistenerCount(emitter, type) {
 /*<replacement>*/
 
 
-var Stream = __webpack_require__(31);
+var Stream = __webpack_require__(30);
 /*</replacement>*/
 
 
-var Buffer = __webpack_require__(9).Buffer;
+var Buffer = __webpack_require__(8).Buffer;
 
 var OurUint8Array = global.Uint8Array || function () {};
 
@@ -11140,7 +10771,7 @@ function _isUint8Array(obj) {
 /*<replacement>*/
 
 
-var debugUtil = __webpack_require__(61);
+var debugUtil = __webpack_require__(60);
 
 var debug;
 
@@ -11152,11 +10783,11 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 
-var BufferList = __webpack_require__(62);
+var BufferList = __webpack_require__(61);
 
-var destroyImpl = __webpack_require__(32);
+var destroyImpl = __webpack_require__(31);
 
-var _require = __webpack_require__(33),
+var _require = __webpack_require__(32),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(4).codes,
@@ -11170,7 +10801,7 @@ var StringDecoder;
 var createReadableStreamAsyncIterator;
 var from;
 
-__webpack_require__(10)(Readable, Stream);
+__webpack_require__(9)(Readable, Stream);
 
 var errorOrDestroy = destroyImpl.errorOrDestroy;
 var kProxyEvents = ['error', 'close', 'destroy', 'pause', 'resume'];
@@ -11243,7 +10874,7 @@ function ReadableState(options, stream, isDuplex) {
   this.encoding = null;
 
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(35).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(34).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -11405,7 +11036,7 @@ Readable.prototype.isPaused = function () {
 
 
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(35).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(34).StringDecoder;
   var decoder = new StringDecoder(enc);
   this._readableState.decoder = decoder; // If setEncoding(null), decoder.encoding equals utf8
 
@@ -12089,7 +11720,7 @@ Readable.prototype.wrap = function (stream) {
 if (typeof Symbol === 'function') {
   Readable.prototype[Symbol.asyncIterator] = function () {
     if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __webpack_require__(66);
+      createReadableStreamAsyncIterator = __webpack_require__(65);
     }
 
     return createReadableStreamAsyncIterator(this);
@@ -12191,7 +11822,7 @@ function endReadableNT(state, stream) {
 if (typeof Symbol === 'function') {
   Readable.from = function (iterable, opts) {
     if (from === undefined) {
-      from = __webpack_require__(67);
+      from = __webpack_require__(66);
     }
 
     return from(Readable, iterable, opts);
@@ -12205,17 +11836,17 @@ function indexOf(xs, x) {
 
   return -1;
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8), __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7), __webpack_require__(1)))
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(15).EventEmitter;
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12327,7 +11958,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12360,7 +11991,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12423,17 +12054,17 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: __webpack_require__(64)
+  deprecate: __webpack_require__(63)
 };
 /*</replacement>*/
 
 /*<replacement>*/
 
-var Stream = __webpack_require__(31);
+var Stream = __webpack_require__(30);
 /*</replacement>*/
 
 
-var Buffer = __webpack_require__(9).Buffer;
+var Buffer = __webpack_require__(8).Buffer;
 
 var OurUint8Array = global.Uint8Array || function () {};
 
@@ -12445,9 +12076,9 @@ function _isUint8Array(obj) {
   return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 }
 
-var destroyImpl = __webpack_require__(32);
+var destroyImpl = __webpack_require__(31);
 
-var _require = __webpack_require__(33),
+var _require = __webpack_require__(32),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(4).codes,
@@ -12462,7 +12093,7 @@ var _require$codes = __webpack_require__(4).codes,
 
 var errorOrDestroy = destroyImpl.errorOrDestroy;
 
-__webpack_require__(10)(Writable, Stream);
+__webpack_require__(9)(Writable, Stream);
 
 function nop() {}
 
@@ -13061,10 +12692,10 @@ Writable.prototype._undestroy = destroyImpl.undestroy;
 Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8), __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7), __webpack_require__(1)))
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13093,7 +12724,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(65).Buffer;
+var Buffer = __webpack_require__(64).Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -13366,7 +12997,7 @@ function simpleEnd(buf) {
 }
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13443,7 +13074,7 @@ var _require$codes = __webpack_require__(4).codes,
 
 var Duplex = __webpack_require__(5);
 
-__webpack_require__(10)(Transform, Duplex);
+__webpack_require__(9)(Transform, Duplex);
 
 function afterTransform(er, data) {
   var ts = this._transformState;
@@ -13573,7 +13204,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports) {
 
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -13588,17 +13219,21 @@ module.exports = typeof queueMicrotask === 'function'
 
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  let shapeMap = __webpack_require__(39)
-  return Object.assign(__webpack_require__(13), {
-    Api: __webpack_require__(47),
-    Parser: __webpack_require__(23),
+  let shapeMap = __webpack_require__(38)
+  return Object.assign({}, {
+    RdfTerm:    __webpack_require__(10),
+    Util:         __webpack_require__(13),
+    Validator:    __webpack_require__(44),
+    Writer:    __webpack_require__(21),
+    Api: __webpack_require__(46),
+    Parser: __webpack_require__(22),
     ShapeMap: shapeMap,
     ShapeMapParser: shapeMap.Parser,
-    N3: __webpack_require__(70)
+    N3: __webpack_require__(69)
   })
 })()
 
@@ -13607,7 +13242,7 @@ if (true)
 
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -13620,7 +13255,7 @@ var ShapeMap = (function () {
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(40)
+  symbols.Parser = __webpack_require__(39)
   return symbols
 })();
 
@@ -13630,14 +13265,14 @@ if (true)
 
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(41).Parser; // node environment
+  ShapeMapJison = __webpack_require__(40).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -13698,7 +13333,7 @@ if (true)
 
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.16 */
@@ -14889,7 +14524,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(19)(module)))
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var HierarchyClosure = (function () {
@@ -14968,7 +14603,7 @@ if (true) {
 
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -14979,7 +14614,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -15008,7 +14643,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 45 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/* ShExValidator - javascript module to validate a graph with respect to Shape Expressions
@@ -15041,8 +14676,8 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var RdfTerm = __webpack_require__(7);
-let ShExUtil = __webpack_require__(20);
+var RdfTerm = __webpack_require__(10);
+let ShExVisitor = __webpack_require__(20);
 
 function getLexicalValue (term) {
   return RdfTerm.isIRI(term) ? term :
@@ -15239,7 +14874,7 @@ var decimalLexicalTests = {
 function ShExValidator_constructor(schema, options) {
   if (!(this instanceof ShExValidator_constructor))
     return new ShExValidator_constructor(schema, options);
-  let index = schema._index || ShExUtil.index(schema)
+  let index = schema._index || ShExVisitor.index(schema)
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -15254,8 +14889,8 @@ function ShExValidator_constructor(schema, options) {
   this._optimize = {}; // optimizations:
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
-  // var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err");
-  var regexModule = this.options.regexModule || __webpack_require__(22);
+  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+  var regexModule = this.options.regexModule || __webpack_require__(45);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -15613,7 +15248,12 @@ function ShExValidator_constructor(schema, options) {
         return _ShExValidator._errorsMatchingShapeExpr(term, valueExpr, recurse, direct)
       }
       var results = regexEngine.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
-      if (false) { var fromNFA, nfa; }
+      // {// testing parity between two engines
+      //   var nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
+      //   var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
+      //   if ("errors" in fromNFA !== "errors" in results)
+      //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
+      // }
       if ("errors" in results) {
         partitionErrors.push({
           errors: results.errors
@@ -16248,455 +15888,285 @@ if (true)
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var NFAXVal1Err = (function () {
-  var RdfTerm = __webpack_require__(7);
+var EvalThreadedNErr = (function () {
+var RdfTerm = __webpack_require__(10);
+var UNBOUNDED = -1;
 
-  var Split = "<span class='keyword' title='Split'>|</span>";
-  var Rept  = "<span class='keyword' title='Repeat'>×</span>";
-  var Match = "<span class='keyword' title='Match'>␃</span>";
-  /* compileNFA - compile regular expression and index triple constraints
-   */
-  var UNBOUNDED = -1;
+function vpEngine (schema, shape, index) {
+    var outerExpression = shape.expression;
+    return {
+      match:match
+    };
 
-  function compileNFA (schema, shape, index) {
-    var expression = shape.expression;
-    return NFA();
+    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
 
-    function NFA () {
-      // wrapper for states, startNo and matchstate
-      var states = [];
-      var matchstate = State_make(Match, []);
-      var startNo = matchstate;
-      var stack = [];
-      var pair;
-      if (expression) {
-        var pair = walkExpr(expression, []);
-        patch(pair.tail, matchstate);
-        startNo = pair.start;
-      }
-      var ret = {
-        algorithm: "rbenx",
-        end: matchstate,
-        states: states,
-        start: startNo,
-        match: rbenx_match
-      }
-      matchstate = states = startNo = null;
-      return ret;
-
-      function walkExpr (expr, stack) {
-        var s, starts;
-        var lastTail;
-        function maybeAddRept (start, tail) {
-          if ((expr.min == undefined || expr.min === 1) &&
-              (expr.max == undefined || expr.max === 1))
-            return {start: start, tail: tail}
-          s = State_make(Rept, [start]);
-          states[s].expr = expr;
-          // cache min/max in normalized form for simplicity of comparison.
-          states[s].min = "min" in expr ? expr.min : 1;
-          states[s].max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-          patch(tail, s);
-          return {start: s, tail: [s]}
-        }
-
+      /*
+       * returns: list of passing or failing threads (no heterogeneous lists)
+       */
+      function validateExpr (expr, thread) {
         if (typeof expr === "string") { // Inclusion
           var included = index.tripleExprs[expr];
-          return walkExpr(included, stack);
+          return validateExpr(included, thread);
         }
 
-        else if (expr.type === "TripleConstraint") {
-          s = State_make(expr, []);
-          states[s].stack = stack;
-          return {start: s, tail: [s]};
-          // maybeAddRept(s, [s]);
+        var constraintNo = constraintList.indexOf(expr);
+        var min = "min" in expr ? expr.min : 1;
+        var max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+
+        function validateRept (type, val) {
+          var repeated = 0, errOut = false;
+          var newThreads = [thread];
+          var minmax = {  };
+          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
+            minmax.min = expr.min;
+            minmax.max = expr.max;
+          }
+          if ("semActs" in expr)
+            minmax.semActs = expr.semActs;
+          if ("annotations" in expr)
+            minmax.annotations = expr.annotations;
+          for (; repeated < max && !errOut; ++repeated) {
+            var inner = [];
+            for (var t = 0; t < newThreads.length; ++t) {
+              var newt = newThreads[t];
+              var sub = val(newt);
+              if (sub.length > 0 && sub[0].errors.length === 0) {
+                sub.forEach(newThread => {
+                  var solutions =
+                      "expression" in newt ? newt.expression.solutions : [];
+                  if ("solution" in newThread)
+                    solutions = solutions.concat(newThread.solution);
+                  delete newThread.solution;
+                  newThread.expression = extend({
+                    type: type,
+                    solutions: solutions
+                  }, minmax);
+                });
+              }
+              if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
+                return repeated < min ? sub : newThreads;
+              else
+                inner = inner.concat(sub);
+              // newThreads.expressions.push(sub);
+            }
+            newThreads = inner;
+          }
+          if (newThreads.length > 0 && newThreads[0].errors.length === 0 && "semActs" in expr) {
+            var passes = [];
+            var failures = [];
+            newThreads.forEach(newThread => {
+              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
+              if (semActErrors.length === 0) {
+                passes.push(newThread)
+              } else {
+                [].push.apply(newThread.errors, semActErrors);
+                failures.push(newThread);
+              }
+            });
+            newThreads = passes.length > 0 ? passes : failures;
+          }
+          return newThreads;
+        }
+
+        if (expr.type === "TripleConstraint") {
+          var negated = "negated" in expr && expr.negated || max === 0;
+          if (negated)
+            min = max = Infinity;
+          if (thread.avail[constraintNo] === undefined)
+            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+          var minmax = {  };
+          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
+            minmax.min = expr.min;
+            minmax.max = expr.max;
+          }
+          if ("semActs" in expr)
+            minmax.semActs = expr.semActs;
+          if ("annotations" in expr)
+            minmax.annotations = expr.annotations;
+          var taken = thread.avail[constraintNo].splice(0, min);
+          var passed = negated ? taken.length === 0 : taken.length >= min;
+          var ret = [];
+          var matched = thread.matched;
+          if (passed) {
+            do {
+              ret.push({
+                avail: thread.avail.map(a => { // copy parent thread's avail vector
+                  return a.slice();
+                }), // was: extend({}, thread.avail)
+                errors: thread.errors.slice(),
+                matched: matched.concat({
+                  tNos: taken.slice()
+                }),
+                expression: extend(
+                  {
+                    type: "TripleConstraintSolutions",
+                    predicate: expr.predicate,
+                    solutions: taken.map(tripleNo =>  {
+                      return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
+                    })
+                    // map(triple => {
+                    //   var t = neighborhood[triple];
+                    //   return {
+                    //     type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: t.object
+                    //   }
+                    // })
+                  },
+                  "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
+                  "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                  minmax)
+              });
+            } while ((function () {
+              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                taken.push(thread.avail[constraintNo].shift());
+                return true;
+              } else {
+                return false;
+              }
+            })());
+          } else {
+            var valueExpr = null;
+            if (typeof expr.valueExpr === "string") { // ShapeRef
+              valueExpr = expr.valueExpr;
+              if (RdfTerm.isBlank(valueExpr))
+                valueExpr = index.shapeExprs[valueExpr];
+            } else if (expr.valueExpr) {
+              valueExpr = extend({}, expr.valueExpr)
+            }
+            ret.push({
+              avail: thread.avail,
+              errors: thread.errors.concat([
+                extend({
+                  type: negated ? "NegatedProperty" : "MissingProperty",
+                  property: expr.predicate
+                }, valueExpr ? { valueExpr: valueExpr } : {})
+              ]),
+              matched: matched
+            });
+          }
+
+          return ret;
         }
 
         else if (expr.type === "OneOf") {
-          lastTail = [];
-          starts = [];
-          expr.expressions.forEach(function (nested, ord) {
-            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
-            starts.push(pair.start);
-            lastTail = lastTail.concat(pair.tail);
+          return validateRept("OneOfSolutions", (th) => {
+            var accept = null;
+            var matched = [];
+            var failed = [];
+            expr.expressions.forEach(nested => {
+              var thcopy = {
+                avail: th.avail.map(a => { return a.slice(); }),
+                errors: th.errors,
+                matched: th.matched//.slice() ever needed??
+              };
+              var sub = validateExpr(nested, thcopy);
+              if (sub[0].errors.length === 0) {
+                matched = matched.concat(sub);
+                sub.forEach(newThread => {
+                  var expressions =
+                      "solution" in thcopy ? thcopy.solution.expressions : [];
+                  if ("expression" in newThread) // undefined for no matches on min card:0
+                    expressions = expressions.concat([newThread.expression]);
+                  delete newThread.expression;
+                  newThread.solution = {
+                    type: "OneOfSolution",
+                    expressions: expressions
+                  };
+                });
+              } else
+                failed = failed.concat(sub);
+            });
+            return matched.length > 0 ? matched : failed;
           });
-          s = State_make(Split, starts);
-          states[s].expr = expr;
-          return maybeAddRept(s, lastTail);
         }
 
         else if (expr.type === "EachOf") {
-          expr.expressions.forEach(function (nested, ord) {
-            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
-            if (ord === 0)
-              s = pair.start;
-            else
-              patch(lastTail, pair.start);
-            lastTail = pair.tail;
+          return validateRept("EachOfSolutions", (th) => {
+            // Iterate through nested expressions, exprThreads starts as [th].
+            return expr.expressions.reduce((exprThreads, nested) => {
+              // Iterate through current thread list composing nextThreads.
+              // Consider e.g.
+              // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
+              // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
+              return exprThreads.reduce((nextThreads, exprThread) => {
+                var sub = validateExpr(nested, exprThread);
+                // Move newThread.expression into a hierarchical solution structure.
+                sub.forEach(newThread => {
+                  if (newThread.errors.length === 0) {
+                    var expressions =
+                        "solution" in exprThread ? exprThread.solution.expressions : [];
+                    if ("expression" in newThread) // undefined for no matches on min card:0
+                      expressions = expressions.concat([newThread.expression]);
+                    // console.warn(threadMatched(newThread), " vs ", exprMatched(expressions));
+                    delete newThread.expression;
+                    newThread.solution = {
+                      type: "EachOfSolution",
+                      expressions: expressions // exprThread.expression + newThread.expression
+                    };
+                  }
+                });
+                return nextThreads.concat(sub);
+              }, []);
+            }, [th]);
           });
-          return maybeAddRept(s, lastTail);
         }
 
-        throw Error("unexpected expr type: " + expr.type);
+        runtimeError("unexpected expr type: " + expr.type);
+      }
+
+      var startingThread = {
+        avail:[],   // triples remaining by constraint number
+        matched:[], // triples matched in this thread
+        errors:[]   // errors encounted
       };
-
-      function State_make (c, outs, negated) {
-        var ret = states.length;
-        states.push({c:c, outs:outs});
-        if (negated)
-          states[ret].negated = true; // only include if true for brevity
-        return ret;
-      }
-
-      function patch (l, target) {
-        l.forEach(elt => {
-          states[elt].outs.push(target);
-        });
-      }
-    }
-
-
-    function nfaToString () {
-      var known = {OneOf: [], EachOf: []};
-      function dumpTripleConstraint (tc) {
-        return "<" + tc.predicate + ">";
-      }
-      function card (obj) {
-        var x = "";
-        if ("min" in obj) x += obj.min;
-        if ("max" in obj) x += "," + obj.max;
-        return x ? "{" + x + "}" : "";
-      }
-      function junct (j) {
-        var id = known[j.type].indexOf(j);
-        if (id === -1)
-          id = known[j.type].push(j)-1;
-        return j.type + id; // + card(j);
-      }
-      function dumpStackElt (elt) {
-        return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-      }
-      function dumpStack (stack) {
-        return stack.map(elt => { return dumpStackElt(elt); }).join("/");
-      }
-      function dumpNFA (states, startNo) {
-        return states.map((s, i) => {
-          return (i === startNo ? s.c === Match ? "." : "S" : s.c === Match ? "E" : " ") + i + " " + (
-            s.c === Split ? ("Split-" + junct(s.expr)) :
-              s.c === Rept ? ("Rept-" + junct(s.expr)) :
-              s.c === Match ? "Match" :
-              dumpTripleConstraint(s.c)
-          ) + card(s) + "→" + s.outs.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
-        }).join("\n");
-      }
-      function dumpMatched (matched) {
-        return matched.map(m => {
-          return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
-        }).join(",");
-      }
-      function dumpThread (thread) {
-        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-          return k + "×" + thread.repeats[k];
-        }).join(",") + " " + dumpMatched(thread.matched);
-      }
-      function dumpThreadList (list) {
-        return "[[" + list.map(thread => { return dumpThread(thread); }).join("\n  ") + "]]";
-      }
-      return {
-        nfa: dumpNFA,
-        stack: dumpStack,
-        stackElt: dumpStackElt,
-        thread: dumpThread,
-        threadList: dumpThreadList
-      };
-    }
-
-    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
-      var rbenx = this;
-      var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
-      function localExpect (list) {
-        return list.map(st => {
-          var s = rbenx.states[st.state]; // simpler threads are a list of states.
-          return renderAtom(s.c, s.negated);
-        });
-      }
-
-      if (rbenx.states.length === 1)
-        return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
-
-      var chosen = null;
-      // var dump = nfaToString();
-      // console.log(dump.nfa(this.states, this.start));
-      addstate(rbenx, clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
-      while (clist.length) {
-        nlist = [];
-        if (trace)
-          trace.push({threads:[]});
-        for (var threadno = 0; threadno < clist.length; ++threadno) {
-          var thread = clist[threadno];
-          if (thread.state === rbenx.end)
-            continue;
-          var state = rbenx.states[thread.state];
-          var nlistlen = nlist.length;
-          var constraintNo = constraintList.indexOf(state.c);
-          // may be Accept!
-            var min = "min" in state.c ? state.c.min : 1;
-            var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-            if ("negated" in state.c && state.c.negated)
-              min = max = 0;
-            if (thread.avail[constraintNo] === undefined)
-              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
-            var taken = thread.avail[constraintNo].splice(0, max);
-            if (taken.length >= min) {
-              do {
-                addStates(rbenx, nlist, thread, taken);
-              } while ((function () {
-                if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                  taken.push(thread.avail[constraintNo].shift());
-                  return true; // stay in look to take more.
-                } else {
-                  return false; // no more to take or we're already at max
-                }
-              })());
-          }
-          if (trace)
-            trace[trace.length-1].threads.push({
-              state: clist[threadno].state,
-              to:nlist.slice(nlistlen).map(x => {
-                return stateString(x.state, x.repeats);
-              })
+      if (!outerExpression)
+        return { }; // vapid match if no expression
+      var ret = validateExpr(outerExpression, startingThread);
+      // console.log(JSON.stringify(ret));
+      // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
+      var longerChosen =
+          ret.reduce((ret, elt) => {
+            if (elt.errors.length > 0)
+              return ret;              // early return
+            var unmatchedTriples = {};
+            // Collect triples assigned to some constraint.
+            Object.keys(tripleToConstraintMapping).forEach(k => {
+              if (tripleToConstraintMapping[k] !== undefined)
+                unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
-        }
-        // console.log(dump.threadList(nlist));
-        if (nlist.length === 0 && chosen === null)
-          return reportError(localExpect(clist, rbenx.states));
-        var t = clist;
-        clist = nlist;
-        nlist = t;
-        var longerChosen = clist.reduce((ret, elt) => {
-          var matchedAll =
-              elt.matched.reduce((ret, m) => {
-                return ret + m.triples.length; // count matched triples
-              }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === undefined ? ret : ret + 1; // count expected
-              }, 0);
-          return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
-        }, null)
-        if (longerChosen)
-          chosen = longerChosen;
-        // if (longerChosen !== null)
-        //   console.log(JSON.stringify(matchedToResult(longerChosen.matched)));
-      }
-      if (chosen === null)
-        return reportError();
-      function reportError () { return {
-        type: "Failure",
-        node: node,
-        errors: localExpect(clist, rbenx.states)
-      } }
-      function localExpect () {
-        return clist.map(t => {
-          var c = rbenx.states[t.state].c;
-          // if (c === Match)
-          //   return { type: "EndState999" };
-          var valueExpr = null;
-          if (typeof c.valueExpr === "string") { // ShapeRef
-            valueExpr = c.valueExpr;
-            if (RdfTerm.isBlank(valueExpr))
-              valueExpr = schema.shapes[valueExpr];
-          } else if (c.valueExpr) {
-            valueExpr = extend({}, c.valueExpr)
-          }
-          return extend({
-            type: state.c.negated ? "NegatedProperty" :
-              t.state === rbenx.end ? "ExcessTripleViolation" :
-              "MissingProperty",
-            property: state.c.predicate
-          }, valueExpr ? { valueExpr: valueExpr } : {});
-        });
-      }
-      // console.log("chosen:", dump.thread(chosen));
-      return "errors" in chosen.matched ?
-        chosen.matched :
-        matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+            // Removed triples matched in this thread.
+            elt.matched.forEach(m => {
+              m.tNos.forEach(t => {
+                delete unmatchedTriples[t];
+              });
+            });
+            // Remaining triples are unaccounted for.
+            Object.keys(unmatchedTriples).forEach(t => {
+              elt.errors.push({
+                type: "ExcessTripleViolation",
+                triple: neighborhood[t],
+                constraint: constraintList[unmatchedTriples[t]]
+              });
+            });
+            return ret !== null ? ret : // keep first solution
+            // Accept thread with no unmatched triples.
+            Object.keys(unmatchedTriples).length > 0 ? null : elt;
+          }, null);
+      return longerChosen !== null ?
+        finish(longerChosen.expression, constraintList,
+               neighborhood, recurse, direct, semActHandler, checkValueExpr) :
+        ret.length > 1 ? {
+          type: "PossibleErrors",
+          errors: ret.reduce((all, e) => {
+            return all.concat([e.errors]);
+          }, [])
+        } : ret[0];
     }
 
-    function addStates (rbenx, nlist, thread, taken) {
-      var state = rbenx.states[thread.state];
-      // find the exprs that require repetition
-      var exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
-      var newStack = state.stack.map(e => {
-        var i = thread.repeats[exprs.indexOf(e.c)];
-        if (i === undefined)
-          i = 0; // expr has no repeats
-        else
-          i = i-1;
-        return { c:e.c, e:e.e, i:i };
-      });
-      var withIndexes = {
-        c: state.c,
-        triples: taken,
-        stack: newStack
-      };
-      thread.matched = thread.matched.concat(withIndexes);
-      state.outs.forEach(o => { // single out if NFA includes epsilons
-        addstate(rbenx, nlist, o, thread);
-      });
-    }
-
-    function addstate (rbenx, list, stateNo, thread, seen) {
-      seen = seen || [];
-      var seenkey = stateString(stateNo, thread.repeats);
-      if (seen.indexOf(seenkey) !== -1)
-        return;
-      seen.push(seenkey);
-
-      var s = rbenx.states[stateNo];
-      if (s.c === Split) {
-        return s.outs.reduce((ret, o, idx) => {
-          return ret.concat(addstate(rbenx, list, o, thread, seen));
-        }, []);
-        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
-      } else if (s.c === Rept) {
-        var ret = [];
-        // matched = [matched].concat("Rept" + s.expr);
-        if (!(stateNo in thread.repeats))
-          thread.repeats[stateNo] = 0;
-        var repetitions = thread.repeats[stateNo];
-        // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-        if (repetitions < s.max)
-          ret = ret.concat(addstate(rbenx, list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-        if (repetitions >= s.min && repetitions <= s.max)
-          ret = ret.concat(addstate(rbenx, list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
-        return ret;
-      } else {
-        // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
-        //   return r2 || avail.length > 0;
-        // }, false))
-        return [list.push({ // return [new list element index]
-          state:stateNo,
-          repeats:thread.repeats,
-          avail:thread.avail.map(a => { // copy parent thread's avail vector
-            return a.slice();
-          }),
-          stack:thread.stack,
-          matched:thread.matched,
-          errors: thread.errors
-        }) - 1];
-      }
-    }
-
-    function resetRepeat (thread, repeatedState) {
-      var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-        if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
-          r[k] = thread.repeats[k];
-        return r;
-      }, {});
-      return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-    }
-
-    function incrmRepeat (thread, repeatedState) {
-      var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-        r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
-        return r;
-      }, {});
-      return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-    }
-
-    function stateString (state, repeats) {
-      var rs = Object.keys(repeats).map(rpt => {
-        return rpt+":"+repeats[rpt];
-      }).join(",");
-      return rs.length ? state + "-" + rs : ""+state;
-    }
-
-    function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
-      var last = [];
-      var errors = [];
-      var skips = [];
-      var ret = matched.reduce((out, m) => {
-        var mis = 0;
-        var ptr = out, t;
-        while (mis < last.length &&
-               m.stack[mis].c === last[mis].c && // constraint
-               m.stack[mis].i === last[mis].i && // iteration number
-               m.stack[mis].e === last[mis].e) { // (dis|con)junction number
-            ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
-          ++mis;
-        }
-        while (mis < m.stack.length) {
-          if (mis >= last.length) {
-            last.push({});
-          }
-          if (m.stack[mis].c !== last[mis].c) {
-            t = [];
-            ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions", ptr.solutions = t;
-            if ("min" in m.stack[mis].c)
-              ptr.min = m.stack[mis].c.min;
-            if ("max" in m.stack[mis].c)
-              ptr.max = m.stack[mis].c.max;
-            if ("annotations" in m.stack[mis].c)
-              ptr.annotations = m.stack[mis].c.annotations;
-            if ("semActs" in m.stack[mis].c)
-              ptr.semActs = m.stack[mis].c.semActs;
-            ptr = t;
-            last[mis].i = null;
-            // !!! on the way out to call after valueExpr test
-            if ("semActs" in m.stack[mis].c) {
-              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
-              if (errors.length)
-                throw errors;
-            }
-            if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
-          } else {
-            ptr = ptr.solutions;
-          }
-          if (m.stack[mis].i !== last[mis].i) {
-            t = [];
-            ptr[m.stack[mis].i] = {
-              type:m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
-              expressions: t};
-            ptr = t;
-            last[mis].e = null;
-          } else {
-            ptr = ptr[last[mis].i].expressions;
-          }
-          if (m.stack[mis].e !== last[mis].e) {
-            t = {};
-            ptr[m.stack[mis].e] = t;
-            if (m.stack[mis].e > 0 && ptr[m.stack[mis].e-1] === undefined && skips.indexOf(ptr) === -1)
-              skips.push(ptr);
-            ptr = t;
-            last.length = mis + 1; // chop off last so we create everything underneath
-          } else {
-            throw "how'd we get here?"
-            ptr = ptr[last[mis].e];
-          }
-          ++mis;
-        }
-        ptr.type = "TripleConstraintSolutions";
-        if ("min" in m.c)
-          ptr.min = m.c.min;
-        if ("max" in m.c)
-          ptr.max = m.c.max;
-        ptr.predicate = m.c.predicate;
-        if ("valueExpr" in m.c)
-          ptr.valueExpr = m.c.valueExpr;
-        if ("productionLabel" in m.c)
-          ptr.productionLabel = m.c.productionLabel;
-        ptr.solutions = m.triples.map(tno => {
-          var triple = neighborhood[tno];
-          var ret = {
-            type: "TestedTriple",
-            subject: triple.subject,
-            predicate: triple.predicate,
-            object: ldify(triple.object)
-          };
-
+    function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
+      function _dive (solns) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
@@ -16711,62 +16181,66 @@ var NFAXVal1Err = (function () {
             ret.language = lang;
           return ret;
         }
-          function diver (focus, shape, dive) {
-            var sub = dive(focus, shape);
-            if ("errors" in sub) {
-              // console.dir(sub);
-              var err = {
-                type: "ReferenceError", focus: focus,
-                shape: shape, errors: sub
-              };
-              if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
-                err.referencedShape = shape;
-              return [err];
+        if (solns.type === "OneOfSolutions" ||
+            solns.type === "EachOfSolutions") {
+          solns.solutions.forEach(s => {
+            s.expressions.forEach(e => {
+              _dive(e);
+            });
+          });
+        } else if (solns.type === "TripleConstraintSolutions") {
+          solns.solutions = solns.solutions.map(x => {
+            if (x.type === "TestedTriple") // already done
+              return x; // c.f. validation/3circularRef1_pass-open
+            var t = neighborhood[x.tripleNo];
+            var expr = constraintList[x.constraintNo];
+            var ret = {
+              type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
+            };
+            function diver (focus, shapeLabel, dive) {
+              var sub = dive(focus, shapeLabel);
+              if ("errors" in sub) {
+                // console.dir(sub);
+                var err = {
+                  type: "ReferenceError", focus: focus,
+                  shape: shapeLabel
+                };
+                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                  err.referencedShape = shape;
+                err.errors = sub;
+                return [err];
+              }
+              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
+                  sub.type === "Recursion")
+                ret.referenced = sub; // !!! needs to aggregate errors and solutions
+              return [];
             }
-            if (("solution" in sub || "solutions" in sub) && Object.keys(sub.solution || sub.solutions).length !== 0 ||
-                sub.type === "Recursion")
-              ret.referenced = sub; // !!! needs to aggregate errors and solutions
-            return [];
-          }
-          function diveRecurse (focus, shapeLabel) {
-            return diver(focus, shapeLabel, recurse);
-          }
-          function diveDirect (focus, shapeLabel) {
-            return diver(focus, shapeLabel, direct);
-          }
-          if ("valueExpr" in ptr)
-            errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
-
-          if (errors.length === 0 && "semActs" in m.c)
-            [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
-          return ret;
-        })
-        if ("annotations" in m.c)
-          ptr.annotations = m.c.annotations;
-        if ("semActs" in m.c)
-          ptr.semActs = m.c.semActs;
-        last = m.stack.slice();
-        return out;
-      }, {});
-
-      if (errors.length)
-        return {
-          type: "SemActFailure",
-          errors: errors
-        };
-
-      // Clear out the nulls for the expressions with min:0 and no matches.
-      // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
-      // Maybe we want these nulls in expressions[] to make it clear that there are holes?
-      skips.forEach(skip => {
-        for (var exprNo = 0; exprNo < skip.length; ++exprNo)
-          if (skip[exprNo] === null || skip[exprNo] === undefined)
-            skip.splice(exprNo--, 1);
-      });
-
+            function diveRecurse (focus, shapeLabel) {
+              return diver(focus, shapeLabel, recurse);
+            }
+            function diveDirect (focus, shapeLabel) {
+              return diver(focus, shapeLabel, direct);
+            }
+            var subErrors = "valueExpr" in expr ?
+                checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
+                [];
+            if (subErrors.length === 0 && "semActs" in expr)
+              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
+            if (subErrors.length > 0) {
+              fromValidatePoint.errors = fromValidatePoint.errors || [];
+              fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
+            }
+            return ret;
+          });
+        } else {
+          throw Error("unexpected expr type in " + JSON.stringify(solns));
+        }
+      }
+      if (Object.keys(fromValidatePoint).length > 0) // guard against {}
+        _dive(fromValidatePoint);
       if ("semActs" in shape)
-        ret.semActs = shape.semActs;
-      return ret;
+        fromValidatePoint.semActs = shape.semActs;
+      return fromValidatePoint;
     }
   }
 
@@ -16778,31 +16252,27 @@ function extend(base) {
   return base;
 }
 
-// ## Exports
-
-return exports = {
-  name: "nfax-val-1err",
-  description: "simple regular expression engine with n out states",
-  compile: compileNFA
+return {
+  name: "eval-threaded-nerr",
+  description: "emulation of regular expression engine with error permutations",
+  compile: vpEngine
 };
-
 })();
 
 if (true)
-  module.exports = NFAXVal1Err;
+  module.exports = EvalThreadedNErr;
 
 
 /***/ }),
-/* 47 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
 var ShExApi = function (config) {
 
-  var ShEx = __webpack_require__(13);
-  var ShExUtil = ShEx.Util;
-  var ShExParser = __webpack_require__(23);
+  const ShExUtil = __webpack_require__(13);
+  const ShExParser = __webpack_require__(22);
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
@@ -17103,11 +16573,11 @@ var ShExApi = function (config) {
   function LoadExtensions (globs) {
     return globs.reduce(
       (list, glob) =>
-        list.concat(__webpack_require__(24).glob.sync(glob))
+        list.concat(__webpack_require__(23).glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  var t = __webpack_require__(57)(path)
+	  var t = __webpack_require__(56)(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
@@ -17124,7 +16594,7 @@ if (true)
 
 
 /***/ }),
-/* 48 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -18057,7 +17527,7 @@ parse: function parse(input) {
 
   var UNBOUNDED = -1;
 
-  var ShExUtil = __webpack_require__(13).Util;
+  var ShExUtil = __webpack_require__(13);
 
   // Common namespaces and entities
   var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -18957,10 +18427,11 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
+
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(19)(module)))
 
 /***/ }),
-/* 49 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -19270,11 +18741,11 @@ exports.realpath = function realpath(p, cache, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(51);
-var balanced = __webpack_require__(52);
+var concatMap = __webpack_require__(50);
+var balanced = __webpack_require__(51);
 
 module.exports = expandTop;
 
@@ -19477,7 +18948,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 51 */
+/* 50 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -19496,7 +18967,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 52 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19562,7 +19033,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 53 */
+/* 52 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -19595,7 +19066,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 54 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -19692,22 +19163,22 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 55 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(25)
+var rp = __webpack_require__(24)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(24).Glob
+var Glob = __webpack_require__(23).Glob
 var util = __webpack_require__(11)
 var path = __webpack_require__(2)
-var assert = __webpack_require__(26)
+var assert = __webpack_require__(25)
 var isAbsolute = __webpack_require__(16)
-var common = __webpack_require__(27)
+var common = __webpack_require__(26)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -20185,12 +19656,12 @@ GlobSync.prototype._makeAbs = function (f) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 56 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(28)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(27)
 var reqs = Object.create(null)
-var once = __webpack_require__(29)
+var once = __webpack_require__(28)
 
 module.exports = wrappy(inflight)
 
@@ -20246,7 +19717,7 @@ function slice (args) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 57 */
+/* 56 */
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -20257,10 +19728,10 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 57;
+webpackEmptyContext.id = 56;
 
 /***/ }),
-/* 58 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20419,7 +19890,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 59 */
+/* 58 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -20509,7 +19980,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 60 */
+/* 59 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -20520,13 +19991,13 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 61 */
+/* 60 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 62 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20544,10 +20015,10 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var _require = __webpack_require__(9),
+var _require = __webpack_require__(8),
     Buffer = _require.Buffer;
 
-var _require2 = __webpack_require__(63),
+var _require2 = __webpack_require__(62),
     inspect = _require2.inspect;
 
 var custom = inspect && inspect.custom || 'inspect';
@@ -20742,13 +20213,13 @@ function () {
 }();
 
 /***/ }),
-/* 63 */
+/* 62 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 64 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -20819,15 +20290,15 @@ function config (name) {
   return String(val).toLowerCase() === 'true';
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(7)))
 
 /***/ }),
-/* 65 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
-var buffer = __webpack_require__(9)
+var buffer = __webpack_require__(8)
 var Buffer = buffer.Buffer
 
 // alternative to using Object.keys for old browsers
@@ -20893,7 +20364,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 /***/ }),
-/* 66 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21107,7 +20578,7 @@ module.exports = createReadableStreamAsyncIterator;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 67 */
+/* 66 */
 /***/ (function(module, exports) {
 
 module.exports = function () {
@@ -21116,7 +20587,7 @@ module.exports = function () {
 
 
 /***/ }),
-/* 68 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21147,9 +20618,9 @@ module.exports = function () {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(36);
+var Transform = __webpack_require__(35);
 
-__webpack_require__(10)(PassThrough, Transform);
+__webpack_require__(9)(PassThrough, Transform);
 
 function PassThrough(options) {
   if (!(this instanceof PassThrough)) return new PassThrough(options);
@@ -21161,7 +20632,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 69 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21264,7 +20735,7 @@ function pipeline() {
 module.exports = pipeline;
 
 /***/ }),
-/* 70 */
+/* 69 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

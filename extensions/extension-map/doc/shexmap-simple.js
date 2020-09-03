@@ -58,7 +58,7 @@ var Getables = [
 var QueryParams = Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
 ]);
 
 // utility functions
@@ -763,7 +763,7 @@ function callValidator (done) {
         schema: Caches.inputSchema.refresh(),
         url: Caches.inputSchema.url || DefaultBase
       };
-      // shex-loader loads IMPORTs and tests the schema for structural faults.
+      // shex-node loads IMPORTs and tests the schema for structural faults.
       ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
         var time;
         var validator = ShEx.Validator.construct(
@@ -877,7 +877,6 @@ function callValidator (done) {
     };
     return logger;
   }
-
 }
 
   function renderEntry (entry) {

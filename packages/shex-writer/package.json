@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/core",
+  "name": "@shexjs/writer",
   "version": "1.0.0-alpha.6",
-  "description": "Shape Expressions validation and utilities.",
+  "description": "Shape Expressions - convert ShExJ to ShExC.",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -11,20 +11,16 @@
     "shex",
     "shape expressions",
     "rdf",
-    "query",
-    "parser"
+    "writer"
   ],
   "license": "MIT",
-  "main": "./shex-core.js",
+  "main": "./shex-writer.js",
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {
-    "hierarchy-closure": "^1.2.1"
-  },
+  "dependencies": {},
   "scripts": {
-    "test": "cd .. && mocha -C -R dot",
-    "browser": "browserify shex.js -s ShEx -o browser/shex-core-browserify.js && uglifyjs browser/shex-core-browserify.js --comments -mco browser/shex-core-browserify.min.js"
+    "test": "cd ../.. && npm run test"
   },
   "publishConfig": {
     "access": "public"

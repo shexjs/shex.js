@@ -5,14 +5,13 @@
  *   multiplicity: ...
  */
 
-var ShExMap = (function () {
+const ShExMapModule = (function () {
 
-var ShExCore = require("@shexjs/core");
-var RdfTerm = ShExCore.RdfTerm;
-var ShExUtil = ShExCore.Util;
-var ShExValidator = require("@shexjs/core").Validator;
-var extensions = require("./lib/extensions");
-var N3 = require("n3");
+const ShExUtil = require("@shexjs/util");
+const RdfTerm = require("@shexjs/term");
+const ShExValidator = require("@shexjs/validator");
+const extensions = require("./lib/extensions");
+const N3 = require("n3");
 var _ = require('underscore');
 
 var MapExt = "http://shex.io/extensions/Map/#";
@@ -426,12 +425,12 @@ return {
 };
 
 })();
-ShExMap.extension = {
+ShExMapModule.extension = {
   hashmap: require("./lib/hashmap_extension.js"),
   regex: require("./lib/regex_extension.js")
 };
-ShExMap.extensions = require("./lib/extensions.js");
-ShExMap.utils = require("./lib/extension-utils.js");
+ShExMapModule.extensions = require("./lib/extensions.js");
+ShExMapModule.utils = require("./lib/extension-utils.js");
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExMap;
+  module.exports = ShExMapModule;

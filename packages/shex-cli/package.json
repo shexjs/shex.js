@@ -19,13 +19,14 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/core": "file:../shex-core",
+    "shape-map": "file:../shape-map",
+    "@shexjs/util": "file:../shex-util",
     "@shexjs/node": "file:../shex-node",
+    "@shexjs/writer": "file:../shex-writer",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "jsonld": "^0.4.11",
     "n3": "^1.6.2",
-    "shape-map": "file:../shape-map",
     "request-promise": "^4.2.2"
   },
   "bin": {

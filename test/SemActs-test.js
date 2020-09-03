@@ -1,10 +1,11 @@
 const VERBOSE = "VERBOSE" in process.env
 const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null
 
-const ShExCore = require("@shexjs/core")
+const ShExUtil = require("@shexjs/util")
+const ShExValidator = require("@shexjs/validator")
 const ShExParser = require("@shexjs/parser")
 const ShapeMapParser = require("shape-map").Parser
-const RdfTerm = require("@shexjs/core").RdfTerm
+const RdfTerm = require("@shexjs/term")
 const Extensions = [
   // http://shex.io/extensions/javascript/
   require("../extensions/extension-eval")
@@ -47,7 +48,7 @@ describe('Invoking SemActs', function () {
       base: schema._base,
       prefixes: schema._prefixes || {}
     }
-    const validator = ShExCore.Validator.construct(schema)
+    const validator = ShExValidator.construct(schema)
     Extensions.forEach(ext => ext.register(validator))
 
     // Resolve and parse data.
@@ -72,7 +73,7 @@ describe('Invoking SemActs', function () {
     // Parse ShapeMap and validate.
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
-    const res = validator.validate(ShExCore.Util.makeN3DB(data), sm)
+    const res = validator.validate(ShExUtil.makeN3DB(data), sm)
 
     // Test results
     const blurb = test.shexPath

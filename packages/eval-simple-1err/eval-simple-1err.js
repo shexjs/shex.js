@@ -1,5 +1,5 @@
-var NFAXVal1Err = (function () {
-  var RdfTerm = require("../RdfTerm");
+var EvalSimple1Err = (function () {
+  var RdfTerm = require("@shexjs/term");
 
   var Split = "<span class='keyword' title='Split'>|</span>";
   var Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -528,7 +528,7 @@ function extend(base) {
 // ## Exports
 
 return exports = {
-  name: "nfax-val-1err",
+  name: "eval-simple-1err",
   description: "simple regular expression engine with n out states",
   compile: compileNFA
 };
@@ -536,4 +536,4 @@ return exports = {
 })();
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = NFAXVal1Err;
+  module.exports = EvalSimple1Err;

@@ -26,7 +26,7 @@ var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedErr
 
 var N3Util = ShEx.N3.Util;
 var RdfTerm = require("@shexjs/term");
-var ShExMap = require("../extensions/extension-map/module");
+const ShExMap = require("../shex-extension-map.js");
 
 var UNBOUNDED = -1;
 
@@ -208,7 +208,7 @@ function ShExMaterializer_constructor(schema, options) {
   this._optimize = {}; // optimizations:
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
-  // var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err");
+  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
   var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer.js");
 
   var blankNodeCount = 0;
@@ -562,12 +562,12 @@ function ShExMaterializer_constructor(schema, options) {
         }
       };
 
-      if (false) {// testing parity between two engines
-        var nfa = require("../lib/regex/nfax-val-1err").compile(schema, shape);
-        var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
-        if ("errors" in fromNFA !== "errors" in results)
-          { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
-      }
+      // {// testing parity between two engines
+      //   var nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
+      //   var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
+      //   if ("errors" in fromNFA !== "errors" in results)
+      //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
+      // }
       if ("errors" in results) {
         partitionErrors.push({
           errors: results.errors
