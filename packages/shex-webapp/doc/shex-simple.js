@@ -850,6 +850,7 @@ function callValidator (done) {
     };
     return logger;
   }
+}
 
   function renderEntry (entry) {
     var fails = entry.status === "nonconformant";
@@ -932,7 +933,6 @@ function callValidator (done) {
       // }
       results.finish();
   }
-}
 
 var LastFailTime = 0;
 function failMessage (e, action, text) {
