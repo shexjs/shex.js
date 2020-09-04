@@ -18,8 +18,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "website",
-      "extensions/*"
+      "website"
     ]
   },
   "license": "MIT",
@@ -29,14 +28,17 @@
   },
   "devDependencies": {
     "@shexjs/cli": "file:packages/shex-cli",
-    "@shexjs/core": "file:packages/shex-core",
-    "@shexjs/extension-eval": "file:extensions/extension-eval",
-    "@shexjs/extension-map": "file:extensions/extension-map",
-    "@shexjs/extension-test": "file:extensions/extension-test",
+    "@shexjs/util": "file:packages/shex-util",
+    "@shexjs/extension-eval": "file:packages/extension-eval",
+    "@shexjs/extension-map": "file:packages/extension-map",
+    "@shexjs/extension-test": "file:packages/extension-test",
     "@shexjs/node": "file:packages/shex-node",
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",
     "@shexjs/webapp": "file:packages/shex-webapp",
+    "@shexjs/writer": "file:packages/shex-writer",
+    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
+    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",
     "cross-spawn": "^6.0.5",
@@ -67,7 +69,7 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "travisRepo": "./test/travisRepo.sh",
-    "browserify-all": "./browserify-all.js ; npm run n3-browserify",
+    "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "travis-deploy-once": "travis-deploy-once",
     "webpack": "cd packages/shex-webapp && npm run webpack",
