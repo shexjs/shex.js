@@ -2,9 +2,8 @@
 
 var ShExApi = function (config) {
 
-  var ShEx = require("@shexjs/core");
-  var ShExUtil = ShEx.Util;
-  var ShExParser = require("@shexjs/parser");
+  const ShExUtil = require("@shexjs/util");
+  const ShExParser = require("@shexjs/parser");
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api

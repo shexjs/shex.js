@@ -2,8 +2,7 @@
 
 // shex-to-json http://tracker.example/schemas/Issue.shex
 
-var ShExCore = require("@shexjs/core");
-var ShExUtil = ShExCore.Util;
+var ShExUtil = require("@shexjs/util");
 var ShExNode = require("@shexjs/node");
 
 // Generate command line interface
