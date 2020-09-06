@@ -4303,7 +4303,7 @@ class N3Lexer {
 // **ShExUtil** provides ShEx utility functions
 
 var ShExUtil = (function () {
-var RdfTerm = __webpack_require__(10);
+var ShExTerm = __webpack_require__(10);
 const Visitor = __webpack_require__(20)
 const Hierarchy = __webpack_require__(41)
 
@@ -4365,13 +4365,13 @@ function extend (base) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -4445,7 +4445,7 @@ var ShExUtil = {
     v.cleanIds = function () {
       for (var k in knownExpressions) {
         var known = knownExpressions[k];
-        if (known.refCount === 1 && RdfTerm.isBlank(known.expr.id))
+        if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
     }
@@ -4517,8 +4517,8 @@ var ShExUtil = {
           "language" in node ? "@" + node.language :
           ""
       )) :
-      RdfTerm.isIRI(node) ? "<" + node + ">" :
-      RdfTerm.isBlank(node) ? node :
+      ShExTerm.isIRI(node) ? "<" + node + ">" :
+      ShExTerm.isBlank(node) ? node :
       "???";
     }
     return this.valGrep(res, "TestedTriple", function (t) {
@@ -4537,19 +4537,19 @@ var ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return RdfTerm.externalTriple(ret, factory);
+      return ShExTerm.externalTriple(ret, factory);
     });
   },
 
   n3jsToTurtle: function (n3js) {
     function termToLex (node) {
-      if (RdfTerm.isIRI(node))
+      if (ShExTerm.isIRI(node))
         return "<" + node + ">";
-      if (RdfTerm.isBlank(node))
+      if (ShExTerm.isBlank(node))
         return node;
-      var t = RdfTerm.getLiteralType(node);
+      var t = ShExTerm.getLiteralType(node);
       if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + RdfTerm.getLiteralValue(node) + "\"" +
+        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
         "^^<" + t + ">";
       return node;
     }
@@ -5167,8 +5167,8 @@ var ShExUtil = {
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          RdfTerm.isIRI(obj[k])) {
-        obj[k] = RdfTerm.resolveRelativeIRI(base, obj[k]);
+          ShExTerm.isIRI(obj[k])) {
+        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
       }}
 
     function resolveRelativeURLs (obj) {
@@ -5219,7 +5219,7 @@ var ShExUtil = {
             + (s2.object.language ? ("@" + s2.object.language) : 
                s2.object.type ? ("^^" + s2.object.type) :
                "");
-          db.addQuad(RdfTerm.externalTriple(s2, dataFactory))
+          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
@@ -5834,8 +5834,8 @@ var ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: RdfTerm.resolveRelativeIRI(base, elt.node),
-        shape: RdfTerm.resolveRelativeIRI(base, elt.shape)
+        node: ShExTerm.resolveRelativeIRI(base, elt.node),
+        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
       });
     });
   },
@@ -5923,7 +5923,7 @@ var ShExUtil = {
     }
   },
 
-  resolveRelativeIRI: RdfTerm.resolveRelativeIRI,
+  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
 
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     var colon = prefixedIri.indexOf(":");
@@ -5953,7 +5953,7 @@ var ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + RdfTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
       return quoted;
     }
     if (!meta)
@@ -5961,7 +5961,7 @@ var ShExUtil = {
     var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    var t = RdfTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    var t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
@@ -6058,10 +6058,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
+    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
+    function getQuads () { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -6070,7 +6070,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
+      var outgoing = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -6079,7 +6079,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
+      var incoming = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
@@ -13225,15 +13225,15 @@ module.exports = typeof queueMicrotask === 'function'
 ShExWebApp = (function () {
   let shapeMap = __webpack_require__(38)
   return Object.assign({}, {
-    RdfTerm:    __webpack_require__(10),
-    Util:         __webpack_require__(13),
-    Validator:    __webpack_require__(44),
-    Writer:    __webpack_require__(21),
-    Api: __webpack_require__(46),
-    Parser: __webpack_require__(22),
-    ShapeMap: shapeMap,
+    ShExTerm:       __webpack_require__(10),
+    Util:           __webpack_require__(13),
+    Validator:      __webpack_require__(44),
+    Writer:         __webpack_require__(21),
+    Api:            __webpack_require__(46),
+    Parser:         __webpack_require__(22),
+    ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
-    N3: __webpack_require__(69)
+    N3:             __webpack_require__(69)
   })
 })()
 
@@ -14676,12 +14676,12 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var RdfTerm = __webpack_require__(10);
+var ShExTerm = __webpack_require__(10);
 let ShExVisitor = __webpack_require__(20);
 
 function getLexicalValue (term) {
-  return RdfTerm.isIRI(term) ? term :
-    RdfTerm.isLiteral(term) ? RdfTerm.getLiteralValue(term) :
+  return ShExTerm.isIRI(term) ? term :
+    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
     term.substr(2); // bnodes start with "_:"
 }
 
@@ -14846,13 +14846,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -14955,7 +14955,7 @@ function ShExValidator_constructor(schema, options) {
   this.validate = function (db, point, label, tracker, seen) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
-      point = RdfTerm.internalTerm(point)
+      point = ShExTerm.internalTerm(point)
     }
     if (typeof point === "object") {
       var shapeMap = point;
@@ -15375,10 +15375,10 @@ function ShExValidator_constructor(schema, options) {
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     var errors = [];
-    var label = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralValue(value) :
-      RdfTerm.isBlank(value) ? value.substring(2) :
+    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+      ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralType(value) : null;
+    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
     var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
@@ -15392,11 +15392,11 @@ function ShExValidator_constructor(schema, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (RdfTerm.isBlank(value)) {
+        if (ShExTerm.isBlank(value)) {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (RdfTerm.isLiteral(value)) {
+        } else if (ShExTerm.isLiteral(value)) {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -15408,11 +15408,11 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
 
       if (valueExpr.datatype) {
-        if (!RdfTerm.isLiteral(value)) {
+        if (!ShExTerm.isLiteral(value)) {
           validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (RdfTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + RdfTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
         }
         else if (numeric) {
           testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
@@ -15428,7 +15428,7 @@ function ShExValidator_constructor(schema, options) {
       }
 
       if (valueExpr.values) {
-        if (RdfTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           var ld = ldify(value);
           if (v.type === "Language") {
@@ -15460,11 +15460,11 @@ function ShExValidator_constructor(schema, options) {
                *       or non-literals with IriStemRange
                */
               function normalizedTest (val, ref, func) {
-                if (RdfTerm.isLiteral(val)) {
+                if (ShExTerm.isLiteral(val)) {
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralValue(val), ref);
+                    return func(ShExTerm.getLiteralValue(val), ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralLanguage(val) || null, ref);
+                    return func(ShExTerm.getLiteralLanguage(val) || null, ref);
                   } else {
                     return validationError("literal " + val + " not comparable with non-literal " + ref);
                   }
@@ -15788,14 +15788,14 @@ function crossProduct(sets) {
  */
 var N3jsTripleToString = function () {
   function fmt (n) {
-    return RdfTerm.isLiteral(n) ?
+    return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(RdfTerm.getLiteralType(n)) !== -1 ?
-      parseInt(RdfTerm.getLiteralValue(n)) :
+      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
+      parseInt(ShExTerm.getLiteralValue(n)) :
       n :
-    RdfTerm.isBlank(n) ?
+    ShExTerm.isBlank(n) ?
       n :
       "<" + n + ">";
   }
@@ -15840,7 +15840,7 @@ function indexNeighborhood (triples) {
  */
 function sparqlOrder (l, r) {
   var [lprec, rprec] = [l, r].map(
-    x => RdfTerm.isBlank(x) ? 1 : RdfTerm.isLiteral(x) ? 2 : 3
+    x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
   );
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
 }
@@ -15892,7 +15892,7 @@ if (true)
 /***/ (function(module, exports, __webpack_require__) {
 
 var EvalThreadedNErr = (function () {
-var RdfTerm = __webpack_require__(10);
+var ShExTerm = __webpack_require__(10);
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -16030,7 +16030,7 @@ function vpEngine (schema, shape, index) {
             var valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
-              if (RdfTerm.isBlank(valueExpr))
+              if (ShExTerm.isBlank(valueExpr))
                 valueExpr = index.shapeExprs[valueExpr];
             } else if (expr.valueExpr) {
               valueExpr = extend({}, expr.valueExpr)
@@ -16170,13 +16170,13 @@ function vpEngine (schema, shape, index) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -16205,7 +16205,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];
