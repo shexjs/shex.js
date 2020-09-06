@@ -49,7 +49,7 @@ describe('Invoking SemActs', function () {
       prefixes: schema._prefixes || {}
     }
     const validator = ShExValidator.construct(schema)
-    Extensions.forEach(ext => ext.register(validator))
+    Extensions.forEach(ext => ext.register(validator, {RdfTerm}))
 
     // Resolve and parse data.
     const dataFile = (test.dataURL.startsWith("./") ? SemActsTestDir : datasPath) + test.dataURL

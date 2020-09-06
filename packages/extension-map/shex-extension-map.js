@@ -20,7 +20,10 @@ var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 var UNBOUNDED = -1;
 const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
-function register (validator) {
+function register (validator, api) {
+  if (api === undefined || !('RdfTerm' in api))
+    throw Error('SemAct extensions must be called with register(validator, {RdfTerm, ...)')
+
   var prefixes = "_prefixes" in validator.schema ?
       validator.schema._prefixes :
       {};
