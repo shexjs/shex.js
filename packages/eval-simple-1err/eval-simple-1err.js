@@ -1,5 +1,5 @@
 var EvalSimple1Err = (function () {
-  var RdfTerm = require("@shexjs/term");
+  var ShExTerm = require("@shexjs/term");
 
   var Split = "<span class='keyword' title='Split'>|</span>";
   var Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -253,7 +253,7 @@ var EvalSimple1Err = (function () {
           var valueExpr = null;
           if (typeof c.valueExpr === "string") { // ShapeRef
             valueExpr = c.valueExpr;
-            if (RdfTerm.isBlank(valueExpr))
+            if (ShExTerm.isBlank(valueExpr))
               valueExpr = schema.shapes[valueExpr];
           } else if (c.valueExpr) {
             valueExpr = extend({}, c.valueExpr)
@@ -447,13 +447,13 @@ var EvalSimple1Err = (function () {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -466,7 +466,7 @@ var EvalSimple1Err = (function () {
                 type: "ReferenceError", focus: focus,
                 shape: shape, errors: sub
               };
-              if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+              if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
                 err.referencedShape = shape;
               return [err];
             }

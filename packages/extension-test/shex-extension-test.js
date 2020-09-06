@@ -1,7 +1,7 @@
 var TestExt = "http://shex.io/extensions/Test/";
 function register (validator, api) {
-  if (api === undefined || !('RdfTerm' in api))
-    throw Error('SemAct extensions must be called with register(validator, {RdfTerm, ...)')
+  if (api === undefined || !('ShExTerm' in api))
+    throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
   var pattern = /^ *(fail|print) *\( *(?:(\"(?:[^\\"]|\\\\|\\")*\")|([spo])) *\) *$/;
 

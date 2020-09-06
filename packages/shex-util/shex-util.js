@@ -1,7 +1,7 @@
 // **ShExUtil** provides ShEx utility functions
 
 var ShExUtil = (function () {
-var RdfTerm = require("@shexjs/term");
+var ShExTerm = require("@shexjs/term");
 const Visitor = require('@shexjs/visitor')
 const Hierarchy = require('hierarchy-closure')
 
@@ -63,13 +63,13 @@ function extend (base) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -143,7 +143,7 @@ var ShExUtil = {
     v.cleanIds = function () {
       for (var k in knownExpressions) {
         var known = knownExpressions[k];
-        if (known.refCount === 1 && RdfTerm.isBlank(known.expr.id))
+        if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
     }
@@ -215,8 +215,8 @@ var ShExUtil = {
           "language" in node ? "@" + node.language :
           ""
       )) :
-      RdfTerm.isIRI(node) ? "<" + node + ">" :
-      RdfTerm.isBlank(node) ? node :
+      ShExTerm.isIRI(node) ? "<" + node + ">" :
+      ShExTerm.isBlank(node) ? node :
       "???";
     }
     return this.valGrep(res, "TestedTriple", function (t) {
@@ -235,19 +235,19 @@ var ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return RdfTerm.externalTriple(ret, factory);
+      return ShExTerm.externalTriple(ret, factory);
     });
   },
 
   n3jsToTurtle: function (n3js) {
     function termToLex (node) {
-      if (RdfTerm.isIRI(node))
+      if (ShExTerm.isIRI(node))
         return "<" + node + ">";
-      if (RdfTerm.isBlank(node))
+      if (ShExTerm.isBlank(node))
         return node;
-      var t = RdfTerm.getLiteralType(node);
+      var t = ShExTerm.getLiteralType(node);
       if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + RdfTerm.getLiteralValue(node) + "\"" +
+        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
         "^^<" + t + ">";
       return node;
     }
@@ -865,8 +865,8 @@ var ShExUtil = {
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          RdfTerm.isIRI(obj[k])) {
-        obj[k] = RdfTerm.resolveRelativeIRI(base, obj[k]);
+          ShExTerm.isIRI(obj[k])) {
+        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
       }}
 
     function resolveRelativeURLs (obj) {
@@ -917,7 +917,7 @@ var ShExUtil = {
             + (s2.object.language ? ("@" + s2.object.language) : 
                s2.object.type ? ("^^" + s2.object.type) :
                "");
-          db.addQuad(RdfTerm.externalTriple(s2, dataFactory))
+          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
@@ -1532,8 +1532,8 @@ var ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: RdfTerm.resolveRelativeIRI(base, elt.node),
-        shape: RdfTerm.resolveRelativeIRI(base, elt.shape)
+        node: ShExTerm.resolveRelativeIRI(base, elt.node),
+        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
       });
     });
   },
@@ -1621,7 +1621,7 @@ var ShExUtil = {
     }
   },
 
-  resolveRelativeIRI: RdfTerm.resolveRelativeIRI,
+  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
 
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     var colon = prefixedIri.indexOf(":");
@@ -1651,7 +1651,7 @@ var ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + RdfTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
       return quoted;
     }
     if (!meta)
@@ -1659,7 +1659,7 @@ var ShExUtil = {
     var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    var t = RdfTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    var t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
@@ -1756,10 +1756,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
+    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
+    function getQuads () { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -1768,7 +1768,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
+      var outgoing = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -1777,7 +1777,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
+      var incoming = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }

@@ -28,12 +28,12 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var RdfTerm = require("@shexjs/term");
+var ShExTerm = require("@shexjs/term");
 let ShExVisitor = require("@shexjs/visitor");
 
 function getLexicalValue (term) {
-  return RdfTerm.isIRI(term) ? term :
-    RdfTerm.isLiteral(term) ? RdfTerm.getLiteralValue(term) :
+  return ShExTerm.isIRI(term) ? term :
+    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
     term.substr(2); // bnodes start with "_:"
 }
 
@@ -198,13 +198,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -307,7 +307,7 @@ function ShExValidator_constructor(schema, options) {
   this.validate = function (db, point, label, tracker, seen) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
-      point = RdfTerm.internalTerm(point)
+      point = ShExTerm.internalTerm(point)
     }
     if (typeof point === "object") {
       var shapeMap = point;
@@ -741,10 +741,10 @@ function ShExValidator_constructor(schema, options) {
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     var errors = [];
-    var label = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralValue(value) :
-      RdfTerm.isBlank(value) ? value.substring(2) :
+    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+      ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralType(value) : null;
+    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
     var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
@@ -760,11 +760,11 @@ function ShExValidator_constructor(schema, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (RdfTerm.isBlank(value)) {
+        if (ShExTerm.isBlank(value)) {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (RdfTerm.isLiteral(value)) {
+        } else if (ShExTerm.isLiteral(value)) {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -776,11 +776,11 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
 
       if (valueExpr.datatype) {
-        if (!RdfTerm.isLiteral(value)) {
+        if (!ShExTerm.isLiteral(value)) {
           validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (RdfTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + RdfTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
         }
         else if (numeric) {
           testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
@@ -796,7 +796,7 @@ function ShExValidator_constructor(schema, options) {
       }
 
       if (valueExpr.values) {
-        if (RdfTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           var ld = ldify(value);
           if (v.type === "Language") {
@@ -828,11 +828,11 @@ function ShExValidator_constructor(schema, options) {
                *       or non-literals with IriStemRange
                */
               function normalizedTest (val, ref, func) {
-                if (RdfTerm.isLiteral(val)) {
+                if (ShExTerm.isLiteral(val)) {
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralValue(val), ref);
+                    return func(ShExTerm.getLiteralValue(val), ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralLanguage(val) || null, ref);
+                    return func(ShExTerm.getLiteralLanguage(val) || null, ref);
                   } else {
                     return validationError("literal " + val + " not comparable with non-literal " + ref);
                   }
@@ -1156,14 +1156,14 @@ function crossProduct(sets) {
  */
 var N3jsTripleToString = function () {
   function fmt (n) {
-    return RdfTerm.isLiteral(n) ?
+    return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(RdfTerm.getLiteralType(n)) !== -1 ?
-      parseInt(RdfTerm.getLiteralValue(n)) :
+      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
+      parseInt(ShExTerm.getLiteralValue(n)) :
       n :
-    RdfTerm.isBlank(n) ?
+    ShExTerm.isBlank(n) ?
       n :
       "<" + n + ">";
   }
@@ -1208,7 +1208,7 @@ function indexNeighborhood (triples) {
  */
 function sparqlOrder (l, r) {
   var [lprec, rprec] = [l, r].map(
-    x => RdfTerm.isBlank(x) ? 1 : RdfTerm.isLiteral(x) ? 2 : 3
+    x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
   );
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
 }

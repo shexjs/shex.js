@@ -6,7 +6,7 @@ BASE <http://schema.org/shex>
     a [schema:Recipe];
         schema:datePublished .  %js:{
           debugger;
-          const val = api.RdfTerm.getLiteralValue(ctx.object);
+          const val = api.ShExTerm.getLiteralValue(ctx.object);
           isNaN(Date.parse(val))
             ? [{type: "SemActViolation", message: `"${val} is not a date`}]
             : []

@@ -155,7 +155,7 @@ describe("A ShEx validator", function () {
             then(function (loaded) {
               var schema = loaded.schema;
               validator = ShExValidator.construct(schema, schemaOptions);
-              var testResults = TestExtension.register(validator, {RdfTerm: ShExTerm});
+              var testResults = TestExtension.register(validator, {ShExTerm});
 
               assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;

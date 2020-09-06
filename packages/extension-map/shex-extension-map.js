@@ -8,7 +8,7 @@
 const ShExMapModule = (function () {
 
 const ShExUtil = require("@shexjs/util");
-const RdfTerm = require("@shexjs/term");
+const ShExTerm = require("@shexjs/term");
 const ShExValidator = require("@shexjs/validator");
 const extensions = require("./lib/extensions");
 const N3 = require("n3");
@@ -21,8 +21,8 @@ var UNBOUNDED = -1;
 const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
 function register (validator, api) {
-  if (api === undefined || !('RdfTerm' in api))
-    throw Error('SemAct extensions must be called with register(validator, {RdfTerm, ...)')
+  if (api === undefined || !('ShExTerm' in api))
+    throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
   var prefixes = "_prefixes" in validator.schema ?
       validator.schema._prefixes :
@@ -165,7 +165,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) {
-        target.addQuad(RdfTerm.externalTriple({
+        target.addQuad(ShExTerm.externalTriple({
           subject: s,
           predicate: p,
           object: o

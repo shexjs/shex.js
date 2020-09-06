@@ -37,7 +37,7 @@ The regular expression engine is loaded from either:
 */
 
 var ShExUtil = require("@shexjs/util");
-var RdfTerm = require("@shexjs/term");
+var ShExTerm = require("@shexjs/term");
 var ShExNode = require("@shexjs/node");
 var ShExWriter = require("@shexjs/writer"); // for verbose output
 var ShExValidator = require("@shexjs/validator");
@@ -651,7 +651,7 @@ function loadRDFmanifest (cmds) {
       var schemaOptions = Object.assign({}, SchemaOptions);
       var traits = loaded.data.getQuads(subject, sht+"trait", null);
       traits.forEach(function (t) {
-        var tStr = RdfTerm.internalTerm(t.object).substr(sht.length);
+        var tStr = ShExTerm.internalTerm(t.object).substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
         if (tStr in TraitToOption)
           validatorOptions[TraitToOption[tStr]] = tStr;
@@ -669,7 +669,7 @@ function loadRDFmanifest (cmds) {
                 } else {
                   var m = loaded.data.getQuads(action, sht+elt[1], null);
                   if (m.length > 0) {
-                    var v = RdfTerm.internalTerm(m[0].object);
+                    var v = ShExTerm.internalTerm(m[0].object);
                     ret[elt[0]] = elt[2] ? [v] : v;
                   }
                 }

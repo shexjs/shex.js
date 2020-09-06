@@ -33,7 +33,7 @@ var Harness = {
 
           // prepare validator
           var validator = ShExValidator.construct(loads[0].schema, { noCache: true });
-          Mapper.register(validator, {RdfTerm: ShExTerm});
+          Mapper.register(validator, {ShExTerm});
 
           // run validator
           var res = validator.validate(ShExUtil.makeN3DB(loads[0].data), inputNode, ShExValidator.start);
