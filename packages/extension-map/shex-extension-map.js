@@ -9,7 +9,6 @@ const ShExMapModule = (function () {
 
 const extensions = require("./lib/extensions");
 const N3 = require("n3");
-var _ = require('underscore');
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -57,7 +56,7 @@ function register (validator, api) {
             }
 
             var prefixedName = getPrefixedName(bindingName);
-            var quotedValue = value; // _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
+            var quotedValue = value; // value.match(/"(.+)"/) === null ? '"' + value + '"' : value;
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
@@ -65,11 +64,9 @@ function register (validator, api) {
 
         // Do we have a map extension function?
         if (/.*[(].*[)].*$/.test(code)) {
-
-            var results = extensions.lift(code, ctx.object, prefixes);
-            _.mapObject(results, function(val, key) {console.warn('HERE')
-                update(key, val);
-            });
+          var results = extensions.lift(code, ctx.object, prefixes);
+          for (key in results)
+            update(key, results[key])
         } else {
           var bindingName = code.match(pattern);
           update(bindingName, ctx.object);
