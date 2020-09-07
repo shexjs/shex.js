@@ -33,7 +33,7 @@ var Harness = {
 
           // prepare validator
           var validator = ShExValidator.construct(loads[0].schema, { noCache: true });
-          Mapper.register(validator, {ShExTerm});
+          const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
           // run validator
           var res = validator.validate(ShExUtil.makeN3DB(loads[0].data), inputNode, ShExValidator.start);
@@ -45,8 +45,8 @@ var Harness = {
             expect(resultBindings).to.deeply.equal(expectedBindings);
           }
 
-          var map = Mapper.materializer(loads[1].schema);
-          var binder = Mapper.binder([resultBindings]);
+          var map = registered.materializer(loads[1].schema);
+          var binder = registered.binder([resultBindings]);
           var outputGraph = map.materialize(binder, createRoot);
           outputGraph.toString = graphToString;
           maybeLog(mapstr);

@@ -178,7 +178,7 @@ function _makeCache (selection) {
       _cache.meta.base = url;
       resolver._setBase(url);
       try {
-        _cache.set(data, url, undefined, resp.headers.get('content-type'));
+        await _cache.set(data, url, undefined, resp.headers.get('content-type'));
       } catch (e) {
         throw Error("error setting " + this.queryStringParm + " with <" + url + ">: " + '\n' + e.message);
       }
@@ -407,9 +407,7 @@ function makeExtensionCache (selection) {
 
       const extension = Function(`"use strict";
 const module = {exports: {}};
-(function () {
 ${code}
-})();
 return module.exports;
 `)()
       const name = extension.name;

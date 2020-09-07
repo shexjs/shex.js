@@ -18,7 +18,9 @@ function register (validator, api) {
        * @return {bool | [{type: SemActViolation, msg: "..."}]} false if the extension failed or did not accept the ctx object.
        */
       dispatch: function (code, ctx, extensionStorage) {
-        return eval(code)
+        // return eval(code) // to enable implicit return
+        // '"use strict";' + code to disable writing implicit globals
+        return Function('api', 'extensionStorage', code).call(ctx, api, extensionStorage)
       }
     }
   )
