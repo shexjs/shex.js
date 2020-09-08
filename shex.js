@@ -1,13 +1,13 @@
 var ShEx = {
-  // Parser:       require('./lib/ShExParser'),
-  // ShapeMapParser: require('./lib/ShapeMapParser'),
-  // ShapeMap:     require('./lib/ShapeMap'),
-  // Util:         require('./lib/ShExUtil'),
-  // Validator:    require('./lib/ShExValidator'),
-  // Loader:       require('./lib/ShExLoader'),
-  // Writer:       require('./lib/ShExWriter'),
-  // 'nfax-val-1err':     require('./lib/regex/nfax-val-1err'),
-  // 'threaded-val-nerr': require('./lib/regex/threaded-val-nerr'),
+  // Parser:       require('@shexjs/parser'),
+  // ShapeMapParser: require('shape-map').Parser,
+  // ShapeMap:     require('shape-map'),
+  // Util:         require('@shexjs/util'),
+  // Validator:    require('@shexjs/validator'),
+  // Node:       require('@shexjs/node'),
+  // Writer:       require('@/shexjs/writer'),
+  // 'eval-simple-1err':     require('@shexjs/eval-simple-1err'),
+  // 'eval-threaded-nerr': require('@shexjs/eval-threaded-nerr'),
   N3:           require('n3'),
 };
 

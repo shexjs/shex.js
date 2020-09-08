@@ -32,13 +32,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 }
 
 <#PostureBP> EXPANDS <#BP> @<#Observation> AND {
-  &<#BP>.shapeExprs[1].expression;
-  &<#Posture>.expression
+ &@<#BP>.shapeExprs[1].expression;
+ &@<#Posture>.expression
 }
 
 <#ReclinedBP> EXPANDS <#PostureBP> @<#Observation> AND {
-  &<#BP>[1];
-  &<#Reclined>[1]
+ &@<#BP>[1];
+ &@<#Reclined>[1]
 }
 
 
@@ -49,13 +49,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 }
 
 <#PosturePulse> EXPANDS <#Pulse> @<#Observation> AND {
-  &<#Pulse>[1] ;
-  &<#Posture>  
+ &@<#Pulse>[1] ;
+ &@<#Posture>  
 }
 
 <#ReclinedPulse> EXPANDS <#PosturePulse> @<#Observation> AND {
-  &<#Pulse-TE> ;
-  &<#Reclined-TE>  
+ &@<#Pulse-TE> ;
+ &@<#Reclined-TE>  
 }
 
 

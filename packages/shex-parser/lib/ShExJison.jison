@@ -26,7 +26,7 @@
 
   var UNBOUNDED = -1;
 
-  var ShExUtil = require("@shexjs/core").Util;
+  var ShExUtil = require("@shexjs/util");
 
   // Common namespaces and entities
   var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -420,7 +420,9 @@ IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
 IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
-IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
+IT_ABSTRACT             [Aa][Bb][Ss][Tt][Rr][Aa][Cc][Tt]
+IT_RESTRICTS		[Rr][Ee][Ss][Tt][Rr][Ii][Cc][Tt][Ss]
+IT_EXTENDS		[Ee][Xx][Tt][Ee][Nn][Dd][Ss]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
@@ -430,6 +432,9 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
 IT_NOT                  [No][Oo][Tt]
+IT_ON                   [Oo][Nn]
+IT_SHAPE                [Ss][Hh][Aa][Pp][Ee]
+IT_EXPRESSION           [Ee][Xx][Pp][Rr][Ee][Ss][Ss][Ii][Oo][Nn]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE         [Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MAXINCLUSIVE         [Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -535,7 +540,9 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_IMPORT}             return 'IT_IMPORT';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
-{IT_VIRTUAL}            return 'IT_VIRTUAL';
+{IT_ABSTRACT}           return 'IT_ABSTRACT';
+{IT_RESTRICTS}		return 'IT_RESTRICTS';
+{IT_EXTENDS}		return 'IT_EXTENDS';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
 {IT_LITERAL}            return 'IT_LITERAL';
@@ -545,6 +552,9 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_AND}                return 'IT_AND';
 {IT_OR}                 return 'IT_OR';
 {IT_NOT}                return 'IT_NOT';
+{IT_ON}                 return 'IT_ON';
+{IT_SHAPE}              return 'IT_SHAPE';
+{IT_EXPRESSION}         return 'IT_EXPRESSION';
 {IT_MININCLUSIVE}       return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}       return 'IT_MINEXCLUSIVE';
 {IT_MAXINCLUSIVE}       return 'IT_MAXINCLUSIVE';
@@ -698,9 +708,25 @@ statement:
     ;
 
 shapeExprDecl:
-      shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        addShape($1,  $2, yy);
+      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+        if ($1.abstract || $3.length) { // t: $1: 1dotAbstractShapeCode1  $2: @@
+          addShape($2, Object.assign({type: "ShapeDecl"}, $1,
+                                     $3.length > 0 ? { restricts: $3 } : { },
+                                     {shapeExpr: $4}), yy) // $5: t: @@
+        } else {
+          addShape($2,  $4, yy);
+        }
       }
+    ;
+
+_QIT_ABSTRACT_E_Opt:
+      	-> {  }
+    | IT_ABSTRACT	-> { abstract: true }
+    ;
+
+_Qrestriction_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qrestriction_E_Star restriction	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
 _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
@@ -1063,7 +1089,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
         $$ = $1 === EmptyShape ? { type: "Shape" } : $1; // t: 0
         if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
@@ -1071,8 +1097,8 @@ shapeDefinition:
     ;
 
 inlineShapeDefinition:
-      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
-        var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
+      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
+        var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
@@ -1080,7 +1106,7 @@ inlineShapeDefinition:
     ;
 
 _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      extension	-> [ "inherit", $1 ] // t: 1dotInherit1
+      extension	-> [ "extends", [$1] ] // t: 1dotExtend1
     | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
@@ -1093,9 +1119,9 @@ _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
         if ($2[0] === "closed")
           $1["closed"] = true; // t: 1dotClosed
         else if ($2[0] in $1)
-          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
+          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotExtend3, 3groupdot3Extra, 3groupdotExtra3
         else
-          $1[$2[0]] = $2[1]; // t: 1dotInherit1
+          $1[$2[0]] = $2[1]; // t: 1dotExtend1
         $$ = $1;
       }
     ;
@@ -1192,14 +1218,15 @@ _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C:
     ;
 
 bracketedTripleExpr:
-      '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' tripleExpression ')' _Qcardinality_E_Opt _QonShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
         if ("min" in $4) { $$.min = $4.min; } // t: open3groupdotclosecard23Annot3Code2
         if ("max" in $4) { $$.max = $4.max; } // t: open3groupdotclosecard23Annot3Code2
-        if ($5.length) { $$.annotations = $5; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
+        if ($5) { $$.onShapeExpression = $5; } // t: !!
+        if ($6.length) { $$.annotations = $6; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($7) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($7.semActs) : $7.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
@@ -1208,18 +1235,30 @@ _Qcardinality_E_Opt:
     | cardinality	// t: 1cardOpt
     ;
 
+_QonShapeExpression_E_Opt:
+      	-> null // t: 1dot
+    | IT_ON _QIT_SHAPE_IT_EXPRESSION_E_Opt inlineShapeExpression -> $3	// t: !!
+    ;
+
+_QIT_SHAPE_IT_EXPRESSION_E_Opt:
+      	
+    | IT_SHAPE IT_EXPRESSION
+    ;
+
 tripleConstraint:
-      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
-        // $6: t: 1dotCode1
+      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _QonShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
+        // $7: t: 1dotCode1
 	if ($3 !== EmptyShape && false) {
 	  var t = blank();
 	  addShape(t, $3, yy);
 	  $3 = t; // ShapeRef
 	}
-        // %6: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1 ? $1 : {}, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot // t: 1inversedot
-        if ($5.length)
-          $$["annotations"] = $5; // t: 1dotAnnot3 // t: 1inversedotAnnot3
+        // %7: t: 1inversedotCode1
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $7); // t: 1dot, 1inversedot
+        if ($5)
+          $$.onShapeExpression = $5; // t: !!
+        if ($6.length)
+          $$["annotations"] = $6; // t: 1dotAnnot3, 1inversedotAnnot3
       }
     ;
 
@@ -1521,7 +1560,7 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
@@ -1529,8 +1568,12 @@ _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
     | '&'	
     ;
 
-_QshapeExprLabel_E_Plus:
-      shapeExprLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
-    | _QshapeExprLabel_E_Plus shapeExprLabel	-> appendTo($1, $2) // t: 1dotInherit3
+restriction:
+      _O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C shapeOrRef	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
+    ;
+
+_O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C:
+      IT_RESTRICTS	
+    | '-'	
     ;
 

@@ -25,23 +25,22 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 
 The regular expression engine is loaded from either:
   absolute path, e.g. if you git cloned shex.js into /tmp:
-    --regex-module /tmp/shex.js/lib/regex/nfax-val-1err
-    --regex-module /tmp/shex.js/lib/regex/threaded-val-nerr
+    --regex-module /tmp/shex.js/packages/eval-simple-1err/eval-simple-1err
+    --regex-module /tmp/shex.js/packages/eval-threaded-nerr/eval-threaded-nerr
   or relative path to bin/validate directory:
-    --regex-module ../lib/regex/nfax-val-1err
-    --regex-module ../lib/regex/threaded-val-nerr
+    --regex-module ../packages/eval-simple-1err/eval-simple-1err
+    --regex-module ../packages/eval-threaded-nerr/eval-threaded-nerr
   or a module name in lib/regex:
-    --regex-module nfax-val-1err
-    --regex-module threaded-val-nerr
+    --regex-module eval-simple-1err
+    --regex-module eval-threaded-nerr
 
 */
 
-var ShExCore = require("@shexjs/core");
-var RdfTerm = ShExCore.RdfTerm;
-var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shexjs/loader");
-var ShExWriter = ShExCore.Writer; // for verbose output
-var ShExValidator = ShExCore.Validator;
+var ShExUtil = require("@shexjs/util");
+var RdfTerm = require("@shexjs/term");
+var ShExNode = require("@shexjs/node");
+var ShExWriter = require("@shexjs/writer"); // for verbose output
+var ShExValidator = require("@shexjs/validator");
 var ShapeMap = require("shape-map");
 
 var N3 = require("n3");
@@ -322,17 +321,17 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
-    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
+    ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
 
     // Expected results, if provided.
     !("result" in valParms) ? Promise.resolve(undefined) :
       typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
-      ShExLoader.GET(valParms.result).then(function (body) { 
+      ShExNode.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       }),
 
     // ShapeMap, if provided.
-    "mapURL" in valParms ? ShExLoader.GET(valParms.mapURL).then(function (body) {
+    "mapURL" in valParms ? ShExNode.GET(valParms.mapURL).then(function (body) {
       return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
     })
     : Promise.resolve("map" in valParms
@@ -485,7 +484,7 @@ function getInvocation (parms) {
              parms.map ? "-m " + parms.map : ''
             ];
   if ("options" in parms)
-    Object.keys(parms.options).forEach(k => { // e.g. --regex-module nfax-val-1err
+    Object.keys(parms.options).forEach(k => { // e.g. --regex-module eval-simple-1err
       res.push("--" + k.replace(/([A-Z])/g, function (c) {
         return "-" + c.toLowerCase();
       }) + " " + parms.options[k]);
@@ -573,7 +572,7 @@ function queueTests (tests, cmds) {
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
   var validator = ShExValidator.construct(schema, options);
-  var extensions = ShExLoader.loadExtensions(cmds.extension);
+  var extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
@@ -594,9 +593,9 @@ function runValidator (graph, shapeMap, schema, options) {
   if (cmds.exec) {
     /* example usage:
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
-       return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+       return require("@shexjs/node").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("../extensions/shex-map").materializer(loaded.schema).
+       var db = require("@shexjs/extension-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
        getQuads(null, null, null);
        var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
@@ -632,7 +631,7 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExLoader.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
+  return ShExNode.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
 
     var testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
@@ -697,7 +696,7 @@ function useCommandLineDefaults (run) {
 
 function loadJSONmanifest (jsonManifests) {
   return jsonManifests.map(function (jm) {
-    return ShExLoader.GET(jm).then(function (p) {
+    return ShExNode.GET(jm).then(function (p) {
       try {
         var d = JSON.parse(p.text);
 
@@ -858,7 +857,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                   body.files[key] :
                   [body.files[key]]
                  ).map(pair => {
-                   return pair.path; // should ShExLoader accept [.name, .path]?
+                   return pair.path; // should ShExNode accept [.name, .path]?
                  });
         }
         var schemaFiles = makeArray("schema");
@@ -879,7 +878,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           });
 
         var httpResponse = this;
-        yield ShExLoader.
+        yield ShExNode.
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data
