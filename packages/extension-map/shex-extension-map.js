@@ -76,9 +76,14 @@ function register (validator, api) {
       }
     }
   );
-  return { results: validator.semActHandler.results[MapExt], binder, materializer }
+  return {
+    results: validator.semActHandler.results[MapExt],
+    binder,
+    trivialMaterializer,
+    visitTripleConstraint
+  }
 
-function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
       function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
       function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
@@ -155,7 +160,7 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
         }
       }
 
-function materializer (schema, nextBNode) {
+function trivialMaterializer (schema, nextBNode) {
   var blankNodeCount = 0;
   const index = schema._index || api.ShExUtil.index(schema)
   nextBNode = nextBNode || function () {
@@ -190,7 +195,7 @@ function materializer (schema, nextBNode) {
       };
 
       v.visitTripleConstraint = function (expr) {
-        myvisitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
+        visitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
       };
 
       v.visitShapeExpr(shape, "_: -start-");

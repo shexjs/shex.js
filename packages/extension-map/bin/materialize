@@ -121,7 +121,7 @@ Promise.all([ShExNode.load([cmds.target], [], [], [], {index: true}),
     // const realValidator = require("@shexjs/validator").construct(emptySchema)
 
     const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})
-    var map = registered.materializer(schema);
+    var map = registered.trivialMaterializer(schema);
 
     var resultBindings1 = ShExUtil.valToExtension(val, Mapper.url);
 

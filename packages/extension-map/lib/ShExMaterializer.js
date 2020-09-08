@@ -26,7 +26,7 @@ var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedErr
 
 var N3Util = ShEx.N3.Util;
 var ShExTerm = require("@shexjs/term");
-const ShExMap = require("../shex-extension-map.js");
+const ShExMap = require("../shex-extension-map");
 
 var UNBOUNDED = -1;
 
@@ -191,9 +191,9 @@ function makeCache () {
  *   lax(true): boolean: whine about missing types in schema.
  *   diagnose(false): boolean: makde validate return a structure with errors.
  */
-function ShExMaterializer_constructor(schema, options) {
+function ShExMaterializer_constructor(schema, mapper, options) {
   if (!(this instanceof ShExMaterializer_constructor))
-    return new ShExMaterializer_constructor(schema, options);
+    return new ShExMaterializer_constructor(schema, mapper, options);
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -209,7 +209,7 @@ function ShExMaterializer_constructor(schema, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer.js");
+  var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer");
 
   var blankNodeCount = 0;
   var nextBNode = options.nextBNode || function () {
@@ -502,7 +502,7 @@ function ShExMaterializer_constructor(schema, options) {
         var tc = constraintList[constraintNo];
         var curSubjectx = {cs: point};
         var target = new ShEx.N3.Store();
-        ShExMap.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
+        mapper.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
         var oldLen = neighborhood.length;
         var created = target.getQuads().map(ShExTerm.internalTriple);
         neighborhood.push.apply(neighborhood, created);

@@ -45,7 +45,7 @@ var Harness = {
             expect(resultBindings).to.deeply.equal(expectedBindings);
           }
 
-          var map = registered.materializer(loads[1].schema);
+          var map = registered.trivialMaterializer(loads[1].schema);
           var binder = registered.binder([resultBindings]);
           var outputGraph = map.materialize(binder, createRoot);
           outputGraph.toString = graphToString;
