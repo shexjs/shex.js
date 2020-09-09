@@ -660,27 +660,29 @@ function ShExValidator_constructor(schema, options) {
 
       var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
       var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-        _seq(neighborhood.length).map(function () { return 0; });
-      var tripleToConstraintMapping0 = xp.get(); // [0,1,0,3] mapping from triple to constraint
-      var tripleToConstraintMapping = []
+          _seq(neighborhood.length).map(function () { return 0; });
+      // t2tc - array mapping neighborhood index to TripleConstraint
+      var t2tcForExpressionAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
+
+      var t2tcForThisShape = []
       var tripleToExtendsMapping = []
       var extendsToTriples = _seq((shape.extends || []).length).map(() => [])
-      tripleToConstraintMapping0.forEach((cNo, tNo) => {
+      t2tcForExpressionAndExtends.forEach((cNo, tNo) => {
         if (cNo < extendedTCs.length) {
           const extNo = extendedTCs[cNo].extendsNo;
           extendsToTriples[extNo].push(neighborhood[tNo]);
           tripleToExtendsMapping[tNo] = cNo;
-          tripleToConstraintMapping[tNo] = undefined;
+          t2tcForThisShape[tNo] = undefined;
         } else {
-          tripleToExtendsMapping[tNo] = undefined;
-          tripleToConstraintMapping[tNo] = cNo;
+          tripleToExtendsMapping[tNo] = null;
+          t2tcForThisShape[tNo] = cNo;
         }
       });
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         var unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return tripleToExtendsMapping[i] === undefined && // didn't match an EXTENDS
-          tripleToConstraintMapping[i] === undefined && // didn't match a constraint
+          return tripleToExtendsMapping[i] === null && // didn't match an EXTENDS
+          t2tcForThisShape[i] === undefined && // didn't match a constraint
           extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0) {
@@ -697,7 +699,7 @@ function ShExValidator_constructor(schema, options) {
       }
 
       // Set usedTriples and constraintMatchCount.
-      tripleToConstraintMapping.forEach(function (tpNumber, ord) {
+      t2tcForThisShape.forEach(function (tpNumber, ord) {
         if (tpNumber !== undefined) {
           usedTriples.push(neighborhood[ord]);
           ++constraintMatchCount[tpNumber];
@@ -706,7 +708,7 @@ function ShExValidator_constructor(schema, options) {
 
       // Pivot to triples by constraint.
       function _constraintToTriples () {
-        return tripleToConstraintMapping.slice().
+        return t2tcForThisShape.slice().
           reduce(function (ret, cNo, tNo) {
             if (cNo !== undefined)
               ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
@@ -715,13 +717,13 @@ function ShExValidator_constructor(schema, options) {
       }
       var constraintToTriplesMapping = _constraintToTriples(); // e.g. [[t0, t2], [t1, t3]]
 
-      tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
+      t2tcForThisShape.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
         return i !== undefined;
       }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3
 
       var results = passScoped(shape, extendsToTriples, valParms);
       if (results === null || !("errors" in results)) {
-        var sub = regexEngine.match(db, point, constraintList, constraintToTriplesMapping, tripleToConstraintMapping, neighborhood, this.semActHandler, null);
+        var sub = regexEngine.match(db, point, constraintList, constraintToTriplesMapping, t2tcForThisShape, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
           results = { type: "ExtendedResults", extensions: results };
           if (Object.keys(sub).length > 0) // no empty objects from {}s.
@@ -762,7 +764,7 @@ function ShExValidator_constructor(schema, options) {
 
       ret = possibleRet;
       partitionErrors = [];
-      // alts.push(tripleToConstraintMapping);
+      // alts.push(t2tcForThisShape);
 
       function passScoped (expr, extendsToTriples, valParms) {
         if (!("extends" in expr))
