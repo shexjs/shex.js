@@ -770,17 +770,20 @@ function ShExValidator_constructor(schema, options) {
         if (!("extends" in expr))
           return null;
         var passes = [];
+        var errors = [];
         for (var eNo = 0; eNo < expr.extends.length; ++eNo) {
           var extend = expr.extends[eNo];
           var subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
           extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
           var sub = _ShExValidator._errorsMatchingShapeExpr(point, extend, valParms, subgraph);
           if ("errors" in sub)
-            return { type: "ExtensionFailure", errors: [sub] };
+            errors.push(sub);
           else
             passes.push(sub);
         }
-
+        if (errors.length > 0) {
+          return { type: "ExtensionFailure", errors: errors };
+        }
         return { type: "ExtensionResults", solutions: passes };
       }
 
