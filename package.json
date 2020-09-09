@@ -63,7 +63,7 @@
     "webpack-cli": "^3.3.2"
   },
   "scripts": {
-    "clean-all": "find . -name node_modules -exec rm -r {} \\; ; find . -name package-lock.json -exec rm -r {} \\; || true",
+    "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
     "rebuild": "npm run clean-all ; npm install && npx lerna bootstrap",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",

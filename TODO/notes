@@ -1,5 +1,12 @@
-For next major version:
-  ~ rename ShEx{,C}Writer
+
+is this test covered by Extend3G-pass?:
+<#Base> {
+  <p1> [1];
+  <p1> [2];
+}
+<#Leaf> EXTENDS @<#Base> {
+  <p1> [3]
+}
 
 + STRING_LITERAL2-ECHAR
 + STRING_LITERAL2-UCHAR1

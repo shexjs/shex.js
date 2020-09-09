@@ -567,7 +567,7 @@ function ShExValidator_constructor(schema, options) {
     var _ShExValidator = this;
     var valParms = { db: db, shapeLabel: shapeLabel, depth: depth, tracker: tracker, seen: seen };
 
-    const {extendedTCs, constraintToExtends} = getExtendedTripleConstraints(shape);
+    const extendedTCs = getExtendedTripleConstraints(shape);
       // var tempShape = new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join('');
       // console.log(JSON.stringify(effectiveExpr, null, 2))
       // console.log(tempShape)
@@ -600,7 +600,9 @@ function ShExValidator_constructor(schema, options) {
     var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     var localTCs = this.indexTripleConstraints(shape.expression);
-    var constraintList = extendedTCs.concat(localTCs); // !! adds tcis to shape.expression
+    var constraintList = extendedTCs.map(
+      ext => ext.tripleConstraint
+    ).concat(localTCs);
     var tripleList = constraintList.reduce(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
@@ -665,11 +667,10 @@ function ShExValidator_constructor(schema, options) {
       var extendsToTriples = _seq((shape.extends || []).length).map(() => [])
       tripleToConstraintMapping0.forEach((cNo, tNo) => {
         if (cNo < extendedTCs.length) {
-          constraintToExtends[cNo].forEach(extNo => {
-            extendsToTriples[extNo].push(neighborhood[tNo]);
-            tripleToExtendsMapping[tNo] = cNo;
-            tripleToConstraintMapping[tNo] = undefined;
-          })
+          const extNo = extendedTCs[cNo].extendsNo;
+          extendsToTriples[extNo].push(neighborhood[tNo]);
+          tripleToExtendsMapping[tNo] = cNo;
+          tripleToConstraintMapping[tNo] = undefined;
         } else {
           tripleToExtendsMapping[tNo] = undefined;
           tripleToConstraintMapping[tNo] = cNo;
@@ -1125,7 +1126,7 @@ function ShExValidator_constructor(schema, options) {
           var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
           var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
           var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage); debugger
+          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
           if (typeof response === 'boolean') {
             if (!response)
               ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
@@ -1154,32 +1155,27 @@ function ShExValidator_constructor(schema, options) {
    * @returns {}
    */
   function getExtendedTripleConstraints (shape) {
-    var extendedTCs = []; // ExtendedTCs found in the extends
-    var constraintToExtends = []; // map from TC to list of extends
+    const ret = []
+    // var extendedTCs = []; // ExtendedTCs found in the extends
+    // var constraintToExtends = []; // map from TC to list of extends
     if ("extends" in shape) {
       shape.extends.forEach((se, extendsNo) => {
-        // build NestedShape.scopedTripleConstraints = indexes of the ExtendedTCs in se
+        // Index incoming and outgoing arcs by predicate.  Multiple TCs with the
+        // same predicate are aggregated into a single TC with the maximum
+        // cardinality span. (@@Does this actually reduce permutations?)
+        // tests: Extend3G-pass
         var ins = {}, outs = {};
-        // constraintToExtends[extendsNo] = [];
         visitTripleConstraints(se, ins, outs);
-        [ins, outs].forEach(direction => {
-          Object.keys(direction).forEach(p => {
-            // constraintToExtends[extendsNo].push(extendedTCs.length);
-            let tc = direction[p]
-            let cNo = extendedTCs.indexOf(tc)
-            if (cNo === -1) {
-              cNo = extendedTCs.length
-              extendedTCs.push(tc)
-              constraintToExtends[cNo] = []
-            } else {
-              console.log("reuse", tc)
-            }
-            constraintToExtends[cNo].push(extendsNo);
-          })
+
+        [ins, outs].forEach(directionIndex => {
+          Object.keys(directionIndex).forEach(predicate => {
+            let tripleConstraint = directionIndex[predicate]
+            ret.push({tripleConstraint, extendsNo});
+          });
         });
       })
     }
-    return {extendedTCs, constraintToExtends};
+    return ret;
 
     /*
      * @expr - shape expression to walk
