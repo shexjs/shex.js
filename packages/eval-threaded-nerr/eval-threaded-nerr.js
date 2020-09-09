@@ -304,7 +304,7 @@ function vpEngine (schema, shape, index) {
             var unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== undefined)
+              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.

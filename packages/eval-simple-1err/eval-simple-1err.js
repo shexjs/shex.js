@@ -242,7 +242,7 @@ var EvalSimple1Err = (function () {
               elt.matched.reduce((ret, m) => {
                 return ret + m.triples.length; // count matched triples
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === undefined ? ret : ret + 1; // count expected
+                return t === "NO_TRIPLE_CONSTRAINT" ? ret : ret + 1; // count expected
               }, 0);
           return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)

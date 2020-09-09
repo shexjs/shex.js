@@ -15368,7 +15368,9 @@ function ShExValidator_constructor(schema, options) {
     var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     var localTCs = this.indexTripleConstraints(shape.expression);
-    var constraintList = extendedTCs.map(ext => ext.tripleConstraint).concat(localTCs); // !! adds tcis to shape.expression
+    var constraintList = extendedTCs.map(
+      ext => ext.tripleConstraint
+    ).concat(localTCs);
     var tripleList = constraintList.reduce(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
@@ -15404,11 +15406,11 @@ function ShExValidator_constructor(schema, options) {
       if (constraints.length === 0 &&   // matches no constraints
           ord < outgoingLength &&       // not an incoming triple
           ord in tripleList.misses) {   // predicate matched some constraint(s)
-        if (shape.extra !== undefined &&
+        if ("extra" in shape &&
             shape.extra.indexOf(neighborhood[ord].predicate) !== -1) {
           extras.push(ord);
-        } else {                                            // not declared extra
-          ret.push({                                        // so it's a missed triple.
+        } else {                        // not declared extra
+          ret.push({                    // so it's a missed triple.
             tripleNo: ord,
             constraintNo: tripleList.misses[ord].constraintNo,
             errors: tripleList.misses[ord].errors
@@ -15418,7 +15420,7 @@ function ShExValidator_constructor(schema, options) {
       return ret;
     }, []);
 
-    var xp = crossProduct(tripleList.constraintList);
+    var xp = crossProduct(tripleList.constraintList, "NO_TRIPLE_CONSTRAINT");
     var partitionErrors = [];
     var regexEngine = regexModule.compile(schema, shape, index);
     while ((misses.length === 0 || this.options.partition !== "greedy") && xp.next() && ret === null) {
@@ -15426,27 +15428,29 @@ function ShExValidator_constructor(schema, options) {
 
       var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
       var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-        _seq(neighborhood.length).map(function () { return 0; });
-      var tripleToConstraintMapping0 = xp.get(); // [0,1,0,3] mapping from triple to constraint
-      var tripleToConstraintMapping = []
+          _seq(neighborhood.length).map(function () { return 0; });
+      // t2tc - array mapping neighborhood index to TripleConstraint
+      var t2tcForExpressionAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
+
+      var t2tcForThisShape = []
       var tripleToExtendsMapping = []
       var extendsToTriples = _seq((shape.extends || []).length).map(() => [])
-      tripleToConstraintMapping0.forEach((cNo, tNo) => {
-        if (cNo < extendedTCs.length) {
+      t2tcForExpressionAndExtends.forEach((cNo, tNo) => {
+        if (cNo !== "NO_TRIPLE_CONSTRAINT" && cNo < extendedTCs.length) {
           const extNo = extendedTCs[cNo].extendsNo;
           extendsToTriples[extNo].push(neighborhood[tNo]);
           tripleToExtendsMapping[tNo] = cNo;
-          tripleToConstraintMapping[tNo] = undefined;
+          t2tcForThisShape[tNo] = "NO_TRIPLE_CONSTRAINT";
         } else {
-          tripleToExtendsMapping[tNo] = undefined;
-          tripleToConstraintMapping[tNo] = cNo;
+          tripleToExtendsMapping[tNo] = "NO_EXTENDS";
+          t2tcForThisShape[tNo] = cNo;
         }
       });
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         var unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return tripleToExtendsMapping[i] === undefined && // didn't match an EXTENDS
-          tripleToConstraintMapping[i] === undefined && // didn't match a constraint
+          return tripleToExtendsMapping[i] === "NO_EXTENDS" && // didn't match an EXTENDS
+          t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
           extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0) {
@@ -15463,8 +15467,8 @@ function ShExValidator_constructor(schema, options) {
       }
 
       // Set usedTriples and constraintMatchCount.
-      tripleToConstraintMapping.forEach(function (tpNumber, ord) {
-        if (tpNumber !== undefined) {
+      t2tcForThisShape.forEach(function (tpNumber, ord) {
+        if (tpNumber !== "NO_TRIPLE_CONSTRAINT") {
           usedTriples.push(neighborhood[ord]);
           ++constraintMatchCount[tpNumber];
         }
@@ -15472,22 +15476,22 @@ function ShExValidator_constructor(schema, options) {
 
       // Pivot to triples by constraint.
       function _constraintToTriples () {
-        return tripleToConstraintMapping.slice().
+        return t2tcForThisShape.slice().
           reduce(function (ret, cNo, tNo) {
-            if (cNo !== undefined)
+            if (cNo !== "NO_TRIPLE_CONSTRAINT")
               ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
             return ret;
           }, _seq(constraintList.length).map(() => [])); // [length][]
       }
       var constraintToTriplesMapping = _constraintToTriples(); // e.g. [[t0, t2], [t1, t3]]
 
-      tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
-        return i !== undefined;
+      t2tcForThisShape.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
+        return i !== "NO_TRIPLE_CONSTRAINT";
       }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3
 
       var results = passScoped(shape, extendsToTriples, valParms);
       if (results === null || !("errors" in results)) {
-        var sub = regexEngine.match(db, point, constraintList, constraintToTriplesMapping, tripleToConstraintMapping, neighborhood, this.semActHandler, null);
+        var sub = regexEngine.match(db, point, constraintList, constraintToTriplesMapping, t2tcForThisShape, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
           results = { type: "ExtendedResults", extensions: results };
           if (Object.keys(sub).length > 0) // no empty objects from {}s.
@@ -15528,7 +15532,7 @@ function ShExValidator_constructor(schema, options) {
 
       ret = possibleRet;
       partitionErrors = [];
-      // alts.push(tripleToConstraintMapping);
+      // alts.push(t2tcForThisShape);
 
       function passScoped (expr, extendsToTriples, valParms) {
         if (!("extends" in expr))
@@ -16118,14 +16122,14 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 }
 
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
-function crossProduct(sets) {
+function crossProduct(sets, emptyValue) {
   var n = sets.length, carets = [], args = null;
 
   function init() {
     args = [];
     for (var i = 0; i < n; i++) {
       carets[i] = 0;
-      args[i] = sets[i][0];
+      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
     }
   }
 
@@ -16150,7 +16154,7 @@ function crossProduct(sets) {
         return false;
       }
       carets[i] = 0;
-      args[i] = sets[i][0];
+      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
       carets[--i]++;
     }
     args[i] = sets[i][carets[i]];
@@ -16666,7 +16670,7 @@ function vpEngine (schema, shape, index) {
             var unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== undefined)
+              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.
