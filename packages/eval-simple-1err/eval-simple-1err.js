@@ -59,7 +59,6 @@ var EvalSimple1Err = (function () {
           s = State_make(expr, []);
           states[s].stack = stack;
           return {start: s, tail: [s]};
-          // maybeAddRept(s, [s]);
         }
 
         else if (expr.type === "OneOf") {
@@ -161,19 +160,12 @@ var EvalSimple1Err = (function () {
       };
     }
 
-    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
+    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
       var rbenx = this;
       var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
 
-      function localExpect (list) {
-        return list.map(st => {
-          var s = rbenx.states[st.state]; // simpler threads are a list of states.
-          return renderAtom(s.c, s.negated);
-        });
-      }
-
       if (rbenx.states.length === 1)
-        return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+        return matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
 
       var chosen = null;
       // var dump = nfaToString();
@@ -191,12 +183,17 @@ var EvalSimple1Err = (function () {
           var nlistlen = nlist.length;
           var constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
+          if (constraintNo === -1) {
+            var scoped = state.c.scopedTripleConstraints.reduce(
+              (acc, tci) => acc.concat(constraintToTripleMapping[tci]), []);
+            addStates(rbenx, nlist, thread, scoped);
+          } else {
             var min = "min" in state.c ? state.c.min : 1;
             var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
             if ("negated" in state.c && state.c.negated)
               min = max = 0;
             if (thread.avail[constraintNo] === undefined)
-              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
             var taken = thread.avail[constraintNo].splice(0, max);
             if (taken.length >= min) {
               do {
@@ -209,6 +206,7 @@ var EvalSimple1Err = (function () {
                   return false; // no more to take or we're already at max
                 }
               })());
+            }
           }
           if (trace)
             trace[trace.length-1].threads.push({
@@ -229,7 +227,7 @@ var EvalSimple1Err = (function () {
               elt.matched.reduce((ret, m) => {
                 return ret + m.triples.length; // count matched triples
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === undefined ? ret : ret + 1; // count expected
+                return t === "NO_TRIPLE_CONSTRAINT" ? ret : ret + 1; // count expected
               }, 0);
           return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)
@@ -269,7 +267,7 @@ var EvalSimple1Err = (function () {
       // console.log("chosen:", dump.thread(chosen));
       return "errors" in chosen.matched ?
         chosen.matched :
-        matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+        matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
     }
 
     function addStates (rbenx, nlist, thread, taken) {
@@ -361,7 +359,7 @@ var EvalSimple1Err = (function () {
       return rs.length ? state + "-" + rs : ""+state;
     }
 
-    function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
+    function matchedToResult (matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler) {
       var last = [];
       var errors = [];
       var skips = [];
@@ -435,8 +433,8 @@ var EvalSimple1Err = (function () {
           ptr.valueExpr = m.c.valueExpr;
         if ("productionLabel" in m.c)
           ptr.productionLabel = m.c.productionLabel;
-        ptr.solutions = m.triples.map(tno => {
-          var triple = neighborhood[tno];
+        ptr.solutions = m.triples.map(tNo => {
+          var triple = neighborhood[tNo];
           var ret = {
             type: "TestedTriple",
             subject: triple.subject,
@@ -458,32 +456,10 @@ var EvalSimple1Err = (function () {
             ret.language = lang;
           return ret;
         }
-          function diver (focus, shape, dive) {
-            var sub = dive(focus, shape);
-            if ("errors" in sub) {
-              // console.dir(sub);
-              var err = {
-                type: "ReferenceError", focus: focus,
-                shape: shape, errors: sub
-              };
-              if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
-                err.referencedShape = shape;
-              return [err];
-            }
-            if (("solution" in sub || "solutions" in sub) && Object.keys(sub.solution || sub.solutions).length !== 0 ||
-                sub.type === "Recursion")
-              ret.referenced = sub; // !!! needs to aggregate errors and solutions
-            return [];
-          }
-          function diveRecurse (focus, shapeLabel) {
-            return diver(focus, shapeLabel, recurse);
-          }
-          function diveDirect (focus, shapeLabel) {
-            return diver(focus, shapeLabel, direct);
-          }
-          if ("valueExpr" in ptr)
-            errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
-
+          var constraintNo = constraintList.indexOf(m.c);
+                      var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
+                      if (hit.res && Object.keys(hit.res).length > 0)
+                        ret.referenced = hit.res;
           if (errors.length === 0 && "semActs" in m.c)
             [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
           return ret;

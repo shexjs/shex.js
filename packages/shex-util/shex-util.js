@@ -885,7 +885,7 @@ var ShExUtil = {
 
   getProofGraph: function (res, db, dataFactory) {
     function _dive1 (solns) {
-      if (solns.type === "NodeTest" || solns.type === "NodeConstraintTest") {
+      if (solns.type === "NodeTest") {
       } else if (solns.type === "SolutionList" ||
           solns.type === "ShapeAndResults") {
         solns.solutions.forEach(s => {
@@ -1108,7 +1108,9 @@ var ShExUtil = {
               vals.push(newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced);
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                          ? rest.referenced.solution
+                          : rest.referenced);
             }
           }
         });
@@ -1485,7 +1487,9 @@ var ShExUtil = {
               toAdd = _join(toAdd, newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced);
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                          ? rest.referenced.solution
+                          : rest.referenced);
             }
           }
         }, []);
