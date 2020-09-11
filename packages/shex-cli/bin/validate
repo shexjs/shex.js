@@ -52,8 +52,8 @@ var SchemaOptions = { duplicateShape: "abort" };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-var orChoices = Object.keys(ShExValidator.options.or).join("|");
-var parChoices = Object.keys(ShExValidator.options.partition).join("|");
+//var orChoices = Object.keys(ShExValidator.options.or).join("|");
+var covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
 var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
 var CommandLineOptions = [
@@ -77,8 +77,8 @@ var CommandLineOptions = [
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
   { name: "duplicate-shape",       type: String, typeLabel: dupChoices,  multiple: false, defaultValue: undefined, description: "what to do with duplicate shapes" },
-  { name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
-  { name: "partition",             type: String, typeLabel: parChoices,  multiple: false, defaultValue: undefined, description: "how to explore a partion of triples into constraints" },
+//{ name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
+  { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
   { name: "jsonld-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD manifest" },
@@ -512,19 +512,13 @@ if (cmds.help)
 if ("duplicate-shape" in cmds)
   SchemaOptions.duplicateShape = cmds["duplicate-shape"];
 
-if (cmds.or) {
-  if (!(cmds.or in ShExValidator.options.or))
-    throw Error("unknown or option \"" + cmds.or + "\" - expected one of " + Object.keys(ShExValidator.options.or).join(", ") + "\".");
-  ValidatorOptions.or = cmds.or;
+if (cmds.coverage) {
+  if (!(cmds.coverage in ShExValidator.options.coverage))
+    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.options.coverage).join(", ") + "\".");
+  ValidatorOptions.coverage = cmds.coverage;
 }
 
-if (cmds.partition) {
-  if (!(cmds.partition in ShExValidator.options.partition))
-    throw Error("unknown partition option \"" + cmds.partition + "\" - expected one of " + Object.keys(ShExValidator.options.partition).join(", ") + "\".");
-  ValidatorOptions.partition = cmds.partition;
-}
-
-var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
+var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "coverage", firstError: "coverage" };
 if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   loadRDFmanifest(cmds).then(function (exitCode) {
     process.on('exit', function() { process.exit(exitCode); });
@@ -549,7 +543,7 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
     shape: 'http://www.w3.org/fhir-rdf-shapes/MedicationOrder',
     data: [ 'file:///tmp/t/t.ttl' ],
     node: 'file:///tmp/t/MedicationOrder/12345-67' } ]
-and some constructor args like {or: "someOf", partition: "exhaustive"}
+and some constructor args like {or: "someOf", coverage: "exhaustive"}
 */
 function queueTests (tests, cmds) {
   return Promise.all(tests.map(function (test) {
