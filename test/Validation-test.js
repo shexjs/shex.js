@@ -85,7 +85,7 @@ describe("A ShEx validator", function () {
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
                // resolve relative URLs in results file
-               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+               if (["shape", "reference", "valueExprRef", "node", "focus", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
                    ShExTerm.isIRI(obj[k])) {
                  obj[k] = ShExTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
@@ -204,8 +204,8 @@ describe("A ShEx validator", function () {
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-                          // if (referenceResult !== null)
-                          //   expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          if (referenceResult !== null)
+                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         }
                       }
                       var xr = test.extensionResults.filter(function (x) {

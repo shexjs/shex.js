@@ -313,7 +313,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
           };
         })
       } : {
-        type: "NodeTest",
+        type: "NodeConstraintTest",
         node: ldify(point),
         shape: shapeLabel,
         shapeExpr: shapeExpr

@@ -885,7 +885,7 @@ var ShExUtil = {
 
   getProofGraph: function (res, db, dataFactory) {
     function _dive1 (solns) {
-      if (solns.type === "NodeTest") {
+      if (solns.type === "NodeConstraintTest") {
       } else if (solns.type === "SolutionList" ||
           solns.type === "ShapeAndResults") {
         solns.solutions.forEach(s => {
@@ -1030,7 +1030,7 @@ var ShExUtil = {
 
   walkVal: function (val, cb) {
     var _ShExUtil = this;
-    if (val.type === "NodeTest") {
+    if (val.type === "NodeConstraintTest") {
       return null;
     } else if (val.type === "ShapeTest") {
       return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
@@ -1498,7 +1498,7 @@ var ShExUtil = {
       }
     } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
       return {  };
-    } else if (val.type === "NodeTest") {
+    } else if (val.type === "NodeConstraintTest") {
       var thisNode = {  };
       thisNode[n3ify(val.node)] = [val.shape];
       return thisNode;

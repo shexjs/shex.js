@@ -1,7 +1,7 @@
 {
   "type": "ShapeAndResults",
   "solutions": [
-    { "type": "NodeTest",
+    { "type": "NodeConstraintTest",
       "node": "_:abcd",
       "shape": "http://a.example/S1",
       "shapeExpr": {
