@@ -1,4 +1,3 @@
-
 is this test covered by Extend3G-pass?:
 <#Base> {
   <p1> [1];
@@ -7,6 +6,13 @@ is this test covered by Extend3G-pass?:
 <#Leaf> EXTENDS @<#Base> {
   <p1> [3]
 }
+(I *think* so...)
+
+// var ShExWriter = require("@shexjs/writer");
+// console.log(new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join(''));
+
+For next major version:
+  ~ rename ShEx{,C}Writer?
 
 + STRING_LITERAL2-ECHAR
 + STRING_LITERAL2-UCHAR1
