@@ -22,7 +22,7 @@
                 "predicate": "http://a.example/a",
                 "object": "http://a.example/base/p",
                 "referenced": {
-                  "type": "NodeTest",
+                  "type": "NodeConstraintTest",
                   "node": "http://a.example/base/p",
                   "shape": "http://a.example/base/P",
                   "shapeExpr": {
@@ -41,7 +41,7 @@
                 "predicate": "http://a.example/a",
                 "object": "http://a.example/base/pt1",
                 "referenced": {
-                  "type": "NodeTest",
+                  "type": "NodeConstraintTest",
                   "node": "http://a.example/base/pt1",
                   "shape": "http://a.example/base/P",
                   "shapeExpr": {
@@ -60,7 +60,7 @@
                 "predicate": "http://a.example/a",
                 "object": "http://a.example/base/pt2",
                 "referenced": {
-                  "type": "NodeTest",
+                  "type": "NodeConstraintTest",
                   "node": "http://a.example/base/pt2",
                   "shape": "http://a.example/base/P",
                   "shapeExpr": {
@@ -91,7 +91,7 @@
                 "predicate": "http://a.example/a",
                 "object": "http://a.example/base/t",
                 "referenced": {
-                  "type": "NodeTest",
+                  "type": "NodeConstraintTest",
                   "node": "http://a.example/base/t",
                   "shape": "http://a.example/base/T",
                   "shapeExpr": {

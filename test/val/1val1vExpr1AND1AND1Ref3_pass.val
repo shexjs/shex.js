@@ -40,7 +40,7 @@
                 "nodeKind": "literal",
                 "type": "NodeConstraint"
               },
-              "type": "NodeTest"
+              "type": "NodeConstraintTest"
             },
             {
               "node": {
@@ -52,7 +52,7 @@
                 "nodeKind": "literal",
                 "type": "NodeConstraint"
               },
-              "type": "NodeTest"
+              "type": "NodeConstraintTest"
             },
             {
               "node": {
@@ -64,7 +64,7 @@
                 "pattern": "^(ab)+$",
                 "type": "NodeConstraint"
               },
-              "type": "NodeTest"
+              "type": "NodeConstraintTest"
             }
           ],
           "type": "ShapeAndResults"

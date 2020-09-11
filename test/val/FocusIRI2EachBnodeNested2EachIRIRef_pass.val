@@ -2,7 +2,7 @@
   "type": "ShapeAndResults",
   "solutions": [
     {
-      "type": "NodeTest",
+      "type": "NodeConstraintTest",
       "node": "http://a.example/n1",
       "shape": "http://a.example/S1",
       "shapeExpr": {

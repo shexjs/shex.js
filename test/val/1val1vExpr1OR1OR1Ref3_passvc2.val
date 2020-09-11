@@ -39,7 +39,7 @@
               "pattern": ".*cd.*",
               "type": "NodeConstraint"
             },
-            "type": "NodeTest"
+            "type": "NodeConstraintTest"
           },
           "type": "ShapeOrResults"
         }

@@ -84,7 +84,7 @@ describe("A ShEx validator", function () {
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
                // resolve relative URLs in results file
-               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object", "focus"].indexOf(k) !== -1 &&
+               if (["shape", "reference", "valueExprRef", "node", "focus", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
                    ShExTerm.isIRI(obj[k])) {
                  obj[k] = ShExTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
@@ -154,7 +154,7 @@ describe("A ShEx validator", function () {
             then(function (loaded) {
               var schema = loaded.schema;
               validator = ShExValidator.construct(schema, schemaOptions);
-              var testResults = TestExtension.register(validator);
+              var testResults = TestExtension.register(validator, {ShExTerm});
 
               assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;

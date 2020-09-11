@@ -14,7 +14,7 @@
         "referenced": {
           "type": "ShapeOrResults",
           "solution": {
-            "type": "NodeTest",
+            "type": "NodeConstraintTest",
             "node": { "value": "cd" },
             "shape": "http://a.example/vc2",
             "shapeExpr": {

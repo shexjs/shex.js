@@ -1,5 +1,5 @@
 var EvalSimple1Err = (function () {
-  var RdfTerm = require("@shexjs/term");
+  var ShExTerm = require("@shexjs/term");
 
   var Split = "<span class='keyword' title='Split'>|</span>";
   var Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -59,7 +59,6 @@ var EvalSimple1Err = (function () {
           s = State_make(expr, []);
           states[s].stack = stack;
           return {start: s, tail: [s]};
-          // maybeAddRept(s, [s]);
         }
 
         else if (expr.type === "NestedShape") {
@@ -172,13 +171,6 @@ var EvalSimple1Err = (function () {
       var rbenx = this;
       var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
 
-      function localExpect (list) {
-        return list.map(st => {
-          var s = rbenx.states[st.state]; // simpler threads are a list of states.
-          return renderAtom(s.c, s.negated);
-        });
-      }
-
       if (rbenx.states.length === 1)
         return matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
 
@@ -201,7 +193,7 @@ var EvalSimple1Err = (function () {
           if (constraintNo === -1) {
             var scoped = state.c.scopedTripleConstraints.reduce(
               (acc, tci) => acc.concat(constraintToTripleMapping[tci]), []);
-            addStates(rbenx, nlist, thread, scoped, constraintToTripleMapping, neighborhood, null, node);
+            addStates(rbenx, nlist, thread, scoped);
           } else {
             var min = "min" in state.c ? state.c.min : 1;
             var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
@@ -212,7 +204,7 @@ var EvalSimple1Err = (function () {
             var taken = thread.avail[constraintNo].splice(0, max);
             if (taken.length >= min) {
               do {
-                addStates(rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, null, node);
+                addStates(rbenx, nlist, thread, taken);
               } while ((function () {
                 if (thread.avail[constraintNo].length > 0 && taken.length < max) {
                   taken.push(thread.avail[constraintNo].shift());
@@ -266,7 +258,7 @@ var EvalSimple1Err = (function () {
           var valueExpr = null;
           if (typeof c.valueExpr === "string") { // ShapeRef
             valueExpr = c.valueExpr;
-            if (RdfTerm.isBlank(valueExpr))
+            if (ShExTerm.isBlank(valueExpr))
               valueExpr = schema.shapes[valueExpr];
           } else if (c.valueExpr) {
             valueExpr = extend({}, c.valueExpr)
@@ -285,7 +277,7 @@ var EvalSimple1Err = (function () {
         matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
     }
 
-    function addStates (rbenx, nlist, thread, taken, constraintToTripleMapping, neighborhood, direct, node) {
+    function addStates (rbenx, nlist, thread, taken) {
       var state = rbenx.states[thread.state];
       // find the exprs that require repetition
       var exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
@@ -460,13 +452,13 @@ var EvalSimple1Err = (function () {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;

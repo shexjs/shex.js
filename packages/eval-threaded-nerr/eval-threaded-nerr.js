@@ -1,5 +1,5 @@
 var EvalThreadedNErr = (function () {
-var RdfTerm = require("@shexjs/term");
+var ShExTerm = require("@shexjs/term");
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -130,7 +130,6 @@ function vpEngine (schema, shape, index) {
                 const totalErrors = taken.length === 0 ? thread.errors.slice() : []
                 const myThread = makeThread(passFail.pass, totalErrors)
                 ret.push(myThread);
-                // ret.push();
               } else {
                 passFail.fail.forEach(
                   f => ret.push(makeThread([f], f.semActErrors))
@@ -174,7 +173,7 @@ function vpEngine (schema, shape, index) {
             var valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
-              if (RdfTerm.isBlank(valueExpr))
+              if (ShExTerm.isBlank(valueExpr))
                 valueExpr = index.shapeExprs[valueExpr];
             } else if (expr.valueExpr) {
               valueExpr = extend({}, expr.valueExpr)
@@ -339,13 +338,13 @@ function vpEngine (schema, shape, index) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -377,7 +376,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];

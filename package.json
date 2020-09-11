@@ -28,17 +28,17 @@
   },
   "devDependencies": {
     "@shexjs/cli": "file:packages/shex-cli",
-    "@shexjs/util": "file:packages/shex-util",
+    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
+    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
     "@shexjs/extension-eval": "file:packages/extension-eval",
     "@shexjs/extension-map": "file:packages/extension-map",
     "@shexjs/extension-test": "file:packages/extension-test",
     "@shexjs/node": "file:packages/shex-node",
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",
+    "@shexjs/util": "file:packages/shex-util",
     "@shexjs/webapp": "file:packages/shex-webapp",
     "@shexjs/writer": "file:packages/shex-writer",
-    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
-    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",
     "cross-spawn": "^6.0.5",
@@ -64,7 +64,8 @@
   },
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
-    "rebuild": "npm run clean-all ; npm install && npx lerna bootstrap",
+    "rebuild": "npm run clean-all && npx lerna bootstrap && for d in packages/*; do (cd $d && npm install); done && npm ci",
+    "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
@@ -138,5 +139,8 @@
       "should": true,
       "describe": true
     }
+  },
+  "dependencies": {
+    "hierarchy-closure": "^1.2.1"
   }
 }

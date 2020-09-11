@@ -22,7 +22,7 @@
               "pattern": "^(ab)*$",
               "type": "NodeConstraint"
             },
-            "type": "NodeTest"
+            "type": "NodeConstraintTest"
           },
           "type": "ShapeOrResults"
         }

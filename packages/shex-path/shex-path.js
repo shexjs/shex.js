@@ -1,5 +1,5 @@
 const ShExUtil = require("@shexjs/util");
-const RdfTerm = require("@shexjs/term");
+const ShExTerm = require("@shexjs/term");
 
 const ShExPath = function (schema, const_iriResolver) {
     const navigation = new Map()
@@ -125,7 +125,7 @@ const ShExPath = function (schema, const_iriResolver) {
           )
         ).filter(elt => elt)
         return follow ? withAttrs.map(
-          elt => schema.shapes.find(se => se.id === RdfTerm.resolveRelativeIRI(iriResolver.base, elt)), []
+          elt => schema.shapes.find(se => se.id === ShExTerm.resolveRelativeIRI(iriResolver.base, elt)), []
         ).filter(elt => elt) : withAttrs
       }
     }

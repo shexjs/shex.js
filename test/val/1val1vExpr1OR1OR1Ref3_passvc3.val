@@ -39,7 +39,7 @@
               "pattern": ".*ef",
               "type": "NodeConstraint"
             },
-            "type": "NodeTest"
+            "type": "NodeConstraintTest"
           },
           "type": "ShapeOrResults"
         }

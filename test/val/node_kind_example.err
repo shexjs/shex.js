@@ -42,6 +42,14 @@
           "errors": [
             "Error validating \"just fine\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
           ]
+        },
+        {
+          "type": "MissingProperty",
+          "property": "http://schema.example/state",
+          "valueExpr": {
+            "type": "NodeConstraint",
+            "nodeKind": "iri"
+          }
         }
       ]
     }

@@ -34,7 +34,7 @@
               }
             ]
           },
-          "type": "NodeTest"
+          "type": "NodeConstraintTest"
         }
       }
     ]
