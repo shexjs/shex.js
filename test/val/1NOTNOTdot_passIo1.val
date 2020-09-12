@@ -10,7 +10,17 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "http://a.example/o1"
+        "object": "http://a.example/o1",
+        "referenced": {
+          "focus": "http://a.example/o1",
+          "shapeExpr": {
+            "shapeExpr": {
+              "type": "Shape"
+            },
+            "type": "ShapeNot"
+          },
+          "type": "ShapeNotTest"
+        }
       }
     ],
     "valueExpr": {

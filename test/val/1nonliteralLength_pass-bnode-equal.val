@@ -15,7 +15,16 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "_:abcdefghijklmnopqrs"
+        "object": "_:abcdefghijklmnopqrs",
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "_:abcdefghijklmnopqrs",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "length": 19,
+            "nodeKind": "nonliteral"
+          }
+        }
       }
     ]
   }

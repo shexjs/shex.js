@@ -3,6 +3,7 @@
 // Release under MIT License.
 
 const ShEx = ShExWebApp; // @@ rename globally
+const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const ShExApi = ShEx.Api({
   fetch, rdfjs: ShEx.N3, jsonld: null
 })
@@ -54,7 +55,7 @@ var Getables = [
 var QueryParams = Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "threaded-val-nerr" },
+  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
 ]);
 
 // utility functions
@@ -112,7 +113,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.RdfTerm.intermalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
+  return ShEx.ShExTerm.intermalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
@@ -189,7 +190,7 @@ function _makeCache (selection) {
       _cache.meta.base = url;
       resolver._setBase(url);
       try {
-        _cache.set(data, url, undefined, resp.headers.get('content-type'));
+        await _cache.set(data, url, undefined, resp.headers.get('content-type'));
       } catch (e) {
         throw Error("error setting " + this.queryStringParm + " with <" + url + ">: " + '\n' + e.message);
       }
@@ -413,52 +414,43 @@ function makeExtensionCache (selection) {
 
   // const resp = await fetch('http://localhost/checkouts/shexSpec/extensions/Eval/')
       // const text = await resp.text();
-      if (mediaType.startsWith('text/html')) return (async function () {
-        const jq = $($.parseHTML(code));
-        debugger
-        const impls = $(jq.find('table.implementations'))
-        if (impls.length !== 1) {
-          results.append($("<div/>").append(
-            $("<span/>").text("unparsable extension index at " + url)
-          ).addClass("error"));
-          return;
-        }
-        const tr = $(impls).find('tr td:contains("shexjs")').parent()
-        if (tr.length !== 1) {
-          results.append($("<div/>").append(
-            $("<span/>").text("no entry for shexjs in index HTML at " + url)
-          ).addClass("error"));
-          return;
-        }
-        const href = tr.find('[property="shex:package"]').attr('href')
-        if (!href) {
-          results.append($("<div/>").append(
-            $("<span/>").text("no package for shexjs in index HTML at " + url)
-          ).addClass("error"));
-          return;
-        }
-        const refd = await fetch(href);
-        if (!refd.ok) {
-          results.append($("<div/>").append(
-            $("<span/>").text(`error fetching implementation: ${refd.status} (${refd.statusText}) for URL <${href}>`)
-          ).addClass("error"));
-        } else {
-          code = await refd.text();
-          this.set(code, url, source, refd.headers.get('content-type'));
-        }
-      }).call(this)
-      const module = {}, exports = {};
-      eval(code);
-      const name = module.exports.name;
+      if (mediaType.startsWith('text/html'))
+        return this.grepHtmlIndexForPackage(code, url, source)
+
+      const extension = Function(`"use strict";
+const module = {exports: {}};
+${code}
+return module.exports;
+`)()
+      const name = extension.name;
       const id = "extension_" + name;
-      const elt = $("<li/>", { class: "menuItem", title: module.exports.description }).append(
-        $("<input/>", { type: "checkbox", checked: "checked", class: "extensionControl", id: id, "data-name": name }),
-        $("<label/>", { for: "extension_" + name }).append(
-          $("<a/>", {href: module.exports.url, text: name})
+
+      // Delete any old li associated with this extension.
+      const old = $(`.extensionControl[data-url="${extension.url}"]`)
+      if (old.length) {
+        results.append($("<div/>").append(
+          $("<span/>").text(`removing old ${old.attr('data-name')} extension`)
+        ));
+        old.parent().remove();
+      }
+      
+      // Create a new li.
+      const elt = $("<li/>", { class: "menuItem", title: extension.description }).append(
+        $("<input/>", {
+          type: "checkbox",
+          checked: "checked",
+          class: "extensionControl",
+          id: id,
+          "data-name": name,
+          "data-url": extension.url
+        }),
+        $("<label/>", { for: id }).append(
+          $("<a/>", {href: extension.url, text: name})
         )
       );
       elt.insertBefore("#load-extension-button");
-      $("#" + id).data("code", module.exports);
+      $("#" + id).data("code", extension);
+
       Caches.extension.url = url; // @@ cheesy hack that only works to remember one extension URL
       results.append($("<div/>").append(
         $("<span/>").text(`extension ${name} loaded from <${url}>`)
@@ -471,12 +463,55 @@ function makeExtensionCache (selection) {
     }
     // $("#extensionDrop").show(); // may have been hidden if no extension loaded.
   };
+
+  /* Poke around in HTML for a PACKAGE link in
+     <table class="implementations">
+       <td property="code:softwareAgent" resource="https://github.com/shexSpec/shex.js">shexjs</td>
+       <td><a property="shex:package" href="PACKAGE"/>...</td>...
+     </table>
+  */
+  ret.grepHtmlIndexForPackage = async function (code, url, source)  {
+    const jq = $(code);
+    const impls = $(jq.find('table.implementations'))
+    if (impls.length !== 1) {
+      results.append($("<div/>").append(
+        $("<span/>").text("unparsable extension index at " + url)
+      ).addClass("error"));
+      return;
+    }
+    const tr = $(impls).find(`tr td[resource="${ShExJsUrl}"]`).parent()
+    if (tr.length !== 1) {
+      results.append($("<div/>").append(
+        $("<span/>").text("no entry for shexjs in index HTML at " + url)
+      ).addClass("error"));
+      return;
+    }
+    const href = tr.find('[property="shex:package"]').attr('href')
+    if (!href) {
+      results.append($("<div/>").append(
+        $("<span/>").text("no package for shexjs in index HTML at " + url)
+      ).addClass("error"));
+      return;
+    }
+    const refd = await fetch(href);
+    if (!refd.ok) {
+      results.append($("<div/>").append(
+        $("<span/>").text(`error fetching implementation: ${refd.status} (${refd.statusText}) for URL <${href}>`)
+      ).addClass("error"));
+    } else {
+      code = await refd.text();
+      this.set(code, url, source, refd.headers.get('content-type'));
+    }
+  };
+
   ret.parse = function (text, base) {
     throw Error("should not try to parse extension cache");
   };
+
   ret.getItems = function () {
     throw Error("should not try to get extension cache items");
   };
+
   return ret;
 }
 
@@ -762,7 +797,7 @@ function callValidator (done) {
           loaded.schema,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
         $(".extensionControl:checked").each(function () {
-          $(this).data("code").register(validator);
+          $(this).data("code").register(validator, ShEx);
         })
 
         currentAction = "validating";
@@ -868,6 +903,7 @@ function callValidator (done) {
     };
     return logger;
   }
+}
 
   function renderEntry (entry) {
     var fails = entry.status === "nonconformant";
@@ -950,7 +986,6 @@ function callValidator (done) {
       // }
       results.finish();
   }
-}
 
 var LastFailTime = 0;
 function failMessage (e, action, text) {
@@ -1735,7 +1770,7 @@ function prepareDragAndDrop () {
                       }, null);
                   if (target) {
                     var appendTo = $("#append").is(":checked") ? target.get() : "";
-                    target.set(appendTo + data, url);
+                    target.set(appendTo + data, url, 'drag and drop', mediaType);
                   } else {
                     results.append("don't know what to do with " + mediaType + "\n");
                   }

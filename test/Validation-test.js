@@ -4,12 +4,12 @@ var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env;
 
-var ShExCore = require("@shexjs/core");
-var ShExParser = require("@shexjs/parser");
-var ShExNode = require("@shexjs/node");
-var ShExUtil = ShExCore.Util;
-var ShExValidator = ShExCore.Validator;
-var TestExtension = require("@shexjs/extension-test")
+const ShExUtil = require("@shexjs/util");
+const ShExTerm = require("@shexjs/term");
+const ShExParser = require("@shexjs/parser");
+const ShExNode = require("@shexjs/node");
+const ShExValidator = require("@shexjs/validator");
+const TestExtension = require("@shexjs/extension-test")
 
 var N3 = require("n3");
 var N3Util = N3.Util;
@@ -24,8 +24,8 @@ var schemasPath = findPath("schemas");
 var validationPath = findPath("validation");
 var manifestFile = validationPath + "manifest.jsonld";
 var regexModules = [
-  ShExCore["nfax-val-1err"],
-  ShExCore["threaded-val-nerr"]
+  require("@shexjs/eval-simple-1err"),
+  require("@shexjs/eval-threaded-nerr")
 ];
 if (EARL)
   regexModules = regexModules.slice(1);
@@ -85,14 +85,14 @@ describe("A ShEx validator", function () {
            function (report) {                                             // test action
              var absoluteVal = valFile ? parseJSONFile(__dirname + "/" + valFile, function (k, obj) {
                // resolve relative URLs in results file
-               if (["shape", "reference", "valueExprRef", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
+               if (["shape", "reference", "valueExprRef", "node", "focus", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
-                   ShExCore.RdfTerm.isIRI(obj[k])) {
-                 obj[k] = ShExCore.RdfTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+                   ShExTerm.isIRI(obj[k])) {
+                 obj[k] = ShExTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
                } else if (["values"].indexOf(k) !== -1) {
                  for (var i = 0; i < obj[k].length; ++i) {
-                   if (typeof obj[k][i] !== "object" && ShExCore.RdfTerm.isIRI(obj[k][i])) {
-                     obj[k][i] = ShExCore.RdfTerm.resolveRelativeIRI(dataURL, obj[k][i]);
+                   if (typeof obj[k][i] !== "object" && ShExTerm.isIRI(obj[k][i])) {
+                     obj[k][i] = ShExTerm.resolveRelativeIRI(dataURL, obj[k][i]);
                    }
                  };
                }
@@ -166,7 +166,7 @@ describe("A ShEx validator", function () {
             then(function (loaded) {
               var schema = loaded.schema;
               validator = ShExValidator.construct(schema, schemaOptions);
-              var testResults = TestExtension.register(validator);
+              var testResults = TestExtension.register(validator, {ShExTerm});
 
               assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;
@@ -192,7 +192,7 @@ describe("A ShEx validator", function () {
                               ""
                           ):
                         s.substr(0, 2) === "_:" ? s :
-                          ShExCore.RdfTerm.resolveRelativeIRI(base, s);
+                          ShExTerm.resolveRelativeIRI(base, s);
                       }
                       var map = maybeGetTerm(manifestFile, test.action.map);
                       if (map) {

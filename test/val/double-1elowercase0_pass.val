@@ -13,6 +13,14 @@
         "object": {
           "value": "1e0",
           "type": "http://www.w3.org/2001/XMLSchema#double"
+        },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"1e0\"^^http://www.w3.org/2001/XMLSchema#double",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#double"
+          }
         }
       }
     ],

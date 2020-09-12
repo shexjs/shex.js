@@ -1,6 +1,6 @@
 var ShExParser = (function () {
 
-var RdfTerm = require("@shexjs/core").RdfTerm;
+var ShExTerm = require("@shexjs/term");
 var ShExJison = require('./lib/ShExJison').Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -98,9 +98,9 @@ var makeDBTermResolver = function (db) {
         var found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
         if (found1.length)
           return pair.prefix === null ?
-          {prefix: null, length: null, term: RdfTerm.internalTerm(found1[0].subject)}:
+          {prefix: null, length: null, term: ShExTerm.internalTerm(found1[0].subject)}:
           found1.reduce((tripacc, triple) => {
-            var s = RdfTerm.internalTerm(triple.subject);
+            var s = ShExTerm.internalTerm(triple.subject);
             return Object.keys(prefixes).reduce((prefacc, prefix) => {
               var ns = prefixes[prefix];
               var sw = s.startsWith(ns);

@@ -16,7 +16,20 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "septante", "language": "fr" }
+        "object": { "value": "septante", "language": "fr" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"septante\"@fr",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "stem": "fr",
+                "type": "LanguageStem"
+              }
+            ]
+          }
+        }
       }
     ]
   }

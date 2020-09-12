@@ -13,6 +13,14 @@
         "object": {
           "value": "false",
           "type": "http://www.w3.org/2001/XMLSchema#boolean"
+        },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"false\"^^http://www.w3.org/2001/XMLSchema#boolean",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#boolean"
+          }
         }
       }
     ],

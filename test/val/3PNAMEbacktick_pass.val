@@ -16,7 +16,15 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://ex1.example/protName",
-                "object": { "value": "Dracula" }
+                "object": { "value": "Dracula" },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "\"Dracula\"",
+                  "shapeExpr": {
+                    "nodeKind": "literal",
+                    "type": "NodeConstraint"
+                  }
+                }
               }
             ],
             "valueExpr": {
@@ -32,7 +40,19 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://ex2.example/protType",
-                "object": "http://ex1.example/Regulatory"
+                "object": "http://ex1.example/Regulatory",
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "http://ex1.example/Regulatory",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      "http://ex1.example/Signaling",
+                      "http://ex1.example/Regulatory",
+                      "http://ex1.example/Transport"
+                    ]
+                  }
+                }
               }
             ],
             "valueExpr": {
@@ -52,7 +72,15 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://ex1.example/protWidth",
-                "object": { "value": "30", "type": "http://ex1.example/microns" }
+                "object": { "value": "30", "type": "http://ex1.example/microns" },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "\"30\"^^http://ex1.example/microns",
+                  "shapeExpr": {
+                    "datatype": "http://ex1.example/microns",
+                    "type": "NodeConstraint"
+                  }
+                }
               }
             ],
             "valueExpr": {
