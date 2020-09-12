@@ -128,7 +128,6 @@
 +    <script>
 +      modules["../../shex"] = ShEx;
 +    </script>
-+    <script src="../../../da-web/underscore-min.js"></script><script>modules["underscore"] = module.exports;</script>
 +    <script src="../lib/extension-utils.js"    ></script><script>modules["./extension-utils"] = module.exports;</script>
 +    <script src="../lib/regex_extension.js"    ></script><script>modules["./regex_extension"] = module.exports;</script>
 +    <script src="../lib/hashmap_extension.js"  ></script><script>modules["./hashmap_extension"] = module.exports;</script>
