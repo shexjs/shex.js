@@ -7,7 +7,21 @@ var chai = require('chai');
 var expect = chai.expect;
 var should = chai.should();
 
+var ShExTerm = require("@shexjs/term");
+var ShExUtil = require("@shexjs/util");
 var mapper = require("@shexjs/extension-map");
+const emptySchema = {type: "Schema"};
+const fakeValidator = {
+  schema: emptySchema,
+  semActHandler: {
+    results: {},
+    register: () => {}
+  }
+}
+// or use a throw-away validator:
+// const realValidator = require("@shexjs/validator").construct(emptySchema)
+const registered = mapper.register(fakeValidator, {ShExTerm, ShExUtil})
+
 var hmExtension = mapper.extension.hashmap;
 
 describe('Hashmap extension', function() {
@@ -201,7 +215,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    mapper.binder([{"urn:local:test:string": "efg"}]), 
+                    registered.binder([{"urn:local:test:string": "efg"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.throw(Error, 
@@ -212,7 +226,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower.bind(this,
                     'hashmap(test:string, {"a": "abc", "b": "abc", "x": "xyz"})', 
-                    mapper.binder([{"urn:local:test:string": "xyz"}]), 
+                    registered.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "b": "abc", "x": "xyz"}'))
             .to.throw(Error, 
@@ -223,7 +237,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"alpha": "beta"})', 
-                    mapper.binder([{"urn:local:test:string": "beta"}]), 
+                    registered.binder([{"urn:local:test:string": "beta"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"alpha": "beta"}'))
             .to.equal('alpha');
@@ -231,7 +245,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    mapper.binder([{"urn:local:test:string": "abc"}]), 
+                    registered.binder([{"urn:local:test:string": "abc"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.equal('a');
@@ -239,7 +253,7 @@ describe('Hashmap extension', function() {
             expect(
                 hmExtension.lower(
                     'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
-                    mapper.binder([{"urn:local:test:string": "xyz"}]), 
+                    registered.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.equal('x');

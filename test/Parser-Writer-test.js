@@ -6,12 +6,11 @@ var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 var EARL = "EARL" in process.env; // We're generating an EARL report.
 var BASE = "http://a.example/application/base/";
 
-var ShExCore = require("@shexjs/core");
-var ShExParser = require("@shexjs/parser");
-var ShExLoader = require("@shexjs/loader");
-var ShExWriter = ShExCore.Writer;
-var ShExUtil = ShExCore.Util;
-var ShExValidator = ShExCore.Validator;
+const ShExParser = require("@shexjs/parser");
+const ShExNode = require("@shexjs/node");
+const ShExUtil = require("@shexjs/util");
+const ShExValidator = require("@shexjs/validator");
+const ShExWriter = require("@shexjs/writer");
 
 var N3 = require("n3");
 
@@ -199,7 +198,7 @@ describe("A ShEx parser", function () {
              parser._setFileName(ShExRSchemaFile);
              var graphParser = ShExValidator.construct(
                GraphSchema,
-               {  } // regexModule: require("../lib/regex/nfax-val-1err") is no faster
+               {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
              var val = graphParser.validate(schemaDriver, schemaRoot, ShExValidator.start); // start shape
              var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
@@ -285,7 +284,7 @@ describe("A ShEx parser", function () {
          ? dir + '/manifest#' + test.name
          : "should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
-        ShExLoader.load([path], [], [], [], { parser: parser }, {}).
+        ShExNode.load([path], [], [], [], { parser: parser }, {}).
           then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
           }).
@@ -406,11 +405,11 @@ if (!EARL && TEST_Vestiges) {
       return true;
     }).forEach(test => {
       var path = schemasPath + test.shex;
-      it("should load the same imports as ShExLoader.load in '" + path + "'", function () {
+      it("should load the same imports as ShExNode.load in '" + path + "'", function () {
         parser._setBase("file://"+path);
         return Promise.all([
-          ShExLoader.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
-          ShExLoader.loadShExImports_NotUsed(path, parser, pickShEx)
+          ShExNode.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
+          ShExNode.loadShExImports_NotUsed(path, parser, pickShEx)
         ]).then(function (loadedAndSchema) {
           expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).to.deep.equal(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
         });

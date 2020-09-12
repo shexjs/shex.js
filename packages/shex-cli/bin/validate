@@ -25,23 +25,22 @@ Running the test extension <http://shex.io/extensions/Test/> adorns the results 
 
 The regular expression engine is loaded from either:
   absolute path, e.g. if you git cloned shex.js into /tmp:
-    --regex-module /tmp/shex.js/lib/regex/nfax-val-1err
-    --regex-module /tmp/shex.js/lib/regex/threaded-val-nerr
+    --regex-module /tmp/shex.js/packages/eval-simple-1err/eval-simple-1err
+    --regex-module /tmp/shex.js/packages/eval-threaded-nerr/eval-threaded-nerr
   or relative path to bin/validate directory:
-    --regex-module ../lib/regex/nfax-val-1err
-    --regex-module ../lib/regex/threaded-val-nerr
+    --regex-module ../packages/eval-simple-1err/eval-simple-1err
+    --regex-module ../packages/eval-threaded-nerr/eval-threaded-nerr
   or a module name in lib/regex:
-    --regex-module nfax-val-1err
-    --regex-module threaded-val-nerr
+    --regex-module eval-simple-1err
+    --regex-module eval-threaded-nerr
 
 */
 
-var ShExCore = require("@shexjs/core");
-var RdfTerm = ShExCore.RdfTerm;
-var ShExUtil = ShExCore.Util;
-var ShExLoader = require("@shexjs/loader");
-var ShExWriter = ShExCore.Writer; // for verbose output
-var ShExValidator = ShExCore.Validator;
+var ShExUtil = require("@shexjs/util");
+var ShExTerm = require("@shexjs/term");
+var ShExNode = require("@shexjs/node");
+var ShExWriter = require("@shexjs/writer"); // for verbose output
+var ShExValidator = require("@shexjs/validator");
 var ShapeMap = require("shape-map");
 
 var N3 = require("n3");
@@ -53,8 +52,8 @@ var SchemaOptions = { duplicateShape: "abort" };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-var orChoices = Object.keys(ShExValidator.options.or).join("|");
-var parChoices = Object.keys(ShExValidator.options.partition).join("|");
+//var orChoices = Object.keys(ShExValidator.options.or).join("|");
+var covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
 var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
 var CommandLineOptions = [
@@ -78,8 +77,8 @@ var CommandLineOptions = [
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
   { name: "duplicate-shape",       type: String, typeLabel: dupChoices,  multiple: false, defaultValue: undefined, description: "what to do with duplicate shapes" },
-  { name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
-  { name: "partition",             type: String, typeLabel: parChoices,  multiple: false, defaultValue: undefined, description: "how to explore a partion of triples into constraints" },
+//{ name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
+  { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
   { name: "jsonld-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD manifest" },
@@ -322,17 +321,17 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
   return Promise.all([
     // Loaded schema and data.
-    ShExLoader.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
+    ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
 
     // Expected results, if provided.
     !("result" in valParms) ? Promise.resolve(undefined) :
       typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
-      ShExLoader.GET(valParms.result).then(function (body) { 
+      ShExNode.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
       }),
 
     // ShapeMap, if provided.
-    "mapURL" in valParms ? ShExLoader.GET(valParms.mapURL).then(function (body) {
+    "mapURL" in valParms ? ShExNode.GET(valParms.mapURL).then(function (body) {
       return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
     })
     : Promise.resolve("map" in valParms
@@ -485,7 +484,7 @@ function getInvocation (parms) {
              parms.map ? "-m " + parms.map : ''
             ];
   if ("options" in parms)
-    Object.keys(parms.options).forEach(k => { // e.g. --regex-module nfax-val-1err
+    Object.keys(parms.options).forEach(k => { // e.g. --regex-module eval-simple-1err
       res.push("--" + k.replace(/([A-Z])/g, function (c) {
         return "-" + c.toLowerCase();
       }) + " " + parms.options[k]);
@@ -513,19 +512,13 @@ if (cmds.help)
 if ("duplicate-shape" in cmds)
   SchemaOptions.duplicateShape = cmds["duplicate-shape"];
 
-if (cmds.or) {
-  if (!(cmds.or in ShExValidator.options.or))
-    throw Error("unknown or option \"" + cmds.or + "\" - expected one of " + Object.keys(ShExValidator.options.or).join(", ") + "\".");
-  ValidatorOptions.or = cmds.or;
+if (cmds.coverage) {
+  if (!(cmds.coverage in ShExValidator.options.coverage))
+    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.options.coverage).join(", ") + "\".");
+  ValidatorOptions.coverage = cmds.coverage;
 }
 
-if (cmds.partition) {
-  if (!(cmds.partition in ShExValidator.options.partition))
-    throw Error("unknown partition option \"" + cmds.partition + "\" - expected one of " + Object.keys(ShExValidator.options.partition).join(", ") + "\".");
-  ValidatorOptions.partition = cmds.partition;
-}
-
-var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "partition", greedy: "partition" };
+var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "coverage", firstError: "coverage" };
 if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   loadRDFmanifest(cmds).then(function (exitCode) {
     process.on('exit', function() { process.exit(exitCode); });
@@ -550,7 +543,7 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
     shape: 'http://www.w3.org/fhir-rdf-shapes/MedicationOrder',
     data: [ 'file:///tmp/t/t.ttl' ],
     node: 'file:///tmp/t/MedicationOrder/12345-67' } ]
-and some constructor args like {or: "someOf", partition: "exhaustive"}
+and some constructor args like {or: "someOf", coverage: "exhaustive"}
 */
 function queueTests (tests, cmds) {
   return Promise.all(tests.map(function (test) {
@@ -573,7 +566,7 @@ function queueTests (tests, cmds) {
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
   var validator = ShExValidator.construct(schema, options);
-  var extensions = ShExLoader.loadExtensions(cmds.extension);
+  var extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
@@ -594,9 +587,9 @@ function runValidator (graph, shapeMap, schema, options) {
   if (cmds.exec) {
     /* example usage:
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
-       return require("../lib/ShExLoader").load(["test/Map/BPunitsDAM.shex"], [], []).
+       return require("@shexjs/node").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("../extensions/extension-map").materializer(loaded.schema).
+       var db = require("@shexjs/extension-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
        getQuads(null, null, null);
        var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
@@ -632,7 +625,7 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   var sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExLoader.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
+  return ShExNode.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
 
     var testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
@@ -652,7 +645,7 @@ function loadRDFmanifest (cmds) {
       var schemaOptions = Object.assign({}, SchemaOptions);
       var traits = loaded.data.getQuads(subject, sht+"trait", null);
       traits.forEach(function (t) {
-        var tStr = RdfTerm.internalTerm(t.object).substr(sht.length);
+        var tStr = ShExTerm.internalTerm(t.object).substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
         if (tStr in TraitToOption)
           validatorOptions[TraitToOption[tStr]] = tStr;
@@ -670,7 +663,7 @@ function loadRDFmanifest (cmds) {
                 } else {
                   var m = loaded.data.getQuads(action, sht+elt[1], null);
                   if (m.length > 0) {
-                    var v = RdfTerm.internalTerm(m[0].object);
+                    var v = ShExTerm.internalTerm(m[0].object);
                     ret[elt[0]] = elt[2] ? [v] : v;
                   }
                 }
@@ -697,7 +690,7 @@ function useCommandLineDefaults (run) {
 
 function loadJSONmanifest (jsonManifests) {
   return jsonManifests.map(function (jm) {
-    return ShExLoader.GET(jm).then(function (p) {
+    return ShExNode.GET(jm).then(function (p) {
       try {
         var d = JSON.parse(p.text);
 
@@ -858,7 +851,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                   body.files[key] :
                   [body.files[key]]
                  ).map(pair => {
-                   return pair.path; // should ShExLoader accept [.name, .path]?
+                   return pair.path; // should ShExNode accept [.name, .path]?
                  });
         }
         var schemaFiles = makeArray("schema");
@@ -879,7 +872,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           });
 
         var httpResponse = this;
-        yield ShExLoader.
+        yield ShExNode.
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data

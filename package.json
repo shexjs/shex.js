@@ -18,8 +18,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "website",
-      "extensions/*"
+      "website"
     ]
   },
   "license": "MIT",
@@ -29,14 +28,17 @@
   },
   "devDependencies": {
     "@shexjs/cli": "file:packages/shex-cli",
-    "@shexjs/core": "file:packages/shex-core",
-    "@shexjs/extension-eval": "file:extensions/extension-eval",
-    "@shexjs/extension-map": "file:extensions/extension-map",
-    "@shexjs/extension-test": "file:extensions/extension-test",
-    "@shexjs/loader": "file:packages/shex-loader",
+    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
+    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
+    "@shexjs/extension-eval": "file:packages/extension-eval",
+    "@shexjs/extension-map": "file:packages/extension-map",
+    "@shexjs/extension-test": "file:packages/extension-test",
+    "@shexjs/node": "file:packages/shex-node",
     "@shexjs/parser": "file:packages/shex-parser",
     "@shexjs/path": "file:packages/shex-path",
+    "@shexjs/util": "file:packages/shex-util",
     "@shexjs/webapp": "file:packages/shex-webapp",
+    "@shexjs/writer": "file:packages/shex-writer",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",
     "cross-spawn": "^6.0.5",
@@ -46,23 +48,20 @@
     "lerna": "^3.20.2",
     "marked": "^0.7.0",
     "mocha": "^6.2.3",
-    "n3": "^1.2.1",
+    "n3": "^1.6.2",
     "nock": "^10.0.6",
     "node-fetch": "^2.6.0",
     "nyc": "^14.1.1",
     "pre-commit": "^1.2.2",
     "request-promise": "^4.2.2",
     "shape-map": "file:packages/shape-map",
-    "shex-test": "shexSpec/shexTest#negation",
-    "terser-webpack-plugin": "^1.2.4",
-    "timeout-promise-queue": "^0.9.2",
-    "uglify-es": "^3.3.9",
-    "webpack": "^4.31.0",
-    "webpack-cli": "^3.3.2"
+    "shex-test": "github:shexSpec/shexTest#negation",
+    "timeout-promise-queue": "^0.9.2"
   },
   "scripts": {
     "clean-all": "find . -name node_modules -exec rm -r {} \\; ; find . -name package-lock.json -exec rm -r {} \\; || true",
-    "rebuild": "npm run clean-all ; npm install && npx lerna bootstrap",
+    "rebuild": "npm run clean-all && npx lerna bootstrap && for d in packages/*; do (cd $d && npm install); done && npm ci",
+    "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
     "test": "mocha -C -R dot",
@@ -71,11 +70,12 @@
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint test/findPath.js",
     "travisRepo": "./test/travisRepo.sh",
-    "browser-webpack": "npx webpack --config webpack.config.js --mode production ; npm run n3-browserify",
-    "n3-browserify": "mkdir -p packages/shex-webapp/node_modules/n3/browser ; npx browserify -s N3 -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs packages/shex-webapp/node_modules/n3/browser/n3-browserify.js -o packages/shex-webapp/node_modules/n3/browser/n3-browserify.min.js -c",
-    "browserify-all": "./browserify-all.js ; npm run n3-browserify",
+    "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
-    "travis-deploy-once": "travis-deploy-once"
+    "travis-deploy-once": "travis-deploy-once",
+    "webpack": "cd packages/shex-webapp && npm run webpack",
+    "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
+    "webpack-monitor": "cd packages/shex-webapp && npm run webpack-monitor"
   },
   "publishConfig": {
     "access": "private"
@@ -135,5 +135,8 @@
       "should": true,
       "describe": true
     }
+  },
+  "dependencies": {
+    "hierarchy-closure": "^1.2.1"
   }
 }
