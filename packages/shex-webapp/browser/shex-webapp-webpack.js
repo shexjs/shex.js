@@ -9036,10 +9036,7 @@ if (true)
 
 var ShExParser = (function () {
 
-// stolen as much as possible from SPARQL.js
-if (true) {
-  ShExJison = __webpack_require__(48).Parser; // node environment
-} else {}
+const ShExJison = __webpack_require__(48).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 var prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -16481,7 +16478,7 @@ function vpEngine (schema, shape, index) {
                       predicate: expr.predicate
                     },
                     "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                    "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                    "id" in expr ? { productionLabel: expr.id } : {},
                     minmax,
                     {
                       solutions: tests.map(p => p.tested)

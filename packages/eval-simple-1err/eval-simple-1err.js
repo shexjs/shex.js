@@ -188,13 +188,9 @@ var EvalSimple1Err = (function () {
             continue;
           var state = rbenx.states[thread.state];
           var nlistlen = nlist.length;
-          var constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
-          if (constraintNo === -1) {
-            var scoped = state.c.scopedTripleConstraints.reduce(
-              (acc, tci) => acc.concat(constraintToTripleMapping[tci]), []);
-            addStates(rbenx, nlist, thread, scoped);
-          } else {
+          if (state.c.type === "TripleConstraint") {
+            var constraintNo = constraintList.indexOf(state.c);
             var min = "min" in state.c ? state.c.min : 1;
             var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
             if ("negated" in state.c && state.c.negated)
@@ -438,8 +434,8 @@ var EvalSimple1Err = (function () {
         ptr.predicate = m.c.predicate;
         if ("valueExpr" in m.c)
           ptr.valueExpr = m.c.valueExpr;
-        if ("productionLabel" in m.c)
-          ptr.productionLabel = m.c.productionLabel;
+        if ("id" in m.c)
+          ptr.productionLabel = m.c.id;
         ptr.solutions = m.triples.map(tNo => {
           var triple = neighborhood[tNo];
           var ret = {
