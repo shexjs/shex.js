@@ -22,7 +22,7 @@
               "nodeKind": "literal",
               "type": "NodeConstraint"
             },
-            "type": "NodeTest"
+            "type": "NodeConstraintTest"
           },
           "type": "ShapeOrResults"
         }

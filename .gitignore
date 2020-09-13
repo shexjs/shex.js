@@ -35,4 +35,4 @@ packages/shex-api/browser/
 packages/shex-parser/browser/
 packages/shex-webapp/browser/shex-webapp-browserify.js
 packages/shex-webapp/browser/shex-webapp-browserify.min.js
-extensions/extension-map/browser/
+packages/extension-map/browser/
