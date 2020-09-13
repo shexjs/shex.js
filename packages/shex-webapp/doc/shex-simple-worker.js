@@ -60,6 +60,7 @@ onmessage = function (msg) {
     ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
       loadedSchema = loaded.schema;
       validator = ShEx.Validator.construct(loaded.schema, options);
+      // extensions.each(ext => ext.register(validator, ShEx);
       postMessage({ response: "created" });
     }).catch(e => {
       postMessage({ response: "error", message: e.message, stack: e.stack });
@@ -86,6 +87,7 @@ onmessage = function (msg) {
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
         singletonMap[0].shape = ShEx.Validator.start;
       var newResults = validator.validate(db, singletonMap, options.track ? makeRelayTracker() : null);
+      console.warn(newResults)
       newResults.forEach(function (res) {
         if (res.shape === ShEx.Validator.start)
           res.shape = START_SHAPE_INDEX_ENTRY;
