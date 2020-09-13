@@ -972,7 +972,7 @@ function callValidator (done) {
         case "finishQuery":
           noScrollAppend($("#inputData textarea"), " " + msg.data.quads.length + " triples (" + msg.data.time + " μs)\n");
           Caches.inputData.slurpWriter.addQuads(msg.data.quads.map(
-            t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
+            t => ShEx.ShExTerm.externalTriple(t, ShEx.N3.DataFactory)
           ));
           break;
 
@@ -1461,7 +1461,7 @@ function queryTracker () {
     end: function (quads, time) {
       noScrollAppend($("#inputData textarea"), " " + quads.length + " triples (" + time + " μs)\n");
       Caches.inputData.slurpWriter.addQuads(quads.map(
-        t => ShEx.RdfTerm.externalTriple(t, ShEx.N3.DataFactory)
+        t => ShEx.ShExTerm.externalTriple(t, ShEx.N3.DataFactory)
       ));
     }
   }
