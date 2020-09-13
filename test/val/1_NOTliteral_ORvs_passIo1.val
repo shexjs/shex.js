@@ -10,7 +10,18 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "http://a.example/o1"
+        "object": "http://a.example/o1",
+        "referenced": {
+          "solution": {
+            "focus": "http://a.example/o1",
+            "shapeExpr": {
+              "nodeKind": "literal",
+              "type": "NodeConstraint"
+            },
+            "type": "ShapeNotTest"
+          },
+          "type": "ShapeOrResults"
+        }
       }
     ],
     "valueExpr": {

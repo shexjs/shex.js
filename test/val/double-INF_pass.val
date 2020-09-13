@@ -13,6 +13,14 @@
         "object": {
           "value": "INF",
           "type": "http://www.w3.org/2001/XMLSchema#double"
+        },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"INF\"^^http://www.w3.org/2001/XMLSchema#double",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#double"
+          }
         }
       }
     ],

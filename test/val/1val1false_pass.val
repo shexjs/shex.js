@@ -16,7 +16,20 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "false", "type": "http://www.w3.org/2001/XMLSchema#boolean" }
+        "object": { "value": "false", "type": "http://www.w3.org/2001/XMLSchema#boolean" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"false\"^^http://www.w3.org/2001/XMLSchema#boolean",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "http://www.w3.org/2001/XMLSchema#boolean",
+                "value": "false"
+              }
+            ]
+          }
+        }
       }
     ]
   }

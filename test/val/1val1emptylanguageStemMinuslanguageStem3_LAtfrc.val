@@ -33,7 +33,34 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "septante", "language": "frc" }
+        "object": { "value": "septante", "language": "frc" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"septante\"@frc",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "exclusions": [
+                  {
+                    "stem": "fr-be",
+                    "type": "LanguageStem"
+                  },
+                  {
+                    "stem": "fr-cd",
+                    "type": "LanguageStem"
+                  },
+                  {
+                    "stem": "fr-ch",
+                    "type": "LanguageStem"
+                  }
+                ],
+                "stem": "",
+                "type": "LanguageStemRange"
+              }
+            ]
+          }
+        }
       }
     ]
   }

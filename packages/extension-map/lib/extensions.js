@@ -4,7 +4,6 @@
  * the extension is valid, it forwards the request on
  */
 var Extensions = (function () {
-var _ = require('underscore');
 
 // Known extensions
 var hashmap_extension = require('./hashmap_extension');
@@ -22,7 +21,7 @@ var utils = require('./extension-utils');
  * @return an object with members:  extension name and the arguments.
  */
 function extensionDef(mapDirective) { 
-    if (_.isEmpty(mapDirective)) 
+    if (mapDirective === undefined)
         throw Error("Invalid extension function: " + mapDirective + "!");
 
     // Get the extension name and argument(s)  
