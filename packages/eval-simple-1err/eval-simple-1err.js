@@ -198,9 +198,9 @@ var EvalSimple1Err = (function () {
             continue;
           var state = rbenx.states[thread.state];
           var nlistlen = nlist.length;
-          var constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
           if (state.c.type === "TripleConstraint") {
+            var constraintNo = constraintList.indexOf(state.c);
             var min = "min" in state.c ? state.c.min : 1;
             var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
             if ("negated" in state.c && state.c.negated)
