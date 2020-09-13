@@ -151,7 +151,7 @@ function vpEngine (schema, shape, index) {
                       predicate: expr.predicate
                     },
                     "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                    "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                    "id" in expr ? { productionLabel: expr.id } : {},
                     minmax,
                     {
                       solutions: tests.map(p => p.tested)
