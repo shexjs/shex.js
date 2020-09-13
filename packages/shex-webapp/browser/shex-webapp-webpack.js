@@ -4303,7 +4303,7 @@ class N3Lexer {
 // **ShExUtil** provides ShEx utility functions
 
 var ShExUtil = (function () {
-var RdfTerm = __webpack_require__(10);
+var ShExTerm = __webpack_require__(10);
 const Visitor = __webpack_require__(20)
 const Hierarchy = __webpack_require__(41)
 
@@ -4365,13 +4365,13 @@ function extend (base) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -4445,7 +4445,7 @@ var ShExUtil = {
     v.cleanIds = function () {
       for (var k in knownExpressions) {
         var known = knownExpressions[k];
-        if (known.refCount === 1 && RdfTerm.isBlank(known.expr.id))
+        if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
     }
@@ -4517,8 +4517,8 @@ var ShExUtil = {
           "language" in node ? "@" + node.language :
           ""
       )) :
-      RdfTerm.isIRI(node) ? "<" + node + ">" :
-      RdfTerm.isBlank(node) ? node :
+      ShExTerm.isIRI(node) ? "<" + node + ">" :
+      ShExTerm.isBlank(node) ? node :
       "???";
     }
     return this.valGrep(res, "TestedTriple", function (t) {
@@ -4537,19 +4537,19 @@ var ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return RdfTerm.externalTriple(ret, factory);
+      return ShExTerm.externalTriple(ret, factory);
     });
   },
 
   n3jsToTurtle: function (n3js) {
     function termToLex (node) {
-      if (RdfTerm.isIRI(node))
+      if (ShExTerm.isIRI(node))
         return "<" + node + ">";
-      if (RdfTerm.isBlank(node))
+      if (ShExTerm.isBlank(node))
         return node;
-      var t = RdfTerm.getLiteralType(node);
+      var t = ShExTerm.getLiteralType(node);
       if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + RdfTerm.getLiteralValue(node) + "\"" +
+        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
         "^^<" + t + ">";
       return node;
     }
@@ -5167,8 +5167,8 @@ var ShExUtil = {
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          RdfTerm.isIRI(obj[k])) {
-        obj[k] = RdfTerm.resolveRelativeIRI(base, obj[k]);
+          ShExTerm.isIRI(obj[k])) {
+        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
       }}
 
     function resolveRelativeURLs (obj) {
@@ -5187,7 +5187,7 @@ var ShExUtil = {
 
   getProofGraph: function (res, db, dataFactory) {
     function _dive1 (solns) {
-      if (solns.type === "NodeTest" || solns.type === "NodeConstraintTest") {
+      if (solns.type === "NodeConstraintTest") {
       } else if (solns.type === "SolutionList" ||
           solns.type === "ShapeAndResults") {
         solns.solutions.forEach(s => {
@@ -5219,7 +5219,7 @@ var ShExUtil = {
             + (s2.object.language ? ("@" + s2.object.language) : 
                s2.object.type ? ("^^" + s2.object.type) :
                "");
-          db.addQuad(RdfTerm.externalTriple(s2, dataFactory))
+          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
@@ -5332,7 +5332,7 @@ var ShExUtil = {
 
   walkVal: function (val, cb) {
     var _ShExUtil = this;
-    if (val.type === "NodeTest") {
+    if (val.type === "NodeConstraintTest") {
       return null;
     } else if (val.type === "ShapeTest") {
       return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
@@ -5410,7 +5410,9 @@ var ShExUtil = {
               vals.push(newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced);
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                          ? rest.referenced.solution
+                          : rest.referenced);
             }
           }
         });
@@ -5787,7 +5789,9 @@ var ShExUtil = {
               toAdd = _join(toAdd, newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced);
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                          ? rest.referenced.solution
+                          : rest.referenced);
             }
           }
         }, []);
@@ -5796,7 +5800,7 @@ var ShExUtil = {
       }
     } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
       return {  };
-    } else if (val.type === "NodeTest") {
+    } else if (val.type === "NodeConstraintTest") {
       var thisNode = {  };
       thisNode[n3ify(val.node)] = [val.shape];
       return thisNode;
@@ -5834,8 +5838,8 @@ var ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: RdfTerm.resolveRelativeIRI(base, elt.node),
-        shape: RdfTerm.resolveRelativeIRI(base, elt.shape)
+        node: ShExTerm.resolveRelativeIRI(base, elt.node),
+        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
       });
     });
   },
@@ -5923,7 +5927,7 @@ var ShExUtil = {
     }
   },
 
-  resolveRelativeIRI: RdfTerm.resolveRelativeIRI,
+  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
 
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     var colon = prefixedIri.indexOf(":");
@@ -5953,7 +5957,7 @@ var ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + RdfTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
       return quoted;
     }
     if (!meta)
@@ -5961,7 +5965,7 @@ var ShExUtil = {
     var relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    var t = RdfTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    var t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
@@ -6058,10 +6062,10 @@ var ShExUtil = {
 
   makeN3DB: function (db, queryTracker) {
 
-    function getSubjects () { return db.getSubjects().map(RdfTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(RdfTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(RdfTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(RdfTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
+    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
+    function getQuads () { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
 
     function getNeighborhood (point, shapeLabel/*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -6070,7 +6074,7 @@ var ShExUtil = {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = db.getQuads(point, null, null, null).map(RdfTerm.internalTriple);
+      var outgoing = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         var time = new Date();
         queryTracker.end(outgoing, time - startTime);
@@ -6079,7 +6083,7 @@ var ShExUtil = {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      var incoming = db.getQuads(null, null, point, null).map(RdfTerm.internalTriple);
+      var incoming = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         queryTracker.end(incoming, new Date() - startTime);
       }
@@ -13225,15 +13229,15 @@ module.exports = typeof queueMicrotask === 'function'
 ShExWebApp = (function () {
   let shapeMap = __webpack_require__(38)
   return Object.assign({}, {
-    RdfTerm:    __webpack_require__(10),
-    Util:         __webpack_require__(13),
-    Validator:    __webpack_require__(44),
-    Writer:    __webpack_require__(21),
-    Api: __webpack_require__(46),
-    Parser: __webpack_require__(22),
-    ShapeMap: shapeMap,
+    ShExTerm:       __webpack_require__(10),
+    Util:           __webpack_require__(13),
+    Validator:      __webpack_require__(44),
+    Writer:         __webpack_require__(21),
+    Api:            __webpack_require__(46),
+    Parser:         __webpack_require__(22),
+    ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
-    N3: __webpack_require__(69)
+    N3:             __webpack_require__(69)
   })
 })()
 
@@ -14660,14 +14664,9 @@ var UNBOUNDED = -1;
 // interface constants
 var Start = { term: "START" }
 var InterfaceOptions = {
-  "or": {
-    "oneOf": "exactly one disjunct must pass",
-    "someOf": "one or more disjuncts must pass",
-    "firstOf": "disjunct evaluation stops after one passes"
-  },
-  "partition": {
-    "greedy": "each triple constraint consumes all triples matching predicate and object",
-    "exhaustive": "search all mappings of triples to triple constriant"
+  "coverage": {
+    "firstError": "fail on first error (usually used with eval-simple-1err)",
+    "exhaustive": "find as many errors as possible (usually used with eval-threaded-nerr)"
   }
 };
 
@@ -14676,12 +14675,12 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var RdfTerm = __webpack_require__(10);
+var ShExTerm = __webpack_require__(10);
 let ShExVisitor = __webpack_require__(20);
 
 function getLexicalValue (term) {
-  return RdfTerm.isIRI(term) ? term :
-    RdfTerm.isLiteral(term) ? RdfTerm.getLiteralValue(term) :
+  return ShExTerm.isIRI(term) ? term :
+    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
     term.substr(2); // bnodes start with "_:"
 }
 
@@ -14846,13 +14845,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -14878,8 +14877,7 @@ function ShExValidator_constructor(schema, options) {
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
-  this.options.or = this.options.or || "someOf";
-  this.options.partition = this.options.partition || "exhaustive";
+  this.options.coverage = this.options.coverage || "exhaustive";
   if (!("noCache" in options && options.noCache))
     this.known = {};
 
@@ -14920,17 +14918,21 @@ function ShExValidator_constructor(schema, options) {
 
     function indexTripleConstraints_dive (expr) {
       if (typeof expr === "string") // Inclusion
-        indexTripleConstraints_dive(index.tripleExprs[expr]);
+        return indexTripleConstraints_dive(index.tripleExprs[expr]);
 
-      else if (expr.type === "TripleConstraint")
-        tripleConstraints.push(expr)-1;
+      else if (expr.type === "TripleConstraint") {
+        tripleConstraints.push(expr);
+        return [tripleConstraints.length - 1]; // index of expr
+      }
 
       else if (expr.type === "OneOf" || expr.type === "EachOf")
-        expr.expressions.forEach(function (nested) {
-          indexTripleConstraints_dive(nested);
-        });
+        return expr.expressions.reduce(function (acc, nested) {
+          return acc.concat(indexTripleConstraints_dive(nested));
+        }, []);
 
-      // @@TODO shape.virtual, shape.inherit
+      else if (expr.type === "NestedShape")
+        return [];
+
       else
         runtimeError("unexpected expr type: " + expr.type);
     };
@@ -14955,7 +14957,7 @@ function ShExValidator_constructor(schema, options) {
   this.validate = function (db, point, label, tracker, seen) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
-      point = RdfTerm.internalTerm(point)
+      point = ShExTerm.internalTerm(point)
     }
     if (typeof point === "object") {
       var shapeMap = point;
@@ -14980,7 +14982,7 @@ function ShExValidator_constructor(schema, options) {
           { passes: ret.passes.concat(res), failures: ret.failures } ;
       }, {passes: [], failures: []});
       if (false) { var _add, ret; }
-      if (results.failures.length) {
+      if (results.failures.length > 0) {
         return results.failures.length !== 1 ?
           { type: "FailureList", errors: results.failures } :
           results.failures [0];
@@ -15010,6 +15012,8 @@ function ShExValidator_constructor(schema, options) {
     } else {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
+    if (typeof label !== "string")
+      return this._validateShapeExpr(db, point, shape, Start, tracker, seen);
 
     if (seen === undefined)
       seen = {};
@@ -15041,12 +15045,12 @@ function ShExValidator_constructor(schema, options) {
     if (typeof shapeExpr === "string") { // ShapeRef
       return this._validateShapeExpr(db, point, index.shapeExprs[shapeExpr], shapeExpr, tracker, seen);
     } else if (shapeExpr.type === "NodeConstraint") {
-      var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-      return errors.length ? {
+      var sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      return sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
-        errors: errors.map(function (error) {
+        errors: sub.errors.map(function (error) { // !!! just sub.errors?
           return {
             type: "NodeConstraintViolation",
             shapeExpr: shapeExpr,
@@ -15054,14 +15058,13 @@ function ShExValidator_constructor(schema, options) {
           };
         })
       } : {
-        type: "NodeTest",
+        type: "NodeConstraintTest",
         node: ldify(point),
         shape: shapeLabel,
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      return this._validateShape(db, point, regexModule.compile(schema, shapeExpr, index),
-                                 shapeExpr, shapeLabel, tracker, seen);
+      return this._validateShape(db, point, shapeExpr, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeExternal") {
       return this.options.validateExtern(db, point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
@@ -15100,11 +15103,12 @@ function ShExValidator_constructor(schema, options) {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
   }
 
-  this._validateShape = function (db, point, regexEngine, shape, shapeLabel, tracker, seen) {
-    var _ShExValidator = this;
+  this._validateShape = function (db, point, shape, shapeLabel, tracker, seen) {
+    const _ShExValidator = this;
+    const valParms = { db, shapeLabel, tracker, seen };
 
-    var ret = null;
-    var startAcionStorage = {}; // !!! need test to see this write to results structure.
+    let ret = null;
+    const startAcionStorage = {}; // !!! need test to see this write to results structure.
     if ("startActs" in schema) {
       const semActErrors = this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage)
       if (semActErrors.length)
@@ -15113,70 +15117,151 @@ function ShExValidator_constructor(schema, options) {
           node: ldify(point),
           shape: shapeLabel,
           errors: semActErrors
-        }; // some semAct aborted !! return real error
+        }; // some semAct aborted !! return a better error
     }
-    // @@ add to tracker: f("validating <" + point + "> as <" + shapeLabel + ">");
 
-    var fromDB  = db.getNeighborhood(point, shapeLabel, shape);
-    var outgoing = indexNeighborhood(fromDB.outgoing.sort(
-      (l, r) => sparqlOrder(l.object, r.object)
+    const fromDB  = db.getNeighborhood(point, shapeLabel, shape);
+    const outgoingLength = fromDB.outgoing.length;
+    const neighborhood = fromDB.outgoing.sort(
+      (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
+    ).concat(fromDB.incoming.sort(
+      (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
     ));
-    var incoming = indexNeighborhood(fromDB.incoming.sort(
-      (l, r) => sparqlOrder(l.subject, r.subject)
-    ));
-    var outgoingLength = fromDB.outgoing.length;
-    var neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
-    var constraintList = this.indexTripleConstraints(shape.expression);
-    var tripleList = constraintList.reduce(function (ret, constraint, ord) {
+    const constraintList = this.indexTripleConstraints(shape.expression);
+    const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms);
+    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
+
+    const xp = crossProduct(tripleList.constraintList, "NO_TRIPLE_CONSTRAINT");
+    const partitionErrors = [];
+    const regexEngine = regexModule.compile(schema, shape, index);
+    while (xp.next() && ret === null) {
+      const errors = []
+      const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
+      const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
+            _seq(neighborhood.length).map(function () { return 0; });
+
+      // t2tc - array mapping neighborhood index to TripleConstraint
+      const t2tcForThisShape = xp.get(); // [0,1,0,3] mapping from triple to constraint
+
+      // Triples not mapped to triple constraints are not allowed in closed shapes.
+      if (shape.closed) {
+        const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
+          return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
+          extras.indexOf(i) === -1; // wasn't in EXTRAs.
+        });
+        if (unexpectedTriples.length > 0)
+          errors.push({
+            errors: [
+              {
+                type: "ClosedShapeViolation",
+                unexpectedTriples: unexpectedTriples
+              }
+            ]
+          });
+      }
+
+      // Set usedTriples and constraintMatchCount.
+      t2tcForThisShape.forEach(function (tpNumber, ord) {
+        if (tpNumber !== "NO_TRIPLE_CONSTRAINT") {
+          usedTriples.push(neighborhood[ord]);
+          ++constraintMatchCount[tpNumber];
+        }
+      });
+      const tc2t = _constraintToTriples(t2tcForThisShape, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
+
+      const results = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
+      if ("errors" in results)
+        errors.push({ errors: results.errors });
+
+      const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+      if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
+        possibleRet.solution = results;
+      if ("semActs" in shape) {
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        if (semActErrors.length)
+          // some semAct aborted
+          errors.push({ errors: semActErrors });
+      }
+
+      partitionErrors.push(errors)
+      if (errors.length === 0)
+        ret = possibleRet
+    }
+    // end of while(xp.next())
+
+    const missErrors = misses.map(function (miss) {
+      const t = neighborhood[miss.tripleNo];
+      return {
+        type: "TypeMismatch",
+        triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+        constraint: constraintList[miss.constraintNo],
+        errors: miss.errors
+      };
+    });
+
+    // Report only last errors until we have a better idea.
+    const lastErrors = partitionErrors[partitionErrors.length - 1];
+    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0].errors : lastErrors);
+    if (errors.length > 0)
+      ret = {
+        type: "Failure",
+        node: ldify(point),
+        shape: shapeLabel,
+        errors: errors
+      };
+
+    // remove N3jsTripleToString
+    if (VERBOSE)
+      neighborhood.forEach(function (t) {
+        delete t.toString;
+      });
+
+    return addShapeAttributes(shape, ret);
+  };
+
+  function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms) {
+    const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
+    const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
+    return constraintList.reduce(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
-      var searchSubject = constraint.inverse ? null : point;
-      var searchObject = constraint.inverse ? point : null;
-      var index = constraint.inverse ? incoming : outgoing;
+      const searchSubject = constraint.inverse ? null : point;
+      const searchObject = constraint.inverse ? point : null;
+      const index = constraint.inverse ? incoming : outgoing;
 
       // get triples matching predciate
-      var matchPredicate = index.byPredicate[constraint.predicate] ||
-        []; // empty list when no triple matches that constraint
+      const matchPredicate = index.byPredicate[constraint.predicate] ||
+            []; // empty list when no triple matches that constraint
 
-      function _errorsByShapeLabel (focus, shapeLabel) {
-        var sub = _ShExValidator.validate(db, focus, shapeLabel, tracker, seen);
-        return "errors" in sub ? sub.errors : [];
-      }
-      function _errorsByShapeExpr (focus, shapeExpr) {
-        var sub = _ShExValidator._validateShapeExpr(db, focus, shapeExpr, shapeLabel, tracker, seen);
-        return "errors" in sub ? sub.errors : [];
-      }
       // strip to triples matching value constraints (apart from @<someShape>)
-      var matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
-        matchPredicate,
-        constraint.valueExpr,
-        constraint.inverse,
-        /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeLabel,
-        /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeExpr
+      const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
+        matchPredicate, constraint, valParms
       );
 
-      matchConstraints.hits.forEach(function (t) {
-        ret.constraintList[neighborhood.indexOf(t)].push(ord);
+      matchConstraints.hits.forEach(function (evidence) {
+        const tNo = neighborhood.indexOf(evidence.triple);
+        ret.constraintList[tNo].push(cNo);
+        ret.results[cNo][tNo] = evidence.sub;
       });
-      matchConstraints.misses.forEach(function (t) {
-        ret.misses[neighborhood.indexOf(t.triple)] = {constraintNo: ord, errors: t.errors};
+      matchConstraints.misses.forEach(function (evidence) {
+        const tNo = neighborhood.indexOf(evidence.triple);
+        ret.misses[tNo] = {constraintNo: cNo, errors: evidence.errors};
       });
       return ret;
-    }, { misses: {}, constraintList:_seq(neighborhood.length).map(function () { return []; }) }); // start with [[],[]...]
+    }, { misses: {}, results: _alist(constraintList.length), constraintList:_alist(neighborhood.length) })
+  }
 
-    // @@ add to tracker: f("constraints by triple: ", JSON.stringify(tripleList.constraintList));
-
-    var extras = []; // triples accounted for by EXTRA
-    var misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
-      if (constraints.length === 0 &&                       // matches no constraints
-          ord < outgoingLength &&                           // not an incoming triple
-          ord in tripleList.misses) {                       // predicate matched some constraint(s)
-        if (shape.extra !== undefined &&
-            shape.extra.indexOf(neighborhood[ord].predicate) !== -1) {
-          extras.push(ord);
-        } else {                                            // not declared extra
-          ret.push({                                        // so it's a missed triple.
+  function whatsMissing (tripleList, neighborhood, outgoingLength, extras) {
+    const matchedExtras = []; // triples accounted for by EXTRA
+    const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+      if (constraints.length === 0 &&   // matches no constraints
+          ord < outgoingLength &&       // not an incoming triple
+          ord in tripleList.misses) {   // predicate matched some constraint(s)
+        if (extras.indexOf(neighborhood[ord].predicate) !== -1) {
+          matchedExtras.push(ord);
+        } else {                        // not declared extra
+          ret.push({                    // so it's a missed triple.
             tripleNo: ord,
             constraintNo: tripleList.misses[ord].constraintNo,
             errors: tripleList.misses[ord].errors
@@ -15185,186 +15270,91 @@ function ShExValidator_constructor(schema, options) {
       }
       return ret;
     }, []);
+    return {misses, extras: matchedExtras}
+  }
 
-    var xp = crossProduct(tripleList.constraintList);
-    var partitionErrors = [];
-    while ((misses.length === 0 || this.options.partition !== "greedy") && xp.next() && ret === null) {
-      // caution: early continues
+  function addShapeAttributes (shape, ret) {
+    if ("annotations" in shape)
+      ret.annotations = shape.annotations;
+    return ret;
+  }
 
-      var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-      var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-        _seq(neighborhood.length).map(function () { return 0; });
-      var tripleToConstraintMapping = xp.get(); // [0,1,0,3] mapping from triple to constraint
+  // Pivot to triples by constraint.
+  function _constraintToTriples (t2tc, constraintList, tripleList) {
+    return t2tc.slice().
+      reduce(function (ret, cNo, tNo) {
+        if (cNo !== "NO_TRIPLE_CONSTRAINT")
+          ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
+        return ret;
+      }, _seq(constraintList.length).map(() => [])); // [length][]
+  }
 
-      // Triples not mapped to triple constraints are not allowed in closed shapes.
-      if (shape.closed) {
-        var unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return tripleToConstraintMapping[i] === undefined && // didn't match a constraint
-          extras.indexOf(i) === -1; // wasn't in EXTRAs.
-        });
-        if (unexpectedTriples.length > 0) {
-          partitionErrors.push({
-            errors: [
-              {
-                type: "ClosedShapeViolation",
-                unexpectedTriples: unexpectedTriples
-              }
-            ]
-          });
-          continue; // closed shape violation.
-        }
-      }
-
-      // Set usedTriples and constraintMatchCount.
-      tripleToConstraintMapping.forEach(function (tpNumber, ord) {
-        if (tpNumber !== undefined) {
-          usedTriples.push(neighborhood[ord]);
-          ++constraintMatchCount[tpNumber];
-        }
-      });
-
-      // Pivot to triples by constraint.
-      function _constraintToTriples () {
-        var cll = constraintList.length;
-        return tripleToConstraintMapping.slice().
-          reduce(function (ret, c, ord) {
-            if (c !== undefined)
-              ret[c].push(ord);
-            return ret;
-          }, _seq(cll).map(function () { return []; }));
-      }
-
-      tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
-        return i !== undefined;
-      }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3
-
-      function _recurse (point, shapeLabel) {
-        return _ShExValidator.validate(db, point, shapeLabel, tracker, seen);
-      }
-      function _direct (point, shapeExpr) {
-        return _ShExValidator._validateShapeExpr(db, point, shapeExpr, shapeLabel, tracker, seen);
-      }
-      function _testExpr (term, valueExpr, recurse, direct) {
-        return _ShExValidator._errorsMatchingShapeExpr(term, valueExpr, recurse, direct)
-      }
-      var results = regexEngine.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
-      // {// testing parity between two engines
-      //   var nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
-      //   var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
-      //   if ("errors" in fromNFA !== "errors" in results)
-      //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
-      // }
-      if ("errors" in results) {
-        partitionErrors.push({
-          errors: results.errors
-        });
-        if (_ShExValidator.options.partition !== "exhaustive")
-          break;
-        else
-          continue;
-      }
-
-      // @@ add to tracker: f("post-regexp " + usedTriples.join(" "));
-
-      var possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
-      if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
-        possibleRet.solution = results;
-      if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
-        if (semActErrors.length) {
-          // some semAct aborted
-          partitionErrors.push({
-            errors: semActErrors
-          });
-          if (_ShExValidator.options.partition !== "exhaustive")
-            break;
-          else
-            continue;
-        }
-      }
-      // @@ add to tracker: f("final " + usedTriples.join(" "));
-
-      ret = possibleRet;
-      partitionErrors = [];
-      // alts.push(tripleToConstraintMapping);
-    }
-    var missErrors = misses.map(function (miss) {
-      var t = neighborhood[miss.tripleNo];
-      return {
-        type: "TypeMismatch",
-        triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
-        constraint: constraintList[miss.constraintNo],
-        errors: miss.errors
-      };
-    });
-    let errors = missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors);
-    if (errors.length > 0) {
-      ret = {
-        type: "Failure",
-        node: ldify(point),
-        shape: shapeLabel,
-        errors: errors
-      };
-    }
-
-    if (VERBOSE) { // remove N3jsTripleToString
-      neighborhood.forEach(function (t) {
-        delete t.toString;
-      });
-    }
-    // @@ add to tracker: f("</" + shapeLabel + ">");
-    return addShapeAttributes(ret);
-
-    function addShapeAttributes (ret) {
-      if ("annotations" in shape)
-        ret.annotations = shape.annotations;
-      return ret;
-    }
-  };
-
-  this._triplesMatchingShapeExpr = function (triples, valueExpr, inverse, recurse, direct) {
+  this._triplesMatchingShapeExpr = function (triples, constraint, valParms) {
     var _ShExValidator = this;
     var misses = [];
     var hits = [];
     triples.forEach(function (triple) {
-      var value = inverse ? triple.subject : triple.object;
-      var errors = valueExpr === undefined ?
-          [] :
-          _ShExValidator._errorsMatchingShapeExpr(value, valueExpr, recurse, direct);
-      if (errors.length === 0) {
-        hits.push(triple);
+      var value = constraint.inverse ? triple.subject : triple.object;
+      var sub;
+      var oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
+      var errors = constraint.valueExpr === undefined ?
+          undefined :
+          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms)).errors;
+      if (!errors) {
+        hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
+        _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
         misses.push({triple: triple, errors: errors});
       }
     });
     return { hits: hits, misses: misses };
   }
-  this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
+  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms) {
     var _ShExValidator = this;
     if (typeof valueExpr === "string") { // ShapeRef
-      return recurse ? recurse(value, valueExpr) : [];
+      return _ShExValidator.validate(valParms.db, value, valueExpr, valParms.tracker, valParms.seen);
     } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
-      return direct === undefined ? [] : direct(value, valueExpr);
+      return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.tracker, valParms.seen)
     } else if (valueExpr.type === "ShapeOr") {
-      var ret = [];
+      var errors = [];
       for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct);
-        if (nested.length === 0)
-          return nested;
-        ret = ret.concat(nested);
+        var nested = valueExpr.shapeExprs[i];
+        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
+        if ("errors" in sub)
+          errors.push(sub);
+        else
+          return { type: "ShapeOrResults", solution: sub };
+      }
+      return { type: "ShapeOrFailure", errors: errors };
+    } else if (valueExpr.type === "ShapeAnd") {
+      var passes = [];
+      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        var nested = valueExpr.shapeExprs[i];
+        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
+        if ("errors" in sub)
+          return { type: "ShapeAndFailure", errors: [sub] };
+        else
+          passes.push(sub);
+      }
+      return { type: "ShapeAndResults", solutions: passes };
+    } else if (valueExpr.type === "ShapeNot") {
+      var sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms);
+      // return sub.errors && sub.errors.length ? {} : {
+      //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
+      var ret = Object.assign({
+        type: null,
+        focus: value
+      }, valueExpr);
+      if (sub.errors && sub.errors.length) {
+        ret.type = "ShapeNotTest";
+        // ret = {};
+      } else {
+        ret.type = "ShapeNotFailure";
+        ret.errors = ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"]
       }
       return ret;
-    } else if (valueExpr.type === "ShapeAnd") {
-      return valueExpr.shapeExprs.reduce(function (ret, nested, iter) {
-        return ret.concat(_ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, true));
-      }, []);
-    } else if (valueExpr.type === "ShapeNot") {
-      var ret = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, recurse, direct, true);
-      return ret.length ?
-        [] :
-        ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"];
     } else {
       throw Error("unknown value expression type '" + valueExpr.type + "'");
     }
@@ -15375,10 +15365,10 @@ function ShExValidator_constructor(schema, options) {
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     var errors = [];
-    var label = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralValue(value) :
-      RdfTerm.isBlank(value) ? value.substring(2) :
+    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+      ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralType(value) : null;
+    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
     var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
@@ -15392,11 +15382,11 @@ function ShExValidator_constructor(schema, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (RdfTerm.isBlank(value)) {
+        if (ShExTerm.isBlank(value)) {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (RdfTerm.isLiteral(value)) {
+        } else if (ShExTerm.isLiteral(value)) {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -15408,11 +15398,11 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
 
       if (valueExpr.datatype) {
-        if (!RdfTerm.isLiteral(value)) {
+        if (!ShExTerm.isLiteral(value)) {
           validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (RdfTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + RdfTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
         }
         else if (numeric) {
           testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
@@ -15428,7 +15418,7 @@ function ShExValidator_constructor(schema, options) {
       }
 
       if (valueExpr.values) {
-        if (RdfTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           var ld = ldify(value);
           if (v.type === "Language") {
@@ -15460,11 +15450,11 @@ function ShExValidator_constructor(schema, options) {
                *       or non-literals with IriStemRange
                */
               function normalizedTest (val, ref, func) {
-                if (RdfTerm.isLiteral(val)) {
+                if (ShExTerm.isLiteral(val)) {
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralValue(val), ref);
+                    return func(ShExTerm.getLiteralValue(val), ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(RdfTerm.getLiteralLanguage(val) || null, ref);
+                    return func(ShExTerm.getLiteralLanguage(val) || null, ref);
                   } else {
                     return validationError("literal " + val + " not comparable with non-literal " + ref);
                   }
@@ -15560,7 +15550,18 @@ function ShExValidator_constructor(schema, options) {
         }
       }
     });
-    return errors;
+    var ret = {
+      type: null,
+      focus: value,
+      shapeExpr: valueExpr
+    };
+    if (errors.length) {
+      ret.type = "NodeConstraintViolation";
+      ret.errors = errors;
+    } else {
+      ret.type = "NodeConstraintTest";
+    }
+    return ret;
 
     function _lc (v) {
       return v == null ? v : v.toLowerCase();
@@ -15598,7 +15599,7 @@ function ShExValidator_constructor(schema, options) {
           var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
           var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
           var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage); debugger
+          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
           if (typeof response === 'boolean') {
             if (!response)
               ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
@@ -15736,14 +15737,14 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 }
 
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
-function crossProduct(sets) {
+function crossProduct(sets, emptyValue) {
   var n = sets.length, carets = [], args = null;
 
   function init() {
     args = [];
     for (var i = 0; i < n; i++) {
       carets[i] = 0;
-      args[i] = sets[i][0];
+      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
     }
   }
 
@@ -15768,7 +15769,7 @@ function crossProduct(sets) {
         return false;
       }
       carets[i] = 0;
-      args[i] = sets[i][0];
+      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
       carets[--i]++;
     }
     args[i] = sets[i][carets[i]];
@@ -15792,14 +15793,14 @@ function crossProduct(sets) {
  */
 var N3jsTripleToString = function () {
   function fmt (n) {
-    return RdfTerm.isLiteral(n) ?
+    return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(RdfTerm.getLiteralType(n)) !== -1 ?
-      parseInt(RdfTerm.getLiteralValue(n)) :
+      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
+      parseInt(ShExTerm.getLiteralValue(n)) :
       n :
-    RdfTerm.isBlank(n) ?
+    ShExTerm.isBlank(n) ?
       n :
       "<" + n + ">";
   }
@@ -15844,7 +15845,7 @@ function indexNeighborhood (triples) {
  */
 function sparqlOrder (l, r) {
   var [lprec, rprec] = [l, r].map(
-    x => RdfTerm.isBlank(x) ? 1 : RdfTerm.isLiteral(x) ? 2 : 3
+    x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
   );
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
 }
@@ -15878,6 +15879,10 @@ function runtimeError () {
   throw e;
 }
 
+  function _alist (len) {
+    return _seq(len).map(() => [])
+  }
+
   return {
     construct: ShExValidator_constructor,
     start: Start,
@@ -15896,7 +15901,7 @@ if (true)
 /***/ (function(module, exports, __webpack_require__) {
 
 var EvalThreadedNErr = (function () {
-var RdfTerm = __webpack_require__(10);
+var ShExTerm = __webpack_require__(10);
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -15905,7 +15910,7 @@ function vpEngine (schema, shape, index) {
       match:match
     };
 
-    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
+    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
 
       /*
        * returns: list of passing or failing threads (no heterogeneous lists)
@@ -15937,7 +15942,7 @@ function vpEngine (schema, shape, index) {
             for (var t = 0; t < newThreads.length; ++t) {
               var newt = newThreads[t];
               var sub = val(newt);
-              if (sub.length > 0 && sub[0].errors.length === 0) {
+              if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
                 sub.forEach(newThread => {
                   var solutions =
                       "expression" in newt ? newt.expression.solutions : [];
@@ -15980,7 +15985,7 @@ function vpEngine (schema, shape, index) {
           if (negated)
             min = max = Infinity;
           if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
           var minmax = {  };
           if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
             minmax.min = expr.min;
@@ -15996,37 +16001,73 @@ function vpEngine (schema, shape, index) {
           var matched = thread.matched;
           if (passed) {
             do {
-              ret.push({
-                avail: thread.avail.map(a => { // copy parent thread's avail vector
-                  return a.slice();
-                }), // was: extend({}, thread.avail)
-                errors: thread.errors.slice(),
-                matched: matched.concat({
-                  tNos: taken.slice()
-                }),
-                expression: extend(
-                  {
-                    type: "TripleConstraintSolutions",
-                    predicate: expr.predicate,
-                    solutions: taken.map(tripleNo =>  {
-                      return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
-                    })
-                    // map(triple => {
-                    //   var t = neighborhood[triple];
-                    //   return {
-                    //     type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: t.object
-                    //   }
-                    // })
-                  },
-                  "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                  "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
-                  minmax)
-              });
+              const passFail = taken.reduce((acc, tripleNo) => {
+                const t = neighborhood[tripleNo]
+                const tested = {
+                  type: "TestedTriple",
+                  subject: t.subject,
+                  predicate: t.predicate,
+                  object: ldify(t.object)
+                }
+                var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
+                if (hit.res && Object.keys(hit.res).length > 0)
+                  tested.referenced = hit.res;
+                const semActErrors = thread.errors.concat(
+                  "semActs" in expr
+                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
+                    : []
+                )
+                if (semActErrors.length > 0)
+                  acc.fail.push({tripleNo, tested, semActErrors})
+                else
+                  acc.pass.push({tripleNo, tested, semActErrors})
+                return acc
+              }, {pass: [], fail: []})
+
+
+              // return an empty solution if min card was 0
+              if (passFail.fail.length === 0) {
+                // If we didn't take anything, fall back to old errors.
+                // Could do something fancy here with a semAct registration for negative matches.
+                const totalErrors = taken.length === 0 ? thread.errors.slice() : []
+                const myThread = makeThread(passFail.pass, totalErrors)
+                ret.push(myThread);
+              } else {
+                passFail.fail.forEach(
+                  f => ret.push(makeThread([f], f.semActErrors))
+                )
+              }
+
+              function makeThread (tests, errors) {
+                return {
+                  avail: thread.avail.map(a => { // copy parent thread's avail vector
+                    return a.slice();
+                  }),
+                  errors: errors,
+                  matched: matched.concat({
+                    tNos: tests.map(p => p.tripleNo)
+                  }),
+                  expression: extend(
+                    {
+                      type: "TripleConstraintSolutions",
+                      predicate: expr.predicate
+                    },
+                    "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
+                    "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                    minmax,
+                    {
+                      solutions: tests.map(p => p.tested)
+                    }
+                  )
+                }
+              }
             } while ((function () {
               if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                // build another thread.
                 taken.push(thread.avail[constraintNo].shift());
                 return true;
               } else {
+                // no more threads
                 return false;
               }
             })());
@@ -16034,7 +16075,7 @@ function vpEngine (schema, shape, index) {
             var valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
-              if (RdfTerm.isBlank(valueExpr))
+              if (ShExTerm.isBlank(valueExpr))
                 valueExpr = index.shapeExprs[valueExpr];
             } else if (expr.valueExpr) {
               valueExpr = extend({}, expr.valueExpr)
@@ -16066,7 +16107,7 @@ function vpEngine (schema, shape, index) {
                 matched: th.matched//.slice() ever needed??
               };
               var sub = validateExpr(nested, thcopy);
-              if (sub[0].errors.length === 0) {
+              if (sub[0].errors.length === 0) { // all subs pass or all fail
                 matched = matched.concat(sub);
                 sub.forEach(newThread => {
                   var expressions =
@@ -16087,14 +16128,14 @@ function vpEngine (schema, shape, index) {
         }
 
         else if (expr.type === "EachOf") {
-          return validateRept("EachOfSolutions", (th) => {
+          return homogenize(validateRept("EachOfSolutions", (th) => {
             // Iterate through nested expressions, exprThreads starts as [th].
             return expr.expressions.reduce((exprThreads, nested) => {
               // Iterate through current thread list composing nextThreads.
               // Consider e.g.
               // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
               // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-              return exprThreads.reduce((nextThreads, exprThread) => {
+              return homogenize(exprThreads.reduce((nextThreads, exprThread) => {
                 var sub = validateExpr(nested, exprThread);
                 // Move newThread.expression into a hierarchical solution structure.
                 sub.forEach(newThread => {
@@ -16112,12 +16153,29 @@ function vpEngine (schema, shape, index) {
                   }
                 });
                 return nextThreads.concat(sub);
-              }, []);
+              }, []));
             }, [th]);
-          });
+          }));
         }
 
         runtimeError("unexpected expr type: " + expr.type);
+
+        function homogenize (list) {
+          return list.reduce((acc, elt) => {
+            if (elt.errors.length === 0) {
+              if (acc.errors) {
+                return { errors: false, l: [elt] };
+              } else {
+                return { errors: false, l: acc.l.concat(elt) };
+              }
+            } else {
+              if (acc.errors) {
+                return { errors: true, l: acc.l.concat(elt) };
+              } else {
+                return acc; }
+            }
+          }, {errors: true, l: []}).l;
+        }
       }
 
       var startingThread = {
@@ -16137,7 +16195,7 @@ function vpEngine (schema, shape, index) {
             var unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== undefined)
+              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.
@@ -16160,7 +16218,7 @@ function vpEngine (schema, shape, index) {
           }, null);
       return longerChosen !== null ?
         finish(longerChosen.expression, constraintList,
-               neighborhood, recurse, direct, semActHandler, checkValueExpr) :
+               neighborhood, semActHandler) :
         ret.length > 1 ? {
           type: "PossibleErrors",
           errors: ret.reduce((all, e) => {
@@ -16169,22 +16227,23 @@ function vpEngine (schema, shape, index) {
         } : ret[0];
     }
 
-    function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
-      function _dive (solns) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
         }
+
+    function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
+      function _dive (solns) {
         if (solns.type === "OneOfSolutions" ||
             solns.type === "EachOfSolutions") {
           solns.solutions.forEach(s => {
@@ -16209,7 +16268,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];
@@ -16247,6 +16306,21 @@ function vpEngine (schema, shape, index) {
       return fromValidatePoint;
     }
   }
+
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: N3Util.getLiteralValue(term) };
+          var dt = N3Util.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = N3Util.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
 
 function extend(base) {
   if (!base) base = {};

@@ -10,7 +10,22 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "ababab" }
+        "object": { "value": "ababab" },
+        "referenced": {
+          "solution": {
+            "node": {
+              "value": "ababab"
+            },
+            "shape": "http://a.example/vc3",
+            "shapeExpr": {
+              "nodeKind": "literal",
+              "pattern": "^(ab)*$",
+              "type": "NodeConstraint"
+            },
+            "type": "NodeConstraintTest"
+          },
+          "type": "ShapeOrResults"
+        }
       }
     ],
     "valueExpr": {

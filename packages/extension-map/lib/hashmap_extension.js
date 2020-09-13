@@ -4,7 +4,6 @@
  * And returns the appropriate map value based on the input.
  */
 var HashmapExtension = (function () {
-var _ = require('underscore');
 var util = require('util');
 
 var extUtils = require('./extension-utils');
@@ -20,11 +19,11 @@ var extUtils = require('./extension-utils');
 function parseArgs(mapDirective, args) {
 
     // Do we have anything in args? 
-    if (_.isEmpty(args)) throw Error("Hashmap extension requires a variable name and map as arguments, but found none!");
+    if (args === undefined || args.length === 0) throw Error("Hashmap extension requires a variable name and map as arguments, but found none!");
 
     // get the variable name and hashmap
     var matches = /^[ ]*([\w:<>]+)[ ]*,[ ]*({.*)$/.exec(args);
-    if (_.isNull(matches) || matches.length < 3) throw Error("Hashmap extension requires a variable name and map as arguments, but found: " + mapDirective + "!");
+    if (matches === null || matches.length < 3) throw Error("Hashmap extension requires a variable name and map as arguments, but found: " + mapDirective + "!");
 
     var varName = matches[1]; 
     var hashString = matches[2];
@@ -32,14 +31,14 @@ function parseArgs(mapDirective, args) {
     var map;
     try { 
         map = JSON.parse(hashString);
-        if (_.isEmpty(map)) throw Error("Empty hashmap!");
+        if (Object.keys(map).length === 0) throw Error("Empty hashmap!");
     } catch(e) { 
         throw Error("Hashmap extension unable to parse map in " + mapDirective+"!" + e.message);
     } 
 
     // Verify that the hash key/value pairs are unique
-    var values = _.values(map);
-    if (values.length != _.uniq(values).length) throw Error('Hashmap extension requires unique key/value pairs!');
+    var values = Object.values(map);
+  if (values.length != [...new Set(values)].length) throw Error('Hashmap extension requires unique key/value pairs!');
 
     return { varName: varName,
              hash: map };
@@ -58,13 +57,13 @@ function parseArgs(mapDirective, args) {
 function expandedVarName(varName, prefixes) { 
     var varComponents = varName.match(/^([\w]+):(.*)$/);
 
-    if (!_.isNull(varComponents) && varComponents.length == 3) { 
+    if (varComponents !== null && varComponents.length == 3) {
         var prefix = varComponents[1];
         var name = varComponents[2];
 
         // Verify we've got a good var name, prefix, and prefix value
-        if (_.isEmpty(prefix) || _.isEmpty(name)) throw Error("Hashmap extension given invalid target variable name " + varName);
-        if (_.isUndefined(prefixes[prefix])) throw Error("Hashmap extension given undefined variable prefix " + prefix);
+        if (prefix.length === 0 || name.length === 0) throw Error("Hashmap extension given invalid target variable name " + varName);
+        if (!(prefix in prefixes)) throw Error("Hashmap extension given undefined variable prefix " + prefix);
 
         expandedName = prefixes[prefix] + name; 
     } else {
@@ -84,14 +83,12 @@ function expandedVarName(varName, prefixes) {
  */
 function invert(hash, value) {
 
-   var keys = _.find(_.keys(hash), function(key) { 
-       return (value === hash[key]); 
-   });
+   var key = Object.keys(hash).find(key => value === hash[key])
 
-   if (_.isEmpty(keys)) 
+   if (!key)
        throw Error("Hashmap extension was unable to invert the value " 
                    + value + " with map " + util.inspect(hash, {depth: null}) +"!");
-   return keys;
+   return key;
 }
  
 function lift(mapDirective, input, prefixes, args) {
@@ -103,7 +100,7 @@ function lift(mapDirective, input, prefixes, args) {
     var expandedName = expandedVarName(mapArgs.varName, prefixes);
 
     var key = extUtils.trimQuotes(input);
-    if (_.isEmpty(key)) throw Error('Hashmap extension has no input');
+    if (key.length === 0) throw Error('Hashmap extension has no input');
     
     var mappedValue = mapArgs.hash[key];
     return { [expandedName]: mappedValue };
@@ -116,11 +113,11 @@ function lower(mapDirective, bindings, prefixes, args) {
     var expandedName = expandedVarName(mapArgs.varName, prefixes);
 
     var mappedValue = extUtils.trimQuotes( bindings.get(expandedName) );
-    if (_.isUndefined(mappedValue)) throw Error('Unable to find mapped value for ' + mapArgs.varName);
+    if (mappedValue === undefined) throw Error('Unable to find mapped value for ' + mapArgs.varName);
 
     // Now use the mapped Value to find the original value and clean it up if we get something
     var inverseValue = invert(mapArgs.hash, mappedValue);
-    if (!_.isEmpty(inverseValue)) { 
+    if (inverseValue.length !== 0) {
         return extUtils.unescapeMetaChars( extUtils.collapseSpaces(inverseValue) );
     }
 

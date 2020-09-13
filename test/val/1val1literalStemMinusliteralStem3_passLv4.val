@@ -33,7 +33,25 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "v4" }
+        "object": { "value": "v4" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"v4\"",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "LiteralStemRange",
+                "stem": "v",
+                "exclusions": [
+                  { "stem": "v1", "type": "LiteralStem" },
+                  { "stem": "v2", "type": "LiteralStem" },
+                  { "stem": "v3", "type": "LiteralStem" }
+                ]
+              }
+            ]
+          }
+        }
       }
     ]
   }
