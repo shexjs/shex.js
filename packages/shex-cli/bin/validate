@@ -653,7 +653,7 @@ function loadRDFmanifest (cmds) {
       });
       var resolver = loaded.data.getQuads(action, sht+"termResolver", null);
       if (resolver.length)
-        schemaOptions["termResolver"] = resolver.map(function (t) { return RdfTerm.internalTerm(t.object) });
+        schemaOptions["termResolver"] = resolver.map(function (t) { return ShExTerm.internalTerm(t.object) });
 
       return [["shex"  , "schema", true ],
               ["shape" , "shape" , false],

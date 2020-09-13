@@ -16,7 +16,15 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://a.example/protName",
-                "object": { "value": "Dracula" }
+                "object": { "value": "Dracula" },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "\"Dracula\"",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "nodeKind": "literal"
+                  }
+                }
               }
             ],
             "valueExpr": {
@@ -32,7 +40,19 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://a.example/protType",
-                "object": "http://a.example/Regulatory"
+                "object": "http://a.example/Regulatory",
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "http://a.example/Regulatory",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "values": [
+                      "http://a.example/Signaling",
+                      "http://a.example/Regulatory",
+                      "http://a.example/Transport"
+                    ]
+                  }
+                }
               }
             ],
             "valueExpr": {
@@ -52,7 +72,15 @@
                 "type": "TestedTriple",
                 "subject": "http://a.example/s",
                 "predicate": "http://a.example/protWidth",
-                "object": { "value": "30", "type": "http://a.example/microns" }
+                "object": { "value": "30", "type": "http://a.example/microns" },
+                "referenced": {
+                  "type": "NodeConstraintTest",
+                  "focus": "\"30\"^^http://a.example/microns",
+                  "shapeExpr": {
+                    "type": "NodeConstraint",
+                    "datatype": "http://a.example/microns"
+                  }
+                }
               }
             ],
             "valueExpr": {
