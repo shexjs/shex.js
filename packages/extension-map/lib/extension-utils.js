@@ -3,8 +3,6 @@
  */
 
 var ExtensionUtils = (function () {
-var _ = require('underscore');
-
 
 return {
     // Collapse multiple spaces into one
@@ -16,7 +14,7 @@ return {
     trimQuotes: function(string) {
 
         // empty string or 1 char string cannot have matching quotes
-        if (_.isUndefined(string) || string.length < 2) return string;
+        if (string === undefined || string.length < 2) return string;
 
         // Starting with single or double quote?
         if (string[0] === '"' || string[0] === "'") {

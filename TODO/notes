@@ -1,5 +1,8 @@
+// var ShExWriter = require("@shexjs/writer");
+// console.log(new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join(''));
+
 For next major version:
-  ~ rename ShEx{,C}Writer
+  ~ rename ShEx{,C}Writer?
 
 + STRING_LITERAL2-ECHAR
 + STRING_LITERAL2-UCHAR1

@@ -1,5 +1,5 @@
 var EvalThreadedNErr = (function () {
-var RdfTerm = require("@shexjs/term");
+var ShExTerm = require("@shexjs/term");
 var UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -8,7 +8,7 @@ function vpEngine (schema, shape, index) {
       match:match
     };
 
-    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
+    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
 
       /*
        * returns: list of passing or failing threads (no heterogeneous lists)
@@ -40,7 +40,7 @@ function vpEngine (schema, shape, index) {
             for (var t = 0; t < newThreads.length; ++t) {
               var newt = newThreads[t];
               var sub = val(newt);
-              if (sub.length > 0 && sub[0].errors.length === 0) {
+              if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
                 sub.forEach(newThread => {
                   var solutions =
                       "expression" in newt ? newt.expression.solutions : [];
@@ -83,7 +83,7 @@ function vpEngine (schema, shape, index) {
           if (negated)
             min = max = Infinity;
           if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].slice();
+            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
           var minmax = {  };
           if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
             minmax.min = expr.min;
@@ -99,37 +99,73 @@ function vpEngine (schema, shape, index) {
           var matched = thread.matched;
           if (passed) {
             do {
-              ret.push({
-                avail: thread.avail.map(a => { // copy parent thread's avail vector
-                  return a.slice();
-                }), // was: extend({}, thread.avail)
-                errors: thread.errors.slice(),
-                matched: matched.concat({
-                  tNos: taken.slice()
-                }),
-                expression: extend(
-                  {
-                    type: "TripleConstraintSolutions",
-                    predicate: expr.predicate,
-                    solutions: taken.map(tripleNo =>  {
-                      return { type: "halfTestedTriple", tripleNo: tripleNo, constraintNo: constraintNo };
-                    })
-                    // map(triple => {
-                    //   var t = neighborhood[triple];
-                    //   return {
-                    //     type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: t.object
-                    //   }
-                    // })
-                  },
-                  "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                  "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
-                  minmax)
-              });
+              const passFail = taken.reduce((acc, tripleNo) => {
+                const t = neighborhood[tripleNo]
+                const tested = {
+                  type: "TestedTriple",
+                  subject: t.subject,
+                  predicate: t.predicate,
+                  object: ldify(t.object)
+                }
+                var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
+                if (hit.res && Object.keys(hit.res).length > 0)
+                  tested.referenced = hit.res;
+                const semActErrors = thread.errors.concat(
+                  "semActs" in expr
+                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
+                    : []
+                )
+                if (semActErrors.length > 0)
+                  acc.fail.push({tripleNo, tested, semActErrors})
+                else
+                  acc.pass.push({tripleNo, tested, semActErrors})
+                return acc
+              }, {pass: [], fail: []})
+
+
+              // return an empty solution if min card was 0
+              if (passFail.fail.length === 0) {
+                // If we didn't take anything, fall back to old errors.
+                // Could do something fancy here with a semAct registration for negative matches.
+                const totalErrors = taken.length === 0 ? thread.errors.slice() : []
+                const myThread = makeThread(passFail.pass, totalErrors)
+                ret.push(myThread);
+              } else {
+                passFail.fail.forEach(
+                  f => ret.push(makeThread([f], f.semActErrors))
+                )
+              }
+
+              function makeThread (tests, errors) {
+                return {
+                  avail: thread.avail.map(a => { // copy parent thread's avail vector
+                    return a.slice();
+                  }),
+                  errors: errors,
+                  matched: matched.concat({
+                    tNos: tests.map(p => p.tripleNo)
+                  }),
+                  expression: extend(
+                    {
+                      type: "TripleConstraintSolutions",
+                      predicate: expr.predicate
+                    },
+                    "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
+                    "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                    minmax,
+                    {
+                      solutions: tests.map(p => p.tested)
+                    }
+                  )
+                }
+              }
             } while ((function () {
               if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                // build another thread.
                 taken.push(thread.avail[constraintNo].shift());
                 return true;
               } else {
+                // no more threads
                 return false;
               }
             })());
@@ -137,7 +173,7 @@ function vpEngine (schema, shape, index) {
             var valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
-              if (RdfTerm.isBlank(valueExpr))
+              if (ShExTerm.isBlank(valueExpr))
                 valueExpr = index.shapeExprs[valueExpr];
             } else if (expr.valueExpr) {
               valueExpr = extend({}, expr.valueExpr)
@@ -169,7 +205,7 @@ function vpEngine (schema, shape, index) {
                 matched: th.matched//.slice() ever needed??
               };
               var sub = validateExpr(nested, thcopy);
-              if (sub[0].errors.length === 0) {
+              if (sub[0].errors.length === 0) { // all subs pass or all fail
                 matched = matched.concat(sub);
                 sub.forEach(newThread => {
                   var expressions =
@@ -190,14 +226,14 @@ function vpEngine (schema, shape, index) {
         }
 
         else if (expr.type === "EachOf") {
-          return validateRept("EachOfSolutions", (th) => {
+          return homogenize(validateRept("EachOfSolutions", (th) => {
             // Iterate through nested expressions, exprThreads starts as [th].
             return expr.expressions.reduce((exprThreads, nested) => {
               // Iterate through current thread list composing nextThreads.
               // Consider e.g.
               // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
               // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-              return exprThreads.reduce((nextThreads, exprThread) => {
+              return homogenize(exprThreads.reduce((nextThreads, exprThread) => {
                 var sub = validateExpr(nested, exprThread);
                 // Move newThread.expression into a hierarchical solution structure.
                 sub.forEach(newThread => {
@@ -215,12 +251,29 @@ function vpEngine (schema, shape, index) {
                   }
                 });
                 return nextThreads.concat(sub);
-              }, []);
+              }, []));
             }, [th]);
-          });
+          }));
         }
 
         runtimeError("unexpected expr type: " + expr.type);
+
+        function homogenize (list) {
+          return list.reduce((acc, elt) => {
+            if (elt.errors.length === 0) {
+              if (acc.errors) {
+                return { errors: false, l: [elt] };
+              } else {
+                return { errors: false, l: acc.l.concat(elt) };
+              }
+            } else {
+              if (acc.errors) {
+                return { errors: true, l: acc.l.concat(elt) };
+              } else {
+                return acc; }
+            }
+          }, {errors: true, l: []}).l;
+        }
       }
 
       var startingThread = {
@@ -240,7 +293,7 @@ function vpEngine (schema, shape, index) {
             var unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== undefined)
+              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.
@@ -263,7 +316,7 @@ function vpEngine (schema, shape, index) {
           }, null);
       return longerChosen !== null ?
         finish(longerChosen.expression, constraintList,
-               neighborhood, recurse, direct, semActHandler, checkValueExpr) :
+               neighborhood, semActHandler) :
         ret.length > 1 ? {
           type: "PossibleErrors",
           errors: ret.reduce((all, e) => {
@@ -272,22 +325,23 @@ function vpEngine (schema, shape, index) {
         } : ret[0];
     }
 
-    function finish (fromValidatePoint, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
-      function _dive (solns) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
         }
+
+    function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
+      function _dive (solns) {
         if (solns.type === "OneOfSolutions" ||
             solns.type === "EachOfSolutions") {
           solns.solutions.forEach(s => {
@@ -312,7 +366,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && RdfTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];
@@ -350,6 +404,21 @@ function vpEngine (schema, shape, index) {
       return fromValidatePoint;
     }
   }
+
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: N3Util.getLiteralValue(term) };
+          var dt = N3Util.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = N3Util.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
 
 function extend(base) {
   if (!base) base = {};

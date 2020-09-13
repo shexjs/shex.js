@@ -16,7 +16,19 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "\u0000\t\u000b\f\u000e&([]" }
+        "object": { "value": "\u0000\t\u000b\f\u000e&([]" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"\u0000\t\u000b\f\u000e&([]\"",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "value": "\u0000\t\u000b\f\u000e&([]"
+              }
+            ]
+          }
+        }
       }
     ]
   }

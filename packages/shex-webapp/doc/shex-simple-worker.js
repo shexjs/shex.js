@@ -17,7 +17,7 @@ module.exports = exports; importScripts("../node_modules/shape-map/lib/ShapeMapJ
 importScripts("../node_modules/shape-map/lib/ShapeMapParser.js"   ); modules["../node_modules/shape-map/lib/ShapeMapParser"] = modules["./lib/ShapeMapParser"] = module.exports;
 importScripts("../node_modules/shape-map/shape-map.js"   ); modules["../node_modules/shape-map/shape-map"] = modules["shape-map"] = module.exports;
 
-importScripts("../node_modules/@shexjs/shex-term/shex-term.js"     ); modules["./RdfTerm"] = modules["../RdfTerm"] = modules["./lib/RdfTerm"] = RdfTerm;
+importScripts("../node_modules/@shexjs/shex-term/shex-term.js"     ); modules["./ShExTerm"] = modules["../ShExTerm"] = modules["./lib/ShExTerm"] = ShExTerm;
 importScripts("../node_modules/@!shexjs/util/lib/ShExUtil.js"     ); modules["./ShExUtil"] = modules["../node_modules/@shexjs/util/lib/ShExUtil"] = modules["./lib/ShExUtil"] = modules[".././node_modules/@shexjs/util/lib/ShExUtil"] = ShExUtil;
 importScripts("../node_modules/@shexjs/threaded-val-nerr/threaded-val-nerr.js"); modules["@shexjs/threaded-val-nerr"] = module.exports;
 importScripts("../node_modules/@shexjs/eval-simple-1err/eval-simple-1err.js"); modules["@shexjs/eval-simple-1err"] = module.exports;
@@ -58,6 +58,7 @@ onmessage = function (msg) {
     // shex-loader loads IMPORTs and tests the schema for structural faults.
     ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
       validator = ShEx.Validator.construct(loaded.schema, options);
+      // extensions.each(ext => ext.register(validator, ShEx);
       postMessage({ response: "created" });
     }).catch(e => {
       postMessage({ response: "error", message: e.message, stack: e.stack });

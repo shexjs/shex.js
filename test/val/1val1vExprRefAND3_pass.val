@@ -19,7 +19,7 @@
           "type": "ShapeAndResults",
           "solutions": [
             {
-              "type": "NodeTest",
+              "type": "NodeConstraintTest",
               "node": {
                 "value": "abab"
               },
@@ -32,7 +32,7 @@
               }
             },
             {
-              "type": "NodeTest",
+              "type": "NodeConstraintTest",
               "node": {
                 "value": "abab"
               },
@@ -45,7 +45,7 @@
               }
             },
             {
-              "type": "NodeTest",
+              "type": "NodeConstraintTest",
               "node": {
                 "value": "abab"
               },
