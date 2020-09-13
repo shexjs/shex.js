@@ -25,14 +25,14 @@ var VERBOSE = "VERBOSE" in process.env;
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 var N3Util = ShEx.N3.Util;
-var RdfTerm = require("@shexjs/term");
-const ShExMap = require("../shex-extension-map.js");
+var ShExTerm = require("@shexjs/term");
+const ShExMap = require("../shex-extension-map");
 
 var UNBOUNDED = -1;
 
 function getLexicalValue (term) {
-  return RdfTerm.isIRI(term) ? term :
-    RdfTerm.isLiteral(term) ? RdfTerm.getLiteralValue(term) :
+  return ShExTerm.isIRI(term) ? term :
+    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
     term.substr(2); // bnodes start with "_:"
 }
 
@@ -143,13 +143,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: RdfTerm.getLiteralValue(term) };
-          var dt = RdfTerm.getLiteralType(term);
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = RdfTerm.getLiteralLanguage(term)
+          var lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -191,9 +191,9 @@ function makeCache () {
  *   lax(true): boolean: whine about missing types in schema.
  *   diagnose(false): boolean: makde validate return a structure with errors.
  */
-function ShExMaterializer_constructor(schema, options) {
+function ShExMaterializer_constructor(schema, mapper, options) {
   if (!(this instanceof ShExMaterializer_constructor))
-    return new ShExMaterializer_constructor(schema, options);
+    return new ShExMaterializer_constructor(schema, mapper, options);
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -209,7 +209,7 @@ function ShExMaterializer_constructor(schema, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer.js");
+  var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer");
 
   var blankNodeCount = 0;
   var nextBNode = options.nextBNode || function () {
@@ -313,7 +313,7 @@ function ShExMaterializer_constructor(schema, options) {
           };
         })
       } : {
-        type: "NodeTest",
+        type: "NodeConstraintTest",
         node: ldify(point),
         shape: shapeLabel,
         shapeExpr: shapeExpr
@@ -502,13 +502,13 @@ function ShExMaterializer_constructor(schema, options) {
         var tc = constraintList[constraintNo];
         var curSubjectx = {cs: point};
         var target = new ShEx.N3.Store();
-        ShExMap.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
+        mapper.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
         var oldLen = neighborhood.length;
-        var created = target.getQuads().map(RdfTerm.internalTriple);
+        var created = target.getQuads().map(ShExTerm.internalTriple);
         neighborhood.push.apply(neighborhood, created);
         console.log("adding: " + created.length + " triples: " + created.map(
           q => (['subject', 'predicate', 'object']).map(
-            pos => RdfTerm.intermalTermToTurtle(q[pos], _ShExValidator.schema._base, _ShExValidator.schema._prefixes)
+            pos => ShExTerm.intermalTermToTurtle(q[pos], _ShExValidator.schema._base, _ShExValidator.schema._prefixes)
           ).join(' ')
         ));
         return Array.apply(null, {length: created.length}).map((_, idx)=>{ return idx+oldLen});
@@ -690,11 +690,11 @@ function ShExMaterializer_constructor(schema, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (RdfTerm.isBlank(value)) {
+        if (ShExTerm.isBlank(value)) {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (RdfTerm.isLiteral(value)) {
+        } else if (ShExTerm.isLiteral(value)) {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -706,16 +706,16 @@ function ShExMaterializer_constructor(schema, options) {
       if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
 
       if (valueExpr.datatype) {
-        if (!RdfTerm.isLiteral(value)) {
+        if (!ShExTerm.isLiteral(value)) {
           validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (RdfTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + RdfTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
         }
       }
 
       if (valueExpr.values) {
-        if (RdfTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           if (!(typeof v === "object" && "value" in v))
             return false;
@@ -766,10 +766,10 @@ function ShExMaterializer_constructor(schema, options) {
         validationError("value " + value + " did not match pattern " + valueExpr.pattern);
     }
 
-    var label = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralValue(value) :
-      RdfTerm.isBlank(value) ? value.substring(2) :
+    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+      ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = RdfTerm.isLiteral(value) ? RdfTerm.getLiteralType(value) : null;
+    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
     var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     Object.keys(stringTests).forEach(function (test) {
@@ -1020,14 +1020,14 @@ function crossProduct(sets) {
  */
 var N3jsTripleToString = function () {
   function fmt (n) {
-    return RdfTerm.isLiteral(n) ?
+    return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(RdfTerm.getLiteralType(n)) !== -1 ?
-      parseInt(RdfTerm.getLiteralValue(n)) :
+      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
+      parseInt(ShExTerm.getLiteralValue(n)) :
       n :
-    RdfTerm.isBlank(n) ?
+    ShExTerm.isBlank(n) ?
       n :
       "<" + n + ">";
   }
@@ -1075,8 +1075,8 @@ function bySubject (t1, t2) {
   // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
   //   return t1.predicate > t2.predicate;
   var l = t1.subject, r = t2.subject;
-  var lprec = RdfTerm.isBlank(l) ? 1 : RdfTerm.isLiteral(l) ? 2 : 3;
-  var rprec = RdfTerm.isBlank(r) ? 1 : RdfTerm.isLiteral(r) ? 2 : 3;
+  var lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
+  var rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
   return lprec === rprec ? l > r : lprec > rprec;
 }
 
@@ -1086,8 +1086,8 @@ function byObject (t1, t2) {
   // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
   //   return t1.predicate > t2.predicate;
   var l = t1.object, r = t2.object;
-  var lprec = RdfTerm.isBlank(l) ? 1 : RdfTerm.isLiteral(l) ? 2 : 3;
-  var rprec = RdfTerm.isBlank(r) ? 1 : RdfTerm.isLiteral(r) ? 2 : 3;
+  var lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
+  var rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
   return lprec === rprec ? l > r : lprec > rprec;
 }
 

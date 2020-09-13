@@ -16,7 +16,20 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "ab", "type": "http://a.example/bloodType" }
+        "object": { "value": "ab", "type": "http://a.example/bloodType" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"ab\"^^http://a.example/bloodType",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              {
+                "type": "http://a.example/bloodType",
+                "value": "ab"
+              }
+            ]
+          }
+        }
       }
     ]
   }
