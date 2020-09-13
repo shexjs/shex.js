@@ -15,7 +15,16 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "05", "type": "http://www.w3.org/2001/XMLSchema#integer" }
+        "object": { "value": "05", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"05\"^^http://www.w3.org/2001/XMLSchema#integer",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+            "mininclusive": 4.5
+          }
+        }
       }
     ]
   }

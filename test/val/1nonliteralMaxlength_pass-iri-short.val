@@ -15,7 +15,16 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": "http://a.example/o"
+        "object": "http://a.example/o",
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "http://a.example/o",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "maxlength": 19,
+            "nodeKind": "nonliteral"
+          }
+        }
       }
     ]
   }

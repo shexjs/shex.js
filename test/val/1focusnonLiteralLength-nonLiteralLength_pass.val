@@ -2,7 +2,7 @@
   "type": "ShapeAndResults",
   "solutions": [
     {
-      "type": "NodeTest",
+      "type": "NodeConstraintTest",
       "node": "http://a.example/s1",
       "shape": "http://a.example/S1",
       "shapeExpr": {
@@ -23,7 +23,16 @@
             "type": "TestedTriple",
             "subject": "http://a.example/s1",
             "predicate": "http://a.example/p1",
-            "object": "http://a.example/o1"
+            "object": "http://a.example/o1",
+            "referenced": {
+              "type": "NodeConstraintTest",
+              "focus": "http://a.example/o1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "nonliteral",
+                "length": 19
+              }
+            }
           }
         ],
         "valueExpr": {

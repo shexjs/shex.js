@@ -7,12 +7,8 @@
 
 const ShExMapModule = (function () {
 
-const ShExUtil = require("@shexjs/util");
-const RdfTerm = require("@shexjs/term");
-const ShExValidator = require("@shexjs/validator");
 const extensions = require("./lib/extensions");
 const N3 = require("n3");
-var _ = require('underscore');
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -20,7 +16,10 @@ var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
 var UNBOUNDED = -1;
 const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 
-function register (validator) {
+function register (validator, api) {
+  if (api === undefined || !('ShExTerm' in api))
+    throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
+
   var prefixes = "_prefixes" in validator.schema ?
       validator.schema._prefixes :
       {};
@@ -41,7 +40,7 @@ function register (validator) {
         function fail (msg) { var e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
         function getPrefixedName(bindingName) {
            // already have the fully prefixed binding name ready to go
-           if (_.isString(bindingName)) return bindingName;
+           if (typeof bindingName === "string") return bindingName;
 
            // bindingName is from a pattern match - need to get & expand it with prefix
             var prefixedName = bindingName[1] ? bindingName[1] :
@@ -57,7 +56,7 @@ function register (validator) {
             }
 
             var prefixedName = getPrefixedName(bindingName);
-            var quotedValue = value; // _.isNull(value.match(/"(.+)"/)) ? '"' + value + '"' : value;
+            var quotedValue = value; // value.match(/"(.+)"/) === null ? '"' + value + '"' : value;
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
@@ -65,11 +64,9 @@ function register (validator) {
 
         // Do we have a map extension function?
         if (/.*[(].*[)].*$/.test(code)) {
-
-            var results = extensions.lift(code, ctx.object, prefixes);
-            _.mapObject(results, function(val, key) {
-                update(key, val);
-            });
+          var results = extensions.lift(code, ctx.object, prefixes);
+          for (key in results)
+            update(key, results[key])
         } else {
           var bindingName = code.match(pattern);
           update(bindingName, ctx.object);
@@ -79,90 +76,20 @@ function register (validator) {
       }
     }
   );
-  return validator.semActHandler.results[MapExt];
-}
-
-function done (validator) {
-  if (Object.keys(validator.semActHandler.results[MapExt]).length === 0)
-    delete validator.semActHandler.results[MapExt];
-}
-
-function n3ify (ldterm) {
-  if (typeof ldterm !== "object")
-    return ldterm;
-  var ret = "\"" + ldterm.value + "\"";
-  if ("language" in ldterm)
-    return ret + "@" + ldterm.language;
-  if ("type" in ldterm)
-    return ret + "^^" + ldterm.type;
-  return ret;
-}
-
-  // Expands the prefixed name to a full IRI (also when it occurs as a literal's type)
-  function expandPrefixedName (prefixedName, prefixes) {
-    var match = /(?:^|"\^\^)([^:\/#"'\^_]*):[^\/]*$/.exec(prefixedName), prefix, base, index;
-    if (match)
-      prefix = match[1], base = prefixes[prefix], index = match.index;
-    if (base === undefined)
-      return prefixedName;
-
-    // The match index is non-zero when expanding a literal's type
-    return index === 0 ? base + prefixedName.substr(prefix.length + 1)
-                       : prefixedName.substr(0, index + 3) +
-                         base + prefixedName.substr(index + prefix.length + 4);
+  return {
+    results: validator.semActHandler.results[MapExt],
+    binder,
+    trivialMaterializer,
+    visitTripleConstraint
   }
 
-function materializer (schema, nextBNode) {
-  var blankNodeCount = 0;
-  const index = schema._index || ShExUtil.index(schema)
-  nextBNode = nextBNode || function () {
-    return '_:b' + blankNodeCount++;
-  };
-  return {
-    materialize: function (bindings, createRoot, shape, target) {
-      shape = !shape || shape === ShExValidator.start ? schema.start : shape;
-      target = target || new N3.Store();
-      // target.addPrefixes(schema.prefixes); // not used, but seems polite
-
-      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
-      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
-      function B () { return nextBNode(); }
-      function add (s, p, o) { target.addQuad({ subject: s, predicate: p, object: n3ify(o) }); return s; } // !!check
-
-      var curSubject = createRoot || B();
-      var curSubjectx = {cs: curSubject};
-
-      var v = ShExUtil.Visitor();
-      var oldVisitShapeRef = v.visitShapeRef;
-
-      v.visitShapeRef = function (shapeRef) {
-        this.visitShapeExpr(index.shapeExprs[shapeRef], shapeRef);
-        return oldVisitShapeRef.call(v, shapeRef);
-      };
-
-      v.visitValueRef = function (r) {
-        this.visitExpression(schema.shapes[r], r);
-        return this._visitValue(r);
-      };
-
-      v.visitTripleConstraint = function (expr) {
-        myvisitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
-      };
-
-      v.visitShapeExpr(shape, "_: -start-");
-      return target;
-    }
-  };
-}
-
-function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
       function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
       function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) {
-        target.addQuad(RdfTerm.externalTriple({
+        target.addQuad(api.ShExTerm.externalTriple({
           subject: s,
           predicate: p,
           object: o
@@ -180,18 +107,18 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
             if (m) { 
               var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
               var val = n3ify(bindings.get(arg));
-              if (!_.isUndefined(val)) {
+              if (val !== undefined) {
                 tripleObject = val;
               }
             }
 
             // Is the arg a function? Check if it has parentheses and ends with a closing one
-            if (_.isUndefined(tripleObject)) {
+            if (tripleObject === undefined) {
               if (/[ a-zA-Z0-9]+\(/.test(code)) 
                   tripleObject = extensions.lower(code, bindings, schema.prefixes);
             }
 
-            if (_.isUndefined(tripleObject))
+            if (tripleObject === undefined)
               ; // console.warn('Not in bindings: ',code);
             else if (expr.inverse)
             //add(tripleObject, expr.predicate, curSubject);
@@ -232,48 +159,49 @@ function myvisitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor,
           curSubjectx.cs = oldSubject;
         }
       }
-function extractBindingsDelMe (soln, min, max, depth) {
-  if ("min" in soln && soln.min < min)
-    min = soln.min
-  var myMax = "max" in soln ?
-      (soln.max === UNBOUNDED ?
-       Infinity :
-       soln.max) :
-      1;
-  if (myMax > max)
-    max = myMax
 
-  function walkExpressions (s) {
-    return s.expressions.reduce((inner, e) => {
-      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
-    }, []);
-  }
+function trivialMaterializer (schema, nextBNode) {
+  var blankNodeCount = 0;
+  const index = schema._index || api.ShExUtil.index(schema)
+  nextBNode = nextBNode || function () {
+    return '_:b' + blankNodeCount++;
+  };
+  return {
+    materialize: function (bindings, createRoot, shape, target) {
+      shape = !shape || shape === validator.start ? schema.start : shape;
+      target = target || new N3.Store();
+      // target.addPrefixes(schema.prefixes); // not used, but seems polite
 
-  function walkTriple (s) {
-    var fromTriple = "extensions" in s && MapExt in s.extensions ?
-        [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
-        [];
-    return "referenced" in s ?
-      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
-      fromTriple;
-  }
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 
-  function structuralError (msg) { throw Error(msg); }
+      var curSubject = createRoot || B();
+      var curSubjectx = {cs: curSubject};
 
-  var walk = // function to explore each solution
-      soln.type === "someOfSolutions" ||
-      soln.type === "eachOfSolutions" ? walkExpressions :
-      soln.type === "tripleConstraintSolutions" ? walkTriple :
-      structuralError("unknown type: " + soln.type);
+      var v = api.ShExUtil.Visitor();
+      var oldVisitShapeRef = v.visitShapeRef;
 
-  if (myMax > 1) // preserve important associations:
-    // map: e.g. [[1,2],[3,4]]
-    // [walk(soln.solutions[0]), walk(soln.solutions[1]),...]
-    return soln.solutions.map(walk);
-  else // hide unimportant nesting:
-    // flatmap: e.g. [1,2,3,4]
-    // [].concat(walk(soln.solutions[0])).concat(walk(soln.solutions[1]))...
-    return [].concat.apply([], soln.solutions.map(walk));
+      v.visitShapeRef = function (shapeRef) {
+        this.visitShapeExpr(index.shapeExprs[shapeRef], shapeRef);
+        return oldVisitShapeRef.call(v, shapeRef);
+      };
+
+      v.visitValueRef = function (r) {
+        this.visitExpression(schema.shapes[r], r);
+        return this._visitValue(r);
+      };
+
+      v.visitTripleConstraint = function (expr) {
+        visitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
+      };
+
+      v.visitShapeExpr(shape, "_: -start-");
+      return target;
+    }
+  };
 }
 
 function binder (tree) {
@@ -415,13 +343,89 @@ function binder (tree) {
   return {get: getter};
 }
 
+}
+
+function done (validator) {
+  if (Object.keys(validator.semActHandler.results[MapExt]).length === 0)
+    delete validator.semActHandler.results[MapExt];
+}
+
+function n3ify (ldterm) {
+  if (typeof ldterm !== "object")
+    return ldterm;
+  var ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
+  // Expands the prefixed name to a full IRI (also when it occurs as a literal's type)
+  function expandPrefixedName (prefixedName, prefixes) {
+    var match = /(?:^|"\^\^)([^:\/#"'\^_]*):[^\/]*$/.exec(prefixedName), prefix, base, index;
+    if (match)
+      prefix = match[1], base = prefixes[prefix], index = match.index;
+    if (base === undefined)
+      return prefixedName;
+
+    // The match index is non-zero when expanding a literal's type
+    return index === 0 ? base + prefixedName.substr(prefix.length + 1)
+                       : prefixedName.substr(0, index + 3) +
+                         base + prefixedName.substr(index + prefix.length + 4);
+  }
+
+function extractBindingsDelMe (soln, min, max, depth) {
+  if ("min" in soln && soln.min < min)
+    min = soln.min
+  var myMax = "max" in soln ?
+      (soln.max === UNBOUNDED ?
+       Infinity :
+       soln.max) :
+      1;
+  if (myMax > max)
+    max = myMax
+
+  function walkExpressions (s) {
+    return s.expressions.reduce((inner, e) => {
+      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
+    }, []);
+  }
+
+  function walkTriple (s) {
+    var fromTriple = "extensions" in s && MapExt in s.extensions ?
+        [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
+        [];
+    return "referenced" in s ?
+      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
+      fromTriple;
+  }
+
+  function structuralError (msg) { throw Error(msg); }
+
+  var walk = // function to explore each solution
+      soln.type === "someOfSolutions" ||
+      soln.type === "eachOfSolutions" ? walkExpressions :
+      soln.type === "tripleConstraintSolutions" ? walkTriple :
+      structuralError("unknown type: " + soln.type);
+
+  if (myMax > 1) // preserve important associations:
+    // map: e.g. [[1,2],[3,4]]
+    // [walk(soln.solutions[0]), walk(soln.solutions[1]),...]
+    return soln.solutions.map(walk);
+  else // hide unimportant nesting:
+    // flatmap: e.g. [1,2,3,4]
+    // [].concat(walk(soln.solutions[0])).concat(walk(soln.solutions[1]))...
+    return [].concat.apply([], soln.solutions.map(walk));
+}
+
 return {
   register: register,
   done: done,
-  materializer: materializer,
-  binder: binder,
+  // materializer: materializer,
+  // binder: binder,
   url: MapExt,
-  visitTripleConstraint: myvisitTripleConstraint
+  // visitTripleConstraint: myvisitTripleConstraint
 };
 
 })();

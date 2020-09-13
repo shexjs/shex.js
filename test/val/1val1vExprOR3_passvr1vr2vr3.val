@@ -30,7 +30,19 @@
         "type": "TestedTriple",
         "subject": "http://a.example/s1",
         "predicate": "http://a.example/p1",
-        "object": { "value": "abcdef" }
+        "object": { "value": "abcdef" },
+        "referenced": {
+          "solution": {
+            "type": "NodeConstraintTest",
+            "focus": "\"abcdef\"",
+            "shapeExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "literal",
+              "pattern": "ab.*"
+            }
+          },
+          "type": "ShapeOrResults"
+        }
       }
     ]
   }

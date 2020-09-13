@@ -7,7 +7,6 @@
  */
 
 var RegexExtension = (function () {
-var _ = require('underscore');
 var extUtils = require('./extension-utils');
 
 var captureGroupName = "(\\?<(?:[a-zA-Z:]+|<[^>]+>)>)";
@@ -25,7 +24,7 @@ function applyPrefix(varName, prefixes) {
 
   // Figure out what variable syntax we have.  It could be <varname> or <prefix:varname>
   var matches = varName.match(/^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/);
-  if (_.isNull(matches))
+  if (matches === null)
     throw Error("variable \"" + varName + "\" did not match expected pattern!");
 
   var expandedVarName;
@@ -60,7 +59,7 @@ function buildExpandedVars(shortPrefixedVar, expandedVars, prefixes) {
     var v = extUtils.unescapeMetaChars( shortPrefixedVar.substr(2, shortPrefixedVar.length - 3) );
     var expandedVarName = applyPrefix(v, prefixes);
 
-    if (!_.isUndefined(expandedVars[expandedVarName]))
+  if (expandedVarName in expandedVars)
         throw Error("unable to process prefixes in " + expandedVarName);
 
     // Add this new var to the list and return the expanded var name
@@ -91,7 +90,7 @@ function lift(mapDirective, input, prefixes, args) {
             return "";
     });
 
-    if (_.isEmpty(expandedVars)) { 
+    if (expandedVars.length === 0) {
         throw Error('Found no capture variable in ' + mapDirective + '!');
     }
     
@@ -124,7 +123,7 @@ function lower(mapDirective, bindings, prefixes, args) {
             matched = true;
             var expVarName = buildExpandedVars(varName, expandedVars, prefixes);
             var val = bindings.get(expVarName);
-            if (_.isUndefined(val)) {
+            if (val === undefined) {
                 throw Error("Unable to process " + mapDirective + 
                             " because variable \"" + expVarName + "\" was not found!");
       

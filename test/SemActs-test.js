@@ -5,7 +5,7 @@ const ShExUtil = require("@shexjs/util")
 const ShExValidator = require("@shexjs/validator")
 const ShExParser = require("@shexjs/parser")
 const ShapeMapParser = require("shape-map").Parser
-const RdfTerm = require("@shexjs/term")
+const ShExTerm = require("@shexjs/term")
 const Extensions = [
   // http://shex.io/extensions/javascript/
   require("../packages/extension-eval")
@@ -49,7 +49,7 @@ describe('Invoking SemActs', function () {
       prefixes: schema._prefixes || {}
     }
     const validator = ShExValidator.construct(schema)
-    Extensions.forEach(ext => ext.register(validator))
+    Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
 
     // Resolve and parse data.
     const dataFile = (test.dataURL.startsWith("./") ? SemActsTestDir : datasPath) + test.dataURL
