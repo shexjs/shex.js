@@ -6,7 +6,16 @@
     "type": "TripleConstraintSolutions", "predicate": "http://a.example/p1",
     "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" },
     "solutions":[
-      {"type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "septante", "language": "fr-bexxxxxx" }}
+      {"type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "septante", "language": "fr-bexxxxxx" },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"septante\"@fr-bexxxxxx",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+          }
+        }
+      }
     ]
   }
 }

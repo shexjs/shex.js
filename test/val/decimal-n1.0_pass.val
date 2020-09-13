@@ -13,6 +13,14 @@
         "object": {
           "value": "-1.0",
           "type": "http://www.w3.org/2001/XMLSchema#decimal"
+        },
+        "referenced": {
+          "type": "NodeConstraintTest",
+          "focus": "\"-1.0\"^^http://www.w3.org/2001/XMLSchema#decimal",
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "datatype": "http://www.w3.org/2001/XMLSchema#decimal"
+          }
         }
       }
     ],

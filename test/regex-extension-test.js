@@ -7,7 +7,20 @@ var chai = require('chai');
 var expect = chai.expect;
 var should = chai.should();
 
+var ShExTerm = require("@shexjs/term");
+var ShExUtil = require("@shexjs/util");
 var mapper = require("@shexjs/extension-map");
+const emptySchema = {type: "Schema"};
+const fakeValidator = {
+  schema: emptySchema,
+  semActHandler: {
+    results: {},
+    register: () => {}
+  }
+}
+// or use a throw-away validator:
+// const realValidator = require("@shexjs/validator").construct(emptySchema)
+const registered = mapper.register(fakeValidator, {ShExTerm, ShExUtil})
 var regexExtension = mapper.extension.regex;
 
 describe('Regex extension', function() {
@@ -131,7 +144,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower.bind(this,
                     "regex(/A (?<test:string>[0-9]+) string/)", 
-                    mapper.binder([{}]), 
+                    registered.binder([{}]), 
                     {"test": "urn:local:test:"},
                     "/?<dem:family>^[a-zA-Z]+)/")
                 ).to.throw(Error, 'Found no capture variable in regex(/A (?<test:string>[0-9]+) string/)!');
@@ -141,7 +154,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/(?<dem:family>^[a-zA-Z]+)/)", 
-                    mapper.binder([{"http://a.example/dem#family": "Smith"}]),
+                    registered.binder([{"http://a.example/dem#family": "Smith"}]),
                     {"dem": "http://a.example/dem#"},
                     "/(?<dem:family>^[a-zA-Z]+)/")
             ).to.equal("Smith");
@@ -151,7 +164,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/A (?<test:string>[a-zA-Z]+) string/)", 
-                    mapper.binder([{"urn:local:test:string": "test"}]), 
+                    registered.binder([{"urn:local:test:string": "test"}]), 
                     {"test": "urn:local:test:"},
                     "/A (?<test:string>[a-zA-Z]+) string/")
             ).to.equal("A test string");
@@ -161,7 +174,7 @@ describe('Regex extension', function() {
             expect(
                 regexExtension.lower(
                     "regex(/(?<dem:family>[a-zA-Z]+), (?<dem:given>[a-zA-Z]+)/)",
-                    mapper.binder([{ 'http://a.example/dem#family': 'Doe', 'http://a.example/dem#given': 'John'}]),
+                    registered.binder([{ 'http://a.example/dem#family': 'Doe', 'http://a.example/dem#given': 'John'}]),
                     {"dem": "http://a.example/dem#"},
                     "/(?<dem:family>[a-zA-Z]+), (?<dem:given>[a-zA-Z]+)/")
             ).to.equal("Doe, John");
