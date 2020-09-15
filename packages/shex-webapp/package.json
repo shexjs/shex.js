@@ -33,6 +33,7 @@
     "test": "mocha -C -R dot",
     "webpack": "npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json",
     "webpack-analyzer": "webpack-bundle-analyzer ./browser/compilation-stats.json",
+    "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
     "webpack-monitor": "WEBPACK_MONITOR=true npx webpack --config webpack.config.js --mode production --profile --json > browser/compilation-stats.json ; npm run n3-browserify"
   },
   "publishConfig": {
@@ -50,8 +51,13 @@
     "test"
   ],
   "devDependencies": {
-    "terser-webpack-plugin": "^4.1.0",
-    "uglify-es": "^3.3.9",
+    "css-loader": "^4.3.0",
+    "file-loader": "^6.1.0",
+    "jquery": "^3.5.1",
+    "jquery-contextmenu": "^2.9.2",
+    "jquery-ui": "^1.12.1",
+    "style-loader": "^1.2.1",
+    "terser-webpack-plugin": "^4.2.0",
     "webpack": "^4.44.1",
     "webpack-bundle-analyzer": "^3.8.0",
     "webpack-cli": "^3.3.12",
