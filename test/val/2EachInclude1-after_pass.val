@@ -21,6 +21,7 @@
             ]
           },
           {
+            "productionLabel": "http://a.example/S2e",
             "type": "TripleConstraintSolutions",
             "predicate": "http://a.example/p2",
             "solutions": [

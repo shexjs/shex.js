@@ -1,11 +1,6 @@
-var ShExParser = (function () {
+const ShExParserCjsModule = (function () {
 
-// stolen as much as possible from SPARQL.js
-if (typeof require !== 'undefined' && typeof exports !== 'undefined') {
-  ShExJison = require('./lib/ShExJison').Parser; // node environment
-} else {
-  ShExJison = ShExJison.Parser; // browser environment
-}
+const ShExJison = require('./lib/ShExJison').Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 var prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -88,4 +83,4 @@ return {
 })();
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExParser;
+  module.exports = ShExParserCjsModule;

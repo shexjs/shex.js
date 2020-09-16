@@ -1,5 +1,6 @@
 if (true) {
-importScripts("../browser/shex-webapp-webpack.js");
+importScripts("../../shex-webapp/doc/webpacks/n3js.js");
+importScripts("./webpacks/shex-webapp.js");
 } else {
 importScripts("../doc/require.js"      );
 
@@ -35,7 +36,7 @@ importScripts("Util.js");
 
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExApi = ShEx.Api({
-  fetch, rdfjs: ShEx.N3, jsonld: null
+  fetch, rdfjs: N3js, jsonld: null
 })
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 var validator = null;
@@ -114,7 +115,7 @@ onmessage = function (msg) {
 }
 
 function makeStaticDB (quads) {
-  var ret = new ShEx.N3.Store();
+  var ret = new N3js.Store();
   ret.addQuads(quads);
   return ret;
 }
