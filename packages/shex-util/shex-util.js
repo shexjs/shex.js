@@ -1,6 +1,6 @@
 // **ShExUtil** provides ShEx utility functions
 
-var ShExUtil = (function () {
+const ShExUtilCjsModule = (function () {
 var ShExTerm = require("@shexjs/term");
 const Visitor = require('@shexjs/visitor')
 const Hierarchy = require('hierarchy-closure')
@@ -1973,4 +1973,4 @@ return AddShExUtil(AddShExUtil);
 })();
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExUtil; // node environment
+  module.exports = ShExUtilCjsModule; // node environment

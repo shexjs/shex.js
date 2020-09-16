@@ -1,7 +1,6 @@
 // **ShExWriter** writes ShEx documents.
 
-var ShExWriter = (function () {
-var util = require('util');
+const ShExWriterCjsModule = (function () {
 var UNBOUNDED = -1;
 
 // Matches a literal as represented in memory by the ShEx library
@@ -179,7 +178,7 @@ ShExWriter.prototype = {
     } else if (shapeExpr.type === "NodeConstraint") {
       pieces = pieces.concat(_ShExWriter._writeNodeConstraint(shapeExpr, done, forceBraces));
     } else
-      throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + util.inspect(shapeExpr));
+      throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + JSON.stringify(shapeExpr));
     return pieces;
   },
 
@@ -624,4 +623,4 @@ return ShExWriter;
 
 // Export the `ShExWriter` class as a whole.
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExWriter; // node environment
+  module.exports = ShExWriterCjsModule; // node environment
