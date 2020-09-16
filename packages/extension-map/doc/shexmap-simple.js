@@ -4,9 +4,11 @@
 
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
+const RdfJs = N3js;
 const ShExApi = ShEx.Api({
-  fetch, rdfjs: ShEx.N3, jsonld: null
+  fetch, rdfjs: RdfJs, jsonld: null
 })
+const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 ShEx.ShapeMap.start = ShEx.Validator.start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -64,9 +66,9 @@ var QueryParams = Getables.concat([
 
 // utility functions
 function parseTurtle (text, meta, base) {
-  var ret = new ShEx.N3.Store();
-  ShEx.N3.Parser._resetBlankNodePrefix();
-  var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
+  var ret = new RdfJs.Store();
+  RdfJs.Parser._resetBlankNodePrefix();
+  var parser = new RdfJs.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
     ret.addQuads(quads);
@@ -112,7 +114,7 @@ function rdflib_termToLex (node, resolver) {
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
-    new ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
+    new RdfJs.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
     .map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
@@ -808,7 +810,7 @@ function callValidator (done) {
         $(".extensionControl:checked").each(function () {
           $(this).data("code").register(validator, ShEx);
         })
-        Mapper = ShExMap.register(validator, ShEx);
+        Mapper = MapModule.register(validator, ShEx);
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();
@@ -822,12 +824,12 @@ function callValidator (done) {
         ret.forEach(entry => {
           if (entry.status === "conformant") {
             if ($("#success").val() === "query" || $("#success").val() === "remainder") {
-              var proofStore = new ShEx.N3.Store();
-              ShEx.Util.getProofGraph(entry.appinfo, proofStore, ShEx.N3.DataFactory);
+              var proofStore = new RdfJs.Store();
+              ShEx.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
               entry.graph = proofStore.getQuads();
             }
             if ($("#success").val() === "remainder") {
-              var remainder = new ShEx.N3.Store();
+              var remainder = new RdfJs.Store();
               remainder.addQuads(inputData.getQuads());
               entry.graph.forEach(q => remainder.removeQuad(q));
               entry.graph = remainder.getQuads();
@@ -929,7 +931,7 @@ function callValidator (done) {
     var elt = null;
 
     if (entry.graph) {
-      var wr = new ShEx.N3.Writer(Caches.inputData.meta);
+      var wr = new RdfJs.Writer(Caches.inputData.meta);
       wr.addQuads(entry.graph);
       wr.end((error, results) => {
         if (error)
@@ -978,7 +980,7 @@ function callValidator (done) {
     fixedMapEntry.attr("title", entry.elapsed + " ms")
 
     if (entry.status === "conformant") {
-      var resultBindings = ShEx.Util.valToExtension(entry.appinfo, ShExMap.url);
+      var resultBindings = ShEx.Util.valToExtension(entry.appinfo, MapModule.url);
       Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     } else {
       Caches.bindings.set("{}");
@@ -1059,12 +1061,12 @@ function materialize () {
     Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     // var outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = Mapper.binder(resultBindings);
-    var writer = new ShEx.N3.Writer({ prefixes: {} });
+    var writer = new RdfJs.Writer({ prefixes: {} });
     $("#results div").empty();
     $("#results .status").text("materializing data...").show();
     outputShapeMap.forEach(pair => {
       try {
-        var materializer2 = ShExMaterializer.construct(outputSchema, Mapper, {});
+        var materializer2 = MapModule.materializer.construct(outputSchema, Mapper, {});
         var res = materializer2.validate(binder, pair.node, pair.shape);
         if ("errors" in res) {
           renderEntry( {
@@ -1079,7 +1081,7 @@ function materialize () {
           // failMessage(e, currentAction);
         } else {
           // console.log("g:", ShEx.Util.valToTurtle(res));
-          writer.addQuads(ShEx.Util.valToN3js(res, ShEx.N3.DataFactory));
+          writer.addQuads(ShEx.Util.valToN3js(res, RdfJs.DataFactory));
         }
       } catch (e) {
         console.dir(e);

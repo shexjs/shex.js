@@ -4,8 +4,9 @@
 
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
+const RdfJs = N3js;
 const ShExApi = ShEx.Api({
-  fetch, rdfjs: ShEx.N3, jsonld: null
+  fetch, rdfjs: RdfJs, jsonld: null
 })
 ShEx.ShapeMap.start = ShEx.Validator.start
 const START_SHAPE_LABEL = "START";
@@ -60,9 +61,9 @@ var QueryParams = Getables.concat([
 
 // utility functions
 function parseTurtle (text, meta, base) {
-  var ret = new ShEx.N3.Store();
-  ShEx.N3.Parser._resetBlankNodePrefix();
-  var parser = new ShEx.N3.Parser({baseIRI: base, format: "text/turtle" });
+  var ret = new RdfJs.Store();
+  RdfJs.Parser._resetBlankNodePrefix();
+  var parser = new RdfJs.Parser({baseIRI: base, format: "text/turtle" });
   var quads = parser.parse(text);
   if (quads !== undefined)
     ret.addQuads(quads);
@@ -118,7 +119,7 @@ function rdflib_termToLex (node, resolver) {
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :
     lex === "a" ? "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" :
-    new ShEx.N3.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
+    new RdfJs.Lexer().tokenize(lex + " ") // need " " to parse "chat"@en
     .map(token => {
     var left = 
           token.type === "typeIRI" ? "^^" :
@@ -433,7 +434,7 @@ return module.exports;
         ));
         old.parent().remove();
       }
-      
+
       // Create a new li.
       const elt = $("<li/>", { class: "menuItem", title: extension.description }).append(
         $("<input/>", {
@@ -812,12 +813,12 @@ function callValidator (done) {
         ret.forEach(entry => {
           if (entry.status === "conformant") {
             if ($("#success").val() === "query" || $("#success").val() === "remainder") {
-              var proofStore = new ShEx.N3.Store();
-              ShEx.Util.getProofGraph(entry.appinfo, proofStore, ShEx.N3.DataFactory);
+              var proofStore = new RdfJs.Store();
+              ShEx.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
               entry.graph = proofStore.getQuads();
             }
             if ($("#success").val() === "remainder") {
-              var remainder = new ShEx.N3.Store();
+              var remainder = new RdfJs.Store();
               remainder.addQuads(inputData.getQuads());
               entry.graph.forEach(q => remainder.removeQuad(q));
               entry.graph = remainder.getQuads();
@@ -919,7 +920,7 @@ function callValidator (done) {
     var elt = null;
 
     if (entry.graph) {
-      var wr = new ShEx.N3.Writer(Caches.inputData.meta);
+      var wr = new RdfJs.Writer(Caches.inputData.meta);
       wr.addQuads(entry.graph);
       wr.end((error, results) => {
         if (error)

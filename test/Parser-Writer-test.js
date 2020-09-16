@@ -1,20 +1,21 @@
 //  "use strict";
 const TEST_ShExR = "TEST_ShExR" in process.env ? JSON.parse(process.env["TEST_ShExR"]) : true;
 const TEST_Vestiges = true;
-var VERBOSE = "VERBOSE" in process.env;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
-var EARL = "EARL" in process.env; // We're generating an EARL report.
-var BASE = "http://a.example/application/base/";
+const VERBOSE = "VERBOSE" in process.env;
+const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+const EARL = "EARL" in process.env; // We're generating an EARL report.
+const BASE = "http://a.example/application/base/";
 
+const Fs = require("fs");
 const ShExParser = require("@shexjs/parser");
-const ShExNode = require("@shexjs/node");
 const ShExUtil = require("@shexjs/util");
 const ShExValidator = require("@shexjs/validator");
 const ShExWriter = require("@shexjs/writer");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+});
 
-var N3 = require("n3");
-
-var fs = require("fs");
 var {assert, expect} = require("chai");
 var findPath = require("./findPath.js");
 
@@ -31,7 +32,7 @@ var illDefinedTestsPath = findPath("illDefined");
 var parser = ShExParser.construct(BASE, null, {index: true});
 
 if (TEST_ShExR) {
-  var GraphSchema = parser.parse(fs.readFileSync(ShExRSchemaFile, "utf8"));
+  var GraphSchema = parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8"));
   var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
   var valueExpr_tripleCnstrnt = GraphSchema._index.shapeExprs[nsPath + "TripleConstraint"].
       expression.expressions.find(e => {
@@ -155,7 +156,7 @@ describe("A ShEx parser", function () {
 
     var jsonSchemaFile = jsonSchemasPath + test.json;
     try {
-      var abstractSyntax = JSON.parse(fs.readFileSync(jsonSchemaFile, "utf8"));
+      var abstractSyntax = JSON.parse(Fs.readFileSync(jsonSchemaFile, "utf8"));
       var shexCFile = schemasPath + test.shex;
       var shexRFile = schemasPath + test.ttl;
 
@@ -165,7 +166,7 @@ describe("A ShEx parser", function () {
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           var schema = fs.readFileSync(shexCFile, "utf8");
+           var schema = Fs.readFileSync(shexCFile, "utf8");
            try {
              parser._setFileName(shexCFile);
              parser._setBase(BASE);
@@ -188,7 +189,7 @@ describe("A ShEx parser", function () {
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           var schema = fs.readFileSync(shexRFile, "utf8");
+           var schema = Fs.readFileSync(shexRFile, "utf8");
            try {
              var schemaGraph = new N3.Store();
              schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
@@ -425,7 +426,7 @@ if (!EARL && TEST_Vestiges) {
 function parseJSONFile(filename, mapFunction) {
   "use strict";
   try {
-    var string = fs.readFileSync(filename, "utf8");
+    var string = Fs.readFileSync(filename, "utf8");
     var object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {

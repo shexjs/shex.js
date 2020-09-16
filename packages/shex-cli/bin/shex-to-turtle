@@ -5,10 +5,10 @@
 const Path = require('path');
 const Fs = require('fs');
 const ShExUtil = require("@shexjs/util");
-const ShExNode = require("@shexjs/node"); // for verbose output
 const ShExRWriter = require('../../../lib/ShExRWriter');
 const Jsonld = require("jsonld");
 const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({rdfjs: N3, jsonld: Jsonld});
 
 
 // Generate command line interface

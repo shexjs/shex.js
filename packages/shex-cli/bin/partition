@@ -2,9 +2,11 @@
 
 // time ./lib/partition ~/checkouts/hcls/hcls-fhir-rdf/generic/fhir-shapes.shex MedicationPrescriptionShape
 
-var ShExLoader = require("@shexjs/node"); // for verbose output
-var ShExUtil = require('@shexjs/util');
-var ShExWriter = require('@shexjs/writer');
+const ShExUtil = require('@shexjs/util');
+const ShExWriter = require('@shexjs/writer');
+const Jsonld = require("jsonld");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({rdfjs: N3, jsonld: Jsonld});
 
 // Generate command line interface
 var CLI = require("command-line-args")([
@@ -41,7 +43,7 @@ if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified")
 var input = cmds.shex.concat(cmds.json).join(", ");
 
 
-ShExLoader(cmds.shex, cmds.json, []).then(function (loaded) {
+ShExNode(cmds.shex, cmds.json, []).then(function (loaded) {
   console.warn("calculating dependencies for " + input);
   var deps = ShExUtil.getDependencies(loaded.schema);
   // console.log('%s', JSON.stringify(deps, null, '  '));

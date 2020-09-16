@@ -1,4 +1,4 @@
-var ShExParser = (function () {
+const ShExParserCjsModule = (function () {
 
 const ShExTerm = require("@shexjs/term");
 const ShExJison = require('./lib/ShExJison').Parser;
@@ -138,4 +138,4 @@ return {
 })();
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExParser;
+  module.exports = ShExParserCjsModule;

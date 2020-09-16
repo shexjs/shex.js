@@ -7,12 +7,15 @@ var EARL = "EARL" in process.env;
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
-const ShExNode = require("@shexjs/node");
 const ShExValidator = require("@shexjs/validator");
 const TestExtension = require("@shexjs/extension-test")
 
-var N3 = require("n3");
-var N3Util = N3.Util;
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+});
+const N3Util = N3.Util;
+
 var fs = require("fs");
 var path = require("path");
 var chai = require("chai");
