@@ -17,8 +17,8 @@ const WebpackMonitor = !!JSON.parse(process.env["WEBPACK_MONITOR"] || "false")
 
 module.exports = {
   entry: {
-    "shex-webapp"    : "./shex-webapp.js",
-    "shex-webapp.min": "./shex-webapp.js",
+    "shexmap-webapp"    : "./shexmap-webapp.js",
+    "shexmap-webapp.min": "./shexmap-webapp.js",
   },
   output: {
     filename: "[name].js",

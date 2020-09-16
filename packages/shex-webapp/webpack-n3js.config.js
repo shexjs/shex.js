@@ -5,10 +5,10 @@ const WebPacksDir = "webpacks/";
 
 module.exports = {
   entry: {
-    "n3js-webpack"    : "./doc/n3-components.js",
-    "n3js-webpack.min": "./doc/n3-components.js",
-    // "n3js-webpack"    : "./node_modules/n3/lib/index.js",
-    // "n3js-webpack.min": "./node_modules/n3/lib/index.js",
+    "n3js"    : "./doc/n3-components.js",
+    "n3js.min": "./doc/n3-components.js",
+    // "n3js"    : "./node_modules/n3/lib/index.js",
+    // "n3js.min": "./node_modules/n3/lib/index.js",
   },
   output: {
     filename: "[name].js",

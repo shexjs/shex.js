@@ -1,15 +1,16 @@
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExNodeCjsModule = (function () {
+const ShExNodeCjsModule = function (config) {
   const ShExApi = require("@shexjs/api")
 
-  const newApi = ShExApi(
+  const newApi = ShExApi(Object.assign(
+    {},
     {
       fetch: require('node-fetch'),
       jsonld: require('jsonld'),
-      rdfjs: require('n3'),
-    }
-  )
+    },
+    config
+  ))
 
   const oldGet = newApi.GET
   newApi.GET = async function (url, mediaType) {
@@ -54,7 +55,7 @@ const ShExNodeCjsModule = (function () {
   }
 
   return newApi
-})()
+}
 
 // return { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
 

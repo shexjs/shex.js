@@ -9,7 +9,6 @@ var should = chai.should();
 
 var ShExTerm = require("@shexjs/term");
 var ShExUtil = require("@shexjs/util");
-var mapper = require("@shexjs/extension-map");
 const emptySchema = {type: "Schema"};
 const fakeValidator = {
   schema: emptySchema,
@@ -18,10 +17,11 @@ const fakeValidator = {
     register: () => {}
   }
 }
+const Mapper = require("@shexjs/extension-map")({});
 // or use a throw-away validator:
 // const realValidator = require("@shexjs/validator").construct(emptySchema)
-const registered = mapper.register(fakeValidator, {ShExTerm, ShExUtil})
-var regexExtension = mapper.extension.regex;
+const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})
+var regexExtension = Mapper.extension.regex;
 
 describe('Regex extension', function() {
 

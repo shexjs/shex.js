@@ -363,16 +363,16 @@ ul {
         Error.captureStackTrace = function () { };
       }
     </script>
+    <script src="./webpacks/n3js.js"></script>
 
-    <!-- #if browserify -->
+    <!-- #if USING_WEBPACK -->
 <!-- -->
-    <script src="../browser/shex-webapp-webpack.js"></script>
+    <script src="./webpacks/shex-webapp.js"></script>
 <!-- -->
 
     <!-- #else -->
 <!--
     <script src="../doc/require.js"                              ></script>
-    <script src="webpacks/n3js-webpack.js"                       ></script><script>modules["n3"                        ] = N3js;</script>
     <script src="../node_modules/@shexjs/util/node_modules/hierarchy-closure/hierarchy-closure.js"
                                                                  ></script><script>modules["hierarchy-closure"         ] = module.exports;</script>
     <script src="../../shape-map/lib/ShapeMapSymbols.js"         ></script><script>modules["./lib/ShapeMapSymbols"     ] = modules["./ShapeMapSymbols"] = module.exports;</script>
