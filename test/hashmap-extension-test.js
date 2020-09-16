@@ -219,7 +219,7 @@ describe('Hashmap extension', function() {
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.throw(Error, 
-                "Hashmap extension was unable to invert the value efg with map { a: 'abc', x: 'xyz' }!");
+                'Hashmap extension was unable to invert the value efg with map {"a":"abc","x":"xyz"}!');
         });
 
         it('should fail gracefully if given a hash map that does not have unique key/value pairs', function() {
