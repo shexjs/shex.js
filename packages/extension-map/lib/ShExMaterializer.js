@@ -6,6 +6,8 @@
  *   constraint violation reporting.
  */
 
+const ShExMapMaterializerCjsModule = function (config) {
+
 // interface constants
 var InterfaceOptions = {
   "or": {
@@ -24,7 +26,6 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var N3Util = ShEx.N3.Util;
 var ShExTerm = require("@shexjs/term");
 const ShExMap = require("../shex-extension-map");
 
@@ -209,7 +210,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer");
+  var regexModule = this.options.regexModule || require("./eval-simple-1err-materializer");
 
   var blankNodeCount = 0;
   var nextBNode = options.nextBNode || function () {
@@ -265,7 +266,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
    */
   this.validate = function (db, point, labelOrShape, depth, seen) {
     // default to schema's start shape
-    if (!labelOrShape || labelOrShape === ShEx.Validator.start) {
+    if (!labelOrShape || labelOrShape === config.Validator.start) {
       if (!schema.start)
         runtimeError("start production not defined");
       labelOrShape = schema.start;
@@ -501,7 +502,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         // console.log({"constraintNo": constraintNo, "min": min, "max": max, "constraintList": constraintList, "db": db, "point": point, "regexEngine": regexEngine, "shape": shape, "shapeLabel": shapeLabel, "depth": depth, "seen": seen});
         var tc = constraintList[constraintNo];
         var curSubjectx = {cs: point};
-        var target = new ShEx.N3.Store();
+        var target = new config.rdfjs.Store();
         mapper.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
         var oldLen = neighborhood.length;
         var created = target.getQuads().map(ShExTerm.internalTriple);
@@ -1120,16 +1121,15 @@ function runtimeError () {
   throw e;
 }
 
+  return { // node environment
+    construct: ShExMaterializer_constructor,
+    options: InterfaceOptions
+  };
+}
+
+
 // ## Exports
 
 // Export the `ShExMaterializer` class as a whole.
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = { // node environment
-    construct: ShExMaterializer_constructor,
-    options: InterfaceOptions
-  };
-else
-  ShExMaterializer =  { // browser environment
-    construct: ShExMaterializer_constructor,
-    options: InterfaceOptions
-  };;
+  module.exports = ShExMapMaterializerCjsModule;

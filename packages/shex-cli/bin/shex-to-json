@@ -3,7 +3,8 @@
 // shex-to-json http://tracker.example/schemas/Issue.shex
 
 var ShExUtil = require("@shexjs/util");
-var ShExNode = require("@shexjs/node");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
 // Generate command line interface
 var CommandLineOptions = [

@@ -5,10 +5,11 @@
  *   multiplicity: ...
  */
 
-const ShExMapModule = (function () {
+const ShExMapCjsModule = function (config) {
 
 const extensions = require("./lib/extensions");
 const N3 = require("n3");
+const materializer = require("./lib/ShExMaterializer")(config);
 
 var MapExt = "http://shex.io/extensions/Map/#";
 var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -422,19 +423,19 @@ function extractBindingsDelMe (soln, min, max, depth) {
 return {
   register: register,
   done: done,
-  // materializer: materializer,
+  materializer: materializer,
   // binder: binder,
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint
+  extension: {
+    hashmap: require("./lib/hashmap_extension"),
+    regex: require("./lib/regex_extension")
+  },
+  extensions: require("./lib/extensions"),
+  utils: require("./lib/extension-utils"),
 };
 
-})();
-ShExMapModule.extension = {
-  hashmap: require("./lib/hashmap_extension"),
-  regex: require("./lib/regex_extension")
 };
-ShExMapModule.extensions = require("./lib/extensions");
-ShExMapModule.utils = require("./lib/extension-utils");
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExMapModule;
+  module.exports = ShExMapCjsModule;

@@ -9,7 +9,6 @@ var should = chai.should();
 
 var ShExTerm = require("@shexjs/term");
 var ShExUtil = require("@shexjs/util");
-var mapper = require("@shexjs/extension-map");
 const emptySchema = {type: "Schema"};
 const fakeValidator = {
   schema: emptySchema,
@@ -20,9 +19,10 @@ const fakeValidator = {
 }
 // or use a throw-away validator:
 // const realValidator = require("@shexjs/validator").construct(emptySchema)
-const registered = mapper.register(fakeValidator, {ShExTerm, ShExUtil})
+const Mapper = require("@shexjs/extension-map")({});
+const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})
 
-var hmExtension = mapper.extension.hashmap;
+var hmExtension = Mapper.extension.hashmap;
 
 describe('Hashmap extension', function() {
 

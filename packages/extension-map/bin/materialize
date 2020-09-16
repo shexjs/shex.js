@@ -8,13 +8,13 @@
  * See https://github.com/shexSpec for more information.
  */
 
-var FS = require("fs");
-var N3 = require("n3");
+const FS = require("fs");
+const N3 = require("n3");
 
-var ShExTerm = require("@shexjs/term");
-var ShExUtil = require("@shexjs/util");
-var ShExNode = require("@shexjs/node");
-var Mapper = require("../shex-extension-map.js");
+const ShExTerm = require("@shexjs/term");
+const ShExUtil = require("@shexjs/util");
+const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const Mapper = require("@shexjs/extension-map")({});
 
 var CommandLineOptions = [
   { name: "help", alias: "h", type: Boolean },
