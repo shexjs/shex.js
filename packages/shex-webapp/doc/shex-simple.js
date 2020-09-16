@@ -1070,6 +1070,20 @@ function callValidator (done) {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
+    if (!fails) {
+      if ($("#success").val() === "query" || $("#success").val() === "remainder") {
+        var proofStore = new RdfJs.Store();
+        ShEx.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
+        entry.graph = proofStore.getQuads();
+      }
+      if ($("#success").val() === "remainder") {
+        var remainder = new RdfJs.Store();
+        remainder.addQuads(Caches.inputData.refresh().getQuads());
+        entry.graph.forEach(q => remainder.removeQuad(q));
+        entry.graph = remainder.getQuads();
+      }
+    }
+
     if (entry.graph) {
       var wr = new RdfJs.Writer(Caches.inputData.meta);
       wr.addQuads(entry.graph);

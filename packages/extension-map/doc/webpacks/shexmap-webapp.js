@@ -77,11 +77,11 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/ 	__webpack_require__.p = "webpacks/";
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 40);
+/******/ 	return __webpack_require__(__webpack_require__.s = 45);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -630,307 +630,12 @@ var substr = 'ab'.substr(-1) === 'b'
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-
-function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
-
-var codes = {};
-
-function createErrorType(code, message, Base) {
-  if (!Base) {
-    Base = Error;
-  }
-
-  function getMessage(arg1, arg2, arg3) {
-    if (typeof message === 'string') {
-      return message;
-    } else {
-      return message(arg1, arg2, arg3);
-    }
-  }
-
-  var NodeError =
-  /*#__PURE__*/
-  function (_Base) {
-    _inheritsLoose(NodeError, _Base);
-
-    function NodeError(arg1, arg2, arg3) {
-      return _Base.call(this, getMessage(arg1, arg2, arg3)) || this;
-    }
-
-    return NodeError;
-  }(Base);
-
-  NodeError.prototype.name = Base.name;
-  NodeError.prototype.code = code;
-  codes[code] = NodeError;
-} // https://github.com/nodejs/node/blob/v10.8.0/lib/internal/errors.js
-
-
-function oneOf(expected, thing) {
-  if (Array.isArray(expected)) {
-    var len = expected.length;
-    expected = expected.map(function (i) {
-      return String(i);
-    });
-
-    if (len > 2) {
-      return "one of ".concat(thing, " ").concat(expected.slice(0, len - 1).join(', '), ", or ") + expected[len - 1];
-    } else if (len === 2) {
-      return "one of ".concat(thing, " ").concat(expected[0], " or ").concat(expected[1]);
-    } else {
-      return "of ".concat(thing, " ").concat(expected[0]);
-    }
-  } else {
-    return "of ".concat(thing, " ").concat(String(expected));
-  }
-} // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
-
-
-function startsWith(str, search, pos) {
-  return str.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
-} // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith
-
-
-function endsWith(str, search, this_len) {
-  if (this_len === undefined || this_len > str.length) {
-    this_len = str.length;
-  }
-
-  return str.substring(this_len - search.length, this_len) === search;
-} // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes
-
-
-function includes(str, search, start) {
-  if (typeof start !== 'number') {
-    start = 0;
-  }
-
-  if (start + search.length > str.length) {
-    return false;
-  } else {
-    return str.indexOf(search, start) !== -1;
-  }
-}
-
-createErrorType('ERR_INVALID_OPT_VALUE', function (name, value) {
-  return 'The value "' + value + '" is invalid for option "' + name + '"';
-}, TypeError);
-createErrorType('ERR_INVALID_ARG_TYPE', function (name, expected, actual) {
-  // determiner: 'must be' or 'must not be'
-  var determiner;
-
-  if (typeof expected === 'string' && startsWith(expected, 'not ')) {
-    determiner = 'must not be';
-    expected = expected.replace(/^not /, '');
-  } else {
-    determiner = 'must be';
-  }
-
-  var msg;
-
-  if (endsWith(name, ' argument')) {
-    // For cases like 'first argument'
-    msg = "The ".concat(name, " ").concat(determiner, " ").concat(oneOf(expected, 'type'));
-  } else {
-    var type = includes(name, '.') ? 'property' : 'argument';
-    msg = "The \"".concat(name, "\" ").concat(type, " ").concat(determiner, " ").concat(oneOf(expected, 'type'));
-  }
-
-  msg += ". Received type ".concat(typeof actual);
-  return msg;
-}, TypeError);
-createErrorType('ERR_STREAM_PUSH_AFTER_EOF', 'stream.push() after EOF');
-createErrorType('ERR_METHOD_NOT_IMPLEMENTED', function (name) {
-  return 'The ' + name + ' method is not implemented';
-});
-createErrorType('ERR_STREAM_PREMATURE_CLOSE', 'Premature close');
-createErrorType('ERR_STREAM_DESTROYED', function (name) {
-  return 'Cannot call ' + name + ' after a stream was destroyed';
-});
-createErrorType('ERR_MULTIPLE_CALLBACK', 'Callback called multiple times');
-createErrorType('ERR_STREAM_CANNOT_PIPE', 'Cannot pipe, not readable');
-createErrorType('ERR_STREAM_WRITE_AFTER_END', 'write after end');
-createErrorType('ERR_STREAM_NULL_VALUES', 'May not write null values to stream', TypeError);
-createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
-  return 'Unknown encoding: ' + arg;
-}, TypeError);
-createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
-module.exports.codes = codes;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-// a duplex stream is just a stream that is both readable and writable.
-// Since JS doesn't have multiple prototypal inheritance, this class
-// prototypally inherits from Readable, and then parasitically from
-// Writable.
-
-/*<replacement>*/
-
-var objectKeys = Object.keys || function (obj) {
-  var keys = [];
-
-  for (var key in obj) {
-    keys.push(key);
-  }
-
-  return keys;
-};
-/*</replacement>*/
-
-
-module.exports = Duplex;
-
-var Readable = __webpack_require__(32);
-
-var Writable = __webpack_require__(36);
-
-__webpack_require__(10)(Duplex, Readable);
-
-{
-  // Allow the keys array to be GC'ed.
-  var keys = objectKeys(Writable.prototype);
-
-  for (var v = 0; v < keys.length; v++) {
-    var method = keys[v];
-    if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
-  }
-}
-
-function Duplex(options) {
-  if (!(this instanceof Duplex)) return new Duplex(options);
-  Readable.call(this, options);
-  Writable.call(this, options);
-  this.allowHalfOpen = true;
-
-  if (options) {
-    if (options.readable === false) this.readable = false;
-    if (options.writable === false) this.writable = false;
-
-    if (options.allowHalfOpen === false) {
-      this.allowHalfOpen = false;
-      this.once('end', onend);
-    }
-  }
-}
-
-Object.defineProperty(Duplex.prototype, 'writableHighWaterMark', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState.highWaterMark;
-  }
-});
-Object.defineProperty(Duplex.prototype, 'writableBuffer', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState && this._writableState.getBuffer();
-  }
-});
-Object.defineProperty(Duplex.prototype, 'writableLength', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    return this._writableState.length;
-  }
-}); // the no-half-open enforcer
-
-function onend() {
-  // If the writable side ended, then we're ok.
-  if (this._writableState.ended) return; // no more data can be written.
-  // But allow more writes to happen in this tick.
-
-  process.nextTick(onEndNT, this);
-}
-
-function onEndNT(self) {
-  self.end();
-}
-
-Object.defineProperty(Duplex.prototype, 'destroyed', {
-  // making it explicit this property is not enumerable
-  // because otherwise some prototype manipulation in
-  // userland will fail
-  enumerable: false,
-  get: function get() {
-    if (this._readableState === undefined || this._writableState === undefined) {
-      return false;
-    }
-
-    return this._readableState.destroyed && this._writableState.destroyed;
-  },
-  set: function set(value) {
-    // we ignore the value if the stream
-    // has not been initialized yet
-    if (this._readableState === undefined || this._writableState === undefined) {
-      return;
-    } // backward compatibility, the user is explicitly
-    // managing destroyed
-
-
-    this._readableState.destroyed = value;
-    this._writableState.destroyed = value;
-  }
-});
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(32);
-exports.Stream = exports;
-exports.Readable = exports;
-exports.Writable = __webpack_require__(36);
-exports.Duplex = __webpack_require__(5);
-exports.Transform = __webpack_require__(38);
-exports.PassThrough = __webpack_require__(75);
-exports.finished = __webpack_require__(17);
-exports.pipeline = __webpack_require__(76);
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
 /**
  *
  * isIRI, isBlank, getLiteralType, getLiteralValue
  */
 
-var ShExTerm = (function () {
+const ShExTermCjsModule = (function () {
 
   var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
@@ -1230,11 +935,339 @@ var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
 })();
 
 if (true)
-  module.exports = ShExTerm; // node environment
+  module.exports = ShExTermCjsModule; // node environment
 
 
 /***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    if (superCtor) {
+      ctor.super_ = superCtor
+      ctor.prototype = Object.create(superCtor.prototype, {
+        constructor: {
+          value: ctor,
+          enumerable: false,
+          writable: true,
+          configurable: true
+        }
+      })
+    }
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    if (superCtor) {
+      ctor.super_ = superCtor
+      var TempCtor = function () {}
+      TempCtor.prototype = superCtor.prototype
+      ctor.prototype = new TempCtor()
+      ctor.prototype.constructor = ctor
+    }
+  }
+}
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
+
+var codes = {};
+
+function createErrorType(code, message, Base) {
+  if (!Base) {
+    Base = Error;
+  }
+
+  function getMessage(arg1, arg2, arg3) {
+    if (typeof message === 'string') {
+      return message;
+    } else {
+      return message(arg1, arg2, arg3);
+    }
+  }
+
+  var NodeError =
+  /*#__PURE__*/
+  function (_Base) {
+    _inheritsLoose(NodeError, _Base);
+
+    function NodeError(arg1, arg2, arg3) {
+      return _Base.call(this, getMessage(arg1, arg2, arg3)) || this;
+    }
+
+    return NodeError;
+  }(Base);
+
+  NodeError.prototype.name = Base.name;
+  NodeError.prototype.code = code;
+  codes[code] = NodeError;
+} // https://github.com/nodejs/node/blob/v10.8.0/lib/internal/errors.js
+
+
+function oneOf(expected, thing) {
+  if (Array.isArray(expected)) {
+    var len = expected.length;
+    expected = expected.map(function (i) {
+      return String(i);
+    });
+
+    if (len > 2) {
+      return "one of ".concat(thing, " ").concat(expected.slice(0, len - 1).join(', '), ", or ") + expected[len - 1];
+    } else if (len === 2) {
+      return "one of ".concat(thing, " ").concat(expected[0], " or ").concat(expected[1]);
+    } else {
+      return "of ".concat(thing, " ").concat(expected[0]);
+    }
+  } else {
+    return "of ".concat(thing, " ").concat(String(expected));
+  }
+} // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
+
+
+function startsWith(str, search, pos) {
+  return str.substr(!pos || pos < 0 ? 0 : +pos, search.length) === search;
+} // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith
+
+
+function endsWith(str, search, this_len) {
+  if (this_len === undefined || this_len > str.length) {
+    this_len = str.length;
+  }
+
+  return str.substring(this_len - search.length, this_len) === search;
+} // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes
+
+
+function includes(str, search, start) {
+  if (typeof start !== 'number') {
+    start = 0;
+  }
+
+  if (start + search.length > str.length) {
+    return false;
+  } else {
+    return str.indexOf(search, start) !== -1;
+  }
+}
+
+createErrorType('ERR_INVALID_OPT_VALUE', function (name, value) {
+  return 'The value "' + value + '" is invalid for option "' + name + '"';
+}, TypeError);
+createErrorType('ERR_INVALID_ARG_TYPE', function (name, expected, actual) {
+  // determiner: 'must be' or 'must not be'
+  var determiner;
+
+  if (typeof expected === 'string' && startsWith(expected, 'not ')) {
+    determiner = 'must not be';
+    expected = expected.replace(/^not /, '');
+  } else {
+    determiner = 'must be';
+  }
+
+  var msg;
+
+  if (endsWith(name, ' argument')) {
+    // For cases like 'first argument'
+    msg = "The ".concat(name, " ").concat(determiner, " ").concat(oneOf(expected, 'type'));
+  } else {
+    var type = includes(name, '.') ? 'property' : 'argument';
+    msg = "The \"".concat(name, "\" ").concat(type, " ").concat(determiner, " ").concat(oneOf(expected, 'type'));
+  }
+
+  msg += ". Received type ".concat(typeof actual);
+  return msg;
+}, TypeError);
+createErrorType('ERR_STREAM_PUSH_AFTER_EOF', 'stream.push() after EOF');
+createErrorType('ERR_METHOD_NOT_IMPLEMENTED', function (name) {
+  return 'The ' + name + ' method is not implemented';
+});
+createErrorType('ERR_STREAM_PREMATURE_CLOSE', 'Premature close');
+createErrorType('ERR_STREAM_DESTROYED', function (name) {
+  return 'Cannot call ' + name + ' after a stream was destroyed';
+});
+createErrorType('ERR_MULTIPLE_CALLBACK', 'Callback called multiple times');
+createErrorType('ERR_STREAM_CANNOT_PIPE', 'Cannot pipe, not readable');
+createErrorType('ERR_STREAM_WRITE_AFTER_END', 'write after end');
+createErrorType('ERR_STREAM_NULL_VALUES', 'May not write null values to stream', TypeError);
+createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
+  return 'Unknown encoding: ' + arg;
+}, TypeError);
+createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
+module.exports.codes = codes;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+// a duplex stream is just a stream that is both readable and writable.
+// Since JS doesn't have multiple prototypal inheritance, this class
+// prototypally inherits from Readable, and then parasitically from
+// Writable.
+
+/*<replacement>*/
+
+var objectKeys = Object.keys || function (obj) {
+  var keys = [];
+
+  for (var key in obj) {
+    keys.push(key);
+  }
+
+  return keys;
+};
+/*</replacement>*/
+
+
+module.exports = Duplex;
+
+var Readable = __webpack_require__(37);
+
+var Writable = __webpack_require__(41);
+
+__webpack_require__(5)(Duplex, Readable);
+
+{
+  // Allow the keys array to be GC'ed.
+  var keys = objectKeys(Writable.prototype);
+
+  for (var v = 0; v < keys.length; v++) {
+    var method = keys[v];
+    if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
+  }
+}
+
+function Duplex(options) {
+  if (!(this instanceof Duplex)) return new Duplex(options);
+  Readable.call(this, options);
+  Writable.call(this, options);
+  this.allowHalfOpen = true;
+
+  if (options) {
+    if (options.readable === false) this.readable = false;
+    if (options.writable === false) this.writable = false;
+
+    if (options.allowHalfOpen === false) {
+      this.allowHalfOpen = false;
+      this.once('end', onend);
+    }
+  }
+}
+
+Object.defineProperty(Duplex.prototype, 'writableHighWaterMark', {
+  // making it explicit this property is not enumerable
+  // because otherwise some prototype manipulation in
+  // userland will fail
+  enumerable: false,
+  get: function get() {
+    return this._writableState.highWaterMark;
+  }
+});
+Object.defineProperty(Duplex.prototype, 'writableBuffer', {
+  // making it explicit this property is not enumerable
+  // because otherwise some prototype manipulation in
+  // userland will fail
+  enumerable: false,
+  get: function get() {
+    return this._writableState && this._writableState.getBuffer();
+  }
+});
+Object.defineProperty(Duplex.prototype, 'writableLength', {
+  // making it explicit this property is not enumerable
+  // because otherwise some prototype manipulation in
+  // userland will fail
+  enumerable: false,
+  get: function get() {
+    return this._writableState.length;
+  }
+}); // the no-half-open enforcer
+
+function onend() {
+  // If the writable side ended, then we're ok.
+  if (this._writableState.ended) return; // no more data can be written.
+  // But allow more writes to happen in this tick.
+
+  process.nextTick(onEndNT, this);
+}
+
+function onEndNT(self) {
+  self.end();
+}
+
+Object.defineProperty(Duplex.prototype, 'destroyed', {
+  // making it explicit this property is not enumerable
+  // because otherwise some prototype manipulation in
+  // userland will fail
+  enumerable: false,
+  get: function get() {
+    if (this._readableState === undefined || this._writableState === undefined) {
+      return false;
+    }
+
+    return this._readableState.destroyed && this._writableState.destroyed;
+  },
+  set: function set(value) {
+    // we ignore the value if the stream
+    // has not been initialized yet
+    if (this._readableState === undefined || this._writableState === undefined) {
+      return;
+    } // backward compatibility, the user is explicitly
+    // managing destroyed
+
+
+    this._readableState.destroyed = value;
+    this._writableState.destroyed = value;
+  }
+});
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
+
+/***/ }),
 /* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(37);
+exports.Stream = exports;
+exports.Readable = exports;
+exports.Writable = __webpack_require__(41);
+exports.Duplex = __webpack_require__(7);
+exports.Transform = __webpack_require__(43);
+exports.PassThrough = __webpack_require__(79);
+exports.finished = __webpack_require__(19);
+exports.pipeline = __webpack_require__(80);
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports) {
 
 var g;
@@ -1260,7 +1293,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1274,9 +1307,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(65)
-var ieee754 = __webpack_require__(66)
-var isArray = __webpack_require__(67)
+var base64 = __webpack_require__(69)
+var ieee754 = __webpack_require__(70)
+var isArray = __webpack_require__(71)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3054,40 +3087,7 @@ function isnan (val) {
   return val !== val // eslint-disable-line no-self-compare
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    if (superCtor) {
-      ctor.super_ = superCtor
-      ctor.prototype = Object.create(superCtor.prototype, {
-        constructor: {
-          value: ctor,
-          enumerable: false,
-          writable: true,
-          configurable: true
-        }
-      })
-    }
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    if (superCtor) {
-      ctor.super_ = superCtor
-      var TempCtor = function () {}
-      TempCtor.prototype = superCtor.prototype
-      ctor.prototype = new TempCtor()
-      ctor.prototype.constructor = ctor
-    }
-  }
-}
-
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
 /* 11 */
@@ -3628,7 +3628,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(45);
+exports.isBuffer = __webpack_require__(64);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -3672,7 +3672,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(46);
+exports.inherits = __webpack_require__(65);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -3801,12 +3801,56 @@ exports.callbackify = callbackify;
 
 /***/ }),
 /* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * A file with common utility functions used by the extensions.
+ */
+
+var ExtensionUtils = (function () {
+
+return {
+    // Collapse multiple spaces into one
+    collapseSpaces:  function(string) { 
+        return string.replace(/  +/g, ' '); 
+    },
+
+    // Remove starting and trailing quotes - does not affect center quotes
+    trimQuotes: function(string) {
+
+        // empty string or 1 char string cannot have matching quotes
+        if (string === undefined || string.length < 2) return string;
+
+        // Starting with single or double quote?
+        if (string[0] === '"' || string[0] === "'") {
+
+            // first and last char ar matching pair of either single or double quotes
+            if (string[0] === string[string.length-1]) 
+               return string.substring(1, string.length-1);
+        }
+       
+        return string;
+    },
+
+    // Unescape the backslash characters in a string (e.g., in a URL)
+    unescapeMetaChars: function(string) { 
+        return string.replace(/\\([\/^$])/g, "$1"); 
+    }
+}
+})();
+
+if (true)
+  module.exports = ExtensionUtils;
+
+
+/***/ }),
+/* 13 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return N3Lexer; });
 /* harmony import */ var _IRIs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(39);
+/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(44);
 /* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(queue_microtask__WEBPACK_IMPORTED_MODULE_1__);
 // **N3Lexer** tokenizes N3 documents.
 
@@ -4294,18 +4338,18 @@ class N3Lexer {
   }
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9).Buffer))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(10).Buffer))
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExUtil** provides ShEx utility functions
 
-var ShExUtil = (function () {
-var ShExTerm = __webpack_require__(7);
-const Visitor = __webpack_require__(20)
-const Hierarchy = __webpack_require__(44)
+const ShExUtilCjsModule = (function () {
+var ShExTerm = __webpack_require__(4);
+const Visitor = __webpack_require__(22)
+const Hierarchy = __webpack_require__(49)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -5885,7 +5929,7 @@ var ShExUtil = {
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      var w = __webpack_require__(21)();
+      var w = __webpack_require__(23)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       var txt;
       w.end((err, res) => {
@@ -6009,8 +6053,8 @@ var ShExUtil = {
   executeQuery: function (query, endpoint) {
     var rows, t, j;
     var queryURL = endpoint + "?query=" + encodeURIComponent(query);
-    if (__webpack_require__(22)) {
-      var request = __webpack_require__(22);
+    if (__webpack_require__(24)) {
+      var request = __webpack_require__(24);
       var res = request('GET', queryURL, {
         headers: {
           'Accept': 'application/sparql-results+json'
@@ -6293,11 +6337,266 @@ return AddShExUtil(AddShExUtil);
 })();
 
 if (true)
-  module.exports = ShExUtil; // node environment
+  module.exports = ShExUtilCjsModule; // node environment
 
 
 /***/ }),
-/* 14 */
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var has = Object.prototype.hasOwnProperty;
+var isArray = Array.isArray;
+
+var hexTable = (function () {
+    var array = [];
+    for (var i = 0; i < 256; ++i) {
+        array.push('%' + ((i < 16 ? '0' : '') + i.toString(16)).toUpperCase());
+    }
+
+    return array;
+}());
+
+var compactQueue = function compactQueue(queue) {
+    while (queue.length > 1) {
+        var item = queue.pop();
+        var obj = item.obj[item.prop];
+
+        if (isArray(obj)) {
+            var compacted = [];
+
+            for (var j = 0; j < obj.length; ++j) {
+                if (typeof obj[j] !== 'undefined') {
+                    compacted.push(obj[j]);
+                }
+            }
+
+            item.obj[item.prop] = compacted;
+        }
+    }
+};
+
+var arrayToObject = function arrayToObject(source, options) {
+    var obj = options && options.plainObjects ? Object.create(null) : {};
+    for (var i = 0; i < source.length; ++i) {
+        if (typeof source[i] !== 'undefined') {
+            obj[i] = source[i];
+        }
+    }
+
+    return obj;
+};
+
+var merge = function merge(target, source, options) {
+    /* eslint no-param-reassign: 0 */
+    if (!source) {
+        return target;
+    }
+
+    if (typeof source !== 'object') {
+        if (isArray(target)) {
+            target.push(source);
+        } else if (target && typeof target === 'object') {
+            if ((options && (options.plainObjects || options.allowPrototypes)) || !has.call(Object.prototype, source)) {
+                target[source] = true;
+            }
+        } else {
+            return [target, source];
+        }
+
+        return target;
+    }
+
+    if (!target || typeof target !== 'object') {
+        return [target].concat(source);
+    }
+
+    var mergeTarget = target;
+    if (isArray(target) && !isArray(source)) {
+        mergeTarget = arrayToObject(target, options);
+    }
+
+    if (isArray(target) && isArray(source)) {
+        source.forEach(function (item, i) {
+            if (has.call(target, i)) {
+                var targetItem = target[i];
+                if (targetItem && typeof targetItem === 'object' && item && typeof item === 'object') {
+                    target[i] = merge(targetItem, item, options);
+                } else {
+                    target.push(item);
+                }
+            } else {
+                target[i] = item;
+            }
+        });
+        return target;
+    }
+
+    return Object.keys(source).reduce(function (acc, key) {
+        var value = source[key];
+
+        if (has.call(acc, key)) {
+            acc[key] = merge(acc[key], value, options);
+        } else {
+            acc[key] = value;
+        }
+        return acc;
+    }, mergeTarget);
+};
+
+var assign = function assignSingleSource(target, source) {
+    return Object.keys(source).reduce(function (acc, key) {
+        acc[key] = source[key];
+        return acc;
+    }, target);
+};
+
+var decode = function (str, decoder, charset) {
+    var strWithoutPlus = str.replace(/\+/g, ' ');
+    if (charset === 'iso-8859-1') {
+        // unescape never throws, no try...catch needed:
+        return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+    }
+    // utf-8
+    try {
+        return decodeURIComponent(strWithoutPlus);
+    } catch (e) {
+        return strWithoutPlus;
+    }
+};
+
+var encode = function encode(str, defaultEncoder, charset) {
+    // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
+    // It has been adapted here for stricter adherence to RFC 3986
+    if (str.length === 0) {
+        return str;
+    }
+
+    var string = str;
+    if (typeof str === 'symbol') {
+        string = Symbol.prototype.toString.call(str);
+    } else if (typeof str !== 'string') {
+        string = String(str);
+    }
+
+    if (charset === 'iso-8859-1') {
+        return escape(string).replace(/%u[0-9a-f]{4}/gi, function ($0) {
+            return '%26%23' + parseInt($0.slice(2), 16) + '%3B';
+        });
+    }
+
+    var out = '';
+    for (var i = 0; i < string.length; ++i) {
+        var c = string.charCodeAt(i);
+
+        if (
+            c === 0x2D // -
+            || c === 0x2E // .
+            || c === 0x5F // _
+            || c === 0x7E // ~
+            || (c >= 0x30 && c <= 0x39) // 0-9
+            || (c >= 0x41 && c <= 0x5A) // a-z
+            || (c >= 0x61 && c <= 0x7A) // A-Z
+        ) {
+            out += string.charAt(i);
+            continue;
+        }
+
+        if (c < 0x80) {
+            out = out + hexTable[c];
+            continue;
+        }
+
+        if (c < 0x800) {
+            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
+            continue;
+        }
+
+        if (c < 0xD800 || c >= 0xE000) {
+            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
+            continue;
+        }
+
+        i += 1;
+        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
+        out += hexTable[0xF0 | (c >> 18)]
+            + hexTable[0x80 | ((c >> 12) & 0x3F)]
+            + hexTable[0x80 | ((c >> 6) & 0x3F)]
+            + hexTable[0x80 | (c & 0x3F)];
+    }
+
+    return out;
+};
+
+var compact = function compact(value) {
+    var queue = [{ obj: { o: value }, prop: 'o' }];
+    var refs = [];
+
+    for (var i = 0; i < queue.length; ++i) {
+        var item = queue[i];
+        var obj = item.obj[item.prop];
+
+        var keys = Object.keys(obj);
+        for (var j = 0; j < keys.length; ++j) {
+            var key = keys[j];
+            var val = obj[key];
+            if (typeof val === 'object' && val !== null && refs.indexOf(val) === -1) {
+                queue.push({ obj: obj, prop: key });
+                refs.push(val);
+            }
+        }
+    }
+
+    compactQueue(queue);
+
+    return value;
+};
+
+var isRegExp = function isRegExp(obj) {
+    return Object.prototype.toString.call(obj) === '[object RegExp]';
+};
+
+var isBuffer = function isBuffer(obj) {
+    if (!obj || typeof obj !== 'object') {
+        return false;
+    }
+
+    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
+};
+
+var combine = function combine(a, b) {
+    return [].concat(a, b);
+};
+
+var maybeMap = function maybeMap(val, fn) {
+    if (isArray(val)) {
+        var mapped = [];
+        for (var i = 0; i < val.length; i += 1) {
+            mapped.push(fn(val[i]));
+        }
+        return mapped;
+    }
+    return fn(val);
+};
+
+module.exports = {
+    arrayToObject: arrayToObject,
+    assign: assign,
+    combine: combine,
+    compact: compact,
+    decode: decode,
+    encode: encode,
+    isBuffer: isBuffer,
+    isRegExp: isRegExp,
+    maybeMap: maybeMap,
+    merge: merge
+};
+
+
+/***/ }),
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = minimatch
@@ -6309,7 +6608,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(57)
+var expand = __webpack_require__(60)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -7226,7 +7525,7 @@ function regExpEscape (s) {
 
 
 /***/ }),
-/* 15 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7709,7 +8008,7 @@ function once(emitter, name) {
 
 
 /***/ }),
-/* 16 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7737,7 +8036,7 @@ module.exports.win32 = win32;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 17 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7745,7 +8044,7 @@ module.exports.win32 = win32;
 // permission from the author, Mathias Buus (@mafintosh).
 
 
-var ERR_STREAM_PREMATURE_CLOSE = __webpack_require__(4).codes.ERR_STREAM_PREMATURE_CLOSE;
+var ERR_STREAM_PREMATURE_CLOSE = __webpack_require__(6).codes.ERR_STREAM_PREMATURE_CLOSE;
 
 function once(callback) {
   var called = false;
@@ -7847,7 +8146,7 @@ function eos(stream, opts, callback) {
 module.exports = eos;
 
 /***/ }),
-/* 18 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -7872,7 +8171,7 @@ if (true)
 
 
 /***/ }),
-/* 19 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -7900,9 +8199,11 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 20 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
+
+function ShExVisitor () {
 
     function isTerm (t) {
       return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
@@ -7915,8 +8216,6 @@ module.exports = function(module) {
   }
   let isInclusion = isShapeRef;
 
-
-function ShExVisitor () {
   // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
   var _ShExUtil = this;
   function visitMap (map, val) {
@@ -8284,13 +8583,12 @@ if (true)
 
 
 /***/ }),
-/* 21 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExWriter** writes ShEx documents.
 
-var ShExWriter = (function () {
-var util = __webpack_require__(11);
+const ShExWriterCjsModule = (function () {
 var UNBOUNDED = -1;
 
 // Matches a literal as represented in memory by the ShEx library
@@ -8468,7 +8766,7 @@ ShExWriter.prototype = {
     } else if (shapeExpr.type === "NodeConstraint") {
       pieces = pieces.concat(_ShExWriter._writeNodeConstraint(shapeExpr, done, forceBraces));
     } else
-      throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + util.inspect(shapeExpr));
+      throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + JSON.stringify(shapeExpr));
     return pieces;
   },
 
@@ -8913,18 +9211,18 @@ return ShExWriter;
 
 // Export the `ShExWriter` class as a whole.
 if (true)
-  module.exports = ShExWriter; // node environment
+  module.exports = ShExWriterCjsModule; // node environment
 
 
 /***/ }),
-/* 22 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var handle_qs_js_1 = __webpack_require__(47);
-var GenericResponse = __webpack_require__(51);
+var handle_qs_js_1 = __webpack_require__(50);
+var GenericResponse = __webpack_require__(54);
 var fd = FormData;
 exports.FormData = fd;
 function doRequest(method, url, options) {
@@ -8993,227 +9291,7 @@ module.exports.FormData = fd;
 
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var has = Object.prototype.hasOwnProperty;
-
-var hexTable = (function () {
-    var array = [];
-    for (var i = 0; i < 256; ++i) {
-        array.push('%' + ((i < 16 ? '0' : '') + i.toString(16)).toUpperCase());
-    }
-
-    return array;
-}());
-
-var compactQueue = function compactQueue(queue) {
-    var obj;
-
-    while (queue.length) {
-        var item = queue.pop();
-        obj = item.obj[item.prop];
-
-        if (Array.isArray(obj)) {
-            var compacted = [];
-
-            for (var j = 0; j < obj.length; ++j) {
-                if (typeof obj[j] !== 'undefined') {
-                    compacted.push(obj[j]);
-                }
-            }
-
-            item.obj[item.prop] = compacted;
-        }
-    }
-
-    return obj;
-};
-
-var arrayToObject = function arrayToObject(source, options) {
-    var obj = options && options.plainObjects ? Object.create(null) : {};
-    for (var i = 0; i < source.length; ++i) {
-        if (typeof source[i] !== 'undefined') {
-            obj[i] = source[i];
-        }
-    }
-
-    return obj;
-};
-
-var merge = function merge(target, source, options) {
-    if (!source) {
-        return target;
-    }
-
-    if (typeof source !== 'object') {
-        if (Array.isArray(target)) {
-            target.push(source);
-        } else if (typeof target === 'object') {
-            if (options.plainObjects || options.allowPrototypes || !has.call(Object.prototype, source)) {
-                target[source] = true;
-            }
-        } else {
-            return [target, source];
-        }
-
-        return target;
-    }
-
-    if (typeof target !== 'object') {
-        return [target].concat(source);
-    }
-
-    var mergeTarget = target;
-    if (Array.isArray(target) && !Array.isArray(source)) {
-        mergeTarget = arrayToObject(target, options);
-    }
-
-    if (Array.isArray(target) && Array.isArray(source)) {
-        source.forEach(function (item, i) {
-            if (has.call(target, i)) {
-                if (target[i] && typeof target[i] === 'object') {
-                    target[i] = merge(target[i], item, options);
-                } else {
-                    target.push(item);
-                }
-            } else {
-                target[i] = item;
-            }
-        });
-        return target;
-    }
-
-    return Object.keys(source).reduce(function (acc, key) {
-        var value = source[key];
-
-        if (has.call(acc, key)) {
-            acc[key] = merge(acc[key], value, options);
-        } else {
-            acc[key] = value;
-        }
-        return acc;
-    }, mergeTarget);
-};
-
-var assign = function assignSingleSource(target, source) {
-    return Object.keys(source).reduce(function (acc, key) {
-        acc[key] = source[key];
-        return acc;
-    }, target);
-};
-
-var decode = function (str) {
-    try {
-        return decodeURIComponent(str.replace(/\+/g, ' '));
-    } catch (e) {
-        return str;
-    }
-};
-
-var encode = function encode(str) {
-    // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
-    // It has been adapted here for stricter adherence to RFC 3986
-    if (str.length === 0) {
-        return str;
-    }
-
-    var string = typeof str === 'string' ? str : String(str);
-
-    var out = '';
-    for (var i = 0; i < string.length; ++i) {
-        var c = string.charCodeAt(i);
-
-        if (
-            c === 0x2D // -
-            || c === 0x2E // .
-            || c === 0x5F // _
-            || c === 0x7E // ~
-            || (c >= 0x30 && c <= 0x39) // 0-9
-            || (c >= 0x41 && c <= 0x5A) // a-z
-            || (c >= 0x61 && c <= 0x7A) // A-Z
-        ) {
-            out += string.charAt(i);
-            continue;
-        }
-
-        if (c < 0x80) {
-            out = out + hexTable[c];
-            continue;
-        }
-
-        if (c < 0x800) {
-            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        if (c < 0xD800 || c >= 0xE000) {
-            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        i += 1;
-        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
-        out += hexTable[0xF0 | (c >> 18)]
-            + hexTable[0x80 | ((c >> 12) & 0x3F)]
-            + hexTable[0x80 | ((c >> 6) & 0x3F)]
-            + hexTable[0x80 | (c & 0x3F)];
-    }
-
-    return out;
-};
-
-var compact = function compact(value) {
-    var queue = [{ obj: { o: value }, prop: 'o' }];
-    var refs = [];
-
-    for (var i = 0; i < queue.length; ++i) {
-        var item = queue[i];
-        var obj = item.obj[item.prop];
-
-        var keys = Object.keys(obj);
-        for (var j = 0; j < keys.length; ++j) {
-            var key = keys[j];
-            var val = obj[key];
-            if (typeof val === 'object' && val !== null && refs.indexOf(val) === -1) {
-                queue.push({ obj: obj, prop: key });
-                refs.push(val);
-            }
-        }
-    }
-
-    return compactQueue(queue);
-};
-
-var isRegExp = function isRegExp(obj) {
-    return Object.prototype.toString.call(obj) === '[object RegExp]';
-};
-
-var isBuffer = function isBuffer(obj) {
-    if (obj === null || typeof obj === 'undefined') {
-        return false;
-    }
-
-    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
-};
-
-module.exports = {
-    arrayToObject: arrayToObject,
-    assign: assign,
-    compact: compact,
-    decode: decode,
-    encode: encode,
-    isBuffer: isBuffer,
-    isRegExp: isRegExp,
-    merge: merge
-};
-
-
-/***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9222,29 +9300,37 @@ module.exports = {
 var replace = String.prototype.replace;
 var percentTwenties = /%20/g;
 
-module.exports = {
-    'default': 'RFC3986',
-    formatters: {
-        RFC1738: function (value) {
-            return replace.call(value, percentTwenties, '+');
-        },
-        RFC3986: function (value) {
-            return value;
-        }
-    },
+var util = __webpack_require__(15);
+
+var Format = {
     RFC1738: 'RFC1738',
     RFC3986: 'RFC3986'
 };
 
+module.exports = util.assign(
+    {
+        'default': Format.RFC3986,
+        formatters: {
+            RFC1738: function (value) {
+                return replace.call(value, percentTwenties, '+');
+            },
+            RFC3986: function (value) {
+                return String(value);
+            }
+        }
+    },
+    Format
+);
+
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ShExParser = (function () {
+const ShExParserCjsModule = (function () {
 
-var ShExTerm = __webpack_require__(7);
-var ShExJison = __webpack_require__(55).Parser;
+const ShExTerm = __webpack_require__(4);
+const ShExJison = __webpack_require__(58).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 var prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -9381,11 +9467,11 @@ return {
 })();
 
 if (true)
-  module.exports = ShExParser;
+  module.exports = ShExParserCjsModule;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -9431,26 +9517,26 @@ if (true)
 module.exports = glob
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(27)
-var minimatch = __webpack_require__(14)
+var rp = __webpack_require__(28)
+var minimatch = __webpack_require__(16)
 var Minimatch = minimatch.Minimatch
-var inherits = __webpack_require__(60)
-var EE = __webpack_require__(15).EventEmitter
+var inherits = __webpack_require__(5)
+var EE = __webpack_require__(17).EventEmitter
 var path = __webpack_require__(2)
-var assert = __webpack_require__(28)
-var isAbsolute = __webpack_require__(16)
-var globSync = __webpack_require__(62)
-var common = __webpack_require__(29)
+var assert = __webpack_require__(29)
+var isAbsolute = __webpack_require__(18)
+var globSync = __webpack_require__(66)
+var common = __webpack_require__(30)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(63)
+var inflight = __webpack_require__(67)
 var util = __webpack_require__(11)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(31)
+var once = __webpack_require__(32)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -10182,7 +10268,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -10198,7 +10284,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(56)
+var old = __webpack_require__(59)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -10255,13 +10341,13 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var objectAssign = __webpack_require__(61);
+var objectAssign = __webpack_require__(63);
 
 // compare and isBuffer taken from https://github.com/feross/buffer/blob/680e9e5e488f22aac27599a57dc844a6315928dd/index.js
 // original notice:
@@ -10766,10 +10852,10 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -10787,8 +10873,8 @@ function ownProp (obj, field) {
 }
 
 var path = __webpack_require__(2)
-var minimatch = __webpack_require__(14)
-var isAbsolute = __webpack_require__(16)
+var minimatch = __webpack_require__(16)
+var isAbsolute = __webpack_require__(18)
 var Minimatch = minimatch.Minimatch
 
 function alphasorti (a, b) {
@@ -11016,7 +11102,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -11055,10 +11141,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(30)
+var wrappy = __webpack_require__(31)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -11103,7 +11189,835 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+ * TODO
+ *   templates: @<foo> %map:{ my:specimen.container.code=.1.code, my:specimen.container.disp=.1.display %}
+ *   node identifiers: @foo> %map:{ foo.id=substr(20) %}
+ *   multiplicity: ...
+ */
+
+const ShExMapCjsModule = function (config) {
+
+const extensions = __webpack_require__(34);
+const N3 = __webpack_require__(83);
+const materializer = __webpack_require__(81)(config);
+
+var MapExt = "http://shex.io/extensions/Map/#";
+var pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
+
+var UNBOUNDED = -1;
+const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
+
+function register (validator, api) {
+  if (api === undefined || !('ShExTerm' in api))
+    throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
+
+  var prefixes = "_prefixes" in validator.schema ?
+      validator.schema._prefixes :
+      {};
+
+  validator.semActHandler.results[MapExt] = {};
+  validator.semActHandler.register(
+    MapExt,
+    {
+      /**
+       * Callback for extension invocation.
+       *
+       * @param {string} code - text of the semantic action.
+       * @param {object} ctx - matched triple or results subset.
+       * @param {object} extensionStorage - place where the extension writes into the result structure.
+       * @return {bool} false if the extension failed or did not accept the ctx object.
+       */
+      dispatch: function (code, ctx, extensionStorage) {
+        function fail (msg) { var e = Error(msg); Error.captureStackTrace(e, fail); throw e; }
+        function getPrefixedName(bindingName) {
+           // already have the fully prefixed binding name ready to go
+           if (typeof bindingName === "string") return bindingName;
+
+           // bindingName is from a pattern match - need to get & expand it with prefix
+            var prefixedName = bindingName[1] ? bindingName[1] :
+                bindingName[2] in prefixes ? (prefixes[bindingName[2]] + bindingName[3]) :
+                fail("unknown prefix " + bindingName[2] + " in \"" + code + "\".");
+            return prefixedName;
+        }
+
+        var update = function(bindingName, value) {
+
+            if (!bindingName) {
+               throw Error("Invocation error: " + MapExt + " code \"" + code + "\" didn't match " + pattern);
+            }
+
+            var prefixedName = getPrefixedName(bindingName);
+            var quotedValue = value; // value.match(/"(.+)"/) === null ? '"' + value + '"' : value;
+
+            validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
+            extensionStorage[prefixedName] = quotedValue;
+        };
+
+        // Do we have a map extension function?
+        if (/.*[(].*[)].*$/.test(code)) {
+          var results = extensions.lift(code, ctx.object, prefixes);
+          for (key in results)
+            update(key, results[key])
+        } else {
+          var bindingName = code.match(pattern);
+          update(bindingName, ctx.object);
+        }
+
+        return true;
+      }
+    }
+  );
+  return {
+    results: validator.semActHandler.results[MapExt],
+    binder,
+    trivialMaterializer,
+    visitTripleConstraint
+  }
+
+function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+      function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
+      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function add (s, p, o) {
+        target.addQuad(api.ShExTerm.externalTriple({
+          subject: s,
+          predicate: p,
+          object: o
+        }, N3.DataFactory));
+        return s;
+      }
+
+        var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === MapExt; });
+        if (mapExts.length) {
+          mapExts.forEach(function (ext) {
+            var code = ext.code;
+            var m = code.match(pattern);
+
+            var tripleObject;
+            if (m) { 
+              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]);
+              var val = n3ify(bindings.get(arg));
+              if (val !== undefined) {
+                tripleObject = val;
+              }
+            }
+
+            // Is the arg a function? Check if it has parentheses and ends with a closing one
+            if (tripleObject === undefined) {
+              if (/[ a-zA-Z0-9]+\(/.test(code)) 
+                  tripleObject = extensions.lower(code, bindings, schema.prefixes);
+            }
+
+            if (tripleObject === undefined)
+              ; // console.warn('Not in bindings: ',code);
+            else if (expr.inverse)
+            //add(tripleObject, expr.predicate, curSubject);
+              add(tripleObject, expr.predicate, curSubjectx.cs);
+            else
+            //add(curSubject    , expr.predicate, tripleObject);
+              add(curSubjectx.cs, expr.predicate, tripleObject);
+          });
+
+        } else if (typeof expr.valueExpr !== "string" && "values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
+          if (expr.inverse)
+            add(expr.valueExpr.values[0], expr.predicate, curSubjectx.cs);
+          else
+            add(curSubjectx.cs, expr.predicate, n3ify(expr.valueExpr.values[0]));
+
+        } else {
+          var oldSubject = curSubjectx.cs;
+          var maxAdd = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+          if (maxAdd > MAX_MAX_CARD)
+            maxAdd = MAX_MAX_CARD;
+          if (!recurse)
+            maxAdd = 1; // no grounds to know how much to repeat.
+          for (var repetition = 0; repetition < maxAdd; ++repetition) {
+            curSubjectx.cs = B();
+            if (recurse) {
+              var res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+              if ("errors" in res)
+                break;
+            }
+            if (expr.inverse)
+              add(curSubjectx.cs, expr.predicate, oldSubject);
+            else
+              add(oldSubject, expr.predicate, curSubjectx.cs);
+          }
+          visitor._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
+                         ["inverse", "negated", "predicate", "valueExpr",
+                          "min", "max", "annotations", "semActs"])
+          curSubjectx.cs = oldSubject;
+        }
+      }
+
+function trivialMaterializer (schema, nextBNode) {
+  var blankNodeCount = 0;
+  const index = schema._index || api.ShExUtil.index(schema)
+  nextBNode = nextBNode || function () {
+    return '_:b' + blankNodeCount++;
+  };
+  return {
+    materialize: function (bindings, createRoot, shape, target) {
+      shape = !shape || shape === validator.start ? schema.start : shape;
+      target = target || new N3.Store();
+      // target.addPrefixes(schema.prefixes); // not used, but seems polite
+
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
+      function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
+      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
+      function B () { return nextBNode(); }
+      function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
+
+      var curSubject = createRoot || B();
+      var curSubjectx = {cs: curSubject};
+
+      var v = api.ShExUtil.Visitor();
+      var oldVisitShapeRef = v.visitShapeRef;
+
+      v.visitShapeRef = function (shapeRef) {
+        this.visitShapeExpr(index.shapeExprs[shapeRef], shapeRef);
+        return oldVisitShapeRef.call(v, shapeRef);
+      };
+
+      v.visitValueRef = function (r) {
+        this.visitExpression(schema.shapes[r], r);
+        return this._visitValue(r);
+      };
+
+      v.visitTripleConstraint = function (expr) {
+        visitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
+      };
+
+      v.visitShapeExpr(shape, "_: -start-");
+      return target;
+    }
+  };
+}
+
+function binder (tree) {
+  var stack = []; // e.g. [2, 1] for v="http://shex.io/extensions/Map/#BPDAM-XXX"
+  var globals = {}; // !! delme
+  //
+
+  /**
+   * returns: { var->count }
+   */
+  function _mults (obj) {
+    var rays = [];
+    var objs = [];
+    var counts = Object.keys(obj).reduce((r, k) => {
+      var toAdd = null;
+      if (typeof obj[k] === "object") {
+        toAdd = _mults(obj[k]);
+        if (obj[k].constructor === Array)
+          rays.push(k);
+        else
+          objs.push(k);
+      } else {
+        // variable name.
+        toAdd = _make(k, 1);
+      }
+      return _add(r, toAdd);
+    }, {});
+    if (rays.length > 0) {
+      objs.forEach(i => {
+        var novel = Object.keys(obj[i]).filter(k => {
+          return counts[k] === 1;
+        });
+        if (novel.length) {
+          var n2 = novel.reduce((r, k) => {
+            r[k] = obj[i][k];
+            return r;
+          }, {});
+          rays.forEach(l => {
+            _cross(obj[l], n2);
+          });
+        }
+      });
+      objs.reverse();
+      objs.forEach(i => {
+        obj.splice(i, 1); // remove object from tree
+      });
+    }
+    return counts;
+  }
+  function _add (l, r) {
+    var ret = Object.assign({}, l);
+    return Object.keys(r).reduce((ret, k) => {
+      var add = k in r ? r[k] : 1;
+      ret[k] = k in ret ? ret[k] + add : add;
+      return ret;
+    }, ret);
+  }
+  function _make (k, v) {
+    var ret = {};
+    ret[k] = v;
+    return ret;
+  }
+  function _cross (list, map) {
+    for (var listIndex in list) {
+      if (list[listIndex].constructor === Array) {
+        _cross(list[listIndex], map);
+      } else {
+        Object.keys(map).forEach(mapKey => {
+          if (mapKey in list[listIndex])
+            throw Error("unexpected duplicate key: " + mapKey + " in " + JSON.stringify(list[listIndex]));
+          list[listIndex][mapKey] = map[mapKey];
+        });
+      }
+    };
+  }
+  _mults(tree);
+  function _simplify (list) {
+    var ret = list.reduce((r, elt) => {
+      return r.concat(
+        elt.constructor === Array ?
+          _simplify(elt) :
+          elt
+      );
+    }, []);
+    return ret.length === 1 ? ret[0] : ret;
+  }
+  tree = tree.constructor === Array ? _simplify(tree) : [tree]; // expects an array
+
+  // var globals = tree.reduce((r, e, idx) => {
+  //   if (e.constructor !== Array) {
+  //     Object.keys(e).forEach(k => {
+  //       r[k] = e[k];
+  //     });
+  //     removables.unshift(idx); // higher indexes at the left
+  //   }
+  //   return r;
+  // }, {});
+
+  function getter (v) {
+    // work with copy of stack while trying to grok this problem...
+    if (stack === null)
+      return undefined;
+    if (v in globals)
+      return globals[v];
+    var nextStack = stack.slice();
+    var next = diveIntoObj(nextStack); // no effect if in obj
+    while (!(v in next)) {
+      var last;
+      while(next.constructor !== Array) {
+        last = nextStack.pop();
+        next = getObj(nextStack);
+      }
+      if (next.length === last+1) {
+        stack = null;
+        return undefined;
+      }
+      nextStack.push(last+1);
+      next = diveIntoObj(nextStack);
+      // console.log("advanced to " + nextStack);
+      // throw Error ("can't advance to find " + v + " in " + JSON.stringify(next));
+    }
+    stack = nextStack.slice();
+    var ret = next[v];
+    delete next[v];
+    return ret;
+
+    function getObj (s) {
+      return s.reduce(function (res, elt) {
+        return res[elt];
+      }, tree);
+    }
+
+    function diveIntoObj (s) {
+      while (getObj(s).constructor === Array)
+        s.push(0);
+      return getObj(s);
+    }
+  };
+  return {get: getter};
+}
+
+}
+
+function done (validator) {
+  if (Object.keys(validator.semActHandler.results[MapExt]).length === 0)
+    delete validator.semActHandler.results[MapExt];
+}
+
+function n3ify (ldterm) {
+  if (typeof ldterm !== "object")
+    return ldterm;
+  var ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
+  // Expands the prefixed name to a full IRI (also when it occurs as a literal's type)
+  function expandPrefixedName (prefixedName, prefixes) {
+    var match = /(?:^|"\^\^)([^:\/#"'\^_]*):[^\/]*$/.exec(prefixedName), prefix, base, index;
+    if (match)
+      prefix = match[1], base = prefixes[prefix], index = match.index;
+    if (base === undefined)
+      return prefixedName;
+
+    // The match index is non-zero when expanding a literal's type
+    return index === 0 ? base + prefixedName.substr(prefix.length + 1)
+                       : prefixedName.substr(0, index + 3) +
+                         base + prefixedName.substr(index + prefix.length + 4);
+  }
+
+function extractBindingsDelMe (soln, min, max, depth) {
+  if ("min" in soln && soln.min < min)
+    min = soln.min
+  var myMax = "max" in soln ?
+      (soln.max === UNBOUNDED ?
+       Infinity :
+       soln.max) :
+      1;
+  if (myMax > max)
+    max = myMax
+
+  function walkExpressions (s) {
+    return s.expressions.reduce((inner, e) => {
+      return inner.concat(extractBindingsDelMe(e, min, max, depth+1));
+    }, []);
+  }
+
+  function walkTriple (s) {
+    var fromTriple = "extensions" in s && MapExt in s.extensions ?
+        [{ depth: depth, min: min, max: max, obj: s.extensions[MapExt] }] :
+        [];
+    return "referenced" in s ?
+      fromTriple.concat(extractBindingsDelMe(s.referenced.solution, min, max, depth+1)) :
+      fromTriple;
+  }
+
+  function structuralError (msg) { throw Error(msg); }
+
+  var walk = // function to explore each solution
+      soln.type === "someOfSolutions" ||
+      soln.type === "eachOfSolutions" ? walkExpressions :
+      soln.type === "tripleConstraintSolutions" ? walkTriple :
+      structuralError("unknown type: " + soln.type);
+
+  if (myMax > 1) // preserve important associations:
+    // map: e.g. [[1,2],[3,4]]
+    // [walk(soln.solutions[0]), walk(soln.solutions[1]),...]
+    return soln.solutions.map(walk);
+  else // hide unimportant nesting:
+    // flatmap: e.g. [1,2,3,4]
+    // [].concat(walk(soln.solutions[0])).concat(walk(soln.solutions[1]))...
+    return [].concat.apply([], soln.solutions.map(walk));
+}
+
+return {
+  register: register,
+  done: done,
+  materializer: materializer,
+  // binder: binder,
+  url: MapExt,
+  // visitTripleConstraint: myvisitTripleConstraint
+  extension: {
+    hashmap: __webpack_require__(35),
+    regex: __webpack_require__(36)
+  },
+  extensions: __webpack_require__(34),
+  utils: __webpack_require__(12),
+};
+
+};
+
+if (true)
+  module.exports = ShExMapCjsModule;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * This file is the main entry point into calling an extension. 
+ * It determines which extension is requested, and then, assuming
+ * the extension is valid, it forwards the request on
+ */
+var Extensions = (function () {
+
+// Known extensions
+var hashmap_extension = __webpack_require__(35);
+var regex_extension = __webpack_require__(36);
+
+var utils = __webpack_require__(12);
+
+/**
+ * Given a map directive that contains an extension of format 
+ *          extensionName(args) 
+ * split it up for easy access to extenion name and arguments separately 
+ * 
+ * @param a map directive with an extension call embedded
+ *
+ * @return an object with members:  extension name and the arguments.
+ */
+function extensionDef(mapDirective) { 
+    if (mapDirective === undefined)
+        throw Error("Invalid extension function: " + mapDirective + "!");
+
+    // Get the extension name and argument(s)  
+    mapDirective = mapDirective.trim(); // Strip any leading or trailing white space
+    var startArgs = mapDirective.indexOf('(', 0);
+    var endArgs = mapDirective.lastIndexOf(')');
+    if (startArgs < 2 || endArgs < 4 || endArgs <= startArgs+1 || endArgs != mapDirective.length-1) 
+        throw Error("Invalid extension function: " + mapDirective + "!");
+
+    return { name:  mapDirective.substring(0, startArgs),
+             args:  mapDirective.substring(startArgs+1, endArgs) }; 
+}
+
+function lift(mapDirective, input, prefixes) {
+    var extDef = extensionDef(mapDirective);
+    switch (extDef.name) {
+        case 'hashmap': 
+          return hashmap_extension.lift(mapDirective, input, prefixes, extDef.args);
+
+        case 'regex': 
+          return regex_extension.lift(mapDirective, input, prefixes, extDef.args);
+
+        case 'test': 
+          return mapDirective;
+
+        default: 
+          throw Error('Unknown extension: '+ mapDirective+'!');
+    }
+}
+
+function lower(mapDirective, bindings, prefixes) {
+    var extDef = extensionDef(mapDirective);
+    switch (extDef.name) {
+        case 'hashmap': 
+          return hashmap_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+
+        case 'regex': 
+          return regex_extension.lower(mapDirective, bindings, prefixes, extDef.args);
+
+        case 'test': 
+          return mapDirective;
+      
+        default: 
+          throw Error('Unknown extension: ' + mapDirective+'!');
+    }
+}
+
+return {
+    lift: lift,
+    lower: lower,
+};
+})();
+
+if (true)
+  module.exports = Extensions;
+
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * The hashmap extension expects a hash map directive in JSON format like: 
+ *    hashmap(variable, {"D": "Divorced", "M": "Married", "S": "Single", "W": "Widowed"}) 
+ * And returns the appropriate map value based on the input.
+ */
+var HashmapExtension = (function () {
+var util = __webpack_require__(11);
+
+var extUtils = __webpack_require__(12);
+
+/**
+ * This function will parse the args string to find the target variable name and 
+ * JSON hashmap arguments we'll use for doing the hash mapping.  
+ * 
+ * @param args a string with the extension arguments
+ * 
+ * @return an object of format: {var: varname, map: hashmap}
+ */
+function parseArgs(mapDirective, args) {
+
+    // Do we have anything in args? 
+    if (args === undefined || args.length === 0) throw Error("Hashmap extension requires a variable name and map as arguments, but found none!");
+
+    // get the variable name and hashmap
+    var matches = /^[ ]*([\w:<>]+)[ ]*,[ ]*({.*)$/.exec(args);
+    if (matches === null || matches.length < 3) throw Error("Hashmap extension requires a variable name and map as arguments, but found: " + mapDirective + "!");
+
+    var varName = matches[1]; 
+    var hashString = matches[2];
+
+    var map;
+    try { 
+        map = JSON.parse(hashString);
+        if (Object.keys(map).length === 0) throw Error("Empty hashmap!");
+    } catch(e) { 
+        throw Error("Hashmap extension unable to parse map in " + mapDirective+"!" + e.message);
+    } 
+
+    // Verify that the hash key/value pairs are unique
+    var values = Object.values(map);
+  if (values.length != [...new Set(values)].length) throw Error('Hashmap extension requires unique key/value pairs!');
+
+    return { varName: varName,
+             hash: map };
+         
+}
+
+/**
+ * If the variable name is a prefixed name (format prefix:name), expand it 
+ * to the full name; returns the original variable name if not prefixed.
+ * 
+ * @param varName variable name
+ * @param prefixes a list of known prefixes in <short name>: <expanded name>
+ * 
+ * @return the variable name, expanded if it had a prefix on it
+ */
+function expandedVarName(varName, prefixes) { 
+    var varComponents = varName.match(/^([\w]+):(.*)$/);
+
+    if (varComponents !== null && varComponents.length == 3) {
+        var prefix = varComponents[1];
+        var name = varComponents[2];
+
+        // Verify we've got a good var name, prefix, and prefix value
+        if (prefix.length === 0 || name.length === 0) throw Error("Hashmap extension given invalid target variable name " + varName);
+        if (!(prefix in prefixes)) throw Error("Hashmap extension given undefined variable prefix " + prefix);
+
+        expandedName = prefixes[prefix] + name; 
+    } else {
+        // Not a prefixed name
+        expandedName = varName;
+    }
+
+    return expandedName;
+}
+
+/**
+ * Invert the value by finding the hash key that matches the value
+ * This assumes key/value pairs are unique
+ *
+ * @param hash hash object whose attributes should be traversed.
+ * @param value scalar value to look for
+ */
+function invert(hash, value) {
+
+   var key = Object.keys(hash).find(key => value === hash[key])
+
+   if (!key)
+       throw Error("Hashmap extension was unable to invert the value " 
+                   + value + " with map " + util.inspect(hash, {depth: null}) +"!");
+   return key;
+}
+ 
+function lift(mapDirective, input, prefixes, args) {
+
+    // Parse to get the target var name and the hash map
+    var mapArgs = parseArgs(mapDirective, args);
+    
+    // Get the expanded var name if it was prefixed
+    var expandedName = expandedVarName(mapArgs.varName, prefixes);
+
+    var key = extUtils.trimQuotes(input);
+    if (key.length === 0) throw Error('Hashmap extension has no input');
+    
+    var mappedValue = mapArgs.hash[key];
+    return { [expandedName]: mappedValue };
+}
+
+function lower(mapDirective, bindings, prefixes, args) {
+    var mapArgs = parseArgs(mapDirective, args);
+
+    // Get the expanded var name if it was prefixed
+    var expandedName = expandedVarName(mapArgs.varName, prefixes);
+
+    var mappedValue = extUtils.trimQuotes( bindings.get(expandedName) );
+    if (mappedValue === undefined) throw Error('Unable to find mapped value for ' + mapArgs.varName);
+
+    // Now use the mapped Value to find the original value and clean it up if we get something
+    var inverseValue = invert(mapArgs.hash, mappedValue);
+    if (inverseValue.length !== 0) {
+        return extUtils.unescapeMetaChars( extUtils.collapseSpaces(inverseValue) );
+    }
+
+    return inverseValue; 
+}
+
+return {
+  lift: lift,
+  lower: lower
+};
+})();
+
+if (true)
+  module.exports = HashmapExtension;
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/**
+ * The regex extension expects a map directive like: 
+ *    regex(/<regex>/) 
+ * where the regex should specify one or more target variables, e.g.,
+ *    regex(/"(?<dem:family>[a-zA-Z'\\-]+),\\s*(?<dem:given>[a-zA-Z'\\-\\s]+)"/)
+ * The expression will be applied and the results returned as a hash.
+ */
+
+var RegexExtension = (function () {
+var extUtils = __webpack_require__(12);
+
+var captureGroupName = "(\\?<(?:[a-zA-Z:]+|<[^>]+>)>)";
+
+/**
+ * Given a variable name, looks up its prefix, and  replacing the shorthand
+ * prefix name in the variable with l name.
+ *
+ * @param shortPrefixedVar a short prefixed variable name to expand e.g., dem:id
+ * @param prefixes a list of the prefix short name/full name mappings
+ *
+ * @return the fully expanded name
+ */
+function applyPrefix(varName, prefixes) {
+
+  // Figure out what variable syntax we have.  It could be <varname> or <prefix:varname>
+  var matches = varName.match(/^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/);
+  if (matches === null)
+    throw Error("variable \"" + varName + "\" did not match expected pattern!");
+
+  var expandedVarName;
+  if (matches[1]) {
+    // Got <varname>
+    expandedVarName = matches[1];
+
+  } else if (matches[2] in prefixes) {
+    // prefixed var e.g., dem:id
+    expandedVarName = prefixes[matches[2]] + matches[3];
+
+  } else
+    // unknown prefix
+    throw Error("Unknown prefix " + matches[2] + " in \"" + varName + "\"!");
+
+  return expandedVarName;
+}
+
+/**
+ * Expand the variable passed in shortPrefixedVar, and add it to a list of the known
+ * fully expanded variables.
+ *
+ * @param shortPrefixedVar a short prefixed variable name e.g., ?<dem:id>
+ * @param expandedVars the list of known variables
+ * @param prefixes the prefix hash that maps short prefix name to the full URI prefix
+ *
+ * @return the fully expanded variable name
+ */
+function buildExpandedVars(shortPrefixedVar, expandedVars, prefixes) {
+
+    // shortPrefixedVar will look like this: ?<test:string> - strip off the ?< and > chars
+    var v = extUtils.unescapeMetaChars( shortPrefixedVar.substr(2, shortPrefixedVar.length - 3) );
+    var expandedVarName = applyPrefix(v, prefixes);
+
+  if (expandedVarName in expandedVars)
+        throw Error("unable to process prefixes in " + expandedVarName);
+
+    // Add this new var to the list and return the expanded var name
+    expandedVars.push(expandedVarName);
+
+    return expandedVarName;
+}
+
+/**
+ * Strip any starting and trailing / char, ignoring leading & trailing whitespace
+ */
+function trimPattern(args) { 
+    if (/^\s*\/.*\/\s*$/.test(args)) {   
+        args = /^\s*\/(.*)\/\s*$/.exec(args)[1];
+        if (args.length < 1) throw Error(mapDirective + ' is missing the required regex pattern');
+    }
+
+    return args;
+}
+
+function lift(mapDirective, input, prefixes, args) {
+    args = trimPattern(args);
+
+    var expandedVars = [];
+    var pattern = args.replace(RegExp(captureGroupName, "g"), 
+        function (m, varName, offset, regexStr) {
+            buildExpandedVars(varName, expandedVars, prefixes);
+            return "";
+    });
+
+    if (expandedVars.length === 0) {
+        throw Error('Found no capture variable in ' + mapDirective + '!');
+    }
+    
+    var matches;
+    try {
+        matches = input.match(RegExp(pattern));
+    } catch (e) {
+        throw Error('Error pattern matching '+mapDirective + " with " + input + ": " + e.message);
+    }
+
+    if (!matches) throw Error(mapDirective + ' found no match for input "' + input + '"!');
+
+    // Build a hash of the regex variable name/value pairs
+    var result = {};
+    for (var i = 1; i < matches.length; ++i) {
+      result[expandedVars[i-1]] = matches[i];
+    }
+  
+    return result;
+}
+
+function lower(mapDirective, bindings, prefixes, args) {
+    args = trimPattern(args);
+
+    // Replace mapDirective named capture groups into bindings for those names.
+    var expandedVars = [];
+    var matched = false;
+    var string = args.replace(RegExp("\\("+captureGroupName+"[^)]+\\)", "g"),
+        function (m, varName, offset, str) {
+            matched = true;
+            var expVarName = buildExpandedVars(varName, expandedVars, prefixes);
+            var val = bindings.get(expVarName);
+            if (val === undefined) {
+                throw Error("Unable to process " + mapDirective + 
+                            " because variable \"" + expVarName + "\" was not found!");
+      
+            } else {
+                return extUtils.trimQuotes( val);
+            }
+    });
+
+    if (!matched) {
+        throw Error('Found no capture variable in ' + mapDirective + '!');
+    }
+
+    string = extUtils.collapseSpaces(string); // replaces white space with a single space 
+    return extUtils.unescapeMetaChars(string);
+}
+
+return {
+  lift: lift,
+  lower: lower
+};
+})();
+
+if (true)
+  module.exports = RegexExtension;
+
+
+/***/ }),
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11138,7 +12052,7 @@ var Duplex;
 Readable.ReadableState = ReadableState;
 /*<replacement>*/
 
-var EE = __webpack_require__(15).EventEmitter;
+var EE = __webpack_require__(17).EventEmitter;
 
 var EElistenerCount = function EElistenerCount(emitter, type) {
   return emitter.listeners(type).length;
@@ -11148,11 +12062,11 @@ var EElistenerCount = function EElistenerCount(emitter, type) {
 /*<replacement>*/
 
 
-var Stream = __webpack_require__(33);
+var Stream = __webpack_require__(38);
 /*</replacement>*/
 
 
-var Buffer = __webpack_require__(9).Buffer;
+var Buffer = __webpack_require__(10).Buffer;
 
 var OurUint8Array = global.Uint8Array || function () {};
 
@@ -11166,7 +12080,7 @@ function _isUint8Array(obj) {
 /*<replacement>*/
 
 
-var debugUtil = __webpack_require__(68);
+var debugUtil = __webpack_require__(72);
 
 var debug;
 
@@ -11178,14 +12092,14 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 
-var BufferList = __webpack_require__(69);
+var BufferList = __webpack_require__(73);
 
-var destroyImpl = __webpack_require__(34);
+var destroyImpl = __webpack_require__(39);
 
-var _require = __webpack_require__(35),
+var _require = __webpack_require__(40),
     getHighWaterMark = _require.getHighWaterMark;
 
-var _require$codes = __webpack_require__(4).codes,
+var _require$codes = __webpack_require__(6).codes,
     ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE,
     ERR_STREAM_PUSH_AFTER_EOF = _require$codes.ERR_STREAM_PUSH_AFTER_EOF,
     ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
@@ -11196,7 +12110,7 @@ var StringDecoder;
 var createReadableStreamAsyncIterator;
 var from;
 
-__webpack_require__(10)(Readable, Stream);
+__webpack_require__(5)(Readable, Stream);
 
 var errorOrDestroy = destroyImpl.errorOrDestroy;
 var kProxyEvents = ['error', 'close', 'destroy', 'pause', 'resume'];
@@ -11213,7 +12127,7 @@ function prependListener(emitter, event, fn) {
 }
 
 function ReadableState(options, stream, isDuplex) {
-  Duplex = Duplex || __webpack_require__(5);
+  Duplex = Duplex || __webpack_require__(7);
   options = options || {}; // Duplex streams are both readable and writable, but share
   // the same options object.
   // However, some cases require setting options to different
@@ -11269,14 +12183,14 @@ function ReadableState(options, stream, isDuplex) {
   this.encoding = null;
 
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(37).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(42).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
 }
 
 function Readable(options) {
-  Duplex = Duplex || __webpack_require__(5);
+  Duplex = Duplex || __webpack_require__(7);
   if (!(this instanceof Readable)) return new Readable(options); // Checking for a Stream.Duplex instance is faster here instead of inside
   // the ReadableState constructor, at least with V8 6.5
 
@@ -11431,7 +12345,7 @@ Readable.prototype.isPaused = function () {
 
 
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(37).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(42).StringDecoder;
   var decoder = new StringDecoder(enc);
   this._readableState.decoder = decoder; // If setEncoding(null), decoder.encoding equals utf8
 
@@ -12115,7 +13029,7 @@ Readable.prototype.wrap = function (stream) {
 if (typeof Symbol === 'function') {
   Readable.prototype[Symbol.asyncIterator] = function () {
     if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __webpack_require__(73);
+      createReadableStreamAsyncIterator = __webpack_require__(77);
     }
 
     return createReadableStreamAsyncIterator(this);
@@ -12217,7 +13131,7 @@ function endReadableNT(state, stream) {
 if (typeof Symbol === 'function') {
   Readable.from = function (iterable, opts) {
     if (from === undefined) {
-      from = __webpack_require__(74);
+      from = __webpack_require__(78);
     }
 
     return from(Readable, iterable, opts);
@@ -12231,17 +13145,17 @@ function indexOf(xs, x) {
 
   return -1;
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8), __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 33 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(15).EventEmitter;
+module.exports = __webpack_require__(17).EventEmitter;
 
 
 /***/ }),
-/* 34 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12353,13 +13267,13 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 35 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var ERR_INVALID_OPT_VALUE = __webpack_require__(4).codes.ERR_INVALID_OPT_VALUE;
+var ERR_INVALID_OPT_VALUE = __webpack_require__(6).codes.ERR_INVALID_OPT_VALUE;
 
 function highWaterMarkFrom(options, isDuplex, duplexKey) {
   return options.highWaterMark != null ? options.highWaterMark : isDuplex ? options[duplexKey] : null;
@@ -12386,7 +13300,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 36 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12449,17 +13363,17 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: __webpack_require__(71)
+  deprecate: __webpack_require__(75)
 };
 /*</replacement>*/
 
 /*<replacement>*/
 
-var Stream = __webpack_require__(33);
+var Stream = __webpack_require__(38);
 /*</replacement>*/
 
 
-var Buffer = __webpack_require__(9).Buffer;
+var Buffer = __webpack_require__(10).Buffer;
 
 var OurUint8Array = global.Uint8Array || function () {};
 
@@ -12471,12 +13385,12 @@ function _isUint8Array(obj) {
   return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 }
 
-var destroyImpl = __webpack_require__(34);
+var destroyImpl = __webpack_require__(39);
 
-var _require = __webpack_require__(35),
+var _require = __webpack_require__(40),
     getHighWaterMark = _require.getHighWaterMark;
 
-var _require$codes = __webpack_require__(4).codes,
+var _require$codes = __webpack_require__(6).codes,
     ERR_INVALID_ARG_TYPE = _require$codes.ERR_INVALID_ARG_TYPE,
     ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
     ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK,
@@ -12488,12 +13402,12 @@ var _require$codes = __webpack_require__(4).codes,
 
 var errorOrDestroy = destroyImpl.errorOrDestroy;
 
-__webpack_require__(10)(Writable, Stream);
+__webpack_require__(5)(Writable, Stream);
 
 function nop() {}
 
 function WritableState(options, stream, isDuplex) {
-  Duplex = Duplex || __webpack_require__(5);
+  Duplex = Duplex || __webpack_require__(7);
   options = options || {}; // Duplex streams are both readable and writable, but share
   // the same options object.
   // However, some cases require setting options to different
@@ -12619,7 +13533,7 @@ if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.protot
 }
 
 function Writable(options) {
-  Duplex = Duplex || __webpack_require__(5); // Writable ctor is applied to Duplexes, too.
+  Duplex = Duplex || __webpack_require__(7); // Writable ctor is applied to Duplexes, too.
   // `realHasInstance` is necessary because using plain `instanceof`
   // would return false, as no `_writableState` property is attached.
   // Trying to use the custom `instanceof` for Writable here will also break the
@@ -13087,10 +14001,10 @@ Writable.prototype._undestroy = destroyImpl.undestroy;
 Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8), __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 37 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13119,7 +14033,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(72).Buffer;
+var Buffer = __webpack_require__(76).Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -13392,7 +14306,7 @@ function simpleEnd(buf) {
 }
 
 /***/ }),
-/* 38 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13461,15 +14375,15 @@ function simpleEnd(buf) {
 
 module.exports = Transform;
 
-var _require$codes = __webpack_require__(4).codes,
+var _require$codes = __webpack_require__(6).codes,
     ERR_METHOD_NOT_IMPLEMENTED = _require$codes.ERR_METHOD_NOT_IMPLEMENTED,
     ERR_MULTIPLE_CALLBACK = _require$codes.ERR_MULTIPLE_CALLBACK,
     ERR_TRANSFORM_ALREADY_TRANSFORMING = _require$codes.ERR_TRANSFORM_ALREADY_TRANSFORMING,
     ERR_TRANSFORM_WITH_LENGTH_0 = _require$codes.ERR_TRANSFORM_WITH_LENGTH_0;
 
-var Duplex = __webpack_require__(5);
+var Duplex = __webpack_require__(7);
 
-__webpack_require__(10)(Transform, Duplex);
+__webpack_require__(5)(Transform, Duplex);
 
 function afterTransform(er, data) {
   var ts = this._transformState;
@@ -13599,7 +14513,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 39 */
+/* 44 */
 /***/ (function(module, exports) {
 
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -13614,21 +14528,30 @@ module.exports = typeof queueMicrotask === 'function'
 
 
 /***/ }),
-/* 40 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  let shapeMap = __webpack_require__(41)
+  let shapeMap = __webpack_require__(46)
   return Object.assign({}, {
-    ShExTerm:       __webpack_require__(7),
-    Util:           __webpack_require__(13),
-    Validator:      __webpack_require__(52),
-    Writer:         __webpack_require__(21),
-    Api:            __webpack_require__(54),
-    Parser:         __webpack_require__(25),
+    ShExTerm:       __webpack_require__(4),
+    Util:           __webpack_require__(14),
+    Validator:      __webpack_require__(55),
+    Writer:         __webpack_require__(23),
+    Api:            __webpack_require__(57),
+    Parser:         __webpack_require__(26),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
-    N3:             __webpack_require__(77)
+
+    Map:         __webpack_require__(33),
+    // <script src="../lib/extension-utils.js"                      ></script><script>modules["./extension-utils"] = modules["./lib/extension-utils"] = module.exports;</script>
+    // <script src="../lib/regex_extension.js"                      ></script><script>modules["./regex_extension"] = modules["./lib/regex_extension"] = module.exports;</script>
+    // <script src="../lib/hashmap_extension.js"                    ></script><script>modules["./lib/hashmap_extension"] = modules["./hashmap_extension"] = module.exports;</script>
+    // <script src="../lib/extensions.js"                           ></script><script>modules["./lib/extensions"] = modules["./lib/extensions"] = module.exports;</script>
+    // <script src="../lib/eval-simple-1err-materializer.js"        ></script><script>modules["../lib/regex/nfax-val-1err-materializer"] = module.exports;</script>
+
+    // <script src="../shex-extension-map.js"                       ></script><script>modules["../shex-extension-map"] = module.exports;</script>
+    // <script src="../lib/ShExMaterializer.js"                     ></script><script>ShExMaterializer = module.exports;</script>
   })
 })()
 
@@ -13637,7 +14560,7 @@ if (true)
 
 
 /***/ }),
-/* 41 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -13645,29 +14568,29 @@ if (true)
  * See README for description.
  */
 
-var ShapeMap = (function () {
-  const symbols = __webpack_require__(18)
+const ShapeMapCjsModule = (function () {
+  const symbols = __webpack_require__(20)
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(42)
+  symbols.Parser = __webpack_require__(47)
   return symbols
 })();
 
 // Export the `ShExValidator` class as a whole.
 if (true)
-  module.exports = ShapeMap;
+  module.exports = ShapeMapCjsModule;
 
 
 /***/ }),
-/* 42 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(43).Parser; // node environment
+  ShapeMapJison = __webpack_require__(48).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -13728,7 +14651,7 @@ if (true)
 
 
 /***/ }),
-/* 43 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.16 */
@@ -14147,7 +15070,7 @@ parse: function parse(input) {
     ShapeMap parser in the Jison parser generator format.
   */
 
-  var ShapeMap = __webpack_require__(18);
+  var ShapeMap = __webpack_require__(20);
 
   // Common namespaces and entities
   var XSD = 'http://www.w3.org/2001/XMLSchema#',
@@ -14916,10 +15839,10 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(19)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(21)(module)))
 
 /***/ }),
-/* 44 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var HierarchyClosure = (function () {
@@ -14998,53 +15921,13 @@ if (true) {
 
 
 /***/ }),
-/* 45 */
-/***/ (function(module, exports) {
-
-module.exports = function isBuffer(arg) {
-  return arg && typeof arg === 'object'
-    && typeof arg.copy === 'function'
-    && typeof arg.fill === 'function'
-    && typeof arg.readUInt8 === 'function';
-}
-
-/***/ }),
-/* 46 */
-/***/ (function(module, exports) {
-
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-
-/***/ }),
-/* 47 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 exports.__esModule = true;
-var qs_1 = __webpack_require__(48);
+var qs_1 = __webpack_require__(51);
 function handleQs(url, query) {
     var _a = url.split('?'), start = _a[0], part2 = _a[1];
     var qs = (part2 || '').split('#')[0];
@@ -15063,15 +15946,15 @@ exports["default"] = handleQs;
 
 
 /***/ }),
-/* 48 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var stringify = __webpack_require__(49);
-var parse = __webpack_require__(50);
-var formats = __webpack_require__(24);
+var stringify = __webpack_require__(52);
+var parse = __webpack_require__(53);
+var formats = __webpack_require__(25);
 
 module.exports = {
     formats: formats,
@@ -15081,42 +15964,67 @@ module.exports = {
 
 
 /***/ }),
-/* 49 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(23);
-var formats = __webpack_require__(24);
+var utils = __webpack_require__(15);
+var formats = __webpack_require__(25);
+var has = Object.prototype.hasOwnProperty;
 
 var arrayPrefixGenerators = {
-    brackets: function brackets(prefix) { // eslint-disable-line func-name-matching
+    brackets: function brackets(prefix) {
         return prefix + '[]';
     },
-    indices: function indices(prefix, key) { // eslint-disable-line func-name-matching
+    comma: 'comma',
+    indices: function indices(prefix, key) {
         return prefix + '[' + key + ']';
     },
-    repeat: function repeat(prefix) { // eslint-disable-line func-name-matching
+    repeat: function repeat(prefix) {
         return prefix;
     }
 };
 
+var isArray = Array.isArray;
+var push = Array.prototype.push;
+var pushToArray = function (arr, valueOrArray) {
+    push.apply(arr, isArray(valueOrArray) ? valueOrArray : [valueOrArray]);
+};
+
 var toISO = Date.prototype.toISOString;
 
+var defaultFormat = formats['default'];
 var defaults = {
+    addQueryPrefix: false,
+    allowDots: false,
+    charset: 'utf-8',
+    charsetSentinel: false,
     delimiter: '&',
     encode: true,
     encoder: utils.encode,
     encodeValuesOnly: false,
-    serializeDate: function serializeDate(date) { // eslint-disable-line func-name-matching
+    format: defaultFormat,
+    formatter: formats.formatters[defaultFormat],
+    // deprecated
+    indices: false,
+    serializeDate: function serializeDate(date) {
         return toISO.call(date);
     },
     skipNulls: false,
     strictNullHandling: false
 };
 
-var stringify = function stringify( // eslint-disable-line func-name-matching
+var isNonNullishPrimitive = function isNonNullishPrimitive(v) {
+    return typeof v === 'string'
+        || typeof v === 'number'
+        || typeof v === 'boolean'
+        || typeof v === 'symbol'
+        || typeof v === 'bigint';
+};
+
+var stringify = function stringify(
     object,
     prefix,
     generateArrayPrefix,
@@ -15128,25 +16036,35 @@ var stringify = function stringify( // eslint-disable-line func-name-matching
     allowDots,
     serializeDate,
     formatter,
-    encodeValuesOnly
+    encodeValuesOnly,
+    charset
 ) {
     var obj = object;
     if (typeof filter === 'function') {
         obj = filter(prefix, obj);
     } else if (obj instanceof Date) {
         obj = serializeDate(obj);
-    } else if (obj === null) {
+    } else if (generateArrayPrefix === 'comma' && isArray(obj)) {
+        obj = utils.maybeMap(obj, function (value) {
+            if (value instanceof Date) {
+                return serializeDate(value);
+            }
+            return value;
+        }).join(',');
+    }
+
+    if (obj === null) {
         if (strictNullHandling) {
-            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder) : prefix;
+            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key') : prefix;
         }
 
         obj = '';
     }
 
-    if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || utils.isBuffer(obj)) {
+    if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
         if (encoder) {
-            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder);
-            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder))];
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key');
+            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value'))];
         }
         return [formatter(prefix) + '=' + formatter(String(obj))];
     }
@@ -15158,7 +16076,7 @@ var stringify = function stringify( // eslint-disable-line func-name-matching
     }
 
     var objKeys;
-    if (Array.isArray(filter)) {
+    if (isArray(filter)) {
         objKeys = filter;
     } else {
         var keys = Object.keys(obj);
@@ -15167,77 +16085,93 @@ var stringify = function stringify( // eslint-disable-line func-name-matching
 
     for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
+        var value = obj[key];
 
-        if (skipNulls && obj[key] === null) {
+        if (skipNulls && value === null) {
             continue;
         }
 
-        if (Array.isArray(obj)) {
-            values = values.concat(stringify(
-                obj[key],
-                generateArrayPrefix(prefix, key),
-                generateArrayPrefix,
-                strictNullHandling,
-                skipNulls,
-                encoder,
-                filter,
-                sort,
-                allowDots,
-                serializeDate,
-                formatter,
-                encodeValuesOnly
-            ));
-        } else {
-            values = values.concat(stringify(
-                obj[key],
-                prefix + (allowDots ? '.' + key : '[' + key + ']'),
-                generateArrayPrefix,
-                strictNullHandling,
-                skipNulls,
-                encoder,
-                filter,
-                sort,
-                allowDots,
-                serializeDate,
-                formatter,
-                encodeValuesOnly
-            ));
-        }
+        var keyPrefix = isArray(obj)
+            ? typeof generateArrayPrefix === 'function' ? generateArrayPrefix(prefix, key) : prefix
+            : prefix + (allowDots ? '.' + key : '[' + key + ']');
+
+        pushToArray(values, stringify(
+            value,
+            keyPrefix,
+            generateArrayPrefix,
+            strictNullHandling,
+            skipNulls,
+            encoder,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            formatter,
+            encodeValuesOnly,
+            charset
+        ));
     }
 
     return values;
 };
 
-module.exports = function (object, opts) {
-    var obj = object;
-    var options = opts ? utils.assign({}, opts) : {};
+var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
+    if (!opts) {
+        return defaults;
+    }
 
-    if (options.encoder !== null && options.encoder !== undefined && typeof options.encoder !== 'function') {
+    if (opts.encoder !== null && opts.encoder !== undefined && typeof opts.encoder !== 'function') {
         throw new TypeError('Encoder has to be a function.');
     }
 
-    var delimiter = typeof options.delimiter === 'undefined' ? defaults.delimiter : options.delimiter;
-    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
-    var skipNulls = typeof options.skipNulls === 'boolean' ? options.skipNulls : defaults.skipNulls;
-    var encode = typeof options.encode === 'boolean' ? options.encode : defaults.encode;
-    var encoder = typeof options.encoder === 'function' ? options.encoder : defaults.encoder;
-    var sort = typeof options.sort === 'function' ? options.sort : null;
-    var allowDots = typeof options.allowDots === 'undefined' ? false : options.allowDots;
-    var serializeDate = typeof options.serializeDate === 'function' ? options.serializeDate : defaults.serializeDate;
-    var encodeValuesOnly = typeof options.encodeValuesOnly === 'boolean' ? options.encodeValuesOnly : defaults.encodeValuesOnly;
-    if (typeof options.format === 'undefined') {
-        options.format = formats['default'];
-    } else if (!Object.prototype.hasOwnProperty.call(formats.formatters, options.format)) {
-        throw new TypeError('Unknown format option provided.');
+    var charset = opts.charset || defaults.charset;
+    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
     }
-    var formatter = formats.formatters[options.format];
+
+    var format = formats['default'];
+    if (typeof opts.format !== 'undefined') {
+        if (!has.call(formats.formatters, opts.format)) {
+            throw new TypeError('Unknown format option provided.');
+        }
+        format = opts.format;
+    }
+    var formatter = formats.formatters[format];
+
+    var filter = defaults.filter;
+    if (typeof opts.filter === 'function' || isArray(opts.filter)) {
+        filter = opts.filter;
+    }
+
+    return {
+        addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
+        encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
+        encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
+        encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
+        filter: filter,
+        formatter: formatter,
+        serializeDate: typeof opts.serializeDate === 'function' ? opts.serializeDate : defaults.serializeDate,
+        skipNulls: typeof opts.skipNulls === 'boolean' ? opts.skipNulls : defaults.skipNulls,
+        sort: typeof opts.sort === 'function' ? opts.sort : null,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+};
+
+module.exports = function (object, opts) {
+    var obj = object;
+    var options = normalizeStringifyOptions(opts);
+
     var objKeys;
     var filter;
 
     if (typeof options.filter === 'function') {
         filter = options.filter;
         obj = filter('', obj);
-    } else if (Array.isArray(options.filter)) {
+    } else if (isArray(options.filter)) {
         filter = options.filter;
         objKeys = filter;
     }
@@ -15249,10 +16183,10 @@ module.exports = function (object, opts) {
     }
 
     var arrayFormat;
-    if (options.arrayFormat in arrayPrefixGenerators) {
-        arrayFormat = options.arrayFormat;
-    } else if ('indices' in options) {
-        arrayFormat = options.indices ? 'indices' : 'repeat';
+    if (opts && opts.arrayFormat in arrayPrefixGenerators) {
+        arrayFormat = opts.arrayFormat;
+    } else if (opts && 'indices' in opts) {
+        arrayFormat = opts.indices ? 'indices' : 'repeat';
     } else {
         arrayFormat = 'indices';
     }
@@ -15263,70 +16197,131 @@ module.exports = function (object, opts) {
         objKeys = Object.keys(obj);
     }
 
-    if (sort) {
-        objKeys.sort(sort);
+    if (options.sort) {
+        objKeys.sort(options.sort);
     }
 
     for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
 
-        if (skipNulls && obj[key] === null) {
+        if (options.skipNulls && obj[key] === null) {
             continue;
         }
-
-        keys = keys.concat(stringify(
+        pushToArray(keys, stringify(
             obj[key],
             key,
             generateArrayPrefix,
-            strictNullHandling,
-            skipNulls,
-            encode ? encoder : null,
-            filter,
-            sort,
-            allowDots,
-            serializeDate,
-            formatter,
-            encodeValuesOnly
+            options.strictNullHandling,
+            options.skipNulls,
+            options.encode ? options.encoder : null,
+            options.filter,
+            options.sort,
+            options.allowDots,
+            options.serializeDate,
+            options.formatter,
+            options.encodeValuesOnly,
+            options.charset
         ));
     }
 
-    var joined = keys.join(delimiter);
+    var joined = keys.join(options.delimiter);
     var prefix = options.addQueryPrefix === true ? '?' : '';
+
+    if (options.charsetSentinel) {
+        if (options.charset === 'iso-8859-1') {
+            // encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
+            prefix += 'utf8=%26%2310003%3B&';
+        } else {
+            // encodeURIComponent('✓')
+            prefix += 'utf8=%E2%9C%93&';
+        }
+    }
 
     return joined.length > 0 ? prefix + joined : '';
 };
 
 
 /***/ }),
-/* 50 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var utils = __webpack_require__(23);
+var utils = __webpack_require__(15);
 
 var has = Object.prototype.hasOwnProperty;
+var isArray = Array.isArray;
 
 var defaults = {
     allowDots: false,
     allowPrototypes: false,
     arrayLimit: 20,
+    charset: 'utf-8',
+    charsetSentinel: false,
+    comma: false,
     decoder: utils.decode,
     delimiter: '&',
     depth: 5,
+    ignoreQueryPrefix: false,
+    interpretNumericEntities: false,
     parameterLimit: 1000,
+    parseArrays: true,
     plainObjects: false,
     strictNullHandling: false
 };
+
+var interpretNumericEntities = function (str) {
+    return str.replace(/&#(\d+);/g, function ($0, numberStr) {
+        return String.fromCharCode(parseInt(numberStr, 10));
+    });
+};
+
+var parseArrayValue = function (val, options) {
+    if (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {
+        return val.split(',');
+    }
+
+    return val;
+};
+
+// This is what browsers will submit when the ✓ character occurs in an
+// application/x-www-form-urlencoded body and the encoding of the page containing
+// the form is iso-8859-1, or when the submitted form has an accept-charset
+// attribute of iso-8859-1. Presumably also with other charsets that do not contain
+// the ✓ character, such as us-ascii.
+var isoSentinel = 'utf8=%26%2310003%3B'; // encodeURIComponent('&#10003;')
+
+// These are the percent-encoded utf-8 octets representing a checkmark, indicating that the request actually is utf-8 encoded.
+var charsetSentinel = 'utf8=%E2%9C%93'; // encodeURIComponent('✓')
 
 var parseValues = function parseQueryStringValues(str, options) {
     var obj = {};
     var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
     var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
     var parts = cleanStr.split(options.delimiter, limit);
+    var skipIndex = -1; // Keep track of where the utf8 sentinel was found
+    var i;
 
-    for (var i = 0; i < parts.length; ++i) {
+    var charset = options.charset;
+    if (options.charsetSentinel) {
+        for (i = 0; i < parts.length; ++i) {
+            if (parts[i].indexOf('utf8=') === 0) {
+                if (parts[i] === charsetSentinel) {
+                    charset = 'utf-8';
+                } else if (parts[i] === isoSentinel) {
+                    charset = 'iso-8859-1';
+                }
+                skipIndex = i;
+                i = parts.length; // The eslint settings do not allow break;
+            }
+        }
+    }
+
+    for (i = 0; i < parts.length; ++i) {
+        if (i === skipIndex) {
+            continue;
+        }
         var part = parts[i];
 
         var bracketEqualsPos = part.indexOf(']=');
@@ -15334,14 +16329,28 @@ var parseValues = function parseQueryStringValues(str, options) {
 
         var key, val;
         if (pos === -1) {
-            key = options.decoder(part, defaults.decoder);
+            key = options.decoder(part, defaults.decoder, charset, 'key');
             val = options.strictNullHandling ? null : '';
         } else {
-            key = options.decoder(part.slice(0, pos), defaults.decoder);
-            val = options.decoder(part.slice(pos + 1), defaults.decoder);
+            key = options.decoder(part.slice(0, pos), defaults.decoder, charset, 'key');
+            val = utils.maybeMap(
+                parseArrayValue(part.slice(pos + 1), options),
+                function (encodedVal) {
+                    return options.decoder(encodedVal, defaults.decoder, charset, 'value');
+                }
+            );
         }
+
+        if (val && options.interpretNumericEntities && charset === 'iso-8859-1') {
+            val = interpretNumericEntities(val);
+        }
+
+        if (part.indexOf('[]=') > -1) {
+            val = isArray(val) ? [val] : val;
+        }
+
         if (has.call(obj, key)) {
-            obj[key] = [].concat(obj[key]).concat(val);
+            obj[key] = utils.combine(obj[key], val);
         } else {
             obj[key] = val;
         }
@@ -15350,21 +16359,22 @@ var parseValues = function parseQueryStringValues(str, options) {
     return obj;
 };
 
-var parseObject = function (chain, val, options) {
-    var leaf = val;
+var parseObject = function (chain, val, options, valuesParsed) {
+    var leaf = valuesParsed ? val : parseArrayValue(val, options);
 
     for (var i = chain.length - 1; i >= 0; --i) {
         var obj;
         var root = chain[i];
 
-        if (root === '[]') {
-            obj = [];
-            obj = obj.concat(leaf);
+        if (root === '[]' && options.parseArrays) {
+            obj = [].concat(leaf);
         } else {
             obj = options.plainObjects ? Object.create(null) : {};
             var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
             var index = parseInt(cleanRoot, 10);
-            if (
+            if (!options.parseArrays && cleanRoot === '') {
+                obj = { 0: leaf };
+            } else if (
                 !isNaN(index)
                 && root !== cleanRoot
                 && String(index) === cleanRoot
@@ -15378,13 +16388,13 @@ var parseObject = function (chain, val, options) {
             }
         }
 
-        leaf = obj;
+        leaf = obj; // eslint-disable-line no-param-reassign
     }
 
     return leaf;
 };
 
-var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
+var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesParsed) {
     if (!givenKey) {
         return;
     }
@@ -15399,15 +16409,14 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
 
     // Get the parent
 
-    var segment = brackets.exec(key);
+    var segment = options.depth > 0 && brackets.exec(key);
     var parent = segment ? key.slice(0, segment.index) : key;
 
     // Stash the parent if it exists
 
     var keys = [];
     if (parent) {
-        // If we aren't using plain objects, optionally prefix keys
-        // that would overwrite object prototype properties
+        // If we aren't using plain objects, optionally prefix keys that would overwrite object prototype properties
         if (!options.plainObjects && has.call(Object.prototype, parent)) {
             if (!options.allowPrototypes) {
                 return;
@@ -15420,7 +16429,7 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
     // Loop through children appending to the array until we hit depth
 
     var i = 0;
-    while ((segment = child.exec(key)) !== null && i < options.depth) {
+    while (options.depth > 0 && (segment = child.exec(key)) !== null && i < options.depth) {
         i += 1;
         if (!options.plainObjects && has.call(Object.prototype, segment[1].slice(1, -1))) {
             if (!options.allowPrototypes) {
@@ -15436,27 +16445,45 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
-    return parseObject(keys, val, options);
+    return parseObject(keys, val, options, valuesParsed);
 };
 
-module.exports = function (str, opts) {
-    var options = opts ? utils.assign({}, opts) : {};
+var normalizeParseOptions = function normalizeParseOptions(opts) {
+    if (!opts) {
+        return defaults;
+    }
 
-    if (options.decoder !== null && options.decoder !== undefined && typeof options.decoder !== 'function') {
+    if (opts.decoder !== null && opts.decoder !== undefined && typeof opts.decoder !== 'function') {
         throw new TypeError('Decoder has to be a function.');
     }
 
-    options.ignoreQueryPrefix = options.ignoreQueryPrefix === true;
-    options.delimiter = typeof options.delimiter === 'string' || utils.isRegExp(options.delimiter) ? options.delimiter : defaults.delimiter;
-    options.depth = typeof options.depth === 'number' ? options.depth : defaults.depth;
-    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : defaults.arrayLimit;
-    options.parseArrays = options.parseArrays !== false;
-    options.decoder = typeof options.decoder === 'function' ? options.decoder : defaults.decoder;
-    options.allowDots = typeof options.allowDots === 'boolean' ? options.allowDots : defaults.allowDots;
-    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : defaults.plainObjects;
-    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : defaults.allowPrototypes;
-    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : defaults.parameterLimit;
-    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
+    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    }
+    var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
+
+    return {
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
+        arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
+        decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
+        delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
+        // eslint-disable-next-line no-implicit-coercion, no-extra-parens
+        depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
+        ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
+        interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
+        parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
+        parseArrays: opts.parseArrays !== false,
+        plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+};
+
+module.exports = function (str, opts) {
+    var options = normalizeParseOptions(opts);
 
     if (str === '' || str === null || typeof str === 'undefined') {
         return options.plainObjects ? Object.create(null) : {};
@@ -15470,7 +16497,7 @@ module.exports = function (str, opts) {
     var keys = Object.keys(tempObj);
     for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
-        var newObj = parseKeys(key, tempObj[key], options);
+        var newObj = parseKeys(key, tempObj[key], options, typeof str === 'string');
         obj = utils.merge(obj, newObj, options);
     }
 
@@ -15479,7 +16506,7 @@ module.exports = function (str, opts) {
 
 
 /***/ }),
-/* 51 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -15546,7 +16573,7 @@ module.exports = Response;
 
 
 /***/ }),
-/* 52 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/* ShExValidator - javascript module to validate a graph with respect to Shape Expressions
@@ -15557,7 +16584,7 @@ module.exports = Response;
  *   constraint violation reporting.
  */
 
-var ShExValidator = (function () {
+const ShExValidatorCjsModule = (function () {
 var UNBOUNDED = -1;
 
 // interface constants
@@ -15574,8 +16601,8 @@ var VERBOSE = "VERBOSE" in process.env;
 
 var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var ShExTerm = __webpack_require__(7);
-let ShExVisitor = __webpack_require__(20);
+var ShExTerm = __webpack_require__(4);
+let ShExVisitor = __webpack_require__(22);
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -15643,7 +16670,7 @@ numericParsers[XSD + "double" ] = function (label, parseError) {
   return Number(label);
 };
 
-testRange = function (value, datatype, parseError) {
+function testRange (value, datatype, parseError) {
   const ranges = {
     //    integer            -1 0 1 +1 | "" -1.0 +1.0 1e0 NaN INF
     //    decimal            -1 0 1 +1 -1.0 +1.0 | "" 1e0 NaN INF
@@ -15787,7 +16814,7 @@ function ShExValidator_constructor(schema, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || __webpack_require__(53);
+  var regexModule = this.options.regexModule || __webpack_require__(56);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -16787,17 +17814,17 @@ function runtimeError () {
 
 // Export the `ShExValidator` class as a whole.
 if (true)
-  module.exports = ShExValidator;
+  module.exports = ShExValidatorCjsModule;
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 53 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var EvalThreadedNErr = (function () {
-var ShExTerm = __webpack_require__(7);
-var UNBOUNDED = -1;
+const EvalThreadedNErrCjsModule = (function () {
+const ShExTerm = __webpack_require__(4);
+const UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
     var outerExpression = shape.expression;
@@ -16948,7 +17975,7 @@ function vpEngine (schema, shape, index) {
                       predicate: expr.predicate
                     },
                     "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                    "productionLabel" in expr ? { productionLabel: expr.productionLabel } : {},
+                    "id" in expr ? { productionLabel: expr.id } : {},
                     minmax,
                     {
                       solutions: tests.map(p => p.tested)
@@ -17233,19 +18260,19 @@ return {
 })();
 
 if (true)
-  module.exports = EvalThreadedNErr;
+  module.exports = EvalThreadedNErrCjsModule;
 
 
 /***/ }),
-/* 54 */
+/* 57 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-var ShExApi = function (config) {
+const ShExApiCjsModule = function (config) {
 
-  const ShExUtil = __webpack_require__(13);
-  const ShExParser = __webpack_require__(25);
+  const ShExUtil = __webpack_require__(14);
+  const ShExParser = __webpack_require__(26);
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
@@ -17561,11 +18588,11 @@ var ShExApi = function (config) {
   function LoadExtensions (globs) {
     return globs.reduce(
       (list, glob) =>
-        list.concat(__webpack_require__(26).glob.sync(glob))
+        list.concat(__webpack_require__(27).glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  var t = __webpack_require__(64)(path)
+	  var t = __webpack_require__(68)(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
@@ -17578,11 +18605,11 @@ var ShExApi = function (config) {
 }
 
 if (true)
-  module.exports = ShExApi
+  module.exports = ShExApiCjsModule
 
 
 /***/ }),
-/* 55 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -18544,7 +19571,7 @@ parse: function parse(input) {
 
   var UNBOUNDED = -1;
 
-  var ShExUtil = __webpack_require__(13);
+  var ShExUtil = __webpack_require__(14);
 
   // Common namespaces and entities
   var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
@@ -19461,10 +20488,10 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(19)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(21)(module)))
 
 /***/ }),
-/* 56 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -19774,11 +20801,11 @@ exports.realpath = function realpath(p, cache, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 57 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(58);
-var balanced = __webpack_require__(59);
+var concatMap = __webpack_require__(61);
+var balanced = __webpack_require__(62);
 
 module.exports = expandTop;
 
@@ -19981,7 +21008,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 58 */
+/* 61 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -20000,7 +21027,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 59 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20066,40 +21093,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 60 */
-/***/ (function(module, exports) {
-
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    if (superCtor) {
-      ctor.super_ = superCtor
-      ctor.prototype = Object.create(superCtor.prototype, {
-        constructor: {
-          value: ctor,
-          enumerable: false,
-          writable: true,
-          configurable: true
-        }
-      })
-    }
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    if (superCtor) {
-      ctor.super_ = superCtor
-      var TempCtor = function () {}
-      TempCtor.prototype = superCtor.prototype
-      ctor.prototype = new TempCtor()
-      ctor.prototype.constructor = ctor
-    }
-  }
-}
-
-
-/***/ }),
-/* 61 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20196,22 +21190,62 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 62 */
+/* 64 */
+/***/ (function(module, exports) {
+
+module.exports = function isBuffer(arg) {
+  return arg && typeof arg === 'object'
+    && typeof arg.copy === 'function'
+    && typeof arg.fill === 'function'
+    && typeof arg.readUInt8 === 'function';
+}
+
+/***/ }),
+/* 65 */
+/***/ (function(module, exports) {
+
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+
+/***/ }),
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(27)
-var minimatch = __webpack_require__(14)
+var rp = __webpack_require__(28)
+var minimatch = __webpack_require__(16)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(26).Glob
+var Glob = __webpack_require__(27).Glob
 var util = __webpack_require__(11)
 var path = __webpack_require__(2)
-var assert = __webpack_require__(28)
-var isAbsolute = __webpack_require__(16)
-var common = __webpack_require__(29)
+var assert = __webpack_require__(29)
+var isAbsolute = __webpack_require__(18)
+var common = __webpack_require__(30)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -20689,12 +21723,12 @@ GlobSync.prototype._makeAbs = function (f) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 63 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(30)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(31)
 var reqs = Object.create(null)
-var once = __webpack_require__(31)
+var once = __webpack_require__(32)
 
 module.exports = wrappy(inflight)
 
@@ -20750,7 +21784,7 @@ function slice (args) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 64 */
+/* 68 */
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -20761,10 +21795,10 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 64;
+webpackEmptyContext.id = 68;
 
 /***/ }),
-/* 65 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20923,7 +21957,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 66 */
+/* 70 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -21013,7 +22047,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 67 */
+/* 71 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -21024,13 +22058,13 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 68 */
+/* 72 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 69 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21048,10 +22082,10 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var _require = __webpack_require__(9),
+var _require = __webpack_require__(10),
     Buffer = _require.Buffer;
 
-var _require2 = __webpack_require__(70),
+var _require2 = __webpack_require__(74),
     inspect = _require2.inspect;
 
 var custom = inspect && inspect.custom || 'inspect';
@@ -21246,13 +22280,13 @@ function () {
 }();
 
 /***/ }),
-/* 70 */
+/* 74 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 71 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -21323,15 +22357,14 @@ function config (name) {
   return String(val).toLowerCase() === 'true';
 }
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 72 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
-var buffer = __webpack_require__(9)
+var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
 
 // alternative to using Object.keys for old browsers
@@ -21351,8 +22384,6 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
@@ -21397,7 +22428,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 /***/ }),
-/* 73 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21407,7 +22438,7 @@ var _Object$setPrototypeO;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var finished = __webpack_require__(17);
+var finished = __webpack_require__(19);
 
 var kLastResolve = Symbol('lastResolve');
 var kLastReject = Symbol('lastReject');
@@ -21611,7 +22642,7 @@ module.exports = createReadableStreamAsyncIterator;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 74 */
+/* 78 */
 /***/ (function(module, exports) {
 
 module.exports = function () {
@@ -21620,7 +22651,7 @@ module.exports = function () {
 
 
 /***/ }),
-/* 75 */
+/* 79 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21651,9 +22682,9 @@ module.exports = function () {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(38);
+var Transform = __webpack_require__(43);
 
-__webpack_require__(10)(PassThrough, Transform);
+__webpack_require__(5)(PassThrough, Transform);
 
 function PassThrough(options) {
   if (!(this instanceof PassThrough)) return new PassThrough(options);
@@ -21665,7 +22696,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 76 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21684,7 +22715,7 @@ function once(callback) {
   };
 }
 
-var _require$codes = __webpack_require__(4).codes,
+var _require$codes = __webpack_require__(6).codes,
     ERR_MISSING_ARGS = _require$codes.ERR_MISSING_ARGS,
     ERR_STREAM_DESTROYED = _require$codes.ERR_STREAM_DESTROYED;
 
@@ -21703,7 +22734,7 @@ function destroyer(stream, reading, writing, callback) {
   stream.on('close', function () {
     closed = true;
   });
-  if (eos === undefined) eos = __webpack_require__(17);
+  if (eos === undefined) eos = __webpack_require__(19);
   eos(stream, {
     readable: reading,
     writable: writing
@@ -21768,7 +22799,1681 @@ function pipeline() {
 module.exports = pipeline;
 
 /***/ }),
-/* 77 */
+/* 81 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process) {/* ShExMaterializer - javascript module to validate a graph with respect to Shape Expressions
+ *
+ * Status: 1/2 tested, no known bugs.
+ *
+ * TODO:
+ *   constraint violation reporting.
+ */
+
+const ShExMapMaterializerCjsModule = function (config) {
+
+// interface constants
+var InterfaceOptions = {
+  "or": {
+    "oneOf": "exactly one disjunct must pass",
+    "someOf": "one or more disjuncts must pass",
+    "firstOf": "disjunct evaluation stops after one passes"
+  },
+  "partition": {
+    "greedy": "each triple constraint consumes all triples matching predicate and object",
+    "exhaustive": "search all mappings of triples to triple constriant"
+  }
+};
+
+var VERBOSE = "VERBOSE" in process.env;
+// **ShExValidator** provides ShEx utility functions
+
+var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+
+var ShExTerm = __webpack_require__(4);
+const ShExMap = __webpack_require__(33);
+
+var UNBOUNDED = -1;
+
+function getLexicalValue (term) {
+  return ShExTerm.isIRI(term) ? term :
+    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
+    term.substr(2); // bnodes start with "_:"
+}
+
+
+var XSD = "http://www.w3.org/2001/XMLSchema#";
+var integerDatatypes = [
+  XSD + "integer",
+  XSD + "nonPositiveInteger",
+  XSD + "negativeInteger",
+  XSD + "long",
+  XSD + "int",
+  XSD + "short",
+  XSD + "byte",
+  XSD + "nonNegativeInteger",
+  XSD + "unsignedLong",
+  XSD + "unsignedInt",
+  XSD + "unsignedShort",
+  XSD + "unsignedByte",
+  XSD + "positiveInteger"
+];
+
+var decimalDatatypes = [
+  XSD + "decimal",
+].concat(integerDatatypes);
+
+var numericDatatypes = [
+  XSD + "float",
+  XSD + "double"
+].concat(decimalDatatypes);
+
+var numericParsers = {};
+numericParsers[XSD + "integer"] = function (label, parseError) {
+  if (!(label.match(/^[+-]?[0-9]+$/))) {
+    parseError("illegal integer value '" + label + "'");
+  }
+  return parseInt(label);
+};
+numericParsers[XSD + "decimal"] = function (label, parseError) {
+  if (!(label.match(/^[+-]?(?:[0-9]*\.[0-9]+|[0-9]+)$/))) { // XSD has no pattern for decimal?
+    parseError("illegal integer value '" + label + "'");
+  }
+  return parseFloat(label);
+};
+numericParsers[XSD + "float"  ] = function (label, parseError) {
+  if (!(label.match(/^[+-]?(?:[0-9]*\.[0-9]+|[0-9]+)$/))) { // XSD has no pattern for float?
+    parseError("illegal integer value '" + label + "'");
+  }
+  return parseFloat(label);
+};
+numericParsers[XSD + "double" ] = function (label, parseError) {
+  if (!(label.match(/[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?/))) {
+    parseError("illegal integer value '" + label + "'");
+  }
+  return Number(label);
+};
+
+/*
+function intSubType (spec, label, parseError) {
+  var ret = numericParsers[XSD + "integer"](label, parseError);
+  if ("min" in spec && ret < spec.min)
+    parseError("illegal " + XSD + spec.type + " value '" + label + "' should not be < " + spec.min);
+  if ("max" in spec && ret > spec.max)
+    parseError("illegal " + XSD + spec.type + " value '" + label + "' should not be > " + spec.max);
+  return ret;
+}
+[{type: "nonPositiveInteger", max: 0},
+ {type: "negativeInteger", max: -1},
+ {type: "long", min: -9223372036854775808, max: 9223372036854775807}, // beyond IEEE double
+ {type: "int", min: -2147483648, max: 2147483647},
+ {type: "short", min: -32768, max: 32767},
+ {type: "byte", min: -128, max: 127},
+ {type: "nonNegativeInteger", min: 0},
+ {type: "unsignedLong", min: 0, max: 18446744073709551615},
+ {type: "unsignedInt", min: 0, max: 4294967295},
+ {type: "unsignedShort", min: 0, max: 65535},
+ {type: "unsignedByte", min: 0, max: 255},
+ {type: "positiveInteger", min: 1}].forEach(function (i) {
+   numericParsers[XSD + i.type ] = function (label, parseError) {
+     return intSubType(i, label, parseError);
+   };
+ });
+*/
+
+var stringTests = {
+  length   : function (v, l) { return v.length === l; },
+  minlength: function (v, l) { return v.length  >= l; },
+  maxlength: function (v, l) { return v.length  <= l; }
+};
+
+var numericValueTests = {
+  mininclusive  : function (n, m) { return n >= m; },
+  minexclusive  : function (n, m) { return n >  m; },
+  maxinclusive  : function (n, m) { return n <= m; },
+  maxexclusive  : function (n, m) { return n <  m; }
+};
+
+var decimalLexicalTests = {
+  totaldigits   : function (v, d) {
+    var m = v.match(/[0-9]/g);
+    return m && m.length <= d;
+  },
+  fractiondigits: function (v, d) {
+    var m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
+    return m && m[1].length <= d;
+  }
+};
+
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = ShExTerm.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
+
+function makeCache () {
+  var _keys = {}; // _keys[http://abcd] = [obj1, obj2]
+  var _vals = {}; // _vals[http://abcd] = [res1, res2]
+  return {
+    cached: function (point, shape) {
+      var cache = _keys[point];
+      if (!cache) {
+        _keys[point] = cache = [];
+        _vals[point] = [];
+        return undefined;
+      }
+      var idx = cache.indexOf(shape);
+      return idx === -1 ? undefined : _vals[point][idx];
+    },
+    remember: function (point, shape, res) {
+      var cache = _keys[point];
+      if (!cache) {
+        _keys[point] = [];
+        _vals[point] = [];
+      } else if (cache.indexOf(shape) !== -1) {
+        // we're conservative in the use here.
+        throw Error("not expecting duplicate key " + key);
+      }
+      _keys[point].push(shape);
+      _vals[point].push(res);
+    }
+  };
+}
+
+/* ShExValidator_constructor - construct an object for validating a schema.
+ *
+ * schema: a structure produced by a ShEx parser or equivalent.
+ * options: object with controls for
+ *   lax(true): boolean: whine about missing types in schema.
+ *   diagnose(false): boolean: makde validate return a structure with errors.
+ */
+function ShExMaterializer_constructor(schema, mapper, options) {
+  if (!(this instanceof ShExMaterializer_constructor))
+    return new ShExMaterializer_constructor(schema, mapper, options);
+  this.type = "ShExValidator";
+  options = options || {};
+  this.options = options;
+  this.options.or = this.options.or || "someOf";
+  this.options.partition = this.options.partition || "exhaustive";
+  if (!("noCache" in options && options.noCache))
+    this.known = makeCache();
+
+  var _ShExValidator = this;
+  this.schema = schema;
+  this._expect = this.options.lax ? noop : expect; // report errors on missing types.
+  this._optimize = {}; // optimizations:
+    // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
+  this.reset = function () {  }; // included in case we need it later.
+  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+  var regexModule = this.options.regexModule || __webpack_require__(82);
+
+  var blankNodeCount = 0;
+  var nextBNode = options.nextBNode || function () {
+    return '_:b' + blankNodeCount++;
+  };
+
+  /* getAST - compile a traditional regular expression abstract syntax tree.
+   * Tested but not used at present.
+   */
+  this.getAST = function () {
+    return {
+      type: "AST",
+      shapes: Object.keys(this.schema._index.shapeExprs).reduce(function (ret, label) {
+        ret[label] = {
+          type: "ASTshape",
+          expression: _compileShapeToAST(_ShExValidator.schema._index.shapeExprs[label].expression, [], _ShExValidator.schema)
+        };
+        return ret;
+      }, {})
+    };
+  };
+
+  /* indexTripleConstraints - compile regular expression and index triple constraints
+   */
+  this.indexTripleConstraints = function (expression) {
+    // list of triple constraints from (:p1 ., (:p2 . | :p3 .))
+    var tripleConstraints = [];
+
+    if (expression)
+      indexTripleConstraints_dive(expression);
+    return tripleConstraints;
+
+    function indexTripleConstraints_dive (expr) {
+      if (expr.type === "TripleConstraint")
+        tripleConstraints.push(expr)-1;
+
+      else if (expr.type === "OneOf" || expr.type === "EachOf")
+        expr.expressions.forEach(function (nested) {
+          indexTripleConstraints_dive(nested);
+        });
+
+      else if (expr.type === "Inclusion")
+        indexTripleConstraints_dive(schema.productions[expr.include]);
+
+      // @@TODO shape.virtual, shape.inherit
+      else
+        runtimeError("unexpected expr type: " + expr.type);
+    };
+  };
+
+  /* validate - test point in db against the schema for labelOrShape
+   * depth: level of recurssion; for logging.
+   */
+  this.validate = function (db, point, labelOrShape, depth, seen) {
+    // default to schema's start shape
+    if (!labelOrShape || labelOrShape === config.Validator.start) {
+      if (!schema.start)
+        runtimeError("start production not defined");
+      labelOrShape = schema.start;
+    }
+    if (typeof labelOrShape !== "string")
+      return this._validateShapeExpr(db, point, labelOrShape, "_: -start-", depth, seen);
+
+    if (!(labelOrShape in this.schema._index.shapeExprs))
+      runtimeError("shape " + labelOrShape + " not defined");
+
+    var shapeLabel = labelOrShape; // for clarity
+    if (seen === undefined)
+      seen = {};
+    var seenKey = point + "|" + shapeLabel;
+    if (seenKey in seen)
+      return {
+        type: "Recursion",
+        node: ldify(point),
+        shape: shapeLabel
+      };
+    seen[seenKey] = { point: point, shapeLabel: shapeLabel };
+    var ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
+    delete seen[seenKey];
+    return ret;
+  }
+
+  this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, seen) {
+    if ("known" in this && this.known.cached(point, shapeExpr))
+      return this.known.cached(point, shapeExpr);
+    var ret = null;
+    if (point === "")
+      throw Error("validation needs a valid focus node");
+    if (typeof(shapeExpr) === "string") { // ShapeRef
+      ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, seen);
+    } else if (shapeExpr.type === "NodeConstraint") {
+      var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      ret = errors.length ? {
+        type: "Failure",
+        node: ldify(point),
+        shape: shapeLabel,
+        errors: errors.map(function (miss) {
+          return {
+            type: "NodeConstraintViolation",
+            shapeExpr: shapeExpr
+          };
+        })
+      } : {
+        type: "NodeConstraintTest",
+        node: ldify(point),
+        shape: shapeLabel,
+        shapeExpr: shapeExpr
+      };
+    } else if (shapeExpr.type === "Shape") {
+      ret = this._validateShape(db, point, regexModule.compile(schema, shapeExpr),
+                                 shapeExpr, shapeLabel, depth, seen);
+    } else if (shapeExpr.type === "ShapeExternal") {
+      ret = this.options.validateExtern(db, point, shapeLabel, depth, seen);
+    } else if (shapeExpr.type === "ShapeOr") {
+      var errors = [];
+      ret = { type: "ShapeOrFailure", errors: errors };
+      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        var nested = shapeExpr.shapeExprs[i];
+        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, seen);
+        if ("errors" in sub)
+          errors.push(sub);
+        else {
+          ret = { type: "ShapeOrResults", solution: sub };
+          break;
+        }
+      }
+    } else if (shapeExpr.type === "ShapeNot") {
+      var sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, depth, seen);
+      if ("errors" in sub)
+          ret = { type: "ShapeNotResults", solution: sub };
+        else
+          ret = { type: "ShapeNotFailure", errors: sub };
+    } else if (shapeExpr.type === "ShapeAnd") {
+      var passes = [];
+      ret = { type: "ShapeAndResults", solutions: passes };
+      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        var nested = shapeExpr.shapeExprs[i];
+        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, seen);
+        if ("errors" in sub) {
+          ret = { type: "ShapeAndFailure", errors: sub };
+          break;
+        } else
+          passes.push(sub);
+      }
+    } else
+      throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
+    if ("known" in this)
+      this.known.remember(point, shapeExpr, ret);
+    return ret;
+  }
+
+  this._validateShape = function (db, point, regexEngine, shape, shapeLabel, depth, seen) {
+    var _ShExValidator = this;
+
+    // logging stuff
+    if (depth === undefined)
+      depth = 0;
+    var padding = (new Array(depth + 1)).join("  "); // AKA "  ".repeat(depth);
+    function _log () {
+      if (!VERBOSE) { return; }
+      console.log(padding + Array.prototype.join.call(arguments, ""));
+    }
+
+    var ret = null;
+    var startAcionStorage = {}; // !!! need test to see this write to results structure.
+    if ("startActs" in schema && !this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage))
+      return null; // some semAct aborted !! return real error
+    _log("validating <" + point + "> as <" + shapeLabel + ">");
+
+    // var outgoing = indexNeighborhood(db.findByIRI(point, null, null, null).sort(byObject));
+    // var incoming = indexNeighborhood(db.findByIRI(null, null, point, null).sort(bySubject));
+    var neighborhood = []; // outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
+
+    var constraintList = this.indexTripleConstraints(shape.expression);
+    // var tripleList = constraintList.reduce(function (ret, constraint, ord) {
+
+    //   // subject and object depend on direction of constraint.
+    //   var searchSubject = constraint.inverse ? null : point;
+    //   var searchObject = constraint.inverse ? point : null;
+    //   var index = constraint.inverse ? incoming : outgoing;
+
+    //   // get triples matching predciate
+    //   var matchPredicate = index.byPredicate[constraint.predicate] ||
+    //     []; // empty list when no triple matches that constraint
+
+    //   function _errorsByShapeLabel (focus, shapeLabel) {
+    //     var sub = _ShExValidator.validate(db, focus, shapeLabel, depth + 1, seen);
+    //     return "errors" in sub ? sub.errors : [];
+    //   }
+    //   function _errorsByShapeExpr (focus, shapeExpr) {
+    //     var sub = _ShExValidator._validateShapeExpr(db, focus, shapeExpr, shapeLabel, depth, seen);
+    //     return "errors" in sub ? sub.errors : [];
+    //   }
+    //   // strip to triples matching value constraints (apart from @<someShape>)
+    //   var matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
+    //     matchPredicate,
+    //     constraint.valueExpr,
+    //     constraint.inverse,
+    //     /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeLabel,
+    //     /* _ShExValidator.options.partition === "exhaustive" ? undefined : */ _errorsByShapeExpr
+    //   );
+
+    //   matchConstraints.hits.forEach(function (t) {
+    //     ret.constraintList[neighborhood.indexOf(t)].push(ord);
+    //   });
+    //   matchConstraints.misses.forEach(function (t) {
+    //     ret.misses[neighborhood.indexOf(t.triple)] = {constraintNo: ord, errors: t.errors};
+    //   });
+    //   return ret;
+    // }, { misses: {}, constraintList:_seq(neighborhood.length).map(function () { return []; }) }); // start with [[],[]...]
+
+    // _log("constraints by triple: ", JSON.stringify(tripleList.constraintList));
+
+    // var misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+    //   if (constraints.length === 0 &&                       // matches no constraints
+    //       ord < outgoing.triples.length &&                  // not an incoming triple
+    //       ord in tripleList.misses &&                       // predicate matched some constraint(s)
+    //       (shape.extra === undefined ||                     // not declared extra
+    //        shape.extra.indexOf(neighborhood[ord].predicate) === -1)) {
+    //     ret.push({tripleNo: ord, constraintNo: tripleList.misses[ord].constraintNo, errors: tripleList.misses[ord].errors});
+    //   }
+    //   return ret;
+    // }, []);
+
+    // var xp = crossProduct(tripleList.constraintList);
+    var partitionErrors = [];
+    // while (misses.length === 0 && xp.next() && ret === null) {
+    //   // caution: early continues
+    for (var __once = 0; __once < 1; ++__once) {
+      // var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
+      // var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
+      //   _seq(neighborhood.length).map(function () { return 0; });
+      // var tripleToConstraintMapping = xp.get(); // [0,1,0,3] mapping from triple to constraint
+
+      // // Triples not mapped to triple constraints are not allowed in closed shapes.
+      // if (shape.closed) {
+      //   var firstSkippedTriple = tripleToConstraintMapping.indexOf(undefined);
+      //   if (firstSkippedTriple !== -1 && firstSkippedTriple < outgoing.triples.length) {
+      //     partitionErrors.push({
+      //       errors: [
+      //         {
+      //           type: "ClosedShapeViolation",
+      //           unexpectedTriples: tripleToConstraintMapping.reduce((ret, c, idx) => {
+      //             if (idx < outgoing.triples.length && c === undefined)
+      //               ret.push(outgoing.triples[idx]);
+      //             return ret;
+      //           }, [])
+      //         }
+      //       ]
+      //     });
+      //     continue; // closed shape violation.
+      //   }
+      // }
+
+      // // Set usedTriples and constraintMatchCount.
+      // tripleToConstraintMapping.forEach(function (tpNumber, ord) {
+      //   if (tpNumber !== undefined) {
+      //     usedTriples.push(neighborhood[ord]);
+      //     ++constraintMatchCount[tpNumber];
+      //   }
+      // });
+
+      // // Pivot to triples by constraint.
+      // function _constraintToTriples () {
+      //   var cll = constraintList.length;
+      //   return tripleToConstraintMapping.slice().
+      //     reduce(function (ret, c, ord) {
+      //       if (c !== undefined)
+      //         ret[c].push(ord);
+      //       return ret;
+      //     }, _seq(cll).map(function () { return []; }));
+      // }
+
+      // tripleToConstraintMapping.slice().sort(function (a,b) { return a-b; }).filter(function (i) { // sort constraint numbers
+      //   return i !== undefined;
+      // }).map(function (n) { return n + " "; }).join(""); // e.g. 0 0 1 3 
+
+      function _recurse (point, shapeLabel) {
+        return _ShExValidator.validate(db, point, shapeLabel, depth+1, seen);
+      }
+      function _direct (point, shapeExpr) {
+        return _ShExValidator._validateShapeExpr(db, point, shapeExpr, shapeLabel, depth, seen);
+      }
+      function _testExpr (term, valueExpr, recurse, direct) {
+        return _ShExValidator._errorsMatchingShapeExpr(term, valueExpr, recurse, direct)
+      }
+      var results = regexEngine.match(db, point, constraintList, _synthesize, /*_constraintToTriples(), tripleToConstraintMapping, */ neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
+      function _synthesize (constraintNo, min, max, neighborhood) {
+        // console.log({"constraintNo": constraintNo, "min": min, "max": max, "constraintList": constraintList, "db": db, "point": point, "regexEngine": regexEngine, "shape": shape, "shapeLabel": shapeLabel, "depth": depth, "seen": seen});
+        var tc = constraintList[constraintNo];
+        var curSubjectx = {cs: point};
+        var target = new config.rdfjs.Store();
+        mapper.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
+        var oldLen = neighborhood.length;
+        var created = target.getQuads().map(ShExTerm.internalTriple);
+        neighborhood.push.apply(neighborhood, created);
+        console.log("adding: " + created.length + " triples: " + created.map(
+          q => (['subject', 'predicate', 'object']).map(
+            pos => ShExTerm.intermalTermToTurtle(q[pos], _ShExValidator.schema._base, _ShExValidator.schema._prefixes)
+          ).join(' ')
+        ));
+        return Array.apply(null, {length: created.length}).map((_, idx)=>{ return idx+oldLen});
+        // if ("semActs" in tc) {
+        //   tc.semActs.forEach(function (semAct) {
+        //     if (semAct.name === ShExMap.url) {
+        //       var prefixes = _ShExValidator.schema.prefixes;
+              
+        //     }
+        //   });
+        // }
+        // console.dir();
+        return [];
+      }
+      function mapper_visitTripleConstraint (expr) {
+        var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === ShExMap.url; });
+        if (mapExts.length) {
+          mapExts.forEach(function (ext) {
+            var code = ext.code;
+            var m = code.match(pattern);
+
+            var tripleObject;
+            if (m) { 
+              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
+              if (!_.isUndefined(bindings[arg])) {
+                tripleObject = bindings[arg];
+              }
+            }
+
+            // Is the arg a function? Check if it has parentheses and ends with a closing one
+            if (_.isUndefined(tripleObject)) {
+              if (/[ a-zA-Z0-9]+\(/.test(code)) 
+                  tripleObject = extensions.lower(code, bindings, schema.prefixes);
+            }
+
+            if (_.isUndefined(tripleObject)) console.warn('Not in bindings: ',code);
+            add(curSubject, expr.predicate, tripleObject);
+          });
+
+        } else if ("values" in expr.valueExpr && expr.valueExpr.values.length === 1) {
+          add(curSubject, expr.predicate, expr.valueExpr.values[0]);
+
+        } else {
+          var oldSubject = curSubject;
+          curSubject = B();
+          add(oldSubject, expr.predicate, curSubject);
+          this._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
+                         ["inverse", "negated", "predicate", "valueExprRef", "valueExpr",
+                          "min", "max", "annotations", "semActs"])
+          curSubject = oldSubject;
+        }
+      };
+
+      // {// testing parity between two engines
+      //   var nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
+      //   var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
+      //   if ("errors" in fromNFA !== "errors" in results)
+      //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
+      // }
+      if ("errors" in results) {
+        partitionErrors.push({
+          errors: results.errors
+        });
+        if (_ShExValidator.options.partition !== "exhaustive")
+          break;
+        else
+          continue;
+      }
+
+      // _log("post-regexp " + usedTriples.join(" "));
+
+      var possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+      if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
+        possibleRet.solution = results;
+      if ("semActs" in shape &&
+          !this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)) {
+        // some semAct aborted
+        partitionErrors.push({
+          errors: [ { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] } ]
+        });
+        if (_ShExValidator.options.partition !== "exhaustive")
+          break;
+        else
+          continue;
+      }
+      // _log("final " + usedTriples.join(" "));
+
+      ret = possibleRet;
+      // alts.push(tripleToConstraintMapping);
+    }
+    if (ret === null/* !! && this.options.diagnose */) {
+      var missErrors = [];// misses.map(function (miss) {
+      //   var t = neighborhood[miss.tripleNo];
+      //   return {
+      //     type: "TypeMismatch",
+      //     triple: {subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+      //     constraint: constraintList[miss.constraintNo],
+      //     errors: miss.errors
+      //   };
+      // });
+      ret = {
+        type: "Failure",
+        node: ldify(point),
+        shape: shapeLabel,
+        errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
+      };
+    }
+
+    if (VERBOSE) { // remove N3jsTripleToString
+      neighborhood.forEach(function (t) {
+        delete t.toString;
+      });
+    }
+    if ("startActs" in schema && depth === 0) {
+      ret.startActs = schema.startActs;
+    }
+    _log("</" + shapeLabel + ">");
+    return ret;
+  };
+
+  this._triplesMatchingShapeExpr = function (triples, valueExpr, inverse, recurse, direct) {
+    var _ShExValidator = this;
+    var misses = [];
+    var hits = [];
+    triples.forEach(function (triple) {
+      var value = inverse ? triple.subject : triple.object;
+      var errors = valueExpr === undefined ?
+          [] :
+          _ShExValidator._errorsMatchingShapeExpr(value, valueExpr, recurse, direct);
+      if (errors.length === 0) {
+        hits.push(triple);
+      } else if (hits.indexOf(triple) === -1) {
+        misses.push({triple: triple, errors: errors});
+      }
+    });
+    return { hits: hits, misses: misses };
+  }
+  this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
+    var _ShExValidator = this;
+    if (typeof(valueExpr) === "string") { // ShapeRef
+      return recurse ? recurse(value, valueExpr) : [];
+    } else if (valueExpr.type === "NodeConstraint") {
+      return this._errorsMatchingNodeConstraint(value, valueExpr, null);
+    } else if (valueExpr.type === "Shape") {
+      return direct === undefined ? [] : direct(value, valueExpr);
+    } else if (valueExpr.type === "ShapeOr") {
+      var ret = [];
+      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        var nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct);
+        if (nested.length === 0)
+          return nested;
+        ret = ret.concat(nested);
+      }
+      return ret;
+    } else if (valueExpr.type === "ShapeAnd") {
+      return valueExpr.shapeExprs.reduce(function (ret, nested, iter) {
+        return ret.concat(_ShExValidator._errorsMatchingShapeExpr(value, nested, recurse, direct, true));
+      }, []);
+    } else {
+      throw Error("unknown value expression type '" + valueExpr.type + "'");
+    }
+  };
+
+  /* _errorsMatchingNodeConstraint - return whether the value matches the value
+   * expression without checking shape references.
+   */
+  this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
+    var errors = [];
+
+    function validationError () {
+      var errorStr = Array.prototype.join.call(arguments, "");
+      errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+    }
+    // if (negated) ;
+    if (false) {} else {
+      if ("nodeKind" in valueExpr) {
+        if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
+          validationError("unknown node kind '" + valueExpr.nodeKind + "'");
+        }
+        if (ShExTerm.isBlank(value)) {
+          if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
+            validationError("blank node found when " + valueExpr.nodeKind + " expected");
+          }
+        } else if (ShExTerm.isLiteral(value)) {
+          if (valueExpr.nodeKind !== "literal") {
+            validationError("literal found when " + valueExpr.nodeKind + " expected");
+          }
+        } else if (valueExpr.nodeKind === "bnode" || valueExpr.nodeKind === "literal") {
+          validationError("iri found when " + valueExpr.nodeKind + " expected");
+        }
+      }
+
+      if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
+
+      if (valueExpr.datatype) {
+        if (!ShExTerm.isLiteral(value)) {
+          validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
+        }
+        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        }
+      }
+
+      if (valueExpr.values) {
+        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+          if (ret) return true;
+          if (!(typeof v === "object" && "value" in v))
+            return false;
+          var ld = ldify(value);
+          return v.value === ld.value &&
+            v.type === ld.type &&
+            v.language === ld.language;
+        }, false)) {
+          // literal match
+        } else if (valueExpr.values.indexOf(value) !== -1) {
+          // trivial match
+        } else {
+          if (!(valueExpr.values.some(function (valueConstraint) {
+            if (typeof valueConstraint === "object" && !("value" in valueConstraint)) {
+              expect(valueConstraint, "type", "StemRange");
+              if (typeof valueConstraint.stem === "object") {
+                expect(valueConstraint.stem, "type", "Wildcard");
+                // match whatever but check exclusions below
+              } else {
+                if (!(value.startsWith(valueConstraint.stem))) {
+                  return false;
+                }
+              }
+              if (valueConstraint.exclusions) {
+                return !valueConstraint.exclusions.some(function (c) {
+                  if (typeof c === "object") {
+                    expect(c, "type", "Stem");
+                    return value.startsWith(c.stem);
+                  } else {
+                    return value === c;
+                  }
+                });
+              }
+              return true;
+            } else {
+              // ignore -- would have caught it above
+            }
+          }))) {
+            validationError("value " + value + " not found in set " + valueExpr.values);
+          }
+        }
+      }
+    }
+
+    if ("pattern" in valueExpr) {
+      var regexp = new RegExp(valueExpr.pattern);
+      if (!(getLexicalValue(value).match(regexp)))
+        validationError("value " + value + " did not match pattern " + valueExpr.pattern);
+    }
+
+    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+      ShExTerm.isBlank(value) ? value.substring(2) :
+      value;
+    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
+    var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
+
+    Object.keys(stringTests).forEach(function (test) {
+      if (test in valueExpr && !stringTests[test](label, valueExpr[test])) {
+        validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
+      }
+    });
+
+    Object.keys(numericValueTests).forEach(function (test) {
+      if (test in valueExpr) {
+        if (numeric) {
+          if (!numericValueTests[test](numericParsers[numeric](label, validationError), valueExpr[test])) {
+            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
+          }
+        } else {
+          validationError("facet violation: numeric facet " + test + " can't apply to " + value);
+        }
+      }
+    });
+
+    Object.keys(decimalLexicalTests).forEach(function (test) {
+      if (test in valueExpr) {
+        if (numeric === XSD + "integer" || numeric === XSD + "decimal") {
+          if (!decimalLexicalTests[test](""+numericParsers[numeric](label, validationError), valueExpr[test])) {
+            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
+          }
+        } else {
+          validationError("facet violation: numeric facet " + test + " can't apply to " + value);
+        }
+      }
+    });
+    return errors;
+  };
+
+  this.semActHandler = {
+    handlers: { },
+    results: { },
+    /**
+     * Store a semantic action handler.
+     *
+     * @param {string} name - semantic action's URL.
+     * @param {object} handler - handler function.
+     *
+     * The handler object has a dispatch function is invoked with:
+     * @param {string} code - text of the semantic action.
+     * @param {object} ctx - matched triple or results subset.
+     * @param {object} extensionStorage - place where the extension writes into the result structure.
+     * @return {bool} false if the extension failed or did not accept the ctx object.
+     */
+    register: function (name, handler) {
+      this.handlers[name] = handler;
+    },
+    /**
+     * Calls all semantic actions, allowing each to write to resultsArtifact.
+     *
+     * @param {array} semActs - list of semantic actions to invoke.
+     * @return {bool} false if any result was false.
+     */
+    dispatchAll: function (semActs, ctx, resultsArtifact) {
+      var _semActHanlder = this;
+      return semActs.reduce(function (ret, semAct) {
+        if (ret && semAct.name in _semActHanlder.handlers) {
+          var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
+          var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
+          var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
+          ret = ret && _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
+          if (!existing && Object.keys(extensionStorage).length > 0) {
+            if (!("extensions" in resultsArtifact))
+              resultsArtifact.extensions = {};
+            resultsArtifact.extensions[semAct.name] = extensionStorage;
+          }
+          return ret;
+        }
+        return ret;
+      }, true);
+    }
+  };
+}
+
+/* _compileShapeToAST - compile a shape expression to an abstract syntax tree.
+ *
+ * currently tested but not used.
+ */
+function _compileShapeToAST (expression, tripleConstraints, schema) {
+
+  function Epsilon () {
+    this.type = "Epsilon";
+  }
+
+  function TripleConstraint (ordinal, predicate, inverse, negated, valueExpr) {
+    this.type = "TripleConstraint";
+    // this.ordinal = ordinal; @@ does 1card25
+    this.inverse = !!inverse;
+    this.negated = !!negated;
+    this.predicate = predicate;
+    if (valueExpr !== undefined)
+      this.valueExpr = valueExpr;
+  }
+
+  function Choice (disjuncts) {
+    this.type = "Choice";
+    this.disjuncts = disjuncts;
+  }
+
+  function EachOf (conjuncts) {
+    this.type = "EachOf";
+    this.conjuncts = conjuncts;
+  }
+
+  function SemActs (expression, semActs) {
+    this.type = "SemActs";
+    this.expression = expression;
+    this.semActs = semActs;
+  }
+
+  function KleeneStar (expression) {
+    this.type = "KleeneStar";
+    this.expression = expression;
+  }
+
+  function _compileExpression (expr, schema) {
+    var repeated, container;
+
+    /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
+       expr 1 1 => expr
+       expr 0 1 => Choice(expr, Eps)
+       expr 0 3 => Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps)
+       expr 2 5 => EachOf(expr, expr, Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps))
+       expr 0 * => KleeneStar(expr)
+       expr 1 * => EachOf(expr, KleeneStar(expr))
+       expr 2 * => EachOf(expr, expr, KleeneStar(expr))
+
+       @@TODO: favor Plus over Star if Epsilon not in expr.
+    */
+    function _repeat (expr, min, max) {
+      if (min === undefined) { min = 1; }
+      if (max === undefined) { max = 1; }
+
+      if (min === 1 && max === 1) { return expr; }
+
+      var opts = max === UNBOUNDED ?
+        new KleeneStar(expr) :
+        _seq(max - min).reduce(function (ret, elt, ord) {
+          return ord === 0 ?
+            new Choice([expr, new Epsilon]) :
+            new Choice([new EachOf([expr, ret]), new Epsilon]);
+        }, undefined);
+
+      var reqd = min !== 0 ?
+        new EachOf(_seq(min).map(function (ret) {
+          return expr; // @@ something with ret
+        }).concat(opts)) : opts;
+      return reqd;
+    }
+
+    if (expr.type === "TripleConstraint") {
+      // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
+      var valueExpr = "valueExprRef" in expr ?
+        schema.valueExprDefns[expr.valueExprRef] :
+        expr.valueExpr;
+      var ordinal = tripleConstraints.push(expr)-1;
+      var tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
+      repeated = _repeat(tp, expr.min, expr.max);
+      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+    }
+
+    else if (expr.type === "OneOf") {
+      container = new Choice(expr.expressions.map(function (e) {
+        return _compileExpression(e, schema);
+      }));
+      repeated = _repeat(container, expr.min, expr.max);
+      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+    }
+
+    else if (expr.type === "EachOf") {
+      container = new EachOf(expr.expressions.map(function (e) {
+        return _compileExpression(e, schema);
+      }));
+      repeated = _repeat(container, expr.min, expr.max);
+      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+    }
+
+    else if (expr.type === "Inclusion") {
+      var included = schema._index.shapeExprs[expr.include].expression;
+      return _compileExpression(included, schema);
+    }
+
+    else throw Error("unexpected expr type: " + expr.type);
+  }
+
+  return expression ? _compileExpression(expression, schema) : new Epsilon();
+}
+
+// http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+function crossProduct(sets) {
+  var n = sets.length, carets = [], args = null;
+
+  function init() {
+    args = [];
+    for (var i = 0; i < n; i++) {
+      carets[i] = 0;
+      args[i] = sets[i][0];
+    }
+  }
+
+  function next() {
+
+    // special case: crossProduct([]).next().next() returns false.
+    if (args !== null && args.length === 0)
+      return false;
+
+    if (args === null) {
+      init();
+      return true;
+    }
+    var i = n - 1;
+    carets[i]++;
+    if (carets[i] < sets[i].length) {
+      args[i] = sets[i][carets[i]];
+      return true;
+    }
+    while (carets[i] >= sets[i].length) {
+      if (i == 0) {
+        return false;
+      }
+      carets[i] = 0;
+      args[i] = sets[i][0];
+      carets[--i]++;
+    }
+    args[i] = sets[i][carets[i]];
+    return true;
+  }
+
+  return {
+    next: next,
+    do: function (block, _context) { // old API
+      return block.apply(_context, args);
+    },
+    // new API because
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
+    // cautions about functions over arguments.
+    get: function () { return args; }
+  };
+}
+
+/* N3jsTripleToString - simple toString function to make N3.js's triples
+ * printable.
+ */
+var N3jsTripleToString = function () {
+  function fmt (n) {
+    return ShExTerm.isLiteral(n) ?
+      [ "http://www.w3.org/2001/XMLSchema#integer",
+        "http://www.w3.org/2001/XMLSchema#float",
+        "http://www.w3.org/2001/XMLSchema#double"
+      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
+      parseInt(ShExTerm.getLiteralValue(n)) :
+      n :
+    ShExTerm.isBlank(n) ?
+      n :
+      "<" + n + ">";
+  }
+  return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
+};
+
+/* indexNeighborhood - index triples by predicate
+ * returns: {
+ *     byPredicate: Object: mapping from predicate to triples containing that
+ *                  predicate.
+ *
+ *     candidates: [[1,3], [0,2]]: mapping from triple to the triple constraints
+ *                 it matches.  It is initialized to []. Mappings that remain an
+ *                 empty set indicate a triple which didn't matching anything in
+ *                 the shape.
+ *
+ *     misses: list to recieve value constraint failures.
+ *   }
+ */
+function indexNeighborhood (triples) {
+  return {
+    triples: triples,
+    byPredicate: triples.reduce(function (ret, t) {
+      var p = t.predicate;
+      if (!(p in ret))
+        ret[p] = [];
+      ret[p].push(t);
+
+      // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
+      if (VERBOSE)
+        t.toString = N3jsTripleToString;
+
+      return ret;
+    }, {}),
+    candidates: _seq(triples.length).map(function () {
+      return [];
+    }),
+    misses: []
+  };
+}
+
+/* bySubject - sort triples by subject following SPARQL partial ordering.
+ */
+function bySubject (t1, t2) {
+  // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
+  //   return t1.predicate > t2.predicate;
+  var l = t1.subject, r = t2.subject;
+  var lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
+  var rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
+  return lprec === rprec ? l > r : lprec > rprec;
+}
+
+/* byObject - sort triples by object following SPARQL partial ordering.
+ */
+function byObject (t1, t2) {
+  // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
+  //   return t1.predicate > t2.predicate;
+  var l = t1.object, r = t2.object;
+  var lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
+  var rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
+  return lprec === rprec ? l > r : lprec > rprec;
+}
+
+/* Return a list of n ""s.
+ *
+ * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
+ * never calls f.
+ */
+function _seq (n) {
+  return n === 0 ?
+    [] :
+    Array(n).join(" ").split(/ /); // hahaha, javascript, you suck.
+}
+
+/* Expect property p with value v in object o
+ */
+function expect (o, p, v) {
+  if (!(p in o))
+    runtimeError("expected "+JSON.stringify(o)+" to have a '"+p+"' attribute.");
+  if (arguments.length > 2 && o[p] !== v)
+    runtimeError("expected "+p+" attribute '"+o[p]+"' to equal '"+v+"'.");
+}
+
+function noop () {  }
+
+function runtimeError () {
+  var errorStr = Array.prototype.join.call(arguments, "");
+  var e = new Error("Runtime error: " + errorStr);
+  Error.captureStackTrace(e, runtimeError);
+  throw e;
+}
+
+  return { // node environment
+    construct: ShExMaterializer_constructor,
+    options: InterfaceOptions
+  };
+}
+
+
+// ## Exports
+
+// Export the `ShExMaterializer` class as a whole.
+if (true)
+  module.exports = ShExMapMaterializerCjsModule;
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
+
+/***/ }),
+/* 82 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var NFAXVal1ErrMaterializer = (function () {
+
+var ShExTerm = ShEx.ShExTerm;
+
+  var Split = "<span class='keyword' title='Split'>|</span>";
+  var Rept  = "<span class='keyword' title='Repeat'>×</span>";
+  var Match = "<span class='keyword' title='Match'>␃</span>";
+var UNBOUNDED = -1;
+  /* compileNFA - compile regular expression and index triple constraints
+   */
+function compileNFA (schema, shape) {
+    var expression = shape.expression;
+    return NFA();
+
+    function NFA () {
+      // wrapper for states, startNo and matchstate
+      var states = [];
+      var matchstate = State_make(Match, []);
+      var startNo = matchstate;
+      var stack = [];
+      var pair;
+      if (expression) {
+        var pair = walkExpr(expression, []);
+        patch(pair.tail, matchstate);
+        startNo = pair.start;
+      }
+      var ret = {
+        algorithm: "rbenx",
+        end: matchstate,
+        states: states,
+        start: startNo,
+        match: rbenx_match
+      }
+      matchstate = states = startNo = null;
+      return ret;
+
+      function walkExpr (expr, stack) {
+        var s, starts;
+        var lastTail;
+        function maybeAddRept (start, tail) {
+          if ((expr.min == undefined || expr.min === 1) &&
+              (expr.max == undefined || expr.max === 1))
+            return {start: start, tail: tail}
+          s = State_make(Rept, [start]);
+          states[s].expr = expr;
+          // cache min/max in normalized form for simplicity of comparison.
+          states[s].min = "min" in expr ? expr.min : 1;
+          states[s].max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+          patch(tail, s);
+          return {start: s, tail: [s]}
+        }
+
+        if (expr.type === "TripleConstraint") {
+          s = State_make(expr, []);
+          states[s].stack = stack;
+          return {start: s, tail: [s]};
+          // maybeAddRept(s, [s]);
+        }
+
+        else if (expr.type === "OneOf") {
+          lastTail = [];
+          starts = [];
+          expr.expressions.forEach(function (nested, ord) {
+            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
+            starts.push(pair.start);
+            lastTail = lastTail.concat(pair.tail);
+          });
+          s = State_make(Split, starts);
+          states[s].expr = expr;
+          return maybeAddRept(s, lastTail);
+        }
+
+        else if (expr.type === "EachOf") {
+          expr.expressions.forEach(function (nested, ord) {
+            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
+            if (ord === 0)
+              s = pair.start;
+            else
+              patch(lastTail, pair.start);
+            lastTail = pair.tail;
+          });
+          return maybeAddRept(s, lastTail);
+        }
+
+        else if (expr.type === "Inclusion") {
+          var included = schema.productions[expr.include];
+          return walkExpr(included, stack);
+        }
+
+        runtimeError("unexpected expr type: " + expr.type);
+      };
+
+      function State_make (c, outs, negated) {
+        var ret = states.length;
+        states.push({c:c, outs:outs});
+        if (negated)
+          states[ret].negated = true; // only include if true for brevity
+        return ret;
+      }
+
+      function patch (l, target) {
+        l.forEach(elt => {
+          states[elt].outs.push(target);
+        });
+      }
+    }
+
+
+    function nfaToString () {
+      var known = {OneOf: [], EachOf: []};
+      function dumpTripleConstraint (tc) {
+        return "<" + tc.predicate + ">";
+      }
+      function card (obj) {
+        var x = "";
+        if ("min" in obj) x += obj.min;
+        if ("max" in obj) x += "," + obj.max;
+        return x ? "{" + x + "}" : "";
+      }
+      function junct (j) {
+        var id = known[j.type].indexOf(j);
+        if (id === -1)
+          id = known[j.type].push(j)-1;
+        return j.type + id; // + card(j);
+      }
+      function dumpStackElt (elt) {
+        return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
+      }
+      function dumpStack (stack) {
+        return stack.map(elt => { return dumpStackElt(elt); }).join("/");
+      }
+      function dumpNFA (states, startNo) {
+        return states.map((s, i) => {
+          return (i === startNo ? s.c === Match ? "." : "S" : s.c === Match ? "E" : " ") + i + " " + (
+            s.c === Split ? ("Split-" + junct(s.expr)) :
+              s.c === Rept ? ("Rept-" + junct(s.expr)) :
+              s.c === Match ? "Match" :
+              dumpTripleConstraint(s.c)
+          ) + card(s) + "→" + s.outs.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
+        }).join("\n");
+      }
+      function dumpMatched (matched) {
+        return matched.map(m => {
+          return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
+        }).join(",");
+      }
+      function dumpThread (thread) {
+        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
+          return k + "×" + thread.repeats[k];
+        }).join(",") + " " + dumpMatched(thread.matched);
+      }
+      function dumpThreadList (list) {
+        return "[[" + list.map(thread => { return dumpThread(thread); }).join("\n  ") + "]]";
+      }
+      return {
+        nfa: dumpNFA,
+        stack: dumpStack,
+        stackElt: dumpStackElt,
+        thread: dumpThread,
+        threadList: dumpThreadList
+      };
+    }
+
+  function rbenx_match (graph, node, constraintList, synthesize, /* constraintToTripleMapping, tripleToConstraintMapping, */ neighborhood, recurse, direct, semActHandler, checkValueExpr, trace) {
+      var _this = this;
+      var clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+
+      function resetRepeat (thread, repeatedState) {
+        var trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+          if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
+            r[k] = thread.repeats[k];
+          return r;
+        }, {});
+        return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+      }
+      function incrmRepeat (thread, repeatedState) {
+        var incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+          r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
+          return r;
+        }, {});
+        return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
+      }
+      function stateString (state, repeats) {
+        var rs = Object.keys(repeats).map(rpt => {
+          return rpt+":"+repeats[rpt];
+        }).join(",");
+        return rs.length ? state + "-" + rs : ""+state;
+      }
+
+      function addstate (list, stateNo, thread, seen) {
+        seen = seen || [];
+        var seenkey = stateString(stateNo, thread.repeats);
+        if (seen.indexOf(seenkey) !== -1)
+          return;
+        seen.push(seenkey);
+
+        var s = _this.states[stateNo];
+        if (s.c === Split) {
+          return s.outs.reduce((ret, o, idx) => {
+            return ret.concat(addstate(list, o, thread, seen));
+          }, []);
+        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
+        } else if (s.c === Rept) {
+          var ret = [];
+          // matched = [matched].concat("Rept" + s.expr);
+          if (!(stateNo in thread.repeats))
+            thread.repeats[stateNo] = 0;
+          var repetitions = thread.repeats[stateNo];
+          // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
+          if (repetitions < s.max)
+            ret = ret.concat(addstate(list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
+          if (repetitions >= s.min && repetitions <= s.max)
+            ret = ret.concat(addstate(list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
+          return ret;
+        } else {
+          // if (stateNo !== _this.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
+          //   return r2 || avail.length > 0;
+          // }, false))
+          return [list.push({ // return [new list element index]
+            state:stateNo,
+            repeats:thread.repeats,
+            avail:thread.avail.map(a => { // copy parent thread's avail vector
+              return a.slice();
+            }),
+            stack:thread.stack,
+            matched:thread.matched,
+            errors: thread.errors
+          }) - 1];
+        }
+      }
+
+      function localExpect (list) {
+        return list.map(st => {
+          var s = _this.states[st.state]; // simpler threads are a list of states.
+          return renderAtom(s.c, s.negated);
+        });
+      }
+
+      if (_this.states.length === 1)
+        return matchedToResult([], constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+
+      var chosen = null;
+      // var dump = nfaToString();
+      // console.log(dump.nfa(this.states, this.start));
+      addstate(clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
+      while (clist.length) {
+        nlist = [];
+        if (trace)
+          trace.push({threads:[]});
+        for (var threadno = 0; threadno < clist.length; ++threadno) {
+          var thread = clist[threadno];
+          if (thread.state === _this.end)
+            continue;
+          var state = _this.states[thread.state];
+          var nlistlen = nlist.length;
+          var constraintNo = constraintList.indexOf(state.c);
+          // may be Accept!
+          var min = "min" in state.c ? state.c.min : 1;
+          var max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+          if ("negated" in state.c && state.c.negated)
+            min = max = 0;
+          if (thread.avail[constraintNo] === undefined)
+            thread.avail[constraintNo] = synthesize(constraintNo, min, max, neighborhood);
+          var taken = thread.avail[constraintNo].splice(0, max);
+          if (taken.length >= min) {
+            do {
+              // find the exprs that require repetition
+              var exprs = _this.states.map(x => { return x.c === Rept ? x.expr : null; });
+              var newStack = state.stack.map(e => {
+                var i = thread.repeats[exprs.indexOf(e.c)];
+                if (i === undefined)
+                  i = 0; // expr has no repeats
+                else
+                  i = i-1;
+                return { c:e.c, e:e.e, i:i };
+              });
+              var withIndexes = {
+                c: state.c,
+                triples: taken,
+                stack: newStack
+              };
+              thread.matched = thread.matched.concat(withIndexes);
+              state.outs.forEach(o => { // single out if NFA includes epsilons
+                addstate(nlist, o, thread);
+              });
+            } while ((function () {
+              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                taken.push(thread.avail[constraintNo].shift());
+                return true; // stay in look to take more.
+              } else {
+                return false; // no more to take or we're already at max
+              }
+            })());
+          }
+          if (trace)
+            trace[trace.length-1].threads.push({
+              state: clist[threadno].state,
+              to:nlist.slice(nlistlen).map(x => {
+                return stateString(x.state, x.repeats);
+              })
+            });
+        }
+        // console.log(dump.threadList(nlist));
+        if (nlist.length === 0 && chosen === null)
+          return reportError(localExpect(clist, _this.states));
+        var t = clist;
+        clist = nlist;
+        nlist = t;
+        var longerChosen = clist.reduce((ret, elt) => {
+          var matchedAll =
+              // elt.matched.reduce((ret, m) => {
+              //   return ret + m.triples.length; // count matched triples
+              // }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
+              //   return t === undefined ? ret : ret + 1; // count expected
+              // }, 0);
+                true;
+          return ret !== null ? ret : (elt.state === _this.end && matchedAll) ? elt : null;
+        }, null)
+        if (longerChosen)
+          chosen = longerChosen;
+        // if (longerChosen !== null)
+        //   console.log(JSON.stringify(matchedToResult(longerChosen.matched)));
+      }
+      if (chosen === null)
+        return reportError();
+      function reportError () { return {
+        type: "Failure",
+        node: node,
+        errors: localExpect(clist, _this.states)
+      } }
+      function localExpect () {
+        return clist.map(t => {
+          var c = _this.states[t.state].c;
+          // if (c === Match)
+          //   return { type: "EndState999" };
+          var valueExpr = extend({}, c.valueExpr);
+          if ("reference" in valueExpr) {
+            var ref = valueExpr.reference;
+            if (ShExTerm.isBlank(ref))
+              valueExpr.reference = schema.shapes[ref];
+          }
+          return extend({
+            type: state.c.negated ? "NegatedProperty" :
+              t.state === _this.end ? "ExcessTripleViolation" :
+              "MissingProperty",
+            property: state.c.predicate
+          }, Object.keys(valueExpr).length > 0 ? { valueExpr: valueExpr } : {});
+        });
+      }
+      // console.log("chosen:", dump.thread(chosen));
+      return "errors" in chosen.matched ?
+        chosen.matched :
+        matchedToResult(chosen.matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr);
+    }
+
+    function matchedToResult (matched, constraintList, neighborhood, recurse, direct, semActHandler, checkValueExpr) {
+      var last = [];
+      var errors = [];
+      var skips = [];
+      var ret = matched.reduce((out, m) => {
+        var mis = 0;
+        var ptr = out, t;
+        while (mis < last.length &&
+               m.stack[mis].c === last[mis].c && // constraint
+               m.stack[mis].i === last[mis].i && // iteration number
+               m.stack[mis].e === last[mis].e) { // (dis|con)junction number
+            ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
+          ++mis;
+        }
+        while (mis < m.stack.length) {
+          if (mis >= last.length) {
+            last.push({});
+          }
+          if (m.stack[mis].c !== last[mis].c) {
+            t = [];
+            ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions", ptr.solutions = t;
+            if ("min" in m.stack[mis].c)
+              ptr.min = m.stack[mis].c.min;
+            if ("max" in m.stack[mis].c)
+              ptr.max = m.stack[mis].c.max;
+            if ("annotations" in m.stack[mis].c)
+              ptr.annotations = m.stack[mis].c.annotations;
+            if ("semActs" in m.stack[mis].c)
+              ptr.semActs = m.stack[mis].c.semActs;
+            ptr = t;
+            last[mis].i = null;
+            // !!! on the way out to call after valueExpr test
+            if ("semActs" in m.stack[mis].c) {
+              if (!semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr))
+                throw { type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] };
+            }
+            if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
+          } else {
+            ptr = ptr.solutions;
+          }
+          if (m.stack[mis].i !== last[mis].i) {
+            t = [];
+            ptr[m.stack[mis].i] = {
+              type:m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
+              expressions: t};
+            ptr = t;
+            last[mis].e = null;
+          } else {
+            ptr = ptr[last[mis].i].expressions;
+          }
+          if (m.stack[mis].e !== last[mis].e) {
+            t = {};
+            ptr[m.stack[mis].e] = t;
+            if (m.stack[mis].e > 0 && ptr[m.stack[mis].e-1] === undefined && skips.indexOf(ptr) === -1)
+              skips.push(ptr);
+            ptr = t;
+            last.length = mis + 1; // chop off last so we create everything underneath
+          } else {
+            throw "how'd we get here?"
+            ptr = ptr[last[mis].e];
+          }
+          ++mis;
+        }
+        ptr.type = "TripleConstraintSolutions";
+        if ("min" in m.c)
+          ptr.min = m.c.min;
+        if ("max" in m.c)
+          ptr.max = m.c.max;
+        ptr.predicate = m.c.predicate;
+        if ("valueExpr" in m.c)
+          ptr.valueExpr = m.c.valueExpr;
+        if ("productionLabel" in m.c)
+          ptr.productionLabel = m.c.productionLabel;
+        ptr.solutions = m.triples.map(tno => {
+          var triple = neighborhood[tno];
+          var ret = {
+            type: "TestedTriple",
+            subject: triple.subject,
+            predicate: triple.predicate,
+            object: ldify(triple.object)
+          };
+
+        function ldify (term) {
+          if (term[0] !== "\"")
+            return term;
+          var ret = { value: ShExTerm.getLiteralValue(term) };
+          var dt = ShExTerm.getLiteralType(term);
+          if (dt &&
+              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+            ret.type = dt;
+          var lang = ShExTerm.getLiteralLanguage(term)
+          if (lang)
+            ret.language = lang;
+          return ret;
+        }
+          function diver (focus, shape, dive) {
+            var sub = dive(focus, shape);
+            if ("errors" in sub) {
+              // console.dir(sub);
+              var err = {
+                type: "ReferenceError", focus: focus,
+                shape: shape, errors: sub
+              };
+              if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
+                err.referencedShape = shape;
+              return [err];
+            }
+            if ("solution" in sub && Object.keys(sub.solution).length !== 0 ||
+                sub.type === "Recursion")
+              ret.referenced = sub; // !!! needs to aggregate errors and solutions
+            return [];
+          }
+          function diveRecurse (focus, shapeLabel) {
+            return diver(focus, shapeLabel, recurse);
+          }
+          function diveDirect (focus, shapeLabel) {
+            return diver(focus, shapeLabel, direct);
+          }
+          if ("valueExpr" in ptr)
+            errors = errors.concat(checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
+
+          if (errors.length === 0 && "semActs" in m.c &&
+              !semActHandler.dispatchAll(m.c.semActs, triple, ret))
+            errors.push({ type: "SemActFailure", errors: [{ type: "UntrackedSemActFailure" }] }) // some semAct aborted
+          return ret;
+        })
+        if ("annotations" in m.c)
+          ptr.annotations = m.c.annotations;
+        if ("semActs" in m.c)
+          ptr.semActs = m.c.semActs;
+        last = m.stack.slice();
+        return out;
+      }, {});
+
+      if (errors.length)
+        return {
+          type: "SemActFailure",
+          errors: errors
+        };
+
+      // Clear out the nulls for the expressions with min:0 and no matches.
+      // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
+      // Maybe we want these nulls in expressions[] to make it clear that there are holes?
+      skips.forEach(skip => {
+        for (var exprNo = 0; exprNo < skip.length; ++exprNo)
+          if (skip[exprNo] === null || skip[exprNo] === undefined)
+            skip.splice(exprNo--, 1);
+      });
+
+      if ("semActs" in shape)
+        ret.semActs = shape.semActs;
+      return ret;
+    }
+  }
+
+function extend(base) {
+  if (!base) base = {};
+  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+    for (var name in arg)
+      base[name] = arg[name];
+  return base;
+}
+
+return {
+  name: "eval-simple-1err",
+  description: "simple regular expression engine with n out states",
+  compile: compileNFA
+};
+})();
+// Export the `ShExValidator` class as a whole.
+if (true)
+  module.exports = NFAXVal1ErrMaterializer;
+
+
+/***/ }),
+/* 83 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -21795,7 +24500,7 @@ __webpack_require__.d(__webpack_exports__, "Triple", function() { return /* reex
 __webpack_require__.d(__webpack_exports__, "termFromId", function() { return /* reexport */ termFromId; });
 __webpack_require__.d(__webpack_exports__, "termToId", function() { return /* reexport */ termToId; });
 
-// NAMESPACE OBJECT: ./node_modules/n3/src/N3Util.js
+// NAMESPACE OBJECT: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Util.js
 var N3Util_namespaceObject = {};
 __webpack_require__.r(N3Util_namespaceObject);
 __webpack_require__.d(N3Util_namespaceObject, "isNamedNode", function() { return isNamedNode; });
@@ -21807,13 +24512,13 @@ __webpack_require__.d(N3Util_namespaceObject, "inDefaultGraph", function() { ret
 __webpack_require__.d(N3Util_namespaceObject, "prefix", function() { return N3Util_prefix; });
 __webpack_require__.d(N3Util_namespaceObject, "prefixes", function() { return N3Util_prefixes; });
 
-// EXTERNAL MODULE: ./node_modules/n3/src/N3Lexer.js
-var N3Lexer = __webpack_require__(12);
+// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Lexer.js
+var N3Lexer = __webpack_require__(13);
 
-// EXTERNAL MODULE: ./node_modules/n3/src/IRIs.js
+// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/IRIs.js
 var IRIs = __webpack_require__(0);
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3Util.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Util.js
 // **N3Util** provides N3 utility functions.
 
 
@@ -21881,7 +24586,7 @@ function N3Util_prefixes(defaultPrefixes, factory) {
   return processPrefix;
 }
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3DataFactory.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3DataFactory.js
 // N3.js implementations of the RDF/JS core data types
 // See https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md
 
@@ -22239,7 +24944,7 @@ function N3DataFactory_quad(subject, predicate, object, graph) {
   return new Quad(subject, predicate, object, graph);
 }
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3Parser.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Parser.js
 // **N3Parser** parses N3 documents.
 
 
@@ -23282,7 +25987,7 @@ function initDataFactory(parser, factory) {
 }
 initDataFactory(N3Parser_N3Parser.prototype, N3DataFactory);
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3Writer.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Writer.js
 // **N3Writer** writes N3 documents.
 
 
@@ -23634,10 +26339,10 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: ./node_modules/readable-stream/readable-browser.js
-var readable_browser = __webpack_require__(6);
+// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/node_modules/readable-stream/readable-browser.js
+var readable_browser = __webpack_require__(8);
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3Store.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Store.js
 // **N3Store** objects store N3 quads by graph in memory.
 
 
@@ -24433,7 +27138,7 @@ function isString(s) {
   return typeof s === 'string' || s instanceof String;
 }
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3StreamParser.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3StreamParser.js
 // **N3StreamParser** parses a text stream into a quad stream.
 
 
@@ -24475,7 +27180,7 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
   }
 }
 
-// CONCATENATED MODULE: ./node_modules/n3/src/N3StreamWriter.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3StreamWriter.js
 // **N3StreamWriter** serializes a quad stream into a text stream.
 
 
@@ -24509,7 +27214,7 @@ class N3StreamWriter_N3StreamWriter extends readable_browser["Transform"] {
   }
 }
 
-// CONCATENATED MODULE: ./node_modules/n3/src/index.js
+// CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/index.js
 
 
 
