@@ -4,7 +4,6 @@
  * And returns the appropriate map value based on the input.
  */
 var HashmapExtension = (function () {
-var util = require('util');
 
 var extUtils = require('./extension-utils');
 
@@ -87,7 +86,7 @@ function invert(hash, value) {
 
    if (!key)
        throw Error("Hashmap extension was unable to invert the value " 
-                   + value + " with map " + util.inspect(hash, {depth: null}) +"!");
+                   + value + " with map " + JSON.stringify(hash, {depth: null}) +"!");
    return key;
 }
  
