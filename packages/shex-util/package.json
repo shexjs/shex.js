@@ -24,7 +24,8 @@
     "@shexjs/validator": "file:../shex-validator",
     "@shexjs/visitor": "file:../shex-visitor",
     "@shexjs/writer": "file:../shex-writer",
-    "hierarchy-closure": "^1.2.1"
+    "hierarchy-closure": "^1.2.1",
+    "sync-request": "^6.1.0"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

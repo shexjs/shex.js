@@ -36,16 +36,16 @@ The regular expression engine is loaded from either:
 
 */
 
-var ShExUtil = require("@shexjs/util");
-var ShExTerm = require("@shexjs/term");
-var ShExNode = require("@shexjs/node");
-var ShExWriter = require("@shexjs/writer"); // for verbose output
-var ShExValidator = require("@shexjs/validator");
-var ShapeMap = require("shape-map");
+const Path = require("path");
+const Util = require("util");
+const ShExUtil = require("@shexjs/util");
+const ShExTerm = require("@shexjs/term");
+const ShExWriter = require("@shexjs/writer"); // for verbose output
+const ShExValidator = require("@shexjs/validator");
+const ShapeMap = require("shape-map");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
-var N3 = require("n3");
-var Path = require("path");
-var Util = require("util");
 var ValidatorOptions = { diagnose: true };
 var SchemaOptions = { duplicateShape: "abort" };
 // var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
@@ -147,8 +147,6 @@ function abort (msg) {
 /* Leverage N3.js's relative IRI parsing.
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
  */
-var N3 = require("n3");
-
 function findNodesAndValidate (loaded, parms, options) {
   let shapeIndex = loaded.schema._shapes || ShExUtil.index(loaded.schema)
   function knownShape (label) {
