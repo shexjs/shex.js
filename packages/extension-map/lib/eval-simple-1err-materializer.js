@@ -1,6 +1,6 @@
 var NFAXVal1ErrMaterializer = (function () {
 
-var ShExTerm = ShEx.ShExTerm;
+  var ShExTerm = require("@shexjs/term");
 
   var Split = "<span class='keyword' title='Split'>|</span>";
   var Rept  = "<span class='keyword' title='Repeat'>×</span>";

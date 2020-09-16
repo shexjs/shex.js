@@ -201,7 +201,6 @@ ul {
     padding-right: .4em;
 }
     </style>
-
     <script>
       // Load worker early.
       var ShExWorker = new Worker("shex-simple-worker.js");
@@ -378,17 +377,17 @@ ul {
         Error.captureStackTrace = function () { };
       }
     </script>
-    <script src="./webpacks/n3js.js"></script>
+    <script src="webpacks/n3js.js"></script>
 
     <!-- #if USING_WEBPACK -->
 <!-- -->
-    <script src="./webpacks/shex-webapp.js"></script>
+    <script src="webpacks/shex-webapp.js"></script>
 <!-- -->
 
     <!-- #else -->
 <!--
     <script src="../doc/require.js"                              ></script>
-    <script src="../node_modules/@shexjs/util/node_modules/hierarchy-closure/hierarchy-closure.js"
+    <script src="../node_modules/hierarchy-closure/hierarchy-closure.js"
                                                                  ></script><script>modules["hierarchy-closure"         ] = module.exports;</script>
     <script src="../../shape-map/lib/ShapeMapSymbols.js"         ></script><script>modules["./lib/ShapeMapSymbols"     ] = modules["./ShapeMapSymbols"] = module.exports;</script>
     <script>module.exports = exports;</script>
@@ -404,7 +403,7 @@ ul {
     <script src="../../shex-validator/shex-validator.js"         ></script><script>modules["@shexjs/validator"         ] = module.exports;</script>
     <script src="../../shex-writer/shex-writer.js"               ></script><script>modules["@shexjs/writer"            ] = module.exports;</script>
     <script>module.exports = exports;</script>
-    <script src="../node_modules/@shexjs/parser/lib/ShExJison.js"></script><script>modules["./lib/ShExJison"           ] = module.exports;</script>
+    <script src="../../shex-parser/lib/ShExJison.js"             ></script><script>modules["./lib/ShExJison"           ] = module.exports;</script>
     <script src="../../shex-parser/shex-parser.js"               ></script><script>modules["@shexjs/parser"            ] = module.exports;</script>
 
     <script src="../shex-webapp.js"></script>
@@ -413,6 +412,6 @@ ul {
     <!-- #endif -->
 
     <script src="../doc/ShExRSchema.js"></script>
-    <script src="./shex-simple.js"></script>
+    <script src="shex-simple.js"></script>
   </body>
 </html>
