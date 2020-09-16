@@ -976,7 +976,7 @@ function callValidator (done) {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
-    if (entry.status === "conformant") {
+    if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
         var proofStore = new RdfJs.Store();
         ShEx.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);

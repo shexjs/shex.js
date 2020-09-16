@@ -20,9 +20,9 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/util": "file:../shex-util",
     "@shexjs/api": "file:../shex-api",
     "@shexjs/parser": "file:../shex-parser",
+    "@shexjs/util": "file:../shex-util",
     "@shexjs/writer": "file:../shex-writer",
     "n3": "^1.6.2",
     "shape-map": "file:../shape-map"
@@ -54,6 +54,7 @@
   "devDependencies": {
     "css-loader": "^4.3.0",
     "file-loader": "^6.1.0",
+    "hierarchy-closure": "^1.2.1",
     "jquery": "^3.5.1",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.12.1",
