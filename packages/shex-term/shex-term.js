@@ -3,9 +3,9 @@
  * isIRI, isBlank, getLiteralType, getLiteralValue
  */
 
-var ShExTerm = (function () {
+const ShExTermCjsModule = (function () {
 
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
@@ -48,7 +48,7 @@ var ShExTerm = (function () {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -161,9 +161,9 @@ var ShExTerm = (function () {
       // Escape special characters
       if (escape.test(node))
         node = node.replace(escapeAll, characterReplacer);
-      var pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
+      const pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
       if (pref) {
-        var rest = node.substr(prefixes[pref].length);
+        const rest = node.substr(prefixes[pref].length);
         if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
           return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
       }
@@ -175,9 +175,9 @@ var ShExTerm = (function () {
     } else if (isBlank(node)) {
       return node;
     } else if (isLiteral(node)) {
-      var value = getLiteralValue(node);
-      var type = getLiteralType(node);
-      var language = getLiteralLanguage(node);
+      const value = getLiteralValue(node);
+      const type = getLiteralType(node);
+      const language = getLiteralLanguage(node);
       // Escape special characters
       if (escape.test(value))
         value = value.replace(escapeAll, characterReplacer);
@@ -200,7 +200,7 @@ var ShExTerm = (function () {
     else if (entity.length === 0)
       return true;
     else {
-      var firstChar = entity[0];
+      const firstChar = entity[0];
       return firstChar !== '"' && firstChar !== '_';
     }
   }
@@ -227,7 +227,7 @@ var ShExTerm = (function () {
 
   // Gets the string value of a literal in the N3 library
   function getLiteralValue (literal) {
-    var match = /^"([^]*)"/.exec(literal);
+    const match = /^"([^]*)"/.exec(literal);
     if (!match)
       throw new Error(literal + ' is not a literal');
     return match[1];
@@ -235,7 +235,7 @@ var ShExTerm = (function () {
 
   // Gets the type of a literal in the N3 library
   function getLiteralType (literal) {
-    var match = /^"[^]*"(?:\^\^([^"]+)|(@)[^@"]+)?$/.exec(literal);
+    const match = /^"[^]*"(?:\^\^([^"]+)|(@)[^@"]+)?$/.exec(literal);
     if (!match)
       throw new Error(literal + ' is not a literal');
     return match[1] || (match[2] ? RdfLangString : XsdString);
@@ -243,7 +243,7 @@ var ShExTerm = (function () {
 
   // Gets the language of a literal in the N3 library
   function getLiteralLanguage (literal) {
-    var match = /^"[^]*"(?:@([^@"]+)|\^\^[^"]+)?$/.exec(literal);
+    const match = /^"[^]*"(?:@([^@"]+)|\^\^[^"]+)?$/.exec(literal);
     if (!match)
       throw new Error(literal + ' is not a literal');
     return match[1] ? match[1].toLowerCase() : '';
@@ -251,11 +251,11 @@ var ShExTerm = (function () {
 
 
 // rdf:type predicate (for 'a' abbreviation)
-var RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+const RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     RDF_TYPE   = RDF_PREFIX + 'type';
 
 // Characters in literals that require escaping
-var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
+const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
     escapeReplacements = {
       '\\': '\\\\', '"': '\\"', '\t': '\\t',
@@ -265,7 +265,7 @@ var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
   // Replaces a character by its escaped version
   function characterReplacer (character) {
     // Replace a single character by its escaped version
-    var result = escapeReplacements[character];
+    const result = escapeReplacements[character];
     if (result === undefined) {
       // Replace a single character with its 4-bit unicode escape sequence
       if (character.length === 1) {
@@ -303,4 +303,4 @@ var escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
 })();
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExTerm; // node environment
+  module.exports = ShExTermCjsModule; // node environment

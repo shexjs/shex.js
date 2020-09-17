@@ -9,7 +9,6 @@ var should = chai.should();
 
 var ShExTerm = require("@shexjs/term");
 var ShExUtil = require("@shexjs/util");
-var mapper = require("@shexjs/extension-map");
 const emptySchema = {type: "Schema"};
 const fakeValidator = {
   schema: emptySchema,
@@ -20,9 +19,10 @@ const fakeValidator = {
 }
 // or use a throw-away validator:
 // const realValidator = require("@shexjs/validator").construct(emptySchema)
-const registered = mapper.register(fakeValidator, {ShExTerm, ShExUtil})
+const Mapper = require("@shexjs/extension-map")({});
+const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})
 
-var hmExtension = mapper.extension.hashmap;
+var hmExtension = Mapper.extension.hashmap;
 
 describe('Hashmap extension', function() {
 
@@ -219,7 +219,7 @@ describe('Hashmap extension', function() {
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
             .to.throw(Error, 
-                "Hashmap extension was unable to invert the value efg with map { a: 'abc', x: 'xyz' }!");
+                'Hashmap extension was unable to invert the value efg with map {"a":"abc","x":"xyz"}!');
         });
 
         it('should fail gracefully if given a hash map that does not have unique key/value pairs', function() {

@@ -8,21 +8,21 @@
  * See https://github.com/shexSpec for more information.
  */
 
-var FS = require("fs");
-var N3 = require("n3");
+const FS = require("fs");
+const N3 = require("n3");
 
-var ShExTerm = require("@shexjs/term");
-var ShExUtil = require("@shexjs/util");
-var ShExNode = require("@shexjs/node");
-var Mapper = require("../shex-extension-map.js");
+const ShExTerm = require("@shexjs/term");
+const ShExUtil = require("@shexjs/util");
+const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const Mapper = require("@shexjs/extension-map")({});
 
-var CommandLineOptions = [
+const CommandLineOptions = [
   { name: "help", alias: "h", type: Boolean },
   { name: "jsonvars", alias: "j", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "json vars file" },
   { name: "root", alias: "r", type: String, typeLabel: "IRI", multiple: false, defaultValue: "tag:eric@w3.org/2016/root", description: "RDF root node IRI" },
   { name: "target", alias: "t", type: String, typeLabel: "file", multiple: false, defaultValue: undefined, description: "target shex file" },
 ];
-var CLI = require("command-line-args")(CommandLineOptions);
+const CLI = require("command-line-args")(CommandLineOptions);
 
 function abort(msg) { 
   console.error(msg);
@@ -55,7 +55,7 @@ function abort(msg) {
   process.exit(1);
 }
 
-var cmds = (function () {
+const cmds = (function () {
   try {
     return CLI;
   } catch (e) {
@@ -84,7 +84,7 @@ try {
 
 Promise.all([ShExNode.load([cmds.target], [], [], [], {index: true}),
              new Promise((resolve, reject) => {
-               var inputChunks = [];
+               const inputChunks = [];
                process.stdin.resume();
                process.stdin.setEncoding("utf8");       
        
@@ -106,9 +106,9 @@ Promise.all([ShExNode.load([cmds.target], [], [], [], {index: true}),
              })
             ]).
   then(loads => {
-    var schema = loads[0].schema;
-    var val = loads[1];
-    var statics = loads[2];
+    const schema = loads[0].schema;
+    const val = loads[1];
+    const statics = loads[2];
     const emptySchema = {type: "Schema"};
     const fakeValidator = {
       schema: emptySchema,
@@ -121,21 +121,21 @@ Promise.all([ShExNode.load([cmds.target], [], [], [], {index: true}),
     // const realValidator = require("@shexjs/validator").construct(emptySchema)
 
     const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})
-    var map = registered.trivialMaterializer(schema);
+    const map = registered.trivialMaterializer(schema);
 
-    var resultBindings1 = ShExUtil.valToExtension(val, Mapper.url);
+    const resultBindings1 = ShExUtil.valToExtension(val, Mapper.url);
 
     function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
 
-    var resultBindings2 = _dup(resultBindings1);
-    var _t = _dup(statics);
+    let resultBindings2 = _dup(resultBindings1);
+    const _t = _dup(statics);
     if (_t && Object.keys(_t).length > 0) {
       if (resultBindings2.constructor !== Array)
         resultBindings2 = [resultBindings2];
       resultBindings2.unshift(_t);
     }
-    var outputGraph = map.materialize(registered.binder(resultBindings2), cmds.root);
-    var writer = new N3.Writer({ prefixes: {} });
+    const outputGraph = map.materialize(registered.binder(resultBindings2), cmds.root);
+    const writer = new N3.Writer({ prefixes: {} });
     outputGraph.getQuads().forEach(t => { writer.addQuad(t); });
     writer.end(function (error, result) { console.log(result); });
   }).catch(e => { console.error("stack" in e ? e.stack : e); });
