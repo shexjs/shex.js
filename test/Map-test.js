@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 
-var VERBOSE = "VERBOSE" in process.env;
-var TERSE = VERBOSE;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+const VERBOSE = "VERBOSE" in process.env;
+const TERSE = VERBOSE;
+const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
-const ShExNode = require("@shexjs/node");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+});
 const ShExValidator = require("@shexjs/validator");
-const Mapper = require("@shexjs/extension-map");
+const Mapper = require("@shexjs/extension-map")({rdfjs: N3, validator: ShExValidator});
 
 // var Promise = require("promise");
-var expect = require("chai").expect;
-var Path = require("path");
+const expect = require("chai").expect;
+const Path = require("path");
 
 var maybeLog = VERBOSE ? console.log : function () {};
 
