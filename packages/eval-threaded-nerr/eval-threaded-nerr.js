@@ -1,6 +1,6 @@
-var EvalThreadedNErr = (function () {
-var ShExTerm = require("@shexjs/term");
-var UNBOUNDED = -1;
+const EvalThreadedNErrCjsModule = (function () {
+const ShExTerm = require("@shexjs/term");
+const UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
     var outerExpression = shape.expression;
@@ -536,4 +536,4 @@ return {
 })();
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = EvalThreadedNErr;
+  module.exports = EvalThreadedNErrCjsModule;

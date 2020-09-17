@@ -29,7 +29,13 @@
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
+    "webpack": "npx webpack --config webpack.config.js --mode production --profile --json > doc/webpacks/compilation-stats.json",
     "browser": "browserify shex.js -s ShEx -o browser/shex-extension-map-browserify.js && uglifyjs browser/shex-extension-map-browserify.js --comments -mco browser/shex-extension-map-browserify.min.js"
+  },
+  "devDependencies": {
+    "terser-webpack-plugin": "^4.2.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
   },
   "publishConfig": {
     "access": "public"
