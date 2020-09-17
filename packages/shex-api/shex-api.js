@@ -9,7 +9,7 @@ const ShExApiCjsModule = function (config) {
   return api
   
   async function GET (url, mediaType) {
-    var m;
+    let m;
     return (m = url.match("^data:([^,]+),(.*)$"))
       ? Promise.resolve({text: m[2], url: m[0]}) // Read from data: URL
       : (url.match("^(blob:)?[a-z]+://."))
@@ -46,7 +46,7 @@ const ShExApiCjsModule = function (config) {
     )
 
     async function mergeSchema (obj) {
-      var meta = addMeta(obj.url, mediaType)
+      const meta = addMeta(obj.url, mediaType)
       try {
         ShExUtil.merge(target, obj.schema, true, true)
         meta._prefixes = target._prefixes || {}
@@ -54,7 +54,7 @@ const ShExApiCjsModule = function (config) {
         loadImports(obj.schema)
         return [mediaType, obj.url]
       } catch (e) {
-        var e2 = Error("error merging schema object " + obj.schema + ": " + e)
+        const e2 = Error("error merging schema object " + obj.schema + ": " + e)
         e2.stack = e.stack
         throw e2
       }
@@ -68,7 +68,7 @@ const ShExApiCjsModule = function (config) {
     }
 
     function addMeta (url, mediaType) {
-      var meta = {
+      const meta = {
         mediaType: mediaType,
         url: url,
         base: url,
@@ -83,32 +83,32 @@ const ShExApiCjsModule = function (config) {
    * a graph (Data).
    */
   async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
-    var returns = {
+    const returns = {
       schema: ShExUtil.emptySchema(),
       data: new config.rdfjs.Store(),
       schemaMeta: [],
       dataMeta: []
     }
-    var promises = []
-    var schemasSeen = shex.concat(json).map(p => {
+    const promises = []
+    const schemasSeen = shex.concat(json).map(p => {
       // might be already loaded objects with a url property.
       return typeof p === "object" ? p.url : p
     })
-    var transform = null
+    let transform = null
     if (schemaOptions && "iriTransform" in schemaOptions) {
       transform = schemaOptions.iriTransform
       delete schemaOptions.iriTransform
     }
 
-    var allLoaded = DynamicPromise()
+    const allLoaded = DynamicPromise()
     function loadImports (schema) {
       if (!("imports" in schema))
         return schema
       if (schemaOptions.keepImports) {
         return schema
       }
-      var ret = Object.assign({}, schema)
-      var imports = ret.imports
+      const ret = Object.assign({}, schema)
+      const imports = ret.imports
       delete ret.imports
       schema.imports.map(function (i) {
         return transform ? transform(i) : i
@@ -117,7 +117,7 @@ const ShExApiCjsModule = function (config) {
       }).map(i => {
         schemasSeen.push(i)
         allLoaded.add(api.GET(i).then(function (loaded) {
-          var meta = {
+          const meta = {
             // mediaType: mediaType,
             url: loaded.url,
             base: loaded.url,
@@ -137,25 +137,26 @@ const ShExApiCjsModule = function (config) {
       returns.resolver = new config.rdfjs.Store()
       returns.resolverMeta = []
       // load the resolver then the schema sources,
-      promises = [Promise.all(loadList(schemaOptions.termResolver, returns.resolverMeta, "text/turtle",
-                                       parseTurtle, returns.resolver, dataOptions)).
-                  then(function (x) {
-                    return Promise.all(loadList(shex, returns.schemaMeta, "text/shex",
-                                                parseShExC, returns.schema, schemaOptions, loadImports))
-                  })]
+      promises.push(Promise.all(loadList(schemaOptions.termResolver, returns.resolverMeta, "text/turtle",
+                                         parseTurtle, returns.resolver, dataOptions)).
+                    then(function (x) {
+                      return Promise.all(loadList(shex, returns.schemaMeta, "text/shex",
+                                                  parseShExC, returns.schema, schemaOptions, loadImports))
+                    }))
       schemaOptions.termResolver = ShExParser.dbTermResolver(returns.resolver)
     } else {
       // else just load the schema sources.
-      promises = loadList(shex, returns.schemaMeta, "text/shex",
-                          parseShExC, returns.schema, schemaOptions, loadImports)
+      [].push.apply(promises, loadList(shex, returns.schemaMeta, "text/shex",
+                                       parseShExC, returns.schema, schemaOptions, loadImports))
     }
-    promises = promises.
-      concat(loadList(json, returns.schemaMeta, "text/json",
-                      parseShExJ, returns.schema, schemaOptions, loadImports)).
-      concat(loadList(turtle, returns.dataMeta, "text/turtle",
-                      parseTurtle, returns.data, dataOptions)).
-      concat(loadList(jsonld, returns.dataMeta, "application/ld+json",
-                      parseJSONLD, returns.data, dataOptions))
+    [].push.apply(promises, [
+      loadList(json, returns.schemaMeta, "text/json",
+               parseShExJ, returns.schema, schemaOptions, loadImports),
+      loadList(turtle, returns.dataMeta, "text/turtle",
+               parseTurtle, returns.data, dataOptions),
+      loadList(jsonld, returns.dataMeta, "application/ld+json",
+               parseJSONLD, returns.data, dataOptions)
+    ].flat())
     return allLoaded.all(promises).then(function (resources) {
       if (returns.schemaMeta.length > 0)
         ShExUtil.isWellDefined(returns.schema)
@@ -164,11 +165,11 @@ const ShExApiCjsModule = function (config) {
   }
 
   function DynamicPromise () {
-    var promises = []
-    var results = []
-    var completedPromises = 0
-    var resolveSelf, rejectSelf
-    var self = new Promise(function (resolve, reject) {
+    const promises = []
+    const results = []
+    let completedPromises = 0
+    let resolveSelf, rejectSelf
+    const self = new Promise(function (resolve, reject) {
       resolveSelf = resolve; rejectSelf = reject
     })
     self.all = function (pz) {
@@ -199,11 +200,11 @@ const ShExApiCjsModule = function (config) {
   }
 
   function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImports) {
-    var parser = schemaOptions && "parser" in schemaOptions ?
+    const parser = schemaOptions && "parser" in schemaOptions ?
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
     try {
-      var s = parser.parse(text)
+      const s = parser.parse(text)
       // !! horrible hack until I set a variable to know if there's a BASE.
       if (s.base === url) delete s.base
       meta.prefixes = s._prefixes || {}
@@ -217,19 +218,19 @@ const ShExApiCjsModule = function (config) {
   }
 
   function loadShExImports_NotUsed (from, parser, transform) {
-    var schemasSeen = [from]
-    var ret = { type: "Schema" }
+    const schemasSeen = [from]
+    const ret = { type: "Schema" }
     return api.GET(from).then(load999Imports).then(function () {
       ShExUtil.isWellDefined(ret)
       return ret
     })
     function load999Imports (loaded) {
-      var schema = parser.parse(loaded.text)
-      var imports = schema.imports
+      const schema = parser.parse(loaded.text)
+      const imports = schema.imports
       delete schema.imports
       ShExUtil.merge(ret, schema, false, true)
       if (imports) {
-        var rest = imports
+        const rest = imports
             .map(function (i) {
               return transform ? transform(i) : i
             }).
@@ -250,14 +251,14 @@ const ShExApiCjsModule = function (config) {
 
   function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImports) {
     try {
-      var s = ShExUtil.ShExJtoAS(JSON.parse(text))
+      const s = ShExUtil.ShExJtoAS(JSON.parse(text))
       ShExUtil.merge(schema, s, true, true)
       meta.prefixes = schema._prefixes
       meta.base = schema.base
       loadImports(s)
       return Promise.resolve([mediaType, url])
     } catch (e) {
-      var e2 = Error("error parsing JSON " + url + ": " + e)
+      const e2 = Error("error parsing JSON " + url + ": " + e)
       // e2.stack = e.stack
       return Promise.reject(e2)
     }
@@ -289,8 +290,8 @@ const ShExApiCjsModule = function (config) {
    */
   function parseTurtle999 (text, mediaType, url, data, meta, dataOptions) {
     try {
-      var p = new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"})
-      var triples = p.parse(text)
+      const p = new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"})
+      const triples = p.parse(text)
       meta.prefixes = p._prefixes
       meta.base = p._base
       data.addPrefixes(p._prefixes)
@@ -303,7 +304,7 @@ const ShExApiCjsModule = function (config) {
 
   function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
     return new Promise(function (resolve, reject) {
-      var struct = JSON.parse(text)
+      const struct = JSON.parse(text)
       config.jsonld.toRDF(struct, {format: "application/nquads", base: url}, function (lderr, nquads) {
         if (lderr) {
           reject("error parsing JSON-ld " + url + ": " + lderr)
@@ -323,7 +324,7 @@ const ShExApiCjsModule = function (config) {
       , []).
       reduce(function (ret, path) {
         try {
-	  var t = require(path)
+	  const t = require(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {

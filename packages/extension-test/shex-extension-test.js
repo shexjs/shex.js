@@ -1,9 +1,9 @@
-var TestExt = "http://shex.io/extensions/Test/";
+const TestExt = "http://shex.io/extensions/Test/";
 function register (validator, api) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
-  var pattern = /^ *(fail|print) *\( *(?:(\"(?:[^\\"]|\\\\|\\")*\")|([spo])) *\) *$/;
+  const pattern = /^ *(fail|print) *\( *(?:(\"(?:[^\\"]|\\\\|\\")*\")|([spo])) *\) *$/;
 
   validator.semActHandler.results[TestExt] = [];
   validator.semActHandler.register(
@@ -18,11 +18,11 @@ function register (validator, api) {
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
       dispatch: function (code, ctx, extensionStorage) {
-        var m = code.match(pattern);
+        const m = code.match(pattern);
         if (!m) {
           throw Error("Invocation error: " + TestExt + " code \"" + code + "\" didn't match " + pattern);
         }
-        var arg = m[2] ? m[2] :
+        const arg = m[2] ? m[2] :
           m[3] === "s" ? ctx.subject :
           m[3] === "p" ? ctx.predicate :
           m[3] === "o" ? ctx.object :

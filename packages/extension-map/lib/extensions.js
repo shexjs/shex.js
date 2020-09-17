@@ -3,13 +3,13 @@
  * It determines which extension is requested, and then, assuming
  * the extension is valid, it forwards the request on
  */
-var Extensions = (function () {
+const Extensions = (function () {
 
 // Known extensions
-var hashmap_extension = require('./hashmap_extension');
-var regex_extension = require('./regex_extension');
+const hashmap_extension = require('./hashmap_extension');
+const regex_extension = require('./regex_extension');
 
-var utils = require('./extension-utils');
+const utils = require('./extension-utils');
 
 /**
  * Given a map directive that contains an extension of format 
@@ -26,8 +26,8 @@ function extensionDef(mapDirective) {
 
     // Get the extension name and argument(s)  
     mapDirective = mapDirective.trim(); // Strip any leading or trailing white space
-    var startArgs = mapDirective.indexOf('(', 0);
-    var endArgs = mapDirective.lastIndexOf(')');
+    const startArgs = mapDirective.indexOf('(', 0);
+    const endArgs = mapDirective.lastIndexOf(')');
     if (startArgs < 2 || endArgs < 4 || endArgs <= startArgs+1 || endArgs != mapDirective.length-1) 
         throw Error("Invalid extension function: " + mapDirective + "!");
 
@@ -36,7 +36,7 @@ function extensionDef(mapDirective) {
 }
 
 function lift(mapDirective, input, prefixes) {
-    var extDef = extensionDef(mapDirective);
+    const extDef = extensionDef(mapDirective);
     switch (extDef.name) {
         case 'hashmap': 
           return hashmap_extension.lift(mapDirective, input, prefixes, extDef.args);
@@ -53,7 +53,7 @@ function lift(mapDirective, input, prefixes) {
 }
 
 function lower(mapDirective, bindings, prefixes) {
-    var extDef = extensionDef(mapDirective);
+    const extDef = extensionDef(mapDirective);
     switch (extDef.name) {
         case 'hashmap': 
           return hashmap_extension.lower(mapDirective, bindings, prefixes, extDef.args);

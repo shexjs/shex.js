@@ -7,13 +7,13 @@ const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
 // Generate command line interface
-var CommandLineOptions = [
+const CommandLineOptions = [
     { name: "help",  alias: "h", type: Boolean },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
     { name: "prefixes",          type: String, multiple:  true, defaultValue:   [] }
 ];
-var CLI = require("command-line-args")(CommandLineOptions);
+const CLI = require("command-line-args")(CommandLineOptions);
 function abort (msg) {
   console.error(msg);
   console.error(require('command-line-usage')([
@@ -32,7 +32,7 @@ function abort (msg) {
 }
 
 // Extract user commands
-var cmds = CLI;
+const cmds = CLI;
 if (cmds.help)
     abort("");
 if (cmds.json.length === 0 && cmds.shex.length === 0) abort("no shex specified");
