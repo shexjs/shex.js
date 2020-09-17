@@ -23,25 +23,28 @@ process = { env: {} };
 exports = {  };
 module = { exports: exports };
 modules = {
-  util: {
-    inspect: function (o) { return "util.inspect(s):"+JSON.stringify(o); }
-  },
-  n3: { },
-  fs: { }, path: { }, jsonld: { },
-  promise: Promise
+  // util: {
+  //   inspect: function (o) { return "util.inspect(s):"+JSON.stringify(o); }
+  // },
+  // n3: { },
+  // fs: { }, path: { }, jsonld: { },
+  // promise: Promise
 };
-modules["request-promise"] = function (url) {
-  return fetch(url).then(function (response) {
-    if (response.ok) {
-      return response.text();
-    }
-    throw Error("GET " + url + " failed: " + response.status + " " + response.statusText);
-  });
-};
+// modules["request-promise"] = function (url) {
+//   return fetch(url).then(function (response) {
+//     if (response.ok) {
+//       return response.text();
+//     }
+//     throw Error("GET " + url + " failed: " + response.status + " " + response.statusText);
+//   });
+// };
+__usage = {  };
 var require = function (s) {
-  if (s in modules)
+  if (s in modules) {
+    __usage[s] = s in __usage ? __usage[s] + 1 : 1
     return modules[s];
-  else {
+  } else {
     console.trace(Error("no def for \"" + s + "\" in:" + JSON.stringify(Object.keys(modules))).stack);
   }
 }
+require.usage = function () { return Object.fromEntries(Object.keys(modules).map(s => [s, s in __usage ? __usage[s] : 0])); }

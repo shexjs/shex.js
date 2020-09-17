@@ -2,33 +2,33 @@
 
 // shex-to-shacl http://tracker.example/schemas/Issue.shex
 
-var ShExLoader = require("../lib/ShExLoader");
-var ShExUtil = require("../lib/ShExUtil");
-var N3 = require("n3");
-var N3Store = N3.Store;
-var N3Writer = N3.Writer();
+const ShExLoader = require("../lib/ShExLoader");
+const ShExUtil = require("../lib/ShExUtil");
+const N3 = require("n3");
+const N3Store = N3.Store;
+const N3Writer = N3.Writer();
 
 // The next ID for new blank nodes
-var blankNodePrefix = 0, blankNodeCount = 0;
+const blankNodePrefix = 0, blankNodeCount = 0;
 function bnode () { return '_:b' + blankNodePrefix++ }
 
-var Rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-var firstP = Rdf+"first";
-var restP = Rdf+"rest";
-var nilP = Rdf+"nil";
+const Rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+const firstP = Rdf+"first";
+const restP = Rdf+"rest";
+const nilP = Rdf+"nil";
 
-var Sh = "http://www.w3.org/ns/shacl#";
-var propertyP = Sh+"property";
-var predicateP = Sh+"predicate";
-var shapeP = Sh+"shape";
-var inP = Sh+"in";
-var stemP = Sh+"stem";
-var andP = Sh+"and";
-var orP = Sh+"or";
-var notP = Sh+"not";
+const Sh = "http://www.w3.org/ns/shacl#";
+const propertyP = Sh+"property";
+const predicateP = Sh+"predicate";
+const shapeP = Sh+"shape";
+const inP = Sh+"in";
+const stemP = Sh+"stem";
+const andP = Sh+"and";
+const orP = Sh+"or";
+const notP = Sh+"not";
 
 // Generate command line interface
-var CLI = require("command-line-args")([
+const CLI = require("command-line-args")([
     { name: "help",  alias: "h", type: Boolean },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] }
@@ -44,17 +44,17 @@ function abort (msg) {
 }
 
 // Extract user commands
-var cmds = CLI.parse();
+const cmds = CLI.parse();
 if (cmds.help)
     abort("");
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
 
 
 ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
-  var db = new N3Store();//     [1,2,3].forEach(i => { db.addTriple("http://a.example/S", "http://a.example/p", "\""+i+"\""); }); 
-  var ignored = [];
+  const db = new N3Store();//     [1,2,3].forEach(i => { db.addTriple("http://a.example/S", "http://a.example/p", "\""+i+"\""); }); 
+  const ignored = [];
   function remove (ob, attr) {
-    var ret = ob[attr];
+    const ret = ob[attr];
     delete ob[attr];
     return ret;
   }
@@ -73,49 +73,49 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
     }
   }
   function byX (obj, key, name) {
-    var args = Array.prototype.slice.call(arguments);
+    const args = Array.prototype.slice.call(arguments);
     args[0] = obj[key];
     args.splice(1, 2); // remove key, name
-    var ret = eval(name() + ".apply(null, args)");
+    const ret = eval(name() + ".apply(null, args)");
     empty(obj[key]);
     delete obj[key];
     return ret;
   }
   function byType (obj, key) {
-    var args = Array.prototype.slice.call(arguments);
+    const args = Array.prototype.slice.call(arguments);
     args.splice(2, 0, function () { return obj[key].type; });
     return byX.apply(null, args);
   }
   function byAttr (obj, key) {
-    var args = Array.prototype.slice.call(arguments);
+    const args = Array.prototype.slice.call(arguments);
     args.splice(2, 0, function () { return key; });
     return byX.apply(null, args);
   }
 
   function Schema (shapes) {
     Object.keys(shapes).forEach(key => {
-      var label = byType(shapes, key, key);
+      const label = byType(shapes, key, key);
       // db.addTriple("http://a.example/Schema", "hasShape", label);
     });
   }
   function Shape (shapeExpr, label) {
-    var expr = byType(shapeExpr, "expression");
+    const expr = byType(shapeExpr, "expression");
     db.addTriple(label, propertyP, expr);
     return label;
   }
   function TripleConstraint (tripleExpr) {
-    var propN = bnode();
+    const propN = bnode();
     db.addTriple(propN, predicateP, remove(tripleExpr, "predicate"));
-    var r = byType(tripleExpr, "valueExpr", propN);
+    const r = byType(tripleExpr, "valueExpr", propN);
     return propN;
   }
   function list (l) {
     if (l.length === 0)
       return nilP;
-    var tail = bnode(), head = tail, dirty = false;
+    const tail = bnode(), head = tail, dirty = false;
     l.forEach(i => {
       if (dirty) {
-        var n = bnode();
+        const n = bnode();
         db.addTriple(tail, restP, n);
         tail = n;
       }
@@ -127,7 +127,7 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
   }
   function NodeConstraint (nodeExpr, propN) {
     //    db.addTriple(propN, predicateP, remove(nodeExpr, "predicate"));
-    var ors = [];
+    const ors = [];
     //    db.addNode(propN, shapeP, shN);
     ["values"].map(attr => {
       if (attr in nodeExpr) {
@@ -138,33 +138,33 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
     if (ors.length === 1)
       db.addTriple(propN, shapeP, ors[0]);
     else if (ors.length > 1) {
-      var or = bnode();
+      const or = bnode();
       db.addTriple(propN, shapeP, or);
       db.addTriple(or, orP, list(ors));
     }
     return ors;
   }
   function values (obj, propN, ors) {
-    var l = obj.splice(0, obj.length);
-    var stemRanges = l.filter(ent => {
+    const l = obj.splice(0, obj.length);
+    const stemRanges = l.filter(ent => {
       return typeof ent !== "string" && ent.type === "StemRange";
     });
     function inOrStem (tz) {
-      var ret = [];
-      var ins = tz.filter(ent => {
+      const ret = [];
+      const ins = tz.filter(ent => {
         return typeof ent === "string";
       });
-      var stems = tz.filter(ent => {
+      const stems = tz.filter(ent => {
         return typeof ent !== "string" && ent.type === "Stem";
       });
       if (ins.length > 0) {
-        var cN = bnode(), inN = bnode();
+        const cN = bnode(), inN = bnode();
         db.addTriple(cN, inP, list(ins));
         ret.push(cN)
         
       }
       if (stems.length > 0) {
-        var cN = bnode();
+        const cN = bnode();
         ret.push(cN);
         stems.forEach(n => {
           db.addTriple(cN, stemP, n.stem);
@@ -175,31 +175,31 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
     ors.push(inOrStem(l));
     if (stemRanges.length > 0) {
       stemRanges.forEach(n => {
-        var excls = ("exclusions" in n) ? remove(n, "exclusions") : [];
-        var lst2 = excls.reduce((lst, ex) => {
+        const excls = ("exclusions" in n) ? remove(n, "exclusions") : [];
+        const lst2 = excls.reduce((lst, ex) => {
           if (typeof ex === "string") {
             lst.ins.push(ex);
           } else {
-            var not = bnode();
+            const not = bnode();
             db.addTriple(not, notP, inOrStem([ex])[0]);
             lst.excls.push(not);
           }
           return lst;
         }, {ins:[], excls:[]});
         if (lst2.ins.length > 0) {
-          var not = bnode();
-          var stin = bnode(); //, list = bnode();
+          const not = bnode();
+          const stin = bnode(); //, list = bnode();
           db.addTriple(not, notP, stin);
           db.addTriple(stin, inP, list(lst2.ins));
           lst2.excls.push(not);
         }
         if (lst2.excls.length) {
-          var andN = bnode(), st = bnode();
+          const andN = bnode(), st = bnode();
           ors.push(andN);
           db.addTriple(andN, andP, list([st].concat(lst2.excls)));
           db.addTriple(st, stemP, n.stem);
         } else {
-          var cN = bnode();
+          const cN = bnode();
           ors.push(cN)
           db.addTriple(cN, stemP, n.stem);
         }
@@ -208,13 +208,13 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
     return ors;
   }
 
-  var schema = loaded.schema;
+  const schema = loaded.schema;
   ignore(schema, "base"); ignore(schema, "prefixes"); ignore(schema, "semActs"); ignore(schema, "start");
   Schema(loaded.schema.shapes);
   remove(schema, "shapes");
   empty(schema);
-  var tz = db.getQuads(); // !!untested
-  var w = require("n3").Writer({ prefixes: {
+  const tz = db.getQuads(); // !!untested
+  const w = require("n3").Writer({ prefixes: {
     my: "http://a.example/",
     sh: "http://www.w3.org/ns/shacl#"
   } });
