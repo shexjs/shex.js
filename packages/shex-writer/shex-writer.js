@@ -1,29 +1,28 @@
 // **ShExWriter** writes ShEx documents.
 
-var ShExWriter = (function () {
-var util = require('util');
-var UNBOUNDED = -1;
+const ShExWriterCjsModule = (function () {
+const UNBOUNDED = -1;
 
 // Matches a literal as represented in memory by the ShEx library
-var ShExLiteralMatcher = /^"([^]*)"(?:\^\^(.+)|@([\-a-z]+))?$/i;
+const ShExLiteralMatcher = /^"([^]*)"(?:\^\^(.+)|@([\-a-z]+))?$/i;
 
 // rdf:type predicate (for 'a' abbreviation)
-var RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+const RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     RDF_TYPE   = RDF_PREFIX + 'type';
 
 // Characters in literals that require escaping
-var ESCAPE_1 = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
+const ESCAPE_1 = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     ESCAPE_g = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
     ESCAPE_replacements = { '\\': '\\\\', '"': '\\"', '/': '\\/', '\t': '\\t',
                             '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f' };
 
-var nodeKinds = {
+const nodeKinds = {
   'iri': "IRI",
   'bnode': "BNODE",
   'literal': "LITERAL",
   'nonliteral': "NONLITERAL"
 };
-var nonLitNodeKinds = {
+const nonLitNodeKinds = {
   'iri': "IRI",
   'bnode': "BNODE",
   'literal': "LITERAL",
@@ -42,7 +41,7 @@ function ShExWriter (outputStream, options) {
 
   // If no output stream given, send the output as string through the end callback
   if (!outputStream) {
-    var output = '';
+    let output = '';
     this._outputStream = {
       write: function (chunk, encoding, done) { output += chunk; done && done(); },
       end:   function (done) { done && done(null, output); },
@@ -73,7 +72,7 @@ ShExWriter.prototype = {
 
   // ### `_writeSchema` writes the shape to the output stream
   _writeSchema: function (schema, done) {
-    var _ShExWriter = this;
+    const _ShExWriter = this;
     this._expect(schema, "type", "Schema");
     _ShExWriter.addPrefixes(schema.prefixes);
     if (schema.base)
@@ -112,8 +111,8 @@ ShExWriter.prototype = {
   },
 
   _writeShapeExpr: function (shapeExpr, done, forceBraces, parentPrec) {
-    var _ShExWriter = this;
-    var pieces = [];
+    const _ShExWriter = this;
+    const pieces = [];
     if (typeof shapeExpr === "string") // ShapeRef
       pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr));
     // !!! []s for precedence!
@@ -124,7 +123,7 @@ ShExWriter.prototype = {
     else if (shapeExpr.type === "ShapeAnd") {
       if (parentPrec >= 3)
         pieces.push("(");
-      var lastAndElided = false;
+      let lastAndElided = false;
       shapeExpr.shapeExprs.forEach(function (expr, ord) {
         if (ord > 0) { // && !!! grammar rules too weird here
           /*
@@ -163,7 +162,7 @@ ShExWriter.prototype = {
           }
           lastAndElided = elideAnd;
         }
-        pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr, done, false, 3));
+        [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr, done, false, 3));
       });
       if (parentPrec >= 3)
         pieces.push(")");
@@ -173,7 +172,7 @@ ShExWriter.prototype = {
       shapeExpr.shapeExprs.forEach(function (expr, ord) {
         if (ord > 0)
           pieces.push(" OR ");
-        pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr, done, forceBraces, 2));
+        [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr, done, forceBraces, 2));
       });
       if (parentPrec >= 2)
         pieces.push(")");
@@ -181,23 +180,23 @@ ShExWriter.prototype = {
       if (parentPrec >= 4)
         pieces.push("(");
       pieces.push("NOT ");
-      pieces = pieces.concat(_ShExWriter._writeShapeExpr(shapeExpr.shapeExpr, done, forceBraces, 4));
+      [].push.apply(pieces, _ShExWriter._writeShapeExpr(shapeExpr.shapeExpr, done, forceBraces, 4));
       if (parentPrec >= 4)
         pieces.push(")");
     } else if (shapeExpr.type === "Shape") {
-      pieces = pieces.concat(_ShExWriter._writeShape(shapeExpr, done, forceBraces));
+      [].push.apply(pieces, _ShExWriter._writeShape(shapeExpr, done, forceBraces));
     } else if (shapeExpr.type === "NodeConstraint") {
-      pieces = pieces.concat(_ShExWriter._writeNodeConstraint(shapeExpr, done, forceBraces));
+      [].push.apply(pieces, _ShExWriter._writeNodeConstraint(shapeExpr, done, forceBraces));
     } else
-      throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + util.inspect(shapeExpr));
+      throw Error("expected Shape{,And,Or,Ref} or NodeConstraint in " + JSON.stringify(shapeExpr));
     return pieces;
   },
 
   // ### `_writeShape` writes the shape to the output stream
   _writeShape: function (shape, done, forceBraces) {
-    var _ShExWriter = this;
+    const _ShExWriter = this;
     try {
-      var pieces = []; // guessing push/join is faster than concat
+      const pieces = []; // guessing push/join is faster than concat
       this._expect(shape, "type", "Shape");
 
       if (shape.closed) pieces.push("CLOSED ");
@@ -209,7 +208,7 @@ ShExWriter.prototype = {
              if (ord)
                pieces.push(" ")
              pieces.push(pair.marker);
-             pieces = pieces.concat(_ShExWriter._writeShapeExpr(i, done, true, 0));
+             [].push.apply(pieces, _ShExWriter._writeShapeExpr(i, done, true, 0));
            });
            pieces.push(" ");
          }
@@ -222,7 +221,7 @@ ShExWriter.prototype = {
         });
         pieces.push(" ");
       }
-      var empties = ["values", "length", "minlength", "maxlength", "pattern", "flags"];
+      const empties = ["values", "length", "minlength", "maxlength", "pattern", "flags"];
       pieces.push("{\n");
 
       function _writeShapeActions (semActs) {
@@ -274,7 +273,7 @@ ShExWriter.prototype = {
         }
 
         function _exprGroup (exprs, separator, precedence, forceParens) {
-          var needsParens = precedence < parentPrecedence || forceParens;
+          const needsParens = precedence < parentPrecedence || forceParens;
           if (needsParens) {
             pieces.push("(");
           }
@@ -308,7 +307,7 @@ ShExWriter.prototype = {
                       " ");
 
           if ("valueExpr" in expr)
-            pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
+            [].push.apply(pieces, _ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
           else
             pieces.push(". ");
 
@@ -319,7 +318,7 @@ ShExWriter.prototype = {
         }
 
         else if (expr.type === "OneOf") {
-          var needsParens = "id" in expr || "min" in expr || "max" in expr || "onShapeExpression" in expr || "annotations" in expr || "semActs" in expr;
+          var needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
           _exprGroup(expr.expressions, "\n"+indent+"| ", 1, needsParens || _ShExWriter.forceParens);
           _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
           _writeScopedShapeExpression(expr.onShapeExpression);
@@ -328,7 +327,7 @@ ShExWriter.prototype = {
         }
 
         else if (expr.type === "EachOf") {
-          var needsParens = "id" in expr || "min" in expr || "max" in expr || "onShapeExpression" in expr || "annotations" in expr || "semActs" in expr;
+          var needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
           _exprGroup(expr.expressions, ";\n"+indent, 2, needsParens || _ShExWriter.forceParens);
           _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
           _writeScopedShapeExpression(expr.onShapeExpression);
@@ -353,11 +352,11 @@ ShExWriter.prototype = {
 
   // ### `_writeShape` writes the shape to the output stream
   _writeNodeConstraint: function (v, done) {
-    var _ShExWriter = this;
+    const _ShExWriter = this;
     try {
       _ShExWriter._expect(v, "type", "NodeConstraint");
 
-      var pieces = [];
+      const pieces = [];
       if (v.nodeKind in nodeKinds)       pieces.push(nodeKinds[v.nodeKind], " ");
       else if (v.nodeKind !== undefined) _ShExWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
 
@@ -370,7 +369,7 @@ ShExWriter.prototype = {
   },
 
   _annotations: function (pieces, annotations, indent) {
-    var _ShExWriter = this;
+    const _ShExWriter = this;
     if (annotations) {
       annotations.forEach(function (a) {
         _ShExWriter._expect(a, "type", "Annotation");
@@ -383,7 +382,7 @@ ShExWriter.prototype = {
   },
 
   _fillNodeConstraint: function (pieces, v, done) {
-    var _ShExWriter = this;
+    const _ShExWriter = this;
     if (v.datatype  && v.values  ) _ShExWriter._error("found both datatype and values in "   +expr);
     if (v.datatype) {
       pieces.push(_ShExWriter._encodeShapeName(v.datatype));
@@ -400,7 +399,7 @@ ShExWriter.prototype = {
 //          expect(t, "type", "IriStemRange");
               if (!("type" in t))
                 runtimeError("expected "+JSON.stringify(t)+" to have a 'type' attribute.");
-          var stemRangeTypes = ["Language", "IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
+          const stemRangeTypes = ["Language", "IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
               if (stemRangeTypes.indexOf(t.type) === -1)
                 runtimeError("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'.");
           if (t.type === "Language") {
@@ -418,7 +417,7 @@ ShExWriter.prototype = {
 //                expect(c, "type", "IriStem");
                     if (!("type" in c))
                       runtimeError("expected "+JSON.stringify(c)+" to have a 'type' attribute.");
-                    var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+                    const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
                     if (stemTypes.indexOf(c.type) === -1)
                       runtimeError("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'.");
                 pieces.push(langOrLiteral(t, c.stem) + "~");
@@ -441,11 +440,11 @@ ShExWriter.prototype = {
     }
 
     if ('pattern' in v) {
-      var pattern = v.pattern.
+      const pattern = v.pattern.
           replace(/\//g, "\\/");
       // if (ESCAPE_1.test(pattern))
       //   pattern = pattern.replace(ESCAPE_g, characterReplacer);
-      var flags = 'flags' in v ? v.flags : "";
+      const flags = 'flags' in v ? v.flags : "";
       pieces.push("/" + pattern + "/" + flags + " ");
     }
     ['length', 'minlength', 'maxlength',
@@ -473,7 +472,7 @@ ShExWriter.prototype = {
     if (ESCAPE_1.test(iri))
       iri = iri.replace(ESCAPE_g, characterReplacer);
     // Try to represent the IRI as prefixed name
-    var prefixMatch = this._prefixRegex.exec(iri);
+    const prefixMatch = this._prefixRegex.exec(iri);
     return !prefixMatch ? '<' + iri + '>' :
            (!prefixMatch[1] ? iri : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2]) + trailingSpace;
   },
@@ -537,13 +536,13 @@ ShExWriter.prototype = {
 
   // ### `addShapes` adds the shapes to the output stream
   addShapes: function (shapes) {
-    for (var i = 0; i < shapes.length; i++)
+    for (let i = 0; i < shapes.length; i++)
       this.addShape(shapes[i]);
   },
 
   // ### `addPrefix` adds the prefix to the output stream
   addPrefix: function (prefix, iri, done) {
-    var prefixes = {};
+    const prefixes = {};
     prefixes[prefix] = iri;
     this.addPrefixes(prefixes, done);
   },
@@ -551,10 +550,11 @@ ShExWriter.prototype = {
   // ### `addPrefixes` adds the prefixes to the output stream
   addPrefixes: function (prefixes, done) {
     // Add all useful prefixes
-    var prefixIRIs = this._prefixIRIs, hasPrefixes = false;
-    for (var prefix in prefixes) {
+    const prefixIRIs = this._prefixIRIs;
+    let hasPrefixes = false;
+    for (let prefix in prefixes) {
       // Verify whether the prefix can be used and does not exist yet
-      var iri = prefixes[prefix];
+      const iri = prefixes[prefix];
       if (// @@ /[#\/]$/.test(iri) && !! what was that?
           prefixIRIs[iri] !== (prefix += ':')) {
         hasPrefixes = true;
@@ -565,8 +565,8 @@ ShExWriter.prototype = {
     }
     // Recreate the prefix matcher
     if (hasPrefixes) {
-      var IRIlist = '', prefixList = '';
-      for (var prefixIRI in prefixIRIs) {
+      let IRIlist = '', prefixList = '';
+      for (let prefixIRI in prefixIRIs) {
         IRIlist += IRIlist ? '|' + prefixIRI : prefixIRI;
         prefixList += (prefixList ? '|' : '') + prefixIRIs[prefixIRI];
       }
@@ -587,7 +587,7 @@ ShExWriter.prototype = {
     this._write = this._blockedWrite;
 
     // Try to end the underlying stream, ensuring done is called exactly one time
-    var singleDone = done && function (error, result) { singleDone = null, done(error, result); };
+    let singleDone = done && function (error, result) { singleDone = null, done(error, result); };
     if (this._endStream) {
       try { return this._outputStream.end(singleDone); }
       catch (error) { /* error closing stream */ }
@@ -599,7 +599,7 @@ ShExWriter.prototype = {
 // Replaces a character by its escaped version
 function characterReplacer(character) {
   // Replace a single character by its escaped version
-  var result = ESCAPE_replacements[character];
+  let result = ESCAPE_replacements[character];
   if (result === undefined) {
     // Replace a single character with its 4-bit unicode escape sequence
     if (character.length === 1) {
@@ -630,7 +630,7 @@ function _throwError (func, str) {
     str = func;
     func = _throwError;
   }
-  var e = new Error(str);
+  const e = new Error(str);
   Error.captureStackTrace(e, func);
   throw e;
 }
@@ -651,4 +651,4 @@ return ShExWriter;
 
 // Export the `ShExWriter` class as a whole.
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExWriter; // node environment
+  module.exports = ShExWriterCjsModule; // node environment

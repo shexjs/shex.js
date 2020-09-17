@@ -31,14 +31,14 @@
   [` f: \n e: -f \n d: -e \n c: a, d \n b: c \n a: b`,
    {a: 2, b: 2, c: 2, d: 2, e: 1, f: 0} ]
 ].forEach((pair, idx) => {
-  var ret = stratify(parse(pair[0]));
+  const ret = stratify(parse(pair[0]));
   console.log("running test " + idx)
   if (!areEqualShallow(ret, pair[1]))
     console.log(idx, ret);
 });
 console.log("done")
 
-var testDep = {
+const testDep = {
   "SL_all": [],
   "SL_1"  : [{label: "SL_5"  , negative:true}],
 
@@ -57,13 +57,13 @@ function parse (str) {
   return str.split("\n").filter(s => {
     return !s.match(/^\s*$/);
   }).reduce((ret, s) => {
-    var lr = s.split(":");
-    var rz = lr[1].split(",").reduce((ret, s) => {
+    const lr = s.split(":");
+    const rz = lr[1].split(",").reduce((ret, s) => {
       s = s.replace(/\s/g, "");
       if (s === "")
 	return ret;
-      var negative = s[0] === "-";
-      var add = {
+      const negative = s[0] === "-";
+      const add = {
 	label: negative ? s.substr(1) : s
       };
       if (negative)
@@ -85,7 +85,7 @@ function stratify (dep) {
 	return 0;
     }
     return dep[key].reduce((ret, rule) => {
-      var add = rule.negative ? 1 : 0;
+      const add = rule.negative ? 1 : 0;
       return Math.max(ret, strat1(rule.label, neg || rule.negative, seen.concat(key))+add);
     }, 0);
   }
@@ -103,12 +103,12 @@ function stratify (dep) {
 function areEqualShallow (a, b) {
   if (a === null || b === null)
     return a === b;
-  for(var key in a) {
+  for(const key in a) {
     if(!(key in b) || a[key] !== b[key]) {
       return false;
     }
   }
-  for(var key in b) {
+  for(const key in b) {
     if(!(key in a) || a[key] !== b[key]) {
       return false;
     }

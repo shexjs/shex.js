@@ -6,7 +6,7 @@
  *   constraint violation reporting.
  */
 
-var ShExValidator = (function () {
+const ShExValidatorCjsModule = (function () {
 var UNBOUNDED = -1;
 
 // interface constants
@@ -94,7 +94,7 @@ numericParsers[XSD + "double" ] = function (label, parseError) {
   return Number(label);
 };
 
-testRange = function (value, datatype, parseError) {
+function testRange (value, datatype, parseError) {
   const ranges = {
     //    integer            -1 0 1 +1 | "" -1.0 +1.0 1e0 NaN INF
     //    decimal            -1 0 1 +1 -1.0 +1.0 | "" 1e0 NaN INF
@@ -1473,4 +1473,4 @@ function runtimeError () {
 
 // Export the `ShExValidator` class as a whole.
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShExValidator;
+  module.exports = ShExValidatorCjsModule;

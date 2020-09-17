@@ -1,4 +1,6 @@
 
+function ShExVisitor () {
+
     function isTerm (t) {
       return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
         return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
@@ -10,8 +12,6 @@
   }
   let isInclusion = isShapeRef;
 
-
-function ShExVisitor () {
   // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
   var _ShExUtil = this;
   function visitMap (map, val) {

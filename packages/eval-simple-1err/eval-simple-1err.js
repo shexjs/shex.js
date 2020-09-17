@@ -1,4 +1,4 @@
-var EvalSimple1Err = (function () {
+const EvalSimple1ErrCjsModule = (function () {
   var ShExTerm = require("@shexjs/term");
 
   var Split = "<span class='keyword' title='Split'>|</span>";
@@ -515,4 +515,4 @@ return exports = {
 })();
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = EvalSimple1Err;
+  module.exports = EvalSimple1ErrCjsModule;

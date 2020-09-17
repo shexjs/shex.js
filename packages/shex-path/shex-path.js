@@ -1,7 +1,7 @@
-const ShExUtil = require("@shexjs/util");
-const ShExTerm = require("@shexjs/term");
+const ShExPathCjsModule = function (schema, const_iriResolver) {
+    const ShExUtil = require("@shexjs/util");
+    const ShExTerm = require("@shexjs/term");
 
-const ShExPath = function (schema, const_iriResolver) {
     const navigation = new Map()
     navigation.set(schema, []) // schema has no parents
 
@@ -147,5 +147,5 @@ const ShExPath = function (schema, const_iriResolver) {
   }
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShExPath
+  module.exports = ShExPathCjsModule
 

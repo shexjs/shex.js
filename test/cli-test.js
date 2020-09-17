@@ -11,7 +11,10 @@ var HTTPTEST = "HTTPTEST" in process.env ?
     "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
 
 var ShExUtil = require("@shexjs/util");
-var ShExNode = require("@shexjs/node");
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+});
 var child_process = require('child_process');
 var chai = require("chai");
 var expect = chai.expect;
