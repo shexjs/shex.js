@@ -6,8 +6,10 @@
  *   constraint violation reporting.
  */
 
+const ShExMapMaterializerCjsModule = function (config) {
+
 // interface constants
-var InterfaceOptions = {
+const InterfaceOptions = {
   "or": {
     "oneOf": "exactly one disjunct must pass",
     "someOf": "one or more disjuncts must pass",
@@ -19,16 +21,15 @@ var InterfaceOptions = {
   }
 };
 
-var VERBOSE = "VERBOSE" in process.env;
+const VERBOSE = "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
-var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var N3Util = ShEx.N3.Util;
-var ShExTerm = require("@shexjs/term");
+const ShExTerm = require("@shexjs/term");
 const ShExMap = require("../shex-extension-map");
 
-var UNBOUNDED = -1;
+const UNBOUNDED = -1;
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -37,8 +38,8 @@ function getLexicalValue (term) {
 }
 
 
-var XSD = "http://www.w3.org/2001/XMLSchema#";
-var integerDatatypes = [
+const XSD = "http://www.w3.org/2001/XMLSchema#";
+const integerDatatypes = [
   XSD + "integer",
   XSD + "nonPositiveInteger",
   XSD + "negativeInteger",
@@ -54,16 +55,16 @@ var integerDatatypes = [
   XSD + "positiveInteger"
 ];
 
-var decimalDatatypes = [
+const decimalDatatypes = [
   XSD + "decimal",
 ].concat(integerDatatypes);
 
-var numericDatatypes = [
+const numericDatatypes = [
   XSD + "float",
   XSD + "double"
 ].concat(decimalDatatypes);
 
-var numericParsers = {};
+const numericParsers = {};
 numericParsers[XSD + "integer"] = function (label, parseError) {
   if (!(label.match(/^[+-]?[0-9]+$/))) {
     parseError("illegal integer value '" + label + "'");
@@ -91,7 +92,7 @@ numericParsers[XSD + "double" ] = function (label, parseError) {
 
 /*
 function intSubType (spec, label, parseError) {
-  var ret = numericParsers[XSD + "integer"](label, parseError);
+  const ret = numericParsers[XSD + "integer"](label, parseError);
   if ("min" in spec && ret < spec.min)
     parseError("illegal " + XSD + spec.type + " value '" + label + "' should not be < " + spec.min);
   if ("max" in spec && ret > spec.max)
@@ -116,26 +117,26 @@ function intSubType (spec, label, parseError) {
  });
 */
 
-var stringTests = {
+const stringTests = {
   length   : function (v, l) { return v.length === l; },
   minlength: function (v, l) { return v.length  >= l; },
   maxlength: function (v, l) { return v.length  <= l; }
 };
 
-var numericValueTests = {
+const numericValueTests = {
   mininclusive  : function (n, m) { return n >= m; },
   minexclusive  : function (n, m) { return n >  m; },
   maxinclusive  : function (n, m) { return n <= m; },
   maxexclusive  : function (n, m) { return n <  m; }
 };
 
-var decimalLexicalTests = {
+const decimalLexicalTests = {
   totaldigits   : function (v, d) {
-    var m = v.match(/[0-9]/g);
+    const m = v.match(/[0-9]/g);
     return m && m.length <= d;
   },
   fractiondigits: function (v, d) {
-    var m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
+    const m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
     return m && m[1].length <= d;
   }
 };
@@ -143,34 +144,34 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: ShExTerm.getLiteralValue(term) };
-          var dt = ShExTerm.getLiteralType(term);
+          const ret = { value: ShExTerm.getLiteralValue(term) };
+          const dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = ShExTerm.getLiteralLanguage(term)
+          const lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
         }
 
 function makeCache () {
-  var _keys = {}; // _keys[http://abcd] = [obj1, obj2]
-  var _vals = {}; // _vals[http://abcd] = [res1, res2]
+  const _keys = {}; // _keys[http://abcd] = [obj1, obj2]
+  const _vals = {}; // _vals[http://abcd] = [res1, res2]
   return {
     cached: function (point, shape) {
-      var cache = _keys[point];
+      let cache = _keys[point];
       if (!cache) {
         _keys[point] = cache = [];
         _vals[point] = [];
         return undefined;
       }
-      var idx = cache.indexOf(shape);
+      const idx = cache.indexOf(shape);
       return idx === -1 ? undefined : _vals[point][idx];
     },
     remember: function (point, shape, res) {
-      var cache = _keys[point];
+      const cache = _keys[point];
       if (!cache) {
         _keys[point] = [];
         _vals[point] = [];
@@ -202,17 +203,17 @@ function ShExMaterializer_constructor(schema, mapper, options) {
   if (!("noCache" in options && options.noCache))
     this.known = makeCache();
 
-  var _ShExValidator = this;
+  const _ShExValidator = this;
   this.schema = schema;
   this._expect = this.options.lax ? noop : expect; // report errors on missing types.
   this._optimize = {}; // optimizations:
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
-  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || require("../lib/regex/nfax-val-1err-materializer");
+  // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+  const regexModule = this.options.regexModule || require("./eval-simple-1err-materializer");
 
-  var blankNodeCount = 0;
-  var nextBNode = options.nextBNode || function () {
+  let blankNodeCount = 0;
+  const nextBNode = options.nextBNode || function () {
     return '_:b' + blankNodeCount++;
   };
 
@@ -236,7 +237,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
    */
   this.indexTripleConstraints = function (expression) {
     // list of triple constraints from (:p1 ., (:p2 . | :p3 .))
-    var tripleConstraints = [];
+    const tripleConstraints = [];
 
     if (expression)
       indexTripleConstraints_dive(expression);
@@ -265,7 +266,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
    */
   this.validate = function (db, point, labelOrShape, depth, seen) {
     // default to schema's start shape
-    if (!labelOrShape || labelOrShape === ShEx.Validator.start) {
+    if (!labelOrShape || labelOrShape === config.Validator.start) {
       if (!schema.start)
         runtimeError("start production not defined");
       labelOrShape = schema.start;
@@ -276,10 +277,10 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     if (!(labelOrShape in this.schema._index.shapeExprs))
       runtimeError("shape " + labelOrShape + " not defined");
 
-    var shapeLabel = labelOrShape; // for clarity
+    const shapeLabel = labelOrShape; // for clarity
     if (seen === undefined)
       seen = {};
-    var seenKey = point + "|" + shapeLabel;
+    const seenKey = point + "|" + shapeLabel;
     if (seenKey in seen)
       return {
         type: "Recursion",
@@ -287,7 +288,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         shape: shapeLabel
       };
     seen[seenKey] = { point: point, shapeLabel: shapeLabel };
-    var ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
+    const ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
     delete seen[seenKey];
     return ret;
   }
@@ -295,13 +296,13 @@ function ShExMaterializer_constructor(schema, mapper, options) {
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, seen) {
     if ("known" in this && this.known.cached(point, shapeExpr))
       return this.known.cached(point, shapeExpr);
-    var ret = null;
+    let ret = null;
     if (point === "")
       throw Error("validation needs a valid focus node");
     if (typeof(shapeExpr) === "string") { // ShapeRef
       ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, seen);
     } else if (shapeExpr.type === "NodeConstraint") {
-      var errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       ret = errors.length ? {
         type: "Failure",
         node: ldify(point),
@@ -324,11 +325,11 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     } else if (shapeExpr.type === "ShapeExternal") {
       ret = this.options.validateExtern(db, point, shapeLabel, depth, seen);
     } else if (shapeExpr.type === "ShapeOr") {
-      var errors = [];
+      const errors = [];
       ret = { type: "ShapeOrFailure", errors: errors };
-      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        var nested = shapeExpr.shapeExprs[i];
-        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, seen);
+      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        const nested = shapeExpr.shapeExprs[i];
+        const sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, seen);
         if ("errors" in sub)
           errors.push(sub);
         else {
@@ -337,17 +338,17 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         }
       }
     } else if (shapeExpr.type === "ShapeNot") {
-      var sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, depth, seen);
+      const sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, depth, seen);
       if ("errors" in sub)
           ret = { type: "ShapeNotResults", solution: sub };
         else
           ret = { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
-      var passes = [];
+      const passes = [];
       ret = { type: "ShapeAndResults", solutions: passes };
-      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        var nested = shapeExpr.shapeExprs[i];
-        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, seen);
+      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        const nested = shapeExpr.shapeExprs[i];
+        const sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, seen);
         if ("errors" in sub) {
           ret = { type: "ShapeAndFailure", errors: sub };
           break;
@@ -362,49 +363,49 @@ function ShExMaterializer_constructor(schema, mapper, options) {
   }
 
   this._validateShape = function (db, point, regexEngine, shape, shapeLabel, depth, seen) {
-    var _ShExValidator = this;
+    const _ShExValidator = this;
 
     // logging stuff
     if (depth === undefined)
       depth = 0;
-    var padding = (new Array(depth + 1)).join("  "); // AKA "  ".repeat(depth);
+    const padding = (new Array(depth + 1)).join("  "); // AKA "  ".repeat(depth);
     function _log () {
       if (!VERBOSE) { return; }
       console.log(padding + Array.prototype.join.call(arguments, ""));
     }
 
-    var ret = null;
-    var startAcionStorage = {}; // !!! need test to see this write to results structure.
+    let ret = null;
+    const startAcionStorage = {}; // !!! need test to see this write to results structure.
     if ("startActs" in schema && !this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage))
       return null; // some semAct aborted !! return real error
     _log("validating <" + point + "> as <" + shapeLabel + ">");
 
-    // var outgoing = indexNeighborhood(db.findByIRI(point, null, null, null).sort(byObject));
-    // var incoming = indexNeighborhood(db.findByIRI(null, null, point, null).sort(bySubject));
-    var neighborhood = []; // outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
+    // const outgoing = indexNeighborhood(db.findByIRI(point, null, null, null).sort(byObject));
+    // const incoming = indexNeighborhood(db.findByIRI(null, null, point, null).sort(bySubject));
+    const neighborhood = []; // outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
 
-    var constraintList = this.indexTripleConstraints(shape.expression);
-    // var tripleList = constraintList.reduce(function (ret, constraint, ord) {
+    const constraintList = this.indexTripleConstraints(shape.expression);
+    // const tripleList = constraintList.reduce(function (ret, constraint, ord) {
 
     //   // subject and object depend on direction of constraint.
-    //   var searchSubject = constraint.inverse ? null : point;
-    //   var searchObject = constraint.inverse ? point : null;
-    //   var index = constraint.inverse ? incoming : outgoing;
+    //   const searchSubject = constraint.inverse ? null : point;
+    //   const searchObject = constraint.inverse ? point : null;
+    //   const index = constraint.inverse ? incoming : outgoing;
 
     //   // get triples matching predciate
-    //   var matchPredicate = index.byPredicate[constraint.predicate] ||
+    //   const matchPredicate = index.byPredicate[constraint.predicate] ||
     //     []; // empty list when no triple matches that constraint
 
     //   function _errorsByShapeLabel (focus, shapeLabel) {
-    //     var sub = _ShExValidator.validate(db, focus, shapeLabel, depth + 1, seen);
+    //     const sub = _ShExValidator.validate(db, focus, shapeLabel, depth + 1, seen);
     //     return "errors" in sub ? sub.errors : [];
     //   }
     //   function _errorsByShapeExpr (focus, shapeExpr) {
-    //     var sub = _ShExValidator._validateShapeExpr(db, focus, shapeExpr, shapeLabel, depth, seen);
+    //     const sub = _ShExValidator._validateShapeExpr(db, focus, shapeExpr, shapeLabel, depth, seen);
     //     return "errors" in sub ? sub.errors : [];
     //   }
     //   // strip to triples matching value constraints (apart from @<someShape>)
-    //   var matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
+    //   const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
     //     matchPredicate,
     //     constraint.valueExpr,
     //     constraint.inverse,
@@ -423,7 +424,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
     // _log("constraints by triple: ", JSON.stringify(tripleList.constraintList));
 
-    // var misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+    // const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
     //   if (constraints.length === 0 &&                       // matches no constraints
     //       ord < outgoing.triples.length &&                  // not an incoming triple
     //       ord in tripleList.misses &&                       // predicate matched some constraint(s)
@@ -434,19 +435,19 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     //   return ret;
     // }, []);
 
-    // var xp = crossProduct(tripleList.constraintList);
-    var partitionErrors = [];
+    // const xp = crossProduct(tripleList.constraintList);
+    const partitionErrors = [];
     // while (misses.length === 0 && xp.next() && ret === null) {
     //   // caution: early continues
-    for (var __once = 0; __once < 1; ++__once) {
-      // var usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-      // var constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
+    for (let __once = 0; __once < 1; ++__once) {
+      // const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
+      // const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
       //   _seq(neighborhood.length).map(function () { return 0; });
-      // var tripleToConstraintMapping = xp.get(); // [0,1,0,3] mapping from triple to constraint
+      // const tripleToConstraintMapping = xp.get(); // [0,1,0,3] mapping from triple to constraint
 
       // // Triples not mapped to triple constraints are not allowed in closed shapes.
       // if (shape.closed) {
-      //   var firstSkippedTriple = tripleToConstraintMapping.indexOf(undefined);
+      //   const firstSkippedTriple = tripleToConstraintMapping.indexOf(undefined);
       //   if (firstSkippedTriple !== -1 && firstSkippedTriple < outgoing.triples.length) {
       //     partitionErrors.push({
       //       errors: [
@@ -474,7 +475,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       // // Pivot to triples by constraint.
       // function _constraintToTriples () {
-      //   var cll = constraintList.length;
+      //   const cll = constraintList.length;
       //   return tripleToConstraintMapping.slice().
       //     reduce(function (ret, c, ord) {
       //       if (c !== undefined)
@@ -496,15 +497,15 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       function _testExpr (term, valueExpr, recurse, direct) {
         return _ShExValidator._errorsMatchingShapeExpr(term, valueExpr, recurse, direct)
       }
-      var results = regexEngine.match(db, point, constraintList, _synthesize, /*_constraintToTriples(), tripleToConstraintMapping, */ neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
+      const results = regexEngine.match(db, point, constraintList, _synthesize, /*_constraintToTriples(), tripleToConstraintMapping, */ neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
       function _synthesize (constraintNo, min, max, neighborhood) {
         // console.log({"constraintNo": constraintNo, "min": min, "max": max, "constraintList": constraintList, "db": db, "point": point, "regexEngine": regexEngine, "shape": shape, "shapeLabel": shapeLabel, "depth": depth, "seen": seen});
-        var tc = constraintList[constraintNo];
-        var curSubjectx = {cs: point};
-        var target = new ShEx.N3.Store();
+        const tc = constraintList[constraintNo];
+        const curSubjectx = {cs: point};
+        const target = new config.rdfjs.Store();
         mapper.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
-        var oldLen = neighborhood.length;
-        var created = target.getQuads().map(ShExTerm.internalTriple);
+        const oldLen = neighborhood.length;
+        const created = target.getQuads().map(ShExTerm.internalTriple);
         neighborhood.push.apply(neighborhood, created);
         console.log("adding: " + created.length + " triples: " + created.map(
           q => (['subject', 'predicate', 'object']).map(
@@ -515,7 +516,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         // if ("semActs" in tc) {
         //   tc.semActs.forEach(function (semAct) {
         //     if (semAct.name === ShExMap.url) {
-        //       var prefixes = _ShExValidator.schema.prefixes;
+        //       const prefixes = _ShExValidator.schema.prefixes;
               
         //     }
         //   });
@@ -524,15 +525,15 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         return [];
       }
       function mapper_visitTripleConstraint (expr) {
-        var mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === ShExMap.url; });
+        const mapExts = (expr.semActs || []).filter(function (ext) { return ext.name === ShExMap.url; });
         if (mapExts.length) {
           mapExts.forEach(function (ext) {
-            var code = ext.code;
-            var m = code.match(pattern);
+            const code = ext.code;
+            const m = code.match(pattern);
 
-            var tripleObject;
+            let tripleObject;
             if (m) { 
-              var arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
+              const arg = m[1] ? m[1] : P(m[2] + ":" + m[3]); 
               if (!_.isUndefined(bindings[arg])) {
                 tripleObject = bindings[arg];
               }
@@ -552,7 +553,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
           add(curSubject, expr.predicate, expr.valueExpr.values[0]);
 
         } else {
-          var oldSubject = curSubject;
+          const oldSubject = curSubject;
           curSubject = B();
           add(oldSubject, expr.predicate, curSubject);
           this._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
@@ -563,8 +564,8 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       };
 
       // {// testing parity between two engines
-      //   var nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
-      //   var fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
+      //   const nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
+      //   const fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
       //   if ("errors" in fromNFA !== "errors" in results)
       //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
       // }
@@ -580,7 +581,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       // _log("post-regexp " + usedTriples.join(" "));
 
-      var possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+      const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape &&
@@ -600,8 +601,8 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       // alts.push(tripleToConstraintMapping);
     }
     if (ret === null/* !! && this.options.diagnose */) {
-      var missErrors = [];// misses.map(function (miss) {
-      //   var t = neighborhood[miss.tripleNo];
+      const missErrors = [];// misses.map(function (miss) {
+      //   const t = neighborhood[miss.tripleNo];
       //   return {
       //     type: "TypeMismatch",
       //     triple: {subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
@@ -630,12 +631,12 @@ function ShExMaterializer_constructor(schema, mapper, options) {
   };
 
   this._triplesMatchingShapeExpr = function (triples, valueExpr, inverse, recurse, direct) {
-    var _ShExValidator = this;
-    var misses = [];
-    var hits = [];
+    const _ShExValidator = this;
+    const misses = [];
+    const hits = [];
     triples.forEach(function (triple) {
-      var value = inverse ? triple.subject : triple.object;
-      var errors = valueExpr === undefined ?
+      const value = inverse ? triple.subject : triple.object;
+      const errors = valueExpr === undefined ?
           [] :
           _ShExValidator._errorsMatchingShapeExpr(value, valueExpr, recurse, direct);
       if (errors.length === 0) {
@@ -647,7 +648,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     return { hits: hits, misses: misses };
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, recurse, direct) {
-    var _ShExValidator = this;
+    const _ShExValidator = this;
     if (typeof(valueExpr) === "string") { // ShapeRef
       return recurse ? recurse(value, valueExpr) : [];
     } else if (valueExpr.type === "NodeConstraint") {
@@ -655,9 +656,9 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     } else if (valueExpr.type === "Shape") {
       return direct === undefined ? [] : direct(value, valueExpr);
     } else if (valueExpr.type === "ShapeOr") {
-      var ret = [];
-      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct);
+      const ret = [];
+      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        const nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct);
         if (nested.length === 0)
           return nested;
         ret = ret.concat(nested);
@@ -676,10 +677,10 @@ function ShExMaterializer_constructor(schema, mapper, options) {
    * expression without checking shape references.
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
-    var errors = [];
+    const errors = [];
 
     function validationError () {
-      var errorStr = Array.prototype.join.call(arguments, "");
+      const errorStr = Array.prototype.join.call(arguments, "");
       errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
     }
     // if (negated) ;
@@ -719,7 +720,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
           if (ret) return true;
           if (!(typeof v === "object" && "value" in v))
             return false;
-          var ld = ldify(value);
+          const ld = ldify(value);
           return v.value === ld.value &&
             v.type === ld.type &&
             v.language === ld.language;
@@ -761,16 +762,16 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     }
 
     if ("pattern" in valueExpr) {
-      var regexp = new RegExp(valueExpr.pattern);
+      const regexp = new RegExp(valueExpr.pattern);
       if (!(getLexicalValue(value).match(regexp)))
         validationError("value " + value + " did not match pattern " + valueExpr.pattern);
     }
 
-    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+    const label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
       ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
+    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
+    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     Object.keys(stringTests).forEach(function (test) {
       if (test in valueExpr && !stringTests[test](label, valueExpr[test])) {
@@ -829,12 +830,12 @@ function ShExMaterializer_constructor(schema, mapper, options) {
      * @return {bool} false if any result was false.
      */
     dispatchAll: function (semActs, ctx, resultsArtifact) {
-      var _semActHanlder = this;
+      const _semActHanlder = this;
       return semActs.reduce(function (ret, semAct) {
         if (ret && semAct.name in _semActHanlder.handlers) {
-          var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
-          var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
-          var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
+          const code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
+          const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
+          const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
           ret = ret && _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
           if (!existing && Object.keys(extensionStorage).length > 0) {
             if (!("extensions" in resultsArtifact))
@@ -891,7 +892,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
   }
 
   function _compileExpression (expr, schema) {
-    var repeated, container;
+    let repeated, container;
 
     /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
        expr 1 1 => expr
@@ -910,7 +911,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 
       if (min === 1 && max === 1) { return expr; }
 
-      var opts = max === UNBOUNDED ?
+      const opts = max === UNBOUNDED ?
         new KleeneStar(expr) :
         _seq(max - min).reduce(function (ret, elt, ord) {
           return ord === 0 ?
@@ -918,7 +919,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
             new Choice([new EachOf([expr, ret]), new Epsilon]);
         }, undefined);
 
-      var reqd = min !== 0 ?
+      const reqd = min !== 0 ?
         new EachOf(_seq(min).map(function (ret) {
           return expr; // @@ something with ret
         }).concat(opts)) : opts;
@@ -927,11 +928,11 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 
     if (expr.type === "TripleConstraint") {
       // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
-      var valueExpr = "valueExprRef" in expr ?
+      const valueExpr = "valueExprRef" in expr ?
         schema.valueExprDefns[expr.valueExprRef] :
         expr.valueExpr;
-      var ordinal = tripleConstraints.push(expr)-1;
-      var tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
+      const ordinal = tripleConstraints.push(expr)-1;
+      const tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
       repeated = _repeat(tp, expr.min, expr.max);
       return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
     }
@@ -953,7 +954,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
     }
 
     else if (expr.type === "Inclusion") {
-      var included = schema._index.shapeExprs[expr.include].expression;
+      const included = schema._index.shapeExprs[expr.include].expression;
       return _compileExpression(included, schema);
     }
 
@@ -965,11 +966,11 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function crossProduct(sets) {
-  var n = sets.length, carets = [], args = null;
+  const n = sets.length, carets = [], args = null;
 
   function init() {
     args = [];
-    for (var i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
       carets[i] = 0;
       args[i] = sets[i][0];
     }
@@ -985,7 +986,7 @@ function crossProduct(sets) {
       init();
       return true;
     }
-    var i = n - 1;
+    const i = n - 1;
     carets[i]++;
     if (carets[i] < sets[i].length) {
       args[i] = sets[i][carets[i]];
@@ -1018,7 +1019,7 @@ function crossProduct(sets) {
 /* N3jsTripleToString - simple toString function to make N3.js's triples
  * printable.
  */
-var N3jsTripleToString = function () {
+const N3jsTripleToString = function () {
   function fmt (n) {
     return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
@@ -1051,7 +1052,7 @@ function indexNeighborhood (triples) {
   return {
     triples: triples,
     byPredicate: triples.reduce(function (ret, t) {
-      var p = t.predicate;
+      const p = t.predicate;
       if (!(p in ret))
         ret[p] = [];
       ret[p].push(t);
@@ -1074,9 +1075,9 @@ function indexNeighborhood (triples) {
 function bySubject (t1, t2) {
   // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
   //   return t1.predicate > t2.predicate;
-  var l = t1.subject, r = t2.subject;
-  var lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
-  var rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
+  const l = t1.subject, r = t2.subject;
+  const lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
+  const rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
   return lprec === rprec ? l > r : lprec > rprec;
 }
 
@@ -1085,9 +1086,9 @@ function bySubject (t1, t2) {
 function byObject (t1, t2) {
   // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
   //   return t1.predicate > t2.predicate;
-  var l = t1.object, r = t2.object;
-  var lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
-  var rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
+  const l = t1.object, r = t2.object;
+  const lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
+  const rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
   return lprec === rprec ? l > r : lprec > rprec;
 }
 
@@ -1114,22 +1115,21 @@ function expect (o, p, v) {
 function noop () {  }
 
 function runtimeError () {
-  var errorStr = Array.prototype.join.call(arguments, "");
-  var e = new Error("Runtime error: " + errorStr);
+  const errorStr = Array.prototype.join.call(arguments, "");
+  const e = new Error("Runtime error: " + errorStr);
   Error.captureStackTrace(e, runtimeError);
   throw e;
 }
+
+  return { // node environment
+    construct: ShExMaterializer_constructor,
+    options: InterfaceOptions
+  };
+}
+
 
 // ## Exports
 
 // Export the `ShExMaterializer` class as a whole.
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = { // node environment
-    construct: ShExMaterializer_constructor,
-    options: InterfaceOptions
-  };
-else
-  ShExMaterializer =  { // browser environment
-    construct: ShExMaterializer_constructor,
-    options: InterfaceOptions
-  };;
+  module.exports = ShExMapMaterializerCjsModule;
