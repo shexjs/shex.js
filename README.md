@@ -139,7 +139,7 @@ GET(data, function (b) {
     if (error) {
       throw Error("error parsing " + data + ": " + error);
     } else if (triple) {
-      db.addTriple(triple)
+      db.addQuad(triple)
     } else {
       Triples = db;
       validateWhenEverythingsLoaded();
