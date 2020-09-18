@@ -73,7 +73,7 @@ describe('Invoking SemActs', function () {
     // Parse ShapeMap and validate.
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
-    const res = validator.validate(ShExUtil.makeN3DB(data), sm)
+    const res = validator.validate(ShExUtil.rdfjsDB(data), sm)
 
     // Test results
     const blurb = test.shexPath
