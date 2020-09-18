@@ -1,7 +1,7 @@
 if: tag IS blank
 sudo: false
-
 language: node_js
+
 env:
   - CLI_TIMEOUT=10000
 node_js:
@@ -9,7 +9,7 @@ node_js:
   - "lts/*"
   - "node"
 before_script:
-  - git clone --depth=50 --branch=master https://github.com/shexSpec/shexTest.git ../shexTest
+  - git clone --depth=1 --branch=master https://github.com/shexSpec/shexTest.git ../shexTest
 install: npm ci
 cache: npm
 script:
