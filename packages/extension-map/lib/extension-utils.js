@@ -2,7 +2,7 @@
  * A file with common utility functions used by the extensions.
  */
 
-var ExtensionUtils = (function () {
+const ExtensionUtils = (function () {
 
 return {
     // Collapse multiple spaces into one

@@ -2,18 +2,18 @@
 
 // shex-to-json http://tracker.example/schemas/Issue.shex
 
-var ShExUtil = require("@shexjs/util");
+const ShExUtil = require("@shexjs/util");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
 // Generate command line interface
-var CommandLineOptions = [
+const CommandLineOptions = [
     { name: "help",  alias: "h", type: Boolean },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
     { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }
 ];
-var CLI = require("command-line-args")(CommandLineOptions);
+const CLI = require("command-line-args")(CommandLineOptions);
 function abort (msg) {
   console.error(msg);
   console.error(require('command-line-usage')([
@@ -32,7 +32,7 @@ function abort (msg) {
 }
 
 // Extract user commands
-var cmds = CLI;
+const cmds = CLI;
 if (cmds.help)
     abort("");
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
