@@ -28,6 +28,8 @@ node_modules
 EGP/
 da-web/
 
+*-stats.json
+
 packages/shape-map/browser/
 packages/shex-core/browser/
 packages/shex-node/browser/
