@@ -19,7 +19,7 @@ const ShExNodeCjsModule = function (config) {
 
     return url === "-"
       ? new Promise(function (fulfill, reject) {
-        var inputChunks = [];
+        const inputChunks = [];
 
         //process.stdin.resume(); is old mode needed?
         process.stdin.setEncoding("utf8");
@@ -39,8 +39,8 @@ const ShExNodeCjsModule = function (config) {
       : url.match("^(blob:)?[a-z]+://.") && !url.match("^file://.")
       ? oldGet(url, mediaType)
       : new Promise(function (fulfill, reject) {
-        var filename = url;
-        var fileURLmatch = filename.match("^file://[^/]*(/.*)$");
+        let filename = url;
+        const fileURLmatch = filename.match("^file://[^/]*(/.*)$");
         if (fileURLmatch) {
           filename = fileURLmatch[1];
         }

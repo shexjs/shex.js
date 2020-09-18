@@ -139,7 +139,7 @@ GET(data, function (b) {
     if (error) {
       throw Error("error parsing " + data + ": " + error);
     } else if (triple) {
-      db.addTriple(triple)
+      db.addQuad(triple)
     } else {
       Triples = db;
       validateWhenEverythingsLoaded();
@@ -159,7 +159,7 @@ var node = "http://shex.io/examples/Issue1";
 
 var shex = require("shex");
 shex.Loader.load([shexc], [], [data], []).then(function (loaded) {
-    var db = shex.Util.makeN3DB(loaded.data);
+    var db = shex.Util.rdfjsDB(loaded.data);
     var validator = shex.Validator.construct(loaded.schema, { results: "api" });
     var result = validator.validate(db, [{node: node, shape: shex.Validator.start}]);
     console.log(result);

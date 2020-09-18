@@ -6,10 +6,10 @@
  * The expression will be applied and the results returned as a hash.
  */
 
-var RegexExtension = (function () {
-var extUtils = require('./extension-utils');
+const RegexExtension = (function () {
+const extUtils = require('./extension-utils');
 
-var captureGroupName = "(\\?<(?:[a-zA-Z:]+|<[^>]+>)>)";
+const captureGroupName = "(\\?<(?:[a-zA-Z:]+|<[^>]+>)>)";
 
 /**
  * Given a variable name, looks up its prefix, and  replacing the shorthand
@@ -23,17 +23,17 @@ var captureGroupName = "(\\?<(?:[a-zA-Z:]+|<[^>]+>)>)";
 function applyPrefix(varName, prefixes) {
 
   // Figure out what variable syntax we have.  It could be <varname> or <prefix:varname>
-  var matches = varName.match(/^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/);
+  const matches = varName.match(/^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/);
   if (matches === null)
     throw Error("variable \"" + varName + "\" did not match expected pattern!");
 
-  var expandedVarName;
+  let expandedVarName;
   if (matches[1]) {
     // Got <varname>
     expandedVarName = matches[1];
 
   } else if (matches[2] in prefixes) {
-    // prefixed var e.g., dem:id
+    // prefixed const e.g., dem:id
     expandedVarName = prefixes[matches[2]] + matches[3];
 
   } else
@@ -56,13 +56,13 @@ function applyPrefix(varName, prefixes) {
 function buildExpandedVars(shortPrefixedVar, expandedVars, prefixes) {
 
     // shortPrefixedVar will look like this: ?<test:string> - strip off the ?< and > chars
-    var v = extUtils.unescapeMetaChars( shortPrefixedVar.substr(2, shortPrefixedVar.length - 3) );
-    var expandedVarName = applyPrefix(v, prefixes);
+    const v = extUtils.unescapeMetaChars( shortPrefixedVar.substr(2, shortPrefixedVar.length - 3) );
+    const expandedVarName = applyPrefix(v, prefixes);
 
   if (expandedVarName in expandedVars)
         throw Error("unable to process prefixes in " + expandedVarName);
 
-    // Add this new var to the list and return the expanded var name
+    // Add this new const to the list and return the expanded const name
     expandedVars.push(expandedVarName);
 
     return expandedVarName;
@@ -83,8 +83,8 @@ function trimPattern(args) {
 function lift(mapDirective, input, prefixes, args) {
     args = trimPattern(args);
 
-    var expandedVars = [];
-    var pattern = args.replace(RegExp(captureGroupName, "g"), 
+    const expandedVars = [];
+    const pattern = args.replace(RegExp(captureGroupName, "g"), 
         function (m, varName, offset, regexStr) {
             buildExpandedVars(varName, expandedVars, prefixes);
             return "";
@@ -94,7 +94,7 @@ function lift(mapDirective, input, prefixes, args) {
         throw Error('Found no capture variable in ' + mapDirective + '!');
     }
     
-    var matches;
+    let matches;
     try {
         matches = input.match(RegExp(pattern));
     } catch (e) {
@@ -104,8 +104,8 @@ function lift(mapDirective, input, prefixes, args) {
     if (!matches) throw Error(mapDirective + ' found no match for input "' + input + '"!');
 
     // Build a hash of the regex variable name/value pairs
-    var result = {};
-    for (var i = 1; i < matches.length; ++i) {
+    const result = {};
+    for (let i = 1; i < matches.length; ++i) {
       result[expandedVars[i-1]] = matches[i];
     }
   
@@ -116,13 +116,13 @@ function lower(mapDirective, bindings, prefixes, args) {
     args = trimPattern(args);
 
     // Replace mapDirective named capture groups into bindings for those names.
-    var expandedVars = [];
-    var matched = false;
-    var string = args.replace(RegExp("\\("+captureGroupName+"[^)]+\\)", "g"),
+    const expandedVars = [];
+    let matched = false;
+    let string = args.replace(RegExp("\\("+captureGroupName+"[^)]+\\)", "g"),
         function (m, varName, offset, str) {
             matched = true;
-            var expVarName = buildExpandedVars(varName, expandedVars, prefixes);
-            var val = bindings.get(expVarName);
+            const expVarName = buildExpandedVars(varName, expandedVars, prefixes);
+            const val = bindings.get(expVarName);
             if (val === undefined) {
                 throw Error("Unable to process " + mapDirective + 
                             " because variable \"" + expVarName + "\" was not found!");

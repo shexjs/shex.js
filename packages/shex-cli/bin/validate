@@ -46,17 +46,17 @@ const ShapeMap = require("shape-map");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
-var ValidatorOptions = { diagnose: true };
-var SchemaOptions = { duplicateShape: "abort" };
-// var RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
+const ValidatorOptions = { diagnose: true };
+const SchemaOptions = { duplicateShape: "abort" };
+// const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-//var orChoices = Object.keys(ShExValidator.options.or).join("|");
-var covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
-var dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
+//const orChoices = Object.keys(ShExValidator.options.or).join("|");
+const covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
+const dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
-var CommandLineOptions = [
+const CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean },
   { name: "quiet",     alias: "q", type: Boolean },
   { name: "query",                 type: Boolean },
@@ -90,9 +90,9 @@ var CommandLineOptions = [
 ];
 
 // Generate command line interface
-var CLI = require("command-line-args")(CommandLineOptions);
-var Argv1 = Path.relative("", process.argv[1]);
-var CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
+const CLI = require("command-line-args")(CommandLineOptions);
+const Argv1 = Path.relative("", process.argv[1]);
+const CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
 
 function abort (msg) {
   console.error(msg);
@@ -165,18 +165,18 @@ function findNodesAndValidate (loaded, parms, options) {
     return (loaded.data.getQuads(null, RDF_TYPE, label).length > 0);
   }
   function someIRInode () {
-    var triples = loaded.data.getQuads(null, null, null);
-    for (var i = 0; i < triples.length; ++i)
+    const triples = loaded.data.getQuads(null, null, null);
+    for (const i = 0; i < triples.length; ++i)
       if (N3.Util.isIRI(triples[i].subject))
         return triples[i].subject;
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
   function allNodesWithType (type) {
-    var triples = loaded.data.getQuads(null, RDF_TYPE, type);
+    const triples = loaded.data.getQuads(null, RDF_TYPE, type);
     return triples.length > 0 ? triples.map(t => t.subject) : [ShExUtil.NotSupplied];
   };
   function getQuads (s, p, o) {
-    var get = s === ShapeMap.focus ? "subject" : "object";
+    const get = s === ShapeMap.focus ? "subject" : "object";
     return loaded.data.getQuads(mine(s), mine(p), mine(o)).map(
       t => t[get]
     );
@@ -189,21 +189,21 @@ function findNodesAndValidate (loaded, parms, options) {
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    var nodes = nodeTypeP
+    const nodes = nodeTypeP
         ? allNodesWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
 						    null, knownType, x =>  x))
         : typeof nodeP === "object" && nodeP.type === "TriplePattern"
         ? getQuads(nodeP.subject, nodeP.predicate, nodeP.object)
         : [ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
                                  MISC_NODES ? () => true : knownNode, x => x)]; // accept unknown nodes
-    var shape, shapeLabel;
+    let shape, shapeLabel;
 
     if (!shapeP && loaded.schema.start) {
       shape = loaded.schema.start;
       shapeLabel = ShExValidator.start;
       ret.shape = shapeLabel;
     } else {
-      var found = ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
+      const found = ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
 					   someShape, knownShape, unknownShape);
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + shapeP + " not defined" + optsStr(shapeP, loaded.schema.shapes));
@@ -228,9 +228,9 @@ function findNodesAndValidate (loaded, parms, options) {
 
     // console.log("runValidator ("+graph+", "+node+", "+schema+", "+shape+")");
     if (nodes[0] === undefined || (shape === undefined && !("start" in schema))) {
-      var msgs = [];
+      const msgs = [];
       if (nodes[0] === undefined) {
-        var subjectNodes = loaded.data.size < 50 ? Object.keys(loaded.data.getQuads(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
+        const subjectNodes = loaded.data.size < 50 ? Object.keys(loaded.data.getQuads(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
         msgs.push("No starting node specified" +
                   (subjectNodes.length ?
                    "; try -n with one of:\n" + subjectNodes.map(n => "  " + n + "\n").join("") :
@@ -239,7 +239,7 @@ function findNodesAndValidate (loaded, parms, options) {
       }
       // Make sure we have a start node.
       if (shape === undefined && !("start" in schema)) {
-        var schemaKeys = Object.keys(schema.shapes);
+        const schemaKeys = Object.keys(schema.shapes);
         schemaKeys.join(", ");
         msgs.push("No shape specified on command line or in shex" +
                   (schemaKeys.length < 50 ?
@@ -252,9 +252,9 @@ function findNodesAndValidate (loaded, parms, options) {
     return nodes.map(node => ({ node: node, shape: shape }));
   }
 
-  var ret = {};
+  const ret = {};
 
-  var shapeMap = "map" in parms
+  const shapeMap = "map" in parms
       ? parms.map.reduce(
         (acc, pair) => acc.concat(_makeShapeMap(pair.node, pair.shape, null)), []
       ).reduce(
@@ -265,15 +265,15 @@ function findNodesAndValidate (loaded, parms, options) {
       ).ret
       : _makeShapeMap(parms.node, parms.shape, parms["node-type"]);
   if (cmds.verbose) {
-    var tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
+    const tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
-    var w;
+    let w;
     new ShExWriter({simplifyParentheses: false }).
       writeSchema(schema, function (error, text, prefixes) {
         if (error) throw error;
         else w = text;
       });
-    var shapeIn = shape ? shape + " in" : "";
+    const shapeIn = shape ? shape + " in" : "";
     console.log("validating " + tz + " over " + loaded.data.size + " triples against " + w);
   }
 
@@ -288,7 +288,7 @@ function findNodesAndValidate (loaded, parms, options) {
         ShExUtil.getProofGraph(ret.results.solution, ret.results.graph, N3.DataFactory);
     }
     if (cmds.remainder) {
-      var remainder = new N3.Store();
+      const remainder = new N3.Store();
       remainder.addQuads(loaded.data.getQuads());
       ret.results.graph.getQuads().forEach(q => remainder.removeQuad(q));
       ret.results.graph = remainder;
@@ -297,8 +297,8 @@ function findNodesAndValidate (loaded, parms, options) {
   return ret;
 
   function optsStr (key, dict) {
-    var r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
-    var opts = Object.keys(dict).reduce(function (ret, k) {
+    const r = RegExp(key.substr(key.lastIndexOf("/")).toLowerCase(), "i");
+    const opts = Object.keys(dict).reduce(function (ret, k) {
       if (k.match(r))
         ret.push(k);
       return ret;
@@ -377,14 +377,14 @@ function queryTracker () {
        ] */
 
     loadedAndResults[0].data = valParms.endpoint
-      ? ShExUtil.makeQueryDB(valParms.endpoint, queryTracker())
-      : ShExUtil.makeN3DB(loadedAndResults[0].data);
+      ? ShExUtil.sparqlDB(valParms.endpoint, queryTracker())
+      : ShExUtil.rdfjsDB(loadedAndResults[0].data);
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
           return label in loadedAndResults[0].schema.shapes;
         }
-        var found = ShExUtil.parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
+        const found = ShExUtil.parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
                                              null, knownShape, loadedAndResults[0].schema.prefixes);
         if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
@@ -403,14 +403,14 @@ function queryTracker () {
         }
       }
 
-      var res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
+      const res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
       if (cmds["dry-run"])
         return res;
-      var passed = !("errors" in res);
-      var expectedResults = loadedAndResults[1];
+      const passed = !("errors" in res);
+      const expectedResults = loadedAndResults[1];
       // display results and return error codes
       if (expectedResults !== undefined) {
-        var match =
+        const match =
             typeof expectedResults === "boolean" && expectedResults !== !passed ||
             JSON.stringify(expectedResults) == JSON.stringify(res);
         if (!valParms.quiet)
@@ -419,7 +419,7 @@ function queryTracker () {
         return Promise.resolve(match ? 0 : 3);
       } else {
         if (res.graph) {
-          var wr = new N3.Writer();
+          const wr = new N3.Writer();
           wr.addQuads(res.graph.getQuads());
           wr.end((error, results) => {
             if (error)
@@ -449,7 +449,7 @@ function queryTracker () {
 
 function rdflib_termToLex (node, resolver) {
   if (typeof node === "object") {
-    var ret = node.value
+    const ret = node.value
         .replace(/"/g, "\\\"")
         .replace(/\r/g, "\\r")
         .replace(/\n/g, "\\n")
@@ -477,10 +477,10 @@ function rdflib_termToLex (node, resolver) {
 }
 
 // Extract user commands
-var arg0 = process.argv[1];
+const arg0 = process.argv[1];
 function getInvocation (parms) {
   function shortenFile (u) {
-    var m = u.match(/file:\/\/(\/.*)$/);
+    const m = u.match(/file:\/\/(\/.*)$/);
     if (m)
       u = Path.relative(process.cwd(), m[1]);
     return "'"+u+"'";
@@ -489,7 +489,7 @@ function getInvocation (parms) {
   function jsonFileArg (u) { return u ? "-j "+shortenFile(u) : ''; }
   function dataFileArg (u) { return u ? "-d "+shortenFile(u) : ''; }
   function jsonldFileArg (u) { return u ? "-l "+shortenFile(u) : ''; }
-  var res = [Path.relative(process.cwd(), arg0),
+  const res = [Path.relative(process.cwd(), arg0),
              parms.shex.map(shexFileArg).join(' '),
              parms.json.map(jsonFileArg).join(' '),
              parms.data.map(dataFileArg).join(' '),
@@ -513,7 +513,7 @@ function getInvocation (parms) {
   return res.join(' ');
 }
 
-var cmds = (function () {
+const cmds = (function () {
   try {
     return CLI;
   } catch (e) {
@@ -534,7 +534,7 @@ if (cmds.coverage) {
   ValidatorOptions.coverage = cmds.coverage;
 }
 
-var TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "coverage", firstError: "coverage" };
+const TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "coverage", firstError: "coverage" };
 if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   loadRDFmanifest(cmds).then(function (exitCode) {
     process.on('exit', function() { process.exit(exitCode); });
@@ -569,7 +569,7 @@ function queueTests (tests, cmds) {
     }
     if ("regexModule" in test.validatorOptions)
       test.validatorOptions.regexModule = getRegexModule(cmds["regexModule"]);
-    var schemaOptions = Object.assign({}, SchemaOptions, test.schemaOptions || {});
+    const schemaOptions = Object.assign({}, SchemaOptions, test.schemaOptions || {});
     return loadSchemaAndData(test, test.validatorOptions, schemaOptions);
   })).then(function (results) {
     // exit with a 0 if all returned 0, else a failure code.
@@ -581,8 +581,8 @@ function queueTests (tests, cmds) {
 
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
-  var validator = ShExValidator.construct(schema, options);
-  var extensions = ShExNode.loadExtensions(cmds.extension);
+  const validator = ShExValidator.construct(schema, options);
+  const extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
   });
@@ -591,7 +591,7 @@ function runValidator (graph, shapeMap, schema, options) {
     return 0;
 
   // run validator
-  var res = cmds.grep
+  const res = cmds.grep
       ? grep(graph, shapeMap)
       : validator.validate(graph, shapeMap);
 
@@ -605,10 +605,10 @@ function runValidator (graph, shapeMap, schema, options) {
        ./bin/validate -x test/Map/BPFHIR.shex -d test/Map/BPFHIR.ttl -n tag:BPfhir123 -e '
        return require("@shexjs/node").load(["test/Map/BPunitsDAM.shex"], [], []).
        then(function (loaded) {
-       var db = require("@shexjs/extension-map").materializer(loaded.schema).
+       const db = require("@shexjs/extension-map").materializer(loaded.schema).
        materialize(validator.semActHandler.results["http://shex.io/extensions/Map/#"], "tag:b0").
        getQuads(null, null, null);
-       var w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
+       const w = require("n3").Writer({ prefixes: { map: "http://shex.io/extensions/Map/#" } });
        w.addTriples(db); w.end(function (error, result) { console.log(result); });
        });'
     */
@@ -622,8 +622,8 @@ function runValidator (graph, shapeMap, schema, options) {
   }
 
   function grep (graph, fixedMap) {
-    var passes = fixedMap.reduce((acc, row) => {
-      var res = validator.validate(graph, [row]);
+    const passes = fixedMap.reduce((acc, row) => {
+      const res = validator.validate(graph, [row]);
       return "errors" in res
         ? acc
         : acc.concat(res);
@@ -639,13 +639,13 @@ function runValidator (graph, shapeMap, schema, options) {
 function loadRDFmanifest (cmds) {
 
   // from a manifest supplied on the command line
-  var mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
-  var sht = "http://www.w3.org/ns/shacl/test-suite#";
+  const mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
+  const sht = "http://www.w3.org/ns/shacl/test-suite#";
   return ShExNode.load([], [], cmds["turtle-manifest"] || [], cmds["jsonld-manifest"] || [], SchemaOptions, undefined).then(function (loaded) {
 
-    var testNodes = cmds["test-name"].length ?
+    const testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
-          var pattern = RegExp(testName);
+          const pattern = RegExp(testName);
           loaded.data.getQuads(null, mf+"name", null).filter(function (triple) {
             if (N3.Util.getLiteralValue(triple.object).match(pattern))
               ret.push(triple.subject);
@@ -655,13 +655,13 @@ function loadRDFmanifest (cmds) {
         loaded.data.getQuads(null, mf+"action", null).map(function (t) {
           return t.subject;
         });
-    var tests = testNodes.map(function (subject) {
-      var action = loaded.data.getQuads(subject, mf+"action", null)[0].object;
-      var validatorOptions = Object.assign({}, ValidatorOptions);
-      var schemaOptions = Object.assign({}, SchemaOptions);
-      var traits = loaded.data.getQuads(subject, sht+"trait", null);
+    const tests = testNodes.map(function (subject) {
+      const action = loaded.data.getQuads(subject, mf+"action", null)[0].object;
+      const validatorOptions = Object.assign({}, ValidatorOptions);
+      const schemaOptions = Object.assign({}, SchemaOptions);
+      const traits = loaded.data.getQuads(subject, sht+"trait", null);
       traits.forEach(function (t) {
-        var tStr = ShExTerm.internalTerm(t.object).substr(sht.length);
+        let tStr = ShExTerm.internalTerm(t.object).substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
         if (tStr in TraitToOption)
           validatorOptions[TraitToOption[tStr]] = tStr;
@@ -677,9 +677,9 @@ function loadRDFmanifest (cmds) {
                     !(cmds[elt[0]].constructor === Array && cmds[elt[0]].length === 0)) {
                   ret[elt[0]] = cmds[elt[0]];
                 } else {
-                  var m = loaded.data.getQuads(action, sht+elt[1], null);
+                  const m = loaded.data.getQuads(action, sht+elt[1], null);
                   if (m.length > 0) {
-                    var v = ShExTerm.internalTerm(m[0].object);
+                    const v = ShExTerm.internalTerm(m[0].object);
                     ret[elt[0]] = elt[2] ? [v] : v;
                   }
                 }
@@ -708,13 +708,13 @@ function loadJSONmanifest (jsonManifests) {
   return jsonManifests.map(function (jm) {
     return ShExNode.GET(jm).then(function (p) {
       try {
-        var d = JSON.parse(p.text);
+        let d = JSON.parse(p.text);
 
         // normalize the input
         if (d.constructor !== Array) {
           if ("@graph" in d) // Extract from the JSON-LD manifest format.
             d = d["@graph"][0].entries.map(function (t) {
-              var options = Object.assign({}, ValidatorOptions);
+              const options = Object.assign({}, ValidatorOptions);
               (t.trait || []).forEach(function (tStr) {
                 tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
                 if (tStr in TraitToOption)
@@ -739,7 +739,7 @@ function loadJSONmanifest (jsonManifests) {
         if (cmds["test-name"].length) // Include only tests listed in --test-name.
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
-              var pattern = RegExp(n);
+              const pattern = RegExp(n);
               return ret || ("name" in elt && elt.name.match(pattern));
             }, false);
           });
@@ -812,7 +812,7 @@ function loadCommandLine (cmds) {
           fns.forEach(fn => {
             if (fn.endsWith(".js")) {
               try {
-                var m = require(REGEX_MODULES + fn);
+                const m = require(REGEX_MODULES + fn);
                 console.log("  --regex-module " + m.name + " -- " + m.description);
               } catch (e) {  }
             }
@@ -828,11 +828,11 @@ function loadCommandLine (cmds) {
 }
 
 function runServer (serverLoaded, serverParms, serverOptions) {
-  var match = serverParms.serve.match(/^(?:http:\/\/)?([a-zA-Z0-9.]+)(?::([0-9]+))?(\/.*)/);
+  const match = serverParms.serve.match(/^(?:http:\/\/)?([a-zA-Z0-9.]+)(?::([0-9]+))?(\/.*)/);
   if (!match)
     throw Error("server parameter expected to be a URL");
 
-  var log     = console.log,
+  const log     = console.log,
       app     = require("koa")(),
       koaBody = require("koa-body"),
       port    = match[2] || 80,
@@ -851,7 +851,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     use(function *(next) {
       switch (this.originalUrl) {
       case srvpath:
-        var parms = {
+        const parms = {
           // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
           // untested! dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
           schemaName:undefined, schemaFile:undefined, shape:undefined,
@@ -859,7 +859,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         };
         if (this.request.method !== "POST")
           this.throw(500, "only supports POST now");
-        var body = this.request.body;
+        const body = this.request.body;
         function makeArray (key) {
           if (!(key in body.files))
             return [];
@@ -870,9 +870,9 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                    return pair.path; // should ShExNode accept [.name, .path]?
                  });
         }
-        var schemaFiles = makeArray("schema");
+        const schemaFiles = makeArray("schema");
         parms.shape      = body.fields.shape; // untested! body.fields.shape
-        var dataFiles = makeArray("data");
+        const dataFiles = makeArray("data");
         parms.node      = body.fields.node; // untested! body.fields.node
         parms["node-type"] = body.fields.nodeType;
 
@@ -881,26 +881,26 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           if (parms[k] === undefined && k in serverParms)
             parms[k] = serverParms[k];
         });
-        var options = serverOptions;
+        const options = serverOptions;
         if ("regex-module" in parms)
           options = extend(options, {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
           });
 
-        var httpResponse = this;
+        const httpResponse = this;
         yield ShExNode.
           load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
           then(function (loaded) {
             // add server-loaded (meta)data
             serverLoaded.data.getQuads().forEach(t => { loaded.data.addTriple(t); });
-            loaded.data = ShExUtil.makeN3DB(loaded.data);
+            loaded.data = ShExUtil.rdfjsDB(loaded.data);
             loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
 
             // add server-loaded schema
             ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
             loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
 
-            var result = findNodesAndValidate(loaded, parms, options);
+            const result = findNodesAndValidate(loaded, parms, options);
             if ("results" in result)
               result = result.results; // otherwise just report the invoked parms.
             if (body.fields.output === "html") {
@@ -916,8 +916,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             dataFiles.forEach(path => { fs.unlink(path); });
             return next;
           }).catch(e => {
-            var stack = typeof e === "object" && "stack" in e ? e.stack : e;
-            var msg = typeof e === "object" && "message" in e ? e.message : e;
+            const stack = typeof e === "object" && "stack" in e ? e.stack : e;
+            const msg = typeof e === "object" && "message" in e ? e.message : e;
             console.warn(stack);
             httpResponse.body = {
               type: "ParsingError",
@@ -966,8 +966,8 @@ function getRegexModule (module) {
 
 function extend (base) {
   if (!base) base = {};
-  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (var name in arg)
+  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+    for (let name in arg)
       base[name] = arg[name];
   return base;
 }
