@@ -17318,7 +17318,7 @@ const ShExApiCjsModule = function (config) {
                parseTurtle, returns.data, dataOptions),
       loadList(jsonld, returns.dataMeta, "application/ld+json",
                parseJSONLD, returns.data, dataOptions)
-    ].flat())
+    ].reduce((acc, l) => acc.concat(l), [])) // .flat() in node > 8.x
     return allLoaded.all(promises).then(function (resources) {
       if (returns.schemaMeta.length > 0)
         ShExUtil.isWellDefined(returns.schema)
