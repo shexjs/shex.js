@@ -249,7 +249,7 @@ function makeSchemaCache (selection) {
         {}
       );
       var schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot, ShEx.Validator.start); // start shape
+      var val = graphParser.validate(ShEx.Util.rdfjsDB(graph), schemaRoot, ShEx.Validator.start); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -264,8 +264,6 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
-  // ret.endpoint = null,
-  // ret.query = null,
   ret.parse = function (text, base) {
     var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
@@ -293,11 +291,9 @@ function makeTurtleCache (selection) {
       delete ret.endpoint; // make sure it's not set
       $("#slurpSpan").remove();
     }
-    if (ret.endpoint) {
-      return ShEx.Util.makeQueryDB(ret.endpoint,
-                                   $("#slurp").is(":checked") ? queryTracker() : null);
-    }
-    return ShEx.Util.makeN3DB(parseTurtle(text, ret.meta, base));
+    return ret.endpoint
+      ? ShEx.Util.sparqlDB(ret.endpoint, $("#slurp").is(":checked") ? queryTracker() : null)
+      : ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
   };
   ret.getItems = function () {
     var m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
@@ -834,8 +830,8 @@ function callValidator (done) {
       if ($("#slurp").is(":checked")) {
         // .set() sets inputData's dirty bit.
         Caches.inputData.set("# slurping from <" + Caches.inputData.endpoint + ">...\n\n\n");
-        Caches.inputData.slurpWriter = new ShEx.N3.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
-        inputData = ShEx.Util.makeQueryDB(Caches.inputData.endpoint, queryTracker());
+        Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
+        inputData = ShEx.Util.sparqlDB(Caches.inputData.endpoint, queryTracker());
       }
 
       currentAction = "creating validator";
@@ -1476,7 +1472,7 @@ function queryTracker () {
     end: function (quads, time) {
       noScrollAppend($("#inputData textarea"), " " + quads.length + " triples (" + time + " μs)\n");
       Caches.inputData.slurpWriter.addQuads(quads.map(
-        t => ShEx.ShExTerm.externalTriple(t, ShEx.N3.DataFactory)
+        t => ShEx.ShExTerm.externalTriple(t, RdfJs.DataFactory)
       ));
     }
   }
