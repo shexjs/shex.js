@@ -1,21 +1,23 @@
+if: tag IS blank
 sudo: false
 language: node_js
+
 env:
   - CLI_TIMEOUT=10000
 node_js:
   - "8"
   - "lts/*"
-  - "stable"
+  - "node"
 before_script:
-  - git clone --depth=50 --branch=LanguageTag-validate https://github.com/shexSpec/shexTest.git ../shexTest
+  - git clone --depth=1 --branch=LanguageTag-validate https://github.com/shexSpec/shexTest.git ../shexTest
+install: npm ci
+cache: npm
 script:
   - npm run test-all
-cache:
-  directories:
-    - node_modules
-    - ~/.npm
+
 notifications:
   email: false
-branches:
-  except:
-    - /^v\d+\.\d+\.\d+$/
+
+# branches:
+#   except:
+#     - /^v\d+\.\d+\.\d+$/
