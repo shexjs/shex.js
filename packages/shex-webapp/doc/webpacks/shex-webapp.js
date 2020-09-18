@@ -2051,7 +2051,7 @@ const ShExUtil = {
     });
     function extensions (obj) {
       const list = [];
-      const crushed = {};
+      let crushed = {};
       function crush (elt) {
         if (crushed === null)
           return elt;
