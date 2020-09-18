@@ -5394,7 +5394,7 @@ const ShExUtil = {
 */
   },
 
-  makeN3DB: function (db, queryTracker) {
+  rdfjsDB: function (db, queryTracker) {
 
     function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
     function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
@@ -5445,102 +5445,6 @@ const ShExUtil = {
       //   return quads;
       // }
     }
-  },
-  /** emulate N3Store().getQuads() with additional parm.
-   */
-  makeQueryDB: function (endpoint, queryTracker) {
-    const _ShExUtil = this;
-
-    function getQuads(s, p, o, g) {
-      return mapQueryToTriples("SELECT " + [
-        (s?"":"?s"), (p?"":"?p"), (o?"":"?o"),
-        "{",
-        (s?s:"?s"), (p?p:"?s"), (o?o:"?s"),
-        "}"].join(" "), s, o)
-    }
-
-    function mapQueryToTriples (query, s, o) {
-      const rows = _ShExUtil.executeQuery(query, endpoint);
-      const triples = rows.map(row =>  {
-        return s ? {
-          subject: s,
-          predicate: row[0],
-          object: row[1]
-        } : {
-          subject: row[0],
-          predicate: row[1],
-          object: o
-        };
-      });
-      return triples;
-    }
-
-    function getTripleConstraints (tripleExpr) {
-      const visitor = _ShExUtil.Visitor();
-      const ret = {
-        out: [],
-        inc: []
-      };
-      visitor.visitTripleConstraint = function (expr) {
-        ret[expr.inverse ? "inc" : "out"].push(expr);
-        return expr;
-      };
-
-      if (tripleExpr)
-        visitor.visitExpression(tripleExpr);
-      return ret;
-    }
-
-    function getNeighborhood (point, shapeLabel, shape) {
-      // I'm guessing a local DB doesn't benefit from shape optimization.
-      let startTime;
-      const tcs = getTripleConstraints(shape.expression);
-      const pz = tcs.out.map(t => t.predicate);
-      pz = pz.filter((p, idx) => pz.lastIndexOf(p) === idx);
-      if (queryTracker) {
-        startTime = new Date();
-        queryTracker.start(false, point, shapeLabel);
-      }
-      const outgoing = (tcs.out.length > 0 || shape.closed)
-          ? mapQueryToTriples(
-            shape.closed
-              ? `SELECT ?p ?o { <${point}> ?p ?o }`
-              : "SELECT ?p ?o {\n" +
-              pz.map(
-                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
-              ).join(" UNION\n") +
-              "\n}",
-            point, null
-          )
-          : [];
-      if (queryTracker) {
-        const time = new Date();
-        queryTracker.end(outgoing, time - startTime);
-        startTime = time;
-      }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
-      }
-      const incoming = tcs.inc.length > 0
-          ? mapQueryToTriples(`SELECT ?s ?p { ?s ?p <${point}> }`, null, point)
-          : []
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
-      }
-      return  {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      getNeighborhood: getNeighborhood,
-      getQuads: getQuads,
-      getSubjects: function () { return ["!Query DB can't index subjects"] },
-      getPredicates: function () { return ["!Query DB can't index predicates"] },
-      getObjects: function () { return ["!Query DB can't index objects"] },
-      get size() { return undefined; }
-    };
   },
 
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
