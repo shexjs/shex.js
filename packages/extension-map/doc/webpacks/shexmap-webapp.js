@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 42);
+/******/ 	return __webpack_require__(__webpack_require__.s = 43);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1151,9 +1151,9 @@ var objectKeys = Object.keys || function (obj) {
 
 module.exports = Duplex;
 
-var Readable = __webpack_require__(34);
+var Readable = __webpack_require__(35);
 
-var Writable = __webpack_require__(38);
+var Writable = __webpack_require__(39);
 
 __webpack_require__(5)(Duplex, Readable);
 
@@ -1255,15 +1255,15 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(34);
+exports = module.exports = __webpack_require__(35);
 exports.Stream = exports;
 exports.Readable = exports;
-exports.Writable = __webpack_require__(38);
+exports.Writable = __webpack_require__(39);
 exports.Duplex = __webpack_require__(7);
-exports.Transform = __webpack_require__(40);
-exports.PassThrough = __webpack_require__(72);
+exports.Transform = __webpack_require__(41);
+exports.PassThrough = __webpack_require__(71);
 exports.finished = __webpack_require__(18);
-exports.pipeline = __webpack_require__(73);
+exports.pipeline = __webpack_require__(72);
 
 
 /***/ }),
@@ -1307,9 +1307,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(62)
-var ieee754 = __webpack_require__(63)
-var isArray = __webpack_require__(64)
+var base64 = __webpack_require__(61)
+var ieee754 = __webpack_require__(62)
+var isArray = __webpack_require__(63)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3098,7 +3098,7 @@ function isnan (val) {
 const ShExUtilCjsModule = (function () {
 const ShExTerm = __webpack_require__(4);
 const Visitor = __webpack_require__(21)
-const Hierarchy = __webpack_require__(46)
+const Hierarchy = __webpack_require__(22)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -4724,7 +4724,7 @@ const ShExUtil = {
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      const w = __webpack_require__(22)();
+      const w = __webpack_require__(23)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
       w.end((err, res) => {
@@ -5205,7 +5205,7 @@ if (true)
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return N3Lexer; });
 /* harmony import */ var _IRIs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41);
+/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(42);
 /* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(queue_microtask__WEBPACK_IMPORTED_MODULE_1__);
 // **N3Lexer** tokenizes N3 documents.
 
@@ -5708,7 +5708,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(53)
+var expand = __webpack_require__(52)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -7646,7 +7646,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(57);
+exports.isBuffer = __webpack_require__(56);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -7690,7 +7690,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(58);
+exports.inherits = __webpack_require__(57);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -8418,6 +8418,85 @@ if (true)
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var HierarchyClosure = (function () {
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
+   */
+  function makeHierarchy () {
+    let roots = {}
+    let parents = {}
+    let children = {}
+    let holders = {}
+    return {
+      add: function (parent, child) {
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
+          return
+        }
+        let target = parent in holders
+          ? getNode(parent)
+          : (roots[parent] = getNode(parent)) // add new parents to roots.
+        let value = getNode(child)
+
+        target[child] = value
+        delete roots[child]
+
+        // // maintain hierarchy (direct and confusing)
+        // children[parent] = children[parent].concat(child, children[child])
+        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
+        // parents[child] = parents[child].concat(parent, parents[parent])
+        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
+
+        // maintain hierarchy (generic and confusing)
+        updateClosure(children, parents, child, parent)
+        updateClosure(parents, children, parent, child)
+        function updateClosure (container, members, near, far) {
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
+          container[near].forEach(
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
+          )
+        }
+
+        function getNode (node) {
+          if (!(node in holders)) {
+            parents[node] = []
+            children[node] = []
+            holders[node] = {}
+          }
+          return holders[node]
+        }
+      },
+      roots: roots,
+      parents: parents,
+      children: children
+    }
+  }
+
+  function depthFirst (n, f, p) {
+    return Object.keys(n).reduce((ret, k) => {
+      return ret.concat(
+        depthFirst(n[k], f, k),
+        p ? f(k, p) : []) // outer invocation can have null parent
+    }, [])
+  }
+
+  return { create: makeHierarchy, depthFirst }
+})()
+
+/* istanbul ignore next */
+if (true) {
+  module.exports = HierarchyClosure
+}
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
 // **ShExWriter** writes ShEx documents.
 
 const ShExWriterCjsModule = (function () {
@@ -9075,12 +9154,12 @@ if (true)
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = __webpack_require__(51).Parser;
+const ShExJison = __webpack_require__(50).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 var prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -9167,7 +9246,7 @@ if (true)
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -9213,26 +9292,26 @@ if (true)
 module.exports = glob
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(25)
+var rp = __webpack_require__(26)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(5)
 var EE = __webpack_require__(15).EventEmitter
 var path = __webpack_require__(2)
-var assert = __webpack_require__(26)
+var assert = __webpack_require__(27)
 var isAbsolute = __webpack_require__(17)
-var globSync = __webpack_require__(59)
-var common = __webpack_require__(27)
+var globSync = __webpack_require__(58)
+var common = __webpack_require__(28)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(60)
+var inflight = __webpack_require__(59)
 var util = __webpack_require__(16)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(29)
+var once = __webpack_require__(30)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -9964,7 +10043,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -9980,7 +10059,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(52)
+var old = __webpack_require__(51)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -10037,13 +10116,13 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var objectAssign = __webpack_require__(56);
+var objectAssign = __webpack_require__(55);
 
 // compare and isBuffer taken from https://github.com/feross/buffer/blob/680e9e5e488f22aac27599a57dc844a6315928dd/index.js
 // original notice:
@@ -10551,7 +10630,7 @@ var objectKeys = Object.keys || function (obj) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -10798,7 +10877,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -10837,10 +10916,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(28)
+var wrappy = __webpack_require__(29)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -10885,7 +10964,7 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10897,9 +10976,9 @@ function onceStrict (fn) {
 
 const ShExMapCjsModule = function (config) {
 
-const extensions = __webpack_require__(31);
-const N3 = __webpack_require__(76);
-const materializer = __webpack_require__(74)(config);
+const extensions = __webpack_require__(32);
+const N3 = __webpack_require__(75);
+const materializer = __webpack_require__(73)(config);
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -11319,10 +11398,10 @@ return {
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint
   extension: {
-    hashmap: __webpack_require__(32),
-    regex: __webpack_require__(33)
+    hashmap: __webpack_require__(33),
+    regex: __webpack_require__(34)
   },
-  extensions: __webpack_require__(31),
+  extensions: __webpack_require__(32),
   utils: __webpack_require__(12),
 };
 
@@ -11333,7 +11412,7 @@ if (true)
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11344,8 +11423,8 @@ if (true)
 const Extensions = (function () {
 
 // Known extensions
-const hashmap_extension = __webpack_require__(32);
-const regex_extension = __webpack_require__(33);
+const hashmap_extension = __webpack_require__(33);
+const regex_extension = __webpack_require__(34);
 
 const utils = __webpack_require__(12);
 
@@ -11418,7 +11497,7 @@ if (true)
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11557,7 +11636,7 @@ if (true)
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11713,7 +11792,7 @@ if (true)
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11758,7 +11837,7 @@ var EElistenerCount = function EElistenerCount(emitter, type) {
 /*<replacement>*/
 
 
-var Stream = __webpack_require__(35);
+var Stream = __webpack_require__(36);
 /*</replacement>*/
 
 
@@ -11776,7 +11855,7 @@ function _isUint8Array(obj) {
 /*<replacement>*/
 
 
-var debugUtil = __webpack_require__(65);
+var debugUtil = __webpack_require__(64);
 
 var debug;
 
@@ -11788,11 +11867,11 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 
-var BufferList = __webpack_require__(66);
+var BufferList = __webpack_require__(65);
 
-var destroyImpl = __webpack_require__(36);
+var destroyImpl = __webpack_require__(37);
 
-var _require = __webpack_require__(37),
+var _require = __webpack_require__(38),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(6).codes,
@@ -11879,7 +11958,7 @@ function ReadableState(options, stream, isDuplex) {
   this.encoding = null;
 
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(39).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(40).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -12041,7 +12120,7 @@ Readable.prototype.isPaused = function () {
 
 
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(39).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(40).StringDecoder;
   var decoder = new StringDecoder(enc);
   this._readableState.decoder = decoder; // If setEncoding(null), decoder.encoding equals utf8
 
@@ -12725,7 +12804,7 @@ Readable.prototype.wrap = function (stream) {
 if (typeof Symbol === 'function') {
   Readable.prototype[Symbol.asyncIterator] = function () {
     if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __webpack_require__(70);
+      createReadableStreamAsyncIterator = __webpack_require__(69);
     }
 
     return createReadableStreamAsyncIterator(this);
@@ -12827,7 +12906,7 @@ function endReadableNT(state, stream) {
 if (typeof Symbol === 'function') {
   Readable.from = function (iterable, opts) {
     if (from === undefined) {
-      from = __webpack_require__(71);
+      from = __webpack_require__(70);
     }
 
     return from(Readable, iterable, opts);
@@ -12844,14 +12923,14 @@ function indexOf(xs, x) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(15).EventEmitter;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12963,7 +13042,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12996,7 +13075,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13059,13 +13138,13 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: __webpack_require__(68)
+  deprecate: __webpack_require__(67)
 };
 /*</replacement>*/
 
 /*<replacement>*/
 
-var Stream = __webpack_require__(35);
+var Stream = __webpack_require__(36);
 /*</replacement>*/
 
 
@@ -13081,9 +13160,9 @@ function _isUint8Array(obj) {
   return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 }
 
-var destroyImpl = __webpack_require__(36);
+var destroyImpl = __webpack_require__(37);
 
-var _require = __webpack_require__(37),
+var _require = __webpack_require__(38),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(6).codes,
@@ -13700,7 +13779,7 @@ Writable.prototype._destroy = function (err, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13729,7 +13808,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(69).Buffer;
+var Buffer = __webpack_require__(68).Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -14002,7 +14081,7 @@ function simpleEnd(buf) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14209,7 +14288,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports) {
 
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -14224,22 +14303,22 @@ module.exports = typeof queueMicrotask === 'function'
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  const shapeMap = __webpack_require__(43)
+  const shapeMap = __webpack_require__(44)
   return Object.assign({}, {
     ShExTerm:       __webpack_require__(4),
     Util:           __webpack_require__(11),
     Validator:      __webpack_require__(47),
-    Writer:         __webpack_require__(22),
-    Api:            __webpack_require__(50),
-    Parser:         __webpack_require__(23),
+    Writer:         __webpack_require__(23),
+    Api:            __webpack_require__(49),
+    Parser:         __webpack_require__(24),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
 
-    Map:            __webpack_require__(30),
+    Map:            __webpack_require__(31),
   })
 })()
 
@@ -14248,7 +14327,7 @@ if (true)
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -14261,7 +14340,7 @@ const ShapeMapCjsModule = (function () {
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(44)
+  symbols.Parser = __webpack_require__(45)
   return symbols
 })();
 
@@ -14271,14 +14350,14 @@ if (true)
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(45).Parser; // node environment
+  ShapeMapJison = __webpack_require__(46).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -14339,7 +14418,7 @@ if (true)
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.16 */
@@ -15530,85 +15609,6 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
-/* 46 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var HierarchyClosure = (function () {
-  /** create a hierarchy object
-   * This object keeps track of direct children and parents as well as transitive children and parents.
-   */
-  function makeHierarchy () {
-    let roots = {}
-    let parents = {}
-    let children = {}
-    let holders = {}
-    return {
-      add: function (parent, child) {
-        if (// test if this is a novel entry.
-          (parent in children && children[parent].indexOf(child) !== -1)) {
-          return
-        }
-        let target = parent in holders
-          ? getNode(parent)
-          : (roots[parent] = getNode(parent)) // add new parents to roots.
-        let value = getNode(child)
-
-        target[child] = value
-        delete roots[child]
-
-        // // maintain hierarchy (direct and confusing)
-        // children[parent] = children[parent].concat(child, children[child])
-        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
-        // parents[child] = parents[child].concat(parent, parents[parent])
-        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
-
-        // maintain hierarchy (generic and confusing)
-        updateClosure(children, parents, child, parent)
-        updateClosure(parents, children, parent, child)
-        function updateClosure (container, members, near, far) {
-          container[far] = container[far].filter(
-            e => /* e !== near && */ container[near].indexOf(e) === -1
-          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
-          container[near].forEach(
-            n => (members[n] = members[n].filter(
-              e => e !== far && members[far].indexOf(e) === -1
-            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
-          )
-        }
-
-        function getNode (node) {
-          if (!(node in holders)) {
-            parents[node] = []
-            children[node] = []
-            holders[node] = {}
-          }
-          return holders[node]
-        }
-      },
-      roots: roots,
-      parents: parents,
-      children: children
-    }
-  }
-
-  function depthFirst (n, f, p) {
-    return Object.keys(n).reduce((ret, k) => {
-      return ret.concat(
-        depthFirst(n[k], f, k),
-        p ? f(k, p) : []) // outer invocation can have null parent
-    }, [])
-  }
-
-  return { create: makeHierarchy, depthFirst }
-})()
-
-/* istanbul ignore next */
-if (true) {
-  module.exports = HierarchyClosure
-}
-
-
-/***/ }),
 /* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -15640,7 +15640,7 @@ var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedErr
 var ShExTerm = __webpack_require__(4);
 let ShExVisitor = __webpack_require__(21);
 let ShExUtil = __webpack_require__(11);
-const Hierarchy = __webpack_require__(48)
+const Hierarchy = __webpack_require__(22)
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -15852,7 +15852,7 @@ function ShExValidator_constructor(schema, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || __webpack_require__(49);
+  var regexModule = this.options.regexModule || __webpack_require__(48);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -17079,85 +17079,6 @@ if (true)
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var HierarchyClosure = (function () {
-  /** create a hierarchy object
-   * This object keeps track of direct children and parents as well as transitive children and parents.
-   */
-  function makeHierarchy () {
-    let roots = {}
-    let parents = {}
-    let children = {}
-    let holders = {}
-    return {
-      add: function (parent, child) {
-        if (// test if this is a novel entry.
-          (parent in children && children[parent].indexOf(child) !== -1)) {
-          return
-        }
-        let target = parent in holders
-          ? getNode(parent)
-          : (roots[parent] = getNode(parent)) // add new parents to roots.
-        let value = getNode(child)
-
-        target[child] = value
-        delete roots[child]
-
-        // // maintain hierarchy (direct and confusing)
-        // children[parent] = children[parent].concat(child, children[child])
-        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
-        // parents[child] = parents[child].concat(parent, parents[parent])
-        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
-
-        // maintain hierarchy (generic and confusing)
-        updateClosure(children, parents, child, parent)
-        updateClosure(parents, children, parent, child)
-        function updateClosure (container, members, near, far) {
-          container[far] = container[far].filter(
-            e => /* e !== near && */ container[near].indexOf(e) === -1
-          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
-          container[near].forEach(
-            n => (members[n] = members[n].filter(
-              e => e !== far && members[far].indexOf(e) === -1
-            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
-          )
-        }
-
-        function getNode (node) {
-          if (!(node in holders)) {
-            parents[node] = []
-            children[node] = []
-            holders[node] = {}
-          }
-          return holders[node]
-        }
-      },
-      roots: roots,
-      parents: parents,
-      children: children
-    }
-  }
-
-  function depthFirst (n, f, p) {
-    return Object.keys(n).reduce((ret, k) => {
-      return ret.concat(
-        depthFirst(n[k], f, k),
-        p ? f(k, p) : []) // outer invocation can have null parent
-    }, [])
-  }
-
-  return { create: makeHierarchy, depthFirst }
-})()
-
-/* istanbul ignore next */
-if (true) {
-  module.exports = HierarchyClosure
-}
-
-
-/***/ }),
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = __webpack_require__(4);
 const UNBOUNDED = -1;
@@ -17610,7 +17531,7 @@ if (true)
 
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
@@ -17618,7 +17539,7 @@ if (true)
 const ShExApiCjsModule = function (config) {
 
   const ShExUtil = __webpack_require__(11);
-  const ShExParser = __webpack_require__(23);
+  const ShExParser = __webpack_require__(24);
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
@@ -17756,7 +17677,7 @@ const ShExApiCjsModule = function (config) {
                parseTurtle, returns.data, dataOptions),
       loadList(jsonld, returns.dataMeta, "application/ld+json",
                parseJSONLD, returns.data, dataOptions)
-    ].flat())
+    ].reduce((acc, l) => acc.concat(l), [])) // .flat() in node > 8.x
     return allLoaded.all(promises).then(function (resources) {
       if (returns.schemaMeta.length > 0)
         ShExUtil.isWellDefined(returns.schema)
@@ -17920,11 +17841,11 @@ const ShExApiCjsModule = function (config) {
   function LoadExtensions (globs) {
     return globs.reduce(
       (list, glob) =>
-        list.concat(__webpack_require__(24).glob.sync(glob))
+        list.concat(__webpack_require__(25).glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  const t = __webpack_require__(61)(path)
+	  const t = __webpack_require__(60)(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
@@ -17941,7 +17862,7 @@ if (true)
 
 
 /***/ }),
-/* 51 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -19806,7 +19727,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
-/* 52 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -20116,11 +20037,11 @@ exports.realpath = function realpath(p, cache, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 53 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(54);
-var balanced = __webpack_require__(55);
+var concatMap = __webpack_require__(53);
+var balanced = __webpack_require__(54);
 
 module.exports = expandTop;
 
@@ -20323,7 +20244,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 54 */
+/* 53 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -20342,7 +20263,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 55 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20408,7 +20329,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 56 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20505,7 +20426,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 57 */
+/* 56 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -20516,7 +20437,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 58 */
+/* 57 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -20545,22 +20466,22 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 59 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(25)
+var rp = __webpack_require__(26)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(24).Glob
+var Glob = __webpack_require__(25).Glob
 var util = __webpack_require__(16)
 var path = __webpack_require__(2)
-var assert = __webpack_require__(26)
+var assert = __webpack_require__(27)
 var isAbsolute = __webpack_require__(17)
-var common = __webpack_require__(27)
+var common = __webpack_require__(28)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -21038,12 +20959,12 @@ GlobSync.prototype._makeAbs = function (f) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 60 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(28)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(29)
 var reqs = Object.create(null)
-var once = __webpack_require__(29)
+var once = __webpack_require__(30)
 
 module.exports = wrappy(inflight)
 
@@ -21099,7 +21020,7 @@ function slice (args) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 61 */
+/* 60 */
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -21110,10 +21031,10 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 61;
+webpackEmptyContext.id = 60;
 
 /***/ }),
-/* 62 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21272,7 +21193,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 63 */
+/* 62 */
 /***/ (function(module, exports) {
 
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -21362,7 +21283,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 64 */
+/* 63 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -21373,13 +21294,13 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 65 */
+/* 64 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 66 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21400,7 +21321,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var _require = __webpack_require__(10),
     Buffer = _require.Buffer;
 
-var _require2 = __webpack_require__(67),
+var _require2 = __webpack_require__(66),
     inspect = _require2.inspect;
 
 var custom = inspect && inspect.custom || 'inspect';
@@ -21595,13 +21516,13 @@ function () {
 }();
 
 /***/ }),
-/* 67 */
+/* 66 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 68 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -21675,7 +21596,7 @@ function config (name) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 69 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* eslint-disable node/no-deprecated-api */
@@ -21743,7 +21664,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 /***/ }),
-/* 70 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21957,7 +21878,7 @@ module.exports = createReadableStreamAsyncIterator;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 71 */
+/* 70 */
 /***/ (function(module, exports) {
 
 module.exports = function () {
@@ -21966,7 +21887,7 @@ module.exports = function () {
 
 
 /***/ }),
-/* 72 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21997,7 +21918,7 @@ module.exports = function () {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(40);
+var Transform = __webpack_require__(41);
 
 __webpack_require__(5)(PassThrough, Transform);
 
@@ -22011,7 +21932,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 73 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22114,7 +22035,7 @@ function pipeline() {
 module.exports = pipeline;
 
 /***/ }),
-/* 74 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/* ShExMaterializer - javascript module to validate a graph with respect to Shape Expressions
@@ -22146,7 +22067,7 @@ const VERBOSE = "VERBOSE" in process.env;
 const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 const ShExTerm = __webpack_require__(4);
-const ShExMap = __webpack_require__(30);
+const ShExMap = __webpack_require__(31);
 
 const UNBOUNDED = -1;
 
@@ -22329,7 +22250,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(75);
+  const regexModule = this.options.regexModule || __webpack_require__(74);
 
   let blankNodeCount = 0;
   const nextBNode = options.nextBNode || function () {
@@ -23254,7 +23175,7 @@ if (true)
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 75 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const NFAXVal1ErrMaterializer = (function () {
@@ -23789,7 +23710,7 @@ if (true)
 
 
 /***/ }),
-/* 76 */
+/* 75 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
