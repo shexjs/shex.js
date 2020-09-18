@@ -914,7 +914,6 @@ function callValidator (done) {
     var resultStr = fails ? "✗" : "✓";
     var elt = null;
 
-
     if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
         var proofStore = new RdfJs.Store();
@@ -928,6 +927,7 @@ function callValidator (done) {
         entry.graph = remainder.getQuads();
       }
     }
+
     if (entry.graph) {
       var wr = new RdfJs.Writer(Caches.inputData.meta);
       wr.addQuads(entry.graph);
