@@ -360,7 +360,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
        ] */
 
     loadedAndResults[0].data =
-      ShExUtil.makeN3DB(loadedAndResults[0].data);
+      ShExUtil.rdfjsDB(loadedAndResults[0].data);
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
@@ -875,7 +875,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           then(function (loaded) {
             // add server-loaded (meta)data
             serverLoaded.data.getQuads().forEach(t => { loaded.data.addTriple(t); });
-            loaded.data = ShExUtil.makeN3DB(loaded.data);
+            loaded.data = ShExUtil.rdfjsDB(loaded.data);
             loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
 
             // add server-loaded schema
