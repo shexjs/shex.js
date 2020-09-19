@@ -37,7 +37,7 @@ Partition-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/l
 ShExPath-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ShExPath-test.js
 	$(MOCHA) -C -R $(REPORTER) ShExPath-test.js
 
-Compilation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../packages/shex-core/lib/ShExUtil.js Compilation-test.js
+Compilation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../packages/shex-util/shex-util.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
 
 $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
@@ -46,7 +46,7 @@ $(ValidationManifest): $(join $(TESTDIR), validation/manifest.ttl) $(GENJSON)
 $(ValidationCorpus): $(GENCorpus) $(JSONSCHEMAS)
 	$(GENCorpus) $< -d $(join $(TESTDIR), schemas/) -o $@ -e # suppress output if there are errors
 
-Validation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../node_modules/@shexjs/util/lib/ShExValidator.js Validation-test.js $(ValidationManifest)
+Validation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../packages/shex-validator/shex-validator.js Validation-test.js $(ValidationManifest)
 	$(MOCHA) -C -R $(REPORTER) Validation-test.js
 
 Map-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Map-test.js

@@ -4,11 +4,11 @@ const ShExTerm = require("@shexjs/term");
 const ShExJison = require('./lib/ShExJison').Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
-var prepareParser = function (baseIRI, prefixes, schemaOptions) {
+const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
-  var prefixesCopy = {};
-  for (var prefix in prefixes || {})
+  const prefixesCopy = {};
+  for (const prefix in prefixes || {})
     prefixesCopy[prefix] = prefixes[prefix];
 
   // Create a copy of the labelResolvers
@@ -18,7 +18,7 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
 
   // Create a new parser with the given prefixes
   // (Workaround for https://github.com/zaach/jison/issues/241)
-  var parser = new ShExJison();
+  const parser = new ShExJison();
 
   function runParser () {
     // ShExJison.base = baseIRI || "";
@@ -79,9 +79,9 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
 
   function contextError (e, lexer) {
     // use the lexer's pretty-printing
-    var line = e.location.first_line;
-    var col  = e.location.first_column + 1;
-    var posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
+    const line = e.location.first_line;
+    const col  = e.location.first_column + 1;
+    const posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
     return `${baseIRI}\n line: ${line}, column: ${col}: ${e.message}${posStr}`;
   }
 }
