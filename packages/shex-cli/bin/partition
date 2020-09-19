@@ -9,14 +9,14 @@ const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({rdfjs: N3, jsonld: Jsonld});
 
 // Generate command line interface
-var CLI = require("command-line-args")([
+const CLI = require("command-line-args")([
     { name: "help",  alias: "h", type: Boolean },
     { name: "shex"    ,  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json"    ,  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "includes",  alias: "d", type: String, multiple:  true, defaultValue:   [], defaultOption:  true }
 ]);
 
-var includes = process.argv.slice(3); // which shapes to include
+const includes = process.argv.slice(3); // which shapes to include
 
 function abort (msg) {
   console.error(msg);
@@ -29,7 +29,7 @@ function abort (msg) {
 }
 
 // Extract user commands
-var cmds = CLI.parse();
+const cmds = CLI.parse();
 if (cmds.help)
     abort("");
 if (cmds.shex.length > 1 && cmds.includes.length === 0) {
@@ -40,12 +40,12 @@ if (cmds.json.length > 1 && cmds.includes.length === 0) {
 }
 if (cmds.includes.length === 0) abort("no includes specified");
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
-var input = cmds.shex.concat(cmds.json).join(", ");
+const input = cmds.shex.concat(cmds.json).join(", ");
 
 
 ShExNode(cmds.shex, cmds.json, []).then(function (loaded) {
   console.warn("calculating dependencies for " + input);
-  var deps = ShExUtil.getDependencies(loaded.schema);
+  const deps = ShExUtil.getDependencies(loaded.schema);
   // console.log('%s', JSON.stringify(deps, null, '  '));
   console.warn("partitioning " + input);
   partition = ShExUtil.partition(loaded.schema, cmds.includes, deps,

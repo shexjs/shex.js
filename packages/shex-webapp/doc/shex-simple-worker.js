@@ -64,8 +64,8 @@ onmessage = function (msg) {
     var errorText = undefined;
     try {
     var db = "endpoint" in msg.data
-      ? ShEx.Util.makeQueryDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-      : ShEx.Util.makeN3DB(makeStaticDB(msg.data.data));
+      ? ShEx.Util.sparqlDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+      : ShEx.Util.rdfjsDB(makeStaticDB(msg.data.data));
       // Some DBs need to be able to inspect the schema to calculate the neighborhood.
       if ("setSchema" in db)
         db.setSchema(loadedSchema);
