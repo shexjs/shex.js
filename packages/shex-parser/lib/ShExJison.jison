@@ -24,12 +24,12 @@
     ShEx parser in the Jison parser generator format.
   */
 
-  var UNBOUNDED = -1;
+  const UNBOUNDED = -1;
 
-  var ShExUtil = require("@shexjs/util");
+  const ShExUtil = require("@shexjs/util");
 
   // Common namespaces and entities
-  var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       RDF_TYPE  = RDF + 'type',
       RDF_FIRST = RDF + 'first',
       RDF_REST  = RDF + 'rest',
@@ -53,7 +53,7 @@
       XSD_TOTALDIGITS    = XSD + 'totalDigits',
       XSD_FRACTIONDIGITS = XSD + 'fractionDigits';
 
-  var numericDatatypes = [
+  const numericDatatypes = [
       XSD + "integer",
       XSD + "decimal",
       XSD + "float",
@@ -75,11 +75,11 @@
       XSD + "positiveInteger"
   ];
 
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
-  var numericFacets = ["mininclusive", "minexclusive",
+  const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
 
   // Returns a lowercase version of the given string
@@ -100,16 +100,16 @@
   // Extends a base object with properties of other objects
   function extend(base) {
     if (!base) base = {};
-    for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-      for (var name in arg)
+    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+      for (let name in arg)
         base[name] = arg[name];
     return base;
   }
 
   // Creates an array that contains all items of the given arrays
   function unionAll() {
-    var union = [];
-    for (var i = 0, l = arguments.length; i < l; i++)
+    let union = [];
+    for (let i = 0, l = arguments.length; i < l; i++)
       union = union.concat.apply(union, arguments[i]);
     return union;
   }
@@ -165,7 +165,8 @@
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, next = '/', segmentStart = 0;
 
     while (i < length) {
       switch (next) {
@@ -226,9 +227,9 @@
 
   // Creates an expression with the given type and attributes
   function expression(expr, attr) {
-    var expression = { expression: expr };
+    const expression = { expression: expr };
     if (attr)
-      for (var a in attr)
+      for (let a in attr)
         expression[a] = attr[a];
     return expression;
   }
@@ -247,17 +248,17 @@
   function blank() {
     return '_:b' + blankId++;
   };
-  var blankId = 0;
+  let blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
     Parser._prefixes = Parser._imports = Parser._sourceMap = Parser._termResolver = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
-  var _fileName; // for debugging
+  let _fileName; // for debugging
   Parser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
-  var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+  const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
       semactEscapeReplacements = { '\\': '\\', '%': '%' },
       pnameEscapeReplacements = {
@@ -276,25 +277,25 @@
   }
 
   function unescapeLangString(string, trimLength) {
-    var at = string.lastIndexOf("@");
-    var lang = string.substr(at);
+    const at = string.lastIndexOf("@");
+    const lang = string.substr(at);
     string = string.substr(0, at);
-    var u = unescapeString(string, trimLength);
+    const u = unescapeString(string, trimLength);
     return extend(u, { language: lowercase(lang.substr(1)) });
   }
 
   // Translates regular expression escape codes in the string into their textual equivalent
   function unescapeRegexp (regexp) {
-    var end = regexp.lastIndexOf("/");
-    var s = regexp.substr(1, end-1);
-    var regexpEscapeReplacements = {
+    const end = regexp.lastIndexOf("/");
+    let s = regexp.substr(1, end-1);
+    const regexpEscapeReplacements = {
       '.': "\\.", '\\': "\\\\", '?': "\\?", '*': "\\*", '+': "\\+",
       '{': "\\{", '}': "\\}", '(': "\\(", ')': "\\)", '|': "\\|",
       '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
       't': '\\t', 'n': '\\n', 'r': '\\r', '-': "\\-", '/': '/'
     };
     s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
-    var ret = {
+    const ret = {
       pattern: s
     };
     if (regexp.length > end+1)
@@ -304,7 +305,7 @@
 
   // Convenience function to return object with p1 key, value p2
   function keyValObject(key, val) {
-    var ret = {};
+    const ret = {};
     ret[key] = val;
     return ret;
   }
@@ -412,8 +413,8 @@
     return shapeAtom;
   }
 
-  var EmptyObject = {  };
-  var EmptyShape = { type: "Shape" };
+  const EmptyObject = {  };
+  const EmptyShape = { type: "Shape" };
 %}
 
 /* lexical grammar */
@@ -493,8 +494,8 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 %%
 
 {STRING_GRAVE}          {
-  var iBacktick = yytext.indexOf('`');
-  var prefix = null;
+  const iBacktick = yytext.indexOf('`');
+  let prefix = null;
   if (iBacktick > 0) {
     prefix = yytext.substr(0, iBacktick-1);
     yytext = yytext.substr(iBacktick);
@@ -614,10 +615,10 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 shexDoc:
       _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
         let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
-        var startObj = Parser.start ? { start: Parser.start } : {};
-        var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
+        const startObj = Parser.start ? { start: Parser.start } : {};
+        const startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
         let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
-        var shexj = Object.assign(
+        const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
         if (Parser.options.index) {
@@ -804,13 +805,13 @@ inlineShapeExpression:
 
 shapeOr: // Sets .needsAtom to tell shapeExpression where to place leading shapeAtom.
       _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{ // returns a ShapeOr
-        var disjuncts = $1.map(nonest);
+        const disjuncts = $1.map(nonest);
         $$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{ // returns a ShapeAnd
         // $1 could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
         $1.filter(c => c.type === "ShapeAnd").length === $1.length
-        var and = {
+        const and = {
           type: "ShapeAnd",
           shapeExprs: $1.reduce(
             (acc, elt) =>
@@ -956,7 +957,7 @@ inlineShapeOrRef:
 shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':');
+        const namePos = $1.indexOf(':');
         $$ = addSourceMap(expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), yy); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1@@
@@ -1110,7 +1111,7 @@ shapeDefinition:
 
 inlineShapeDefinition:
       _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
-        var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
+        const exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
@@ -1250,7 +1251,7 @@ tripleConstraint:
       _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $6: t: 1dotCode1
 	if ($3 !== EmptyShape && false) {
-	  var t = blank();
+	  const t = blank();
 	  addShape(t, $3, yy);
 	  $3 = t; // ShapeRef
 	}
@@ -1272,7 +1273,7 @@ cardinality:
     | '?'	-> { min:0, max:1 } // t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
-        var nums = $1.match(/(\d+)/g);
+        const nums = $1.match(/(\d+)/g);
         $$ = { min: parseInt(nums[0], 10) }; // t: 1card2blank, 1card2Star
         if (nums.length === 2)
             $$["max"] = parseInt(nums[1], 10); // t: 1card23
@@ -1539,7 +1540,7 @@ langString:
 
 iri:
       IRIREF	{ // t: 1dot
-        var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        const unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
         $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       }
     | prefixedName	
@@ -1547,8 +1548,8 @@ iri:
 
 prefixedName:
       PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos), yy) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        const namePos1 = $1.indexOf(':');
+        $$ = expandPrefix($1.substr(0, namePos1), yy) + ShExUtil.unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
       }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1), yy);
@@ -1558,8 +1559,8 @@ prefixedName:
 iriOrLabel:
       IRIREF	-> this._base === null || absoluteIRI.test($1.slice(1, -1)) ? ShExUtil.unescapeText($1.slice(1,-1), {}) : _resolveIRI(ShExUtil.unescapeText($1.slice(1,-1), {})) // t: 1dot
     | PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
-        var namePos = $1.indexOf(':');
-      $$ = expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1);
+        const namePos2 = $1.indexOf(':');
+      $$ = expandPrefix($1.substr(0, namePos2), yy) + $1.substr(namePos2 + 1);
     }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
       $$ = expandPrefix($1.substr(0, $1.length - 1), yy);
