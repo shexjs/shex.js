@@ -234,7 +234,7 @@ function makeSchemaCache (selection) {
         {}
       );
       var schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      var val = graphParser.validate(ShEx.Util.makeN3DB(graph), schemaRoot, ShEx.Validator.start); // start shape
+      var val = graphParser.validate(ShEx.Util.rdfjsDB(graph), schemaRoot, ShEx.Validator.start); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -250,7 +250,7 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   var ret = _makeCache(selection);
   ret.parse = function (text, base) {
-    return ShEx.Util.makeN3DB(parseTurtle(text, ret.meta, base));
+    return ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
   };
   ret.getItems = function () {
     var data = this.refresh();
