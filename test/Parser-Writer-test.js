@@ -182,7 +182,7 @@ describe("A ShEx parser", function () {
              const schemaGraph = new N3.Store();
              schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
              // console.log(schemaGraph.getQuads());
-             const schemaDriver = ShExUtil.makeN3DB(schemaGraph);
+             const schemaDriver = ShExUtil.rdfjsDB(schemaGraph);
              const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
              const graphParser = ShExValidator.construct(
