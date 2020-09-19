@@ -15,7 +15,7 @@ function compileNFA (schema, shape) {
     function NFA () {
       // wrapper for states, startNo and matchstate
       const states = [];
-      let matchstate = State_make(Match, []);
+      const matchstate = State_make(Match, []);
       let startNo = matchstate;
       const stack = [];
       let pair;
@@ -229,7 +229,7 @@ function compileNFA (schema, shape) {
         }
       }
 
-      function localExpect (list) {
+      function localExpect999 (list) {
         return list.map(st => {
           const s = rbenx.states[st.state]; // simpler threads are a list of states.
           return renderAtom(s.c, s.negated);

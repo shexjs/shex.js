@@ -11150,7 +11150,7 @@ const ShExTerm = __webpack_require__(3);
 const UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
-    var outerExpression = shape.expression;
+    const outerExpression = shape.expression;
     return {
       match:match
     };
@@ -11162,18 +11162,18 @@ function vpEngine (schema, shape, index) {
        */
       function validateExpr (expr, thread) {
         if (typeof expr === "string") { // Inclusion
-          var included = index.tripleExprs[expr];
+          const included = index.tripleExprs[expr];
           return validateExpr(included, thread);
         }
 
-        var constraintNo = constraintList.indexOf(expr);
-        var min = "min" in expr ? expr.min : 1;
-        var max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        const constraintNo = constraintList.indexOf(expr);
+        const min = "min" in expr ? expr.min : 1;
+        const max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
 
         function validateRept (type, val) {
-          var repeated = 0, errOut = false;
-          var newThreads = [thread];
-          var minmax = {  };
+          let repeated = 0, errOut = false;
+          let newThreads = [thread];
+          const minmax = {  };
           if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
             minmax.min = expr.min;
             minmax.max = expr.max;
@@ -11183,16 +11183,16 @@ function vpEngine (schema, shape, index) {
           if ("annotations" in expr)
             minmax.annotations = expr.annotations;
           for (; repeated < max && !errOut; ++repeated) {
-            var inner = [];
-            for (var t = 0; t < newThreads.length; ++t) {
-              var newt = newThreads[t];
-              var sub = val(newt);
+            let inner = [];
+            for (let t = 0; t < newThreads.length; ++t) {
+              const newt = newThreads[t];
+              const sub = val(newt);
               if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
                 sub.forEach(newThread => {
-                  var solutions =
-                      "expression" in newt ? newt.expression.solutions : [];
+                  const solutions =
+                      "expression" in newt ? newt.expression.solutions.slice() : [];
                   if ("solution" in newThread)
-                    solutions = solutions.concat(newThread.solution);
+                    solutions.push(newThread.solution);
                   delete newThread.solution;
                   newThread.expression = extend({
                     type: type,
@@ -11209,8 +11209,8 @@ function vpEngine (schema, shape, index) {
             newThreads = inner;
           }
           if (newThreads.length > 0 && newThreads[0].errors.length === 0 && "semActs" in expr) {
-            var passes = [];
-            var failures = [];
+            const passes = [];
+            const failures = [];
             newThreads.forEach(newThread => {
               const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
               if (semActErrors.length === 0) {
@@ -11226,12 +11226,12 @@ function vpEngine (schema, shape, index) {
         }
 
         if (expr.type === "TripleConstraint") {
-          var negated = "negated" in expr && expr.negated || max === 0;
+          const negated = "negated" in expr && expr.negated || max === 0;
           if (negated)
             min = max = Infinity;
           if (thread.avail[constraintNo] === undefined)
             thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-          var minmax = {  };
+          const minmax = {  };
           if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
             minmax.min = expr.min;
             minmax.max = expr.max;
@@ -11240,10 +11240,10 @@ function vpEngine (schema, shape, index) {
             minmax.semActs = expr.semActs;
           if ("annotations" in expr)
             minmax.annotations = expr.annotations;
-          var taken = thread.avail[constraintNo].splice(0, min);
-          var passed = negated ? taken.length === 0 : taken.length >= min;
-          var ret = [];
-          var matched = thread.matched;
+          const taken = thread.avail[constraintNo].splice(0, min);
+          const passed = negated ? taken.length === 0 : taken.length >= min;
+          const ret = [];
+          const matched = thread.matched;
           if (passed) {
             do {
               const passFail = taken.reduce((acc, tripleNo) => {
@@ -11254,7 +11254,7 @@ function vpEngine (schema, shape, index) {
                   predicate: t.predicate,
                   object: ldify(t.object)
                 }
-                var hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
+                const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
                 if (hit.res && Object.keys(hit.res).length > 0)
                   tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(
@@ -11317,7 +11317,7 @@ function vpEngine (schema, shape, index) {
               }
             })());
           } else {
-            var valueExpr = null;
+            let valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
               if (ShExTerm.isBlank(valueExpr))
@@ -11342,23 +11342,23 @@ function vpEngine (schema, shape, index) {
 
         else if (expr.type === "OneOf") {
           return validateRept("OneOfSolutions", (th) => {
-            var accept = null;
-            var matched = [];
-            var failed = [];
+            // const accept = null;
+            const matched = [];
+            const failed = [];
             expr.expressions.forEach(nested => {
-              var thcopy = {
+              const thcopy = {
                 avail: th.avail.map(a => { return a.slice(); }),
                 errors: th.errors,
                 matched: th.matched//.slice() ever needed??
               };
-              var sub = validateExpr(nested, thcopy);
+              const sub = validateExpr(nested, thcopy);
               if (sub[0].errors.length === 0) { // all subs pass or all fail
-                matched = matched.concat(sub);
+                [].push.apply(matched, sub);
                 sub.forEach(newThread => {
-                  var expressions =
+                  const expressions =
                       "solution" in thcopy ? thcopy.solution.expressions : [];
                   if ("expression" in newThread) // undefined for no matches on min card:0
-                    expressions = expressions.concat([newThread.expression]);
+                    expressions.push(newThread.expression);
                   delete newThread.expression;
                   newThread.solution = {
                     type: "OneOfSolution",
@@ -11366,7 +11366,7 @@ function vpEngine (schema, shape, index) {
                   };
                 });
               } else
-                failed = failed.concat(sub);
+                [].push.apply(failed, sub);
             });
             return matched.length > 0 ? matched : failed;
           });
@@ -11381,15 +11381,14 @@ function vpEngine (schema, shape, index) {
               // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
               // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
               return homogenize(exprThreads.reduce((nextThreads, exprThread) => {
-                var sub = validateExpr(nested, exprThread);
+                const sub = validateExpr(nested, exprThread);
                 // Move newThread.expression into a hierarchical solution structure.
                 sub.forEach(newThread => {
                   if (newThread.errors.length === 0) {
-                    var expressions =
-                        "solution" in exprThread ? exprThread.solution.expressions : [];
+                    const expressions =
+                        "solution" in exprThread ? exprThread.solution.expressions.slice() : [];
                     if ("expression" in newThread) // undefined for no matches on min card:0
-                      expressions = expressions.concat([newThread.expression]);
-                    // console.warn(threadMatched(newThread), " vs ", exprMatched(expressions));
+                      expressions.push(newThread.expression);
                     delete newThread.expression;
                     newThread.solution = {
                       type: "EachOfSolution",
@@ -11423,21 +11422,21 @@ function vpEngine (schema, shape, index) {
         }
       }
 
-      var startingThread = {
+      const startingThread = {
         avail:[],   // triples remaining by constraint number
         matched:[], // triples matched in this thread
         errors:[]   // errors encounted
       };
       if (!outerExpression)
         return { }; // vapid match if no expression
-      var ret = validateExpr(outerExpression, startingThread);
+      const ret = validateExpr(outerExpression, startingThread);
       // console.log(JSON.stringify(ret));
       // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
-      var longerChosen =
+      const longerChosen =
           ret.reduce((ret, elt) => {
             if (elt.errors.length > 0)
               return ret;              // early return
-            var unmatchedTriples = {};
+            const unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
               if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
@@ -11475,13 +11474,13 @@ function vpEngine (schema, shape, index) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: ShExTerm.getLiteralValue(term) };
-          var dt = ShExTerm.getLiteralType(term);
+          const ret = { value: ShExTerm.getLiteralValue(term) };
+          const dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = ShExTerm.getLiteralLanguage(term)
+          const lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -11500,16 +11499,16 @@ function vpEngine (schema, shape, index) {
           solns.solutions = solns.solutions.map(x => {
             if (x.type === "TestedTriple") // already done
               return x; // c.f. validation/3circularRef1_pass-open
-            var t = neighborhood[x.tripleNo];
-            var expr = constraintList[x.constraintNo];
-            var ret = {
+            const t = neighborhood[x.tripleNo];
+            const expr = constraintList[x.constraintNo];
+            const ret = {
               type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
             };
             function diver (focus, shapeLabel, dive) {
-              var sub = dive(focus, shapeLabel);
+              const sub = dive(focus, shapeLabel);
               if ("errors" in sub) {
                 // console.dir(sub);
-                var err = {
+                const err = {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
@@ -11529,7 +11528,7 @@ function vpEngine (schema, shape, index) {
             function diveDirect (focus, shapeLabel) {
               return diver(focus, shapeLabel, direct);
             }
-            var subErrors = "valueExpr" in expr ?
+            const subErrors = "valueExpr" in expr ?
                 checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
                 [];
             if (subErrors.length === 0 && "semActs" in expr)
@@ -11555,13 +11554,13 @@ function vpEngine (schema, shape, index) {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: N3Util.getLiteralValue(term) };
-          var dt = N3Util.getLiteralType(term);
+          const ret = { value: N3Util.getLiteralValue(term) };
+          const dt = N3Util.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = N3Util.getLiteralLanguage(term)
+          const lang = N3Util.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -11569,8 +11568,8 @@ function vpEngine (schema, shape, index) {
 
 function extend(base) {
   if (!base) base = {};
-  for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (var name in arg)
+  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+    for (let name in arg)
       base[name] = arg[name];
   return base;
 }
