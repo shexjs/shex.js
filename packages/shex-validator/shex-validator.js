@@ -7,23 +7,23 @@
  */
 
 const ShExValidatorCjsModule = (function () {
-var UNBOUNDED = -1;
+const UNBOUNDED = -1;
 
 // interface constants
-var Start = { term: "START" }
-var InterfaceOptions = {
+const Start = { term: "START" }
+const InterfaceOptions = {
   "coverage": {
     "firstError": "fail on first error (usually used with eval-simple-1err)",
     "exhaustive": "find as many errors as possible (usually used with eval-threaded-nerr)"
   }
 };
 
-var VERBOSE = "VERBOSE" in process.env;
+const VERBOSE = "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
-var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
-var ShExTerm = require("@shexjs/term");
+const ShExTerm = require("@shexjs/term");
 let ShExVisitor = require("@shexjs/visitor");
 
 function getLexicalValue (term) {
@@ -33,8 +33,8 @@ function getLexicalValue (term) {
 }
 
 
-var XSD = "http://www.w3.org/2001/XMLSchema#";
-var integerDatatypes = [
+const XSD = "http://www.w3.org/2001/XMLSchema#";
+const integerDatatypes = [
   XSD + "integer",
   XSD + "nonPositiveInteger",
   XSD + "negativeInteger",
@@ -50,16 +50,16 @@ var integerDatatypes = [
   XSD + "positiveInteger"
 ];
 
-var decimalDatatypes = [
+const decimalDatatypes = [
   XSD + "decimal",
 ].concat(integerDatatypes);
 
-var numericDatatypes = [
+const numericDatatypes = [
   XSD + "float",
   XSD + "double"
 ].concat(decimalDatatypes);
 
-var numericParsers = {};
+const numericParsers = {};
 numericParsers[XSD + "integer"] = function (label, parseError) {
   if (!(label.match(/^[+-]?[0-9]+$/))) {
     parseError("illegal integer value '" + label + "'");
@@ -130,7 +130,7 @@ function testRange (value, datatype, parseError) {
     unsignedByte:       { min: 0                   , max: 255      },
     positiveInteger:    { min: 1                   , max: Infinity }
   }
-  var parms = ranges[datatype.substr(XSD.length)];
+  const parms = ranges[datatype.substr(XSD.length)];
   if (!parms) throw Error("unexpected datatype: " + datatype);
   if (value < parms.min) {
     parseError("\"" + value + "\"^^<" + datatype + "> is less than the min:", parms.min);
@@ -141,7 +141,7 @@ function testRange (value, datatype, parseError) {
 
 /*
 function intSubType (spec, label, parseError) {
-  var ret = numericParsers[XSD + "integer"](label, parseError);
+  const ret = numericParsers[XSD + "integer"](label, parseError);
   if ("min" in spec && ret < spec.min)
     parseError("illegal " + XSD + spec.type + " value '" + label + "' should not be < " + spec.min);
   if ("max" in spec && ret > spec.max)
@@ -166,26 +166,26 @@ function intSubType (spec, label, parseError) {
  });
 */
 
-var stringTests = {
+const stringTests = {
   length   : function (v, l) { return v.length === l; },
   minlength: function (v, l) { return v.length  >= l; },
   maxlength: function (v, l) { return v.length  <= l; }
 };
 
-var numericValueTests = {
+const numericValueTests = {
   mininclusive  : function (n, m) { return n >= m; },
   minexclusive  : function (n, m) { return n >  m; },
   maxinclusive  : function (n, m) { return n <= m; },
   maxexclusive  : function (n, m) { return n <  m; }
 };
 
-var decimalLexicalTests = {
+const decimalLexicalTests = {
   totaldigits   : function (v, d) {
-    var m = v.match(/[0-9]/g);
+    const m = v.match(/[0-9]/g);
     return m && m.length <= d;
   },
   fractiondigits: function (v, d) {
-    var m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
+    const m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
     return m && m[1].length <= d;
   }
 };
@@ -193,13 +193,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: ShExTerm.getLiteralValue(term) };
-          var dt = ShExTerm.getLiteralType(term);
+          const ret = { value: ShExTerm.getLiteralValue(term) };
+          const dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = ShExTerm.getLiteralLanguage(term)
+          const lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -229,14 +229,14 @@ function ShExValidator_constructor(schema, options) {
   if (!("noCache" in options && options.noCache))
     this.known = {};
 
-  var _ShExValidator = this;
+  const _ShExValidator = this;
   this.schema = schema;
   this._expect = this.options.lax ? noop : expect; // report errors on missing types.
   this._optimize = {}; // optimizations:
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
-  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || require("@shexjs/eval-threaded-nerr");
+  // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+  const regexModule = this.options.regexModule || require("@shexjs/eval-threaded-nerr");
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -258,7 +258,7 @@ function ShExValidator_constructor(schema, options) {
    */
   this.indexTripleConstraints = function (expression) {
     // list of triple constraints from (:p1 ., (:p2 . | :p3 .))
-    var tripleConstraints = [];
+    const tripleConstraints = [];
 
     if (expression)
       indexTripleConstraints_dive(expression);
@@ -289,7 +289,7 @@ function ShExValidator_constructor(schema, options) {
   /* emptyTracker - a tracker that does nothing
    */
   this.emptyTracker = function () {
-    var noop = x => x;
+    const noop = x => x;
     return {
       recurse: noop,
       known: noop,
@@ -308,11 +308,11 @@ function ShExValidator_constructor(schema, options) {
       point = ShExTerm.internalTerm(point)
     }
     if (typeof point === "object") {
-      var shapeMap = point;
+      const shapeMap = point;
       if (this.options.results === "api") {
         return shapeMap.map(pair => {
-          var time = new Date();
-          var res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
+          let time = new Date();
+          const res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
           time = new Date() - time;
           return {
             node: pair.node,
@@ -323,14 +323,14 @@ function ShExValidator_constructor(schema, options) {
           };
         });
       }
-      var results = shapeMap.reduce((ret, pair) => {
-        var res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
+      const results = shapeMap.reduce((ret, pair) => {
+        const res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
       }, {passes: [], failures: []});
       if (false && this.options.results === "api") {
-        var ret = {};
+        const ret = {};
         function _add (n, s, r) {
           if (!(n in ret)) {
             ret[n] = [{shape: s, result: r}];
@@ -355,7 +355,7 @@ function ShExValidator_constructor(schema, options) {
       }
     }
 
-    var outside = tracker === undefined;
+    const outside = tracker === undefined;
     // logging stuff
     if (!tracker)
       tracker = this.emptyTracker();
@@ -364,7 +364,7 @@ function ShExValidator_constructor(schema, options) {
         runtimeError("start production not defined");
     }
 
-    var shape = null;
+    let shape = null;
     if (label == Start) {
       shape = schema.start;
     } else if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
@@ -379,7 +379,7 @@ function ShExValidator_constructor(schema, options) {
 
     if (seen === undefined)
       seen = {};
-    var seenKey = point + "@" + (label === Start ? "_: -start-" : label);
+    const seenKey = point + "@" + (label === Start ? "_: -start-" : label);
     if (seenKey in seen)
       return tracker.recurse({
         type: "Recursion",
@@ -390,7 +390,7 @@ function ShExValidator_constructor(schema, options) {
       return tracker.known(this.known[seenKey]);
     seen[seenKey] = { point: point, shape: label };
     tracker.enter(point, label);
-    var ret = this._validateShapeExpr(db, point, shape, label, tracker, seen);
+    const ret = this._validateShapeExpr(db, point, shape, label, tracker, seen);
     tracker.exit(point, label, ret);
     delete seen[seenKey];
     if ("known" in this)
@@ -407,7 +407,7 @@ function ShExValidator_constructor(schema, options) {
     if (typeof shapeExpr === "string") { // ShapeRef
       return this._validateShapeExpr(db, point, index.shapeExprs[shapeExpr], shapeExpr, tracker, seen);
     } else if (shapeExpr.type === "NodeConstraint") {
-      var sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       return sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
         type: "Failure",
         node: ldify(point),
@@ -430,10 +430,10 @@ function ShExValidator_constructor(schema, options) {
     } else if (shapeExpr.type === "ShapeExternal") {
       return this.options.validateExtern(db, point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
-      var errors = [];
-      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        var nested = shapeExpr.shapeExprs[i];
-        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen);
+      const errors = [];
+      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        const nested = shapeExpr.shapeExprs[i];
+        const sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -441,17 +441,17 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeOrFailure", errors: errors };
     } else if (shapeExpr.type === "ShapeNot") {
-      var sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, tracker, seen);
+      const sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, tracker, seen);
       if ("errors" in sub)
           return { type: "ShapeNotResults", solution: sub };
         else
           return { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
-      var passes = [];
-      var errors = [];
-      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        var nested = shapeExpr.shapeExprs[i];
-        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen);
+      const passes = [];
+      const errors = [];
+      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        const nested = shapeExpr.shapeExprs[i];
+        const sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -652,14 +652,14 @@ function ShExValidator_constructor(schema, options) {
   }
 
   this._triplesMatchingShapeExpr = function (triples, constraint, valParms) {
-    var _ShExValidator = this;
-    var misses = [];
-    var hits = [];
+    const _ShExValidator = this;
+    const misses = [];
+    const hits = [];
     triples.forEach(function (triple) {
-      var value = constraint.inverse ? triple.subject : triple.object;
-      var sub;
-      var oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
-      var errors = constraint.valueExpr === undefined ?
+      const value = constraint.inverse ? triple.subject : triple.object;
+      let sub;
+      const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
+      const errors = constraint.valueExpr === undefined ?
           undefined :
           (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms)).errors;
       if (!errors) {
@@ -672,7 +672,7 @@ function ShExValidator_constructor(schema, options) {
     return { hits: hits, misses: misses };
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, valParms) {
-    var _ShExValidator = this;
+    const _ShExValidator = this;
     if (typeof valueExpr === "string") { // ShapeRef
       return _ShExValidator.validate(valParms.db, value, valueExpr, valParms.tracker, valParms.seen);
     } else if (valueExpr.type === "NodeConstraint") {
@@ -680,10 +680,10 @@ function ShExValidator_constructor(schema, options) {
     } else if (valueExpr.type === "Shape") {
       return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.tracker, valParms.seen)
     } else if (valueExpr.type === "ShapeOr") {
-      var errors = [];
-      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = valueExpr.shapeExprs[i];
-        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
+      const errors = [];
+      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        const nested = valueExpr.shapeExprs[i];
+        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -691,10 +691,10 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeOrFailure", errors: errors };
     } else if (valueExpr.type === "ShapeAnd") {
-      var passes = [];
-      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = valueExpr.shapeExprs[i];
-        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
+      const passes = [];
+      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        const nested = valueExpr.shapeExprs[i];
+        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
         if ("errors" in sub)
           return { type: "ShapeAndFailure", errors: [sub] };
         else
@@ -702,10 +702,10 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else if (valueExpr.type === "ShapeNot") {
-      var sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms);
+      const sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms);
       // return sub.errors && sub.errors.length ? {} : {
       //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
-      var ret = Object.assign({
+      const ret = Object.assign({
         type: null,
         focus: value
       }, valueExpr);
@@ -726,15 +726,15 @@ function ShExValidator_constructor(schema, options) {
    * expression without checking shape references.
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
-    var errors = [];
-    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+    const errors = [];
+    const label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
       ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
+    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
+    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
-      var errorStr = Array.prototype.join.call(arguments, "");
+      const errorStr = Array.prototype.join.call(arguments, "");
       errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
       return false;
     }
@@ -784,7 +784,7 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.values) {
         if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          var ld = ldify(value);
+          const ld = ldify(value);
           if (v.type === "Language") {
             return v.languageTag === ld.language; // @@ use equals/normalizeTest
           }
@@ -802,7 +802,7 @@ function ShExValidator_constructor(schema, options) {
             if (typeof valueConstraint === "object" && !("value" in valueConstraint)) { // isTerm me -- strike "value" in
               if (!("type" in valueConstraint))
                 runtimeError("expected "+JSON.stringify(valueConstraint)+" to have a 'type' attribute.");
-              var stemRangeTypes = [
+              const stemRangeTypes = [
                 "Language",
                 "IriStem",      "LiteralStem",      "LanguageStem",
                 "IriStemRange", "LiteralStemRange", "LanguageStemRange"
@@ -857,7 +857,7 @@ function ShExValidator_constructor(schema, options) {
                   if (!isTerm(c)) {
                     if (!("type" in c))
                       runtimeError("expected "+JSON.stringify(c)+" to have a 'type' attribute.");
-                    var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+                    const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
                     if (stemTypes.indexOf(c.type) === -1)
                       runtimeError("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'.");
                     return startsWith(value, c.stem);
@@ -878,7 +878,7 @@ function ShExValidator_constructor(schema, options) {
     }
 
     if ("pattern" in valueExpr) {
-      var regexp = "flags" in valueExpr ?
+      const regexp = "flags" in valueExpr ?
 	  new RegExp(valueExpr.pattern, valueExpr.flags) :
 	  new RegExp(valueExpr.pattern);
       if (!(getLexicalValue(value).match(regexp)))
@@ -914,7 +914,7 @@ function ShExValidator_constructor(schema, options) {
         }
       }
     });
-    var ret = {
+    const ret = {
       type: null,
       focus: value,
       shapeExpr: valueExpr
@@ -953,12 +953,12 @@ function ShExValidator_constructor(schema, options) {
      * @return {bool} false if any result was false.
      */
     dispatchAll: function (semActs, ctx, resultsArtifact) {
-      var _semActHanlder = this;
+      const _semActHanlder = this;
       return semActs.reduce(function (ret, semAct) {
         if (ret.length === 0 && semAct.name in _semActHanlder.handlers) {
-          var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
-          var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
-          var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
+          const code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
+          const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
+          const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
           const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
           if (typeof response === 'boolean') {
             if (!response)
@@ -1024,7 +1024,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
   }
 
   function _compileExpression (expr, schema) {
-    var repeated, container;
+    let repeated, container;
 
     /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
        expr 1 1 => expr
@@ -1043,7 +1043,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 
       if (min === 1 && max === 1) { return expr; }
 
-      var opts = max === UNBOUNDED ?
+      const opts = max === UNBOUNDED ?
         new KleeneStar(expr) :
         _seq(max - min).reduce(function (ret, elt, ord) {
           return ord === 0 ?
@@ -1051,7 +1051,7 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
             new Choice([new EachOf([expr, ret]), new Epsilon]);
         }, undefined);
 
-      var reqd = min !== 0 ?
+      const reqd = min !== 0 ?
         new EachOf(_seq(min).map(function (ret) {
           return expr; // @@ something with ret
         }).concat(opts)) : opts;
@@ -1059,17 +1059,17 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
     }
 
     if (typeof expr === "string") { // Inclusion
-      var included = schema._index.tripleExprs[expr].expression;
+      const included = schema._index.tripleExprs[expr].expression;
       return _compileExpression(included, schema);
     }
 
     else if (expr.type === "TripleConstraint") {
       // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
-      var valueExpr = "valueExprRef" in expr ?
+      const valueExpr = "valueExprRef" in expr ?
         schema.valueExprDefns[expr.valueExprRef] :
         expr.valueExpr;
-      var ordinal = tripleConstraints.push(expr)-1;
-      var tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
+      const ordinal = tripleConstraints.push(expr)-1;
+      const tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
       repeated = _repeat(tp, expr.min, expr.max);
       return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
     }
@@ -1098,11 +1098,12 @@ function _compileShapeToAST (expression, tripleConstraints, schema) {
 
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function crossProduct(sets, emptyValue) {
-  var n = sets.length, carets = [], args = null;
+  const n = sets.length, carets = [];
+  let args = null;
 
   function init() {
     args = [];
-    for (var i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
       carets[i] = 0;
       args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
     }
@@ -1118,7 +1119,7 @@ function crossProduct(sets, emptyValue) {
       init();
       return true;
     }
-    var i = n - 1;
+    let i = n - 1;
     carets[i]++;
     if (carets[i] < sets[i].length) {
       args[i] = sets[i][carets[i]];
@@ -1151,7 +1152,7 @@ function crossProduct(sets, emptyValue) {
 /* N3jsTripleToString - simple toString function to make N3.js's triples
  * printable.
  */
-var N3jsTripleToString = function () {
+const N3jsTripleToString = function () {
   function fmt (n) {
     return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
@@ -1183,7 +1184,7 @@ var N3jsTripleToString = function () {
 function indexNeighborhood (triples) {
   return {
     byPredicate: triples.reduce(function (ret, t) {
-      var p = t.predicate;
+      const p = t.predicate;
       if (!(p in ret))
         ret[p] = [];
       ret[p].push(t);
@@ -1204,7 +1205,7 @@ function indexNeighborhood (triples) {
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.
  */
 function sparqlOrder (l, r) {
-  var [lprec, rprec] = [l, r].map(
+  const [lprec, rprec] = [l, r].map(
     x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
   );
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
@@ -1233,8 +1234,8 @@ function expect (o, p, v) {
 function noop () {  }
 
 function runtimeError () {
-  var errorStr = Array.prototype.join.call(arguments, "");
-  var e = new Error(errorStr);
+  const errorStr = Array.prototype.join.call(arguments, "");
+  const e = new Error(errorStr);
   Error.captureStackTrace(e, runtimeError);
   throw e;
 }
