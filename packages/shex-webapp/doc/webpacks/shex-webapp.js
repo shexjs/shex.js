@@ -4525,22 +4525,22 @@ function ShExVisitor () {
   }
   let isInclusion = isShapeRef;
 
-  // function expect (l, r) { var ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
-  var _ShExUtil = this;
+  // function expect (l, r) { const ls = JSON.stringify(l), rs = JSON.stringify(r); if (ls !== rs) throw Error(ls+" !== "+rs); }
+  const _ShExUtil = this;
   function visitMap (map, val) {
-    var ret = {};
+    const ret = {};
     Object.keys(map).forEach(function (item) {
       ret[item] = val(map[item]);
     });
     return ret;
   }
-  var r = {
+  const r = {
     runtimeError: function (e) {
       throw e;
     },
 
     visitSchema: function (schema) {
-      var ret = { type: "Schema" };
+      const ret = { type: "Schema" };
       _expect(schema, "type", "Schema");
       this._maybeSet(schema, ret, "Schema",
                      ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
@@ -4562,14 +4562,14 @@ function ShExVisitor () {
     },
 
     visitImports: function (imports) {
-      var _Visitor = this;
+      const _Visitor = this;
       return imports.map(function (imp) {
         return _Visitor.visitIRI(imp);
       });
     },
 
     visitStartActs: function (startActs) {
-      var _Visitor = this;
+      const _Visitor = this;
       return startActs === undefined ?
         undefined :
         startActs.map(function (act) {
@@ -4577,17 +4577,17 @@ function ShExVisitor () {
         });
     },
     visitSemActs: function (semActs) {
-      var _Visitor = this;
+      const _Visitor = this;
       if (semActs === undefined)
         return undefined;
-      var ret = []
+      const ret = []
       Object.keys(semActs).forEach(function (label) {
         ret.push(_Visitor.visitSemAct(semActs[label], label));
       });
       return ret;
     },
     visitSemAct: function (semAct, label) {
-      var ret = { type: "SemAct" };
+      const ret = { type: "SemAct" };
       _expect(semAct, "type", "SemAct");
 
       this._maybeSet(semAct, ret, "SemAct",
@@ -4596,7 +4596,7 @@ function ShExVisitor () {
     },
 
     visitShapes: function (shapes) {
-      var _Visitor = this;
+      const _Visitor = this;
       if (shapes === undefined)
         return undefined;
       return shapes.map(
@@ -4606,10 +4606,10 @@ function ShExVisitor () {
     },
 
     visitProductions999: function (productions) { // !! DELETE
-      var _Visitor = this;
+      const _Visitor = this;
       if (productions === undefined)
         return undefined;
-      var ret = {}
+      const ret = {}
       Object.keys(productions).forEach(function (label) {
         ret[label] = _Visitor.visitExpression(productions[label], label);
       });
@@ -4619,7 +4619,7 @@ function ShExVisitor () {
     visitShapeExpr: function (expr, label) {
       if (isShapeRef(expr))
         return this.visitShapeRef(expr)
-      var r =
+      const r =
           expr.type === "Shape" ? this.visitShape(expr, label) :
           expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
           expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
@@ -4636,8 +4636,8 @@ function ShExVisitor () {
     // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
     _visitShapeGroup: function (expr, label) {
       this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
-      var _Visitor = this;
-      var r = { type: expr.type };
+      const _Visitor = this;
+      const r = { type: expr.type };
       if ("id" in expr)
         r.id = expr.id;
       r.shapeExprs = expr.shapeExprs.map(function (nested) {
@@ -4649,7 +4649,7 @@ function ShExVisitor () {
     // _visitShapeNot: visit negated shape
     visitShapeNot: function (expr, label) {
       this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
-      var r = { type: expr.type };
+      const r = { type: expr.type };
       if ("id" in expr)
         r.id = expr.id;
       r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, label);
@@ -4658,7 +4658,7 @@ function ShExVisitor () {
 
     // ### `visitNodeConstraint` deep-copies the structure of a shape
     visitShape: function (shape, label) {
-      var ret = { type: "Shape" };
+      const ret = { type: "Shape" };
       _expect(shape, "type", "Shape");
 
       this._maybeSet(shape, ret, "Shape",
@@ -4671,7 +4671,7 @@ function ShExVisitor () {
 
     // ### `visitNodeConstraint` deep-copies the structure of a shape
     visitNodeConstraint: function (shape, label) {
-      var ret = { type: "NodeConstraint" };
+      const ret = { type: "NodeConstraint" };
       _expect(shape, "type", "NodeConstraint");
 
       this._maybeSet(shape, ret, "NodeConstraint",
@@ -4700,8 +4700,8 @@ function ShExVisitor () {
 
     // _visitGroup: visit a grouping expression (someOf or eachOf)
     _visitGroup: function (expr, type) {
-      var _Visitor = this;
-      var r = Object.assign(
+      const _Visitor = this;
+      const r = Object.assign(
         // pre-declare an id so it sorts to the top
         "id" in expr ? { id: null } : { },
         { type: expr.type }
@@ -4728,7 +4728,7 @@ function ShExVisitor () {
     visitExpression: function (expr) {
       if (typeof expr === "string")
         return this.visitInclusion(expr);
-      var r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
+      const r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
           expr.type === "OneOf" ? this.visitOneOf(expr) :
           expr.type === "EachOf" ? this.visitEachOf(expr) :
           null;
@@ -4739,7 +4739,7 @@ function ShExVisitor () {
     },
 
     visitValues: function (values) {
-      var _Visitor = this;
+      const _Visitor = this;
       return values.map(function (t) {
         return isTerm(t) || t.type === "Language" ?
           t :
@@ -4748,14 +4748,14 @@ function ShExVisitor () {
     },
 
     visitStemRange: function (t) {
-      var _Visitor = this; // console.log(Error(t.type).stack);
+      const _Visitor = this; // console.log(Error(t.type).stack);
       // _expect(t, "type", "IriStemRange");
       if (!("type" in t))
         _Visitor.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
-      var stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
+      const stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
       if (stemRangeTypes.indexOf(t.type) === -1)
         _Visitor.runtimeError(Error("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'."));
-      var stem;
+      let stem;
       if (isTerm(t)) {
         _expect(t.stem, "type", "Wildcard");
         stem = { type: t.type, stem: { type: "Wildcard" } };
@@ -4775,7 +4775,7 @@ function ShExVisitor () {
         // _expect(c, "type", "IriStem");
         if (!("type" in c))
           _Visitor.runtimeError(Error("expected "+JSON.stringify(c)+" to have a 'type' attribute."));
-        var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+        const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
         if (stemTypes.indexOf(c.type) === -1)
           _Visitor.runtimeError(Error("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'."));
         return { type: c.type, stem: c.stem };
@@ -4794,16 +4794,16 @@ function ShExVisitor () {
     },
 
     _maybeSet: function (obj, ret, context, members, ignore) {
-      var _Visitor = this;
+      const _Visitor = this;
       this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
       members.forEach(function (member) {
-        var methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
+        const methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
         if (member in obj) {
-          var f = _Visitor[methodName];
+          const f = _Visitor[methodName];
           if (typeof f !== "function") {
             throw Error(methodName + " not found in Visitor");
           }
-          var t = f.call(_Visitor, obj[member]);
+          const t = f.call(_Visitor, obj[member]);
           if (t !== undefined) {
             ret[member] = t;
           }
@@ -4818,11 +4818,11 @@ function ShExVisitor () {
       return l.slice();
     },
     _testUnknownAttributes: function (obj, expected, context, captureFrame) {
-      var unknownMembers = Object.keys(obj).reduce(function (ret, k) {
+      const unknownMembers = Object.keys(obj).reduce(function (ret, k) {
         return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
       }, []);
       if (unknownMembers.length > 0) {
-        var e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
+        const e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
                       unknownMembers.map(function (p) {
                         return "\"" + p + "\"";
                       }).join(",") +
