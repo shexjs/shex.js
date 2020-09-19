@@ -5394,7 +5394,7 @@ const ShExUtil = {
 */
   },
 
-  makeN3DB: function (db, queryTracker) {
+  rdfjsDB: function (db, queryTracker) {
 
     function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
     function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
@@ -5445,102 +5445,6 @@ const ShExUtil = {
       //   return quads;
       // }
     }
-  },
-  /** emulate N3Store().getQuads() with additional parm.
-   */
-  makeQueryDB: function (endpoint, queryTracker) {
-    const _ShExUtil = this;
-
-    function getQuads(s, p, o, g) {
-      return mapQueryToTriples("SELECT " + [
-        (s?"":"?s"), (p?"":"?p"), (o?"":"?o"),
-        "{",
-        (s?s:"?s"), (p?p:"?s"), (o?o:"?s"),
-        "}"].join(" "), s, o)
-    }
-
-    function mapQueryToTriples (query, s, o) {
-      const rows = _ShExUtil.executeQuery(query, endpoint);
-      const triples = rows.map(row =>  {
-        return s ? {
-          subject: s,
-          predicate: row[0],
-          object: row[1]
-        } : {
-          subject: row[0],
-          predicate: row[1],
-          object: o
-        };
-      });
-      return triples;
-    }
-
-    function getTripleConstraints (tripleExpr) {
-      const visitor = _ShExUtil.Visitor();
-      const ret = {
-        out: [],
-        inc: []
-      };
-      visitor.visitTripleConstraint = function (expr) {
-        ret[expr.inverse ? "inc" : "out"].push(expr);
-        return expr;
-      };
-
-      if (tripleExpr)
-        visitor.visitExpression(tripleExpr);
-      return ret;
-    }
-
-    function getNeighborhood (point, shapeLabel, shape) {
-      // I'm guessing a local DB doesn't benefit from shape optimization.
-      let startTime;
-      const tcs = getTripleConstraints(shape.expression);
-      const pz = tcs.out.map(t => t.predicate);
-      pz = pz.filter((p, idx) => pz.lastIndexOf(p) === idx);
-      if (queryTracker) {
-        startTime = new Date();
-        queryTracker.start(false, point, shapeLabel);
-      }
-      const outgoing = (tcs.out.length > 0 || shape.closed)
-          ? mapQueryToTriples(
-            shape.closed
-              ? `SELECT ?p ?o { <${point}> ?p ?o }`
-              : "SELECT ?p ?o {\n" +
-              pz.map(
-                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
-              ).join(" UNION\n") +
-              "\n}",
-            point, null
-          )
-          : [];
-      if (queryTracker) {
-        const time = new Date();
-        queryTracker.end(outgoing, time - startTime);
-        startTime = time;
-      }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
-      }
-      const incoming = tcs.inc.length > 0
-          ? mapQueryToTriples(`SELECT ?s ?p { ?s ?p <${point}> }`, null, point)
-          : []
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
-      }
-      return  {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      getNeighborhood: getNeighborhood,
-      getQuads: getQuads,
-      getSubjects: function () { return ["!Query DB can't index subjects"] },
-      getPredicates: function () { return ["!Query DB can't index predicates"] },
-      getObjects: function () { return ["!Query DB can't index objects"] },
-      get size() { return undefined; }
-    };
   },
 
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
@@ -7884,7 +7788,7 @@ module.exports = eos;
  *   testing.
  */
 
-var ShapeMapSymbols = (function () {
+const ShapeMapSymbols = (function () {
   return {
     focus: { term: "FOCUS" },
     start: { term: "START" },
@@ -8951,16 +8855,16 @@ const ShExParserCjsModule = (function () {
 const ShExJison = __webpack_require__(50).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
-var prepareParser = function (baseIRI, prefixes, schemaOptions) {
+const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
-  var prefixesCopy = {};
-  for (var prefix in prefixes || {})
+  const prefixesCopy = {};
+  for (const prefix in prefixes || {})
     prefixesCopy[prefix] = prefixes[prefix];
 
   // Create a new parser with the given prefixes
   // (Workaround for https://github.com/zaach/jison/issues/241)
-  var parser = new ShExJison();
+  const parser = new ShExJison();
 
   function runParser () {
     // ShExJison.base = baseIRI || "";
@@ -9018,9 +8922,9 @@ var prepareParser = function (baseIRI, prefixes, schemaOptions) {
 
   function contextError (e, lexer) {
     // use the lexer's pretty-printing
-    var line = e.location.first_line;
-    var col  = e.location.first_column + 1;
-    var posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
+    const line = e.location.first_line;
+    const col  = e.location.first_column + 1;
+    const posStr = "pos" in e.hash ? "\n" + e.hash.pos : ""
     return `${baseIRI}\n line: ${line}, column: ${col}: ${e.message}${posStr}`;
   }
 }
@@ -14142,7 +14046,7 @@ if (true)
 /* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ShapeMapParser = (function () {
+const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
@@ -14150,20 +14054,20 @@ if (true) {
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
-var prepareParser = function (baseIRI, schemaMeta, dataMeta) {
+const prepareParser = function (baseIRI, schemaMeta, dataMeta) {
   // Create a copy of the prefixes
-  var schemaBase = schemaMeta.base;
-  var schemaPrefixesCopy = {};
-  for (var prefix in schemaMeta.prefixes || {})
+  const schemaBase = schemaMeta.base;
+  const schemaPrefixesCopy = {};
+  for (const prefix in schemaMeta.prefixes || {})
     schemaPrefixesCopy[prefix] = schemaMeta.prefixes[prefix];
-  var dataBase = dataMeta.base;
-  var dataPrefixesCopy = {};
-  for (var prefix in dataMeta.prefixes || {})
+  const dataBase = dataMeta.base;
+  const dataPrefixesCopy = {};
+  for (const prefix in dataMeta.prefixes || {})
     dataPrefixesCopy[prefix] = dataMeta.prefixes[prefix];
 
   // Create a new parser with the given prefixes
   // (Workaround for https://github.com/zaach/jison/issues/241)
-  var parser = new ShapeMapJison();
+  const parser = new ShapeMapJison();
 
   function runParser () {
     ShapeMapJison._schemaPrefixes = Object.create(schemaPrefixesCopy);
@@ -14175,9 +14079,9 @@ var prepareParser = function (baseIRI, schemaMeta, dataMeta) {
       return ShapeMapJison.prototype.parse.apply(parser, arguments);
     } catch (e) {
       // use the lexer's pretty-printing
-      var lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
-      var pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
-      var t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
+      const lineNo = "lexer" in parser.yy ? parser.yy.lexer.yylineno + 1 : 1;
+      const pos = "lexer" in parser.yy ? parser.yy.lexer.showPosition() : "";
+      const t = Error(`${baseIRI}(${lineNo}): ${e.message}\n${pos}`);
       Error.captureStackTrace(t, runParser);
       parser.reset();
       throw t;
@@ -14210,7 +14114,7 @@ if (true)
 /* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.16 */
+/* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
 /*
   Returns a Parser object of the following structure:
 
@@ -14335,7 +14239,7 @@ break;
 case 16:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        var namePos = $$[$0].indexOf(':');
+        const namePos = $$[$0].indexOf(':');
         this.$ = { shape: expandPrefix(Parser._schemaPrefixes, $$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1) };
       
 break;
@@ -14396,7 +14300,7 @@ break;
 case 57:
 
         this.$ = {  };
-        var t = $$[$0-1].substr(0, $$[$0-1].length - 1).trim(); // remove trailing ':' and spaces
+        const t = $$[$0-1].substr(0, $$[$0-1].length - 1).trim(); // remove trailing ':' and spaces
         this.$[unescapeString(t, 1)["@value"]] = $$[$0];
       
 break;
@@ -14435,37 +14339,27 @@ this.$ = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 break;
 case 84:
 
-        var unesc = unescapeText($$[$0].slice(1,-1), {});
-        this.$ = Parser._dataBase === null || absoluteIRI.test(unesc) ? unesc : _resolveDataIRI(unesc)
+        const node = unescapeText($$[$0].slice(1,-1), {});
+        this.$ = Parser._dataBase === null || absoluteIRI.test(node) ? node : _resolveDataIRI(node)
       
 break;
-case 85: case 86: case 90:
-
-        var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix(Parser._dataPrefixes, $$[$0].substr(0, namePos)) + unescapeText($$[$0].substr(namePos + 1), pnameEscapeReplacements);
-    
+case 85: case 86:
+this.$ = parsePName($$[$0], Parser._dataPrefixes);
 break;
 case 87:
-
-        this.$ = expandPrefix(Parser._dataPrefixes, $$[$0].substr(0, $$[$0].length - 1));
-    
+this.$ = expandPrefix(Parser._dataPrefixes, $$[$0].substr(0, $$[$0].length - 1));;
 break;
 case 88:
 
-        var unesc = unescapeText($$[$0].slice(1,-1), {});
-        this.$ = Parser._schemaBase === null || absoluteIRI.test(unesc) ? unesc : _resolveSchemaIRI(unesc)
+        const shape = unescapeText($$[$0].slice(1,-1), {});
+        this.$ = Parser._schemaBase === null || absoluteIRI.test(shape) ? shape : _resolveSchemaIRI(shape)
       
 break;
-case 89:
-
-        var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix(Parser._schemaPrefixes, $$[$0].substr(0, namePos)) + unescapeText($$[$0].substr(namePos + 1), pnameEscapeReplacements);
-    
+case 89: case 90:
+this.$ = parsePName($$[$0], Parser._schemaPrefixes);
 break;
 case 91:
-
-        this.$ = expandPrefix(Parser._schemaPrefixes, $$[$0].substr(0, $$[$0].length - 1));
-    
+this.$ = expandPrefix(Parser._schemaPrefixes, $$[$0].substr(0, $$[$0].length - 1));;
 break;
 }
 },
@@ -14475,13 +14369,9 @@ parseError: function parseError (str, hash) {
     if (hash.recoverable) {
         this.trace(str);
     } else {
-        function _parseError (msg, hash) {
-            this.message = msg;
-            this.hash = hash;
-        }
-        _parseError.prototype = new Error();
-
-        throw new _parseError(str, hash);
+        var error = new Error(str);
+        error.hash = hash;
+        throw error;
     }
 },
 parse: function parse(input) {
@@ -14550,7 +14440,7 @@ parse: function parse(input) {
                     text: lexer.match,
                     token: this.terminals_[symbol] || symbol,
                     line: lexer.yylineno,
-                    loc: yyloc,
+                    loc: lexer.yylloc,
                     expected: expected
                 });
             }
@@ -14626,17 +14516,17 @@ parse: function parse(input) {
     ShapeMap parser in the Jison parser generator format.
   */
 
-  var ShapeMap = __webpack_require__(19);
+  const ShapeMap = __webpack_require__(19);
 
   // Common namespaces and entities
-  var XSD = 'http://www.w3.org/2001/XMLSchema#',
+  const XSD = 'http://www.w3.org/2001/XMLSchema#',
       XSD_INTEGER  = XSD + 'integer',
       XSD_DECIMAL  = XSD + 'decimal',
       XSD_FLOAT   = XSD + 'float',
       XSD_DOUBLE   = XSD + 'double',
       XSD_BOOLEAN  = XSD + 'boolean';
 
-  var numericDatatypes = [
+  const numericDatatypes = [
       XSD + "integer",
       XSD + "decimal",
       XSD + "float",
@@ -14658,18 +14548,18 @@ parse: function parse(input) {
       XSD + "positiveInteger"
   ];
 
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
-  var numericFacets = ["mininclusive", "minexclusive",
+  const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
 
   // Extends a base object with properties of other objects
-  function extend(base) {
+  function extend (base) {
     if (!base) base = {};
-    for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-      for (var name in arg)
+    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+      for (let name in arg)
         base[name] = arg[name];
     return base;
   }
@@ -14759,7 +14649,7 @@ parse: function parse(input) {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -14815,8 +14705,8 @@ parse: function parse(input) {
   }
 
   function obj() {
-    var ret = {  };
-    for (var i = 0; i < arguments.length; i+= 2) {
+    const ret = {  };
+    for (let i = 0; i < arguments.length; i+= 2) {
       ret[arguments[i]] = arguments[i+1];
     }
     return ret;
@@ -14831,17 +14721,17 @@ parse: function parse(input) {
   function blank() {
     return '_:b' + blankId++;
   };
-  var blankId = 0;
+  const blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
     Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._schemaBase = Parser._schemaBasePath = Parser._schemaBaseRoot = Parser._schemaBaseIRIScheme = null;
   }
-  var _fileName; // for debugging
+  let _fileName; // for debugging
   Parser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
-  var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+  const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
       pnameEscapeReplacements = {
         '\\': '\\', "'": "'", '"': '"',
@@ -14859,16 +14749,22 @@ parse: function parse(input) {
   }
 
   function unescapeLangString(string, trimLength) {
-    var at = string.lastIndexOf("@");
-    var lang = string.substr(at);
+    const at = string.lastIndexOf("@");
+    const lang = string.substr(at);
     string = string.substr(0, at);
-    var u = unescapeString(string, trimLength);
+    const u = unescapeString(string, trimLength);
     return extend(u, obj("@language", lang.substr(1).toLowerCase()));
   }
 
   function error (msg) {
     Parser.reset();
     throw new Error(msg);
+  }
+
+  // Parse a prefix out of a PName or throw Error
+  function parsePName (pname, prefixes) {
+    const namePos = pname.indexOf(':');
+    return expandPrefix(prefixes, pname.substr(0, namePos)) + unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   // Expand declared prefix or throw Error
@@ -14919,8 +14815,8 @@ parse: function parse(input) {
     }
   }
 
-  var EmptyObject = {  };
-  var EmptyShape = { type: "Shape" };
+  const EmptyObject = {  };
+  const EmptyShape = { type: "Shape" };
 
   // <?INCLUDE from ShExUtil. Factor into `rdf-token` module? ?>
   /**
@@ -14928,10 +14824,10 @@ parse: function parse(input) {
    * throws: if there are any unallowed sequences
    */
   function unescapeText (string, replacements) {
-    var regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
+    const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
     try {
       string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
-        var charCode;
+        let charCode;
         if (unicode4) {
           charCode = parseInt(unicode4, 16);
           if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
@@ -14944,7 +14840,7 @@ parse: function parse(input) {
           return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
         }
         else {
-          var replacement = replacements[escapedChar];
+          const replacement = replacements[escapedChar];
           if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
           return replacement;
         }
@@ -15365,7 +15261,7 @@ case 40:return 'invalid character '+yy_.yytext;
 break;
 }
 },
-rules: [/^(?:\s+|(#[^\u000a\u000d]*|\/\*([^*]|\*([^\/]|\\\/))*\*\/))/,/^(?:(appinfo[\u0020\u000A\u0009]+:))/,/^(?:("([^\u0022\u005C\u000A\u000D]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*"[\u0020\u000A\u0009]*:))/,/^(?:([Ff][Oo][Cc][Uu][Ss]))/,/^(?:([Ss][Tt][Aa][Rr][Tt]))/,/^(?:(@[Ss][Tt][Aa][Rr][Tt]))/,/^(?:([Ss][Pp][Aa][Rr][Qq][Ll]))/,/^(?:(@(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|:|[0-9]|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))*))))/,/^(?:(@((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)))/,/^(?:(@([A-Za-z])+((-([0-9A-Za-z])+))*))/,/^(?:(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|:|[0-9]|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))*)))/,/^(?:(appinfo:))/,/^(?:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:))/,/^(?:(([+-])?((([0-9])+\.([0-9])*(([Ee]([+-])?([0-9])+)))|((\.)?([0-9])+(([Ee]([+-])?([0-9])+))))))/,/^(?:(([+-])?([0-9])*\.([0-9])+))/,/^(?:(([+-])?([0-9])+))/,/^(?:(<([^\u0000-\u0020<>\"{}|^`\\]|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*>))/,/^(?:(_:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|[0-9])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?))/,/^(?:('''(('|'')?([^\'\\]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*'''))/,/^(?:("""(("|"")?([^\"\\]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*"""))/,/^(?:('([^\u0027\u005c\u000a\u000d]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*'))/,/^(?:("([^\u0022\u005c\u000a\u000d]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*"))/,/^(?:a\b)/,/^(?:,)/,/^(?:\{)/,/^(?:\})/,/^(?:@)/,/^(?:!)/,/^(?:\?)/,/^(?:\/)/,/^(?:\$)/,/^(?:\[)/,/^(?:\])/,/^(?:\^\^)/,/^(?:_\b)/,/^(?:true\b)/,/^(?:false\b)/,/^(?:null\b)/,/^(?:$)/,/^(?:[a-zA-Z0-9_-]+)/,/^(?:.)/],
+rules: [/^(?:\s+|(#[^\u000a\u000d]*|\/\*([^*]|\*([^/]|\\\/))*\*\/))/,/^(?:(appinfo[\u0020\u000A\u0009]+:))/,/^(?:("([^\u0022\u005C\u000A\u000D]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*"[\u0020\u000A\u0009]*:))/,/^(?:([Ff][Oo][Cc][Uu][Ss]))/,/^(?:([Ss][Tt][Aa][Rr][Tt]))/,/^(?:(@[Ss][Tt][Aa][Rr][Tt]))/,/^(?:([Ss][Pp][Aa][Rr][Qq][Ll]))/,/^(?:(@(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|:|[0-9]|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))*))))/,/^(?:(@((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)))/,/^(?:(@([A-Za-z])+((-([0-9A-Za-z])+))*))/,/^(?:(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:)(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|:|[0-9]|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))(((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.|:|((%([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))|(\\(_|~|\.|-|!|\$|&|'|\(|\)|\*|\+|,|;|=|\/|\?|#|@|%))))*)))/,/^(?:(appinfo:))/,/^(?:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?)?:))/,/^(?:(([+-])?((([0-9])+\.([0-9])*(([Ee]([+-])?([0-9])+)))|((\.)?([0-9])+(([Ee]([+-])?([0-9])+))))))/,/^(?:(([+-])?([0-9])*\.([0-9])+))/,/^(?:(([+-])?([0-9])+))/,/^(?:(<([^\u0000-\u0020<>\"{}|^`\\]|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*>))/,/^(?:(_:((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|[0-9])((((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040])|\.)*((([A-Z]|[a-z]|[\u00c0-\u00d6]|[\u00d8-\u00f6]|[\u00f8-\u02ff]|[\u0370-\u037d]|[\u037f-\u1fff]|[\u200c-\u200d]|[\u2070-\u218f]|[\u2c00-\u2fef]|[\u3001-\ud7ff]|[\uf900-\ufdcf]|[\ufdf0-\ufffd]|[\uD800-\uDB7F][\uDC00-\uDFFF])|_|_\b)|-|[0-9]|[\u00b7]|[\u0300-\u036f]|[\u203f-\u2040]))?))/,/^(?:('''(('|'')?([^\'\\]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*'''))/,/^(?:("""(("|"")?([^\"\\]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f]))))*"""))/,/^(?:('([^\u0027\u005c\u000a\u000d]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*'))/,/^(?:("([^\u0022\u005c\u000a\u000d]|(\\[\"\'\\bfnrt])|(\\u([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])|\\U([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])([0-9]|[A-F]|[a-f])))*"))/,/^(?:a\b)/,/^(?:,)/,/^(?:\{)/,/^(?:\})/,/^(?:@)/,/^(?:!)/,/^(?:\?)/,/^(?:\/)/,/^(?:\$)/,/^(?:\[)/,/^(?:\])/,/^(?:\^\^)/,/^(?:_\b)/,/^(?:true\b)/,/^(?:false\b)/,/^(?:null\b)/,/^(?:$)/,/^(?:[a-zA-Z0-9_-]+)/,/^(?:.)/],
 conditions: {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40],"inclusive":true}}
 });
 return lexer;
@@ -17590,10 +17486,10 @@ switch (yystate) {
 case 1:
 
         let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
-        var startObj = Parser.start ? { start: Parser.start } : {};
-        var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
+        const startObj = Parser.start ? { start: Parser.start } : {};
+        const startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
         let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
-        var shexj = Object.assign(
+        const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
         if (Parser.options.index) {
@@ -17705,7 +17601,7 @@ this.$ = $$[$0];
 break;
 case 35:
  // returns a ShapeOr
-        var disjuncts = $$[$0].map(nonest);
+        const disjuncts = $$[$0].map(nonest);
         this.$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
       
 break;
@@ -17713,7 +17609,7 @@ case 36:
  // returns a ShapeAnd
         // $$[$0-1] could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
         $$[$0-1].filter(c => c.type === "ShapeAnd").length === $$[$0-1].length
-        var and = {
+        const and = {
           type: "ShapeAnd",
           shapeExprs: $$[$0-1].reduce(
             (acc, elt) =>
@@ -17772,7 +17668,7 @@ break;
 case 87:
  // t: 1dotRefLNex@@
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        var namePos = $$[$0].indexOf(':');
+        const namePos = $$[$0].indexOf(':');
         this.$ = addSourceMap(expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1), yy); // ShapeRef
       
 break;
@@ -17926,7 +17822,7 @@ case 130:
 break;
 case 131:
  // t: 1dotInherit3
-        var exprObj = $$[$0-1] ? { expression: $$[$0-1] } : EmptyObject; // t: 0, 0Inherit1
+        const exprObj = $$[$0-1] ? { expression: $$[$0-1] } : EmptyObject; // t: 0, 0Inherit1
         this.$ = (exprObj === EmptyObject && $$[$0-3] === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $$[$0-3]);
@@ -18027,7 +17923,7 @@ case 170:
 
         // $$[$0]: t: 1dotCode1
 	if ($$[$0-3] !== EmptyShape && false) {
-	  var t = blank();
+	  const t = blank();
 	  addShape(t, $$[$0-3], yy);
 	  $$[$0-3] = t; // ShapeRef
 	}
@@ -18049,7 +17945,7 @@ break;
 case 176:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-2);
-        var nums = $$[$0].match(/(\d+)/g);
+        const nums = $$[$0].match(/(\d+)/g);
         this.$ = { min: parseInt(nums[0], 10) }; // t: 1card2blank, 1card2Star
         if (nums.length === 2)
             this.$["max"] = parseInt(nums[1], 10); // t: 1card23
@@ -18260,14 +18156,14 @@ this.$ = unescapeLangString($$[$0], 3)	// t: 1val1STRING_LITERAL_LONG2_with_LANG
 break;
 case 259:
  // t: 1dot
-        var unesc = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
+        const unesc = ShExUtil.unescapeText($$[$0].slice(1,-1), {});
         this.$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       
 break;
 case 261:
  // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
-        var namePos = $$[$0].indexOf(':');
-        this.$ = expandPrefix($$[$0].substr(0, namePos), yy) + ShExUtil.unescapeText($$[$0].substr(namePos + 1), pnameEscapeReplacements);
+        const namePos1 = $$[$0].indexOf(':');
+        this.$ = expandPrefix($$[$0].substr(0, namePos1), yy) + ShExUtil.unescapeText($$[$0].substr(namePos1 + 1), pnameEscapeReplacements);
       
 break;
 case 262:
@@ -18439,12 +18335,12 @@ parse: function parse(input) {
     ShEx parser in the Jison parser generator format.
   */
 
-  var UNBOUNDED = -1;
+  const UNBOUNDED = -1;
 
-  var ShExUtil = __webpack_require__(13);
+  const ShExUtil = __webpack_require__(13);
 
   // Common namespaces and entities
-  var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       RDF_TYPE  = RDF + 'type',
       RDF_FIRST = RDF + 'first',
       RDF_REST  = RDF + 'rest',
@@ -18468,7 +18364,7 @@ parse: function parse(input) {
       XSD_TOTALDIGITS    = XSD + 'totalDigits',
       XSD_FRACTIONDIGITS = XSD + 'fractionDigits';
 
-  var numericDatatypes = [
+  const numericDatatypes = [
       XSD + "integer",
       XSD + "decimal",
       XSD + "float",
@@ -18490,11 +18386,11 @@ parse: function parse(input) {
       XSD + "positiveInteger"
   ];
 
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
-  var numericFacets = ["mininclusive", "minexclusive",
+  const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
 
   // Returns a lowercase version of the given string
@@ -18515,16 +18411,16 @@ parse: function parse(input) {
   // Extends a base object with properties of other objects
   function extend(base) {
     if (!base) base = {};
-    for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-      for (var name in arg)
+    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+      for (let name in arg)
         base[name] = arg[name];
     return base;
   }
 
   // Creates an array that contains all items of the given arrays
   function unionAll() {
-    var union = [];
-    for (var i = 0, l = arguments.length; i < l; i++)
+    let union = [];
+    for (let i = 0, l = arguments.length; i < l; i++)
       union = union.concat.apply(union, arguments[i]);
     return union;
   }
@@ -18580,7 +18476,8 @@ parse: function parse(input) {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, next = '/', segmentStart = 0;
 
     while (i < length) {
       switch (next) {
@@ -18637,9 +18534,9 @@ parse: function parse(input) {
 
   // Creates an expression with the given type and attributes
   function expression(expr, attr) {
-    var expression = { expression: expr };
+    const expression = { expression: expr };
     if (attr)
-      for (var a in attr)
+      for (let a in attr)
         expression[a] = attr[a];
     return expression;
   }
@@ -18658,17 +18555,17 @@ parse: function parse(input) {
   function blank() {
     return '_:b' + blankId++;
   };
-  var blankId = 0;
+  let blankId = 0;
   Parser._resetBlanks = function () { blankId = 0; }
   Parser.reset = function () {
     Parser._prefixes = Parser._imports = Parser._sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
     Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
   }
-  var _fileName; // for debugging
+  let _fileName; // for debugging
   Parser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
-  var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+  const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
       semactEscapeReplacements = { '\\': '\\', '%': '%' },
       pnameEscapeReplacements = {
@@ -18687,25 +18584,25 @@ parse: function parse(input) {
   }
 
   function unescapeLangString(string, trimLength) {
-    var at = string.lastIndexOf("@");
-    var lang = string.substr(at);
+    const at = string.lastIndexOf("@");
+    const lang = string.substr(at);
     string = string.substr(0, at);
-    var u = unescapeString(string, trimLength);
+    const u = unescapeString(string, trimLength);
     return extend(u, { language: lowercase(lang.substr(1)) });
   }
 
   // Translates regular expression escape codes in the string into their textual equivalent
   function unescapeRegexp (regexp) {
-    var end = regexp.lastIndexOf("/");
-    var s = regexp.substr(1, end-1);
-    var regexpEscapeReplacements = {
+    const end = regexp.lastIndexOf("/");
+    let s = regexp.substr(1, end-1);
+    const regexpEscapeReplacements = {
       '.': "\\.", '\\': "\\\\", '?': "\\?", '*': "\\*", '+': "\\+",
       '{': "\\{", '}': "\\}", '(': "\\(", ')': "\\)", '|': "\\|",
       '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
       't': '\\t', 'n': '\\n', 'r': '\\r', '-': "\\-", '/': '/'
     };
     s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
-    var ret = {
+    const ret = {
       pattern: s
     };
     if (regexp.length > end+1)
@@ -18715,7 +18612,7 @@ parse: function parse(input) {
 
   // Convenience function to return object with p1 key, value p2
   function keyValObject(key, val) {
-    var ret = {};
+    const ret = {};
     ret[key] = val;
     return ret;
   }
@@ -18823,8 +18720,8 @@ parse: function parse(input) {
     return shapeAtom;
   }
 
-  var EmptyObject = {  };
-  var EmptyShape = { type: "Shape" };
+  const EmptyObject = {  };
+  const EmptyShape = { type: "Shape" };
 /* generated by jison-lex 0.3.4 */
 var lexer = (function(){
 var lexer = ({
@@ -19341,7 +19238,6 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
-
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
