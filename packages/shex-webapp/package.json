@@ -25,7 +25,8 @@
     "@shexjs/util": "file:../shex-util",
     "@shexjs/writer": "file:../shex-writer",
     "n3": "^1.6.2",
-    "shape-map": "file:../shape-map"
+    "shape-map": "file:../shape-map",
+    "request-promise": "^4.2.4"
   },
   "scripts": {
     "make": "(cd test/ && make test)",

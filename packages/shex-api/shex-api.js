@@ -146,8 +146,8 @@ const ShExApiCjsModule = function (config) {
       schemaOptions.termResolver = ShExParser.dbTermResolver(returns.resolver)
     } else {
       // else just load the schema sources.
-      promises.push(Promise.all(loadList(shex, returns.schemaMeta, "text/shex",
-                                         parseShExC, returns.schema, schemaOptions, loadImports)))
+      [].push.apply(promises, loadList(shex, returns.schemaMeta, "text/shex",
+                                       parseShExC, returns.schema, schemaOptions, loadImports))
     }
     [].push.apply(promises, [
       loadList(json, returns.schemaMeta, "text/json",

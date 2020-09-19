@@ -18399,17 +18399,17 @@ const ShExApiCjsModule = function (config) {
       returns.resolver = new config.rdfjs.Store()
       returns.resolverMeta = []
       // load the resolver then the schema sources,
-      promises = [Promise.all(loadList(schemaOptions.termResolver, returns.resolverMeta, "text/turtle",
-                                       parseTurtle, returns.resolver, dataOptions)).
-                  then(function (x) {
-                    return Promise.all(loadList(shex, returns.schemaMeta, "text/shex",
-                                                parseShExC, returns.schema, schemaOptions, loadImports))
-                  })]
+      promises.push(Promise.all(loadList(schemaOptions.termResolver, returns.resolverMeta, "text/turtle",
+                                         parseTurtle, returns.resolver, dataOptions)).
+                    then(function (x) {
+                      return Promise.all(loadList(shex, returns.schemaMeta, "text/shex",
+                                                  parseShExC, returns.schema, schemaOptions, loadImports))
+                    }))
       schemaOptions.termResolver = ShExParser.dbTermResolver(returns.resolver)
     } else {
       // else just load the schema sources.
-      promises.push(Promise.all(loadList(shex, returns.schemaMeta, "text/shex",
-                                         parseShExC, returns.schema, schemaOptions, loadImports)))
+      [].push.apply(promises, loadList(shex, returns.schemaMeta, "text/shex",
+                                       parseShExC, returns.schema, schemaOptions, loadImports))
     }
     [].push.apply(promises, [
       loadList(json, returns.schemaMeta, "text/json",
