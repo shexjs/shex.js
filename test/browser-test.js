@@ -131,7 +131,7 @@ describe('no URL parameters', function () { // needs this
     dom.window.$('#inputData textarea').val()
   })
 
-  it("should load clinical observation example", function (done) {
+  it("should load clinical observation example", async function () {
     let clinObs = dom.window.$('#manifestDrop').find('button').slice(0, 1)
     expect(clinObs.text()).to.equal('clinical observation')
     clinObs.click()
@@ -140,13 +140,52 @@ describe('no URL parameters', function () { // needs this
     expect(withBDate.text()).to.equal('with birthdate')
     withBDate.click()
 
-    // #validate.click has asynchronous behavior so pass done function.
-    $.event.trigger('click', e => {
-      expect(dom.window.$('#results').text().match(/<Obs1>@START/)).not.to.equal(null)
-      expect(dom.window.$('#results').text().match(/<Obs1>@START999/)).to.equal(null)
-      done()
-    }, dom.window.document.getElementById('validate'))
+    $("#interface").val("human");
+    await validationResults({
+      name: "human", selector: "> div", contents: [
+        { shapeMap: "<Obs1>@START"                  , classes: ["human", "passes"] },
+        { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
+      ]
+    })
+
+    $("#interface").val("minimal");
+    await validationResults({
+      name: "minimal", selector: "> pre", contents: [
+        { shapeMap: /"node": "[^"]+Obs1"/, classes: ["passes"] },
+        { shapeMap: /"node": "[^"]+Patient2"/, classes: ["passes"] },
+      ]
+    })
+
+    $("#interface").val("human");
+    $("#success").val("query");
+    await validationResults({
+      name: "human", selector: "> *", contents: [
+        { shapeMap: ":name \"Bob\""                 , classes: ["passes"] },
+        { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
+      ]
+    })
   }).timeout(STARTUP_TIMEOUT)
+
+  function validationResults (expected) {
+    return new Promise((resolve, reject) => {
+      $.event.trigger('click', e => {
+        const resDiv = dom.window.$('#results > div')
+        expect(resDiv.length).to.equal(1)
+        const res = resDiv.find(expected.selector)
+
+        expected.contents.forEach((contents, idx) => {
+          const elt = res.get(idx)
+          const classList = [...elt.classList]
+          contents.classes.forEach(cls => expect(classList).to.include(cls))
+          if (contents.shapeMap.constructor === RegExp)
+            expect(elt.textContent).to.match(contents.shapeMap)
+          else
+            expect(elt.textContent).to.include(contents.shapeMap)
+        })
+        resolve()
+      }, dom.window.document.getElementById('validate'))
+    })
+  }
 })
 
 describe('default URL parameters', function () { // needs this
