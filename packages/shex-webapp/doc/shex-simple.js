@@ -81,9 +81,9 @@ function parseShEx (text, meta, base) {
   $("#schemaDialect").text(Caches.inputSchema.language);
   var resolverText = $("#meta textarea").val();
   if (resolverText) {
-    var resolverStore = new ShEx.N3.Store();
+    var resolverStore = new RdfJs.Store();
     shexParser._setTermResolver(ShEx.Parser.dbTermResolver(resolverStore));
-    resolverStore.addQuads(new ShEx.N3.Parser({baseIRI:DefaultBase}).parse(resolverText));
+    resolverStore.addQuads(new RdfJs.Parser({baseIRI:DefaultBase}).parse(resolverText));
   } else {
     shexParser._setTermResolver(ShEx.Parser.disabledTermResolver());
   }
