@@ -1,0 +1,12 @@
+[
+  {
+    "name": ":S1 {:p1 .|:p2 .,:p3 .} / { :s1 :p1 \"p1-0\" . }" ,
+    "options999": { "or": "someOf" } ,
+    "schemaLabel": "1dotOr2dot_pass_p1" ,
+    "schemaURL": "../cli/1dotOr2dot.shex" ,
+    "shape": "http://a.example/S1" ,
+    "dataLabel": "p1.ttl" ,
+    "dataURL": "../cli/p1.ttl" ,
+    "node": "x"
+  }
+]

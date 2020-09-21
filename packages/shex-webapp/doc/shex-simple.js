@@ -539,6 +539,7 @@ function makeShapeMapCache (selection) {
 function paintManifest (selector, list, func, listItems, side) {
   $(selector).empty();
   list.forEach(entry => {
+    // build button disabled and with leading "..." to indicate that it's being loaded
     const button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
     const li = $("<li/>").append(button);
     $(selector).append(li);
@@ -560,6 +561,7 @@ function paintManifest (selector, list, func, listItems, side) {
         SharedForTests.promise = func(entry.name, entry, li, listItems, side);
       });
       listItems[side][sum(text)] = li;
+      // enable and get rid of the "..." in the label now that it's loaded
       button.text(entry.label).removeAttr("disabled");
     }
   });
@@ -1794,7 +1796,7 @@ function prepareManifest (demoList, base) {
     return acc;
   }, {});
   const nesting = demoList.reduce(function (acc, elt) {
-    const key = elt.schemaLabel + "|" + elt.schema;
+    const key = elt.schemaLabel || elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
       acc[key] = {
