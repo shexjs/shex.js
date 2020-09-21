@@ -271,7 +271,7 @@ function makeTurtleCache (selection) {
 
 function makeManifestCache (selection) {
   const ret = _makeCache(selection);
-  ret.set = function (textOrObj, url, source) {
+  ret.set = async function (textOrObj, url, source) {
     $("#inputSchema .manifest li").remove();
     $("#inputData .passes li, #inputData .fails li").remove();
     if (typeof textOrObj !== "object") {
@@ -361,7 +361,7 @@ function makeManifestCache (selection) {
       });
       return acc.concat(elt);
     }, []);
-    prepareManifest(demos, url);
+    await prepareManifest(demos, url);
     $("#manifestDrop").show(); // may have been hidden if no manifest loaded.
   };
   ret.parse = function (text, base) {
@@ -408,7 +408,7 @@ function makeManifestCache (selection) {
 
 function makeExtensionCache (selection) {
   const ret = _makeCache(selection);
-  ret.set = function (code, url, source, mediaType) {
+  ret.set = async function (code, url, source, mediaType) {
     this.url = url; // @@crappyHack1 -- parms should differntiate:
     try {
       // exceptions pass through to caller (asyncGet)
@@ -501,7 +501,7 @@ return module.exports;
       ).addClass("error"));
     } else {
       code = await refd.text();
-      this.set(code, url, source, refd.headers.get('content-type'));
+      await this.set(code, url, source, refd.headers.get('content-type'));
     }
   };
 
@@ -555,35 +555,36 @@ function makeJSONCache(selection) {
 }
 
 // controls for manifest buttons
-function paintManifest (selector, list, func, listItems, side) {
+async function paintManifest (selector, list, func, listItems, side) {
   $(selector).empty();
-  list.forEach(entry => {
+  await Promise.all(list.map(async entry => {
     // build button disabled and with leading "..." to indicate that it's being loaded
     const button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
     const li = $("<li/>").append(button);
     $(selector).append(li);
     if (entry.text === undefined) {
-      fetchOK(entry.url).catch(responseOrError => {
+      entry.text = await fetchOK(entry.url).catch(responseOrError => {
         // leave a message in the schema or data block
         return "# " + renderErrorMessage(
           responseOrError instanceof Error
             ? { url: entry.url, status: -1, statusText: responseOrError.message }
           : responseOrError,
           side);
-      }).then(schemaLoaded);
+      })
+      schemaLoaded();
     } else {
-      schemaLoaded(entry.text);
+      schemaLoaded();
     }
-    function schemaLoaded (text) {
-      entry.text = text;
+
+    function schemaLoaded () {
       li.on("click", async () => {
         SharedForTests.promise = func(entry.name, entry, li, listItems, side);
       });
-      listItems[side][sum(text)] = li;
+      listItems[side][sum(entry.text)] = li;
       // enable and get rid of the "..." in the label now that it's loaded
       button.text(entry.label).removeAttr("disabled");
     }
-  });
+  }))
 }
 
 function fetchOK (url) {
@@ -601,9 +602,9 @@ function renderErrorMessage (response, what) {
   return message;
 }
 
-function clearData () {
+async function clearData () {
   // Clear out data textarea.
-  Caches.inputData.set("", DefaultBase);
+  await Caches.inputData.set("", DefaultBase);
   $("#inputData .status").text(" ");
 
   // Clear out every form of ShapeMap.
@@ -614,9 +615,9 @@ function clearData () {
   results.clear();
 }
 
-function clearAll () {
+async function clearAll () {
   $("#results .status").hide();
-  Caches.inputSchema.set("", DefaultBase);
+  await Caches.inputSchema.set("", DefaultBase);
   $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
@@ -629,9 +630,9 @@ function clearAll () {
 
 async function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
-    clearAll();
+    await clearAll();
   } else {
-    Caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
+    await Caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
     Caches.inputSchema.url = undefined; // @@ crappyHack1
     $("#inputSchema .status").text(name);
 
@@ -641,15 +642,15 @@ async function pickSchema (name, schemaTest, elt, listItems, side) {
       "fails": "Failing:",
       "indeterminant": "Data:"
     };
-    Object.keys(headings).forEach(function (key) {
+    await Promise.all(Object.keys(headings).map(async function (key) {
       if (key in schemaTest) {
         $("#inputData ." + key + "").show();
         $("#inputData ." + key + " p:first").text(headings[key]);
-        paintManifest("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
+        await paintManifest("#inputData ." + key + " ul", schemaTest[key], pickData, listItems, "inputData");
       } else {
         $("#inputData ." + key + " ul").empty();
       }
-    });
+    }));
 
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
@@ -667,7 +668,7 @@ async function pickData (name, dataTest, elt, listItems, side) {
     $(elt).removeClass("selected");
   } else {
     // Update data pane.
-    Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
+    await Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
     Caches.inputData.url = undefined; // @@ crappyHack1
     $("#inputData .status").text(name);
     $("#inputData li.selected").removeClass("selected");
@@ -746,7 +747,7 @@ const results = (function () {
   };
 })();
 
-
+let LastFailTime = 0;
 // Validation UI
 function disableResultsAndValidate (evt, done) {
   if (new Date().getTime() - LastFailTime < 100) {
@@ -761,10 +762,13 @@ function disableResultsAndValidate (evt, done) {
   }
   results.clear();
   results.start();
-  setTimeout(async function () {
-    await copyEditMapToTextMap(); // will update if #editMap is dirty
-    await callValidator(done);
-  }, 0);
+  SharedForTests.promise = new Promise((resolve, reject) => {
+    setTimeout(async function () {
+      await copyEditMapToTextMap() // will update if #editMap is dirty
+      await callValidator(done)
+      resolve()
+    }, 0);
+  })
 }
 
 function hasFocusNode () {
@@ -808,7 +812,8 @@ async function callValidator (done) {
         url: Caches.inputSchema.url || DefaultBase
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
-      ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
+      try {
+        const loaded = await ShExApi.load([alreadLoaded], [], [], []);
         let time;
         const validator = ShEx.Validator.construct(
           loaded.schema,
@@ -827,7 +832,7 @@ async function callValidator (done) {
         // const dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
 
-        ret.forEach(renderEntry);
+        await Promise.all(ret.map(renderEntry));
         // for debugging values and schema formats:
         // try {
         //   const x = ShExUtil.valToValues(ret);
@@ -840,20 +845,20 @@ async function callValidator (done) {
         // }
         finishRendering();
         if (done) { done() }
-      }).catch(function (e) {
+      } catch (e) {
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);
         console.error(e); // dump details to console.
         if (done) { done(e) }
-      });
+      }
     } else {
       const outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
         text("parsed "+Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
         append($("<button>(copy to input)</button>").
                css("border-radius", ".5em").
-               on("click", function () {
-                 Caches.inputSchema.set($("#results div").text(), DefaultBase);
+               on("click", async function () {
+                 await Caches.inputSchema.set($("#results div").text(), DefaultBase);
                })).
         append(":").
         show();
@@ -971,9 +976,9 @@ async function callValidator (done) {
 
     if (entry.status === "conformant") {
       const resultBindings = ShEx.Util.valToExtension(entry.appinfo, MapModule.url);
-      Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
+      await Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     } else {
-      Caches.bindings.set("{}");
+      await Caches.bindings.set("{}");
     }
   }
 
@@ -1000,7 +1005,6 @@ async function callValidator (done) {
       results.finish();
   }
 
-let LastFailTime = 0;
 function failMessage (e, action, text) {
   $("#results .status").empty().text("Errors encountered:").show()
   const div = $("<div/>").addClass("error");
@@ -1033,7 +1037,7 @@ async function materialize () {
     function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
     const resultBindings = _dup(await Caches.bindings.refresh());
     if (Caches.statics.get().trim().length === 0)
-      Caches.statics.set("{  }");
+      await Caches.statics.set("{  }");
     const _t = await Caches.statics.refresh();
     if (_t && Object.keys(_t) > 0) {
       if (resultBindings.constructor !== Array)
@@ -1048,7 +1052,7 @@ async function materialize () {
     }]);
 
     const binder = Mapper.binder(resultBindings);
-    Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
+    await Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     // const outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = Mapper.binder(resultBindings);
     const writer = new RdfJs.Writer({ prefixes: {} });
@@ -1598,10 +1602,10 @@ function fixedShapeMapToTerms (shapeMap) {
 /**
  * Load URL search parameters
  */
-function loadSearchParameters () {
+async function loadSearchParameters () {
   // don't overwrite if we arrived here from going back for forth in history
   if (Caches.inputSchema.selection.val() !== "" || Caches.inputData.selection.val() !== "")
-    return;
+    return Promise.resolve();
 
   const iface = parseQueryString(location.search);
 
@@ -1623,7 +1627,7 @@ function loadSearchParameters () {
     });
 
   // Load all known query parameters.
-  return Promise.all(QueryParams.reduce((promises, input) => {
+  await Promise.all(QueryParams.reduce((promises, input) => {
     const parm = input.queryStringParm;
     if (parm + "URL" in iface) {
       const url = iface[parm + "URL"][0];
@@ -1648,7 +1652,7 @@ function loadSearchParameters () {
       if ("cache" in input)
         // If it parses, make meta (prefixes, base) available.
         try {
-          input.cache.set(value, location.href);
+          promises.push(input.cache.set(value, location.href));
         } catch (e) {
           if ("fail" in input) {
             input.fail(e);
@@ -1762,7 +1766,7 @@ function customizeInterface () {
 /**
  * Prepare drag and drop into text areas
  */
-function prepareDragAndDrop () {
+async function prepareDragAndDrop () {
   QueryParams.filter(q => {
     return "cache" in q;
   }).map(q => {
@@ -1807,6 +1811,7 @@ function prepareDragAndDrop () {
             {type: "text/uri-list"},
             {type: "text/plain"}
           ];
+          const promises = [];
           if (prefTypes.find(l => {
             if (l.type.indexOf("/") === -1) {
               if (xfer[l.type].length > 0) {
@@ -1829,9 +1834,9 @@ function prepareDragAndDrop () {
                       action.schemaURL = action.schema; delete action.schema;
                       action.dataURL = action.data; delete action.data;
                     });
-                    Caches.manifest.set(parsed, DefaultBase, "drag and drop");
+                    promises.push(Caches.manifest.set(parsed, DefaultBase, "drag and drop"));
                   } else {
-                    inject(desc.targets, DefaultBase, val, l.type);
+                    promises.push(inject(desc.targets, DefaultBase, val, l.type));
                   }
                 } else if (l.type === "text/uri-list") {
                   $.ajax({
@@ -1845,7 +1850,7 @@ function prepareDragAndDrop () {
                     results.append($("<pre/>").text("GET <" + val + "> failed: " + error));
                   }).done(function (data, status, jqXhr) {
                     try {
-                      inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]);
+                      promises.push(inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]));
                       $("#loadForm").dialog("close");
                       toggleControls();
                     } catch (e) {
@@ -1853,12 +1858,12 @@ function prepareDragAndDrop () {
                     }
                   });
                 } else if (l.type === "text/plain") {
-                  inject(desc.targets, DefaultBase, val, l.type);
+                  promises.push(inject(desc.targets, DefaultBase, val, l.type));
                 }
                 $("#results .status").text("").hide();
                 // desc.targets.text(xfer.getData(l.type));
                 return true;
-                function inject (targets, url, data, mediaType) {
+                async function inject (targets, url, data, mediaType) {
                   const target =
                       targets.length === 1 ? targets[0].target :
                       targets.reduce((ret, elt) => {
@@ -1868,7 +1873,7 @@ function prepareDragAndDrop () {
                       }, null);
                   if (target) {
                     const appendTo = $("#append").is(":checked") ? target.get() : "";
-                    target.set(appendTo + data, url, 'drag and drop', mediaType);
+                    await target.set(appendTo + data, url, 'drag and drop', mediaType);
                   } else {
                     results.append("don't know what to do with " + mediaType + "\n");
                   }
@@ -1888,7 +1893,7 @@ function prepareDragAndDrop () {
                   })
                 }, null, 2)
             ));
-
+          return Promise.await(promises);
         });
     });
   function readfiles(files, targets) {
@@ -1906,9 +1911,9 @@ function prepareDragAndDrop () {
         formData.append("file", file);
         const reader = new FileReader();
         reader.onload = (function (target) {
-          return function (event) {
+          return async function (event) {
             const appendTo = $("#append").is(":checked") ? target.get() : "";
-            target.set(appendTo + event.target.result, DefaultBase);
+            await target.set(appendTo + event.target.result, DefaultBase);
           };
         })(target);
         reader.readAsText(file);
@@ -1921,7 +1926,7 @@ function prepareDragAndDrop () {
   }
 }
 
-function prepareManifest (demoList, base) {
+async function prepareManifest (demoList, base) {
   const listItems = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = {};
     return acc;
@@ -1964,7 +1969,7 @@ function prepareManifest (demoList, base) {
     return acc;
   }, {});
   const nestingAsList = Object.keys(nesting).map(e => nesting[e]);
-  paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
+  await paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
@@ -2096,7 +2101,6 @@ function addContextMenus (inputSelector, cache) {
 
     // when the items are ready,
     const p = buildMenuItemsPromise($this, e)
-    console.warn(p)
     p.then(items => {
 
       // store a callback on the trigger
@@ -2188,8 +2192,10 @@ function tableToBindings () {
 }
 
 prepareControls();
-prepareDragAndDrop();
-loadSearchParameters().then(
+Promise.all([
+  prepareDragAndDrop(), // async 'cause it calls Cache.X.set(""...)
+  loadSearchParameters()
+]).then(
   () => {
     if ('_testCallback' in window) {
       window._testCallback(SharedForTests)

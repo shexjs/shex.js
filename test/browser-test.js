@@ -143,10 +143,12 @@ if (!TEST_browser) {
         ClinObs = $('#manifestDrop').find('button').slice(0, 1)
         expect(ClinObs.text()).to.equal('clinical observation')
         ClinObs.click()
+        await SharedForTests.promise
 
         WithBDate = $('.passes').find('button').slice(0, 1)
         expect(WithBDate.text()).to.equal('with birthdate')
         WithBDate.click()
+        await SharedForTests.promise
       }).timeout(STARTUP_TIMEOUT)
 
       it("human output", async function () {
@@ -236,24 +238,22 @@ if (!TEST_browser) {
       }
     })
 
-    function validationResults (expected) {
-      return new Promise((resolve, reject) => {
-        $.event.trigger('click', e => {
-          const resDiv = $('#results > div')
-          expect(resDiv.length).to.equal(1)
-          const res = resDiv.find(expected.selector)
+    async function validationResults (expected) {
+      $("#validate").trigger('click')
+      await SharedForTests.promise
+      const resDiv = $('#results > div')
+      expect(resDiv.length).to.equal(1)
+      const res = resDiv.find(expected.selector)
 
-          expected.contents.forEach((contents, idx) => {
-            const elt = res.get(idx)
-            const classList = [...elt.classList]
-            contents.classes.forEach(cls => expect(classList).to.include(cls))
-            if (contents.shapeMap.constructor === RegExp)
-              expect(elt.textContent).to.match(contents.shapeMap)
-            else
-              expect(elt.textContent).to.include(contents.shapeMap)
-          })
-          resolve()
-        }, dom.window.document.getElementById('validate'))
+      expected.contents.forEach((contents, idx) => {
+        const elt = res.get(idx)
+        expect(elt).not.to.equal(undefined)
+        const classList = [...elt.classList]
+        contents.classes.forEach(cls => expect(classList).to.include(cls))
+        if (contents.shapeMap.constructor === RegExp)
+          expect(elt.textContent).to.match(contents.shapeMap)
+        else
+          expect(elt.textContent).to.include(contents.shapeMap)
       })
     }
   })
@@ -271,7 +271,6 @@ if (!TEST_browser) {
     }).timeout(STARTUP_TIMEOUT)
   })
 
-  if (true)
   describe('another manifest', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $
@@ -280,9 +279,7 @@ if (!TEST_browser) {
 
     it("should load clinical observation example", async function () {
       let buttons = $('#manifestDrop').find('button')
-      expect(buttons.slice(0, 1).text()).to.equal('...tOr2dot_pass_p1')
-      // await SharedForTests.promise
-      // expect(buttons.slice(0, 1).text()).to.equal('1dotOr2dot_pass_p1')
+      expect(buttons.slice(0, 1).text()).to.equal('1dotOr2dot_pass_p1')
     }).timeout(STARTUP_TIMEOUT)
   })
 
