@@ -304,9 +304,10 @@ function makeManifestCache (selection) {
     const demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
         // compatibility with test suite structure.
+
         const action = elt.action;
-        const schemaLabel = action.schemaURL.substr(action.schemaURL.lastIndexOf('/')+1);
-        const dataLabel = elt["@id"];
+        let schemaLabel = action.schema.substr(action.schema.lastIndexOf('/')+1);
+        let dataLabel = elt["@id"];
         let match = null;
         const emptyGraph = "-- empty graph --";
         if ("comment" in elt) {
@@ -327,12 +328,10 @@ function makeManifestCache (selection) {
         elt = Object.assign(
           {
             schemaLabel: schemaLabel,
-            schema: action.schema,
-            schemaURL: action.schemaURL || url,
+            schemaURL: action.schema || url,
             // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
             dataLabel: dataLabel,
-            data: action.data,
-            dataURL: action.dataURL || DefaultBase
+            dataURL: action.data || DefaultBase
           },
           (queryMap ? { queryMap: queryMap } : { queryMapURL: queryMapURL }),
           { status: elt["@type"] === "sht:ValidationFailure" ? "nonconformant" : "conformant" }
@@ -1688,7 +1687,7 @@ function prepareDragAndDrop () {
                 $("#results .status").text("handling "+l.type+"...").show();
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
-                    const parsed = JSON.parse(val);
+                    let parsed = JSON.parse(val);
                     if (!(parsed.constructor === Array)) {
                       parsed = [parsed];
                     }
