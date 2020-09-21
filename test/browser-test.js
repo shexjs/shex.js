@@ -15,6 +15,7 @@ let expect = require("chai").expect
 const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const { JSDOM } = jsdom
+let SharedForTests = null
 
 if (true) {
 var Server = require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
@@ -95,11 +96,15 @@ function setup (done, ready, searchParms) {
   let dom = getDom(searchParms)
   // stamp('dom')
   dom.window.fetch = node_fetch
-  dom.window._testCallback = e => {
+  dom.window._testCallback = parm => {
+    if (parm instanceof Error)
+      return done(parm)
+
     // stamp('hear')
     clearTimeout(timer)
     ready(dom)
-    done(e)
+    SharedForTests = parm
+    done()
   }
   return dom
 
@@ -131,15 +136,25 @@ describe('no URL parameters', function () { // needs this
     dom.window.$('#inputData textarea').val()
   })
 
+  let InputData, InputSchema
+  let QueryMap, QueryMapEditor, FixedMap
+  let ClinObs, WithBDate
+
   it("should load clinical observation example", async function () {
-    let clinObs = dom.window.$('#manifestDrop').find('button').slice(0, 1)
-    expect(clinObs.text()).to.equal('clinical observation')
-    clinObs.click()
+    ClinObs = $('#manifestDrop').find('button').slice(0, 1)
+    expect(ClinObs.text()).to.equal('clinical observation')
+    ClinObs.click()
 
-    let withBDate = dom.window.$('.passes').find('button').slice(0, 1)
-    expect(withBDate.text()).to.equal('with birthdate')
-    withBDate.click()
+    WithBDate = $('.passes').find('button').slice(0, 1)
+    expect(WithBDate.text()).to.equal('with birthdate')
+    WithBDate.click()
 
+    QueryMap = $('#textMap')
+    QueryMapEditor = $('#editMap')
+    FixedMap = $('#fixedMap')
+  }).timeout(STARTUP_TIMEOUT)
+
+  it("human output", async function () {
     $("#interface").val("human");
     await validationResults({
       name: "human", selector: "> div", contents: [
@@ -147,7 +162,9 @@ describe('no URL parameters', function () { // needs this
         { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
       ]
     })
+  })
 
+  it("minimal output", async function () {
     $("#interface").val("minimal");
     await validationResults({
       name: "minimal", selector: "> pre", contents: [
@@ -155,7 +172,9 @@ describe('no URL parameters', function () { // needs this
         { shapeMap: /"node": "[^"]+Patient2"/, classes: ["passes"] },
       ]
     })
+  })
 
+  it("matched graph output", async function () {
     $("#interface").val("human");
     $("#success").val("query");
     await validationResults({
@@ -164,12 +183,66 @@ describe('no URL parameters', function () { // needs this
         { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
       ]
     })
-  }).timeout(STARTUP_TIMEOUT)
+  })
+
+
+  it("set query map - empty", async function () {
+    await set("#textMap", "")
+    expect($("#editMap .pair").length).to.equal(1)
+    expect($("#fixedMap .pair").length).to.equal(0)
+    expect(mapToText($("#editMap"))).to.equal("@")
+    expect(mapToText($("#fixedMap"))).to.equal("")
+  })
+
+  it("set query map - one", async function () {
+    await set("#textMap", "{FOCUS :subject _}@START")
+    expect($("#editMap .pair").length).to.equal(1)
+    expect($("#fixedMap .pair").length).to.equal(1)
+    expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START")
+    expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
+  })
+
+  it("set query map - one,", async function () {
+    await set("#textMap", "{FOCUS :subject _}@START,")
+    expect($("#editMap .pair").length).to.equal(1)
+    expect($("#fixedMap .pair").length).to.equal(1)
+    expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START")
+    expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
+  })
+
+  it("set query map - two -> one", async function () {
+    await set("#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
+    expect($("#editMap .pair").length).to.equal(2)
+    expect($("#fixedMap .pair").length).to.equal(1)
+    expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START,{FOCUS <http://hl7.org/fhir/lalala> _}@START")
+    expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
+  })
+
+  async function set (selector, value) {
+    $(selector).val(value)
+    $(selector).trigger("change")
+    await SharedForTests.promise
+  }
+
+  async function wait (timeout) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(timeout)
+      }, timeout)
+    })
+  }
+
+  function mapToText (map) {
+    return map.find(".pair").map((idx, pair) => fixedMapPairToText(pair)).get().join(',')
+  }
+  function fixedMapPairToText (pair) {
+    return $(pair).find(".focus").val() + $(pair).find(".shapeMap-joiner").text() + $(pair).find(".inputShape").val()
+  }
 
   function validationResults (expected) {
     return new Promise((resolve, reject) => {
       $.event.trigger('click', e => {
-        const resDiv = dom.window.$('#results > div')
+        const resDiv = $('#results > div')
         expect(resDiv.length).to.equal(1)
         const res = resDiv.find(expected.selector)
 
@@ -195,7 +268,7 @@ describe('default URL parameters', function () { // needs this
                                '?manifestURL=../examples/manifest.json') })
 
   it("should load clinical observation example", function (done) {
-    let buttons = dom.window.$('#manifestDrop').find('button')
+    let buttons = $('#manifestDrop').find('button')
     expect(buttons.slice(0, 1).text()).to.equal('clinical observation')
     done()
   }).timeout(STARTUP_TIMEOUT)

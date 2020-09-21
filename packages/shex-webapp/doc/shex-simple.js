@@ -9,6 +9,7 @@ const ShExApi = ShEx.Api({
   fetch, rdfjs: RdfJs, jsonld: null
 })
 ShEx.ShapeMap.start = ShEx.Validator.start
+const SharedForTests = {} // an object to share state with a test harness
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
@@ -132,7 +133,7 @@ function _makeCache (selection) {
   let resolver;
   const ret = {
     selection: selection,
-    parsed: null,
+    parsed: null, // a Promise
     meta: { prefixes: {}, base: DefaultBase },
     dirty: function (newVal) {
       const ret = _dirty;
@@ -153,10 +154,11 @@ function _makeCache (selection) {
         // Note that Caches.manifest.set takes a 3rd parm.
       }
     },
-    refresh: function () {
+    refresh: async function () {
       if (!_dirty)
         return this.parsed;
       this.parsed = this.parse(selection.val(), this.meta.base);
+      await this.parsed;
       resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
@@ -237,8 +239,8 @@ function makeSchemaCache (selection) {
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
-  ret.getItems = function () {
-    const obj = this.refresh();
+  ret.getItems = async function () {
+    const obj = await this.refresh();
     const start = "start" in obj ? [START_SHAPE_LABEL] : [];
     const rest = "shapes" in obj ? obj.shapes.map(se => Caches.inputSchema.meta.termToLex(se.id)) : [];
     return start.concat(rest);
@@ -251,8 +253,8 @@ function makeTurtleCache (selection) {
   ret.parse = function (text, base) {
     return ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
   };
-  ret.getItems = function () {
-    const data = this.refresh();
+  ret.getItems = async function () {
+    const data = await this.refresh();
     return data.getQuads().map(t => {
       return Caches.inputData.meta.termToLex(t.subject); // !!check
     });
@@ -355,7 +357,7 @@ function makeManifestCache (selection) {
   ret.parse = function (text, base) {
     throw Error("should not try to parse manifest cache");
   };
-  ret.getItems = function () {
+  ret.getItems = async function () {
     throw Error("should not try to get manifest cache items");
   };
   return ret;
@@ -497,7 +499,7 @@ return module.exports;
     throw Error("should not try to parse extension cache");
   };
 
-  ret.getItems = function () {
+  ret.getItems = async function () {
     throw Error("should not try to get extension cache items");
   };
 
@@ -521,14 +523,14 @@ return module.exports;
 
 function makeShapeMapCache (selection) {
   const ret = _makeCache(selection);
-  ret.parse = function (text) {
+  ret.parse = async function (text) {
     removeEditMapPair(null);
     $("#textMap").val(text);
     copyTextMapToEditMap();
-    copyEditMapToFixedMap();
+    await copyEditMapToFixedMap();
   };
   // ret.parse = function (text, base) {  };
-  ret.getItems = function () {
+  ret.getItems = async function () {
     throw Error("should not try to get manifest cache items");
   };
   return ret;
@@ -555,8 +557,8 @@ function paintManifest (selector, list, func, listItems, side) {
     }
     function schemaLoaded (text) {
       entry.text = text;
-      li.on("click", () => {
-        func(entry.name, entry, li, listItems, side);
+      li.on("click", async () => {
+        SharedForTests.promise = func(entry.name, entry, li, listItems, side);
       });
       listItems[side][sum(text)] = li;
       button.text(entry.label).removeAttr("disabled");
@@ -605,7 +607,7 @@ function clearAll () {
   $("#inputData .passes ul, #inputData .fails ul").empty();
 }
 
-function pickSchema (name, schemaTest, elt, listItems, side) {
+async function pickSchema (name, schemaTest, elt, listItems, side) {
   if ($(elt).hasClass("selected")) {
     clearAll();
   } else {
@@ -632,14 +634,14 @@ function pickSchema (name, schemaTest, elt, listItems, side) {
     $("#inputSchema li.selected").removeClass("selected");
     $(elt).addClass("selected");
     try {
-      Caches.inputSchema.refresh();
+      await Caches.inputSchema.refresh();
     } catch (e) {
       failMessage(e, "parsing schema");
     }
   }
 }
 
-function pickData (name, dataTest, elt, listItems, side) {
+async function pickData (name, dataTest, elt, listItems, side) {
   clearData();
   if ($(elt).hasClass("selected")) {
     $(elt).removeClass("selected");
@@ -651,7 +653,7 @@ function pickData (name, dataTest, elt, listItems, side) {
     $("#inputData li.selected").removeClass("selected");
     $(elt).addClass("selected");
     try {
-      Caches.inputData.refresh();
+      await Caches.inputData.refresh();
     } catch (e) {
       failMessage(e, "parsing data");
     }
@@ -659,21 +661,24 @@ function pickData (name, dataTest, elt, listItems, side) {
     // Update ShapeMap pane.
     removeEditMapPair(null);
     if (dataTest.entry.queryMap === undefined) {
-      fetchOK(dataTest.entry.queryMapURL).then(queryMapLoaded).catch(response => {
-        renderErrorMessage(response, "queryMap");
-      });
+      try {
+        const resp = await fetchOK(dataTest.entry.queryMapURL)
+        queryMapLoaded(resp);
+      } catch (e) {
+        renderErrorMessage(e, "queryMap");
+      }
     } else {
-      queryMapLoaded(dataTest.entry.queryMap);
+      await queryMapLoaded(dataTest.entry.queryMap);
     }
 
-    function queryMapLoaded (text) {
+    async function queryMapLoaded (text) {
       dataTest.entry.queryMap = text;
       try {
         $("#textMap").val(JSON.parse(dataTest.entry.queryMap).map(entry => `<${entry.node}>@<${entry.shape}>`).join(",\n"));
       } catch (e) {
         $("#textMap").val(dataTest.entry.queryMap);
       }
-      copyTextMapToEditMap();
+      await copyTextMapToEditMap();
       // callValidator();
     }
   }
@@ -728,9 +733,9 @@ function disableResultsAndValidate (evt, done) {
   }
   results.clear();
   results.start();
-  setTimeout(function () {
-    copyEditMapToTextMap(); // will update if #editMap is dirty
-    callValidator(done);
+  setTimeout(async function () {
+    await copyEditMapToTextMap(); // will update if #editMap is dirty
+    await callValidator(done);
   }, 0);
 }
 
@@ -742,17 +747,17 @@ function hasFocusNode () {
   });
 }
 
-function callValidator (done) {
+async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
   let currentAction = "parsing input schema";
   try {
-    noStack(() => { Caches.inputSchema.refresh(); });
+    await Caches.inputSchema.refresh(); // @@ throw away parser stack?
     $("#schemaDialect").text(Caches.inputSchema.language);
     if (hasFocusNode()) {
       currentAction = "parsing input data";
       $("#results .status").text("parsing data...").show();
-      const inputData = Caches.inputData.refresh(); // need prefixes for ShapeMap
+      const inputData = await Caches.inputData.refresh(); // need prefixes for ShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       currentAction = "parsing shape map";
       const fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
@@ -770,7 +775,7 @@ function callValidator (done) {
       //         ShEx.Util.canonicalize(
       //           Caches.inputSchema.refresh())));
       const alreadLoaded = {
-        schema: Caches.inputSchema.refresh(),
+        schema: await Caches.inputSchema.refresh(),
         url: Caches.inputSchema.url || DefaultBase
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
@@ -840,16 +845,6 @@ function callValidator (done) {
       results.finish();
       if (done) { done() }
     }
-
-    function noStack (f) {
-      try {
-        f();
-      } catch (e) {
-        // The Parser error stack is uninteresting.
-        delete e.stack;
-        throw e;
-      }
-    }
   } catch (e) {
     failMessage(e, currentAction);
     console.error(e); // dump details to console.
@@ -872,7 +867,7 @@ function callValidator (done) {
   }
 }
 
-  function renderEntry (entry) {
+  async function renderEntry (entry) {
     const fails = entry.status === "nonconformant";
 
     // locate FixedMap entry
@@ -893,7 +888,7 @@ function callValidator (done) {
       }
       if ($("#success").val() === "remainder") {
         const remainder = new RdfJs.Store();
-        remainder.addQuads(Caches.inputData.refresh().getQuads());
+        remainder.addQuads((await Caches.inputData.refresh()).getQuads());
         entry.graph.forEach(q => remainder.removeQuad(q));
         entry.graph = remainder.getQuads();
       }
@@ -1171,19 +1166,19 @@ function prepareControls () {
   });
 
   $("#shapeMap-tabs").tabs({
-    activate: function (event, ui) {
+    activate: async function (event, ui) {
       if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
-        copyEditMapToTextMap();
+        await copyEditMapToTextMap();
     }
   });
   $("#textMap").on("change", evt => {
     results.clear();
-    copyTextMapToEditMap();
+    SharedForTests.promise = copyTextMapToEditMap();
   });
-  Caches.inputData.selection.on("change", evt => {
-    copyEditMapToFixedMap();
+  Caches.inputData.selection.on("change", async evt => {
+    await copyEditMapToFixedMap();
   });
-  $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
+  // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
 
   function dismissModal (evt) {
     // $.unblockUI();
@@ -1211,7 +1206,10 @@ function prepareControls () {
   });
 }
 
-function toggleControls (evt) {
+async function toggleControls (evt) {
+  // don't use `return false` 'cause the browser doesn't wait around for a promise before looking at return false to decide the event is handled
+  if (evt) evt.preventDefault();
+
   const revealing = evt && $("#controls").css("display") !== "flex";
   $("#controls").css("display", revealing ? "flex" : "none");
   toggleControlsArrow(revealing ? "up" : "down");
@@ -1229,9 +1227,10 @@ function toggleControls (evt) {
       const left = bottonBBox.right - bottonBBox.width; // - controlsBBox.width;
       $("#controls").css("top", bottonBBox.bottom).css("left", left);
     }
-    $("#permalink a").attr("href", getPermalink());
+    $("#permalink a").removeAttr("href"); // can't click until ready
+    const permalink = await getPermalink();
+    $("#permalink a").attr("href", permalink);
   }
-  return false;
 }
 
 function toggleControlsArrow (which) {
@@ -1300,11 +1299,12 @@ function markEditMapClean () {
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
  */
-function copyEditMapToFixedMap () {
+async function copyEditMapToFixedMap () {
   $("#fixedMap tbody").empty(); // empty out the fixed map.
   const fixedMapTab = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
   const restoreText = fixedMapTab.text();
   fixedMapTab.text("resolving Fixed Map").addClass("running");
+  $("#fixedMap .pair").remove(); // clear out existing edit map (make optional?)
   const nodeShapePromises = $("#editMap .pair").get().reduce((acc, queryPair) => {
     $(queryPair).find(".error").removeClass("error"); // remove previous error markers
     const node = $(queryPair).find(".focus").val();
@@ -1318,8 +1318,9 @@ function copyEditMapToFixedMap () {
     try {
       const sm = smparser.parse(node + '@' + shape)[0];
       const added = typeof sm.node === "string" || "@value" in sm.node
-        ? Promise.resolve({nodes: [node], shape: shape, status: status})
-        : Promise.resolve({nodes: getQuads(sm.node.subject, sm.node.predicate, sm.node.object), shape: shape, status: status}); // !!check
+            ? Promise.resolve({nodes: [node], shape: shape, status: status})
+            : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
+            .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
       return acc.concat(added);
     } catch (e) {
       // find which cell was broken
@@ -1335,8 +1336,9 @@ function copyEditMapToFixedMap () {
     }
   }, []);
 
-  Promise.all(nodeShapePromises).then(pairs => pairs.reduce((acc, pair) => {
-    pair.nodes.forEach(node => {// !!check
+  const pairs = await Promise.all(nodeShapePromises)
+  pairs.reduce((acc, pair) => {
+    pair.nodes.forEach(node => {
       const nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
       let shapeTerm = Caches.inputSchema.meta.lexToTerm(pair.shape);
       if (shapeTerm === ShEx.Validator.start)
@@ -1350,17 +1352,16 @@ function copyEditMapToFixedMap () {
     });
 
     return acc;
-  }, {})).then(() => {
-    // scroll inputs to right
-    $("#fixedMap input").each((idx, focusElt) => {
-      focusElt.scrollLeft = focusElt.scrollWidth;
-    });
-    fixedMapTab.text(restoreText).removeClass("running");
+  }, {})
+  // scroll inputs to right
+  $("#fixedMap input").each((idx, focusElt) => {
+    focusElt.scrollLeft = focusElt.scrollWidth;
   });
+  fixedMapTab.text(restoreText).removeClass("running");
 
-  function getQuads (s, p, o) {
+  async function getQuads (s, p, o) {
     const get = s === ShEx.ShapeMap.focus ? "subject" : "object";
-    return Caches.inputData.refresh().getQuads(mine(s), mine(p), mine(o)).map(t => {
+    return (await Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
       return Caches.inputData.meta.termToLex(t[get]);// !!check
     });
     function mine (term) {
@@ -1420,7 +1421,7 @@ function lexifyFirstColumn (row) { // !!not used
   return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
 }
 
-function copyEditMapToTextMap () {
+async function copyEditMapToTextMap () {
   if ($("#editMap").attr("data-dirty") === "true") {
     const text = $("#editMap .pair").get().reduce((acc, queryPair) => {
       const node = $(queryPair).find(".focus").val();
@@ -1431,7 +1432,7 @@ function copyEditMapToTextMap () {
       return acc.concat([node+"@"+status+shape]);
     }, []).join(",\n");
     $("#textMap").empty().val(text);
-    copyEditMapToFixedMap();
+    await copyEditMapToFixedMap();
     markEditMapClean();
   }
 }
@@ -1440,19 +1441,20 @@ function copyEditMapToTextMap () {
  * Parse a supplied query map and build #editMap
  * @returns list of errors. ([] means everything was good.)
  */
-function copyTextMapToEditMap () {
+async function copyTextMapToEditMap () {
   $("#textMap").removeClass("error");
   const shapeMap = $("#textMap").val();
-  try { Caches.inputSchema.refresh(); } catch (e) { }
-  try { Caches.inputData.refresh(); } catch (e) { }
+  try { await Caches.inputSchema.refresh(); } catch (e) { }
+  try { await Caches.inputData.refresh(); } catch (e) { }
   try {
     const smparser = ShEx.ShapeMapParser.construct(
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
     const sm = smparser.parse(shapeMap);
     removeEditMapPair(null);
     addEditMapPairs(sm.length ? sm : null);
-    copyEditMapToFixedMap();
+    const ret = await copyEditMapToFixedMap();
     markEditMapClean();
+    return ret;
   } catch (e) {
     $("#textMap").addClass("error");
     $("#fixedMap").empty();
@@ -1559,9 +1561,9 @@ function loadSearchParameters () {
     $("body").keydown(function (e) { // keydown because we need to preventDefault
       const code = e.keyCode || e.charCode; // standards anyone?
       if (e.ctrlKey && (code === 10 || code === 13)) {
-        const at = $(":focus");
-        $("#validate").focus().click();
-        at.focus();
+        // const at = $(":focus");
+        $("#validate")/*.focus()*/.click();
+        // at.focus();
         return false; // same as e.preventDefault();
       } else {
         return true;
@@ -1574,7 +1576,7 @@ function loadSearchParameters () {
         ("schema" in iface &&
          iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
        && shapeMapErrors.length === 0) {
-      callValidator();
+      return callValidator();
     }
   });
 }
@@ -1582,9 +1584,9 @@ function loadSearchParameters () {
   /**
    * update location with a current values of some inputs
    */
-  function getPermalink () {
+  async function getPermalink () {
     let parms = [];
-    copyEditMapToTextMap();
+    await copyEditMapToTextMap();
     parms = parms.concat(QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
@@ -1863,117 +1865,149 @@ function prepareManifest (demoList, base) {
 }
 
 function addContextMenus (inputSelector, cache) {
-    // !!! terribly stateful; only one context menu at a time!
-    let terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
-    $.contextMenu({
-      selector: inputSelector,
-      callback: function (key, options) {
-        markEditMapDirty();
-        if (options.items[key].ignore) { // ignore the event
-        } else if (terms) {
-          const term = terms.tz[terms.match];
-          const val = nodeLex.substr(0, term[0]) +
-              key + addSpace +
-              nodeLex.substr(term[0] + term[1]);
-          if (terms.match === 2 && !m[9])
-            val = val + "}";
-          else if (term[0] + term[1] === nodeLex.length)
-            val = val + " ";
-          $(options.selector).val(val);
-          // target.scrollLeft = scrollLeft + val.length - nodeLex.length;
-          target.scrollLeft = target.scrollWidth;
-        } else {
-          $(options.selector).val(key);
-        }
-      },
-      build: function (elt, evt) {
-        if (elt.hasClass("data")) {
-          nodeLex = elt.val();
-          const shapeLex = elt.parent().parent().find(".schema").val()
+  // !!! terribly stateful; only one context menu at a time!
+  const DATA_HANDLE = 'runCallbackThingie'
+  let terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
+  $(inputSelector).on('contextmenu', rightClickHandler)
+  $.contextMenu({
+    trigger: 'none',
+    selector: inputSelector,
+    build: function($trigger, e) {
+      // return callback set by the mouseup handler
+      return $trigger.data(DATA_HANDLE)();
+    }
+  });
 
-          // Would like to use SMParser but that means users can't fix bad SMs.
-          // const sm = smparser.parse(nodeLex + '@START')[0];
-          // const m = typeof sm.node === "string" || "@value" in sm.node
-          //     ? null
-          //     : tpToM(sm.node);
+  async function buildMenuItemsPromise (elt, evt) {
+    if (elt.hasClass("data")) {
+      nodeLex = elt.val();
+      const shapeLex = elt.parent().parent().find(".schema").val()
 
-          m = nodeLex.match(RegExp("^"+ParseTriplePattern+"$"));
-          if (m) {
-            target = evt.target;
-            const selStart = target.selectionStart;
-            scrollLeft = target.scrollLeft;
-            terms = [0, 1, 2].reduce((acc, ord) => {
-              if (m[(ord+1)*2-1] !== undefined) {
-                const at = acc.start + m[(ord+1)*2-1].length;
-                const len = m[(ord+1)*2] ? m[(ord+1)*2].length : 0;
-                return {
-                  start: at + len,
-                  tz: acc.tz.concat([[at, len]]),
-                  match: acc.match === null && at + len >= selStart ?
-                    ord :
-                    acc.match
-                };
-              } else {
-                return acc;
-              }
-            }, {start: 0, tz: [], match: null });
-            function norm (tz) {
-              return tz.map(t => {
-                return t.startsWith('!')
-                  ? {name: "- " + t.substr(1) + " -", ignore: true}
-                  : {name: Caches.inputData.meta.termToLex(t)}; // !!check
-              });
-            }
-            const queryMapKeywords = [{name: "FOCUS"}, {name: "_"}];
-            const getTermsFunctions = [
-              () => { return queryMapKeywords.concat(norm(store.getSubjects())); },
-              () => { return norm(store.getPredicates()); },
-              () => { return queryMapKeywords.concat(norm(store.getObjects())); },
-            ];
-            const store = Caches.inputData.refresh();
-            const items = [];
-            if (terms.match === null)
-              return false; // prevent contextMenu from whining about an empty list
-            items = getTermsFunctions[terms.match]();
+      // Would like to use SMParser but that means users can't fix bad SMs.
+      /*
+        const sm = smparser.parse(nodeLex + '@START')[0];
+        const m = typeof sm.node === "string" || "@value" in sm.node
+            ? null
+            : tpToM(sm.node);
+      */
+
+      m = nodeLex.match(RegExp("^"+ParseTriplePattern+"$"));
+      if (m) {
+        target = evt.target;
+        const selStart = target.selectionStart;
+        scrollLeft = target.scrollLeft;
+        terms = [0, 1, 2].reduce((acc, ord) => {
+          if (m[(ord+1)*2-1] !== undefined) {
+            const at = acc.start + m[(ord+1)*2-1].length;
+            const len = m[(ord+1)*2] ? m[(ord+1)*2].length : 0;
             return {
-              items:
-              items.reduce((ret, opt) => {
-                ret[opt.name] = opt;
-                return ret;
-              }, {})
+              start: at + len,
+              tz: acc.tz.concat([[at, len]]),
+              match: acc.match === null && at + len >= selStart ?
+                ord :
+                acc.match
             };
-            
+          } else {
+            return acc;
           }
+        }, {start: 0, tz: [], match: null });
+        function norm (tz) {
+          return tz.map(t => {
+            return t.startsWith('!')
+              ? "- " + t.substr(1) + " -"
+              : Caches.inputData.meta.termToLex(t); // !!check
+          });
         }
-        terms = nodeLex = null;
-        try {
-          return {
-            items: cache.getItems().reduce((ret, opt) => {
-              ret[opt] = { name: opt };
-              return ret;
-            }, {})
-          };
-        } catch (e) {
-          failMessage(e, cache === Caches.inputSchema ? "parsing schema" : "parsing data");
-          let items = {};
-          const failContent = "no choices found";
-          items[failContent] = failContent;
-          return { items: items }
-        }
-
-        // hack to emulate regex parsing product
-        // function tpToM (tp) {
-        //   return [nodeLex, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
-        //   function lex (node) {
-        //     return node === ShEx.ShapeMap.focus
-        //       ? "FOCUS"
-        //       : node === null
-        //       ? "_"
-        //       : Caches.inputData.meta.termToLex(node);
-        //   }
-        // }
+        const queryMapKeywords = ["FOCUS", "_"];
+        const getTermsFunctions = [
+          () => { return queryMapKeywords.concat(norm(store.getSubjects())); },
+          () => { return norm(store.getPredicates()); },
+          () => { return queryMapKeywords.concat(norm(store.getObjects())); },
+        ];
+        const store = await Caches.inputData.refresh();
+        if (terms.match === null)
+          return false; // prevent contextMenu from whining about an empty list
+        return listToCTHash(getTermsFunctions[terms.match]())
       }
+    }
+    terms = nodeLex = null;
+    try {
+      return listToCTHash(await cache.getItems())
+    } catch (e) {
+      failMessage(e, cache === Caches.inputSchema ? "parsing schema" : "parsing data");
+      let items = {};
+      const failContent = "no choices found";
+      items[failContent] = failContent;
+      return items
+    }
+
+    // hack to emulate regex parsing product
+    /*
+      function tpToM (tp) {
+        return [nodeLex, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
+        function lex (node) {
+          return node === ShEx.ShapeMap.focus
+            ? "FOCUS"
+            : node === null
+            ? "_"
+            : Caches.inputData.meta.termToLex(node);
+        }
+      }
+    */
+  }
+
+  function rightClickHandler (e) {
+    e.preventDefault();
+    const $this = $(this);
+    $this.off('contextmenu', rightClickHandler);
+
+    // when the items are ready,
+    const p = buildMenuItemsPromise($this, e)
+    console.warn(p)
+    p.then(items => {
+
+      // store a callback on the trigger
+      $this.data(DATA_HANDLE, function () {
+        return {
+          callback: menuCallback,
+          items: items
+        };
+      });
+      const _offset = $this.offset();
+      $this.contextMenu({
+        x: _offset.left + 10,
+        y: _offset.top + 10
+      })
+      $this.on('contextmenu', rightClickHandler)
     });
+  }
+
+  function menuCallback (key, options) {
+    markEditMapDirty();
+    if (options.items[key].ignore) { // ignore the event
+    } else if (terms) {
+      const term = terms.tz[terms.match];
+      const val = nodeLex.substr(0, term[0]) +
+            key + addSpace +
+            nodeLex.substr(term[0] + term[1]);
+      if (terms.match === 2 && !m[9])
+        val = val + "}";
+      else if (term[0] + term[1] === nodeLex.length)
+        val = val + " ";
+      $(options.selector).val(val);
+      // target.scrollLeft = scrollLeft + val.length - nodeLex.length;
+      target.scrollLeft = target.scrollWidth;
+    } else {
+      $(options.selector).val(key);
+    }
+  }
+
+  function listToCTHash (items) {
+    return items.reduce((acc, item) => {
+      acc[item] = { name: item }
+      return acc
+    }, {})
+  }
 }
 
 prepareControls();
@@ -1981,13 +2015,13 @@ prepareDragAndDrop();
 loadSearchParameters().then(
   () => {
     if ('_testCallback' in window) {
-      window._testCallback()
+      window._testCallback(SharedForTests)
     }
   }).catch(
     e => {
-    if ('_testCallback' in window) {
-      window._testCallback(e)
-    }
+      if ('_testCallback' in window) {
+        window._testCallback(e instanceof Error ? e : Error(e))
+      }
     }
   )
 
