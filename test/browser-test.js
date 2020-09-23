@@ -21,104 +21,10 @@ const jsdom = require("jsdom")
 const { JSDOM } = jsdom
 let SharedForTests = null
 
-if (true) {
-var Server = require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
-    .get(RegExp(PATH))
-    .reply(function(path, requestBody) {
-      let filePath = __dirname + '/../' + getRelPath(path);
-      let ret = fs.readFileSync(filePath, 'utf8')
-      logServed(path, filePath, ret.length)
-      return [200, ret, {}];
-    })
-    .persist()
-} else if (false) {
-  var Server = new (require("mock-http-server"))({ host: HOST, port: PORT });
-  
-  Server.start(() => {});
-  // Server.stop(done);
-
-  Server.on({
-    method: 'GET',
-    path: '*',
-    reply: {
-      status:  200,
-      // headers: { "content-type": "application/json" },
-      body: function (req) {
-        let path = req.originalUrl
-        let filePath = getRelPath(path)
-        let ret = fs.readFileSync(filePath, 'utf8');
-        logServed(req.originalUrl, filePath, ret.length)
-        return ret
-      }
-    }
-  });
-} else {
-  const http = require('http')
-
-  const requestHandler = (request, response) => {
-    let filePath = getRelPath(request.url)
-    let ret = fs.readFileSync(filePath, 'utf8');
-    logServed(request.url, filePath, ret.length)
-    return response.end(ret)
-  }
-
-  const Server = http.createServer(requestHandler)
-
-  Server.listen(PORT, (err) => {
-    if (err) {
-      return console.log('something bad happened', err)
-    }
-  })
-}
-
-function getRelPath (url) {
-  url = url.replace(/^\/shexSpec/, '')
-  let filePath = url.substr(PATH.length)
-  return filePath.replace(/\?.*$/, '')
-}
+const Server = startServer()
 
 function logServed (url, filePath, length) {
   // console.log(url, filePath, length)
-}
-
-function getDom (page, searchParms) {
-  let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + page + searchParms
-  return new JSDOM(fs.readFileSync(__dirname + '/../' + page, 'utf8'), {
-    url: url,
-    runScripts: "dangerously",
-    resources: "usable"
-  })
-}
-
-async function setup (page, searchParms) {
-  // let start = Date.now()
-  // stamp('start')
-  let timer = setTimeout(() => {
-    // stamp('script load timeout')
-    throw Error(`script load timeout ${SCRIPT_CALLBACK_TIMEOUT}`)
-  }, SCRIPT_CALLBACK_TIMEOUT)
-  let dom = getDom(page, searchParms)
-  // stamp('dom')
-  dom.window.fetch = node_fetch
-  await new Promise((resolve, reject) => {
-    dom.window._testCallback = (parm, results) => {
-      if (parm instanceof Error)
-        throw parm
-
-      // stamp('callback')
-      clearTimeout(timer)
-      SharedForTests = parm
-      resolve()
-    }
-  })
-  const loaded = (await SharedForTests.promise).loads
-  return { dom, $: dom.window.$, loaded }
-
-  // function stamp (message) {
-  //   let t = Date.now()
-  //   console.warn(message, t, t - start)
-  //   start = t
-  // }
 }
 
 if (!TEST_browser) {
@@ -132,7 +38,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(page, ''));
+      ({ dom, $, loaded } = await loadPage(page, ''));
     })
 
     describe('validation output', function () {
@@ -164,7 +70,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(page, '?manifestURL=../../shex-webapp/examples/manifest.json'));
+      ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../../shex-webapp/examples/manifest.json'));
     })
 
     it("should load manifest", function () {
@@ -302,7 +208,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(page, '?manifestURL=../examples/manifest.json999'));
+      ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../examples/manifest.json999'));
     })
 
     it("should load manifest", function () {
@@ -321,7 +227,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(page, '?manifestURL=/shex.js/test/browser/manifest-one.json'));
+      ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-one.json'));
     })
 
     it("should load clinical observation example", async function () {
@@ -334,7 +240,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(page, '?manifestURL='));
+      ({ dom, $, loaded } = await loadPage(page, '?manifestURL='));
     })
 
     it("should load no schemas", async function () {
@@ -347,79 +253,45 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(page, '?manifestURL='));
+      ({ dom, $, loaded } = await loadPage(page, '?manifestURL='));
     })
 
     it("single test manifest", async function () {
-      await drop("#manifestDrop", { "application/json": JSON.stringify(testEx1, null, 2) })
+      await dropData("#manifestDrop", { "application/json": JSON.stringify(testEx1, null, 2) })
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(1)
       expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
     })
 
     it("test manifest array of one", async function () {
-      await drop("#manifestDrop", { "application/json": JSON.stringify([testEx1], null, 2) })
+      await dropData("#manifestDrop", { "application/json": JSON.stringify([testEx1], null, 2) })
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(1)
       expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
     })
 
     it("test manifest array of two", async function () {
-      await drop("#manifestDrop", { "application/json": JSON.stringify([testEx1, testEx2], null, 2) })
+      await dropData("#manifestDrop", { "application/json": JSON.stringify([testEx1, testEx2], null, 2) })
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(2)
       expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
       expect(buttons.slice(1, 2).text()).to.equal('1dot-relative.shex')
     })
 
-    async function drop (selector, data) {
-      const $elt = $(selector)
-      const offset = $elt.offset()
-      const type = "drop";
-      const options = Object.assign({}, {
-	bubbles: true,
-	cancelable: (type !== "mousemove"),
-	view: dom.window,
-	detail: 0,
-	screenX: 0,
-	screenY: 0,
-	clientX: 1,
-	clientY: 1,
-	ctrlKey: false,
-	altKey: false,
-	shiftKey: false,
-	metaKey: false,
-	button: 0,
-	relatedTarget: undefined
-      }, {
-        dx: offset.left,
-        dy: offset.top
-      });
+    async function dropData (selector, data) {
       const event = dom.window.document.createEvent("MouseEvents");
-      event.initMouseEvent( type, options.bubbles, options.cancelable,
-			    options.view, options.detail,
-			    options.screenX, options.screenY, options.clientX, options.clientY,
-			    options.ctrlKey, options.altKey, options.shiftKey, options.metaKey,
-			    options.button, options.relatedTarget || dom.window.document.body.parentNode );
+      event.initMouseEvent( "drop", true, true );
       event.dataTransfer = {
         data: data,
-        setData: function(type, val) {
-          this.data[type] = val
-        },
-        getData: function(type) {
-          return this.data[type]
-        },
+        setData: function(type, val) { this.data[type] = val },
+        getData: function(type) { return this.data[type] },
 	dropEffect: 'none',
 	effectAllowed: 'all',
         files: [],
  	items: {},
 	types: [],
       }
-      // const dataTransfer = new DataTransfer;
-      // dataTransfer.setData("data", data);
-      // const event = new DragEvent('drop', { dataTransfer: dataTransfer });
-      const elem = $elt.get(0);
-      elem.dispatchEvent( event );
+      $(selector).get(0).dispatchEvent( event );
       await SharedForTests.promise;
     }
   })
@@ -427,6 +299,7 @@ if (!TEST_browser) {
   let testExample1 = {
     "@id": "#3circRefS1-IS2-IS3-IS3",
     "@type": "sht:ValidationTest",
+    "trait": [ "Import" ],
     "action": {
       "schema": "https://shex.io/shexTest/master/schemas/3circRefS1-IS2-IS3-IS3.shex",
       "shape": "http://a.example/S1",
@@ -435,9 +308,6 @@ if (!TEST_browser) {
     },
     "extensionResults": [],
     "name": "3circRefS1-IS2-IS3-IS3",
-    "trait": [
-      "Import"
-    ],
     "comment": "I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> } on { <n1> <p1> \"X\" ; <p2> <n2> . <n2> <p3> <n3> . <n3> <p4> <n5> . <n5> <p1> \"X\" }",
     "status": "mf:proposed",
     "result": "3circRefPlus1_pass-open.val"
@@ -461,6 +331,7 @@ if (!TEST_browser) {
   const testEx2 = {
     "@id": "#1dot-relative_pass-short-shape",
     "@type": "sht:ValidationTest",
+    "trait": [ "relativeIRI" ],
     "action": {
       "schema": "http://localhost/checkouts/shexSpec/shexTest/validation/1dot-relative.shex",
       "shape": "S1",
@@ -469,12 +340,110 @@ if (!TEST_browser) {
     },
     "extensionResults": [],
     "name": "1dot-relative_pass-short-shape",
-    "trait": [
-      "relativeIRI"
-    ],
     "comment": "<S1> { <p1> [<o1>] } on <S1> in { <s1> <p1> <o1> }",
     "status": "mf:Approved"
   }
   })
+}
+
+function startServer () {
+  // Three possibilities to serve page resources.
+  if (true) {
+    return require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
+        .get(RegExp(PATH))
+        .reply(function(path, requestBody) {
+          let filePath = __dirname + '/../' + getRelPath(path);
+          let ret = fs.readFileSync(filePath, 'utf8')
+          logServed(path, filePath, ret.length)
+          return [200, ret, {}];
+        })
+        .persist()
+  } else if (false) {
+    const srvr = new (require("mock-http-server"))({ host: HOST, port: PORT });
+
+    srvr.start(() => {});
+    // srvr.stop(done);
+
+    srvr.on({
+      method: 'GET',
+      path: '*',
+      reply: {
+        status:  200,
+        // headers: { "content-type": "application/json" },
+        body: function (req) {
+          let path = req.originalUrl
+          let filePath = getRelPath(path)
+          let ret = fs.readFileSync(filePath, 'utf8');
+          logServed(req.originalUrl, filePath, ret.length)
+          return ret
+        }
+      }
+    });
+    return srvr
+  } else {
+    const http = require('http')
+
+    const requestHandler = (request, response) => {
+      let filePath = getRelPath(request.url)
+      let ret = fs.readFileSync(filePath, 'utf8');
+      logServed(request.url, filePath, ret.length)
+      return response.end(ret)
+    }
+
+    const srvr = http.createsrvr(requestHandler)
+
+    srvr.listen(PORT, (err) => {
+      if (err) {
+        return console.log('something bad happened', err)
+      }
+    })
+    return srvr
+  }
+
+  function getRelPath (url) {
+    url = url.replace(/^\/shexSpec/, '')
+    let filePath = url.substr(PATH.length)
+    return filePath.replace(/\?.*$/, '')
+  }
+}
+
+async function loadPage (page, searchParms) {
+  // let start = Date.now()
+  // stamp('start')
+  let timer = setTimeout(() => {
+    // stamp('script load timeout')
+    throw Error(`script load timeout ${SCRIPT_CALLBACK_TIMEOUT}`)
+  }, SCRIPT_CALLBACK_TIMEOUT)
+  let dom = getDom(page, searchParms)
+  // stamp('dom')
+  dom.window.fetch = node_fetch
+  await new Promise((resolve, reject) => {
+    dom.window._testCallback = (parm, results) => {
+      if (parm instanceof Error)
+        throw parm
+
+      // stamp('callback')
+      clearTimeout(timer)
+      SharedForTests = parm
+      resolve()
+    }
+  })
+  const loaded = (await SharedForTests.promise).loads
+  return { dom, $: dom.window.$, loaded }
+
+  // function stamp (message) {
+  //   let t = Date.now()
+  //   console.warn(message, t, t - start)
+  //   start = t
+  // }
+
+  function getDom (page, searchParms) {
+    let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + page + searchParms
+    return new JSDOM(fs.readFileSync(__dirname + '/../' + page, 'utf8'), {
+      url: url,
+      runScripts: "dangerously",
+      resources: "usable"
+    })
+  }
 }
 
