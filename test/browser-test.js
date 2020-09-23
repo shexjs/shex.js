@@ -8,7 +8,9 @@ const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
 const PATH = '/shex.js/'
-const PAGE = 'packages/shex-webapp/doc/shex-simple.html'
+const PAGE =
+      'packages/shex-webapp/doc/shex-simple.html'
+      // 'packages/extension-map/doc/shexmap-simple.html'
 
 let fs = require('fs')
 let expect = require("chai").expect
@@ -281,6 +283,96 @@ if (!TEST_browser) {
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.slice(0, 1).text()).to.equal('1dotOr2dot_pass_p1')
     }).timeout(STARTUP_TIMEOUT)
+  })
+
+  describe('no manifest', function () {
+    this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+    let dom, $
+    before(done => { dom = setup(done, () => $ = dom.window.$, '?manifestURL=') })
+
+    it("should load no schemas", async function () {
+      let buttons = $('#manifestDrop').find('button')
+      expect(buttons.length).to.equal(0)
+    }).timeout(STARTUP_TIMEOUT)
+  })
+
+  describe('dragon drop', function () {
+    this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+    let dom, $
+    before(done => { dom = setup(done, () => $ = dom.window.$, '?manifestURL=') })
+
+    it("single test manifest", async function () {
+      await drop("#manifestDrop", { "application/json": JSON.stringify(testEx1, null, 2) })
+      let buttons = $('#manifestDrop').find('button')
+      expect(buttons.length).to.equal(1)
+      expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
+    })
+
+    it("test manifest array of one", async function () {
+      await drop("#manifestDrop", { "application/json": JSON.stringify([testEx1], null, 2) })
+      let buttons = $('#manifestDrop').find('button')
+      expect(buttons.length).to.equal(1)
+      expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
+    })
+
+    it("test manifest array of two", async function () {
+      await drop("#manifestDrop", { "application/json": JSON.stringify([testEx1, testEx2], null, 2) })
+      let buttons = $('#manifestDrop').find('button')
+      expect(buttons.length).to.equal(2)
+      expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
+      expect(buttons.slice(1, 2).text()).to.equal('1dot-relative.shex')
+    })
+
+    async function drop (selector, data) {
+      const $elt = $(selector)
+      const offset = $elt.offset()
+      const type = "drop";
+      const options = Object.assign({}, {
+	bubbles: true,
+	cancelable: (type !== "mousemove"),
+	view: dom.window,
+	detail: 0,
+	screenX: 0,
+	screenY: 0,
+	clientX: 1,
+	clientY: 1,
+	ctrlKey: false,
+	altKey: false,
+	shiftKey: false,
+	metaKey: false,
+	button: 0,
+	relatedTarget: undefined
+      }, {
+        dx: offset.left,
+        dy: offset.top
+      });
+      const event = dom.window.document.createEvent("MouseEvents");
+      event.initMouseEvent( type, options.bubbles, options.cancelable,
+			    options.view, options.detail,
+			    options.screenX, options.screenY, options.clientX, options.clientY,
+			    options.ctrlKey, options.altKey, options.shiftKey, options.metaKey,
+			    options.button, options.relatedTarget || dom.window.document.body.parentNode );
+      event.dataTransfer = {
+        data: data,
+        setData: function(type, val) {
+          this.data[type] = val
+        },
+        getData: function(type) {
+          return this.data[type]
+        },
+	dropEffect: 'none',
+	effectAllowed: 'all',
+        files: [],
+ 	items: {},
+	types: [],
+      }
+      // const dataTransfer = new DataTransfer;
+      // dataTransfer.setData("data", data);
+      // const event = new DragEvent('drop', { dataTransfer: dataTransfer });
+      const elem = $elt.get(0);
+      elem.dispatchEvent( event );
+      await SharedForTests.promise;
+    }
   })
 
   let testExample1 = {

@@ -150,7 +150,7 @@ function _makeCache (selection) {
     get: function () {
       return selection.val();
     },
-    set: function (text, base) {
+    set: async function (text, base) {
       _dirty = true;
       selection.val(text);
       this.meta.base = base;
@@ -1814,9 +1814,9 @@ async function prepareDragAndDrop () {
           const promises = [];
           if (prefTypes.find(l => {
             if (l.type.indexOf("/") === -1) {
-              if (xfer[l.type].length > 0) {
+              if (l.type in xfer && xfer[l.type].length > 0) {
                 $("#results .status").text("handling "+xfer[l.type].length+" files...").show();
-                readfiles(xfer[l.type], desc.targets);
+                promises.push(readfiles(xfer[l.type], desc.targets));
                 return true;
               }
             } else {
@@ -1893,12 +1893,13 @@ async function prepareDragAndDrop () {
                   })
                 }, null, 2)
             ));
-          return Promise.await(promises);
+          SharedForTests.promise = Promise.all(promises);
         });
     });
-  function readfiles(files, targets) {
+  /*async*/ function readfiles(files, targets) { // returns promise but doesn't use await
     const formData = new FormData();
-    let sucecesses = 0;
+    let successes = 0;
+    const promises = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i], name = file.name;
@@ -1908,21 +1909,26 @@ async function prepareDragAndDrop () {
           null;
       }, null);
       if (target) {
-        formData.append("file", file);
-        const reader = new FileReader();
-        reader.onload = (function (target) {
-          return async function (event) {
-            const appendTo = $("#append").is(":checked") ? target.get() : "";
-            await target.set(appendTo + event.target.result, DefaultBase);
-          };
-        })(target);
-        reader.readAsText(file);
-        ++sucecesses;
+        promises.push(new Promise((resolve, reject) => {
+          formData.append("file", file);
+          const reader = new FileReader();
+          reader.onload = (function (target) {
+            return async function (event) {
+              const appendTo = $("#append").is(":checked") ? target.get() : "";
+              await target.set(appendTo + event.target.result, DefaultBase);
+              ++successes;
+              resolve()
+            };
+          })(target);
+          reader.readAsText(file);
+        }))
       } else {
         results.append("don't know what to do with " + name + "\n");
       }
     }
-    $("#results .status").text("loaded "+sucecesses+" files.").show();
+    return Promise.all(promises).then(() => {
+      $("#results .status").text("loaded "+successes+" files.").show();
+    })
   }
 }
 
