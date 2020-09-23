@@ -88,28 +88,29 @@ function getDom (searchParms) {
   })
 }
 
-function setup (done, ready, searchParms) {
+async function setup (searchParms) {
   // let start = Date.now()
   // stamp('start')
   let timer = setTimeout(() => {
     // stamp('script load timeout')
-    done('script load timeout')
+    throw Error(`script load timeout ${SCRIPT_CALLBACK_TIMEOUT}`)
   }, SCRIPT_CALLBACK_TIMEOUT)
   let dom = getDom(searchParms)
   // stamp('dom')
   dom.window.fetch = node_fetch
-  dom.window._testCallback = (parm, results) => {
-    if (parm instanceof Error)
-      return done(parm)
+  await new Promise((resolve, reject) => {
+    dom.window._testCallback = (parm, results) => {
+      if (parm instanceof Error)
+        throw parm
 
-    // stamp('hear')
-    clearTimeout(timer)
-    ready(dom)
-    SharedForTests = parm
-    SharedForTests.promise = Promise.resolve(results)
-    done()
-  }
-  return dom
+      // stamp('callback')
+      clearTimeout(timer)
+      SharedForTests = parm
+      resolve()
+    }
+  })
+  const loaded = (await SharedForTests.promise).loads
+  return { dom, $: dom.window.$, loaded }
 
   // function stamp (message) {
   //   let t = Date.now()
@@ -125,10 +126,9 @@ if (!TEST_browser) {
 
   describe('no URL parameters', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
-    let dom, $
-    before(done => {
-      dom = setup(done, () => $ = dom.window.$,
-                  '')
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup(''));
     })
 
     describe('validation output', function () {
@@ -261,25 +261,50 @@ if (!TEST_browser) {
     }
   })
 
-  describe('explicit manifest', function () {
+  describe('explicit manifest URL', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
-    let dom, $
-    before(done => { dom = setup(done, () => $ = dom.window.$,
-                                 '?manifestURL=../examples/manifest.json') })
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup('?manifestURL=../examples/manifest.json'));
+    })
 
-    it("should load clinical observation example", function (done) {
-      // SharedForTests.promise.then(loaded => console.warn(JSON.stringify(loaded, null, 2)))
+    it("should load manifest", function () {
+      let buttons = $('#manifestDrop').find('button');
+      expect(loaded).to.have.property('manifest')
+      expect(loaded.manifest).to.have.key('fromUrl')
+    }).timeout(STARTUP_TIMEOUT)
+
+    it("should load clinical observation example", function () {
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.slice(0, 1).text()).to.equal('clinical observation')
-      done()
+    }).timeout(STARTUP_TIMEOUT)
+  })
+
+  describe('bad manifest URL', function () {
+    this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup('?manifestURL=../examples/manifest.json999'));
+    })
+
+    it("should load manifest", function () {
+      let buttons = $('#manifestDrop').find('button')
+      expect(loaded).to.have.property('manifest')
+      expect(loaded.manifest).to.have.key('loadFailure')
+    }).timeout(STARTUP_TIMEOUT)
+
+    it("should load clinical observation example", function () {
+      let buttons = $('#manifestDrop').find('button')
+      expect(buttons.length).to.equal(0)
     }).timeout(STARTUP_TIMEOUT)
   })
 
   describe('another manifest', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
-    let dom, $
-    before(done => { dom = setup(done, () => $ = dom.window.$,
-                                 '?manifestURL=/shex.js/test/browser/manifest-one.json') })
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup('?manifestURL=/shex.js/test/browser/manifest-one.json'));
+    })
 
     it("should load clinical observation example", async function () {
       let buttons = $('#manifestDrop').find('button')
@@ -289,8 +314,10 @@ if (!TEST_browser) {
 
   describe('no manifest', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
-    let dom, $
-    before(done => { dom = setup(done, () => $ = dom.window.$, '?manifestURL=') })
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup('?manifestURL='));
+    })
 
     it("should load no schemas", async function () {
       let buttons = $('#manifestDrop').find('button')
@@ -300,8 +327,10 @@ if (!TEST_browser) {
 
   describe('dragon drop', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
-    let dom, $
-    before(done => { dom = setup(done, () => $ = dom.window.$, '?manifestURL=') })
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup('?manifestURL='));
+    })
 
     it("single test manifest", async function () {
       await drop("#manifestDrop", { "application/json": JSON.stringify(testEx1, null, 2) })

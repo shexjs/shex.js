@@ -2217,15 +2217,14 @@ function tableToBindings () {
 prepareControls();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
-Promise.all([ dndPromise, loads ]).then(() => {
-  if ('_testCallback' in window) {
-    window._testCallback(SharedForTests, loads);
-  }
+const ready = Promise.all([ dndPromise, loads ]);
+if ('_testCallback' in window) {
+  SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
+  window._testCallback(SharedForTests);
+}
+ready.then(() => {
   // Update UI to say we're done loading everything?
 }, e => {
-  if ('_testCallback' in window) {
-    window._testCallback(e instanceof Error ? e : Error(e), loads);
-  }
   // Drop catch on the floor presuming thrower updated the UI.
 });
 
