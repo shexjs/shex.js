@@ -8,10 +8,12 @@ const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
 const PATH = '/shex.js/'
-const PAGE =
-      'packages/shex-webapp/doc/shex-simple.html'
-      // 'packages/extension-map/doc/shexmap-simple.html'
-
+const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
+const SHEXMAP_SIMPLE = 'packages/extension-map/doc/shexmap-simple.html'
+const TESTS = [ // page and the labels on the top-most buttons on the default manifest
+  {page: SHEX_SIMPLE, schemaLabel: "clinical observation", dataLabel: "with birthdate"},
+  {page: SHEXMAP_SIMPLE, schemaLabel: "BP", dataLabel: "simple"},
+]
 let fs = require('fs')
 let expect = require("chai").expect
 const node_fetch = require("node-fetch")
@@ -79,23 +81,23 @@ function logServed (url, filePath, length) {
   // console.log(url, filePath, length)
 }
 
-function getDom (searchParms) {
-  let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + PAGE + searchParms
-  return new JSDOM(fs.readFileSync(__dirname + '/../' + PAGE, 'utf8'), {
+function getDom (page, searchParms) {
+  let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + page + searchParms
+  return new JSDOM(fs.readFileSync(__dirname + '/../' + page, 'utf8'), {
     url: url,
     runScripts: "dangerously",
     resources: "usable"
   })
 }
 
-async function setup (searchParms) {
+async function setup (page, searchParms) {
   // let start = Date.now()
   // stamp('start')
   let timer = setTimeout(() => {
     // stamp('script load timeout')
     throw Error(`script load timeout ${SCRIPT_CALLBACK_TIMEOUT}`)
   }, SCRIPT_CALLBACK_TIMEOUT)
-  let dom = getDom(searchParms)
+  let dom = getDom(page, searchParms)
   // stamp('dom')
   dom.window.fetch = node_fetch
   await new Promise((resolve, reject) => {
@@ -124,11 +126,13 @@ if (!TEST_browser) {
 
 } else {
 
+  TESTS.forEach(test => {
+    const {page, schemaLabel, dataLabel} = test
   describe('no URL parameters', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup(''));
+      ({ dom, $, loaded } = await setup(page, ''));
     })
 
     describe('validation output', function () {
@@ -140,52 +144,49 @@ if (!TEST_browser) {
         $('#inputData textarea').val()
       })
 
-      it("should load clinical observation example", async function () {
-        let ClinObs, WithBDate
+      it("should load first example example", async function () {
+        let schema, data
 
-        ClinObs = $('#manifestDrop').find('button').slice(0, 1)
-        expect(ClinObs.text()).to.equal('clinical observation')
-        ClinObs.click()
+        schema = $('#manifestDrop').find('button').slice(0, 1)
+        expect(schema.text()).to.equal(schemaLabel)
+        schema.click()
         await SharedForTests.promise
 
-        WithBDate = $('.passes').find('button').slice(0, 1)
-        expect(WithBDate.text()).to.equal('with birthdate')
-        WithBDate.click()
-        await SharedForTests.promise
+        data = $('.passes').find('button').slice(0, 1)
+        expect(data.text()).to.equal(dataLabel)
+        data.click()
+        await SharedForTests.promise // following tests need data
       }).timeout(STARTUP_TIMEOUT)
-
-      it("human output", async function () {
-        $("#interface").val("human");
-        const valResp = await validationResults({
-          name: "human", selector: "> div", contents: [
-            { shapeMap: "<Obs1>@START"                  , classes: ["human", "passes"] },
-            { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
-          ]
-        })
-        expect(valResp.validationResults.length).to.equal(2)
-      })
-
-      it("minimal output", async function () {
-        $("#interface").val("minimal");
-        await validationResults({
-          name: "minimal", selector: "> pre", contents: [
-            { shapeMap: /"node": "[^"]+Obs1"/, classes: ["passes"] },
-            { shapeMap: /"node": "[^"]+Patient2"/, classes: ["passes"] },
-          ]
-        })
-      })
-
-      it("matched graph output", async function () {
-        $("#interface").val("human");
-        $("#success").val("query");
-        await validationResults({
-          name: "human", selector: "> *", contents: [
-            { shapeMap: ":name \"Bob\""                 , classes: ["passes"] },
-            { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
-          ]
-        })
-      })
     })
+  })
+
+  describe('explicit manifest URL', function () {
+    this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+    let dom, $, loaded
+    before(async () => {
+      ({ dom, $, loaded } = await setup(page, '?manifestURL=../../shex-webapp/examples/manifest.json'));
+    })
+
+    it("should load manifest", function () {
+      let buttons = $('#manifestDrop').find('button');
+      expect(loaded).to.have.property('manifest')
+      expect(loaded.manifest).to.have.key('fromUrl')
+    }).timeout(STARTUP_TIMEOUT)
+
+
+    it("should load clinical observation example", async function () {
+      let schema, data
+
+      schema = $('#manifestDrop').find('button').slice(0, 1)
+      expect(schema.text()).to.equal('clinical observation')
+      schema.click()
+      await SharedForTests.promise
+
+      data = $('.passes').find('button').slice(0, 1)
+      expect(data.text()).to.equal('with birthdate')
+      data.click()
+      await SharedForTests.promise
+    }).timeout(STARTUP_TIMEOUT)
 
     describe('query map', function () {
       it("empty", async function () {
@@ -212,7 +213,7 @@ if (!TEST_browser) {
         expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
       })
 
-      it("two -> one", async function () {
+      it("two query map, one fixed map", async function () {
         await set("#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
         expect($("#editMap .pair").length).to.equal(2)
         expect($("#fixedMap .pair").length).to.equal(1)
@@ -242,6 +243,38 @@ if (!TEST_browser) {
       }
     })
 
+    it("human output", async function () {
+      $("#interface").val("human");
+      const valResp = await validationResults({
+        name: "human", selector: "> div", contents: [
+          { shapeMap: "<Obs1>@START"                  , classes: ["human", "passes"] },
+          { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
+        ]
+      })
+      expect(valResp.validationResults.length).to.equal(2)
+    })
+
+    it("minimal output", async function () {
+      $("#interface").val("minimal");
+      await validationResults({
+        name: "minimal", selector: "> pre", contents: [
+          { shapeMap: /"node": "[^"]+Obs1"/, classes: ["passes"] },
+          { shapeMap: /"node": "[^"]+Patient2"/, classes: ["passes"] },
+        ]
+      })
+    })
+
+    it("matched graph output", async function () {
+      $("#interface").val("human");
+      $("#success").val("query");
+      await validationResults({
+        name: "human", selector: "> *", contents: [
+          { shapeMap: ":name \"Bob\""                 , classes: ["passes"] },
+          { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
+        ]
+      })
+    })
+
     async function validationResults (expected) {
       $("#validate").trigger('click')
       const validationResponse = await SharedForTests.promise
@@ -265,30 +298,11 @@ if (!TEST_browser) {
     }
   })
 
-  describe('explicit manifest URL', function () {
-    this.timeout(SCRIPT_CALLBACK_TIMEOUT);
-    let dom, $, loaded
-    before(async () => {
-      ({ dom, $, loaded } = await setup('?manifestURL=../examples/manifest.json'));
-    })
-
-    it("should load manifest", function () {
-      let buttons = $('#manifestDrop').find('button');
-      expect(loaded).to.have.property('manifest')
-      expect(loaded.manifest).to.have.key('fromUrl')
-    }).timeout(STARTUP_TIMEOUT)
-
-    it("should load clinical observation example", function () {
-      let buttons = $('#manifestDrop').find('button')
-      expect(buttons.slice(0, 1).text()).to.equal('clinical observation')
-    }).timeout(STARTUP_TIMEOUT)
-  })
-
   describe('bad manifest URL', function () {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup('?manifestURL=../examples/manifest.json999'));
+      ({ dom, $, loaded } = await setup(page, '?manifestURL=../examples/manifest.json999'));
     })
 
     it("should load manifest", function () {
@@ -307,7 +321,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup('?manifestURL=/shex.js/test/browser/manifest-one.json'));
+      ({ dom, $, loaded } = await setup(page, '?manifestURL=/shex.js/test/browser/manifest-one.json'));
     })
 
     it("should load clinical observation example", async function () {
@@ -320,7 +334,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup('?manifestURL='));
+      ({ dom, $, loaded } = await setup(page, '?manifestURL='));
     })
 
     it("should load no schemas", async function () {
@@ -333,7 +347,7 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await setup('?manifestURL='));
+      ({ dom, $, loaded } = await setup(page, '?manifestURL='));
     })
 
     it("single test manifest", async function () {
@@ -461,7 +475,6 @@ if (!TEST_browser) {
     "comment": "<S1> { <p1> [<o1>] } on <S1> in { <s1> <p1> <o1> }",
     "status": "mf:Approved"
   }
-
-  const both = [ testEx1, testEx2 ]
+  })
 }
 

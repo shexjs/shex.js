@@ -945,6 +945,7 @@ async function callValidator (done) {
       });
       delete entry.graph;
     } else {
+      let renderMe = entry
       switch ($("#interface").val()) {
       case "human":
         elt = $("<div class='human'/>").append(
@@ -959,10 +960,14 @@ async function callValidator (done) {
       case "minimal":
         if (fails)
           entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
-        delete entry.appinfo;
-        // fall through to default
+        renderMe = Object.keys(entry).reduce((acc, key) => {
+          if (key !== "appinfo")
+            acc[key] = entry[key];
+          return acc
+        }, {});
+        // falling through to default covers the appinfo case
       default:
-        elt = $("<pre/>").text(JSON.stringify(entry, null, "  ")).addClass(klass);
+        elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
       }
     }
     results.append(elt);
