@@ -156,12 +156,13 @@ if (!TEST_browser) {
 
       it("human output", async function () {
         $("#interface").val("human");
-        await validationResults({
+        const valResp = await validationResults({
           name: "human", selector: "> div", contents: [
             { shapeMap: "<Obs1>@START"                  , classes: ["human", "passes"] },
             { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
           ]
         })
+        expect(valResp.validationResults.length).to.equal(2)
       })
 
       it("minimal output", async function () {
@@ -243,7 +244,8 @@ if (!TEST_browser) {
 
     async function validationResults (expected) {
       $("#validate").trigger('click')
-      await SharedForTests.promise
+      const validationResponse = await SharedForTests.promise
+      expect(validationResponse).to.have.property('validationResults')
       const resDiv = $('#results > div')
       expect(resDiv.length).to.equal(1)
       const res = resDiv.find(expected.selector)
@@ -258,6 +260,8 @@ if (!TEST_browser) {
         else
           expect(elt.textContent).to.include(contents.shapeMap)
       })
+
+      return validationResponse
     }
   })
 
