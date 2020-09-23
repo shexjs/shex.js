@@ -227,10 +227,10 @@ if (!TEST_browser) {
     this.timeout(SCRIPT_CALLBACK_TIMEOUT);
     let dom, $, loaded
     before(async () => {
-      ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-one.json'));
+      ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-two.json'));
     })
 
-    it("should load clinical observation example", async function () {
+    it("should load first example", async function () {
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.slice(0, 1).text()).to.equal('1dotOr2dot_pass_p1')
     }).timeout(STARTUP_TIMEOUT)
@@ -260,21 +260,21 @@ if (!TEST_browser) {
       await dropData("#manifestDrop", { "application/json": JSON.stringify(testEx1, null, 2) })
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(1)
-      expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
+      expect(buttons.slice(0, 1).text()).to.equal('I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> }')
     })
 
     it("test manifest array of one", async function () {
       await dropData("#manifestDrop", { "application/json": JSON.stringify([testEx1], null, 2) })
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(1)
-      expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
+      expect(buttons.slice(0, 1).text()).to.equal('I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> }')
     })
 
     it("test manifest array of two", async function () {
       await dropData("#manifestDrop", { "application/json": JSON.stringify([testEx1, testEx2], null, 2) })
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(2)
-      expect(buttons.slice(0, 1).text()).to.equal('1NOTRefOR1dot.shex')
+      expect(buttons.slice(0, 1).text()).to.equal('I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> }')
       expect(buttons.slice(1, 2).text()).to.equal('1dot-relative.shex')
     })
 
@@ -296,7 +296,7 @@ if (!TEST_browser) {
     }
   })
 
-  let testExample1 = {
+  let testEx1 = {
     "@id": "#3circRefS1-IS2-IS3-IS3",
     "@type": "sht:ValidationTest",
     "trait": [ "Import" ],
@@ -313,21 +313,6 @@ if (!TEST_browser) {
     "result": "3circRefPlus1_pass-open.val"
   }
 
-  const testEx1 = {
-    "@id": "#1NOTRefOR1dot_pass-inOR",
-    "@type": "sht:ValidationTest",
-    "action": {
-      "schema": "http://localhost/checkouts/shexSpec/shexTest/schemas/1NOTRefOR1dot.shex",
-      "shape": "http://a.example/S1",
-      "data": "http://localhost/checkouts/shexSpec/shexTest/validation/In1_Ip1_In2.In2_Ip2_LX.ttl",
-      "focus": "http://a.example/n1"
-    },
-    "extensionResults": [],
-    "name": "1NOTRefOR1dot_pass-inOR",
-    "comment": "<S1> { <p1> NOT @<S2> OR { <p2> . } } <S2> { <p3> . } in { <n1> <p1> <n2> . <n2> <p2> \"X\" }",
-    "status": "mf:Proposed"
-  }
-
   const testEx2 = {
     "@id": "#1dot-relative_pass-short-shape",
     "@type": "sht:ValidationTest",
@@ -342,6 +327,21 @@ if (!TEST_browser) {
     "name": "1dot-relative_pass-short-shape",
     "comment": "<S1> { <p1> [<o1>] } on <S1> in { <s1> <p1> <o1> }",
     "status": "mf:Approved"
+  }
+
+  const junk = {
+    "@id": "#1NOTRefOR1dot_pass-inOR",
+    "@type": "sht:ValidationTest",
+    "action": {
+      "schema": "http://localhost/checkouts/shexSpec/shexTest/schemas/1NOTRefOR1dot.shex",
+      "shape": "http://a.example/S1",
+      "data": "http://localhost/checkouts/shexSpec/shexTest/validation/In1_Ip1_In2.In2_Ip2_LX.ttl",
+      "focus": "http://a.example/n1"
+    },
+    "extensionResults": [],
+    "name": "1NOTRefOR1dot_pass-inOR",
+    "comment": "<S1> { <p1> NOT @<S2> OR { <p2> . } } <S2> { <p3> . } in { <n1> <p1> <n2> . <n2> <p2> \"X\" }",
+    "status": "mf:Proposed"
   }
   })
 }
