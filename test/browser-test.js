@@ -98,7 +98,7 @@ function setup (done, ready, searchParms) {
   let dom = getDom(searchParms)
   // stamp('dom')
   dom.window.fetch = node_fetch
-  dom.window._testCallback = parm => {
+  dom.window._testCallback = (parm, results) => {
     if (parm instanceof Error)
       return done(parm)
 
@@ -106,6 +106,7 @@ function setup (done, ready, searchParms) {
     clearTimeout(timer)
     ready(dom)
     SharedForTests = parm
+    SharedForTests.promise = Promise.resolve(results)
     done()
   }
   return dom
@@ -267,6 +268,7 @@ if (!TEST_browser) {
                                  '?manifestURL=../examples/manifest.json') })
 
     it("should load clinical observation example", function (done) {
+      // SharedForTests.promise.then(loaded => console.warn(JSON.stringify(loaded, null, 2)))
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.slice(0, 1).text()).to.equal('clinical observation')
       done()

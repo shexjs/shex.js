@@ -722,7 +722,7 @@ const results = (function () {
 
 let LastFailTime = 0;
 // Validation UI
-function disableResultsAndValidate (evt, done) {
+function disableResultsAndValidate (evt) {
   if (new Date().getTime() - LastFailTime < 100) {
     results.append(
       $("<div/>").addClass("warning").append(
@@ -738,7 +738,7 @@ function disableResultsAndValidate (evt, done) {
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
       await copyEditMapToTextMap() // will update if #editMap is dirty
-      await callValidator(done)
+      await callValidator()
       resolve()
     }, 0);
   })
@@ -815,12 +815,12 @@ async function callValidator (done) {
         //   console.dir(e);
         // }
         finishRendering();
-        if (done) { done() }
+        return { validationResults: ret }; // for tester or whoever is awaiting this promise
       } catch (e) {
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);
         console.error(e); // dump details to console.
-        if (done) { done(e) }
+        return { validationError: e };
       }
     } else {
       const outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -849,12 +849,15 @@ async function callValidator (done) {
         results.append(pre);
       }
       results.finish();
-      if (done) { done() }
+      return { transformation: {
+        from: Caches.inputSchema.language,
+        to: outputLanguage
+      } }
     }
   } catch (e) {
     failMessage(e, currentAction);
     console.error(e); // dump details to console.
-    if (done) { done(e) }
+    return { inputError: e };
   }
 
   function makeConsoleTracker () {
@@ -1489,7 +1492,7 @@ function fixedShapeMapToTerms (shapeMap) {
  * Load URL search parameters
  */
 async function loadSearchParameters () {
-  // don't overwrite if we arrived here from going back for forth in history
+  // don't overwrite if we arrived here from going back and forth in history
   if (Caches.inputSchema.selection.val() !== "" || Caches.inputData.selection.val() !== "")
     return Promise.resolve();
 
@@ -1505,85 +1508,97 @@ async function loadSearchParameters () {
     iface.manifestURL = ["../examples/manifest.json"];
   }
 
-  // Load all known query parameters.
-  await Promise.all(QueryParams.reduce((promises, input) => {
-    const parm = input.queryStringParm;
+  // Load all known query parameters. Save load results into array like:
+  /* [ [ "data", { "skipped": "skipped" } ],
+       [ "manifest", { "fromUrl": { "url": "http://...", "data": "..." } } ], ] */
+  const loadedAsArray = await Promise.all(QueryParams.map(async input => {
+    const label = input.queryStringParm;
+    const parm = label;
     if (parm + "URL" in iface) {
       const url = iface[parm + "URL"][0];
       if (url.length > 0) { // manifest= loads no manifest
         // !!! set anyways in asyncGet?
         input.cache.url = url; // all fooURL query parms are caches.
-        promises.push(input.cache.asyncGet(url).catch(function (e) {
+        try {
+          const got = await input.cache.asyncGet(url)
+          return [label, {fromUrl: got}]
+        } catch(e) {
           if ("fail" in input) {
             input.fail(e);
           } else {
             input.location.val(e.message);
           }
           results.append($("<pre/>").text(e).addClass("error"));
-          throw e
-        }));
+          return [label, { loadFailure: e instanceof Error ? e : Error(e) }];
+        };
       }
     } else if (parm in iface) {
       const prepend = input.location.prop("tagName") === "TEXTAREA" ?
           input.location.val() :
           "";
       const value = prepend + iface[parm].join("");
-      if ("cache" in input)
-        // If it parses, make meta (prefixes, base) available.
-        try {
-          promises.push(input.cache.set(value, location.href));
-        } catch (e) {
-          if ("fail" in input) {
-            input.fail(e);
-          }
-          results.append($("<pre/>").text(
-            "error setting " + input.queryStringParm + ":\n" + e + "\n" + value
-          ).addClass("error"));
-          throw e
+      const origValue = input.location.val();
+
+      try {
+        if ("cache" in input) {
+          await input.cache.set(value, location.href);
+        } else {
+          input.location.val(prepend + value);
+          if (input.location.val() === null)
+            throw Error(`Unable to set value to ${prepend + value}`)
         }
-      else {
-        // Set HTML interface state.
-        // A little insulation against improper values:
-        let orig = input.location.val();
-        input.location.val(prepend + value);
-        if (input.location.val() === null) {
-          // invalid value so return to last value
-          input.location.val(orig);
+        return [label, { literal: value }]
+      } catch (e) {
+        input.location.val(origValue);
+        if ("fail" in input) {
+          input.fail(e);
         }
+        results.append($("<pre/>").text(
+          "error setting " + label + ":\n" + e + "\n" + value
+        ).addClass("error"));
+        return [label, { failure: e }]
       }
     } else if ("deflt" in input) {
       input.location.val(input.deflt);
+      return [label, { deflt: "deflt" }]; // flag that it was a default
     }
-    return promises;
-  }, [])).then(function (_) {
+    return [label, { skipped: "skipped" }]
+  }))
+  // convert loaded array into Object:
+  /* { "data": { "skipped": "skipped" },
+       "manifest": { "fromUrl": { "url": "http://...", "data": "..." } }, } */
+  const loaded = loadedAsArray.reduce((acc, fromArray) => {
+    acc[fromArray[0]] = fromArray[1]
+    return acc
+  }, {})
 
-    // Parse the shape-map using the prefixes and base.
-    const shapeMapErrors = $("#textMap").val().trim().length > 0
+  // Parse the shape-map using the prefixes and base.
+  const shapeMapErrors = $("#textMap").val().trim().length > 0
         ? copyTextMapToEditMap()
         : makeFreshEditMap();
 
-    customizeInterface();
-    $("body").keydown(function (e) { // keydown because we need to preventDefault
-      const code = e.keyCode || e.charCode; // standards anyone?
-      if (e.ctrlKey && (code === 10 || code === 13)) {
-        // const at = $(":focus");
-        $("#validate")/*.focus()*/.click();
-        // at.focus();
-        return false; // same as e.preventDefault();
-      } else {
-        return true;
-      }
-    });
-    addContextMenus("#focus0", Caches.inputData);
-    addContextMenus("#inputShape0", Caches.inputSchema);
-    if ("schemaURL" in iface ||
-        // some schema is non-empty
-        ("schema" in iface &&
-         iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
-       && shapeMapErrors.length === 0) {
-      return callValidator();
+  customizeInterface();
+  $("body").keydown(function (e) { // keydown because we need to preventDefault
+    const code = e.keyCode || e.charCode; // standards anyone?
+    if (e.ctrlKey && (code === 10 || code === 13)) {
+      // const at = $(":focus");
+      $("#validate")/*.focus()*/.click();
+      // at.focus();
+      return false; // same as e.preventDefault();
+    } else {
+      return true;
     }
   });
+  addContextMenus("#focus0", Caches.inputData);
+  addContextMenus("#inputShape0", Caches.inputSchema);
+  if ("schemaURL" in iface ||
+      // some schema is non-empty
+      ("schema" in iface &&
+       iface.schema.reduce((r, elt) => { return r+elt.length; }, 0))
+      && shapeMapErrors.length === 0) {
+    return callValidator();
+  }
+  return loaded;
 }
 
   /**
@@ -2024,19 +2039,17 @@ function addContextMenus (inputSelector, cache) {
 }
 
 prepareControls();
-Promise.all([
-  prepareDragAndDrop(), // async 'cause it calls Cache.X.set(""...)
-  loadSearchParameters()
-]).then(
-  () => {
-    if ('_testCallback' in window) {
-      window._testCallback(SharedForTests)
-    }
-  }).catch(
-    e => {
-      if ('_testCallback' in window) {
-        window._testCallback(e instanceof Error ? e : Error(e))
-      }
-    }
-  )
+const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
+const loads = loadSearchParameters();
+Promise.all([ dndPromise, loads ]).then(() => {
+  if ('_testCallback' in window) {
+    window._testCallback(SharedForTests, loads);
+  }
+  // Update UI to say we're done loading everything?
+}, e => {
+  if ('_testCallback' in window) {
+    window._testCallback(e instanceof Error ? e : Error(e), loads);
+  }
+  // Drop catch on the floor presuming thrower updated the UI.
+});
 
