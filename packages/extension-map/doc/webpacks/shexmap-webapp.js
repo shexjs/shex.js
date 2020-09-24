@@ -16667,11 +16667,10 @@ function vpEngine (schema, shape, index) {
               const sub = val(newt);
               if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
                 sub.forEach(newThread => {
-                  let solutions = // !!const?
-                      "expression" in newt ? newt.expression.solutions : [];
+                  const solutions =
+                      "expression" in newt ? newt.expression.solutions.slice() : [];
                   if ("solution" in newThread)
-                    solutions = solutions.concat(newThread.solution);
-                    // [].push.apply(solutions, newThread.solution);
+                    solutions.push(newThread.solution);
                   delete newThread.solution;
                   newThread.expression = extend({
                     type: type,
@@ -16864,11 +16863,10 @@ function vpEngine (schema, shape, index) {
                 // Move newThread.expression into a hierarchical solution structure.
                 sub.forEach(newThread => {
                   if (newThread.errors.length === 0) {
-                    let expressions = // !!const?
-                        "solution" in exprThread ? exprThread.solution.expressions : [];
+                    const expressions =
+                        "solution" in exprThread ? exprThread.solution.expressions.slice() : [];
                     if ("expression" in newThread) // undefined for no matches on min card:0
-                      expressions = expressions.concat([newThread.expression]);
-                    // console.warn(threadMatched(newThread), " vs ", exprMatched(expressions));
+                      expressions.push(newThread.expression);
                     delete newThread.expression;
                     newThread.solution = {
                       type: "EachOfSolution",
@@ -22057,11 +22055,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         const oldLen = neighborhood.length;
         const created = target.getQuads().map(ShExTerm.internalTriple);
         neighborhood.push.apply(neighborhood, created);
-        console.log("adding: " + created.length + " triples: " + created.map(
-          q => (['subject', 'predicate', 'object']).map(
-            pos => ShExTerm.intermalTermToTurtle(q[pos], _ShExValidator.schema._base, _ShExValidator.schema._prefixes)
-          ).join(' ')
-        ));
+        if (false) {}
         return Array.apply(null, {length: created.length}).map((_, idx)=>{ return idx+oldLen});
         // if ("semActs" in tc) {
         //   tc.semActs.forEach(function (semAct) {

@@ -1026,10 +1026,13 @@ function failMessage (e, action, text) {
 }
 
 async function materialize () {
+  SharedForTests.promise = materializeAsync()
+}
+async function materializeAsync () {
   if (Caches.bindings.get().trim().length === 0) {
     results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
       removeClass("passes fails").addClass("error");
-    return;
+    return null;
   }
   results.start();
   const parsing = "output schema";
@@ -1064,7 +1067,7 @@ async function materialize () {
     await Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     // const outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = Mapper.binder(resultBindings);
-    const writer = new RdfJs.Writer({ prefixes: {} });
+    const generatedGraph = new RdfJs.Store();
     $("#results div").empty();
     $("#results .status").text("materializing data...").show();
     outputShapeMap.forEach(pair => {
@@ -1084,7 +1087,7 @@ async function materialize () {
           // failMessage(e, currentAction);
         } else {
           // console.log("g:", ShEx.Util.valToTurtle(res));
-          writer.addQuads(ShEx.Util.valToN3js(res, RdfJs.DataFactory));
+          generatedGraph.addQuads(ShEx.Util.valToN3js(res, RdfJs.DataFactory));
         }
       } catch (e) {
         console.dir(e);
@@ -1092,14 +1095,30 @@ async function materialize () {
     });
     finishRendering();
     $("#results .status").text("materialization results").show();
+    const writer = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
+    writer.addQuads(generatedGraph.getQuads());
     writer.end(function (error, result) {
-      results.append($("<pre/>").text(result));
+      results.append(
+        $("<div/>", {class: "passes"}).append(
+          $("<span/>", {class: "shapeMap"}).append(
+            "# ",
+            $("<span/>", {class: "data"}).text($("#createRoot").val()),
+            $("<span/>", {class: "valStatus"}).text("@"),
+            $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+          ),
+          $("<pre/>").text(result)
+        )
+      )
+      // results.append($("<pre/>").text(result));
     });
+    results.finish();
+    return { materializationResults: generatedGraph };
   } catch (e) {
     results.replace("error parsing " + parsing + ":\n" + e).
       removeClass("passes fails").addClass("error");
+    // results.finish();
+    return null;
   }
-  results.finish();
 }
 
 function addEmptyEditMapPair (evt) {
