@@ -7,14 +7,15 @@ const SCRIPT_CALLBACK_TIMEOUT = 40000
 const PROTOCOL = 'http:'
 const HOST = 'localhost'
 const PORT = 9999
-const PATH = '/shex.js/'
+const WEBROOT = '/shex.js/'
 const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
 const SHEXMAP_SIMPLE = 'packages/extension-map/doc/shexmap-simple.html'
 const TESTS = [ // page and the labels on the top-most buttons on the default manifest
   {page: SHEX_SIMPLE, schemaLabel: "clinical observation", dataLabel: "with birthdate"},
   {page: SHEXMAP_SIMPLE, schemaLabel: "BP", dataLabel: "simple"},
 ]
-let fs = require('fs')
+let Fs = require('fs')
+let Path = require('path')
 let expect = require("chai").expect
 const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
@@ -23,8 +24,11 @@ let SharedForTests = null
 
 const Server = startServer()
 
-function logServed (url, filePath, length) {
-  // console.log(url, filePath, length)
+function log200 (url, filePath, length) {
+  // console.log(200, url, filePath, length)
+}
+function log404 (url) {debugger
+  console.warn(404, url)
 }
 
 if (!TEST_browser) {
@@ -151,7 +155,7 @@ if (!TEST_browser) {
 
     it("human output", async function () {
       $("#interface").val("human");
-      const valResp = await validationResults({
+      const valResp = await validationResults($, {
         name: "human", selector: "> div", contents: [
           { shapeMap: "<Obs1>@START"                  , classes: ["human", "passes"] },
           { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
@@ -162,7 +166,7 @@ if (!TEST_browser) {
 
     it("minimal output", async function () {
       $("#interface").val("minimal");
-      await validationResults({
+      await validationResults($, {
         name: "minimal", selector: "> pre", contents: [
           { shapeMap: /"node": "[^"]+Obs1"/, classes: ["passes"] },
           { shapeMap: /"node": "[^"]+Patient2"/, classes: ["passes"] },
@@ -173,35 +177,13 @@ if (!TEST_browser) {
     it("matched graph output", async function () {
       $("#interface").val("human");
       $("#success").val("query");
-      await validationResults({
+      await validationResults($, {
         name: "human", selector: "> *", contents: [
           { shapeMap: ":name \"Bob\""                 , classes: ["passes"] },
           { shapeMap: "<Patient2>@!<ObservationShape>", classes: ["human", "passes"] },
         ]
       })
     })
-
-    async function validationResults (expected) {
-      $("#validate").trigger('click')
-      const validationResponse = await SharedForTests.promise
-      expect(validationResponse).to.have.property('validationResults')
-      const resDiv = $('#results > div')
-      expect(resDiv.length).to.equal(1)
-      const res = resDiv.find(expected.selector)
-
-      expected.contents.forEach((contents, idx) => {
-        const elt = res.get(idx)
-        expect(elt).not.to.equal(undefined)
-        const classList = [...elt.classList]
-        contents.classes.forEach(cls => expect(classList).to.include(cls))
-        if (contents.shapeMap.constructor === RegExp)
-          expect(elt.textContent).to.match(contents.shapeMap)
-        else
-          expect(elt.textContent).to.include(contents.shapeMap)
-      })
-
-      return validationResponse
-    }
   })
 
   describe('bad manifest URL', function () {
@@ -211,13 +193,13 @@ if (!TEST_browser) {
       ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../examples/manifest.json999'));
     })
 
-    it("should load manifest", function () {
+    it("should fail to load manifest", function () {
       let buttons = $('#manifestDrop').find('button')
       expect(loaded).to.have.property('manifest')
       expect(loaded.manifest).to.have.key('loadFailure')
     }).timeout(STARTUP_TIMEOUT)
 
-    it("should load clinical observation example", function () {
+    it("should have no manifest", function () {
       let buttons = $('#manifestDrop').find('button')
       expect(buttons.length).to.equal(0)
     }).timeout(STARTUP_TIMEOUT)
@@ -231,8 +213,39 @@ if (!TEST_browser) {
     })
 
     it("should load first example", async function () {
-      let buttons = $('#manifestDrop').find('button')
-      expect(buttons.slice(0, 1).text()).to.equal('1dotOr2dot_pass_p1')
+      const schema = $('#manifestDrop').find('button').slice(0, 1)
+      expect(schema.text()).to.equal('1dotOr2dot_pass_p1')
+      schema.click()
+      await SharedForTests.promise
+
+      const data = $('.passes').find('button').slice(0, 1)
+      expect(data.text()).to.equal('p1.ttl')
+      data.click()
+      await SharedForTests.promise
+
+      await validationResults($, {
+        name: "human", selector: "> *", contents: [
+          { shapeMap: "✓<x>@<http://a.example/S1>", classes: ["passes"] },
+        ]
+      })
+    }).timeout(STARTUP_TIMEOUT)
+
+    it("should load second example", async function () {
+      const  schema = $('#manifestDrop').find('button').slice(1, 2)
+      expect(schema.text()).to.equal('imports schema')
+      schema.click()
+      await SharedForTests.promise
+
+      const data = $('.passes').find('button').slice(0, 1)
+      expect(data.text()).to.equal('passing data')
+      data.click()
+      await SharedForTests.promise
+
+      await validationResults($, {
+        name: "human", selector: "> *", contents: [
+          { shapeMap: "✓<http://a.example/n1>@<http://a.example/S1>", classes: ["passes"] },
+        ]
+      })
     }).timeout(STARTUP_TIMEOUT)
   })
 
@@ -346,21 +359,39 @@ if (!TEST_browser) {
   })
 }
 
+async function validationResults ($, expected) {
+  $("#validate").trigger('click')
+  const validationResponse = await SharedForTests.promise
+  expect(validationResponse).to.have.property('validationResults')
+  const resDiv = $('#results > div')
+  expect(resDiv.length).to.equal(1)
+  const res = resDiv.find(expected.selector)
+
+  expected.contents.forEach((contents, idx) => {
+    const elt = res.get(idx)
+    expect(elt).not.to.equal(undefined)
+    const classList = [...elt.classList]
+    contents.classes.forEach(cls => expect(classList).to.include(cls))
+    if (contents.shapeMap.constructor === RegExp)
+      expect(elt.textContent).to.match(contents.shapeMap)
+    else
+      expect(elt.textContent).to.include(contents.shapeMap)
+  })
+
+  return validationResponse
+}
+
 function startServer () {
   // Three possibilities to serve page resources.
   if (true) {
     return require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
-        .get(RegExp(PATH))
+        .get(RegExp(WEBROOT))
         .reply(function(path, requestBody) {
-          let filePath = __dirname + '/../' + getRelPath(path);
-          let ret = fs.readFileSync(filePath, 'utf8')
-          logServed(path, filePath, ret.length)
-          return [200, ret, {}];
+          return [200, findOrThrow(path), {}];
         })
         .persist()
   } else if (false) {
     const srvr = new (require("mock-http-server"))({ host: HOST, port: PORT });
-
     srvr.start(() => {});
     // srvr.stop(done);
 
@@ -370,26 +401,13 @@ function startServer () {
       reply: {
         status:  200,
         // headers: { "content-type": "application/json" },
-        body: function (req) {
-          let path = req.originalUrl
-          let filePath = getRelPath(path)
-          let ret = fs.readFileSync(filePath, 'utf8');
-          logServed(req.originalUrl, filePath, ret.length)
-          return ret
-        }
+        body: (req) => [200, findOrThrow(req.originalUrl), {}],
       }
     });
     return srvr
   } else {
     const http = require('http')
-
-    const requestHandler = (request, response) => {
-      let filePath = getRelPath(request.url)
-      let ret = fs.readFileSync(filePath, 'utf8');
-      logServed(request.url, filePath, ret.length)
-      return response.end(ret)
-    }
-
+    const requestHandler = (request, response) => response.end(findOrThrow(request.url))
     const srvr = http.createsrvr(requestHandler)
 
     srvr.listen(PORT, (err) => {
@@ -400,9 +418,27 @@ function startServer () {
     return srvr
   }
 
+  // blinkly tries file extensions. should look at request headers.
+  function findOrThrow (path) {
+    let filePath = Path.join(__dirname, '..', getRelPath(path));
+    let last
+    const extensions = ['', '.shex', '.ttl']
+    const ret = extensions.find(
+      ext => Fs.existsSync(last = filePath + ext)
+    )
+    if (ret !== undefined) {
+      const ret = Fs.readFileSync(last, 'utf8')
+      log200(path, last, ret.length)
+      return ret
+    } else {
+      log404(path)
+      throw Error(`Not Found ${path}`)
+    }
+  }
+
   function getRelPath (url) {
-    url = url.replace(/^\/shexSpec/, '')
-    let filePath = url.substr(PATH.length)
+    url = url.replace(/^\/shexSpec/, '') // do any of the servers need this?
+    let filePath = url.substr(WEBROOT.length)
     return filePath.replace(/\?.*$/, '')
   }
 }
@@ -438,8 +474,8 @@ async function loadPage (page, searchParms) {
   // }
 
   function getDom (page, searchParms) {
-    let url = PROTOCOL + '//' + HOST + ':' + PORT + PATH + page + searchParms
-    return new JSDOM(fs.readFileSync(__dirname + '/../' + page, 'utf8'), {
+    let url = PROTOCOL + '//' + HOST + ':' + PORT + WEBROOT + page + searchParms
+    return new JSDOM(Fs.readFileSync(__dirname + '/../' + page, 'utf8'), {
       url: url,
       runScripts: "dangerously",
       resources: "usable"

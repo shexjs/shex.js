@@ -6,7 +6,7 @@ const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const RdfJs = N3js;
 const ShExApi = ShEx.Api({
-  fetch, rdfjs: RdfJs, jsonld: null
+  fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 ShEx.ShapeMap.start = ShEx.Validator.start
@@ -681,7 +681,9 @@ async function pickData (name, dataTest, elt, listItems, side) {
 
     // Update ShapeMap pane.
     removeEditMapPair(null);
-    if (dataTest.entry.queryMap === undefined) {
+    if (dataTest.entry.queryMap !== undefined) {
+      await queryMapLoaded(dataTest.entry.queryMap);
+    } else if (dataTest.entry.queryMapURL !== undefined) {
       try {
         const resp = await fetchOK(dataTest.entry.queryMapURL)
         queryMapLoaded(resp);
@@ -689,7 +691,7 @@ async function pickData (name, dataTest, elt, listItems, side) {
         renderErrorMessage(e, "queryMap");
       }
     } else {
-      await queryMapLoaded(dataTest.entry.queryMap);
+      results.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
     }
 
     async function queryMapLoaded (text) {
