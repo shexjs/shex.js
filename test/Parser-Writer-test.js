@@ -16,14 +16,14 @@ const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
 });
 
-var {assert, expect} = require("chai");
-var findPath = require("./findPath.js");
+const {assert, expect} = require("chai");
+const findPath = require("./findPath.js");
 
-var schemasPath = findPath("schemas");
-var jsonSchemasPath = findPath("parsedSchemas");
-var manifestFile = schemasPath + "manifest.jsonld";
-var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
-var negativeTests = [
+const schemasPath = findPath("schemas");
+const jsonSchemasPath = findPath("parsedSchemas");
+const manifestFile = schemasPath + "manifest.jsonld";
+const ShExRSchemaFile = findPath("doc") + "ShExR.shex";
+const negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
   {path: findPath("negativeStructure"), include: "Structural error"}
 ];
@@ -35,7 +35,7 @@ const parser = ShExParser.construct(BASE, null, {index: true});
 const GraphSchema = loadGraphSchema();
 
 // positive transformation tests
-let schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+const schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
@@ -144,9 +144,9 @@ describe("A ShEx parser", function () {
 
     const jsonSchemaFile = jsonSchemasPath + test.json;
     try {
-      var abstractSyntax = JSON.parse(Fs.readFileSync(jsonSchemaFile, "utf8"));
-      var shexCFile = schemasPath + test.shex;
-      var shexRFile = schemasPath + test.ttl;
+      const abstractSyntax = JSON.parse(Fs.readFileSync(jsonSchemaFile, "utf8"));
+      const shexCFile = schemasPath + test.shex;
+      const shexRFile = schemasPath + test.ttl;
 
       it(EARL
          ? 'schemas/manifest\#' + test.name
@@ -154,7 +154,7 @@ describe("A ShEx parser", function () {
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           var schema = Fs.readFileSync(shexCFile, "utf8");
+           const schema = Fs.readFileSync(shexCFile, "utf8");
            try {
              parser._setFileName(shexCFile);
              parser._setBase(BASE);
@@ -177,7 +177,7 @@ describe("A ShEx parser", function () {
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           var schema = Fs.readFileSync(shexRFile, "utf8");
+           const schema = Fs.readFileSync(shexRFile, "utf8");
            try {
              const schemaGraph = new N3.Store();
              schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
@@ -260,7 +260,7 @@ describe("A ShEx parser", function () {
   // negative syntax and structure tests
   negativeTests.forEach(testSet => {
     const manifest = testSet.path + "manifest.jsonld";
-    let negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
+    const negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
     if (TESTS)
       negSchemas = negSchemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
@@ -393,7 +393,7 @@ if (!EARL && TEST_Vestiges) {
     }).filter(t => {
       return true;
     }).forEach(test => {
-      var path = schemasPath + test.shex;
+      const path = schemasPath + test.shex;
       it("should load the same imports as ShExNode.load in '" + path + "'", function () {
         parser._setBase("file://"+path);
         return Promise.all([
@@ -435,8 +435,8 @@ function loadGraphSchema () {
 function parseJSONFile(filename, mapFunction) {
   "use strict";
   try {
-    var string = Fs.readFileSync(filename, "utf8");
-    var object = JSON.parse(string);
+    const string = Fs.readFileSync(filename, "utf8");
+    const object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
         if (typeof obj[k] === "object") {
