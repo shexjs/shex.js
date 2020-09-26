@@ -353,30 +353,15 @@ if (!TEST_browser) {
             ]
           })
         })
-        
 
-        async function dropData (selector, data) {
-          const event = dom.window.document.createEvent("MouseEvents");
-          event.initMouseEvent( "drop", true, true );
+        async function dropData (selector, data) { await drop(selector, data, []) }
+        async function dropFiles (selector, files) { await drop(selector, undefined, files) }
+
+        async function drop (selector, data, files) {
+          const event = dom.window.document.createEvent("MouseEvents")
+          event.initMouseEvent( "drop", true, true )
           event.dataTransfer = {
             data: data,
-            setData: function(type, val) { this.data[type] = val },
-            getData: function(type) { return this.data[type] },
-	    dropEffect: 'none',
-	    effectAllowed: 'all',
-            files: [],
- 	    items: {},
-	    types: [],
-          }
-          $(selector).get(0).dispatchEvent( event );
-          await SharedForTests.promise;
-        }
-
-        async function dropFiles (selector, files) {
-          const event = dom.window.document.createEvent("MouseEvents");
-          event.initMouseEvent( "drop", true, true );
-          event.dataTransfer = {
-            // data: data,
             setData: function(type, val) { this.data[type] = val },
             getData: function(type) { return this.data[type] },
 	    dropEffect: 'none',
@@ -385,8 +370,8 @@ if (!TEST_browser) {
  	    items: {},
 	    types: [],
           }
-          $(selector).get(0).dispatchEvent( event );
-          await SharedForTests.promise;
+          $(selector).get(0).dispatchEvent( event )
+          await SharedForTests.promise
         }
       })
 
