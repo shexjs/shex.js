@@ -38,6 +38,13 @@ if (!TEST_browser) {
   console.warn("Skipping browser-tests; to activate these tests, set environment variable TEST_browser=true");
 
 } else {
+  // Some manifests to play with:
+  const Manifest_Example = 'packages/shex-webapp/examples/manifest.json'
+  const Manifest_ShExMap = 'packages/extension-map/examples/manifest.json'
+  const Manifest_InlineOne = 'test/browser/manifest-inline-one.json'
+  const Manifest_UrlTwo = 'test/browser/manifest-URL-two.json'
+  function rel (file) { return `../../../${file}` }
+  function abs (file) { return `/shex.js/${file}` }
 
   TESTS.forEach(test => {
     describe(`WEBapp ${test.page}`, function () {
@@ -80,7 +87,7 @@ if (!TEST_browser) {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../../shex-webapp/examples/manifest.json'));
+          ({ dom, $, loaded } = await loadPage(page, `?manifestURL=${rel(Manifest_Example)}`));
           expect(loaded.manifest).to.have.property('fromUrl')
         })
 
@@ -197,7 +204,7 @@ if (!TEST_browser) {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../examples/manifest.json999'));
+          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=doesNotExist'));
           expect(loaded.manifest).to.have.property('loadFailure')
         })
 
@@ -217,7 +224,7 @@ if (!TEST_browser) {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-inline-one.json'));
+          ({ dom, $, loaded } = await loadPage(page, `?manifestURL=${abs(Manifest_InlineOne)}`));
           expect(loaded.manifest).to.have.property('fromUrl')
         })
 
@@ -244,7 +251,7 @@ if (!TEST_browser) {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-URL-two.json'));
+          ({ dom, $, loaded } = await loadPage(page, `?manifestURL=${abs(Manifest_UrlTwo)}`));
           expect(loaded.manifest).to.have.property('fromUrl')
         })
 
@@ -299,7 +306,27 @@ if (!TEST_browser) {
         }).timeout(STARTUP_TIMEOUT)
       })
 
-      describe('dragon drop', function () {
+      describe('GET dialog', function () {
+        this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+        let dom, $, loaded
+        before(async () => {
+          ({ dom, $, loaded } = await loadPage(page, '?manifestURL='));
+          expect(loaded.manifest).to.have.property('skipped')
+        })
+
+        it("should load no schemas", async function () {
+          expect($('#manifestDrop').find('button').length).to.equal(0)
+          $("#load-manifest-button").trigger('click')
+          $("#loadForm").attr("class", "manifest").find("span.whatToLoad").text('manifest')
+          $("#loadInput").val(rel(Manifest_UrlTwo))
+          $('div[aria-describedBy=loadForm] button:contains("GET")').trigger('click')
+          const loaded = await SharedForTests.promise
+          let buttons = $('#manifestDrop').find('button')
+          expect($('#manifestDrop').find('button').length).to.equal(2)
+        }).timeout(STARTUP_TIMEOUT)
+      })
+
+      describe('drag and drop', function () {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
@@ -332,10 +359,10 @@ if (!TEST_browser) {
         it("single test without URLs as simple object", async function () {
           // Construction of JsDom's internal Blob is idiomatic. Have fun in the debugger!
           const manifest = Blob.create([
-            [Fs.readFileSync("test/browser/manifest-inline-one.json")],
+            [Fs.readFileSync(Manifest_InlineOne)],
             {type: "application/json"}
           ])
-          manifest.name = "manifest-inline-one.json"
+          manifest.name = Path.parse(Manifest_InlineOne).name
           await dropFiles("#manifestDrop", [manifest])
           const schema = $('#manifestDrop').find('button').slice(0, 1)
           expect(schema.text()).to.equal('1dotOr2dot_pass_p1')
@@ -408,7 +435,7 @@ if (!TEST_browser) {
         "status": "mf:Approved"
       }
 
-      const junk = {
+      const notCurrentlyUsed1 = {
         "@id": "#1NOTRefOR1dot_pass-inOR",
         "@type": "sht:ValidationTest",
         "action": {
@@ -433,7 +460,7 @@ if (!TEST_browser) {
       this.timeout(SCRIPT_CALLBACK_TIMEOUT);
       let dom, $, loaded
       before(async () => {
-        ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/packages/extension-map/examples/manifest.json'));
+        ({ dom, $, loaded } = await loadPage(page, `?manifestURL=${abs(Manifest_ShExMap)}`));
           expect(loaded.manifest).to.have.property('fromUrl')
       })
 
@@ -549,9 +576,8 @@ function startServer () {
     const srvr = http.createsrvr(requestHandler)
 
     srvr.listen(PORT, (err) => {
-      if (err) {
-        return console.log('something bad happened', err)
-      }
+      if (err)
+        throw Error(`server.listen got ${err}`)
     })
     return srvr
   }

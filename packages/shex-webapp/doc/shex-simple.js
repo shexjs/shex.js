@@ -1120,7 +1120,7 @@ function prepareControls () {
     buttons: {
       "GET": function (evt, ui) {
         results.clear();
-        const target = Getables.find(g => g.queryStringParm === $("#loadForm span").text());
+        const target = Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
         const url = $("#loadInput").val();
         const tips = $(".validateTips");
         function updateTips (t) {
@@ -1137,11 +1137,11 @@ function prepareControls () {
           return;
         }
         tips.removeClass("ui-state-highlight").text();
-        target.cache.asyncGet(url).catch(function (e) {
+        SharedForTests.promise = target.cache.asyncGet(url).catch(function (e) {
           updateTips(e.message);
         });
       },
-      Cancel: function() {
+      "Cancel": function() {
         $("#loadInput").removeClass("ui-state-error");
         $("#loadForm").dialog("close");
         toggleControls();
@@ -1160,7 +1160,7 @@ function prepareControls () {
           target.cache.meta.base && target.cache.meta.base !== DefaultBase ? target.cache.meta.base :
           "";
       $("#loadInput").val(prefillURL);
-      $("#loadForm").attr("class", type).find("span").text(type);
+      $("#loadForm").attr("class", type).find("span.whatToLoad").text(type);
       $("#loadForm").dialog("open");
     });
   });
@@ -2047,12 +2047,14 @@ function addContextMenus (inputSelector, cache) {
 prepareControls();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
-const ready = Promise.all([ dndPromise, loads ]);
+let ready = Promise.all([ dndPromise, loads ]);
 if ('_testCallback' in window) {
   SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
   window._testCallback(SharedForTests);
 }
-ready.then(() => {
+ready.then(resolves => {
+  if (!('_testCallback' in window))
+    console.log('serch parameters:', resolves[1]);
   // Update UI to say we're done loading everything?
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
