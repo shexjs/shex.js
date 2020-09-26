@@ -25080,7 +25080,7 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/readable-stream/readable-browser.js
+// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/node_modules/readable-stream/readable-browser.js
 var readable_browser = __webpack_require__(8);
 
 // CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Store.js
