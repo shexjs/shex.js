@@ -28,23 +28,11 @@ const negativeTests = [
   {path: findPath("negativeStructure"), include: "Structural error"}
 ];
 const illDefinedTestsPath = findPath("illDefined");
+const nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
 
 const parser = ShExParser.construct(BASE, null, {index: true});
 
-const GraphSchema = TEST_ShExR ? parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8")) : null;
-const nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
-if (TEST_ShExR) {
-  const valueExpr_tripleCnstrnt = GraphSchema._index.shapeExprs[nsPath + "TripleConstraint"].
-      expression.expressions.find(e => {
-        return e.predicate === nsPath + "shex#valueExpr";
-      });
-  valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",
-                                        shapeExprs:
-                                        [ nsPath + "shapeExpr",
-                                          { type: "Shape", closed: true } ] }
-} else {
-  console.warn("ShExR tests disabled");
-}
+const GraphSchema = loadGraphSchema();
 
 // positive transformation tests
 const schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
@@ -420,6 +408,27 @@ if (!EARL && TEST_Vestiges) {
       });
     });
   });
+}
+
+function loadGraphSchema () {
+  if (TEST_ShExR) {
+    const ret = parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8"));
+
+    // @@ What the heck is this for?
+    const valueExpr_tripleCnstrnt = ret._index.shapeExprs[nsPath + "TripleConstraint"].
+          expression.expressions.find(e => {
+            return e.predicate === nsPath + "shex#valueExpr";
+          });
+    valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",
+                                          shapeExprs:
+                                          [ nsPath + "shapeExpr",
+                                            { type: "Shape", closed: true } ] }
+
+    return ret;
+  } else {
+    console.warn("ShExR tests disabled");
+    return null;
+  }
 }
 
 // Parses a JSON object, restoring `undefined` values
