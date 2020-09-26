@@ -94,7 +94,7 @@ ShExWriter.prototype = {
     if ("shapes" in schema)
       schema.shapes.forEach(function (shapeExpr) {
         let id = shapeExpr.id;
-        var abstract = "";
+        let abstract = "";
         if (shapeExpr.type === "ShapeDecl") {
           if (shapeExpr.abstract)
             abstract = "abstract "
@@ -306,7 +306,7 @@ ShExWriter.prototype = {
         }
 
         else if (expr.type === "OneOf") {
-          var needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
+          const needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
           _exprGroup(expr.expressions, "\n"+indent+"| ", 1, needsParens || _ShExWriter.forceParens);
           _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
           _ShExWriter._annotations(pieces, expr.annotations, indent);
@@ -314,7 +314,7 @@ ShExWriter.prototype = {
         }
 
         else if (expr.type === "EachOf") {
-          var needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
+          const needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
           _exprGroup(expr.expressions, ";\n"+indent, 2, needsParens || _ShExWriter.forceParens);
           _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
           _ShExWriter._annotations(pieces, expr.annotations, indent);

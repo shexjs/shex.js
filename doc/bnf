@@ -6,7 +6,7 @@
 #
 # yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2_on_shape_expression?lang=perl
 # repo: https://github.com/shexSpec/shex.js/
-# branch: on-shape-expression
+# branch: extends
 # path: doc/bnf
 # TODO:
 #   annotations on shapes

@@ -255,16 +255,6 @@ function vpEngine (schema, shape, index) {
           }));
         }
 
-        // else if (expr.type === "Inclusion") {
-        //   var included = schema.productions[expr.include];
-        //   return validateExpr(included, thread);
-        // }
-
-        // else if (expr.type === "NestedShape") {
-        //   var newThreads = [thread]
-        //   return newThreads;
-        // }
-
         runtimeError("unexpected expr type: " + expr.type);
 
         function homogenize (list) {
