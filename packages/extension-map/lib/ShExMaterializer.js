@@ -255,7 +255,6 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       else if (expr.type === "Inclusion")
         indexTripleConstraints_dive(schema.productions[expr.include]);
 
-      // @@TODO shape.virtual, shape.inherit
       else
         runtimeError("unexpected expr type: " + expr.type);
     };

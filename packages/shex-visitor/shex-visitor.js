@@ -150,7 +150,6 @@ function ShExVisitor () {
 
       this._maybeSet(shape, ret, "Shape",
                      [ "id",
-                       // "virtual", "inherit", -- futureWork
                        "closed",
                        "expression", "extra", "semActs", "annotations"]);
       return ret;
@@ -163,7 +162,6 @@ function ShExVisitor () {
 
       this._maybeSet(shape, ret, "NodeConstraint",
                      [ "id",
-                       // "virtual", "inherit", -- futureWork
                        "nodeKind", "datatype", "pattern", "flags", "length",
                        "reference", "minlength", "maxlength",
                        "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",

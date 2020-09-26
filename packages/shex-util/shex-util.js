@@ -11,7 +11,7 @@ SX._namespace = "http://www.w3.org/ns/shex#";
  "ShapeOr", "ShapeAnd", "shapeExprs", "nodeKind",
  "NodeConstraint", "iri", "bnode", "nonliteral", "literal", "datatype", "length", "minlength", "maxlength", "pattern", "flags", "mininclusive", "minexclusive", "maxinclusive", "maxexclusive", "totaldigits", "fractiondigits", "values",
  "ShapeNot", "shapeExpr",
- "Shape", "virtual", "closed", "extra", "expression", "inherit", "semActs",
+ "Shape", "closed", "extra", "expression", "semActs",
  "ShapeRef", "reference", "ShapeExternal",
  "EachOf", "OneOf", "expressions", "min", "max", "annotation",
  "TripleConstraint", "inverse", "negated", "predicate", "valueExpr",
@@ -693,10 +693,6 @@ const ShExUtil = {
           }
         }
 
-        if (shape.inherit && shape.inherit.length > 0)
-          shape.inherit.forEach(function (i) {
-            ret.add(shape.id, i);
-          });
         if (shape.expression)
           _walkTripleExpression(shape.expression, negated);
       }
