@@ -246,17 +246,6 @@ ShExWriter.prototype = {
       }
 
       function _writeExpression (expr, indent, parentPrecedence) {
-        function _writeScopedShapeExpression (scopedShapeExpr) {
-          if (scopedShapeExpr) {
-            pieces.push(" ON SHAPE EXPRESSION\n");
-            pieces = pieces.concat(
-              _ShExWriter._writeShapeExpr(scopedShapeExpr, done, true, 0).map(
-                line => indent + "    " + line
-              )
-            )
-          }
-        }
-
         function _writeExpressionActions (semActs) {
           if (semActs) {
 
@@ -312,7 +301,6 @@ ShExWriter.prototype = {
             pieces.push(". ");
 
           _writeCardinality(expr.min, expr.max);
-          _writeScopedShapeExpression(expr.onShapeExpression);
           _ShExWriter._annotations(pieces, expr.annotations, indent);
           _writeExpressionActions(expr.semActs);
         }
@@ -321,7 +309,6 @@ ShExWriter.prototype = {
           var needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
           _exprGroup(expr.expressions, "\n"+indent+"| ", 1, needsParens || _ShExWriter.forceParens);
           _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
-          _writeScopedShapeExpression(expr.onShapeExpression);
           _ShExWriter._annotations(pieces, expr.annotations, indent);
           _writeExpressionActions(expr.semActs);
         }
@@ -330,7 +317,6 @@ ShExWriter.prototype = {
           var needsParens = "id" in expr || "min" in expr || "max" in expr || "annotations" in expr || "semActs" in expr;
           _exprGroup(expr.expressions, ";\n"+indent, 2, needsParens || _ShExWriter.forceParens);
           _writeCardinality(expr.min, expr.max); // t: open1dotclosecardOpt
-          _writeScopedShapeExpression(expr.onShapeExpression);
           _ShExWriter._annotations(pieces, expr.annotations, indent);
           _writeExpressionActions(expr.semActs);
         }

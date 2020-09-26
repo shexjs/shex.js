@@ -153,9 +153,8 @@
 [42]    multiElementGroup     ::= unaryTripleExpr (';' unaryTripleExpr)+ ';'?
 [43]    unaryTripleExpr       ::= ('$' tripleExprLabel)? (tripleConstraint | bracketedTripleExpr)
                                 | include
-[44]    bracketedTripleExpr   ::= '(' innerTripleExpr ')' cardinality? onShapeExpr? annotation* semanticActions
-[0]     onShapeExpr           ::= "ON" ("SHAPE" "EXPRESSION")? inlineShapeExpression
-[45]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? onShapeExpr? annotation* semanticActions
+[44]    bracketedTripleExpr   ::= '(' innerTripleExpr ')' cardinality? annotation* semanticActions
+[45]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions
 [46]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
 [47]    senseFlags            ::= '^'
 [48]    valueSet              ::= '[' valueSetValue* ']'

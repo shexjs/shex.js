@@ -433,9 +433,6 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
 IT_NOT                  [No][Oo][Tt]
-IT_ON                   [Oo][Nn]
-IT_SHAPE                [Ss][Hh][Aa][Pp][Ee]
-IT_EXPRESSION           [Ee][Xx][Pp][Rr][Ee][Ss][Ss][Ii][Oo][Nn]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE         [Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MAXINCLUSIVE         [Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -553,9 +550,6 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_AND}                return 'IT_AND';
 {IT_OR}                 return 'IT_OR';
 {IT_NOT}                return 'IT_NOT';
-{IT_ON}                 return 'IT_ON';
-{IT_SHAPE}              return 'IT_SHAPE';
-{IT_EXPRESSION}         return 'IT_EXPRESSION';
 {IT_MININCLUSIVE}       return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}       return 'IT_MINEXCLUSIVE';
 {IT_MAXINCLUSIVE}       return 'IT_MAXINCLUSIVE';
@@ -1219,15 +1213,14 @@ _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C:
     ;
 
 bracketedTripleExpr:
-      '(' tripleExpression ')' _Qcardinality_E_Opt _QonShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
         if ("min" in $4) { $$.min = $4.min; } // t: open3groupdotclosecard23Annot3Code2
         if ("max" in $4) { $$.max = $4.max; } // t: open3groupdotclosecard23Annot3Code2
-        if ($5) { $$.onShapeExpression = $5; } // t: !!
-        if ($6.length) { $$.annotations = $6; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($7) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($7.semActs) : $7.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
+        if ($5.length) { $$.annotations = $5; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
@@ -1236,30 +1229,18 @@ _Qcardinality_E_Opt:
     | cardinality	// t: 1cardOpt
     ;
 
-_QonShapeExpression_E_Opt:
-      	-> null // t: 1dot
-    | IT_ON _QIT_SHAPE_IT_EXPRESSION_E_Opt inlineShapeExpression -> $3	// t: !!
-    ;
-
-_QIT_SHAPE_IT_EXPRESSION_E_Opt:
-      	
-    | IT_SHAPE IT_EXPRESSION
-    ;
-
 tripleConstraint:
-      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _QonShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
-        // $7: t: 1dotCode1
+      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        // $6: t: 1dotCode1
 	if ($3 !== EmptyShape && false) {
 	  const t = blank();
 	  addShape(t, $3, yy);
 	  $3 = t; // ShapeRef
 	}
         // %7: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $7); // t: 1dot, 1inversedot
-        if ($5)
-          $$.onShapeExpression = $5; // t: !!
-        if ($6.length)
-          $$["annotations"] = $6; // t: 1dotAnnot3, 1inversedotAnnot3
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot, 1inversedot
+        if ($5.length)
+          $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3
       }
     ;
 
