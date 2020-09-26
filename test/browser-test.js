@@ -20,15 +20,18 @@ let expect = require("chai").expect
 const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const { JSDOM } = jsdom
+// JsDom only accepts it's own implementation of Blob
+const Blob = require('../node_modules/jsdom/lib/jsdom/living/generated/Blob')
 let SharedForTests = null
 
 const Server = startServer()
 
+// Uncomment logs to watch HTTP traffic.
 function log200 (url, filePath, length) {
   // console.log(200, url, filePath, length)
 }
-function log404 (url) {debugger
-  console.warn(404, url)
+function log404 (url) {
+  // console.warn(404, url)
 }
 
 if (!TEST_browser) {
@@ -44,7 +47,8 @@ if (!TEST_browser) {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, ''));
+          ({ dom, $, loaded } = await loadPage(page, ''))
+          expect(loaded.manifest).to.have.property('fromUrl') // shex-simple.js defaults to some URL
         })
 
         describe('validation output', function () {
@@ -56,7 +60,7 @@ if (!TEST_browser) {
             $('#inputData textarea').val()
           })
 
-          it("should load first example example", async function () {
+          it("should load first example from default manifest", async function () {
             let schema, data
 
             schema = $('#manifestDrop').find('button').slice(0, 1)
@@ -77,6 +81,7 @@ if (!TEST_browser) {
         let dom, $, loaded
         before(async () => {
           ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../../shex-webapp/examples/manifest.json'));
+          expect(loaded.manifest).to.have.property('fromUrl')
         })
 
         it("should load manifest", function () {
@@ -100,7 +105,7 @@ if (!TEST_browser) {
           await SharedForTests.promise
         }).timeout(STARTUP_TIMEOUT)
 
-        describe('query map', function () {
+        describe('should set query map to', function () {
           it("empty", async function () {
             await set("#textMap", "")
             expect($("#editMap .pair").length).to.equal(1)
@@ -109,7 +114,7 @@ if (!TEST_browser) {
             expect(mapToText($("#fixedMap"))).to.equal("")
           })
 
-          it("one", async function () {
+          it("one entry", async function () {
             await set("#textMap", "{FOCUS :subject _}@START")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
@@ -117,7 +122,7 @@ if (!TEST_browser) {
             expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
           })
 
-          it("one,", async function () {
+          it("one entry with trailing comma", async function () {
             await set("#textMap", "{FOCUS :subject _}@START,")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
@@ -125,7 +130,7 @@ if (!TEST_browser) {
             expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
           })
 
-          it("two query map, one fixed map", async function () {
+          it("two entries with produce one fixed map entry", async function () {
             await set("#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
             expect($("#editMap .pair").length).to.equal(2)
             expect($("#fixedMap .pair").length).to.equal(1)
@@ -155,7 +160,7 @@ if (!TEST_browser) {
           }
         })
 
-        it("human output", async function () {
+        it("validation should generate human output", async function () {
           $("#interface").val("human");
           const valResp = await validationResults($, {
             name: "human", selector: "> div", contents: [
@@ -166,7 +171,7 @@ if (!TEST_browser) {
           expect(valResp.validationResults.length).to.equal(2)
         })
 
-        it("minimal output", async function () {
+        it("validation should generate minimal output", async function () {
           $("#interface").val("minimal");
           await validationResults($, {
             name: "minimal", selector: "> pre", contents: [
@@ -176,7 +181,7 @@ if (!TEST_browser) {
           })
         })
 
-        it("matched graph output", async function () {
+        it("validation should generate matched graph output", async function () {
           $("#interface").val("human");
           $("#success").val("query");
           await validationResults($, {
@@ -193,6 +198,7 @@ if (!TEST_browser) {
         let dom, $, loaded
         before(async () => {
           ({ dom, $, loaded } = await loadPage(page, '?manifestURL=../examples/manifest.json999'));
+          expect(loaded.manifest).to.have.property('loadFailure')
         })
 
         it("should fail to load manifest", function () {
@@ -207,14 +213,42 @@ if (!TEST_browser) {
         }).timeout(STARTUP_TIMEOUT)
       })
 
-      describe('another manifest', function () {
+      describe('inline schema and data', function () {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
         before(async () => {
-          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-two.json'));
+          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-inline-one.json'));
+          expect(loaded.manifest).to.have.property('fromUrl')
         })
 
-        it("should load first example", async function () {
+        it("should load simple example", async function () {
+          const schema = $('#manifestDrop').find('button').slice(0, 1)
+          expect(schema.text()).to.equal('1dotOr2dot_pass_p1')
+          schema.click()
+          await SharedForTests.promise
+
+          const data = $('.passes').find('button').slice(0, 1)
+          expect(data.text()).to.equal('p1.ttl')
+          data.click()
+          await SharedForTests.promise
+
+          await validationResults($, {
+            name: "human", selector: "> *", contents: [
+              { shapeMap: "✓<x>@<http://a.example/S1>", classes: ["passes"] },
+            ]
+          })
+        }).timeout(STARTUP_TIMEOUT)
+      })
+
+      describe('URL refs to schema and data', function () {
+        this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+        let dom, $, loaded
+        before(async () => {
+          ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/test/browser/manifest-URL-two.json'));
+          expect(loaded.manifest).to.have.property('fromUrl')
+        })
+
+        it("should load simple example", async function () {
           const schema = $('#manifestDrop').find('button').slice(0, 1)
           expect(schema.text()).to.equal('1dotOr2dot_pass_p1')
           schema.click()
@@ -232,7 +266,7 @@ if (!TEST_browser) {
           })
         }).timeout(STARTUP_TIMEOUT)
 
-        it("should load second example", async function () {
+        it("should load imports example", async function () {
           const  schema = $('#manifestDrop').find('button').slice(1, 2)
           expect(schema.text()).to.equal('imports schema')
           schema.click()
@@ -256,6 +290,7 @@ if (!TEST_browser) {
         let dom, $, loaded
         before(async () => {
           ({ dom, $, loaded } = await loadPage(page, '?manifestURL='));
+          expect(loaded.manifest).to.have.property('skipped')
         })
 
         it("should load no schemas", async function () {
@@ -269,29 +304,56 @@ if (!TEST_browser) {
         let dom, $, loaded
         before(async () => {
           ({ dom, $, loaded } = await loadPage(page, '?manifestURL='));
+          expect(loaded.manifest).to.have.property('skipped')
         })
 
-        it("single test manifest", async function () {
+        it("test manifest with URLs as simple object", async function () {
           await dropData("#manifestDrop", { "application/json": JSON.stringify(testEx1, null, 2) })
           let buttons = $('#manifestDrop').find('button')
           expect(buttons.length).to.equal(1)
           expect(buttons.slice(0, 1).text()).to.equal('I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> }')
         })
 
-        it("test manifest array of one", async function () {
+        it("test manifest with URLs as array of one object", async function () {
           await dropData("#manifestDrop", { "application/json": JSON.stringify([testEx1], null, 2) })
           let buttons = $('#manifestDrop').find('button')
           expect(buttons.length).to.equal(1)
           expect(buttons.slice(0, 1).text()).to.equal('I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> }')
         })
 
-        it("test manifest array of two", async function () {
+        it("test manifest with URLs array of two objects", async function () {
           await dropData("#manifestDrop", { "application/json": JSON.stringify([testEx1, testEx2], null, 2) })
           let buttons = $('#manifestDrop').find('button')
           expect(buttons.length).to.equal(2)
           expect(buttons.slice(0, 1).text()).to.equal('I2 I3 <S1> { <p1> ., <p2> @<S2>? } | I3 <S2> { <p3> @<S3> } | <S3> { <p4> @<S1> }')
           expect(buttons.slice(1, 2).text()).to.equal('1dot-relative.shex')
         })
+
+        it("single test without URLs as simple object", async function () {
+          // Construction of JsDom's internal Blob is idiomatic. Have fun in the debugger!
+          const manifest = Blob.create([
+            [Fs.readFileSync("test/browser/manifest-inline-one.json")],
+            {type: "application/json"}
+          ])
+          manifest.name = "manifest-inline-one.json"
+          await dropFiles("#manifestDrop", [manifest])
+          const schema = $('#manifestDrop').find('button').slice(0, 1)
+          expect(schema.text()).to.equal('1dotOr2dot_pass_p1')
+          schema.click()
+          await SharedForTests.promise
+
+          const data = $('.passes').find('button').slice(0, 1)
+          expect(data.text()).to.equal('p1.ttl')
+          data.click()
+          await SharedForTests.promise
+
+          await validationResults($, {
+            name: "human", selector: "> *", contents: [
+              { shapeMap: "✓<x>@<http://a.example/S1>", classes: ["passes"] },
+            ]
+          })
+        })
+        
 
         async function dropData (selector, data) {
           const event = dom.window.document.createEvent("MouseEvents");
@@ -303,6 +365,23 @@ if (!TEST_browser) {
 	    dropEffect: 'none',
 	    effectAllowed: 'all',
             files: [],
+ 	    items: {},
+	    types: [],
+          }
+          $(selector).get(0).dispatchEvent( event );
+          await SharedForTests.promise;
+        }
+
+        async function dropFiles (selector, files) {
+          const event = dom.window.document.createEvent("MouseEvents");
+          event.initMouseEvent( "drop", true, true );
+          event.dataTransfer = {
+            // data: data,
+            setData: function(type, val) { this.data[type] = val },
+            getData: function(type) { return this.data[type] },
+	    dropEffect: 'none',
+	    effectAllowed: 'all',
+            files: files,
  	    items: {},
 	    types: [],
           }
@@ -370,6 +449,7 @@ if (!TEST_browser) {
       let dom, $, loaded
       before(async () => {
         ({ dom, $, loaded } = await loadPage(page, '?manifestURL=/shex.js/packages/extension-map/examples/manifest.json'));
+          expect(loaded.manifest).to.have.property('fromUrl')
       })
 
       it("should load the BP example", async function () {
@@ -555,4 +635,3 @@ async function loadPage (page, searchParms) {
     })
   }
 }
-
