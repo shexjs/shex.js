@@ -1072,8 +1072,8 @@ async function materializeAsync () {
     $("#results .status").text("materializing data...").show();
     outputShapeMap.forEach(pair => {
       try {
-        const materializer2 = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const res = materializer2.validate(binder, pair.node, pair.shape);
+        const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
+        const res = materializer.validate(binder, pair.node, pair.shape);
         if ("errors" in res) {
           renderEntry( {
             node: pair.node,
