@@ -16,25 +16,25 @@ const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
 });
 
-var {assert, expect} = require("chai");
-var findPath = require("./findPath.js");
+const {assert, expect} = require("chai");
+const findPath = require("./findPath.js");
 
-var schemasPath = findPath("schemas");
-var jsonSchemasPath = findPath("parsedSchemas");
-var manifestFile = schemasPath + "manifest.jsonld";
-var ShExRSchemaFile = findPath("doc") + "ShExR.shex";
-var negativeTests = [
+const schemasPath = findPath("schemas");
+const jsonSchemasPath = findPath("parsedSchemas");
+const manifestFile = schemasPath + "manifest.jsonld";
+const ShExRSchemaFile = findPath("doc") + "ShExR.shex";
+const negativeTests = [
   {path: findPath("negativeSyntax"), include: "Parse error"},
   {path: findPath("negativeStructure"), include: "Structural error"}
 ];
-var illDefinedTestsPath = findPath("illDefined");
+const illDefinedTestsPath = findPath("illDefined");
 
-var parser = ShExParser.construct(BASE, null, {index: true});
+const parser = ShExParser.construct(BASE, null, {index: true});
 
+const GraphSchema = TEST_ShExR ? parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8")) : null;
+const nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
 if (TEST_ShExR) {
-  var GraphSchema = parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8"));
-  var nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
-  var valueExpr_tripleCnstrnt = GraphSchema._index.shapeExprs[nsPath + "TripleConstraint"].
+  const valueExpr_tripleCnstrnt = GraphSchema._index.shapeExprs[nsPath + "TripleConstraint"].
       expression.expressions.find(e => {
         return e.predicate === nsPath + "shex#valueExpr";
       });
@@ -47,12 +47,12 @@ if (TEST_ShExR) {
 }
 
 // positive transformation tests
-var schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+const schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
 describe("A ShEx parser", function () {
-  // var b = function () {  };
+  // const b = function () {  };
   // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
   // });
@@ -61,7 +61,7 @@ describe("A ShEx parser", function () {
   beforeEach(function () { parser._resetBlanks(); });
 
   function expectError (f, match) {
-    var error = null;
+    let error = null;
     try {
       f();
     } catch (e) {
@@ -152,13 +152,13 @@ describe("A ShEx parser", function () {
   }
 
   schemas.forEach(function (test) {
-    var schema = test.name;
+    const schema = test.name;
 
-    var jsonSchemaFile = jsonSchemasPath + test.json;
+    const jsonSchemaFile = jsonSchemasPath + test.json;
     try {
-      var abstractSyntax = JSON.parse(Fs.readFileSync(jsonSchemaFile, "utf8"));
-      var shexCFile = schemasPath + test.shex;
-      var shexRFile = schemasPath + test.ttl;
+      const abstractSyntax = JSON.parse(Fs.readFileSync(jsonSchemaFile, "utf8"));
+      const shexCFile = schemasPath + test.shex;
+      const shexRFile = schemasPath + test.ttl;
 
       it(EARL
          ? 'schemas/manifest\#' + test.name
@@ -166,13 +166,13 @@ describe("A ShEx parser", function () {
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           var schema = Fs.readFileSync(shexCFile, "utf8");
+           const schema = Fs.readFileSync(shexCFile, "utf8");
            try {
              parser._setFileName(shexCFile);
              parser._setBase(BASE);
-             var parsedSchema = parser.parse(schema);
-             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
-             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+             const parsedSchema = parser.parse(schema);
+             const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
+             const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("parsed   :" + JSON.stringify(canonParsed));
              if (VERBOSE) console.log("expected :" + JSON.stringify(canonAbstractSyntax));
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
@@ -189,22 +189,22 @@ describe("A ShEx parser", function () {
          "' as '" + jsonSchemaFile + "'." , function () {
 
            if (VERBOSE) console.log(schema);
-           var schema = Fs.readFileSync(shexRFile, "utf8");
+           const schema = Fs.readFileSync(shexRFile, "utf8");
            try {
-             var schemaGraph = new N3.Store();
+             const schemaGraph = new N3.Store();
              schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
              // console.log(schemaGraph.getQuads());
-             var schemaDriver = ShExUtil.rdfjsDB(schemaGraph);
-             var schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
+             const schemaDriver = ShExUtil.rdfjsDB(schemaGraph);
+             const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
              parser._setFileName(ShExRSchemaFile);
-             var graphParser = ShExValidator.construct(
+             const graphParser = ShExValidator.construct(
                GraphSchema,
                {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
-             var val = graphParser.validate(schemaDriver, schemaRoot, ShExValidator.start); // start shape
-             var parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
-             var canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
-             var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+             const val = graphParser.validate(schemaDriver, schemaRoot, ShExValidator.start); // start shape
+             const parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
+             const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
+             const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
              if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
              // The order of nesting affects productions so don't look at them.
@@ -224,7 +224,7 @@ describe("A ShEx parser", function () {
         });
 
         it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
-          var w;
+          let w;
           new ShExWriter({simplifyParentheses: false }).
             writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
@@ -234,9 +234,9 @@ describe("A ShEx parser", function () {
           parser._setFileName(shexCFile + " (generated)");
           try {
             parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
-            var parsed2 = parser.parse(w);
-            var canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
-            var canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
+            const parsed2 = parser.parse(w);
+            const canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
+            const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
             expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
           } catch (e) {
             parser.reset();
@@ -245,7 +245,7 @@ describe("A ShEx parser", function () {
         });
 
         it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
-          var w;
+          let w;
           new ShExWriter({simplifyParentheses: true }).
             writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
@@ -254,7 +254,7 @@ describe("A ShEx parser", function () {
           if (VERBOSE) console.log("simple   :" + w);
           parser._setFileName(shexCFile + " (simplified)");
           try {
-            var parsed3 = parser.parse(w); // test that simplified also parses
+            const parsed3 = parser.parse(w); // test that simplified also parses
           } catch (e) {
             parser.reset();
             throw(e);
@@ -262,7 +262,7 @@ describe("A ShEx parser", function () {
         });
       }
     } catch (e) {
-      var e2 = Error("Error in (" + jsonSchemaFile + "): " + e.message);
+      const e2 = Error("Error in (" + jsonSchemaFile + "): " + e.message);
       e2.stack = "Error in (" + jsonSchemaFile + "): " + e.stack;
       throw e2;
     }
@@ -271,14 +271,14 @@ describe("A ShEx parser", function () {
 
   // negative syntax and structure tests
   negativeTests.forEach(testSet => {
-    var manifest = testSet.path + "manifest.jsonld";
-    var negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
+    const manifest = testSet.path + "manifest.jsonld";
+    const negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
     if (TESTS)
       negSchemas = negSchemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
     negSchemas.forEach(function (test) {
-      var path = testSet.path + test.shex;
-      var dir = testSet.path.replace(/\/$/, '');
+      const path = testSet.path + test.shex;
+      let dir = testSet.path.replace(/\/$/, '');
       dir = dir.substr(dir.lastIndexOf('/')+1);
 
       it(EARL
@@ -324,11 +324,11 @@ describe("A ShEx parser", function () {
 
   if (!EARL && (!TESTS || TESTS.indexOf("prefix") !== -1)) {
     describe("with indexing", function () {
-      var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
+      const prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
+      const parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
 
       it("should use those prefixes", function () {
-        var schema = "a:a { b:b .+ }";
+        const schema = "a:a { b:b .+ }";
         expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
@@ -340,17 +340,17 @@ describe("A ShEx parser", function () {
 
   if (!EARL && (!TESTS || TESTS.indexOf("prefix") !== -1)) {
     describe("with pre-defined prefixes", function () {
-      var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
+      const prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
+      const parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
 
       it("should use those prefixes", function () {
-        var schema = "a:a { b:b .+ }";
+        const schema = "a:a { b:b .+ }";
         expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
       it("should allow temporarily overriding prefixes", function () {
-        var schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
+        const schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
         expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#a"].expression.predicate)
           .to.deep.equal("http://a.example/def#b");
         expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
@@ -372,17 +372,17 @@ describe("A ShEx parser", function () {
     });
 
     describe("with pre-defined PNAME_NS prefixes", function () {
-      var prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
-      var parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
+      const prefixes = { a: "http://a.example/abc#", b: "http://a.example/def#" };
+      const parser = ShExParser.construct("http://a.example/", prefixes, {index: true});
 
       it("should use those prefixes", function () {
-        var schema = "a: { b: .+ }";
+        const schema = "a: { b: .+ }";
         expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#"].expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
       it("should allow temporarily overriding prefixes", function () {
-        var schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
+        const schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
         expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#"].expression.predicate)
           .to.deep.equal("http://a.example/def#");
         expect(parser.parse("a: { b: .+ }")._index.shapeExprs["http://a.example/abc#"].expression.predicate)
@@ -405,7 +405,7 @@ if (!EARL && TEST_Vestiges) {
     }).filter(t => {
       return true;
     }).forEach(test => {
-      var path = schemasPath + test.shex;
+      const path = schemasPath + test.shex;
       it("should load the same imports as ShExNode.load in '" + path + "'", function () {
         parser._setBase("file://"+path);
         return Promise.all([
@@ -426,8 +426,8 @@ if (!EARL && TEST_Vestiges) {
 function parseJSONFile(filename, mapFunction) {
   "use strict";
   try {
-    var string = Fs.readFileSync(filename, "utf8");
-    var object = JSON.parse(string);
+    const string = Fs.readFileSync(filename, "utf8");
+    const object = JSON.parse(string);
     function resolveRelativeURLs (obj) {
       Object.keys(obj).forEach(function (k) {
         if (typeof obj[k] === "object") {
@@ -453,8 +453,8 @@ function parseJSONFile(filename, mapFunction) {
 // Recursively replace values of "{undefined}" by `undefined`
 function restoreUndefined(object) {
   "use strict";
-  for (var key in object) {
-    var item = object[key];
+  for (const key in object) {
+    const item = object[key];
     if (typeof item === "object") {
       object[key] = restoreUndefined(item);
     } else if (item === "{undefined}") {
