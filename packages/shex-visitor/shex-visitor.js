@@ -334,7 +334,7 @@ function ShExVisitor () {
     }
 
   };
-  r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
+  r.visitBase = r.visitStart = r.visitClosed = r["visit@context"] = r._visitValue;
   r.visitRestricts = r.visitExtends = r._visitShapeExprList;
   r.visitExtra = r.visitAnnotations = r._visitList;
   r.visitAbstract = r.visitInverse = r.visitPredicate = r._visitValue;

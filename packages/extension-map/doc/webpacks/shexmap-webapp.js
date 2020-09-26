@@ -8252,7 +8252,7 @@ function ShExVisitor () {
     }
 
   };
-  r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
+  r.visitBase = r.visitStart = r.visitClosed = r["visit@context"] = r._visitValue;
   r.visitRestricts = r.visitExtends = r._visitShapeExprList;
   r.visitExtra = r.visitAnnotations = r._visitList;
   r.visitAbstract = r.visitInverse = r.visitPredicate = r._visitValue;
@@ -18524,7 +18524,7 @@ case 263:
       
 break;
 case 265:
-this.$ = $$[$0] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
+this.$ = $$[$0] // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN;
 break;
 case 268:
 this.$ = $$[$0] // t: @_$[$0-1]dotSpecialize1, @_$[$0-1]dot3Specialize, @_$[$0-1]dotSpecialize3;
@@ -22165,7 +22165,6 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       else if (expr.type === "Inclusion")
         indexTripleConstraints_dive(schema.productions[expr.include]);
 
-      // @@TODO shape.virtual, shape.inherit
       else
         runtimeError("unexpected expr type: " + expr.type);
     };

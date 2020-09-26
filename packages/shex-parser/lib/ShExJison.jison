@@ -1542,7 +1542,7 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:

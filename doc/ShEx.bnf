@@ -59,7 +59,7 @@
 [5s]    baseDecl              ::= "BASE" IRIREF
 [6s]    prefixDecl            ::= "PREFIX" PNAME_NS IRIREF
 [4]     start                 ::= "start" '=' ( shapeLabel | shapeDefinition semanticActions )
-[5]     shape                 ::= "VIRTUAL"? shapeLabel shapeDefinition semanticActions
+[5]     shape                 ::= "ABSTRACT"? shapeLabel shapeDefinition semanticActions
 [6]     shapeDefinition       ::= (includeSet | inclPropertySet | "CLOSED")* '{' someOfShape? '}'
 [7]     includeSet            ::= '&' shapeLabel+
 [8]     inclPropertySet       ::= "EXTRA" predicate+

@@ -775,7 +775,7 @@ case 263:
       
 break;
 case 265:
-this.$ = $$[$0] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3;
+this.$ = $$[$0] // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN;
 break;
 case 268:
 this.$ = $$[$0] // t: @_$[$0-1]dotSpecialize1, @_$[$0-1]dot3Specialize, @_$[$0-1]dotSpecialize3;
