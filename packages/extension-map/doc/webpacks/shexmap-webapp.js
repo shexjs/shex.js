@@ -22446,11 +22446,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         const oldLen = neighborhood.length;
         const created = target.getQuads().map(ShExTerm.internalTriple);
         neighborhood.push.apply(neighborhood, created);
-        console.log("adding: " + created.length + " triples: " + created.map(
-          q => (['subject', 'predicate', 'object']).map(
-            pos => ShExTerm.intermalTermToTurtle(q[pos], _ShExValidator.schema._base, _ShExValidator.schema._prefixes)
-          ).join(' ')
-        ));
+        if (false) {}
         return Array.apply(null, {length: created.length}).map((_, idx)=>{ return idx+oldLen});
         // if ("semActs" in tc) {
         //   tc.semActs.forEach(function (semAct) {
@@ -25475,7 +25471,7 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/readable-stream/readable-browser.js
+// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/node_modules/readable-stream/readable-browser.js
 var readable_browser = __webpack_require__(8);
 
 // CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Store.js

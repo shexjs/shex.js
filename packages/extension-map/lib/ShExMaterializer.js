@@ -507,7 +507,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         const oldLen = neighborhood.length;
         const created = target.getQuads().map(ShExTerm.internalTriple);
         neighborhood.push.apply(neighborhood, created);
-        console.log("adding: " + created.length + " triples: " + created.map(
+        if (false) console.log("adding: " + created.length + " triples: " + created.map(
           q => (['subject', 'predicate', 'object']).map(
             pos => ShExTerm.intermalTermToTurtle(q[pos], _ShExValidator.schema._base, _ShExValidator.schema._prefixes)
           ).join(' ')

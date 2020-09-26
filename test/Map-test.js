@@ -6,12 +6,12 @@ const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
-const N3 = require("n3");
+const RdfJs = require("n3");
 const ShExNode = require("@shexjs/node")({
-  rdfjs: N3,
+  rdfjs: RdfJs,
 });
 const ShExValidator = require("@shexjs/validator");
-const Mapper = require("@shexjs/extension-map")({rdfjs: N3, validator: ShExValidator});
+const Mapper = require("@shexjs/extension-map")({rdfjs: RdfJs, Validator: ShExValidator});
 
 // var Promise = require("promise");
 const expect = require("chai").expect;
@@ -20,53 +20,64 @@ const Path = require("path");
 var maybeLog = VERBOSE ? console.log : function () {};
 
 var Harness = {
-  prepare: function (srcSchemas, targetSchemas, inputData, inputNode, createRoot, expectedBindings, expectedRDF) {
+  prepare: function (srcSchemas, targetSchemas, inputData, inputNode, createRoot, expectedBindings, expectedRDF, testTrivial) {
     var mapstr = srcSchemas + " -> " + targetSchemas.join(',');
-    it('('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF, function (done) {
+    it('('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF, async function () {
 
       srcSchemas = srcSchemas.map(function (p) { return Path.resolve(__dirname, p); });
       targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
       inputData = Path.resolve(__dirname, inputData);
       expectedRDF = Path.resolve(__dirname, expectedRDF);
       // Lean on ShExNode to load all the schemas and data graphs.
-      Promise.all([ShExNode.load(srcSchemas, [], [inputData], [], {index: true}),
-                   ShExNode.load(targetSchemas, [], [expectedRDF], [], {index: true})]).
-        then(function (loads) {
-          loads[0].data.toString = loads[1].data.toString = graphToString;
+      const loads = await Promise.all([ShExNode.load(srcSchemas, [], [inputData], [], {index: true}),
+                                       ShExNode.load(targetSchemas, [], [expectedRDF], [], {index: true})])
+      loads[0].data.toString = loads[1].data.toString = graphToString;
 
-          // prepare validator
-          var validator = ShExValidator.construct(loads[0].schema, { noCache: true });
-          const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
+      // prepare validator
+      var validator = ShExValidator.construct(loads[0].schema, {noCache: true});
+      const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
-          // run validator
-          var res = validator.validate(ShExUtil.rdfjsDB(loads[0].data), inputNode, ShExValidator.start);
-          expect(res).to.not.be.null;
-          var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
+      // run validator
+      var res = validator.validate(ShExUtil.rdfjsDB(loads[0].data), inputNode, ShExValidator.start);
+      expect(res).to.not.be.null;
+      var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
 
-          // test against expected.
-          if (expectedBindings) {
-            expect(resultBindings).to.deeply.equal(expectedBindings);
-          }
+      // test against expected.
+      if (expectedBindings)
+        expect(resultBindings).to.deeply.equal(expectedBindings);
 
-          var map = registered.trivialMaterializer(loads[1].schema);
-          var binder = registered.binder([resultBindings]);
-          var outputGraph = map.materialize(binder, createRoot);
-          outputGraph.toString = graphToString;
-          maybeLog(mapstr);
-          maybeLog("output:");
-          maybeLog(outputGraph.toString());
-          maybeLog("expect:");
-          maybeLog(loads[1].data.toString());
-          // console.log(outputGraph.toString(), "\n--\n", loads[1].data.toString());
-          expect(geq(outputGraph, loads[1].data)).to.be.true;
-          done();
-        }).catch(function (error) {
-          done(error);
-        });
-
+      if (testTrivial)
+        testGraph(trivial(registered, loads[1].schema, resultBindings, createRoot), mapstr, loads[1].data)
+      testGraph(materialize(registered, loads[1].schema, resultBindings, createRoot), mapstr, loads[1].data)
     });
   }
 };
+
+function testGraph (trivialOutput, mapstr, data) {
+  trivialOutput.toString = graphToString;
+  maybeLog(mapstr);
+  maybeLog("output:");
+  maybeLog(trivialOutput.toString());
+  maybeLog("expect:");
+  maybeLog(data.toString());
+  // console.log(trivialOutput.toString(), "\n--\n", data.toString());
+  expect(geq(trivialOutput, data)).to.be.true;
+}
+
+function trivial (registered, schema, resultBindings, createRoot) {
+  var trivialMaterializer = registered.trivialMaterializer(schema);
+  const trivialBinder = registered.binder(JSON.parse(JSON.stringify([resultBindings])))
+  return trivialMaterializer.materialize(trivialBinder, createRoot);
+}
+
+function materialize (registered, schema, resultBindings, createRoot) {
+  const materializer = Mapper.materializer.construct(schema, registered, {});
+  const binder = registered.binder(JSON.parse(JSON.stringify([resultBindings])))
+  const res2 = materializer.validate(binder, createRoot, undefined)
+  const store = new RdfJs.Store()
+  store.addQuads(ShExUtil.valToN3js(res2, RdfJs.DataFactory))
+  return store
+}
 
 function geq (l, r) { // graphEquals needs a this
   return graphEquals.call(l, r);
@@ -74,8 +85,8 @@ function geq (l, r) { // graphEquals needs a this
 
 describe('A ShEx Mapper', function () {
   var tests = [
-    ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"],
-    ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl"],
+    ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl", true],
+    ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl", true],
 //    ["bifer", ["Map/BPDAMFHIR/BPFHIRsys.shex", "Map/BPDAMFHIR/BPFHIRdia.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
 //    ["bifb" , ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPunitsDAM.ttl"]
   ];
