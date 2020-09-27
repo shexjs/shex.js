@@ -423,6 +423,7 @@ const ShExUtil = {
     let nestables = Object.keys(shapeReferences).filter(
       label => shapeReferences[label].length === 1
         && shapeReferences[label][0].type === 'tc' // no inheritance support yet
+        && label in index.shapeExprs
         && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now
     ).filter(
       nestable => !('noNestPattern' in options)

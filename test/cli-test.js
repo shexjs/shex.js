@@ -2,31 +2,33 @@
 
 "use strict";
 const TEST_cli = "TEST_cli" in process.env ? JSON.parse(process.env["TEST_cli"]) : false;
-var TIME = "TIME" in process.env;
-var TESTS = "TESTS" in process.env ?
+const TIME = "TIME" in process.env;
+const TESTS = "TESTS" in process.env ?
     process.env.TESTS.split(/,/) :
     null;
-var HTTPTEST = "HTTPTEST" in process.env ?
+const HTTPTEST = "HTTPTEST" in process.env ?
     process.env.HTTPTEST :
     "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
 
-var ShExUtil = require("@shexjs/util");
+const ShExUtil = require("@shexjs/util");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
+  // cwd: __dirname, // screws up absolutizeResults
 });
-var child_process = require('child_process');
-var chai = require("chai");
-var expect = chai.expect;
-var assert = chai.assert;
-var should = chai.should;
-var Queue = require("timeout-promise-queue").PromiseQueue(25);
+const child_process = require('child_process');
+const chai = require("chai");
+const expect = chai.expect;
+const assert = chai.assert;
+const should = chai.should;
+const Queue = require("timeout-promise-queue").PromiseQueue(25);
 
-var fs = require("fs");
+const fs = require("fs");
+const Path = require("path");
 
-var manifestFile = "cli/manifest.json";
+const manifestFile = "cli/manifest.json";
 
-var AllTests = {
+const AllTests = {
   "shex-validate": [
     // pleas for help
     { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
@@ -132,10 +134,10 @@ if (!TEST_cli) {
 
 } else {
 
-var last = new Date();
-var stamp = TIME ? function (s) {
-  var t = new Date();
-  var delta = t - last;
+const last = new Date();
+const stamp = TIME ? function (s) {
+  const t = new Date();
+  const delta = t - last;
   last = t;
   console.warn(delta, s);
 } : function () {};
@@ -143,7 +145,7 @@ var stamp = TIME ? function (s) {
 /* set up IO promises
  */
 Object.keys(AllTests).forEach(function (script) {
-  var tests = AllTests[script];
+  let tests = AllTests[script];
 
   if (TESTS)
     tests = tests.filter(function (t) {
@@ -154,26 +156,24 @@ Object.keys(AllTests).forEach(function (script) {
     try {
       test.ref =
         "resultText" in test ? { resultText: test.resultText } :
-      "resultNoSpace" in test ? ShExNode.GET(test.resultNoSpace).then(function (loaded) { return { resultNoSpace: loaded }; }) :
+      "resultNoSpace" in test ? ShExNode.GET(fromHere(test.resultNoSpace)).then(function (loaded) { return { resultNoSpace: loaded }; }) :
       "resultMatch" in test ? { resultMatch: RegExp(test.resultMatch) } :
       "errorMatch" in test ? { errorMatch: RegExp(test.errorMatch) } :
-      ShExNode.GET(test.result).then(function (loaded) { return { result: loaded }; });
+      ShExNode.GET(fromHere(test.result)).then(function (loaded) { return { result: loaded }; });
 
       test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
-        process.chdir(__dirname); // the above paths are relative to this directory
-
-        var program = child_process.spawn("../node_modules/.bin/" + script, test.args);
+        const program = child_process.spawn("../node_modules/.bin/" + script, test.args, {cwd: __dirname});
 
         if (typeof test.stdin !== "undefined") {  
           // redirecting stdin for this test
-          fs.createReadStream(test.stdin).pipe(program.stdin)
+          fs.createReadStream(fromHere(test.stdin)).pipe(program.stdin)
         }
 
-        var stdout = "", stderr = ""
+        let stdout = "", stderr = ""
 
         program.stdout.on("data", function(data) { stdout += data; });
         program.stderr.on("data", function(data) { stderr += data; });
-        program.on("exit", function(exitCode) {
+        program.on("close", function(exitCode) {
           setTimeout(
             () => resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}), 0
           )
@@ -185,7 +185,7 @@ Object.keys(AllTests).forEach(function (script) {
         })
       }), 60 * 1000); // 1 minute
     } catch (e) {
-      var throwMe = new Error("Error setting up test " + test.name + " " + e);
+      const throwMe = new Error("Error setting up test " + test.name + " " + e);
       throwMe.stack = "Error setting up test " + test.name + " " + e.stack;
       throw throwMe;
     }
@@ -196,12 +196,12 @@ stamp("setup");
 /* test results
  */
 Object.keys(AllTests).forEach(function (script) {
-  var tests = AllTests[script];
+  let tests = AllTests[script];
 
   describe("The " + script + " script", function () {
     "use strict";
 
-    var setSlow = process.env["CLI_TIMEOUT"]; // CLI_TIMEOUT=4000 will run tests with timout of 4s
+    const setSlow = process.env["CLI_TIMEOUT"]; // CLI_TIMEOUT=4000 will run tests with timout of 4s
     this.timeout(setSlow && setSlow !== "1" ? parseInt(setSlow) : 6000);
     if (TESTS)
       tests = tests.filter(function (t) {
@@ -223,8 +223,8 @@ Object.keys(AllTests).forEach(function (script) {
          function (done) {
            stamp(script+"/"+test.name);
            Promise.all([test.ref, test.exec]).then(function (both) {
-             var ref = both[0];
-             var exec = both[1];
+             const ref = both[0];
+             const exec = both[1];
 
              if (test.status === 0) {      // Keep this test before exitCode in order to
                expect(exec.stderr).to.be.empty; // print errors from spawn.
@@ -253,5 +253,10 @@ Object.keys(AllTests).forEach(function (script) {
   });
 });
 
+  function fromHere (urlish) {
+    if (!urlish.match(/^[a-z]+:\/\//))
+      return Path.join(__dirname, urlish);
+    return urlish;
+  }
 }
 
