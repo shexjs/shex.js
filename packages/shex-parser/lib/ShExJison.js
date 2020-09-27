@@ -1266,8 +1266,7 @@ parse: function parse(input) {
       else if (Parser.options.duplicateShape !== "ignore")
         error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
-      shape.id = label;
-      Parser.shapes[label] = shape;
+      Parser.shapes[label] = Object.assign({id: label}, shape);
     }
   }
 

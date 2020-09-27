@@ -424,7 +424,8 @@ const ShExUtil = {
       label => shapeReferences[label].length === 1
         && shapeReferences[label][0].type === 'tc' // no inheritance support yet
         && label in index.shapeExprs
-        && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now
+        && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now. @@ needs an option
+        && !index.shapeExprs[label].abstract // shouldn't have a ref to an unEXTENDed ABSTRACT shape anyways.
     ).filter(
       nestable => !('noNestPattern' in options)
         || !nestable.match(RegExp(options.noNestPattern))
@@ -439,59 +440,65 @@ const ShExUtil = {
       let oldToNew = {}
 
       if (options.rename) {
-      if (!('transform' in options)) {
-        options.transform = (function () {
-          let map = shapeLabels.reduce((acc, k, idx) => {
-            acc[k] = '_:transformed' + idx
-            return acc
-          }, {})
-          return function (id, shapeExpr) {
-            return map[id]
-          }
-        })()
-      }
-      Object.keys(nestables).forEach(oldName => {
-        let shapeExpr = index.shapeExprs[oldName]
-        let newName = options.transform(oldName, shapeExpr)
-        oldToNew[oldName] = newName
-        shapeLabels[shapeLabels.indexOf(oldName)] = newName
-        nestables[newName] = nestables[oldName]
-        nestables[newName].was = oldName
-        delete nestables[oldName]
-        index.shapeExprs[newName] = index.shapeExprs[oldName]
-        delete index.shapeExprs[oldName]
-        if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
-        let ref = shapeReferences[oldName][0]
-        if (ref.type === 'tc') {
-          if (ref.tc.valueExpr.type === 'ShapeRef') {
-            ref.tc.valueExpr.reference = newName
+        if (!('transform' in options)) {
+          options.transform = (function () {
+            let map = shapeLabels.reduce((acc, k, idx) => {
+              acc[k] = '_:renamed' + idx
+              return acc
+            }, {})
+            return function (id, shapeExpr) {
+              return map[id]
+            }
+          })()
+        }
+        Object.keys(nestables).forEach(oldName => {
+          let shapeExpr = index.shapeExprs[oldName]
+          let newName = options.transform(oldName, shapeExpr)
+          oldToNew[oldName] = shapeExpr.id = newName
+          shapeLabels[shapeLabels.indexOf(oldName)] = newName
+          nestables[newName] = nestables[oldName]
+          nestables[newName].was = oldName
+          delete nestables[oldName]
+
+          // @@ maybe update index when done? 
+          index.shapeExprs[newName] = index.shapeExprs[oldName]
+          delete index.shapeExprs[oldName]
+
+          if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
+          let ref = shapeReferences[oldName][0]
+          if (ref.type === 'tc') {
+            if (typeof ref.tc.valueExpr === 'string') { // ShapeRef
+              ref.tc.valueExpr = newName
+            } else {
+              throw Error('assertion: rename not implemented for TripleConstraint expr: ' + ref.tc.valueExpr)
+              // _ShExUtil.setValueType(ref, newName)
+            }
+          } else if (ref.type === 'Shape') {
+            throw Error('assertion: rename not implemented for Shape: ' + ref)
           } else {
-            throw Error('assertion: rename not implemented for TripleConstraint expr: ' + ref.tc.valueExpr)
-            // _ShExUtil.setValueType(ref, newName)
+            throw Error('assertion: ' + ref.type + ' not TripleConstraint or Shape')
           }
-        } else if (ref.type === 'Shape') {
-          throw Error('assertion: rename not implemented for Shape: ' + ref)
-        } else {
-          throw Error('assertion: ' + ref.type + ' not TripleConstraint or Shape')
-        }
-      })
+        })
 
-      Object.keys(nestables).forEach(k => {
-        let n = nestables[k]
-        if (n.referrer in oldToNew) {
-          n.newReferrer = oldToNew[n.referrer]
-        }
-      })
+        Object.keys(nestables).forEach(k => {
+          let n = nestables[k]
+          if (n.referrer in oldToNew) {
+            n.newReferrer = oldToNew[n.referrer]
+          }
+        })
 
-      // Restore old order for more concise diffs.
-      let shapesCopy = {}
-      shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
-      index.shapeExprs = shapesCopy
+        // Restore old order for more concise diffs.
+        let shapesCopy = {}
+        shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
+        index.shapeExprs = shapesCopy
       } else {
         const doomed = []
         const ids = schema.shapes.map(s => s.id)
         Object.keys(nestables).forEach(oldName => {
-          shapeReferences[oldName][0].tc.valueExpr = index.shapeExprs[oldName].shapeExpr
+          const borged = index.shapeExprs[oldName]
+          // In principle, the ShExJ shouldn't have a Decl if the above criteria are met,
+          // but the ShExJ may be generated by something which emits Decls regardless.
+          shapeReferences[oldName][0].tc.valueExpr = _ShExUtil.skipDecl(borged)
           const delme = ids.indexOf(oldName)
           if (schema.shapes[delme].id !== oldName)
             throw Error('assertion: found ' + schema.shapes[delme].id + ' instead of ' + oldName)
@@ -502,6 +509,7 @@ const ShExUtil = {
           const id = schema.shapes[delme].id
           if (!nestables[id])
             throw Error('deleting unexpected shape ' + id)
+          delete schema.shapes[delme].id
           schema.shapes.splice(delme, 1)
         })
       }
@@ -1661,7 +1669,7 @@ const ShExUtil = {
       return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     } else {
       debugger; // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
     }
     function errorList (errors) {
       return errors.reduce(function (acc, e) {
