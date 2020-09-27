@@ -1,5 +1,5 @@
 {
-  "name": "furk",
+  "name": "shex",
   "private": true,
   "version": "1.0.0-alpha.3",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
@@ -41,6 +41,7 @@
     "@shexjs/writer": "file:packages/shex-writer",
     "browserify": "^16.2.3",
     "chai": "^4.2.0",
+    "coveralls": "^3.1.0",
     "cross-spawn": "^6.0.5",
     "eslint": "^5.16.0",
     "jison": "^0.4.18",
@@ -77,6 +78,7 @@
     "travisRepo": "./test/travisRepo.sh",
     "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
+    "coveralls": "cat ./coverage/lcov.info | coveralls",
     "travis-deploy-once": "travis-deploy-once",
     "webpack": "cd packages/shex-webapp && npm run webpack",
     "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
@@ -150,7 +152,7 @@
       "test/"
     ],
     "extension": [
-       ".js"
+      ".js"
     ],
     "reporter": [
       "lcov",
