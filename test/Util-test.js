@@ -569,6 +569,19 @@ describe('shex-util:', function () {
     })
   })
 
+  describe('utility function getPredicateUsage', function () {
+    const parser = ShExParser.construct(Base, {}, {index: false})
+    Tests.forEach(test => {
+      it (`should nest ${test.name}`, function () {
+        const orig = parser.parse(test.schema)
+        const unaltered = JSON.parse(JSON.stringify(orig))
+        const untyped = {}
+        const predicateUsage = ShExUtil.getPredicateUsage(unaltered, untyped)
+        expect(predicateUsage).to.deep.equal(test.predicateUsage)
+      })
+    })
+  })
+
   describe('utility function getProofGraph', function () {
     it (`should parse validation results`, function () {
       const store = new N3.Store()
