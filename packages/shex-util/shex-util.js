@@ -536,7 +536,7 @@ const ShExUtil = {
 
     let predicates = { } // IRI->{ uses: [shapeLabel], commonType: shapeExpr }
     Object.keys(schema.shapes).forEach(shapeLabel => {
-      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[shapeLabel])
+      let shapeExpr = schema.shapes[shapeLabel]
       if (shapeExpr.type === 'Shape') {
         let tcs = _ShExUtil.simpleTripleConstraints(shapeExpr) || []
         tcs.forEach(tc => {
