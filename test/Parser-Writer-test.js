@@ -187,9 +187,10 @@ describe("A ShEx parser", function () {
              parser._setFileName(ShExRSchemaFile);
              const graphParser = ShExValidator.construct(
                GraphSchema,
+               schemaDriver,
                {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
-             const val = graphParser.validate(schemaDriver, schemaRoot, ShExValidator.start); // start shape
+             const val = graphParser.validate(schemaRoot, ShExValidator.start); // start shape
              const parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
              const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
