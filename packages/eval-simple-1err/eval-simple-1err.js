@@ -61,13 +61,6 @@ const EvalSimple1ErrCjsModule = (function () {
           return {start: s, tail: [s]};
         }
 
-        else if (expr.type === "NestedShape") {
-          s = State_make(expr, []);
-          states[s].stack = stack;
-          return {start: s, tail: [s]};
-          // maybeAddRept(s, [s]);
-        }
-
         else if (expr.type === "OneOf") {
           lastTail = [];
           starts = [];

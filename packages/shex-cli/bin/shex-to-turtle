@@ -55,10 +55,9 @@ if (cmds['schema-keep-imports']) {
 
 ShExNode.load(cmds.shex, cmds.json, [], [], schemaOptions).then(function (loaded) {
   if (false) {
-    const shexj = ShExUtil.AStoShExJ(loaded.schema);
     let w;
     new ShExRWriter({ base: cmds['schema-base'] || loaded.schemaMeta[0].base }).
-      writeSchema(shexj, function (error, text, prefixes) {
+      writeSchema(loaded.schema, function (error, text, prefixes) {
         if (error) throw error;
         else w = text;
       });

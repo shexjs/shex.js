@@ -280,9 +280,6 @@ function ShExValidator_constructor(schema, options) {
           return acc.concat(indexTripleConstraints_dive(nested));
         }, []);
 
-      else if (expr.type === "NestedShape")
-        return [];
-
       else
         runtimeError("unexpected expr type: " + expr.type);
     };
