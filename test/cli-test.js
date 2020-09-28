@@ -171,12 +171,10 @@ Object.keys(AllTests).forEach(function (script) {
 
         let stdout = "", stderr = ""
 
-        program.stdout.on("data", function(data) { stdout += data; });
-        program.stderr.on("data", function(data) { stderr += data; });
-        program.on("close", function(exitCode) {
-          setTimeout(
-            () => resolve({stdout:stdout, stderr:stderr, exitCode:exitCode}), 0
-          )
+        program.stdout.on("data", function (data) { stdout += data; });
+        program.stderr.on("data", function (data) { stderr += data; });
+        program.on("close", function (exitCode) {
+          resolve({stdout:stdout, stderr:stderr, exitCode:exitCode})
         });
         program.on("error", function(err) { reject(err); });
         cancel.on('timeout', err => {
