@@ -1,7 +1,7 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS : null;
 var EARL = "EARL" in process.env;
 
 const ShExUtil = require("@shexjs/util");
@@ -52,11 +52,10 @@ describe("A ShEx validator", function () {
 
   if (TESTS) {
     tests = tests.filter(function (t) {
-      return TESTS.indexOf(t["@id"]) !== -1 ||
-        TESTS.indexOf(t["@id"].substr(1)) !== -1 ||
-        TESTS.indexOf(t.action.schema) !== -1 ||
-        TESTS.indexOf(t.action.data) !== -1 ||
-        TESTS.indexOf(t.result) !== -1;
+      return t["@id"].match(TESTS) ||
+        t["@id"].substr(1).match(TESTS) ||
+        t.action.schema.match(TESTS) ||
+        t.action.data.match(TESTS);
     });
   }
 
