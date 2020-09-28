@@ -34,11 +34,11 @@ var Harness = {
       loads[0].data.toString = loads[1].data.toString = graphToString;
 
       // prepare validator
-      var validator = ShExValidator.construct(loads[0].schema, {noCache: true});
+      var validator = ShExValidator.construct(loads[0].schema, ShExUtil.rdfjsDB(loads[0].data), {noCache: true});
       const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
       // run validator
-      var res = validator.validate(ShExUtil.rdfjsDB(loads[0].data), inputNode, ShExValidator.start);
+      var res = validator.validate(inputNode, ShExValidator.start);
       expect(res).to.not.be.null;
       var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
 

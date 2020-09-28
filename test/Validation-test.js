@@ -145,8 +145,8 @@ describe("A ShEx validator", function () {
               "exhaustive" :
               "greedy",
             semActs: semActs,
-            validateExtern: function (db, point, shapeLabel, depth, seen) {
-              return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
+            validateExtern: function (point, shapeLabel, depth, seen) {
+              return validator._validateShapeExpr(point, shapeExterns[shapeLabel],
                                                   shapeLabel, depth, seen);
             }
           }, params);
@@ -156,8 +156,6 @@ describe("A ShEx validator", function () {
           ShExNode.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
             then(function (loaded) {
               var schema = loaded.schema;
-              validator = ShExValidator.construct(schema, schemaOptions);
-              var testResults = TestExtension.register(validator, {ShExTerm});
 
               assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;
@@ -196,7 +194,9 @@ describe("A ShEx validator", function () {
                         var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
-                      var validationResult = validator.validate(ShExUtil.rdfjsDB(store), map);
+                      validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(store), schemaOptions);
+                      var testResults = TestExtension.register(validator, {ShExTerm});
+                      var validationResult = validator.validate(map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                       if (params.results !== "api") {
