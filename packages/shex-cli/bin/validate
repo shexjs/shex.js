@@ -581,7 +581,7 @@ function queueTests (tests, cmds) {
 
 function runValidator (graph, shapeMap, schema, options) {
   // prepare validator
-  const validator = ShExValidator.construct(schema, options);
+  const validator = ShExValidator.construct(schema, graph, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
@@ -592,8 +592,8 @@ function runValidator (graph, shapeMap, schema, options) {
 
   // run validator
   const res = cmds.grep
-      ? grep(graph, shapeMap)
-      : validator.validate(graph, shapeMap);
+      ? grep(shapeMap)
+      : validator.validate(shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -621,9 +621,9 @@ function runValidator (graph, shapeMap, schema, options) {
     return res;
   }
 
-  function grep (graph, fixedMap) {
+  function grep (fixedMap) {
     const passes = fixedMap.reduce((acc, row) => {
-      const res = validator.validate(graph, [row]);
+      const res = validator.validate([row]);
       return "errors" in res
         ? acc
         : acc.concat(res);

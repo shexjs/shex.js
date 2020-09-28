@@ -11,7 +11,7 @@ SX._namespace = "http://www.w3.org/ns/shex#";
  "ShapeOr", "ShapeAnd", "shapeExprs", "nodeKind",
  "NodeConstraint", "iri", "bnode", "nonliteral", "literal", "datatype", "length", "minlength", "maxlength", "pattern", "flags", "mininclusive", "minexclusive", "maxinclusive", "maxexclusive", "totaldigits", "fractiondigits", "values",
  "ShapeNot", "shapeExpr",
- "Shape", "virtual", "closed", "extra", "expression", "inherit", "semActs",
+ "Shape", "closed", "extra", "expression", "semActs",
  "ShapeRef", "reference", "ShapeExternal",
  "EachOf", "OneOf", "expressions", "min", "max", "annotation",
  "TripleConstraint", "inverse", "negated", "predicate", "valueExpr",
@@ -393,13 +393,7 @@ const ShExUtil = {
     shapeLabels.forEach(label => {
       let shape = index.shapeExprs[label]
       noteReference(label, null) // just note the shape so we have a complete list at the end
-      shape = _ShExUtil.skipDecl(shape)
       if (shape.type === 'Shape') {
-        if ('extends' in shape) {
-          shape.extends.forEach(
-            parent => noteReference(parent, shape)
-          )
-        }
         if ('expression' in shape) {
           (_ShExUtil.simpleTripleConstraints(shape) || []).forEach(tc => {
             let target = _ShExUtil.getValueType(tc.valueExpr, true)
@@ -415,7 +409,8 @@ const ShExUtil = {
     let nestables = Object.keys(shapeReferences).filter(
       label => shapeReferences[label].length === 1
         && shapeReferences[label][0].type === 'tc' // no inheritance support yet
-        && _ShExUtil.skipDecl(index.shapeExprs[label]).type === 'Shape' // Don't nest e.g. valuesets for now
+        && label in index.shapeExprs
+        && index.shapeExprs[label].type === 'Shape' // Don't nest e.g. valuesets for now. @@ needs an option
     ).filter(
       nestable => !('noNestPattern' in options)
         || !nestable.match(RegExp(options.noNestPattern))
@@ -430,59 +425,65 @@ const ShExUtil = {
       let oldToNew = {}
 
       if (options.rename) {
-      if (!('transform' in options)) {
-        options.transform = (function () {
-          let map = shapeLabels.reduce((acc, k, idx) => {
-            acc[k] = '_:transformed' + idx
-            return acc
-          }, {})
-          return function (id, shapeExpr) {
-            return map[id]
-          }
-        })()
-      }
-      Object.keys(nestables).forEach(oldName => {
-        let shapeExpr = index.shapeExprs[oldName]
-        let newName = options.transform(oldName, shapeExpr)
-        oldToNew[oldName] = newName
-        shapeLabels[shapeLabels.indexOf(oldName)] = newName
-        nestables[newName] = nestables[oldName]
-        nestables[newName].was = oldName
-        delete nestables[oldName]
-        index.shapeExprs[newName] = index.shapeExprs[oldName]
-        delete index.shapeExprs[oldName]
-        if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
-        let ref = shapeReferences[oldName][0]
-        if (ref.type === 'tc') {
-          if (ref.tc.valueExpr.type === 'ShapeRef') {
-            ref.tc.valueExpr.reference = newName
+        if (!('transform' in options)) {
+          options.transform = (function () {
+            let map = shapeLabels.reduce((acc, k, idx) => {
+              acc[k] = '_:renamed' + idx
+              return acc
+            }, {})
+            return function (id, shapeExpr) {
+              return map[id]
+            }
+          })()
+        }
+        Object.keys(nestables).forEach(oldName => {
+          let shapeExpr = index.shapeExprs[oldName]
+          let newName = options.transform(oldName, shapeExpr)
+          oldToNew[oldName] = shapeExpr.id = newName
+          shapeLabels[shapeLabels.indexOf(oldName)] = newName
+          nestables[newName] = nestables[oldName]
+          nestables[newName].was = oldName
+          delete nestables[oldName]
+
+          // @@ maybe update index when done? 
+          index.shapeExprs[newName] = index.shapeExprs[oldName]
+          delete index.shapeExprs[oldName]
+
+          if (shapeReferences[oldName].length !== 1) { throw Error('assertion: ' + oldName + ' doesn\'t have one reference: [' + shapeReferences[oldName] + ']') }
+          let ref = shapeReferences[oldName][0]
+          if (ref.type === 'tc') {
+            if (typeof ref.tc.valueExpr === 'string') { // ShapeRef
+              ref.tc.valueExpr = newName
+            } else {
+              throw Error('assertion: rename not implemented for TripleConstraint expr: ' + ref.tc.valueExpr)
+              // _ShExUtil.setValueType(ref, newName)
+            }
+          } else if (ref.type === 'Shape') {
+            throw Error('assertion: rename not implemented for Shape: ' + ref)
           } else {
-            throw Error('assertion: rename not implemented for TripleConstraint expr: ' + ref.tc.valueExpr)
-            // _ShExUtil.setValueType(ref, newName)
+            throw Error('assertion: ' + ref.type + ' not TripleConstraint or Shape')
           }
-        } else if (ref.type === 'Shape') {
-          throw Error('assertion: rename not implemented for Shape: ' + ref)
-        } else {
-          throw Error('assertion: ' + ref.type + ' not TripleConstraint or Shape')
-        }
-      })
+        })
 
-      Object.keys(nestables).forEach(k => {
-        let n = nestables[k]
-        if (n.referrer in oldToNew) {
-          n.newReferrer = oldToNew[n.referrer]
-        }
-      })
+        Object.keys(nestables).forEach(k => {
+          let n = nestables[k]
+          if (n.referrer in oldToNew) {
+            n.newReferrer = oldToNew[n.referrer]
+          }
+        })
 
-      // Restore old order for more concise diffs.
-      let shapesCopy = {}
-      shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
-      index.shapeExprs = shapesCopy
+        // Restore old order for more concise diffs.
+        let shapesCopy = {}
+        shapeLabels.forEach(label => shapesCopy[label] = index.shapeExprs[label])
+        index.shapeExprs = shapesCopy
       } else {
         const doomed = []
         const ids = schema.shapes.map(s => s.id)
         Object.keys(nestables).forEach(oldName => {
-          shapeReferences[oldName][0].tc.valueExpr = index.shapeExprs[oldName].shapeExpr
+          const borged = index.shapeExprs[oldName]
+          // In principle, the ShExJ shouldn't have a Decl if the above criteria are met,
+          // but the ShExJ may be generated by something which emits Decls regardless.
+          shapeReferences[oldName][0].tc.valueExpr = borged
           const delme = ids.indexOf(oldName)
           if (schema.shapes[delme].id !== oldName)
             throw Error('assertion: found ' + schema.shapes[delme].id + ' instead of ' + oldName)
@@ -493,6 +494,7 @@ const ShExUtil = {
           const id = schema.shapes[delme].id
           if (!nestables[id])
             throw Error('deleting unexpected shape ' + id)
+          delete schema.shapes[delme].id
           schema.shapes.splice(delme, 1)
         })
       }
@@ -520,10 +522,10 @@ const ShExUtil = {
     // populate shapeHierarchy
     let shapeHierarchy = Hierarchy.create()
     Object.keys(schema.shapes).forEach(label => {
-      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[label])
+      let shapeExpr = schema.shapes[label]
       if (shapeExpr.type === 'Shape') {
         (shapeExpr.extends || []).forEach(
-          superShape => shapeHierarchy.add(superShape, label)
+          superShape => shapeHierarchy.add(superShape.reference, label)
         )
       }
     })
@@ -534,7 +536,7 @@ const ShExUtil = {
 
     let predicates = { } // IRI->{ uses: [shapeLabel], commonType: shapeExpr }
     Object.keys(schema.shapes).forEach(shapeLabel => {
-      let shapeExpr = _ShExUtil.skipDecl(schema.shapes[shapeLabel])
+      let shapeExpr = schema.shapes[shapeLabel]
       if (shapeExpr.type === 'Shape') {
         let tcs = _ShExUtil.simpleTripleConstraints(shapeExpr) || []
         tcs.forEach(tc => {
@@ -572,14 +574,16 @@ const ShExUtil = {
               }
             } else if (curType === newType) {
               ; // same type again
-            } else if (shapeHierarchy.parents[curType].indexOf(newType) !== -1) {
+            } else if (shapeHierarchy.parents[curType] && shapeHierarchy.parents[curType].indexOf(newType) !== -1) {
               predicates[tc.predicate].polymorphic = true; // already covered by current commonType
             } else {
-              let idx = shapeHierarchy.parents[newType].indexOf(curType)
+              let idx = shapeHierarchy.parents[newType] ? shapeHierarchy.parents[newType].indexOf(curType) : -1
               if (idx === -1) {
-                let intersection = shapeHierarchy.parents[curType].filter(
-                  lab => -1 !== shapeHierarchy.parents[newType].indexOf(lab)
-                )
+                let intersection = shapeHierarchy.parents[curType]
+                    ? shapeHierarchy.parents[curType].filter(
+                      lab => -1 !== shapeHierarchy.parents[newType].indexOf(lab)
+                    )
+                    : []
                 if (intersection.length === 0) {
                   untyped[tc.predicate] = {
                     shapeLabel,
@@ -623,10 +627,6 @@ const ShExUtil = {
           return shape.expression.expressions
         }
     throw Error('can\'t (yet) express ' + JSON.stringify(shape))
-  },
-
-  skipDecl: function (shapeExpr) {
-    return shapeExpr.type === 'ShapeDecl' ? shapeExpr.shapeExpr : shapeExpr
   },
 
   getValueType: function (valueExpr) {
@@ -693,10 +693,6 @@ const ShExUtil = {
           }
         }
 
-        if (shape.inherit && shape.inherit.length > 0)
-          shape.inherit.forEach(function (i) {
-            ret.add(shape.id, i);
-          });
         if (shape.expression)
           _walkTripleExpression(shape.expression, negated);
       }
@@ -1118,6 +1114,8 @@ const ShExUtil = {
       } else {
         return null;
       }
+    } else if (val.type === "NodeConstraintTest") {
+      return null;
     } else if (val.type === "Recursion") {
       return null;
     } else {
