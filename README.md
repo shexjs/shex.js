@@ -153,15 +153,17 @@ See? That's all there was too it!
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
 <a name="loader-script"/>
 ```js
-var shexc = "http://shex.io/examples/Issue.shex";
-var data = "http://shex.io/examples/Issue1.ttl";
-var node = "http://shex.io/examples/Issue1";
+const shexc = "http://shex.io/examples/Issue.shex";
+const data = "http://shex.io/examples/Issue1.ttl";
+const node = "http://shex.io/examples/Issue1";
 
-var shex = require("shex");
-shex.Loader.load([shexc], [], [data], []).then(function (loaded) {
-    var db = shex.Util.rdfjsDB(loaded.data);
-    var validator = shex.Validator.construct(loaded.schema, { results: "api" });
-    var result = validator.validate(db, [{node: node, shape: shex.Validator.start}]);
+const ShExApi = require("@shexjs/api");
+const ShExUtil = require("@shexjs/util");
+const ShExValidator = require("@shexjs/validator");
+ShExApi.load([shexc], [], [data], []).then(function (loaded) {
+    var db = ShExUtil.rdfjsDB(loaded.data);
+    var validator = ShExValidator.construct(loaded.schema, ShExUtil.rdfjsDB(db), { results: "api" });
+    var result = validator.validate([{node: node, shape: ShExValidator.start}]);
     console.log(result);
 });
 ```
