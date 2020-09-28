@@ -48,9 +48,6 @@ describe('Invoking SemActs', function () {
       base: schema._base,
       prefixes: schema._prefixes || {}
     }
-    const validator = ShExValidator.construct(schema)
-    Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
-
     // Resolve and parse data.
     const dataFile = (test.dataURL.startsWith("./") ? SemActsTestDir : datasPath) + test.dataURL
     const dataBase = new URL(dataFile, Base)
@@ -71,9 +68,11 @@ describe('Invoking SemActs', function () {
     const expected = JSON.parse(Fs.readFileSync(expectedFile, 'utf8'))
 
     // Parse ShapeMap and validate.
+    const validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(data))
+    Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
-    const res = validator.validate(ShExUtil.rdfjsDB(data), sm)
+    const res = validator.validate(sm)
 
     // Test results
     const blurb = test.shexPath

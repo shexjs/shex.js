@@ -41,8 +41,8 @@
       }
       .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
       #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
-      #meta textarea, .meta { background-color: #fffff4; color: #000000; }
-      #meta li.selected { background-color: #ffffe8; }
+      #inputMeta textarea, .inputMeta { background-color: #fffff4; color: #000000; }
+      #inputMeta li.selected { background-color: #ffffe8; }
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
       #inputData li.selected button { background-color: #e8ffe8; color: #000000; }
       #manifestDrop { border-color: white; width: 100%; }
@@ -72,6 +72,7 @@
       #results div.human pre { margin: 0 2em; }
       #results h3 { font-size: larger; margin: 0; }
       #results pre { margin: 1ex; }
+      #results .data, #results .schema { border-style: dotted; border-width: 2px; }
       .status { display: none; } /* disable .status 'cause it's redundant against the selected marker. */
       #navlist li {
         display: inline;
@@ -217,7 +218,7 @@ ul {
     <div id="title">
       <img src="ShEx-bones-min.svg" class="ShExLogo" alt="ShEx Icon"/><h1 style="float:left;">ShEx2 — Simple Online Validator</h1>
       <!-- <ul id="navlist" style="float:left; padding-left: 1em;"> -->
-      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="meta-upload" class="inputfile" data-target="#meta textarea"/> <label for="meta-upload" class="meta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
+      <!--   <li>‣ <span class="heading">drag and drop to:</span> <input type="file" id="schema-upload" class="inputfile" data-target="#inputSchema textarea"/> <label for="schema-upload" class="schema">ShEx schema</label>, <input type="file" id="inputMeta-upload" class="inputfile" data-target="#inputMeta textarea"/> <label for="inputMeta-upload" class="inputMeta">metadata</label>, <input type="file" id="data-upload" class="inputfile" data-target="#inputData textarea"/> <label for="data-upload" class="data">RDF data</label></li> -->
       <!-- </ul> -->
       <form id="menuForm">
           <button id="menu-button" title="click for menu">
@@ -229,7 +230,7 @@ ul {
               <li class="        "><h3>user interface</h3></li>
               <li class="menuitem"><label for="interface">style:</label><select id="interface"><option value="minimal">minimal</option><option value="human">human</option><option value="appinfo">appinfo</option></select></li>
               <li class="menuitem"><label for="success">on success:</label><select id="success"><option value="proof">proof</option><option value="query">matched graph</option><option value="remainder">remaining graph</option></select></li>
-              <li class="menuitem"><input type="checkbox" id="showMeta"/><label for="showMeta">show metadata pane</label></li>
+              <li class="menuitem"><input type="checkbox" id="showInputMeta"/><label for="showInputMeta">show metadata pane</label></li>
               <li class="menuitem"><a id="download-results-button">download <span class="results">results</span></a></li>
               <li class="        "><hr/></li>
               <li class="        "><h3>HTTP</h3></li>
@@ -253,7 +254,7 @@ ul {
         </div>
       </form>
       <div id="loadForm" style="cursor: default; text-align: left; ">
-        <h1>Load <span></span></h1>
+        <h1>Load <span class="whatToLoad"></span></h1>
         <p class="menuitem"><label for="loadInput" style="float: left;">from </label><input id="loadInput" style="width: 80%;"/></p>
         <p class="validateTips">Enter a URL.</p>
       </div>
@@ -336,7 +337,7 @@ ul {
         </div>
       </div>
       <div class="panel">
-        <div id="meta" data-adjust="#inputData textarea" style="display: none;">
+        <div id="inputMeta" data-adjust="#inputData textarea" style="display: none;">
           <p class="status"> </p>
           <textarea rows="12" style="width: 100%"></textarea>
         </div>

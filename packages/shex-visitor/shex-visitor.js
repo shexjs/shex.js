@@ -150,7 +150,6 @@ function ShExVisitor () {
 
       this._maybeSet(shape, ret, "Shape",
                      [ "id",
-                       // "virtual", "inherit", -- futureWork
                        "closed",
                        "expression", "extra", "semActs", "annotations"]);
       return ret;
@@ -163,7 +162,6 @@ function ShExVisitor () {
 
       this._maybeSet(shape, ret, "NodeConstraint",
                      [ "id",
-                       // "virtual", "inherit", -- futureWork
                        "nodeKind", "datatype", "pattern", "flags", "length",
                        "reference", "minlength", "maxlength",
                        "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
@@ -320,8 +318,8 @@ function ShExVisitor () {
     }
 
   };
-  r.visitBase = r.visitStart = r.visitVirtual = r.visitClosed = r["visit@context"] = r._visitValue;
-  r.visitInherit = r.visitExtra = r.visitAnnotations = r._visitList;
+  r.visitBase = r.visitStart = r.visitClosed = r["visit@context"] = r._visitValue;
+  r.visitExtra = r.visitAnnotations = r._visitList;
   r.visitInverse = r.visitPredicate = r._visitValue;
   r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
 

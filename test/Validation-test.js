@@ -1,7 +1,7 @@
 //  "use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
-var TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+var TESTS = "TESTS" in process.env ? process.env.TESTS : null;
 var EARL = "EARL" in process.env;
 
 const ShExUtil = require("@shexjs/util");
@@ -52,11 +52,10 @@ describe("A ShEx validator", function () {
 
   if (TESTS) {
     tests = tests.filter(function (t) {
-      return TESTS.indexOf(t["@id"]) !== -1 ||
-        TESTS.indexOf(t["@id"].substr(1)) !== -1 ||
-        TESTS.indexOf(t.action.schema) !== -1 ||
-        TESTS.indexOf(t.action.data) !== -1 ||
-        TESTS.indexOf(t.result) !== -1;
+      return t["@id"].match(TESTS) ||
+        t["@id"].substr(1).match(TESTS) ||
+        t.action.schema.match(TESTS) ||
+        t.action.data.match(TESTS);
     });
   }
 
@@ -156,8 +155,8 @@ describe("A ShEx validator", function () {
               "exhaustive" :
               "greedy",
             semActs: semActs,
-            validateExtern: function (db, point, shapeLabel, depth, seen) {
-              return validator._validateShapeExpr(db, point, shapeExterns[shapeLabel],
+            validateExtern: function (point, shapeLabel, depth, seen) {
+              return validator._validateShapeExpr(point, shapeExterns[shapeLabel],
                                                   shapeLabel, depth, seen);
             }
           }, params, resolverOptions);
@@ -168,8 +167,6 @@ describe("A ShEx validator", function () {
           ShExNode.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
             then(function (loaded) {
               var schema = loaded.schema;
-              validator = ShExValidator.construct(schema, schemaOptions);
-              var testResults = TestExtension.register(validator, {ShExTerm});
 
               assert(referenceResult !== undefined || test["@type"] === "sht:ValidationFailure", "test " + test["@id"] + " has no reference result");
               // var start = schema.start;
@@ -208,7 +205,9 @@ describe("A ShEx validator", function () {
                         var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
-                      var validationResult = validator.validate(ShExUtil.rdfjsDB(store), map);
+                      validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(store), schemaOptions);
+                      var testResults = TestExtension.register(validator, {ShExTerm});
+                      var validationResult = validator.validate(map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                       if (params.results !== "api") {
