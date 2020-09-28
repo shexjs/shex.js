@@ -218,9 +218,9 @@ const decimalLexicalTests = {
  *   lax(true): boolean: whine about missing types in schema.
  *   diagnose(false): boolean: makde validate return a structure with errors.
  */
-function ShExValidator_constructor(schema, options) {
+function ShExValidator_constructor(schema, db, options) {
   if (!(this instanceof ShExValidator_constructor))
-    return new ShExValidator_constructor(schema, options);
+    return new ShExValidator_constructor(schema, db, options);
   let index = schema._index || ShExVisitor.index(schema)
   this.type = "ShExValidator";
   options = options || {};
@@ -303,7 +303,7 @@ function ShExValidator_constructor(schema, options) {
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
-  this.validate = function (db, point, label, tracker, seen, uniques) {
+  this.validate = function (point, label, tracker, seen, uniques) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
       point = ShExTerm.internalTerm(point)
@@ -313,7 +313,7 @@ function ShExValidator_constructor(schema, options) {
       if (this.options.results === "api") {
         return shapeMap.map(pair => {
           let time = new Date();
-          const res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
+          const res = this.validate(pair.node, pair.shape, label, tracker); // really tracker and seen
           time = new Date() - time;
           return {
             node: pair.node,
@@ -325,7 +325,7 @@ function ShExValidator_constructor(schema, options) {
         });
       }
       const results = shapeMap.reduce((ret, pair) => {
-        const res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
+        const res = this.validate(pair.node, pair.shape, label, tracker); // really tracker and seen
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
@@ -368,8 +368,6 @@ function ShExValidator_constructor(schema, options) {
       seen = {};
     if (uniques === undefined)
       uniques = {};
-    // if (typeof labelOrShape !== "string")  // !! deprecated?
-    //   return this._validateShapeExpr(db, point, labelOrShape, "_: -start-", seen, uniques);
 
     let shape = null;
     if (label == Start) {
@@ -382,7 +380,7 @@ function ShExValidator_constructor(schema, options) {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
     if (typeof label !== "string")
-      return this._validateShapeExpr(db, point, shape, Start, tracker, seen);
+      return this._validateShapeExpr(point, shape, Start, tracker, seen);
 
     if (seen === undefined)
       seen = {};
@@ -397,7 +395,7 @@ function ShExValidator_constructor(schema, options) {
       return tracker.known(this.known[seenKey]);
     seen[seenKey] = { point: point, shape: label };
     tracker.enter(point, label);
-    const ret = this._validateShapeExpr(db, point, shape, label, tracker, seen, uniques);
+    const ret = this._validateShapeExpr(point, shape, label, tracker, seen, uniques);
     tracker.exit(point, label, ret);
     delete seen[seenKey];
     if ("known" in this)
@@ -408,11 +406,11 @@ function ShExValidator_constructor(schema, options) {
     return ret;
   }
 
-  this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, tracker, seen, uniques) {
+  this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen, uniques) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     if (typeof shapeExpr === "string") { // ShapeRef
-      return this._validateShapeExpr(db, point, index.shapeExprs[shapeExpr], shapeExpr, tracker, seen, uniques);
+      return this._validateShapeExpr(point, index.shapeExprs[shapeExpr], shapeExpr, tracker, seen, uniques);
     } else if (shapeExpr.type === "NodeConstraint") {
       const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       return sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
@@ -433,14 +431,14 @@ function ShExValidator_constructor(schema, options) {
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      return this._validateShape(db, point, shapeExpr, shapeLabel, tracker, seen, uniques);
+      return this._validateShape(point, shapeExpr, shapeLabel, tracker, seen, uniques);
     } else if (shapeExpr.type === "ShapeExternal") {
-      return this.options.validateExtern(db, point, shapeLabel, tracker, seen, uniques);
+      return this.options.validateExtern(point, shapeLabel, tracker, seen, uniques);
     } else if (shapeExpr.type === "ShapeOr") {
       const errors = [];
       for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         const nested = shapeExpr.shapeExprs[i];
-        const sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen, uniques);
+        const sub = this._validateShapeExpr(point, nested, shapeLabel, tracker, seen, uniques);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -448,7 +446,7 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeOrFailure", errors: errors };
     } else if (shapeExpr.type === "ShapeNot") {
-      const sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, tracker, seen, uniques);
+      const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, tracker, seen, uniques);
       if ("errors" in sub)
           return { type: "ShapeNotResults", solution: sub };
         else
@@ -458,7 +456,7 @@ function ShExValidator_constructor(schema, options) {
       const errors = [];
       for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         const nested = shapeExpr.shapeExprs[i];
-        const sub = this._validateShapeExpr(db, point, nested, shapeLabel, tracker, seen, uniques);
+        const sub = this._validateShapeExpr(point, nested, shapeLabel, tracker, seen, uniques);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -472,7 +470,7 @@ function ShExValidator_constructor(schema, options) {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
   }
 
-  this._validateShape = function (db, point, shape, shapeLabel, tracker, seen, uniques) {
+  this._validateShape = function (point, shape, shapeLabel, tracker, seen, uniques) {
     const _ShExValidator = this;
     const valParms = { db, shapeLabel, tracker, seen, uniques };
 
@@ -681,11 +679,11 @@ function ShExValidator_constructor(schema, options) {
   this._errorsMatchingShapeExpr = function (value, valueExpr, valParms) {
     const _ShExValidator = this;
     if (typeof valueExpr === "string") { // ShapeRef
-      return _ShExValidator.validate(valParms.db, value, valueExpr, valParms.tracker, valParms.seen, valParms.uniques);
+      return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen, valParms.uniques);
     } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
-      return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.tracker, valParms.seen)
+      return _ShExValidator._validateShapeExpr(value, valueExpr, valParms.shapeLabel, valParms.tracker, valParms.seen)
     } else if (valueExpr.type === "ShapeOr") {
       const errors = [];
       for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
