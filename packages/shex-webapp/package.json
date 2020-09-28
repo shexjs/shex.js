@@ -31,10 +31,10 @@
     "make": "(cd test/ && make test)",
     "browserify-n3": "mkdir -p node_modules/n3/browser ; npx browserify -s N3 -o node_modules/n3/browser/n3-browserify.js node_modules/n3/lib/index.js ; npx uglifyjs node_modules/n3/browser/n3-browserify.js -o node_modules/n3/browser/n3-browserify.min.js -c",
     "test": "mocha -C -R dot",
-    "webpack": "npx webpack --config webpack.config.js --mode production",
-    "webpack-analyzer": "npx webpack --config webpack.config.js --mode production --profile --json > ./doc/webpacks/shex-webapp-stats.json && webpack-bundle-analyzer ./doc/webpacks/shex-webapp-stats.json",
+    "webpack": "webpack --config webpack.config.js --mode production",
+    "webpack-analyzer": "webpack --config webpack.config.js --mode production --profile --json > ./doc/webpacks/shex-webapp-stats.json && webpack-bundle-analyzer ./doc/webpacks/shex-webapp-stats.json",
     "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
-    "webpack-monitor": "WEBPACK_MONITOR=true npx webpack --config webpack.config.js --mode production",
+    "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production",
     "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development"
   },
   "publishConfig": {
