@@ -41,9 +41,10 @@ const ShExNodeCjsModule = function (config) {
       : new Promise(function (fulfill, reject) {
         let filename = url;
         const fileURLmatch = filename.match("^file://[^/]*(/.*)$");
-        if (fileURLmatch) {
+        if (fileURLmatch)
           filename = fileURLmatch[1];
-        }
+        if ("cwd" in config)
+          filename = Path.join(config.cwd, filename)
         FS.readFile(filename, "utf8", function (error, text) {
           if (error) {
             reject(error)
