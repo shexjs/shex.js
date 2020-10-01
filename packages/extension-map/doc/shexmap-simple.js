@@ -2,6 +2,7 @@
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
+const USE_INCREMENTAL_RESULTS = true;
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const RdfJs = N3js;
@@ -767,7 +768,7 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      await copyEditMapToTextMap() // will update if #editMap is dirty
+      await copyEditMapToTextMap(), // will update if #editMap is dirty
       resolve(await callValidator())
     }, 0);
   })
@@ -787,7 +788,7 @@ async function callValidator (done) {
   $("#results .status").hide();
   let currentAction = "parsing input schema";
   try {
-    await Caches.inputSchema.refresh(); // @@ throw away parser stack?
+    const inputSchema = await Caches.inputSchema.refresh(); // @@ throw away parser stack?
     $("#schemaDialect").text(Caches.inputSchema.language);
     if (hasFocusNode()) {
       currentAction = "parsing input data";
@@ -804,56 +805,111 @@ async function callValidator (done) {
 
       currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
-      // const dataURL = "data:text/json," +
-      //     JSON.stringify(
-      //       ShEx.Util.AStoShExJ(
-      //         ShEx.Util.canonicalize(
-      //           Caches.inputSchema.refresh())));
-      const alreadLoaded = {
-        schema: await Caches.inputSchema.refresh(),
-        url: Caches.inputSchema.url || DefaultBase
-      };
-      // shex-node loads IMPORTs and tests the schema for structural faults.
-      try {
-        const loaded = await ShExApi.load([alreadLoaded], [], [], []);
-        let time;
-        const validator = ShEx.Validator.construct(
-          loaded.schema,
-          inputData,
-          { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
-        $(".extensionControl:checked").each(function () {
-          $(this).data("code").register(validator, ShEx);
-        })
-        Mapper = MapModule.register(validator, ShEx);
+      // Mapper = MapModule.register(validator, ShEx); !! need to pass to ShExWorker
+      const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
+      let time; // time includes overhead of worker messages.
+      const created = await createValidator(inputSchema, inputData);
 
-        currentAction = "validating";
-        $("#results .status").text("validating...").show();
-        time = new Date();
-        const ret = validator.validate(fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
+      // const resultsMap = USE_INCREMENTAL_RESULTS ?
+      //       Util.createResults() :
+      //       "not used";
+
+      currentAction = "validating";
+      $("#results .status").text("validating...").show();
+      time = new Date();
+      const transportMap = fixedMap.map(function (ent) {
+        return {
+          node: ent.node,
+          shape: ent.shape === ShEx.Validator.start ?
+            START_SHAPE_INDEX_ENTRY :
+            ent.shape
+        };
+      });
+      return new Promise((resolve, reject) => {
+      const terminator = disableable(reject);
+      const results = []
+      ShExWorker.onmessage = parseUpdatesAndResults;
+      ShExWorker.postMessage({
+        request: "validate",
+        queryMap: transportMap,
+        options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
+      });
+
+      function parseUpdatesAndResults (msg) {
+        switch (msg.data.response) {
+        case "update":
+          // msg.data.results.forEach(newRes => {
+          //   const key = Util.indexKey(newRes.node, newRes.shape);
+          //   if (key in index) {
+          //     markResult(updateCells[key], newRes.status, start);
+          //   } else {
+          //     extraResult(newRes);
+          //   }
+          // });
+
+          if (USE_INCREMENTAL_RESULTS) {
+            // Merge into results.
+            [].push.apply(results, msg.data.results)
+            msg.data.results.forEach(function (res) {
+              if (res.shape === START_SHAPE_INDEX_ENTRY)
+                res.shape = ShEx.Validator.start;
+            });
+            msg.data.results.forEach(renderEntry);
+            // resultsMap.merge(msg.data.results);
+          } else {
+            throw Error('fix this code path; probably results=msg.data.(all?)results')
+          }
+          break;
+
+        case "recurse":
+          validationTracker.recurse(msg.data.x);
+          break;
+
+        case "known":
+          validationTracker.known(msg.data.x);
+          break;
+
+        case "enter":
+          validationTracker.enter(msg.data.point, msg.data.label);
+          break;
+
+        case "exit":
+          validationTracker.exit(msg.data.point, msg.data.label, msg.data.ret);
+          break;
+
+        case "done":
+          ShExWorker.onmessage = false;
+          $("#results .status").text("rendering results...").show();
+          if (!USE_INCREMENTAL_RESULTS) {
+            if ("solutions" in msg.data.results)
+              msg.data.results.solutions.forEach(renderEntry);
+            else
+              renderEntry(msg.data.results);
+            }
         time = new Date() - time;
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-        // const dated = Object.assign({ _when: new Date().toISOString() }, ret);
-        $("#results .status").text("rendering results...").show();
-
-        await Promise.all(ret.map(renderEntry));
-        // for debugging values and schema formats:
-        // try {
-        //   const x = ShExUtil.valToValues(ret);
-        //   // const x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
-        //   res = results.replace(JSON.stringify(x, null, "  "));
-        //   const y = ShExUtil.valuesToSchema(x);
-        //   res = results.append(JSON.stringify(y, null, "  "));
-        // } catch (e) {
-        //   console.dir(e);
-        // }
         finishRendering();
-        return { validationResults: ret }; // for tester or whoever is awaiting this promise
-      } catch (e) {
+        if (done) { done() }
+          workerUICleanup(terminator);
+          resolve({ validationResults: results});
+          break;
+
+        case "error":
+          ShExWorker.onmessage = false;
+          const e = Error(msg.data.message);
+          e.stack = msg.data.stack;
+          workerUICleanup(terminator);
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);
         console.error(e); // dump details to console.
-        return { validationError: e };
+        if (done) { done(e) }
+          break;
+
+        default:
+          console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
+        }
       }
+      })
     } else {
       const outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
@@ -892,9 +948,69 @@ async function callValidator (done) {
     return { inputError: e };
   }
 
+  async function createValidator (inputSchema, inputData) {
+    await new Promise((resolve, reject) => {
+      disableable(reject);
+      ShExWorker.onmessage = function (msg) {
+        switch (msg.data.response) {
+        case "created":
+          resolve(msg.data.results);
+          break;
+        case "error":
+          const throwMe = Error(msg.data.message);
+          throwMe.stack = msg.data.stack;
+          throwMe.text = msg.data.errorText;
+          reject(throwMe);
+          break;
+        default:
+          reject(Error(`expected ${expect}, got ${JSON.stringify(msg.data)}`));
+        }
+      }
+      ShExWorker.postMessage(Object.assign(
+        {
+          request: "create",
+          schema: inputSchema,
+          schemaURL: Caches.inputSchema.url || DefaultBase
+          /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
+        },
+        "endpoint" in Caches.inputData ?
+          { endpoint: Caches.inputData.endpoint } :
+        { data: inputData.getQuads() }
+      ));
+    })
+  }
+
+      function terminateWorker (evt, terminator) {
+        ShExWorker.terminate();
+        ShExWorker = new Worker("shex-simple-worker.js");
+        if (evt !== null)
+          $("#results .status").text("validation aborted").show();
+        workerUICleanup(terminator);
+      }
+
+      function workerUICleanup (terminator) {
+        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
+        $("#validate").off("click", terminator);
+        $("#validate").on("click", disableResultsAndValidate);
+      }
+
+      function disableable (reject) {
+        $("#validate").addClass("stoppable").text("abort (ctl-enter)");
+        $("#validate").off("click", disableResultsAndValidate);
+        const terminator = function (evt) {
+          terminateWorker(evt, terminator);
+          reject(Error(`Interrupted by user click`))
+        }
+        $("#validate").on("click", terminator);
+        return terminator;
+      }
+
   function makeConsoleTracker () {
     function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
     function sm (node, shape) {
+      if (typeof shape === "object" && "term" in shape && shape.term === ShEx.Validator.start.term) {
+        shape = ShEx.Validator.start;
+      }
       return `${Caches.inputData.meta.termToLex(node)}@${Caches.inputSchema.meta.termToLex(shape)}`;
     }
     const logger = {
@@ -2244,12 +2360,14 @@ function tableToBindings () {
 prepareControls();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
-const ready = Promise.all([ dndPromise, loads ]);
+let ready = Promise.all([ dndPromise, loads ]);
 if ('_testCallback' in window) {
   SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
   window._testCallback(SharedForTests);
 }
-ready.then(() => {
+ready.then(resolves => {
+  if (!('_testCallback' in window))
+    console.log('serch parameters:', resolves[1]);
   // Update UI to say we're done loading everything?
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
