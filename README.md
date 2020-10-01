@@ -282,7 +282,7 @@ cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.o
 ```
 # ShEx2 features
 
-# ShEx IMPORT Demo (with relative IRIs):
+## ShEx IMPORT Demo (with relative IRIs):
 
 1. open a browser window (we'll call **validator**) with https://rawgit.com/shexSpec/shex.js/master/doc/shex-simple.html
 2. open another browser window (we'll call **viewer**) with https://shex.io/shexTest/master/viewer?validation
@@ -292,3 +292,44 @@ cat problem.val | materialize -t target_schema.shex -j vars.json -r http://hl7.o
 
 It should validate, which involves the IMPORT of `3circRefS2-IS3` and `3circRefS3`.
 `3circRefS2-IS3` also IMPORTs `3circRefS3` which shows that IMPORT is idempotent (has a side effect only the first time).
+
+# lerna monorepo
+
+This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
+
+- [`shape-map`](packages/shape-map#readme) -- a [ShapeMap](https://shexspec.github.io/shape-map/) parser
+- ['@shexjs/parser'](packages/parser#readme) -- parse ShExC into ShExJ
+- ['@shexjs/writer'](packages/writer#readme) -- serialize ShExK as ShExC
+- ['@shexjs/term'](packages/term#readme) -- RDF terms uses in ShEx
+- ['@shexjs/util'](packages/util#readme) -- some utilities for transforming schemas or validation output
+- ['@shexjs/visitor'](packages/visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
+- ['@shexjs/validator'](packages/validator#readme) -- validate nodes in an RDF graph against shapes in a schema
+- ['@shexjs/eval-simple-1err'](packages/eval-simple-1err#readme) -- eval-simple-1err
+- ['@shexjs/eval-threaded-nerr'](packages/eval-threaded-nerr#readme) -- eval-threaded-nerr
+- ['@shexjs/api'](packages/api#readme) -- an API for loading and using ShEx schemas
+- ['@shexjs/node'](packages/node#readme) -- additional API functionality for a node environment
+- ['@shexjs/cli'](packages/cli#readme) -- a set of command line tools for transformaing and validating with schemas
+- ['@shexjs/webapp'](packages/webapp#readme) -- the shex-simple WEBApp
+- ['@shexjs/path'](packages/path#readme) -- traverse ShEx schemas with a path language
+- ['@shexjs/extension-test'](packages/extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
+- ['@shexjs/extension-map'](packages/extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
+- ['@shexjs/extension-eval'](packages/extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+
+
+
+Here are some commands you'll need:
+
+- building/testing
+  - `lerna bootstrap` -- look for all packages in `packages/*`
+  - `npm ci` -- to install root node_modules per package-lock.json
+  - `lerna list` -- in case you ever wonder what packages flashed past your eyes
+- adding an NPM package (`promise-worker`) to one of our managed packages (`webapp`)
+  - `lerna add promise-worker --scope=@shexjs/webapp`
+- remove a package you aren't using it after all:
+  # edit e.g. the package.json (e.g. packages/shex-webapp/package.json) to remove the dependency
+  # `lerna bootstrap --scope @shexjs/webapp --no-ci --force-local` ([why](https://github.com/lerna/lerna/issues/1886#issuecomment-531545220))
+  # if it's in node_modules, `npm remove promise-worker`
+- adding a dev package
+  - shex.js follows [the advice of lerna docs](https://github.com/lerna/lerna/blob/master/doc/hoist.md) to "hoist" all dev dependencies to the root package (`hoist:true` in lerna.config). Lerna moves devDeps required in more than one package (e.g. the webpack deps in the webapp and extension-map packages) to the root so they won't appear in e.g. packages/extension-map/node_modules.
+  - in principle, this should work: `lerna add -dev pseudo-worker --scope=@shexjs/webapp`
+  - but it doesn't seem to so instead: `(cd packages/shex-webapp && npm install --save-dev pseudo-worker)`
