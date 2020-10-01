@@ -58,7 +58,7 @@
     "request-promise": "^4.2.2",
     "shape-map": "file:packages/shape-map",
     "shex-test": "github:shexSpec/shexTest#backtick",
-    "sync-request": "^6.0.0",
+    "sync-request": "^6.1.0",
     "terser-webpack-plugin": "^1.2.4",
     "timeout-promise-queue": "^0.9.2",
     "uglify-es": "^3.3.9",
