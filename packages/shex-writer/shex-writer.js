@@ -191,16 +191,6 @@ ShExWriter.prototype = {
 
       if (shape.closed) pieces.push("CLOSED ");
 
-      // if (shape.inherit && shape.inherit.length > 0) { futureWork
-      //   pieces.push("&");
-      //   shape.inherit.forEach(function (i, ord) {
-      //     if (ord)
-      //       pieces.push(" ")
-      //     pieces.push(_ShExWriter._encodeShapeName(i, ord > 0));
-      //   });
-      //   pieces.push(" ");
-      // }
-
       if (shape.extra && shape.extra.length > 0) {
         pieces.push("EXTRA ");
         shape.extra.forEach(function (i, ord) {
@@ -312,7 +302,7 @@ ShExWriter.prototype = {
         }
       }
 
-      if (shape.expression) // t: 0, 0Inherit1
+      if (shape.expression) // t: 0
         _writeExpression(shape.expression, "  ", 0);
       pieces.push("\n}");
       _writeShapeActions(shape.semActs);

@@ -25,62 +25,62 @@ importScripts("../../shex-parser/shex-parser.js"               ); modules["@shex
 importScripts("../shex-webapp.js");
 }
 importScripts("Util.js");
+// importScripts('promise-worker/register.js');
 
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExApi = ShEx.Api({
   fetch, rdfjs: N3js, jsonld: null
 })
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
-var validator = null;
-var loadedSchema = null;
-onmessage = function (msg) {
+let validator = null;
+self.onmessage = async function (msg) {
+let errorText = undefined;
+let time;
+// await wait(1000); // play with delays in response
+try {
   switch (msg.data.request) {
   case "create":
-    var options = msg.data.options || {};
-    if ("regexModule" in options)
-      options.regexModule = modules[options.regexModule];
-    options = Object.create({ results: "api" }, options); // default to API results
-    // var dataURL = "data:text/json," +
+    errorText = "creating validator";
+    const inputData = "endpoint" in msg.data
+      ? ShEx.Util.sparqlDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+      : ShEx.Util.rdfjsDB(makeStaticDB(msg.data.data));
+
+    // const dataURL = "data:text/json," +
     //     JSON.stringify(
     //       ShEx.Util.AStoShExJ(
     //         ShEx.Util.canonicalize(
     //           msg.data.schema)));
-    var alreadLoaded = {
+    const alreadLoaded = {
       schema: msg.data.schema,
       url: msg.data.schemaURL
     };
     // shex-loader loads IMPORTs and tests the schema for structural faults.
-    ShExApi.load([alreadLoaded], [], [], []).then(loaded => {
-      loadedSchema = loaded.schema;
-      validator = ShEx.Validator.construct(loaded.schema, options);
-      // extensions.each(ext => ext.register(validator, ShEx);
-      postMessage({ response: "created" });
-    }).catch(e => {
-      postMessage({ response: "error", message: e.message, stack: e.stack });
-    });
+    const loaded = await ShExApi.load([alreadLoaded], [], [], [])
+    let createOpts = msg.data.options || {};
+    if ("regexModule" in createOpts)
+      createOpts.regexModule = modules[createOpts.regexModule];
+    createOpts = Object.create({ results: "api" }, createOpts); // default to API results
+    validator = ShEx.Validator.construct(
+      loaded.schema,
+      inputData,
+      createOpts
+    );
+    // extensions.each(ext => ext.register(validator, ShEx);
+    self.postMessage({ response: "created", results: {} });
     break;
 
   case "validate":
-    var errorText = undefined;
-    try {
-    var db = "endpoint" in msg.data
-      ? ShEx.Util.sparqlDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-      : ShEx.Util.rdfjsDB(makeStaticDB(msg.data.data));
-      // Some DBs need to be able to inspect the schema to calculate the neighborhood.
-      if ("setSchema" in db)
-        db.setSchema(loadedSchema);
-
-    var queryMap = msg.data.queryMap;
-    var currentEntry = 0, options = msg.data.options || {};
-    var results = Util.createResults();
-
-    for (var currentEntry = 0; currentEntry < queryMap.length; ) {
-      var singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
+    const queryMap = msg.data.queryMap;
+    const currentEntry = 0, options = msg.data.options || {};
+    const results = Util.createResults();
+    for (let currentEntry = 0; currentEntry < queryMap.length; ) {
+      const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
         singletonMap[0].shape = ShEx.Validator.start;
-      var newResults = validator.validate(db, singletonMap, options.track ? makeRelayTracker() : null);
-      console.warn(newResults)
+      time = new Date();
+      const newResults = validator.validate(singletonMap, options.track ? makeRelayTracker() : null);
+      time = new Date() - time;
       newResults.forEach(function (res) {
         if (res.shape === ShEx.Validator.start)
           res.shape = START_SHAPE_INDEX_ENTRY;
@@ -89,7 +89,7 @@ onmessage = function (msg) {
       results.merge(newResults);
 
       // Notify caller.
-      postMessage({ response: "update", results: newResults });
+      self.postMessage({ response: "update", results: newResults });
 
       // Skip entries that were already processed.
       while (currentEntry < queryMap.length &&
@@ -98,32 +98,37 @@ onmessage = function (msg) {
     }
     // Done -- show results and restore interface.
     if (options.includeDoneResults)
-      postMessage({ response: "done", results: results.getShapeMap() });
+      self.postMessage({ response: "done", results: results.getShapeMap() });
     else
-      postMessage({ response: "done" });
-    } catch (e) {
-    postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });
-    }
+      self.postMessage({ response: "done" });
     break;
 
   default:
     throw "unknown request: " + JSON.stringify(msg.data);
   }
+} catch (e) {
+self.postMessage({ response: "error", message: e.message, stack: e.stack, text: errorText });
+}
+}
 
+async function wait (ms) {
+  await new Promise((resolve, reject) => {
+    setTimeout(() => resolve(ms), ms)
+  })
 }
 
 function makeStaticDB (quads) {
-  var ret = new N3js.Store();
+  const ret = new N3js.Store();
   ret.addQuads(quads);
   return ret;
 }
 
   function makeRelayTracker () {
-    var logger = {
-      recurse: x => { postMessage({ response: "recurse", x: x }); return x; },
-      known: x => { postMessage({ response: "known", x: x }); return x; },
-      enter: (point, label) => { postMessage({ response: "enter", point: point, label: label }); },
-      exit: (point, label, ret) => { postMessage({ response: "exit", point: point, label: label, ret: null }); }, /* don't ship big ret structures */
+    const logger = {
+      recurse: x => { self.postMessage({ response: "recurse", x: x }); return x; },
+      known: x => { self.postMessage({ response: "known", x: x }); return x; },
+      enter: (point, label) => { self.postMessage({ response: "enter", point: point, label: label }); },
+      exit: (point, label, ret) => { self.postMessage({ response: "exit", point: point, label: label, ret: null }); }, /* don't ship big ret structures */
     };
     return logger;
   }
@@ -131,11 +136,10 @@ function makeStaticDB (quads) {
 function queryTracker () {
   return {
     start: function (isOut, term, shapeLabel) {
-      postMessage ({ response: "startQuery", isOut: isOut, term: term, shape: shapeLabel });
+      self.postMessage ({ response: "startQuery", isOut: isOut, term: term, shape: shapeLabel });
     },
     end: function (quads, time) {
-      postMessage({ response: "finishQuery", quads: quads, time: time });
+      self.postMessage({ response: "finishQuery", quads: quads, time: time });
     }
   }
 }
-

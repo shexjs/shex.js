@@ -359,8 +359,7 @@
       else if (Parser.options.duplicateShape !== "ignore")
         error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
-      shape.id = label;
-      Parser.shapes[label] = shape;
+      Parser.shapes[label] = Object.assign({id: label}, shape);
     }
   }
 
@@ -426,7 +425,6 @@ IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_LABEL                [Ll][Aa][Bb][Ee][Ll]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
-IT_VIRTUAL              [Vv][Ii][Rr][Tt][Uu][Aa][Ll]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
@@ -555,7 +553,6 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_LABEL}              return 'IT_LABEL';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
-{IT_VIRTUAL}            return 'IT_VIRTUAL';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
 {IT_LITERAL}            return 'IT_LITERAL';
@@ -1102,7 +1099,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotInherit3
+      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: @@
         $$ = $1 === EmptyShape ? { type: "Shape" } : $1; // t: 0
         if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
@@ -1110,31 +1107,30 @@ shapeDefinition:
     ;
 
 inlineShapeDefinition:
-      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotInherit3
-        const exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Inherit1
+      _Q_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: @@
+        const exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
       }
     ;
 
-_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      extension	-> [ "inherit", $1 ] // t: 1dotInherit1
-    | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
+_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
+      extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
 
-_Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
+_Q_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       	-> EmptyObject
-    | _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
+    | _Q_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
         if ($1 === EmptyObject)
           $1 = {};
         if ($2[0] === "closed")
           $1["closed"] = true; // t: 1dotClosed
         else if ($2[0] in $1)
-          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotInherit3, 3groupdot3Extra, 3groupdotExtra3
+          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 3groupdot3Extra, 3groupdotExtra3
         else
-          $1[$2[0]] = $2[1]; // t: 1dotInherit1
+          $1[$2[0]] = $2[1]; // t: @@
         $$ = $1;
       }
     ;
@@ -1574,17 +1570,8 @@ blankNode:
       BLANK_NODE_LABEL	// t: 1dotInline1
     ;
 
-extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C _QshapeExprLabel_E_Plus	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
-    ;
-
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
       IT_EXTENDS	
     | '&'	
-    ;
-
-_QshapeExprLabel_E_Plus:
-      shapeExprLabel	-> [$1] // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
-    | _QshapeExprLabel_E_Plus shapeExprLabel	-> appendTo($1, $2) // t: 1dotInherit3
     ;
 
