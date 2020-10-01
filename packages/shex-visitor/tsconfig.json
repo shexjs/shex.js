@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["dom", "esnext"],
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "strict": false,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "sourceMap": true,
+  },
+  "include": [
+    "./src/*"
+  ]
+}
