@@ -207,8 +207,8 @@ function ShExVisitor() {
 
     visitShapeRef: function (reference) {
       if (typeof reference !== "string") {
-        // @ts-ignore
-        let ex = Exception(
+        // ASK ERIC: This was once Exception() instead of new Error() is that okay?
+        let ex = new Error(
           "visitShapeRef expected a string, not " + JSON.stringify(reference)
         );
         console.warn(ex);
@@ -337,10 +337,11 @@ function ShExVisitor() {
     },
 
     visitExclusion: function (c) {
+      // ASK ERIC: It is unclear where _Visitor comes from. I added the following line and all tests pass. But, is it okay to add this line?
+      const _Visitor = this;
       if (!isTerm(c)) {
         // _expect(c, "type", "IriStem");
         if (!("type" in c))
-          // @ts-ignore
           _Visitor.runtimeError(
             Error(
               "expected " + JSON.stringify(c) + " to have a 'type' attribute."
@@ -348,7 +349,6 @@ function ShExVisitor() {
           );
         const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
         if (stemTypes.indexOf(c.type) === -1)
-          // @ts-ignore
           _Visitor.runtimeError(
             Error(
               "expected type attribute '" +
@@ -366,8 +366,8 @@ function ShExVisitor() {
 
     visitInclusion: function (inclusion) {
       if (typeof inclusion !== "string") {
-        // @ts-ignore
-        let ex = Exception(
+        // ASK ERIC: This was once Exception() instead of new Error() is that okay?
+        let ex = new Error(
           "visitInclusion expected a string, not " + JSON.stringify(inclusion)
         );
         console.warn(ex);
