@@ -457,7 +457,7 @@ if (!TEST_browser) {
   })
 
 
-  describe(`WEBapp ${SHEXMAP_SIMPLE}'s synthesis interface}`, function () {
+  xdescribe(`WEBapp ${SHEXMAP_SIMPLE}'s synthesis interface}`, function () {
     const page = SHEXMAP_SIMPLE
 
     describe('another manifest', function () {
@@ -556,7 +556,7 @@ function startServer () {
     return require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
         .get(RegExp(WEBROOT))
         .reply(function(path, requestBody) {
-          return [200, findOrThrow(path), {}];
+          return [200, readFromFilesystem(path), {}];
         })
         .persist()
   } else if (false) {
@@ -570,13 +570,13 @@ function startServer () {
       reply: {
         status:  200,
         // headers: { "content-type": "application/json" },
-        body: (req) => [200, findOrThrow(req.originalUrl), {}],
+        body: (req) => [200, readFromFilesystem(req.originalUrl), {}],
       }
     });
     return srvr
   } else {
     const http = require('http')
-    const requestHandler = (request, response) => response.end(findOrThrow(request.url))
+    const requestHandler = (request, response) => response.end(readFromFilesystem(request.url))
     const srvr = http.createsrvr(requestHandler)
 
     srvr.listen(PORT, (err) => {
@@ -586,8 +586,8 @@ function startServer () {
     return srvr
   }
 
-  // blinkly tries file extensions. should look at request headers.
-  function findOrThrow (path) {
+  // blindly tries file extensions. should look at request headers.
+  function readFromFilesystem (path) {
     let filePath = Path.join(__dirname, '..', getRelPath(path));
     let last
     const extensions = ['', '.shex', '.ttl']
@@ -612,6 +612,7 @@ function startServer () {
 }
 
 async function loadPage (page, searchParms) {
+  const base = Path.join(__dirname, '..', page) // paths relative to repo root
   // let start = Date.now()
   // stamp('start')
   let timer = setTimeout(() => {
@@ -657,7 +658,7 @@ async function loadPage (page, searchParms) {
 
   function getDom (page, searchParms) {
     let url = PROTOCOL + '//' + HOST + ':' + PORT + WEBROOT + page + searchParms
-    return new JSDOM(Fs.readFileSync(__dirname + '/../' + page, 'utf8'), {
+    return new JSDOM(Fs.readFileSync(base, 'utf8'), {
       url: url,
       runScripts: "dangerously",
       resources: "usable"
