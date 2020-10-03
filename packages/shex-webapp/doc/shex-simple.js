@@ -797,7 +797,7 @@ async function callValidator (done) {
         };
       });
       return new Promise((resolve, reject) => {
-      const terminator = disableable(reject);
+      const terminator = stopValidationButton(reject);
       const results = []
       ShExWorker.onmessage = parseUpdatesAndResults;
       ShExWorker.postMessage({
@@ -921,8 +921,9 @@ async function callValidator (done) {
 
   async function createValidator (inputSchema, inputData) {
     await new Promise((resolve, reject) => {
-      disableable(reject);
+      const terminator = stopValidationButton(reject);
       ShExWorker.onmessage = function (msg) {
+        $("#validate").off("click", terminator);
         switch (msg.data.response) {
         case "created":
           resolve(msg.data.results);
@@ -965,7 +966,7 @@ async function callValidator (done) {
         $("#validate").on("click", disableResultsAndValidate);
       }
 
-      function disableable (reject) {
+      function stopValidationButton (reject) {
         $("#validate").addClass("stoppable").text("abort (ctl-enter)");
         $("#validate").off("click", disableResultsAndValidate);
         const terminator = function (evt) {
