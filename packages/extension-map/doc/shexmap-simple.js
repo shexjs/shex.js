@@ -865,6 +865,7 @@ async function callValidator (done) {
 
       currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
+      // Mapper = MapModule.register(validator, ShEx); !! need to pass to ShExWorker
       const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
       let time; // time includes overhead of worker messages.
       const created = await createValidator(inputSchema, inputData);
@@ -885,7 +886,7 @@ async function callValidator (done) {
         };
       });
       return new Promise((resolve, reject) => {
-      const terminator = disableable(reject);
+      const terminator = stopValidationButton(reject);
       const results = []
       ShExWorker.onmessage = parseUpdatesAndResults;
       ShExWorker.postMessage({
@@ -1024,8 +1025,9 @@ async function callValidator (done) {
 
   async function createValidator (inputSchema, inputData) {
     await new Promise((resolve, reject) => {
-      disableable(reject);
+      const terminator = stopValidationButton(reject);
       ShExWorker.onmessage = function (msg) {
+        $("#validate").off("click", terminator);
         switch (msg.data.response) {
         case "created":
           resolve(msg.data.results);
@@ -1068,7 +1070,7 @@ async function callValidator (done) {
         $("#validate").on("click", disableResultsAndValidate);
       }
 
-      function disableable (reject) {
+      function stopValidationButton (reject) {
         $("#validate").addClass("stoppable").text("abort (ctl-enter)");
         $("#validate").off("click", disableResultsAndValidate);
         const terminator = function (evt) {
@@ -2564,7 +2566,7 @@ function tableToBindings () {
 prepareControls();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
-const ready = Promise.all([ dndPromise, loads ]);
+let ready = Promise.all([ dndPromise, loads ]);
 if ('_testCallback' in window) {
   SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
   window._testCallback(SharedForTests);
