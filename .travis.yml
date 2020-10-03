@@ -13,7 +13,7 @@ before_script:
 install: npm ci
 cache: npm
 script:
-  - npm run test && TEST_cli=true mocha -C -R dot test/cli-test.js
+  - npm run test-all
 
 notifications:
   email: false
