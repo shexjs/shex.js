@@ -22,7 +22,6 @@ let expect = require("chai").expect
 const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const PseudoWorker = require('pseudo-worker')
-const XhrShim = require('./xhr-shim')
 const { JSDOM } = jsdom
 // JsDom only accepts it's own implementation of Blob
 const Blob = require('../node_modules/jsdom/lib/jsdom/living/generated/Blob')
@@ -611,26 +610,99 @@ function startServer () {
   }
 }
 
+class _UrlStack {
+  constructor () { this.stack = []; }
+  enter (rel, what) {
+    const entry = {
+      abs: this.stack.length
+        ? new URL(rel, this.base())
+        : new URL(rel), // top-most must be an absolute URL
+      rel: rel,
+      what: what,
+    }
+    // const indent = ' '.repeat((this.stack.length)*2);
+    // console.warn(`${what}${indent}+ ${rel}`);
+    this.stack.push(entry);
+  }
+  base () { return this.stack[this.stack.length-1].abs; }
+  leave (rel, what) {
+    const entry = this.stack[this.stack.length - 1];
+    if (rel !== entry.rel || what !== entry.what) {
+      console.warn(Error(`bad leave(${rel}, ${what}), !== ${entry.rel}, ${entry.what}`).stack);
+      return;
+    }
+    this.stack.pop();
+    // const indent = ' '.repeat((this.stack.length)*2);
+    // console.warn(`${entry.what}${indent}- ${entry.rel}`)
+  }
+}
+const UrlStack = new _UrlStack();
+
+/*async*/ function wait (t) { return new Promise(acc => setTimeout(acc, t)) }
+
+function MinimalXhr () {
+  return {
+    open: function (type, script) {
+      this.script = script
+    },
+
+    send: function () {
+      var that = this
+      process.nextTick(function () {
+        that.readyState = 2
+        that.onreadystatechange()
+        process.nextTick(function () {
+          that.readyState = 4
+          if (Fs.existsSync(that.script)) {
+            that.responseText = Fs.readFileSync(that.script, 'utf-8')
+            that.status = 200
+          } else {
+            that.status = 404
+          }
+          that.onreadystatechange()
+        })
+      })
+    }
+  }
+}
+
 async function loadPage (page, searchParms) {
-  const base = Path.join(__dirname, '..', page) // paths relative to repo root
   // let start = Date.now()
   // stamp('start')
   let timer = setTimeout(() => {
     // stamp('script load timeout')
     throw Error(`script load timeout ${SCRIPT_CALLBACK_TIMEOUT}`)
   }, SCRIPT_CALLBACK_TIMEOUT)
-  let dom = getDom(page, searchParms)
+  UrlStack.enter('file://' +__dirname, '$')
+  UrlStack.enter(page, '*');
+  let curWorker = null;
+  let dom = getDom(page, searchParms) // @@ make a URL
   // stamp('dom')
-  global.fetch = dom.window.fetch = node_fetch
-  global.XMLHttpRequest = XhrShim
+  global.fetch = dom.window.fetch = function (url, opts = {}) {
+    // console.warn('FETCH:', url)
+    return node_fetch(url, opts)
+  }
+  global.XMLHttpRequest = MinimalXhr; // various scripts call XMLHttpRequest
   global.importScripts = function (path) {
-    path = __dirname + '/../packages/shex-webapp/doc/' + path
-    const script = Fs.readFileSync(path, 'utf8');
-    (Function(script))()
+    UrlStack.enter(path, 'I');
+    let error = null;
+    try {
+      let script = Fs.readFileSync(UrlStack.base().pathname, 'utf8');
+      (Function(script))();
+    } catch (e) {
+      error = e;
+    } finally {
+      UrlStack.leave(path, 'I');
+    }
+    if (error) throw error;
   }
 
   dom.window.Worker = function (path) {
-    const ret = new PseudoWorker(__dirname + '/../packages/shex-webapp/doc/' + path)
+    enterWorker(path);
+    const ret = new PseudoWorker(UrlStack.base());
+    // ret.addEventListener('message', function () {
+    // ret._terminated.then(() => UrlStack.leave(path, 'W'))
+    // })
     ret.onerror = function (e) {
       console.error('worker error:', e);
     }
@@ -647,6 +719,20 @@ async function loadPage (page, searchParms) {
       resolve()
     }
   })
+  function enterWorker (path) {
+    leaveLastWorker(path);
+    UrlStack.enter(path, 'W');
+    curWorker = path;
+  }
+  function leaveLastWorker () {
+    if (curWorker === null)
+      return
+    UrlStack.leave(curWorker, 'W');
+    curWorker = null;
+  }
+  leaveLastWorker();
+  UrlStack.leave(page, '*');
+  UrlStack.leave('file://' +__dirname, '$')
   const loaded = (await SharedForTests.promise).loads
   return { dom, $: dom.window.$, loaded }
 
@@ -658,7 +744,7 @@ async function loadPage (page, searchParms) {
 
   function getDom (page, searchParms) {
     let url = PROTOCOL + '//' + HOST + ':' + PORT + WEBROOT + page + searchParms
-    return new JSDOM(Fs.readFileSync(base, 'utf8'), {
+    return new JSDOM(Fs.readFileSync(page, 'utf8'), {
       url: url,
       runScripts: "dangerously",
       resources: "usable"
