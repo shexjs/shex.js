@@ -40,6 +40,9 @@ function log404 (url) {
 if (!TEST_browser) {
   console.warn("Skipping browser-tests; to activate these tests, set environment variable TEST_browser=true");
 
+} else if (parseInt(process.version.substr(1)) < 10) {
+  console.warn("Skipping browser-tests; node v10 or greater needed for WebWorker tests.");
+
 } else {
   // Some manifests to play with:
   const Manifest_Example = 'packages/shex-webapp/examples/manifest.json'
