@@ -818,7 +818,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     throw Error("server parameter expected to be a URL");
 
   const log     = console.log,
-      app     = require("koa")(),
+      app     = new (require("koa"))(),
       koaBody = require("koa-body"),
       port    = match[2] || 80,
       host    = "http://" + match[1],
@@ -833,8 +833,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         uploadDir: Path.resolve(__dirname, "../rest/uploads")
       }
     })).
-    use(function *(next) {
-      switch (this.originalUrl) {
+    use(async (ctx, next) => {
+      switch (ctx.originalUrl) {
       case srvpath:
         const parms = {
           // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
@@ -842,24 +842,23 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           schemaName:undefined, schemaFile:undefined, shape:undefined,
           dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
         };
-        if (this.request.method !== "POST")
-          this.throw(500, "only supports POST now");
-        const body = this.request.body;
+        if (ctx.request.method !== "POST")
+          ctx.throw(500, "only supports POST now");
         function makeArray (key) {
-          if (!(key in body.files))
+          if (!(key in ctx.request.files))
             return [];
-          return (body.files[key].constructor === Array ?
-                  body.files[key] :
-                  [body.files[key]]
+          return (ctx.request.files[key].constructor === Array ?
+                  ctx.request.files[key] :
+                  [ctx.request.files[key]]
                  ).map(pair => {
                    return pair.path; // should ShExNode accept [.name, .path]?
                  });
         }
         const schemaFiles = makeArray("schema");
-        parms.shape      = body.fields.shape; // untested! body.fields.shape
+        parms.shape      = ctx.request.body.shape; // untested! ctx.request.body.shape
         const dataFiles = makeArray("data");
-        parms.node      = body.fields.node; // untested! body.fields.node
-        parms["node-type"] = body.fields.nodeType;
+        parms.node      = ctx.request.body.node; // untested! ctx.request.body.node
+        parms["node-type"] = ctx.request.body.nodeType;
 
         // Default to serverParms
         Object.keys(parms).forEach(k => {
@@ -872,10 +871,9 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
           });
 
-        const httpResponse = this;
-        yield ShExNode.
-          load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined).
-          then(function (loaded) {
+        const httpResponse = ctx;
+        try {
+            const loaded = await ShExNode.load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined);
             // add server-loaded (meta)data
             serverLoaded.data.getQuads().forEach(t => { loaded.data.addTriple(t); });
             loaded.data = ShExUtil.rdfjsDB(loaded.data);
@@ -888,7 +886,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             let result = findNodesAndValidate(loaded, parms, options);
             if ("results" in result)
               result = result.results; // otherwise just report the invoked parms.
-            if (body.fields.output === "html") {
+            if (ctx.request.body.output === "html") {
               httpResponse.body = Object.keys(parms).reduce((r, p) => {
                 return r.replace("["+p+"]", parms[p]);
               }, fs.readFileSync("./validate.template", "utf-8")).
@@ -896,11 +894,11 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             } else {
               httpResponse.body = JSON.stringify(result, null, 2)+"\n";
             }
-          }).then(function () {
+
             schemaFiles.forEach(path => { fs.unlinkSync(path); });
             dataFiles.forEach(path => { fs.unlinkSync(path); });
-            return next;
-          }).catch(e => {
+            await next;
+        } catch (e) {
             const stack = typeof e === "object" && "stack" in e ? e.stack : e;
             const msg = typeof e === "object" && "message" in e ? e.message : e;
             console.warn(stack);
@@ -911,13 +909,13 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             httpResponse.status = 500;
             schemaFiles.forEach(path => { fs.unlink(path); });
             dataFiles.forEach(path => { fs.unlink(path); });
-          });
+          };
         break;
       case "/":
-        this.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
+        ctx.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
         break;
       default:
-        this.throw(404, "whazzat?");
+        ctx.throw(404, "whazzat?");
       }
     }).
     listen(port);
