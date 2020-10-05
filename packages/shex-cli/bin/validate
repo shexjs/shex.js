@@ -319,29 +319,28 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     if (valParms.data.length === 0 && valParms.jsonld.length === 0) abort("No data specified");
     if (valParms.shex.length === 0 && valParms.json.length === 0) abort("No shex specified");
   }
-  const loadPromises = [];
-    // Loaded schema and data.
-  loadPromises.push(ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined));
-    // Expected results, if provided.
-  loadPromises.push(
-      !("result" in valParms) ? Promise.resolve(undefined) :
-      typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
-      ShExNode.GET(valParms.result).then(function (body) { 
-        return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
-      })
-  )
-    // ShapeMap, if provided.
-  loadPromises.push(
-    "mapURL" in valParms ? ShExNode.GET(valParms.mapURL).then(function (body) {
-      return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
-    })
-    : Promise.resolve("map" in valParms
-                      ? { shapeMapBody: valParms.map,
-                          shapeMapBase: "file://" + Path.resolve(process.cwd()) }
-                      : undefined)
-  )
+  // Loaded schema and data.
+  const schemaAndDataP = ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined);
+  // Expected results, if provided.
+  const expectedResultsP = !("result" in valParms)
+        ? Promise.resolve(undefined)
+        : typeof valParms.result === "boolean"
+        ? Promise.resolve(valParms.result)
+        : ShExNode.GET(valParms.result).then(function (body) {
+          return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
+        })
+  // ShapeMap, if provided.
+  const shapeMapP = "mapURL" in valParms
+        ? ShExNode.GET(valParms.mapURL).then(function (body) {
+          return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
+        })
+        : Promise.resolve("map" in valParms
+                          ? { shapeMapBody: valParms.map,
+                              shapeMapBase: "file://" + Path.resolve(process.cwd()) }
+                          : undefined)
+
   try {
-  const loadedAndResults = await Promise.all(loadPromises)
+    const [schemaAndData, expectedResults, shapeMap] = await Promise.all([schemaAndDataP, expectedResultsP, shapeMapP])
     /* loadedAndResults is something like: [
          { data: N3Store {…},
            dataMeta: [{
@@ -364,42 +363,41 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
          }
        ] */
 
-    loadedAndResults[0].data =
-      ShExUtil.rdfjsDB(loadedAndResults[0].data);
+    schemaAndData.data =
+      ShExUtil.rdfjsDB(schemaAndData.data);
     if (valParms.serve) {
       if (valParms.shape) {
         function knownShape (label) {
-          return label in loadedAndResults[0].schema.shapes;
+          return label in schemaAndData.schema.shapes;
         }
-        const found = ShExUtil.parsePassedNode(valParms.shape, loadedAndResults[0].schemaMeta[0],
-                                             null, knownShape, loadedAndResults[0].schema.prefixes);
+        const found = ShExUtil.parsePassedNode(valParms.shape, schemaAndData.schemaMeta[0],
+                                               null, knownShape, schemaAndData.schema.prefixes);
         if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
-      runServer(loadedAndResults[0], valParms, validatorOptions, schemaOptions);
+      runServer(schemaAndData, valParms, validatorOptions, schemaOptions);
     } else {
-      if (loadedAndResults[2]) { // if we loaded a map
+      if (shapeMap) { // if we loaded a map
         try {
-          valParms.map = ShExUtil.absolutizeShapeMap(JSON.parse(loadedAndResults[2].shapeMapBody),
-                                                     loadedAndResults[0].dataMeta[0].base); // @@ relative to data[0]'s base instead of loadedAndResults[2].shapeMapBase -- is that good?
+          valParms.map = ShExUtil.absolutizeShapeMap(JSON.parse(shapeMap.shapeMapBody),
+                                                     schemaAndData.dataMeta[0].base); // @@ relative to data[0]'s base instead of shapeMap.shapeMapBase -- is that good?
         } catch (e) {
-          valParms.map = ShapeMap.Parser.construct(loadedAndResults[2].shapeMapBase,
-                                                       loadedAndResults[0].schemaMeta[0],
-                                                       loadedAndResults[0].dataMeta[0])
-            .parse(loadedAndResults[2].shapeMapBody);
+          valParms.map = ShapeMap.Parser.construct(shapeMap.shapeMapBase,
+                                                   schemaAndData.schemaMeta[0],
+                                                   schemaAndData.dataMeta[0])
+            .parse(shapeMap.shapeMapBody);
         }
       }
 
-      const res = findNodesAndValidate(loadedAndResults[0], valParms, validatorOptions, schemaOptions).results;
+      const res = findNodesAndValidate(schemaAndData, valParms, validatorOptions, schemaOptions).results;
       if (cmds["dry-run"])
         return res;
       const passed = !("errors" in res);
-      const expectedResults = loadedAndResults[1];
       // display results and return error codes
       if (expectedResults !== undefined) {
         const match =
-            typeof expectedResults === "boolean" && expectedResults !== !passed ||
-            JSON.stringify(expectedResults) == JSON.stringify(res);
+              typeof expectedResults === "boolean" && expectedResults !== !passed ||
+              JSON.stringify(expectedResults) == JSON.stringify(res);
         if (!valParms.quiet)
           console.log(match);
         // Exit status 3 means match failure.
@@ -427,7 +425,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         return passed ? 0 : 2;
       }
     }
-} catch (e) {
+  } catch (e) {
     console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
     return 1;
   };
