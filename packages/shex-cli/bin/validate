@@ -75,6 +75,7 @@ const CommandLineOptions = [
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
+  { name: "serve-n",               type: Number, typeLabel: "integer",   multiple: false, defaultValue:        -1, description: "serve N times and exit" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
   { name: "duplicate-shape",       type: String, typeLabel: dupChoices,  multiple: false, defaultValue: undefined, description: "what to do with duplicate shapes" },
 //{ name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
@@ -815,9 +816,12 @@ function loadCommandLine (cmds) {
 function runServer (serverLoaded, serverParms, serverOptions) {
   const match = serverParms.serve.match(/^(?:http:\/\/)?([a-zA-Z0-9.]+)(?::([0-9]+))?(\/.*)/);
   if (!match)
-    throw Error("server parameter expected to be a URL");
+    throw Error("server parameter expected to be an HTTP URL");
+  let stopAfter = serverParms["serve-n"];
+  if (stopAfter === undefined || stopAfter === -1)
+    stopAfter = Infinity;
 
-  const log     = console.log,
+  const log     = serverParms.quiet ? () => undefined : console.log,
       app     = new (require("koa"))(),
       koaBody = require("koa-body"),
       port    = match[2] || 80,
@@ -825,7 +829,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       srvpath = match[3],
       fs      = require("fs");
 
-  app.
+  const server = app.
     use(koaBody({
       multipart: true,
       formLimit: 15,
@@ -871,7 +875,6 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
           });
 
-        const httpResponse = ctx;
         try {
             const loaded = await ShExNode.load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined);
             // add server-loaded (meta)data
@@ -887,13 +890,14 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             if ("results" in result)
               result = result.results; // otherwise just report the invoked parms.
             if (ctx.request.body.output === "html") {
-              httpResponse.body = Object.keys(parms).reduce((r, p) => {
+              ctx.body = Object.keys(parms).reduce((r, p) => {
                 return r.replace("["+p+"]", parms[p]);
               }, fs.readFileSync("./validate.template", "utf-8")).
                 replace(/\[result\]/, JSON.stringify(result, null, 2));
             } else {
-              httpResponse.body = JSON.stringify(result, null, 2)+"\n";
+              ctx.body = JSON.stringify(result, null, 2)+"\n";
             }
+            ctx.type = 'application/json'
 
             schemaFiles.forEach(path => { fs.unlinkSync(path); });
             dataFiles.forEach(path => { fs.unlinkSync(path); });
@@ -902,21 +906,28 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             const stack = typeof e === "object" && "stack" in e ? e.stack : e;
             const msg = typeof e === "object" && "message" in e ? e.message : e;
             console.warn(stack);
-            httpResponse.body = {
+            ctx.body = {
               type: "ParsingError",
               errors: [msg]
             };
-            httpResponse.status = 500;
+            ctx.type = 'application/json'
+            ctx.status = 500;
             schemaFiles.forEach(path => { fs.unlink(path); });
             dataFiles.forEach(path => { fs.unlink(path); });
           };
         break;
       case "/":
         ctx.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
+        ctx.type = 'text/html'
         break;
       default:
-        ctx.throw(404, "whazzat?");
+        ctx.status = 404;
+        ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
+        ctx.type = 'text/plain';
       }
+      log(`${ctx.request.host}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
+      if (!--stopAfter)
+        server.close();
     }).
     listen(port);
 
