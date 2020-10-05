@@ -26,6 +26,10 @@
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "jsonld": "^1.5.4",
+    "koa": "^2.13.0",
+    "koa-body": "^4.2.0",
+    "koa": "^1.2.0",
+    "koa-body": "^1.4.0",
     "n3": "^1.6.2",
     "request-promise": "^4.2.2"
   },

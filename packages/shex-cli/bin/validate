@@ -138,7 +138,7 @@ function abort (msg) {
     {
       content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
     }
-                                              ]));
+  ]));
   process.exit(1);
 }
 
@@ -308,27 +308,30 @@ function findNodesAndValidate (loaded, parms, options) {
   }
 }
 
-function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
+async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.shex.length > 1 && valParms.data.length === 0) {
     valParms.data = valParms.shex.splice(1); // push all but one into data
   }
   if (valParms.json.length > 1 && valParms.data.length === 0) {
     valParms.data = valParms.json.splice(1); // push all but one into data
   }
-  if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve) abort("No data specified");
-  if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified"); 
-  return Promise.all([
+  if (!valParms.serve) {
+    if (valParms.data.length === 0 && valParms.jsonld.length === 0) abort("No data specified");
+    if (valParms.shex.length === 0 && valParms.json.length === 0) abort("No shex specified");
+  }
+  const loadPromises = [];
     // Loaded schema and data.
-    ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined),
-
+  loadPromises.push(ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined));
     // Expected results, if provided.
-    !("result" in valParms) ? Promise.resolve(undefined) :
+  loadPromises.push(
+      !("result" in valParms) ? Promise.resolve(undefined) :
       typeof valParms.result === "boolean" ? Promise.resolve(valParms.result) :
       ShExNode.GET(valParms.result).then(function (body) { 
         return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
-      }),
-
+      })
+  )
     // ShapeMap, if provided.
+  loadPromises.push(
     "mapURL" in valParms ? ShExNode.GET(valParms.mapURL).then(function (body) {
       return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
     })
@@ -336,7 +339,9 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
                       ? { shapeMapBody: valParms.map,
                           shapeMapBase: "file://" + Path.resolve(process.cwd()) }
                       : undefined)
-  ]).then(function (loadedAndResults) {
+  )
+  try {
+  const loadedAndResults = await Promise.all(loadPromises)
     /* loadedAndResults is something like: [
          { data: N3Store {…},
            dataMeta: [{
@@ -398,7 +403,7 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         if (!valParms.quiet)
           console.log(match);
         // Exit status 3 means match failure.
-        return Promise.resolve(match ? 0 : 3);
+        return match ? 0 : 3;
       } else {
         if (res.graph) {
           const wr = new N3.Writer();
@@ -419,13 +424,13 @@ function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         } else if (!valParms.quiet)
           console.log(JSON.stringify(res, null, "  "));
         // Exit status 2 means validation failure.
-        return Promise.resolve(passed ? 0 : 2);
+        return passed ? 0 : 2;
       }
     }
-  }).catch(function (e) {
+} catch (e) {
     console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
     return 1;
-  });
+  };
 
 }
 
@@ -882,7 +887,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
             loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
 
-            const result = findNodesAndValidate(loaded, parms, options);
+            let result = findNodesAndValidate(loaded, parms, options);
             if ("results" in result)
               result = result.results; // otherwise just report the invoked parms.
             if (body.fields.output === "html") {
@@ -894,8 +899,8 @@ function runServer (serverLoaded, serverParms, serverOptions) {
               httpResponse.body = JSON.stringify(result, null, 2)+"\n";
             }
           }).then(function () {
-            schemaFiles.forEach(path => { fs.unlink(path); });
-            dataFiles.forEach(path => { fs.unlink(path); });
+            schemaFiles.forEach(path => { fs.unlinkSync(path); });
+            dataFiles.forEach(path => { fs.unlinkSync(path); });
             return next;
           }).catch(e => {
             const stack = typeof e === "object" && "stack" in e ? e.stack : e;
