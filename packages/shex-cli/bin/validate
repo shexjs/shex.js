@@ -57,12 +57,13 @@ const covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
 const dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
 const CommandLineOptions = [
-  { name: "verbose",   alias: "v", type: Boolean },
-  { name: "quiet",     alias: "q", type: Boolean },
-  { name: "query",                 type: Boolean },
-  { name: "remainder",             type: Boolean },
+  { name: "verbose",   alias: "v", type: Boolean , description: "print extra information" },           //
+  { name: "quiet",     alias: "q", type: Boolean , description: "don't print anything" },              // switch to logger
+  { name: "terse",     alias: "Q", type: Boolean , description: "don't print diagnistics or advice" }, //
+  { name: "query",                 type: Boolean , description: "show matching RDF graph" },
+  { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
-  { name: "help",      alias: "h", type: Boolean },
+  { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
   { name: "map",       alias: "m", type: String, typeLabel: "string",    multiple: false, defaultValue: undefined, description: "QueryMap" },
@@ -368,8 +369,9 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       ShExUtil.rdfjsDB(schemaAndData.data);
     if (valParms.serve) {
       if (valParms.shape) {
+        const index = ShExUtil.index(schemaAndData.schema);
         function knownShape (label) {
-          return label in schemaAndData.schema.shapes;
+          return label in index.shapeExprs;
         }
         const found = ShExUtil.parsePassedNode(valParms.shape, schemaAndData.schemaMeta[0],
                                                null, knownShape, schemaAndData.schema.prefixes);
@@ -822,126 +824,127 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     stopAfter = Infinity;
 
   const log     = serverParms.quiet ? () => undefined : console.log,
-      app     = new (require("koa"))(),
-      koaBody = require("koa-body"),
-      port    = match[2] || 80,
-      host    = "http://" + match[1],
-      srvpath = match[3],
-      fs      = require("fs");
+        app     = new (require("koa"))(),
+        koaBody = require("koa-body"),
+        port    = match[2] || 80,
+        host    = match[1],
+        srvpath = match[3],
+        fs      = require("fs");
 
-  const server = app.
-    use(koaBody({
-      multipart: true,
-      formLimit: 15,
-      formidable: {
-        uploadDir: Path.resolve(__dirname, "../rest/uploads")
+  const server = app.use(koaBody({
+    multipart: true,
+    formLimit: 15,
+    formidable: {
+      uploadDir: Path.resolve(__dirname, "../rest/uploads")
+    }
+  })).use(async (ctx, next) => {
+    switch (ctx.originalUrl) {
+    case srvpath:
+      const parms = {
+        // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
+        // untested! dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
+        schemaName:undefined, schemaFile:undefined, shape:undefined,
+        dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
+      };
+      if (ctx.request.method !== "POST")
+        ctx.throw(500, "only supports POST now");
+      function makeArray (key) {
+        if (!("files" in ctx.request) || !(key in ctx.request.files))
+          return [];
+        return (ctx.request.files[key].constructor === Array ?
+                ctx.request.files[key] :
+                [ctx.request.files[key]]
+               ).map(pair => {
+                 return pair.path; // should ShExNode accept [.name, .path]?
+               });
       }
-    })).
-    use(async (ctx, next) => {
-      switch (ctx.originalUrl) {
-      case srvpath:
-        const parms = {
-          // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
-          // untested! dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
-          schemaName:undefined, schemaFile:undefined, shape:undefined,
-          dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
-        };
-        if (ctx.request.method !== "POST")
-          ctx.throw(500, "only supports POST now");
-        function makeArray (key) {
-          if (!(key in ctx.request.files))
-            return [];
-          return (ctx.request.files[key].constructor === Array ?
-                  ctx.request.files[key] :
-                  [ctx.request.files[key]]
-                 ).map(pair => {
-                   return pair.path; // should ShExNode accept [.name, .path]?
-                 });
-        }
-        const schemaFiles = makeArray("schema");
-        parms.shape      = ctx.request.body.shape; // untested! ctx.request.body.shape
-        const dataFiles = makeArray("data");
-        parms.node      = ctx.request.body.node; // untested! ctx.request.body.node
-        parms["node-type"] = ctx.request.body.nodeType;
+      const schemaFiles = makeArray("schema");
+      parms.shape      = ctx.request.body.shape; // untested! ctx.request.body.shape
+      const dataFiles = makeArray("data");
+      parms.node      = ctx.request.body.node; // untested! ctx.request.body.node
+      parms["node-type"] = ctx.request.body.nodeType;
 
-        // Default to serverParms
-        Object.keys(parms).forEach(k => {
-          if (parms[k] === undefined && k in serverParms)
-            parms[k] = serverParms[k];
+      // Default to serverParms
+      Object.keys(parms).forEach(k => {
+        if (parms[k] === undefined && k in serverParms)
+          parms[k] = serverParms[k];
+      });
+      const options = serverOptions;
+      if ("regex-module" in parms)
+        options = extend(options, {
+          regexModule: require(REGEX_MODULES + parms["regex-module"])
         });
-        const options = serverOptions;
-        if ("regex-module" in parms)
-          options = extend(options, {
-            regexModule: require(REGEX_MODULES + parms["regex-module"])
-          });
 
-        try {
-            const loaded = await ShExNode.load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined);
-            // add server-loaded (meta)data
-            serverLoaded.data.getQuads().forEach(t => { loaded.data.addTriple(t); });
-            loaded.data = ShExUtil.rdfjsDB(loaded.data);
-            loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
+      try {
+        const loaded = await ShExNode.load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined);
+        // add server-loaded (meta)data
+        serverLoaded.data.getQuads().forEach(t => { loaded.data.addQuad(t); });
+        loaded.data = ShExUtil.rdfjsDB(loaded.data);
+        loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
 
-            // add server-loaded schema
-            ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
-            loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
+        // add server-loaded schema
+        ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
+        loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
 
-            let result = findNodesAndValidate(loaded, parms, options);
-            if ("results" in result)
-              result = result.results; // otherwise just report the invoked parms.
-            if (ctx.request.body.output === "html") {
-              ctx.body = Object.keys(parms).reduce((r, p) => {
-                return r.replace("["+p+"]", parms[p]);
-              }, fs.readFileSync("./validate.template", "utf-8")).
-                replace(/\[result\]/, JSON.stringify(result, null, 2));
-            } else {
-              ctx.body = JSON.stringify(result, null, 2)+"\n";
-            }
-            ctx.type = 'application/json'
+        let result = findNodesAndValidate(loaded, parms, options);
+        if ("results" in result)
+          result = result.results; // otherwise just report the invoked parms.
+        if (ctx.request.body.output === "html") {
+          ctx.body = Object.keys(parms).reduce((r, p) => {
+            return r.replace("["+p+"]", parms[p]);
+          }, fs.readFileSync("./validate.template", "utf-8")).
+            replace(/\[result\]/, JSON.stringify(result, null, 2));
+        } else {
+          ctx.body = JSON.stringify(result, null, 2)+"\n";
+        }
+        ctx.type = 'application/json'
 
-            schemaFiles.forEach(path => { fs.unlinkSync(path); });
-            dataFiles.forEach(path => { fs.unlinkSync(path); });
-            await next;
-        } catch (e) {
-            const stack = typeof e === "object" && "stack" in e ? e.stack : e;
-            const msg = typeof e === "object" && "message" in e ? e.message : e;
-            console.warn(stack);
-            ctx.body = {
-              type: "ParsingError",
-              errors: [msg]
-            };
-            ctx.type = 'application/json'
-            ctx.status = 500;
-            schemaFiles.forEach(path => { fs.unlink(path); });
-            dataFiles.forEach(path => { fs.unlink(path); });
-          };
-        break;
-      case "/":
-        ctx.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
-        ctx.type = 'text/html'
-        break;
-      default:
-        ctx.status = 404;
-        ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
-        ctx.type = 'text/plain';
-      }
-      log(`${ctx.request.host}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
-      if (!--stopAfter)
-        server.close();
-    }).
-    listen(port);
+        schemaFiles.forEach(path => { fs.unlinkSync(path); });
+        dataFiles.forEach(path => { fs.unlinkSync(path); });
+        await next;
+      } catch (e) {
+        const stack = typeof e === "object" && "stack" in e ? e.stack : e;
+        const msg = typeof e === "object" && "message" in e ? e.message : e;
+        console.warn(stack);
+        ctx.body = {
+          type: "ParsingError",
+          errors: [msg]
+        };
+        ctx.type = 'application/json'
+        ctx.status = 500;
+        schemaFiles.forEach(path => { fs.unlink(path); });
+        dataFiles.forEach(path => { fs.unlink(path); });
+      };
+      break;
+    case "/":
+      ctx.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
+      ctx.type = 'text/html'
+      break;
+    default:
+      ctx.status = 404;
+      ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
+      ctx.type = 'text/plain';
+    }
+    log(`${ctx.request.host}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
+    if (!--stopAfter)
+      server.close();
+  }).listen(port);
 
-  log('Visit %s:%s/ in browser.', host, port);
-  log();
-  log('Test with a supplied schema and data:');
-  log('  curl -i %s:%s%s -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir, CliDir);
-  log('or preload the schema and just supply the data:');
-  log('  %s -x %s1dotOr2dot.shex -s http://a.example/S1 -S ', Argv1, CliDir, serverParms.serve);
-  log('and pass only the data parameters:');
-  log('  curl -i %s:%s%s -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir);
-  log('Note that shape and node can be relative or prefixed URLs.');
-  log();
-  log('Press CTRL+C to stop...');
+  if (serverParms.terse) {
+    log('host: %s port: %s', host, port);
+  } else {
+    log('Visit http://%s:%s/ in browser.', host, port);
+    log();
+    log('Test with a supplied schema and data:');
+    log('  curl -i http://%s:%s%s -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir, CliDir);
+    log('or preload the schema and just supply the data:');
+    log('  %s -x %s1dotOr2dot.shex -s http://a.example/S1 -S ', Argv1, CliDir, serverParms.serve);
+    log('and pass only the data parameters:');
+    log('  curl -i http://%s:%s%s -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir);
+    log('Note that shape and node can be relative or prefixed URLs.');
+    log();
+    log('Press CTRL+C to stop...');
+  }
 }
 
 function getRegexModule (module) {
