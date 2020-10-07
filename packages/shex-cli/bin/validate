@@ -858,10 +858,10 @@ function runServer (serverLoaded, serverParms, serverOptions) {
                  return pair.path; // should ShExNode accept [.name, .path]?
                });
       }
-      const schemaFiles = makeArray("schema");
-      parms.shape      = ctx.request.body.shape; // untested! ctx.request.body.shape
-      const dataFiles = makeArray("data");
-      parms.node      = ctx.request.body.node; // untested! ctx.request.body.node
+      const schemaFiles  = makeArray("schema");
+      parms.shape        = ctx.request.body.shape; // untested! ctx.request.body.shape
+      const dataFiles    = makeArray("data");
+      parms.node         = ctx.request.body.node; // untested! ctx.request.body.node
       parms["node-type"] = ctx.request.body.nodeType;
 
       // Default to serverParms
@@ -925,10 +925,12 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
       ctx.type = 'text/plain';
     }
-    log(`${ctx.request.host}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
+    log(`${ctx.ips.length > 0 ? ctx.ips[ctx.ips.length - 1] : ctx.ip}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
     if (!--stopAfter)
       server.close();
   }).listen(port);
+  // For some reason, this doesn't detect "EACCES: permission denied 0.0.0.0:80":
+  //   server.on('error', (e) => { console.error('Network error:', e) });
 
   if (serverParms.terse) {
     log('host: %s port: %s', host, port);
