@@ -567,9 +567,9 @@ function queueTests (tests, cmds) {
   });
 }
 
-function runValidator (graph, shapeMap, schema, options) {
+function runValidator (db, shapeMap, schema, options) {
   // prepare validator
-  const validator = ShExValidator.construct(schema, graph, options);
+  const validator = ShExValidator.construct(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
@@ -829,64 +829,76 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         port    = match[2] || 80,
         host    = match[1],
         srvpath = match[3],
-        fs      = require("fs");
+        fs      = require("fs"),
+        baseUrl = `http://${host}:${port}${srvpath}`;
 
-  const server = app.use(koaBody({
-    multipart: true,
-    formLimit: 15,
-    formidable: {
-      uploadDir: Path.resolve(__dirname, "../rest/uploads")
-    }
-  })).use(async (ctx, next) => {
+  const server = app
+        .use(koaBody({
+          multipart: true,
+          // formLimit: "64 kb",
+          formidable: {
+            uploadDir: Path.resolve(__dirname, "../rest/uploads")
+          }
+        }))
+        .use(async (ctx, next) => {
     switch (ctx.originalUrl) {
     case srvpath:
       const parms = {
-        // untested! schemaName:undefined, schemaFile:undefined, shape:undefined,
-        // untested! dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
-        schemaName:undefined, schemaFile:undefined, shape:undefined,
-        dataName:undefined,   dataFile:undefined,   node:undefined, nodeType:undefined
+        schema: { type: "Schema" }, shape:undefined, schemaMeta: [],
+        data: new N3.Store(), node:undefined, dataMeta: [], nodeType:undefined
       };
       if (ctx.request.method !== "POST")
         ctx.throw(500, "only supports POST now");
-      function makeArray (key) {
-        if (!("files" in ctx.request) || !(key in ctx.request.files))
-          return [];
-        return (ctx.request.files[key].constructor === Array ?
-                ctx.request.files[key] :
-                [ctx.request.files[key]]
-               ).map(pair => {
-                 return pair.path; // should ShExNode accept [.name, .path]?
-               });
-      }
-      const schemaFiles  = makeArray("schema");
-      parms.shape        = ctx.request.body.shape; // untested! ctx.request.body.shape
-      const dataFiles    = makeArray("data");
-      parms.node         = ctx.request.body.node; // untested! ctx.request.body.node
-      parms["node-type"] = ctx.request.body.nodeType;
 
-      // Default to serverParms
-      Object.keys(parms).forEach(k => {
-        if (parms[k] === undefined && k in serverParms)
-          parms[k] = serverParms[k];
-      });
-      const options = serverOptions;
-      if ("regex-module" in parms)
-        options = extend(options, {
-          regexModule: require(REGEX_MODULES + parms["regex-module"])
-        });
+      const unlinkMe = await Promise.all(Object.keys(ctx.request.files || []).reduce((acc, key) => {
+        let fz = ctx.request.files[key];
+        if (fz.constructor !== Array)
+          fz = [fz];
+        return acc.concat(fz.map(
+          async file => {
+            const url = new URL(file.name, baseUrl);
+            const text = await fs.promises.readFile(file.path, "utf8");
+            await mergeParm(parms, key, text, url, file.type);
+            return {key, text, url, file}; // only really need file.path; rest for debugging
+          }
+        ))
+      }, []))
+
+      // (['schema', 'shape', 'data', 'node', 'node-type']).forEach...
+      for (let key in ctx.request.body)
+        await mergeParm(parms, key, ctx.request.body[key], baseUrl, null);
 
       try {
-        const loaded = await ShExNode.load(schemaFiles, [], dataFiles, [], SchemaOptions, undefined);
-        // add server-loaded (meta)data
-        serverLoaded.data.getQuads().forEach(t => { loaded.data.addQuad(t); });
-        loaded.data = ShExUtil.rdfjsDB(loaded.data);
-        loaded.dataMeta = loaded.dataMeta.concat(serverLoaded.dataMeta);
+        (['schema', 'data']).forEach(
+          key => {
+            if (parms[key + "Meta"].length === 0) {
+              if (serverLoaded[key + "Meta"].length > 0) {
+                parms[key] = serverLoaded[key];
+                parms[key + "Meta"] = serverLoaded[key + "Meta"];
+              } else {
+                throw makeError(`No ${key} specified.`, 400);
+              }
+            }
+          });
+        (['node', 'shape']).forEach( // "regex-module"
+          key => {
+            if (!parms[key]) {
+              if (key in serverParms)
+                parms[key] = serverParms[key];
+              else
+                throw makeError(`No ${key} specified.`, 400);
+            }
+          })
 
-        // add server-loaded schema
-        ShExUtil.merge(loaded.schema, serverLoaded.schema, false, true);
-        loaded.schemaMeta = loaded.schemaMeta.concat(serverLoaded.schemaMeta);
+        const options = serverOptions;
+        if ("regex-module" in parms)
+          options = extend(options, {
+            regexModule: require(REGEX_MODULES + parms["regex-module"])
+          });
 
-        let result = findNodesAndValidate(loaded, parms, options);
+        if (!("getNeighborhood" in parms.data)) // !! clean up db chaos
+          parms.data = ShExUtil.rdfjsDB(parms.data);
+        let result = findNodesAndValidate(parms, parms, options);
         if ("results" in result)
           result = result.results; // otherwise just report the invoked parms.
         if (ctx.request.body.output === "html") {
@@ -898,10 +910,6 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           ctx.body = JSON.stringify(result, null, 2)+"\n";
         }
         ctx.type = 'application/json'
-
-        schemaFiles.forEach(path => { fs.unlinkSync(path); });
-        dataFiles.forEach(path => { fs.unlinkSync(path); });
-        await next;
       } catch (e) {
         const stack = typeof e === "object" && "stack" in e ? e.stack : e;
         const msg = typeof e === "object" && "message" in e ? e.message : e;
@@ -911,10 +919,11 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           errors: [msg]
         };
         ctx.type = 'application/json'
-        ctx.status = 500;
-        schemaFiles.forEach(path => { fs.unlink(path); });
-        dataFiles.forEach(path => { fs.unlink(path); });
-      };
+        ctx.status = "status" in e ? e.status : 500;
+      }
+
+      unlinkMe.forEach(x => fs.unlinkSync(x.file.path));
+      await next;
       break;
     case "/":
       ctx.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
@@ -947,6 +956,53 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     log();
     log('Press CTRL+C to stop...');
   }
+}
+
+async function mergeParm (parms, parm, text, url, type) {
+  switch (parm) {
+  case "schema":
+    let part = null;
+    const prefixes = {};
+    try {
+      part = JSON.parse(text);
+    } catch (e) {
+      const parser = require("@shexjs/parser").construct(url.href, prefixes);
+      part = parser.parse(text);
+    }
+    ShExUtil.merge(parms.schema, part, true, true);
+    parms.schemaMeta.push({prefixes, base: url.href})
+    break;
+  case "data":
+    const tpz = await new Promise((resolve, reject) => {
+      const parser = new N3.Parser({ baseIRI: url.href });
+      parser.parse(text, function (error, quad, prefixes) {
+        if (error)
+          throw error;
+        if (quad)
+          parms.data.addQuad(quad);
+        else
+          resolve(prefixes);
+      });
+    })
+    parms.dataMeta.push({prefixes: tpz, base: url.href})
+    break;
+  default:
+    // These have no merge semantics so just overwrite.
+    // node and shape will be evaluated as relative URLs in findNodesAndValidate.
+    parms[parm] = text;
+  }
+}
+
+function objKeyVal (pairs) {
+  const ret = {};
+  pairs.forEach(pair => ret[pair[0]] = pair[1]);
+  return ret;
+}
+
+function makeError (msg, status) {
+  const ret = Error(msg);
+  ret.status = status;
+  return ret;
 }
 
 function getRegexModule (module) {
