@@ -255,9 +255,7 @@ const EvalSimple1ErrCjsModule = (function () {
           }
           if (elt.state !== rbenx.end) {
             return acc.concat([extend({
-              type: lastState.c.negated
-                ? "NegatedProperty"
-                : "MissingProperty",
+              type: "MissingProperty",
               property: lastState.c.predicate,
             }, valueExpr ? { valueExpr: valueExpr } : {})])
           } else {
@@ -275,9 +273,7 @@ const EvalSimple1ErrCjsModule = (function () {
             });
 
           return acc.concat(Object.keys(unmatchedTriples).map(i => extend({
-            type: lastState.c.negated
-              ? "NegatedProperty"
-              : "ExcessTripleViolation",
+            type: "ExcessTripleViolation",
             property: lastState.c.predicate,
             triple: neighborhood[unmatchedTriples[i]],
           }, valueExpr ? { valueExpr: valueExpr } : {})));
