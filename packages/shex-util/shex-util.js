@@ -1540,7 +1540,7 @@ const ShExUtil = {
     });
   },
 
-  errsToSimple: function (val, node, shape) {
+  errsToSimple: function (val) {
     const _ShExUtil = this;
     if (val.type === "FailureList") {
       return val.errors.reduce((ret, e) => {
@@ -1575,7 +1575,7 @@ const ShExUtil = {
     } else if (val.type === "ExcessTripleViolation") {
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
     } else if (val.type === "ClosedShapeViolation") {
-      return ["ClosedShapeError: unexpected: {"].concat(
+      return ["Unexpected triple(s): {"].concat(
         val.unexpectedTriples.map(t => {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })

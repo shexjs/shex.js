@@ -241,8 +241,8 @@ const EvalSimple1ErrCjsModule = (function () {
       } }
       function localExpect (clist, states) {
         const lastState = states[states.length - 1];
-        return clist.map(t => {
-          const c = rbenx.states[t.state].c;
+        return clist.reduce((acc, elt) => {
+          const c = rbenx.states[elt.state].c;
           // if (c === Match)
           //   return { type: "EndState999" };
           let valueExpr = null;
@@ -253,13 +253,36 @@ const EvalSimple1ErrCjsModule = (function () {
           } else if (c.valueExpr) {
             valueExpr = extend({}, c.valueExpr)
           }
-          return extend({
-            type: lastState.c.negated ? "NegatedProperty" :
-              t.state === rbenx.end ? "ExcessTripleViolation" :
-              "MissingProperty",
-            property: lastState.c.predicate
-          }, valueExpr ? { valueExpr: valueExpr } : {});
-        });
+          if (elt.state !== rbenx.end) {
+            return acc.concat([extend({
+              type: lastState.c.negated
+                ? "NegatedProperty"
+                : "MissingProperty",
+              property: lastState.c.predicate,
+            }, valueExpr ? { valueExpr: valueExpr } : {})])
+          } else {
+            const unmatchedTriples = {};
+            // Collect triples assigned to some constraint.
+            Object.keys(tripleToConstraintMapping).forEach(k => {
+              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
+                unmatchedTriples[k] = tripleToConstraintMapping[k];
+            });
+            // Removed triples matched in this thread.
+            elt.matched.forEach(m => {
+              m.triples.forEach(t => {
+                delete unmatchedTriples[t];
+              });
+            });
+
+          return acc.concat(Object.keys(unmatchedTriples).map(i => extend({
+            type: lastState.c.negated
+              ? "NegatedProperty" // @@ save me
+              : "ExcessTripleViolation",
+            property: lastState.c.predicate,
+            triple: neighborhood[unmatchedTriples[i]],
+          }, valueExpr ? { valueExpr: valueExpr } : {})));
+          }
+        }, []);
       }
       // console.log("chosen:", dump.thread(chosen));
       return "errors" in chosen.matched ?

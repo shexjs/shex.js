@@ -202,6 +202,7 @@ describe("A ShEx validator", function () {
                       if (params.results !== "api") {
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
+                          ShExUtil.errsToSimple(validationResult);
                           if (referenceResult)
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
                         } else {

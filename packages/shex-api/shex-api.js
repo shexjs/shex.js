@@ -158,10 +158,14 @@ const ShExApiCjsModule = function (config) {
       resolveSelf = resolve; rejectSelf = reject
     })
     self.all = function (pz) {
-      pz.forEach(function (promise, index) {
-        promises.push(promise)
-        addThen(promise, index)
-      })
+      if (pz.length === 0)
+        resolveSelf([]) // otherwise it returns a Promise which never .thens
+      // (and oddly doesn't have a slot in nodes pending promises?)
+      else
+        pz.forEach(function (promise, index) {
+          promises.push(promise)
+          addThen(promise, index)
+        })
       return self
     }
     self.add = function (promise) {
