@@ -1,4 +1,4 @@
-//  "use strict";
+"use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS : null;
@@ -33,7 +33,7 @@ var regexModules = [
 if (EARL)
   regexModules = regexModules.slice(1);
 
-TODO = [
+const TODO = [
   // delightfully empty (for now)
 ];
 
@@ -202,13 +202,14 @@ describe("A ShEx validator", function () {
                       if (params.results !== "api") {
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
-                          ShExUtil.errsToSimple(validationResult);
                           if (referenceResult)
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          ShExUtil.errsToSimple(validationResult);
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
                           if (referenceResult !== null)
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          ShExUtil.valToValues(validationResult);
                         }
                       }
                       var xr = test.extensionResults.filter(function (x) {
