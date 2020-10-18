@@ -1961,7 +1961,7 @@ const ShExUtil = {
       return _ShExUtil.walkVal(val.solution, cb);
     } else if (val.type === "Failure") { // NOT1dotOR2dot_pass-empty
       return null; // !!TODO
-    } else if (val.type === "ShapeNot") { // 1NOTNOTIRI_passIo1, 
+    } else if (val.type === "ShapeNot") { // 1NOTNOTIRI_passIo1,
       return _ShExUtil.walkVal(val.shapeExpr, cb);
     } else if (val.type === "ShapeOrResults") { // 1dotRefOR3_passShape1
       return _ShExUtil.walkVal(val.solution, cb);
