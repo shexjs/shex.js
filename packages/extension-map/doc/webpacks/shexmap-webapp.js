@@ -5383,7 +5383,8 @@ const ShExUtil = {
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     return fetch(queryURL, {
       headers: {
-        'Accept': 'application/sparql-results+json'
+        'Accept': 'application/sparql-results+json',
+        'User-agent': 'shex-simple/1.0 (https://github.com/shexSpec/shex.js; https://github.com/shexSpec/shex.js/issues) ShEx/2.1'
       }}).then(resp => resp.json()).then(t => {
         const selects = t.head.vars;
         return t.results.bindings.map(row => {
@@ -5414,7 +5415,8 @@ const ShExUtil = {
       const request = __webpack_require__(23);
       const res = request('GET', queryURL, {
         headers: {
-          'Accept': 'application/sparql-results+json'
+          'Accept': 'application/sparql-results+json',
+          'User-agent': 'shex-simple/1.0 (https://github.com/shexSpec/shex.js; https://github.com/shexSpec/shex.js/issues) ShEx/2.1'
         },
       });
       t = res.getBody().toString('utf-8');
