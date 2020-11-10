@@ -833,7 +833,7 @@ async function callValidator (done) {
     if (hasFocusNode()) {
       currentAction = "parsing input data";
       $("#results .status").text("parsing data...").show();
-      const inputData = await Caches.inputData.refresh(); // need prefixes for ShapeMap
+      let inputData = await Caches.inputData.refresh(); // need prefixes for ShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       currentAction = "parsing shape map";
       const fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
