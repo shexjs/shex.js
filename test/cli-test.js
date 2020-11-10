@@ -20,7 +20,6 @@ const child_process = require('child_process');
 const chai = require("chai");
 const expect = chai.expect;
 const assert = chai.assert;
-const should = chai.should;
 const Queue = require("timeout-promise-queue").PromiseQueue(25);
 
 const fs = require("fs");
