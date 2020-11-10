@@ -950,7 +950,7 @@ async function callValidator (done) {
         case "finishQuery":
           noScrollAppend($("#inputData textarea"), " " + msg.data.quads.length + " triples (" + msg.data.time + " μs)\n");
           Caches.inputData.slurpWriter.addQuads(msg.data.quads.map(
-            t => ShEx.ShExTerm.externalTriple(t, ShEx.N3.DataFactory)
+            t => ShEx.ShExTerm.externalTriple(t, RdfJs.DataFactory)
           ));
           break;
 
@@ -1031,7 +1031,8 @@ async function callValidator (done) {
         {
           request: "create",
           schema: inputSchema,
-          schemaURL: Caches.inputSchema.url || DefaultBase
+          schemaURL: Caches.inputSchema.url || DefaultBase,
+          slurp: $("#slurp").is(":checked")
           /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
         },
         "endpoint" in Caches.inputData ?
