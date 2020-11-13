@@ -46,11 +46,14 @@ const ShapeMap = require("shape-map");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
+ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+
 const ValidatorOptions = { diagnose: true };
 const SchemaOptions = { duplicateShape: "abort" };
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
+const START_SHAPE_LABEL = "START";
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 //const orChoices = Object.keys(ShExValidator.options.or).join("|");
 const covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
@@ -63,6 +66,8 @@ const CommandLineOptions = [
   { name: "query",                 type: Boolean , description: "show matching RDF graph" },
   { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
+  { name: "track",                 type: Boolean , description: "display graph nodes touched by validation" },
+  { name: "slurp",                 type: Boolean , description: "record neighborhoods visited by validation" },
   { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
@@ -73,7 +78,7 @@ const CommandLineOptions = [
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
-  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple:  true, defaultValue: undefined, description: "data query endpoint" },
+  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "data query endpoint" },
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
@@ -188,6 +193,11 @@ function findNodesAndValidate (loaded, parms, options) {
         : term;
     }
   }
+  const shapeMapExtensions = {
+    "http://www.w3.org/ns/shex#Extensions-sparql": function (query) {
+      return ShExUtil.executeQuery(query, parms.endpoint).map(row => row[0]);
+    }
+  }
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
@@ -196,6 +206,8 @@ function findNodesAndValidate (loaded, parms, options) {
 						    null, knownType, x =>  x))
         : typeof nodeP === "object" && nodeP.type === "TriplePattern"
         ? getQuads(nodeP.subject, nodeP.predicate, nodeP.object)
+        : typeof nodeP === "object" && nodeP.type === "Extension"
+          ? shapeMapExtensions[nodeP.language](nodeP.lexical)
         : [ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
                                  MISC_NODES ? () => true : knownNode, x => x)]; // accept unknown nodes
     let shape, shapeLabel;
@@ -205,8 +217,10 @@ function findNodesAndValidate (loaded, parms, options) {
       shapeLabel = ShExValidator.start;
       ret.shape = shapeLabel;
     } else {
-      const found = ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
-					   someShape, knownShape, unknownShape);
+      const found = typeof shapeP === "string"
+            ? ShExUtil.parsePassedNode(shapeP, loaded.schemaMeta[0],
+				       someShape, knownShape, unknownShape)
+            : shapeP; // already a token like .start
       if (found === ShExUtil.NotSupplied || found === ShExUtil.UnknownIRI)
         throw Error("shape " + shapeP + " not defined" + optsStr(shapeP, loaded.schema.shapes));
       // shape = { type: "ShapeRef", reference: found };
@@ -366,9 +380,15 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
          }
        ] */
 
+    const queryTracker = valParms.track || valParms.slurp
+          ? makeQueryTracker(
+            metaToResolver(schemaAndData.schemaMeta[0]),
+            metaToResolver(schemaAndData.dataMeta[0]))
+          : null;
     schemaAndData.data = valParms.endpoint
-      ? ShExUtil.sparqlDB(valParms.endpoint, queryTracker())
-      : ShExUtil.rdfjsDB(schemaAndData.data);
+      ? ShExUtil.sparqlDB(valParms.endpoint, queryTracker)
+      : ShExUtil.rdfjsDB(schemaAndData.data, queryTracker);
+
     if (valParms.serve) {
       if (valParms.shape) {
         const index = ShExUtil.index(schemaAndData.schema);
@@ -395,6 +415,9 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       }
 
       const res = findNodesAndValidate(schemaAndData, valParms, validatorOptions, schemaOptions).results;
+      if (valParms.slurp)
+        res.graph = queryTracker.store; // slurp trumps query graph
+
       if (cmds["dry-run"])
         return res;
       const passed = !("errors" in res);
@@ -409,19 +432,21 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         return match ? 0 : 3;
       } else {
         if (res.graph) {
-          const wr = new N3.Writer();
+          const wr = new N3.Writer({ prefixes: schemaAndData.dataMeta[0].prefixes || {} });
           wr.addQuads(res.graph.getQuads());
+          let text = null;
           wr.end((error, results) => {
             if (error)
               throw error;
-            res.turtle = ""
-              + "# node: " + res.node + "\n"
-              + "# shape: " + res.shape + "\n"
+            text = ""
+              + (res.solutions || [res]).map(
+                r2 =>
+                  "# <" + r2.node + ">@<" + r2.shape + ">\n").join('')
               + results.trim();
           });
           delete res.graph;
-          if (valParms.quiet)
-            console.log(res.turtle);
+          if (text)
+            console.log(text);
           else
             console.log(JSON.stringify(res, null, "  "));
         } else if (!valParms.quiet)
@@ -435,20 +460,32 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     return 1;
   };
 
-  function queryTracker () {
+  function makeQueryTracker (schemaMeta, dataMeta) {
     return {
+      store: valParms.slurp ? new N3.Store() : null,
       start: function (isOut, term, shapeLabel) {
-        process.stderr.write((isOut ? "←" : "→") + " <" + term + ">@<" + shapeLabel + ">");
-        return
-        var node = Caches.inputSchema.meta.termToLex(term);
-        var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
+        if (valParms.track) {
+          var node = rdflib_termToLex(term, dataMeta);
+          var shape = rdflib_termToLex(shapeLabel, schemaMeta);
+          var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
+          process.stdout.write("# " + slurpStatus);
+        }
       },
       end: function (triples, time) {
-        process.stderr.write(" " + triples.length + " triples (" + time + " μs)\n");
-        return
-        Caches.inputData.slurpWriter.addTriples(triples);
+        if (valParms.track)
+          process.stdout.write(" " + triples.length + " triples (" + time + " μs)\n");
+        if (valParms.slurp)
+          this.store.addQuads(triples.map(
+            t => ShExTerm.externalTriple(t, N3.DataFactory)
+          ));
       }
     }
+  }
+
+  function metaToResolver (meta) {
+    return meta
+      ? { _base: meta.url, _basePath: meta.url, meta: {prefixes: meta.prefixes} }
+      : {url: "foo:bar", prefixes: {}} ;
   }
 }
 
