@@ -1,0 +1,21 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+BASE <http://www.wikidata.org/prop/direct/>
+
+wd:3_of_4 <P999> _:objOf999 .
+_:objOf999
+  # works
+  <P2860> _:a ; # apparenlty, a bare blank node stands for unknown value
+  # advisors
+  <P184> wd:Q123 , _:1e_____ , _:xe_____ , _:ye_____ , _:1cd__2g , _:1cd__2f , _:1cdef2g , _:1cdef2f .
+
+# advisors (mostly bnodes to exercise disambiguator)
+wd:Q123                                                         <P735> "a" .
+_:1e_____ <P000> wd:Qe                                        ; <P735> "abc" .
+_:xe_____ <P000> wd:Qe                                        ; <P735> "abc" .
+_:ye_____ <P000> wd:Qe                                        ; <P735> "abc" .
+_:1cd__2g <P000> wd:Qc , wd:Qd                 ; <P001> wd:Qg ; <P735> "abc" .
+_:1cd__2f <P000> wd:Qc , wd:Qd                 ; <P001> wd:Qf ; <P735> "abc" .
+_:1cdef2g <P000> wd:Qc , wd:Qd , wd:Qe , wd:Qf ; <P001> wd:Qg ; <P735> "abc" .
+_:1cdef2f <P000> wd:Qc , wd:Qd , wd:Qe , wd:Qf ; <P001> wd:Qf ; <P735> "abc" .
+

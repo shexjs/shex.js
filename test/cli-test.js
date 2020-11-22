@@ -128,6 +128,13 @@ const AllTests = {
   ]
 };
 
+if (process.env.SPARQL_SERVER) { //  set up server, e.g. using SWObjects: sparql -d test/sparqlDb/wd-3_of_4.ttl --serve http://localhost:8088/sparql --server-no-description
+  AllTests["shex-validate"].push( // TEST_cli=true SPARQL_SERVER=http://localhost:8088/sparql npx mocha cli-test.js
+    { name: "sparqlDb-bnodes-wd-3_of_4", args: ["-x", "sparqlDb/citing_work.shex", "-d", "sparqlDb/wikidata-prefixes.ttl", "--track", "--slurp", "--endpoint", process.env.SPARQL_SERVER, "-m", "SPARQL 'SELECT ?s { ?s wdt:P999 ?o }'@:middle" ], resultMatch: "P735 \"abc\"", status: 0 }
+  )
+}
+
+
 if (!TEST_cli) {
   console.warn("Skipping cli-tests; to activate these tests, set environment variable TEST_cli=true");
 

@@ -195,7 +195,12 @@ function findNodesAndValidate (loaded, parms, options) {
   }
   const shapeMapExtensions = {
     "http://www.w3.org/ns/shex#Extensions-sparql": function (query) {
-      return ShExUtil.executeQuery(query, parms.endpoint).map(row => row[0]);
+      const prefixesStr = loaded.dataMeta.length > 0
+            ? Object.keys(loaded.dataMeta[0].prefixes).map(
+              k => `PREFIX ${k}: <${loaded.dataMeta[0].prefixes[k]}>\n`
+            ).join("")
+            : "";
+      return ShExUtil.executeQuery(prefixesStr + query, parms.endpoint).map(row => row[0]);
     }
   }
 
