@@ -49,7 +49,7 @@ const ShExNode = require("@shexjs/node")({rdfjs: N3});
 ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const ValidatorOptions = { diagnose: true };
-const SchemaOptions = { duplicateShape: "abort" };
+const SchemaOptions = { duplicateShape: "abort", index: true };
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
@@ -503,6 +503,8 @@ function rdflib_termToLex (node, resolver) {
       ret = ret + "^^" + rdflib_termToLex(node.datatype, resolver);
     return ret;
   }
+  if (node.startsWith("_:"))
+    return node;
   if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     return "a";
   if (node === ShExValidator.start)
