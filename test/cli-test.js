@@ -234,6 +234,9 @@ Object.keys(AllTests).forEach(function (script) {
                expect(exec.stderr).to.be.empty; // print errors from spawn.
              }
 
+             if (!("errorMatch" in ref) && exec.stderr.length > 0)
+               throw Error("execution returned an error: " + exec.stderr);
+
              if ("errorMatch" in ref)
                expect(exec.stderr).to.match(ref.errorMatch);
              if ("resultMatch" in ref)
