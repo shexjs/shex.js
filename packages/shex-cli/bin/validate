@@ -404,7 +404,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         } catch (e) {
           valParms.map = ShapeMap.Parser.construct(shapeMap.shapeMapBase,
                                                    schemaAndData.schemaMeta[0],
-                                                   schemaAndData.dataMeta[0])
+                                                   schemaAndData.dataMeta[0] || {})
             .parse(shapeMap.shapeMapBody);
         }
       }
