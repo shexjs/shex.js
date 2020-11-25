@@ -1,6 +1,7 @@
 if: tag IS blank
-sudo: false
 language: node_js
+os: linux
+dist: xenial
 
 env:
   - CLI_TIMEOUT=10000

@@ -1,4 +1,4 @@
-//  "use strict";
+"use strict";
 var VERBOSE = "VERBOSE" in process.env;
 var TERSE = VERBOSE;
 var TESTS = "TESTS" in process.env ? process.env.TESTS : null;
@@ -15,7 +15,6 @@ const ShExNode = require("@shexjs/node")({
   rdfjs: N3,
 });
 const N3Util = N3.Util;
-
 var fs = require("fs");
 var path = require("path");
 var chai = require("chai");
@@ -33,7 +32,7 @@ var regexModules = [
 if (EARL)
   regexModules = regexModules.slice(1);
 
-TODO = [
+const TODO = [
   // delightfully empty (for now)
 ];
 
@@ -163,7 +162,9 @@ describe("A ShEx validator", function () {
               //   start = Object.keys(schema.action.shapes)[0];
 
               var store = new N3.Store();
-              var turtleParser = new N3.Parser({baseIRI: dataURL, blankNodePrefix: "", format: "text/turtle"});
+              // Crappy hack 'cause N3Parser._resetBlankNodePrefix() isn't exported.
+              const bnodeRenumberer = makeBNodeRenumberer().start(0);
+              var turtleParser = new N3.Parser({baseIRI: dataURL, blankNodePrefix: "", format: "text/turtle", factory: N3.DataFactory});
               turtleParser.parse(
                 fs.readFileSync(dataFile, "utf8"),
                 function (error, triple, prefixes) {
@@ -172,6 +173,7 @@ describe("A ShEx validator", function () {
                   } else if (triple) {
                     store.addQuad(triple);
                   } else {
+                    bnodeRenumberer.restore();
                     try {
                       function maybeGetTerm (base, s) {
                         return s === undefined ? null :
@@ -202,13 +204,14 @@ describe("A ShEx validator", function () {
                       if (params.results !== "api") {
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
-                          ShExUtil.errsToSimple(validationResult);
                           if (referenceResult)
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          ShExUtil.errsToSimple(validationResult);
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
                           if (referenceResult !== null)
                             expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                          ShExUtil.valToValues(validationResult);
                         }
                       }
                       var xr = test.extensionResults.filter(function (x) {
@@ -283,4 +286,36 @@ function restoreUndefined(object) {
   if ("shape" in object && "shapeExpr" in object && "id" in object.shapeExpr)
     delete object.shapeExpr.id
   return object;
+}
+
+function makeBNodeRenumberer () {
+  const known = {};
+  let counter = 0;
+  let old = null;
+  return {
+    start: function (ord = 0) {
+      counter = ord;
+      old = N3.DataFactory.blankNode;
+      N3.DataFactory.blankNode = blankNode;
+      return this;
+    },
+    restore: function () {
+      N3.DataFactory.blankNode = old;
+      return this;
+    }
+  };
+
+  function blankNode (theirName) {
+    let ret;
+    if (theirName in known) {
+      ret = known[theirName];
+    } else {
+      const myName = !theirName || theirName.startsWith('n3-') ? `n3-${counter++}` : theirName;
+      ret = old(myName);
+      if (theirName)
+        known[theirName] = ret;
+    }
+    // console.warn(`BNode ${theirName} => ${ret.id}`);
+    return ret;
+  }
 }

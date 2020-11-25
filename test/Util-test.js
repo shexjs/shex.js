@@ -447,7 +447,7 @@ describe('shex-util:', function () {
       expect(store.size).to.equal(4)
     })
   })
-
+/* -- deprecated
   describe('utility function valToSimple', function () {
     it (`should parse validation results`, function () {
       const simple = ShExUtil.valToSimple(AppInfo1)
@@ -462,7 +462,7 @@ describe('shex-util:', function () {
       ])
     })
   })
-
+*/
   describe('utility function errsToSimple', function () {
     it (`should parse validation failure`, function () {
       const simple = ShExUtil.errsToSimple(Error1)
