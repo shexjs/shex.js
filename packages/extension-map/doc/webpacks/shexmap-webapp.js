@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 43);
+/******/ 	return __webpack_require__(__webpack_require__.s = 42);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -89,34 +89,34 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-var RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     XSD  = 'http://www.w3.org/2001/XMLSchema#',
     SWAP = 'http://www.w3.org/2000/10/swap/';
 
 /* harmony default export */ __webpack_exports__["a"] = ({
   xsd: {
-    decimal: XSD + 'decimal',
-    boolean: XSD + 'boolean',
-    double:  XSD + 'double',
-    integer: XSD + 'integer',
-    string:  XSD + 'string',
+    decimal: `${XSD}decimal`,
+    boolean: `${XSD}boolean`,
+    double:  `${XSD}double`,
+    integer: `${XSD}integer`,
+    string:  `${XSD}string`,
   },
   rdf: {
-    type:       RDF + 'type',
-    nil:        RDF + 'nil',
-    first:      RDF + 'first',
-    rest:       RDF + 'rest',
-    langString: RDF + 'langString',
+    type:       `${RDF}type`,
+    nil:        `${RDF}nil`,
+    first:      `${RDF}first`,
+    rest:       `${RDF}rest`,
+    langString: `${RDF}langString`,
   },
   owl: {
     sameAs: 'http://www.w3.org/2002/07/owl#sameAs',
   },
   r: {
-    forSome: SWAP + 'reify#forSome',
-    forAll:  SWAP + 'reify#forAll',
+    forSome: `${SWAP}reify#forSome`,
+    forAll:  `${SWAP}reify#forAll`,
   },
   log: {
-    implies: SWAP + 'log#implies',
+    implies: `${SWAP}log#implies`,
   },
 });
 
@@ -1151,9 +1151,9 @@ var objectKeys = Object.keys || function (obj) {
 
 module.exports = Duplex;
 
-var Readable = __webpack_require__(35);
+var Readable = __webpack_require__(34);
 
-var Writable = __webpack_require__(39);
+var Writable = __webpack_require__(38);
 
 __webpack_require__(5)(Duplex, Readable);
 
@@ -1255,15 +1255,15 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(35);
+exports = module.exports = __webpack_require__(34);
 exports.Stream = exports;
 exports.Readable = exports;
-exports.Writable = __webpack_require__(39);
+exports.Writable = __webpack_require__(38);
 exports.Duplex = __webpack_require__(7);
-exports.Transform = __webpack_require__(41);
-exports.PassThrough = __webpack_require__(71);
+exports.Transform = __webpack_require__(40);
+exports.PassThrough = __webpack_require__(72);
 exports.finished = __webpack_require__(18);
-exports.pipeline = __webpack_require__(72);
+exports.pipeline = __webpack_require__(73);
 
 
 /***/ }),
@@ -1307,9 +1307,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(61)
-var ieee754 = __webpack_require__(62)
-var isArray = __webpack_require__(63)
+var base64 = __webpack_require__(62)
+var ieee754 = __webpack_require__(63)
+var isArray = __webpack_require__(64)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3098,7 +3098,7 @@ function isnan (val) {
 const ShExUtilCjsModule = (function () {
 const ShExTerm = __webpack_require__(4);
 const Visitor = __webpack_require__(21)
-const Hierarchy = __webpack_require__(22)
+const Hierarchy = __webpack_require__(46)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -4148,13 +4148,9 @@ const ShExUtil = {
 
   walkVal: function (val, cb) {
     const _ShExUtil = this;
-    if (val.type === "NodeConstraintTest") {
-      return null;
-    } else if (val.type === "ShapeTest") {
-      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
-    } else if (val.type === "ShapeOrResults") {
-      return _ShExUtil.walkVal(val.solution || val.solutions, cb);
-    } else if (val.type === "ShapeAndResults") {
+    if (typeof val === "string") { // ShapeRef
+      return null; // 1NOTRefOR1dot_pass-inOR
+    } else if (val.type === "SolutionList") { // dependent_shape
       return val.solutions.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -4166,7 +4162,75 @@ const ShExUtil = {
           })
         return ret;
       }, {});
+    } else if (val.type === "NodeConstraintTest") { // 1iri_pass-iri
+      return _ShExUtil.walkVal(val.shapeExpr, cb);
+    } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
+      return null;
+    } else if (val.type === "ShapeTest") { // 0_empty
+      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+    } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
+      return null;
+    } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
+      return _ShExUtil.walkVal(val.shapeExpr, cb);
+    } else if (val.type === "ShapeNotResults") { // NOT1dotOR2dot_pass-empty
+      return _ShExUtil.walkVal(val.solution, cb);
+    } else if (val.type === "Failure") { // NOT1dotOR2dot_pass-empty
+      return null; // !!TODO
+    } else if (val.type === "ShapeNot") { // 1NOTNOTIRI_passIo1,
+      return _ShExUtil.walkVal(val.shapeExpr, cb);
+    } else if (val.type === "ShapeOrResults") { // 1dotRefOR3_passShape1
+      return _ShExUtil.walkVal(val.solution, cb);
+    } else if (val.type === "ShapeOr") { // 1NOT_literalORvs__passIo1
+      return val.shapeExprs.reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
+    } else if (val.type === "ShapeAndResults" || // 1iriRef1_pass-iri
+               val.type === "ExtensionResults") { // extends-abstract-multi-empty_pass-missingOptRef1
+      return val.solutions.reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
+    } else if (val.type === "ShapeAnd") { // 1NOT_literalANDvs__passIv1
+      return val.shapeExprs.reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
+    } else if (val.type === "ExtendedResults") { // extends-abstract-multi-empty_pass-missingOptRef1
+      return (["extensions", "local"]).reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
     } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
+      // 1dotOne2dot_pass_p1
       return val.solutions.reduce((ret, sln) => {
         sln.expressions.forEach(exp => {
           const n = _ShExUtil.walkVal(exp, cb);
@@ -4180,21 +4244,16 @@ const ShExUtil = {
         });
         return ret;
       }, {});
-    } else if (val.type === "OneOfSolutions") {
-      return val.solutions.reduce((ret, sln) => {
-        Object.assign(ret, _ShExUtil.walkVal(sln, cb));
-        return ret;
-      }, {});
-    } else if (val.type === "TripleConstraintSolutions") {
+    } else if (val.type === "TripleConstraintSolutions") { // 1dot_pass-noOthers
       if ("solutions" in val) {
         const ret = {};
         const vals = [];
         ret[val.predicate] = vals;
         val.solutions.forEach(sln => {
           const toAdd = [];
-          if (chaseList(sln.referenced, toAdd)) {
+          if (chaseList(sln.referenced, toAdd)) { // parse 1val1IRIREF.ttl
             [].push.apply(vals, toAdd);
-          } else {
+          } else { // 1dot_pass-noOthers
             const newElt = cb(sln);
             if ("referenced" in sln) {
               const t = _ShExUtil.walkVal(sln.referenced, cb);
@@ -4236,9 +4295,7 @@ const ShExUtil = {
       } else {
         return null;
       }
-    } else if (val.type === "NodeConstraintTest") {
-      return null;
-    } else if (val.type === "Recursion") {
+    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
       return null;
     } else {
       // console.log(val);
@@ -4581,7 +4638,7 @@ const ShExUtil = {
       return ret;
     }
   },
-
+/* -- deprecated
   valToSimple: function (val) {
     const _ShExUtil = this;
     function _join (list) {
@@ -4596,7 +4653,9 @@ const ShExUtil = {
         return ret;
       }, {});
     }
-    if (val.type === "TripleConstraintSolutions") {
+    if (typeof val === "string") {
+      return val
+    } else if (val.type === "TripleConstraintSolutions") {
       if ("solutions" in val) {
         return val.solutions.reduce((ret, sln) => {
           if (!("referenced" in sln))
@@ -4642,13 +4701,33 @@ const ShExUtil = {
     } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
       return {  };
     } else if (val.type === "NodeConstraintTest") {
+      return _ShExUtil.valToSimple(val.shapeExpr);
+    } else if (val.type === "NodeConstraint") {
       const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
+      thisNode[n3ify(val.focus)] = [val.shape];
       return thisNode;
     } else if (val.type === "ShapeTest") {
       const thisNode = {  };
       thisNode[n3ify(val.node)] = [val.shape];
       return "solution" in val ? _join([thisNode].concat(_ShExUtil.valToSimple(val.solution))) : thisNode;
+    } else if (val.type === "Shape") {
+      const thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return thisNode;
+    } else if (val.type === "ShapeNotTest") {
+      const thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return _join(['NOT1'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
+    } else if (val.type === "ShapeNot") {
+      const thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return _join(['NOT'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
+    } else if (val.type === "ShapeAnd") {
+      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('AND');
+    } else if (val.type === "ShapeOr") {
+      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('OR');
+    } else if (val.type === "Failure") {
+      return _ShExUtil.errsToSimple(val);
     } else if (val.type === "Recursion") {
       return {  };
     } else if ("solutions" in val) {
@@ -4656,6 +4735,9 @@ const ShExUtil = {
       return _join(val.solutions.map(sln => {
         return _ShExUtil.valToSimple(sln);
       }));
+    } else if ("solution" in val) {
+      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
+      return _ShExUtil.valToSimple(val.solution);
     } else if ("expressions" in val) {
       return _join(val.expressions.map(sln => {
         return _ShExUtil.valToSimple(sln);
@@ -4666,7 +4748,7 @@ const ShExUtil = {
     }
     return val;
   },
-
+*/
   simpleToShapeMap: function (x) {
     return Object.keys(x).reduce((ret, k) => {
       x[k].forEach(s => {
@@ -4685,7 +4767,7 @@ const ShExUtil = {
     });
   },
 
-  errsToSimple: function (val, node, shape) {
+  errsToSimple: function (val) {
     const _ShExUtil = this;
     if (val.type === "FailureList") {
       return val.errors.reduce((ret, e) => {
@@ -4727,13 +4809,13 @@ const ShExUtil = {
     } else if (val.type === "ExcessTripleViolation") {
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
     } else if (val.type === "ClosedShapeViolation") {
-      return ["ClosedShapeError: unexpected: {"].concat(
+      return ["Unexpected triple(s): {"].concat(
         val.unexpectedTriples.map(t => {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      const w = __webpack_require__(23)();
+      const w = __webpack_require__(22)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
       w.end((err, res) => {
@@ -5118,7 +5200,7 @@ if (true)
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return N3Lexer; });
 /* harmony import */ var _IRIs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(42);
+/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41);
 /* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(queue_microtask__WEBPACK_IMPORTED_MODULE_1__);
 // **N3Lexer** tokenizes N3 documents.
 
@@ -5127,17 +5209,17 @@ if (true)
 const { xsd } = _IRIs__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"];
 
 // Regular expression and replacement string to escape N3 strings
-var escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
-var escapeReplacements = {
+const escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
+const escapeReplacements = {
   '\\': '\\', "'": "'", '"': '"',
   'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
   '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
   '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
   '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
 };
-var illegalIriChars = /[\x00-\x20<>\\"\{\}\|\^\`]/;
+const illegalIriChars = /[\x00-\x20<>\\"\{\}\|\^\`]/;
 
-var lineModeRegExps = {
+const lineModeRegExps = {
   _iri: true,
   _unescapedIri: true,
   _simpleQuotedString: true,
@@ -5148,7 +5230,7 @@ var lineModeRegExps = {
   _whitespace: true,
   _endOfFile: true,
 };
-var invalidRegExp = /$0^/;
+const invalidRegExp = /$0^/;
 
 // ## Constructor
 class N3Lexer {
@@ -5179,7 +5261,7 @@ class N3Lexer {
     if (this._lineMode = !!options.lineMode) {
       this._n3Mode = false;
       // Don't tokenize special literals
-      for (var key in this) {
+      for (const key in this) {
         if (!(key in lineModeRegExps) && this[key] instanceof RegExp)
           this[key] = invalidRegExp;
       }
@@ -5199,10 +5281,11 @@ class N3Lexer {
   // ### `_tokenizeToEnd` tokenizes as for as possible, emitting tokens through the callback
   _tokenizeToEnd(callback, inputFinished) {
     // Continue parsing as far as possible; the loop will return eventually
-    var input = this._input, outputComments = this._comments;
+    let input = this._input;
+    const outputComments = this._comments;
     while (true) {
       // Count and skip whitespace lines
-      var whiteSpaceMatch, comment;
+      let whiteSpaceMatch, comment;
       while (whiteSpaceMatch = this._newline.exec(input)) {
         // Try to find a comment
         if (outputComments && (comment = this._comment.exec(whiteSpaceMatch[0])))
@@ -5228,8 +5311,9 @@ class N3Lexer {
       }
 
       // Look for specific token types based on the first character
-      var line = this._line, type = '', value = '', prefix = '',
-          firstChar = input[0], match = null, matchLength = 0, inconclusive = false;
+      const line = this._line, firstChar = input[0];
+      let type = '', value = '', prefix = '',
+          match = null, matchLength = 0, inconclusive = false;
       switch (firstChar) {
       case '^':
         // We need at least 3 tokens lookahead to distinguish ^^<IRI> and ^^pre:fixed
@@ -5283,7 +5367,7 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a blank node.
         // Therefore, try inserting a space if we're at the end of the input.
         if ((match = this._blank.exec(input)) ||
-            inputFinished && (match = this._blank.exec(input + ' ')))
+            inputFinished && (match = this._blank.exec(`${input} `)))
           type = 'blank', prefix = '_', value = match[1];
         break;
 
@@ -5361,7 +5445,7 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a number.
         // Therefore, try inserting a space if we're at the end of the input.
         if (match = this._number.exec(input) ||
-            inputFinished && (match = this._number.exec(input + ' '))) {
+            inputFinished && (match = this._number.exec(`${input} `))) {
           type = 'literal', value = match[0];
           prefix = (typeof match[1] === 'string' ? xsd.double :
                     (typeof match[2] === 'string' ? xsd.decimal : xsd.integer));
@@ -5440,7 +5524,7 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a prefixed name.
         // Therefore, try inserting a space if we're at the end of the input.
         else if ((match = this._prefixed.exec(input)) ||
-                 inputFinished && (match = this._prefixed.exec(input + ' ')))
+                 inputFinished && (match = this._prefixed.exec(`${input} `)))
           type = 'prefixed', prefix = match[1] || '', value = this._unescape(match[2]);
       }
 
@@ -5465,7 +5549,7 @@ class N3Lexer {
       }
 
       // Emit the parsed token
-      var token = { line: line, type: type, value: value, prefix: prefix };
+      const token = { line: line, type: type, value: value, prefix: prefix };
       callback(null, token);
       this.previousToken = token;
       this._previousMarker = type;
@@ -5540,7 +5624,7 @@ class N3Lexer {
   // ### `_syntaxError` creates a syntax error for the given issue
   _syntaxError(issue) {
     this._input = null;
-    var err = new Error('Unexpected "' + issue + '" on line ' + this._line + '.');
+    const err = new Error(`Unexpected "${issue}" on line ${this._line}.`);
     err.context = {
       token: undefined,
       line: this._line,
@@ -5554,7 +5638,6 @@ class N3Lexer {
   // ### `tokenize` starts the transformation of an N3 document into an array of tokens.
   // The input can be a string or a stream.
   tokenize(input, callback) {
-    var self = this;
     this._line = 1;
 
     // If the input is a string, continuously emit tokens through the callback until the end
@@ -5562,11 +5645,12 @@ class N3Lexer {
       this._input = input;
       // If a callback was passed, asynchronously call it
       if (typeof callback === 'function')
-        queue_microtask__WEBPACK_IMPORTED_MODULE_1___default()(() => self._tokenizeToEnd(callback, true));
+        queue_microtask__WEBPACK_IMPORTED_MODULE_1___default()(() => this._tokenizeToEnd(callback, true));
       // If no callback was passed, tokenize synchronously and return
       else {
-        var tokens = [], error;
-        this._tokenizeToEnd(function (e, t) { e ? (error = e) : tokens.push(t); }, true);
+        const tokens = [];
+        let error;
+        this._tokenizeToEnd((e, t) => e ? (error = e) : tokens.push(t), true);
         if (error) throw error;
         return tokens;
       }
@@ -5578,28 +5662,28 @@ class N3Lexer {
       if (typeof input.setEncoding === 'function')
         input.setEncoding('utf8');
       // Adds the data chunk to the buffer and parses as far as possible
-      input.on('data', function (data) {
-        if (self._input !== null && data.length !== 0) {
+      input.on('data', data => {
+        if (this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
-          if (self._pendingBuffer) {
-            data = Buffer.concat([self._pendingBuffer, data]);
-            self._pendingBuffer = null;
+          if (this._pendingBuffer) {
+            data = Buffer.concat([this._pendingBuffer, data]);
+            this._pendingBuffer = null;
           }
           // Hold if the buffer ends in an incomplete unicode sequence
           if (data[data.length - 1] & 0x80) {
-            self._pendingBuffer = data;
+            this._pendingBuffer = data;
           }
           // Otherwise, tokenize as far as possible
           else {
-            self._input += data;
-            self._tokenizeToEnd(callback, false);
+            this._input += data;
+            this._tokenizeToEnd(callback, false);
           }
         }
       });
       // Parses until the end
-      input.on('end', function () {
-        if (self._input !== null)
-          self._tokenizeToEnd(callback, true);
+      input.on('end', () => {
+        if (this._input !== null)
+          this._tokenizeToEnd(callback, true);
       });
       input.on('error', callback);
     }
@@ -5621,7 +5705,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(52)
+var expand = __webpack_require__(53)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -7559,7 +7643,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(56);
+exports.isBuffer = __webpack_require__(57);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -7603,7 +7687,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(57);
+exports.inherits = __webpack_require__(58);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -8331,85 +8415,6 @@ if (true)
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var HierarchyClosure = (function () {
-  /** create a hierarchy object
-   * This object keeps track of direct children and parents as well as transitive children and parents.
-   */
-  function makeHierarchy () {
-    let roots = {}
-    let parents = {}
-    let children = {}
-    let holders = {}
-    return {
-      add: function (parent, child) {
-        if (// test if this is a novel entry.
-          (parent in children && children[parent].indexOf(child) !== -1)) {
-          return
-        }
-        let target = parent in holders
-          ? getNode(parent)
-          : (roots[parent] = getNode(parent)) // add new parents to roots.
-        let value = getNode(child)
-
-        target[child] = value
-        delete roots[child]
-
-        // // maintain hierarchy (direct and confusing)
-        // children[parent] = children[parent].concat(child, children[child])
-        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
-        // parents[child] = parents[child].concat(parent, parents[parent])
-        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
-
-        // maintain hierarchy (generic and confusing)
-        updateClosure(children, parents, child, parent)
-        updateClosure(parents, children, parent, child)
-        function updateClosure (container, members, near, far) {
-          container[far] = container[far].filter(
-            e => /* e !== near && */ container[near].indexOf(e) === -1
-          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
-          container[near].forEach(
-            n => (members[n] = members[n].filter(
-              e => e !== far && members[far].indexOf(e) === -1
-            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
-          )
-        }
-
-        function getNode (node) {
-          if (!(node in holders)) {
-            parents[node] = []
-            children[node] = []
-            holders[node] = {}
-          }
-          return holders[node]
-        }
-      },
-      roots: roots,
-      parents: parents,
-      children: children
-    }
-  }
-
-  function depthFirst (n, f, p) {
-    return Object.keys(n).reduce((ret, k) => {
-      return ret.concat(
-        depthFirst(n[k], f, k),
-        p ? f(k, p) : []) // outer invocation can have null parent
-    }, [])
-  }
-
-  return { create: makeHierarchy, depthFirst }
-})()
-
-/* istanbul ignore next */
-if (true) {
-  module.exports = HierarchyClosure
-}
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
 // **ShExWriter** writes ShEx documents.
 
 const ShExWriterCjsModule = (function () {
@@ -9053,12 +9058,12 @@ if (true)
 
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = __webpack_require__(50).Parser;
+const ShExJison = __webpack_require__(51).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -9145,7 +9150,7 @@ if (true)
 
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -9191,26 +9196,26 @@ if (true)
 module.exports = glob
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(26)
+var rp = __webpack_require__(25)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(5)
 var EE = __webpack_require__(15).EventEmitter
 var path = __webpack_require__(2)
-var assert = __webpack_require__(27)
+var assert = __webpack_require__(26)
 var isAbsolute = __webpack_require__(17)
-var globSync = __webpack_require__(58)
-var common = __webpack_require__(28)
+var globSync = __webpack_require__(59)
+var common = __webpack_require__(27)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(59)
+var inflight = __webpack_require__(60)
 var util = __webpack_require__(16)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(30)
+var once = __webpack_require__(29)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -9942,7 +9947,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 26 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -9958,7 +9963,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(51)
+var old = __webpack_require__(52)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -10015,13 +10020,13 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 27 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var objectAssign = __webpack_require__(55);
+var objectAssign = __webpack_require__(56);
 
 // compare and isBuffer taken from https://github.com/feross/buffer/blob/680e9e5e488f22aac27599a57dc844a6315928dd/index.js
 // original notice:
@@ -10529,7 +10534,7 @@ var objectKeys = Object.keys || function (obj) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 28 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -10776,7 +10781,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 29 */
+/* 28 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -10815,10 +10820,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 30 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(29)
+var wrappy = __webpack_require__(28)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -10863,7 +10868,7 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 31 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10875,9 +10880,9 @@ function onceStrict (fn) {
 
 const ShExMapCjsModule = function (config) {
 
-const extensions = __webpack_require__(32);
-const N3 = __webpack_require__(75);
-const materializer = __webpack_require__(73)(config);
+const extensions = __webpack_require__(31);
+const N3 = __webpack_require__(76);
+const materializer = __webpack_require__(74)(config);
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -11297,10 +11302,10 @@ return {
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint
   extension: {
-    hashmap: __webpack_require__(33),
-    regex: __webpack_require__(34)
+    hashmap: __webpack_require__(32),
+    regex: __webpack_require__(33)
   },
-  extensions: __webpack_require__(32),
+  extensions: __webpack_require__(31),
   utils: __webpack_require__(12),
 };
 
@@ -11311,7 +11316,7 @@ if (true)
 
 
 /***/ }),
-/* 32 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11322,8 +11327,8 @@ if (true)
 const Extensions = (function () {
 
 // Known extensions
-const hashmap_extension = __webpack_require__(33);
-const regex_extension = __webpack_require__(34);
+const hashmap_extension = __webpack_require__(32);
+const regex_extension = __webpack_require__(33);
 
 const utils = __webpack_require__(12);
 
@@ -11396,7 +11401,7 @@ if (true)
 
 
 /***/ }),
-/* 33 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11535,7 +11540,7 @@ if (true)
 
 
 /***/ }),
-/* 34 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11691,7 +11696,7 @@ if (true)
 
 
 /***/ }),
-/* 35 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11736,7 +11741,7 @@ var EElistenerCount = function EElistenerCount(emitter, type) {
 /*<replacement>*/
 
 
-var Stream = __webpack_require__(36);
+var Stream = __webpack_require__(35);
 /*</replacement>*/
 
 
@@ -11754,7 +11759,7 @@ function _isUint8Array(obj) {
 /*<replacement>*/
 
 
-var debugUtil = __webpack_require__(64);
+var debugUtil = __webpack_require__(65);
 
 var debug;
 
@@ -11766,11 +11771,11 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 
-var BufferList = __webpack_require__(65);
+var BufferList = __webpack_require__(66);
 
-var destroyImpl = __webpack_require__(37);
+var destroyImpl = __webpack_require__(36);
 
-var _require = __webpack_require__(38),
+var _require = __webpack_require__(37),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(6).codes,
@@ -11857,7 +11862,7 @@ function ReadableState(options, stream, isDuplex) {
   this.encoding = null;
 
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(40).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(39).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -12019,7 +12024,7 @@ Readable.prototype.isPaused = function () {
 
 
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(40).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(39).StringDecoder;
   var decoder = new StringDecoder(enc);
   this._readableState.decoder = decoder; // If setEncoding(null), decoder.encoding equals utf8
 
@@ -12703,7 +12708,7 @@ Readable.prototype.wrap = function (stream) {
 if (typeof Symbol === 'function') {
   Readable.prototype[Symbol.asyncIterator] = function () {
     if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __webpack_require__(69);
+      createReadableStreamAsyncIterator = __webpack_require__(70);
     }
 
     return createReadableStreamAsyncIterator(this);
@@ -12805,7 +12810,7 @@ function endReadableNT(state, stream) {
 if (typeof Symbol === 'function') {
   Readable.from = function (iterable, opts) {
     if (from === undefined) {
-      from = __webpack_require__(70);
+      from = __webpack_require__(71);
     }
 
     return from(Readable, iterable, opts);
@@ -12822,14 +12827,14 @@ function indexOf(xs, x) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 36 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(15).EventEmitter;
 
 
 /***/ }),
-/* 37 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12941,7 +12946,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 38 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12974,7 +12979,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 39 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13037,13 +13042,13 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: __webpack_require__(67)
+  deprecate: __webpack_require__(68)
 };
 /*</replacement>*/
 
 /*<replacement>*/
 
-var Stream = __webpack_require__(36);
+var Stream = __webpack_require__(35);
 /*</replacement>*/
 
 
@@ -13059,9 +13064,9 @@ function _isUint8Array(obj) {
   return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 }
 
-var destroyImpl = __webpack_require__(37);
+var destroyImpl = __webpack_require__(36);
 
-var _require = __webpack_require__(38),
+var _require = __webpack_require__(37),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(6).codes,
@@ -13678,7 +13683,7 @@ Writable.prototype._destroy = function (err, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 40 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13707,7 +13712,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(68).Buffer;
+var Buffer = __webpack_require__(69).Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -13980,7 +13985,7 @@ function simpleEnd(buf) {
 }
 
 /***/ }),
-/* 41 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14187,14 +14192,14 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 42 */
+/* 41 */
 /***/ (function(module, exports) {
 
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 let promise
 
 module.exports = typeof queueMicrotask === 'function'
-  ? queueMicrotask
+  ? queueMicrotask.bind(globalThis)
   // reuse resolved promise, and allocate it lazily
   : cb => (promise || (promise = Promise.resolve()))
     .then(cb)
@@ -14202,22 +14207,22 @@ module.exports = typeof queueMicrotask === 'function'
 
 
 /***/ }),
-/* 43 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  const shapeMap = __webpack_require__(44)
+  const shapeMap = __webpack_require__(43)
   return Object.assign({}, {
     ShExTerm:       __webpack_require__(4),
     Util:           __webpack_require__(11),
     Validator:      __webpack_require__(47),
-    Writer:         __webpack_require__(23),
-    Api:            __webpack_require__(49),
-    Parser:         __webpack_require__(24),
+    Writer:         __webpack_require__(22),
+    Api:            __webpack_require__(50),
+    Parser:         __webpack_require__(23),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
 
-    Map:            __webpack_require__(31),
+    Map:            __webpack_require__(30),
   })
 })()
 
@@ -14226,7 +14231,7 @@ if (true)
 
 
 /***/ }),
-/* 44 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -14239,7 +14244,7 @@ const ShapeMapCjsModule = (function () {
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(45)
+  symbols.Parser = __webpack_require__(44)
   return symbols
 })();
 
@@ -14249,14 +14254,14 @@ if (true)
 
 
 /***/ }),
-/* 45 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(46).Parser; // node environment
+  ShapeMapJison = __webpack_require__(45).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -14317,7 +14322,7 @@ if (true)
 
 
 /***/ }),
-/* 46 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -15500,6 +15505,85 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
+/* 46 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var HierarchyClosure = (function () {
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
+   */
+  function makeHierarchy () {
+    let roots = {}
+    let parents = {}
+    let children = {}
+    let holders = {}
+    return {
+      add: function (parent, child) {
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
+          return
+        }
+        let target = parent in holders
+          ? getNode(parent)
+          : (roots[parent] = getNode(parent)) // add new parents to roots.
+        let value = getNode(child)
+
+        target[child] = value
+        delete roots[child]
+
+        // // maintain hierarchy (direct and confusing)
+        // children[parent] = children[parent].concat(child, children[child])
+        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
+        // parents[child] = parents[child].concat(parent, parents[parent])
+        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
+
+        // maintain hierarchy (generic and confusing)
+        updateClosure(children, parents, child, parent)
+        updateClosure(parents, children, parent, child)
+        function updateClosure (container, members, near, far) {
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
+          container[near].forEach(
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
+          )
+        }
+
+        function getNode (node) {
+          if (!(node in holders)) {
+            parents[node] = []
+            children[node] = []
+            holders[node] = {}
+          }
+          return holders[node]
+        }
+      },
+      roots: roots,
+      parents: parents,
+      children: children
+    }
+  }
+
+  function depthFirst (n, f, p) {
+    return Object.keys(n).reduce((ret, k) => {
+      return ret.concat(
+        depthFirst(n[k], f, k),
+        p ? f(k, p) : []) // outer invocation can have null parent
+    }, [])
+  }
+
+  return { create: makeHierarchy, depthFirst }
+})()
+
+/* istanbul ignore next */
+if (true) {
+  module.exports = HierarchyClosure
+}
+
+
+/***/ }),
 /* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -15526,12 +15610,12 @@ const InterfaceOptions = {
 const VERBOSE = "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
-const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = __webpack_require__(4);
 let ShExVisitor = __webpack_require__(21);
 let ShExUtil = __webpack_require__(11);
-const Hierarchy = __webpack_require__(22)
+const Hierarchy = __webpack_require__(48)
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -15743,7 +15827,7 @@ function ShExValidator_constructor(schema, db, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(48);
+  const regexModule = this.options.regexModule || __webpack_require__(49);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -16104,12 +16188,8 @@ function ShExValidator_constructor(schema, db, options) {
         });
         if (unexpectedTriples.length > 0)
           errors.push({
-            errors: [
-              {
-                type: "ClosedShapeViolation",
-                unexpectedTriples: unexpectedTriples
-              }
-            ]
+            type: "ClosedShapeViolation",
+            unexpectedTriples: unexpectedTriples
           });
       }
 
@@ -16134,7 +16214,7 @@ function ShExValidator_constructor(schema, db, options) {
         }
       }
       if ("errors" in results)
-        errors.push({ errors: results.errors });
+        [].push.apply(errors, results.errors);
 
       const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
@@ -16143,7 +16223,7 @@ function ShExValidator_constructor(schema, db, options) {
         const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
         if (semActErrors.length)
           // some semAct aborted
-          errors.push({ errors: semActErrors });
+          [].push.apply(errors, semActErrors);
       }
 
       partitionErrors.push(errors)
@@ -16164,7 +16244,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     // Report only last errors until we have a better idea.
     const lastErrors = partitionErrors[partitionErrors.length - 1];
-    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0].errors : lastErrors);
+    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
     if (errors.length > 0)
       ret = {
         type: "Failure",
@@ -16375,7 +16455,7 @@ function ShExValidator_constructor(schema, db, options) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
         _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-        misses.push({triple: triple, errors: errors});
+        misses.push({triple: triple, errors: sub});
       }
     });
     return { hits: hits, misses: misses };
@@ -16968,6 +17048,85 @@ if (true)
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var HierarchyClosure = (function () {
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
+   */
+  function makeHierarchy () {
+    let roots = {}
+    let parents = {}
+    let children = {}
+    let holders = {}
+    return {
+      add: function (parent, child) {
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
+          return
+        }
+        let target = parent in holders
+          ? getNode(parent)
+          : (roots[parent] = getNode(parent)) // add new parents to roots.
+        let value = getNode(child)
+
+        target[child] = value
+        delete roots[child]
+
+        // // maintain hierarchy (direct and confusing)
+        // children[parent] = children[parent].concat(child, children[child])
+        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
+        // parents[child] = parents[child].concat(parent, parents[parent])
+        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
+
+        // maintain hierarchy (generic and confusing)
+        updateClosure(children, parents, child, parent)
+        updateClosure(parents, children, parent, child)
+        function updateClosure (container, members, near, far) {
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
+          container[near].forEach(
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
+          )
+        }
+
+        function getNode (node) {
+          if (!(node in holders)) {
+            parents[node] = []
+            children[node] = []
+            holders[node] = {}
+          }
+          return holders[node]
+        }
+      },
+      roots: roots,
+      parents: parents,
+      children: children
+    }
+  }
+
+  function depthFirst (n, f, p) {
+    return Object.keys(n).reduce((ret, k) => {
+      return ret.concat(
+        depthFirst(n[k], f, k),
+        p ? f(k, p) : []) // outer invocation can have null parent
+    }, [])
+  }
+
+  return { create: makeHierarchy, depthFirst }
+})()
+
+/* istanbul ignore next */
+if (true) {
+  module.exports = HierarchyClosure
+}
+
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = __webpack_require__(4);
 const UNBOUNDED = -1;
@@ -17409,15 +17568,15 @@ if (true)
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExApiCjsModule = function (config) {
+const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(11);
-  const ShExParser = __webpack_require__(24);
+  const ShExParser = __webpack_require__(23);
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
@@ -17499,7 +17658,7 @@ const ShExApiCjsModule = function (config) {
   async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
     const returns = {
       schema: ShExUtil.emptySchema(),
-      data: new config.rdfjs.Store(),
+      data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     }
@@ -17572,10 +17731,14 @@ const ShExApiCjsModule = function (config) {
       resolveSelf = resolve; rejectSelf = reject
     })
     self.all = function (pz) {
-      pz.forEach(function (promise, index) {
-        promises.push(promise)
-        addThen(promise, index)
-      })
+      if (pz.length === 0)
+        resolveSelf([]) // otherwise it returns a Promise which never .thens
+      // (and oddly doesn't have a slot in nodes pending promises?)
+      else
+        pz.forEach(function (promise, index) {
+          promises.push(promise)
+          addThen(promise, index)
+        })
       return self
     }
     self.add = function (promise) {
@@ -17719,11 +17882,11 @@ const ShExApiCjsModule = function (config) {
   function LoadExtensions (globs) {
     return globs.reduce(
       (list, glob) =>
-        list.concat(__webpack_require__(25).glob.sync(glob))
+        list.concat(__webpack_require__(24).glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  const t = __webpack_require__(60)(path)
+	  const t = __webpack_require__(61)(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
@@ -17740,7 +17903,7 @@ if (true)
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -19589,7 +19752,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -19899,11 +20062,11 @@ exports.realpath = function realpath(p, cache, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(53);
-var balanced = __webpack_require__(54);
+var concatMap = __webpack_require__(54);
+var balanced = __webpack_require__(55);
 
 module.exports = expandTop;
 
@@ -20106,7 +20269,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -20125,7 +20288,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20191,7 +20354,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20288,7 +20451,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -20299,7 +20462,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -20328,22 +20491,22 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(26)
+var rp = __webpack_require__(25)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(25).Glob
+var Glob = __webpack_require__(24).Glob
 var util = __webpack_require__(16)
 var path = __webpack_require__(2)
-var assert = __webpack_require__(27)
+var assert = __webpack_require__(26)
 var isAbsolute = __webpack_require__(17)
-var common = __webpack_require__(28)
+var common = __webpack_require__(27)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -20821,12 +20984,12 @@ GlobSync.prototype._makeAbs = function (f) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(29)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(28)
 var reqs = Object.create(null)
-var once = __webpack_require__(30)
+var once = __webpack_require__(29)
 
 module.exports = wrappy(inflight)
 
@@ -20882,7 +21045,7 @@ function slice (args) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -20893,10 +21056,10 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 60;
+webpackEmptyContext.id = 61;
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21027,9 +21190,7 @@ function fromByteArray (uint8) {
 
   // go through the array every three bytes, we'll deal with trailing stuff later
   for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(
-      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
-    ))
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
   }
 
   // pad the end with zeros, but make sure to not forget the extra bytes
@@ -21055,9 +21216,10 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports) {
 
+/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = (nBytes * 8) - mLen - 1
@@ -21145,7 +21307,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -21156,13 +21318,13 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21183,7 +21345,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var _require = __webpack_require__(10),
     Buffer = _require.Buffer;
 
-var _require2 = __webpack_require__(66),
+var _require2 = __webpack_require__(67),
     inspect = _require2.inspect;
 
 var custom = inspect && inspect.custom || 'inspect';
@@ -21378,13 +21540,13 @@ function () {
 }();
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -21458,9 +21620,10 @@ function config (name) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
@@ -21482,6 +21645,8 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
+
+SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
@@ -21526,7 +21691,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21740,7 +21905,7 @@ module.exports = createReadableStreamAsyncIterator;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, exports) {
 
 module.exports = function () {
@@ -21749,7 +21914,7 @@ module.exports = function () {
 
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21780,7 +21945,7 @@ module.exports = function () {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(41);
+var Transform = __webpack_require__(40);
 
 __webpack_require__(5)(PassThrough, Transform);
 
@@ -21794,7 +21959,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21897,7 +22062,7 @@ function pipeline() {
 module.exports = pipeline;
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/* ShExMaterializer - javascript module to validate a graph with respect to Shape Expressions
@@ -21929,7 +22094,7 @@ const VERBOSE = "VERBOSE" in process.env;
 const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 const ShExTerm = __webpack_require__(4);
-const ShExMap = __webpack_require__(31);
+const ShExMap = __webpack_require__(30);
 
 const UNBOUNDED = -1;
 
@@ -22112,7 +22277,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(74);
+  const regexModule = this.options.regexModule || __webpack_require__(75);
 
   let blankNodeCount = 0;
   const nextBNode = options.nextBNode || function () {
@@ -23032,7 +23197,7 @@ if (true)
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 74 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const NFAXVal1ErrMaterializer = (function () {
@@ -23567,7 +23732,7 @@ if (true)
 
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -23603,7 +23768,7 @@ __webpack_require__.d(N3Util_namespaceObject, "isLiteral", function() { return i
 __webpack_require__.d(N3Util_namespaceObject, "isVariable", function() { return isVariable; });
 __webpack_require__.d(N3Util_namespaceObject, "isDefaultGraph", function() { return isDefaultGraph; });
 __webpack_require__.d(N3Util_namespaceObject, "inDefaultGraph", function() { return inDefaultGraph; });
-__webpack_require__.d(N3Util_namespaceObject, "prefix", function() { return N3Util_prefix; });
+__webpack_require__.d(N3Util_namespaceObject, "prefix", function() { return prefix; });
 __webpack_require__.d(N3Util_namespaceObject, "prefixes", function() { return N3Util_prefixes; });
 
 // EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Lexer.js
@@ -23648,15 +23813,15 @@ function inDefaultGraph(quad) {
 }
 
 // Creates a function that prepends the given IRI to a local name
-function N3Util_prefix(iri, factory) {
+function prefix(iri, factory) {
   return N3Util_prefixes({ '': iri }, factory)('');
 }
 
 // Creates a function that allows registering and expanding prefixes
 function N3Util_prefixes(defaultPrefixes, factory) {
   // Add all of the default prefixes
-  var prefixes = Object.create(null);
-  for (var prefix in defaultPrefixes)
+  const prefixes = Object.create(null);
+  for (const prefix in defaultPrefixes)
     processPrefix(prefix, defaultPrefixes[prefix]);
   // Set the default factory if none was specified
   factory = factory || N3DataFactory;
@@ -23667,13 +23832,13 @@ function N3Util_prefixes(defaultPrefixes, factory) {
     // Create a new prefix if an IRI is specified or the prefix doesn't exist
     if (typeof iri === 'string') {
       // Create a function that expands the prefix
-      var cache = Object.create(null);
-      prefixes[prefix] = function (local) {
+      const cache = Object.create(null);
+      prefixes[prefix] = local => {
         return cache[local] || (cache[local] = factory.namedNode(iri + local));
       };
     }
     else if (!(prefix in prefixes)) {
-      throw new Error('Unknown prefix: ' + prefix);
+      throw new Error(`Unknown prefix: ${prefix}`);
     }
     return prefixes[prefix];
   }
@@ -23688,6 +23853,7 @@ function N3Util_prefixes(defaultPrefixes, factory) {
 
 const { rdf, xsd } = IRIs["a" /* default */];
 
+// eslint-disable-next-line prefer-const
 let DEFAULTGRAPH;
 let _blankNodeCounter = 0;
 
@@ -23761,7 +23927,8 @@ class Literal extends Term {
   // ### The language of this literal
   get language() {
     // Find the last quotation mark (e.g., '"abc"@en-us')
-    var id = this.id, atPos = id.lastIndexOf('"') + 1;
+    const id = this.id;
+    let atPos = id.lastIndexOf('"') + 1;
     // If "@" it follows, return the remaining substring; empty otherwise
     return atPos < id.length && id[atPos++] === '@' ? id.substr(atPos).toLowerCase() : '';
   }
@@ -23774,11 +23941,12 @@ class Literal extends Term {
   // ### The datatype string of this literal
   get datatypeString() {
     // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
-    var id = this.id, dtPos = id.lastIndexOf('"') + 1, ch;
+    const id = this.id, dtPos = id.lastIndexOf('"') + 1;
+    const char = dtPos < id.length ? id[dtPos] : '';
     // If "^" it follows, return the remaining substring
-    return dtPos < id.length && (ch = id[dtPos]) === '^' ? id.substr(dtPos + 2) :
+    return char === '^' ? id.substr(dtPos + 2) :
            // If "@" follows, return rdf:langString; xsd:string otherwise
-           (ch !== '@' ? xsd.string : rdf.langString);
+           (char !== '@' ? xsd.string : rdf.langString);
   }
 
   // ### Returns whether this object represents the same term as the other
@@ -23808,7 +23976,7 @@ class Literal extends Term {
 // ## BlankNode constructor
 class BlankNode extends Term {
   constructor(name) {
-    super('_:' + name);
+    super(`_:${name}`);
   }
 
   // ### The term type of this term
@@ -23824,7 +23992,7 @@ class BlankNode extends Term {
 
 class Variable extends Term {
   constructor(name) {
-    super('?' + name);
+    super(`?${name}`);
   }
 
   // ### The term type of this term
@@ -23885,7 +24053,7 @@ function termFromId(id, factory) {
     if (id[id.length - 1] === '"')
       return factory.literal(id.substr(1, id.length - 2));
     // Literal with datatype or language
-    var endPos = id.lastIndexOf('"', id.length - 1);
+    const endPos = id.lastIndexOf('"', id.length - 1);
     return factory.literal(id.substr(1, endPos - 1),
             id[endPos + 1] === '@' ? id.substr(endPos + 2)
                                    : factory.namedNode(id.substr(endPos + 3)));
@@ -23914,12 +24082,12 @@ function termToId(term) {
   // Term instantiated with another library
   switch (term.termType) {
   case 'NamedNode':    return term.value;
-  case 'BlankNode':    return '_:' + term.value;
-  case 'Variable':     return '?' + term.value;
+  case 'BlankNode':    return `_:${term.value}`;
+  case 'Variable':     return `?${term.value}`;
   case 'DefaultGraph': return '';
-  case 'Literal':      return '"' + term.value + '"' +
-    (term.language ? '@' + term.language :
-      (term.datatype && term.datatype.value !== xsd.string ? '^^' + term.datatype.value : ''));
+  case 'Literal':      return `"${term.value}"${
+    term.language ? `@${term.language}` :
+      (term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : '')}`;
   case 'Quad':
     // To identify RDF* quad components, we escape quotes by doubling them.
     // This avoids the overhead of backslash parsing of Turtle-like syntaxes.
@@ -23932,7 +24100,7 @@ function termToId(term) {
       }${
         (isDefaultGraph(term.graph)) ? '' : ` ${termToId(term.graph)}`
       }>>`;
-  default: throw new Error('Unexpected termType: ' + term.termType);
+  default: throw new Error(`Unexpected termType: ${term.termType}`);
   }
 }
 
@@ -23997,7 +24165,7 @@ function blankNode(name) {
 function literal(value, languageOrDataType) {
   // Create a language-tagged string
   if (typeof languageOrDataType === 'string')
-    return new Literal('"' + value + '"@' + languageOrDataType.toLowerCase());
+    return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
 
   // Automatically determine datatype for booleans and numbers
   let datatype = languageOrDataType ? languageOrDataType.value : '';
@@ -24019,8 +24187,8 @@ function literal(value, languageOrDataType) {
 
   // Create a datatyped literal
   return (datatype === '' || datatype === xsd.string) ?
-    new Literal('"' + value + '"') :
-    new Literal('"' + value + '"^^' + datatype);
+    new Literal(`"${value}"`) :
+    new Literal(`"${value}"^^${datatype}`);
 }
 
 // ### Creates a variable
@@ -24058,7 +24226,7 @@ class N3Parser_N3Parser {
     options.factory && initDataFactory(this, options.factory);
 
     // Set supported features depending on the format
-    var format = (typeof options.format === 'string') ?
+    const format = (typeof options.format === 'string') ?
                  options.format.match(/\w*$/)[0].toLowerCase() : '',
         isTurtle = /turtle/.test(format), isTriG = /trig/.test(format),
         isNTriples = /triple/.test(format), isNQuads = /quad/.test(format),
@@ -24072,7 +24240,7 @@ class N3Parser_N3Parser {
     this._supportsRDFStar = format === '' || /star|\*$/.test(format);
     // Disable relative IRIs in N-Triples or N-Quads mode
     if (isLineMode)
-      this._resolveRelativeIRI = function (iri) { return null; };
+      this._resolveRelativeIRI = iri => { return null; };
     this._blankNodePrefix = typeof options.blankNodePrefix !== 'string' ? '' :
                               options.blankNodePrefix.replace(/^(?!_:)/, '_:');
     this._lexer = options.lexer || new N3Lexer["a" /* default */]({ lineMode: isLineMode, n3: isN3 });
@@ -24097,7 +24265,7 @@ class N3Parser_N3Parser {
     }
     else {
       // Remove fragment if present
-      var fragmentPos = baseIRI.indexOf('#');
+      const fragmentPos = baseIRI.indexOf('#');
       if (fragmentPos >= 0)
         baseIRI = baseIRI.substr(0, fragmentPos);
       // Set base IRI and its components
@@ -24113,7 +24281,7 @@ class N3Parser_N3Parser {
   // ### `_saveContext` stores the current parsing context
   // when entering a new scope (list, blank node, formula)
   _saveContext(type, graph, subject, predicate, object) {
-    var n3Mode = this._n3Mode;
+    const n3Mode = this._n3Mode;
     this._contextStack.push({
       subject: subject, predicate: predicate, object: object,
       graph: graph, type: type,
@@ -24127,7 +24295,7 @@ class N3Parser_N3Parser {
       this._inversePredicate = false;
       // In N3, blank nodes are scoped to a formula
       // (using a dot as separator, as a blank node label cannot start with it)
-      this._prefixes._ = (this._graph ? this._graph.id.substr(2) + '.' : '.');
+      this._prefixes._ = (this._graph ? `${this._graph.id.substr(2)}.` : '.');
       // Quantifiers are scoped to a formula
       this._quantified = Object.create(this._quantified);
     }
@@ -24136,7 +24304,7 @@ class N3Parser_N3Parser {
   // ### `_restoreContext` restores the parent context
   // when leaving a scope (list, blank node, formula)
   _restoreContext() {
-    var context = this._contextStack.pop(), n3Mode = this._n3Mode;
+    const context = this._contextStack.pop(), n3Mode = this._n3Mode;
     this._subject   = context.subject;
     this._predicate = context.predicate;
     this._object    = context.object;
@@ -24186,12 +24354,12 @@ class N3Parser_N3Parser {
 
   // ### `_readEntity` reads an IRI, prefixed name, blank node, or variable
   _readEntity(token, quantifier) {
-    var value;
+    let value;
     switch (token.type) {
     // Read a relative or absolute IRI
     case 'IRI':
     case 'typeIRI':
-      var iri = this._resolveIRI(token.value);
+      const iri = this._resolveIRI(token.value);
       if (iri === null)
         return this._error('Invalid IRI', token);
       value = this._namedNode(iri);
@@ -24199,9 +24367,9 @@ class N3Parser_N3Parser {
     // Read a prefixed name
     case 'type':
     case 'prefixed':
-      var prefix = this._prefixes[token.prefix];
+      const prefix = this._prefixes[token.prefix];
       if (prefix === undefined)
-        return this._error('Undefined prefix "' + token.prefix + ':"', token);
+        return this._error(`Undefined prefix "${token.prefix}:"`, token);
       value = this._namedNode(prefix + token.value);
       break;
     // Read a blank node
@@ -24214,7 +24382,7 @@ class N3Parser_N3Parser {
       break;
     // Everything else is not an entity
     default:
-      return this._error('Expected entity but got ' + token.type, token);
+      return this._error(`Expected entity but got ${token.type}`, token);
     }
     // In N3 mode, replace the entity if it is quantified
     if (!quantifier && this._n3Mode && (value.id in this._quantified))
@@ -24294,7 +24462,7 @@ class N3Parser_N3Parser {
 
   // ### `_readPredicate` reads a quad's predicate
   _readPredicate(token) {
-    var type = token.type;
+    const type = token.type;
     switch (type) {
     case 'inverse':
       this._inversePredicate = true;
@@ -24306,7 +24474,7 @@ class N3Parser_N3Parser {
     case '}':
       // Expected predicate didn't come, must have been trailing semicolon
       if (this._predicate === null)
-        return this._error('Unexpected ' + type, token);
+        return this._error(`Unexpected ${type}`, token);
       this._subject = null;
       return type === ']' ? this._readBlankNodeTail(token) : this._readPunctuation(token);
     case ';':
@@ -24379,7 +24547,7 @@ class N3Parser_N3Parser {
   // ### `_readGraph` reads a graph
   _readGraph(token) {
     if (token.type !== '{')
-      return this._error('Expected graph but got ' + token.type, token);
+      return this._error(`Expected graph but got ${token.type}`, token);
     // The "subject" we read is actually the GRAPH's label
     this._graph = this._subject, this._subject = null;
     return this._readSubject;
@@ -24407,7 +24575,7 @@ class N3Parser_N3Parser {
       this._emit(this._subject, this._predicate, this._object, this._graph);
 
     // Restore the parent context containing this blank node
-    var empty = this._predicate === null;
+    const empty = this._predicate === null;
     this._restoreContext();
     // If the blank node was the subject, continue reading the predicate
     if (this._object === null)
@@ -24433,12 +24601,12 @@ class N3Parser_N3Parser {
 
   // ### `_readListItem` reads items from a list
   _readListItem(token) {
-    var item = null,                      // The item of the list
+    let item = null,                      // The item of the list
         list = null,                      // The list itself
-        previousList = this._subject,     // The previous list that contains this list
-        stack = this._contextStack,       // The stack of parent contexts
-        parent = stack[stack.length - 1], // The parent containing the current list
         next = this._readListItem;        // The next function to execute
+    const previousList = this._subject,   // The previous list that contains this list
+        stack = this._contextStack,       // The stack of parent contexts
+        parent = stack[stack.length - 1]; // The parent containing the current list
 
     switch (token.type) {
     case '[':
@@ -24555,7 +24723,7 @@ class N3Parser_N3Parser {
     // Create a datatyped literal
     case 'type':
     case 'typeIRI':
-      var datatype = this._readEntity(token);
+      const datatype = this._readEntity(token);
       if (datatype === undefined) return; // No datatype means an error occurred
       literal = this._literal(this._literalValue, datatype);
       token = null;
@@ -24615,8 +24783,8 @@ class N3Parser_N3Parser {
 
   // ### `_readPunctuation` reads punctuation between quads or quad parts
   _readPunctuation(token) {
-    var next, subject = this._subject, graph = this._graph,
-        inversePredicate = this._inversePredicate;
+    let next, graph = this._graph;
+    const subject = this._subject, inversePredicate = this._inversePredicate;
     switch (token.type) {
     // A closing brace ends a graph
     case '}':
@@ -24645,11 +24813,11 @@ class N3Parser_N3Parser {
         next = this._readQuadPunctuation;
         break;
       }
-      return this._error('Expected punctuation to follow "' + this._object.id + '"', token);
+      return this._error(`Expected punctuation to follow "${this._object.id}"`, token);
     }
     // A quad has been completed now, so return it
     if (subject !== null) {
-      var predicate = this._predicate, object = this._object;
+      const predicate = this._predicate, object = this._object;
       if (!inversePredicate)
         this._emit(subject, predicate, object,  graph);
       else
@@ -24660,7 +24828,7 @@ class N3Parser_N3Parser {
 
     // ### `_readBlankNodePunctuation` reads punctuation in a blank node
   _readBlankNodePunctuation(token) {
-    var next;
+    let next;
     switch (token.type) {
     // Semicolon means the subject is shared; predicate and object are different
     case ';':
@@ -24671,7 +24839,7 @@ class N3Parser_N3Parser {
       next = this._readObject;
       break;
     default:
-      return this._error('Expected punctuation to follow "' + this._object.id + '"', token);
+      return this._error(`Expected punctuation to follow "${this._object.id}"`, token);
     }
     // A quad has been completed now, so return it
     this._emit(this._subject, this._predicate, this._object, this._graph);
@@ -24696,8 +24864,8 @@ class N3Parser_N3Parser {
   // ### `_readPrefixIRI` reads the IRI of a prefix declaration
   _readPrefixIRI(token) {
     if (token.type !== 'IRI')
-      return this._error('Expected IRI to follow prefix "' + this._prefix + ':"', token);
-    var prefixNode = this._readEntity(token);
+      return this._error(`Expected IRI to follow prefix "${this._prefix}:"`, token);
+    const prefixNode = this._readEntity(token);
     this._prefixes[this._prefix] = prefixNode.value;
     this._prefixCallback(this._prefix, prefixNode);
     return this._readDeclarationPunctuation;
@@ -24705,7 +24873,7 @@ class N3Parser_N3Parser {
 
   // ### `_readBaseIRI` reads the IRI of a base declaration
   _readBaseIRI(token) {
-    var iri = token.type === 'IRI' && this._resolveIRI(token.value);
+    const iri = token.type === 'IRI' && this._resolveIRI(token.value);
     if (!iri)
       return this._error('Expected valid IRI to follow base declaration', token);
     this._setBase(iri);
@@ -24749,14 +24917,14 @@ class N3Parser_N3Parser {
 
   // Reads a list of quantified symbols from a @forSome or @forAll statement
   _readQuantifierList(token) {
-    var entity;
+    let entity;
     switch (token.type) {
     case 'IRI':
     case 'prefixed':
       if ((entity = this._readEntity(token, true)) !== undefined)
         break;
     default:
-      return this._error('Unexpected ' + token.type, token);
+      return this._error(`Unexpected ${token.type}`, token);
     }
     // Without explicit quantifiers, map entities to a quantified entity
     if (!this._explicitQuantifiers)
@@ -24810,11 +24978,11 @@ class N3Parser_N3Parser {
     case '^': return this._readBackwardPath;
     // Not a path; resume reading where we left off
     default:
-      var stack = this._contextStack, parent = stack.length && stack[stack.length - 1];
+      const stack = this._contextStack, parent = stack.length && stack[stack.length - 1];
       // If we were reading a list item, we still need to output it
       if (parent && parent.type === 'item') {
         // The list item is the remaining subejct after reading the path
-        var item = this._subject;
+        const item = this._subject;
         // Switch back to the context of the list
         this._restoreContext();
         // Output the list item
@@ -24826,7 +24994,8 @@ class N3Parser_N3Parser {
 
   // ### `_readForwardPath` reads a '!' path
   _readForwardPath(token) {
-    var subject, predicate, object = this._blankNode();
+    let subject, predicate;
+    const object = this._blankNode();
     // The next token is the predicate
     if ((predicate = this._readEntity(token)) === undefined)
       return;
@@ -24843,7 +25012,8 @@ class N3Parser_N3Parser {
 
   // ### `_readBackwardPath` reads a '^' path
   _readBackwardPath(token) {
-    var subject = this._blankNode(), predicate, object;
+    const subject = this._blankNode();
+    let predicate, object;
     // The next token is the predicate
     if ((predicate = this._readEntity(token)) === undefined)
       return;
@@ -24864,7 +25034,7 @@ class N3Parser_N3Parser {
       // An entity means this is a quad (only allowed if not already inside a graph)
       if (this._supportsQuads && this._graph === null && (this._graph = this._readEntity(token)) !== undefined)
         return this._readRDFStarTail;
-      return this._error('Expected >> to follow "' + this._object.id + '"', token);
+      return this._error(`Expected >> to follow "${this._object.id}"`, token);
     }
     return this._readRDFStarTail(token);
   }
@@ -24891,7 +25061,7 @@ class N3Parser_N3Parser {
 
   // ### `_getContextEndReader` gets the next reader function at the end of a context
   _getContextEndReader() {
-    var contextStack = this._contextStack;
+    const contextStack = this._contextStack;
     if (!contextStack.length)
       return this._readPunctuation;
 
@@ -24914,7 +25084,7 @@ class N3Parser_N3Parser {
 
   // ### `_error` emits an error message through the callback
   _error(message, token) {
-    var err = new Error(message + ' on line ' + token.line + '.');
+    const err = new Error(`${message} on line ${token.line}.`);
     err.context = {
       token: token,
       line: token.line,
@@ -24959,7 +25129,8 @@ class N3Parser_N3Parser {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -25003,7 +25174,7 @@ class N3Parser_N3Parser {
                 result = result.substr(0, segmentStart);
               // Remove a trailing '/..' segment
               if (next !== '/')
-                return result + '/' + iri.substr(i + 1);
+                return `${result}/${iri.substr(i + 1)}`;
               segmentStart = i + 1;
             }
           }
@@ -25018,24 +25189,24 @@ class N3Parser_N3Parser {
 
   // ### `parse` parses the N3 input and emits each parsed quad through the callback
   parse(input, quadCallback, prefixCallback) {
-    var self = this;
     // The read callback is the next function to be executed when a token arrives.
     // We start reading in the top context.
     this._readCallback = this._readInTopContext;
     this._sparqlStyle = false;
     this._prefixes = Object.create(null);
     this._prefixes._ = this._blankNodePrefix ? this._blankNodePrefix.substr(2)
-                                             : 'b' + blankNodePrefix++ + '_';
+                                             : `b${blankNodePrefix++}_`;
     this._prefixCallback = prefixCallback || noop;
     this._inversePredicate = false;
     this._quantified = Object.create(null);
 
     // Parse synchronously if no quad callback is given
     if (!quadCallback) {
-      var quads = [], error;
-      this._callback = function (e, t) { e ? (error = e) : t && quads.push(t); };
-      this._lexer.tokenize(input).every(function (token) {
-        return self._readCallback = self._readCallback(token);
+      const quads = [];
+      let error;
+      this._callback = (e, t) => { e ? (error = e) : t && quads.push(t); };
+      this._lexer.tokenize(input).every(token => {
+        return this._readCallback = this._readCallback(token);
       });
       if (error) throw error;
       return quads;
@@ -25043,11 +25214,11 @@ class N3Parser_N3Parser {
 
     // Parse asynchronously otherwise, executing the read callback when a token arrives
     this._callback = quadCallback;
-    this._lexer.tokenize(input, function (error, token) {
+    this._lexer.tokenize(input, (error, token) => {
       if (error !== null)
-        self._callback(error), self._callback = noop;
-      else if (self._readCallback)
-        self._readCallback = self._readCallback(token);
+        this._callback(error), this._callback = noop;
+      else if (this._readCallback)
+        this._readCallback = this._readCallback(token);
     });
   }
 }
@@ -25058,7 +25229,7 @@ function noop() {}
 // Initializes the parser with the given data factory
 function initDataFactory(parser, factory) {
   // Set factory methods
-  var namedNode = factory.namedNode;
+  const namedNode = factory.namedNode;
   parser._namedNode   = namedNode;
   parser._blankNode   = factory.blankNode;
   parser._literal     = factory.literal;
@@ -25092,7 +25263,7 @@ const N3Writer_DEFAULTGRAPH = N3DataFactory.defaultGraph();
 const { rdf: N3Writer_rdf, xsd: N3Writer_xsd } = IRIs["a" /* default */];
 
 // Characters in literals that require escaping
-var N3Writer_escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
+const N3Writer_escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
     escapedCharacters = {
       '\\': '\\\\', '"': '\\"', '\t': '\\t',
@@ -25122,10 +25293,10 @@ class N3Writer_N3Writer {
 
     // If no output stream given, send the output as string through the end callback
     if (!outputStream) {
-      var output = '';
+      let output = '';
       this._outputStream = {
         write(chunk, encoding, done) { output += chunk; done && done(); },
-        end:   function (done) { done && done(null, output); },
+        end: done => { done && done(null, output); },
       };
       this._endStream = true;
     }
@@ -25165,7 +25336,7 @@ class N3Writer_N3Writer {
       if (!graph.equals(this._graph)) {
         // Close the previous graph and start the new one
         this._write((this._subject === null ? '' : (this._inDefaultGraph ? '.\n' : '\n}\n')) +
-                    (N3Writer_DEFAULTGRAPH.equals(graph) ? '' : this._encodeIriOrBlank(graph) + ' {\n'));
+                    (N3Writer_DEFAULTGRAPH.equals(graph) ? '' : `${this._encodeIriOrBlank(graph)} {\n`));
         this._graph = graph;
         this._subject = null;
       }
@@ -25173,19 +25344,19 @@ class N3Writer_N3Writer {
       if (subject.equals(this._subject)) {
         // Don't repeat the predicate if it's the same
         if (predicate.equals(this._predicate))
-          this._write(', ' + this._encodeObject(object), done);
+          this._write(`, ${this._encodeObject(object)}`, done);
         // Same subject, different predicate
         else
-          this._write(';\n    ' +
-                      this._encodePredicate(this._predicate = predicate) + ' ' +
-                      this._encodeObject(object), done);
+          this._write(`;\n    ${
+                      this._encodePredicate(this._predicate = predicate)} ${
+                      this._encodeObject(object)}`, done);
       }
       // Different subject; write the whole quad
       else
-        this._write((this._subject === null ? '' : '.\n') +
-                    this._encodeSubject(this._subject = subject) + ' ' +
-                    this._encodePredicate(this._predicate = predicate) + ' ' +
-                    this._encodeObject(object), done);
+        this._write(`${(this._subject === null ? '' : '.\n') +
+                    this._encodeSubject(this._subject = subject)} ${
+                    this._encodePredicate(this._predicate = predicate)} ${
+                    this._encodeObject(object)}`, done);
     }
     catch (error) { done && done(error); }
   }
@@ -25199,17 +25370,17 @@ class N3Writer_N3Writer {
 
   // ### `quadToString` serializes a quad as a string
   quadToString(subject, predicate, object, graph) {
-    return  this._encodeSubject(subject)   + ' ' +
-            this._encodeIriOrBlank(predicate) + ' ' +
-            this._encodeObject(object) +
-            (graph && graph.value ? ' ' + this._encodeIriOrBlank(graph) + ' .\n' : ' .\n');
+    return  `${this._encodeSubject(subject)} ${
+            this._encodeIriOrBlank(predicate)} ${
+            this._encodeObject(object)
+            }${graph && graph.value ? ` ${this._encodeIriOrBlank(graph)} .\n` : ' .\n'}`;
   }
 
   // ### `quadsToString` serializes an array of quads as a string
   quadsToString(quads) {
-    return quads.map(function (t) {
+    return quads.map(t => {
       return this.quadToString(t.subject, t.predicate, t.object, t.graph);
-    }, this).join('');
+    }).join('');
   }
 
   // ### `_encodeSubject` represents a subject
@@ -25225,31 +25396,31 @@ class N3Writer_N3Writer {
       // If it is a list head, pretty-print it
       if (this._lists && (entity.value in this._lists))
         entity = this.list(this._lists[entity.value]);
-      return 'id' in entity ? entity.id : '_:' + entity.value;
+      return 'id' in entity ? entity.id : `_:${entity.value}`;
     }
     // Escape special characters
-    var iri = entity.value;
+    let iri = entity.value;
     if (N3Writer_escape.test(iri))
       iri = iri.replace(escapeAll, characterReplacer);
     // Try to represent the IRI as prefixed name
-    var prefixMatch = this._prefixRegex.exec(iri);
-    return !prefixMatch ? '<' + iri + '>' :
+    const prefixMatch = this._prefixRegex.exec(iri);
+    return !prefixMatch ? `<${iri}>` :
            (!prefixMatch[1] ? iri : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2]);
   }
 
   // ### `_encodeLiteral` represents a literal
   _encodeLiteral(literal) {
     // Escape special characters
-    var value = literal.value;
+    let value = literal.value;
     if (N3Writer_escape.test(value))
       value = value.replace(escapeAll, characterReplacer);
     // Write the literal, possibly with type or language
     if (literal.language)
-      return '"' + value + '"@' + literal.language;
+      return `"${value}"@${literal.language}`;
     else if (literal.datatype.value !== N3Writer_xsd.string)
-      return '"' + value + '"^^' + this._encodeIriOrBlank(literal.datatype);
+      return `"${value}"^^${this._encodeIriOrBlank(literal.datatype)}`;
     else
-      return '"' + value + '"';
+      return `"${value}"`;
   }
 
   // ### `_encodePredicate` represents a predicate
@@ -25298,22 +25469,27 @@ class N3Writer_N3Writer {
 
   // ### `addQuads` adds the quads to the output stream
   addQuads(quads) {
-    for (var i = 0; i < quads.length; i++)
+    for (let i = 0; i < quads.length; i++)
       this.addQuad(quads[i]);
   }
 
   // ### `addPrefix` adds the prefix to the output stream
   addPrefix(prefix, iri, done) {
-    var prefixes = {};
+    const prefixes = {};
     prefixes[prefix] = iri;
     this.addPrefixes(prefixes, done);
   }
 
   // ### `addPrefixes` adds the prefixes to the output stream
   addPrefixes(prefixes, done) {
-    var prefixIRIs = this._prefixIRIs, hasPrefixes = false;
-    for (var prefix in prefixes) {
-      var iri = prefixes[prefix];
+    // Ignore prefixes if not supported by the serialization
+    if (!this._prefixIRIs)
+      return done && done();
+
+    // Write all new prefixes
+    let hasPrefixes = false;
+    for (let prefix in prefixes) {
+      let iri = prefixes[prefix];
       if (typeof iri !== 'string')
         iri = iri.value;
       hasPrefixes = true;
@@ -25323,19 +25499,19 @@ class N3Writer_N3Writer {
         this._subject = null, this._graph = '';
       }
       // Store and write the prefix
-      prefixIRIs[iri] = (prefix += ':');
-      this._write('@prefix ' + prefix + ' <' + iri + '>.\n');
+      this._prefixIRIs[iri] = (prefix += ':');
+      this._write(`@prefix ${prefix} <${iri}>.\n`);
     }
     // Recreate the prefix matcher
     if (hasPrefixes) {
-      var IRIlist = '', prefixList = '';
-      for (var prefixIRI in prefixIRIs) {
-        IRIlist += IRIlist ? '|' + prefixIRI : prefixIRI;
-        prefixList += (prefixList ? '|' : '') + prefixIRIs[prefixIRI];
+      let IRIlist = '', prefixList = '';
+      for (const prefixIRI in this._prefixIRIs) {
+        IRIlist += IRIlist ? `|${prefixIRI}` : prefixIRI;
+        prefixList += (prefixList ? '|' : '') + this._prefixIRIs[prefixIRI];
       }
       IRIlist = IRIlist.replace(/[\]\/\(\)\*\+\?\.\\\$]/g, '\\$&');
-      this._prefixRegex = new RegExp('^(?:' + prefixList + ')[^\/]*$|' +
-                                     '^(' + IRIlist + ')([a-zA-Z][\\-_a-zA-Z0-9]*)$');
+      this._prefixRegex = new RegExp(`^(?:${prefixList})[^\/]*$|` +
+                                     `^(${IRIlist})([a-zA-Z][\\-_a-zA-Z0-9]*)$`);
     }
     // End a prefix block with a newline
     this._write(hasPrefixes ? '\n' : '', done);
@@ -25343,7 +25519,7 @@ class N3Writer_N3Writer {
 
   // ### `blank` creates a blank node with the given content
   blank(predicate, object) {
-    var children = predicate, child, length;
+    let children = predicate, child, length;
     // Empty blank node
     if (predicate === undefined)
       children = [];
@@ -25362,35 +25538,35 @@ class N3Writer_N3Writer {
     case 1:
       child = children[0];
       if (!(child.object instanceof N3Writer_SerializedTerm))
-        return new N3Writer_SerializedTerm('[ ' + this._encodePredicate(child.predicate) + ' ' +
-                                  this._encodeObject(child.object) + ' ]');
+        return new N3Writer_SerializedTerm(`[ ${this._encodePredicate(child.predicate)} ${
+                                  this._encodeObject(child.object)} ]`);
     // Generate a multi-triple or nested blank node
     default:
-      var contents = '[';
+      let contents = '[';
       // Write all triples in order
-      for (var i = 0; i < length; i++) {
+      for (let i = 0; i < length; i++) {
         child = children[i];
         // Write only the object is the predicate is the same as the previous
         if (child.predicate.equals(predicate))
-          contents += ', ' + this._encodeObject(child.object);
+          contents += `, ${this._encodeObject(child.object)}`;
         // Otherwise, write the predicate and the object
         else {
-          contents += (i ? ';\n  ' : '\n  ') +
-                      this._encodePredicate(child.predicate) + ' ' +
-                      this._encodeObject(child.object);
+          contents += `${(i ? ';\n  ' : '\n  ') +
+                      this._encodePredicate(child.predicate)} ${
+                      this._encodeObject(child.object)}`;
           predicate = child.predicate;
         }
       }
-      return new N3Writer_SerializedTerm(contents + '\n]');
+      return new N3Writer_SerializedTerm(`${contents}\n]`);
     }
   }
 
   // ### `list` creates a list node with the given content
   list(elements) {
-    var length = elements && elements.length || 0, contents = new Array(length);
-    for (var i = 0; i < length; i++)
+    const length = elements && elements.length || 0, contents = new Array(length);
+    for (let i = 0; i < length; i++)
       contents[i] = this._encodeObject(elements[i]);
-    return new N3Writer_SerializedTerm('(' + contents.join(' ') + ')');
+    return new N3Writer_SerializedTerm(`(${contents.join(' ')})`);
   }
 
   // ### `end` signals the end of the output stream
@@ -25404,7 +25580,7 @@ class N3Writer_N3Writer {
     this._write = this._blockedWrite;
 
     // Try to end the underlying stream, ensuring done is called exactly one time
-    var singleDone = done && function (error, result) { singleDone = null, done(error, result); };
+    let singleDone = done && ((error, result) => { singleDone = null, done(error, result); });
     if (this._endStream) {
       try { return this._outputStream.end(singleDone); }
       catch (error) { /* error closing stream */ }
@@ -25416,7 +25592,7 @@ class N3Writer_N3Writer {
 // Replaces a character by its escaped version
 function characterReplacer(character) {
   // Replace a single character by its escaped version
-  var result = escapedCharacters[character];
+  let result = escapedCharacters[character];
   if (result === undefined) {
     // Replace a single character with its 4-bit unicode escape sequence
     if (character.length === 1) {
@@ -25474,16 +25650,17 @@ class N3Store_N3Store {
   // ### `size` returns the number of quads in the store
   get size() {
     // Return the quad count if if was cached
-    var size = this._size;
+    let size = this._size;
     if (size !== null)
       return size;
 
     // Calculate the number of quads by counting to the deepest level
     size = 0;
-    var graphs = this._graphs, subjects, subject;
-    for (var graphKey in graphs)
-      for (var subjectKey in (subjects = graphs[graphKey].subjects))
-        for (var predicateKey in (subject = subjects[subjectKey]))
+    const graphs = this._graphs;
+    let subjects, subject;
+    for (const graphKey in graphs)
+      for (const subjectKey in (subjects = graphs[graphKey].subjects))
+        for (const predicateKey in (subject = subjects[subjectKey]))
           size += Object.keys(subject[predicateKey]).length;
     return this._size = size;
   }
@@ -25494,10 +25671,10 @@ class N3Store_N3Store {
   // Returns if the index has changed, if the entry did not already exist.
   _addToIndex(index0, key0, key1, key2) {
     // Create layers as necessary
-    var index1 = index0[key0] || (index0[key0] = {});
-    var index2 = index1[key1] || (index1[key1] = {});
+    const index1 = index0[key0] || (index0[key0] = {});
+    const index2 = index1[key1] || (index1[key1] = {});
     // Setting the key to _any_ value signals the presence of the quad
-    var existed = key2 in index2;
+    const existed = key2 in index2;
     if (!existed)
       index2[key2] = null;
     return !existed;
@@ -25506,13 +25683,13 @@ class N3Store_N3Store {
   // ### `_removeFromIndex` removes a quad from a three-layered index
   _removeFromIndex(index0, key0, key1, key2) {
     // Remove the quad from the index
-    var index1 = index0[key0], index2 = index1[key1], key;
+    const index1 = index0[key0], index2 = index1[key1];
     delete index2[key2];
 
     // Remove intermediary index layers if they are empty
-    for (key in index2) return;
+    for (const key in index2) return;
     delete index1[key1];
-    for (key in index1) return;
+    for (const key in index1) return;
     delete index0[key0];
   }
 
@@ -25527,31 +25704,32 @@ class N3Store_N3Store {
   // and iteration halts when it returns truthy for any quad.
   // If instead `array` is given, each result is added to the array.
   _findInIndex(index0, key0, key1, key2, name0, name1, name2, graph, callback, array) {
-    var tmp, index1, index2, varCount = !key0 + !key1 + !key2,
-        // depending on the number of variables, keys or reverse index are faster
+    let tmp, index1, index2;
+    // Depending on the number of variables, keys or reverse index are faster
+    const varCount = !key0 + !key1 + !key2,
         entityKeys = varCount > 1 ? Object.keys(this._ids) : this._entities;
 
     // If a key is specified, use only that part of index 0.
     if (key0) (tmp = index0, index0 = {})[key0] = tmp[key0];
-    for (var value0 in index0) {
-      var entity0 = entityKeys[value0];
+    for (const value0 in index0) {
+      const entity0 = entityKeys[value0];
 
       if (index1 = index0[value0]) {
         // If a key is specified, use only that part of index 1.
         if (key1) (tmp = index1, index1 = {})[key1] = tmp[key1];
-        for (var value1 in index1) {
-          var entity1 = entityKeys[value1];
+        for (const value1 in index1) {
+          const entity1 = entityKeys[value1];
 
           if (index2 = index1[value1]) {
             // If a key is specified, use only that part of index 2, if it exists.
-            var values = key2 ? (key2 in index2 ? [key2] : []) : Object.keys(index2);
+            const values = key2 ? (key2 in index2 ? [key2] : []) : Object.keys(index2);
             // Create quads for all items found in index 2.
-            for (var l = 0; l < values.length; l++) {
-              var parts = { subject: null, predicate: null, object: null };
+            for (let l = 0; l < values.length; l++) {
+              const parts = { subject: null, predicate: null, object: null };
               parts[name0] = termFromId(entity0, this._factory);
               parts[name1] = termFromId(entity1, this._factory);
               parts[name2] = termFromId(entityKeys[values[l]], this._factory);
-              var quad = this._factory.quad(
+              const quad = this._factory.quad(
                 parts.subject, parts.predicate, parts.object, termFromId(graph, this._factory));
               if (array)
                 array.push(quad);
@@ -25567,13 +25745,13 @@ class N3Store_N3Store {
 
   // ### `_loop` executes the callback on all keys of index 0
   _loop(index0, callback) {
-    for (var key0 in index0)
+    for (const key0 in index0)
       callback(key0);
   }
 
   // ### `_loopByKey0` executes the callback on all keys of a certain entry in index 0
   _loopByKey0(index0, key0, callback) {
-    var index1, key1;
+    let index1, key1;
     if (index1 = index0[key0]) {
       for (key1 in index1)
         callback(key1);
@@ -25582,7 +25760,7 @@ class N3Store_N3Store {
 
   // ### `_loopByKey1` executes the callback on given keys of all entries in index 0
   _loopByKey1(index0, key1, callback) {
-    var key0, index1;
+    let key0, index1;
     for (key0 in index0) {
       index1 = index0[key0];
       if (index1[key1])
@@ -25592,7 +25770,7 @@ class N3Store_N3Store {
 
   // ### `_loopBy2Keys` executes the callback on given keys of certain entries in index 2
   _loopBy2Keys(index0, key0, key1, callback) {
-    var index1, index2, key2;
+    let index1, index2, key2;
     if ((index1 = index0[key0]) && (index2 = index1[key1])) {
       for (key2 in index2)
         callback(key2);
@@ -25603,15 +25781,15 @@ class N3Store_N3Store {
   // The index base is `index0` and the keys at each level are `key0`, `key1`, and `key2`.
   // Any of these keys can be undefined, which is interpreted as a wildcard.
   _countInIndex(index0, key0, key1, key2) {
-    var count = 0, tmp, index1, index2;
+    let count = 0, tmp, index1, index2;
 
     // If a key is specified, count only that part of index 0
     if (key0) (tmp = index0, index0 = {})[key0] = tmp[key0];
-    for (var value0 in index0) {
+    for (const value0 in index0) {
       if (index1 = index0[value0]) {
         // If a key is specified, count only that part of index 1
         if (key1) (tmp = index1, index1 = {})[key1] = tmp[key1];
-        for (var value1 in index1) {
+        for (const value1 in index1) {
           if (index2 = index1[value1]) {
             // If a key is specified, count the quad if it exists
             if (key2) (key2 in index2) && count++;
@@ -25629,7 +25807,7 @@ class N3Store_N3Store {
   _getGraphs(graph) {
     if (!isString(graph))
       return this._graphs;
-    var graphs = {};
+    const graphs = {};
     graphs[graph] = this._graphs[graph];
     return graphs;
   }
@@ -25637,11 +25815,11 @@ class N3Store_N3Store {
   // ### `_uniqueEntities` returns a function that accepts an entity ID
   // and passes the corresponding entity to callback if it hasn't occurred before.
   _uniqueEntities(callback) {
-    var uniqueIds = Object.create(null), entities = this._entities;
-    return function (id) {
+    const uniqueIds = Object.create(null);
+    return id => {
       if (!(id in uniqueIds)) {
         uniqueIds[id] = true;
-        callback(termFromId(entities[id]));
+        callback(termFromId(this._entities[id], this._factory));
       }
     };
   }
@@ -25663,7 +25841,7 @@ class N3Store_N3Store {
     graph = termToId(graph);
 
     // Find the graph that will contain the triple
-    var graphItem = this._graphs[graph];
+    let graphItem = this._graphs[graph];
     // Create the graph if it doesn't exist yet
     if (!graphItem) {
       graphItem = this._graphs[graph] = { subjects: {}, predicates: {}, objects: {} };
@@ -25675,13 +25853,13 @@ class N3Store_N3Store {
     // Since entities can often be long IRIs, we avoid storing them in every index.
     // Instead, we have a separate index that maps entities to numbers,
     // which are then used as keys in the other indexes.
-    var ids = this._ids;
-    var entities = this._entities;
+    const ids = this._ids;
+    const entities = this._entities;
     subject   = ids[subject]   || (ids[entities[++this._id] = subject]   = this._id);
     predicate = ids[predicate] || (ids[entities[++this._id] = predicate] = this._id);
     object    = ids[object]    || (ids[entities[++this._id] = object]    = this._id);
 
-    var changed = this._addToIndex(graphItem.subjects,   subject,   predicate, object);
+    const changed = this._addToIndex(graphItem.subjects,   subject,   predicate, object);
     this._addToIndex(graphItem.predicates, predicate, object,    subject);
     this._addToIndex(graphItem.objects,    object,    subject,   predicate);
 
@@ -25692,14 +25870,13 @@ class N3Store_N3Store {
 
   // ### `addQuads` adds multiple quads to the store
   addQuads(quads) {
-    for (var i = 0; i < quads.length; i++)
+    for (let i = 0; i < quads.length; i++)
       this.addQuad(quads[i]);
   }
 
   // ### `import` adds a stream of quads to the store
   import(stream) {
-    var self = this;
-    stream.on('data', function (quad) { self.addQuad(quad); });
+    stream.on('data', quad => { this.addQuad(quad); });
     return stream;
   }
 
@@ -25718,7 +25895,8 @@ class N3Store_N3Store {
 
     // Find internal identifiers for all components
     // and verify the quad exists.
-    var graphItem, ids = this._ids, graphs = this._graphs, subjects, predicates;
+    const ids = this._ids, graphs = this._graphs;
+    let graphItem, subjects, predicates;
     if (!(subject    = ids[subject]) || !(predicate = ids[predicate]) ||
         !(object     = ids[object])  || !(graphItem = graphs[graph])  ||
         !(subjects   = graphItem.subjects[subject]) ||
@@ -25740,14 +25918,13 @@ class N3Store_N3Store {
 
   // ### `removeQuads` removes multiple quads from the store
   removeQuads(quads) {
-    for (var i = 0; i < quads.length; i++)
+    for (let i = 0; i < quads.length; i++)
       this.removeQuad(quads[i]);
   }
 
   // ### `remove` removes a stream of quads from the store
   remove(stream) {
-    var self = this;
-    stream.on('data', function (quad) { self.removeQuad(quad); });
+    stream.on('data', quad => { this.removeQuad(quad); });
     return stream;
   }
 
@@ -25771,8 +25948,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var quads = [], graphs = this._getGraphs(graph), content,
-        ids = this._ids, subjectId, predicateId, objectId;
+    const quads = [], graphs = this._getGraphs(graph), ids = this._ids;
+    let content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
     if (isString(subject)   && !(subjectId   = ids[subject])   ||
@@ -25780,7 +25957,7 @@ class N3Store_N3Store {
         isString(object)    && !(objectId    = ids[object]))
       return quads;
 
-    for (var graphId in graphs) {
+    for (const graphId in graphs) {
       // Only if the specified graph contains triples, there can be results
       if (content = graphs[graphId]) {
         // Choose the optimal index, based on what fields are present
@@ -25814,11 +25991,11 @@ class N3Store_N3Store {
   // ### `match` returns a stream of quads matching a pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   match(subject, predicate, object, graph) {
-    var stream = new readable_browser["Readable"]({ objectMode: true });
+    const stream = new readable_browser["Readable"]({ objectMode: true });
 
     // Initialize stream once it is being read
     stream._read = () => {
-      for (var quad of this.getQuads(subject, predicate, object, graph))
+      for (const quad of this.getQuads(subject, predicate, object, graph))
         stream.push(quad);
       stream.push(null);
     };
@@ -25835,8 +26012,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var count = 0, graphs = this._getGraphs(graph), content,
-        ids = this._ids, subjectId, predicateId, objectId;
+    const graphs = this._getGraphs(graph), ids = this._ids;
+    let count = 0, content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
     if (isString(subject)   && !(subjectId   = ids[subject])   ||
@@ -25844,7 +26021,7 @@ class N3Store_N3Store {
         isString(object)    && !(objectId    = ids[object]))
       return 0;
 
-    for (var graphId in graphs) {
+    for (const graphId in graphs) {
       // Only if the specified graph contains triples, there can be results
       if (content = graphs[graphId]) {
         // Choose the optimal index, based on what fields are present
@@ -25872,7 +26049,7 @@ class N3Store_N3Store {
   // ### `forEach` executes the callback on all quads.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forEach(callback, subject, predicate, object, graph) {
-    this.some(function (quad) {
+    this.some(quad => {
       callback(quad);
       return false;
     }, subject, predicate, object, graph);
@@ -25882,8 +26059,8 @@ class N3Store_N3Store {
   // and returns `true` if it returns truthy for all them.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   every(callback, subject, predicate, object, graph) {
-    var some = false;
-    var every = !this.some(function (quad) {
+    let some = false;
+    const every = !this.some(quad => {
       some = true;
       return !callback(quad);
     }, subject, predicate, object, graph);
@@ -25900,8 +26077,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var graphs = this._getGraphs(graph), content,
-        ids = this._ids, subjectId, predicateId, objectId;
+    const graphs = this._getGraphs(graph), ids = this._ids;
+    let content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
     if (isString(subject)   && !(subjectId   = ids[subject])   ||
@@ -25909,7 +26086,7 @@ class N3Store_N3Store {
         isString(object)    && !(objectId    = ids[object]))
       return false;
 
-    for (var graphId in graphs) {
+    for (const graphId in graphs) {
       // Only if the specified graph contains triples, there can be results
       if (content = graphs[graphId]) {
         // Choose the optimal index, based on what fields are present
@@ -25954,8 +26131,8 @@ class N3Store_N3Store {
   // ### `getSubjects` returns all subjects that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getSubjects(predicate, object, graph) {
-    var results = [];
-    this.forSubjects(function (s) { results.push(s); }, predicate, object, graph);
+    const results = [];
+    this.forSubjects(s => { results.push(s); }, predicate, object, graph);
     return results;
   }
 
@@ -25967,7 +26144,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var ids = this._ids, graphs = this._getGraphs(graph), content, predicateId, objectId;
+    const ids = this._ids, graphs = this._getGraphs(graph);
+    let content, predicateId, objectId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
@@ -26000,8 +26178,8 @@ class N3Store_N3Store {
   // ### `getPredicates` returns all predicates that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getPredicates(subject, object, graph) {
-    var results = [];
-    this.forPredicates(function (p) { results.push(p); }, subject, object, graph);
+    const results = [];
+    this.forPredicates(p => { results.push(p); }, subject, object, graph);
     return results;
   }
 
@@ -26013,7 +26191,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var ids = this._ids, graphs = this._getGraphs(graph), content, subjectId, objectId;
+    const ids = this._ids, graphs = this._getGraphs(graph);
+    let content, subjectId, objectId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
@@ -26046,8 +26225,8 @@ class N3Store_N3Store {
   // ### `getObjects` returns all objects that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getObjects(subject, predicate, graph) {
-    var results = [];
-    this.forObjects(function (o) { results.push(o); }, subject, predicate, graph);
+    const results = [];
+    this.forObjects(o => { results.push(o); }, subject, predicate, graph);
     return results;
   }
 
@@ -26059,7 +26238,8 @@ class N3Store_N3Store {
     predicate = predicate && termToId(predicate);
     graph = graph && termToId(graph);
 
-    var ids = this._ids, graphs = this._getGraphs(graph), content, subjectId, predicateId;
+    const ids = this._ids, graphs = this._getGraphs(graph);
+    let content, subjectId, predicateId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
@@ -26092,16 +26272,16 @@ class N3Store_N3Store {
   // ### `getGraphs` returns all graphs that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getGraphs(subject, predicate, object) {
-    var results = [];
-    this.forGraphs(function (g) { results.push(g); }, subject, predicate, object);
+    const results = [];
+    this.forGraphs(g => { results.push(g); }, subject, predicate, object);
     return results;
   }
 
   // ### `forGraphs` executes the callback on all graphs that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forGraphs(callback, subject, predicate, object) {
-    for (var graph in this._graphs) {
-      this.some(function (quad) {
+    for (const graph in this._graphs) {
+      this.some(quad => {
         callback(quad.graph);
         return true; // Halt iteration of some()
       }, subject, predicate, object, graph);
@@ -26110,16 +26290,16 @@ class N3Store_N3Store {
 
   // ### `createBlankNode` creates a new blank node, returning its name
   createBlankNode(suggestedName) {
-    var name, index;
+    let name, index;
     // Generate a name based on the suggested name
     if (suggestedName) {
-      name = suggestedName = '_:' + suggestedName, index = 1;
+      name = suggestedName = `_:${suggestedName}`, index = 1;
       while (this._ids[name])
         name = suggestedName + index++;
     }
     // Generate a generic blank node name
     else {
-      do { name = '_:b' + this._blankNodeIndex++; }
+      do { name = `_:b${this._blankNodeIndex++}`; }
       while (this._ids[name]);
     }
     // Add the blank node to the entities, avoiding the generation of duplicates
@@ -26131,29 +26311,29 @@ class N3Store_N3Store {
   // ### `extractLists` finds and removes all list triples
   // and returns the items per list.
   extractLists({ remove = false, ignoreErrors = false } = {}) {
-    var lists = {}; // has scalar keys so could be a simple Object
-    var onError = ignoreErrors ? (() => true) :
+    const lists = {}; // has scalar keys so could be a simple Object
+    const onError = ignoreErrors ? (() => true) :
                   ((node, message) => { throw new Error(`${node.value} ${message}`); });
 
     // Traverse each list from its tail
-    var tails = this.getQuads(null, IRIs["a" /* default */].rdf.rest, IRIs["a" /* default */].rdf.nil, null);
-    var toRemove = remove ? [...tails] : [];
+    const tails = this.getQuads(null, IRIs["a" /* default */].rdf.rest, IRIs["a" /* default */].rdf.nil, null);
+    const toRemove = remove ? [...tails] : [];
     tails.forEach(tailQuad => {
-      var items = [];             // the members found as objects of rdf:first quads
-      var malformed = false;      // signals whether the current list is malformed
-      var head;                   // the head of the list (_:b1 in above example)
-      var headPos;                // set to subject or object when head is set
-      var graph = tailQuad.graph; // make sure list is in exactly one graph
+      const items = [];             // the members found as objects of rdf:first quads
+      let malformed = false;      // signals whether the current list is malformed
+      let head;                   // the head of the list (_:b1 in above example)
+      let headPos;                // set to subject or object when head is set
+      const graph = tailQuad.graph; // make sure list is in exactly one graph
 
       // Traverse the list from tail to end
-      var current = tailQuad.subject;
+      let current = tailQuad.subject;
       while (current && !malformed) {
-        var objectQuads = this.getQuads(null, null, current, null);
-        var subjectQuads = this.getQuads(current, null, null, null);
-        var i, quad, first = null, rest = null, parent = null;
+        const objectQuads = this.getQuads(null, null, current, null);
+        const subjectQuads = this.getQuads(current, null, null, null);
+        let quad, first = null, rest = null, parent = null;
 
         // Find the first and rest of this list node
-        for (i = 0; i < subjectQuads.length && !malformed; i++) {
+        for (let i = 0; i < subjectQuads.length && !malformed; i++) {
           quad = subjectQuads[i];
           if (!quad.graph.equals(graph))
             malformed = onError(current, 'not confined to single graph');
@@ -26187,7 +26367,7 @@ class N3Store_N3Store {
 
         // { :s :p (1 2) } arrives here with no head
         // { (1 2) :p :o } arrives here with head set to the list.
-        for (i = 0; i < objectQuads.length && !malformed; ++i) {
+        for (let i = 0; i < objectQuads.length && !malformed; ++i) {
           quad = objectQuads[i];
           if (head)
             malformed = onError(current, 'can\'t have coreferences');
@@ -26244,9 +26424,10 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
     this._readableState.objectMode = true;
 
     // Set up parser with dummy stream to obtain `data` and `end` callbacks
-    var self = this, parser = new N3Parser_N3Parser(options), onData, onEnd;
+    const parser = new N3Parser_N3Parser(options);
+    let onData, onEnd;
     parser.parse({
-      on: function (event, callback) {
+      on: (event, callback) => {
         switch (event) {
         case 'data': onData = callback; break;
         case 'end':   onEnd = callback; break;
@@ -26254,22 +26435,21 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
       },
     },
       // Handle quads by pushing them down the pipeline
-      function (error, quad) { error && self.emit('error', error) || quad && self.push(quad); },
+      (error, quad) => { error && this.emit('error', error) || quad && this.push(quad); },
       // Emit prefixes through the `prefix` event
-      function (prefix, uri) { self.emit('prefix', prefix, uri); }
+      (prefix, uri) => { this.emit('prefix', prefix, uri); }
     );
 
     // Implement Transform methods through parser callbacks
-    this._transform = function (chunk, encoding, done) { onData(chunk); done(); };
-    this._flush = function (done) { onEnd(); done(); };
+    this._transform = (chunk, encoding, done) => { onData(chunk); done(); };
+    this._flush = done => { onEnd(); done(); };
   }
 
   // ### Parses a stream of strings
   import(stream) {
-    var self = this;
-    stream.on('data',  function (chunk) { self.write(chunk); });
-    stream.on('end',   function ()      { self.end(); });
-    stream.on('error', function (error) { self.emit('error', error); });
+    stream.on('data',  chunk => { this.write(chunk); });
+    stream.on('end',   ()      => { this.end(); });
+    stream.on('error', error => { this.emit('error', error); });
     return this;
   }
 }
@@ -26286,24 +26466,22 @@ class N3StreamWriter_N3StreamWriter extends readable_browser["Transform"] {
     this._writableState.objectMode = true;
 
     // Set up writer with a dummy stream object
-    var self = this;
-    var writer = this._writer = new N3Writer_N3Writer({
-      write: function (quad, encoding, callback) { self.push(quad); callback && callback(); },
-      end: function (callback) { self.push(null); callback && callback(); },
+    const writer = this._writer = new N3Writer_N3Writer({
+      write: (quad, encoding, callback) => { this.push(quad); callback && callback(); },
+      end: callback => { this.push(null); callback && callback(); },
     }, options);
 
     // Implement Transform methods on top of writer
-    this._transform = function (quad, encoding, done) { writer.addQuad(quad, done); };
-    this._flush = function (done) { writer.end(done); };
+    this._transform = (quad, encoding, done) => { writer.addQuad(quad, done); };
+    this._flush = done => { writer.end(done); };
   }
 
 // ### Serializes a stream of quads
   import(stream) {
-    var self = this;
-    stream.on('data',   function (quad)  { self.write(quad); });
-    stream.on('end',    function ()      { self.end(); });
-    stream.on('error',  function (error) { self.emit('error', error); });
-    stream.on('prefix', function (prefix, iri) { self._writer.addPrefix(prefix, iri); });
+    stream.on('data',   quad => { this.write(quad); });
+    stream.on('end',    () => { this.end(); });
+    stream.on('error',  error => { this.emit('error', error); });
+    stream.on('prefix', (prefix, iri) => { this._writer.addPrefix(prefix, iri); });
     return this;
   }
 }

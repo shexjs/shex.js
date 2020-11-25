@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 20);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -910,7 +910,7 @@ if (true)
 const ShExUtilCjsModule = (function () {
 const ShExTerm = __webpack_require__(3);
 const Visitor = __webpack_require__(10)
-const Hierarchy = __webpack_require__(11)
+const Hierarchy = __webpack_require__(23)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -1960,13 +1960,9 @@ const ShExUtil = {
 
   walkVal: function (val, cb) {
     const _ShExUtil = this;
-    if (val.type === "NodeConstraintTest") {
-      return null;
-    } else if (val.type === "ShapeTest") {
-      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
-    } else if (val.type === "ShapeOrResults") {
-      return _ShExUtil.walkVal(val.solution || val.solutions, cb);
-    } else if (val.type === "ShapeAndResults") {
+    if (typeof val === "string") { // ShapeRef
+      return null; // 1NOTRefOR1dot_pass-inOR
+    } else if (val.type === "SolutionList") { // dependent_shape
       return val.solutions.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1978,7 +1974,75 @@ const ShExUtil = {
           })
         return ret;
       }, {});
+    } else if (val.type === "NodeConstraintTest") { // 1iri_pass-iri
+      return _ShExUtil.walkVal(val.shapeExpr, cb);
+    } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
+      return null;
+    } else if (val.type === "ShapeTest") { // 0_empty
+      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+    } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
+      return null;
+    } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
+      return _ShExUtil.walkVal(val.shapeExpr, cb);
+    } else if (val.type === "ShapeNotResults") { // NOT1dotOR2dot_pass-empty
+      return _ShExUtil.walkVal(val.solution, cb);
+    } else if (val.type === "Failure") { // NOT1dotOR2dot_pass-empty
+      return null; // !!TODO
+    } else if (val.type === "ShapeNot") { // 1NOTNOTIRI_passIo1,
+      return _ShExUtil.walkVal(val.shapeExpr, cb);
+    } else if (val.type === "ShapeOrResults") { // 1dotRefOR3_passShape1
+      return _ShExUtil.walkVal(val.solution, cb);
+    } else if (val.type === "ShapeOr") { // 1NOT_literalORvs__passIo1
+      return val.shapeExprs.reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
+    } else if (val.type === "ShapeAndResults" || // 1iriRef1_pass-iri
+               val.type === "ExtensionResults") { // extends-abstract-multi-empty_pass-missingOptRef1
+      return val.solutions.reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
+    } else if (val.type === "ShapeAnd") { // 1NOT_literalANDvs__passIv1
+      return val.shapeExprs.reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
+    } else if (val.type === "ExtendedResults") { // extends-abstract-multi-empty_pass-missingOptRef1
+      return (["extensions", "local"]).reduce((ret, exp) => {
+        const n = _ShExUtil.walkVal(exp, cb);
+        if (n)
+          Object.keys(n).forEach(k => {
+            if (k in ret)
+              ret[k] = ret[k].concat(n[k]);
+            else
+              ret[k] = n[k];
+          })
+        return ret;
+      }, {});
     } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
+      // 1dotOne2dot_pass_p1
       return val.solutions.reduce((ret, sln) => {
         sln.expressions.forEach(exp => {
           const n = _ShExUtil.walkVal(exp, cb);
@@ -1992,21 +2056,16 @@ const ShExUtil = {
         });
         return ret;
       }, {});
-    } else if (val.type === "OneOfSolutions") {
-      return val.solutions.reduce((ret, sln) => {
-        Object.assign(ret, _ShExUtil.walkVal(sln, cb));
-        return ret;
-      }, {});
-    } else if (val.type === "TripleConstraintSolutions") {
+    } else if (val.type === "TripleConstraintSolutions") { // 1dot_pass-noOthers
       if ("solutions" in val) {
         const ret = {};
         const vals = [];
         ret[val.predicate] = vals;
         val.solutions.forEach(sln => {
           const toAdd = [];
-          if (chaseList(sln.referenced, toAdd)) {
+          if (chaseList(sln.referenced, toAdd)) { // parse 1val1IRIREF.ttl
             [].push.apply(vals, toAdd);
-          } else {
+          } else { // 1dot_pass-noOthers
             const newElt = cb(sln);
             if ("referenced" in sln) {
               const t = _ShExUtil.walkVal(sln.referenced, cb);
@@ -2048,9 +2107,7 @@ const ShExUtil = {
       } else {
         return null;
       }
-    } else if (val.type === "NodeConstraintTest") {
-      return null;
-    } else if (val.type === "Recursion") {
+    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
       return null;
     } else {
       // console.log(val);
@@ -2393,7 +2450,7 @@ const ShExUtil = {
       return ret;
     }
   },
-
+/* -- deprecated
   valToSimple: function (val) {
     const _ShExUtil = this;
     function _join (list) {
@@ -2408,7 +2465,9 @@ const ShExUtil = {
         return ret;
       }, {});
     }
-    if (val.type === "TripleConstraintSolutions") {
+    if (typeof val === "string") {
+      return val
+    } else if (val.type === "TripleConstraintSolutions") {
       if ("solutions" in val) {
         return val.solutions.reduce((ret, sln) => {
           if (!("referenced" in sln))
@@ -2454,13 +2513,33 @@ const ShExUtil = {
     } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
       return {  };
     } else if (val.type === "NodeConstraintTest") {
+      return _ShExUtil.valToSimple(val.shapeExpr);
+    } else if (val.type === "NodeConstraint") {
       const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
+      thisNode[n3ify(val.focus)] = [val.shape];
       return thisNode;
     } else if (val.type === "ShapeTest") {
       const thisNode = {  };
       thisNode[n3ify(val.node)] = [val.shape];
       return "solution" in val ? _join([thisNode].concat(_ShExUtil.valToSimple(val.solution))) : thisNode;
+    } else if (val.type === "Shape") {
+      const thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return thisNode;
+    } else if (val.type === "ShapeNotTest") {
+      const thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return _join(['NOT1'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
+    } else if (val.type === "ShapeNot") {
+      const thisNode = {  };
+      thisNode[n3ify(val.node)] = [val.shape];
+      return _join(['NOT'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
+    } else if (val.type === "ShapeAnd") {
+      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('AND');
+    } else if (val.type === "ShapeOr") {
+      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('OR');
+    } else if (val.type === "Failure") {
+      return _ShExUtil.errsToSimple(val);
     } else if (val.type === "Recursion") {
       return {  };
     } else if ("solutions" in val) {
@@ -2468,6 +2547,9 @@ const ShExUtil = {
       return _join(val.solutions.map(sln => {
         return _ShExUtil.valToSimple(sln);
       }));
+    } else if ("solution" in val) {
+      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
+      return _ShExUtil.valToSimple(val.solution);
     } else if ("expressions" in val) {
       return _join(val.expressions.map(sln => {
         return _ShExUtil.valToSimple(sln);
@@ -2478,7 +2560,7 @@ const ShExUtil = {
     }
     return val;
   },
-
+*/
   simpleToShapeMap: function (x) {
     return Object.keys(x).reduce((ret, k) => {
       x[k].forEach(s => {
@@ -2497,7 +2579,7 @@ const ShExUtil = {
     });
   },
 
-  errsToSimple: function (val, node, shape) {
+  errsToSimple: function (val) {
     const _ShExUtil = this;
     if (val.type === "FailureList") {
       return val.errors.reduce((ret, e) => {
@@ -2539,13 +2621,13 @@ const ShExUtil = {
     } else if (val.type === "ExcessTripleViolation") {
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
     } else if (val.type === "ClosedShapeViolation") {
-      return ["ClosedShapeError: unexpected: {"].concat(
+      return ["Unexpected triple(s): {"].concat(
         val.unexpectedTriples.map(t => {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      const w = __webpack_require__(12)();
+      const w = __webpack_require__(11)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
       w.end((err, res) => {
@@ -2892,7 +2974,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(29)
+var expand = __webpack_require__(30)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -4347,7 +4429,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(36);
+exports.isBuffer = __webpack_require__(37);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -4391,7 +4473,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(37);
+exports.inherits = __webpack_require__(38);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -5007,85 +5089,6 @@ if (true)
 
 /***/ }),
 /* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var HierarchyClosure = (function () {
-  /** create a hierarchy object
-   * This object keeps track of direct children and parents as well as transitive children and parents.
-   */
-  function makeHierarchy () {
-    let roots = {}
-    let parents = {}
-    let children = {}
-    let holders = {}
-    return {
-      add: function (parent, child) {
-        if (// test if this is a novel entry.
-          (parent in children && children[parent].indexOf(child) !== -1)) {
-          return
-        }
-        let target = parent in holders
-          ? getNode(parent)
-          : (roots[parent] = getNode(parent)) // add new parents to roots.
-        let value = getNode(child)
-
-        target[child] = value
-        delete roots[child]
-
-        // // maintain hierarchy (direct and confusing)
-        // children[parent] = children[parent].concat(child, children[child])
-        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
-        // parents[child] = parents[child].concat(parent, parents[parent])
-        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
-
-        // maintain hierarchy (generic and confusing)
-        updateClosure(children, parents, child, parent)
-        updateClosure(parents, children, parent, child)
-        function updateClosure (container, members, near, far) {
-          container[far] = container[far].filter(
-            e => /* e !== near && */ container[near].indexOf(e) === -1
-          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
-          container[near].forEach(
-            n => (members[n] = members[n].filter(
-              e => e !== far && members[far].indexOf(e) === -1
-            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
-          )
-        }
-
-        function getNode (node) {
-          if (!(node in holders)) {
-            parents[node] = []
-            children[node] = []
-            holders[node] = {}
-          }
-          return holders[node]
-        }
-      },
-      roots: roots,
-      parents: parents,
-      children: children
-    }
-  }
-
-  function depthFirst (n, f, p) {
-    return Object.keys(n).reduce((ret, k) => {
-      return ret.concat(
-        depthFirst(n[k], f, k),
-        p ? f(k, p) : []) // outer invocation can have null parent
-    }, [])
-  }
-
-  return { create: makeHierarchy, depthFirst }
-})()
-
-/* istanbul ignore next */
-if (true) {
-  module.exports = HierarchyClosure
-}
-
-
-/***/ }),
-/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExWriter** writes ShEx documents.
@@ -5731,12 +5734,12 @@ if (true)
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = __webpack_require__(27).Parser;
+const ShExJison = __webpack_require__(28).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -5823,7 +5826,7 @@ if (true)
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -5869,26 +5872,26 @@ if (true)
 module.exports = glob
 
 var fs = __webpack_require__(2)
-var rp = __webpack_require__(15)
+var rp = __webpack_require__(14)
 var minimatch = __webpack_require__(5)
 var Minimatch = minimatch.Minimatch
-var inherits = __webpack_require__(32)
-var EE = __webpack_require__(33).EventEmitter
+var inherits = __webpack_require__(33)
+var EE = __webpack_require__(34).EventEmitter
 var path = __webpack_require__(1)
-var assert = __webpack_require__(16)
+var assert = __webpack_require__(15)
 var isAbsolute = __webpack_require__(7)
-var globSync = __webpack_require__(38)
-var common = __webpack_require__(17)
+var globSync = __webpack_require__(39)
+var common = __webpack_require__(16)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(39)
+var inflight = __webpack_require__(40)
 var util = __webpack_require__(6)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(19)
+var once = __webpack_require__(18)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -6620,7 +6623,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0)))
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -6636,7 +6639,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(28)
+var old = __webpack_require__(29)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -6693,13 +6696,13 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0)))
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var objectAssign = __webpack_require__(35);
+var objectAssign = __webpack_require__(36);
 
 // compare and isBuffer taken from https://github.com/feross/buffer/blob/680e9e5e488f22aac27599a57dc844a6315928dd/index.js
 // original notice:
@@ -7204,10 +7207,10 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 };
 
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(34)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(35)))
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -7454,7 +7457,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0)))
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -7493,10 +7496,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(18)
+var wrappy = __webpack_require__(17)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -7541,18 +7544,18 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  let shapeMap = __webpack_require__(21)
+  let shapeMap = __webpack_require__(20)
   return Object.assign({}, {
     ShExTerm:       __webpack_require__(3),
     Util:           __webpack_require__(4),
     Validator:      __webpack_require__(24),
-    Writer:         __webpack_require__(12),
-    Api:            __webpack_require__(26),
-    Parser:         __webpack_require__(13),
+    Writer:         __webpack_require__(11),
+    Api:            __webpack_require__(27),
+    Parser:         __webpack_require__(12),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
   })
@@ -7563,7 +7566,7 @@ if (true)
 
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -7576,7 +7579,7 @@ const ShapeMapCjsModule = (function () {
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(22)
+  symbols.Parser = __webpack_require__(21)
   return symbols
 })();
 
@@ -7586,14 +7589,14 @@ if (true)
 
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(23).Parser; // node environment
+  ShapeMapJison = __webpack_require__(22).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -7654,7 +7657,7 @@ if (true)
 
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -8837,6 +8840,85 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0), __webpack_require__(9)(module)))
 
 /***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var HierarchyClosure = (function () {
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
+   */
+  function makeHierarchy () {
+    let roots = {}
+    let parents = {}
+    let children = {}
+    let holders = {}
+    return {
+      add: function (parent, child) {
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
+          return
+        }
+        let target = parent in holders
+          ? getNode(parent)
+          : (roots[parent] = getNode(parent)) // add new parents to roots.
+        let value = getNode(child)
+
+        target[child] = value
+        delete roots[child]
+
+        // // maintain hierarchy (direct and confusing)
+        // children[parent] = children[parent].concat(child, children[child])
+        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
+        // parents[child] = parents[child].concat(parent, parents[parent])
+        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
+
+        // maintain hierarchy (generic and confusing)
+        updateClosure(children, parents, child, parent)
+        updateClosure(parents, children, parent, child)
+        function updateClosure (container, members, near, far) {
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
+          container[near].forEach(
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
+          )
+        }
+
+        function getNode (node) {
+          if (!(node in holders)) {
+            parents[node] = []
+            children[node] = []
+            holders[node] = {}
+          }
+          return holders[node]
+        }
+      },
+      roots: roots,
+      parents: parents,
+      children: children
+    }
+  }
+
+  function depthFirst (n, f, p) {
+    return Object.keys(n).reduce((ret, k) => {
+      return ret.concat(
+        depthFirst(n[k], f, k),
+        p ? f(k, p) : []) // outer invocation can have null parent
+    }, [])
+  }
+
+  return { create: makeHierarchy, depthFirst }
+})()
+
+/* istanbul ignore next */
+if (true) {
+  module.exports = HierarchyClosure
+}
+
+
+/***/ }),
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -8863,12 +8945,12 @@ const InterfaceOptions = {
 const VERBOSE = "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
-const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = __webpack_require__(3);
 let ShExVisitor = __webpack_require__(10);
 let ShExUtil = __webpack_require__(4);
-const Hierarchy = __webpack_require__(11)
+const Hierarchy = __webpack_require__(25)
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -9080,7 +9162,7 @@ function ShExValidator_constructor(schema, db, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(25);
+  const regexModule = this.options.regexModule || __webpack_require__(26);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -9441,12 +9523,8 @@ function ShExValidator_constructor(schema, db, options) {
         });
         if (unexpectedTriples.length > 0)
           errors.push({
-            errors: [
-              {
-                type: "ClosedShapeViolation",
-                unexpectedTriples: unexpectedTriples
-              }
-            ]
+            type: "ClosedShapeViolation",
+            unexpectedTriples: unexpectedTriples
           });
       }
 
@@ -9471,7 +9549,7 @@ function ShExValidator_constructor(schema, db, options) {
         }
       }
       if ("errors" in results)
-        errors.push({ errors: results.errors });
+        [].push.apply(errors, results.errors);
 
       const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
@@ -9480,7 +9558,7 @@ function ShExValidator_constructor(schema, db, options) {
         const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
         if (semActErrors.length)
           // some semAct aborted
-          errors.push({ errors: semActErrors });
+          [].push.apply(errors, semActErrors);
       }
 
       partitionErrors.push(errors)
@@ -9501,7 +9579,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     // Report only last errors until we have a better idea.
     const lastErrors = partitionErrors[partitionErrors.length - 1];
-    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0].errors : lastErrors);
+    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
     if (errors.length > 0)
       ret = {
         type: "Failure",
@@ -9712,7 +9790,7 @@ function ShExValidator_constructor(schema, db, options) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
         _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-        misses.push({triple: triple, errors: errors});
+        misses.push({triple: triple, errors: sub});
       }
     });
     return { hits: hits, misses: misses };
@@ -10305,6 +10383,85 @@ if (true)
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var HierarchyClosure = (function () {
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
+   */
+  function makeHierarchy () {
+    let roots = {}
+    let parents = {}
+    let children = {}
+    let holders = {}
+    return {
+      add: function (parent, child) {
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
+          return
+        }
+        let target = parent in holders
+          ? getNode(parent)
+          : (roots[parent] = getNode(parent)) // add new parents to roots.
+        let value = getNode(child)
+
+        target[child] = value
+        delete roots[child]
+
+        // // maintain hierarchy (direct and confusing)
+        // children[parent] = children[parent].concat(child, children[child])
+        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
+        // parents[child] = parents[child].concat(parent, parents[parent])
+        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
+
+        // maintain hierarchy (generic and confusing)
+        updateClosure(children, parents, child, parent)
+        updateClosure(parents, children, parent, child)
+        function updateClosure (container, members, near, far) {
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
+          container[near].forEach(
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
+          )
+        }
+
+        function getNode (node) {
+          if (!(node in holders)) {
+            parents[node] = []
+            children[node] = []
+            holders[node] = {}
+          }
+          return holders[node]
+        }
+      },
+      roots: roots,
+      parents: parents,
+      children: children
+    }
+  }
+
+  function depthFirst (n, f, p) {
+    return Object.keys(n).reduce((ret, k) => {
+      return ret.concat(
+        depthFirst(n[k], f, k),
+        p ? f(k, p) : []) // outer invocation can have null parent
+    }, [])
+  }
+
+  return { create: makeHierarchy, depthFirst }
+})()
+
+/* istanbul ignore next */
+if (true) {
+  module.exports = HierarchyClosure
+}
+
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = __webpack_require__(3);
 const UNBOUNDED = -1;
@@ -10746,15 +10903,15 @@ if (true)
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExApiCjsModule = function (config) {
+const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(4);
-  const ShExParser = __webpack_require__(13);
+  const ShExParser = __webpack_require__(12);
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
@@ -10836,7 +10993,7 @@ const ShExApiCjsModule = function (config) {
   async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
     const returns = {
       schema: ShExUtil.emptySchema(),
-      data: new config.rdfjs.Store(),
+      data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     }
@@ -10909,10 +11066,14 @@ const ShExApiCjsModule = function (config) {
       resolveSelf = resolve; rejectSelf = reject
     })
     self.all = function (pz) {
-      pz.forEach(function (promise, index) {
-        promises.push(promise)
-        addThen(promise, index)
-      })
+      if (pz.length === 0)
+        resolveSelf([]) // otherwise it returns a Promise which never .thens
+      // (and oddly doesn't have a slot in nodes pending promises?)
+      else
+        pz.forEach(function (promise, index) {
+          promises.push(promise)
+          addThen(promise, index)
+        })
       return self
     }
     self.add = function (promise) {
@@ -11056,11 +11217,11 @@ const ShExApiCjsModule = function (config) {
   function LoadExtensions (globs) {
     return globs.reduce(
       (list, glob) =>
-        list.concat(__webpack_require__(14).glob.sync(glob))
+        list.concat(__webpack_require__(13).glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  const t = __webpack_require__(40)(path)
+	  const t = __webpack_require__(41)(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
@@ -11077,7 +11238,7 @@ if (true)
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -12926,7 +13087,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0), __webpack_require__(9)(module)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -13236,11 +13397,11 @@ exports.realpath = function realpath(p, cache, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0)))
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(30);
-var balanced = __webpack_require__(31);
+var concatMap = __webpack_require__(31);
+var balanced = __webpack_require__(32);
 
 module.exports = expandTop;
 
@@ -13443,7 +13604,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -13462,7 +13623,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13528,7 +13689,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -13561,7 +13722,7 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14044,7 +14205,7 @@ function once(emitter, name) {
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports) {
 
 var g;
@@ -14070,7 +14231,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14167,7 +14328,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -14178,7 +14339,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -14207,22 +14368,22 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(2)
-var rp = __webpack_require__(15)
+var rp = __webpack_require__(14)
 var minimatch = __webpack_require__(5)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(14).Glob
+var Glob = __webpack_require__(13).Glob
 var util = __webpack_require__(6)
 var path = __webpack_require__(1)
-var assert = __webpack_require__(16)
+var assert = __webpack_require__(15)
 var isAbsolute = __webpack_require__(7)
-var common = __webpack_require__(17)
+var common = __webpack_require__(16)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -14700,12 +14861,12 @@ GlobSync.prototype._makeAbs = function (f) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0)))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(18)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(17)
 var reqs = Object.create(null)
-var once = __webpack_require__(19)
+var once = __webpack_require__(18)
 
 module.exports = wrappy(inflight)
 
@@ -14761,7 +14922,7 @@ function slice (args) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0)))
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -14772,7 +14933,7 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 40;
+webpackEmptyContext.id = 41;
 
 /***/ })
 /******/ ]);

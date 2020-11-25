@@ -1,6 +1,6 @@
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExNodeCjsModule = function (config) {
+const ShExNodeCjsModule = function (config = {}) {
   const ShExApi = require("@shexjs/api")
 
   const newApi = ShExApi(Object.assign(
