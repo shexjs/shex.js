@@ -27,9 +27,20 @@
             }
           }
         },
-        "errors": [
-          "Error validating http://a.example/v2 as {\"type\":\"ShapeNot\",\"shapeExpr\":{\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\",\"http://a.example/v2\"]}}: expected NOT to pass"
-        ]
+        "errors": {
+          "type": "ShapeNotFailure",
+          "focus": "http://a.example/v2",
+          "errors": [
+            "Error validating http://a.example/v2 as {\"type\":\"ShapeNot\",\"shapeExpr\":{\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\",\"http://a.example/v2\"]}}: expected NOT to pass"
+          ],
+          "shapeExpr": {
+            "type": "NodeConstraint",
+            "values": [
+              "http://a.example/v1",
+              "http://a.example/v2"
+            ]
+          }
+        }
       },
       {
         "type": "MissingProperty",
