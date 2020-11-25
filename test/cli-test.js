@@ -20,7 +20,6 @@ const child_process = require('child_process');
 const chai = require("chai");
 const expect = chai.expect;
 const assert = chai.assert;
-const should = chai.should;
 const Queue = require("timeout-promise-queue").PromiseQueue(25);
 
 const fs = require("fs");
@@ -227,6 +226,9 @@ Object.keys(AllTests).forEach(function (script) {
              if (test.status === 0) {      // Keep this test before exitCode in order to
                expect(exec.stderr).to.be.empty; // print errors from spawn.
              }
+
+             if (!("errorMatch" in ref) && exec.stderr.length > 0)
+               throw Error("execution returned an error: " + exec.stderr);
 
              if ("errorMatch" in ref)
                expect(exec.stderr).to.match(ref.errorMatch);

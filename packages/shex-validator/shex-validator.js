@@ -21,7 +21,7 @@ const InterfaceOptions = {
 const VERBOSE = "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
-const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = require("@shexjs/term");
 let ShExVisitor = require("@shexjs/visitor");
@@ -519,12 +519,8 @@ function ShExValidator_constructor(schema, db, options) {
         });
         if (unexpectedTriples.length > 0)
           errors.push({
-            errors: [
-              {
-                type: "ClosedShapeViolation",
-                unexpectedTriples: unexpectedTriples
-              }
-            ]
+            type: "ClosedShapeViolation",
+            unexpectedTriples: unexpectedTriples
           });
       }
 
@@ -539,7 +535,7 @@ function ShExValidator_constructor(schema, db, options) {
 
       const results = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
       if ("errors" in results)
-        errors.push({ errors: results.errors });
+        [].push.apply(errors, results.errors);
 
       const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
@@ -548,7 +544,7 @@ function ShExValidator_constructor(schema, db, options) {
         const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
         if (semActErrors.length)
           // some semAct aborted
-          errors.push({ errors: semActErrors });
+          [].push.apply(errors, semActErrors);
       }
 
       partitionErrors.push(errors)
@@ -569,7 +565,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     // Report only last errors until we have a better idea.
     const lastErrors = partitionErrors[partitionErrors.length - 1];
-    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0].errors : lastErrors);
+    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
     if (errors.length > 0)
       ret = {
         type: "Failure",
@@ -671,7 +667,7 @@ function ShExValidator_constructor(schema, db, options) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
         _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-        misses.push({triple: triple, errors: errors});
+        misses.push({triple: triple, errors: sub});
       }
     });
     return { hits: hits, misses: misses };
