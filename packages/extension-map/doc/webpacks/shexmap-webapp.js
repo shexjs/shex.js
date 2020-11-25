@@ -89,34 +89,34 @@
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-var RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+const RDF  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
     XSD  = 'http://www.w3.org/2001/XMLSchema#',
     SWAP = 'http://www.w3.org/2000/10/swap/';
 
 /* harmony default export */ __webpack_exports__["a"] = ({
   xsd: {
-    decimal: XSD + 'decimal',
-    boolean: XSD + 'boolean',
-    double:  XSD + 'double',
-    integer: XSD + 'integer',
-    string:  XSD + 'string',
+    decimal: `${XSD}decimal`,
+    boolean: `${XSD}boolean`,
+    double:  `${XSD}double`,
+    integer: `${XSD}integer`,
+    string:  `${XSD}string`,
   },
   rdf: {
-    type:       RDF + 'type',
-    nil:        RDF + 'nil',
-    first:      RDF + 'first',
-    rest:       RDF + 'rest',
-    langString: RDF + 'langString',
+    type:       `${RDF}type`,
+    nil:        `${RDF}nil`,
+    first:      `${RDF}first`,
+    rest:       `${RDF}rest`,
+    langString: `${RDF}langString`,
   },
   owl: {
     sameAs: 'http://www.w3.org/2002/07/owl#sameAs',
   },
   r: {
-    forSome: SWAP + 'reify#forSome',
-    forAll:  SWAP + 'reify#forAll',
+    forSome: `${SWAP}reify#forSome`,
+    forAll:  `${SWAP}reify#forAll`,
   },
   log: {
-    implies: SWAP + 'log#implies',
+    implies: `${SWAP}log#implies`,
   },
 });
 
@@ -1262,7 +1262,7 @@ exports.Writable = __webpack_require__(41);
 exports.Duplex = __webpack_require__(7);
 exports.Transform = __webpack_require__(43);
 exports.PassThrough = __webpack_require__(79);
-exports.finished = __webpack_require__(18);
+exports.finished = __webpack_require__(19);
 exports.pipeline = __webpack_require__(80);
 
 
@@ -3149,17 +3149,17 @@ if (true)
 const { xsd } = _IRIs__WEBPACK_IMPORTED_MODULE_0__[/* default */ "a"];
 
 // Regular expression and replacement string to escape N3 strings
-var escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
-var escapeReplacements = {
+const escapeSequence = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\([^])/g;
+const escapeReplacements = {
   '\\': '\\', "'": "'", '"': '"',
   'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
   '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
   '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
   '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
 };
-var illegalIriChars = /[\x00-\x20<>\\"\{\}\|\^\`]/;
+const illegalIriChars = /[\x00-\x20<>\\"\{\}\|\^\`]/;
 
-var lineModeRegExps = {
+const lineModeRegExps = {
   _iri: true,
   _unescapedIri: true,
   _simpleQuotedString: true,
@@ -3170,7 +3170,7 @@ var lineModeRegExps = {
   _whitespace: true,
   _endOfFile: true,
 };
-var invalidRegExp = /$0^/;
+const invalidRegExp = /$0^/;
 
 // ## Constructor
 class N3Lexer {
@@ -3201,7 +3201,7 @@ class N3Lexer {
     if (this._lineMode = !!options.lineMode) {
       this._n3Mode = false;
       // Don't tokenize special literals
-      for (var key in this) {
+      for (const key in this) {
         if (!(key in lineModeRegExps) && this[key] instanceof RegExp)
           this[key] = invalidRegExp;
       }
@@ -3221,10 +3221,11 @@ class N3Lexer {
   // ### `_tokenizeToEnd` tokenizes as for as possible, emitting tokens through the callback
   _tokenizeToEnd(callback, inputFinished) {
     // Continue parsing as far as possible; the loop will return eventually
-    var input = this._input, outputComments = this._comments;
+    let input = this._input;
+    const outputComments = this._comments;
     while (true) {
       // Count and skip whitespace lines
-      var whiteSpaceMatch, comment;
+      let whiteSpaceMatch, comment;
       while (whiteSpaceMatch = this._newline.exec(input)) {
         // Try to find a comment
         if (outputComments && (comment = this._comment.exec(whiteSpaceMatch[0])))
@@ -3250,8 +3251,9 @@ class N3Lexer {
       }
 
       // Look for specific token types based on the first character
-      var line = this._line, type = '', value = '', prefix = '',
-          firstChar = input[0], match = null, matchLength = 0, inconclusive = false;
+      const line = this._line, firstChar = input[0];
+      let type = '', value = '', prefix = '',
+          match = null, matchLength = 0, inconclusive = false;
       switch (firstChar) {
       case '^':
         // We need at least 3 tokens lookahead to distinguish ^^<IRI> and ^^pre:fixed
@@ -3305,7 +3307,7 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a blank node.
         // Therefore, try inserting a space if we're at the end of the input.
         if ((match = this._blank.exec(input)) ||
-            inputFinished && (match = this._blank.exec(input + ' ')))
+            inputFinished && (match = this._blank.exec(`${input} `)))
           type = 'blank', prefix = '_', value = match[1];
         break;
 
@@ -3383,7 +3385,7 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a number.
         // Therefore, try inserting a space if we're at the end of the input.
         if (match = this._number.exec(input) ||
-            inputFinished && (match = this._number.exec(input + ' '))) {
+            inputFinished && (match = this._number.exec(`${input} `))) {
           type = 'literal', value = match[0];
           prefix = (typeof match[1] === 'string' ? xsd.double :
                     (typeof match[2] === 'string' ? xsd.decimal : xsd.integer));
@@ -3462,7 +3464,7 @@ class N3Lexer {
         // we always need a non-dot character before deciding it is a prefixed name.
         // Therefore, try inserting a space if we're at the end of the input.
         else if ((match = this._prefixed.exec(input)) ||
-                 inputFinished && (match = this._prefixed.exec(input + ' ')))
+                 inputFinished && (match = this._prefixed.exec(`${input} `)))
           type = 'prefixed', prefix = match[1] || '', value = this._unescape(match[2]);
       }
 
@@ -3487,7 +3489,7 @@ class N3Lexer {
       }
 
       // Emit the parsed token
-      var token = { line: line, type: type, value: value, prefix: prefix };
+      const token = { line: line, type: type, value: value, prefix: prefix };
       callback(null, token);
       this.previousToken = token;
       this._previousMarker = type;
@@ -3562,7 +3564,7 @@ class N3Lexer {
   // ### `_syntaxError` creates a syntax error for the given issue
   _syntaxError(issue) {
     this._input = null;
-    var err = new Error('Unexpected "' + issue + '" on line ' + this._line + '.');
+    const err = new Error(`Unexpected "${issue}" on line ${this._line}.`);
     err.context = {
       token: undefined,
       line: this._line,
@@ -3576,7 +3578,6 @@ class N3Lexer {
   // ### `tokenize` starts the transformation of an N3 document into an array of tokens.
   // The input can be a string or a stream.
   tokenize(input, callback) {
-    var self = this;
     this._line = 1;
 
     // If the input is a string, continuously emit tokens through the callback until the end
@@ -3584,11 +3585,12 @@ class N3Lexer {
       this._input = input;
       // If a callback was passed, asynchronously call it
       if (typeof callback === 'function')
-        queue_microtask__WEBPACK_IMPORTED_MODULE_1___default()(() => self._tokenizeToEnd(callback, true));
+        queue_microtask__WEBPACK_IMPORTED_MODULE_1___default()(() => this._tokenizeToEnd(callback, true));
       // If no callback was passed, tokenize synchronously and return
       else {
-        var tokens = [], error;
-        this._tokenizeToEnd(function (e, t) { e ? (error = e) : tokens.push(t); }, true);
+        const tokens = [];
+        let error;
+        this._tokenizeToEnd((e, t) => e ? (error = e) : tokens.push(t), true);
         if (error) throw error;
         return tokens;
       }
@@ -3600,28 +3602,28 @@ class N3Lexer {
       if (typeof input.setEncoding === 'function')
         input.setEncoding('utf8');
       // Adds the data chunk to the buffer and parses as far as possible
-      input.on('data', function (data) {
-        if (self._input !== null && data.length !== 0) {
+      input.on('data', data => {
+        if (this._input !== null && data.length !== 0) {
           // Prepend any previous pending writes
-          if (self._pendingBuffer) {
-            data = Buffer.concat([self._pendingBuffer, data]);
-            self._pendingBuffer = null;
+          if (this._pendingBuffer) {
+            data = Buffer.concat([this._pendingBuffer, data]);
+            this._pendingBuffer = null;
           }
           // Hold if the buffer ends in an incomplete unicode sequence
           if (data[data.length - 1] & 0x80) {
-            self._pendingBuffer = data;
+            this._pendingBuffer = data;
           }
           // Otherwise, tokenize as far as possible
           else {
-            self._input += data;
-            self._tokenizeToEnd(callback, false);
+            this._input += data;
+            this._tokenizeToEnd(callback, false);
           }
         }
       });
       // Parses until the end
-      input.on('end', function () {
-        if (self._input !== null)
-          self._tokenizeToEnd(callback, true);
+      input.on('end', () => {
+        if (this._input !== null)
+          this._tokenizeToEnd(callback, true);
       });
       input.on('error', callback);
     }
@@ -3638,7 +3640,7 @@ class N3Lexer {
 
 const ShExUtilCjsModule = (function () {
 const ShExTerm = __webpack_require__(3);
-const Visitor = __webpack_require__(21)
+const Visitor = __webpack_require__(22)
 const Hierarchy = __webpack_require__(49)
 
 const SX = {};
@@ -5286,7 +5288,7 @@ const ShExUtil = {
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      const w = __webpack_require__(22)();
+      const w = __webpack_require__(23)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
       w.end((err, res) => {
@@ -5412,8 +5414,8 @@ const ShExUtil = {
   executeQuery: function (query, endpoint) {
     let rows, t;
     var queryURL = endpoint + "?query=" + encodeURIComponent(query);
-    if (__webpack_require__(23)) {
-      const request = __webpack_require__(23);
+    if (__webpack_require__(24)) {
+      const request = __webpack_require__(24);
       const res = request('GET', queryURL, {
         headers: {
           'Accept': 'application/sparql-results+json',
@@ -5435,6 +5437,8 @@ const ShExUtil = {
     const selects = j.head.vars;
     return j.results.bindings.map(row => {
       return selects.map(sel => {
+        if (!(sel in row))
+          return null;
         const elt = row[sel];
         switch (elt.type) {
         case "uri": return elt.value;
@@ -5531,9 +5535,10 @@ const ShExUtil = {
   /** emulate N3Store().getQuads() with additional parm.
    */
   sparqlDB: function (endpoint, queryTracker) {
-    var _ShExUtil = this;
+    const _ShExUtil = this;
     // Need to inspect the schema to calculate the relevant neighborhood.
-    var schemaIndex = null
+    const schemaIndex = null;
+    const bnodes = { };
 
     function getQuads(s, p, o, g) {
       return mapQueryToTriples("SELECT " + [
@@ -5544,14 +5549,14 @@ const ShExUtil = {
     }
 
     function mapQueryToTriples (query, s, o) {
-      var rows = _ShExUtil.executeQuery(query, endpoint);
-      var triples = rows.map(row =>  {
+      const rows = _ShExUtil.executeQuery(query, endpoint);
+      const triples = rows.map(row =>  {
         return s ? {
-          subject: s,
+          subject: s, // arcs out
           predicate: row[0],
           object: row[1]
         } : {
-          subject: row[0],
+          subject: row[0], // arcs in
           predicate: row[1],
           object: o
         };
@@ -5560,8 +5565,8 @@ const ShExUtil = {
     }
 
     function getTripleConstraints (tripleExpr) {
-      var visitor = _ShExUtil.Visitor();
-      var ret = {
+      const visitor = _ShExUtil.Visitor();
+      const ret = {
         out: [],
         inc: []
       };
@@ -5581,40 +5586,66 @@ const ShExUtil = {
 
     function getNeighborhood (point, shapeLabel, shape) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
-      var startTime;
-      var tcs = getTripleConstraints(shape.expression);
-      var pz = tcs.out.map(t => t.predicate);
+      let startTime;
+      const pointStr = find(point);
+      const tcs = getTripleConstraints(shape.expression);
+      let pz = tcs.out.map(t => t.predicate);
       pz = pz.filter((p, idx) => pz.lastIndexOf(p) === idx);
       if (queryTracker) {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      var outgoing = (tcs.out.length > 0 || shape.closed)
+      const outgoing = (tcs.out.length > 0 || shape.closed)
           ? mapQueryToTriples(
             shape.closed
-              ? `SELECT ?p ?o { <${point}> ?p ?o }`
-              : "SELECT ?p ?o {\n" +
+              ? `SELECT ?p ?o { ${pointStr} ?s ?p ?o }`
+              : `SELECT ?p ?o { # ${point}\n` + pointStr +
               pz.map(
-                p => `  {<${point}> <${p}> ?o BIND(<${p}> AS ?p)}`
+                p => `  {?s <${p}> ?o BIND(<${p}> AS ?p)}`
               ).join(" UNION\n") +
               "\n}",
             point, null
           )
           : [];
       if (queryTracker) {
-        var time = new Date();
+        const time = new Date();
         queryTracker.end(outgoing, time - startTime);
         startTime = time;
       }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
+      let incoming = [];
+      if (tcs.inc.length > 0) {
+        if (queryTracker) {
+          queryTracker.start(true, point, shapeLabel);
+        }
+        const incoming = mapQueryToTriples(`SELECT ?s ?p { ?s ?p ${pointStr} }`, null, point);
+        if (queryTracker) {
+          queryTracker.end(incoming, new Date() - startTime);
+        }
       }
-      var incoming = tcs.inc.length > 0
-          ? mapQueryToTriples(`SELECT ?s ?p { ?s ?p <${point}> }`, null, point)
-          : []
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
-      }
+      const bnodesByPredicate = outgoing.reduce((acc, t) => {
+        if (t.object.startsWith("_:")) {
+          bnodes[t.object] = { from: point, p: t.predicate };
+          // e.g. { from: "n0", p: "p0" }
+          if (!(t.predicate in acc))
+            acc[t.predicate] = [];
+          acc[t.predicate].push(t.object);
+        }
+        return acc;
+      }, {});
+      Object.keys(bnodesByPredicate)
+        .filter(p => bnodesByPredicate[p].length > 1)
+        .forEach(p => {
+          const query = `SELECT ?s ?p ?o { # find bnodes in <${point}> ${p} ?o
+${find(bnodesByPredicate[p][0])}  ?s ?p ?o
+}`;
+          const rows = _ShExUtil.executeQuery(query, endpoint);
+          const uniques = getUniques(rows);
+          Object.keys(uniques).forEach(s => {
+            bnodes[s].unique = uniques[s].unique,
+            bnodes[s].proxies = uniques[s].proxies
+            bnodes[s].see = uniques[s].see
+          });
+        });
       return  {
         outgoing: outgoing,
         incoming: incoming
@@ -5630,6 +5661,175 @@ const ShExUtil = {
       get size() { return undefined; },
       setSchema: function (schema) { schemaIndex = schema._index || _ShExUtil.index(schema) },
     };
+
+    function find (point, depth = 0, recursed = false) {
+      if (!point.startsWith("_:"))
+        return recursed
+          ? "  <" + point + ">"
+          : "  BIND (" + "<" + point + ">" + " AS ?s)\n";
+
+      const see = bnodes[point].see || point;
+      const s = depth === 0 ? '?s' : `?_${depth}`;
+      const {from, p, unique, proxies} = bnodes[see];
+      const prior = find(from, depth+1, true);
+      const uniqueStr = unique
+            ? ".\n" + Object.keys(unique).map(
+              p => `  ${s} <${p}> ${unique[p].map(o => `<${o}>`).join(', ')} .
+  MINUS {
+    ${s} <${p}> ${s}_ne .
+    FILTER (${s}_ne NOT IN (${unique[p].map(o => `<${o}>`).join(', ')}))
+  }`
+            ).join('\n')
+            : '.';
+      // "\n# " + JSON.stringify(unique)
+      const limitPre = proxies ? "{ SELECT ?s WHERE {\n" : "";
+      const limitPost = proxies ? "} LIMIT 1 }" : "";
+      return depth === 0
+        ? `${limitPre}${prior} <${p}> ?s ${uniqueStr}${limitPost}\n`
+        : `${prior} <${p}> ?_${depth}  ${uniqueStr}\n  ?_${depth}`;
+    }
+
+    function getUniques (rs) {
+      // index the result set three ways
+      const index = rs.reduce((acc, t) => {
+        const [s, p, o] = t;
+        if (!s.startsWith("_:")) // only index bnodes
+          return acc;
+        acc.sz.add(s);
+
+        indexTriple(acc.spo, s, p, o);
+        indexTriple(acc.pso, p, s, o);
+        indexTriple(acc.pos, p, o, s);
+
+        return acc;
+
+        function indexTriple (index, a, b, c) {
+          if (!(a in index))
+            index[a] = {};
+          if (!(b in index[a]))
+            index[a][b] = [];
+          index[a][b].push(c);
+        }
+      }, {sz: new Set(), spo: {}, pso: {}, pos: {}});
+
+      // use the spo index to find indistinguishable bnodes
+      const duplicates = [...index.sz].reduce((acc, s) => {
+        const po = index.spo[s];
+        const poStr = JSON.stringify(po);
+        if (poStr in acc.strs) {
+          const firstS = acc.strs[poStr];
+          acc.duplicates[s] = firstS;
+        } else {
+          acc.strs[poStr] = s;
+        }
+        return acc;
+      }, {strs: {}, duplicates:{}}).duplicates;
+
+      // Optimization: order predicates by maximum coverage.
+      const pzSortedByObjects = Object.keys(index.pos).sort( // sort by number of unique values
+        (l, r) => Object.keys(index.pos[r]).length - Object.keys(index.pos[l]).length
+      );
+
+      // Map subjects to their unique attributes.
+      return [...index.sz].reduce((acc, s) => {
+        if (s in duplicates) {
+          const see = duplicates[s]
+          // queries for s should use `see` instead
+          acc[s].see = see;
+          // record that see proxies for s
+          addAttr(acc[see], 'proxies', s);
+        } else {
+          // which other subjects to test for value collisions
+          const others = [...index.sz].filter(member => member !== s && !(member in duplicates));
+          // walk the power set of properties
+          const pzIterator = OrderedPowerSet(pzSortedByObjects, true, false);
+          for (const pz of pzIterator) {
+            // s's values for this set of properties
+            const testUnique = vals(index.pso, s, pz);
+            // other subjects with the save values for the same properties
+            const conflicts = others.filter(
+              other => hashOfArraysEqual(testUnique, vals(index.pso, other, pz))
+            );
+            if (conflicts.length === 0) {
+              // record set of unique p/o that identifies s
+              acc[s].unique = testUnique;
+              // skip remaining power set
+              break;
+            }
+          };
+        }
+        return acc;
+      }, [...index.sz].reduce((acc, s) => setAttr(acc, s, {}), {}))
+    }
+
+    function vals (pso, s, pz) {
+      return pz.reduce((acc, p) => {
+        acc[p] = pso[p][s]
+        return acc;
+      }, {});
+    }
+
+    function setAttr (obj, attr, val) {
+      obj[attr] = val;
+      return obj;
+    }
+
+    function addAttr (obj, attr, val) {
+      if (!(attr in obj))
+        obj[attr] = [];
+      obj[attr].push(val);
+      return obj;
+    }
+
+    function hashOfArraysEqual (l, r) {
+      if (Object.keys(l).length !== Object.keys(r).length) return false;
+      return Object.keys(l).every(k => arrayEqual(l[k], r[k]))
+    }
+    function arrayEqual (l, r) {
+      if (l === undefined && r === undefined) return true;
+      if (l === undefined || r === undefined) return true;
+      if (l.length !== r.length) return false;
+      return l.every((v, idx) => r[idx] === v)
+    }
+
+    /** Generates a power set ordered by set length and member order.
+     * This algorithm does not keep the entire power set in memory.
+     *
+     * @param members - array elements to combine in power set, e.g. ['a', 'b']
+     * @param unique - whether results have no repeats, e.g. ['a', 'a']
+     * @param reorder - whether results include reorderings, e.g ['a', 'b'] and ['b', 'a']
+     * @yields elements in the power set, e.g. a,b,c,ab,ac,bc,abc
+     */
+    function *OrderedPowerSet (members, unique = false, reorder = true) {
+      let last;
+      let k = null;
+      for (k = 1; k <= members.length; ++k)
+        yield* combi.call(this, 0, [[]]);
+
+      function *combi (n, comb) {
+        let combs = [];
+        for (let x = 0; x < comb.length; ++x) {
+          const next = reorder
+                ? 0 // LSB gets all characters
+                : comb.length === 1 && comb[0].length === 0
+                ? x // LSB starts after x
+                : members.indexOf(comb[x][comb[x].length - 1]) // after last character
+          for (let l = next; l < members.length; ++l) {
+            if (!unique || comb[x].indexOf(members[l]) === -1) {
+              const entry = comb[x].concat([members[l]]);
+              if (n === k - 1)
+                yield entry;
+              else
+                combs.push(entry); // build intermediate combinations
+            }
+          }
+        }
+        if (n < k - 1) {
+          n++;
+          yield* combi.call(this, n, combs);
+        }
+      }
+    }
   },
 
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
@@ -5703,6 +5903,261 @@ if (true)
 
 /***/ }),
 /* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var has = Object.prototype.hasOwnProperty;
+var isArray = Array.isArray;
+
+var hexTable = (function () {
+    var array = [];
+    for (var i = 0; i < 256; ++i) {
+        array.push('%' + ((i < 16 ? '0' : '') + i.toString(16)).toUpperCase());
+    }
+
+    return array;
+}());
+
+var compactQueue = function compactQueue(queue) {
+    while (queue.length > 1) {
+        var item = queue.pop();
+        var obj = item.obj[item.prop];
+
+        if (isArray(obj)) {
+            var compacted = [];
+
+            for (var j = 0; j < obj.length; ++j) {
+                if (typeof obj[j] !== 'undefined') {
+                    compacted.push(obj[j]);
+                }
+            }
+
+            item.obj[item.prop] = compacted;
+        }
+    }
+};
+
+var arrayToObject = function arrayToObject(source, options) {
+    var obj = options && options.plainObjects ? Object.create(null) : {};
+    for (var i = 0; i < source.length; ++i) {
+        if (typeof source[i] !== 'undefined') {
+            obj[i] = source[i];
+        }
+    }
+
+    return obj;
+};
+
+var merge = function merge(target, source, options) {
+    /* eslint no-param-reassign: 0 */
+    if (!source) {
+        return target;
+    }
+
+    if (typeof source !== 'object') {
+        if (isArray(target)) {
+            target.push(source);
+        } else if (target && typeof target === 'object') {
+            if ((options && (options.plainObjects || options.allowPrototypes)) || !has.call(Object.prototype, source)) {
+                target[source] = true;
+            }
+        } else {
+            return [target, source];
+        }
+
+        return target;
+    }
+
+    if (!target || typeof target !== 'object') {
+        return [target].concat(source);
+    }
+
+    var mergeTarget = target;
+    if (isArray(target) && !isArray(source)) {
+        mergeTarget = arrayToObject(target, options);
+    }
+
+    if (isArray(target) && isArray(source)) {
+        source.forEach(function (item, i) {
+            if (has.call(target, i)) {
+                var targetItem = target[i];
+                if (targetItem && typeof targetItem === 'object' && item && typeof item === 'object') {
+                    target[i] = merge(targetItem, item, options);
+                } else {
+                    target.push(item);
+                }
+            } else {
+                target[i] = item;
+            }
+        });
+        return target;
+    }
+
+    return Object.keys(source).reduce(function (acc, key) {
+        var value = source[key];
+
+        if (has.call(acc, key)) {
+            acc[key] = merge(acc[key], value, options);
+        } else {
+            acc[key] = value;
+        }
+        return acc;
+    }, mergeTarget);
+};
+
+var assign = function assignSingleSource(target, source) {
+    return Object.keys(source).reduce(function (acc, key) {
+        acc[key] = source[key];
+        return acc;
+    }, target);
+};
+
+var decode = function (str, decoder, charset) {
+    var strWithoutPlus = str.replace(/\+/g, ' ');
+    if (charset === 'iso-8859-1') {
+        // unescape never throws, no try...catch needed:
+        return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+    }
+    // utf-8
+    try {
+        return decodeURIComponent(strWithoutPlus);
+    } catch (e) {
+        return strWithoutPlus;
+    }
+};
+
+var encode = function encode(str, defaultEncoder, charset) {
+    // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
+    // It has been adapted here for stricter adherence to RFC 3986
+    if (str.length === 0) {
+        return str;
+    }
+
+    var string = str;
+    if (typeof str === 'symbol') {
+        string = Symbol.prototype.toString.call(str);
+    } else if (typeof str !== 'string') {
+        string = String(str);
+    }
+
+    if (charset === 'iso-8859-1') {
+        return escape(string).replace(/%u[0-9a-f]{4}/gi, function ($0) {
+            return '%26%23' + parseInt($0.slice(2), 16) + '%3B';
+        });
+    }
+
+    var out = '';
+    for (var i = 0; i < string.length; ++i) {
+        var c = string.charCodeAt(i);
+
+        if (
+            c === 0x2D // -
+            || c === 0x2E // .
+            || c === 0x5F // _
+            || c === 0x7E // ~
+            || (c >= 0x30 && c <= 0x39) // 0-9
+            || (c >= 0x41 && c <= 0x5A) // a-z
+            || (c >= 0x61 && c <= 0x7A) // A-Z
+        ) {
+            out += string.charAt(i);
+            continue;
+        }
+
+        if (c < 0x80) {
+            out = out + hexTable[c];
+            continue;
+        }
+
+        if (c < 0x800) {
+            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
+            continue;
+        }
+
+        if (c < 0xD800 || c >= 0xE000) {
+            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
+            continue;
+        }
+
+        i += 1;
+        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
+        out += hexTable[0xF0 | (c >> 18)]
+            + hexTable[0x80 | ((c >> 12) & 0x3F)]
+            + hexTable[0x80 | ((c >> 6) & 0x3F)]
+            + hexTable[0x80 | (c & 0x3F)];
+    }
+
+    return out;
+};
+
+var compact = function compact(value) {
+    var queue = [{ obj: { o: value }, prop: 'o' }];
+    var refs = [];
+
+    for (var i = 0; i < queue.length; ++i) {
+        var item = queue[i];
+        var obj = item.obj[item.prop];
+
+        var keys = Object.keys(obj);
+        for (var j = 0; j < keys.length; ++j) {
+            var key = keys[j];
+            var val = obj[key];
+            if (typeof val === 'object' && val !== null && refs.indexOf(val) === -1) {
+                queue.push({ obj: obj, prop: key });
+                refs.push(val);
+            }
+        }
+    }
+
+    compactQueue(queue);
+
+    return value;
+};
+
+var isRegExp = function isRegExp(obj) {
+    return Object.prototype.toString.call(obj) === '[object RegExp]';
+};
+
+var isBuffer = function isBuffer(obj) {
+    if (!obj || typeof obj !== 'object') {
+        return false;
+    }
+
+    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
+};
+
+var combine = function combine(a, b) {
+    return [].concat(a, b);
+};
+
+var maybeMap = function maybeMap(val, fn) {
+    if (isArray(val)) {
+        var mapped = [];
+        for (var i = 0; i < val.length; i += 1) {
+            mapped.push(fn(val[i]));
+        }
+        return mapped;
+    }
+    return fn(val);
+};
+
+module.exports = {
+    arrayToObject: arrayToObject,
+    assign: assign,
+    combine: combine,
+    compact: compact,
+    decode: decode,
+    encode: encode,
+    isBuffer: isBuffer,
+    isRegExp: isRegExp,
+    maybeMap: maybeMap,
+    merge: merge
+};
+
+
+/***/ }),
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = minimatch
@@ -6631,7 +7086,7 @@ function regExpEscape (s) {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7114,7 +7569,7 @@ function once(emitter, name) {
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -7824,7 +8279,7 @@ exports.callbackify = callbackify;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7852,7 +8307,7 @@ module.exports.win32 = win32;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7962,7 +8417,7 @@ function eos(stream, opts, callback) {
 module.exports = eos;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -7987,7 +8442,7 @@ if (true)
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -8015,7 +8470,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -8397,7 +8852,7 @@ if (true)
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExWriter** writes ShEx documents.
@@ -9020,7 +9475,7 @@ if (true)
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9096,226 +9551,6 @@ module.exports.FormData = fd;
 
 
 /***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var has = Object.prototype.hasOwnProperty;
-
-var hexTable = (function () {
-    var array = [];
-    for (var i = 0; i < 256; ++i) {
-        array.push('%' + ((i < 16 ? '0' : '') + i.toString(16)).toUpperCase());
-    }
-
-    return array;
-}());
-
-var compactQueue = function compactQueue(queue) {
-    var obj;
-
-    while (queue.length) {
-        var item = queue.pop();
-        obj = item.obj[item.prop];
-
-        if (Array.isArray(obj)) {
-            var compacted = [];
-
-            for (var j = 0; j < obj.length; ++j) {
-                if (typeof obj[j] !== 'undefined') {
-                    compacted.push(obj[j]);
-                }
-            }
-
-            item.obj[item.prop] = compacted;
-        }
-    }
-
-    return obj;
-};
-
-var arrayToObject = function arrayToObject(source, options) {
-    var obj = options && options.plainObjects ? Object.create(null) : {};
-    for (var i = 0; i < source.length; ++i) {
-        if (typeof source[i] !== 'undefined') {
-            obj[i] = source[i];
-        }
-    }
-
-    return obj;
-};
-
-var merge = function merge(target, source, options) {
-    if (!source) {
-        return target;
-    }
-
-    if (typeof source !== 'object') {
-        if (Array.isArray(target)) {
-            target.push(source);
-        } else if (typeof target === 'object') {
-            if (options.plainObjects || options.allowPrototypes || !has.call(Object.prototype, source)) {
-                target[source] = true;
-            }
-        } else {
-            return [target, source];
-        }
-
-        return target;
-    }
-
-    if (typeof target !== 'object') {
-        return [target].concat(source);
-    }
-
-    var mergeTarget = target;
-    if (Array.isArray(target) && !Array.isArray(source)) {
-        mergeTarget = arrayToObject(target, options);
-    }
-
-    if (Array.isArray(target) && Array.isArray(source)) {
-        source.forEach(function (item, i) {
-            if (has.call(target, i)) {
-                if (target[i] && typeof target[i] === 'object') {
-                    target[i] = merge(target[i], item, options);
-                } else {
-                    target.push(item);
-                }
-            } else {
-                target[i] = item;
-            }
-        });
-        return target;
-    }
-
-    return Object.keys(source).reduce(function (acc, key) {
-        var value = source[key];
-
-        if (has.call(acc, key)) {
-            acc[key] = merge(acc[key], value, options);
-        } else {
-            acc[key] = value;
-        }
-        return acc;
-    }, mergeTarget);
-};
-
-var assign = function assignSingleSource(target, source) {
-    return Object.keys(source).reduce(function (acc, key) {
-        acc[key] = source[key];
-        return acc;
-    }, target);
-};
-
-var decode = function (str) {
-    try {
-        return decodeURIComponent(str.replace(/\+/g, ' '));
-    } catch (e) {
-        return str;
-    }
-};
-
-var encode = function encode(str) {
-    // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
-    // It has been adapted here for stricter adherence to RFC 3986
-    if (str.length === 0) {
-        return str;
-    }
-
-    var string = typeof str === 'string' ? str : String(str);
-
-    var out = '';
-    for (var i = 0; i < string.length; ++i) {
-        var c = string.charCodeAt(i);
-
-        if (
-            c === 0x2D // -
-            || c === 0x2E // .
-            || c === 0x5F // _
-            || c === 0x7E // ~
-            || (c >= 0x30 && c <= 0x39) // 0-9
-            || (c >= 0x41 && c <= 0x5A) // a-z
-            || (c >= 0x61 && c <= 0x7A) // A-Z
-        ) {
-            out += string.charAt(i);
-            continue;
-        }
-
-        if (c < 0x80) {
-            out = out + hexTable[c];
-            continue;
-        }
-
-        if (c < 0x800) {
-            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        if (c < 0xD800 || c >= 0xE000) {
-            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        i += 1;
-        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
-        out += hexTable[0xF0 | (c >> 18)]
-            + hexTable[0x80 | ((c >> 12) & 0x3F)]
-            + hexTable[0x80 | ((c >> 6) & 0x3F)]
-            + hexTable[0x80 | (c & 0x3F)];
-    }
-
-    return out;
-};
-
-var compact = function compact(value) {
-    var queue = [{ obj: { o: value }, prop: 'o' }];
-    var refs = [];
-
-    for (var i = 0; i < queue.length; ++i) {
-        var item = queue[i];
-        var obj = item.obj[item.prop];
-
-        var keys = Object.keys(obj);
-        for (var j = 0; j < keys.length; ++j) {
-            var key = keys[j];
-            var val = obj[key];
-            if (typeof val === 'object' && val !== null && refs.indexOf(val) === -1) {
-                queue.push({ obj: obj, prop: key });
-                refs.push(val);
-            }
-        }
-    }
-
-    return compactQueue(queue);
-};
-
-var isRegExp = function isRegExp(obj) {
-    return Object.prototype.toString.call(obj) === '[object RegExp]';
-};
-
-var isBuffer = function isBuffer(obj) {
-    if (obj === null || typeof obj === 'undefined') {
-        return false;
-    }
-
-    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
-};
-
-module.exports = {
-    arrayToObject: arrayToObject,
-    assign: assign,
-    compact: compact,
-    decode: decode,
-    encode: encode,
-    isBuffer: isBuffer,
-    isRegExp: isRegExp,
-    merge: merge
-};
-
-
-/***/ }),
 /* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -9325,19 +9560,27 @@ module.exports = {
 var replace = String.prototype.replace;
 var percentTwenties = /%20/g;
 
-module.exports = {
-    'default': 'RFC3986',
-    formatters: {
-        RFC1738: function (value) {
-            return replace.call(value, percentTwenties, '+');
-        },
-        RFC3986: function (value) {
-            return value;
-        }
-    },
+var util = __webpack_require__(14);
+
+var Format = {
     RFC1738: 'RFC1738',
     RFC3986: 'RFC3986'
 };
+
+module.exports = util.assign(
+    {
+        'default': Format.RFC3986,
+        formatters: {
+            RFC1738: function (value) {
+                return replace.call(value, percentTwenties, '+');
+            },
+            RFC3986: function (value) {
+                return String(value);
+            }
+        }
+    },
+    Format
+);
 
 
 /***/ }),
@@ -9535,13 +9778,13 @@ module.exports = glob
 
 var fs = __webpack_require__(4)
 var rp = __webpack_require__(28)
-var minimatch = __webpack_require__(14)
+var minimatch = __webpack_require__(15)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(5)
-var EE = __webpack_require__(15).EventEmitter
+var EE = __webpack_require__(16).EventEmitter
 var path = __webpack_require__(2)
 var assert = __webpack_require__(29)
-var isAbsolute = __webpack_require__(17)
+var isAbsolute = __webpack_require__(18)
 var globSync = __webpack_require__(66)
 var common = __webpack_require__(30)
 var alphasort = common.alphasort
@@ -9549,7 +9792,7 @@ var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
 var inflight = __webpack_require__(67)
-var util = __webpack_require__(16)
+var util = __webpack_require__(17)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
@@ -10434,7 +10677,7 @@ function isBuffer(b) {
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-var util = __webpack_require__(16);
+var util = __webpack_require__(17);
 var hasOwn = Object.prototype.hasOwnProperty;
 var pSlice = Array.prototype.slice;
 var functionsHaveNames = (function () {
@@ -10890,8 +11133,8 @@ function ownProp (obj, field) {
 }
 
 var path = __webpack_require__(2)
-var minimatch = __webpack_require__(14)
-var isAbsolute = __webpack_require__(17)
+var minimatch = __webpack_require__(15)
+var isAbsolute = __webpack_require__(18)
 var Minimatch = minimatch.Minimatch
 
 function alphasorti (a, b) {
@@ -12069,7 +12312,7 @@ var Duplex;
 Readable.ReadableState = ReadableState;
 /*<replacement>*/
 
-var EE = __webpack_require__(15).EventEmitter;
+var EE = __webpack_require__(16).EventEmitter;
 
 var EElistenerCount = function EElistenerCount(emitter, type) {
   return emitter.listeners(type).length;
@@ -13168,7 +13411,7 @@ function indexOf(xs, x) {
 /* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(15).EventEmitter;
+module.exports = __webpack_require__(16).EventEmitter;
 
 
 /***/ }),
@@ -14537,7 +14780,7 @@ function done(stream, er, data) {
 let promise
 
 module.exports = typeof queueMicrotask === 'function'
-  ? queueMicrotask
+  ? queueMicrotask.bind(globalThis)
   // reuse resolved promise, and allocate it lazily
   : cb => (promise || (promise = Promise.resolve()))
     .then(cb)
@@ -14554,7 +14797,7 @@ ShExWebApp = (function () {
     ShExTerm:       __webpack_require__(3),
     Util:           __webpack_require__(13),
     Validator:      __webpack_require__(55),
-    Writer:         __webpack_require__(22),
+    Writer:         __webpack_require__(23),
     Api:            __webpack_require__(57),
     Parser:         __webpack_require__(26),
     ShapeMap:       shapeMap,
@@ -14578,7 +14821,7 @@ if (true)
  */
 
 const ShapeMapCjsModule = (function () {
-  const symbols = __webpack_require__(19)
+  const symbols = __webpack_require__(20)
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
@@ -15065,7 +15308,7 @@ parse: function parse(input) {
     ShapeMap parser in the Jison parser generator format.
   */
 
-  const ShapeMap = __webpack_require__(19);
+  const ShapeMap = __webpack_require__(20);
 
   // Common namespaces and entities
   const XSD = 'http://www.w3.org/2001/XMLSchema#',
@@ -15840,7 +16083,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(21)(module)))
 
 /***/ }),
 /* 49 */
@@ -15971,36 +16214,61 @@ module.exports = {
 "use strict";
 
 
-var utils = __webpack_require__(24);
+var utils = __webpack_require__(14);
 var formats = __webpack_require__(25);
+var has = Object.prototype.hasOwnProperty;
 
 var arrayPrefixGenerators = {
-    brackets: function brackets(prefix) { // eslint-disable-line func-name-matching
+    brackets: function brackets(prefix) {
         return prefix + '[]';
     },
-    indices: function indices(prefix, key) { // eslint-disable-line func-name-matching
+    comma: 'comma',
+    indices: function indices(prefix, key) {
         return prefix + '[' + key + ']';
     },
-    repeat: function repeat(prefix) { // eslint-disable-line func-name-matching
+    repeat: function repeat(prefix) {
         return prefix;
     }
 };
 
+var isArray = Array.isArray;
+var push = Array.prototype.push;
+var pushToArray = function (arr, valueOrArray) {
+    push.apply(arr, isArray(valueOrArray) ? valueOrArray : [valueOrArray]);
+};
+
 var toISO = Date.prototype.toISOString;
 
+var defaultFormat = formats['default'];
 var defaults = {
+    addQueryPrefix: false,
+    allowDots: false,
+    charset: 'utf-8',
+    charsetSentinel: false,
     delimiter: '&',
     encode: true,
     encoder: utils.encode,
     encodeValuesOnly: false,
-    serializeDate: function serializeDate(date) { // eslint-disable-line func-name-matching
+    format: defaultFormat,
+    formatter: formats.formatters[defaultFormat],
+    // deprecated
+    indices: false,
+    serializeDate: function serializeDate(date) {
         return toISO.call(date);
     },
     skipNulls: false,
     strictNullHandling: false
 };
 
-var stringify = function stringify( // eslint-disable-line func-name-matching
+var isNonNullishPrimitive = function isNonNullishPrimitive(v) {
+    return typeof v === 'string'
+        || typeof v === 'number'
+        || typeof v === 'boolean'
+        || typeof v === 'symbol'
+        || typeof v === 'bigint';
+};
+
+var stringify = function stringify(
     object,
     prefix,
     generateArrayPrefix,
@@ -16012,25 +16280,35 @@ var stringify = function stringify( // eslint-disable-line func-name-matching
     allowDots,
     serializeDate,
     formatter,
-    encodeValuesOnly
+    encodeValuesOnly,
+    charset
 ) {
     var obj = object;
     if (typeof filter === 'function') {
         obj = filter(prefix, obj);
     } else if (obj instanceof Date) {
         obj = serializeDate(obj);
-    } else if (obj === null) {
+    } else if (generateArrayPrefix === 'comma' && isArray(obj)) {
+        obj = utils.maybeMap(obj, function (value) {
+            if (value instanceof Date) {
+                return serializeDate(value);
+            }
+            return value;
+        }).join(',');
+    }
+
+    if (obj === null) {
         if (strictNullHandling) {
-            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder) : prefix;
+            return encoder && !encodeValuesOnly ? encoder(prefix, defaults.encoder, charset, 'key') : prefix;
         }
 
         obj = '';
     }
 
-    if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean' || utils.isBuffer(obj)) {
+    if (isNonNullishPrimitive(obj) || utils.isBuffer(obj)) {
         if (encoder) {
-            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder);
-            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder))];
+            var keyValue = encodeValuesOnly ? prefix : encoder(prefix, defaults.encoder, charset, 'key');
+            return [formatter(keyValue) + '=' + formatter(encoder(obj, defaults.encoder, charset, 'value'))];
         }
         return [formatter(prefix) + '=' + formatter(String(obj))];
     }
@@ -16042,7 +16320,7 @@ var stringify = function stringify( // eslint-disable-line func-name-matching
     }
 
     var objKeys;
-    if (Array.isArray(filter)) {
+    if (isArray(filter)) {
         objKeys = filter;
     } else {
         var keys = Object.keys(obj);
@@ -16051,77 +16329,93 @@ var stringify = function stringify( // eslint-disable-line func-name-matching
 
     for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
+        var value = obj[key];
 
-        if (skipNulls && obj[key] === null) {
+        if (skipNulls && value === null) {
             continue;
         }
 
-        if (Array.isArray(obj)) {
-            values = values.concat(stringify(
-                obj[key],
-                generateArrayPrefix(prefix, key),
-                generateArrayPrefix,
-                strictNullHandling,
-                skipNulls,
-                encoder,
-                filter,
-                sort,
-                allowDots,
-                serializeDate,
-                formatter,
-                encodeValuesOnly
-            ));
-        } else {
-            values = values.concat(stringify(
-                obj[key],
-                prefix + (allowDots ? '.' + key : '[' + key + ']'),
-                generateArrayPrefix,
-                strictNullHandling,
-                skipNulls,
-                encoder,
-                filter,
-                sort,
-                allowDots,
-                serializeDate,
-                formatter,
-                encodeValuesOnly
-            ));
-        }
+        var keyPrefix = isArray(obj)
+            ? typeof generateArrayPrefix === 'function' ? generateArrayPrefix(prefix, key) : prefix
+            : prefix + (allowDots ? '.' + key : '[' + key + ']');
+
+        pushToArray(values, stringify(
+            value,
+            keyPrefix,
+            generateArrayPrefix,
+            strictNullHandling,
+            skipNulls,
+            encoder,
+            filter,
+            sort,
+            allowDots,
+            serializeDate,
+            formatter,
+            encodeValuesOnly,
+            charset
+        ));
     }
 
     return values;
 };
 
-module.exports = function (object, opts) {
-    var obj = object;
-    var options = opts ? utils.assign({}, opts) : {};
+var normalizeStringifyOptions = function normalizeStringifyOptions(opts) {
+    if (!opts) {
+        return defaults;
+    }
 
-    if (options.encoder !== null && options.encoder !== undefined && typeof options.encoder !== 'function') {
+    if (opts.encoder !== null && opts.encoder !== undefined && typeof opts.encoder !== 'function') {
         throw new TypeError('Encoder has to be a function.');
     }
 
-    var delimiter = typeof options.delimiter === 'undefined' ? defaults.delimiter : options.delimiter;
-    var strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
-    var skipNulls = typeof options.skipNulls === 'boolean' ? options.skipNulls : defaults.skipNulls;
-    var encode = typeof options.encode === 'boolean' ? options.encode : defaults.encode;
-    var encoder = typeof options.encoder === 'function' ? options.encoder : defaults.encoder;
-    var sort = typeof options.sort === 'function' ? options.sort : null;
-    var allowDots = typeof options.allowDots === 'undefined' ? false : options.allowDots;
-    var serializeDate = typeof options.serializeDate === 'function' ? options.serializeDate : defaults.serializeDate;
-    var encodeValuesOnly = typeof options.encodeValuesOnly === 'boolean' ? options.encodeValuesOnly : defaults.encodeValuesOnly;
-    if (typeof options.format === 'undefined') {
-        options.format = formats['default'];
-    } else if (!Object.prototype.hasOwnProperty.call(formats.formatters, options.format)) {
-        throw new TypeError('Unknown format option provided.');
+    var charset = opts.charset || defaults.charset;
+    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
     }
-    var formatter = formats.formatters[options.format];
+
+    var format = formats['default'];
+    if (typeof opts.format !== 'undefined') {
+        if (!has.call(formats.formatters, opts.format)) {
+            throw new TypeError('Unknown format option provided.');
+        }
+        format = opts.format;
+    }
+    var formatter = formats.formatters[format];
+
+    var filter = defaults.filter;
+    if (typeof opts.filter === 'function' || isArray(opts.filter)) {
+        filter = opts.filter;
+    }
+
+    return {
+        addQueryPrefix: typeof opts.addQueryPrefix === 'boolean' ? opts.addQueryPrefix : defaults.addQueryPrefix,
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        delimiter: typeof opts.delimiter === 'undefined' ? defaults.delimiter : opts.delimiter,
+        encode: typeof opts.encode === 'boolean' ? opts.encode : defaults.encode,
+        encoder: typeof opts.encoder === 'function' ? opts.encoder : defaults.encoder,
+        encodeValuesOnly: typeof opts.encodeValuesOnly === 'boolean' ? opts.encodeValuesOnly : defaults.encodeValuesOnly,
+        filter: filter,
+        formatter: formatter,
+        serializeDate: typeof opts.serializeDate === 'function' ? opts.serializeDate : defaults.serializeDate,
+        skipNulls: typeof opts.skipNulls === 'boolean' ? opts.skipNulls : defaults.skipNulls,
+        sort: typeof opts.sort === 'function' ? opts.sort : null,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+};
+
+module.exports = function (object, opts) {
+    var obj = object;
+    var options = normalizeStringifyOptions(opts);
+
     var objKeys;
     var filter;
 
     if (typeof options.filter === 'function') {
         filter = options.filter;
         obj = filter('', obj);
-    } else if (Array.isArray(options.filter)) {
+    } else if (isArray(options.filter)) {
         filter = options.filter;
         objKeys = filter;
     }
@@ -16133,10 +16427,10 @@ module.exports = function (object, opts) {
     }
 
     var arrayFormat;
-    if (options.arrayFormat in arrayPrefixGenerators) {
-        arrayFormat = options.arrayFormat;
-    } else if ('indices' in options) {
-        arrayFormat = options.indices ? 'indices' : 'repeat';
+    if (opts && opts.arrayFormat in arrayPrefixGenerators) {
+        arrayFormat = opts.arrayFormat;
+    } else if (opts && 'indices' in opts) {
+        arrayFormat = opts.indices ? 'indices' : 'repeat';
     } else {
         arrayFormat = 'indices';
     }
@@ -16147,35 +16441,45 @@ module.exports = function (object, opts) {
         objKeys = Object.keys(obj);
     }
 
-    if (sort) {
-        objKeys.sort(sort);
+    if (options.sort) {
+        objKeys.sort(options.sort);
     }
 
     for (var i = 0; i < objKeys.length; ++i) {
         var key = objKeys[i];
 
-        if (skipNulls && obj[key] === null) {
+        if (options.skipNulls && obj[key] === null) {
             continue;
         }
-
-        keys = keys.concat(stringify(
+        pushToArray(keys, stringify(
             obj[key],
             key,
             generateArrayPrefix,
-            strictNullHandling,
-            skipNulls,
-            encode ? encoder : null,
-            filter,
-            sort,
-            allowDots,
-            serializeDate,
-            formatter,
-            encodeValuesOnly
+            options.strictNullHandling,
+            options.skipNulls,
+            options.encode ? options.encoder : null,
+            options.filter,
+            options.sort,
+            options.allowDots,
+            options.serializeDate,
+            options.formatter,
+            options.encodeValuesOnly,
+            options.charset
         ));
     }
 
-    var joined = keys.join(delimiter);
+    var joined = keys.join(options.delimiter);
     var prefix = options.addQueryPrefix === true ? '?' : '';
+
+    if (options.charsetSentinel) {
+        if (options.charset === 'iso-8859-1') {
+            // encodeURIComponent('&#10003;'), the "numeric entity" representation of a checkmark
+            prefix += 'utf8=%26%2310003%3B&';
+        } else {
+            // encodeURIComponent('✓')
+            prefix += 'utf8=%E2%9C%93&';
+        }
+    }
 
     return joined.length > 0 ? prefix + joined : '';
 };
@@ -16188,29 +16492,80 @@ module.exports = function (object, opts) {
 "use strict";
 
 
-var utils = __webpack_require__(24);
+var utils = __webpack_require__(14);
 
 var has = Object.prototype.hasOwnProperty;
+var isArray = Array.isArray;
 
 var defaults = {
     allowDots: false,
     allowPrototypes: false,
     arrayLimit: 20,
+    charset: 'utf-8',
+    charsetSentinel: false,
+    comma: false,
     decoder: utils.decode,
     delimiter: '&',
     depth: 5,
+    ignoreQueryPrefix: false,
+    interpretNumericEntities: false,
     parameterLimit: 1000,
+    parseArrays: true,
     plainObjects: false,
     strictNullHandling: false
 };
+
+var interpretNumericEntities = function (str) {
+    return str.replace(/&#(\d+);/g, function ($0, numberStr) {
+        return String.fromCharCode(parseInt(numberStr, 10));
+    });
+};
+
+var parseArrayValue = function (val, options) {
+    if (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {
+        return val.split(',');
+    }
+
+    return val;
+};
+
+// This is what browsers will submit when the ✓ character occurs in an
+// application/x-www-form-urlencoded body and the encoding of the page containing
+// the form is iso-8859-1, or when the submitted form has an accept-charset
+// attribute of iso-8859-1. Presumably also with other charsets that do not contain
+// the ✓ character, such as us-ascii.
+var isoSentinel = 'utf8=%26%2310003%3B'; // encodeURIComponent('&#10003;')
+
+// These are the percent-encoded utf-8 octets representing a checkmark, indicating that the request actually is utf-8 encoded.
+var charsetSentinel = 'utf8=%E2%9C%93'; // encodeURIComponent('✓')
 
 var parseValues = function parseQueryStringValues(str, options) {
     var obj = {};
     var cleanStr = options.ignoreQueryPrefix ? str.replace(/^\?/, '') : str;
     var limit = options.parameterLimit === Infinity ? undefined : options.parameterLimit;
     var parts = cleanStr.split(options.delimiter, limit);
+    var skipIndex = -1; // Keep track of where the utf8 sentinel was found
+    var i;
 
-    for (var i = 0; i < parts.length; ++i) {
+    var charset = options.charset;
+    if (options.charsetSentinel) {
+        for (i = 0; i < parts.length; ++i) {
+            if (parts[i].indexOf('utf8=') === 0) {
+                if (parts[i] === charsetSentinel) {
+                    charset = 'utf-8';
+                } else if (parts[i] === isoSentinel) {
+                    charset = 'iso-8859-1';
+                }
+                skipIndex = i;
+                i = parts.length; // The eslint settings do not allow break;
+            }
+        }
+    }
+
+    for (i = 0; i < parts.length; ++i) {
+        if (i === skipIndex) {
+            continue;
+        }
         var part = parts[i];
 
         var bracketEqualsPos = part.indexOf(']=');
@@ -16218,14 +16573,28 @@ var parseValues = function parseQueryStringValues(str, options) {
 
         var key, val;
         if (pos === -1) {
-            key = options.decoder(part, defaults.decoder);
+            key = options.decoder(part, defaults.decoder, charset, 'key');
             val = options.strictNullHandling ? null : '';
         } else {
-            key = options.decoder(part.slice(0, pos), defaults.decoder);
-            val = options.decoder(part.slice(pos + 1), defaults.decoder);
+            key = options.decoder(part.slice(0, pos), defaults.decoder, charset, 'key');
+            val = utils.maybeMap(
+                parseArrayValue(part.slice(pos + 1), options),
+                function (encodedVal) {
+                    return options.decoder(encodedVal, defaults.decoder, charset, 'value');
+                }
+            );
         }
+
+        if (val && options.interpretNumericEntities && charset === 'iso-8859-1') {
+            val = interpretNumericEntities(val);
+        }
+
+        if (part.indexOf('[]=') > -1) {
+            val = isArray(val) ? [val] : val;
+        }
+
         if (has.call(obj, key)) {
-            obj[key] = [].concat(obj[key]).concat(val);
+            obj[key] = utils.combine(obj[key], val);
         } else {
             obj[key] = val;
         }
@@ -16234,21 +16603,22 @@ var parseValues = function parseQueryStringValues(str, options) {
     return obj;
 };
 
-var parseObject = function (chain, val, options) {
-    var leaf = val;
+var parseObject = function (chain, val, options, valuesParsed) {
+    var leaf = valuesParsed ? val : parseArrayValue(val, options);
 
     for (var i = chain.length - 1; i >= 0; --i) {
         var obj;
         var root = chain[i];
 
-        if (root === '[]') {
-            obj = [];
-            obj = obj.concat(leaf);
+        if (root === '[]' && options.parseArrays) {
+            obj = [].concat(leaf);
         } else {
             obj = options.plainObjects ? Object.create(null) : {};
             var cleanRoot = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root;
             var index = parseInt(cleanRoot, 10);
-            if (
+            if (!options.parseArrays && cleanRoot === '') {
+                obj = { 0: leaf };
+            } else if (
                 !isNaN(index)
                 && root !== cleanRoot
                 && String(index) === cleanRoot
@@ -16262,13 +16632,13 @@ var parseObject = function (chain, val, options) {
             }
         }
 
-        leaf = obj;
+        leaf = obj; // eslint-disable-line no-param-reassign
     }
 
     return leaf;
 };
 
-var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
+var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesParsed) {
     if (!givenKey) {
         return;
     }
@@ -16283,15 +16653,14 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
 
     // Get the parent
 
-    var segment = brackets.exec(key);
+    var segment = options.depth > 0 && brackets.exec(key);
     var parent = segment ? key.slice(0, segment.index) : key;
 
     // Stash the parent if it exists
 
     var keys = [];
     if (parent) {
-        // If we aren't using plain objects, optionally prefix keys
-        // that would overwrite object prototype properties
+        // If we aren't using plain objects, optionally prefix keys that would overwrite object prototype properties
         if (!options.plainObjects && has.call(Object.prototype, parent)) {
             if (!options.allowPrototypes) {
                 return;
@@ -16304,7 +16673,7 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
     // Loop through children appending to the array until we hit depth
 
     var i = 0;
-    while ((segment = child.exec(key)) !== null && i < options.depth) {
+    while (options.depth > 0 && (segment = child.exec(key)) !== null && i < options.depth) {
         i += 1;
         if (!options.plainObjects && has.call(Object.prototype, segment[1].slice(1, -1))) {
             if (!options.allowPrototypes) {
@@ -16320,27 +16689,45 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options) {
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
-    return parseObject(keys, val, options);
+    return parseObject(keys, val, options, valuesParsed);
 };
 
-module.exports = function (str, opts) {
-    var options = opts ? utils.assign({}, opts) : {};
+var normalizeParseOptions = function normalizeParseOptions(opts) {
+    if (!opts) {
+        return defaults;
+    }
 
-    if (options.decoder !== null && options.decoder !== undefined && typeof options.decoder !== 'function') {
+    if (opts.decoder !== null && opts.decoder !== undefined && typeof opts.decoder !== 'function') {
         throw new TypeError('Decoder has to be a function.');
     }
 
-    options.ignoreQueryPrefix = options.ignoreQueryPrefix === true;
-    options.delimiter = typeof options.delimiter === 'string' || utils.isRegExp(options.delimiter) ? options.delimiter : defaults.delimiter;
-    options.depth = typeof options.depth === 'number' ? options.depth : defaults.depth;
-    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : defaults.arrayLimit;
-    options.parseArrays = options.parseArrays !== false;
-    options.decoder = typeof options.decoder === 'function' ? options.decoder : defaults.decoder;
-    options.allowDots = typeof options.allowDots === 'boolean' ? options.allowDots : defaults.allowDots;
-    options.plainObjects = typeof options.plainObjects === 'boolean' ? options.plainObjects : defaults.plainObjects;
-    options.allowPrototypes = typeof options.allowPrototypes === 'boolean' ? options.allowPrototypes : defaults.allowPrototypes;
-    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : defaults.parameterLimit;
-    options.strictNullHandling = typeof options.strictNullHandling === 'boolean' ? options.strictNullHandling : defaults.strictNullHandling;
+    if (typeof opts.charset !== 'undefined' && opts.charset !== 'utf-8' && opts.charset !== 'iso-8859-1') {
+        throw new TypeError('The charset option must be either utf-8, iso-8859-1, or undefined');
+    }
+    var charset = typeof opts.charset === 'undefined' ? defaults.charset : opts.charset;
+
+    return {
+        allowDots: typeof opts.allowDots === 'undefined' ? defaults.allowDots : !!opts.allowDots,
+        allowPrototypes: typeof opts.allowPrototypes === 'boolean' ? opts.allowPrototypes : defaults.allowPrototypes,
+        arrayLimit: typeof opts.arrayLimit === 'number' ? opts.arrayLimit : defaults.arrayLimit,
+        charset: charset,
+        charsetSentinel: typeof opts.charsetSentinel === 'boolean' ? opts.charsetSentinel : defaults.charsetSentinel,
+        comma: typeof opts.comma === 'boolean' ? opts.comma : defaults.comma,
+        decoder: typeof opts.decoder === 'function' ? opts.decoder : defaults.decoder,
+        delimiter: typeof opts.delimiter === 'string' || utils.isRegExp(opts.delimiter) ? opts.delimiter : defaults.delimiter,
+        // eslint-disable-next-line no-implicit-coercion, no-extra-parens
+        depth: (typeof opts.depth === 'number' || opts.depth === false) ? +opts.depth : defaults.depth,
+        ignoreQueryPrefix: opts.ignoreQueryPrefix === true,
+        interpretNumericEntities: typeof opts.interpretNumericEntities === 'boolean' ? opts.interpretNumericEntities : defaults.interpretNumericEntities,
+        parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
+        parseArrays: opts.parseArrays !== false,
+        plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
+        strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
+    };
+};
+
+module.exports = function (str, opts) {
+    var options = normalizeParseOptions(opts);
 
     if (str === '' || str === null || typeof str === 'undefined') {
         return options.plainObjects ? Object.create(null) : {};
@@ -16354,7 +16741,7 @@ module.exports = function (str, opts) {
     var keys = Object.keys(tempObj);
     for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
-        var newObj = parseKeys(key, tempObj[key], options);
+        var newObj = parseKeys(key, tempObj[key], options, typeof str === 'string');
         obj = utils.merge(obj, newObj, options);
     }
 
@@ -16459,7 +16846,7 @@ const VERBOSE = "VERBOSE" in process.env;
 const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = __webpack_require__(3);
-let ShExVisitor = __webpack_require__(21);
+let ShExVisitor = __webpack_require__(22);
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -18122,7 +18509,7 @@ if (true)
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExApiCjsModule = function (config) {
+const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(13);
   const ShExParser = __webpack_require__(26);
@@ -18207,7 +18594,7 @@ const ShExApiCjsModule = function (config) {
   async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
     const returns = {
       schema: ShExUtil.emptySchema(),
-      data: new config.rdfjs.Store(),
+      data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     }
@@ -20332,7 +20719,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
   exports.main(process.argv.slice(1));
 }
 }
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(21)(module)))
 
 /***/ }),
 /* 59 */
@@ -21082,13 +21469,13 @@ globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(4)
 var rp = __webpack_require__(28)
-var minimatch = __webpack_require__(14)
+var minimatch = __webpack_require__(15)
 var Minimatch = minimatch.Minimatch
 var Glob = __webpack_require__(27).Glob
-var util = __webpack_require__(16)
+var util = __webpack_require__(17)
 var path = __webpack_require__(2)
 var assert = __webpack_require__(29)
-var isAbsolute = __webpack_require__(17)
+var isAbsolute = __webpack_require__(18)
 var common = __webpack_require__(30)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
@@ -21773,9 +22160,7 @@ function fromByteArray (uint8) {
 
   // go through the array every three bytes, we'll deal with trailing stuff later
   for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-    parts.push(encodeChunk(
-      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
-    ))
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
   }
 
   // pad the end with zeros, but make sure to not forget the extra bytes
@@ -21804,6 +22189,7 @@ function fromByteArray (uint8) {
 /* 70 */
 /***/ (function(module, exports) {
 
+/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = (nBytes * 8) - mLen - 1
@@ -22207,7 +22593,6 @@ function config (name) {
 /* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
@@ -22229,8 +22614,6 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
@@ -22285,7 +22668,7 @@ var _Object$setPrototypeO;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var finished = __webpack_require__(18);
+var finished = __webpack_require__(19);
 
 var kLastResolve = Symbol('lastResolve');
 var kLastReject = Symbol('lastReject');
@@ -22581,7 +22964,7 @@ function destroyer(stream, reading, writing, callback) {
   stream.on('close', function () {
     closed = true;
   });
-  if (eos === undefined) eos = __webpack_require__(18);
+  if (eos === undefined) eos = __webpack_require__(19);
   eos(stream, {
     readable: reading,
     writable: writing
@@ -24352,7 +24735,7 @@ __webpack_require__.d(N3Util_namespaceObject, "isLiteral", function() { return i
 __webpack_require__.d(N3Util_namespaceObject, "isVariable", function() { return isVariable; });
 __webpack_require__.d(N3Util_namespaceObject, "isDefaultGraph", function() { return isDefaultGraph; });
 __webpack_require__.d(N3Util_namespaceObject, "inDefaultGraph", function() { return inDefaultGraph; });
-__webpack_require__.d(N3Util_namespaceObject, "prefix", function() { return N3Util_prefix; });
+__webpack_require__.d(N3Util_namespaceObject, "prefix", function() { return prefix; });
 __webpack_require__.d(N3Util_namespaceObject, "prefixes", function() { return N3Util_prefixes; });
 
 // EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Lexer.js
@@ -24397,15 +24780,15 @@ function inDefaultGraph(quad) {
 }
 
 // Creates a function that prepends the given IRI to a local name
-function N3Util_prefix(iri, factory) {
+function prefix(iri, factory) {
   return N3Util_prefixes({ '': iri }, factory)('');
 }
 
 // Creates a function that allows registering and expanding prefixes
 function N3Util_prefixes(defaultPrefixes, factory) {
   // Add all of the default prefixes
-  var prefixes = Object.create(null);
-  for (var prefix in defaultPrefixes)
+  const prefixes = Object.create(null);
+  for (const prefix in defaultPrefixes)
     processPrefix(prefix, defaultPrefixes[prefix]);
   // Set the default factory if none was specified
   factory = factory || N3DataFactory;
@@ -24416,13 +24799,13 @@ function N3Util_prefixes(defaultPrefixes, factory) {
     // Create a new prefix if an IRI is specified or the prefix doesn't exist
     if (typeof iri === 'string') {
       // Create a function that expands the prefix
-      var cache = Object.create(null);
-      prefixes[prefix] = function (local) {
+      const cache = Object.create(null);
+      prefixes[prefix] = local => {
         return cache[local] || (cache[local] = factory.namedNode(iri + local));
       };
     }
     else if (!(prefix in prefixes)) {
-      throw new Error('Unknown prefix: ' + prefix);
+      throw new Error(`Unknown prefix: ${prefix}`);
     }
     return prefixes[prefix];
   }
@@ -24437,6 +24820,7 @@ function N3Util_prefixes(defaultPrefixes, factory) {
 
 const { rdf, xsd } = IRIs["a" /* default */];
 
+// eslint-disable-next-line prefer-const
 let DEFAULTGRAPH;
 let _blankNodeCounter = 0;
 
@@ -24510,7 +24894,8 @@ class Literal extends Term {
   // ### The language of this literal
   get language() {
     // Find the last quotation mark (e.g., '"abc"@en-us')
-    var id = this.id, atPos = id.lastIndexOf('"') + 1;
+    const id = this.id;
+    let atPos = id.lastIndexOf('"') + 1;
     // If "@" it follows, return the remaining substring; empty otherwise
     return atPos < id.length && id[atPos++] === '@' ? id.substr(atPos).toLowerCase() : '';
   }
@@ -24523,11 +24908,12 @@ class Literal extends Term {
   // ### The datatype string of this literal
   get datatypeString() {
     // Find the last quotation mark (e.g., '"abc"^^http://ex.org/types#t')
-    var id = this.id, dtPos = id.lastIndexOf('"') + 1, ch;
+    const id = this.id, dtPos = id.lastIndexOf('"') + 1;
+    const char = dtPos < id.length ? id[dtPos] : '';
     // If "^" it follows, return the remaining substring
-    return dtPos < id.length && (ch = id[dtPos]) === '^' ? id.substr(dtPos + 2) :
+    return char === '^' ? id.substr(dtPos + 2) :
            // If "@" follows, return rdf:langString; xsd:string otherwise
-           (ch !== '@' ? xsd.string : rdf.langString);
+           (char !== '@' ? xsd.string : rdf.langString);
   }
 
   // ### Returns whether this object represents the same term as the other
@@ -24557,7 +24943,7 @@ class Literal extends Term {
 // ## BlankNode constructor
 class BlankNode extends Term {
   constructor(name) {
-    super('_:' + name);
+    super(`_:${name}`);
   }
 
   // ### The term type of this term
@@ -24573,7 +24959,7 @@ class BlankNode extends Term {
 
 class Variable extends Term {
   constructor(name) {
-    super('?' + name);
+    super(`?${name}`);
   }
 
   // ### The term type of this term
@@ -24634,7 +25020,7 @@ function termFromId(id, factory) {
     if (id[id.length - 1] === '"')
       return factory.literal(id.substr(1, id.length - 2));
     // Literal with datatype or language
-    var endPos = id.lastIndexOf('"', id.length - 1);
+    const endPos = id.lastIndexOf('"', id.length - 1);
     return factory.literal(id.substr(1, endPos - 1),
             id[endPos + 1] === '@' ? id.substr(endPos + 2)
                                    : factory.namedNode(id.substr(endPos + 3)));
@@ -24663,12 +25049,12 @@ function termToId(term) {
   // Term instantiated with another library
   switch (term.termType) {
   case 'NamedNode':    return term.value;
-  case 'BlankNode':    return '_:' + term.value;
-  case 'Variable':     return '?' + term.value;
+  case 'BlankNode':    return `_:${term.value}`;
+  case 'Variable':     return `?${term.value}`;
   case 'DefaultGraph': return '';
-  case 'Literal':      return '"' + term.value + '"' +
-    (term.language ? '@' + term.language :
-      (term.datatype && term.datatype.value !== xsd.string ? '^^' + term.datatype.value : ''));
+  case 'Literal':      return `"${term.value}"${
+    term.language ? `@${term.language}` :
+      (term.datatype && term.datatype.value !== xsd.string ? `^^${term.datatype.value}` : '')}`;
   case 'Quad':
     // To identify RDF* quad components, we escape quotes by doubling them.
     // This avoids the overhead of backslash parsing of Turtle-like syntaxes.
@@ -24681,7 +25067,7 @@ function termToId(term) {
       }${
         (isDefaultGraph(term.graph)) ? '' : ` ${termToId(term.graph)}`
       }>>`;
-  default: throw new Error('Unexpected termType: ' + term.termType);
+  default: throw new Error(`Unexpected termType: ${term.termType}`);
   }
 }
 
@@ -24746,7 +25132,7 @@ function blankNode(name) {
 function literal(value, languageOrDataType) {
   // Create a language-tagged string
   if (typeof languageOrDataType === 'string')
-    return new Literal('"' + value + '"@' + languageOrDataType.toLowerCase());
+    return new Literal(`"${value}"@${languageOrDataType.toLowerCase()}`);
 
   // Automatically determine datatype for booleans and numbers
   let datatype = languageOrDataType ? languageOrDataType.value : '';
@@ -24768,8 +25154,8 @@ function literal(value, languageOrDataType) {
 
   // Create a datatyped literal
   return (datatype === '' || datatype === xsd.string) ?
-    new Literal('"' + value + '"') :
-    new Literal('"' + value + '"^^' + datatype);
+    new Literal(`"${value}"`) :
+    new Literal(`"${value}"^^${datatype}`);
 }
 
 // ### Creates a variable
@@ -24807,7 +25193,7 @@ class N3Parser_N3Parser {
     options.factory && initDataFactory(this, options.factory);
 
     // Set supported features depending on the format
-    var format = (typeof options.format === 'string') ?
+    const format = (typeof options.format === 'string') ?
                  options.format.match(/\w*$/)[0].toLowerCase() : '',
         isTurtle = /turtle/.test(format), isTriG = /trig/.test(format),
         isNTriples = /triple/.test(format), isNQuads = /quad/.test(format),
@@ -24821,7 +25207,7 @@ class N3Parser_N3Parser {
     this._supportsRDFStar = format === '' || /star|\*$/.test(format);
     // Disable relative IRIs in N-Triples or N-Quads mode
     if (isLineMode)
-      this._resolveRelativeIRI = function (iri) { return null; };
+      this._resolveRelativeIRI = iri => { return null; };
     this._blankNodePrefix = typeof options.blankNodePrefix !== 'string' ? '' :
                               options.blankNodePrefix.replace(/^(?!_:)/, '_:');
     this._lexer = options.lexer || new N3Lexer["a" /* default */]({ lineMode: isLineMode, n3: isN3 });
@@ -24846,7 +25232,7 @@ class N3Parser_N3Parser {
     }
     else {
       // Remove fragment if present
-      var fragmentPos = baseIRI.indexOf('#');
+      const fragmentPos = baseIRI.indexOf('#');
       if (fragmentPos >= 0)
         baseIRI = baseIRI.substr(0, fragmentPos);
       // Set base IRI and its components
@@ -24862,7 +25248,7 @@ class N3Parser_N3Parser {
   // ### `_saveContext` stores the current parsing context
   // when entering a new scope (list, blank node, formula)
   _saveContext(type, graph, subject, predicate, object) {
-    var n3Mode = this._n3Mode;
+    const n3Mode = this._n3Mode;
     this._contextStack.push({
       subject: subject, predicate: predicate, object: object,
       graph: graph, type: type,
@@ -24876,7 +25262,7 @@ class N3Parser_N3Parser {
       this._inversePredicate = false;
       // In N3, blank nodes are scoped to a formula
       // (using a dot as separator, as a blank node label cannot start with it)
-      this._prefixes._ = (this._graph ? this._graph.id.substr(2) + '.' : '.');
+      this._prefixes._ = (this._graph ? `${this._graph.id.substr(2)}.` : '.');
       // Quantifiers are scoped to a formula
       this._quantified = Object.create(this._quantified);
     }
@@ -24885,7 +25271,7 @@ class N3Parser_N3Parser {
   // ### `_restoreContext` restores the parent context
   // when leaving a scope (list, blank node, formula)
   _restoreContext() {
-    var context = this._contextStack.pop(), n3Mode = this._n3Mode;
+    const context = this._contextStack.pop(), n3Mode = this._n3Mode;
     this._subject   = context.subject;
     this._predicate = context.predicate;
     this._object    = context.object;
@@ -24935,12 +25321,12 @@ class N3Parser_N3Parser {
 
   // ### `_readEntity` reads an IRI, prefixed name, blank node, or variable
   _readEntity(token, quantifier) {
-    var value;
+    let value;
     switch (token.type) {
     // Read a relative or absolute IRI
     case 'IRI':
     case 'typeIRI':
-      var iri = this._resolveIRI(token.value);
+      const iri = this._resolveIRI(token.value);
       if (iri === null)
         return this._error('Invalid IRI', token);
       value = this._namedNode(iri);
@@ -24948,9 +25334,9 @@ class N3Parser_N3Parser {
     // Read a prefixed name
     case 'type':
     case 'prefixed':
-      var prefix = this._prefixes[token.prefix];
+      const prefix = this._prefixes[token.prefix];
       if (prefix === undefined)
-        return this._error('Undefined prefix "' + token.prefix + ':"', token);
+        return this._error(`Undefined prefix "${token.prefix}:"`, token);
       value = this._namedNode(prefix + token.value);
       break;
     // Read a blank node
@@ -24963,7 +25349,7 @@ class N3Parser_N3Parser {
       break;
     // Everything else is not an entity
     default:
-      return this._error('Expected entity but got ' + token.type, token);
+      return this._error(`Expected entity but got ${token.type}`, token);
     }
     // In N3 mode, replace the entity if it is quantified
     if (!quantifier && this._n3Mode && (value.id in this._quantified))
@@ -25043,7 +25429,7 @@ class N3Parser_N3Parser {
 
   // ### `_readPredicate` reads a quad's predicate
   _readPredicate(token) {
-    var type = token.type;
+    const type = token.type;
     switch (type) {
     case 'inverse':
       this._inversePredicate = true;
@@ -25055,7 +25441,7 @@ class N3Parser_N3Parser {
     case '}':
       // Expected predicate didn't come, must have been trailing semicolon
       if (this._predicate === null)
-        return this._error('Unexpected ' + type, token);
+        return this._error(`Unexpected ${type}`, token);
       this._subject = null;
       return type === ']' ? this._readBlankNodeTail(token) : this._readPunctuation(token);
     case ';':
@@ -25128,7 +25514,7 @@ class N3Parser_N3Parser {
   // ### `_readGraph` reads a graph
   _readGraph(token) {
     if (token.type !== '{')
-      return this._error('Expected graph but got ' + token.type, token);
+      return this._error(`Expected graph but got ${token.type}`, token);
     // The "subject" we read is actually the GRAPH's label
     this._graph = this._subject, this._subject = null;
     return this._readSubject;
@@ -25156,7 +25542,7 @@ class N3Parser_N3Parser {
       this._emit(this._subject, this._predicate, this._object, this._graph);
 
     // Restore the parent context containing this blank node
-    var empty = this._predicate === null;
+    const empty = this._predicate === null;
     this._restoreContext();
     // If the blank node was the subject, continue reading the predicate
     if (this._object === null)
@@ -25182,12 +25568,12 @@ class N3Parser_N3Parser {
 
   // ### `_readListItem` reads items from a list
   _readListItem(token) {
-    var item = null,                      // The item of the list
+    let item = null,                      // The item of the list
         list = null,                      // The list itself
-        previousList = this._subject,     // The previous list that contains this list
-        stack = this._contextStack,       // The stack of parent contexts
-        parent = stack[stack.length - 1], // The parent containing the current list
         next = this._readListItem;        // The next function to execute
+    const previousList = this._subject,   // The previous list that contains this list
+        stack = this._contextStack,       // The stack of parent contexts
+        parent = stack[stack.length - 1]; // The parent containing the current list
 
     switch (token.type) {
     case '[':
@@ -25304,7 +25690,7 @@ class N3Parser_N3Parser {
     // Create a datatyped literal
     case 'type':
     case 'typeIRI':
-      var datatype = this._readEntity(token);
+      const datatype = this._readEntity(token);
       if (datatype === undefined) return; // No datatype means an error occurred
       literal = this._literal(this._literalValue, datatype);
       token = null;
@@ -25364,8 +25750,8 @@ class N3Parser_N3Parser {
 
   // ### `_readPunctuation` reads punctuation between quads or quad parts
   _readPunctuation(token) {
-    var next, subject = this._subject, graph = this._graph,
-        inversePredicate = this._inversePredicate;
+    let next, graph = this._graph;
+    const subject = this._subject, inversePredicate = this._inversePredicate;
     switch (token.type) {
     // A closing brace ends a graph
     case '}':
@@ -25394,11 +25780,11 @@ class N3Parser_N3Parser {
         next = this._readQuadPunctuation;
         break;
       }
-      return this._error('Expected punctuation to follow "' + this._object.id + '"', token);
+      return this._error(`Expected punctuation to follow "${this._object.id}"`, token);
     }
     // A quad has been completed now, so return it
     if (subject !== null) {
-      var predicate = this._predicate, object = this._object;
+      const predicate = this._predicate, object = this._object;
       if (!inversePredicate)
         this._emit(subject, predicate, object,  graph);
       else
@@ -25409,7 +25795,7 @@ class N3Parser_N3Parser {
 
     // ### `_readBlankNodePunctuation` reads punctuation in a blank node
   _readBlankNodePunctuation(token) {
-    var next;
+    let next;
     switch (token.type) {
     // Semicolon means the subject is shared; predicate and object are different
     case ';':
@@ -25420,7 +25806,7 @@ class N3Parser_N3Parser {
       next = this._readObject;
       break;
     default:
-      return this._error('Expected punctuation to follow "' + this._object.id + '"', token);
+      return this._error(`Expected punctuation to follow "${this._object.id}"`, token);
     }
     // A quad has been completed now, so return it
     this._emit(this._subject, this._predicate, this._object, this._graph);
@@ -25445,8 +25831,8 @@ class N3Parser_N3Parser {
   // ### `_readPrefixIRI` reads the IRI of a prefix declaration
   _readPrefixIRI(token) {
     if (token.type !== 'IRI')
-      return this._error('Expected IRI to follow prefix "' + this._prefix + ':"', token);
-    var prefixNode = this._readEntity(token);
+      return this._error(`Expected IRI to follow prefix "${this._prefix}:"`, token);
+    const prefixNode = this._readEntity(token);
     this._prefixes[this._prefix] = prefixNode.value;
     this._prefixCallback(this._prefix, prefixNode);
     return this._readDeclarationPunctuation;
@@ -25454,7 +25840,7 @@ class N3Parser_N3Parser {
 
   // ### `_readBaseIRI` reads the IRI of a base declaration
   _readBaseIRI(token) {
-    var iri = token.type === 'IRI' && this._resolveIRI(token.value);
+    const iri = token.type === 'IRI' && this._resolveIRI(token.value);
     if (!iri)
       return this._error('Expected valid IRI to follow base declaration', token);
     this._setBase(iri);
@@ -25498,14 +25884,14 @@ class N3Parser_N3Parser {
 
   // Reads a list of quantified symbols from a @forSome or @forAll statement
   _readQuantifierList(token) {
-    var entity;
+    let entity;
     switch (token.type) {
     case 'IRI':
     case 'prefixed':
       if ((entity = this._readEntity(token, true)) !== undefined)
         break;
     default:
-      return this._error('Unexpected ' + token.type, token);
+      return this._error(`Unexpected ${token.type}`, token);
     }
     // Without explicit quantifiers, map entities to a quantified entity
     if (!this._explicitQuantifiers)
@@ -25559,11 +25945,11 @@ class N3Parser_N3Parser {
     case '^': return this._readBackwardPath;
     // Not a path; resume reading where we left off
     default:
-      var stack = this._contextStack, parent = stack.length && stack[stack.length - 1];
+      const stack = this._contextStack, parent = stack.length && stack[stack.length - 1];
       // If we were reading a list item, we still need to output it
       if (parent && parent.type === 'item') {
         // The list item is the remaining subejct after reading the path
-        var item = this._subject;
+        const item = this._subject;
         // Switch back to the context of the list
         this._restoreContext();
         // Output the list item
@@ -25575,7 +25961,8 @@ class N3Parser_N3Parser {
 
   // ### `_readForwardPath` reads a '!' path
   _readForwardPath(token) {
-    var subject, predicate, object = this._blankNode();
+    let subject, predicate;
+    const object = this._blankNode();
     // The next token is the predicate
     if ((predicate = this._readEntity(token)) === undefined)
       return;
@@ -25592,7 +25979,8 @@ class N3Parser_N3Parser {
 
   // ### `_readBackwardPath` reads a '^' path
   _readBackwardPath(token) {
-    var subject = this._blankNode(), predicate, object;
+    const subject = this._blankNode();
+    let predicate, object;
     // The next token is the predicate
     if ((predicate = this._readEntity(token)) === undefined)
       return;
@@ -25613,7 +26001,7 @@ class N3Parser_N3Parser {
       // An entity means this is a quad (only allowed if not already inside a graph)
       if (this._supportsQuads && this._graph === null && (this._graph = this._readEntity(token)) !== undefined)
         return this._readRDFStarTail;
-      return this._error('Expected >> to follow "' + this._object.id + '"', token);
+      return this._error(`Expected >> to follow "${this._object.id}"`, token);
     }
     return this._readRDFStarTail(token);
   }
@@ -25640,7 +26028,7 @@ class N3Parser_N3Parser {
 
   // ### `_getContextEndReader` gets the next reader function at the end of a context
   _getContextEndReader() {
-    var contextStack = this._contextStack;
+    const contextStack = this._contextStack;
     if (!contextStack.length)
       return this._readPunctuation;
 
@@ -25663,7 +26051,7 @@ class N3Parser_N3Parser {
 
   // ### `_error` emits an error message through the callback
   _error(message, token) {
-    var err = new Error(message + ' on line ' + token.line + '.');
+    const err = new Error(`${message} on line ${token.line}.`);
     err.context = {
       token: token,
       line: token.line,
@@ -25708,7 +26096,8 @@ class N3Parser_N3Parser {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -25752,7 +26141,7 @@ class N3Parser_N3Parser {
                 result = result.substr(0, segmentStart);
               // Remove a trailing '/..' segment
               if (next !== '/')
-                return result + '/' + iri.substr(i + 1);
+                return `${result}/${iri.substr(i + 1)}`;
               segmentStart = i + 1;
             }
           }
@@ -25767,24 +26156,24 @@ class N3Parser_N3Parser {
 
   // ### `parse` parses the N3 input and emits each parsed quad through the callback
   parse(input, quadCallback, prefixCallback) {
-    var self = this;
     // The read callback is the next function to be executed when a token arrives.
     // We start reading in the top context.
     this._readCallback = this._readInTopContext;
     this._sparqlStyle = false;
     this._prefixes = Object.create(null);
     this._prefixes._ = this._blankNodePrefix ? this._blankNodePrefix.substr(2)
-                                             : 'b' + blankNodePrefix++ + '_';
+                                             : `b${blankNodePrefix++}_`;
     this._prefixCallback = prefixCallback || noop;
     this._inversePredicate = false;
     this._quantified = Object.create(null);
 
     // Parse synchronously if no quad callback is given
     if (!quadCallback) {
-      var quads = [], error;
-      this._callback = function (e, t) { e ? (error = e) : t && quads.push(t); };
-      this._lexer.tokenize(input).every(function (token) {
-        return self._readCallback = self._readCallback(token);
+      const quads = [];
+      let error;
+      this._callback = (e, t) => { e ? (error = e) : t && quads.push(t); };
+      this._lexer.tokenize(input).every(token => {
+        return this._readCallback = this._readCallback(token);
       });
       if (error) throw error;
       return quads;
@@ -25792,11 +26181,11 @@ class N3Parser_N3Parser {
 
     // Parse asynchronously otherwise, executing the read callback when a token arrives
     this._callback = quadCallback;
-    this._lexer.tokenize(input, function (error, token) {
+    this._lexer.tokenize(input, (error, token) => {
       if (error !== null)
-        self._callback(error), self._callback = noop;
-      else if (self._readCallback)
-        self._readCallback = self._readCallback(token);
+        this._callback(error), this._callback = noop;
+      else if (this._readCallback)
+        this._readCallback = this._readCallback(token);
     });
   }
 }
@@ -25807,7 +26196,7 @@ function noop() {}
 // Initializes the parser with the given data factory
 function initDataFactory(parser, factory) {
   // Set factory methods
-  var namedNode = factory.namedNode;
+  const namedNode = factory.namedNode;
   parser._namedNode   = namedNode;
   parser._blankNode   = factory.blankNode;
   parser._literal     = factory.literal;
@@ -25841,7 +26230,7 @@ const N3Writer_DEFAULTGRAPH = N3DataFactory.defaultGraph();
 const { rdf: N3Writer_rdf, xsd: N3Writer_xsd } = IRIs["a" /* default */];
 
 // Characters in literals that require escaping
-var N3Writer_escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
+const N3Writer_escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
     escapedCharacters = {
       '\\': '\\\\', '"': '\\"', '\t': '\\t',
@@ -25871,10 +26260,10 @@ class N3Writer_N3Writer {
 
     // If no output stream given, send the output as string through the end callback
     if (!outputStream) {
-      var output = '';
+      let output = '';
       this._outputStream = {
         write(chunk, encoding, done) { output += chunk; done && done(); },
-        end:   function (done) { done && done(null, output); },
+        end: done => { done && done(null, output); },
       };
       this._endStream = true;
     }
@@ -25914,7 +26303,7 @@ class N3Writer_N3Writer {
       if (!graph.equals(this._graph)) {
         // Close the previous graph and start the new one
         this._write((this._subject === null ? '' : (this._inDefaultGraph ? '.\n' : '\n}\n')) +
-                    (N3Writer_DEFAULTGRAPH.equals(graph) ? '' : this._encodeIriOrBlank(graph) + ' {\n'));
+                    (N3Writer_DEFAULTGRAPH.equals(graph) ? '' : `${this._encodeIriOrBlank(graph)} {\n`));
         this._graph = graph;
         this._subject = null;
       }
@@ -25922,19 +26311,19 @@ class N3Writer_N3Writer {
       if (subject.equals(this._subject)) {
         // Don't repeat the predicate if it's the same
         if (predicate.equals(this._predicate))
-          this._write(', ' + this._encodeObject(object), done);
+          this._write(`, ${this._encodeObject(object)}`, done);
         // Same subject, different predicate
         else
-          this._write(';\n    ' +
-                      this._encodePredicate(this._predicate = predicate) + ' ' +
-                      this._encodeObject(object), done);
+          this._write(`;\n    ${
+                      this._encodePredicate(this._predicate = predicate)} ${
+                      this._encodeObject(object)}`, done);
       }
       // Different subject; write the whole quad
       else
-        this._write((this._subject === null ? '' : '.\n') +
-                    this._encodeSubject(this._subject = subject) + ' ' +
-                    this._encodePredicate(this._predicate = predicate) + ' ' +
-                    this._encodeObject(object), done);
+        this._write(`${(this._subject === null ? '' : '.\n') +
+                    this._encodeSubject(this._subject = subject)} ${
+                    this._encodePredicate(this._predicate = predicate)} ${
+                    this._encodeObject(object)}`, done);
     }
     catch (error) { done && done(error); }
   }
@@ -25948,17 +26337,17 @@ class N3Writer_N3Writer {
 
   // ### `quadToString` serializes a quad as a string
   quadToString(subject, predicate, object, graph) {
-    return  this._encodeSubject(subject)   + ' ' +
-            this._encodeIriOrBlank(predicate) + ' ' +
-            this._encodeObject(object) +
-            (graph && graph.value ? ' ' + this._encodeIriOrBlank(graph) + ' .\n' : ' .\n');
+    return  `${this._encodeSubject(subject)} ${
+            this._encodeIriOrBlank(predicate)} ${
+            this._encodeObject(object)
+            }${graph && graph.value ? ` ${this._encodeIriOrBlank(graph)} .\n` : ' .\n'}`;
   }
 
   // ### `quadsToString` serializes an array of quads as a string
   quadsToString(quads) {
-    return quads.map(function (t) {
+    return quads.map(t => {
       return this.quadToString(t.subject, t.predicate, t.object, t.graph);
-    }, this).join('');
+    }).join('');
   }
 
   // ### `_encodeSubject` represents a subject
@@ -25974,31 +26363,31 @@ class N3Writer_N3Writer {
       // If it is a list head, pretty-print it
       if (this._lists && (entity.value in this._lists))
         entity = this.list(this._lists[entity.value]);
-      return 'id' in entity ? entity.id : '_:' + entity.value;
+      return 'id' in entity ? entity.id : `_:${entity.value}`;
     }
     // Escape special characters
-    var iri = entity.value;
+    let iri = entity.value;
     if (N3Writer_escape.test(iri))
       iri = iri.replace(escapeAll, characterReplacer);
     // Try to represent the IRI as prefixed name
-    var prefixMatch = this._prefixRegex.exec(iri);
-    return !prefixMatch ? '<' + iri + '>' :
+    const prefixMatch = this._prefixRegex.exec(iri);
+    return !prefixMatch ? `<${iri}>` :
            (!prefixMatch[1] ? iri : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2]);
   }
 
   // ### `_encodeLiteral` represents a literal
   _encodeLiteral(literal) {
     // Escape special characters
-    var value = literal.value;
+    let value = literal.value;
     if (N3Writer_escape.test(value))
       value = value.replace(escapeAll, characterReplacer);
     // Write the literal, possibly with type or language
     if (literal.language)
-      return '"' + value + '"@' + literal.language;
+      return `"${value}"@${literal.language}`;
     else if (literal.datatype.value !== N3Writer_xsd.string)
-      return '"' + value + '"^^' + this._encodeIriOrBlank(literal.datatype);
+      return `"${value}"^^${this._encodeIriOrBlank(literal.datatype)}`;
     else
-      return '"' + value + '"';
+      return `"${value}"`;
   }
 
   // ### `_encodePredicate` represents a predicate
@@ -26047,22 +26436,27 @@ class N3Writer_N3Writer {
 
   // ### `addQuads` adds the quads to the output stream
   addQuads(quads) {
-    for (var i = 0; i < quads.length; i++)
+    for (let i = 0; i < quads.length; i++)
       this.addQuad(quads[i]);
   }
 
   // ### `addPrefix` adds the prefix to the output stream
   addPrefix(prefix, iri, done) {
-    var prefixes = {};
+    const prefixes = {};
     prefixes[prefix] = iri;
     this.addPrefixes(prefixes, done);
   }
 
   // ### `addPrefixes` adds the prefixes to the output stream
   addPrefixes(prefixes, done) {
-    var prefixIRIs = this._prefixIRIs, hasPrefixes = false;
-    for (var prefix in prefixes) {
-      var iri = prefixes[prefix];
+    // Ignore prefixes if not supported by the serialization
+    if (!this._prefixIRIs)
+      return done && done();
+
+    // Write all new prefixes
+    let hasPrefixes = false;
+    for (let prefix in prefixes) {
+      let iri = prefixes[prefix];
       if (typeof iri !== 'string')
         iri = iri.value;
       hasPrefixes = true;
@@ -26072,19 +26466,19 @@ class N3Writer_N3Writer {
         this._subject = null, this._graph = '';
       }
       // Store and write the prefix
-      prefixIRIs[iri] = (prefix += ':');
-      this._write('@prefix ' + prefix + ' <' + iri + '>.\n');
+      this._prefixIRIs[iri] = (prefix += ':');
+      this._write(`@prefix ${prefix} <${iri}>.\n`);
     }
     // Recreate the prefix matcher
     if (hasPrefixes) {
-      var IRIlist = '', prefixList = '';
-      for (var prefixIRI in prefixIRIs) {
-        IRIlist += IRIlist ? '|' + prefixIRI : prefixIRI;
-        prefixList += (prefixList ? '|' : '') + prefixIRIs[prefixIRI];
+      let IRIlist = '', prefixList = '';
+      for (const prefixIRI in this._prefixIRIs) {
+        IRIlist += IRIlist ? `|${prefixIRI}` : prefixIRI;
+        prefixList += (prefixList ? '|' : '') + this._prefixIRIs[prefixIRI];
       }
       IRIlist = IRIlist.replace(/[\]\/\(\)\*\+\?\.\\\$]/g, '\\$&');
-      this._prefixRegex = new RegExp('^(?:' + prefixList + ')[^\/]*$|' +
-                                     '^(' + IRIlist + ')([a-zA-Z][\\-_a-zA-Z0-9]*)$');
+      this._prefixRegex = new RegExp(`^(?:${prefixList})[^\/]*$|` +
+                                     `^(${IRIlist})([a-zA-Z][\\-_a-zA-Z0-9]*)$`);
     }
     // End a prefix block with a newline
     this._write(hasPrefixes ? '\n' : '', done);
@@ -26092,7 +26486,7 @@ class N3Writer_N3Writer {
 
   // ### `blank` creates a blank node with the given content
   blank(predicate, object) {
-    var children = predicate, child, length;
+    let children = predicate, child, length;
     // Empty blank node
     if (predicate === undefined)
       children = [];
@@ -26111,35 +26505,35 @@ class N3Writer_N3Writer {
     case 1:
       child = children[0];
       if (!(child.object instanceof N3Writer_SerializedTerm))
-        return new N3Writer_SerializedTerm('[ ' + this._encodePredicate(child.predicate) + ' ' +
-                                  this._encodeObject(child.object) + ' ]');
+        return new N3Writer_SerializedTerm(`[ ${this._encodePredicate(child.predicate)} ${
+                                  this._encodeObject(child.object)} ]`);
     // Generate a multi-triple or nested blank node
     default:
-      var contents = '[';
+      let contents = '[';
       // Write all triples in order
-      for (var i = 0; i < length; i++) {
+      for (let i = 0; i < length; i++) {
         child = children[i];
         // Write only the object is the predicate is the same as the previous
         if (child.predicate.equals(predicate))
-          contents += ', ' + this._encodeObject(child.object);
+          contents += `, ${this._encodeObject(child.object)}`;
         // Otherwise, write the predicate and the object
         else {
-          contents += (i ? ';\n  ' : '\n  ') +
-                      this._encodePredicate(child.predicate) + ' ' +
-                      this._encodeObject(child.object);
+          contents += `${(i ? ';\n  ' : '\n  ') +
+                      this._encodePredicate(child.predicate)} ${
+                      this._encodeObject(child.object)}`;
           predicate = child.predicate;
         }
       }
-      return new N3Writer_SerializedTerm(contents + '\n]');
+      return new N3Writer_SerializedTerm(`${contents}\n]`);
     }
   }
 
   // ### `list` creates a list node with the given content
   list(elements) {
-    var length = elements && elements.length || 0, contents = new Array(length);
-    for (var i = 0; i < length; i++)
+    const length = elements && elements.length || 0, contents = new Array(length);
+    for (let i = 0; i < length; i++)
       contents[i] = this._encodeObject(elements[i]);
-    return new N3Writer_SerializedTerm('(' + contents.join(' ') + ')');
+    return new N3Writer_SerializedTerm(`(${contents.join(' ')})`);
   }
 
   // ### `end` signals the end of the output stream
@@ -26153,7 +26547,7 @@ class N3Writer_N3Writer {
     this._write = this._blockedWrite;
 
     // Try to end the underlying stream, ensuring done is called exactly one time
-    var singleDone = done && function (error, result) { singleDone = null, done(error, result); };
+    let singleDone = done && ((error, result) => { singleDone = null, done(error, result); });
     if (this._endStream) {
       try { return this._outputStream.end(singleDone); }
       catch (error) { /* error closing stream */ }
@@ -26165,7 +26559,7 @@ class N3Writer_N3Writer {
 // Replaces a character by its escaped version
 function characterReplacer(character) {
   // Replace a single character by its escaped version
-  var result = escapedCharacters[character];
+  let result = escapedCharacters[character];
   if (result === undefined) {
     // Replace a single character with its 4-bit unicode escape sequence
     if (character.length === 1) {
@@ -26223,16 +26617,17 @@ class N3Store_N3Store {
   // ### `size` returns the number of quads in the store
   get size() {
     // Return the quad count if if was cached
-    var size = this._size;
+    let size = this._size;
     if (size !== null)
       return size;
 
     // Calculate the number of quads by counting to the deepest level
     size = 0;
-    var graphs = this._graphs, subjects, subject;
-    for (var graphKey in graphs)
-      for (var subjectKey in (subjects = graphs[graphKey].subjects))
-        for (var predicateKey in (subject = subjects[subjectKey]))
+    const graphs = this._graphs;
+    let subjects, subject;
+    for (const graphKey in graphs)
+      for (const subjectKey in (subjects = graphs[graphKey].subjects))
+        for (const predicateKey in (subject = subjects[subjectKey]))
           size += Object.keys(subject[predicateKey]).length;
     return this._size = size;
   }
@@ -26243,10 +26638,10 @@ class N3Store_N3Store {
   // Returns if the index has changed, if the entry did not already exist.
   _addToIndex(index0, key0, key1, key2) {
     // Create layers as necessary
-    var index1 = index0[key0] || (index0[key0] = {});
-    var index2 = index1[key1] || (index1[key1] = {});
+    const index1 = index0[key0] || (index0[key0] = {});
+    const index2 = index1[key1] || (index1[key1] = {});
     // Setting the key to _any_ value signals the presence of the quad
-    var existed = key2 in index2;
+    const existed = key2 in index2;
     if (!existed)
       index2[key2] = null;
     return !existed;
@@ -26255,13 +26650,13 @@ class N3Store_N3Store {
   // ### `_removeFromIndex` removes a quad from a three-layered index
   _removeFromIndex(index0, key0, key1, key2) {
     // Remove the quad from the index
-    var index1 = index0[key0], index2 = index1[key1], key;
+    const index1 = index0[key0], index2 = index1[key1];
     delete index2[key2];
 
     // Remove intermediary index layers if they are empty
-    for (key in index2) return;
+    for (const key in index2) return;
     delete index1[key1];
-    for (key in index1) return;
+    for (const key in index1) return;
     delete index0[key0];
   }
 
@@ -26276,31 +26671,32 @@ class N3Store_N3Store {
   // and iteration halts when it returns truthy for any quad.
   // If instead `array` is given, each result is added to the array.
   _findInIndex(index0, key0, key1, key2, name0, name1, name2, graph, callback, array) {
-    var tmp, index1, index2, varCount = !key0 + !key1 + !key2,
-        // depending on the number of variables, keys or reverse index are faster
+    let tmp, index1, index2;
+    // Depending on the number of variables, keys or reverse index are faster
+    const varCount = !key0 + !key1 + !key2,
         entityKeys = varCount > 1 ? Object.keys(this._ids) : this._entities;
 
     // If a key is specified, use only that part of index 0.
     if (key0) (tmp = index0, index0 = {})[key0] = tmp[key0];
-    for (var value0 in index0) {
-      var entity0 = entityKeys[value0];
+    for (const value0 in index0) {
+      const entity0 = entityKeys[value0];
 
       if (index1 = index0[value0]) {
         // If a key is specified, use only that part of index 1.
         if (key1) (tmp = index1, index1 = {})[key1] = tmp[key1];
-        for (var value1 in index1) {
-          var entity1 = entityKeys[value1];
+        for (const value1 in index1) {
+          const entity1 = entityKeys[value1];
 
           if (index2 = index1[value1]) {
             // If a key is specified, use only that part of index 2, if it exists.
-            var values = key2 ? (key2 in index2 ? [key2] : []) : Object.keys(index2);
+            const values = key2 ? (key2 in index2 ? [key2] : []) : Object.keys(index2);
             // Create quads for all items found in index 2.
-            for (var l = 0; l < values.length; l++) {
-              var parts = { subject: null, predicate: null, object: null };
+            for (let l = 0; l < values.length; l++) {
+              const parts = { subject: null, predicate: null, object: null };
               parts[name0] = termFromId(entity0, this._factory);
               parts[name1] = termFromId(entity1, this._factory);
               parts[name2] = termFromId(entityKeys[values[l]], this._factory);
-              var quad = this._factory.quad(
+              const quad = this._factory.quad(
                 parts.subject, parts.predicate, parts.object, termFromId(graph, this._factory));
               if (array)
                 array.push(quad);
@@ -26316,13 +26712,13 @@ class N3Store_N3Store {
 
   // ### `_loop` executes the callback on all keys of index 0
   _loop(index0, callback) {
-    for (var key0 in index0)
+    for (const key0 in index0)
       callback(key0);
   }
 
   // ### `_loopByKey0` executes the callback on all keys of a certain entry in index 0
   _loopByKey0(index0, key0, callback) {
-    var index1, key1;
+    let index1, key1;
     if (index1 = index0[key0]) {
       for (key1 in index1)
         callback(key1);
@@ -26331,7 +26727,7 @@ class N3Store_N3Store {
 
   // ### `_loopByKey1` executes the callback on given keys of all entries in index 0
   _loopByKey1(index0, key1, callback) {
-    var key0, index1;
+    let key0, index1;
     for (key0 in index0) {
       index1 = index0[key0];
       if (index1[key1])
@@ -26341,7 +26737,7 @@ class N3Store_N3Store {
 
   // ### `_loopBy2Keys` executes the callback on given keys of certain entries in index 2
   _loopBy2Keys(index0, key0, key1, callback) {
-    var index1, index2, key2;
+    let index1, index2, key2;
     if ((index1 = index0[key0]) && (index2 = index1[key1])) {
       for (key2 in index2)
         callback(key2);
@@ -26352,15 +26748,15 @@ class N3Store_N3Store {
   // The index base is `index0` and the keys at each level are `key0`, `key1`, and `key2`.
   // Any of these keys can be undefined, which is interpreted as a wildcard.
   _countInIndex(index0, key0, key1, key2) {
-    var count = 0, tmp, index1, index2;
+    let count = 0, tmp, index1, index2;
 
     // If a key is specified, count only that part of index 0
     if (key0) (tmp = index0, index0 = {})[key0] = tmp[key0];
-    for (var value0 in index0) {
+    for (const value0 in index0) {
       if (index1 = index0[value0]) {
         // If a key is specified, count only that part of index 1
         if (key1) (tmp = index1, index1 = {})[key1] = tmp[key1];
-        for (var value1 in index1) {
+        for (const value1 in index1) {
           if (index2 = index1[value1]) {
             // If a key is specified, count the quad if it exists
             if (key2) (key2 in index2) && count++;
@@ -26378,7 +26774,7 @@ class N3Store_N3Store {
   _getGraphs(graph) {
     if (!isString(graph))
       return this._graphs;
-    var graphs = {};
+    const graphs = {};
     graphs[graph] = this._graphs[graph];
     return graphs;
   }
@@ -26386,11 +26782,11 @@ class N3Store_N3Store {
   // ### `_uniqueEntities` returns a function that accepts an entity ID
   // and passes the corresponding entity to callback if it hasn't occurred before.
   _uniqueEntities(callback) {
-    var uniqueIds = Object.create(null), entities = this._entities;
-    return function (id) {
+    const uniqueIds = Object.create(null);
+    return id => {
       if (!(id in uniqueIds)) {
         uniqueIds[id] = true;
-        callback(termFromId(entities[id]));
+        callback(termFromId(this._entities[id], this._factory));
       }
     };
   }
@@ -26412,7 +26808,7 @@ class N3Store_N3Store {
     graph = termToId(graph);
 
     // Find the graph that will contain the triple
-    var graphItem = this._graphs[graph];
+    let graphItem = this._graphs[graph];
     // Create the graph if it doesn't exist yet
     if (!graphItem) {
       graphItem = this._graphs[graph] = { subjects: {}, predicates: {}, objects: {} };
@@ -26424,13 +26820,13 @@ class N3Store_N3Store {
     // Since entities can often be long IRIs, we avoid storing them in every index.
     // Instead, we have a separate index that maps entities to numbers,
     // which are then used as keys in the other indexes.
-    var ids = this._ids;
-    var entities = this._entities;
+    const ids = this._ids;
+    const entities = this._entities;
     subject   = ids[subject]   || (ids[entities[++this._id] = subject]   = this._id);
     predicate = ids[predicate] || (ids[entities[++this._id] = predicate] = this._id);
     object    = ids[object]    || (ids[entities[++this._id] = object]    = this._id);
 
-    var changed = this._addToIndex(graphItem.subjects,   subject,   predicate, object);
+    const changed = this._addToIndex(graphItem.subjects,   subject,   predicate, object);
     this._addToIndex(graphItem.predicates, predicate, object,    subject);
     this._addToIndex(graphItem.objects,    object,    subject,   predicate);
 
@@ -26441,14 +26837,13 @@ class N3Store_N3Store {
 
   // ### `addQuads` adds multiple quads to the store
   addQuads(quads) {
-    for (var i = 0; i < quads.length; i++)
+    for (let i = 0; i < quads.length; i++)
       this.addQuad(quads[i]);
   }
 
   // ### `import` adds a stream of quads to the store
   import(stream) {
-    var self = this;
-    stream.on('data', function (quad) { self.addQuad(quad); });
+    stream.on('data', quad => { this.addQuad(quad); });
     return stream;
   }
 
@@ -26467,7 +26862,8 @@ class N3Store_N3Store {
 
     // Find internal identifiers for all components
     // and verify the quad exists.
-    var graphItem, ids = this._ids, graphs = this._graphs, subjects, predicates;
+    const ids = this._ids, graphs = this._graphs;
+    let graphItem, subjects, predicates;
     if (!(subject    = ids[subject]) || !(predicate = ids[predicate]) ||
         !(object     = ids[object])  || !(graphItem = graphs[graph])  ||
         !(subjects   = graphItem.subjects[subject]) ||
@@ -26489,14 +26885,13 @@ class N3Store_N3Store {
 
   // ### `removeQuads` removes multiple quads from the store
   removeQuads(quads) {
-    for (var i = 0; i < quads.length; i++)
+    for (let i = 0; i < quads.length; i++)
       this.removeQuad(quads[i]);
   }
 
   // ### `remove` removes a stream of quads from the store
   remove(stream) {
-    var self = this;
-    stream.on('data', function (quad) { self.removeQuad(quad); });
+    stream.on('data', quad => { this.removeQuad(quad); });
     return stream;
   }
 
@@ -26520,8 +26915,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var quads = [], graphs = this._getGraphs(graph), content,
-        ids = this._ids, subjectId, predicateId, objectId;
+    const quads = [], graphs = this._getGraphs(graph), ids = this._ids;
+    let content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
     if (isString(subject)   && !(subjectId   = ids[subject])   ||
@@ -26529,7 +26924,7 @@ class N3Store_N3Store {
         isString(object)    && !(objectId    = ids[object]))
       return quads;
 
-    for (var graphId in graphs) {
+    for (const graphId in graphs) {
       // Only if the specified graph contains triples, there can be results
       if (content = graphs[graphId]) {
         // Choose the optimal index, based on what fields are present
@@ -26563,11 +26958,11 @@ class N3Store_N3Store {
   // ### `match` returns a stream of quads matching a pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   match(subject, predicate, object, graph) {
-    var stream = new readable_browser["Readable"]({ objectMode: true });
+    const stream = new readable_browser["Readable"]({ objectMode: true });
 
     // Initialize stream once it is being read
     stream._read = () => {
-      for (var quad of this.getQuads(subject, predicate, object, graph))
+      for (const quad of this.getQuads(subject, predicate, object, graph))
         stream.push(quad);
       stream.push(null);
     };
@@ -26584,8 +26979,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var count = 0, graphs = this._getGraphs(graph), content,
-        ids = this._ids, subjectId, predicateId, objectId;
+    const graphs = this._getGraphs(graph), ids = this._ids;
+    let count = 0, content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
     if (isString(subject)   && !(subjectId   = ids[subject])   ||
@@ -26593,7 +26988,7 @@ class N3Store_N3Store {
         isString(object)    && !(objectId    = ids[object]))
       return 0;
 
-    for (var graphId in graphs) {
+    for (const graphId in graphs) {
       // Only if the specified graph contains triples, there can be results
       if (content = graphs[graphId]) {
         // Choose the optimal index, based on what fields are present
@@ -26621,7 +27016,7 @@ class N3Store_N3Store {
   // ### `forEach` executes the callback on all quads.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forEach(callback, subject, predicate, object, graph) {
-    this.some(function (quad) {
+    this.some(quad => {
       callback(quad);
       return false;
     }, subject, predicate, object, graph);
@@ -26631,8 +27026,8 @@ class N3Store_N3Store {
   // and returns `true` if it returns truthy for all them.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   every(callback, subject, predicate, object, graph) {
-    var some = false;
-    var every = !this.some(function (quad) {
+    let some = false;
+    const every = !this.some(quad => {
       some = true;
       return !callback(quad);
     }, subject, predicate, object, graph);
@@ -26649,8 +27044,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var graphs = this._getGraphs(graph), content,
-        ids = this._ids, subjectId, predicateId, objectId;
+    const graphs = this._getGraphs(graph), ids = this._ids;
+    let content, subjectId, predicateId, objectId;
 
     // Translate IRIs to internal index keys.
     if (isString(subject)   && !(subjectId   = ids[subject])   ||
@@ -26658,7 +27053,7 @@ class N3Store_N3Store {
         isString(object)    && !(objectId    = ids[object]))
       return false;
 
-    for (var graphId in graphs) {
+    for (const graphId in graphs) {
       // Only if the specified graph contains triples, there can be results
       if (content = graphs[graphId]) {
         // Choose the optimal index, based on what fields are present
@@ -26703,8 +27098,8 @@ class N3Store_N3Store {
   // ### `getSubjects` returns all subjects that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getSubjects(predicate, object, graph) {
-    var results = [];
-    this.forSubjects(function (s) { results.push(s); }, predicate, object, graph);
+    const results = [];
+    this.forSubjects(s => { results.push(s); }, predicate, object, graph);
     return results;
   }
 
@@ -26716,7 +27111,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var ids = this._ids, graphs = this._getGraphs(graph), content, predicateId, objectId;
+    const ids = this._ids, graphs = this._getGraphs(graph);
+    let content, predicateId, objectId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
@@ -26749,8 +27145,8 @@ class N3Store_N3Store {
   // ### `getPredicates` returns all predicates that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getPredicates(subject, object, graph) {
-    var results = [];
-    this.forPredicates(function (p) { results.push(p); }, subject, object, graph);
+    const results = [];
+    this.forPredicates(p => { results.push(p); }, subject, object, graph);
     return results;
   }
 
@@ -26762,7 +27158,8 @@ class N3Store_N3Store {
     object = object && termToId(object);
     graph = graph && termToId(graph);
 
-    var ids = this._ids, graphs = this._getGraphs(graph), content, subjectId, objectId;
+    const ids = this._ids, graphs = this._getGraphs(graph);
+    let content, subjectId, objectId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
@@ -26795,8 +27192,8 @@ class N3Store_N3Store {
   // ### `getObjects` returns all objects that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getObjects(subject, predicate, graph) {
-    var results = [];
-    this.forObjects(function (o) { results.push(o); }, subject, predicate, graph);
+    const results = [];
+    this.forObjects(o => { results.push(o); }, subject, predicate, graph);
     return results;
   }
 
@@ -26808,7 +27205,8 @@ class N3Store_N3Store {
     predicate = predicate && termToId(predicate);
     graph = graph && termToId(graph);
 
-    var ids = this._ids, graphs = this._getGraphs(graph), content, subjectId, predicateId;
+    const ids = this._ids, graphs = this._getGraphs(graph);
+    let content, subjectId, predicateId;
     callback = this._uniqueEntities(callback);
 
     // Translate IRIs to internal index keys.
@@ -26841,16 +27239,16 @@ class N3Store_N3Store {
   // ### `getGraphs` returns all graphs that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   getGraphs(subject, predicate, object) {
-    var results = [];
-    this.forGraphs(function (g) { results.push(g); }, subject, predicate, object);
+    const results = [];
+    this.forGraphs(g => { results.push(g); }, subject, predicate, object);
     return results;
   }
 
   // ### `forGraphs` executes the callback on all graphs that match the pattern.
   // Setting any field to `undefined` or `null` indicates a wildcard.
   forGraphs(callback, subject, predicate, object) {
-    for (var graph in this._graphs) {
-      this.some(function (quad) {
+    for (const graph in this._graphs) {
+      this.some(quad => {
         callback(quad.graph);
         return true; // Halt iteration of some()
       }, subject, predicate, object, graph);
@@ -26859,16 +27257,16 @@ class N3Store_N3Store {
 
   // ### `createBlankNode` creates a new blank node, returning its name
   createBlankNode(suggestedName) {
-    var name, index;
+    let name, index;
     // Generate a name based on the suggested name
     if (suggestedName) {
-      name = suggestedName = '_:' + suggestedName, index = 1;
+      name = suggestedName = `_:${suggestedName}`, index = 1;
       while (this._ids[name])
         name = suggestedName + index++;
     }
     // Generate a generic blank node name
     else {
-      do { name = '_:b' + this._blankNodeIndex++; }
+      do { name = `_:b${this._blankNodeIndex++}`; }
       while (this._ids[name]);
     }
     // Add the blank node to the entities, avoiding the generation of duplicates
@@ -26880,29 +27278,29 @@ class N3Store_N3Store {
   // ### `extractLists` finds and removes all list triples
   // and returns the items per list.
   extractLists({ remove = false, ignoreErrors = false } = {}) {
-    var lists = {}; // has scalar keys so could be a simple Object
-    var onError = ignoreErrors ? (() => true) :
+    const lists = {}; // has scalar keys so could be a simple Object
+    const onError = ignoreErrors ? (() => true) :
                   ((node, message) => { throw new Error(`${node.value} ${message}`); });
 
     // Traverse each list from its tail
-    var tails = this.getQuads(null, IRIs["a" /* default */].rdf.rest, IRIs["a" /* default */].rdf.nil, null);
-    var toRemove = remove ? [...tails] : [];
+    const tails = this.getQuads(null, IRIs["a" /* default */].rdf.rest, IRIs["a" /* default */].rdf.nil, null);
+    const toRemove = remove ? [...tails] : [];
     tails.forEach(tailQuad => {
-      var items = [];             // the members found as objects of rdf:first quads
-      var malformed = false;      // signals whether the current list is malformed
-      var head;                   // the head of the list (_:b1 in above example)
-      var headPos;                // set to subject or object when head is set
-      var graph = tailQuad.graph; // make sure list is in exactly one graph
+      const items = [];             // the members found as objects of rdf:first quads
+      let malformed = false;      // signals whether the current list is malformed
+      let head;                   // the head of the list (_:b1 in above example)
+      let headPos;                // set to subject or object when head is set
+      const graph = tailQuad.graph; // make sure list is in exactly one graph
 
       // Traverse the list from tail to end
-      var current = tailQuad.subject;
+      let current = tailQuad.subject;
       while (current && !malformed) {
-        var objectQuads = this.getQuads(null, null, current, null);
-        var subjectQuads = this.getQuads(current, null, null, null);
-        var i, quad, first = null, rest = null, parent = null;
+        const objectQuads = this.getQuads(null, null, current, null);
+        const subjectQuads = this.getQuads(current, null, null, null);
+        let quad, first = null, rest = null, parent = null;
 
         // Find the first and rest of this list node
-        for (i = 0; i < subjectQuads.length && !malformed; i++) {
+        for (let i = 0; i < subjectQuads.length && !malformed; i++) {
           quad = subjectQuads[i];
           if (!quad.graph.equals(graph))
             malformed = onError(current, 'not confined to single graph');
@@ -26936,7 +27334,7 @@ class N3Store_N3Store {
 
         // { :s :p (1 2) } arrives here with no head
         // { (1 2) :p :o } arrives here with head set to the list.
-        for (i = 0; i < objectQuads.length && !malformed; ++i) {
+        for (let i = 0; i < objectQuads.length && !malformed; ++i) {
           quad = objectQuads[i];
           if (head)
             malformed = onError(current, 'can\'t have coreferences');
@@ -26993,9 +27391,10 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
     this._readableState.objectMode = true;
 
     // Set up parser with dummy stream to obtain `data` and `end` callbacks
-    var self = this, parser = new N3Parser_N3Parser(options), onData, onEnd;
+    const parser = new N3Parser_N3Parser(options);
+    let onData, onEnd;
     parser.parse({
-      on: function (event, callback) {
+      on: (event, callback) => {
         switch (event) {
         case 'data': onData = callback; break;
         case 'end':   onEnd = callback; break;
@@ -27003,22 +27402,21 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
       },
     },
       // Handle quads by pushing them down the pipeline
-      function (error, quad) { error && self.emit('error', error) || quad && self.push(quad); },
+      (error, quad) => { error && this.emit('error', error) || quad && this.push(quad); },
       // Emit prefixes through the `prefix` event
-      function (prefix, uri) { self.emit('prefix', prefix, uri); }
+      (prefix, uri) => { this.emit('prefix', prefix, uri); }
     );
 
     // Implement Transform methods through parser callbacks
-    this._transform = function (chunk, encoding, done) { onData(chunk); done(); };
-    this._flush = function (done) { onEnd(); done(); };
+    this._transform = (chunk, encoding, done) => { onData(chunk); done(); };
+    this._flush = done => { onEnd(); done(); };
   }
 
   // ### Parses a stream of strings
   import(stream) {
-    var self = this;
-    stream.on('data',  function (chunk) { self.write(chunk); });
-    stream.on('end',   function ()      { self.end(); });
-    stream.on('error', function (error) { self.emit('error', error); });
+    stream.on('data',  chunk => { this.write(chunk); });
+    stream.on('end',   ()      => { this.end(); });
+    stream.on('error', error => { this.emit('error', error); });
     return this;
   }
 }
@@ -27035,24 +27433,22 @@ class N3StreamWriter_N3StreamWriter extends readable_browser["Transform"] {
     this._writableState.objectMode = true;
 
     // Set up writer with a dummy stream object
-    var self = this;
-    var writer = this._writer = new N3Writer_N3Writer({
-      write: function (quad, encoding, callback) { self.push(quad); callback && callback(); },
-      end: function (callback) { self.push(null); callback && callback(); },
+    const writer = this._writer = new N3Writer_N3Writer({
+      write: (quad, encoding, callback) => { this.push(quad); callback && callback(); },
+      end: callback => { this.push(null); callback && callback(); },
     }, options);
 
     // Implement Transform methods on top of writer
-    this._transform = function (quad, encoding, done) { writer.addQuad(quad, done); };
-    this._flush = function (done) { writer.end(done); };
+    this._transform = (quad, encoding, done) => { writer.addQuad(quad, done); };
+    this._flush = done => { writer.end(done); };
   }
 
 // ### Serializes a stream of quads
   import(stream) {
-    var self = this;
-    stream.on('data',   function (quad)  { self.write(quad); });
-    stream.on('end',    function ()      { self.end(); });
-    stream.on('error',  function (error) { self.emit('error', error); });
-    stream.on('prefix', function (prefix, iri) { self._writer.addPrefix(prefix, iri); });
+    stream.on('data',   quad => { this.write(quad); });
+    stream.on('end',    () => { this.end(); });
+    stream.on('error',  error => { this.emit('error', error); });
+    stream.on('prefix', (prefix, iri) => { this._writer.addPrefix(prefix, iri); });
     return this;
   }
 }
