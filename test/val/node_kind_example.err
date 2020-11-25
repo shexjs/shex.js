@@ -39,9 +39,17 @@
               "nodeKind": "iri"
             }
           },
-          "errors": [
-            "Error validating \"just fine\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
-          ]
+          "errors": {
+            "type": "NodeConstraintViolation",
+            "focus": "\"just fine\"",
+            "errors": [
+              "Error validating \"just fine\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
+            ],
+            "shapeExpr": {
+              "nodeKind": "iri",
+              "type": "NodeConstraint"
+            }
+          }
         },
         {
           "type": "MissingProperty",
