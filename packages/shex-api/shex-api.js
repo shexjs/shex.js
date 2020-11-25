@@ -1,6 +1,6 @@
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExApiCjsModule = function (config) {
+const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = require("@shexjs/util");
   const ShExParser = require("@shexjs/parser");
@@ -85,7 +85,7 @@ const ShExApiCjsModule = function (config) {
   async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
     const returns = {
       schema: ShExUtil.emptySchema(),
-      data: new config.rdfjs.Store(),
+      data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     }
@@ -173,10 +173,14 @@ const ShExApiCjsModule = function (config) {
       resolveSelf = resolve; rejectSelf = reject
     })
     self.all = function (pz) {
-      pz.forEach(function (promise, index) {
-        promises.push(promise)
-        addThen(promise, index)
-      })
+      if (pz.length === 0)
+        resolveSelf([]) // otherwise it returns a Promise which never .thens
+      // (and oddly doesn't have a slot in nodes pending promises?)
+      else
+        pz.forEach(function (promise, index) {
+          promises.push(promise)
+          addThen(promise, index)
+        })
       return self
     }
     self.add = function (promise) {
