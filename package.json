@@ -83,7 +83,7 @@
     "coverage": "nyc npm run test-all",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
     "travis-deploy-once": "travis-deploy-once",
-    "webpack": "cd packages/shex-webapp && npm run webpack",
+    "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack)",
     "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
     "webpack-monitor": "cd packages/shex-webapp && npm run webpack-monitor"
   },
