@@ -398,7 +398,7 @@ function ShExValidator_constructor(schema, db, options) {
     if ("startActs" in schema && outside) {
       ret.startActs = schema.startActs;
     }
-    return ret;
+    return this.options.noResults ? {} : ret;
   }
 
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen) {
