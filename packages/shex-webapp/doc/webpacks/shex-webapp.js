@@ -10457,7 +10457,7 @@ if (true)
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
-const ShExApiCjsModule = function (config) {
+const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(4);
   const ShExParser = __webpack_require__(12);
@@ -10542,7 +10542,7 @@ const ShExApiCjsModule = function (config) {
   async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
     const returns = {
       schema: ShExUtil.emptySchema(),
-      data: new config.rdfjs.Store(),
+      data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     }
