@@ -473,7 +473,7 @@ function ShExValidator_constructor(schema, db, options) {
     if ("startActs" in schema && outside) {
       ret.startActs = schema.startActs;
     }
-    return ret;
+    return this.options.noResults ? {} : ret;
   }
 
   this._validateShapeDecl = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
