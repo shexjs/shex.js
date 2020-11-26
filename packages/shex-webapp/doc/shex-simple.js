@@ -2056,7 +2056,7 @@ if ('_testCallback' in window) {
 }
 ready.then(resolves => {
   if (!('_testCallback' in window))
-    console.log('serch parameters:', resolves[1]);
+    console.log('search parameters:', resolves[1]);
   // Update UI to say we're done loading everything?
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
