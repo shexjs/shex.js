@@ -201,7 +201,7 @@ ShExWriter.prototype = {
 
       if (shape.closed) pieces.push("CLOSED ");
 
-      [{keyword: "extends", marker: "&"}].forEach(pair => {
+      [{keyword: "extends", marker: "EXTENDS"}].forEach(pair => {
          // pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
          if (shape[pair.keyword] && shape[pair.keyword].length > 0) {
            shape[pair.keyword].forEach(function (i, ord) {

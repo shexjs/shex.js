@@ -5294,7 +5294,7 @@ ShExWriter.prototype = {
 
       if (shape.closed) pieces.push("CLOSED ");
 
-      [{keyword: "extends", marker: "&"}].forEach(pair => {
+      [{keyword: "extends", marker: "EXTENDS"}].forEach(pair => {
          // pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
          if (shape[pair.keyword] && shape[pair.keyword].length > 0) {
            shape[pair.keyword].forEach(function (i, ord) {
@@ -9283,13 +9283,15 @@ function ShExValidator_constructor(schema, db, options) {
     } else {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
+
+    // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
       return this._validateShapeDecl(point, shape, Start, 0, tracker, seen);
 
     if (seen === undefined)
       seen = {};
     const seenKey = point + "@" + (label === Start ? "_: -start-" : label);
-    if (!subGraph) {
+    if (!subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
       if (seenKey in seen)
         return tracker.recurse({
           type: "Recursion",
@@ -9301,8 +9303,63 @@ function ShExValidator_constructor(schema, db, options) {
       seen[seenKey] = { point: point, shape: label };
       tracker.enter(point, label);
     }
+    const ret = this._validateDescendants(point, label, 0, tracker, seen, subGraph);
+    if (!subGraph) {
+      tracker.exit(point, label, ret);
+      delete seen[seenKey];
+      if ("known" in this)
+        this.known[seenKey] = ret;
+    }
+    if ("startActs" in schema && outside) {
+      ret.startActs = schema.startActs;
+    }
+    return ret;
+  }
 
-    function schemaExtensions (schema) {
+  this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, subGraph) {
+    if (subGraph) // Shape inference doesn't apply when validating base shapes.
+      return this._validateShapeDecl(point, index.shapeExprs[shapeLabel], shapeLabel, 0, tracker, seen, subGraph);
+
+    // Find all non-abstract shapeExprs extended with label. 
+    let candidates = [shapeLabel];
+    candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+    // Uniquify list.
+    for (let i = candidates.length - 1; i >= 0; --i) {
+      if (candidates.indexOf(candidates[i]) < i)
+        candidates.splice(i, 1);
+    }
+    // Filter out abstract shapes.
+    candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
+
+    // Aggregate results in a SolutionList or FailureList.
+    const results = candidates.reduce((ret, candidateShapeLabel) => {
+      const shapeExpr = index.shapeExprs[candidateShapeLabel];
+      const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, subGraph);
+      return "errors" in res ?
+        { passes: ret.passes, failures: ret.failures.concat(res) } :
+        { passes: ret.passes.concat(res), failures: ret.failures } ;
+
+    }, {passes: [], failures: []});
+    let ret;
+    if (results.passes.length > 0) {
+      ret = results.passes.length !== 1 ?
+        { type: "SolutionList", solutions: results.passes } :
+      results.passes [0];
+    } else if (results.failures.length > 0) {
+      ret = results.failures.length !== 1 ?
+        { type: "FailureList", errors: results.failures } :
+      results.failures [0];
+    } else {
+      ret = {
+        type: "AbstractShapeFailure",
+        shape: shapeLabel,
+        errors: shapeLabel + " has no non-abstract children"
+      };
+    }
+    return ret;
+
+    // @TODO move to Vistior.index
+    function indexExtensions (schema) {
       const abstractness = {};
       const extensions = Hierarchy.create();
       makeSchemaVisitor().visitSchema(schema);
@@ -9337,53 +9394,6 @@ function ShExValidator_constructor(schema, db, options) {
         return schemaVisitor;
       }
     }
-    // Get derived shapes.
-    let candidates = [label];
-    if (!subGraph) {
-      candidates = candidates.concat(schemaExtensions(this.schema)[label] || []);
-      // Uniquify list.
-      for (let i = candidates.length - 1; i >= 0; --i) {
-        if (candidates.indexOf(candidates[i]) < i)
-          candidates.splice(i, 1);
-      }
-      // Filter out abstract shapes.
-      candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
-    }
-    const results = candidates.reduce((ret, label) => {
-      const shapeExpr = index.shapeExprs[label];
-      const res = this._validateShapeDecl(point, shapeExpr, label, 0, tracker, seen, subGraph);
-      return "errors" in res ?
-        { passes: ret.passes, failures: ret.failures.concat(res) } :
-        { passes: ret.passes.concat(res), failures: ret.failures } ;
-
-    }, {passes: [], failures: []});
-    let ret;
-    if (results.passes.length > 0) {
-      ret = results.passes.length !== 1 ?
-        { type: "SolutionList", solutions: results.passes } :
-      results.passes [0];
-    } else if (results.failures.length > 0) {
-      ret = results.failures.length !== 1 ?
-        { type: "FailureList", errors: results.failures } :
-      results.failures [0];
-    } else {
-      ret = {
-        type: "AbstractShapeFailure",
-        shape: label,
-        errors: label + " has no non-abstract children"
-      };
-    }
-    if (!subGraph) {
-      tracker.exit(point, label, ret);
-      delete seen[seenKey];
-      // Don't cache EXTENDS validations as they aren't testing the neighborhood.
-      if ("known" in this)
-        this.known[seenKey] = ret;
-    }
-    if ("startActs" in schema && outside) {
-      ret.startActs = schema.startActs;
-    }
-    return ret;
   }
 
   this._validateShapeDecl = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
@@ -9395,7 +9405,7 @@ function ShExValidator_constructor(schema, db, options) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     if (typeof shapeExpr === "string") { // ShapeRef
-      return this._validateShapeDecl(point, index.shapeExprs[shapeExpr], shapeExpr, depth, tracker, seen, subgraph);
+      return this._validateDescendants(point, shapeExpr, depth, tracker, seen, subgraph);
     } else if (shapeExpr.type === "NodeConstraint") {
       const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       return sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
@@ -9517,9 +9527,9 @@ function ShExValidator_constructor(schema, db, options) {
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
-          t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
-          extras.indexOf(i) === -1; // wasn't in EXTRAs.
+          return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
+            tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
+            extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
           errors.push({
