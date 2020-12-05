@@ -301,7 +301,7 @@ function ShExValidator_constructor(schema, db, options) {
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
-  this.validate = function (point, label, tracker, seen, subGraph, noDescendants) {
+  this.validate = function (point, label, tracker, seen, subGraph) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
       point = ShExTerm.internalTerm(point)
@@ -393,10 +393,7 @@ function ShExValidator_constructor(schema, db, options) {
       seen[seenKey] = { point: point, shape: label };
       tracker.enter(point, label);
     }
-    const ret = noDescendants
-          ? // Shape polymorphism doesn't apply when validating base shapes.
-            this._validateShapeDecl(point, index.shapeExprs[label], label, 0, tracker, seen, subGraph)
-          : this._validateDescendants(point, label, 0, tracker, seen, subGraph);
+    const ret = this._validateDescendants(point, label, 0, tracker, seen, subGraph);
     if (!subGraph) {
       tracker.exit(point, label, ret);
       delete seen[seenKey];
@@ -778,7 +775,7 @@ function ShExValidator_constructor(schema, db, options) {
       const extend = expr.extends[eNo];
       const subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      const sub = _ShExValidator.validate(point, extend, valParms.tracker, valParms.seen, subgraph, true)
+      const sub = _ShExValidator.validate(point, extend, valParms.tracker, valParms.seen, subgraph)
       if ("errors" in sub)
         errors.push(sub);
       else
