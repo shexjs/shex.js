@@ -67,7 +67,8 @@ const CommandLineOptions = [
   { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
   { name: "track",                 type: Boolean , description: "display graph nodes touched by validation" },
-  { name: "slurp",                 type: Boolean , description: "record neighborhoods visited by validation" },
+  { name: "slurp",                 type: Boolean , description: "record minimal neighborhoods needed by validation" },
+  { name: "slurp-all",             type: Boolean , description: "record complete neighborhoods visited by validation. implies --slurp; may be the same as --slurp, depending on the databse" },
   { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
@@ -410,9 +411,10 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         }
       }
 
-      const res = findNodesAndValidate(schemaAndData, valParms, validatorOptions, schemaOptions).results;
-      if (valParms.slurp)
-        res.graph = queryTracker.store; // slurp trumps query graph
+      const valOpts2 = valParms.slurp
+            ? Object.assign({}, {noResults: true}, validatorOptions)
+            : validatorOptions;
+      const res = findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaOptions).results;
 
       if (cmds["dry-run"])
         return res;
@@ -445,7 +447,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             console.log(text);
           else
             console.log(JSON.stringify(res, null, "  "));
-        } else if (!valParms.quiet)
+        } else if (!valParms.quiet && !valParms.slurp)
           console.log(JSON.stringify(res, null, "  "));
         // Exit status 2 means validation failure.
         return passed ? 0 : 2;
@@ -457,8 +459,12 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   };
 
   function makeQueryTracker (schemaMeta, dataMeta) {
+    if (valParms.slurp) {
+      console.log(Object.keys(dataMeta.meta.prefixes).map(
+        prefix => `PREFIX ${prefix}: <${dataMeta.meta.prefixes[prefix]}>\n`
+      ).join(""));
+    }
     return {
-      store: valParms.slurp ? new N3.Store() : null,
       start: function (isOut, term, shapeLabel) {
         if (valParms.track) {
           var node = rdflib_termToLex(term, dataMeta);
@@ -470,10 +476,18 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       end: function (triples, time) {
         if (valParms.track)
           process.stdout.write(" " + triples.length + " triples (" + time + " μs)\n");
-        if (valParms.slurp)
-          this.store.addQuads(triples.map(
+        if (valParms.slurp) {
+          const wr = new N3.Writer({ prefixes: dataMeta.meta.prefixes || {} });
+          wr.addQuads(triples.map(
             t => ShExTerm.externalTriple(t, N3.DataFactory)
           ));
+          wr.end((error, results) => {
+            if (error)
+              console.warn(error.replace(/^/mg, "# "));
+            else
+              console.log(results.replace(/^(@prefix [^:]*: *<[^>]*> *.\n)*\n*/g, ''));
+          });
+        }
       }
     }
   }
@@ -841,13 +855,15 @@ function loadJSONmanifest (jsonManifests) {
 }
 
 function loadCommandLine (cmds) {
-  // from the command line directly
 
-  // coerce booleans (no files called "true" or "false", please).
-  if ("result" in cmds) {
+  // Set implicit commands
+  if ("result" in cmds) { // "true" and "false" are reserved.
     if (cmds.result === "true") cmds.result = true;
     else if (cmds.result === "false") cmds.result = false;
   }
+  if ("slurp-all" in cmds)
+    cmds.slurp = "true";
+
   if (cmds.invocation) {
     console.log(getInvocation(cmds));
   }

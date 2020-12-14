@@ -15768,11 +15768,8 @@ function ShExValidator_constructor(schema, db, options) {
           return acc.concat(indexTripleConstraints_dive(nested));
         }, []);
 
-      else if (expr.type === "NestedShape")
-        return [];
-
       else
-        runtimeError("unexpected expr type: " + expr.type);
+        return runtimeError("unexpected expr type: " + expr.type);
     };
   };
 
@@ -15850,6 +15847,8 @@ function ShExValidator_constructor(schema, db, options) {
     } else {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
+
+    // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
       return this._validateShapeExpr(point, shape, Start, tracker, seen);
 
@@ -15874,7 +15873,7 @@ function ShExValidator_constructor(schema, db, options) {
     if ("startActs" in schema && outside) {
       ret.startActs = schema.startActs;
     }
-    return ret;
+    return this.options.noResults ? {} : ret;
   }
 
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen) {
@@ -15986,7 +15985,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
-          extras.indexOf(i) === -1; // wasn't in EXTRAs.
+            extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
           errors.push({
@@ -16753,8 +16752,8 @@ function vpEngine (schema, shape, index) {
         }
 
         const constraintNo = constraintList.indexOf(expr);
-        const min = "min" in expr ? expr.min : 1;
-        const max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        let min = "min" in expr ? expr.min : 1;
+        let max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
 
         function validateRept (type, val) {
           let repeated = 0, errOut = false;
@@ -21261,7 +21260,6 @@ function config (name) {
 /* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
@@ -21283,8 +21281,6 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
