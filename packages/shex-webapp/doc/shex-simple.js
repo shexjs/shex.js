@@ -1726,6 +1726,41 @@ async function loadSearchParameters () {
   return loaded;
 }
 
+function setTextAreaHandlers () {
+  const timeouts = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = undefined;
+    return acc;
+  }, {});
+
+  Object.keys(Caches).forEach(function (cache) {
+    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
+      const code = e.keyCode || e.charCode;
+      // if (!(e.ctrlKey)) {
+      //   results.clear();
+      // }
+      if (!(e.ctrlKey && (code === 10 || code === 13))) {
+        later(e.target, cache, Caches[cache]);
+      }
+    });
+  });
+
+  function later (target, side, cache) {
+    cache.dirty(true);
+    if (timeouts[side])
+      clearTimeout(timeouts[side]);
+
+    timeouts[side] = setTimeout(() => {
+      timeouts[side] = undefined;
+      const curSum = sum($(target).val());
+      if (curSum in listItems[side])
+        listItems[side][curSum].addClass("selected");
+      else
+        $("#"+side+" .selected").removeClass("selected");
+      delete cache.url;
+    }, INPUTAREA_TIMEOUT);
+  }
+}
+
   /**
    * update location with a current values of some inputs
    */
@@ -1984,38 +2019,6 @@ async function prepareManifest (demoList, base) {
   }, {});
   const nestingAsList = Object.keys(nesting).map(e => nesting[e]);
   await paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
-  const timeouts = Object.keys(Caches).reduce((acc, k) => {
-    acc[k] = undefined;
-    return acc;
-  }, {});
-
-  Object.keys(Caches).forEach(function (cache) {
-    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
-      const code = e.keyCode || e.charCode;
-      // if (!(e.ctrlKey)) {
-      //   results.clear();
-      // }
-      if (!(e.ctrlKey && (code === 10 || code === 13))) {
-        later(e.target, cache, Caches[cache]);
-      }
-    });
-  });
-
-  function later (target, side, cache) {
-    cache.dirty(true);
-    if (timeouts[side])
-      clearTimeout(timeouts[side]);
-
-    timeouts[side] = setTimeout(() => {
-      timeouts[side] = undefined;
-      const curSum = sum($(target).val());
-      if (curSum in listItems[side])
-        listItems[side][curSum].addClass("selected");
-      else
-        $("#"+side+" .selected").removeClass("selected");
-      delete cache.url;
-    }, INPUTAREA_TIMEOUT);
-  }
 }
 
 function addContextMenus (inputSelector, cache) {
@@ -2164,6 +2167,7 @@ function addContextMenus (inputSelector, cache) {
 }
 
 prepareControls();
+setTextAreaHandlers();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
 let ready = Promise.all([ dndPromise, loads ]);
@@ -2173,7 +2177,7 @@ if ('_testCallback' in window) {
 }
 ready.then(resolves => {
   if (!('_testCallback' in window))
-    console.log('serch parameters:', resolves[1]);
+    console.log('search parameters:', resolves[1]);
   // Update UI to say we're done loading everything?
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
