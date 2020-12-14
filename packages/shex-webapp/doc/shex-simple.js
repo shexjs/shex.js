@@ -24,7 +24,7 @@ const DefaultBase = location.origin + location.pathname;
 
 const Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
-Caches.inputMeta = makeTurtleCache($("#meta textarea"));
+Caches.inputMeta = makeTurtleCache($("#inputMeta textarea"), [Caches.inputSchema]);
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
 Caches.extension = makeExtensionCache($("#extensionDrop"));
@@ -55,7 +55,7 @@ const Getables = [
   {queryStringParm: "manifest",     location: Caches.manifest.selection,    cache: Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
   {queryStringParm: "extension",    location: Caches.extension.selection,   cache: Caches.extension  },
   {queryStringParm: "shape-map",    location: $("#textMap"),                cache: Caches.shapeMap   },
-  {queryStringParm: "meta",         location: Caches.inputMeta.selection,   cache: Caches.inputMeta  },
+  {queryStringParm: "inputMeta",    location: Caches.inputMeta.selection,   cache: Caches.inputMeta  },
 ];
 
 const QueryParams = Getables.concat([
@@ -80,7 +80,7 @@ function parseTurtle (text, meta, base) {
 const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
 function parseShEx (text, meta, base) {
   $("#schemaDialect").text(Caches.inputSchema.language);
-  var resolverText = $("#meta textarea").val();
+  var resolverText = $("#inputMeta textarea").val();
   if (resolverText) {
     var resolverStore = new RdfJs.Store();
     shexParser._setTermResolver(ShEx.Parser.dbTermResolver(resolverStore));
@@ -265,8 +265,13 @@ function makeSchemaCache (selection) {
   return ret;
 }
 
-function makeTurtleCache (selection) {
+function makeTurtleCache (selection, dependencies = []) {
   const ret = _makeCache(selection);
+  const oldDirty = ret.dirty;
+  ret.dirty = function (newVal) {
+    oldDirty.call(ret, newVal)
+    dependencies.forEach(d => d.dirty(newVal));
+  };
   ret.parse = function (text, base) {
     var text = Caches.inputData.get();
     var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
@@ -684,7 +689,7 @@ async function pickSchema (name, schemaTest, elt, listItems, side) {
 
     var hasMeta = "meta" in schemaTest && schemaTest.meta.length > 0;
     Caches.inputMeta.set(hasMeta ? schemaTest.meta : "");
-    $("#showMeta").prop("checked", hasMeta);
+    $("#showInputMeta").prop("checked", hasMeta);
     revealMetaPane();
 
     clearData();
@@ -1366,7 +1371,7 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
-  $("#showMeta").on("click", revealMetaPane);
+  $("#showInputMeta").on("click", revealMetaPane);
   $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
@@ -1543,14 +1548,14 @@ function toggleControlsArrow (which) {
 }
 
 function revealMetaPane () {
-  if ($("#showMeta").is(":checked")) {
-    $("#meta").show();
-    if ($("#meta").attr("data-adjust"))
-      $($("#meta").attr("data-adjust")).attr("rows", "12");
+  if ($("#showInputMeta").is(":checked")) {
+    $("#inputMeta").show();
+    if ($("#inputMeta").attr("data-adjust"))
+      $($("#inputMeta").attr("data-adjust")).attr("rows", "12");
   } else {
-    $("#meta").hide();
-    if ($("#meta").attr("data-adjust"))
-      $($("#meta").attr("data-adjust")).attr("rows", "25");
+    $("#inputMeta").hide();
+    if ($("#inputMeta").attr("data-adjust"))
+      $($("#inputMeta").attr("data-adjust")).attr("rows", "25");
   }
 }
 
@@ -1894,10 +1899,51 @@ async function loadSearchParameters () {
   return loaded;
 }
 
-function changeInputTabs() { // ???
+function changeInputTabs() { // to be used for wikidata deployment
   $("#query").html("<a href=\"#textMap\">Query</a>");
   $("#queryEditor").remove();
   $("#fixMap").html("<a href=\"#fixedMap-tab\">Entities to check</a>");
+}
+
+function setTextAreaHandlers () {
+  const timeouts = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = undefined;
+    return acc;
+  }, {});
+
+  Object.keys(Caches).forEach(function (cache) {
+    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
+      const code = e.keyCode || e.charCode;
+      // if (!(e.ctrlKey)) {
+      //   results.clear();
+      // }
+      if (!(e.ctrlKey && (code === 10 || code === 13))) {
+        later(e.target, cache, Caches[cache]);
+      }
+    });
+  });
+
+  $("#inputMeta textarea").keyup(function (e) {
+    var code = e.keyCode || e.charCode;
+    if (!(e.ctrlKey && (code === 10 || code === 13)))
+      later(e.target, "inputMeta", Caches.inputMeta);
+  });
+
+  function later (target, side, cache) {
+    cache.dirty(true);
+    if (timeouts[side])
+      clearTimeout(timeouts[side]);
+
+    timeouts[side] = setTimeout(() => {
+      timeouts[side] = undefined;
+      const curSum = sum($(target).val());
+      if (curSum in listItems[side])
+        listItems[side][curSum].addClass("selected");
+      else
+        $("#"+side+" .selected").removeClass("selected");
+      delete cache.url;
+    }, INPUTAREA_TIMEOUT);
+  }
 }
 
   /**
@@ -2162,44 +2208,6 @@ async function prepareManifest (demoList, base) {
   }, {});
   const nestingAsList = Object.keys(nesting).map(e => nesting[e]);
   await paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
-  const timeouts = Object.keys(Caches).reduce((acc, k) => {
-    acc[k] = undefined;
-    return acc;
-  }, {});
-
-  Object.keys(Caches).forEach(function (cache) {
-    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
-      const code = e.keyCode || e.charCode;
-      // if (!(e.ctrlKey)) {
-      //   results.clear();
-      // }
-      if (!(e.ctrlKey && (code === 10 || code === 13))) {
-        later(e.target, cache, Caches[cache]);
-      }
-    });
-  });
-
-  $("#meta textarea").keyup(function (e) {
-    var code = e.keyCode || e.charCode;
-    if (!(e.ctrlKey && (code === 10 || code === 13)))
-      later(e.target, "meta", Caches.inputMeta);
-  });
-
-  function later (target, side, cache) {
-    cache.dirty(true);
-    if (timeouts[side])
-      clearTimeout(timeouts[side]);
-
-    timeouts[side] = setTimeout(() => {
-      timeouts[side] = undefined;
-      const curSum = sum($(target).val());
-      if (curSum in listItems[side])
-        listItems[side][curSum].addClass("selected");
-      else
-        $("#"+side+" .selected").removeClass("selected");
-      delete cache.url;
-    }, INPUTAREA_TIMEOUT);
-  }
 }
 
 function addContextMenus (inputSelector, cache) {
@@ -2384,6 +2392,7 @@ function addContextMenus (inputSelector, cache) {
 }
 
 prepareControls();
+setTextAreaHandlers();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
 const ready = Promise.all([ dndPromise, loads ]);
@@ -2393,7 +2402,7 @@ if ('_testCallback' in window) {
 }
 ready.then(resolves => {
   if (!('_testCallback' in window))
-    console.log('serch parameters:', resolves[1]);
+    console.log('search parameters:', resolves[1]);
   // Update UI to say we're done loading everything?
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
