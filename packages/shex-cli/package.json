@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@shexjs/node": "file:../shex-node",
+    "@shexjs/parser": "file:../shex-parser",
     "@shexjs/util": "file:../shex-util",
     "@shexjs/writer": "file:../shex-writer",
     "command-line-args": "^5.0.2",

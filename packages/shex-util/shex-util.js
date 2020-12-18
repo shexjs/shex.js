@@ -1896,7 +1896,7 @@ const ShExUtil = {
   },
   /** emulate N3Store().getQuads() with additional parm.
    */
-  sparqlDB: function (endpoint, queryTracker) {
+  sparqlDB: function (endpoint, queryTracker, options) {
     const _ShExUtil = this;
     // Need to inspect the schema to calculate the relevant neighborhood.
     const schemaIndex = null;
@@ -1959,7 +1959,7 @@ const ShExUtil = {
       }
       const outgoing = (tcs.out.length > 0 || shape.closed)
           ? mapQueryToTriples(
-            shape.closed
+            shape.closed || options.allOutgoing
               ? `SELECT ?p ?o { ${pointStr} ?s ?p ?o }`
               : `SELECT ?p ?o { # ${point}\n` + pointStr +
               pz.map(

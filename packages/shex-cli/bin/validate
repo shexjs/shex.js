@@ -393,7 +393,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             metaToResolver(schemaAndData.dataMeta[0]))
           : null;
     schemaAndData.data = valParms.endpoint
-      ? ShExUtil.sparqlDB(valParms.endpoint, queryTracker)
+      ? ShExUtil.sparqlDB(valParms.endpoint, queryTracker, {allOutgoing: valParms["slurp-all"]})
       : ShExUtil.rdfjsDB(schemaAndData.data, queryTracker);
 
     if (valParms.serve) {
