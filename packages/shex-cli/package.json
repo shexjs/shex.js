@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "shape-map": "file:../shape-map",
+    "@shexjs/parser": "file:../shex-parser",
     "@shexjs/util": "file:../shex-util",
     "@shexjs/node": "file:../shex-node",
     "@shexjs/writer": "file:../shex-writer",
