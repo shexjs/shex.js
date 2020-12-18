@@ -15870,7 +15870,7 @@ function ShExValidator_constructor(schema, db, options) {
         }, []);
 
       else
-        runtimeError("unexpected expr type: " + expr.type);
+        return runtimeError("unexpected expr type: " + expr.type);
     };
   };
 
@@ -16350,7 +16350,7 @@ function ShExValidator_constructor(schema, db, options) {
       const extend = expr.extends[eNo];
       const subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      const sub = _ShExValidator._errorsMatchingShapeExpr(point, extend, valParms, subgraph);
+      const sub = _ShExValidator.validate(point, extend, valParms.tracker, valParms.seen, subgraph)
       if ("errors" in sub)
         errors.push(sub);
       else
@@ -17159,8 +17159,8 @@ function vpEngine (schema, shape, index) {
         }
 
         const constraintNo = constraintList.indexOf(expr);
-        const min = "min" in expr ? expr.min : 1;
-        const max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        let min = "min" in expr ? expr.min : 1;
+        let max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
 
         function validateRept (type, val) {
           let repeated = 0, errOut = false;

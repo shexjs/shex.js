@@ -281,7 +281,7 @@ function ShExValidator_constructor(schema, db, options) {
         }, []);
 
       else
-        runtimeError("unexpected expr type: " + expr.type);
+        return runtimeError("unexpected expr type: " + expr.type);
     };
   };
 

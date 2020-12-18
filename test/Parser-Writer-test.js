@@ -35,7 +35,7 @@ const parser = ShExParser.construct(BASE, null, {index: true});
 const GraphSchema = loadGraphSchema();
 
 // positive transformation tests
-const schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
+let schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
@@ -261,7 +261,7 @@ describe("A ShEx parser", function () {
   // negative syntax and structure tests
   negativeTests.forEach(testSet => {
     const manifest = testSet.path + "manifest.jsonld";
-    const negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
+    let negSchemas = parseJSONFile(manifest)["@graph"][0]["entries"];
     if (TESTS)
       negSchemas = negSchemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
