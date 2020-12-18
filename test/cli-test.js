@@ -73,6 +73,10 @@ const AllTests = {
     { name: "closed-fail" , args: ["-x", "cli/1dotOr2dotCLOSED.shex", "-s", "<http://a.example/S1>", "-d", "cli/p2p3p4.ttl", "-n", "<x>"], result: "cli/1dotOr2dotCLOSED_fail_p4.val", status: 2 },
     { name: "missing-node" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x999>"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
     { name: "missing-shape" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1999>", "-d", "cli/p1.ttl", "-n", "<x>"], errorMatch: "example/S1\n", status: 1 },
+    { name: "slurp" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p2p3p5.ttl", "-n", "<x>", "--slurp"], resultMatch: "PREFIX : <http://a.example/>", status: 0 },
+    { name: "slurp-all" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p2p3p5.ttl", "-n", "<x>", "--slurp-all"], resultMatch: "\"p5-0\"", status: 0 },
+
+    // manifest
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
     { name: "simple-as-jsonld" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: 0 },
