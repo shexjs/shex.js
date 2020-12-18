@@ -278,12 +278,11 @@ function ShExValidator_constructor(schema, db, options) {
           return acc.concat(indexTripleConstraints_dive(nested));
         }, []);
 
-      else if (expr.type === "NestedShape")
+      else if (expr.type === "ValueComparison" || expr.type === "Unique")
         return [];
 
-      // @@TODO shape.abstract, shape.extends
-      else if (expr.type !== "ValueComparison" && expr.type !== "Unique")
-        runtimeError("unexpected expr type: " + expr.type);
+      else
+        return runtimeError("unexpected expr type: " + expr.type);
     };
   };
 
@@ -379,6 +378,8 @@ function ShExValidator_constructor(schema, db, options) {
     } else {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
+
+    // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
       return this._validateShapeExpr(point, shape, Start, tracker, seen);
 
@@ -403,7 +404,7 @@ function ShExValidator_constructor(schema, db, options) {
     if ("startActs" in schema && outside) {
       ret.startActs = schema.startActs;
     }
-    return ret;
+    return this.options.noResults ? {} : ret;
   }
 
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen, uniques) {
@@ -515,7 +516,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
-          extras.indexOf(i) === -1; // wasn't in EXTRAs.
+            extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
           errors.push({

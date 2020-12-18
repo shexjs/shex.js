@@ -20,8 +20,8 @@ function vpEngine (schema, shape, index) {
         }
 
         const constraintNo = constraintList.indexOf(expr);
-        const min = "min" in expr ? expr.min : 1;
-        const max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        let min = "min" in expr ? expr.min : 1;
+        let max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
 
         function validateRept (type, val) {
           let repeated = 0, errOut = false;

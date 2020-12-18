@@ -9071,7 +9071,7 @@ function ShExValidator_constructor(schema, db, options) {
 
   /* indexTripleConstraints - compile regular expression and index triple constraints
    */
-  this.indexTripleConstraints = function (expression) {
+  this.indexTripleConstraints = function (expression) {debugger
     // list of triple constraints from (:p1 ., (:p2 . | :p3 .))
     const tripleConstraints = [];
 
@@ -9093,12 +9093,11 @@ function ShExValidator_constructor(schema, db, options) {
           return acc.concat(indexTripleConstraints_dive(nested));
         }, []);
 
-      else if (expr.type === "NestedShape")
+      else if (expr.type === "ValueComparison" || expr.type === "Unique")
         return [];
 
-      // @@TODO shape.abstract, shape.extends
-      else if (expr.type !== "ValueComparison" && expr.type !== "Unique")
-        runtimeError("unexpected expr type: " + expr.type);
+      else
+        return runtimeError("unexpected expr type: " + expr.type);
     };
   };
 
@@ -9180,6 +9179,8 @@ function ShExValidator_constructor(schema, db, options) {
     } else {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
+
+    // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
       return this._validateShapeExpr(point, shape, Start, tracker, seen);
 
@@ -9204,7 +9205,7 @@ function ShExValidator_constructor(schema, db, options) {
     if ("startActs" in schema && outside) {
       ret.startActs = schema.startActs;
     }
-    return ret;
+    return this.options.noResults ? {} : ret;
   }
 
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen, uniques) {
@@ -9316,7 +9317,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
-          extras.indexOf(i) === -1; // wasn't in EXTRAs.
+            extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
           errors.push({
@@ -10083,8 +10084,8 @@ function vpEngine (schema, shape, index) {
         }
 
         const constraintNo = constraintList.indexOf(expr);
-        const min = "min" in expr ? expr.min : 1;
-        const max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        let min = "min" in expr ? expr.min : 1;
+        let max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
 
         function validateRept (type, val) {
           let repeated = 0, errOut = false;
