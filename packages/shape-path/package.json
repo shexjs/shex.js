@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-path.js",
+  "main": "./shape-path.js",
   "engines": {
     "node": ">=0.10.0"
   },

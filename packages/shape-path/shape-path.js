@@ -1,4 +1,4 @@
-const ShExPathCjsModule = function (schema, const_iriResolver) {
+const ShapePathCjsModule = function (schema, const_iriResolver) {
     const ShExUtil = require("@shexjs/util");
     const ShExTerm = require("@shexjs/term");
 
@@ -139,5 +139,5 @@ const ShExPathCjsModule = function (schema, const_iriResolver) {
   }
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShExPathCjsModule
+  module.exports = ShapePathCjsModule
 

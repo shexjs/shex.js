@@ -2,17 +2,17 @@ const VERBOSE = "VERBOSE" in process.env;
 const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
 
 const ShExParser = require("@shexjs/parser");
-const ShExPath = require("@shexjs/path");
+const ShapePath = require("@shexjs/path");
 
 const fs = require('fs');
 const expect = require('chai').expect;
 const findPath = require('./findPath.js');
 
 const schemasPath = findPath('schemas');
-const shexPathTestDir = __dirname + '/../test/ShExPath/';
-const manifestFile = shexPathTestDir + 'Manifest.json';
+const shapePathTestDir = __dirname + '/../test/ShapePath/';
+const manifestFile = shapePathTestDir + 'Manifest.json';
 
-describe('Resolving ShExPaths', function () {
+describe('Resolving ShapePaths', function () {
   const parser = ShExParser.construct();
 
   // Ensure the same blank node identifiers are used in every test
@@ -25,19 +25,19 @@ describe('Resolving ShExPaths', function () {
 
   manifest.tests.forEach(function (test) {
 
-    const schemaFile = (test.from.startsWith("./") ? shexPathTestDir : schemasPath) + test.from + (test.from.endsWith(".json") ? "" : ".shex");
-    const expectedFile = shexPathTestDir + test.expect + ".json";
+    const schemaFile = (test.from.startsWith("./") ? shapePathTestDir : schemasPath) + test.from + (test.from.endsWith(".json") ? "" : ".shex");
+    const expectedFile = shapePathTestDir + test.expect + ".json";
     const schemaStr = fs.readFileSync(schemaFile, 'utf8');
     const schema = test.from.endsWith(".json")
           ? JSON.parse(schemaStr)
           : parser.parse(schemaStr); parser._resetBlanks();
-    const shexPath = ShExPath(schema, {base: "base:/", prefixes: {"": "default:/", "x": "x:/"}})
+    const shapePath = ShapePath(schema, {base: "base:/", prefixes: {"": "default:/", "x": "x:/"}})
     const blurb = (VERBOSE ? schemaFile : test.from) +
-          ' for ' + test.shexPath
+          ' for ' + test.shapePath
     if (test.throws) {
       let message = undefined
       try {
-        shexPath.search(test.shexPath)
+        shapePath.search(test.shapePath)
       } catch (e) {
         message = e.message
       }
@@ -52,7 +52,7 @@ describe('Resolving ShExPaths', function () {
            expect(expectedFile).to.contain(message);
          });
     } else {
-      const target = shexPath.search(test.shexPath);
+      const target = shapePath.search(test.shapePath);
       const expected = JSON.parse(fs.readFileSync(expectedFile, 'utf8'));
 
       it(blurb + ' should match ' +
