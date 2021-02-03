@@ -73,7 +73,7 @@ const ShapePathCjsModule = function (schema, const_iriResolver) {
         if (i || N || axis) {
           if (I.type === "Shape" && axis !== "Shape" && "expression" in I) {
             return (I.extends || []).map(e => schema.shapes.find(
-              se => se.id === RdfTerm.resolveRelativeIRI(iriResolver.base, e)
+              se => se.id === ShExTerm.resolveRelativeIRI(iriResolver.base, e)
             )).concat(I).map(
               se => se.type === 'ShapeDecl' ? se.shapeExpr : se
             ).map(
