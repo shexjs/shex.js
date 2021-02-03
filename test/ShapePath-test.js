@@ -1,5 +1,5 @@
 const VERBOSE = "VERBOSE" in process.env;
-const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null;
+const TESTS = "TESTS" in process.env ? process.env["TESTS"] : null;
 
 const ShExParser = require("@shexjs/parser");
 const ShapePath = require("@shexjs/path");
@@ -20,7 +20,7 @@ describe('Resolving ShapePaths', function () {
   const manifest = parseJSON(fs.readFileSync(manifestFile, 'utf8'));
   if (TESTS)
     manifest.tests = manifest.tests.filter(function (t) {
-      return TESTS.indexOf(t.from) !== -1 || TESTS.indexOf(t.expect) !== -1;
+      return t.name.match(TESTS) || t.from.match(TESTS) || t.expect.match(TESTS);
     });
 
   manifest.tests.forEach(function (test) {
@@ -32,27 +32,25 @@ describe('Resolving ShapePaths', function () {
           ? JSON.parse(schemaStr)
           : parser.parse(schemaStr); parser._resetBlanks();
     const shapePath = ShapePath(schema, {base: "base:/", prefixes: {"": "default:/", "x": "x:/"}})
-    const blurb = (VERBOSE ? schemaFile : test.from) +
+    const blurb = test.name + ': ' + (VERBOSE ? schemaFile : test.from) +
           ' for ' + test.shapePath
+    let target = null
+    let thrownMessage = null
+    try {
+      target = shapePath.search(test.shapePath)
+    } catch (e) {
+      thrownMessage = e.message
+    }
     if (test.throws) {
-      let message = undefined
-      try {
-        shapePath.search(test.shapePath)
-      } catch (e) {
-        message = e.message
-      }
-
-
       it(blurb + ' should fail witl ' +
          (VERBOSE ? expectedFile : test.expect), function () {
            if (VERBOSE) console.log("schema: ", JSON.stringify(schema));
            if (VERBOSE) console.log("include: ", JSON.stringify(test.include));
-           if (VERBOSE) console.log("message: ", message);
+           if (VERBOSE) console.log("message: ", thrownMessage);
            if (VERBOSE) console.log("expect: ", expectedFile);
-           expect(expectedFile).to.contain(message);
+           expect(expectedFile).to.contain(thrownMessage);
          });
     } else {
-      const target = shapePath.search(test.shapePath);
       const expected = JSON.parse(fs.readFileSync(expectedFile, 'utf8'));
 
       it(blurb + ' should match ' +

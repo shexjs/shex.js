@@ -55,14 +55,14 @@ const ShapePathCjsModule = function (schema, const_iriResolver) {
             + ")";
       const INT = "([1-9][0-9]*)"
       const IRI = "<([^>]+)>"
-      const ATTRS = "((?:\\.[a-zA-Z_][a-zA-Z_0-9]*)*)"
-      const R = new RegExp(`^\\s*(@?)\\s*${TESTS}?\\s*(?:${INT}|${IRI}\\s*${INT}?)?\\s*${ATTRS}\\s*\\/?`)
+      const ATTRS = "((?:::[a-zA-Z_][a-zA-Z_0-9]*)*)"
+      const R = new RegExp(`^\\s*(@?)\\s*${TESTS}?\\s*(?:${INT}|${IRI}\\s*${INT}?)?\\s*${ATTRS}\\s*(\\/|\\.|(?=@))?`)
       while(path && (m = path.match(R)) && m[0].length) {
         const len = m[0].length;
         path = path.substr(len);
         consumed += len;
         context = context.reduce(
-          (newValue, I) => newValue.concat(attr(m[1], m[6].split(/\./).splice(1), skipAssumedAxes(I, m[2], m[3] ? parseInt(m[3]) : null, m[4], m[5]))), []
+          (newValue, I) => newValue.concat(attr(m[1], m[6].split(/::/).splice(1), skipAssumedAxes(I, m[2], m[3] ? parseInt(m[3]) : null, m[4], m[5]))), []
         )
       }
       if (path.length)
@@ -86,7 +86,7 @@ const ShapePathCjsModule = function (schema, const_iriResolver) {
         if (!i && !N)
           return [I]
         if (I.type === "Schema") {
-          if (i) return [I.shapes[i-1]]
+          if (i) return [I.shapes[i-1].id]
           else if ("shapes" in I && (!Ni || Ni === 1)) return [N]
         } else if (I.type === "ShapeOr" || I.type === "ShapeAnd") {
           if (i && i - 1 >= 0 && i - 1 < I.shapeExprs.length) return [I.shapeExprs[i - 1]]
