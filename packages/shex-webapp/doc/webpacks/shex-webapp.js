@@ -1952,7 +1952,14 @@ const ShExUtil = {
     } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
       return null;
     } else if (val.type === "ShapeTest") { // 0_empty
-      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+      const vals = [];
+      visitSolution(val, vals); // A ShapeTest is a sort of Solution.
+      const ret = vals.length
+            ? {'http://shex.io/reflex': vals}
+            : {};
+      if ("solution" in val)
+        Object.assign(ret, _ShExUtil.walkVal(val.solution, cb))
+      return Object.keys(ret).length ? ret : null;
     } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
       return null;
     } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
@@ -2021,18 +2028,32 @@ const ShExUtil = {
         const ret = {};
         const vals = [];
         ret[val.predicate] = vals;
-        val.solutions.forEach(sln => {
+        val.solutions.forEach(sln => visitSolution(sln, vals));
+        return vals.length ? ret : null;
+      } else {
+        return null;
+      }
+    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
+      return null;
+    } else {
+      // console.log(val);
+      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    return val;
+
+        function visitSolution (sln, vals) {
           const toAdd = [];
           if (chaseList(sln.referenced, toAdd)) { // parse 1val1IRIREF.ttl
             [].push.apply(vals, toAdd);
           } else { // 1dot_pass-noOthers
-            const newElt = cb(sln);
+            const newElt = cb(sln) || {};
             if ("referenced" in sln) {
               const t = _ShExUtil.walkVal(sln.referenced, cb);
               if (t)
                 newElt.nested = t;
             }
-            vals.push(newElt);
+            if (Object.keys(newElt).length > 0)
+              vals.push(newElt);
           }
           function chaseList (li) {
             if (!li) return false;
@@ -2062,18 +2083,7 @@ const ShExUtil = {
                           : rest.referenced);
             }
           }
-        });
-        return vals.length ? ret : null;
-      } else {
-        return null;
-      }
-    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
-      return null;
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
+        }
   },
 
   /**
@@ -2083,13 +2093,13 @@ const ShExUtil = {
    */
   valToValues: function (val) {
     return this.walkVal (val, function (sln) {
-      return { ldterm: sln.object };
+      return "object" in sln ? { ldterm: sln.object } : null;
     });
   },
 
   valToExtension: function (val, lookfor) {
     const map = this.walkVal (val, function (sln) {
-      return { extensions: sln.extensions };
+      return "extensions" in sln ? { extensions: sln.extensions } : null;
     });
     function extensions (obj) {
       const list = [];
@@ -9217,9 +9227,10 @@ function ShExValidator_constructor(schema, db, options) {
         ret = { type: "ShapeAndFailure", errors: errors };
       else
         ret = { type: "ShapeAndResults", solutions: passes };      
-    } else
+    } else {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
-    debugger
+    }
+
     if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
         &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
         && !("errors" in ret) && "semActs" in shapeExpr) {
@@ -9302,7 +9313,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
           [].push.apply(errors, semActErrors);

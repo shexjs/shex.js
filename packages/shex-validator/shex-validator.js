@@ -461,9 +461,10 @@ function ShExValidator_constructor(schema, db, options) {
         ret = { type: "ShapeAndFailure", errors: errors };
       else
         ret = { type: "ShapeAndResults", solutions: passes };      
-    } else
+    } else {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
-    debugger
+    }
+
     if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
         &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
         && !("errors" in ret) && "semActs" in shapeExpr) {
@@ -546,7 +547,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
           [].push.apply(errors, semActErrors);

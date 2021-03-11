@@ -2250,7 +2250,7 @@ if ('_testCallback' in window) {
   SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
   window._testCallback(SharedForTests);
 }
-ready.then(() => {
+ready.then(resolves => {
   if (!('_testCallback' in window))
     console.log('search parameters:', resolves[1]);
   // Update UI to say we're done loading everything?

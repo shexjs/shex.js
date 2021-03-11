@@ -70,7 +70,7 @@ function register (validator, api) {
             update(key, results[key])
         } else {
           const bindingName = code.match(pattern);
-          update(bindingName, ctx.object);
+          update(bindingName, ctx.node || ctx.object);
         }
 
         return true;
