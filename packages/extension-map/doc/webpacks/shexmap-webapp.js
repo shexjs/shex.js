@@ -3190,7 +3190,7 @@ class N3Lexer {
     this._boolean = /^(?:true|false)(?=[.,;\s#()\[\]\{\}"'<>])/;
     this._keyword = /^@[a-z]+(?=[\s#<:])/i;
     this._sparqlKeyword = /^(?:PREFIX|BASE|GRAPH)(?=[\s#<])/i;
-    this._shortPredicates = /^a(?=[\s()\[\]\{\}"'<>])/;
+    this._shortPredicates = /^a(?=[\s#()\[\]\{\}"'<>])/;
     this._newline = /^[ \t]*(?:#[^\n\r]*)?(?:\r\n|\n|\r)[ \t]*/;
     this._comment = /#([^\n\r]*)/;
     this._whitespace = /^[ \t]+/;
@@ -6969,31 +6969,52 @@ function unwrapListeners(arr) {
 
 function once(emitter, name) {
   return new Promise(function (resolve, reject) {
-    function eventListener() {
-      if (errorListener !== undefined) {
+    function errorListener(err) {
+      emitter.removeListener(name, resolver);
+      reject(err);
+    }
+
+    function resolver() {
+      if (typeof emitter.removeListener === 'function') {
         emitter.removeListener('error', errorListener);
       }
       resolve([].slice.call(arguments));
     };
-    var errorListener;
 
-    // Adding an error listener is not optional because
-    // if an error is thrown on an event emitter we cannot
-    // guarantee that the actual event we are waiting will
-    // be fired. The result could be a silent way to create
-    // memory or file descriptor leaks, which is something
-    // we should avoid.
+    eventTargetAgnosticAddListener(emitter, name, resolver, { once: true });
     if (name !== 'error') {
-      errorListener = function errorListener(err) {
-        emitter.removeListener(name, eventListener);
-        reject(err);
-      };
-
-      emitter.once('error', errorListener);
+      addErrorHandlerIfEventEmitter(emitter, errorListener, { once: true });
     }
-
-    emitter.once(name, eventListener);
   });
+}
+
+function addErrorHandlerIfEventEmitter(emitter, handler, flags) {
+  if (typeof emitter.on === 'function') {
+    eventTargetAgnosticAddListener(emitter, 'error', handler, flags);
+  }
+}
+
+function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
+  if (typeof emitter.on === 'function') {
+    if (flags.once) {
+      emitter.once(name, listener);
+    } else {
+      emitter.on(name, listener);
+    }
+  } else if (typeof emitter.addEventListener === 'function') {
+    // EventTarget does not have `error` event semantics like Node
+    // EventEmitters, we do not listen for `error` events here.
+    emitter.addEventListener(name, function wrapListener(arg) {
+      // IE does not have builtin `{ once: true }` support so we
+      // have to do it manually.
+      if (flags.once) {
+        emitter.removeEventListener(name, wrapListener);
+      }
+      listener(arg);
+    });
+  } else {
+    throw new TypeError('The "emitter" argument must be of type EventEmitter. Received type ' + typeof emitter);
+  }
 }
 
 
@@ -21144,6 +21165,7 @@ function config (name) {
 /* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
@@ -21165,6 +21187,8 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
+
+SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
@@ -24826,11 +24850,14 @@ class N3Writer_N3Writer {
     // Initialize writer, depending on the format
     this._subject = null;
     if (!(/triple|quad/i).test(options.format)) {
+      this._lineMode = false;
       this._graph = N3Writer_DEFAULTGRAPH;
+      this._baseIRI = options.baseIRI;
       this._prefixIRIs = Object.create(null);
       options.prefixes && this.addPrefixes(options.prefixes);
     }
     else {
+      this._lineMode = true;
       this._writeQuad = this._writeQuadLine;
     }
   }
@@ -24916,8 +24943,11 @@ class N3Writer_N3Writer {
         entity = this.list(this._lists[entity.value]);
       return 'id' in entity ? entity.id : `_:${entity.value}`;
     }
-    // Escape special characters
     let iri = entity.value;
+    // Use relative IRIs if requested and possible
+    if (this._baseIRI && iri.startsWith(this._baseIRI))
+      iri = iri.substr(this._baseIRI.length);
+    // Escape special characters
     if (N3Writer_escape.test(iri))
       iri = iri.replace(escapeAll, characterReplacer);
     // Try to represent the IRI as prefixed name
@@ -24932,13 +24962,43 @@ class N3Writer_N3Writer {
     let value = literal.value;
     if (N3Writer_escape.test(value))
       value = value.replace(escapeAll, characterReplacer);
-    // Write the literal, possibly with type or language
+
+    // Write a language-tagged literal
     if (literal.language)
       return `"${value}"@${literal.language}`;
-    else if (literal.datatype.value !== N3Writer_xsd.string)
-      return `"${value}"^^${this._encodeIriOrBlank(literal.datatype)}`;
-    else
-      return `"${value}"`;
+
+    // Write dedicated literals per data type
+    if (this._lineMode) {
+      // Only abbreviate strings in N-Triples or N-Quads
+      if (literal.datatype.value === N3Writer_xsd.string)
+        return `"${value}"`;
+    }
+    else {
+      // Use common datatype abbreviations in Turtle or TriG
+      switch (literal.datatype.value) {
+      case N3Writer_xsd.string:
+        return `"${value}"`;
+      case N3Writer_xsd.boolean:
+        if (value === 'true' || value === 'false')
+          return value;
+        break;
+      case N3Writer_xsd.integer:
+        if (/^[+-]?\d+$/.test(value))
+          return value;
+        break;
+      case N3Writer_xsd.decimal:
+        if (/^[+-]?\d*\.\d+$/.test(value))
+          return value;
+        break;
+      case N3Writer_xsd.double:
+        if (/^[+-]?(?:\d+\.\d*|\.?\d+)[eE][+-]?\d+$/.test(value))
+          return value;
+        break;
+      }
+    }
+
+    // Write a regular datatyped literal
+    return `"${value}"^^${this._encodeIriOrBlank(literal.datatype)}`;
   }
 
   // ### `_encodePredicate` represents a predicate
@@ -25980,8 +26040,7 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
 // ## Constructor
 class N3StreamWriter_N3StreamWriter extends readable_browser["Transform"] {
   constructor(options) {
-    super({ encoding: 'utf8' });
-    this._writableState.objectMode = true;
+    super({ encoding: 'utf8', writableObjectMode: true });
 
     // Set up writer with a dummy stream object
     const writer = this._writer = new N3Writer_N3Writer({

@@ -130,7 +130,6 @@ function rdflib_lexToTerm (lex, resolver) {
 // caches for textarea parsers
 function _makeCache (selection) {
   let _dirty = true;
-  let resolver;
   const ret = {
     selection: selection,
     parsed: null, // a Promise
@@ -159,7 +158,6 @@ function _makeCache (selection) {
         return this.parsed;
       this.parsed = this.parse(selection.val(), this.meta.base);
       await this.parsed;
-      resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
     },
@@ -179,7 +177,6 @@ function _makeCache (selection) {
         throw Error("fetch <" + url + "> got error response " + resp.status + ": " + resp.statusText);
       const data = await resp.text();
       _cache.meta.base = url;
-      resolver._setBase(url);
       try {
         await _cache.set(data, url, undefined, resp.headers.get('content-type'));
       } catch (e) {
@@ -191,9 +188,9 @@ function _makeCache (selection) {
     },
     url: undefined // only set if inputarea caches some web resource.
   };
-  resolver = new IRIResolver(ret.meta);
-  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, resolver); };
-  ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
+
+  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, new IRIResolver(ret.meta)); };
+  ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, new IRIResolver(ret.meta)); };
   return ret;
 }
 
@@ -926,7 +923,7 @@ async function callValidator (done) {
         elt = $("<div class='human'/>").append(
           $("<span/>").text(resultStr),
           $("<span/>").text(
-            `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
+            `${Caches.inputData.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));

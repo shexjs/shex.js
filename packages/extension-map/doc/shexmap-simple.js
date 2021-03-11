@@ -137,7 +137,6 @@ function rdflib_lexToTerm (lex, resolver) {
 // caches for textarea parsers
 function _makeCache (selection) {
   let _dirty = true;
-  let resolver;
   const ret = {
     selection: selection,
     parsed: null, // a Promise
@@ -166,7 +165,6 @@ function _makeCache (selection) {
         return this.parsed;
       this.parsed = this.parse(selection.val(), this.meta.base);
       await this.parsed;
-      resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
     },
@@ -186,7 +184,6 @@ function _makeCache (selection) {
         throw Error("fetch <" + url + "> got error response " + resp.status + ": " + resp.statusText);
       const data = await resp.text();
       _cache.meta.base = url;
-      resolver._setBase(url);
       try {
         await _cache.set(data, url, undefined, resp.headers.get('content-type'));
       } catch (e) {
@@ -198,9 +195,9 @@ function _makeCache (selection) {
     },
     url: undefined // only set if inputarea caches some web resource.
   };
-  resolver = new IRIResolver(ret.meta);
-  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, resolver); };
-  ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
+
+  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, new IRIResolver(ret.meta)); };
+  ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, new IRIResolver(ret.meta)); };
   return ret;
 }
 
@@ -955,7 +952,7 @@ async function callValidator (done) {
         elt = $("<div class='human'/>").append(
           $("<span/>").text(resultStr),
           $("<span/>").text(
-            `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
+            `${Caches.inputData.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
@@ -1759,6 +1756,41 @@ async function loadSearchParameters () {
   return loaded;
 }
 
+function setTextAreaHandlers () {
+  const timeouts = Object.keys(Caches).reduce((acc, k) => {
+    acc[k] = undefined;
+    return acc;
+  }, {});
+
+  Object.keys(Caches).forEach(function (cache) {
+    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
+      const code = e.keyCode || e.charCode;
+      // if (!(e.ctrlKey)) {
+      //   results.clear();
+      // }
+      if (!(e.ctrlKey && (code === 10 || code === 13))) {
+        later(e.target, cache, Caches[cache]);
+      }
+    });
+  });
+
+  function later (target, side, cache) {
+    cache.dirty(true);
+    if (timeouts[side])
+      clearTimeout(timeouts[side]);
+
+    timeouts[side] = setTimeout(() => {
+      timeouts[side] = undefined;
+      const curSum = sum($(target).val());
+      if (curSum in listItems[side])
+        listItems[side][curSum].addClass("selected");
+      else
+        $("#"+side+" .selected").removeClass("selected");
+      delete cache.url;
+    }, INPUTAREA_TIMEOUT);
+  }
+}
+
   /**
    * update location with a current values of some inputs
    */
@@ -2018,38 +2050,6 @@ async function prepareManifest (demoList, base) {
   }, {});
   const nestingAsList = Object.keys(nesting).map(e => nesting[e]);
   await paintManifest("#inputSchema .manifest ul", nestingAsList, pickSchema, listItems, "inputSchema");
-  const timeouts = Object.keys(Caches).reduce((acc, k) => {
-    acc[k] = undefined;
-    return acc;
-  }, {});
-
-  Object.keys(Caches).forEach(function (cache) {
-    Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
-      const code = e.keyCode || e.charCode;
-      // if (!(e.ctrlKey)) {
-      //   results.clear();
-      // }
-      if (!(e.ctrlKey && (code === 10 || code === 13))) {
-        later(e.target, cache, Caches[cache]);
-      }
-    });
-  });
-
-  function later (target, side, cache) {
-    cache.dirty(true);
-    if (timeouts[side])
-      clearTimeout(timeouts[side]);
-
-    timeouts[side] = setTimeout(() => {
-      timeouts[side] = undefined;
-      const curSum = sum($(target).val());
-      if (curSum in listItems[side])
-        listItems[side][curSum].addClass("selected");
-      else
-        $("#"+side+" .selected").removeClass("selected");
-      delete cache.url;
-    }, INPUTAREA_TIMEOUT);
-  }
 }
 
 function addContextMenus (inputSelector, cache) {
@@ -2242,6 +2242,7 @@ function tableToBindings () {
 }
 
 prepareControls();
+setTextAreaHandlers();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
 const ready = Promise.all([ dndPromise, loads ]);
@@ -2250,6 +2251,8 @@ if ('_testCallback' in window) {
   window._testCallback(SharedForTests);
 }
 ready.then(() => {
+  if (!('_testCallback' in window))
+    console.log('search parameters:', resolves[1]);
   // Update UI to say we're done loading everything?
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
