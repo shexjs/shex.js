@@ -1,6 +1,6 @@
 [
   {
-    "http://shex.io/extensions/Map/#BPDAM-name": "\"Sue\""
+    "http://shex.io/extensions/Map/#BPDAM-name": { "value": "Sue" }
   },
   [
     {
