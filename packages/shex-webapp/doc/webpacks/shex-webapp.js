@@ -1825,6 +1825,7 @@ const ShExUtil = {
             _dive1(s.referenced);
           }
         });
+      } else if (solns.type === "Recursion") {
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
