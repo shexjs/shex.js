@@ -910,7 +910,8 @@ const ShExUtil = {
     function _dive1 (solns) {
       if (solns.type === "NodeConstraintTest") {
       } else if (solns.type === "SolutionList" ||
-          solns.type === "ShapeAndResults") {
+                 solns.type === "ShapeAndResults" ||
+                 solns.type === "ExtensionResults") {
         solns.solutions.forEach(s => {
           if (s.solution) // no .solution for <S> {}
             _dive1(s.solution);
@@ -945,6 +946,11 @@ const ShExUtil = {
             _dive1(s.referenced);
           }
         });
+      } else if (solns.type === "ExtendedResults") {
+        _dive1(solns.extensions);
+        if ("local" in solns)
+          _dive1(solns.local);        
+      } else if (solns.type === "Recursion") {        
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
@@ -1072,7 +1078,14 @@ const ShExUtil = {
     } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
       return null;
     } else if (val.type === "ShapeTest") { // 0_empty
-      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+      const vals = [];
+      visitSolution(val, vals); // A ShapeTest is a sort of Solution.
+      const ret = vals.length
+            ? {'http://shex.io/reflex': vals}
+            : {};
+      if ("solution" in val)
+        Object.assign(ret, _ShExUtil.walkVal(val.solution, cb))
+      return Object.keys(ret).length ? ret : null;
     } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
       return null;
     } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
@@ -1154,18 +1167,32 @@ const ShExUtil = {
         const ret = {};
         const vals = [];
         ret[val.predicate] = vals;
-        val.solutions.forEach(sln => {
+        val.solutions.forEach(sln => visitSolution(sln, vals));
+        return vals.length ? ret : null;
+      } else {
+        return null;
+      }
+    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
+      return null;
+    } else {
+      // console.log(val);
+      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    return val;
+
+        function visitSolution (sln, vals) {
           const toAdd = [];
           if (chaseList(sln.referenced, toAdd)) { // parse 1val1IRIREF.ttl
             [].push.apply(vals, toAdd);
           } else { // 1dot_pass-noOthers
-            const newElt = cb(sln);
+            const newElt = cb(sln) || {};
             if ("referenced" in sln) {
               const t = _ShExUtil.walkVal(sln.referenced, cb);
               if (t)
                 newElt.nested = t;
             }
-            vals.push(newElt);
+            if (Object.keys(newElt).length > 0)
+              vals.push(newElt);
           }
           function chaseList (li) {
             if (!li) return false;
@@ -1195,18 +1222,7 @@ const ShExUtil = {
                           : rest.referenced);
             }
           }
-        });
-        return vals.length ? ret : null;
-      } else {
-        return null;
-      }
-    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
-      return null;
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
+        }
   },
 
   /**
@@ -1216,13 +1232,13 @@ const ShExUtil = {
    */
   valToValues: function (val) {
     return this.walkVal (val, function (sln) {
-      return { ldterm: sln.object };
+      return "object" in sln ? { ldterm: sln.object } : null;
     });
   },
 
   valToExtension: function (val, lookfor) {
     const map = this.walkVal (val, function (sln) {
-      return { extensions: sln.extensions };
+      return "extensions" in sln ? { extensions: sln.extensions } : null;
     });
     function extensions (obj) {
       const list = [];

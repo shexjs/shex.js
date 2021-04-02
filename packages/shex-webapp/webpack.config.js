@@ -39,7 +39,7 @@ module.exports = {
     })]
   },
   node: {
-    fs: 'empty',  // @@ webpack-monitor shows require('fs') errors. help?
+    fs: 'empty',  // TODO: update ShapeMapParser to use ts-jison
     // net: 'empty',
     // tls: 'empty',
   },

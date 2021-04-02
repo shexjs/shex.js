@@ -70,7 +70,7 @@ function register (validator, api) {
             update(key, results[key])
         } else {
           const bindingName = code.match(pattern);
-          update(bindingName, ctx.object);
+          update(bindingName, ctx.node || ctx.object);
         }
 
         return true;
@@ -218,7 +218,7 @@ function binder (tree) {
     const objs = [];
     const counts = Object.keys(obj).reduce((r, k) => {
       let toAdd = null;
-      if (typeof obj[k] === "object") {
+      if (typeof obj[k] === "object" && !("value" in obj[k])) {
         toAdd = _mults(obj[k]);
         if (obj[k].constructor === Array)
           rays.push(k);

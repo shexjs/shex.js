@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 42);
+/******/ 	return __webpack_require__(__webpack_require__.s = 43);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -1151,9 +1151,9 @@ var objectKeys = Object.keys || function (obj) {
 
 module.exports = Duplex;
 
-var Readable = __webpack_require__(34);
+var Readable = __webpack_require__(35);
 
-var Writable = __webpack_require__(38);
+var Writable = __webpack_require__(39);
 
 __webpack_require__(5)(Duplex, Readable);
 
@@ -1255,15 +1255,15 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(34);
+exports = module.exports = __webpack_require__(35);
 exports.Stream = exports;
 exports.Readable = exports;
-exports.Writable = __webpack_require__(38);
+exports.Writable = __webpack_require__(39);
 exports.Duplex = __webpack_require__(7);
-exports.Transform = __webpack_require__(40);
-exports.PassThrough = __webpack_require__(72);
+exports.Transform = __webpack_require__(41);
+exports.PassThrough = __webpack_require__(71);
 exports.finished = __webpack_require__(18);
-exports.pipeline = __webpack_require__(73);
+exports.pipeline = __webpack_require__(72);
 
 
 /***/ }),
@@ -1307,9 +1307,9 @@ module.exports = g;
 
 
 
-var base64 = __webpack_require__(62)
-var ieee754 = __webpack_require__(63)
-var isArray = __webpack_require__(64)
+var base64 = __webpack_require__(61)
+var ieee754 = __webpack_require__(62)
+var isArray = __webpack_require__(63)
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -3098,7 +3098,7 @@ function isnan (val) {
 const ShExUtilCjsModule = (function () {
 const ShExTerm = __webpack_require__(4);
 const Visitor = __webpack_require__(21)
-const Hierarchy = __webpack_require__(46)
+const Hierarchy = __webpack_require__(22)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -4005,7 +4005,8 @@ const ShExUtil = {
     function _dive1 (solns) {
       if (solns.type === "NodeConstraintTest") {
       } else if (solns.type === "SolutionList" ||
-          solns.type === "ShapeAndResults") {
+                 solns.type === "ShapeAndResults" ||
+                 solns.type === "ExtensionResults") {
         solns.solutions.forEach(s => {
           if (s.solution) // no .solution for <S> {}
             _dive1(s.solution);
@@ -4040,6 +4041,11 @@ const ShExUtil = {
             _dive1(s.referenced);
           }
         });
+      } else if (solns.type === "ExtendedResults") {
+        _dive1(solns.extensions);
+        if ("local" in solns)
+          _dive1(solns.local);        
+      } else if (solns.type === "Recursion") {        
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
@@ -4167,7 +4173,14 @@ const ShExUtil = {
     } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
       return null;
     } else if (val.type === "ShapeTest") { // 0_empty
-      return "solution" in val ? _ShExUtil.walkVal(val.solution, cb) : null;
+      const vals = [];
+      visitSolution(val, vals); // A ShapeTest is a sort of Solution.
+      const ret = vals.length
+            ? {'http://shex.io/reflex': vals}
+            : {};
+      if ("solution" in val)
+        Object.assign(ret, _ShExUtil.walkVal(val.solution, cb))
+      return Object.keys(ret).length ? ret : null;
     } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
       return null;
     } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
@@ -4249,18 +4262,32 @@ const ShExUtil = {
         const ret = {};
         const vals = [];
         ret[val.predicate] = vals;
-        val.solutions.forEach(sln => {
+        val.solutions.forEach(sln => visitSolution(sln, vals));
+        return vals.length ? ret : null;
+      } else {
+        return null;
+      }
+    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
+      return null;
+    } else {
+      // console.log(val);
+      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+    }
+    return val;
+
+        function visitSolution (sln, vals) {
           const toAdd = [];
           if (chaseList(sln.referenced, toAdd)) { // parse 1val1IRIREF.ttl
             [].push.apply(vals, toAdd);
           } else { // 1dot_pass-noOthers
-            const newElt = cb(sln);
+            const newElt = cb(sln) || {};
             if ("referenced" in sln) {
               const t = _ShExUtil.walkVal(sln.referenced, cb);
               if (t)
                 newElt.nested = t;
             }
-            vals.push(newElt);
+            if (Object.keys(newElt).length > 0)
+              vals.push(newElt);
           }
           function chaseList (li) {
             if (!li) return false;
@@ -4290,18 +4317,7 @@ const ShExUtil = {
                           : rest.referenced);
             }
           }
-        });
-        return vals.length ? ret : null;
-      } else {
-        return null;
-      }
-    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
-      return null;
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
+        }
   },
 
   /**
@@ -4311,13 +4327,13 @@ const ShExUtil = {
    */
   valToValues: function (val) {
     return this.walkVal (val, function (sln) {
-      return { ldterm: sln.object };
+      return "object" in sln ? { ldterm: sln.object } : null;
     });
   },
 
   valToExtension: function (val, lookfor) {
     const map = this.walkVal (val, function (sln) {
-      return { extensions: sln.extensions };
+      return "extensions" in sln ? { extensions: sln.extensions } : null;
     });
     function extensions (obj) {
       const list = [];
@@ -4815,7 +4831,7 @@ const ShExUtil = {
         })
       ).concat(["}"]);
     } else if (val.type === "NodeConstraintViolation") {
-      const w = __webpack_require__(22)();
+      const w = __webpack_require__(23)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
       w.end((err, res) => {
@@ -5200,7 +5216,7 @@ if (true)
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return N3Lexer; });
 /* harmony import */ var _IRIs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
-/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(41);
+/* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(42);
 /* harmony import */ var queue_microtask__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(queue_microtask__WEBPACK_IMPORTED_MODULE_1__);
 // **N3Lexer** tokenizes N3 documents.
 
@@ -5250,7 +5266,7 @@ class N3Lexer {
     this._boolean = /^(?:true|false)(?=[.,;\s#()\[\]\{\}"'<>])/;
     this._keyword = /^@[a-z]+(?=[\s#<:])/i;
     this._sparqlKeyword = /^(?:PREFIX|BASE|GRAPH)(?=[\s#<])/i;
-    this._shortPredicates = /^a(?=[\s()\[\]\{\}"'<>])/;
+    this._shortPredicates = /^a(?=[\s#()\[\]\{\}"'<>])/;
     this._newline = /^[ \t]*(?:#[^\n\r]*)?(?:\r\n|\n|\r)[ \t]*/;
     this._comment = /#([^\n\r]*)/;
     this._whitespace = /^[ \t]+/;
@@ -5705,7 +5721,7 @@ try {
 } catch (er) {}
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-var expand = __webpack_require__(53)
+var expand = __webpack_require__(52)
 
 var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
@@ -7076,31 +7092,52 @@ function unwrapListeners(arr) {
 
 function once(emitter, name) {
   return new Promise(function (resolve, reject) {
-    function eventListener() {
-      if (errorListener !== undefined) {
+    function errorListener(err) {
+      emitter.removeListener(name, resolver);
+      reject(err);
+    }
+
+    function resolver() {
+      if (typeof emitter.removeListener === 'function') {
         emitter.removeListener('error', errorListener);
       }
       resolve([].slice.call(arguments));
     };
-    var errorListener;
 
-    // Adding an error listener is not optional because
-    // if an error is thrown on an event emitter we cannot
-    // guarantee that the actual event we are waiting will
-    // be fired. The result could be a silent way to create
-    // memory or file descriptor leaks, which is something
-    // we should avoid.
+    eventTargetAgnosticAddListener(emitter, name, resolver, { once: true });
     if (name !== 'error') {
-      errorListener = function errorListener(err) {
-        emitter.removeListener(name, eventListener);
-        reject(err);
-      };
-
-      emitter.once('error', errorListener);
+      addErrorHandlerIfEventEmitter(emitter, errorListener, { once: true });
     }
-
-    emitter.once(name, eventListener);
   });
+}
+
+function addErrorHandlerIfEventEmitter(emitter, handler, flags) {
+  if (typeof emitter.on === 'function') {
+    eventTargetAgnosticAddListener(emitter, 'error', handler, flags);
+  }
+}
+
+function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
+  if (typeof emitter.on === 'function') {
+    if (flags.once) {
+      emitter.once(name, listener);
+    } else {
+      emitter.on(name, listener);
+    }
+  } else if (typeof emitter.addEventListener === 'function') {
+    // EventTarget does not have `error` event semantics like Node
+    // EventEmitters, we do not listen for `error` events here.
+    emitter.addEventListener(name, function wrapListener(arg) {
+      // IE does not have builtin `{ once: true }` support so we
+      // have to do it manually.
+      if (flags.once) {
+        emitter.removeEventListener(name, wrapListener);
+      }
+      listener(arg);
+    });
+  } else {
+    throw new TypeError('The "emitter" argument must be of type EventEmitter. Received type ' + typeof emitter);
+  }
 }
 
 
@@ -7643,7 +7680,7 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
-exports.isBuffer = __webpack_require__(57);
+exports.isBuffer = __webpack_require__(56);
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
@@ -7687,7 +7724,7 @@ exports.log = function() {
  *     prototype.
  * @param {function} superCtor Constructor function to inherit prototype from.
  */
-exports.inherits = __webpack_require__(58);
+exports.inherits = __webpack_require__(57);
 
 exports._extend = function(origin, add) {
   // Don't do anything if add isn't an object
@@ -8415,6 +8452,85 @@ if (true)
 /* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
+var HierarchyClosure = (function () {
+  /** create a hierarchy object
+   * This object keeps track of direct children and parents as well as transitive children and parents.
+   */
+  function makeHierarchy () {
+    let roots = {}
+    let parents = {}
+    let children = {}
+    let holders = {}
+    return {
+      add: function (parent, child) {
+        if (// test if this is a novel entry.
+          (parent in children && children[parent].indexOf(child) !== -1)) {
+          return
+        }
+        let target = parent in holders
+          ? getNode(parent)
+          : (roots[parent] = getNode(parent)) // add new parents to roots.
+        let value = getNode(child)
+
+        target[child] = value
+        delete roots[child]
+
+        // // maintain hierarchy (direct and confusing)
+        // children[parent] = children[parent].concat(child, children[child])
+        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
+        // parents[child] = parents[child].concat(parent, parents[parent])
+        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
+
+        // maintain hierarchy (generic and confusing)
+        updateClosure(children, parents, child, parent)
+        updateClosure(parents, children, parent, child)
+        function updateClosure (container, members, near, far) {
+          container[far] = container[far].filter(
+            e => /* e !== near && */ container[near].indexOf(e) === -1
+          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
+          container[near].forEach(
+            n => (members[n] = members[n].filter(
+              e => e !== far && members[far].indexOf(e) === -1
+            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
+          )
+        }
+
+        function getNode (node) {
+          if (!(node in holders)) {
+            parents[node] = []
+            children[node] = []
+            holders[node] = {}
+          }
+          return holders[node]
+        }
+      },
+      roots: roots,
+      parents: parents,
+      children: children
+    }
+  }
+
+  function depthFirst (n, f, p) {
+    return Object.keys(n).reduce((ret, k) => {
+      return ret.concat(
+        depthFirst(n[k], f, k),
+        p ? f(k, p) : []) // outer invocation can have null parent
+    }, [])
+  }
+
+  return { create: makeHierarchy, depthFirst }
+})()
+
+/* istanbul ignore next */
+if (true) {
+  module.exports = HierarchyClosure
+}
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
 // **ShExWriter** writes ShEx documents.
 
 const ShExWriterCjsModule = (function () {
@@ -9058,12 +9174,12 @@ if (true)
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = __webpack_require__(51).Parser;
+const ShExJison = __webpack_require__(50).Parser;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -9150,7 +9266,7 @@ if (true)
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Approach:
@@ -9196,26 +9312,26 @@ if (true)
 module.exports = glob
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(25)
+var rp = __webpack_require__(26)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(5)
 var EE = __webpack_require__(15).EventEmitter
 var path = __webpack_require__(2)
-var assert = __webpack_require__(26)
+var assert = __webpack_require__(27)
 var isAbsolute = __webpack_require__(17)
-var globSync = __webpack_require__(59)
-var common = __webpack_require__(27)
+var globSync = __webpack_require__(58)
+var common = __webpack_require__(28)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
 var ownProp = common.ownProp
-var inflight = __webpack_require__(60)
+var inflight = __webpack_require__(59)
 var util = __webpack_require__(16)
 var childrenIgnored = common.childrenIgnored
 var isIgnored = common.isIgnored
 
-var once = __webpack_require__(29)
+var once = __webpack_require__(30)
 
 function glob (pattern, options, cb) {
   if (typeof options === 'function') cb = options, options = {}
@@ -9947,7 +10063,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = realpath
@@ -9963,7 +10079,7 @@ var origRealpathSync = fs.realpathSync
 
 var version = process.version
 var ok = /^v[0-5]\./.test(version)
-var old = __webpack_require__(52)
+var old = __webpack_require__(51)
 
 function newError (er) {
   return er && er.syscall === 'realpath' && (
@@ -10020,13 +10136,13 @@ function unmonkeypatch () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var objectAssign = __webpack_require__(56);
+var objectAssign = __webpack_require__(55);
 
 // compare and isBuffer taken from https://github.com/feross/buffer/blob/680e9e5e488f22aac27599a57dc844a6315928dd/index.js
 // original notice:
@@ -10534,7 +10650,7 @@ var objectKeys = Object.keys || function (obj) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {exports.alphasort = alphasort
@@ -10781,7 +10897,7 @@ function childrenIgnored (self, path) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports) {
 
 // Returns a wrapper function that returns a wrapped callback
@@ -10820,10 +10936,10 @@ function wrappy (fn, cb) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var wrappy = __webpack_require__(28)
+var wrappy = __webpack_require__(29)
 module.exports = wrappy(once)
 module.exports.strict = wrappy(onceStrict)
 
@@ -10868,7 +10984,7 @@ function onceStrict (fn) {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10880,9 +10996,9 @@ function onceStrict (fn) {
 
 const ShExMapCjsModule = function (config) {
 
-const extensions = __webpack_require__(31);
-const N3 = __webpack_require__(76);
-const materializer = __webpack_require__(74)(config);
+const extensions = __webpack_require__(32);
+const N3 = __webpack_require__(75);
+const materializer = __webpack_require__(73)(config);
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -10943,7 +11059,7 @@ function register (validator, api) {
             update(key, results[key])
         } else {
           const bindingName = code.match(pattern);
-          update(bindingName, ctx.object);
+          update(bindingName, ctx.node || ctx.object);
         }
 
         return true;
@@ -11091,7 +11207,7 @@ function binder (tree) {
     const objs = [];
     const counts = Object.keys(obj).reduce((r, k) => {
       let toAdd = null;
-      if (typeof obj[k] === "object") {
+      if (typeof obj[k] === "object" && !("value" in obj[k])) {
         toAdd = _mults(obj[k]);
         if (obj[k].constructor === Array)
           rays.push(k);
@@ -11302,10 +11418,10 @@ return {
   url: MapExt,
   // visitTripleConstraint: myvisitTripleConstraint
   extension: {
-    hashmap: __webpack_require__(32),
-    regex: __webpack_require__(33)
+    hashmap: __webpack_require__(33),
+    regex: __webpack_require__(34)
   },
-  extensions: __webpack_require__(31),
+  extensions: __webpack_require__(32),
   utils: __webpack_require__(12),
 };
 
@@ -11316,7 +11432,7 @@ if (true)
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11327,8 +11443,8 @@ if (true)
 const Extensions = (function () {
 
 // Known extensions
-const hashmap_extension = __webpack_require__(32);
-const regex_extension = __webpack_require__(33);
+const hashmap_extension = __webpack_require__(33);
+const regex_extension = __webpack_require__(34);
 
 const utils = __webpack_require__(12);
 
@@ -11401,7 +11517,7 @@ if (true)
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11540,7 +11656,7 @@ if (true)
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -11696,7 +11812,7 @@ if (true)
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11741,7 +11857,7 @@ var EElistenerCount = function EElistenerCount(emitter, type) {
 /*<replacement>*/
 
 
-var Stream = __webpack_require__(35);
+var Stream = __webpack_require__(36);
 /*</replacement>*/
 
 
@@ -11759,7 +11875,7 @@ function _isUint8Array(obj) {
 /*<replacement>*/
 
 
-var debugUtil = __webpack_require__(65);
+var debugUtil = __webpack_require__(64);
 
 var debug;
 
@@ -11771,11 +11887,11 @@ if (debugUtil && debugUtil.debuglog) {
 /*</replacement>*/
 
 
-var BufferList = __webpack_require__(66);
+var BufferList = __webpack_require__(65);
 
-var destroyImpl = __webpack_require__(36);
+var destroyImpl = __webpack_require__(37);
 
-var _require = __webpack_require__(37),
+var _require = __webpack_require__(38),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(6).codes,
@@ -11862,7 +11978,7 @@ function ReadableState(options, stream, isDuplex) {
   this.encoding = null;
 
   if (options.encoding) {
-    if (!StringDecoder) StringDecoder = __webpack_require__(39).StringDecoder;
+    if (!StringDecoder) StringDecoder = __webpack_require__(40).StringDecoder;
     this.decoder = new StringDecoder(options.encoding);
     this.encoding = options.encoding;
   }
@@ -12024,7 +12140,7 @@ Readable.prototype.isPaused = function () {
 
 
 Readable.prototype.setEncoding = function (enc) {
-  if (!StringDecoder) StringDecoder = __webpack_require__(39).StringDecoder;
+  if (!StringDecoder) StringDecoder = __webpack_require__(40).StringDecoder;
   var decoder = new StringDecoder(enc);
   this._readableState.decoder = decoder; // If setEncoding(null), decoder.encoding equals utf8
 
@@ -12708,7 +12824,7 @@ Readable.prototype.wrap = function (stream) {
 if (typeof Symbol === 'function') {
   Readable.prototype[Symbol.asyncIterator] = function () {
     if (createReadableStreamAsyncIterator === undefined) {
-      createReadableStreamAsyncIterator = __webpack_require__(70);
+      createReadableStreamAsyncIterator = __webpack_require__(69);
     }
 
     return createReadableStreamAsyncIterator(this);
@@ -12810,7 +12926,7 @@ function endReadableNT(state, stream) {
 if (typeof Symbol === 'function') {
   Readable.from = function (iterable, opts) {
     if (from === undefined) {
-      from = __webpack_require__(71);
+      from = __webpack_require__(70);
     }
 
     return from(Readable, iterable, opts);
@@ -12827,14 +12943,14 @@ function indexOf(xs, x) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(15).EventEmitter;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12946,7 +13062,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12979,7 +13095,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13042,13 +13158,13 @@ Writable.WritableState = WritableState;
 /*<replacement>*/
 
 var internalUtil = {
-  deprecate: __webpack_require__(68)
+  deprecate: __webpack_require__(67)
 };
 /*</replacement>*/
 
 /*<replacement>*/
 
-var Stream = __webpack_require__(35);
+var Stream = __webpack_require__(36);
 /*</replacement>*/
 
 
@@ -13064,9 +13180,9 @@ function _isUint8Array(obj) {
   return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 }
 
-var destroyImpl = __webpack_require__(36);
+var destroyImpl = __webpack_require__(37);
 
-var _require = __webpack_require__(37),
+var _require = __webpack_require__(38),
     getHighWaterMark = _require.getHighWaterMark;
 
 var _require$codes = __webpack_require__(6).codes,
@@ -13683,7 +13799,7 @@ Writable.prototype._destroy = function (err, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9), __webpack_require__(1)))
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -13712,7 +13828,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(69).Buffer;
+var Buffer = __webpack_require__(68).Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -13985,7 +14101,7 @@ function simpleEnd(buf) {
 }
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -14192,7 +14308,7 @@ function done(stream, er, data) {
 }
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports) {
 
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -14207,22 +14323,22 @@ module.exports = typeof queueMicrotask === 'function'
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 ShExWebApp = (function () {
-  const shapeMap = __webpack_require__(43)
+  const shapeMap = __webpack_require__(44)
   return Object.assign({}, {
     ShExTerm:       __webpack_require__(4),
     Util:           __webpack_require__(11),
     Validator:      __webpack_require__(47),
-    Writer:         __webpack_require__(22),
-    Api:            __webpack_require__(50),
-    Parser:         __webpack_require__(23),
+    Writer:         __webpack_require__(23),
+    Api:            __webpack_require__(49),
+    Parser:         __webpack_require__(24),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
 
-    Map:            __webpack_require__(30),
+    Map:            __webpack_require__(31),
   })
 })()
 
@@ -14231,7 +14347,7 @@ if (true)
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* ShapeMap - javascript module to associate RDF nodes with labeled shapes.
@@ -14244,7 +14360,7 @@ const ShapeMapCjsModule = (function () {
 
   // Write the parser object directly into the symbols so the caller shares a
   // symbol space with ShapeMapJison for e.g. start and focus.
-  symbols.Parser = __webpack_require__(44)
+  symbols.Parser = __webpack_require__(45)
   return symbols
 })();
 
@@ -14254,14 +14370,14 @@ if (true)
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(45).Parser; // node environment
+  ShapeMapJison = __webpack_require__(46).Parser; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -14322,7 +14438,7 @@ if (true)
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -15505,85 +15621,6 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
-/* 46 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var HierarchyClosure = (function () {
-  /** create a hierarchy object
-   * This object keeps track of direct children and parents as well as transitive children and parents.
-   */
-  function makeHierarchy () {
-    let roots = {}
-    let parents = {}
-    let children = {}
-    let holders = {}
-    return {
-      add: function (parent, child) {
-        if (// test if this is a novel entry.
-          (parent in children && children[parent].indexOf(child) !== -1)) {
-          return
-        }
-        let target = parent in holders
-          ? getNode(parent)
-          : (roots[parent] = getNode(parent)) // add new parents to roots.
-        let value = getNode(child)
-
-        target[child] = value
-        delete roots[child]
-
-        // // maintain hierarchy (direct and confusing)
-        // children[parent] = children[parent].concat(child, children[child])
-        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
-        // parents[child] = parents[child].concat(parent, parents[parent])
-        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
-
-        // maintain hierarchy (generic and confusing)
-        updateClosure(children, parents, child, parent)
-        updateClosure(parents, children, parent, child)
-        function updateClosure (container, members, near, far) {
-          container[far] = container[far].filter(
-            e => /* e !== near && */ container[near].indexOf(e) === -1
-          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
-          container[near].forEach(
-            n => (members[n] = members[n].filter(
-              e => e !== far && members[far].indexOf(e) === -1
-            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
-          )
-        }
-
-        function getNode (node) {
-          if (!(node in holders)) {
-            parents[node] = []
-            children[node] = []
-            holders[node] = {}
-          }
-          return holders[node]
-        }
-      },
-      roots: roots,
-      parents: parents,
-      children: children
-    }
-  }
-
-  function depthFirst (n, f, p) {
-    return Object.keys(n).reduce((ret, k) => {
-      return ret.concat(
-        depthFirst(n[k], f, k),
-        p ? f(k, p) : []) // outer invocation can have null parent
-    }, [])
-  }
-
-  return { create: makeHierarchy, depthFirst }
-})()
-
-/* istanbul ignore next */
-if (true) {
-  module.exports = HierarchyClosure
-}
-
-
-/***/ }),
 /* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -15615,7 +15652,7 @@ const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "Untracked
 const ShExTerm = __webpack_require__(4);
 let ShExVisitor = __webpack_require__(21);
 let ShExUtil = __webpack_require__(11);
-const Hierarchy = __webpack_require__(48)
+const Hierarchy = __webpack_require__(22)
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -15827,7 +15864,7 @@ function ShExValidator_constructor(schema, db, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(49);
+  const regexModule = this.options.regexModule || __webpack_require__(48);
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -15981,7 +16018,7 @@ function ShExValidator_constructor(schema, db, options) {
     return ret;
   }
 
-  this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, subGraph) {
+  this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, subGraph, allowAbstract) {
     if (subGraph) // Shape inference doesn't apply when validating base shapes.
       return this._validateShapeDecl(point, index.shapeExprs[shapeLabel], shapeLabel, 0, tracker, seen, subGraph);
 
@@ -15994,7 +16031,8 @@ function ShExValidator_constructor(schema, db, options) {
         candidates.splice(i, 1);
     }
     // Filter out abstract shapes.
-    candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
+    if (!allowAbstract)
+      candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
 
     // Aggregate results in a SolutionList or FailureList.
     const results = candidates.reduce((ret, candidateShapeLabel) => {
@@ -16069,11 +16107,13 @@ function ShExValidator_constructor(schema, db, options) {
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
     if (point === "")
       throw Error("validation needs a valid focus node");
+    let ret = null
     if (typeof shapeExpr === "string") { // ShapeRef
-      return this._validateDescendants(point, shapeExpr, depth, tracker, seen, subgraph);
+      // ret = this._validateShapeDecl(point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, tracker, seen, subgraph);
+      ret = this._validateDescendants(point, shapeExpr, depth, tracker, seen, subgraph, true);
     } else if (shapeExpr.type === "NodeConstraint") {
       const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-      return sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
+      ret = sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
@@ -16091,9 +16131,9 @@ function ShExValidator_constructor(schema, db, options) {
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      return this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
+      ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
     } else if (shapeExpr.type === "ShapeExternal") {
-      return this.options.validateExtern(point, shapeLabel, tracker, seen);
+      ret = this.options.validateExtern(point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
       const errors = [];
       for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
@@ -16104,13 +16144,13 @@ function ShExValidator_constructor(schema, db, options) {
         else
           return { type: "ShapeOrResults", solution: sub };
       }
-      return { type: "ShapeOrFailure", errors: errors };
+      ret = { type: "ShapeOrFailure", errors: errors };
     } else if (shapeExpr.type === "ShapeNot") {
       const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
       if ("errors" in sub)
-          return { type: "ShapeNotResults", solution: sub };
+          ret = { type: "ShapeNotResults", solution: sub };
         else
-          return { type: "ShapeNotFailure", errors: sub };
+          ret = { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
       const passes = [];
       const errors = [];
@@ -16122,12 +16162,23 @@ function ShExValidator_constructor(schema, db, options) {
         else
           passes.push(sub);
       }
-      if (errors.length > 0) {
-        return  { type: "ShapeAndFailure", errors: errors};
-      }
-      return { type: "ShapeAndResults", solutions: passes };
-    } else
+      if (errors.length > 0)
+        ret = { type: "ShapeAndFailure", errors: errors };
+      else
+        ret = { type: "ShapeAndResults", solutions: passes };
+    } else {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
+    }
+
+    if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
+        &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
+        && !("errors" in ret) && "semActs" in shapeExpr) {
+      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({node: point}, ret), ret)
+      if (semActErrors.length)
+        // some semAct aborted
+        return { type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors};
+    }
+    return ret;
   }
 
   this._validateShape = function (point, shape, shapeLabel, depth, tracker, seen, subgraph) {
@@ -16230,7 +16281,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
           [].push.apply(errors, semActErrors);
@@ -17058,85 +17109,6 @@ if (true)
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var HierarchyClosure = (function () {
-  /** create a hierarchy object
-   * This object keeps track of direct children and parents as well as transitive children and parents.
-   */
-  function makeHierarchy () {
-    let roots = {}
-    let parents = {}
-    let children = {}
-    let holders = {}
-    return {
-      add: function (parent, child) {
-        if (// test if this is a novel entry.
-          (parent in children && children[parent].indexOf(child) !== -1)) {
-          return
-        }
-        let target = parent in holders
-          ? getNode(parent)
-          : (roots[parent] = getNode(parent)) // add new parents to roots.
-        let value = getNode(child)
-
-        target[child] = value
-        delete roots[child]
-
-        // // maintain hierarchy (direct and confusing)
-        // children[parent] = children[parent].concat(child, children[child])
-        // children[child].forEach(c => parents[c] = parents[c].concat(parent, parents[parent]))
-        // parents[child] = parents[child].concat(parent, parents[parent])
-        // parents[parent].forEach(p => children[p] = children[p].concat(child, children[child]))
-
-        // maintain hierarchy (generic and confusing)
-        updateClosure(children, parents, child, parent)
-        updateClosure(parents, children, parent, child)
-        function updateClosure (container, members, near, far) {
-          container[far] = container[far].filter(
-            e => /* e !== near && */ container[near].indexOf(e) === -1
-          ).concat(container[near].indexOf(near) === -1 ? [near] : [], container[near])
-          container[near].forEach(
-            n => (members[n] = members[n].filter(
-              e => e !== far && members[far].indexOf(e) === -1
-            ).concat(members[far].indexOf(far) === -1 ? [far] : [], members[far]))
-          )
-        }
-
-        function getNode (node) {
-          if (!(node in holders)) {
-            parents[node] = []
-            children[node] = []
-            holders[node] = {}
-          }
-          return holders[node]
-        }
-      },
-      roots: roots,
-      parents: parents,
-      children: children
-    }
-  }
-
-  function depthFirst (n, f, p) {
-    return Object.keys(n).reduce((ret, k) => {
-      return ret.concat(
-        depthFirst(n[k], f, k),
-        p ? f(k, p) : []) // outer invocation can have null parent
-    }, [])
-  }
-
-  return { create: makeHierarchy, depthFirst }
-})()
-
-/* istanbul ignore next */
-if (true) {
-  module.exports = HierarchyClosure
-}
-
-
-/***/ }),
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = __webpack_require__(4);
 const UNBOUNDED = -1;
@@ -17251,7 +17223,7 @@ function vpEngine (schema, shape, index) {
                   tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(
                   "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
+                    ? semActHandler.dispatchAll(expr.semActs, tested, tested)
                     : []
                 )
                 if (semActErrors.length > 0)
@@ -17524,7 +17496,7 @@ function vpEngine (schema, shape, index) {
                 checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
                 [];
             if (subErrors.length === 0 && "semActs" in expr)
-              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
+              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, ret, ret))
             if (subErrors.length > 0) {
               fromValidatePoint.errors = fromValidatePoint.errors || [];
               fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
@@ -17578,7 +17550,7 @@ if (true)
 
 
 /***/ }),
-/* 50 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
@@ -17586,7 +17558,7 @@ if (true)
 const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(11);
-  const ShExParser = __webpack_require__(23);
+  const ShExParser = __webpack_require__(24);
 
   const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
@@ -17892,11 +17864,11 @@ const ShExApiCjsModule = function (config = {}) {
   function LoadExtensions (globs) {
     return globs.reduce(
       (list, glob) =>
-        list.concat(__webpack_require__(24).glob.sync(glob))
+        list.concat(__webpack_require__(25).glob.sync(glob))
       , []).
       reduce(function (ret, path) {
         try {
-	  const t = __webpack_require__(61)(path)
+	  const t = __webpack_require__(60)(path)
 	  ret[t.url] = t
 	  return ret
         } catch (e) {
@@ -17913,7 +17885,7 @@ if (true)
 
 
 /***/ }),
-/* 51 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, module) {/* parser generated by jison 0.4.18 */
@@ -19762,7 +19734,7 @@ if ( true && __webpack_require__.c[__webpack_require__.s] === module) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1), __webpack_require__(20)(module)))
 
 /***/ }),
-/* 52 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -20072,11 +20044,11 @@ exports.realpath = function realpath(p, cache, cb) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 53 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var concatMap = __webpack_require__(54);
-var balanced = __webpack_require__(55);
+var concatMap = __webpack_require__(53);
+var balanced = __webpack_require__(54);
 
 module.exports = expandTop;
 
@@ -20279,7 +20251,7 @@ function expand(str, isTop) {
 
 
 /***/ }),
-/* 54 */
+/* 53 */
 /***/ (function(module, exports) {
 
 module.exports = function (xs, fn) {
@@ -20298,7 +20270,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 55 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20364,7 +20336,7 @@ function range(a, b, str) {
 
 
 /***/ }),
-/* 56 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20461,7 +20433,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 57 */
+/* 56 */
 /***/ (function(module, exports) {
 
 module.exports = function isBuffer(arg) {
@@ -20472,7 +20444,7 @@ module.exports = function isBuffer(arg) {
 }
 
 /***/ }),
-/* 58 */
+/* 57 */
 /***/ (function(module, exports) {
 
 if (typeof Object.create === 'function') {
@@ -20501,22 +20473,22 @@ if (typeof Object.create === 'function') {
 
 
 /***/ }),
-/* 59 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {module.exports = globSync
 globSync.GlobSync = GlobSync
 
 var fs = __webpack_require__(3)
-var rp = __webpack_require__(25)
+var rp = __webpack_require__(26)
 var minimatch = __webpack_require__(14)
 var Minimatch = minimatch.Minimatch
-var Glob = __webpack_require__(24).Glob
+var Glob = __webpack_require__(25).Glob
 var util = __webpack_require__(16)
 var path = __webpack_require__(2)
-var assert = __webpack_require__(26)
+var assert = __webpack_require__(27)
 var isAbsolute = __webpack_require__(17)
-var common = __webpack_require__(27)
+var common = __webpack_require__(28)
 var alphasort = common.alphasort
 var alphasorti = common.alphasorti
 var setopts = common.setopts
@@ -20994,12 +20966,12 @@ GlobSync.prototype._makeAbs = function (f) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 60 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(28)
+/* WEBPACK VAR INJECTION */(function(process) {var wrappy = __webpack_require__(29)
 var reqs = Object.create(null)
-var once = __webpack_require__(29)
+var once = __webpack_require__(30)
 
 module.exports = wrappy(inflight)
 
@@ -21055,7 +21027,7 @@ function slice (args) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 61 */
+/* 60 */
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -21066,10 +21038,10 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 61;
+webpackEmptyContext.id = 60;
 
 /***/ }),
-/* 62 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21226,7 +21198,7 @@ function fromByteArray (uint8) {
 
 
 /***/ }),
-/* 63 */
+/* 62 */
 /***/ (function(module, exports) {
 
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -21317,7 +21289,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 
 /***/ }),
-/* 64 */
+/* 63 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
@@ -21328,13 +21300,13 @@ module.exports = Array.isArray || function (arr) {
 
 
 /***/ }),
-/* 65 */
+/* 64 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 66 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21355,7 +21327,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var _require = __webpack_require__(10),
     Buffer = _require.Buffer;
 
-var _require2 = __webpack_require__(67),
+var _require2 = __webpack_require__(66),
     inspect = _require2.inspect;
 
 var custom = inspect && inspect.custom || 'inspect';
@@ -21550,13 +21522,13 @@ function () {
 }();
 
 /***/ }),
-/* 67 */
+/* 66 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 68 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -21630,9 +21602,10 @@ function config (name) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(9)))
 
 /***/ }),
-/* 69 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
@@ -21654,6 +21627,8 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
+
+SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
@@ -21698,7 +21673,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 /***/ }),
-/* 70 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21912,7 +21887,7 @@ module.exports = createReadableStreamAsyncIterator;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 71 */
+/* 70 */
 /***/ (function(module, exports) {
 
 module.exports = function () {
@@ -21921,7 +21896,7 @@ module.exports = function () {
 
 
 /***/ }),
-/* 72 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21952,7 +21927,7 @@ module.exports = function () {
 
 module.exports = PassThrough;
 
-var Transform = __webpack_require__(40);
+var Transform = __webpack_require__(41);
 
 __webpack_require__(5)(PassThrough, Transform);
 
@@ -21966,7 +21941,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 73 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22069,7 +22044,7 @@ function pipeline() {
 module.exports = pipeline;
 
 /***/ }),
-/* 74 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/* ShExMaterializer - javascript module to validate a graph with respect to Shape Expressions
@@ -22101,7 +22076,7 @@ const VERBOSE = "VERBOSE" in process.env;
 const ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
 
 const ShExTerm = __webpack_require__(4);
-const ShExMap = __webpack_require__(30);
+const ShExMap = __webpack_require__(31);
 
 const UNBOUNDED = -1;
 
@@ -22284,7 +22259,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(75);
+  const regexModule = this.options.regexModule || __webpack_require__(74);
 
   let blankNodeCount = 0;
   const nextBNode = options.nextBNode || function () {
@@ -23204,7 +23179,7 @@ if (true)
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
 /***/ }),
-/* 75 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const NFAXVal1ErrMaterializer = (function () {
@@ -23739,7 +23714,7 @@ if (true)
 
 
 /***/ }),
-/* 76 */
+/* 75 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -25315,11 +25290,14 @@ class N3Writer_N3Writer {
     // Initialize writer, depending on the format
     this._subject = null;
     if (!(/triple|quad/i).test(options.format)) {
+      this._lineMode = false;
       this._graph = N3Writer_DEFAULTGRAPH;
+      this._baseIRI = options.baseIRI;
       this._prefixIRIs = Object.create(null);
       options.prefixes && this.addPrefixes(options.prefixes);
     }
     else {
+      this._lineMode = true;
       this._writeQuad = this._writeQuadLine;
     }
   }
@@ -25405,8 +25383,11 @@ class N3Writer_N3Writer {
         entity = this.list(this._lists[entity.value]);
       return 'id' in entity ? entity.id : `_:${entity.value}`;
     }
-    // Escape special characters
     let iri = entity.value;
+    // Use relative IRIs if requested and possible
+    if (this._baseIRI && iri.startsWith(this._baseIRI))
+      iri = iri.substr(this._baseIRI.length);
+    // Escape special characters
     if (N3Writer_escape.test(iri))
       iri = iri.replace(escapeAll, characterReplacer);
     // Try to represent the IRI as prefixed name
@@ -25421,13 +25402,43 @@ class N3Writer_N3Writer {
     let value = literal.value;
     if (N3Writer_escape.test(value))
       value = value.replace(escapeAll, characterReplacer);
-    // Write the literal, possibly with type or language
+
+    // Write a language-tagged literal
     if (literal.language)
       return `"${value}"@${literal.language}`;
-    else if (literal.datatype.value !== N3Writer_xsd.string)
-      return `"${value}"^^${this._encodeIriOrBlank(literal.datatype)}`;
-    else
-      return `"${value}"`;
+
+    // Write dedicated literals per data type
+    if (this._lineMode) {
+      // Only abbreviate strings in N-Triples or N-Quads
+      if (literal.datatype.value === N3Writer_xsd.string)
+        return `"${value}"`;
+    }
+    else {
+      // Use common datatype abbreviations in Turtle or TriG
+      switch (literal.datatype.value) {
+      case N3Writer_xsd.string:
+        return `"${value}"`;
+      case N3Writer_xsd.boolean:
+        if (value === 'true' || value === 'false')
+          return value;
+        break;
+      case N3Writer_xsd.integer:
+        if (/^[+-]?\d+$/.test(value))
+          return value;
+        break;
+      case N3Writer_xsd.decimal:
+        if (/^[+-]?\d*\.\d+$/.test(value))
+          return value;
+        break;
+      case N3Writer_xsd.double:
+        if (/^[+-]?(?:\d+\.\d*|\.?\d+)[eE][+-]?\d+$/.test(value))
+          return value;
+        break;
+      }
+    }
+
+    // Write a regular datatyped literal
+    return `"${value}"^^${this._encodeIriOrBlank(literal.datatype)}`;
   }
 
   // ### `_encodePredicate` represents a predicate
@@ -26469,8 +26480,7 @@ class N3StreamParser_N3StreamParser extends readable_browser["Transform"] {
 // ## Constructor
 class N3StreamWriter_N3StreamWriter extends readable_browser["Transform"] {
   constructor(options) {
-    super({ encoding: 'utf8' });
-    this._writableState.objectMode = true;
+    super({ encoding: 'utf8', writableObjectMode: true });
 
     // Set up writer with a dummy stream object
     const writer = this._writer = new N3Writer_N3Writer({
