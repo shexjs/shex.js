@@ -869,7 +869,12 @@ async function callValidator (done) {
         show();
       let parsedSchema;
       if (Caches.inputSchema.language === "ShExJ") {
-        new ShEx.Writer({simplifyParentheses: false}).writeSchema(Caches.inputSchema.parsed, (error, text) => {
+        const opts = {
+          simplifyParentheses: false,
+          base: Caches.inputSchema.meta.base,
+          prefixes: Caches.inputSchema.meta.prefixes
+        }
+        new ShEx.Writer(opts).writeSchema(Caches.inputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
             // res.addClass("error");
