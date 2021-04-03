@@ -35,7 +35,7 @@
     "@shexjs/extension-test": "file:packages/extension-test",
     "@shexjs/node": "file:packages/shex-node",
     "@shexjs/parser": "file:packages/shex-parser",
-    "@shexjs/path": "file:packages/shex-path",
+    "@shexjs/path": "file:packages/shape-path",
     "@shexjs/util": "file:packages/shex-util",
     "@shexjs/webapp": "file:packages/shex-webapp",
     "@shexjs/writer": "file:packages/shex-writer",

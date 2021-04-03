@@ -205,12 +205,12 @@ describe("A ShEx validator", function () {
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
                           if (referenceResult)
-                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                            expect(canonicalizeJ(validationResult)).to.deep.equal(canonicalizeJ(referenceResult));
                           ShExUtil.errsToSimple(validationResult);
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
                           if (referenceResult !== null)
-                            expect(restoreUndefined(validationResult)).to.deep.equal(restoreUndefined(referenceResult));
+                            expect(canonicalizeJ(validationResult, {})).to.deep.equal(canonicalizeJ(referenceResult, {}));
                           ShExUtil.valToValues(validationResult);
                         }
                       }
@@ -259,7 +259,7 @@ function parseJSONFile(filename, mapFunction) {
       });
     }
     resolveRelativeURLs(object);
-    return /"\{undefined\}"/.test(string) ? restoreUndefined(object) : object;
+    return /"\{undefined\}"/.test(string) ? canonicalizeJ(object) : object;
   } catch (e) {
     throw new Error("error reading " + filename +
                     ": " + ("stack" in e ? e.stack : e));
@@ -268,19 +268,19 @@ function parseJSONFile(filename, mapFunction) {
 
 // Not sure this is needed when everything's working but I have hunch it makes
 // error handling a little more graceful.
-
-// Stolen from Ruben Verborgh's SPARQL.js tests:
-// Recursively replace values of "{undefined}" by `undefined`
-function restoreUndefined(object) {
+function canonicalizeJ (object, map) {
   "use strict";
   for (var key in object) {
     var item = object[key];
     if (typeof item === "object") {
       object[key] = item.type === "ShapeRef"
         ? item.reference
-        : restoreUndefined(item);
-    } else if (item === "{undefined}") {
-      object[key] = undefined;
+        : canonicalizeJ(item, map);
+    } else if (map && (["node", "subject", "object"]).indexOf(key) !== -1 &&
+               typeof item === "string" && item.startsWith("_:")) {
+      if (!(item in map))
+        map[item] = "_:b" + Object.keys(map).length;
+      object[key] = map[item];
     }
   }
   if ("shape" in object && "shapeExpr" in object && "id" in object.shapeExpr)

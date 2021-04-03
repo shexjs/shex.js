@@ -66,12 +66,12 @@
                         "type": "TestedTriple",
                         "subject": "_:n3-0",
                         "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
-                        "object": "_:n3-2",
+                        "object": "_:n3-1",
                         "referenced": {
                           "type": "ShapeOrResults",
                           "solution": {
                             "type": "ShapeTest",
-                            "node": "_:n3-2",
+                            "node": "_:n3-1",
                             "shape": "http://a.example/List1PlusIri",
                             "solution": {
                               "type": "EachOfSolutions",
@@ -89,7 +89,7 @@
                                       "solutions": [
                                         {
                                           "type": "TestedTriple",
-                                          "subject": "_:n3-2",
+                                          "subject": "_:n3-1",
                                           "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
                                           "object": "http://a.example/v2",
                                           "referenced": {
@@ -121,14 +121,14 @@
                                       "solutions": [
                                         {
                                           "type": "TestedTriple",
-                                          "subject": "_:n3-2",
+                                          "subject": "_:n3-1",
                                           "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
-                                          "object": "_:n3-4",
+                                          "object": "_:n3-2",
                                           "referenced": {
                                             "type": "ShapeOrResults",
                                             "solution": {
                                               "type": "ShapeTest",
-                                              "node": "_:n3-4",
+                                              "node": "_:n3-2",
                                               "shape": "http://a.example/List1PlusIri",
                                               "solution": {
                                                 "type": "EachOfSolutions",
@@ -146,7 +146,7 @@
                                                         "solutions": [
                                                           {
                                                             "type": "TestedTriple",
-                                                            "subject": "_:n3-4",
+                                                            "subject": "_:n3-2",
                                                             "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
                                                             "object": "http://a.example/v3",
                                                             "referenced": {
@@ -178,7 +178,7 @@
                                                         "solutions": [
                                                           {
                                                             "type": "TestedTriple",
-                                                            "subject": "_:n3-4",
+                                                            "subject": "_:n3-2",
                                                             "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
                                                             "object": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil",
                                                             "referenced": {
