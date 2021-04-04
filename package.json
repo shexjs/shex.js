@@ -56,6 +56,7 @@
     "node-fetch": "^2.6.0",
     "nyc": "^14.1.1",
     "pre-commit": "^1.2.2",
+    "relateurl": "^0.2.7",
     "request-promise": "^4.2.2",
     "shape-map": "file:packages/shape-map",
     "shex-test": "github:shexSpec/shexTest#extends",
