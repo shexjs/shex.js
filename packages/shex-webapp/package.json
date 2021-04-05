@@ -20,12 +20,12 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/api": "file:../shex-api",
-    "@shexjs/parser": "file:../shex-parser",
-    "@shexjs/util": "file:../shex-util",
-    "@shexjs/writer": "file:../shex-writer",
+    "@shexjs/api": "1.0.0-alpha.6",
+    "@shexjs/parser": "1.0.0-alpha.6",
+    "@shexjs/util": "1.0.0-alpha.6",
+    "@shexjs/writer": "1.0.0-alpha.6",
     "n3": "^1.6.2",
-    "shape-map": "file:../shape-map"
+    "shape-map": "1.0.0-alpha.6"
   },
   "scripts": {
     "make": "(cd test/ && make test)",

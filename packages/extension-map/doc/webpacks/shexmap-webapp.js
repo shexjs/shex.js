@@ -20224,19 +20224,16 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
-    return new Promise(function (resolve, reject) {
-      const struct = JSON.parse(text)
-      config.jsonld.toRDF(struct, {format: "application/nquads", base: url}, function (lderr, nquads) {
-        if (lderr) {
-          reject("error parsing JSON-ld " + url + ": " + lderr)
-        } else {
-          meta.prefixes = {}; // @@ take from @context?
-          meta.base = url;    // @@ take from @context.base? (or vocab?)
-          resolve(parseTurtle(nquads, mediaType, url, data, meta))
-        }
-      })
-    })
+  async function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
+    const struct = JSON.parse(text)
+    try {
+      const nquads = await config.jsonld.toRDF(struct, {format: "application/nquads", base: url});
+      meta.prefixes = {}; // @@ take from @context?
+      meta.base = url;    // @@ take from @context.base? (or vocab?)
+      return parseTurtle(nquads, mediaType, url, data, meta);
+    } catch (lderr) {
+      throw Error("error parsing JSON-ld " + url + ": " + lderr);
+    }
   }
 
   function LoadExtensions (globs) {
@@ -22655,6 +22652,9 @@ function range(a, b, str) {
   var i = ai;
 
   if (ai >= 0 && bi > 0) {
+    if(a===b) {
+      return [ai, bi];
+    }
     begs = [];
     left = str.length;
 
@@ -23956,7 +23956,6 @@ function config (name) {
 /* 91 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = __webpack_require__(10)
 var Buffer = buffer.Buffer
@@ -23978,8 +23977,6 @@ if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow)
 function SafeBuffer (arg, encodingOrOffset, length) {
   return Buffer(arg, encodingOrOffset, length)
 }
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
 
 // Copy static methods from Buffer
 copyProps(Buffer, SafeBuffer)
@@ -26442,10 +26439,10 @@ function termToId(term) {
 class Quad extends Term {
   constructor(subject, predicate, object, graph) {
     super('');
-    this.subject   = subject;
-    this.predicate = predicate;
-    this.object    = object;
-    this.graph     = graph || DEFAULTGRAPH;
+    this._subject   = subject;
+    this._predicate = predicate;
+    this._object    = object;
+    this._graph     = graph || DEFAULTGRAPH;
   }
 
   // ### The term type of this term
@@ -26453,23 +26450,39 @@ class Quad extends Term {
     return 'Quad';
   }
 
+  get subject() {
+    return this._subject;
+  }
+
+  get predicate() {
+    return this._predicate;
+  }
+
+  get object() {
+    return this._object;
+  }
+
+  get graph() {
+    return this._graph;
+  }
+
   // ### Returns a plain object representation of this quad
   toJSON() {
     return {
       termType:  this.termType,
-      subject:   this.subject.toJSON(),
-      predicate: this.predicate.toJSON(),
-      object:    this.object.toJSON(),
-      graph:     this.graph.toJSON(),
+      subject:   this._subject.toJSON(),
+      predicate: this._predicate.toJSON(),
+      object:    this._object.toJSON(),
+      graph:     this._graph.toJSON(),
     };
   }
 
   // ### Returns whether this object represents the same quad as the other
   equals(other) {
-    return !!other && this.subject.equals(other.subject)     &&
-                      this.predicate.equals(other.predicate) &&
-                      this.object.equals(other.object)       &&
-                      this.graph.equals(other.graph);
+    return !!other && this._subject.equals(other.subject)     &&
+                      this._predicate.equals(other.predicate) &&
+                      this._object.equals(other.object)       &&
+                      this._graph.equals(other.graph);
   }
 }
 
@@ -27978,7 +27991,7 @@ function characterReplacer(character) {
   return result;
 }
 
-// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/node_modules/readable-stream/readable-browser.js
+// EXTERNAL MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/readable-stream/readable-browser.js
 var readable_browser = __webpack_require__(9);
 
 // CONCATENATED MODULE: /home/eric/checkouts/shexSpec/shex.js/node_modules/n3/src/N3Store.js

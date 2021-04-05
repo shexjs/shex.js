@@ -291,19 +291,16 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
-    return new Promise(function (resolve, reject) {
-      const struct = JSON.parse(text)
-      config.jsonld.toRDF(struct, {format: "application/nquads", base: url}, function (lderr, nquads) {
-        if (lderr) {
-          reject("error parsing JSON-ld " + url + ": " + lderr)
-        } else {
-          meta.prefixes = {}; // @@ take from @context?
-          meta.base = url;    // @@ take from @context.base? (or vocab?)
-          resolve(parseTurtle(nquads, mediaType, url, data, meta))
-        }
-      })
-    })
+  async function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
+    const struct = JSON.parse(text)
+    try {
+      const nquads = await config.jsonld.toRDF(struct, {format: "application/nquads", base: url});
+      meta.prefixes = {}; // @@ take from @context?
+      meta.base = url;    // @@ take from @context.base? (or vocab?)
+      return parseTurtle(nquads, mediaType, url, data, meta);
+    } catch (lderr) {
+      throw Error("error parsing JSON-ld " + url + ": " + lderr);
+    }
   }
 
   function LoadExtensions (globs) {
