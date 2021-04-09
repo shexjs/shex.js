@@ -5,7 +5,7 @@ const ShExApiCjsModule = function (config = {}) {
   const ShExUtil = require("@shexjs/util");
   const ShExParser = require("@shexjs/parser");
 
-  const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
+  const api = { load: LoadPromise, loadExtensions: LoadNoExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
   
   async function GET (url, mediaType) {
@@ -303,23 +303,7 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  function LoadExtensions (globs) {
-    return globs.reduce(
-      (list, glob) =>
-        list.concat(require("glob").glob.sync(glob))
-      , []).
-      reduce(function (ret, path) {
-        try {
-	  const t = require(path)
-	  ret[t.url] = t
-	  return ret
-        } catch (e) {
-	  console.warn("ShEx extension \"" + moduleDir + "\" not loadable: " + e)
-	  return ret
-        }
-      }, {})
-  }
-
+  function LoadNoExtensions (globs) { return []; }
 }
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")

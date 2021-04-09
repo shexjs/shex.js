@@ -18,7 +18,7 @@ const InterfaceOptions = {
   }
 };
 
-const VERBOSE = "VERBOSE" in process.env;
+const VERBOSE = false; // "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
 const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
