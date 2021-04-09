@@ -24,6 +24,8 @@
     "@shexjs/parser": "1.0.0-alpha.6",
     "@shexjs/util": "1.0.0-alpha.6",
     "@shexjs/writer": "1.0.0-alpha.6",
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5",
     "n3": "^1.6.2",
     "shape-map": "1.0.0-alpha.6"
   },
@@ -62,7 +64,6 @@
     "terser-webpack-plugin": "^4.2.0",
     "webpack": "^4.44.1",
     "webpack-bundle-analyzer": "^3.8.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-monitor": "^1.0.14"
+    "webpack-cli": "^3.3.12"
   }
 }

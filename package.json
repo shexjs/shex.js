@@ -67,7 +67,7 @@
     "travis-deploy-once": "travis-deploy-once",
     "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack)",
     "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
-    "webpack-monitor": "cd packages/shex-webapp && npm run webpack-monitor"
+    "webpack-monitor": "if [ -d ./node_modules/webpack-monitor ]; then (cd packages/shex-webapp && npm run webpack-monitor) else echo \"You need to install webpack-monitor\"; fi"
   },
   "publishConfig": {
     "access": "private"
