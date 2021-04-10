@@ -40,8 +40,8 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      fs: false,  // TODO: update ShapeMapParser to use ts-jison
-      path: false,
+      // fs: false,  // TODO: update ShapeMapParser to use ts-jison
+      // path: false,
       // net: 'empty',
       // tls: 'empty',
       url: require.resolve("url/"),
