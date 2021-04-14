@@ -7794,16 +7794,21 @@ const ShExUtil = {
               const ent = expressions[0];
               const rest = expressions[1].solutions[0];
               const member = ent.solutions[0];
-              const newElt = cb(member);
+              let newElt = cb(member);
               if ("referenced" in member) {
                 const t = _ShExUtil.walkVal(member.referenced, cb);
-                if (t)
-                  newElt.nested = t;
+                if (t) {
+                  if (newElt)
+                    newElt.nested = t;
+                  else
+                    newElt = t;
+                }
               }
-              vals.push(newElt);
+              if (newElt)
+                vals.push(newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil OR @<list>` idiom
                           ? rest.referenced.solution
                           : rest.referenced);
             }
