@@ -12,7 +12,7 @@ const ShExNode = require("@shexjs/node")({
 });
 const ShExParser = require("@shexjs/parser");
 const ShExValidator = require("@shexjs/validator");
-const Mapper = require("@shexjs/extension-map")({rdfjs: RdfJs, Validator: ShExValidator});
+const Mapper = require("..")({rdfjs: RdfJs, Validator: ShExValidator});
 
 // var Promise = require("promise");
 const expect = require("chai").expect;
@@ -168,7 +168,7 @@ describe('Examples manifest', function () {
 function loadManifest() {
   const schemaBase = 'http://a.example/schema/'
   const turtleBase = 'http://a.example/turtle/'
-  const examplesDir = Path.join(__dirname, '../packages/extension-map/examples/')
+  const examplesDir = Path.join(__dirname, '../examples')
   const examplesManifest = JSON.parse(Fs.readFileSync(Path.join(examplesDir, 'manifest.json'), 'utf8'))
 
   return examplesManifest

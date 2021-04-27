@@ -21,7 +21,7 @@ const node_fetch = require("node-fetch")
 const jsdom = require("jsdom")
 const { JSDOM } = jsdom
 // JsDom only accepts it's own implementation of Blob
-const Blob = require('../node_modules/jsdom/lib/jsdom/living/generated/Blob')
+const Blob = require('jsdom/lib/jsdom/living/generated/Blob')
 let SharedForTests = null
 
 const Server = startServer()
@@ -41,8 +41,8 @@ if (!TEST_browser) {
   // Some manifests to play with:
   const Manifest_Example = 'packages/shex-webapp/examples/manifest.json'
   const Manifest_ShExMap = 'packages/extension-map/examples/manifest.json'
-  const Manifest_InlineOne = 'test/browser/manifest-inline-one.json'
-  const Manifest_UrlTwo = 'test/browser/manifest-URL-two.json'
+  const Manifest_InlineOne = 'packages/shex-webapp/test/browser/manifest-inline-one.json'
+  const Manifest_UrlTwo = 'packages/shex-webapp/test/browser/manifest-URL-two.json'
   function rel (file) { return `../../../${file}` }
   function abs (file) { return `/shex.js/${file}` }
 
@@ -584,7 +584,7 @@ function startServer () {
 
   // blindly tries file extensions. should look at request headers.
   function readFromFilesystem (path) {
-    let filePath = Path.join(__dirname, '..', getRelPath(path));
+    let filePath = Path.join(__dirname, '../../..', getRelPath(path));
     let last
     const extensions = ['', '.shex', '.ttl']
     const ret = extensions.find(
@@ -608,7 +608,7 @@ function startServer () {
 }
 
 async function loadPage (page, searchParms) {
-  const base = Path.join(__dirname, '..', page) // paths relative to repo root
+  const base = Path.join(__dirname, '../../..', page) // paths relative to repo root
   // let start = Date.now()
   // stamp('start')
   let timer = setTimeout(() => {

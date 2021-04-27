@@ -7,7 +7,7 @@ var chai = require('chai');
 var expect = chai.expect;
 var should = chai.should();
 
-var mapExtUtils = require("@shexjs/extension-map")({}).utils;
+var mapExtUtils = require("..")({}).utils;
 
 describe('Map extension utils', function() {
 

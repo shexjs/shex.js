@@ -8,7 +8,7 @@ const ShapeMapParser = require("shape-map").Parser
 const ShExTerm = require("@shexjs/term")
 const Extensions = [
   // http://shex.io/extensions/javascript/
-  require("../packages/extension-eval")
+  require("@shexjs/extension-eval")
 ]
 const Fs = require('fs')
 const N3 = require('n3')
