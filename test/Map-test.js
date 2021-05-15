@@ -10,58 +10,77 @@ const RdfJs = require("n3");
 const ShExNode = require("@shexjs/node")({
   rdfjs: RdfJs,
 });
+const ShExParser = require("@shexjs/parser");
 const ShExValidator = require("@shexjs/validator");
 const Mapper = require("@shexjs/extension-map")({rdfjs: RdfJs, Validator: ShExValidator});
 
 // var Promise = require("promise");
 const expect = require("chai").expect;
 const Path = require("path");
+const Fs = require("fs");
 
 var maybeLog = VERBOSE ? console.log : function () {};
+const urlify = (s) => "file://localhost/" + s
 
-var Harness = {
-  prepare: function (srcSchemas, targetSchemas, inputData, inputNode, createRoot, expectedBindings, expectedRDF, testTrivial) {
-    var mapstr = srcSchemas + " -> " + targetSchemas.join(',');
-    it('('+ mapstr + ')' + ' should map ' + inputData + " to " + expectedRDF, async function () {
+function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createRoot, expectedBindings, expectedRdfFilePath, testTrivial) {
+  var mapstr = srcSchemas + " -> " + targetSchemas.join(',');
+  it('('+ mapstr + ')' + ' should map ' + inputDataFilePath + " to " + expectedRdfFilePath, async function () {
 
-      srcSchemas = srcSchemas.map(function (p) { return Path.resolve(__dirname, p); });
-      targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
-      inputData = Path.resolve(__dirname, inputData);
-      expectedRDF = Path.resolve(__dirname, expectedRDF);
-      // Lean on ShExNode to load all the schemas and data graphs.
-      const loads = await Promise.all([ShExNode.load(srcSchemas, [], [inputData], [], {index: true}),
-                                       ShExNode.load(targetSchemas, [], [expectedRDF], [], {index: true})])
-      loads[0].data.toString = loads[1].data.toString = graphToString;
+    srcSchemas = srcSchemas.map(function (p) { return Path.resolve(__dirname, p); });
+    targetSchemas = targetSchemas.map(function (p) { return Path.resolve(__dirname, p); });
+    inputDataFilePath = Path.resolve(__dirname, inputDataFilePath);
+    expectedRdfFilePath = Path.resolve(__dirname, expectedRdfFilePath);
+    // Lean on ShExNode to load all the schemas and data graphs.
+    const loads = await Promise.all([ShExNode.load(srcSchemas, [], [inputDataFilePath], [], {index: true}),
+                                     ShExNode.load(targetSchemas, [], [expectedRdfFilePath], [], {index: true})])
+    loads[0].data.toString = loads[1].data.toString = graphToString;
+    const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
+    const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }
+    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
+  })
 
-      // prepare validator
-      var validator = ShExValidator.construct(loads[0].schema, ShExUtil.rdfjsDB(loads[0].data), {noCache: true});
-      const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
+}
 
-      // run validator
-      var res = validator.validate(inputNode, ShExValidator.start);
-      expect(res).to.not.be.null;
-      var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
+async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expectedBindings, expectedRdfP, mapstr, testTrivial) {
+  const [inputData, smap, expectedRdf] = await Promise.all([inputDataP, smapP, expectedRdfP])
+  // console.log([inputData.graph.size, JSON.stringify(smap), expectedRdf.graph.size])
 
-      // test against expected.
-      if (expectedBindings)
-        expect(resultBindings).to.deeply.equal(expectedBindings);
+  // prepare validator    
+  var validator = ShExValidator.construct(srcSchema, ShExUtil.rdfjsDB(inputData.graph), {noCache: true});
+  const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
-      if (testTrivial)
-        testGraph(trivial(registered, loads[1].schema, resultBindings, createRoot), mapstr, loads[1].data)
-      testGraph(materialize(registered, loads[1].schema, resultBindings, createRoot), mapstr, loads[1].data)
-    });
+  // run validator
+  var res = validator.validate(smap);
+  expect(res.errors || []).to.deep.equal([]); // Trick chai into displaying errors.
+
+  // var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
+  const resultBindings = ShExUtil.valToExtension(res, Mapper.url);
+
+  // test against expected.
+  if (expectedBindings) {
+    if (resultBindings instanceof Array !== expectedBindings instanceof Array)
+      expect([resultBindings]).to.deep.equal(expectedBindings);
+    else
+      expect(resultBindings).to.deep.equal(expectedBindings);
   }
-};
 
-function testGraph (trivialOutput, mapstr, data) {
-  trivialOutput.toString = graphToString;
-  maybeLog(mapstr);
-  maybeLog("output:");
-  maybeLog(trivialOutput.toString());
-  maybeLog("expect:");
-  maybeLog(data.toString());
-  // console.log(trivialOutput.toString(), "\n--\n", data.toString());
-  expect(geq(trivialOutput, data)).to.be.true;
+  if (testTrivial)
+    testGraph(trivial(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
+  testGraph(materialize(registered, targetSchema, resultBindings, createRoot), expectedRdf.graph, mapstr)
+}
+
+function testGraph (got, expected, mapstr) {
+  const passed = geq(got, expected);
+  if (!passed) {debugger
+    expected.toString = got.toString = graphToString;
+    maybeLog(mapstr);
+    maybeLog("output:");
+    maybeLog(got.toString());
+    maybeLog("expect:");
+    maybeLog(expected.toString());
+    // console.log(got.toString(), "\n--\n", expected.toString());
+  }
+  expect(passed).to.be.true;
 }
 
 function trivial (registered, schema, resultBindings, createRoot) {
@@ -72,7 +91,7 @@ function trivial (registered, schema, resultBindings, createRoot) {
 
 function materialize (registered, schema, resultBindings, createRoot) {
   const materializer = Mapper.materializer.construct(schema, registered, {});
-  const binder = registered.binder(JSON.parse(JSON.stringify([resultBindings])))
+  const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
   const res2 = materializer.validate(binder, createRoot, undefined)
   const store = new RdfJs.Store()
   store.addQuads(ShExUtil.valToN3js(res2, RdfJs.DataFactory))
@@ -93,11 +112,11 @@ describe('A ShEx Mapper', function () {
   if (TESTS)
     tests = tests.filter(function (t) { return TESTS.indexOf(t[0]) !== -1; });
   tests.forEach(function (test) {
-    Harness.prepare.apply(null, test.slice(1));
+    loadAndRun.apply(null, test.slice(1));
   });
 
 /*
-  Harness.prepare(["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", null, "Map/BPDAMFHIR/BPunitsDAM.ttl");
+  loadAndRun(["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAMsys.shex", "Map/BPDAMFHIR/BPunitsDAMdia.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", null, "Map/BPDAMFHIR/BPunitsDAM.ttl");
 
   emits:
     _:0 bpudam:systolic [
@@ -122,6 +141,83 @@ describe('A ShEx Mapper', function () {
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 */
 });
+const ShapeMap = require("shape-map");
+ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+
+const Awaiting = []
+const Examples = loadManifest()
+before(() => {
+  return Promise.all(Awaiting)
+})
+
+describe('Examples manifest', function () {
+  Examples.forEach((manifest) => {
+    const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
+    const createRoot = manifest.createRoot.startsWith('_:')
+          ? manifest.createRoot
+          : manifest.createRoot.substr(1, manifest.createRoot.length-2)
+    const dataSummary = "dataURL" in manifest
+          ? manifest.dataURL
+          : manifest.data.length + ' chars of turtle'
+    it(mapstr + ' should map ' + dataSummary + " to " + manifest.outputDataURL, async function () {
+      return run(manifest.inputSchema, manifest.outputSchema, manifest.inputDataP, manifest.smapP, createRoot, manifest.expectedBindings, manifest.expectedDataP, mapstr, false)
+    })
+  })
+})
+
+function loadManifest() {
+  const schemaBase = 'http://a.example/schema/'
+  const turtleBase = 'http://a.example/turtle/'
+  const examplesDir = Path.join(__dirname, '../packages/extension-map/examples/')
+  const examplesManifest = JSON.parse(Fs.readFileSync(Path.join(examplesDir, 'manifest.json'), 'utf8'))
+
+  return examplesManifest
+    .filter(e => e.status === "conformant" && !(e.queryMap.startsWith("_:")))
+    .map((manifest) => {
+
+      // validation inputs
+      const inputSchema = ShExParser.construct(schemaBase, {}, {index: true}).parse(manifest.schema)
+      const inputDataP = parseTurtle(manifest.data, turtleBase)
+      const smapP = inputDataP.then(
+        (inputData) => ShapeMap.Parser.construct(
+          'http://a.example/schema/',
+          {base: inputSchema._base, prefixes: inputSchema._prefixes},
+          inputData.meta
+        ).parse(manifest.queryMap)
+      )
+
+      // materialization inputs
+      const outputSchema = ShExParser.construct(schemaBase, {}, {index: true}).parse(manifest.outputSchema)
+      const expectedBindings = manifest.expectedBindingsURL ? JSON.parse(Fs.readFileSync(Path.join(examplesDir, manifest.expectedBindingsURL), 'utf8')) : null
+      const expectedDataP = parseTurtle(Fs.readFileSync(Path.join(examplesDir, manifest.outputDataURL), 'utf8'), turtleBase)
+      Awaiting.push(inputDataP, smapP, expectedDataP)
+      return Object.assign(manifest, {inputSchema, outputSchema, inputDataP, smapP, expectedBindings, expectedDataP})
+    })
+}
+
+
+// function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
+async function parseTurtle (text, url) {
+  const graph = new RdfJs.Store()
+  const ret = { graph, meta: { base: url, prefixes: {} } }
+  return new Promise((resolve, reject) => {
+    new RdfJs.Parser({baseIRI: url, blankNodePrefix: "_:", format: "text/turtle"}).
+      parse(text,
+            function (error, triple, prefixes) {
+              if (prefixes) {
+                ret.meta.prefixes = prefixes
+              }
+              if (error) {
+                throw "error parsing " + url + ": " + error
+              } else if (triple) {
+                graph.addQuad(triple)
+              } else {
+                ret.meta.base = this._base
+                resolve(ret)
+              }
+            })
+  })
+}
 
 function graphToString () {
   var output = '';
