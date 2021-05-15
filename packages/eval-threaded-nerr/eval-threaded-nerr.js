@@ -112,7 +112,7 @@ function vpEngine (schema, shape, index) {
                   tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(
                   "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
+                    ? semActHandler.dispatchAll(expr.semActs, tested, tested)
                     : []
                 )
                 if (semActErrors.length > 0)
@@ -385,7 +385,7 @@ function vpEngine (schema, shape, index) {
                 checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
                 [];
             if (subErrors.length === 0 && "semActs" in expr)
-              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, t, ret))
+              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, ret, ret))
             if (subErrors.length > 0) {
               fromValidatePoint.errors = fromValidatePoint.errors || [];
               fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);

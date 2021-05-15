@@ -1,6 +1,6 @@
 # debugging: MOCHA='mocha --debug-brk'
 
-JISON?=../node_modules/.bin/jison
+JISON?=../node_modules/.bin/ts-jison
 MOCHA?=../node_modules/.bin/mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
@@ -21,11 +21,15 @@ SHEXSCHEMAS = $(wildcard $(join $(TESTDIR), schemas/*.shex))
 JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 
 ../packages/shex-parser/lib/ShExJison.js: ../packages/shex-parser/lib/ShExJison.jison
-	$(JISON) $^ -o $@ -p lr
+	$(JISON) $^ -o $@ -t javascript -p lr
 	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@ # yyloc is reset by lex()->next()->test_match() [[ this.yylloc = {...} ]]
 
 ../packages/shape-map/lib/ShapeMapJison.js: ../packages/shape-map/lib/ShapeMapJison.jison
-	$(JISON) $^ -o $@ -p lalr
+	$(JISON) $^ -o $@ -t javascript -p lalr
+	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@
+
+../packages/shape-path/lib/ShapePathJison.js: ../packages/shape-path/lib/ShapePathJison.jison
+	$(JISON) $^ -o $@ -t javascript -p lalr
 	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@
 
 Parser-Writer-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Parser-Writer-test.js
@@ -34,8 +38,8 @@ Parser-Writer-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-m
 Partition-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Partition-test.js
 	$(MOCHA) -C -R $(REPORTER) Partition-test.js
 
-ShExPath-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ShExPath-test.js
-	$(MOCHA) -C -R $(REPORTER) ShExPath-test.js
+ShapePath-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ShapePath-test.js
+	$(MOCHA) -C -R $(REPORTER) ShapePath-test.js
 
 Compilation-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js ../packages/shex-util/shex-util.js Compilation-test.js
 	$(MOCHA) -C -R $(REPORTER) Compilation-test.js
@@ -67,5 +71,5 @@ hashmap-extension-test: ../packages/shex-parser/lib/ShExJison.js hashmap-extensi
 regex-extension-test: ../packages/shex-parser/lib/ShExJison.js regex-extension-test.js
 	$(MOCHA) -C -R $(REPORTER) regex-extension-test.js
 
-test: Parser-Writer-test Partition-test ShExPath-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js
+test: Parser-Writer-test Partition-test ShapePath-test Compilation-test Validation-test Map-test cli-test browser-test map-extensions-test hashmap-extension-test regex-extension-test.js
 

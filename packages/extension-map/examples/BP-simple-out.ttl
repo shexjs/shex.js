@@ -1,0 +1,11 @@
+PREFIX : <http://dam.example/med#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX bp: <http://shex.io/extensions/Map/#BPDAM->
+PREFIX Map: <http://shex.io/extensions/Map/#>
+
+<tag:b0> :systolic _:b0;
+    :diastolic _:b1.
+_:b0 :value "110"^^xsd:float;
+    :units "mmHg".
+_:b1 :value "70"^^xsd:float;
+    :units "mmHg".

@@ -20,10 +20,10 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "file:../shex-term",
-    "@shexjs/validator": "file:../shex-validator",
-    "@shexjs/visitor": "file:../shex-visitor",
-    "@shexjs/writer": "file:../shex-writer",
+    "@shexjs/term": "1.0.0-alpha.6",
+    "@shexjs/validator": "1.0.0-alpha.6",
+    "@shexjs/visitor": "1.0.0-alpha.6",
+    "@shexjs/writer": "1.0.0-alpha.6",
     "hierarchy-closure": "^1.2.1",
     "sync-request": "^6.1.0"
   },
