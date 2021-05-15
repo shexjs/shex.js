@@ -8472,32 +8472,32 @@ const ShExUtil = {
 */
   },
 
-  rdfjsDB: function (db, queryTracker) {
+  rdfjsDB: function (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 
     function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
     function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
     function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
+    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
 
-    function getNeighborhood (point, shapeLabel/*, shape */) {
+    function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
       let startTime;
       if (queryTracker) {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      const outgoing = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
+      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         const time = new Date();
-        queryTracker.end(outgoing, time - startTime);
+        queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
         startTime = time;
       }
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      const incoming = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
+      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
+        queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
       }
       return {
         outgoing: outgoing,
