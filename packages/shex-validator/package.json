@@ -20,9 +20,9 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/eval-simple-1err": "file:../eval-simple-1err",
-    "@shexjs/eval-threaded-nerr": "file:../eval-threaded-nerr",
-    "@shexjs/visitor": "file:../shex-visitor"
+    "@shexjs/eval-simple-1err": "1.0.0-alpha.6",
+    "@shexjs/eval-threaded-nerr": "1.0.0-alpha.6",
+    "@shexjs/visitor": "1.0.0-alpha.6"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

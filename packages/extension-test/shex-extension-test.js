@@ -17,7 +17,7 @@ function register (validator, api) {
        * @param {object} extensionStorage - place where the extension writes into the result structure.
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
-      dispatch: function (code, ctx, extensionStorage) {
+      dispatch: function (code, ctx, extensionStorage) {debugger
         const m = code.match(pattern);
         if (!m) {
           throw Error("Invocation error: " + TestExt + " code \"" + code + "\" didn't match " + pattern);
