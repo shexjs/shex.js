@@ -23,9 +23,15 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/util": "file:../../packages/shex-util",
+    "@shexjs/util": "1.0.0-alpha.6",
+    "@shexjs/parser": "1.0.0-alpha.6",
+    "@shexjs/util": "1.0.0-alpha.6",
+    "@shexjs/writer": "1.0.0-alpha.6",
     "command-line-args": "^5.0.2",
-    "command-line-usage": "^5.0.5"
+    "command-line-usage": "^5.0.5",
+    "hierarchy-closure": "^1.2.1",
+    "n3": "^1.6.2",
+    "shape-map": "1.0.0-alpha.6"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
@@ -36,11 +42,9 @@
     "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production"
   },
   "devDependencies": {
-    "terser-webpack-plugin": "^4.2.0",
-    "webpack": "^4.44.1",
-    "webpack-bundle-analyzer": "^3.8.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-monitor": "^1.0.14"
+    "jquery": "^3.5.1",
+    "jquery-contextmenu": "^2.9.2",
+    "jquery-ui": "^1.12.1"
   },
   "publishConfig": {
     "access": "public"
