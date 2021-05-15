@@ -75,7 +75,7 @@ describe('Invoking SemActs', function () {
     const res = validator.validate(sm)
 
     // Test results
-    const blurb = test.shexPath
+    const blurb = ''
           + (VERBOSE ? schemaFile : test.schemaURL)
           + (VERBOSE ? dataFile : test.dataURL)
     it(blurb + ' should fail with ' +
