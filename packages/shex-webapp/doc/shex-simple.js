@@ -130,7 +130,6 @@ function rdflib_lexToTerm (lex, resolver) {
 // caches for textarea parsers
 function _makeCache (selection) {
   let _dirty = true;
-  let resolver;
   const ret = {
     selection: selection,
     parsed: null, // a Promise
@@ -159,7 +158,6 @@ function _makeCache (selection) {
         return this.parsed;
       this.parsed = this.parse(selection.val(), this.meta.base);
       await this.parsed;
-      resolver._setBase(this.meta.base);
       _dirty = false;
       return this.parsed;
     },
@@ -179,7 +177,6 @@ function _makeCache (selection) {
         throw Error("fetch <" + url + "> got error response " + resp.status + ": " + resp.statusText);
       const data = await resp.text();
       _cache.meta.base = url;
-      resolver._setBase(url);
       try {
         await _cache.set(data, url, undefined, resp.headers.get('content-type'));
       } catch (e) {
@@ -191,9 +188,9 @@ function _makeCache (selection) {
     },
     url: undefined // only set if inputarea caches some web resource.
   };
-  resolver = new IRIResolver(ret.meta);
-  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, resolver); };
-  ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, resolver); };
+
+  ret.meta.termToLex = function (trm) { return  rdflib_termToLex(trm, new IRIResolver(ret.meta)); };
+  ret.meta.lexToTerm = function (lex) { return  rdflib_lexToTerm(lex, new IRIResolver(ret.meta)); };
   return ret;
 }
 
@@ -214,6 +211,7 @@ function makeSchemaCache (selection) {
           graph ? parseShExR() :
           parseShEx(text, ret.meta, base);
     $("#results .status").hide();
+    markEditMapDirty(); // ShapeMap validity may have changed.
     return schema;
 
     function tryN3 (text) {
@@ -252,7 +250,9 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
   ret.parse = function (text, base) {
-    return ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+    const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+    markEditMapDirty(); // ShapeMap validity may have changed.
+    return res;
   };
   ret.getItems = async function () {
     const data = await this.refresh();
@@ -553,12 +553,12 @@ async function paintManifest (selector, list, func, listItems, side) {
           : responseOrError,
           side);
       })
-      schemaLoaded();
+      textLoaded();
     } else {
-      schemaLoaded();
+      textLoaded();
     }
 
-    function schemaLoaded () {
+    function textLoaded () {
       li.on("click", async () => {
         SharedForTests.promise = func(entry.name, entry, li, listItems, side);
       });
@@ -567,6 +567,7 @@ async function paintManifest (selector, list, func, listItems, side) {
       button.text(entry.label).removeAttr("disabled");
     }
   }))
+  setTextAreaHandlers(listItems);
 }
 
 function fetchOK (url) {
@@ -740,8 +741,9 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      await copyEditMapToTextMap() // will update if #editMap is dirty
-      resolve(await callValidator())
+      const errors = await copyEditMapToTextMap() // will update if #editMap is dirty
+      if (errors.length === 0)
+        resolve(await callValidator())
     }, 0);
   })
 }
@@ -838,7 +840,12 @@ async function callValidator (done) {
         show();
       let parsedSchema;
       if (Caches.inputSchema.language === "ShExJ") {
-        new ShEx.Writer({simplifyParentheses: false}).writeSchema(Caches.inputSchema.parsed, (error, text) => {
+        const opts = {
+          simplifyParentheses: false,
+          base: Caches.inputSchema.meta.base,
+          prefixes: Caches.inputSchema.meta.prefixes
+        }
+        new ShEx.Writer(opts).writeSchema(Caches.inputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
             // res.addClass("error");
@@ -926,7 +933,7 @@ async function callValidator (done) {
         elt = $("<div class='human'/>").append(
           $("<span/>").text(resultStr),
           $("<span/>").text(
-            `${Caches.inputSchema.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputData.meta.termToLex(entry.shape)}`
+            `${Caches.inputData.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
@@ -1185,15 +1192,15 @@ function prepareControls () {
     activate: async function (event, ui) {
       if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
         await copyEditMapToTextMap();
+      else if (ui.oldPanel.get(0) === $("#textMap").get(0))
+        await copyTextMapToEditMap()
     }
   });
   $("#textMap").on("change", evt => {
     results.clear();
     SharedForTests.promise = copyTextMapToEditMap();
   });
-  Caches.inputData.selection.on("change", async evt => {
-    await copyEditMapToFixedMap();
-  });
+  Caches.inputData.selection.on("change", dataInputHandler); // input + paste?
   // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
 
   function dismissModal (evt) {
@@ -1220,6 +1227,14 @@ function prepareControls () {
       reader.readAsText(evt.target.files[0]);
     });
   });
+}
+
+async function dataInputHandler (evt) {
+  const active = $('#shapeMap-tabs ul li.ui-tabs-active a').attr('href');
+  if (active === "#editMap-tab")
+    return await copyEditMapToTextMap();
+  else // if (active === "#textMap")
+    return await copyTextMapToEditMap();
 }
 
 async function toggleControls (evt) {
@@ -1314,6 +1329,7 @@ function markEditMapClean () {
 
 /** getShapeMap -- zip a node list and a shape list into a ShapeMap
  * use {Caches.inputData,Caches.inputSchema}.meta.{prefix,base} to complete IRIs
+ * @return array of encountered errors
  */
 async function copyEditMapToFixedMap () {
   $("#fixedMap tbody").empty(); // empty out the fixed map.
@@ -1374,6 +1390,7 @@ async function copyEditMapToFixedMap () {
     focusElt.scrollLeft = focusElt.scrollWidth;
   });
   fixedMapTab.text(restoreText).removeClass("running");
+  return []; // no errors
 
   async function getQuads (s, p, o) {
     const get = s === ShEx.ShapeMap.focus ? "subject" : "object";
@@ -1437,6 +1454,9 @@ function lexifyFirstColumn (row) { // !!not used
   return Caches.inputData.meta.termToLex(row[0]); // row[0] is the first column.
 }
 
+/**
+ * @return list of errors encountered
+ */
 async function copyEditMapToTextMap () {
   if ($("#editMap").attr("data-dirty") === "true") {
     const text = $("#editMap .pair").get().reduce((acc, queryPair) => {
@@ -1448,21 +1468,25 @@ async function copyEditMapToTextMap () {
       return acc.concat([node+"@"+status+shape]);
     }, []).join(",\n");
     $("#textMap").empty().val(text);
-    await copyEditMapToFixedMap();
+    const ret = await copyEditMapToFixedMap();
     markEditMapClean();
+    return ret;
+  } else {
+    return []; // no errors
   }
 }
 
 /**
- * Parse a supplied query map and build #editMap
+ * Parse query map to populate #editMap and #fixedMap.
  * @returns list of errors. ([] means everything was good.)
  */
 async function copyTextMapToEditMap () {
   $("#textMap").removeClass("error");
   const shapeMap = $("#textMap").val();
-  try { await Caches.inputSchema.refresh(); } catch (e) { }
-  try { await Caches.inputData.refresh(); } catch (e) { }
+  results.clear();
   try {
+    await Caches.inputSchema.refresh();
+    await Caches.inputData.refresh();
     const smparser = ShEx.ShapeMapParser.construct(
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
     const sm = smparser.parse(shapeMap);
@@ -1470,13 +1494,14 @@ async function copyTextMapToEditMap () {
     addEditMapPairs(sm.length ? sm : null);
     const ret = await copyEditMapToFixedMap();
     markEditMapClean();
+    results.clear();
     return ret;
   } catch (e) {
     $("#textMap").addClass("error");
-    $("#fixedMap").empty();
     failMessage(e, "parsing Query Map");
+    makeFreshEditMap()
+    return [e];
   }
-  return [];
 }
 
 function makeFreshEditMap () {
@@ -1586,11 +1611,13 @@ async function loadSearchParameters () {
         : makeFreshEditMap();
 
   customizeInterface();
-  $("body").keydown(function (e) { // keydown because we need to preventDefault
+  $("body").keydown(async function (e) { // keydown because we need to preventDefault
     const code = e.keyCode || e.charCode; // standards anyone?
-    if (e.ctrlKey && (code === 10 || code === 13)) {
+    if (e.ctrlKey && (code === 10 || code === 13)) { // ctrl-enter
       // const at = $(":focus");
-      $("#validate")/*.focus()*/.click();
+      const smErrors = await dataInputHandler();
+      if (smErrors.length === 0)
+        $("#validate")/*.focus()*/.click();
       // at.focus();
       return false; // same as e.preventDefault();
     } else {
@@ -1609,7 +1636,8 @@ async function loadSearchParameters () {
   return loaded;
 }
 
-function setTextAreaHandlers () {
+function setTextAreaHandlers (listItems) {
+  const textAreaCaches = ["inputSchema", "inputData", "shapeMap"]
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
@@ -2050,7 +2078,6 @@ function addContextMenus (inputSelector, cache) {
 }
 
 prepareControls();
-setTextAreaHandlers();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
 let ready = Promise.all([ dndPromise, loads ]);

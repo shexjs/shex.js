@@ -141,6 +141,7 @@ describe("A ShEx parser", function () {
 
   schemas.forEach(function (test) {
     const schema = test.name;
+    const meta = {base: null, prefixes: null}
 
     const jsonSchemaFile = jsonSchemasPath + test.json;
     try {
@@ -153,16 +154,18 @@ describe("A ShEx parser", function () {
          : "should correctly parse ShExC schema '" + shexCFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
-           if (VERBOSE) console.log(schema);
            const schema = Fs.readFileSync(shexCFile, "utf8");
+           if (VERBOSE) console.log("schema: [[\n" + schema + "\n]]");
            try {
              parser._setFileName(shexCFile);
              parser._setBase(BASE);
              const parsedSchema = parser.parse(schema);
+             meta.base = parsedSchema._base;
+             meta.prefixes = parsedSchema._prefixes;
              const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
-             if (VERBOSE) console.log("parsed   :" + JSON.stringify(canonParsed));
-             if (VERBOSE) console.log("expected :" + JSON.stringify(canonAbstractSyntax));
+             if (VERBOSE) console.log("parsed:" + JSON.stringify(canonParsed));
+             if (VERBOSE) console.log("expected:" + JSON.stringify(canonAbstractSyntax));
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
            } catch (e) {
              parser.reset();
@@ -176,11 +179,11 @@ describe("A ShEx parser", function () {
          : "should correctly parse ShExR schema '" + shexRFile +
          "' as '" + jsonSchemaFile + "'." , function () {
 
-           if (VERBOSE) console.log(schema);
-           const schema = Fs.readFileSync(shexRFile, "utf8");
+           const shexR = Fs.readFileSync(shexRFile, "utf8");
+           if (VERBOSE) console.log("\nShExR:", shexR);
            try {
              const schemaGraph = new N3.Store();
-             schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(schema));
+             schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(shexR));
              // console.log(schemaGraph.getQuads());
              const schemaDriver = ShExUtil.rdfjsDB(schemaGraph);
              const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
@@ -195,7 +198,7 @@ describe("A ShEx parser", function () {
              const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
              const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
              if (VERBOSE) console.log("transformed:" + JSON.stringify(parsedSchema));
-             if (VERBOSE) console.log("expected   :" + JSON.stringify(canonAbstractSyntax));
+             if (VERBOSE) console.log("expected:" + JSON.stringify(canonAbstractSyntax));
              // The order of nesting affects productions so don't look at them.
              delete canonParsed.productions;
              delete canonAbstractSyntax.productions;
@@ -213,17 +216,18 @@ describe("A ShEx parser", function () {
         });
 
         it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
-          let w;
-          new ShExWriter({simplifyParentheses: false }).
+          let w;debugger
+          new ShExWriter({simplifyParentheses: false, base: meta.base, prefixes: meta.prefixes}).
             writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;
               else w = text;
             });
-          if (VERBOSE) console.log("written  :" + w);
+          if (VERBOSE) console.log("\nwritten: [[\n" + w + "\n]]");
           parser._setFileName(shexCFile + " (generated)");
           try {
             parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
             const parsed2 = parser.parse(w);
+            if (VERBOSE) console.log("re-parsed:", JSON.stringify(parsed2));
             const canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
             const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
             expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
@@ -240,7 +244,7 @@ describe("A ShEx parser", function () {
               if (error) throw error;
               else w = text;
             });
-          if (VERBOSE) console.log("simple   :" + w);
+          if (VERBOSE) console.log("\nsimple: [[\n" + w + "\n]]");
           parser._setFileName(shexCFile + " (simplified)");
           try {
             const parsed3 = parser.parse(w); // test that simplified also parses
