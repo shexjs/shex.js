@@ -1,6 +1,7 @@
 // **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
 
 const ShExNodeCjsModule = function (config = {}) {
+  const Glob = require("glob").glob;
   const ShExApi = require("@shexjs/api")
 
   const newApi = ShExApi(Object.assign(
@@ -8,6 +9,7 @@ const ShExNodeCjsModule = function (config = {}) {
     {
       fetch: require('node-fetch'),
       jsonld: require('jsonld'),
+      loadExtensions: LoadExtensions,
     },
     config
   ))
@@ -56,6 +58,23 @@ const ShExNodeCjsModule = function (config = {}) {
   }
 
   return newApi
+
+  function LoadExtensions (globs) {
+    return globs.reduce(
+      (list, glob) =>
+        list.concat(Glob.sync(glob))
+      , []).
+      reduce(function (ret, path) {
+        try {
+	  const t = require(path)
+	  ret[t.url] = t
+	  return ret
+        } catch (e) {
+	  console.warn("ShEx extension \"" + moduleDir + "\" not loadable: " + e)
+	  return ret
+        }
+      }, {})
+  }
 }
 
 // return { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
