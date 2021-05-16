@@ -1858,7 +1858,7 @@ const ShExUtil = {
       const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         const time = new Date();
-        queryTracker.end(outgoing, time.valueOf() - startTime.ValueOf());
+        queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
         startTime = time;
       }
       if (queryTracker) {
