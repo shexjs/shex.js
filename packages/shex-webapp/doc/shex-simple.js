@@ -2080,7 +2080,7 @@ function addContextMenus (inputSelector, cache) {
 prepareControls();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = loadSearchParameters();
-let ready = Promise.all([ dndPromise, loads ]);
+const ready = Promise.all([ dndPromise, loads ]);
 if ('_testCallback' in window) {
   SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
   window._testCallback(SharedForTests);
