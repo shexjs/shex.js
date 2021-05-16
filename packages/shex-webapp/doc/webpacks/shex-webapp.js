@@ -5313,7 +5313,7 @@ var __webpack_unused_export__;
       nonest(shapeAtom).shapeExprs = nonest(shapeAtom).shapeExprs.concat(juncts);
       return shapeAtom;
     } else {
-      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts) };
+      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts.map(nonest)) };
     }
   }
 
@@ -6715,6 +6715,137 @@ const ShExUtil = {
 
   Visitor: Visitor,
   index: Visitor.index,
+
+
+  /* getAST - compile a traditional regular expression abstract syntax tree.
+   * Tested but not used at present.
+   */
+  getAST: function (schema) {
+    return {
+      type: "AST",
+      shapes: schema.shapes.reduce(function (ret, shape) {
+        ret[shape.id] = {
+          type: "ASTshape",
+          expression: _compileShapeToAST(shape.expression, [], schema)
+        };
+        return ret;
+      }, {})
+    };
+
+    /* _compileShapeToAST - compile a shape expression to an abstract syntax tree.
+     *
+     * currently tested but not used.
+     */
+    function _compileShapeToAST (expression, tripleConstraints, schema) {
+
+      function Epsilon () {
+        this.type = "Epsilon";
+      }
+
+      function TripleConstraint (ordinal, predicate, inverse, negated, valueExpr) {
+        this.type = "TripleConstraint";
+        // this.ordinal = ordinal; @@ does 1card25
+        this.inverse = !!inverse;
+        this.negated = !!negated;
+        this.predicate = predicate;
+        if (valueExpr !== undefined)
+          this.valueExpr = valueExpr;
+      }
+
+      function Choice (disjuncts) {
+        this.type = "Choice";
+        this.disjuncts = disjuncts;
+      }
+
+      function EachOf (conjuncts) {
+        this.type = "EachOf";
+        this.conjuncts = conjuncts;
+      }
+
+      function SemActs (expression, semActs) {
+        this.type = "SemActs";
+        this.expression = expression;
+        this.semActs = semActs;
+      }
+
+      function KleeneStar (expression) {
+        this.type = "KleeneStar";
+        this.expression = expression;
+      }
+
+      function _compileExpression (expr, schema) {
+        let repeated, container;
+
+        /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
+           expr 1 1 => expr
+           expr 0 1 => Choice(expr, Eps)
+           expr 0 3 => Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps)
+           expr 2 5 => EachOf(expr, expr, Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps))
+           expr 0 * => KleeneStar(expr)
+           expr 1 * => EachOf(expr, KleeneStar(expr))
+           expr 2 * => EachOf(expr, expr, KleeneStar(expr))
+
+           @@TODO: favor Plus over Star if Epsilon not in expr.
+        */
+        function _repeat (expr, min, max) {
+          if (min === undefined) { min = 1; }
+          if (max === undefined) { max = 1; }
+
+          if (min === 1 && max === 1) { return expr; }
+
+          const opts = max === UNBOUNDED ?
+                new KleeneStar(expr) :
+                Array.from(Array(max - min)).reduce(function (ret, elt, ord) {
+                  return ord === 0 ?
+                    new Choice([expr, new Epsilon]) :
+                    new Choice([new EachOf([expr, ret]), new Epsilon]);
+                }, undefined);
+
+          const reqd = min !== 0 ?
+                new EachOf(Array.from(Array(min)).map(function (ret) {
+                  return expr; // @@ something with ret
+                }).concat(opts)) : opts;
+          return reqd;
+        }
+
+        if (typeof expr === "string") { // Inclusion
+          const included = schema._index.tripleExprs[expr].expression;
+          return _compileExpression(included, schema);
+        }
+
+        else if (expr.type === "TripleConstraint") {
+          // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
+          const valueExpr = "valueExprRef" in expr ?
+                schema.valueExprDefns[expr.valueExprRef] :
+                expr.valueExpr;
+          const ordinal = tripleConstraints.push(expr)-1;
+          const tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
+          repeated = _repeat(tp, expr.min, expr.max);
+          return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+        }
+
+        else if (expr.type === "OneOf") {
+          container = new Choice(expr.expressions.map(function (e) {
+            return _compileExpression(e, schema);
+          }));
+          repeated = _repeat(container, expr.min, expr.max);
+          return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+        }
+
+        else if (expr.type === "EachOf") {
+          container = new EachOf(expr.expressions.map(function (e) {
+            return _compileExpression(e, schema);
+          }));
+          repeated = _repeat(container, expr.min, expr.max);
+          return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+        }
+
+        else throw Error("unexpected expr type: " + expr.type);
+      }
+
+      return expression ? _compileExpression(expression, schema) : new Epsilon();
+    }
+  },
 
   // tests
   // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
@@ -8839,22 +8970,6 @@ function ShExValidator_constructor(schema, db, options) {
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
   const regexModule = this.options.regexModule || __webpack_require__(237);
 
-  /* getAST - compile a traditional regular expression abstract syntax tree.
-   * Tested but not used at present.
-   */
-  this.getAST = function () {
-    return {
-      type: "AST",
-      shapes: schema.shapes.reduce(function (ret, shape) {
-        ret[shape.id] = {
-          type: "ASTshape",
-          expression: _compileShapeToAST(shape.expression, [], _ShExValidator.schema)
-        };
-        return ret;
-      }, {})
-    };
-  };
-
   /* indexTripleConstraints - compile regular expression and index triple constraints
    */
   this.indexTripleConstraints = function (expression) {
@@ -9574,120 +9689,6 @@ function ShExValidator_constructor(schema, db, options) {
   };
 }
 
-/* _compileShapeToAST - compile a shape expression to an abstract syntax tree.
- *
- * currently tested but not used.
- */
-function _compileShapeToAST (expression, tripleConstraints, schema) {
-
-  function Epsilon () {
-    this.type = "Epsilon";
-  }
-
-  function TripleConstraint (ordinal, predicate, inverse, negated, valueExpr) {
-    this.type = "TripleConstraint";
-    // this.ordinal = ordinal; @@ does 1card25
-    this.inverse = !!inverse;
-    this.negated = !!negated;
-    this.predicate = predicate;
-    if (valueExpr !== undefined)
-      this.valueExpr = valueExpr;
-  }
-
-  function Choice (disjuncts) {
-    this.type = "Choice";
-    this.disjuncts = disjuncts;
-  }
-
-  function EachOf (conjuncts) {
-    this.type = "EachOf";
-    this.conjuncts = conjuncts;
-  }
-
-  function SemActs (expression, semActs) {
-    this.type = "SemActs";
-    this.expression = expression;
-    this.semActs = semActs;
-  }
-
-  function KleeneStar (expression) {
-    this.type = "KleeneStar";
-    this.expression = expression;
-  }
-
-  function _compileExpression (expr, schema) {
-    let repeated, container;
-
-    /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
-       expr 1 1 => expr
-       expr 0 1 => Choice(expr, Eps)
-       expr 0 3 => Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps)
-       expr 2 5 => EachOf(expr, expr, Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps))
-       expr 0 * => KleeneStar(expr)
-       expr 1 * => EachOf(expr, KleeneStar(expr))
-       expr 2 * => EachOf(expr, expr, KleeneStar(expr))
-
-       @@TODO: favor Plus over Star if Epsilon not in expr.
-    */
-    function _repeat (expr, min, max) {
-      if (min === undefined) { min = 1; }
-      if (max === undefined) { max = 1; }
-
-      if (min === 1 && max === 1) { return expr; }
-
-      const opts = max === UNBOUNDED ?
-        new KleeneStar(expr) :
-        _seq(max - min).reduce(function (ret, elt, ord) {
-          return ord === 0 ?
-            new Choice([expr, new Epsilon]) :
-            new Choice([new EachOf([expr, ret]), new Epsilon]);
-        }, undefined);
-
-      const reqd = min !== 0 ?
-        new EachOf(_seq(min).map(function (ret) {
-          return expr; // @@ something with ret
-        }).concat(opts)) : opts;
-      return reqd;
-    }
-
-    if (typeof expr === "string") { // Inclusion
-      const included = schema._index.tripleExprs[expr].expression;
-      return _compileExpression(included, schema);
-    }
-
-    else if (expr.type === "TripleConstraint") {
-      // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
-      const valueExpr = "valueExprRef" in expr ?
-        schema.valueExprDefns[expr.valueExprRef] :
-        expr.valueExpr;
-      const ordinal = tripleConstraints.push(expr)-1;
-      const tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
-      repeated = _repeat(tp, expr.min, expr.max);
-      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else if (expr.type === "OneOf") {
-      container = new Choice(expr.expressions.map(function (e) {
-        return _compileExpression(e, schema);
-      }));
-      repeated = _repeat(container, expr.min, expr.max);
-      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else if (expr.type === "EachOf") {
-      container = new EachOf(expr.expressions.map(function (e) {
-        return _compileExpression(e, schema);
-      }));
-      repeated = _repeat(container, expr.min, expr.max);
-      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else throw Error("unexpected expr type: " + expr.type);
-  }
-
-  return expression ? _compileExpression(expression, schema) : new Epsilon();
-}
-
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function crossProduct(sets, emptyValue) {
   const n = sets.length, carets = [];
@@ -9803,15 +9804,13 @@ function sparqlOrder (l, r) {
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
 }
 
-/* Return a list of n ""s.
+/* Return a list of n `undefined`s.
  *
  * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
  * never calls f.
  */
 function _seq (n) {
-  return n === 0 ?
-    [] :
-    Array(n).join(" ").split(/ /); // hahaha, javascript, you suck.
+  return Array.from(Array(n)); // hahaha, javascript, you suck.
 }
 
 /* Expect property p with value v in object o
