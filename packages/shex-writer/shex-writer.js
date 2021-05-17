@@ -1,6 +1,7 @@
 // **ShExWriter** writes ShEx documents.
 
 const ShExWriterCjsModule = (function () {
+const RelateUrl = require("relateurl");
 const UNBOUNDED = -1;
 
 // Matches a literal as represented in memory by the ShEx library
@@ -55,6 +56,7 @@ function ShExWriter (outputStream, options) {
 
   // Initialize writer, depending on the format
   this._prefixIRIs = Object.create(null);
+  this._baseIRI = options.base || null;
   options.prefixes && this.addPrefixes(options.prefixes);
 
   this._error = options.error || _throwError;
@@ -74,9 +76,12 @@ ShExWriter.prototype = {
   _writeSchema: function (schema, done) {
     const _ShExWriter = this;
     this._expect(schema, "type", "Schema");
-    _ShExWriter.addPrefixes(schema.prefixes);
-    if (schema.base)
-      _ShExWriter._write("BASE " + this._encodeIriOrBlankNode(schema.base) + "\n");
+    _ShExWriter.addPrefixes(schema._prefixes);
+    if (schema._base)
+      _ShExWriter._baseIRI = schema._base;
+
+    if (_ShExWriter._baseIRI)
+      _ShExWriter._write("BASE <" + _ShExWriter._baseIRI + ">\n"); // don't use _encodeIriOrBlankNode()
 
     if (schema.imports)
       schema.imports.forEach(function (imp) {
@@ -147,7 +152,7 @@ ShExWriter.prototype = {
           let elideAnd = !lastAndElided
               && (nonLitNodeConstraint(ord-1) && shapeOrRef(ord)
                   || shapeDecl(ord-1) && nonLitNodeConstraint(ord))
-          if (!elideAnd) {
+          if (!elideAnd || true) { // !! temporary work-around for ShExC parser bug
             pieces.push(" AND ");
           }
           lastAndElided = elideAnd;
@@ -436,8 +441,24 @@ ShExWriter.prototype = {
       iri = iri.replace(ESCAPE_g, characterReplacer);
     // Try to represent the IRI as prefixed name
     const prefixMatch = this._prefixRegex.exec(iri);
-    return !prefixMatch ? '<' + iri + '>' :
-           (!prefixMatch[1] ? iri : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2]) + trailingSpace;
+    return !prefixMatch
+      ? this._relateUrl(iri)
+      : (!prefixMatch[1]
+         ? iri
+         : this._prefixIRIs[prefixMatch[1]] + prefixMatch[2])
+      + trailingSpace;
+  },
+
+  // ### ``
+  _relateUrl: function (iri) {
+    const base = this._baseIRI;
+    try {
+      if (base && new URL(base).host === new URL(iri).host) // https://github.com/stevenvachon/relateurl/issues/28
+        iri = RelateUrl.relate(base, iri, { output: RelateUrl.ROOT_PATH_RELATIVE });
+    } catch (e) {
+      // invalid URL for e.g. already relative IMPORTs
+    }
+    return '<' + iri + '>';
   },
 
   // ### `_encodeLiteral` represents a literal
@@ -446,12 +467,21 @@ ShExWriter.prototype = {
     if (ESCAPE_1.test(value))
       value = value.replace(ESCAPE_g, characterReplacer);
     // Write the literal, possibly with type or language
-    if (language)
+    if (language) {
       return '"' + value + '"@' + language;
-    else if (type)
-      return '"' + value + '"^^' + this._encodeIriOrBlankNode(type);
-    else
+    } else if (type) { // && type !== "http://www.w3.org/2001/XMLSchema#integer" is implied by the parsing rules.
+      if (type === "http://www.w3.org/2001/XMLSchema#integer" && value.match(/^[+-]?[0-9]+$/)) {
+        return value;
+      } else if (type === "http://www.w3.org/2001/XMLSchema#decimal" && value.match(/^[+-]?[0-9]*\.[0-9]+$/)) {
+        return value;
+      } else if (type === "http://www.w3.org/2001/XMLSchema#double" && value.match(/^[+-]?([0-9]+\.[0-9]*[eE][+-]?[0-9]+|\.?[0-9]+[eE][+-]?[0-9]+)$/)) {
+        return value;
+      } else {
+        return '"' + value + '"^^' + this._encodeIriOrBlankNode(type);
+      }
+    } else {
       return '"' + value + '"';
+    }
   },
 
   // ### `_encodeShapeName` represents a subject

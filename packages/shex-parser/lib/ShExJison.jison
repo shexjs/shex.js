@@ -115,9 +115,9 @@
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:58 with
-  //   s/this\./Parser./g
+  //   s/this\./ShExJisonParser./g
   // ### `_setBase` sets the base IRI to resolve relative IRIs.
-  Parser._setBase = function (baseIRI) {
+  ShExJisonParser._setBase = function (baseIRI) {
     if (!baseIRI)
       baseIRI = null;
 
@@ -126,34 +126,34 @@
     //   throw new Error('Invalid base IRI ' + baseIRI);
 
     // Set base IRI and its components
-    if (Parser._base = baseIRI) {
-      Parser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
+    if (ShExJisonParser._base = baseIRI) {
+      ShExJisonParser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
       baseIRI = baseIRI.match(schemeAuthority);
-      Parser._baseRoot   = baseIRI[0];
-      Parser._baseScheme = baseIRI[1];
+      ShExJisonParser._baseRoot   = baseIRI[0];
+      ShExJisonParser._baseScheme = baseIRI[1];
     }
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./Parser./g
+  //   s/this\./ShExJisonParser./g
   //   s/token/iri/
   // ### `_resolveIRI` resolves a relative IRI token against the base path,
   // assuming that a base path has been set and that the IRI is indeed relative.
   function _resolveIRI (iri) {
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
-    case undefined: return Parser._base;
+    case undefined: return ShExJisonParser._base;
     // Resolve relative fragment IRIs against the base IRI
-    case '#': return Parser._base + iri;
+    case '#': return ShExJisonParser._base + iri;
     // Resolve relative query string IRIs by replacing the query string
-    case '?': return Parser._base.replace(/(?:\?.*)?$/, iri);
+    case '?': return ShExJisonParser._base.replace(/(?:\?.*)?$/, iri);
     // Resolve root-relative IRIs at the root of the base IRI
     case '/':
       // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? Parser._baseScheme : Parser._baseRoot) + _removeDotSegments(iri);
+      return (iri[1] === '/' ? ShExJisonParser._baseScheme : ShExJisonParser._baseRoot) + _removeDotSegments(iri);
     // Resolve all other IRIs at the base IRI's path
     default: {
-      return _removeDotSegments(Parser._basePath + iri);
+      return _removeDotSegments(ShExJisonParser._basePath + iri);
     }
     }
   }
@@ -245,13 +245,13 @@
     return '_:b' + blankId++;
   };
   let blankId = 0;
-  Parser._resetBlanks = function () { blankId = 0; }
-  Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser._sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
-    Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
+  ShExJisonParser._resetBlanks = function () { blankId = 0; }
+  ShExJisonParser.reset = function () {
+    ShExJisonParser._prefixes = ShExJisonParser._imports = ShExJisonParser._sourceMap = ShExJisonParser.shapes = ShExJisonParser.productions = ShExJisonParser.start = ShExJisonParser.startActs = null; // Reset state.
+    ShExJisonParser._base = ShExJisonParser._baseIRI = ShExJisonParser._baseIRIPath = ShExJisonParser._baseIRIRoot = null;
   }
   let _fileName; // for debugging
-  Parser._setFileName = function (fn) { _fileName = fn; }
+  ShExJisonParser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
   const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
@@ -326,60 +326,60 @@
       pos: yy.lexer.showPosition()
     }
     e.hash = hash;
-    if (Parser.recoverable) {
-      Parser.recoverable(e)
+    if (ShExJisonParser.recoverable) {
+      ShExJisonParser.recoverable(e)
     } else {
       throw e;
-      Parser.reset();
+      ShExJisonParser.reset();
     }
   }
 
   // Expand declared prefix or throw Error
   function expandPrefix (prefix, yy) {
-    if (!(prefix in Parser._prefixes))
+    if (!(prefix in ShExJisonParser._prefixes))
       error(new Error('Parse error; unknown prefix "' + prefix + ':"'), yy);
-    return Parser._prefixes[prefix];
+    return ShExJisonParser._prefixes[prefix];
   }
 
   // Add a shape to the map
   function addShape (label, shape, yy) {
     if (shape === EmptyShape)
       shape = { type: "Shape" };
-    if (Parser.productions && label in Parser.productions)
+    if (ShExJisonParser.productions && label in ShExJisonParser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
-    if (!Parser.shapes)
-      Parser.shapes = new Map();
-    if (label in Parser.shapes) {
-      if (Parser.options.duplicateShape === "replace")
-        Parser.shapes[label] = shape;
-      else if (Parser.options.duplicateShape !== "ignore")
+    if (!ShExJisonParser.shapes)
+      ShExJisonParser.shapes = new Map();
+    if (label in ShExJisonParser.shapes) {
+      if (ShExJisonParser.options.duplicateShape === "replace")
+        ShExJisonParser.shapes[label] = shape;
+      else if (ShExJisonParser.options.duplicateShape !== "ignore")
         error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
-      Parser.shapes[label] = Object.assign({id: label}, shape);
+      ShExJisonParser.shapes[label] = Object.assign({id: label}, shape);
     }
   }
 
   // Add a production to the map
   function addProduction (label, production, yy) {
-    if (Parser.shapes && label in Parser.shapes)
+    if (ShExJisonParser.shapes && label in ShExJisonParser.shapes)
       error(new Error("Structural error: "+label+" is a shape expression"), yy);
-    if (!Parser.productions)
-      Parser.productions = new Map();
-    if (label in Parser.productions) {
-      if (Parser.options.duplicateShape === "replace")
-        Parser.productions[label] = production;
-      else if (Parser.options.duplicateShape !== "ignore")
+    if (!ShExJisonParser.productions)
+      ShExJisonParser.productions = new Map();
+    if (label in ShExJisonParser.productions) {
+      if (ShExJisonParser.options.duplicateShape === "replace")
+        ShExJisonParser.productions[label] = production;
+      else if (ShExJisonParser.options.duplicateShape !== "ignore")
         error(new Error("Parse error: "+label+" already defined"), yy);
     } else
-      Parser.productions[label] = production;
+      ShExJisonParser.productions[label] = production;
   }
 
   function addSourceMap (obj, yy) {
-    if (!Parser._sourceMap)
-      Parser._sourceMap = new Map();
-    let list = Parser._sourceMap.get(obj)
+    if (!ShExJisonParser._sourceMap)
+      ShExJisonParser._sourceMap = new Map();
+    let list = ShExJisonParser._sourceMap.get(obj)
     if (!list)
-      Parser._sourceMap.set(obj, list = []);
+      ShExJisonParser._sourceMap.set(obj, list = []);
     list.push(yy.lexer.yylloc);
     return obj;
   }
@@ -398,7 +398,7 @@
       nonest(shapeAtom).shapeExprs = nonest(shapeAtom).shapeExprs.concat(juncts);
       return shapeAtom;
     } else {
-      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts) };
+      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts.map(nonest)) };
     }
   }
 
@@ -592,22 +592,22 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 shexDoc:
       _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
-        const startObj = Parser.start ? { start: Parser.start } : {};
-        const startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
+        let imports = Object.keys(ShExJisonParser._imports).length ? { imports: ShExJisonParser._imports } : {}
+        const startObj = ShExJisonParser.start ? { start: ShExJisonParser.start } : {};
+        const startActs = ShExJisonParser.startActs ? { startActs: ShExJisonParser.startActs } : {};
+        let shapes = ShExJisonParser.shapes ? { shapes: Object.values(ShExJisonParser.shapes) } : {};
         const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
-        if (Parser.options.index) {
-          if (Parser._base !== null)
-            shexj._base = Parser._base;
-          shexj._prefixes = Parser._prefixes;
+        if (ShExJisonParser.options.index) {
+          if (ShExJisonParser._base !== null)
+            shexj._base = ShExJisonParser._base;
+          shexj._prefixes = ShExJisonParser._prefixes;
           shexj._index = {
-            shapeExprs: Parser.shapes || new Map(),
-            tripleExprs: Parser.productions || new Map()
+            shapeExprs: ShExJisonParser.shapes || new Map(),
+            tripleExprs: ShExJisonParser.productions || new Map()
           };
-          shexj._sourceMap = Parser._sourceMap;
+          shexj._sourceMap = ShExJisonParser._sourceMap;
         }
         return shexj;
       }
@@ -649,20 +649,20 @@ directive:
 
 baseDecl:
       IT_BASE IRIREF	{ // t: @@
-        Parser._setBase(Parser._base === null ||
+        ShExJisonParser._setBase(ShExJisonParser._base === null ||
                     absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : _resolveIRI($2.slice(1, -1)));
       }
     ;
 
 prefixDecl:
       IT_PREFIX PNAME_NS iri	{ // t: ShExParser-test.js/with pre-defined prefixes
-        Parser._prefixes[$2.slice(0, -1)] = $3;
+        ShExJisonParser._prefixes[$2.slice(0, -1)] = $3;
       }
     ;
 
 importDecl:
       IT_IMPORT iri	{ // t: @@
-        Parser._imports.push($2);
+        ShExJisonParser._imports.push($2);
       }
     ;
 
@@ -673,15 +673,15 @@ notStartAction:
 
 start:
       IT_start '=' shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
-        if (Parser.start)
+        if (ShExJisonParser.start)
           error(new Error("Parse error: start already defined"), yy);
-        Parser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
+        ShExJisonParser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
       }
     ;
 
 startActions:
       _QcodeDecl_E_Plus	{
-        Parser.startActs = $1; // t: startCode1
+        ShExJisonParser.startActs = $1; // t: startCode1
       }
     ;
 
@@ -1498,7 +1498,7 @@ langString:
 iri:
       IRIREF	{ // t: 1dot
         const unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
-        $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
+        $$ = ShExJisonParser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       }
     | prefixedName	
     ;
