@@ -407,9 +407,9 @@ if (!TEST_browser) {
         "@type": "sht:ValidationTest",
         "trait": [ "Import" ],
         "action": {
-          "schema": "https://shex.io/shexTest/master/schemas/3circRefS1-IS2-IS3-IS3.shex",
+          "schema": "https://shex.io/shexTest/main/schemas/3circRefS1-IS2-IS3-IS3.shex",
           "shape": "http://a.example/S1",
-          "data": "https://shex.io/shexTest/master/validation/3circRefPlus1_pass-open.ttl",
+          "data": "https://shex.io/shexTest/main/validation/3circRefPlus1_pass-open.ttl",
           "focus": "http://a.example/n1"
         },
         "extensionResults": [],
