@@ -20,12 +20,17 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/api": "file:../shex-api",
-    "@shexjs/parser": "file:../shex-parser",
-    "@shexjs/util": "file:../shex-util",
-    "@shexjs/writer": "file:../shex-writer",
+    "@shexjs/api": "1.0.0-alpha.6",
+    "@shexjs/parser": "1.0.0-alpha.6",
+    "@shexjs/term": "1.0.0-alpha.6",
+    "@shexjs/util": "1.0.0-alpha.6",
+    "@shexjs/validator": "1.0.0-alpha.6",
+    "@shexjs/writer": "1.0.0-alpha.6",
+    "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5",
+    "hierarchy-closure": "^1.2.1",
     "n3": "^1.6.2",
-    "shape-map": "file:../shape-map",
+    "shape-map": "1.0.0-alpha.6",
     "request-promise": "^4.2.4"
   },
   "scripts": {
@@ -37,6 +42,11 @@
     "webpack-jquery-components": "webpack --config webpack-jquery-components.config.js --mode development",
     "webpack-monitor": "WEBPACK_MONITOR=true webpack --config webpack.config.js --mode production",
     "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development"
+  },
+  "devDependencies": {
+    "jquery": "^3.5.1",
+    "jquery-contextmenu": "^2.9.2",
+    "jquery-ui": "^1.12.1"
   },
   "publishConfig": {
     "access": "public"
@@ -51,19 +61,5 @@
   "pre-commit": [
     "lint",
     "test"
-  ],
-  "devDependencies": {
-    "css-loader": "^4.3.0",
-    "file-loader": "^6.1.0",
-    "hierarchy-closure": "^1.2.1",
-    "jquery": "^3.5.1",
-    "jquery-contextmenu": "^2.9.2",
-    "jquery-ui": "^1.12.1",
-    "style-loader": "^1.2.1",
-    "terser-webpack-plugin": "^4.2.0",
-    "webpack": "^4.44.1",
-    "webpack-bundle-analyzer": "^3.8.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-monitor": "^1.0.14"
-  }
+  ]
 }

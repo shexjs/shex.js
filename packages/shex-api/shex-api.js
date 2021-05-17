@@ -5,7 +5,7 @@ const ShExApiCjsModule = function (config = {}) {
   const ShExUtil = require("@shexjs/util");
   const ShExParser = require("@shexjs/parser");
 
-  const api = { load: LoadPromise, loadExtensions: LoadExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
+  const api = { load: LoadPromise, loadExtensions: LoadNoExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
   return api
   
   async function GET (url, mediaType) {
@@ -306,38 +306,19 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
-    return new Promise(function (resolve, reject) {
-      const struct = JSON.parse(text)
-      config.jsonld.toRDF(struct, {format: "application/nquads", base: url}, function (lderr, nquads) {
-        if (lderr) {
-          reject("error parsing JSON-ld " + url + ": " + lderr)
-        } else {
-          meta.prefixes = {}; // @@ take from @context?
-          meta.base = url;    // @@ take from @context.base? (or vocab?)
-          resolve(parseTurtle(nquads, mediaType, url, data, meta))
-        }
-      })
-    })
+  async function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
+    const struct = JSON.parse(text)
+    try {
+      const nquads = await config.jsonld.toRDF(struct, {format: "application/nquads", base: url});
+      meta.prefixes = {}; // @@ take from @context?
+      meta.base = url;    // @@ take from @context.base? (or vocab?)
+      return parseTurtle(nquads, mediaType, url, data, meta);
+    } catch (lderr) {
+      throw Error("error parsing JSON-ld " + url + ": " + lderr);
+    }
   }
 
-  function LoadExtensions (globs) {
-    return globs.reduce(
-      (list, glob) =>
-        list.concat(require("glob").glob.sync(glob))
-      , []).
-      reduce(function (ret, path) {
-        try {
-	  const t = require(path)
-	  ret[t.url] = t
-	  return ret
-        } catch (e) {
-	  console.warn("ShEx extension \"" + moduleDir + "\" not loadable: " + e)
-	  return ret
-        }
-      }, {})
-  }
-
+  function LoadNoExtensions (globs) { return []; }
 }
 
 if (typeof require !== "undefined" && typeof exports !== "undefined")
