@@ -1,5 +1,5 @@
 
-var TESTSDIR = "TESTSDIR" in process.env ? process.env.TESTSDIR : "../../shexTest";
+var TESTSDIR = "TESTSDIR" in process.env ? process.env.TESTSDIR : "../../../../shexTest";
 var fs = require("fs");
 var path = require("path");
 module.exports = function (dirName) {
