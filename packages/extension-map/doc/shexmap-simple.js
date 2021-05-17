@@ -838,9 +838,9 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      const errors = await copyEditMapToTextMap() // will update if #editMap is dirty
+      const errors = await copyEditMapToTextMap(); // will update if #editMap is dirty
       if (errors.length === 0)
-        resolve(await callValidator())
+        resolve(await callValidator());
     }, 0);
   })
 }

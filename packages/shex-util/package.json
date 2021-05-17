@@ -26,7 +26,8 @@
     "@shexjs/term": "1.0.0-alpha.6",
     "@shexjs/visitor": "1.0.0-alpha.6",
     "@shexjs/writer": "1.0.0-alpha.6",
-    "hierarchy-closure": "^1.2.1"
+    "hierarchy-closure": "^1.2.1",
+    "sync-request": "^6.1.0"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
