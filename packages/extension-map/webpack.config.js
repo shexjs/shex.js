@@ -38,10 +38,14 @@ module.exports = {
       include: /\.min\.js$/
     })]
   },
-  node: {
-    fs: 'empty',  // @@ webpack-monitor shows require('fs') errors. help?
-    // net: 'empty',
-    // tls: 'empty',
+  resolve: {
+    fallback: {
+      // fs: false,  // TODO: update ShapeMapParser to use ts-jison
+      // path: false,
+      // net: 'empty',
+      // tls: 'empty',
+      url: require.resolve("url/"),
+    }
   },
   plugins: [
     // new BundleAnalyzerPlugin(/*{analyzerMode: 'json'}*/)

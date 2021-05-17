@@ -1,7 +1,7 @@
 {
   "name": "shex",
   "private": true,
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.6",
   "description": "Shape Expressions library compatible with N3 and SPARQL.js.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -27,28 +27,16 @@
     "node": ">=0.10.0"
   },
   "devDependencies": {
-    "@shexjs/cli": "file:packages/shex-cli",
-    "@shexjs/eval-simple-1err": "file:packages/eval-simple-1err",
-    "@shexjs/eval-threaded-nerr": "file:packages/eval-threaded-nerr",
-    "@shexjs/extension-eval": "file:packages/extension-eval",
-    "@shexjs/extension-map": "file:packages/extension-map",
-    "@shexjs/extension-test": "file:packages/extension-test",
-    "@shexjs/node": "file:packages/shex-node",
-    "@shexjs/parser": "file:packages/shex-parser",
-    "@shexjs/path": "file:packages/shex-path",
-    "@shexjs/util": "file:packages/shex-util",
-    "@shexjs/webapp": "file:packages/shex-webapp",
-    "@shexjs/writer": "file:packages/shex-writer",
-    "browserify": "^16.2.3",
     "chai": "^4.2.0",
     "coveralls": "^3.1.0",
     "cross-spawn": "^6.0.5",
+    "css-loader": "^5.2.0",
     "eslint": "^5.16.0",
-    "jison": "^0.4.18",
+    "file-loader": "^6.2.0",
     "jsdom": "^15.1.0",
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
-    "lerna": "^3.20.2",
+    "lerna": "^4.0.0",
     "marked": "^0.7.0",
     "mocha": "^6.2.3",
     "n3": "^1.6.2",
@@ -56,15 +44,16 @@
     "node-fetch": "^2.6.0",
     "nyc": "^14.1.1",
     "pre-commit": "^1.2.2",
-    "request-promise": "^4.2.4",
-    "shape-map": "file:packages/shape-map",
-    "shex-test": "github:shexSpec/shexTest#master",
+    "request-promise": "^4.2.2",
+    "shex-test": "github:shexSpec/shexTest#main",
+    "style-loader": "^2.0.0",
     "sync-request": "^6.1.0",
-    "terser-webpack-plugin": "^1.2.4",
+    "terser-webpack-plugin": "^5.1.1",
     "timeout-promise-queue": "^0.9.2",
-    "uglify-es": "^3.3.9",
-    "webpack": "^4.31.0",
-    "webpack-cli": "^3.3.2"
+    "url": "^0.11.0",
+    "webpack": "^5.31.0",
+    "webpack-bundle-analyzer": "^4.4.0",
+    "webpack-cli": "^4.6.0"
   },
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
@@ -77,15 +66,16 @@
     "test-verbose": "mocha && TEST_cli=true mocha test/cli-test.js && TEST_browser=true mocha test/browser-test.js",
     "earl999": "mocha -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
-    "lint": "eslint test/findPath.js",
-    "travisRepo": "./test/travisRepo.sh",
+    "lint": "eslint packages/shex-cli/test/findPath.js",
+    "travisRepo": "./tools/travisRepo.sh",
     "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
+    "parser-all": "(cd packages/shex-parser/ && npm run parser) && (cd packages/shape-path/ && npm run parser) && (cd packages/shape-map/ && npm run parser)",
     "travis-deploy-once": "travis-deploy-once",
     "webpack": "(cd packages/shex-webapp/ && npm run webpack) && (cd packages/extension-map/ && npm run webpack)",
     "webpack-analyzer": "cd packages/shex-webapp && npm run webpack-analyzer",
-    "webpack-monitor": "cd packages/shex-webapp && npm run webpack-monitor"
+    "webpack-monitor": "if [ -d ./node_modules/webpack-monitor ]; then (cd packages/shex-webapp && npm run webpack-monitor) else echo \"You need to install webpack-monitor\"; fi"
   },
   "publishConfig": {
     "access": "private"
@@ -97,13 +87,8 @@
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
   },
-  "testling": {
-    "files": "test/*.js",
-    "harness": "mocha",
-    "browsers": [
-      "firefox/24..latest",
-      "chrome/29..latest"
-    ]
+  "mocha": {
+    "spec": "packages/*/test/*test.js"
   },
   "pre-commit": [
     "lint",
@@ -145,9 +130,6 @@
       "should": true,
       "describe": true
     }
-  },
-  "dependencies": {
-    "hierarchy-closure": "^1.2.1"
   },
   "nyc": {
     "exclude": [
