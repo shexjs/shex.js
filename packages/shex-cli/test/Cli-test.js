@@ -6,6 +6,7 @@ const TIME = "TIME" in process.env;
 const HTTPTEST = "HTTPTEST" in process.env ?
     process.env.HTTPTEST :
     "http://raw.githubusercontent.com/shexSpec/shex.js/main/packages/shex-cli/test/"
+
 const TestUtils = require("@shexjs/util/tools/common-test-infrastructure.js");
 
 const AllTests = {
