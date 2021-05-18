@@ -21,6 +21,7 @@ const DefaultBase = location.origin + location.pathname;
 
 const Caches = {};
 Caches.inputSchema = makeSchemaCache($("#inputSchema textarea.schema"));
+Caches.inputMeta = makeTurtleCache($("#inputMeta textarea"), [Caches.inputSchema]);
 Caches.inputData = makeTurtleCache($("#inputData textarea"));
 Caches.manifest = makeManifestCache($("#manifestDrop"));
 Caches.extension = makeExtensionCache($("#extensionDrop"));
@@ -54,6 +55,7 @@ const Getables = [
   {queryStringParm: "manifest",     location: Caches.manifest.selection,    cache: Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
   {queryStringParm: "extension",    location: Caches.extension.selection,   cache: Caches.extension  },
   {queryStringParm: "shape-map",    location: $("#textMap"),                cache: Caches.shapeMap   },
+  {queryStringParm: "inputMeta",    location: Caches.inputMeta.selection,   cache: Caches.inputMeta  },
   {queryStringParm: "bindings",     location: Caches.bindings.selection,    cache: Caches.bindings   },
   {queryStringParm: "statics",      location: Caches.statics.selection,     cache: Caches.statics    },
   {queryStringParm: "outSchema",    location: Caches.outputSchema.selection,cache: Caches.outputSchema},
@@ -80,6 +82,16 @@ function parseTurtle (text, meta, base) {
 
 const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
 function parseShEx (text, meta, base) {
+  $("#schemaDialect").text(Caches.inputSchema.language);
+  var resolverText = $("#inputMeta textarea").val();
+  if (resolverText) {
+    var resolverStore = new RdfJs.Store();
+    shexParser._setTermResolver(ShEx.Parser.dbTermResolver(resolverStore));
+    resolverStore.addQuads(new RdfJs.Parser({baseIRI:DefaultBase}).parse(resolverText));
+  } else {
+    shexParser._setTermResolver(ShEx.Parser.disabledTermResolver());
+  }
+
   shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
   shexParser._setBase(base);
   const ret = shexParser.parse(text);
@@ -254,8 +266,13 @@ function makeSchemaCache (selection) {
   return ret;
 }
 
-function makeTurtleCache (selection) {
+function makeTurtleCache (selection, dependencies = []) {
   const ret = _makeCache(selection);
+  const oldDirty = ret.dirty;
+  ret.dirty = function (newVal) {
+    oldDirty.call(ret, newVal)
+    dependencies.forEach(d => d.dirty(newVal));
+  };
   ret.parse = function (text, base) {
     const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
@@ -291,7 +308,7 @@ function makeManifestCache (selection) {
         // transform deprecated examples.js structure
         // textOrObj = eval(textOrObj).reduce(function (acc, schema) {
         //   function x (data, status) {
-        //     return {
+        //     return Object.assign({
         //       schemaLabel: schema.name,
         //       schema: schema.schema,
         //       dataLabel: data.name,
@@ -302,7 +319,7 @@ function makeManifestCache (selection) {
         //       staticVars: data.staticVars,
         //       createRoot: data.createRoot,
         //       status: status
-        //     };
+        //     }, "meta" in schema ? { meta: schema.meta } : { } );
         //   }
         //   return acc.concat(
         //     schema.passes.map(data => x(data, "conformant")),
@@ -620,6 +637,7 @@ async function clearData () {
 async function clearAll () {
   $("#results .status").hide();
   await Caches.inputSchema.set("", DefaultBase);
+  await Caches.inputMeta.set("", DefaultBase);
   $(".inputShape").val("");
   $("#inputSchema .status").text(" ");
   $("#inputSchema li.selected").removeClass("selected");
@@ -637,6 +655,11 @@ async function pickSchema (name, schemaTest, elt, listItems, side) {
     await Caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
     Caches.inputSchema.url = undefined; // @@ crappyHack1
     $("#inputSchema .status").text(name);
+
+    var hasMeta = "meta" in schemaTest && schemaTest.meta.length > 0;
+    Caches.inputMeta.set(hasMeta ? schemaTest.meta : "");
+    $("#showInputMeta").prop("checked", hasMeta);
+    revealMetaPane();
 
     clearData();
     const headings = {
@@ -1253,6 +1276,7 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
+  $("#showInputMeta").on("click", revealMetaPane);
   $("#materialize").on("click", materialize);
   $("#download-results-button").on("click", downloadResults);
 
@@ -1417,6 +1441,18 @@ function toggleControlsArrow (which) {
     break;
   default:
     throw Error("toggleControlsArrow expected [up|down], got \"" + which + "\"");
+  }
+}
+
+function revealMetaPane () {
+  if ($("#showInputMeta").is(":checked")) {
+    $("#inputMeta").show();
+    if ($("#inputMeta").attr("data-adjust"))
+      $($("#inputMeta").attr("data-adjust")).attr("rows", "12");
+  } else {
+    $("#inputMeta").hide();
+    if ($("#inputMeta").attr("data-adjust"))
+      $($("#inputMeta").attr("data-adjust")).attr("rows", "25");
   }
 }
 
@@ -1805,6 +1841,12 @@ function setTextAreaHandlers (listItems) {
     });
   });
 
+  $("#inputMeta textarea").keyup(function (e) {
+    var code = e.keyCode || e.charCode;
+    if (!(e.ctrlKey && (code === 10 || code === 13)))
+      later(e.target, "inputMeta", Caches.inputMeta);
+  });
+
   function later (target, side, cache) {
     cache.dirty(true);
     if (timeouts[side])
@@ -1887,6 +1929,7 @@ async function prepareDragAndDrop () {
     {location: $("body"), targets: [
       {media: "application/json", target: Caches.manifest},
       {ext: ".shex", media: "text/shex", target: Caches.inputSchema},
+      {ext: ".owl", media: "text/turtle+owl", target: Caches.inputMeta},
       {ext: ".ttl", media: "text/turtle", target: Caches.inputData},
       {ext: ".json", media: "application/json", target: Caches.manifest},
       {ext: ".smap", media: "text/plain", target: Caches.shapeMap}]}
@@ -1938,6 +1981,9 @@ async function prepareDragAndDrop () {
                       const action = "action" in elt ? elt.action: elt;
                       action.schemaURL = action.schema; delete action.schema;
                       action.dataURL = action.data; delete action.data;
+                      if ("termResolver" in action) {
+                        action.termResolverURL = action.termResolver; delete action.termResolver;
+                      }
                     });
                     promises.push(Caches.manifest.set(parsed, DefaultBase, "drag and drop"));
                   } else {
@@ -2046,11 +2092,11 @@ async function prepareManifest (demoList, base) {
     const key = elt.schemaLabel + "|" + elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
-      acc[key] = {
+      acc[key] = Object.assign({
         label: elt.schemaLabel,
         text: elt.schema,
         url: elt.schemaURL || (elt.schema ? base : undefined)
-      };
+      }, "meta" in elt ? { meta: elt.meta } : { });
     } else {
       // nth entry with this schema
     }
