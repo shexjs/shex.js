@@ -13851,8 +13851,8 @@ const ShExUtil = {
     return fetch(queryURL, {
       headers: {
         'Accept': 'application/sparql-results+json',
-        'Access-Control-Request-Headers': 'user-agent',
-        'User-agent': 'shex-simple/1.0 (https://github.com/shexSpec/shex.js; https://github.com/shexSpec/shex.js/issues) ShEx/2.1'
+        // 'Access-Control-Request-Headers': 'user-agent',
+        // 'User-agent': 'shex-simple/1.0 (https://github.com/shexSpec/shex.js; https://github.com/shexSpec/shex.js/issues) ShEx/2.1',
       }}).then(resp => resp.json()).then(t => {
         const selects = t.head.vars;
         return t.results.bindings.map(row => {
@@ -13884,8 +13884,8 @@ const ShExUtil = {
       const res = request('GET', queryURL, {
         headers: {
           'Accept': 'application/sparql-results+json',
-          'Access-Control-Request-Headers': 'user-agent',
-          'User-agent': 'shex-simple/1.0 (https://github.com/shexSpec/shex.js; https://github.com/shexSpec/shex.js/issues) ShEx/2.1'
+          // 'Access-Control-Request-Headers': 'user-agent',
+          // 'User-agent': 'shex-simple/1.0 (https://github.com/shexSpec/shex.js; https://github.com/shexSpec/shex.js/issues) ShEx/2.1',
         },
       });
       t = res.getBody().toString('utf-8');
@@ -14002,7 +14002,7 @@ const ShExUtil = {
   sparqlDB: function (endpoint, queryTracker, options = {}) {
     const _ShExUtil = this;
     // Need to inspect the schema to calculate the relevant neighborhood.
-    const schemaIndex = null;
+    let schemaIndex = null;
     const bnodes = { };
 
     function getQuads(s, p, o, g) {
