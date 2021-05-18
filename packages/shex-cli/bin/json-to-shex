@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json
+// json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/main/parsedSchemas/open2dotOr1dotclose.json
 
 const ShExWriter = require("@shexjs/writer"); // for verbose output
 const N3 = require("n3");
@@ -19,7 +19,7 @@ function abort (msg) {
   console.error(require('command-line-usage')([
     {
       header: "json-to-shex",
-      content: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    shex-to-json https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json" },
+      content: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    shex-to-json https://raw.githubusercontent.com/shexSpec/shexTest/main/parsedSchemas/open2dotOr1dotclose.json" },
     {
       header: 'Options',
       optionList: CommandLineOptions
