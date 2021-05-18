@@ -1,3 +1,3 @@
-if [ $(git rev-parse --abbrev-ref HEAD) = "main" ] && test $(grep shexSpec/shexTest.git .travis.yml | grep branch=master | wc -l) != 1
-then echo "ERROR in .travis.yml: shex.js master should be testing on shexTest master\n^^^^^\n" ; exit -1
+if [ $(git rev-parse --abbrev-ref HEAD) = "main" ] && test $(grep shexSpec/shexTest.git .travis.yml | grep branch=main | wc -l) != 1
+then echo "ERROR in .travis.yml: shex.js main should be testing on shexTest main\n^^^^^\n" ; exit -1
 fi

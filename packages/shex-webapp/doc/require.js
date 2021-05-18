@@ -3,7 +3,7 @@
 
  * The general usage is:
      <script src="require.js"></script>
-     <script src="https://rawgit.com/RubenVerborgh/N3.js/master/lib/N3Util.js"></script>
+     <script src="https://rawgit.com/RubenVerborgh/N3.js/main/lib/N3Util.js"></script>
      <script>modules["./N3Util"] = N3Util = module.exports;</script>
  * This idiom loads the module and assigns the current assignment of
  * module.exports to a global. Some libraries include an index library
