@@ -9,7 +9,7 @@ const TESTS = "TESTS" in process.env ?
     null;
 const HTTPTEST = "HTTPTEST" in process.env ?
     process.env.HTTPTEST :
-    "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
+    "http://raw.githubusercontent.com/shexSpec/shex.js/main/test/"
 
 const ShExUtil = require("@shexjs/util");
 const N3 = require("n3");
