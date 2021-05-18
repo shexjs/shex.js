@@ -2043,7 +2043,7 @@ const ShExUtil = {
   },
   /** emulate N3Store().getQuads() with additional parm.
    */
-  sparqlDB: function (endpoint, queryTracker, options) {
+  sparqlDB: function (endpoint, queryTracker, options = {}) {
     const _ShExUtil = this;
     // Need to inspect the schema to calculate the relevant neighborhood.
     const schemaIndex = null;
