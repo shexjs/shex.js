@@ -14,7 +14,7 @@ const N3 = require("n3");
 const ShExTerm = require("@shexjs/term");
 const ShExUtil = require("@shexjs/util");
 const ShExNode = require("@shexjs/node")({rdfjs: N3});
-const Mapper = require("@shexjs/extension-map")({rdfjs: N3});
+const Mapper = require("..")({rdfjs: N3});
 
 const CommandLineOptions = [
   { name: "help", alias: "h", type: Boolean },

@@ -20,10 +20,12 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "@shexjs/term": "1.0.0-alpha.6",
     "@shexjs/util": "1.0.0-alpha.6",
     "@ts-jison/parser": "^0.0.9"
   },
   "devDependencies": {
+    "@shexjs/parser": "1.0.0-alpha.6",
     "@ts-jison/parser-generator": "^0.0.9"
   },
   "scripts": {

@@ -44,8 +44,6 @@
     "node-fetch": "^2.6.0",
     "nyc": "^14.1.1",
     "pre-commit": "^1.2.2",
-    "request-promise": "^4.2.2",
-    "shape-map": "1.0.0-alpha.6",
     "shex-test": "github:shexSpec/shexTest#LanguageTag-data-case",
     "style-loader": "^2.0.0",
     "terser-webpack-plugin": "^5.1.1",
@@ -66,8 +64,8 @@
     "test-verbose": "mocha && TEST_cli=true mocha test/cli-test.js && TEST_browser=true mocha test/browser-test.js",
     "earl999": "mocha -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
-    "lint": "eslint test/findPath.js",
-    "travisRepo": "./test/travisRepo.sh",
+    "lint": "eslint packages/shex-cli/test/findPath.js",
+    "travisRepo": "./tools/travisRepo.sh",
     "browserify-all": "./tools/browserify-all.js #; npm run n3-browserify",
     "coverage": "nyc npm run test-all",
     "coveralls": "cat ./coverage/lcov.info | coveralls",
@@ -87,13 +85,8 @@
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
   },
-  "testling": {
-    "files": "test/*.js",
-    "harness": "mocha",
-    "browsers": [
-      "firefox/24..latest",
-      "chrome/29..latest"
-    ]
+  "mocha": {
+    "spec": "packages/*/test/*test.js"
   },
   "pre-commit": [
     "lint",
@@ -135,9 +128,6 @@
       "should": true,
       "describe": true
     }
-  },
-  "dependencies": {
-    "hierarchy-closure": "^1.2.1"
   },
   "nyc": {
     "exclude": [

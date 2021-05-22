@@ -3,32 +3,14 @@
 "use strict";
 const TEST_cli = "TEST_cli" in process.env ? JSON.parse(process.env["TEST_cli"]) : false;
 const TIME = "TIME" in process.env;
-const TESTS = "TESTS" in process.env ?
-    process.env.TESTS.split(/,/) :
-    null;
 const HTTPTEST = "HTTPTEST" in process.env ?
     process.env.HTTPTEST :
-    "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
+    "http://raw.githubusercontent.com/shexSpec/shex.js/main/packages/shex-cli/test/"
 
-const ShExUtil = require("@shexjs/util");
-const N3 = require("n3");
-const ShExNode = require("@shexjs/node")({
-  rdfjs: N3,
-  // cwd: __dirname, // screws up absolutizeResults
-});
-const child_process = require('child_process');
-const chai = require("chai");
-const expect = chai.expect;
-const assert = chai.assert;
-const Queue = require("timeout-promise-queue").PromiseQueue(25);
-
-const fs = require("fs");
-const Path = require("path");
-
-const manifestFile = "cli/manifest.json";
+const TestUtils = require("@shexjs/util/tools/common-test-infrastructure.js");
 
 const AllTests = {
-  "shex-validate": [
+  "validate": [
     // pleas for help
     { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
     { name: "help-simple" , args: ["--help", "-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>"], errorMatch: "example", status: 1 },
@@ -92,7 +74,7 @@ const AllTests = {
     //  --dry-run
     { name: "simple-dry" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--dry-run"], resultText: "", status: 0 },
     { name: "simple-as-jsonld-dry" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run"], resultText: "", status: 0 },
-    { name: "simple-as-jsonld-dry-inv" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run", "--invocation"], resultMatch: ".bin/shex-validate", status: 0 },
+    { name: "simple-as-jsonld-dry-inv" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run", "--invocation"], resultMatch: "../bin/validate", status: 0 },
 
     // HTTP access via raw.githubusercontent.com
     { name: "simple-http" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", HTTPTEST + "cli/p1.ttl", "-n", "<x>"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: 0 },
@@ -120,147 +102,11 @@ const AllTests = {
     { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], errorMatch: "ENOENT", status: 1 },
     { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], errorMatch: "Not Found", status: 1 },
   ],
-
-  "shexmap-materialize": [
-    { name: "help", args: ["--help"], errorMatch: "Examples", status: 1 },
-    { name: "garbage", args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
-    { name: "no-target-file-specified", args: ["--jsonvars vars.json"], errorMatch: "No ShEx target schema file specified.", status: 1 },
-    { name: "no-target-file", args: ["--target", "cli/1dotOr2dot.json999"], errorMatch: "ENOENT", status: 1 },
-    { name: "no-jsonvars-file", args: ["--target", "Map/vpr-FHIR/FHIRConditionCompact.shex", "--jsonvars", "cli/1dotOr2dot.json999"], errorMatch: "ENOENT", status: 1 },
-    { name: "target-file", args: ["--target", "Map/vpr-FHIR/FHIRConditionCompact.shex", "--jsonvars", "Map/vpr-FHIR/vars.json" ], stdin: "Map/vpr-FHIR/vprPatient-vprSchema.val", resultMatch: "b15", status: 0 },
-    { name: "target-file", args: ["--target", "Map/vpr-FHIR/FHIRConditionCompact.shex", "--jsonvars", "Map/vpr-FHIR/vars.json", "--root", "http://hl7.org/fhir/shape/Problem"], stdin: "Map/vpr-FHIR/vprPatient-vprSchema.val", resultMatch: "Problem", status: 0 }
-  ]
 };
 
 if (!TEST_cli) {
   console.warn("Skipping cli-tests; to activate these tests, set environment variable TEST_cli=true");
-
 } else {
-
-const last = new Date();
-const stamp = TIME ? function (s) {
-  const t = new Date();
-  const delta = t - last;
-  last = t;
-  console.warn(delta, s);
-} : function () {};
-
-/* set up IO promises
- */
-Object.keys(AllTests).forEach(function (script) {
-  let tests = AllTests[script];
-
-  if (TESTS)
-    tests = tests.filter(function (t) {
-      return TESTS.indexOf(t.name) !== -1;
-    });
-
-  tests.forEach(function (test) {
-    try {
-      test.ref =
-        "resultText" in test ? { resultText: test.resultText } :
-      "resultNoSpace" in test ? ShExNode.GET(fromHere(test.resultNoSpace)).then(function (loaded) { return { resultNoSpace: loaded }; }) :
-      "resultMatch" in test ? { resultMatch: RegExp(test.resultMatch) } :
-      "errorMatch" in test ? { errorMatch: RegExp(test.errorMatch) } :
-      ShExNode.GET(fromHere(test.result)).then(function (loaded) { return { result: loaded }; });
-
-      test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
-        const program = child_process.spawn("../node_modules/.bin/" + script, test.args, {cwd: __dirname});
-
-        if (typeof test.stdin !== "undefined") {  
-          // redirecting stdin for this test
-          fs.createReadStream(fromHere(test.stdin)).pipe(program.stdin)
-        }
-
-        let stdout = "", stderr = ""
-
-        program.stdout.on("data", function (data) { stdout += data; });
-        program.stderr.on("data", function (data) { stderr += data; });
-        program.on("close", function (exitCode) {
-          resolve({stdout:stdout, stderr:stderr, exitCode:exitCode})
-        });
-        program.on("error", function(err) { reject(err); });
-        cancel.on('timeout', err => {
-          program.kill()
-          reject()
-        })
-      }), 60 * 1000); // 1 minute
-    } catch (e) {
-      const throwMe = new Error("Error setting up test " + test.name + " " + e);
-      throwMe.stack = "Error setting up test " + test.name + " " + e.stack;
-      throw throwMe;
-    }
-  });
-});
-stamp("setup");
-
-/* test results
- */
-Object.keys(AllTests).forEach(function (script) {
-  let tests = AllTests[script];
-
-  describe("The " + script + " script", function () {
-    "use strict";
-
-    const setSlow = process.env["CLI_TIMEOUT"]; // CLI_TIMEOUT=4000 will run tests with timout of 4s
-    this.timeout(setSlow && setSlow !== "1" ? parseInt(setSlow) : 6000);
-    if (TESTS)
-      tests = tests.filter(function (t) {
-        return TESTS.indexOf(t.name) !== -1;
-      });
-
-    tests.forEach(function (test) {
-      it("should execute $(" + test.args.join(" ") + ")"+
-         ("stdin" in test ?
-          " with stdin from " + test.stdin :
-          "") +
-         ( "resultMatch" in test ?
-           (" and match /" + test.resultMatch) + "/" :
-           (" and get " +
-            ("resultText" in test ? JSON.stringify(test.resultText) :
-             "resultNoSpace" in test ? JSON.stringify(test.resultNoSpace) : test.result))
-         ) +
-         " in test '" + test.name + "'.",
-         function (done) {
-           stamp(script+"/"+test.name);
-           Promise.all([test.ref, test.exec]).then(function (both) {
-             const ref = both[0];
-             const exec = both[1];
-
-             if (test.status === 0) {      // Keep this test before exitCode in order to
-               expect(exec.stderr).to.be.empty; // print errors from spawn.
-             }
-
-             if (!("errorMatch" in ref) && exec.stderr.length > 0)
-               throw Error("execution returned an error: " + exec.stderr);
-
-             if ("errorMatch" in ref)
-               expect(exec.stderr).to.match(ref.errorMatch);
-             if ("resultMatch" in ref)
-               expect(exec.stdout).to.match(ref.resultMatch);
-             else if ("resultText" in ref)
-               expect(exec.stdout).to.equal(ref.resultText);
-             else if ("resultNoSpace" in ref)
-               expect(exec.stdout.replace(/[ \n]/g, "")).to.equal(ref.resultNoSpace.text.replace(/[ \n]/g, ""));
-             else if ("result" in ref) {
-               expect(JSON.parse(exec.stdout)).to.deep.equal(
-                 ShExUtil.absolutizeResults(
-                   JSON.parse(ref.result.text), ref.result.url));}
-             else if (!("errorMatch" in ref))
-               throw Error("unknown test criteria in " + JSON.stringify(ref));
-
-             expect(exec.exitCode).to.equal(test.status);
-             done();
-           }).catch(function (e) { done(e); });
-         }).timeout(2 * 60 * 1000); // 2 mins for the whole test suite
-    });
-  });
-});
-
-  function fromHere (urlish) {
-    if (!urlish.match(/^[a-z]+:\/\//))
-      return Path.join(__dirname, urlish);
-    return urlish;
-  }
+  TestUtils.runCliTests(AllTests, __dirname, TIME);
 }
 

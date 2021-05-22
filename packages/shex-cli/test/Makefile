@@ -8,11 +8,11 @@ GENCorpus?=$(join $(TESTDIR), bin/genCorpus.js)
 REPORTER?=dot # override with e.g. REPORTER=mocha-earl-reporter
 ASSERTER?=http://www.w3.org/People/Eric/ericp-foaf#me
 SUBJECT?=https://www.npmjs.com/package/shex
-TEST_PREFIX?=https://raw.githubusercontent.com/shexSpec/shexTest/master/
+TEST_PREFIX?=https://raw.githubusercontent.com/shexSpec/shexTest/main/
 RPRT_OPTS?=--reporter-options asserter=$(ASSERTER),subject=$(SUBJECT),testPrefix=$(TEST_PREFIX)
 REPORTER1=mocha-earl-reporter $(RPRT_OPTS)
 
-BRANCH?=$(shell git rev-parse --abbrev-ref HEAD) # e.g. master or ShEx1
+BRANCH?=$(shell git rev-parse --abbrev-ref HEAD) # e.g. main or ShEx1
 HTTPTEST?="http://raw.githubusercontent.com/shexSpec/shex.js/$(BRANCH)/test/"
 
 ValidationManifest=$(join $(TESTDIR), validation/manifest.jsonld) # isn't there an easier way to construct filenames?
