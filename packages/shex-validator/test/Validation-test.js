@@ -7,7 +7,7 @@ var EARL = "EARL" in process.env;
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
-const ShExValidator = require("@shexjs/validator");
+const ShExValidator = require("..");
 const TestExtension = require("@shexjs/extension-test")
 
 const N3 = require("n3");

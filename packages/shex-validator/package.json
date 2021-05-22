@@ -22,7 +22,14 @@
   "dependencies": {
     "@shexjs/eval-simple-1err": "1.0.0-alpha.6",
     "@shexjs/eval-threaded-nerr": "1.0.0-alpha.6",
+    "@shexjs/term": "1.0.0-alpha.6",
     "@shexjs/visitor": "1.0.0-alpha.6"
+  },
+  "devDependencies": {
+    "@shexjs/extension-test": "1.0.0-alpha.6",
+    "@shexjs/node": "1.0.0-alpha.6",
+    "@shexjs/parser": "1.0.0-alpha.6",
+    "@shexjs/util": "1.0.0-alpha.6"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
