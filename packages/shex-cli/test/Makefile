@@ -1,6 +1,6 @@
 # debugging: MOCHA='mocha --debug-brk'
 
-JISON?=../node_modules/.bin/jison
+JISON?=../node_modules/.bin/ts-jison
 MOCHA?=../node_modules/.bin/mocha
 TESTDIR?=../../shexTest/ # needs trailing '/'
 GENJSON?=$(join $(TESTDIR), bin/genJSON.js)
@@ -8,11 +8,11 @@ GENCorpus?=$(join $(TESTDIR), bin/genCorpus.js)
 REPORTER?=dot # override with e.g. REPORTER=mocha-earl-reporter
 ASSERTER?=http://www.w3.org/People/Eric/ericp-foaf#me
 SUBJECT?=https://www.npmjs.com/package/shex
-TEST_PREFIX?=https://raw.githubusercontent.com/shexSpec/shexTest/master/
+TEST_PREFIX?=https://raw.githubusercontent.com/shexSpec/shexTest/main/
 RPRT_OPTS?=--reporter-options asserter=$(ASSERTER),subject=$(SUBJECT),testPrefix=$(TEST_PREFIX)
 REPORTER1=mocha-earl-reporter $(RPRT_OPTS)
 
-BRANCH?=$(shell git rev-parse --abbrev-ref HEAD) # e.g. master or ShEx1
+BRANCH?=$(shell git rev-parse --abbrev-ref HEAD) # e.g. main or ShEx1
 HTTPTEST?="http://raw.githubusercontent.com/shexSpec/shex.js/$(BRANCH)/test/"
 
 ValidationManifest=$(join $(TESTDIR), validation/manifest.jsonld) # isn't there an easier way to construct filenames?
@@ -21,11 +21,15 @@ SHEXSCHEMAS = $(wildcard $(join $(TESTDIR), schemas/*.shex))
 JSONSCHEMAS = $(SHEXSCHEMAS:shex=json)
 
 ../packages/shex-parser/lib/ShExJison.js: ../packages/shex-parser/lib/ShExJison.jison
-	$(JISON) $^ -o $@ -p lr
+	$(JISON) $^ -o $@ -t javascript -p lr
 	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@ # yyloc is reset by lex()->next()->test_match() [[ this.yylloc = {...} ]]
 
 ../packages/shape-map/lib/ShapeMapJison.js: ../packages/shape-map/lib/ShapeMapJison.jison
-	$(JISON) $^ -o $@ -p lalr
+	$(JISON) $^ -o $@ -t javascript -p lalr
+	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@
+
+../packages/shape-path/lib/ShapePathJison.js: ../packages/shape-path/lib/ShapePathJison.jison
+	$(JISON) $^ -o $@ -t javascript -p lalr
 	perl -pi -e 's/loc: yyloc,$$/loc: lexer.yylloc,/' $@
 
 Parser-Writer-test: ../packages/shex-parser/lib/ShExJison.js ../packages/shape-map/lib/ShapeMapJison.js Parser-Writer-test.js

@@ -9,7 +9,7 @@ const TESTS = "TESTS" in process.env ?
     null;
 const HTTPTEST = "HTTPTEST" in process.env ?
     process.env.HTTPTEST :
-    "http://raw.githubusercontent.com/shexSpec/shex.js/master/test/"
+    "http://raw.githubusercontent.com/shexSpec/shex.js/main/test/"
 
 const ShExUtil = require("@shexjs/util");
 const N3 = require("n3");
@@ -34,18 +34,18 @@ const RestTests = {
     args: [],
     posts: [
       { curl: [], errors: ["No schema specified."], status: 400 },
-      { curl: ["-F", "data=@./test/cli/p2p3.ttl", "-F", "node=x"], errors: ["No schema specified."], status: 400 },
-      { curl: ["-F", "schema=@./test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], errors: ["No data specified."], status: 400 },
-      { curl: ["-F", "schema=@./test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
+      { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], errors: ["No schema specified."], status: 400 },
+      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], errors: ["No data specified."], status: 400 },
+      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
     ]
   },
   "default-schema-and-data": {
     args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>"],
     posts: [
       { curl: [], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
-      { curl: ["-F", "schema=@./test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
-      { curl: ["-F", "data=@./test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
-      { curl: ["-F", "schema=@./test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
+      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
+      { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
+      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
     ]
   },
 }
@@ -57,7 +57,7 @@ if (!TEST_server) {
 
   const ServeArgs = ["-S", "http://localhost:8088/validate", "--serve-n", "1", "-Q"];
   const ServerEndpoint = "http://localhost:8088/validate";
-  const ValidateScript = "../node_modules/.bin/shex-validate";
+  const ValidateScript = "../bin/validate";
 
   async function tryPostToServer (serverName, serverTest, postTest) {
     let server = null;

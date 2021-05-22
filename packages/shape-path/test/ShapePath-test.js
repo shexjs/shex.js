@@ -2,7 +2,7 @@ const VERBOSE = "VERBOSE" in process.env;
 const TESTS = "TESTS" in process.env ? process.env["TESTS"] : null;
 
 const ShExParser = require("@shexjs/parser");
-const ShapePath = require("@shexjs/path");
+const ShapePath = require("..");
 
 const fs = require('fs');
 const expect = require('chai').expect;

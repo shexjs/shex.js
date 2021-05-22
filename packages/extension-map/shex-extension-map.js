@@ -8,7 +8,8 @@
 const ShExMapCjsModule = function (config) {
 
 const extensions = require("./lib/extensions");
-const N3 = require("n3");
+const N3Util = require("n3/lib/N3Util");
+const N3DataFactory = require("n3/lib/N3DataFactory").default;
 const materializer = require("./lib/ShExMaterializer")(config);
 
 const MapExt = "http://shex.io/extensions/Map/#";
@@ -86,7 +87,7 @@ function register (validator, api) {
 
 function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
       function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
-      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
+      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) {
@@ -94,7 +95,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           subject: s,
           predicate: p,
           object: o
-        }, N3.DataFactory));
+        }, N3DataFactory));
         return s;
       }
 
@@ -170,12 +171,12 @@ function trivialMaterializer (schema, nextBNode) {
   return {
     materialize: function (bindings, createRoot, shape, target) {
       shape = !shape || shape === validator.start ? schema.start : shape;
-      target = target || new N3.Store();
+      target = target || new config.rdfjs.Store();
       // target.addPrefixes(schema.prefixes); // not used, but seems polite
 
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function P (pname) { return expandPrefixedName(pname, schema.prefixes); }
-      function L (value, modifier) { return N3.Util.createLiteral(value, modifier); }
+      function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       function add (s, p, o) { target.addTriple({ subject: s, predicate: p, object: n3ify(o) }); return s; }
 

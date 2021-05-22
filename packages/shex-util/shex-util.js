@@ -85,6 +85,137 @@ const ShExUtil = {
   Visitor: Visitor,
   index: Visitor.index,
 
+
+  /* getAST - compile a traditional regular expression abstract syntax tree.
+   * Tested but not used at present.
+   */
+  getAST: function (schema) {
+    return {
+      type: "AST",
+      shapes: schema.shapes.reduce(function (ret, shape) {
+        ret[shape.id] = {
+          type: "ASTshape",
+          expression: _compileShapeToAST(shape.expression, [], schema)
+        };
+        return ret;
+      }, {})
+    };
+
+    /* _compileShapeToAST - compile a shape expression to an abstract syntax tree.
+     *
+     * currently tested but not used.
+     */
+    function _compileShapeToAST (expression, tripleConstraints, schema) {
+
+      function Epsilon () {
+        this.type = "Epsilon";
+      }
+
+      function TripleConstraint (ordinal, predicate, inverse, negated, valueExpr) {
+        this.type = "TripleConstraint";
+        // this.ordinal = ordinal; @@ does 1card25
+        this.inverse = !!inverse;
+        this.negated = !!negated;
+        this.predicate = predicate;
+        if (valueExpr !== undefined)
+          this.valueExpr = valueExpr;
+      }
+
+      function Choice (disjuncts) {
+        this.type = "Choice";
+        this.disjuncts = disjuncts;
+      }
+
+      function EachOf (conjuncts) {
+        this.type = "EachOf";
+        this.conjuncts = conjuncts;
+      }
+
+      function SemActs (expression, semActs) {
+        this.type = "SemActs";
+        this.expression = expression;
+        this.semActs = semActs;
+      }
+
+      function KleeneStar (expression) {
+        this.type = "KleeneStar";
+        this.expression = expression;
+      }
+
+      function _compileExpression (expr, schema) {
+        let repeated, container;
+
+        /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
+           expr 1 1 => expr
+           expr 0 1 => Choice(expr, Eps)
+           expr 0 3 => Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps)
+           expr 2 5 => EachOf(expr, expr, Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps))
+           expr 0 * => KleeneStar(expr)
+           expr 1 * => EachOf(expr, KleeneStar(expr))
+           expr 2 * => EachOf(expr, expr, KleeneStar(expr))
+
+           @@TODO: favor Plus over Star if Epsilon not in expr.
+        */
+        function _repeat (expr, min, max) {
+          if (min === undefined) { min = 1; }
+          if (max === undefined) { max = 1; }
+
+          if (min === 1 && max === 1) { return expr; }
+
+          const opts = max === UNBOUNDED ?
+                new KleeneStar(expr) :
+                Array.from(Array(max - min)).reduce(function (ret, elt, ord) {
+                  return ord === 0 ?
+                    new Choice([expr, new Epsilon]) :
+                    new Choice([new EachOf([expr, ret]), new Epsilon]);
+                }, undefined);
+
+          const reqd = min !== 0 ?
+                new EachOf(Array.from(Array(min)).map(function (ret) {
+                  return expr; // @@ something with ret
+                }).concat(opts)) : opts;
+          return reqd;
+        }
+
+        if (typeof expr === "string") { // Inclusion
+          const included = schema._index.tripleExprs[expr].expression;
+          return _compileExpression(included, schema);
+        }
+
+        else if (expr.type === "TripleConstraint") {
+          // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
+          const valueExpr = "valueExprRef" in expr ?
+                schema.valueExprDefns[expr.valueExprRef] :
+                expr.valueExpr;
+          const ordinal = tripleConstraints.push(expr)-1;
+          const tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
+          repeated = _repeat(tp, expr.min, expr.max);
+          return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+        }
+
+        else if (expr.type === "OneOf") {
+          container = new Choice(expr.expressions.map(function (e) {
+            return _compileExpression(e, schema);
+          }));
+          repeated = _repeat(container, expr.min, expr.max);
+          return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+        }
+
+        else if (expr.type === "EachOf") {
+          container = new EachOf(expr.expressions.map(function (e) {
+            return _compileExpression(e, schema);
+          }));
+          repeated = _repeat(container, expr.min, expr.max);
+          return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
+        }
+
+        else throw Error("unexpected expr type: " + expr.type);
+      }
+
+      return expression ? _compileExpression(expression, schema) : new Epsilon();
+    }
+  },
+
   // tests
   // console.warn("HERE:", ShExJtoAS({"type":"Schema","shapes":[{"id":"http://all.example/S1","type":"Shape","expression":
   //  { "id":"http://all.example/S1e", "type":"EachOf","expressions":[ ] },
@@ -1208,16 +1339,21 @@ const ShExUtil = {
               const ent = expressions[0];
               const rest = expressions[1].solutions[0];
               const member = ent.solutions[0];
-              const newElt = cb(member);
+              let newElt = cb(member);
               if ("referenced" in member) {
                 const t = _ShExUtil.walkVal(member.referenced, cb);
-                if (t)
-                  newElt.nested = t;
+                if (t) {
+                  if (newElt)
+                    newElt.nested = t;
+                  else
+                    newElt = t;
+                }
               }
-              vals.push(newElt);
+              if (newElt)
+                vals.push(newElt);
               return rest.object === RDF.nil ?
                 true :
-                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
+                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil OR @<list>` idiom
                           ? rest.referenced.solution
                           : rest.referenced);
             }
@@ -1913,32 +2049,32 @@ const ShExUtil = {
 */
   },
 
-  rdfjsDB: function (db, queryTracker) {
+  rdfjsDB: function (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 
     function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
     function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
     function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads () { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
+    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
 
-    function getNeighborhood (point, shapeLabel/*, shape */) {
+    function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
       let startTime;
       if (queryTracker) {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      const outgoing = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
+      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
         const time = new Date();
-        queryTracker.end(outgoing, time - startTime);
+        queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
         startTime = time;
       }
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      const incoming = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
+      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
       if (queryTracker) {
-        queryTracker.end(incoming, new Date() - startTime);
+        queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
       }
       return {
         outgoing: outgoing,
