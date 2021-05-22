@@ -2,7 +2,7 @@
 
 var AssertedBy = "http://www.w3.org/People/Eric/ericp-foaf#me";
 var Subject = "https://www.npmjs.com/package/shex";
-var Branch = "master";
+var Branch = "main";
 var When = new Date().toISOString();
 
 header();

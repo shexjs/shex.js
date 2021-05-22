@@ -10,7 +10,7 @@ ShExWebApp = (function () {
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
 
-    Map:            require("@shexjs/extension-map"),
+    Map:            require("."),
   })
 })()
 
