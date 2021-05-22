@@ -381,7 +381,7 @@
       nonest(shapeAtom).shapeExprs = nonest(shapeAtom).shapeExprs.concat(juncts);
       return shapeAtom;
     } else {
-      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts) };
+      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts.map(nonest)) };
     }
   }
 

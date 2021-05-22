@@ -2205,7 +2205,7 @@ function addContextMenus (inputSelector, cache) {
     if (options.items[key].ignore) { // ignore the event
     } else if (terms) {
       const term = terms.tz[terms.match];
-      const val = nodeLex.substr(0, term[0]) +
+      let val = nodeLex.substr(0, term[0]) +
             key + addSpace +
             nodeLex.substr(term[0] + term[1]);
       if (terms.match === 2 && !m[9])
