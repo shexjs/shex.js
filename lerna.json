@@ -1,17 +1,24 @@
 {
-  "version": "1.0.0-alpha.10",
+  "version": "1.0.0-alpha.11",
   "npmClient": "npm",
   "hoist": true,
   "command": {
     "publish": {
-      "ignoreChanges": ["ignored-file", "*.md"],
+      "ignoreChanges": [
+        "ignored-file",
+        "*.md"
+      ],
       "message": "chore(release): publish",
       "registry": "https://npm.pkg.github.com"
     },
     "bootstrap": {
       "ignore": "component-*",
-      "npmClientArgs": ["--no-package-lock"]
+      "npmClientArgs": [
+        "--no-package-lock"
+      ]
     }
   },
-  "packages": [ "packages/*" ]
+  "packages": [
+    "packages/*"
+  ]
 }
