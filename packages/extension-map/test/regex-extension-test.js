@@ -17,7 +17,7 @@ const fakeValidator = {
     register: () => {}
   }
 }
-const Mapper = require("@shexjs/extension-map")({});
+const Mapper = require("..")({});
 // or use a throw-away validator:
 // const realValidator = require("@shexjs/validator").construct(emptySchema)
 const registered = Mapper.register(fakeValidator, {ShExTerm, ShExUtil})

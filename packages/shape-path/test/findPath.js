@@ -1,11 +1,11 @@
 
-var TESTSDIR = "TESTSDIR" in process.env ? process.env.TESTSDIR : "../../shexTest";
+var TESTSDIR = "TESTSDIR" in process.env ? process.env.TESTSDIR : "../../../../shexTest";
 var fs = require("fs");
 var path = require("path");
 module.exports = function (dirName) {
 
   // try relative path to package.json
-  var packageName = path.resolve(__dirname, TESTSDIR, "package.json");
+  var packageName = path.resolve(__dirname, TESTSDIR, "package.json");console.log(TESTSDIR, packageName)
   if (fs.existsSync(packageName)) {
     try {
       var pkg = require(path.resolve(__dirname, TESTSDIR, JSON.parse(fs.readFileSync(packageName, "utf8")).main))[dirName];
