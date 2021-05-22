@@ -6,7 +6,7 @@ dist: xenial
 env:
   - CLI_TIMEOUT=10000
 node_js:
-  - "lts/*"
+#  - "lts/*"
   - "node"
 before_script:
   - git clone --depth=1 --branch=backtick https://github.com/shexSpec/shexTest.git ../shexTest
