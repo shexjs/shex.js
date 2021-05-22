@@ -28,6 +28,11 @@ node_modules
 EGP/
 da-web/
 
+*-stats.json
+
+.coveralls.yml
+.nyc_output/
+
 packages/shape-map/browser/
 packages/shex-core/browser/
 packages/shex-node/browser/

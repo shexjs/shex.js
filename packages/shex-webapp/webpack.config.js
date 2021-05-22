@@ -1,5 +1,7 @@
-const path = require('path');
+const Path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
+const DocDir = "doc/"
+const WebPacksDir = "webpacks/";
 
 // webpack-bundle-analyzer can be run after compilation.
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -15,12 +17,13 @@ const WebpackMonitor = !!JSON.parse(process.env["WEBPACK_MONITOR"] || "false")
 
 module.exports = {
   entry: {
-    "shex-webapp-webpack": "./shex-webapp.js",
-    "shex-webapp-webpack.min": "./shex-webapp.js",
+    "shex-webapp"    : "./shex-webapp.js",
+    "shex-webapp.min": "./shex-webapp.js",
   },
   output: {
     filename: "[name].js",
-    path: path.resolve(__dirname, 'browser'),
+    path: Path.resolve(__dirname, DocDir, WebPacksDir),
+    publicPath: WebPacksDir,
     // libraryTarget: 'umd',
     // libraryExport: 'ShExWebApp',
     // umdNamedDefine: true,
@@ -35,10 +38,14 @@ module.exports = {
       include: /\.min\.js$/
     })]
   },
-  node: {
-    fs: 'empty',  // @@ webpack-monitor shows require('fs') errors. help?
-    // net: 'empty',
-    // tls: 'empty',
+  resolve: {
+    fallback: {
+      // fs: false,  // TODO: update ShapeMapParser to use ts-jison
+      // path: false,
+      // net: 'empty',
+      // tls: 'empty',
+      url: require.resolve("url/"),
+    }
   },
   plugins: [
     // new BundleAnalyzerPlugin(/*{analyzerMode: 'json'}*/)

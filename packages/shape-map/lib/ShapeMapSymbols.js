@@ -6,7 +6,7 @@
  *   testing.
  */
 
-var ShapeMapSymbols = (function () {
+const ShapeMapSymbols = (function () {
   return {
     focus: { term: "FOCUS" },
     start: { term: "START" },

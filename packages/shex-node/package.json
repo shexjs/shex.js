@@ -20,8 +20,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/api": "file:../shex-api",
-    "jsonld": "^1.5.4",
+    "@shexjs/api": "1.0.0-alpha.6",
+    "jsonld": "^4.0.1",
     "n3": "^1.6.2",
     "node-fetch": "^2.6.0"
   },

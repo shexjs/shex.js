@@ -24,12 +24,12 @@
     ShEx parser in the Jison parser generator format.
   */
 
-  var UNBOUNDED = -1;
+  const UNBOUNDED = -1;
 
-  var ShExUtil = require("@shexjs/util");
+  const ShExUtil = require("@shexjs/util");
 
   // Common namespaces and entities
-  var RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+  const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       RDF_TYPE  = RDF + 'type',
       RDF_FIRST = RDF + 'first',
       RDF_REST  = RDF + 'rest',
@@ -53,7 +53,7 @@
       XSD_TOTALDIGITS    = XSD + 'totalDigits',
       XSD_FRACTIONDIGITS = XSD + 'fractionDigits';
 
-  var numericDatatypes = [
+  const numericDatatypes = [
       XSD + "integer",
       XSD + "decimal",
       XSD + "float",
@@ -75,11 +75,11 @@
       XSD + "positiveInteger"
   ];
 
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
-  var numericFacets = ["mininclusive", "minexclusive",
+  const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
 
   // Returns a lowercase version of the given string
@@ -100,24 +100,24 @@
   // Extends a base object with properties of other objects
   function extend(base) {
     if (!base) base = {};
-    for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-      for (var name in arg)
+    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+      for (let name in arg)
         base[name] = arg[name];
     return base;
   }
 
   // Creates an array that contains all items of the given arrays
   function unionAll() {
-    var union = [];
-    for (var i = 0, l = arguments.length; i < l; i++)
+    let union = [];
+    for (let i = 0, l = arguments.length; i < l; i++)
       union = union.concat.apply(union, arguments[i]);
     return union;
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:58 with
-  //   s/this\./Parser./g
+  //   s/this\./ShExJisonParser./g
   // ### `_setBase` sets the base IRI to resolve relative IRIs.
-  Parser._setBase = function (baseIRI) {
+  ShExJisonParser._setBase = function (baseIRI) {
     if (!baseIRI)
       baseIRI = null;
 
@@ -126,34 +126,34 @@
     //   throw new Error('Invalid base IRI ' + baseIRI);
 
     // Set base IRI and its components
-    if (Parser._base = baseIRI) {
-      Parser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
+    if (ShExJisonParser._base = baseIRI) {
+      ShExJisonParser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
       baseIRI = baseIRI.match(schemeAuthority);
-      Parser._baseRoot   = baseIRI[0];
-      Parser._baseScheme = baseIRI[1];
+      ShExJisonParser._baseRoot   = baseIRI[0];
+      ShExJisonParser._baseScheme = baseIRI[1];
     }
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./Parser./g
+  //   s/this\./ShExJisonParser./g
   //   s/token/iri/
   // ### `_resolveIRI` resolves a relative IRI token against the base path,
   // assuming that a base path has been set and that the IRI is indeed relative.
   function _resolveIRI (iri) {
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
-    case undefined: return Parser._base;
+    case undefined: return ShExJisonParser._base;
     // Resolve relative fragment IRIs against the base IRI
-    case '#': return Parser._base + iri;
+    case '#': return ShExJisonParser._base + iri;
     // Resolve relative query string IRIs by replacing the query string
-    case '?': return Parser._base.replace(/(?:\?.*)?$/, iri);
+    case '?': return ShExJisonParser._base.replace(/(?:\?.*)?$/, iri);
     // Resolve root-relative IRIs at the root of the base IRI
     case '/':
       // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? Parser._baseScheme : Parser._baseRoot) + _removeDotSegments(iri);
+      return (iri[1] === '/' ? ShExJisonParser._baseScheme : ShExJisonParser._baseRoot) + _removeDotSegments(iri);
     // Resolve all other IRIs at the base IRI's path
     default: {
-      return _removeDotSegments(Parser._basePath + iri);
+      return _removeDotSegments(ShExJisonParser._basePath + iri);
     }
     }
   }
@@ -165,7 +165,8 @@
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, next = '/', segmentStart = 0;
 
     while (i < length) {
       switch (next) {
@@ -222,9 +223,9 @@
 
   // Creates an expression with the given type and attributes
   function expression(expr, attr) {
-    var expression = { expression: expr };
+    const expression = { expression: expr };
     if (attr)
-      for (var a in attr)
+      for (let a in attr)
         expression[a] = attr[a];
     return expression;
   }
@@ -243,17 +244,17 @@
   function blank() {
     return '_:b' + blankId++;
   };
-  var blankId = 0;
-  Parser._resetBlanks = function () { blankId = 0; }
-  Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser._sourceMap = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
-    Parser._base = Parser._baseIRI = Parser._baseIRIPath = Parser._baseIRIRoot = null;
+  let blankId = 0;
+  ShExJisonParser._resetBlanks = function () { blankId = 0; }
+  ShExJisonParser.reset = function () {
+    ShExJisonParser._prefixes = ShExJisonParser._imports = ShExJisonParser._sourceMap = ShExJisonParser.shapes = ShExJisonParser.productions = ShExJisonParser.start = ShExJisonParser.startActs = null; // Reset state.
+    ShExJisonParser._base = ShExJisonParser._baseIRI = ShExJisonParser._baseIRIPath = ShExJisonParser._baseIRIRoot = null;
   }
-  var _fileName; // for debugging
-  Parser._setFileName = function (fn) { _fileName = fn; }
+  let _fileName; // for debugging
+  ShExJisonParser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
-  var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+  const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
       semactEscapeReplacements = { '\\': '\\', '%': '%' },
       pnameEscapeReplacements = {
@@ -272,25 +273,25 @@
   }
 
   function unescapeLangString(string, trimLength) {
-    var at = string.lastIndexOf("@");
-    var lang = string.substr(at);
+    const at = string.lastIndexOf("@");
+    const lang = string.substr(at);
     string = string.substr(0, at);
-    var u = unescapeString(string, trimLength);
+    const u = unescapeString(string, trimLength);
     return extend(u, { language: lowercase(lang.substr(1)) });
   }
 
   // Translates regular expression escape codes in the string into their textual equivalent
   function unescapeRegexp (regexp) {
-    var end = regexp.lastIndexOf("/");
-    var s = regexp.substr(1, end-1);
-    var regexpEscapeReplacements = {
+    const end = regexp.lastIndexOf("/");
+    let s = regexp.substr(1, end-1);
+    const regexpEscapeReplacements = {
       '.': "\\.", '\\': "\\\\", '?': "\\?", '*': "\\*", '+': "\\+",
       '{': "\\{", '}': "\\}", '(': "\\(", ')': "\\)", '|': "\\|",
       '^': "\\^", '$': "\\$", '[': "\\[", ']': "\\]", '/': "\\/",
       't': '\\t', 'n': '\\n', 'r': '\\r', '-': "\\-", '/': '/'
     };
     s = ShExUtil.unescapeText(s, regexpEscapeReplacements)
-    var ret = {
+    const ret = {
       pattern: s
     };
     if (regexp.length > end+1)
@@ -300,7 +301,7 @@
 
   // Convenience function to return object with p1 key, value p2
   function keyValObject(key, val) {
-    var ret = {};
+    const ret = {};
     ret[key] = val;
     return ret;
   }
@@ -325,61 +326,60 @@
       pos: yy.lexer.showPosition()
     }
     e.hash = hash;
-    if (Parser.recoverable) {
-      Parser.recoverable(e)
+    if (ShExJisonParser.recoverable) {
+      ShExJisonParser.recoverable(e)
     } else {
       throw e;
-      Parser.reset();
+      ShExJisonParser.reset();
     }
   }
 
   // Expand declared prefix or throw Error
   function expandPrefix (prefix, yy) {
-    if (!(prefix in Parser._prefixes))
+    if (!(prefix in ShExJisonParser._prefixes))
       error(new Error('Parse error; unknown prefix "' + prefix + ':"'), yy);
-    return Parser._prefixes[prefix];
+    return ShExJisonParser._prefixes[prefix];
   }
 
   // Add a shape to the map
   function addShape (label, shape, yy) {
     if (shape === EmptyShape)
       shape = { type: "Shape" };
-    if (Parser.productions && label in Parser.productions)
+    if (ShExJisonParser.productions && label in ShExJisonParser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
-    if (!Parser.shapes)
-      Parser.shapes = new Map();
-    if (label in Parser.shapes) {
-      if (Parser.options.duplicateShape === "replace")
-        Parser.shapes[label] = shape;
-      else if (Parser.options.duplicateShape !== "ignore")
+    if (!ShExJisonParser.shapes)
+      ShExJisonParser.shapes = new Map();
+    if (label in ShExJisonParser.shapes) {
+      if (ShExJisonParser.options.duplicateShape === "replace")
+        ShExJisonParser.shapes[label] = shape;
+      else if (ShExJisonParser.options.duplicateShape !== "ignore")
         error(new Error("Parse error: "+label+" already defined"), yy);
     } else {
-      shape.id = label;
-      Parser.shapes[label] = shape;
+      ShExJisonParser.shapes[label] = Object.assign({id: label}, shape);
     }
   }
 
   // Add a production to the map
   function addProduction (label, production, yy) {
-    if (Parser.shapes && label in Parser.shapes)
+    if (ShExJisonParser.shapes && label in ShExJisonParser.shapes)
       error(new Error("Structural error: "+label+" is a shape expression"), yy);
-    if (!Parser.productions)
-      Parser.productions = new Map();
-    if (label in Parser.productions) {
-      if (Parser.options.duplicateShape === "replace")
-        Parser.productions[label] = production;
-      else if (Parser.options.duplicateShape !== "ignore")
+    if (!ShExJisonParser.productions)
+      ShExJisonParser.productions = new Map();
+    if (label in ShExJisonParser.productions) {
+      if (ShExJisonParser.options.duplicateShape === "replace")
+        ShExJisonParser.productions[label] = production;
+      else if (ShExJisonParser.options.duplicateShape !== "ignore")
         error(new Error("Parse error: "+label+" already defined"), yy);
     } else
-      Parser.productions[label] = production;
+      ShExJisonParser.productions[label] = production;
   }
 
   function addSourceMap (obj, yy) {
-    if (!Parser._sourceMap)
-      Parser._sourceMap = new Map();
-    let list = Parser._sourceMap.get(obj)
+    if (!ShExJisonParser._sourceMap)
+      ShExJisonParser._sourceMap = new Map();
+    let list = ShExJisonParser._sourceMap.get(obj)
     if (!list)
-      Parser._sourceMap.set(obj, list = []);
+      ShExJisonParser._sourceMap.set(obj, list = []);
     list.push(yy.lexer.yylloc);
     return obj;
   }
@@ -398,7 +398,7 @@
       nonest(shapeAtom).shapeExprs = nonest(shapeAtom).shapeExprs.concat(juncts);
       return shapeAtom;
     } else {
-      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts) };
+      return { type: type, shapeExprs: [nonest(shapeAtom)].concat(juncts.map(nonest)) };
     }
   }
 
@@ -408,8 +408,8 @@
     return shapeAtom;
   }
 
-  var EmptyObject = {  };
-  var EmptyShape = { type: "Shape" };
+  const EmptyObject = {  };
+  const EmptyShape = { type: "Shape" };
 %}
 
 /* lexical grammar */
@@ -432,9 +432,6 @@ IT_NONLITERAL           [Nn][Oo][Nn][Ll][Ii][Tt][Ee][Rr][Aa][Ll]
 IT_AND                  [Aa][Nn][Dd]
 IT_OR                   [Oo][Rr]
 IT_NOT                  [No][Oo][Tt]
-IT_ON                   [Oo][Nn]
-IT_SHAPE                [Ss][Hh][Aa][Pp][Ee]
-IT_EXPRESSION           [Ee][Xx][Pp][Rr][Ee][Ss][Ss][Ii][Oo][Nn]
 IT_MININCLUSIVE         [Mm][Ii][Nn][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MINEXCLUSIVE         [Mm][Ii][Nn][Ee][Xx][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
 IT_MAXINCLUSIVE         [Mm][Aa][Xx][Ii][Nn][Cc][Ll][Uu][Ss][Ii][Vv][Ee]
@@ -552,9 +549,6 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_AND}                return 'IT_AND';
 {IT_OR}                 return 'IT_OR';
 {IT_NOT}                return 'IT_NOT';
-{IT_ON}                 return 'IT_ON';
-{IT_SHAPE}              return 'IT_SHAPE';
-{IT_EXPRESSION}         return 'IT_EXPRESSION';
 {IT_MININCLUSIVE}       return 'IT_MININCLUSIVE';
 {IT_MINEXCLUSIVE}       return 'IT_MINEXCLUSIVE';
 {IT_MAXINCLUSIVE}       return 'IT_MAXINCLUSIVE';
@@ -604,22 +598,22 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 shexDoc:
       _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        let imports = Object.keys(Parser._imports).length ? { imports: Parser._imports } : {}
-        var startObj = Parser.start ? { start: Parser.start } : {};
-        var startActs = Parser.startActs ? { startActs: Parser.startActs } : {};
-        let shapes = Parser.shapes ? { shapes: Object.values(Parser.shapes) } : {};
-        var shexj = Object.assign(
+        let imports = Object.keys(ShExJisonParser._imports).length ? { imports: ShExJisonParser._imports } : {}
+        const startObj = ShExJisonParser.start ? { start: ShExJisonParser.start } : {};
+        const startActs = ShExJisonParser.startActs ? { startActs: ShExJisonParser.startActs } : {};
+        let shapes = ShExJisonParser.shapes ? { shapes: Object.values(ShExJisonParser.shapes) } : {};
+        const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
-        if (Parser.options.index) {
-          if (Parser._base !== null)
-            shexj._base = Parser._base;
-          shexj._prefixes = Parser._prefixes;
+        if (ShExJisonParser.options.index) {
+          if (ShExJisonParser._base !== null)
+            shexj._base = ShExJisonParser._base;
+          shexj._prefixes = ShExJisonParser._prefixes;
           shexj._index = {
-            shapeExprs: Parser.shapes || new Map(),
-            tripleExprs: Parser.productions || new Map()
+            shapeExprs: ShExJisonParser.shapes || new Map(),
+            tripleExprs: ShExJisonParser.productions || new Map()
           };
-          shexj._sourceMap = Parser._sourceMap;
+          shexj._sourceMap = ShExJisonParser._sourceMap;
         }
         return shexj;
       }
@@ -661,20 +655,20 @@ directive:
 
 baseDecl:
       IT_BASE IRIREF	{ // t: @@
-        Parser._setBase(Parser._base === null ||
+        ShExJisonParser._setBase(ShExJisonParser._base === null ||
                     absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : _resolveIRI($2.slice(1, -1)));
       }
     ;
 
 prefixDecl:
       IT_PREFIX PNAME_NS iri	{ // t: ShExParser-test.js/with pre-defined prefixes
-        Parser._prefixes[$2.slice(0, -1)] = $3;
+        ShExJisonParser._prefixes[$2.slice(0, -1)] = $3;
       }
     ;
 
 importDecl:
       IT_IMPORT iri	{ // t: @@
-        Parser._imports.push($2);
+        ShExJisonParser._imports.push($2);
       }
     ;
 
@@ -685,15 +679,15 @@ notStartAction:
 
 start:
       IT_start '=' shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
-        if (Parser.start)
+        if (ShExJisonParser.start)
           error(new Error("Parse error: start already defined"), yy);
-        Parser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
+        ShExJisonParser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
       }
     ;
 
 startActions:
       _QcodeDecl_E_Plus	{
-        Parser.startActs = $1; // t: startCode1
+        ShExJisonParser.startActs = $1; // t: startCode1
       }
     ;
 
@@ -792,13 +786,13 @@ inlineShapeExpression:
 
 shapeOr: // Sets .needsAtom to tell shapeExpression where to place leading shapeAtom.
       _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Plus	{ // returns a ShapeOr
-        var disjuncts = $1.map(nonest);
+        const disjuncts = $1.map(nonest);
         $$ = { type: "ShapeOr", shapeExprs: disjuncts, needsAtom: disjuncts }; // t: @@
       }
     | _Q_O_QIT_AND_E_S_QshapeNot_E_C_E_Plus _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{ // returns a ShapeAnd
         // $1 could have implicit conjuncts and explicit nested ANDs (will have .nested: true)
         $1.filter(c => c.type === "ShapeAnd").length === $1.length
-        var and = {
+        const and = {
           type: "ShapeAnd",
           shapeExprs: $1.reduce(
             (acc, elt) =>
@@ -944,7 +938,7 @@ inlineShapeOrRef:
 shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':');
+        const namePos = $1.indexOf(':');
         $$ = addSourceMap(expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), yy); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1@@
@@ -1098,7 +1092,7 @@ shapeDefinition:
 
 inlineShapeDefinition:
       _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
-        var exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
+        const exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
 	  EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
@@ -1218,15 +1212,14 @@ _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C:
     ;
 
 bracketedTripleExpr:
-      '(' tripleExpression ')' _Qcardinality_E_Opt _QonShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
+      '(' tripleExpression ')' _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // t: open1dotOr1dot, !openopen1dotcloseCode1closeCode2
         $$ = $2;
         // Copy all of the new attributes into the encapsulated shape.
         if ("min" in $4) { $$.min = $4.min; } // t: open3groupdotclosecard23Annot3Code2
         if ("max" in $4) { $$.max = $4.max; } // t: open3groupdotclosecard23Annot3Code2
-        if ($5) { $$.onShapeExpression = $5; } // t: !!
-        if ($6.length) { $$.annotations = $6; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
-        if ($7) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($7.semActs) : $7.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
+        if ($5.length) { $$.annotations = $5; } // t: open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
+        if ($6) { $$.semActs = "semActs" in $2 ? $2.semActs.concat($6.semActs) : $6.semActs; } // t: open3groupdotcloseCode1, !open1dotOr1dot
       }
     ;
 
@@ -1235,30 +1228,18 @@ _Qcardinality_E_Opt:
     | cardinality	// t: 1cardOpt
     ;
 
-_QonShapeExpression_E_Opt:
-      	-> null // t: 1dot
-    | IT_ON _QIT_SHAPE_IT_EXPRESSION_E_Opt inlineShapeExpression -> $3	// t: !!
-    ;
-
-_QIT_SHAPE_IT_EXPRESSION_E_Opt:
-      	
-    | IT_SHAPE IT_EXPRESSION
-    ;
-
 tripleConstraint:
-      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _QonShapeExpression_E_Opt _Qannotation_E_Star semanticActions	{
-        // $7: t: 1dotCode1
+      _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
+        // $6: t: 1dotCode1
 	if ($3 !== EmptyShape && false) {
-	  var t = blank();
+	  const t = blank();
 	  addShape(t, $3, yy);
 	  $3 = t; // ShapeRef
 	}
         // %7: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $7); // t: 1dot, 1inversedot
-        if ($5)
-          $$.onShapeExpression = $5; // t: !!
-        if ($6.length)
-          $$["annotations"] = $6; // t: 1dotAnnot3, 1inversedotAnnot3
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot, 1inversedot
+        if ($5.length)
+          $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3
       }
     ;
 
@@ -1273,7 +1254,7 @@ cardinality:
     | '?'	-> { min:0, max:1 } // t: 1cardOpt
     | REPEAT_RANGE	{
         $1 = $1.substr(1, $1.length-2);
-        var nums = $1.match(/(\d+)/g);
+        const nums = $1.match(/(\d+)/g);
         $$ = { min: parseInt(nums[0], 10) }; // t: 1card2blank, 1card2Star
         if (nums.length === 2)
             $$["max"] = parseInt(nums[1], 10); // t: 1card23
@@ -1539,16 +1520,16 @@ langString:
 
 iri:
       IRIREF	{ // t: 1dot
-        var unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
-        $$ = Parser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
+        const unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
+        $$ = ShExJisonParser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
       }
     | prefixedName	
     ;
 
 prefixedName:
       PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos), yy) + ShExUtil.unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
+        const namePos1 = $1.indexOf(':');
+        $$ = expandPrefix($1.substr(0, namePos1), yy) + ShExUtil.unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
       }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
         $$ = expandPrefix($1.substr(0, $1.length - 1), yy);
@@ -1560,7 +1541,7 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 1dotInherit1, 1dot3Inherit, 1dotInherit3
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:

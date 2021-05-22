@@ -4,9 +4,9 @@
 # All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
 # http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
 #
-# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2_on_shape_expression?lang=perl
+# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2_EXTENDS?lang=perl
 # repo: https://github.com/shexSpec/shex.js/
-# branch: on-shape-expression
+# branch: extends
 # path: doc/bnf
 # TODO:
 #   annotations on shapes
@@ -81,6 +81,7 @@
 # ~ nodeConstraint split into litNodeConstraint and nonLitNodeConstraint
 # - tripleExprLable -= '$'
 # ~ align REGEXP with XML Schema
+# ~ align with current EXTENDS/RESTRICTS consensus
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -153,9 +154,8 @@
 [42]    multiElementGroup     ::= unaryTripleExpr (';' unaryTripleExpr)+ ';'?
 [43]    unaryTripleExpr       ::= ('$' tripleExprLabel)? (tripleConstraint | bracketedTripleExpr)
                                 | include
-[44]    bracketedTripleExpr   ::= '(' innerTripleExpr ')' cardinality? onShapeExpr? annotation* semanticActions
-[0]     onShapeExpr           ::= "ON" ("SHAPE" "EXPRESSION")? inlineShapeExpression
-[45]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? onShapeExpr? annotation* semanticActions
+[44]    bracketedTripleExpr   ::= '(' innerTripleExpr ')' cardinality? annotation* semanticActions
+[45]    tripleConstraint      ::= senseFlags? predicate inlineShapeExpression cardinality? annotation* semanticActions
 [46]    cardinality           ::= '*' | '+' | '?' | REPEAT_RANGE
 [47]    senseFlags            ::= '^'
 [48]    valueSet              ::= '[' valueSetValue* ']'

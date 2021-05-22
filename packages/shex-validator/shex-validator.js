@@ -6,24 +6,24 @@
  *   constraint violation reporting.
  */
 
-var ShExValidator = (function () {
-var UNBOUNDED = -1;
+const ShExValidatorCjsModule = (function () {
+const UNBOUNDED = -1;
 
 // interface constants
-var Start = { term: "START" }
-var InterfaceOptions = {
+const Start = { term: "START" }
+const InterfaceOptions = {
   "coverage": {
     "firstError": "fail on first error (usually used with eval-simple-1err)",
     "exhaustive": "find as many errors as possible (usually used with eval-threaded-nerr)"
   }
 };
 
-var VERBOSE = "VERBOSE" in process.env;
+const VERBOSE = false; // "VERBOSE" in process.env;
 // **ShExValidator** provides ShEx utility functions
 
-var ProgramFlowError = { type: "ProgramFlowError", errors: { type: "UntrackedError" } };
+const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
-var ShExTerm = require("@shexjs/term");
+const ShExTerm = require("@shexjs/term");
 let ShExVisitor = require("@shexjs/visitor");
 let ShExUtil = require("@shexjs/util");
 const Hierarchy = require('hierarchy-closure')
@@ -35,8 +35,8 @@ function getLexicalValue (term) {
 }
 
 
-var XSD = "http://www.w3.org/2001/XMLSchema#";
-var integerDatatypes = [
+const XSD = "http://www.w3.org/2001/XMLSchema#";
+const integerDatatypes = [
   XSD + "integer",
   XSD + "nonPositiveInteger",
   XSD + "negativeInteger",
@@ -52,16 +52,16 @@ var integerDatatypes = [
   XSD + "positiveInteger"
 ];
 
-var decimalDatatypes = [
+const decimalDatatypes = [
   XSD + "decimal",
 ].concat(integerDatatypes);
 
-var numericDatatypes = [
+const numericDatatypes = [
   XSD + "float",
   XSD + "double"
 ].concat(decimalDatatypes);
 
-var numericParsers = {};
+const numericParsers = {};
 numericParsers[XSD + "integer"] = function (label, parseError) {
   if (!(label.match(/^[+-]?[0-9]+$/))) {
     parseError("illegal integer value '" + label + "'");
@@ -94,7 +94,7 @@ numericParsers[XSD + "double" ] = function (label, parseError) {
   return Number(label);
 };
 
-testRange = function (value, datatype, parseError) {
+function testRange (value, datatype, parseError) {
   const ranges = {
     //    integer            -1 0 1 +1 | "" -1.0 +1.0 1e0 NaN INF
     //    decimal            -1 0 1 +1 -1.0 +1.0 | "" 1e0 NaN INF
@@ -132,7 +132,7 @@ testRange = function (value, datatype, parseError) {
     unsignedByte:       { min: 0                   , max: 255      },
     positiveInteger:    { min: 1                   , max: Infinity }
   }
-  var parms = ranges[datatype.substr(XSD.length)];
+  const parms = ranges[datatype.substr(XSD.length)];
   if (!parms) throw Error("unexpected datatype: " + datatype);
   if (value < parms.min) {
     parseError("\"" + value + "\"^^<" + datatype + "> is less than the min:", parms.min);
@@ -143,7 +143,7 @@ testRange = function (value, datatype, parseError) {
 
 /*
 function intSubType (spec, label, parseError) {
-  var ret = numericParsers[XSD + "integer"](label, parseError);
+  const ret = numericParsers[XSD + "integer"](label, parseError);
   if ("min" in spec && ret < spec.min)
     parseError("illegal " + XSD + spec.type + " value '" + label + "' should not be < " + spec.min);
   if ("max" in spec && ret > spec.max)
@@ -168,26 +168,26 @@ function intSubType (spec, label, parseError) {
  });
 */
 
-var stringTests = {
+const stringTests = {
   length   : function (v, l) { return v.length === l; },
   minlength: function (v, l) { return v.length  >= l; },
   maxlength: function (v, l) { return v.length  <= l; }
 };
 
-var numericValueTests = {
+const numericValueTests = {
   mininclusive  : function (n, m) { return n >= m; },
   minexclusive  : function (n, m) { return n >  m; },
   maxinclusive  : function (n, m) { return n <= m; },
   maxexclusive  : function (n, m) { return n <  m; }
 };
 
-var decimalLexicalTests = {
+const decimalLexicalTests = {
   totaldigits   : function (v, d) {
-    var m = v.match(/[0-9]/g);
+    const m = v.match(/[0-9]/g);
     return m && m.length <= d;
   },
   fractiondigits: function (v, d) {
-    var m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
+    const m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
     return m && m[1].length <= d;
   }
 };
@@ -195,13 +195,13 @@ var decimalLexicalTests = {
         function ldify (term) {
           if (term[0] !== "\"")
             return term;
-          var ret = { value: ShExTerm.getLiteralValue(term) };
-          var dt = ShExTerm.getLiteralType(term);
+          const ret = { value: ShExTerm.getLiteralValue(term) };
+          const dt = ShExTerm.getLiteralType(term);
           if (dt &&
               dt !== "http://www.w3.org/2001/XMLSchema#string" &&
               dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
             ret.type = dt;
-          var lang = ShExTerm.getLiteralLanguage(term)
+          const lang = ShExTerm.getLiteralLanguage(term)
           if (lang)
             ret.language = lang;
           return ret;
@@ -220,9 +220,9 @@ var decimalLexicalTests = {
  *   lax(true): boolean: whine about missing types in schema.
  *   diagnose(false): boolean: makde validate return a structure with errors.
  */
-function ShExValidator_constructor(schema, options) {
+function ShExValidator_constructor(schema, db, options) {
   if (!(this instanceof ShExValidator_constructor))
-    return new ShExValidator_constructor(schema, options);
+    return new ShExValidator_constructor(schema, db, options);
   let index = schema._index || ShExVisitor.index(schema)
   this.type = "ShExValidator";
   options = options || {};
@@ -231,36 +231,20 @@ function ShExValidator_constructor(schema, options) {
   if (!("noCache" in options && options.noCache))
     this.known = {};
 
-  var _ShExValidator = this;
+  const _ShExValidator = this;
   this.schema = schema;
   this._expect = this.options.lax ? noop : expect; // report errors on missing types.
   this._optimize = {}; // optimizations:
     // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
   this.reset = function () {  }; // included in case we need it later.
-  // var regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  var regexModule = this.options.regexModule || require("@shexjs/eval-threaded-nerr");
-
-  /* getAST - compile a traditional regular expression abstract syntax tree.
-   * Tested but not used at present.
-   */
-  this.getAST = function () {
-    return {
-      type: "AST",
-      shapes: schema.shapes.reduce(function (ret, shape) {
-        ret[shape.id] = {
-          type: "ASTshape",
-          expression: _compileShapeToAST(shape.expression, [], _ShExValidator.schema)
-        };
-        return ret;
-      }, {})
-    };
-  };
+  // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+  const regexModule = this.options.regexModule || require("@shexjs/eval-threaded-nerr");
 
   /* indexTripleConstraints - compile regular expression and index triple constraints
    */
   this.indexTripleConstraints = function (expression) {
     // list of triple constraints from (:p1 ., (:p2 . | :p3 .))
-    var tripleConstraints = [];
+    const tripleConstraints = [];
 
     if (expression)
       indexTripleConstraints_dive(expression);
@@ -280,18 +264,15 @@ function ShExValidator_constructor(schema, options) {
           return acc.concat(indexTripleConstraints_dive(nested));
         }, []);
 
-      else if (expr.type === "NestedShape")
-        return [];
-
       else
-        runtimeError("unexpected expr type: " + expr.type);
+        return runtimeError("unexpected expr type: " + expr.type);
     };
   };
 
   /* emptyTracker - a tracker that does nothing
    */
   this.emptyTracker = function () {
-    var noop = x => x;
+    const noop = x => x;
     return {
       recurse: noop,
       known: noop,
@@ -304,17 +285,17 @@ function ShExValidator_constructor(schema, options) {
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
-  this.validate = function (db, point, label, tracker, seen, subGraph) {
+  this.validate = function (point, label, tracker, seen, subGraph) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
       point = ShExTerm.internalTerm(point)
     }
     if (typeof point === "object") {
-      var shapeMap = point;
+      const shapeMap = point;
       if (this.options.results === "api") {
         return shapeMap.map(pair => {
-          var time = new Date();
-          var res = this.validate(db, pair.node, pair.shape, label, tracker); // really tracker and seen
+          let time = new Date();
+          const res = this.validate(pair.node, pair.shape, label, tracker); // really tracker and seen
           time = new Date() - time;
           return {
             node: pair.node,
@@ -325,14 +306,14 @@ function ShExValidator_constructor(schema, options) {
           };
         });
       }
-      var results = shapeMap.reduce((ret, pair) => {
-        var res = this.validate(db, pair.node, pair.shape, label, tracker, subGraph); // really tracker and seen
+      const results = shapeMap.reduce((ret, pair) => {
+        const res = this.validate(pair.node, pair.shape, label, tracker, subGraph); // really tracker and seen
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
       }, {passes: [], failures: []});
       if (false && this.options.results === "api") {
-        var ret = {};
+        const ret = {};
         function _add (n, s, r) {
           if (!(n in ret)) {
             ret[n] = [{shape: s, result: r}];
@@ -357,7 +338,7 @@ function ShExValidator_constructor(schema, options) {
       }
     }
 
-    var outside = tracker === undefined;
+    const outside = tracker === undefined;
     // logging stuff
     if (!tracker)
       tracker = this.emptyTracker();
@@ -366,7 +347,7 @@ function ShExValidator_constructor(schema, options) {
         runtimeError("start production not defined");
     }
 
-    var shape = null;
+    let shape = null;
     if (label == Start) {
       shape = schema.start;
     } else if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
@@ -376,13 +357,15 @@ function ShExValidator_constructor(schema, options) {
     } else {
       runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
+
+    // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
-      return this._validateShapeDecl(db, point, shape, Start, 0, tracker, seen);
+      return this._validateShapeDecl(point, shape, Start, 0, tracker, seen);
 
     if (seen === undefined)
       seen = {};
-    var seenKey = point + "@" + (label === Start ? "_: -start-" : label);
-    if (!subGraph) {
+    const seenKey = point + "@" + (label === Start ? "_: -start-" : label);
+    if (!subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
       if (seenKey in seen)
         return tracker.recurse({
           type: "Recursion",
@@ -394,29 +377,85 @@ function ShExValidator_constructor(schema, options) {
       seen[seenKey] = { point: point, shape: label };
       tracker.enter(point, label);
     }
+    const ret = this._validateDescendants(point, label, 0, tracker, seen, subGraph);
+    if (!subGraph) {
+      tracker.exit(point, label, ret);
+      delete seen[seenKey];
+      if ("known" in this)
+        this.known[seenKey] = ret;
+    }
+    if ("startActs" in schema && outside) {
+      ret.startActs = schema.startActs;
+    }
+    return ret;
+  }
 
-    function schemaExtensions (schema) {
-      var abstractness = {};
-      var extensions = Hierarchy.create();
+  this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, subGraph, allowAbstract) {
+    if (subGraph) // Shape inference doesn't apply when validating base shapes.
+      return this._validateShapeDecl(point, index.shapeExprs[shapeLabel], shapeLabel, 0, tracker, seen, subGraph);
+
+    // Find all non-abstract shapeExprs extended with label. 
+    let candidates = [shapeLabel];
+    candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+    // Uniquify list.
+    for (let i = candidates.length - 1; i >= 0; --i) {
+      if (candidates.indexOf(candidates[i]) < i)
+        candidates.splice(i, 1);
+    }
+    // Filter out abstract shapes.
+    if (!allowAbstract)
+      candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
+
+    // Aggregate results in a SolutionList or FailureList.
+    const results = candidates.reduce((ret, candidateShapeLabel) => {
+      const shapeExpr = index.shapeExprs[candidateShapeLabel];
+      const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, subGraph);
+      return "errors" in res ?
+        { passes: ret.passes, failures: ret.failures.concat(res) } :
+        { passes: ret.passes.concat(res), failures: ret.failures } ;
+
+    }, {passes: [], failures: []});
+    let ret;
+    if (results.passes.length > 0) {
+      ret = results.passes.length !== 1 ?
+        { type: "SolutionList", solutions: results.passes } :
+      results.passes [0];
+    } else if (results.failures.length > 0) {
+      ret = results.failures.length !== 1 ?
+        { type: "FailureList", errors: results.failures } :
+      results.failures [0];
+    } else {
+      ret = {
+        type: "AbstractShapeFailure",
+        shape: shapeLabel,
+        errors: shapeLabel + " has no non-abstract children"
+      };
+    }
+    return ret;
+
+    // @TODO move to Vistior.index
+    function indexExtensions (schema) {
+      const abstractness = {};
+      const extensions = Hierarchy.create();
       makeSchemaVisitor().visitSchema(schema);
       return extensions.children;
 
       function makeSchemaVisitor (schema) {
-        var schemaVisitor = ShExUtil.Visitor();
-        var curLabel;
-        var curAbstract;
-        var oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
+        const schemaVisitor = ShExUtil.Visitor();
+        let curLabel;
+        let curAbstract;
+        const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
         schemaVisitor.visitShapeDecl = function (decl) {
           curLabel = decl.id;
           curAbstract = decl.abstract;
           abstractness[decl.id] = decl.abstract;
           return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
         };
-        var oldVisitShape = schemaVisitor.visitShape;
+        const oldVisitShape = schemaVisitor.visitShape;
         schemaVisitor.visitShape = function (shape) {
           if ("extends" in shape) {
             shape.extends.forEach(ext => {
-              var extendsVisitor = ShExUtil.Visitor();
+              const extendsVisitor = ShExUtil.Visitor();
               extendsVisitor.visitShapeRef = function (parent) {
                 extensions.add(parent, curLabel);
                 // makeSchemaVisitor().visitSchema(schema);
@@ -430,68 +469,23 @@ function ShExValidator_constructor(schema, options) {
         return schemaVisitor;
       }
     }
-    // Get derived shapes.
-    var candidates = [label];
-    if (!subGraph) {
-      candidates = candidates.concat(schemaExtensions(this.schema)[label] || []);
-      // Uniquify list.
-      for (var i = candidates.length - 1; i >= 0; --i) {
-        if (candidates.indexOf(candidates[i]) < i)
-          candidates.splice(i, 1);
-      }
-      // Filter out abstract shapes.
-      candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
-    }
-    var results = candidates.reduce((ret, label) => {
-      var shapeExpr = index.shapeExprs[label];
-      var res = this._validateShapeDecl(db, point, shapeExpr, label, 0, tracker, seen, subGraph);
-      return "errors" in res ?
-        { passes: ret.passes, failures: ret.failures.concat(res) } :
-        { passes: ret.passes.concat(res), failures: ret.failures } ;
-
-    }, {passes: [], failures: []});
-    var ret;
-    if (results.passes.length > 0) {
-      ret = results.passes.length !== 1 ?
-        { type: "SolutionList", solutions: results.passes } :
-      results.passes [0];
-    } else if (results.failures.length > 0) {
-      ret = results.failures.length !== 1 ?
-        { type: "FailureList", errors: results.failures } :
-      results.failures [0];
-    } else {
-      ret = {
-        type: "AbstractShapeFailure",
-        shape: label,
-        errors: label + " has no non-abstract children"
-      };
-    }
-    if (!subGraph) {
-      tracker.exit(point, label, ret);
-      delete seen[seenKey];
-      // Don't cache EXTENDS validations as they aren't testing the neighborhood.
-      if ("known" in this)
-        this.known[seenKey] = ret;
-    }
-    if ("startActs" in schema && outside) {
-      ret.startActs = schema.startActs;
-    }
-    return ret;
   }
 
-  this._validateShapeDecl = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
-    var expr = shapeExpr.type === "ShapeDecl" ? shapeExpr.shapeExpr : shapeExpr;
-    return this._validateShapeExpr(db, point, expr, shapeLabel, depth, tracker, seen, subgraph);
+  this._validateShapeDecl = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
+    const expr = shapeExpr.type === "ShapeDecl" ? shapeExpr.shapeExpr : shapeExpr;
+    return this._validateShapeExpr(point, expr, shapeLabel, depth, tracker, seen, subgraph);
   }
 
-  this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
+  this._validateShapeExpr = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
     if (point === "")
       throw Error("validation needs a valid focus node");
+    let ret = null
     if (typeof shapeExpr === "string") { // ShapeRef
-      return this._validateShapeDecl(db, point, index.shapeExprs[shapeExpr], shapeExpr, depth, tracker, seen, subgraph);
+      // ret = this._validateShapeDecl(point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, tracker, seen, subgraph);
+      ret = this._validateDescendants(point, shapeExpr, depth, tracker, seen, subgraph, true);
     } else if (shapeExpr.type === "NodeConstraint") {
-      var sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-      return sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
+      const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      ret = sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
         type: "Failure",
         node: ldify(point),
         shape: shapeLabel,
@@ -509,46 +503,57 @@ function ShExValidator_constructor(schema, options) {
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      return this._validateShape(db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
+      ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
     } else if (shapeExpr.type === "ShapeExternal") {
-      return this.options.validateExtern(db, point, shapeLabel, tracker, seen);
+      ret = this.options.validateExtern(point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
-      var errors = [];
-      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        var nested = shapeExpr.shapeExprs[i];
-        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, tracker, seen, subgraph);
+      const errors = [];
+      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        const nested = shapeExpr.shapeExprs[i];
+        const sub = this._validateShapeExpr(point, nested, shapeLabel, depth, tracker, seen, subgraph);
         if ("errors" in sub)
           errors.push(sub);
         else
           return { type: "ShapeOrResults", solution: sub };
       }
-      return { type: "ShapeOrFailure", errors: errors };
+      ret = { type: "ShapeOrFailure", errors: errors };
     } else if (shapeExpr.type === "ShapeNot") {
-      var sub = this._validateShapeExpr(db, point, shapeExpr.shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
+      const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
       if ("errors" in sub)
-          return { type: "ShapeNotResults", solution: sub };
+          ret = { type: "ShapeNotResults", solution: sub };
         else
-          return { type: "ShapeNotFailure", errors: sub };
+          ret = { type: "ShapeNotFailure", errors: sub };
     } else if (shapeExpr.type === "ShapeAnd") {
-      var passes = [];
-      var errors = [];
-      for (var i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        var nested = shapeExpr.shapeExprs[i];
-        var sub = this._validateShapeExpr(db, point, nested, shapeLabel, depth, tracker, seen, subgraph);
+      const passes = [];
+      const errors = [];
+      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+        const nested = shapeExpr.shapeExprs[i];
+        const sub = this._validateShapeExpr(point, nested, shapeLabel, depth, tracker, seen, subgraph);
         if ("errors" in sub)
           errors.push(sub);
         else
           passes.push(sub);
       }
-      if (errors.length > 0) {
-        return  { type: "ShapeAndFailure", errors: errors};
-      }
-      return { type: "ShapeAndResults", solutions: passes };
-    } else
+      if (errors.length > 0)
+        ret = { type: "ShapeAndFailure", errors: errors };
+      else
+        ret = { type: "ShapeAndResults", solutions: passes };
+    } else {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
+    }
+
+    if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
+        &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
+        && !("errors" in ret) && "semActs" in shapeExpr) {
+      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({node: point}, ret), ret)
+      if (semActErrors.length)
+        // some semAct aborted
+        return { type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors};
+    }
+    return ret;
   }
 
-  this._validateShape = function (db, point, shape, shapeLabel, depth, tracker, seen, subgraph) {
+  this._validateShape = function (point, shape, shapeLabel, depth, tracker, seen, subgraph) {
     const _ShExValidator = this;
     const valParms = { db, shapeLabel, depth, tracker, seen };
 
@@ -610,18 +615,14 @@ function ShExValidator_constructor(schema, options) {
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
-          t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
-          extras.indexOf(i) === -1; // wasn't in EXTRAs.
+          return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
+            tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
+            extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
           errors.push({
-            errors: [
-              {
-                type: "ClosedShapeViolation",
-                unexpectedTriples: unexpectedTriples
-              }
-            ]
+            type: "ClosedShapeViolation",
+            unexpectedTriples: unexpectedTriples
           });
       }
 
@@ -646,16 +647,16 @@ function ShExValidator_constructor(schema, options) {
         }
       }
       if ("errors" in results)
-        errors.push({ errors: results.errors });
+        [].push.apply(errors, results.errors);
 
       const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, results, possibleRet)
+        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
-          errors.push({ errors: semActErrors });
+          [].push.apply(errors, semActErrors);
       }
 
       partitionErrors.push(errors)
@@ -676,7 +677,7 @@ function ShExValidator_constructor(schema, options) {
 
     // Report only last errors until we have a better idea.
     const lastErrors = partitionErrors[partitionErrors.length - 1];
-    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0].errors : lastErrors);
+    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
     if (errors.length > 0)
       ret = {
         type: "Failure",
@@ -772,7 +773,7 @@ function ShExValidator_constructor(schema, options) {
       const extend = expr.extends[eNo];
       const subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      const sub = _ShExValidator._errorsMatchingShapeExpr(point, extend, valParms, subgraph);
+      const sub = _ShExValidator.validate(point, extend, valParms.tracker, valParms.seen, subgraph)
       if ("errors" in sub)
         errors.push(sub);
       else
@@ -798,7 +799,7 @@ function ShExValidator_constructor(schema, options) {
         // same predicate are aggregated into a single TC with the maximum
         // cardinality span. (@@Does this actually reduce permutations?)
         // tests: Extend3G-pass
-        var ins = {}, outs = {};
+        const ins = {}, outs = {};
         visitTripleConstraints(se, ins, outs);
 
         [ins, outs].forEach(directionIndex => {
@@ -817,10 +818,10 @@ function ShExValidator_constructor(schema, options) {
      * @outs - outgoing arcs
      */
     function visitTripleConstraints (expr, ins, outs) {
-      var visitor = ShExUtil.Visitor();
-      var outerMin = 1;
-      var outerMax = 1;
-      var oldVisitOneOf = visitor.visitOneOf;
+      const visitor = ShExUtil.Visitor();
+      let outerMin = 1;
+      let outerMax = 1;
+      const oldVisitOneOf = visitor.visitOneOf;
 
       // Override visitShapeRef to follow references.
       // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
@@ -843,8 +844,8 @@ function ShExValidator_constructor(schema, options) {
 
       // Any TC inside a OneOf implicitly has a min cardinality of 0.
       visitor.visitOneOf = function (expr) {
-        var oldOuterMin = outerMin;
-        var oldOuterMax = outerMax;
+        const oldOuterMin = outerMin;
+        const oldOuterMax = outerMax;
         outerMin = 0;
         oldVisitOneOf.call(visitor, expr);
         outerMin = oldOuterMin;
@@ -854,8 +855,8 @@ function ShExValidator_constructor(schema, options) {
       // Synthesize a TripleConstraint with the implicit cardinality.
       visitor.visitTripleConstraint = function (expr) {
         const idx = expr.inverse ? ins : outs; // pick an index
-        var min = "min" in expr ? expr.min : 1; min = min * outerMin;
-        var max = "max" in expr ? expr.max : 1; max = max * outerMax;
+        let min = "min" in expr ? expr.min : 1; min = min * outerMin;
+        let max = "max" in expr ? expr.max : 1; max = max * outerMax;
         idx[expr.predicate] = {
           type: "TripleConstraint",
           predicate: expr.predicate,
@@ -873,38 +874,38 @@ function ShExValidator_constructor(schema, options) {
   }
 
   this._triplesMatchingShapeExpr = function (triples, constraint, valParms) {
-    var _ShExValidator = this;
-    var misses = [];
-    var hits = [];
+    const _ShExValidator = this;
+    const misses = [];
+    const hits = [];
     triples.forEach(function (triple) {
-      var value = constraint.inverse ? triple.subject : triple.object;
-      var sub;
-      var oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
-      var errors = constraint.valueExpr === undefined ?
+      const value = constraint.inverse ? triple.subject : triple.object;
+      let sub;
+      const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
+      const errors = constraint.valueExpr === undefined ?
           undefined :
           (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms)).errors;
       if (!errors) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
         _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-        misses.push({triple: triple, errors: errors});
+        misses.push({triple: triple, errors: sub});
       }
     });
     return { hits: hits, misses: misses };
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, subgraph) {
-    var _ShExValidator = this;
+    const _ShExValidator = this;
     if (typeof valueExpr === "string") { // ShapeRef
-      return _ShExValidator.validate(valParms.db, value, valueExpr, valParms.tracker, valParms.seen, subgraph);
+      return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen, subgraph);
     } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
-      return _ShExValidator._validateShapeExpr(valParms.db, value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, subgraph)
+      return _ShExValidator._validateShapeExpr(value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, subgraph)
     } else if (valueExpr.type === "ShapeOr") {
-      var errors = [];
-      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = valueExpr.shapeExprs[i];
-        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, subgraph);
+      const errors = [];
+      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        const nested = valueExpr.shapeExprs[i];
+        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, subgraph);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -912,10 +913,10 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeOrFailure", errors: errors };
     } else if (valueExpr.type === "ShapeAnd") {
-      var passes = [];
-      for (var i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        var nested = valueExpr.shapeExprs[i];
-        var sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, subgraph);
+      const passes = [];
+      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
+        const nested = valueExpr.shapeExprs[i];
+        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, subgraph);
         if ("errors" in sub)
           return { type: "ShapeAndFailure", errors: [sub] };
         else
@@ -923,10 +924,10 @@ function ShExValidator_constructor(schema, options) {
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else if (valueExpr.type === "ShapeNot") {
-      var sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, subgraph);
+      const sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, subgraph);
       // return sub.errors && sub.errors.length ? {} : {
       //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
-      var ret = Object.assign({
+      const ret = Object.assign({
         type: null,
         focus: value
       }, valueExpr);
@@ -947,15 +948,15 @@ function ShExValidator_constructor(schema, options) {
    * expression without checking shape references.
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
-    var errors = [];
-    var label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
+    const errors = [];
+    const label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
       ShExTerm.isBlank(value) ? value.substring(2) :
       value;
-    var dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    var numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
+    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
+    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
-      var errorStr = Array.prototype.join.call(arguments, "");
+      const errorStr = Array.prototype.join.call(arguments, "");
       errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
       return false;
     }
@@ -1005,7 +1006,7 @@ function ShExValidator_constructor(schema, options) {
       if (valueExpr.values) {
         if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          var ld = ldify(value);
+          const ld = ldify(value);
           if (v.type === "Language") {
             return v.languageTag === ld.language; // @@ use equals/normalizeTest
           }
@@ -1023,7 +1024,7 @@ function ShExValidator_constructor(schema, options) {
             if (typeof valueConstraint === "object" && !("value" in valueConstraint)) { // isTerm me -- strike "value" in
               if (!("type" in valueConstraint))
                 runtimeError("expected "+JSON.stringify(valueConstraint)+" to have a 'type' attribute.");
-              var stemRangeTypes = [
+              const stemRangeTypes = [
                 "Language",
                 "IriStem",      "LiteralStem",      "LanguageStem",
                 "IriStemRange", "LiteralStemRange", "LanguageStemRange"
@@ -1078,7 +1079,7 @@ function ShExValidator_constructor(schema, options) {
                   if (!isTerm(c)) {
                     if (!("type" in c))
                       runtimeError("expected "+JSON.stringify(c)+" to have a 'type' attribute.");
-                    var stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+                    const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
                     if (stemTypes.indexOf(c.type) === -1)
                       runtimeError("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'.");
                     return startsWith(value, c.stem);
@@ -1099,7 +1100,7 @@ function ShExValidator_constructor(schema, options) {
     }
 
     if ("pattern" in valueExpr) {
-      var regexp = "flags" in valueExpr ?
+      const regexp = "flags" in valueExpr ?
 	  new RegExp(valueExpr.pattern, valueExpr.flags) :
 	  new RegExp(valueExpr.pattern);
       if (!(getLexicalValue(value).match(regexp)))
@@ -1135,7 +1136,7 @@ function ShExValidator_constructor(schema, options) {
         }
       }
     });
-    var ret = {
+    const ret = {
       type: null,
       focus: value,
       shapeExpr: valueExpr
@@ -1174,12 +1175,12 @@ function ShExValidator_constructor(schema, options) {
      * @return {bool} false if any result was false.
      */
     dispatchAll: function (semActs, ctx, resultsArtifact) {
-      var _semActHanlder = this;
+      const _semActHanlder = this;
       return semActs.reduce(function (ret, semAct) {
         if (ret.length === 0 && semAct.name in _semActHanlder.handlers) {
-          var code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
-          var existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
-          var extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
+          const code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
+          const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
+          const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
           const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
           if (typeof response === 'boolean') {
             if (!response)
@@ -1203,127 +1204,14 @@ function ShExValidator_constructor(schema, options) {
   };
 }
 
-/* _compileShapeToAST - compile a shape expression to an abstract syntax tree.
- *
- * currently tested but not used.
- */
-function _compileShapeToAST (expression, tripleConstraints, schema) {
-
-  function Epsilon () {
-    this.type = "Epsilon";
-  }
-
-  function TripleConstraint (ordinal, predicate, inverse, negated, valueExpr) {
-    this.type = "TripleConstraint";
-    // this.ordinal = ordinal; @@ does 1card25
-    this.inverse = !!inverse;
-    this.negated = !!negated;
-    this.predicate = predicate;
-    if (valueExpr !== undefined)
-      this.valueExpr = valueExpr;
-  }
-
-  function Choice (disjuncts) {
-    this.type = "Choice";
-    this.disjuncts = disjuncts;
-  }
-
-  function EachOf (conjuncts) {
-    this.type = "EachOf";
-    this.conjuncts = conjuncts;
-  }
-
-  function SemActs (expression, semActs) {
-    this.type = "SemActs";
-    this.expression = expression;
-    this.semActs = semActs;
-  }
-
-  function KleeneStar (expression) {
-    this.type = "KleeneStar";
-    this.expression = expression;
-  }
-
-  function _compileExpression (expr, schema) {
-    var repeated, container;
-
-    /* _repeat: map expr with a min and max cardinality to a corresponding AST with Groups and Stars.
-       expr 1 1 => expr
-       expr 0 1 => Choice(expr, Eps)
-       expr 0 3 => Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps)
-       expr 2 5 => EachOf(expr, expr, Choice(EachOf(expr, Choice(EachOf(expr, Choice(expr, EPS)), Eps)), Eps))
-       expr 0 * => KleeneStar(expr)
-       expr 1 * => EachOf(expr, KleeneStar(expr))
-       expr 2 * => EachOf(expr, expr, KleeneStar(expr))
-
-       @@TODO: favor Plus over Star if Epsilon not in expr.
-    */
-    function _repeat (expr, min, max) {
-      if (min === undefined) { min = 1; }
-      if (max === undefined) { max = 1; }
-
-      if (min === 1 && max === 1) { return expr; }
-
-      var opts = max === UNBOUNDED ?
-        new KleeneStar(expr) :
-        _seq(max - min).reduce(function (ret, elt, ord) {
-          return ord === 0 ?
-            new Choice([expr, new Epsilon]) :
-            new Choice([new EachOf([expr, ret]), new Epsilon]);
-        }, undefined);
-
-      var reqd = min !== 0 ?
-        new EachOf(_seq(min).map(function (ret) {
-          return expr; // @@ something with ret
-        }).concat(opts)) : opts;
-      return reqd;
-    }
-
-    if (typeof expr === "string") { // Inclusion
-      var included = schema._index.tripleExprs[expr].expression;
-      return _compileExpression(included, schema);
-    }
-
-    else if (expr.type === "TripleConstraint") {
-      // predicate, inverse, negated, valueExpr, annotations, semActs, min, max
-      var valueExpr = "valueExprRef" in expr ?
-        schema.valueExprDefns[expr.valueExprRef] :
-        expr.valueExpr;
-      var ordinal = tripleConstraints.push(expr)-1;
-      var tp = new TripleConstraint(ordinal, expr.predicate, expr.inverse, expr.negated, valueExpr);
-      repeated = _repeat(tp, expr.min, expr.max);
-      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else if (expr.type === "OneOf") {
-      container = new Choice(expr.expressions.map(function (e) {
-        return _compileExpression(e, schema);
-      }));
-      repeated = _repeat(container, expr.min, expr.max);
-      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else if (expr.type === "EachOf") {
-      container = new EachOf(expr.expressions.map(function (e) {
-        return _compileExpression(e, schema);
-      }));
-      repeated = _repeat(container, expr.min, expr.max);
-      return expr.semActs ? new SemActs(repeated, expr.semActs) : repeated;
-    }
-
-    else throw Error("unexpected expr type: " + expr.type);
-  }
-
-  return expression ? _compileExpression(expression, schema) : new Epsilon();
-}
-
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function crossProduct(sets, emptyValue) {
-  var n = sets.length, carets = [], args = null;
+  const n = sets.length, carets = [];
+  let args = null;
 
   function init() {
     args = [];
-    for (var i = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
       carets[i] = 0;
       args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
     }
@@ -1339,7 +1227,7 @@ function crossProduct(sets, emptyValue) {
       init();
       return true;
     }
-    var i = n - 1;
+    let i = n - 1;
     carets[i]++;
     if (carets[i] < sets[i].length) {
       args[i] = sets[i][carets[i]];
@@ -1372,7 +1260,7 @@ function crossProduct(sets, emptyValue) {
 /* N3jsTripleToString - simple toString function to make N3.js's triples
  * printable.
  */
-var N3jsTripleToString = function () {
+const N3jsTripleToString = function () {
   function fmt (n) {
     return ShExTerm.isLiteral(n) ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
@@ -1404,7 +1292,7 @@ var N3jsTripleToString = function () {
 function indexNeighborhood (triples) {
   return {
     byPredicate: triples.reduce(function (ret, t) {
-      var p = t.predicate;
+      const p = t.predicate;
       if (!(p in ret))
         ret[p] = [];
       ret[p].push(t);
@@ -1425,21 +1313,19 @@ function indexNeighborhood (triples) {
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.
  */
 function sparqlOrder (l, r) {
-  var [lprec, rprec] = [l, r].map(
+  const [lprec, rprec] = [l, r].map(
     x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
   );
   return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
 }
 
-/* Return a list of n ""s.
+/* Return a list of n `undefined`s.
  *
  * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
  * never calls f.
  */
 function _seq (n) {
-  return n === 0 ?
-    [] :
-    Array(n).join(" ").split(/ /); // hahaha, javascript, you suck.
+  return Array.from(Array(n)); // hahaha, javascript, you suck.
 }
 
 /* Expect property p with value v in object o
@@ -1454,8 +1340,8 @@ function expect (o, p, v) {
 function noop () {  }
 
 function runtimeError () {
-  var errorStr = Array.prototype.join.call(arguments, "");
-  var e = new Error(errorStr);
+  const errorStr = Array.prototype.join.call(arguments, "");
+  const e = new Error(errorStr);
   Error.captureStackTrace(e, runtimeError);
   throw e;
 }
@@ -1473,4 +1359,4 @@ function runtimeError () {
 
 // Export the `ShExValidator` class as a whole.
 if (typeof require !== "undefined" && typeof exports !== "undefined")
-  module.exports = ShExValidator;
+  module.exports = ShExValidatorCjsModule;

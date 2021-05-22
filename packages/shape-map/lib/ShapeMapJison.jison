@@ -8,17 +8,17 @@
     ShapeMap parser in the Jison parser generator format.
   */
 
-  var ShapeMap = require("./ShapeMapSymbols");
+  const ShapeMap = require("./ShapeMapSymbols");
 
   // Common namespaces and entities
-  var XSD = 'http://www.w3.org/2001/XMLSchema#',
+  const XSD = 'http://www.w3.org/2001/XMLSchema#',
       XSD_INTEGER  = XSD + 'integer',
       XSD_DECIMAL  = XSD + 'decimal',
       XSD_FLOAT   = XSD + 'float',
       XSD_DOUBLE   = XSD + 'double',
       XSD_BOOLEAN  = XSD + 'boolean';
 
-  var numericDatatypes = [
+  const numericDatatypes = [
       XSD + "integer",
       XSD + "decimal",
       XSD + "float",
@@ -40,26 +40,26 @@
       XSD + "positiveInteger"
   ];
 
-  var absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
-  var numericFacets = ["mininclusive", "minexclusive",
+  const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
 
   // Extends a base object with properties of other objects
-  function extend(base) {
+  function extend (base) {
     if (!base) base = {};
-    for (var i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-      for (var name in arg)
+    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+      for (let name in arg)
         base[name] = arg[name];
     return base;
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:58 with
-  //   s/this\./Parser./g
+  //   s/this\./ShapeMapJisonParser./g
   // ### `_setSchemaBase` sets the base IRI to resolve relative IRIs.
-  Parser._setSchemaBase = function (baseIRI) {
+  ShapeMapJisonParser._setSchemaBase = function (baseIRI) {
     if (!baseIRI)
       baseIRI = null;
 
@@ -68,14 +68,14 @@
     //   throw new Error('Invalid base IRI ' + baseIRI);
 
     // Set base IRI and its components
-    if (Parser._schemaBase = baseIRI) {
-      Parser._schemaBasePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
+    if (ShapeMapJisonParser._schemaBase = baseIRI) {
+      ShapeMapJisonParser._schemaBasePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
       baseIRI = baseIRI.match(schemeAuthority);
-      Parser._schemaBaseRoot   = baseIRI[0];
-      Parser._schemaBaseScheme = baseIRI[1];
+      ShapeMapJisonParser._schemaBaseRoot   = baseIRI[0];
+      ShapeMapJisonParser._schemaBaseScheme = baseIRI[1];
     }
   }
-  Parser._setDataBase = function (baseIRI) {
+  ShapeMapJisonParser._setDataBase = function (baseIRI) {
     if (!baseIRI)
       baseIRI = null;
 
@@ -84,52 +84,52 @@
     //   throw new Error('Invalid base IRI ' + baseIRI);
 
     // Set base IRI and its components
-    if (Parser._dataBase = baseIRI) {
-      Parser._dataBasePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
+    if (ShapeMapJisonParser._dataBase = baseIRI) {
+      ShapeMapJisonParser._dataBasePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
       baseIRI = baseIRI.match(schemeAuthority);
-      Parser._dataBaseRoot   = baseIRI[0];
-      Parser._dataBaseScheme = baseIRI[1];
+      ShapeMapJisonParser._dataBaseRoot   = baseIRI[0];
+      ShapeMapJisonParser._dataBaseScheme = baseIRI[1];
     }
   }
 
   // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./Parser./g
+  //   s/this\./ShapeMapJisonParser./g
   //   s/token/iri/
   // ### `_resolveSchemaIRI` resolves a relative IRI token against the base path,
   // assuming that a base path has been set and that the IRI is indeed relative.
   function _resolveSchemaIRI (iri) {
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
-    case undefined: return Parser._schemaBase;
+    case undefined: return ShapeMapJisonParser._schemaBase;
     // Resolve relative fragment IRIs against the base IRI
-    case '#': return Parser._schemaBase + iri;
+    case '#': return ShapeMapJisonParser._schemaBase + iri;
     // Resolve relative query string IRIs by replacing the query string
-    case '?': return Parser._schemaBase.replace(/(?:\?.*)?$/, iri);
+    case '?': return ShapeMapJisonParser._schemaBase.replace(/(?:\?.*)?$/, iri);
     // Resolve root-relative IRIs at the root of the base IRI
     case '/':
       // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? Parser._schemaBaseScheme : Parser._schemaBaseRoot) + _removeDotSegments(iri);
+      return (iri[1] === '/' ? ShapeMapJisonParser._schemaBaseScheme : ShapeMapJisonParser._schemaBaseRoot) + _removeDotSegments(iri);
     // Resolve all other IRIs at the base IRI's path
     default: {
-      return _removeDotSegments(Parser._schemaBasePath + iri);
+      return _removeDotSegments(ShapeMapJisonParser._schemaBasePath + iri);
     }
     }
   }
   function _resolveDataIRI (iri) {
     switch (iri[0]) {
     // An empty relative IRI indicates the base IRI
-    case undefined: return Parser._dataBase;
+    case undefined: return ShapeMapJisonParser._dataBase;
     // Resolve relative fragment IRIs against the base IRI
-    case '#': return Parser._dataBase + iri;
+    case '#': return ShapeMapJisonParser._dataBase + iri;
     // Resolve relative query string IRIs by replacing the query string
-    case '?': return Parser._dataBase.replace(/(?:\?.*)?$/, iri);
+    case '?': return ShapeMapJisonParser._dataBase.replace(/(?:\?.*)?$/, iri);
     // Resolve root-relative IRIs at the root of the base IRI
     case '/':
       // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? Parser._dataBaseScheme : Parser._dataBaseRoot) + _removeDotSegments(iri);
+      return (iri[1] === '/' ? ShapeMapJisonParser._dataBaseScheme : ShapeMapJisonParser._dataBaseRoot) + _removeDotSegments(iri);
     // Resolve all other IRIs at the base IRI's path
     default: {
-      return _removeDotSegments(Parser._dataBasePath + iri);
+      return _removeDotSegments(ShapeMapJisonParser._dataBasePath + iri);
     }
     }
   }
@@ -141,7 +141,7 @@
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    var result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -197,8 +197,8 @@
   }
 
   function obj() {
-    var ret = {  };
-    for (var i = 0; i < arguments.length; i+= 2) {
+    const ret = {  };
+    for (let i = 0; i < arguments.length; i+= 2) {
       ret[arguments[i]] = arguments[i+1];
     }
     return ret;
@@ -213,17 +213,17 @@
   function blank() {
     return '_:b' + blankId++;
   };
-  var blankId = 0;
-  Parser._resetBlanks = function () { blankId = 0; }
-  Parser.reset = function () {
-    Parser._prefixes = Parser._imports = Parser.valueExprDefns = Parser.shapes = Parser.productions = Parser.start = Parser.startActs = null; // Reset state.
-    Parser._schemaBase = Parser._schemaBasePath = Parser._schemaBaseRoot = Parser._schemaBaseIRIScheme = null;
+  const blankId = 0;
+  ShapeMapJisonParser._resetBlanks = function () { blankId = 0; }
+  ShapeMapJisonParser.reset = function () {
+    ShapeMapJisonParser._prefixes = ShapeMapJisonParser._imports = ShapeMapJisonParser.valueExprDefns = ShapeMapJisonParser.shapes = ShapeMapJisonParser.productions = ShapeMapJisonParser.start = ShapeMapJisonParser.startActs = null; // Reset state.
+    ShapeMapJisonParser._schemaBase = ShapeMapJisonParser._schemaBasePath = ShapeMapJisonParser._schemaBaseRoot = ShapeMapJisonParser._schemaBaseIRIScheme = null;
   }
-  var _fileName; // for debugging
-  Parser._setFileName = function (fn) { _fileName = fn; }
+  let _fileName; // for debugging
+  ShapeMapJisonParser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
-  var stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
+  const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
                                    't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
       pnameEscapeReplacements = {
         '\\': '\\', "'": "'", '"': '"',
@@ -241,16 +241,22 @@
   }
 
   function unescapeLangString(string, trimLength) {
-    var at = string.lastIndexOf("@");
-    var lang = string.substr(at);
+    const at = string.lastIndexOf("@");
+    const lang = string.substr(at);
     string = string.substr(0, at);
-    var u = unescapeString(string, trimLength);
+    const u = unescapeString(string, trimLength);
     return extend(u, obj("@language", lang.substr(1).toLowerCase()));
   }
 
   function error (msg) {
-    Parser.reset();
+    ShapeMapJisonParser.reset();
     throw new Error(msg);
+  }
+
+  // Parse a prefix out of a PName or throw Error
+  function parsePName (pname, prefixes) {
+    const namePos = pname.indexOf(':');
+    return expandPrefix(prefixes, pname.substr(0, namePos)) + unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   // Expand declared prefix or throw Error
@@ -262,32 +268,32 @@
 
   // Add a shape to the map
   function addShape (label, shape) {
-    if (Parser.productions && label in Parser.productions)
+    if (ShapeMapJisonParser.productions && label in ShapeMapJisonParser.productions)
       error("Structural error: "+label+" is a shape");
-    if (!Parser.shapes)
-      Parser.shapes = {};
-    if (label in Parser.shapes) {
-      if (Parser.options.duplicateShape === "replace")
-        Parser.shapes[label] = shape;
-      else if (Parser.options.duplicateShape !== "ignore")
+    if (!ShapeMapJisonParser.shapes)
+      ShapeMapJisonParser.shapes = {};
+    if (label in ShapeMapJisonParser.shapes) {
+      if (ShapeMapJisonParser.options.duplicateShape === "replace")
+        ShapeMapJisonParser.shapes[label] = shape;
+      else if (ShapeMapJisonParser.options.duplicateShape !== "ignore")
         error("Parse error: "+label+" already defined");
     } else
-      Parser.shapes[label] = shape;
+      ShapeMapJisonParser.shapes[label] = shape;
   }
 
   // Add a production to the map
   function addProduction (label, production) {
-    if (Parser.shapes && label in Parser.shapes)
+    if (ShapeMapJisonParser.shapes && label in ShapeMapJisonParser.shapes)
       error("Structural error: "+label+" is a shape");
-    if (!Parser.productions)
-      Parser.productions = {};
-    if (label in Parser.productions) {
-      if (Parser.options.duplicateShape === "replace")
-        Parser.productions[label] = production;
-      else if (Parser.options.duplicateShape !== "ignore")
+    if (!ShapeMapJisonParser.productions)
+      ShapeMapJisonParser.productions = {};
+    if (label in ShapeMapJisonParser.productions) {
+      if (ShapeMapJisonParser.options.duplicateShape === "replace")
+        ShapeMapJisonParser.productions[label] = production;
+      else if (ShapeMapJisonParser.options.duplicateShape !== "ignore")
         error("Parse error: "+label+" already defined");
     } else
-      Parser.productions[label] = production;
+      ShapeMapJisonParser.productions[label] = production;
   }
 
   function shapeJunction (type, container, elts) {
@@ -301,8 +307,8 @@
     }
   }
 
-  var EmptyObject = {  };
-  var EmptyShape = { type: "Shape" };
+  const EmptyObject = {  };
+  const EmptyShape = { type: "Shape" };
 
   // <?INCLUDE from ShExUtil. Factor into `rdf-token` module? ?>
   /**
@@ -310,10 +316,10 @@
    * throws: if there are any unallowed sequences
    */
   function unescapeText (string, replacements) {
-    var regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
+    const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
     try {
       string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
-        var charCode;
+        let charCode;
         if (unicode4) {
           charCode = parseInt(unicode4, 16);
           if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
@@ -326,7 +332,7 @@
           return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
         }
         else {
-          var replacement = replacements[escapedChar];
+          const replacement = replacements[escapedChar];
           if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
           return replacement;
         }
@@ -478,12 +484,12 @@ statusAndShape:
     | ATSTART	-> { shape: ShapeMap.start }
     | ATPNAME_NS	{
         $1 = $1.substr(1, $1.length-1);
-        $$ = { shape: expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1)) };
+        $$ = { shape: expandPrefix(ShapeMapJisonParser._schemaPrefixes, $1.substr(0, $1.length - 1)) };
       }
     | ATPNAME_LN	{
         $1 = $1.substr(1, $1.length-1);
-        var namePos = $1.indexOf(':');
-        $$ = { shape: expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + $1.substr(namePos + 1) };
+        const namePos = $1.indexOf(':');
+        $$ = { shape: expandPrefix(ShapeMapJisonParser._schemaPrefixes, $1.substr(0, namePos)) + $1.substr(namePos + 1) };
       }
     ;
 
@@ -590,7 +596,7 @@ _Q_O_QjsonMember_E_S_QGT_COMMA_E_S_QjsonMember_E_Star_C_E_Opt:
 jsonMember:
       STRING_LITERAL2_COLON jsonValue	{
         $$ = {  };
-        var t = $1.substr(0, $1.length - 1).trim(); // remove trailing ':' and spaces
+        const t = $1.substr(0, $1.length - 1).trim(); // remove trailing ':' and spaces
         $$[unescapeString(t, 1)["@value"]] = $2;
       }
     ;
@@ -662,37 +668,21 @@ nodePredicate:
 
 nodeIri:
       IRIREF	{
-        var unesc = unescapeText($1.slice(1,-1), {});
-        $$ = Parser._dataBase === null || absoluteIRI.test(unesc) ? unesc : _resolveDataIRI(unesc)
+        const node = unescapeText($1.slice(1,-1), {});
+        $$ = ShapeMapJisonParser._dataBase === null || absoluteIRI.test(node) ? node : _resolveDataIRI(node)
       }
-    | PNAME_LN	{
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
-    }
-    | APPINFO_COLON	{
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
-    }
-    | PNAME_NS	{
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, $1.length - 1));
-    }
+    | PNAME_LN	-> parsePName($1, ShapeMapJisonParser._dataPrefixes)
+    | APPINFO_COLON	-> parsePName($1, ShapeMapJisonParser._dataPrefixes)
+    | PNAME_NS	-> expandPrefix(ShapeMapJisonParser._dataPrefixes, $1.substr(0, $1.length - 1));
     ;
 
 shapeIri:
       IRIREF	{
-        var unesc = unescapeText($1.slice(1,-1), {});
-        $$ = Parser._schemaBase === null || absoluteIRI.test(unesc) ? unesc : _resolveSchemaIRI(unesc)
+        const shape = unescapeText($1.slice(1,-1), {});
+        $$ = ShapeMapJisonParser._schemaBase === null || absoluteIRI.test(shape) ? shape : _resolveSchemaIRI(shape)
       }
-    | PNAME_LN	{
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
-    }
-    | APPINFO_COLON	{
-        var namePos = $1.indexOf(':');
-        $$ = expandPrefix(Parser._dataPrefixes, $1.substr(0, namePos)) + unescapeText($1.substr(namePos + 1), pnameEscapeReplacements);
-    }
-    | PNAME_NS	{
-        $$ = expandPrefix(Parser._schemaPrefixes, $1.substr(0, $1.length - 1));
-    }
+    | PNAME_LN	-> parsePName($1, ShapeMapJisonParser._schemaPrefixes)
+    | APPINFO_COLON	-> parsePName($1, ShapeMapJisonParser._schemaPrefixes)
+    | PNAME_NS	-> expandPrefix(ShapeMapJisonParser._schemaPrefixes, $1.substr(0, $1.length - 1));
     ;
 

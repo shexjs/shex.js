@@ -1,24 +1,25 @@
 #!/usr/bin/env node
 
-// json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json
+// json-to-shex https://raw.githubusercontent.com/shexSpec/shexTest/main/parsedSchemas/open2dotOr1dotclose.json
 
-const ShExNode = require("@shexjs/node");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
+const N3 = require("n3");
+const ShExNode = require("@shexjs/node")({rdfjs: N3});
 
 // Generate command line interface
-var CommandLineOptions = [
+const CommandLineOptions = [
     { name: "help",  alias: "h", type: Boolean },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [] },
     { name: "prefixes",          type: String, multiple:  true, defaultValue:   [] }
 ];
-var CLI = require("command-line-args")(CommandLineOptions);
+const CLI = require("command-line-args")(CommandLineOptions);
 function abort (msg) {
   console.error(msg);
   console.error(require('command-line-usage')([
     {
       header: "json-to-shex",
-      content: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    shex-to-json https://raw.githubusercontent.com/shexSpec/shexTest/master/parsedSchemas/open2dotOr1dotclose.json" },
+      content: "load some number of schema files from web or filesystem and display as ShEx compact syntax (ShExC), for example:\n    shex-to-json https://raw.githubusercontent.com/shexSpec/shexTest/main/parsedSchemas/open2dotOr1dotclose.json" },
     {
       header: 'Options',
       optionList: CommandLineOptions
@@ -31,7 +32,7 @@ function abort (msg) {
 }
 
 // Extract user commands
-var cmds = CLI;
+const cmds = CLI;
 if (cmds.help)
     abort("");
 if (cmds.json.length === 0 && cmds.shex.length === 0) abort("no shex specified");
