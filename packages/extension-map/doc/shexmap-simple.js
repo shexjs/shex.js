@@ -784,7 +784,6 @@ function hasFocusNode () {
   });
 }
 
-let Mapper = null
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -807,7 +806,6 @@ async function callValidator (done) {
 
       currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
-      // Mapper = MapModule.register(validator, ShEx); !! need to pass to ShExWorker
       const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
       let time; // time includes overhead of worker messages.
       const created = await createValidator(inputSchema, inputData);
@@ -988,20 +986,6 @@ async function callValidator (done) {
     })
   }
 
-      function terminateWorker (evt, terminator) {
-        ShExWorker.terminate();
-        ShExWorker = new Worker("shex-simple-worker.js");
-        if (evt !== null)
-          $("#results .status").text("validation aborted").show();
-        workerUICleanup(terminator);
-      }
-
-      function workerUICleanup (terminator) {
-        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
-        $("#validate").off("click", terminator);
-        $("#validate").on("click", disableResultsAndValidate);
-      }
-
       function stopValidationButton (reject) {
         $("#validate").addClass("stoppable").text("abort (ctl-enter)");
         $("#validate").off("click", disableResultsAndValidate);
@@ -1031,6 +1015,20 @@ async function callValidator (done) {
     return logger;
   }
 }
+
+      function terminateWorker (evt, terminator) {
+        ShExWorker.terminate();
+        ShExWorker = new Worker("shexmap-simple-worker.js");
+        if (evt !== null)
+          $("#results .status").text("validation aborted").show();
+        workerUICleanup(terminator);
+      }
+
+      function workerUICleanup (terminator) {
+        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
+        $("#validate").off("click", terminator);
+        $("#validate").on("click", disableResultsAndValidate);
+      }
 
   async function renderEntry (entry) {
     const fails = entry.status === "nonconformant";
@@ -1189,54 +1187,71 @@ async function materializeAsync () {
       shape: Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with Caches.outputSchema
     }]);
 
-    const binder = Mapper.binder(resultBindings);
     await Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     // const outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
     // binder = Mapper.binder(resultBindings);
     const generatedGraph = new RdfJs.Store();
     $("#results div").empty();
     $("#results .status").text("materializing data...").show();
-    outputShapeMap.forEach(pair => {
-      try {
-        const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const res = materializer.validate(binder, pair.node, pair.shape);
-        if ("errors" in res) {
-          renderEntry( {
-            node: pair.node,
-            shape: pair.shape,
-            status: "errors" in res ? "nonconformant" : "conformant",
-            appinfo: res,
-            elapsed: -1
-          })
-          // $("#results .status").text("validation errors:").show();
-          // $("#results .status").text("synthesis errors:").show();
-          // failMessage(e, currentAction);
-        } else {
-          // console.log("g:", ShEx.Util.valToTurtle(res));
-          generatedGraph.addQuads(ShEx.Util.valToN3js(res, RdfJs.DataFactory));
+    await new Promise((resolve, reject) => {
+      const terminator = stopMaterializionButton(reject);
+      const resultGraphs = []
+      ShExWorker.onmessage = parseUpdatesAndResults;
+      ShExWorker.postMessage({
+        request: "materialize",
+        queryMap: outputShapeMap,
+        outputSchema: outputSchema,
+        resultBindings: resultBindings,
+        options: {track: LOG_PROGRESS},
+      });
+      function parseUpdatesAndResults (msg) {
+        switch (msg.data.response) {
+        case "update":
+          generatedGraph.addQuads(ShEx.Util.valToN3js(msg.data.results, RdfJs.DataFactory));
+          resultGraphs.push(msg.data.results);
+          break;
+
+        case "error":
+          if ("exception" in msg.data) {
+            results.replace("error materializing:\n" + msg.data.exception).
+              removeClass("passes fails").addClass("error");
+          } else {
+            renderEntry({
+              node: msg.data.node,
+              shape: msg.data.shape,
+              status: "errors" in msg.data.results ? "nonconformant" : "conformant",
+              appinfo: msg.data.results,
+              elapsed: -1
+            });
+          }
+          break;
+
+        case "done":
+          workerUICleanup(terminator);
+          resolve({ materializionResults: resultGraphs });
         }
-      } catch (e) {
-        console.dir(e);
       }
     });
     finishRendering();
-    $("#results .status").text("materialization results").show();
-    const writer = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
-    writer.addQuads(generatedGraph.getQuads());
-    writer.end(function (error, result) {
-      results.append(
-        $("<div/>", {class: "passes"}).append(
-          $("<span/>", {class: "shapeMap"}).append(
-            "# ",
-            $("<span/>", {class: "data"}).text($("#createRoot").val()),
-            $("<span/>", {class: "valStatus"}).text("@"),
-            $("<span/>", {class: "schema"}).text($("#outputShape").val()),
-          ),
-          $("<pre/>").text(result)
+    if (generatedGraph.size) {
+      $("#results .status").text("materialization results").show();
+      const writer = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
+      writer.addQuads(generatedGraph.getQuads());
+      writer.end(function (error, result) {
+        results.append(
+          $("<div/>", {class: "passes"}).append(
+            $("<span/>", {class: "shapeMap"}).append(
+              "# ",
+              $("<span/>", {class: "data"}).text($("#createRoot").val()),
+              $("<span/>", {class: "valStatus"}).text("@"),
+              $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+            ),
+            $("<pre/>").text(result)
+          )
         )
-      )
-      // results.append($("<pre/>").text(result));
-    });
+        // results.append($("<pre/>").text(result));
+      });
+    }
     results.finish();
     return { materializationResults: generatedGraph };
   } catch (e) {
@@ -1245,6 +1260,17 @@ async function materializeAsync () {
     // results.finish();
     return null;
   }
+
+      function stopMaterializionButton (reject) {
+        $("#materialize").addClass("stoppable").text("abort (ctl-enter)");
+        $("#materialize").off("click", materialize); // @@ disableResultsAndMaterialize
+        const terminator = function (evt) {
+          terminateWorker(evt, terminator);
+          reject(Error(`Interrupted by user click`))
+        }
+        $("#materialize").on("click", terminator);
+        return terminator;
+      }
 }
 
 function addEmptyEditMapPair (evt) {
