@@ -64,7 +64,7 @@ ShExLoader.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
     delete ob[attr];
   }
   function empty (ob) {
-    if (ob.constructor === Array) {
+    if (Array.isArray(ob)) {
       if (Object.keys(ob).length !== 0)
         throw Error("array not empty: " + JSON.stringify(ob));
     } else {

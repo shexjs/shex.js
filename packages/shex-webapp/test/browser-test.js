@@ -459,7 +459,7 @@ if (!TEST_browser) {
   })
 
 
-  xdescribe(`WEBapp ${SHEXMAP_SIMPLE}'s synthesis interface}`, function () {
+  describe(`WEBapp ${SHEXMAP_SIMPLE}'s synthesis interface}`, function () {
     const page = SHEXMAP_SIMPLE
 
     describe('another manifest', function () {
@@ -494,7 +494,7 @@ if (!TEST_browser) {
         })
       }).timeout(STARTUP_TIMEOUT)
 
-      it("should load the BPPatient 2 level example", async function () {
+      it("should load the BPPatient 2 level example", async function () {debugger
         const  schema = $('#manifestDrop').find('button').slice(3, 4)
         expect(schema.text()).to.equal('BPPatient 2 levels')
         schema.click()
@@ -613,15 +613,24 @@ function startServer () {
   }
 }
 
+const lnameToUrl = {}; // see horrible hack below
+
 class _UrlStack {
   constructor () { this.stack = []; }
   enter (rel, what) {
-    const entry = {
-      abs: this.stack.length
-        ? new URL(rel, this.base())
-        : new URL(rel), // top-most must be an absolute URL
-      rel: rel,
-      what: what,
+    let entry;
+    try {
+      entry = {
+        abs: this.stack.length
+          ? new URL(rel, this.base())
+          : new URL(rel), // top-most must be an absolute URL
+        rel: rel,
+        what: what,
+      }
+      lnameToUrl[rel] = entry;
+    } catch (e) {
+      // horrible hack for dynamically reloading workers from script.
+      entry = lnameToUrl[rel];
     }
     // const indent = ' '.repeat((this.stack.length)*2);
     // console.warn(`${what}${indent}+ ${rel}`);

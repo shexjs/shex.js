@@ -367,7 +367,7 @@ function makeManifestCache (selection) {
         // }, []);
       }
     }
-    if (textOrObj.constructor !== Array)
+    if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
@@ -787,6 +787,33 @@ async function pickData (name, dataTest, elt, listItems, side) {
   }
 }
 
+function Canceleable (stopElement, clickAction, abortText, startMessage, handler) {
+  const restoreText = stopElement.text();
+  return new Promise((resolve, reject) => {
+    stopElement.addClass("stoppable").text("abort (ctl-enter)");
+    stopElement.off("click", clickAction);
+    stopElement.on("click", cancel);
+    ShExWorker.onmessage = function (msg) {
+      return handler(msg, workerUICleanup, resolve, reject)
+    },
+    ShExWorker.postMessage(startMessage);
+
+    function cancel (evt) {
+      ShExWorker.terminate();
+      ShExWorker = new Worker("shexmap-simple-worker.js");
+      if (evt !== null)
+        $("#results .status").text(abortText).show();
+      workerUICleanup();
+      reject(Error(`Interrupted by user click`))
+    }
+
+    function workerUICleanup () {
+      stopElement.removeClass("stoppable").text(restoreText);
+      stopElement.off("click", cancel);
+      stopElement.on("click", clickAction);
+    }
+  })
+}
 
 // Control results area content.
 const results = (function () {
@@ -853,7 +880,6 @@ function hasFocusNode () {
   });
 }
 
-let Mapper = null
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -882,10 +908,26 @@ async function callValidator (done) {
 
       currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
-      // Mapper = MapModule.register(validator, ShEx); !! need to pass to ShExWorker
       const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
       let time; // time includes overhead of worker messages.
-      const created = await createValidator(inputSchema, inputData);
+      const created = await Canceleable(
+        $("#validate"),
+        disableResultsAndValidate,
+        "validator creation aborted",
+        Object.assign(
+          {
+            request: "create",
+            schema: inputSchema,
+            schemaURL: Caches.inputSchema.url || DefaultBase,
+            slurp: $("#slurp").is(":checked"),
+            /*options: { regexModule: modules["../lib/regex/nfax-val-1err"] },*/
+          },
+          "endpoint" in Caches.inputData ?
+            { endpoint: Caches.inputData.endpoint } :
+          { data: inputData.getQuads() }
+        ),
+        handleCreate
+      );
 
       // const resultsMap = USE_INCREMENTAL_RESULTS ?
       //       Util.createResults() :
@@ -902,28 +944,39 @@ async function callValidator (done) {
             ent.shape
         };
       });
-      return new Promise((resolve, reject) => {
-      const terminator = stopValidationButton(reject);
       const results = []
-      ShExWorker.onmessage = parseUpdatesAndResults;
-      ShExWorker.postMessage({
-        request: "validate",
-        queryMap: transportMap,
-        options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
-      });
+      return Canceleable(
+        $("#validate"),
+        disableResultsAndValidate,
+        "validation aborted",
+        {
+          request: "validate",
+          queryMap: transportMap,
+          options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
+        },
+        parseUpdatesAndResults
+      );
 
-      function parseUpdatesAndResults (msg) {
+      function handleCreate (msg, workerUICleanup, resolve, reject) {
+        switch (msg.data.response) {
+        case "created":
+          workerUICleanup()
+          resolve(msg.data.results);
+          break;
+        case "error":
+          const throwMe = Error(msg.data.message);
+          throwMe.stack = msg.data.stack;
+          throwMe.text = msg.data.errorText;
+          reject(throwMe);
+          break;
+        default:
+          reject(Error(`expected ${expect}, got ${JSON.stringify(msg.data)}`));
+        }
+      }
+
+      function parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
         switch (msg.data.response) {
         case "update":
-          // msg.data.results.forEach(newRes => {
-          //   const key = Util.indexKey(newRes.node, newRes.shape);
-          //   if (key in index) {
-          //     markResult(updateCells[key], newRes.status, start);
-          //   } else {
-          //     extraResult(newRes);
-          //   }
-          // });
-
           if (USE_INCREMENTAL_RESULTS) {
             // Merge into results.
             [].push.apply(results, msg.data.results)
@@ -962,12 +1015,12 @@ async function callValidator (done) {
               msg.data.results.solutions.forEach(renderEntry);
             else
               renderEntry(msg.data.results);
-            }
-        time = new Date() - time;
-        $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-        finishRendering();
-        if (done) { done() }
-          workerUICleanup(terminator);
+          }
+          time = new Date() - time;
+          $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
+          finishRendering();
+          if (done) { done() }
+          workerUICleanup();
           resolve({ validationResults: results});
           break;
 
@@ -990,18 +1043,17 @@ async function callValidator (done) {
           ShExWorker.onmessage = false;
           const e = Error(msg.data.message);
           e.stack = msg.data.stack;
-          workerUICleanup(terminator);
-        $("#results .status").text("validation errors:").show();
-        failMessage(e, currentAction);
-        console.error(e); // dump details to console.
-        if (done) { done(e) }
+          workerUICleanup();
+          $("#results .status").text("validation errors:").show();
+          failMessage(e, currentAction);
+          console.error(e); // dump details to console.
+          if (done) { done(e) }
           break;
 
         default:
           console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
         }
       }
-      })
     } else {
       const outputLanguage = Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
       $("#results .status").
@@ -1044,65 +1096,6 @@ async function callValidator (done) {
     console.error(e); // dump details to console.
     return { inputError: e };
   }
-
-  async function createValidator (inputSchema, inputData) {
-    await new Promise((resolve, reject) => {
-      const terminator = stopValidationButton(reject);
-      ShExWorker.onmessage = function (msg) {
-        $("#validate").off("click", terminator);
-        switch (msg.data.response) {
-        case "created":
-          resolve(msg.data.results);
-          break;
-        case "error":
-          const throwMe = Error(msg.data.message);
-          throwMe.stack = msg.data.stack;
-          throwMe.text = msg.data.errorText;
-          reject(throwMe);
-          break;
-        default:
-          reject(Error(`expected ${expect}, got ${JSON.stringify(msg.data)}`));
-        }
-      }
-      ShExWorker.postMessage(Object.assign(
-        {
-          request: "create",
-          schema: inputSchema,
-          schemaURL: Caches.inputSchema.url || DefaultBase,
-          slurp: $("#slurp").is(":checked")
-          /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
-        },
-        "endpoint" in Caches.inputData ?
-          { endpoint: Caches.inputData.endpoint } :
-        { data: inputData.getQuads() }
-      ));
-    })
-  }
-
-      function terminateWorker (evt, terminator) {
-        ShExWorker.terminate();
-        ShExWorker = new Worker("shex-simple-worker.js");
-        if (evt !== null)
-          $("#results .status").text("validation aborted").show();
-        workerUICleanup(terminator);
-      }
-
-      function workerUICleanup (terminator) {
-        $("#validate").removeClass("stoppable").text("validate (ctl-enter)");
-        $("#validate").off("click", terminator);
-        $("#validate").on("click", disableResultsAndValidate);
-      }
-
-      function stopValidationButton (reject) {
-        $("#validate").addClass("stoppable").text("abort (ctl-enter)");
-        $("#validate").off("click", disableResultsAndValidate);
-        const terminator = function (evt) {
-          terminateWorker(evt, terminator);
-          reject(Error(`Interrupted by user click`))
-        }
-        $("#validate").on("click", terminator);
-        return terminator;
-      }
 
   function makeConsoleTracker () {
     function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
@@ -1200,11 +1193,9 @@ async function callValidator (done) {
     fixedMapEntry.find("a").attr("href", "#" + anchor);
     fixedMapEntry.attr("title", entry.elapsed + " ms")
 
-    if (entry.status === "conformant") {
+    if (!fails) {
       const resultBindings = ShEx.Util.valToExtension(entry.appinfo, MapModule.url);
       await Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
-    } else {
-      await Caches.bindings.set("{}");
     }
   }
 
@@ -1309,7 +1300,7 @@ async function materializeAsync () {
       await Caches.statics.set("{  }");
     const _t = await Caches.statics.refresh();
     if (_t && Object.keys(_t) > 0) {
-      if (resultBindings.constructor !== Array)
+      if (!Array.isArray(resultBindings))
         resultBindings = [resultBindings];
       resultBindings.unshift(_t);
     }
@@ -1320,54 +1311,73 @@ async function materializeAsync () {
       shape: Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with Caches.outputSchema
     }]);
 
-    const binder = Mapper.binder(resultBindings);
     await Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
-    // const outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
-    // binder = Mapper.binder(resultBindings);
     const generatedGraph = new RdfJs.Store();
     $("#results div").empty();
     $("#results .status").text("materializing data...").show();
-    outputShapeMap.forEach(pair => {
-      try {
-        const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const res = materializer.validate(binder, pair.node, pair.shape);
-        if ("errors" in res) {
-          renderEntry( {
-            node: pair.node,
-            shape: pair.shape,
-            status: "errors" in res ? "nonconformant" : "conformant",
-            appinfo: res,
-            elapsed: -1
-          })
-          // $("#results .status").text("validation errors:").show();
-          // $("#results .status").text("synthesis errors:").show();
-          // failMessage(e, currentAction);
+
+    const resultGraphs = []
+    const materialized = await Canceleable(
+      $("#materialize"),
+      materialize,
+      "materialization aborted, re-start from validation",
+      {
+        request: "materialize",
+        queryMap: outputShapeMap,
+        outputSchema: outputSchema,
+        resultBindings: resultBindings,
+        options: {track: LOG_PROGRESS},
+      },
+      parseUpdatesAndResults
+    );
+
+    function parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
+      switch (msg.data.response) {
+      case "update":
+        generatedGraph.addQuads(ShEx.Util.valToN3js(msg.data.results, RdfJs.DataFactory));
+        resultGraphs.push(msg.data.results);
+        break;
+
+      case "error":
+        if ("exception" in msg.data) {
+          results.replace("error materializing:\n" + msg.data.exception).
+            removeClass("passes fails").addClass("error");
         } else {
-          // console.log("g:", ShEx.Util.valToTurtle(res));
-          generatedGraph.addQuads(ShEx.Util.valToN3js(res, RdfJs.DataFactory));
+          renderEntry({
+            node: msg.data.node,
+            shape: msg.data.shape,
+            status: "errors" in msg.data.results ? "nonconformant" : "conformant",
+            appinfo: msg.data.results,
+            elapsed: -1
+          });
         }
-      } catch (e) {
-        console.dir(e);
+        break;
+
+      case "done":
+        workerUICleanup();
+        resolve({ materializionResults: resultGraphs });
       }
-    });
+    }
     finishRendering();
-    $("#results .status").text("materialization results").show();
-    const writer = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
-    writer.addQuads(generatedGraph.getQuads());
-    writer.end(function (error, result) {
-      results.append(
-        $("<div/>", {class: "passes"}).append(
-          $("<span/>", {class: "shapeMap"}).append(
-            "# ",
-            $("<span/>", {class: "data"}).text($("#createRoot").val()),
-            $("<span/>", {class: "valStatus"}).text("@"),
-            $("<span/>", {class: "schema"}).text($("#outputShape").val()),
-          ),
-          $("<pre/>").text(result)
+    if (generatedGraph.size) {
+      $("#results .status").text("materialization results").show();
+      const writer = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
+      writer.addQuads(generatedGraph.getQuads());
+      writer.end(function (error, result) {
+        results.append(
+          $("<div/>", {class: "passes"}).append(
+            $("<span/>", {class: "shapeMap"}).append(
+              "# ",
+              $("<span/>", {class: "data"}).text($("#createRoot").val()),
+              $("<span/>", {class: "valStatus"}).text("@"),
+              $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+            ),
+            $("<pre/>").text(result)
+          )
         )
-      )
-      // results.append($("<pre/>").text(result));
-    });
+        // results.append($("<pre/>").text(result));
+      });
+    }
     results.finish();
     return { materializationResults: generatedGraph };
   } catch (e) {
@@ -2224,7 +2234,7 @@ async function prepareDragAndDrop () {
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
                     let parsed = JSON.parse(val);
-                    if (!(parsed.constructor === Array)) {
+                    if (!(Array.isArray(parsed))) {
                       parsed = [parsed];
                     }
                     parsed.map(elt => {
@@ -2574,7 +2584,7 @@ function bindingsToTable () {
   let vars = [];
   function varsIn (a) {
     return a.forEach(elt => {
-      if (elt.constructor === Array) {
+      if (Array.isArray(elt)) {
         varsIn(elt)
       } else {
         let tr = $("<tr/>")
@@ -2592,7 +2602,7 @@ function bindingsToTable () {
       }
     })
   }
-  varsIn(d.constructor === Array ? d : [d])
+  varsIn(Array.isArray(d) ? d : [d])
 
   vars.forEach(v => {
     thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
