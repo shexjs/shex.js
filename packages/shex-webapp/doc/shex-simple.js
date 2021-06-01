@@ -816,8 +816,9 @@ async function callValidator (done) {
           {
             request: "create",
             schema: inputSchema,
-            schemaURL: Caches.inputSchema.url || DefaultBase
-            /*, options: { regexModule: modules["../lib/regex/nfax-val-1err"] }*/
+            schemaURL: Caches.inputSchema.url || DefaultBase,
+            slurp: $("#slurp").is(":checked"),
+            /*options: { regexModule: modules["../lib/regex/nfax-val-1err"] },*/
           },
           "endpoint" in Caches.inputData ?
             { endpoint: Caches.inputData.endpoint } :
