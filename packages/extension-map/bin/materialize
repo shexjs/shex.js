@@ -130,7 +130,7 @@ Promise.all([ShExNode.load([cmds.target], [], [], [], {index: true}),
     let resultBindings2 = _dup(resultBindings1);
     const _t = _dup(statics);
     if (_t && Object.keys(_t).length > 0) {
-      if (resultBindings2.constructor !== Array)
+      if (!Array.isArray(resultBindings2))
         resultBindings2 = [resultBindings2];
       resultBindings2.unshift(_t);
     }

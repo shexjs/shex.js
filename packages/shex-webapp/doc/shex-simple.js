@@ -301,7 +301,7 @@ function makeManifestCache (selection) {
         // }, []);
       }
     }
-    if (textOrObj.constructor !== Array)
+    if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
@@ -1894,7 +1894,7 @@ async function prepareDragAndDrop () {
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
                     let parsed = JSON.parse(val);
-                    if (!(parsed.constructor === Array)) {
+                    if (!(Array.isArray(parsed))) {
                       parsed = [parsed];
                     }
                     parsed.map(elt => {

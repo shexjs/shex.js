@@ -6754,7 +6754,7 @@ function binder (tree) {
   tree = Array.isArray(tree) ? _simplify(tree) : [tree]; // expects an array
 
   // const globals = tree.reduce((r, e, idx) => {
-  //   if (Array.isArray(e)) {
+  //   if (!Array.isArray(e)) {
   //     Object.keys(e).forEach(k => {
   //       r[k] = e[k];
   //     });
