@@ -39,7 +39,7 @@ const ShapePathCjsModule = function (schema, const_iriResolver) {
      *   .search("/my:path", [schema.shapes[1]])
      */
     function search (path, context = [schema], iriResolver = const_iriResolver) {
-      if (context.constructor !== Array) {
+      if (!Array.isArray(context)) {
         context = [context]
       }
       if (path[0] === '/') {
