@@ -1185,7 +1185,7 @@ function ShExValidator_constructor(schema, db, options) {
           if (typeof response === 'boolean') {
             if (!response)
               ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
-          } else if (typeof response === 'object' && response.constructor === Array) {
+          } else if (typeof response === 'object' && Array.isArray(response)) {
             if (response.length > 0)
               ret.push({ type: "SemActFailure", errors: response })
           } else {

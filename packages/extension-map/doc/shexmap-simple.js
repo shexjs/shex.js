@@ -311,7 +311,7 @@ function makeManifestCache (selection) {
         // }, []);
       }
     }
-    if (textOrObj.constructor !== Array)
+    if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
       if ("action" in elt) {
@@ -1061,7 +1061,7 @@ async function materializeAsync () {
       await Caches.statics.set("{  }");
     const _t = await Caches.statics.refresh();
     if (_t && Object.keys(_t) > 0) {
-      if (resultBindings.constructor !== Array)
+      if (!Array.isArray(resultBindings))
         resultBindings = [resultBindings];
       resultBindings.unshift(_t);
     }
@@ -1931,7 +1931,7 @@ async function prepareDragAndDrop () {
                 if (l.type === "application/json") {
                   if (desc.location.get(0) === $("body").get(0)) {
                     let parsed = JSON.parse(val);
-                    if (!(parsed.constructor === Array)) {
+                    if (!(Array.isArray(parsed))) {
                       parsed = [parsed];
                     }
                     parsed.map(elt => {
@@ -2242,7 +2242,7 @@ function bindingsToTable () {
   let vars = [];
   function varsIn (a) {
     return a.forEach(elt => {
-      if (elt.constructor === Array) {
+      if (Array.isArray(elt)) {
         varsIn(elt)
       } else {
         let tr = $("<tr/>")
@@ -2260,7 +2260,7 @@ function bindingsToTable () {
       }
     })
   }
-  varsIn(d.constructor === Array ? d : [d])
+  varsIn(Array.isArray(d) ? d : [d])
 
   vars.forEach(v => {
     thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))

@@ -225,7 +225,7 @@ const ShExUtil = {
 
   ShExJtoAS: function (schema) {
     const _ShExUtil = this;
-    schema._prefixes = schema.prefixes || {  };
+    schema._prefixes = schema._prefixes || {  };
     schema._index = this.index(schema);
     return schema;
   },
@@ -1382,7 +1382,7 @@ const ShExUtil = {
       function crush (elt) {
         if (crushed === null)
           return elt;
-        if (elt.constructor === Array) {
+        if (Array.isArray(elt)) {
           crushed = null;
           return elt;
         }
@@ -1401,7 +1401,7 @@ const ShExUtil = {
             list.push(crush(ldify(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
-          if (nested.constructor === Array)
+          if (Array.isArray(nested))
             nested.forEach(crush);
           else
             crush(nested);
@@ -1836,7 +1836,7 @@ const ShExUtil = {
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
     } else if (val.type === "TypeMismatch") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
@@ -1850,13 +1850,13 @@ const ShExUtil = {
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(nested);
     } else if (val.type === "ShapeAndFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
     } else if (val.type === "ShapeOrFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
@@ -1885,13 +1885,13 @@ const ShExUtil = {
       return ["Unexpected property: " + val.property];
     } else if (val.type === "AbstractShapeFailure") {
       return ["Abstract Shape: " + val.shape];
-    } else if (val.constructor === Array) {
+    } else if (Array.isArray(val)) {
       return val.reduce((ret, e) => {
         const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
     } else if (val.type === "SemActFailure") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :

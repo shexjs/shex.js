@@ -117,7 +117,7 @@
 +      Caches.statics.set("{  }");
 +    var _t = Caches.statics.refresh();
 +    if (_t && Object.keys(_t) > 0) {
-+      if (resultBindings.constructor !== Array)
++      if (!Array.isArray(resultBindings))
 +        resultBindings = [resultBindings];
 +      resultBindings.unshift(_t);
 +    }
@@ -220,7 +220,7 @@
 +  let vars = [];
 +  function varsIn (a) {
 +    return a.forEach(elt => {
-+      if (elt.constructor === Array) {
++      if (Array.isArray(elt)) {
 +        varsIn(elt)
 +      } else {
 +        let tr = $("<tr/>")
