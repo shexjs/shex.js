@@ -16,9 +16,6 @@
   ],
   "license": "MIT",
   "main": "./shex-util.js",
-  "files": [
-    "./shex-util.js"
-  ],
   "engines": {
     "node": ">=0.10.0"
   },
