@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/node",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0-alpha.13",
   "description": "Shape Expressions packages for node.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/api": "^1.0.0-alpha.12",
+    "@shexjs/api": "^1.0.0-alpha.13",
     "jsonld": "^4.0.1",
     "n3": "^1.6.2",
     "node-fetch": "^2.6.0"

@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/path",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0-alpha.13",
   "description": "Shape Expressions Path Utilities.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@shexjs/term": "^1.0.0-alpha.12",
-    "@shexjs/util": "^1.0.0-alpha.12",
+    "@shexjs/util": "^1.0.0-alpha.13",
     "@ts-jison/parser": "^0.0.9"
   },
   "devDependencies": {
