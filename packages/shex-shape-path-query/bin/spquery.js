@@ -7,12 +7,10 @@ const Sp = require('shape-path-core')
 const SpGrep = require(Sp.scripts.spgrep)
 
 // data query
-const ShExValidator = require('@shexjs/validator');
 const ShExUtil = require('@shexjs/util');
-const ShExTerm = require('@shexjs/term');
-const ShExMap = require('@shexjs/extension-map');
 const ShapeMap = require('shape-map');
-const MapModule = ShExMap(ShExTerm);
+
+const SPQuery = require('../shape-path-query');
 const N3 = require("n3");
 
 
@@ -24,49 +22,17 @@ class QueryValidator {
     this.shapeMap = shapeMap;
     this.graph = readTurtle(dataFile);
   }
-  query(schema, schemaNodes) {
-    // Add ShExMap annotations to each element of the nodeSet.
-    // ShExMap binds variables which we use to capture schema matches.
-    const vars = schemaNodes.map((shexNode) => {
-      const idx = schemaNodes.indexOf(shexNode); // first occurance of shexNode
-      const varName = 'http://a.example/binding-' + idx;
-      // Pretend it's a TripleConstraint. Could be any shapeExpr or tripleExpr.
-      // @ts-ignore
-      shexNode.semActs = [{
-        "type": "SemAct",
-        "name": MapModule.url,
-        "code": `<${varName}>`
-      }];
-      return varName;
-    });
-    // Construct validator with ShapeMap semantic action handler.
-    const validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(this.graph), {});
-    const mapper = MapModule.register(validator, { ShExTerm });
-    try {
-      // Validate data against schema.
-      const schemaMeta = {
-        base: Base,
-        prefixes: {}
-      };
-      const dataMeta = schemaMeta; // cheat 'cause we're not populating them
-      const smap = ShapeMap.Parser.construct(Base, schemaMeta, dataMeta)
-            .parse(this.shapeMap);
-      const valRes = validator.validate(smap);
-      if ("errors" in valRes) {
-        throw Error(JSON.stringify(valRes, undefined, 2));
-      }
-      else {
-        // Show values extracted from data.
-        const resultBindings = ShExUtil.valToExtension(valRes, MapModule.url);
-        const values = vars.map(v => resultBindings[v]);
-        console.log(JSON.stringify(values, undefined, 2));
-      }
-    }
-    catch (e) {
-      if (e instanceof Error)
-        throw e;
-      throw Error(String(e));
-    }
+  query(schema, nodeSet) {
+    const db = ShExUtil.rdfjsDB(this.graph)
+    const schemaMeta = {
+      base: Base,
+      prefixes: {}
+    };
+    const dataMeta = schemaMeta; // cheat 'cause we're not populating them
+    const smap = ShapeMap.Parser.construct(Base, schemaMeta, dataMeta)
+          .parse(this.shapeMap);
+
+    console.log(JSON.stringify(SPQuery.shapePathQuery(schema, nodeSet, db, smap), null, 2))
   }
 }
 
