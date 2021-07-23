@@ -4,7 +4,13 @@ const Fs = require('fs');
 const Path = require('path');
 
 const Sp = require('shape-path-core')
+
+const oldDepth = process.env._INCLUDE_DEPTH
+if (oldDepth === undefined)
+  process.env._INCLUDE_DEPTH = 0
+process.env._INCLUDE_DEPTH++
 const SpGrep = require(Sp.scripts.spgrep)
+process.env._INCLUDE_DEPTH = oldDepth
 
 // data query
 const ShExUtil = require('@shexjs/util');
@@ -40,10 +46,10 @@ const cmd = SpGrep.cmd
       .option('-d, --data <dataFile>', 'data file')
       .option('-m, --shape-map <shapeMap>', 'shape map')
 
-//if (require.main === module) {
-  // test() // uncomment to run basic test
+if (require.main === module || process.env._INCLUDE_DEPTH === '0') {
+  // test() // uncomment to run a basic test
   cmd.action(run).parse()
-//}
+}
 process.exit(0)
 
 function test() {

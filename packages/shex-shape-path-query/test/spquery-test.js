@@ -44,6 +44,7 @@ function run (... command) {
   const oldArgv = process.argv
   process.argv = [process.argv[0]].concat(command)
   expect(() => {
+    process.env._INCLUDE_DEPTH = '0'
     require(command[0])
   }).to.throw(exitErrorString)
 
