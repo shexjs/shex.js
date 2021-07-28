@@ -28,6 +28,7 @@
     "@shexjs/writer": "^1.0.0-alpha.15",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
+    "dctap": "^0.0.4",
     "hierarchy-closure": "^1.2.1",
     "n3": "^1.6.2",
     "shape-map": "^1.0.0-alpha.15"
