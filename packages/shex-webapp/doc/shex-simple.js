@@ -200,19 +200,33 @@ function makeSchemaCache (selection) {
   ret.language = null;
   ret.parse = async function (text, base) {
     const isJSON = text.match(/^\s*\{/);
+    const isDCTAP = text.match(/\s*shapeID/)
     graph = isJSON ? null : tryN3(text);
     this.language =
       isJSON ? "ShExJ" :
+      isDCTAP ? "DCTAP":
       graph ? "ShExR" :
       "ShExC";
     $("#results .status").text("parsing "+this.language+" schema...").show();
     const schema =
           isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
+          isDCTAP ? await parseDcTap(text) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta, base);
     $("#results .status").hide();
     markEditMapDirty(); // ShapeMap validity may have changed.
     return schema;
+
+    async function parseDcTap (text) {
+      const dctap = new ShEx.DcTap();
+      return await new Promise((resolve, reject) => {
+        $.csv.toArrays(text, {}, (err, data) => {
+          if (err) reject(err)
+          dctap.parseRows(data, base)
+          resolve(dctap.toShEx())
+        })
+      })
+    }
 
     function tryN3 (text) {
       try {
