@@ -11,7 +11,6 @@ describe('spgrep script', () => {
     const res = run(
       '../bin/spquery.js',
       '-d', Path.join(Sp.examples, 'issue/Issue2.ttl'),
-      // '-d', Path.join(__dirname, '../examples/issue/Issue2.ttl'),
       '-m', '<http://instance.example/project1/Issue2>@<http://project.example/schema#Issue>',
       '@<http://project.example/schema#DiscItem>~<http://project.example/ns#href>'
         +',@<http://project.example/schema#Issue>'
@@ -29,7 +28,7 @@ describe('spgrep script', () => {
 
 function run (... command) {
   const exitErrorString = 'process.exit() was called.'
-  const logSpy = sinon.spy(console, 'log')
+  const logSpy = sinon.stub(console, 'log').callsFake(() => {})
   const oldExit = process.exit
   let exitCode = null
   process.exit = (exitCodeP) => {
