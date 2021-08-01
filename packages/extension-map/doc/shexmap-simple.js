@@ -163,7 +163,7 @@ function _makeCache (selection) {
     refresh: async function () {
       if (!_dirty)
         return this.parsed;
-      this.parsed = this.parse(selection.val(), this.meta.base);
+      this.parsed = await this.parse(selection.val(), this.meta.base);
       await this.parsed;
       _dirty = false;
       return this.parsed;
@@ -205,7 +205,7 @@ function makeSchemaCache (selection) {
   const ret = _makeCache(selection);
   let graph = null;
   ret.language = null;
-  ret.parse = function (text, base) {
+  ret.parse = async function (text, base) {
     const isJSON = text.match(/^\s*\{/);
     graph = isJSON ? null : tryN3(text);
     this.language =
@@ -256,7 +256,7 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
-  ret.parse = function (text, base) {
+  ret.parse = async function (text, base) {
     const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
@@ -365,7 +365,7 @@ function makeManifestCache (selection) {
     await prepareManifest(demos, url);
     $("#manifestDrop").show(); // may have been hidden if no manifest loaded.
   };
-  ret.parse = function (text, base) {
+  ret.parse = async function (text, base) {
     throw Error("should not try to parse manifest cache");
   };
   ret.getItems = async function () {
@@ -506,7 +506,7 @@ return module.exports;
     }
   };
 
-  ret.parse = function (text, base) {
+  ret.parse = async function (text, base) {
     throw Error("should not try to parse extension cache");
   };
 
