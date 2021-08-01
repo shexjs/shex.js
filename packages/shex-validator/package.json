@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/validator",
-  "version": "1.0.0-alpha.15",
+  "version": "1.0.0-alpha.17",
   "description": "Shape Expressions Validator and schema index generator.",
   "author": {
     "name": "Eric Prud'hommeaux",
