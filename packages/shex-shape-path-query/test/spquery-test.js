@@ -6,16 +6,12 @@ const expect = chai.expect;
 const sinon = require("sinon");
 const Sp = require('shape-path-core')
 
-const queryResults = [
-  "http://instance.example/project1/img1.jpg",
-  "http://instance.example/project1/spec3"
-]
-
 describe('spgrep script', () => {
   it('query data', () => {
     const res = run(
       '../bin/spquery.js',
-      '-d', Path.join(__dirname, '../examples/issue/Issue2.ttl'),
+      '-d', Path.join(Sp.examples, 'issue/Issue2.ttl'),
+      // '-d', Path.join(__dirname, '../examples/issue/Issue2.ttl'),
       '-m', '<http://instance.example/project1/Issue2>@<http://project.example/schema#Issue>',
       '@<http://project.example/schema#DiscItem>~<http://project.example/ns#href>'
         +',@<http://project.example/schema#Issue>'
