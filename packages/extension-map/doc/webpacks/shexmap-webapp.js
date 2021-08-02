@@ -1871,8 +1871,8 @@ module.exports = function inspect_(obj, options, depth, seen) {
         throw new TypeError('option "maxStringLength", if provided, must be a positive integer, Infinity, or `null`');
     }
     var customInspect = has(opts, 'customInspect') ? opts.customInspect : true;
-    if (typeof customInspect !== 'boolean') {
-        throw new TypeError('option "customInspect", if provided, must be `true` or `false`');
+    if (typeof customInspect !== 'boolean' && customInspect !== 'symbol') {
+        throw new TypeError('option "customInspect", if provided, must be `true`, `false`, or `\'symbol\'`');
     }
 
     if (
@@ -1974,7 +1974,7 @@ module.exports = function inspect_(obj, options, depth, seen) {
     if (typeof obj === 'object' && customInspect) {
         if (inspectSymbol && typeof obj[inspectSymbol] === 'function') {
             return obj[inspectSymbol]();
-        } else if (typeof obj.inspect === 'function') {
+        } else if (customInspect !== 'symbol' && typeof obj.inspect === 'function') {
             return obj.inspect();
         }
     }
@@ -8911,7 +8911,7 @@ function binder (tree) {
       let toAdd = null;
       if (typeof obj[k] === "object" && !("value" in obj[k])) {
         toAdd = _mults(obj[k]);
-        if (obj[k].constructor === Array)
+        if (Array.isArray(obj[k]))
           rays.push(k);
         else
           objs.push(k);
@@ -8958,7 +8958,7 @@ function binder (tree) {
   }
   function _cross (list, map) {
     for (let listIndex in list) {
-      if (list[listIndex].constructor === Array) {
+      if (Array.isArray(list[listIndex])) {
         _cross(list[listIndex], map);
       } else {
         Object.keys(map).forEach(mapKey => {
@@ -8973,17 +8973,17 @@ function binder (tree) {
   function _simplify (list) {
     const ret = list.reduce((r, elt) => {
       return r.concat(
-        elt.constructor === Array ?
+        Array.isArray(elt) ?
           _simplify(elt) :
           elt
       );
     }, []);
     return ret.length === 1 ? ret[0] : ret;
   }
-  tree = tree.constructor === Array ? _simplify(tree) : [tree]; // expects an array
+  tree = Array.isArray(tree) ? _simplify(tree) : [tree]; // expects an array
 
   // const globals = tree.reduce((r, e, idx) => {
-  //   if (e.constructor !== Array) {
+  //   if (!Array.isArray(e)) {
   //     Object.keys(e).forEach(k => {
   //       r[k] = e[k];
   //     });
@@ -9002,7 +9002,7 @@ function binder (tree) {
     let next = diveIntoObj(nextStack); // no effect if in obj
     while (!(v in next)) {
       let last;
-      while(next.constructor !== Array) {
+      while(!Array.isArray(next)) {
         last = nextStack.pop();
         next = getObj(nextStack);
       }
@@ -9027,7 +9027,7 @@ function binder (tree) {
     }
 
     function diveIntoObj (s) {
-      while (getObj(s).constructor === Array)
+      while (Array.isArray(getObj(s)))
         s.push(0);
       return getObj(s);
     }
@@ -10588,7 +10588,7 @@ var __webpack_unused_export__;
     if (ShExJisonParser.productions && label in ShExJisonParser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!ShExJisonParser.shapes)
-      ShExJisonParser.shapes = new Map();
+      ShExJisonParser.shapes = {};
     if (label in ShExJisonParser.shapes) {
       if (ShExJisonParser.options.duplicateShape === "replace")
         ShExJisonParser.shapes[label] = shape;
@@ -10604,7 +10604,7 @@ var __webpack_unused_export__;
     if (ShExJisonParser.shapes && label in ShExJisonParser.shapes)
       error(new Error("Structural error: "+label+" is a shape expression"), yy);
     if (!ShExJisonParser.productions)
-      ShExJisonParser.productions = new Map();
+      ShExJisonParser.productions = {};
     if (label in ShExJisonParser.productions) {
       if (ShExJisonParser.options.duplicateShape === "replace")
         ShExJisonParser.productions[label] = production;
@@ -10689,8 +10689,8 @@ case 1:
             shexj._base = ShExJisonParser._base;
           shexj._prefixes = ShExJisonParser._prefixes;
           shexj._index = {
-            shapeExprs: ShExJisonParser.shapes || new Map(),
-            tripleExprs: ShExJisonParser.productions || new Map()
+            shapeExprs: ShExJisonParser.shapes || {},
+            tripleExprs: ShExJisonParser.productions || {}
           };
           shexj._sourceMap = ShExJisonParser._sourceMap;
         }
@@ -12181,7 +12181,7 @@ const ShExUtil = {
 
   ShExJtoAS: function (schema) {
     const _ShExUtil = this;
-    schema._prefixes = schema.prefixes || {  };
+    schema._prefixes = schema._prefixes || {  };
     schema._index = this.index(schema);
     return schema;
   },
@@ -13293,7 +13293,7 @@ const ShExUtil = {
       function crush (elt) {
         if (crushed === null)
           return elt;
-        if (elt.constructor === Array) {
+        if (Array.isArray(elt)) {
           crushed = null;
           return elt;
         }
@@ -13312,7 +13312,7 @@ const ShExUtil = {
             list.push(crush(ldify(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
-          if (nested.constructor === Array)
+          if (Array.isArray(nested))
             nested.forEach(crush);
           else
             crush(nested);
@@ -13724,20 +13724,20 @@ const ShExUtil = {
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
     } else if (val.type === "TypeMismatch") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
     } else if (val.type === "ShapeAndFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
     } else if (val.type === "ShapeOrFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
@@ -13764,13 +13764,13 @@ const ShExUtil = {
       return ["Missing property: " + val.property];
     } else if (val.type === "NegatedProperty") {
       return ["Unexpected property: " + val.property];
-    } else if (val.constructor === Array) {debugger;
+    } else if (Array.isArray(val)) {debugger;
       return val.reduce((ret, e) => {
         const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
     } else if (val.type === "SemActFailure") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
@@ -15311,7 +15311,7 @@ function ShExValidator_constructor(schema, db, options) {
           if (typeof response === 'boolean') {
             if (!response)
               ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
-          } else if (typeof response === 'object' && response.constructor === Array) {
+          } else if (typeof response === 'object' && Array.isArray(response)) {
             if (response.length > 0)
               ret.push({ type: "SemActFailure", errors: response })
           } else {

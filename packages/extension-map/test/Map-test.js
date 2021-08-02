@@ -310,7 +310,7 @@ function graphEquals (right, m) {
       var ret = l.equals(r, m);
       expect(ret).to.equal(equals, m);
       if (mapping) {
-        if (mapping.constructor === Array) {
+        if (Array.isArray(mapping)) {
           var found = 0;
           mapping.forEach(function (thisMap) {
             try {
