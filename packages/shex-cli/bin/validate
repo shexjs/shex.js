@@ -731,7 +731,7 @@ function loadRDFmanifest (cmds) {
               ["mapURL", "map"   , false]].reduce(function (ret, elt) {
                 // Command like arguments override *each* manifest entry.
                 if (cmds[elt[0]] &&
-                    !(cmds[elt[0]].constructor === Array && cmds[elt[0]].length === 0)) {
+                    !(Array.isArray(cmds[elt[0]]) && cmds[elt[0]].length === 0)) {
                   ret[elt[0]] = cmds[elt[0]];
                 } else {
                   const m = loaded.data.getQuads(action, sht+elt[1], null);
@@ -768,7 +768,7 @@ function loadJSONmanifest (jsonManifests) {
         let d = JSON.parse(p.text);
 
         // normalize the input
-        if (d.constructor !== Array) {
+        if (!Array.isArray(d)) {
           if ("@graph" in d) // Extract from the JSON-LD manifest format.
             d = d["@graph"][0].entries.map(function (t) {
               const options = Object.assign({}, ValidatorOptions);
@@ -816,7 +816,7 @@ function loadJSONmanifest (jsonManifests) {
           ["shex", "json", "data", "jsonld"].forEach(function (attr) {
             if (!(attr in elt))
               elt[attr] = [];
-            else if (elt[attr].constructor !== Array)
+            else if (!Array.isArray(elt[attr]))
               elt[attr] = [elt[attr]];
             elt[attr] = elt[attr].map(function (url) {
               return ShExUtil.resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
@@ -931,7 +931,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
 
       const unlinkMe = await Promise.all(Object.keys(ctx.request.files || []).reduce((acc, key) => {
         let fz = ctx.request.files[key];
-        if (fz.constructor !== Array)
+        if (!Array.isArray(fz))
           fz = [fz];
         return acc.concat(fz.map(
           async file => {

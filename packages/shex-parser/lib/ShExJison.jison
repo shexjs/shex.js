@@ -352,7 +352,7 @@
     if (ShExJisonParser.productions && label in ShExJisonParser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!ShExJisonParser.shapes)
-      ShExJisonParser.shapes = new Map();
+      ShExJisonParser.shapes = {};
     if (label in ShExJisonParser.shapes) {
       if (ShExJisonParser.options.duplicateShape === "replace")
         ShExJisonParser.shapes[label] = shape;
@@ -368,7 +368,7 @@
     if (ShExJisonParser.shapes && label in ShExJisonParser.shapes)
       error(new Error("Structural error: "+label+" is a shape expression"), yy);
     if (!ShExJisonParser.productions)
-      ShExJisonParser.productions = new Map();
+      ShExJisonParser.productions = {};
     if (label in ShExJisonParser.productions) {
       if (ShExJisonParser.options.duplicateShape === "replace")
         ShExJisonParser.productions[label] = production;
@@ -623,8 +623,8 @@ shexDoc:
             shexj._base = ShExJisonParser._base;
           shexj._prefixes = ShExJisonParser._prefixes;
           shexj._index = {
-            shapeExprs: ShExJisonParser.shapes || new Map(),
-            tripleExprs: ShExJisonParser.productions || new Map()
+            shapeExprs: ShExJisonParser.shapes || {},
+            tripleExprs: ShExJisonParser.productions || {}
           };
           shexj._sourceMap = ShExJisonParser._sourceMap;
         }

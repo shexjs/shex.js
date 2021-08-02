@@ -5282,7 +5282,7 @@ var __webpack_unused_export__;
     if (ShExJisonParser.productions && label in ShExJisonParser.productions)
       error(new Error("Structural error: "+label+" is a triple expression"), yy);
     if (!ShExJisonParser.shapes)
-      ShExJisonParser.shapes = new Map();
+      ShExJisonParser.shapes = {};
     if (label in ShExJisonParser.shapes) {
       if (ShExJisonParser.options.duplicateShape === "replace")
         ShExJisonParser.shapes[label] = shape;
@@ -5298,7 +5298,7 @@ var __webpack_unused_export__;
     if (ShExJisonParser.shapes && label in ShExJisonParser.shapes)
       error(new Error("Structural error: "+label+" is a shape expression"), yy);
     if (!ShExJisonParser.productions)
-      ShExJisonParser.productions = new Map();
+      ShExJisonParser.productions = {};
     if (label in ShExJisonParser.productions) {
       if (ShExJisonParser.options.duplicateShape === "replace")
         ShExJisonParser.productions[label] = production;
@@ -5383,8 +5383,8 @@ case 1:
             shexj._base = ShExJisonParser._base;
           shexj._prefixes = ShExJisonParser._prefixes;
           shexj._index = {
-            shapeExprs: ShExJisonParser.shapes || new Map(),
-            tripleExprs: ShExJisonParser.productions || new Map()
+            shapeExprs: ShExJisonParser.shapes || {},
+            tripleExprs: ShExJisonParser.productions || {}
           };
           shexj._sourceMap = ShExJisonParser._sourceMap;
         }
@@ -6972,7 +6972,7 @@ const ShExUtil = {
 
   ShExJtoAS: function (schema) {
     const _ShExUtil = this;
-    schema._prefixes = schema.prefixes || {  };
+    schema._prefixes = schema._prefixes || {  };
     schema._index = this.index(schema);
     return schema;
   },
@@ -8084,7 +8084,7 @@ const ShExUtil = {
       function crush (elt) {
         if (crushed === null)
           return elt;
-        if (elt.constructor === Array) {
+        if (Array.isArray(elt)) {
           crushed = null;
           return elt;
         }
@@ -8103,7 +8103,7 @@ const ShExUtil = {
             list.push(crush(ldify(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
-          if (nested.constructor === Array)
+          if (Array.isArray(nested))
             nested.forEach(crush);
           else
             crush(nested);
@@ -8515,20 +8515,20 @@ const ShExUtil = {
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
     } else if (val.type === "TypeMismatch") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
     } else if (val.type === "ShapeAndFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
     } else if (val.type === "ShapeOrFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
@@ -8555,13 +8555,13 @@ const ShExUtil = {
       return ["Missing property: " + val.property];
     } else if (val.type === "NegatedProperty") {
       return ["Unexpected property: " + val.property];
-    } else if (val.constructor === Array) {debugger;
+    } else if (Array.isArray(val)) {debugger;
       return val.reduce((ret, e) => {
         const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
     } else if (val.type === "SemActFailure") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
@@ -9786,7 +9786,7 @@ function ShExValidator_constructor(schema, db, options) {
           if (typeof response === 'boolean') {
             if (!response)
               ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
-          } else if (typeof response === 'object' && response.constructor === Array) {
+          } else if (typeof response === 'object' && Array.isArray(response)) {
             if (response.length > 0)
               ret.push({ type: "SemActFailure", errors: response })
           } else {
@@ -10348,6 +10348,247 @@ if (true)
 
 /***/ }),
 
+/***/ 89:
+/***/ ((module) => {
+
+"use strict";
+
+
+class DcTap {
+
+  dontResolveIris = false
+  prefixes = {}
+  shapes = []
+  curShape = null
+  conjuncts = null
+  headers = ["shapeID", "shapeLabel", "propertyID", "propertyLabel", "mandatory", "repeatable", "valueNodeType", "valueDataType", "valueConstraint", "valueConstraintType", "valueShape", "note"]
+
+  constructor (opts = {}) {
+    Object.assign(this, opts)
+  }
+
+  parseRows (rows, base) {
+    rows.forEach((row) => {
+
+      // Ignore headers.
+      if (row[0].toLowerCase() === this.headers[0].toLowerCase()
+          && row[1].toLowerCase() === this.headers[1].toLowerCase()
+          && row[2].toLowerCase() === this.headers[2].toLowerCase()
+          || row[0].toLowerCase() === "prefix"
+          && row[1].toLowerCase() === "namespace")
+        ;
+
+      // Ignore blank lines.
+      else if (row.length === 1)
+        ;
+
+      // Two columns means it's a prefix decl,
+      else if (row.length === 2)
+        this.prefixes[row[0]] = row[1]
+
+      // otherwise, it's a regular row.
+      else
+        this.parseRow(row, base)
+    })
+    return this
+  }
+
+  parseRow (row, base) {
+
+    // Interpret has object with usual keys.
+    if (Array.isArray(row)) {
+      row = this.headers.reduce((acc, header, idx) => {
+        acc[header] = row[idx]
+        return acc
+      }, {})
+    }
+
+    // Ignore case on keywords.
+    row.valueNodeType = row.valueNodeType.toLowerCase()
+    row.valueConstraintType = row.valueConstraintType.toLowerCase()
+
+    // If this row defines a shape,
+    if (row.shapeID) {
+      // set the current shape.
+      this.curShape = {
+        type: "Shape",
+        shapeID: this.parseIri(row.shapeID, base),
+        tripleConstraints: [],
+      }
+      this.shapes.push(this.curShape)
+    } else if (!this.curShape) {
+      throw new Error(`no current shape into which to add ${JSON.stringify(row)}`)
+    }
+
+    // Add TripleConstraints to current row
+    this.curShape.tripleConstraints.push(this.toTripleConstraint(row, base))
+    return this
+  }
+
+  toTripleConstraint (sc, base) {
+    // Return minimal object which preserves semantics.
+    return Object.assign(
+      {
+        propertyID: this.parseIri(sc.propertyID, base),
+      },
+      sc.mandatory ? { mandatory: true } : {},
+      sc.repeatable ? { repeatable: true } : {},
+      this.parseValueConstraint(sc, base),
+      sc.valueShape ? { valueShape: this.parseIri(sc.valueShape, base) } : {},
+    )
+  }
+
+  parseValueConstraint (sc, base) {
+    switch (sc.valueConstraintType) {
+
+    case "iristem":
+    case "literalstem":
+    case "picklist":
+    case "languagetag":
+      // These get split on whitespase and their values coersed according to the constraintType and the valueNodeType.
+      const values = sc.valueConstraint.split(/\s+/)
+      return {
+        values: values.map(v => this.coerseValue(v, sc, base, sc.valueConstraintType.endsWith('stem')))
+      }
+
+    case "pattern":
+      // Value is a regular expression (unanchored PCRE per XML Schema?)
+      return {
+        pattern: sc.valueConstraint
+      }
+
+    case "":
+      // No constraintType means the value is a datatype.
+      return sc.valueDataType
+        ? { datatype: this.parseIri(sc.valueDataType, base) }
+      : {} // no valueConstraint property
+    default: throw Error(`Unknown valueConstraintType ${sc.valueConstraintType} in ${JSON.stringify(sc, null, 2)}?`)
+    }
+  }
+
+  coerseValue (v, sc, base, isStem = false) {
+    if (sc.valueConstraintType === "languagetag")
+      return {
+        type: "Language",
+        languageTag: v
+      }
+
+    switch (sc.valueNodeType) {
+    case "literal":
+      const ret = isStem
+        ? {
+          type: "LiteralStem",
+          stem: v
+        }
+      : {
+        value: v
+      }
+      // if (sc.valueDataType && sc.valueDataType !== "xsd:string")
+      //   ret.datatype = sc.valueDataType
+      return ret
+    case "iri":
+      return isStem
+        ? {
+          type: "IriStem",
+          stem: this.parseIri(v, base)
+        }
+      : this.parseIri(v, base)
+    case "":
+      return {
+        value: v
+      }
+    default:
+      throw Error(`Unknown valueNodeType ${sc.valueNodeType} in ${JSON.stringify(sc, null, 2)}?`)
+    }
+  }
+
+  parseIri (lex, base) {
+    // Grandfather in old form which kinda ignores IRI resolution.
+    if (this.dontResolveIris)
+      return lex // new URL(lex, base).href
+
+    // Parse IRI forms according to Turtle rules.
+    if (lex[0] === "<") {
+      if (lex[lex.length - 1] !== ">")
+        throw new Error(`Malformed URL: ${lex}`)
+      return new URL(lex.substr(1, lex.length - 2), base).href
+    } else {
+      const at = lex.indexOf(":")
+      if (at === -1)
+        throw new Error(`Expected ':' in IRI ${lex}`)
+      const prefix = lex.substr(0, at)
+      if (!(prefix in this.prefixes))
+        throw new Error(`Prefix ${prefix} not found in known prefixes: ${Object.keys(this.prefixes).join(" ,")}`)
+      const lname = lex.substr(at + 1)
+      return this.prefixes[prefix] + lname
+    }
+  }
+
+  toJson () {
+    return this.shapes
+  }
+
+  toShEx () {
+    const schema = {
+      type: "Schema",
+      shapes: this.shapes.map(sh => ({
+        type: "Shape",
+        id: sh.shapeID,
+        expression: maybeAnd(sh.tripleConstraints.map(tc => Object.assign(
+          {
+            type: "TripleConstraint",
+            predicate: tc.propertyID,
+          },
+          tc.mandatory ? { min: 1 } : {},
+          tc.repeatable ? { max: -1 } : {},
+          shexValueExpr(tc),
+        )), "EachOf", "expressions")
+      }))
+    }
+    return schema
+  }
+}
+
+function shexValueExpr (tc) {
+  const valueExprs = []
+  if (tc.values)
+    valueExprs.push({
+      type: "NodeConstraint",
+      values: tc.values
+    })
+  if (tc.pattern)
+    valueExprs.push({
+      type: "NodeConstraint",
+      pattern: tc.pattern
+    })
+  if (tc.datatype)
+    valueExprs.push({
+      type: "NodeConstraint",
+      datatype: tc.datatype
+    })
+  if (tc.valueShape)
+    valueExprs.push(tc.valueShape)
+  const valueExpr = maybeAnd(valueExprs, "ShapeAnd", "shapeExprs")
+  return valueExpr ? { valueExpr } : {}
+}
+
+function maybeAnd (conjuncts, type, property) {
+  if (conjuncts.length === 0)
+    return  undefined
+
+  if (conjuncts.length === 1)
+    return conjuncts[0]
+
+  const ret = { type }
+  ret[property] = conjuncts
+  return ret
+}
+
+module.exports = { DcTap }
+
+
+/***/ }),
+
 /***/ 863:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -10362,6 +10603,7 @@ ShExWebApp = (function () {
     Parser:         __webpack_require__(931),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
+    DcTap:          __webpack_require__(89).DcTap,
   })
 })()
 
