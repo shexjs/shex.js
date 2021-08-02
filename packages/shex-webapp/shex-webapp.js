@@ -9,6 +9,7 @@ ShExWebApp = (function () {
     Parser:         require("@shexjs/parser"),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
+    DcTap:          require("dctap").DcTap,
   })
 })()
 
