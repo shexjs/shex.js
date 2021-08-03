@@ -1,6 +1,6 @@
 # @shexjs/shape-path-query
 
-NPM module to use [ShapePaths](http://github.com/shexSpec/ShapePath) to query data.
+NPM module to use [shape-path-core](https://github.com/shexSpec/ShapePath.js/tree/main/packages/core) to query data.
 
 ## API
 
@@ -38,6 +38,10 @@ returns: hmm, not sure. at the simplest, an array of terms matched from the vali
 ## quickstart
 
 ``` shell
-./bin/spquery.js '@<http://project.example/schema#DiscItem>~<http://project.example/ns#href>,@<http://project.example/schema#Issue>~<http://project.example/ns#spec>/valueExpr/shapeExprs~<http://project.example/ns#href>' ../../node_modules/shape-path-core/examples/issue/Issue.json -d ./examples/issue/Issue2.ttl -m '<http://instance.example/project1/Issue2>@<http://project.example/schema#Issue>'
+./bin/spquery.js \
+  '@<http://project.example/schema#DiscItem>~<http://project.example/ns#href>,@<http://project.example/schema#Issue>~<http://project.example/ns#spec>/valueExpr/shapeExprs~<http://project.example/ns#href>' \
+  ../../node_modules/shape-path-core/examples/issue/Issue.json \
+  -d ./examples/issue/Issue2.ttl \
+  -m '<http://instance.example/project1/Issue2>@<http://project.example/schema#Issue>'
 ```
 or `npm run toy` from this directory
