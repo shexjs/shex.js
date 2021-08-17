@@ -16,7 +16,7 @@
   ],
   "license": "MIT",
   "main": "./shape-path-query.js",
-  "type": "package",
+  "type": "commonjs",
   "engines": {
     "node": ">=0.10.0"
   },
