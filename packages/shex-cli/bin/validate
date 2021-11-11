@@ -279,15 +279,15 @@ function findNodesAndValidate (loaded, parms, options) {
       ).ret
       : _makeShapeMap(parms.node, parms.shape, parms["node-type"]);
   if (cmds.verbose) {
-    const tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
+    let tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
     let w;
     new ShExWriter({simplifyParentheses: false }).
-      writeSchema(schema, function (error, text, prefixes) {
+      writeSchema(loaded.schema, function (error, text, prefixes) {
         if (error) throw error;
         else w = text;
       });
-    const shapeIn = shape ? shape + " in" : "";
+    const shapeIn = shapeMap ? shapeMap + " in" : "";
     console.log("validating " + tz + " over " + loaded.data.size + " triples against " + w);
   }
 
@@ -646,7 +646,7 @@ function runValidator (db, shapeMap, schema, options) {
 
   // run validator
   const res = cmds.grep
-      ? grep(shapeMap, cmds.list)
+      ? grep(shapeMap)
       : validator.validate(shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
@@ -675,14 +675,18 @@ function runValidator (db, shapeMap, schema, options) {
     return res;
   }
 
-  function grep (fixedMap, asList) {
+  function grep (fixedMap) {
     const passes = fixedMap.reduce((acc, row) => {
+      if (cmds.verbose)
+        process.stdout.write('checking ' + JSON.stringify(row))
       const res = validator.validate([row]);
+      if (cmds.verbose)
+        process.stdout.write(' -> ' + !('errors' in res) + "\n")
       return "errors" in res
         ? acc
-        : acc.concat(asList ? row.node : res);
+        : acc.concat(cmds.list ? row.node : res);
     }, []);
-    return asList
+    return cmds.list
       ? passes
     :passes.length > 1
       ? { type: "SolutionList", solutions: passes }
