@@ -168,7 +168,7 @@ function _makeCache (selection) {
       try {
         resp = await fetch(url, {headers: {
           accept: 'text/shex,text/turtle,*/*;q=0.9, test/html;q=0.8',
-          cache: 'no-cache'
+          // cache: 'no-cache' -- breaks CORS, so user has to open in new page and force reload there
         }})
       } catch (e) {
         throw Error("unable to fetch <" + url + ">: " + '\n' + e.message);
@@ -1906,12 +1906,16 @@ async function prepareManifest (demoList, base) {
     acc[k] = {};
     return acc;
   }, {});
-  const nesting = demoList.reduce(function (acc, elt) {
-    const key = elt.schemaLabel + "|" + elt.schema;
+  const nesting = demoList.reduce(function (acc, elt, idx) {
+    const defaultLabel = "title" in elt
+          ? elt.title
+          : `manifest[${idx}]`;
+    const schemaLabel = elt.schemaLabel || defaultLabel;
+    const key = schemaLabel + "|" + elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
       acc[key] = {
-        label: elt.schemaLabel,
+        label: schemaLabel,
         text: elt.schema,
         url: elt.schemaURL || (elt.schema ? base : undefined)
       };
@@ -1919,9 +1923,10 @@ async function prepareManifest (demoList, base) {
       // nth entry with this schema
     }
 
-    if ("dataLabel" in elt) {
+    if ("dataLabel" in elt || "data" in elt || "dataURL" in elt) {
+      const dataLabel = elt.dataLabel || defaultLabel;
       const dataEntry = {
-        label: elt.dataLabel,
+        label: dataLabel || idx.toString(),
         text: elt.data,
         url: elt.dataURL || (elt.data ? base : undefined),
         entry: elt

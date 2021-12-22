@@ -29,6 +29,7 @@
     "@shexjs/writer": "^1.0.0-alpha.15",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
+    "glob": "^7.2.0",
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
     "n3": "^1.6.2",
