@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/api",
-  "version": "1.0.0-alpha.15",
+  "version": "1.0.0-alpha.19",
   "description": "Shape Expressions simple API",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,8 +20,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/parser": "^1.0.0-alpha.15",
-    "@shexjs/util": "^1.0.0-alpha.15"
+    "@shexjs/parser": "^1.0.0-alpha.19",
+    "@shexjs/util": "^1.0.0-alpha.19"
   },
   "scripts": {
     "test": "cd ../.. && npm run test"
