@@ -40,6 +40,7 @@ const Path = require("path");
 const Util = require("util");
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
+const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
 const ShExValidator = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
@@ -1040,7 +1041,7 @@ async function mergeParm (parms, parm, text, url, type) {
     try {
       part = JSON.parse(text);
     } catch (e) {
-      const parser = require("@shexjs/parser").construct(url.href, prefixes);
+      const parser = ShExParser.construct(url.href, prefixes);
       part = parser.parse(text);
     }
     ShExUtil.merge(parms.schema, part, true, true);

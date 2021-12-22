@@ -1,9 +1,10 @@
+import * as N3 from 'n3';
+
 export = shexjs__util;
 
 declare function shexjs__util(parent: any, toPrototype: any): any;
 
 declare namespace shexjs__util {
-    const NotSupplied: string;
 
     const RDF: {
         first: string;
@@ -86,97 +87,72 @@ declare namespace shexjs__util {
         values: string;
     };
 
-    const UnknownIRI: string;
-
-    function AStoShExJ(schema: any, abbreviate: any): any;
-
-    function BiDiClosure(): any;
-
-    function ShExJtoAS(schema: any): any;
-
-    function ShExRVisitor(knownShapeExprs: any): any;
-
-    function ShExRtoShExJ(schema: any): any;
-
+    function version(): any;
     function Visitor(...args: any[]): any;
-
-    function absolutizeResults(parsed: any, base: any): any;
-
-    function absolutizeShapeMap(parsed: any, base: any): any;
-
-    function canonicalize(schema: any, trimIRI: any): any;
-
-    function emptySchema(): any;
-
-    function errsToSimple(val: any): any;
-
-    function executeQuery(query: any, endpoint: any): any;
-
-    function executeQueryPromise(query: any, endpoint: any): any;
-
-    function flatten(schema: any, deps: any, cantFind: any): any;
-
-    function getAST(schema: any): any;
-
-    function getDependencies(schema: any, ret: any): any;
-
-    function getPredicateUsage(schema: any, untyped: any): any;
-
-    function getProofGraph(res: any, db: any, dataFactory: any): any;
-
-    function getValueType(valueExpr: any): any;
-
     function index(schema: any): any;
-
-    function isWellDefined(schema: any): any;
-
-    function makeTriplesDB(queryTracker: any): any;
-
-    function merge(left: any, right: any, overwrite: any, inPlace: any): any;
-
+    function getAST(schema: any): any;
+    function ShExJtoAS(schema: any): any;
+    function AStoShExJ(schema: any, abbreviate: any): any;
+    function ShExRVisitor(knownShapeExprs: any): any;
+    function ShExRtoShExJ(schema: any): any;
+    function valGrep(obj: any, type: any, f: any): any;
+    function valToN3js(res: any, factory: any): any;
     function n3jsToTurtle(n3js: any): any;
-
+    function canonicalize(schema: any, trimIRI: any): any;
+    function BiDiClosure(): any;
     function nestShapes(schema: any, options: any): any;
-
-    function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
-
-    function partition(schema: any, includes: any, deps: any, cantFind: any): any;
-
-    function rdfjsDB(db: any, queryTracker: any, ...args: any[]): any;
-
-    function resolvePrefixedIRI(prefixedIri: any, prefixes: any): any;
-
-    function resolveRelativeIRI(base: any, iri: any): any;
-
-    function simpleToShapeMap(x: any): any;
-
+    function getPredicateUsage(schema: any, untyped: any): any;
     function simpleTripleConstraints(shape: any): any;
-
-    function skipDecl(shapeExpr: any): any;
-
+    function getValueType(valueExpr: any): any;
+    function getDependencies(schema: any, ret: any): any;
+    function partition(schema: any, includes: any, deps: any, cantFind: any): any;
+    function flatten(schema: any, deps: any, cantFind: any): any;
+    function emptySchema(): any;
+    function merge(left: any, right: any, overwrite: any, inPlace: any): any;
+    function absolutizeResults(parsed: any, base: any): any;
+    function getProofGraph(res: any, db: any, dataFactory: any): any;
+    function validateSchema(schema: any): any;
+    function isWellDefined(schema: any): any;
+    function walkVal(val: any, cb: any): any;
+    function valToValues(val: any): any;
+    function valToExtension(val: any, lookfor: any): any;
+    function valuesToSchema(values: any): any;
+    function simpleToShapeMap(x: any): any;
+    function absolutizeShapeMap(parsed: any, base: any): any;
+    function errsToSimple(val: any): any;
+    function resolveRelativeIRI(base: any, iri: any): any;
+    function resolvePrefixedIRI(prefixedIri: any, prefixes: any): any;
+    function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
+    function executeQueryPromise(query: any, endpoint: any): any;
+    function executeQuery(query: any, endpoint: any): any;
+    function rdfjsDB(db: N3.Store, queryTracker?: QueryTracker): NeighborhoodDb;
+    const NotSupplied: string;
+    const UnknownIRI: string;
     function unescapeText(string: any, replacements: any): any;
 
-    function valGrep(obj: any, type: any, f: any): any;
 
-    function valToExtension(val: any, lookfor: any): any;
+    // function skipDecl(shapeExpr: any): any;
+    // namespace Visitor {
+    //     function index(schema: any): any;
+    // }
+    // function makeTriplesDB(queryTracker: any): any;
 
-    function valToN3js(res: any, factory: any): any;
-
-    function valToValues(val: any): any;
-
-    function validateSchema(schema: any): any;
-
-    function valuesToSchema(values: any): any;
-
-    function version(): any;
-
-    function walkVal(val: any, cb: any): any;
-
-    namespace Visitor {
-        function index(schema: any): any;
-
+    interface QueryTracker {
+        start (isOut: boolean, term: N3.DataFactory.Term, shapeLabel: string): void;
+        end (triples: N3.DataFactory.Quads, time: number): void;
     }
 
-}
+    interface Neighborhood {
+      incoming: Quad[];
+      outgoing: Quad[];
+    }
 
+    interface NeighborhoodDb {
+      getSubjects(): N3.DataFactory.Term[];
+      getPredicates(): N3.DataFactory.Term[];
+      getObjects(): N3.DataFactory.Term[];
+      getQuads(): N3.DataFactory.Quad[];
+      getNeighborhood (point: N3.DataFactory.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
+    }
+}
 
