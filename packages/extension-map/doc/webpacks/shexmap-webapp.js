@@ -663,7 +663,7 @@ if (true) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.default = void 0;
+exports["default"] = void 0;
 const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       XSD = 'http://www.w3.org/2001/XMLSchema#',
       SWAP = 'http://www.w3.org/2000/10/swap/';
@@ -693,7 +693,7 @@ var _default = {
     implies: `${SWAP}log#implies`
   }
 };
-exports.default = _default;
+exports["default"] = _default;
 
 /***/ }),
 
@@ -706,11 +706,11 @@ exports.default = _default;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports["default"] = exports.Variable = exports.Triple = exports.Term = exports.Quad = exports.NamedNode = exports.Literal = exports.DefaultGraph = exports.BlankNode = void 0;
+exports.escapeQuotes = escapeQuotes;
 exports.termFromId = termFromId;
 exports.termToId = termToId;
-exports.escapeQuotes = escapeQuotes;
 exports.unescapeQuotes = unescapeQuotes;
-exports.Triple = exports.Quad = exports.DefaultGraph = exports.Variable = exports.BlankNode = exports.Literal = exports.NamedNode = exports.Term = exports.default = void 0;
 
 var _IRIs = _interopRequireDefault(__webpack_require__(325));
 
@@ -741,7 +741,7 @@ const DataFactory = {
 };
 var _default = DataFactory; // ## Term constructor
 
-exports.default = _default;
+exports["default"] = _default;
 
 class Term {
   constructor(id) {
@@ -751,6 +751,12 @@ class Term {
 
   get value() {
     return this.id;
+  } // ### Implement hashCode for Immutable.js, since we implement `equals`
+  // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
+
+
+  get hashCode() {
+    return 0;
   } // ### Returns whether this object represents the same term as the other
 
 
@@ -1056,11 +1062,11 @@ function literal(value, languageOrDataType) {
     // Convert a boolean
     if (typeof value === 'boolean') datatype = xsd.boolean; // Convert an integer or double
     else if (typeof value === 'number') {
-        if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
-          datatype = xsd.double;
-          if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
-        }
+      if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
+        datatype = xsd.double;
+        if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
       }
+    }
   } // Create a datatyped literal
 
 
@@ -1093,12 +1099,12 @@ function quad(subject, predicate, object, graph) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.isNamedNode = isNamedNode;
-exports.isBlankNode = isBlankNode;
-exports.isLiteral = isLiteral;
-exports.isVariable = isVariable;
-exports.isDefaultGraph = isDefaultGraph;
 exports.inDefaultGraph = inDefaultGraph;
+exports.isBlankNode = isBlankNode;
+exports.isDefaultGraph = isDefaultGraph;
+exports.isLiteral = isLiteral;
+exports.isNamedNode = isNamedNode;
+exports.isVariable = isVariable;
 exports.prefix = prefix;
 exports.prefixes = prefixes;
 
@@ -2058,7 +2064,7 @@ module.exports = parseQuery;
 "use strict";
 
 
-var _parseUrl = __webpack_require__(883)/* .parse */ .Qc;
+var _parseUrl = (__webpack_require__(883)/* .parse */ .Qc);
 
 
 
@@ -6470,7 +6476,7 @@ const ShExMapCjsModule = function (config) {
 
 const extensions = __webpack_require__(386);
 const N3Util = __webpack_require__(670);
-const N3DataFactory = __webpack_require__(713).default;
+const N3DataFactory = (__webpack_require__(713)["default"]);
 const materializer = __webpack_require__(865)(config);
 
 const MapExt = "http://shex.io/extensions/Map/#";
@@ -7593,7 +7599,7 @@ const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(839)/* .Parser */ ._b; // node environment
+  ShapeMapJison = (__webpack_require__(839)/* .Parser */ ._b); // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -8882,11 +8888,7 @@ break;
 case 169:
 
         // $$[$0]: t: 1dotCode1
-	if ($$[$0-3] !== EmptyShape && false) {
-	  const t = blank();
-	  addShape(t, $$[$0-3], yy);
-	  $$[$0-3] = t; // ShapeRef
-	}
+	if ($$[$0-3] !== EmptyShape && false) {}
         // %6: t: 1inversedotCode1
         this.$ = extend({ type: "TripleConstraint" }, $$[$0-5] ? $$[$0-5] : {}, { predicate: $$[$0-4] }, ($$[$0-3] === EmptyShape ? {} : { valueExpr: $$[$0-3] }), $$[$0-2], $$[$0]); // t: 1dot // t: 1inversedot
         if ($$[$0-1].length)
@@ -9321,7 +9323,7 @@ __webpack_unused_export__ = ShExJisonLexer;
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = __webpack_require__(509)/* .Parser */ ._b;
+const ShExJison = (__webpack_require__(509)/* .Parser */ ._b);
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
