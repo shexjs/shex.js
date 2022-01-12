@@ -1777,7 +1777,7 @@ module.exports = parseQuery;
 "use strict";
 
 
-var _parseUrl = __webpack_require__(883)/* .parse */ .Qc;
+var _parseUrl = (__webpack_require__(883)/* .parse */ .Qc);
 
 
 
@@ -4738,7 +4738,7 @@ const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = __webpack_require__(839)/* .Parser */ ._b; // node environment
+  ShapeMapJison = (__webpack_require__(839)/* .Parser */ ._b); // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -6042,11 +6042,7 @@ break;
 case 174:
 
         // $$[$0]: t: 1dotCode1
-	if ($$[$0-3] !== EmptyShape && false) {
-	  const t = blank();
-	  addShape(t, $$[$0-3], yy);
-	  $$[$0-3] = t; // ShapeRef
-	}
+	if ($$[$0-3] !== EmptyShape && false) {}
         // %7: t: 1inversedotCode1
         this.$ = extend({ type: "TripleConstraint" }, $$[$0-5], { predicate: $$[$0-4] }, ($$[$0-3] === EmptyShape ? {} : { valueExpr: $$[$0-3] }), $$[$0-2], $$[$0]); // t: 1dot, 1inversedot
         if ($$[$0-1].length)
@@ -6493,7 +6489,7 @@ __webpack_unused_export__ = ShExJisonLexer;
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = __webpack_require__(509)/* .Parser */ ._b;
+const ShExJison = (__webpack_require__(509)/* .Parser */ ._b);
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -6696,7 +6692,7 @@ const ShExTermCjsModule = (function () {
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
-      return "\"" + node.value + "\"" + (
+      return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
         node.datatypeString === RdfLangString
           ? "@" + node.language
           : node.datatypeString === XsdString
@@ -6816,7 +6812,7 @@ const ShExTermCjsModule = (function () {
     const match = /^"([^]*)"/.exec(literal);
     if (!match)
       throw new Error(literal + ' is not a literal');
-    return match[1];
+    return match[1].replace(/\\"/g, '"');
   }
 
   // Gets the type of a literal in the N3 library
@@ -10881,7 +10877,7 @@ ShExWebApp = (function () {
     Parser:         __webpack_require__(931),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
-    DcTap:          __webpack_require__(281).DcTap,
+    DcTap:          (__webpack_require__(281).DcTap),
   })
 })()
 
