@@ -6669,7 +6669,7 @@ const ShExTermCjsModule = (function () {
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
-      return "\"" + node.value + "\"" + (
+      return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
         node.datatypeString === RdfLangString
           ? "@" + node.language
           : node.datatypeString === XsdString
@@ -6789,7 +6789,7 @@ const ShExTermCjsModule = (function () {
     const match = /^"([^]*)"/.exec(literal);
     if (!match)
       throw new Error(literal + ' is not a literal');
-    return match[1];
+    return match[1].replace(/\\"/g, '"');
   }
 
   // Gets the type of a literal in the N3 library
