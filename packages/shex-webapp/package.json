@@ -28,6 +28,7 @@
     "@shexjs/writer": "^1.0.0-alpha.15",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
+    "dctap": "^0.0.5",
     "hierarchy-closure": "^1.2.1",
     "n3": "^1.6.2",
     "shape-map": "^1.0.0-alpha.15"
@@ -43,6 +44,7 @@
     "webpack-n3js": "webpack --config webpack-n3js.config.js --mode development"
   },
   "devDependencies": {
+    "dctap": "^0.0.5",
     "jquery": "^3.5.1",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.12.1"
