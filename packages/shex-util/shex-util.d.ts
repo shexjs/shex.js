@@ -1,4 +1,5 @@
 import * as N3 from 'n3';
+import * as ShExJ from 'shexj';
 
 export = shexjs__util;
 
@@ -138,21 +139,21 @@ declare namespace shexjs__util {
     // function makeTriplesDB(queryTracker: any): any;
 
     interface QueryTracker {
-        start (isOut: boolean, term: N3.DataFactory.Term, shapeLabel: string): void;
-        end (triples: N3.DataFactory.Quads, time: number): void;
+        start (isOut: boolean, term: N3.Term, shapeLabel: string): void;
+        end (triples: N3.Quad[], time: number): void;
     }
 
     interface Neighborhood {
-      incoming: Quad[];
-      outgoing: Quad[];
+      incoming: N3.Quad[];
+      outgoing: N3.Quad[];
     }
 
     interface NeighborhoodDb {
-      getSubjects(): N3.DataFactory.Term[];
-      getPredicates(): N3.DataFactory.Term[];
-      getObjects(): N3.DataFactory.Term[];
-      getQuads(): N3.DataFactory.Quad[];
-      getNeighborhood (point: N3.DataFactory.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
+      getSubjects(): N3.Term[];
+      getPredicates(): N3.Term[];
+      getObjects(): N3.Term[];
+      getQuads(): N3.Quad[];
+      getNeighborhood (point: N3.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
     }
 }
 
