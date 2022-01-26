@@ -12980,7 +12980,7 @@ function ShExVisitor () {
 
     visitSchema: function (schema) {
       const ret = { type: "Schema" };
-      _expect(schema, "type", "Schema");
+      this._expect(schema, "type", "Schema");
       this._maybeSet(schema, ret, "Schema",
                      ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
                      ["_base", "_prefixes", "_index", "_sourceMap"]
@@ -13027,7 +13027,7 @@ function ShExVisitor () {
     },
     visitSemAct: function (semAct, label) {
       const ret = { type: "SemAct" };
-      _expect(semAct, "type", "SemAct");
+      this._expect(semAct, "type", "SemAct");
 
       this._maybeSet(semAct, ret, "SemAct",
                      ["name", "code"]);
@@ -13098,7 +13098,7 @@ function ShExVisitor () {
     // ### `visitNodeConstraint` deep-copies the structure of a shape
     visitShape: function (shape, label) {
       const ret = { type: "Shape" };
-      _expect(shape, "type", "Shape");
+      this._expect(shape, "type", "Shape");
 
       this._maybeSet(shape, ret, "Shape",
                      [ "id",
@@ -13110,7 +13110,7 @@ function ShExVisitor () {
     // ### `visitNodeConstraint` deep-copies the structure of a shape
     visitNodeConstraint: function (shape, label) {
       const ret = { type: "NodeConstraint" };
-      _expect(shape, "type", "NodeConstraint");
+      this._expect(shape, "type", "NodeConstraint");
 
       this._maybeSet(shape, ret, "NodeConstraint",
                      [ "id",
@@ -13186,7 +13186,7 @@ function ShExVisitor () {
 
     visitStemRange: function (t) {
       const _Visitor = this; // console.log(Error(t.type).stack);
-      // _expect(t, "type", "IriStemRange");
+      // this._expect(t, "type", "IriStemRange");
       if (!("type" in t))
         _Visitor.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
       const stemRangeTypes = ["IriStem", "LiteralStem", "LanguageStem", "IriStemRange", "LiteralStemRange", "LanguageStemRange"];
@@ -13194,7 +13194,7 @@ function ShExVisitor () {
         _Visitor.runtimeError(Error("expected type attribute '"+t.type+"' to be in '"+stemRangeTypes+"'."));
       let stem;
       if (isTerm(t)) {
-        _expect(t.stem, "type", "Wildcard");
+        this._expect(t.stem, "type", "Wildcard");
         stem = { type: t.type, stem: { type: "Wildcard" } };
       } else {
         stem = { type: t.type, stem: t.stem };
@@ -13209,7 +13209,7 @@ function ShExVisitor () {
 
     visitExclusion: function (c) {
       if (!isTerm(c)) {
-        // _expect(c, "type", "IriStem");
+        // this._expect(c, "type", "IriStem");
         if (!("type" in c))
           _Visitor.runtimeError(Error("expected "+JSON.stringify(c)+" to have a 'type' attribute."));
         const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
@@ -13267,9 +13267,15 @@ function ShExVisitor () {
         Error.captureStackTrace(e, captureFrame);
         throw e;
       }
-    }
-
+    },
+    _expect: function (o, p, v) {
+      if (!(p in o))
+        this.runtimeError(Error("expected "+JSON.stringify(o)+" to have a ."+p));
+      if (arguments.length > 2 && o[p] !== v)
+        this.runtimeError(Error("expected "+o[p]+" to equal "+v));
+    },
   };
+
   r.visitBase = r.visitStart = r.visitClosed = r["visit@context"] = r._visitValue;
   r.visitExtra = r.visitAnnotations = r._visitList;
   r.visitInverse = r.visitPredicate = r._visitValue;
@@ -13283,16 +13289,6 @@ function ShExVisitor () {
   return r;
 
   // Expect property p with value v in object o
-  function _expect (o, p, v) {
-    if (!(p in o))
-      this._error("expected "+JSON.stringify(o)+" to have a ."+p);
-    if (arguments.length > 2 && o[p] !== v)
-      this._error("expected "+o[o]+" to equal ."+v);
-  }
-
-  function _error (str) {
-    throw new Error(str);
-  }
 }
 
 // The ShEx Vistor is here to minimize deps for ShExValidator.
