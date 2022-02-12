@@ -27,6 +27,9 @@ build/Release
 node_modules
 EGP/
 da-web/
+.emacs.desktop*
+.dependabot/
+.idea/
 
 *-stats.json
 
