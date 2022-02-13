@@ -9,7 +9,7 @@ start=@<Schema>
   sx:imports @<IriList1Plus>? ;
   sx:startActs @<SemActList1Plus>? ;
   sx:start @<shapeExpr>?;
-  sx:shapes @<shapeExpr>*
+  sx:shapes @<shapeExprList1Plus>?
 }
 
 <shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
