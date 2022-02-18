@@ -69,7 +69,7 @@ describe('Invoking SemActs', function () {
 
     // Parse ShapeMap and validate.
     const validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(data))
-    Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
+    Extensions.forEach(ext => ext.register(validator, {ShExTerm, DataFactory: N3.DataFactory}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
     const res = validator.validate(sm)

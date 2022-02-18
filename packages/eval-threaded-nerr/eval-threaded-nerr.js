@@ -112,7 +112,7 @@ function vpEngine (schema, shape, index) {
                   tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(
                   "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, tested, tested)
+                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
                     : []
                 )
                 if (semActErrors.length > 0)

@@ -1465,27 +1465,8 @@ const ShExUtil = {
             extend({id: v[SX.expression][0].ldterm}, tripleExpr(v[SX.expression][0].nested)) :
             v[SX.expression][0].ldterm;
         }
-        if (SX.annotation in v)
-          ret.annotations = v[SX.annotation].map(e => {
-            return {
-              type: "Annotation",
-              predicate: e.nested[SX.predicate][0].ldterm,
-              object: e.nested[SX.object][0].ldterm
-            };
-          });
-        if (SX.semActs in v)
-          ret.semActs = v[SX.semActs].map(e => {
-            const ret = {
-              type: "SemAct",
-              name: e.nested[SX.name][0].ldterm
-            };
-            if (SX.code in e.nested)
-              ret.code = e.nested[SX.code][0].ldterm.value;
-            return ret;
-          });
-        return ret;
       } else if (t === SX.NodeConstraint) {
-        const ret = { type: "NodeConstraint" };
+        ret = { type: "NodeConstraint" };
         if (SX.values in v)
           ret.values = v[SX.values].map(v1 => { return objectValue(v1); });
         if (SX.nodeKind in v)
@@ -1500,10 +1481,28 @@ const ShExUtil = {
           ret.flags = v[SX.flags][0].ldterm.value;
         if (SX.datatype in v)
           ret.datatype = v[SX.datatype][0].ldterm;
-        return ret;
       } else {
         throw Error("unknown shapeExpr type in " + JSON.stringify(v));
       }
+      if (SX.annotation in v)
+        ret.annotations = v[SX.annotation].map(e => {
+          return {
+            type: "Annotation",
+            predicate: e.nested[SX.predicate][0].ldterm,
+            object: e.nested[SX.object][0].ldterm
+          };
+        });
+      if (SX.semActs in v)
+        ret.semActs = v[SX.semActs].map(e => {
+          const ret = {
+            type: "SemAct",
+            name: e.nested[SX.name][0].ldterm
+          };
+          if (SX.code in e.nested)
+            ret.code = e.nested[SX.code][0].ldterm.value;
+          return ret;
+        });
+      return ret;
 
     }
 

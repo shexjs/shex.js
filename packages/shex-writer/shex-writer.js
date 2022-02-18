@@ -206,18 +206,6 @@ ShExWriter.prototype = {
       const empties = ["values", "length", "minlength", "maxlength", "pattern", "flags"];
       pieces.push("{\n");
 
-      function _writeShapeActions (semActs) {
-        if (!semActs)
-          return;
-
-        semActs.forEach(function (act) {
-          _ShExWriter._expect(act, "type", "SemAct");
-          pieces.push(" %",
-                      _ShExWriter._encodePredicate(act.name),
-                      ("code" in act ? "{"+escapeCode(act.code)+"%"+"}" : "%"));
-        });
-      }
-
       function _writeCardinality (min, max) {
         if      (min === 0 && max === 1)         pieces.push("?");
         else if (min === 0 && max === UNBOUNDED) pieces.push("*");
@@ -310,8 +298,8 @@ ShExWriter.prototype = {
       if (shape.expression) // t: 0
         _writeExpression(shape.expression, "  ", 0);
       pieces.push("\n}");
-      _writeShapeActions(shape.semActs);
-      _ShExWriter._annotations(pieces, shape.annotations, "  ");
+      this._writeShapeActions(pieces, shape.semActs, "  ");
+      this._annotations(pieces, shape.annotations, "  ");
 
       return pieces;
     }
@@ -329,11 +317,25 @@ ShExWriter.prototype = {
       else if (v.nodeKind !== undefined) _ShExWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
 
       this._fillNodeConstraint(pieces, v, done);
+      this._writeShapeActions(pieces, v.semActs, "  ");
       this._annotations(pieces, v.annotations, "  ");
       return pieces;
     }
     catch (error) { done && done(error); }
 
+  },
+
+  _writeShapeActions: function (pieces, semActs, indent) {
+    const _ShExWriter = this;
+    if (!semActs)
+      return;
+
+    semActs.forEach(function (act) {
+      _ShExWriter._expect(act, "type", "SemAct");
+      pieces.push(" %",
+        _ShExWriter._encodePredicate(act.name),
+        ("code" in act ? "{"+escapeCode(act.code)+"%"+"}" : "%"));
+    });
   },
 
   _annotations: function (pieces, annotations, indent) {

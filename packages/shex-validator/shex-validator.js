@@ -452,7 +452,7 @@ function ShExValidator_constructor(schema, db, options) {
     if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
         &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
         && !("errors" in ret) && "semActs" in shapeExpr) {
-      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({node: point}, ret), ret)
+      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({}, ret, {node: point}), ret)
       if (semActErrors.length)
         // some semAct aborted
         return { type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors};

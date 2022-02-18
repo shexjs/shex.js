@@ -4029,7 +4029,7 @@ function vpEngine (schema, shape, index) {
                   tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(
                   "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, tested, tested)
+                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
                     : []
                 )
                 if (semActErrors.length > 0)
@@ -11188,27 +11188,8 @@ const ShExUtil = {
             extend({id: v[SX.expression][0].ldterm}, tripleExpr(v[SX.expression][0].nested)) :
             v[SX.expression][0].ldterm;
         }
-        if (SX.annotation in v)
-          ret.annotations = v[SX.annotation].map(e => {
-            return {
-              type: "Annotation",
-              predicate: e.nested[SX.predicate][0].ldterm,
-              object: e.nested[SX.object][0].ldterm
-            };
-          });
-        if (SX.semActs in v)
-          ret.semActs = v[SX.semActs].map(e => {
-            const ret = {
-              type: "SemAct",
-              name: e.nested[SX.name][0].ldterm
-            };
-            if (SX.code in e.nested)
-              ret.code = e.nested[SX.code][0].ldterm.value;
-            return ret;
-          });
-        return ret;
       } else if (t === SX.NodeConstraint) {
-        const ret = { type: "NodeConstraint" };
+        ret = { type: "NodeConstraint" };
         if (SX.values in v)
           ret.values = v[SX.values].map(v1 => { return objectValue(v1); });
         if (SX.nodeKind in v)
@@ -11223,10 +11204,28 @@ const ShExUtil = {
           ret.flags = v[SX.flags][0].ldterm.value;
         if (SX.datatype in v)
           ret.datatype = v[SX.datatype][0].ldterm;
-        return ret;
       } else {
         throw Error("unknown shapeExpr type in " + JSON.stringify(v));
       }
+      if (SX.annotation in v)
+        ret.annotations = v[SX.annotation].map(e => {
+          return {
+            type: "Annotation",
+            predicate: e.nested[SX.predicate][0].ldterm,
+            object: e.nested[SX.object][0].ldterm
+          };
+        });
+      if (SX.semActs in v)
+        ret.semActs = v[SX.semActs].map(e => {
+          const ret = {
+            type: "SemAct",
+            name: e.nested[SX.name][0].ldterm
+          };
+          if (SX.code in e.nested)
+            ret.code = e.nested[SX.code][0].ldterm.value;
+          return ret;
+        });
+      return ret;
 
     }
 
@@ -12274,7 +12273,7 @@ function ShExValidator_constructor(schema, db, options) {
     if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
         &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
         && !("errors" in ret) && "semActs" in shapeExpr) {
-      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({node: point}, ret), ret)
+      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({}, ret, {node: point}), ret)
       if (semActErrors.length)
         // some semAct aborted
         return { type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors};
@@ -13543,18 +13542,6 @@ ShExWriter.prototype = {
       const empties = ["values", "length", "minlength", "maxlength", "pattern", "flags"];
       pieces.push("{\n");
 
-      function _writeShapeActions (semActs) {
-        if (!semActs)
-          return;
-
-        semActs.forEach(function (act) {
-          _ShExWriter._expect(act, "type", "SemAct");
-          pieces.push(" %",
-                      _ShExWriter._encodePredicate(act.name),
-                      ("code" in act ? "{"+escapeCode(act.code)+"%"+"}" : "%"));
-        });
-      }
-
       function _writeCardinality (min, max) {
         if      (min === 0 && max === 1)         pieces.push("?");
         else if (min === 0 && max === UNBOUNDED) pieces.push("*");
@@ -13647,8 +13634,8 @@ ShExWriter.prototype = {
       if (shape.expression) // t: 0
         _writeExpression(shape.expression, "  ", 0);
       pieces.push("\n}");
-      _writeShapeActions(shape.semActs);
-      _ShExWriter._annotations(pieces, shape.annotations, "  ");
+      this._writeShapeActions(pieces, shape.semActs, "  ");
+      this._annotations(pieces, shape.annotations, "  ");
 
       return pieces;
     }
@@ -13666,11 +13653,25 @@ ShExWriter.prototype = {
       else if (v.nodeKind !== undefined) _ShExWriter._error("unexpected nodeKind: " + v.nodeKind); // !!!!
 
       this._fillNodeConstraint(pieces, v, done);
+      this._writeShapeActions(pieces, v.semActs, "  ");
       this._annotations(pieces, v.annotations, "  ");
       return pieces;
     }
     catch (error) { done && done(error); }
 
+  },
+
+  _writeShapeActions: function (pieces, semActs, indent) {
+    const _ShExWriter = this;
+    if (!semActs)
+      return;
+
+    semActs.forEach(function (act) {
+      _ShExWriter._expect(act, "type", "SemAct");
+      pieces.push(" %",
+        _ShExWriter._encodePredicate(act.name),
+        ("code" in act ? "{"+escapeCode(act.code)+"%"+"}" : "%"));
+    });
   },
 
   _annotations: function (pieces, annotations, indent) {

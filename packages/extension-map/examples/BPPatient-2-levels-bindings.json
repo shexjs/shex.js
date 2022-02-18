@@ -1,6 +1,6 @@
 [
   {
-    "http://shex.io/extensions/Map/#BPDAM-name": { "value": "Sue" }
+    "http://shex.io/extensions/Map/#BPDAM-name": "\"Sue\""
   },
   [
     [
@@ -9,7 +9,7 @@
       },
       [
         {
-          "http://shex.io/extensions/Map/#BPDAM-reportNo": { "value": "one" }
+          "http://shex.io/extensions/Map/#BPDAM-reportNo": "\"one\""
         },
         [
           {
@@ -55,7 +55,7 @@
       },
       [
         {
-          "http://shex.io/extensions/Map/#BPDAM-reportNo": { "value": "two" }
+          "http://shex.io/extensions/Map/#BPDAM-reportNo": "\"two\""
         },
         [
           {
