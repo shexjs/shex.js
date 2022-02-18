@@ -1446,13 +1446,13 @@ const ShExUtil = {
                    "ShapeNot"     : { nary: false, expr: true , prop: "shapeExpr"  },
                    "ShapeRef"     : { nary: false, expr: false, prop: "reference"  },
                    "ShapeExternal": { nary: false, expr: false, prop: null         } };
-      const ret = findType(v, elts, shapeExpr);
+      let ret = findType(v, elts, shapeExpr);
       if (ret !== Missed)
         return ret;
 
       const t = v[RDF.type][0].ldterm;
       if (t === SX.Shape) {
-        const ret = { type: "Shape" };
+        ret = { type: "Shape" };
         ["closed"].forEach(a => {
           if (SX[a] in v)
             ret[a] = !!v[SX[a]][0].ldterm.value;

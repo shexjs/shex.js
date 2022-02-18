@@ -218,7 +218,7 @@ describe("A ShEx parser", function () {
         });
 
         it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
-          let w;debugger
+          let w;
           new ShExWriter({simplifyParentheses: false, base: meta.base, prefixes: meta.prefixes}).
             writeSchema(abstractSyntax, function (error, text, prefixes) {
               if (error) throw error;

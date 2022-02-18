@@ -48,7 +48,8 @@ const ShExTermCjsModule = (function () {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    const result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -175,7 +176,7 @@ const ShExTermCjsModule = (function () {
     } else if (isBlank(node)) {
       return node;
     } else if (isLiteral(node)) {
-      const value = getLiteralValue(node);
+      let value = getLiteralValue(node);
       const type = getLiteralType(node);
       const language = getLiteralLanguage(node);
       // Escape special characters
@@ -249,11 +250,6 @@ const ShExTermCjsModule = (function () {
     return match[1] ? match[1].toLowerCase() : '';
   }
 
-
-// rdf:type predicate (for 'a' abbreviation)
-const RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    RDF_TYPE   = RDF_PREFIX + 'type';
-
 // Characters in literals that require escaping
 const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
@@ -265,7 +261,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
   // Replaces a character by its escaped version
   function characterReplacer (character) {
     // Replace a single character by its escaped version
-    const result = escapeReplacements[character];
+    let result = escapeReplacements[character]; // @@ const should be let
     if (result === undefined) {
       // Replace a single character with its 4-bit unicode escape sequence
       if (character.length === 1) {
