@@ -14,7 +14,7 @@ export function getLiteralValue(literal: any): any;
 
 export function inDefaultGraph(triple: any): any;
 
-export function intermalTermToTurtle(node: any, base: any, prefixes: any): any;
+export function internalTermToTurtle(node: any, base: any, prefixes: any): any;
 
 export function internalTerm(node: any): any;
 

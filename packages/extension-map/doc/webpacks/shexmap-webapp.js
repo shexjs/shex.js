@@ -663,7 +663,7 @@ if (true) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports["default"] = void 0;
+exports.default = void 0;
 const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       XSD = 'http://www.w3.org/2001/XMLSchema#',
       SWAP = 'http://www.w3.org/2000/10/swap/';
@@ -693,7 +693,7 @@ var _default = {
     implies: `${SWAP}log#implies`
   }
 };
-exports["default"] = _default;
+exports.default = _default;
 
 /***/ }),
 
@@ -706,11 +706,11 @@ exports["default"] = _default;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports["default"] = exports.Variable = exports.Triple = exports.Term = exports.Quad = exports.NamedNode = exports.Literal = exports.DefaultGraph = exports.BlankNode = void 0;
-exports.escapeQuotes = escapeQuotes;
 exports.termFromId = termFromId;
 exports.termToId = termToId;
+exports.escapeQuotes = escapeQuotes;
 exports.unescapeQuotes = unescapeQuotes;
+exports.Triple = exports.Quad = exports.DefaultGraph = exports.Variable = exports.BlankNode = exports.Literal = exports.NamedNode = exports.Term = exports.default = void 0;
 
 var _IRIs = _interopRequireDefault(__webpack_require__(325));
 
@@ -741,7 +741,7 @@ const DataFactory = {
 };
 var _default = DataFactory; // ## Term constructor
 
-exports["default"] = _default;
+exports.default = _default;
 
 class Term {
   constructor(id) {
@@ -751,12 +751,6 @@ class Term {
 
   get value() {
     return this.id;
-  } // ### Implement hashCode for Immutable.js, since we implement `equals`
-  // https://immutable-js.com/docs/v4.0.0/ValueObject/#hashCode()
-
-
-  get hashCode() {
-    return 0;
   } // ### Returns whether this object represents the same term as the other
 
 
@@ -1062,11 +1056,11 @@ function literal(value, languageOrDataType) {
     // Convert a boolean
     if (typeof value === 'boolean') datatype = xsd.boolean; // Convert an integer or double
     else if (typeof value === 'number') {
-      if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
-        datatype = xsd.double;
-        if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
+        if (Number.isFinite(value)) datatype = Number.isInteger(value) ? xsd.integer : xsd.double;else {
+          datatype = xsd.double;
+          if (!Number.isNaN(value)) value = value > 0 ? 'INF' : '-INF';
+        }
       }
-    }
   } // Create a datatyped literal
 
 
@@ -1099,12 +1093,12 @@ function quad(subject, predicate, object, graph) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.inDefaultGraph = inDefaultGraph;
-exports.isBlankNode = isBlankNode;
-exports.isDefaultGraph = isDefaultGraph;
-exports.isLiteral = isLiteral;
 exports.isNamedNode = isNamedNode;
+exports.isBlankNode = isBlankNode;
+exports.isLiteral = isLiteral;
 exports.isVariable = isVariable;
+exports.isDefaultGraph = isDefaultGraph;
+exports.inDefaultGraph = inDefaultGraph;
 exports.prefix = prefix;
 exports.prefixes = prefixes;
 
@@ -2064,7 +2058,7 @@ module.exports = parseQuery;
 "use strict";
 
 
-var _parseUrl = (__webpack_require__(883)/* .parse */ .Qc);
+var _parseUrl = __webpack_require__(883)/* .parse */ .Qc;
 
 
 
@@ -6476,7 +6470,7 @@ const ShExMapCjsModule = function (config) {
 
 const extensions = __webpack_require__(386);
 const N3Util = __webpack_require__(670);
-const N3DataFactory = (__webpack_require__(713)["default"]);
+const N3DataFactory = __webpack_require__(713).default;
 const materializer = __webpack_require__(865)(config);
 
 const MapExt = "http://shex.io/extensions/Map/#";
@@ -7599,7 +7593,7 @@ const ShapeMapParser = (function () {
 
 // stolen as much as possible from SPARQL.js
 if (true) {
-  ShapeMapJison = (__webpack_require__(839)/* .Parser */ ._b); // node environment
+  ShapeMapJison = __webpack_require__(839)/* .Parser */ ._b; // node environment
 } else {}
 
 // Creates a ShEx parser with the given pre-defined prefixes
@@ -8888,7 +8882,11 @@ break;
 case 169:
 
         // $$[$0]: t: 1dotCode1
-	if ($$[$0-3] !== EmptyShape && false) {}
+	if ($$[$0-3] !== EmptyShape && false) {
+	  const t = blank();
+	  addShape(t, $$[$0-3], yy);
+	  $$[$0-3] = t; // ShapeRef
+	}
         // %6: t: 1inversedotCode1
         this.$ = extend({ type: "TripleConstraint" }, $$[$0-5] ? $$[$0-5] : {}, { predicate: $$[$0-4] }, ($$[$0-3] === EmptyShape ? {} : { valueExpr: $$[$0-3] }), $$[$0-2], $$[$0]); // t: 1dot // t: 1inversedot
         if ($$[$0-1].length)
@@ -9323,7 +9321,7 @@ __webpack_unused_export__ = ShExJisonLexer;
 
 const ShExParserCjsModule = (function () {
 
-const ShExJison = (__webpack_require__(509)/* .Parser */ ._b);
+const ShExJison = __webpack_require__(509)/* .Parser */ ._b;
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
@@ -9464,7 +9462,8 @@ const ShExTermCjsModule = (function () {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    const result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -9545,7 +9544,7 @@ const ShExTermCjsModule = (function () {
     };
   }
 
-  function externalTerm (node, factory) { // !!intermalTermToRdfjs
+  function externalTerm (node, factory) { // !!internalTermToRdfjs
     if (isIRI(node)) {
       return factory.namedNode(node);
     } else if (isBlank(node)) {
@@ -9569,7 +9568,7 @@ const ShExTermCjsModule = (function () {
     );
   }
 
-  function intermalTermToTurtle (node, base, prefixes) {
+  function internalTermToTurtle (node, base, prefixes) {
     if (isIRI(node)) {
       // if (node === RDF_TYPE) // only valid in Turtle predicates
       //   return "a";
@@ -9591,7 +9590,7 @@ const ShExTermCjsModule = (function () {
     } else if (isBlank(node)) {
       return node;
     } else if (isLiteral(node)) {
-      const value = getLiteralValue(node);
+      let value = getLiteralValue(node);
       const type = getLiteralType(node);
       const language = getLiteralLanguage(node);
       // Escape special characters
@@ -9601,7 +9600,7 @@ const ShExTermCjsModule = (function () {
       if (language)
         return '"' + value + '"@' + language;
       else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.intermalTermToTurtle(type, base, prefixes);
+        return '"' + value + '"^^' + this.internalTermToTurtle(type, base, prefixes);
       else
         return '"' + value + '"';
     } else {
@@ -9665,11 +9664,6 @@ const ShExTermCjsModule = (function () {
     return match[1] ? match[1].toLowerCase() : '';
   }
 
-
-// rdf:type predicate (for 'a' abbreviation)
-const RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    RDF_TYPE   = RDF_PREFIX + 'type';
-
 // Characters in literals that require escaping
 const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
@@ -9681,7 +9675,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
   // Replaces a character by its escaped version
   function characterReplacer (character) {
     // Replace a single character by its escaped version
-    const result = escapeReplacements[character];
+    let result = escapeReplacements[character]; // @@ const should be let
     if (result === undefined) {
       // Replace a single character with its 4-bit unicode escape sequence
       if (character.length === 1) {
@@ -9714,7 +9708,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     internalTriple: internalTriple,
     externalTerm: externalTerm,
     externalTriple: externalTriple,
-    intermalTermToTurtle: intermalTermToTurtle,
+    internalTermToTurtle: internalTermToTurtle,
   }
 })();
 
@@ -11175,13 +11169,13 @@ const ShExUtil = {
                    "ShapeNot"     : { nary: false, expr: true , prop: "shapeExpr"  },
                    "ShapeRef"     : { nary: false, expr: false, prop: "reference"  },
                    "ShapeExternal": { nary: false, expr: false, prop: null         } };
-      const ret = findType(v, elts, shapeExpr);
+      let ret = findType(v, elts, shapeExpr);
       if (ret !== Missed)
         return ret;
 
       const t = v[RDF.type][0].ldterm;
       if (t === SX.Shape) {
-        const ret = { type: "Shape" };
+        ret = { type: "Shape" };
         ["closed"].forEach(a => {
           if (SX[a] in v)
             ret[a] = !!v[SX[a]][0].ldterm.value;
@@ -11624,26 +11618,8 @@ const ShExUtil = {
     return fetch(queryURL, {
       headers: {
         'Accept': 'application/sparql-results+json'
-      }}).then(resp => resp.json()).then(t => {
-        const selects = t.head.vars;
-        return t.results.bindings.map(row => {
-          return selects.map(sel => {
-            const elt = row[sel];
-            switch (elt.type) {
-            case "uri": return elt.value;
-            case "bnode": return "_:" + elt.value;
-            case "literal":
-              const datatype = elt.datatype;
-              const lang = elt["xml:lang"];
-              return "\"" + elt.value + "\"" + (
-                datatype ? "^^" + datatype :
-                  lang ? "@" + lang :
-                  "");
-            default: throw "unknown XML results type: " + elt.prop("tagName");
-            }
-            return row[sel];
-          })
-        });
+      }}).then(resp => resp.json()).then(jsonObject => {
+        return this.parseSparqlJsonResults(jsonObject);
       })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
   },
 
@@ -11656,50 +11632,80 @@ const ShExUtil = {
     xhr.send();
     // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
     // const selects = selectsBlock.match(/\?[^\s?]+/g);
-    const t = JSON.parse(xhr.responseText);
-    const selects = t.head.vars;
-    return t.results.bindings.map(row => {
+    const jsonObject = JSON.parse(xhr.responseText);
+    return this.parseSparqlJsonResults(jsonObject);
+  },
+
+  parseSparqlJsonResults: function (jsonObject) {
+    const selects = jsonObject.head.vars;
+    return jsonObject.results.bindings.map(row => {
+      // spec: https://www.w3.org/TR/rdf-sparql-json-res/#variable-binding-results
       return selects.map(sel => {
         const elt = row[sel];
         switch (elt.type) {
         case "uri": return elt.value;
         case "bnode": return "_:" + elt.value;
         case "literal":
-          const datatype = elt.datatype;
-          const lang = elt["xml:lang"];
-          return "\"" + elt.value + "\"" + (
-            datatype ? "^^" + datatype :
-              lang ? "@" + lang :
-              "");
-        default: throw "unknown XML results type: " + elt.prop("tagName");
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\"" + (
+            "xml:lang" in elt ? "@" + elt["xml:lang"] : "");
+        case "typed-literal": // encountered in wikidata query service
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\"" + (
+            "^^" + elt.datatype);
+        default: throw "unknown XML results type: " + elt.type;
         }
-        return row[sel];
       })
     });
+  },
 
 /* TO ADD? XML results format parsed with jquery:
-        $(data).find("sparql > results > result").
-          each((_, row) => {
-            rows.push($(row).find("binding > *:nth-child(1)").
-              map((idx, elt) => {
-                elt = $(elt);
-                const text = elt.text();
-                switch (elt.prop("tagName")) {
-                case "uri": return text;
-                case "bnode": return "_:" + text;
-                case "literal":
-                  const datatype = elt.attr("datatype");
-                  const lang = elt.attr("xml:lang");
-                  return "\"" + text + "\"" + (
-                    datatype ? "^^" + datatype :
-                    lang ? "@" + lang :
-                      "");
-                default: throw "unknown XML results type: " + elt.prop("tagName");
-                }
-              }).get());
-          });
-*/
+  // parse..._dom(new window.DOMParser().parseFromString(str, "text/xml"));
+
+  parseSparqlXmlResults_dom: function (doc) {
+    Array.from(X.querySelectorAll('sparql > results > result')).map(row => {
+      Array.from(row.querySelectorAll("binding")).map(elt => {
+        const typed = Array.from(elt.children)[0];
+        const text = typed.textContent;
+
+        switch (elt.tagName) {
+        case "uri": return text;
+        case "bnode": return "_:" + text;
+        case "literal":
+          const datatype = typed.getAttribute("datatype");
+          const lang = typed.getAttribute("xml:lang");
+          return "\"" + text + "\"" + (
+            datatype ? "^^" + datatype :
+            lang ? "@" + lang :
+              "");
+        default: throw "unknown XML results type: " + elt.tagName;
+        }
+      })
+    })
   },
+
+  parseSparqlXmlResults_jquery: function (jqObj) {
+    $(jqObj).find("sparql > results > result").
+      each((_, row) => {
+        rows.push($(row).find("binding > *:nth-child(1)").
+          map((idx, elt) => {
+            elt = $(elt);
+            const text = elt.text();
+
+            switch (elt.prop("tagName")) {
+            case "uri": return text;
+            case "bnode": return "_:" + text;
+            case "literal":
+              const datatype = elt.attr("datatype");
+              const lang = elt.attr("xml:lang");
+              return "\"" + text + "\"" + (
+                datatype ? "^^" + datatype :
+                lang ? "@" + lang :
+                  "");
+            default: throw "unknown XML results type: " + elt.prop("tagName");
+            }
+          }).get());
+      });
+  }
+*/
 
   rdfjsDB: function (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 

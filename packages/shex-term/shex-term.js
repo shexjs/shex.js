@@ -130,7 +130,7 @@ const ShExTermCjsModule = (function () {
     };
   }
 
-  function externalTerm (node, factory) { // !!intermalTermToRdfjs
+  function externalTerm (node, factory) { // !!internalTermToRdfjs
     if (isIRI(node)) {
       return factory.namedNode(node);
     } else if (isBlank(node)) {
@@ -154,7 +154,7 @@ const ShExTermCjsModule = (function () {
     );
   }
 
-  function intermalTermToTurtle (node, base, prefixes) {
+  function internalTermToTurtle (node, base, prefixes) {
     if (isIRI(node)) {
       // if (node === RDF_TYPE) // only valid in Turtle predicates
       //   return "a";
@@ -186,7 +186,7 @@ const ShExTermCjsModule = (function () {
       if (language)
         return '"' + value + '"@' + language;
       else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.intermalTermToTurtle(type, base, prefixes);
+        return '"' + value + '"^^' + this.internalTermToTurtle(type, base, prefixes);
       else
         return '"' + value + '"';
     } else {
@@ -294,7 +294,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     internalTriple: internalTriple,
     externalTerm: externalTerm,
     externalTriple: externalTriple,
-    intermalTermToTurtle: intermalTermToTurtle,
+    internalTermToTurtle: internalTermToTurtle,
   }
 })();
 
