@@ -6,10 +6,10 @@ start=@<Schema>
 
 <Schema> CLOSED {
   a [sx:Schema] ;
-  sx:imports @<IriList1Plus>? ;
-  sx:startActs @<SemActList1Plus>? ;
-  sx:start @<shapeExpr>?;
-  sx:shapes @<shapeExprList1Plus>?
+  sx:imports @<IriList1Plus> ? ;
+  sx:startActs @<SemActList1Plus> ? ;
+  sx:start @<shapeExpr> ? ;
+  sx:shapes @<shapeExprList1Plus> ?
 }
 
 <shapeExpr> @<ShapeOr> OR @<ShapeAnd> OR @<ShapeNot> OR @<NodeConstraint> OR @<Shape> OR @<ShapeExternal>
@@ -31,29 +31,31 @@ start=@<Schema>
 
 <NodeConstraint> CLOSED {
   a [sx:NodeConstraint] ;
-  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral]?;
+  sx:nodeKind [sx:iri sx:bnode sx:literal sx:nonliteral] ? ;
   sx:datatype IRI ? ;
   &<xsFacets>  ;
-  sx:values @<valueSetValueList1Plus>?
+  sx:values @<valueSetValueList1Plus> ? ;
+  sx:semActs @<SemActList1Plus> ? ;
+  sx:annotation @<AnnotationList1Plus> ?
 }
 
 <Shape> CLOSED {
   a [sx:Shape] ;
-  sx:closed [true false]? ;
-  sx:extra IRI* ;
-  sx:expression @<tripleExpression>? ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<AnnotationList1Plus>? ;
+  sx:closed [true false] ? ;
+  sx:extra IRI * ;
+  sx:expression @<tripleExpression> ? ;
+  sx:semActs @<SemActList1Plus> ? ;
+  sx:annotation @<AnnotationList1Plus> ?
 }
 
 <ShapeExternal> CLOSED {
-  a [sx:ShapeExternal] ;
+  a [sx:ShapeExternal]
 }
 
 <SemAct> CLOSED {
   a [sx:SemAct] ;
   sx:name IRI ;
-  sx:code xsd:string?
+  sx:code xsd:string ?
 }
 
 <Annotation> CLOSED {
@@ -64,13 +66,13 @@ start=@<Schema>
 
 # <xsFacet> @<stringFacet> OR @<numericFacet>
 <facet_holder> { # hold labeled productions
-  $<xsFacets> ( &<stringFacet> | &<numericFacet> )* ;
+  $<xsFacets> ( &<stringFacet> | &<numericFacet> ) * ;
   $<stringFacet> (
       sx:length xsd:integer
     | sx:minlength xsd:integer
     | sx:maxlength xsd:integer
-    | sx:pattern xsd:string ; sx:flags xsd:string?
-  );
+    | sx:pattern xsd:string ; sx:flags xsd:string ?
+  ) ;
   $<numericFacet> (
       sx:mininclusive   @<numericLiteral>
     | sx:minexclusive   @<numericLiteral>
@@ -86,23 +88,23 @@ start=@<Schema>
                                OR @<LiteralStem> OR @<LiteralStemRange>
                 OR @<Language> OR @<LanguageStem> OR @<LanguageStemRange>
 <objectValue> IRI OR LITERAL # rdf:langString breaks on Annotation.object
-<Language> CLOSED { a [sx:Language]; sx:languageTag xsd:string }
-<IriStem> CLOSED { a [sx:IriStem]; sx:stem xsd:string }
+<Language> CLOSED { a [sx:Language] ; sx:languageTag xsd:string }
+<IriStem> CLOSED { a [sx:IriStem] ; sx:stem xsd:string }
 <IriStemRange> CLOSED {
-  a [sx:IriStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
+  a [sx:IriStemRange] ;
+  sx:stem xsd:string OR @<Wildcard> ;
   sx:exclusion @<IriStemExclusionList1Plus>
 }
-<LiteralStem> CLOSED { a [sx:LiteralStem]; sx:stem xsd:string }
+<LiteralStem> CLOSED { a [sx:LiteralStem] ; sx:stem xsd:string }
 <LiteralStemRange> CLOSED {
-  a [sx:LiteralStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
+  a [sx:LiteralStemRange] ;
+  sx:stem xsd:string OR @<Wildcard> ;
   sx:exclusion @<LiteralStemExclusionList1Plus>
 }
-<LanguageStem> CLOSED { a [sx:LanguageStem]; sx:stem xsd:string }
+<LanguageStem> CLOSED { a [sx:LanguageStem] ; sx:stem xsd:string }
 <LanguageStemRange> CLOSED {
-  a [sx:LanguageStemRange];
-  sx:stem xsd:string OR @<Wildcard>;
+  a [sx:LanguageStemRange] ;
+  sx:stem xsd:string OR @<Wildcard> ;
   sx:exclusion @<LanguageStemExclusionList1Plus>
 }
 <Wildcard> BNODE CLOSED {
@@ -113,20 +115,20 @@ start=@<Schema>
 
 <OneOf> CLOSED {
   a [sx:OneOf] ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
+  sx:min xsd:integer ? ;
+  sx:max xsd:integer ? ;
   sx:expressions @<tripleExpressionList2Plus> ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<AnnotationList1Plus>?
+  sx:semActs @<SemActList1Plus> ? ;
+  sx:annotation @<AnnotationList1Plus> ?
 }
 
 <EachOf> CLOSED {
   a [sx:EachOf] ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
+  sx:min xsd:integer ? ;
+  sx:max xsd:integer ? ;
   sx:expressions @<tripleExpressionList2Plus> ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<AnnotationList1Plus>?
+  sx:semActs @<SemActList1Plus> ? ;
+  sx:annotation @<AnnotationList1Plus> ?
 }
 
 <tripleExpressionList2Plus> CLOSED {
@@ -140,14 +142,14 @@ start=@<Schema>
 
 <TripleConstraint> CLOSED {
   a [sx:TripleConstraint] ;
-  sx:inverse [true false]? ;
-  sx:negated [true false]? ;
-  sx:min xsd:integer? ;
-  sx:max xsd:integer? ;
+  sx:inverse [true false] ? ;
+  sx:negated [true false] ? ;
+  sx:min xsd:integer ? ;
+  sx:max xsd:integer ? ;
   sx:predicate IRI ;
-  sx:valueExpr @<shapeExpr>? ;
-  sx:semActs @<SemActList1Plus>? ;
-  sx:annotation @<AnnotationList1Plus>?
+  sx:valueExpr @<shapeExpr> ? ;
+  sx:semActs @<SemActList1Plus> ? ;
+  sx:annotation @<AnnotationList1Plus> ?
 }
 
 <IriList1Plus> CLOSED {
