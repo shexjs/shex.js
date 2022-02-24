@@ -11762,11 +11762,12 @@ const ShExUtil = {
         case "uri": return elt.value;
         case "bnode": return "_:" + elt.value;
         case "literal":
-          return "\"" + elt.value.replace(/"/g, '\\""') + "\"" + (
-            "xml:lang" in elt ? "@" + elt["xml:lang"] : "");
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
+            + ("xml:lang" in elt ? "@" + elt["xml:lang"] : "")
+            + ("datatype" in elt ? "^^" + elt.datatype : "");
         case "typed-literal": // encountered in wikidata query service
-          return "\"" + elt.value.replace(/"/g, '\\""') + "\"" + (
-            "^^" + elt.datatype);
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
+            + ("^^" + elt.datatype);
         default: throw "unknown XML results type: " + elt.type;
         }
       })
