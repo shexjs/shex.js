@@ -119,7 +119,7 @@ function rdflib_termToLex (node, resolver) {
   if (node.indexOf(resolver._basePath) === 0 &&
       ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
     return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.ShExTerm.intermalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
+  return ShEx.ShExTerm.internalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
 }
 function rdflib_lexToTerm (lex, resolver) {
   return lex === START_SHAPE_LABEL ? ShEx.Validator.start :

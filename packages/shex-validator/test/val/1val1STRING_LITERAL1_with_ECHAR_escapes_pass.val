@@ -19,7 +19,7 @@
         "object": { "value": "\t\b\n\r\f\\\"'\u0061\uD835\uDCB8" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"\t\b\n\r\f\\\"'a𝒸\"",
+          "focus": "\"\t\b\n\r\f\\\\\"'a𝒸\"",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [
