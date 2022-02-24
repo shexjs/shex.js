@@ -1056,11 +1056,11 @@ async function materializeAsync () {
     // );
 
     function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-    const resultBindings = _dup(await Caches.bindings.refresh());
+    let resultBindings = _dup(await Caches.bindings.refresh());
     if (Caches.statics.get().trim().length === 0)
       await Caches.statics.set("{  }");
     const _t = await Caches.statics.refresh();
-    if (_t && Object.keys(_t) > 0) {
+    if (_t && Object.keys(_t).length > 0) {
       if (!Array.isArray(resultBindings))
         resultBindings = [resultBindings];
       resultBindings.unshift(_t);
