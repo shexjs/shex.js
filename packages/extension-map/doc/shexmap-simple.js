@@ -10,7 +10,6 @@ const ShExApi = ShEx.Api({
 })
 const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 ShEx.ShapeMap.start = ShEx.Validator.start
-const SharedForTests = {} // an object to share state with a test harness
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
@@ -29,6 +28,8 @@ Caches.bindings = makeJSONCache($("#bindings1 textarea"));
 Caches.statics = makeJSONCache($("#staticVars textarea"));
 Caches.outputSchema = makeSchemaCache($("#outputSchema textarea"));
 // let ShExRSchema; // defined in calling page
+
+const SharedForTests = {Caches, /*DefaultBase*/} // an object to share state with a test harness
 
 const ParseTriplePattern = (function () {
   const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
