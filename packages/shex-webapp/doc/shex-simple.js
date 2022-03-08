@@ -756,9 +756,9 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      const errors = await copyEditMapToTextMap() // will update if #editMap is dirty
+      const errors = await copyEditMapToTextMap(); // will update if #editMap is dirty
       if (errors.length === 0)
-        resolve(await callValidator())
+        resolve(await callValidator());
     }, 0);
   })
 }
@@ -1652,7 +1652,6 @@ async function loadSearchParameters () {
 }
 
 function setTextAreaHandlers (listItems) {
-  const textAreaCaches = ["inputSchema", "inputData", "shapeMap"]
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
