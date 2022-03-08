@@ -35,9 +35,9 @@
     "url": "https://github.com/shexSpec/grammar/issues"
   },
   "dependencies": {
-    "@ts-jison/parser": "^0.0.9"
+    "@ts-jison/parser": "^0.2.2"
   },
   "devDependencies": {
-    "@ts-jison/parser-generator": "^0.0.9"
+    "@ts-jison/parser-generator": "^0.2.2"
   }
 }
