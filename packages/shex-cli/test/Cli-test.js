@@ -1,13 +1,20 @@
-// Test shex.js command line scripts.
+/* Test shex.js command line scripts.
+ * can be used with a provided HTTP server à la:
+ *   HTTPTEST="http://raw.githubusercontent-local.com/shexSpec/shex.js/main/packages/shex-cli/test/" mocha ...
+ */
 
 "use strict";
 const TEST_cli = "TEST_cli" in process.env ? JSON.parse(process.env["TEST_cli"]) : false;
 const TIME = "TIME" in process.env;
-const HTTPTEST = "HTTPTEST" in process.env ?
-    process.env.HTTPTEST :
-    "http://raw.githubusercontent.com/shexSpec/shex.js/main/packages/shex-cli/test/"
-
 const TestUtils = require("@shexjs/util/tools/common-test-infrastructure.js");
+
+const HTTPTEST = "HTTPTEST" in process.env ?
+      process.env.HTTPTEST :
+      TestUtils.startLocalServer(
+        "localhost", // some loopback address or local IP address
+        "/shexSpec/shex.js/main/packages/shex-cli/test/", // use the same path as rawgit, in case it's ever helpful
+        __dirname, // server root
+      );
 
 const AllTests = {
   "validate": [
@@ -46,7 +53,7 @@ const AllTests = {
     { name: "simple-bad-data-missed", args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", HTTPTEST + "cli/p1.ttl999", "-n", "<x>"], errorMatch: "Not Found", status: 1 },
     { name: "results-missing-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results-missing.json"], errorMatch: "Not Found", status: 1 },
     //  --dry-run
-    { name: "simple-bad-shex-http" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex999", "-s", "<http://a.example/S1>", "-d", HTTPTEST + "cli/p1.ttl", "-n", "<x>", "--dry-run"], errorMatch: "Not Found", status: 1 },
+    { name: "simple-bad-shex-http-dry" , args: ["-x", HTTPTEST + "cli/1dotOr2dot.shex999", "-s", "<http://a.example/S1>", "-d", HTTPTEST + "cli/p1.ttl", "-n", "<x>", "--dry-run"], errorMatch: "Not Found", status: 1 },
     { name: "results-missing-http-dry", args: ["--json-manifest", HTTPTEST + "cli/manifest-results-missing.json", "--dry-run"], errorMatch: "Not Found", status: 1 },
 
     // local file access
@@ -107,6 +114,7 @@ const AllTests = {
 if (!TEST_cli) {
   console.warn("Skipping cli-tests; to activate these tests, set environment variable TEST_cli=true");
 } else {
+  // console.log(`Testing CLI programs against HTTP server ${HTTPTEST}`);
   TestUtils.runCliTests(AllTests, __dirname, TIME);
 }
 
