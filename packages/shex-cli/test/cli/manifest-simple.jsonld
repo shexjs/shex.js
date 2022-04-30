@@ -1,5 +1,5 @@
 {
-  "@context": "https://raw.githubusercontent.com/shexSpec/test-suite/gh-pages/tests/manifest-context.jsonld",
+  "@context": "../static/manifest-context.jsonld",
   "@graph": [
     {
       "@id": "http://shexspec.github.io/test-suite/tests/manifest.ttl",
