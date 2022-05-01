@@ -37,10 +37,10 @@
     "koa": "^2.13.0",
     "koa-body": "^4.2.0",
     "lerna": "^4.0.0",
-    "marked": "^0.7.0",
+    "marked": "^4.0.12",
     "mocha": "^9.1.3",
     "n3": "^1.6.2",
-    "nock": "^10.0.6",
+    "nock": "^13.2.4",
     "node-fetch": "^2.6.0",
     "nyc": "^15.1.0",
     "pre-commit": "^1.2.2",
@@ -59,10 +59,10 @@
     "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
-    "test": "mocha -C -R dot",
-    "test-all": "TEST_cli=true TEST_browser=true TEST_server=true mocha -R dot",
-    "test-verbose": "mocha && TEST_cli=true mocha test/cli-test.js && TEST_browser=true mocha test/browser-test.js",
-    "earl999": "mocha -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
+    "test": "mocha packages/*/test/*test.js -C -R dot",
+    "test-all": "TEST_cli=true TEST_browser=true TEST_server=true mocha packages/*/test/*test.js -R dot",
+    "test-verbose": "mocha packages/*/test/*test.js && TEST_cli=true mocha packages/*/test/*test.js test/cli-test.js && TEST_browser=true mocha packages/*/test/*test.js test/browser-test.js",
+    "earl999": "mocha packages/*/test/*test.js -C -R mocha-earl-reporter test/Parser-Writer-test.js test/Validation-test.js",
     "earl": "cd test && make Parser-Writer-test && make Validation-test",
     "lint": "eslint packages/shex-cli/test/findPath.js",
     "travisRepo": "./tools/travisRepo.sh",
@@ -84,9 +84,6 @@
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
-  },
-  "mocha": {
-    "spec": "packages/*/test/*test.js"
   },
   "pre-commit": [
     "lint",

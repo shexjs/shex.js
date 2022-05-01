@@ -8,8 +8,8 @@ start=@<Schema>
   a [sx:Schema] ;
   sx:imports @<IriList1Plus>? ;
   sx:startActs @<SemActList1Plus>? ;
-  sx:start @<shapeExpr>? ;
-  sx:shapes @<shapeDeclOrExpr>*
+  sx:start @<shapeExpr> ? ;
+  sx:shapes @<shapeDeclOrExprList1Plus>*
 }
 
 # <shapeDeclOrExpr> is a shortcut for always requriing a ShapeDecl
