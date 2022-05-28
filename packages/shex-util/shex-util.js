@@ -1049,7 +1049,7 @@ const ShExUtil = {
             _dive1(s.referenced);
           }
         });
-      } else if (solns.type === "Recursion") {
+      } else if (["ShapeNotResults", "Recursion"].indexOf(solns.type) !== -1) {
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
