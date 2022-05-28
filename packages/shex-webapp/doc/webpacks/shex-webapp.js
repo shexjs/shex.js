@@ -5391,14 +5391,28 @@ if (true)
 /***/ 410:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-// **ShExLoader** return promise to load ShExC, ShExJ and N3 (Turtle) files.
+/** @shexjs/api - HTTP access functions for @shexjs library.
+ * For `file:` access or dynamic loading of ShEx extensions, use `@shexjs/node`.
+ *
+ * load function(shExC, shExJ, turtle, jsonld, schemaOptions = {}, dataOptions = {})
+ *   return promise of loaded schema URLs (ShExC and ShExJ), data files (turle, and jsonld)
+ * loadExtensions function(globs[])
+ *   prototype of loadExtensions. does nothing
+ * GET function(url, mediaType)
+ *   return promise of {contents, url}
+ */
 
 const ShExApiCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(443);
   const ShExParser = __webpack_require__(931);
 
-  const api = { load: LoadPromise, loadExtensions: LoadNoExtensions, GET: GET, loadShExImports_NotUsed: loadShExImports_NotUsed };
+  const api = {
+    load: LoadPromise,
+    loadExtensions: LoadNoExtensions,
+    GET: GET,
+    loadShExImports_NotUsed: loadShExImports_NotUsed // possible load imports function
+  };
   return api
   
   async function GET (url, mediaType) {
@@ -5687,12 +5701,21 @@ const ShExApiCjsModule = function (config = {}) {
   async function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
     const struct = JSON.parse(text)
     try {
-      const nquads = await config.jsonld.toRDF(struct, {format: "application/nquads", base: url});
+      const nquads = await config.jsonld.toRDF(struct, Object.assign(
+        {
+          format: "application/nquads",
+          base: url
+        },
+        config.jsonLdOptions || {}
+      ))
       meta.prefixes = {}; // @@ take from @context?
       meta.base = url;    // @@ take from @context.base? (or vocab?)
-      return parseTurtle(nquads, mediaType, url, data, meta);
+      return parseTurtle(nquads, mediaType, url, data, meta)
     } catch (lderr) {
-      throw Error("error parsing JSON-ld " + url + ": " + lderr);
+      let e = lderr
+      if ("details" in e) e = e.details
+      if ("cause" in e) e = e.cause
+      throw Error("error parsing JSON-ld " + url + ": " + e)
     }
   }
 
@@ -7833,7 +7856,7 @@ const ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      ret.shapes = Object.keys(index.shapeExprs).sort().map(k => {
+      ret.shapes = Object.keys(index.shapeExprs).map(k => {
         if ("extra" in index.shapeExprs[k])
           index.shapeExprs[k].extra.sort();
         return v.visitShapeExpr(index.shapeExprs[k]);

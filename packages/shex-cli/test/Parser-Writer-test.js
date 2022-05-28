@@ -405,9 +405,11 @@ if (!EARL && TEST_Vestiges) {
         parser._setBase("file://"+path);
         return Promise.all([
           ShExNode.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
-          ShExNode.loadShExImports_NotUsed(path, parser, pickShEx)
+          ShExNode.loadShExImports_NotUsed(path, parser, pickShEx).then(schema => ({ schema })), // make resolve look like above structure
         ]).then(function (loadedAndSchema) {
-          expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).to.deep.equal(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
+          const load_res = ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE);
+          const loadShExImports_res = ShExUtil.canonicalize(loadedAndSchema[1].schema, BASE);
+          expect(loadShExImports_res).to.deep.equal(load_res);
         });
         function pickShEx (i) {
           return i + ".shex";
