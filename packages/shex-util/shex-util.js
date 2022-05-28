@@ -438,7 +438,7 @@ const ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      ret.shapes = Object.keys(index.shapeExprs).sort().map(k => {
+      ret.shapes = Object.keys(index.shapeExprs).map(k => {
         if ("extra" in index.shapeExprs[k])
           index.shapeExprs[k].extra.sort();
         return v.visitShapeDecl(index.shapeExprs[k]);
