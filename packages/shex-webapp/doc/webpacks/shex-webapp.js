@@ -7691,7 +7691,7 @@ const ShExUtil = {
 
   ShExRVisitor: function (knownShapeExprs) {
     const v = ShExUtil.Visitor();
-    const knownExpressions = {};
+    const knownTripleExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
         oldVisitExpression = v.visitExpression;
@@ -7701,31 +7701,39 @@ const ShExUtil = {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
-        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
+        if (knownShapeExprs.has(expr.id) || Object.keys(expr).length === 1) {
+          const already = knownShapeExprs.get(expr.id);
+          if (typeof expr.expression === "object") {
+            if (!already)
+              knownShapeExprs.set(expr.id, oldVisitShapeExpr.call(this, expr, label));
+          }
           return expr.id;
-        delete expr.id;
+        } else {
+          delete expr.id;
+          return oldVisitShapeExpr.call(this, expr, label);
+        }
       }
       return oldVisitShapeExpr.call(this, expr, label);
     };
 
     v.visitExpression = function (expr) {
-      if (typeof expr === "string") // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
+      if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
-      if ("id" in expr) {
-        if (expr.id in knownExpressions) {
-          knownExpressions[expr.id].refCount++;
+      } else if ("id" in expr) {
+        if (expr.id in knownTripleExpressions) {
+          knownTripleExpressions[expr.id].refCount++;
           return expr.id;
         }
       }
       const ret = oldVisitExpression.call(this, expr);
       // Everything from RDF has an ID, usually a BNode.
-      knownExpressions[expr.id] = { refCount: 1, expr: ret };
+      knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
     }
 
     v.cleanIds = function () {
-      for (let k in knownExpressions) {
-        const known = knownExpressions[k];
+      for (let k in knownTripleExpressions) {
+        const known = knownTripleExpressions[k];
         if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
@@ -7759,16 +7767,16 @@ const ShExUtil = {
 
   ShExRtoShExJ: function (schema) {
     // compile a list of known shapeExprs
-    const knownShapeExprs = [];
+    const knownShapeExprs = new Map();
     if ("shapes" in schema)
-      [].push.apply(knownShapeExprs, schema.shapes.map(sh => { return sh.id; }));
+      schema.shapes.forEach(sh => knownShapeExprs.set(sh.id, null))
 
     // normalize references to those shapeExprs
     const v = this.ShExRVisitor(knownShapeExprs);
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map(sh => {
+      schema.shapes = schema.shapes.map((sh, idx) => {
         return sh.type === SX.ShapeDecl ?
           {
             type: "ShapeDecl",
@@ -7776,7 +7784,7 @@ const ShExUtil = {
             abstract: sh.abstract,
             shapeExpr: v.visitShapeExpr(sh.shapeExpr)
           } :
-          v.keepShapeExpr(sh);
+        knownShapeExprs.get(sh.id) ? knownShapeExprs.get(sh.id) : (() => {const n = v.keepShapeExpr(sh); knownShapeExprs.set(sh.id, n); return n;})();
       });
 
     // remove extraneous BNode IDs
@@ -8533,7 +8541,7 @@ const ShExUtil = {
         _dive1(solns.extensions);
         if ("local" in solns)
           _dive1(solns.local);        
-      } else if (solns.type === "Recursion") {        
+      } else if (["ShapeNotResults", "Recursion"].indexOf(solns.type) !== -1) {
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
