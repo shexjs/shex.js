@@ -325,14 +325,19 @@ const ShExUtil = {
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
       schema.shapes = schema.shapes.map((sh, idx) => {
-        return sh.type === SX.ShapeDecl ?
+        return sh.type === SX.ShapeExternal
+          ?
           {
-            type: "ShapeDecl",
+            type: "ShapeExternal",
             id: sh.id,
-            abstract: sh.abstract,
-            shapeExpr: v.visitShapeExpr(sh.shapeExpr)
-          } :
-        knownShapeExprs.get(sh.id) ? knownShapeExprs.get(sh.id) : (() => {const n = v.keepShapeExpr(sh); knownShapeExprs.set(sh.id, n); return n;})();
+          }
+        :
+        {
+          type: "ShapeDecl",
+          id: sh.id,
+          abstract: sh.abstract,
+          shapeExpr: v.visitShapeExpr(sh.shapeExpr)
+        };
       });
 
     // remove extraneous BNode IDs
@@ -1460,14 +1465,17 @@ const ShExUtil = {
       const shapes = values[SX.shapes];
       if (shapes) {
         ret.shapes = shapes.map(v => { // @@ console.log(v.nested);
-          var t = v.nested[RDF.type][0].ldterm;
-          var obj = t === SX.ShapeDecl ?
-              {
-                type: SX.ShapeDecl,
-                abstract: !!v.nested[SX["abstract"]][0].ldterm.value,
-                shapeExpr: shapeExpr(v.nested[SX.shapeExpr][0].nested)
-              } :
-              shapeExpr(v.nested);
+          var t = v.nested[RDF.type][0].ldterm;debugger;
+          const obj = t === SX.ShapeExternal
+                ? { type: t }
+                : Object.assign(
+                  {},
+                  { type: SX.ShapeDecl },
+                  SX["abstract"] in v.nested
+                    ? {abstract: !!v.nested[SX["abstract"]]?.[0].ldterm.value}
+                    : {},
+                  {shapeExpr: shapeExpr(v.nested[SX.shapeExpr][0].nested)}
+                );
           return extend({id: v.ldterm}, obj);
         });
       }
