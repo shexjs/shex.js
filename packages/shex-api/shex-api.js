@@ -207,7 +207,7 @@ const ShExApiCjsModule = function (config = {}) {
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
     try {
-      const s = parser.parse(text)
+      const s = parser.parse(text, url/*, opts, filename*/)
       // !! horrible hack until I set a variable to know if there's a BASE.
       if (s.base === url) delete s.base
       meta.prefixes = s._prefixes || {}
@@ -228,7 +228,7 @@ const ShExApiCjsModule = function (config = {}) {
       return ret
     })
     function load999Imports (loaded) {
-      const schema = parser.parse(loaded.text)
+      const schema = parser.parse(loaded.text/*, base, opts, filename*/)
       const imports = schema.imports
       delete schema.imports
       ShExUtil.merge(ret, schema, false, true)
