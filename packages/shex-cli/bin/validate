@@ -40,11 +40,16 @@ const Path = require("path");
 const Util = require("util");
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
+const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
 const ShExValidator = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
 const N3 = require("n3");
-const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+  fetch: require('node-fetch'),
+  jsonld: require('jsonld'),
+});
 
 ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
@@ -66,6 +71,7 @@ const CommandLineOptions = [
   { name: "query",                 type: Boolean , description: "show matching RDF graph" },
   { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
+  { name: "list",                  type: Boolean },
   { name: "track",                 type: Boolean , description: "display graph nodes touched by validation" },
   { name: "slurp",                 type: Boolean , description: "record minimal neighborhoods needed by validation" },
   { name: "slurp-all",             type: Boolean , description: "record complete neighborhoods visited by validation. implies --slurp; may be the same as --slurp, depending on the databse" },
@@ -278,15 +284,15 @@ function findNodesAndValidate (loaded, parms, options) {
       ).ret
       : _makeShapeMap(parms.node, parms.shape, parms["node-type"]);
   if (cmds.verbose) {
-    const tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
+    let tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
     let w;
     new ShExWriter({simplifyParentheses: false }).
-      writeSchema(schema, function (error, text, prefixes) {
+      writeSchema(loaded.schema, function (error, text, prefixes) {
         if (error) throw error;
         else w = text;
       });
-    const shapeIn = shape ? shape + " in" : "";
+    const shapeIn = shapeMap ? shapeMap + " in" : "";
     console.log("validating " + tz + " over " + loaded.data.size + " triples against " + w);
   }
 
@@ -676,12 +682,18 @@ function runValidator (db, shapeMap, schema, options) {
 
   function grep (fixedMap) {
     const passes = fixedMap.reduce((acc, row) => {
+      if (cmds.verbose)
+        process.stdout.write('checking ' + JSON.stringify(row))
       const res = validator.validate([row]);
+      if (cmds.verbose)
+        process.stdout.write(' -> ' + !('errors' in res) + "\n")
       return "errors" in res
         ? acc
-        : acc.concat(res);
+        : acc.concat(cmds.list ? row.node : res);
     }, []);
-    return passes.length > 1
+    return cmds.list
+      ? passes
+    :passes.length > 1
       ? { type: "SolutionList", solutions: passes }
     : passes.length === 1
       ? passes[0]
@@ -727,7 +739,7 @@ function loadRDFmanifest (cmds) {
               ["mapURL", "map"   , false]].reduce(function (ret, elt) {
                 // Command like arguments override *each* manifest entry.
                 if (cmds[elt[0]] &&
-                    !(cmds[elt[0]].constructor === Array && cmds[elt[0]].length === 0)) {
+                    !(Array.isArray(cmds[elt[0]]) && cmds[elt[0]].length === 0)) {
                   ret[elt[0]] = cmds[elt[0]];
                 } else {
                   const m = loaded.data.getQuads(action, sht+elt[1], null);
@@ -764,7 +776,7 @@ function loadJSONmanifest (jsonManifests) {
         let d = JSON.parse(p.text);
 
         // normalize the input
-        if (d.constructor !== Array) {
+        if (!Array.isArray(d)) {
           if ("@graph" in d) // Extract from the JSON-LD manifest format.
             d = d["@graph"][0].entries.map(function (t) {
               const options = Object.assign({}, ValidatorOptions);
@@ -811,7 +823,7 @@ function loadJSONmanifest (jsonManifests) {
           ["shex", "json", "data", "jsonld"].forEach(function (attr) {
             if (!(attr in elt))
               elt[attr] = [];
-            else if (elt[attr].constructor !== Array)
+            else if (!Array.isArray(elt[attr]))
               elt[attr] = [elt[attr]];
             elt[attr] = elt[attr].map(function (url) {
               return ShExUtil.resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
@@ -919,7 +931,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
 
       const unlinkMe = await Promise.all(Object.keys(ctx.request.files || []).reduce((acc, key) => {
         let fz = ctx.request.files[key];
-        if (fz.constructor !== Array)
+        if (!Array.isArray(fz))
           fz = [fz];
         return acc.concat(fz.map(
           async file => {
@@ -1033,8 +1045,8 @@ async function mergeParm (parms, parm, text, url, type) {
     try {
       part = JSON.parse(text);
     } catch (e) {
-      const parser = require("@shexjs/parser").construct(url.href, prefixes);
-      part = parser.parse(text);
+      const parser = ShExParser.construct(url.href, prefixes);
+      part = parser.parse(text/*, base, opts, filename*/);
     }
     ShExUtil.merge(parms.schema, part, true, true);
     parms.schemaMeta.push({prefixes, base: url.href})
