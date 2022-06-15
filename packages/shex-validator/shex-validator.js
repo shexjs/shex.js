@@ -350,12 +350,8 @@ function ShExValidator_constructor(schema, db, options) {
     let shape = null;
     if (label == Start) {
       shape = schema.start;
-    } else if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
-      runtimeError("shape " + label + " not found; no shapes in schema");
-    } else if (label in index.shapeExprs) {
-      shape = index.shapeExprs[label]
     } else {
-      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+      shape = this._lookupShape(label);
     }
 
     // if we passed in an expression rather than a label, validate it directly.
@@ -392,7 +388,7 @@ function ShExValidator_constructor(schema, db, options) {
 
   this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, subGraph, allowAbstract) {
     if (subGraph) // Shape inference doesn't apply when validating base shapes.
-      return this._validateShapeDecl(point, index.shapeExprs[shapeLabel], shapeLabel, 0, tracker, seen, subGraph);
+      return this._validateShapeDecl(point, this._lookupShape(shapeLabel), shapeLabel, 0, tracker, seen, subGraph);
 
     // Find all non-abstract shapeExprs extended with label. 
     let candidates = [shapeLabel];
@@ -404,11 +400,11 @@ function ShExValidator_constructor(schema, db, options) {
     }
     // Filter out abstract shapes.
     if (!allowAbstract)
-      candidates = candidates.filter(l => !index.shapeExprs[l].abstract);
+      candidates = candidates.filter(l => !this._lookupShape(l).abstract);
 
     // Aggregate results in a SolutionList or FailureList.
     const results = candidates.reduce((ret, candidateShapeLabel) => {
-      const shapeExpr = index.shapeExprs[candidateShapeLabel];
+      const shapeExpr = this._lookupShape(candidateShapeLabel);
       const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, subGraph);
       return "errors" in res ?
         { passes: ret.passes, failures: ret.failures.concat(res) } :
@@ -476,12 +472,21 @@ function ShExValidator_constructor(schema, db, options) {
     return this._validateShapeExpr(point, expr, shapeLabel, depth, tracker, seen, subgraph);
   }
 
+  this._lookupShape = function (label) {
+    if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
+      runtimeError("shape " + label + " not found; no shapes in schema");
+    } else if (label in index.shapeExprs) {
+      return index.shapeExprs[label]
+    } else {
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+    }
+  }
+
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     let ret = null
     if (typeof shapeExpr === "string") { // ShapeRef
-      // ret = this._validateShapeDecl(point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, tracker, seen, subgraph);
       ret = this._validateDescendants(point, shapeExpr, depth, tracker, seen, subgraph, true);
     } else if (shapeExpr.type === "NodeConstraint") {
       const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
@@ -826,7 +831,7 @@ function ShExValidator_constructor(schema, db, options) {
       // Override visitShapeRef to follow references.
       // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
       visitor.visitShapeRef = function (inclusion) {
-        return visitor.visitShapeDecl(index.shapeExprs[inclusion]);
+        return visitor.visitShapeDecl(this._lookupShape(inclusion));
       };
 
       // Visit shape's EXTENDS and expression.

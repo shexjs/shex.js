@@ -72,9 +72,10 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
+shexParserOptions = {index: true, duplicateShape: "abort"};
+const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
 function parseShEx (text, meta, base) {
-  shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParserOptions.duplicateShape = $("#duplicateShape").val();
   shexParser._setBase(base);
   const ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
