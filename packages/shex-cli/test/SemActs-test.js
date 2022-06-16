@@ -25,9 +25,6 @@ const ManifestBase = new URL(ManifestFile, Base)
 describe('Invoking SemActs', function () {
   const schemaParser = ShExParser.construct(ManifestBase.href, null, {index: true})
 
-  // Ensure the same blank node identifiers are used in every test
-  beforeEach(function () { schemaParser._resetBlanks(); })
-
   // Load manifest
   const manifest = parseJSON(Fs.readFileSync(ManifestFile, 'utf8'))
   if (TESTS)
@@ -43,7 +40,7 @@ describe('Invoking SemActs', function () {
     const schemaStr = Fs.readFileSync(schemaFile + (test.schemaURL.endsWith(".json") ? "" : ".shex"), 'utf8')
     const schema = test.schemaURL.endsWith(".json")
           ? JSON.parse(schemaStr)
-          : schemaParser.parse(schemaStr); schemaParser._resetBlanks()
+          : schemaParser.parse(schemaStr);
     const schemaMeta = {
       base: schema._base,
       prefixes: schema._prefixes || {}

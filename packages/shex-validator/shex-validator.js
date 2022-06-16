@@ -348,12 +348,8 @@ function ShExValidator_constructor(schema, db, options) {
     let shape = null;
     if (label == Start) {
       shape = schema.start;
-    } else if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
-      runtimeError("shape " + label + " not found; no shapes in schema");
-    } else if (label in index.shapeExprs) {
-      shape = index.shapeExprs[label]
     } else {
-      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+      shape = this._lookupShape(label);
     }
 
     // if we passed in an expression rather than a label, validate it directly.
@@ -384,12 +380,22 @@ function ShExValidator_constructor(schema, db, options) {
     return this.options.noResults ? {} : ret;
   }
 
+  this._lookupShape = function (label) {
+    if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
+      runtimeError("shape " + label + " not found; no shapes in schema");
+    } else if (label in index.shapeExprs) {
+      return index.shapeExprs[label]
+    } else {
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+    }
+  }
+
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     let ret = null
     if (typeof shapeExpr === "string") { // ShapeRef
-      ret = this._validateShapeExpr(point, index.shapeExprs[shapeExpr], shapeExpr, tracker, seen);
+      ret = this._validateShapeExpr(point, this._lookupShape(shapeExpr), shapeExpr, tracker, seen);
     } else if (shapeExpr.type === "NodeConstraint") {
       const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       ret = sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?

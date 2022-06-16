@@ -10,7 +10,6 @@ const ShExApi = ShEx.Api({
 })
 const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 ShEx.ShapeMap.start = ShEx.Validator.start
-const SharedForTests = {} // an object to share state with a test harness
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
@@ -29,6 +28,8 @@ Caches.bindings = makeJSONCache($("#bindings1 textarea"));
 Caches.statics = makeJSONCache($("#staticVars textarea"));
 Caches.outputSchema = makeSchemaCache($("#outputSchema textarea"));
 // let ShExRSchema; // defined in calling page
+
+const SharedForTests = {Caches, /*DefaultBase*/} // an object to share state with a test harness
 
 const ParseTriplePattern = (function () {
   const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
@@ -78,9 +79,10 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
+shexParserOptions = {index: true, duplicateShape: "abort"};
+const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
 function parseShEx (text, meta, base) {
-  shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParserOptions.duplicateShape = $("#duplicateShape").val();
   shexParser._setBase(base);
   const ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
@@ -175,7 +177,7 @@ function _makeCache (selection) {
       try {
         resp = await fetch(url, {headers: {
           accept: 'text/shex,text/turtle,*/*;q=0.9, test/html;q=0.8',
-          cache: 'no-cache'
+          // cache: 'no-cache' -- breaks CORS, so user has to open in new page and force reload there
         }})
       } catch (e) {
         throw Error("unable to fetch <" + url + ">: " + '\n' + e.message);
@@ -207,19 +209,33 @@ function makeSchemaCache (selection) {
   ret.language = null;
   ret.parse = async function (text, base) {
     const isJSON = text.match(/^\s*\{/);
+    const isDCTAP = text.match(/\s*shapeID/)
     graph = isJSON ? null : tryN3(text);
     this.language =
       isJSON ? "ShExJ" :
+      isDCTAP ? "DCTAP":
       graph ? "ShExR" :
       "ShExC";
     $("#results .status").text("parsing "+this.language+" schema...").show();
     const schema =
           isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
+          isDCTAP ? await parseDcTap(text) :
           graph ? parseShExR() :
           parseShEx(text, ret.meta, base);
     $("#results .status").hide();
     markEditMapDirty(); // ShapeMap validity may have changed.
     return schema;
+
+    async function parseDcTap (text) {
+      const dctap = new ShEx.DcTap();
+      return await new Promise((resolve, reject) => {
+        $.csv.toArrays(text, {}, (err, data) => {
+          if (err) reject(err)
+          dctap.parseRows(data, base)
+          resolve(dctap.toShEx())
+        })
+      })
+    }
 
     function tryN3 (text) {
       try {
@@ -768,9 +784,9 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      const errors = await copyEditMapToTextMap() // will update if #editMap is dirty
+      const errors = await copyEditMapToTextMap(); // will update if #editMap is dirty
       if (errors.length === 0)
-        resolve(await callValidator())
+        resolve(await callValidator());
     }, 0);
   })
 }
@@ -1056,11 +1072,11 @@ async function materializeAsync () {
     // );
 
     function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-    const resultBindings = _dup(await Caches.bindings.refresh());
+    let resultBindings = _dup(await Caches.bindings.refresh());
     if (Caches.statics.get().trim().length === 0)
       await Caches.statics.set("{  }");
     const _t = await Caches.statics.refresh();
-    if (_t && Object.keys(_t) > 0) {
+    if (_t && Object.keys(_t).length > 0) {
       if (!Array.isArray(resultBindings))
         resultBindings = [resultBindings];
       resultBindings.unshift(_t);
@@ -1787,7 +1803,6 @@ async function loadSearchParameters () {
 }
 
 function setTextAreaHandlers (listItems) {
-  const textAreaCaches = ["inputSchema", "inputData", "shapeMap"]
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
@@ -2042,12 +2057,16 @@ async function prepareManifest (demoList, base) {
     acc[k] = {};
     return acc;
   }, {});
-  const nesting = demoList.reduce(function (acc, elt) {
-    const key = elt.schemaLabel + "|" + elt.schema;
+  const nesting = demoList.reduce(function (acc, elt, idx) {
+    const defaultLabel = "title" in elt
+          ? elt.title
+          : `manifest[${idx}]`;
+    const schemaLabel = elt.schemaLabel || defaultLabel;
+    const key = schemaLabel + "|" + elt.schema;
     if (!(key in acc)) {
       // first entry with this schema
       acc[key] = {
-        label: elt.schemaLabel,
+        label: schemaLabel,
         text: elt.schema,
         url: elt.schemaURL || (elt.schema ? base : undefined)
       };
@@ -2055,9 +2074,10 @@ async function prepareManifest (demoList, base) {
       // nth entry with this schema
     }
 
-    if ("dataLabel" in elt) {
+    if ("dataLabel" in elt || "data" in elt || "dataURL" in elt) {
+      const dataLabel = elt.dataLabel || defaultLabel;
       const dataEntry = {
-        label: elt.dataLabel,
+        label: dataLabel || idx.toString(),
         text: elt.data,
         url: elt.dataURL || (elt.data ? base : undefined),
         outputSchemaUrl: elt.outputSchemaURL || (elt.outputSchema ? base : undefined),

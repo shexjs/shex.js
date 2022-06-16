@@ -22,7 +22,8 @@ const jsdom = require("jsdom")
 const { JSDOM } = jsdom
 // JsDom only accepts it's own implementation of Blob
 const Blob = require('jsdom/lib/jsdom/living/generated/Blob')
-let SharedForTests = null
+const ShExParser = require('@shexjs/parser')
+let SharedForTests = null // gets set by shex-simple.js
 
 const Server = startServer()
 
@@ -39,14 +40,33 @@ if (!TEST_browser) {
 
 } else {
   // Some manifests to play with:
-  const Manifest_Example = 'packages/shex-webapp/examples/manifest.json'
+  const WebAppExamplesDir = 'packages/shex-webapp/examples/'
+  const Manifest_Example = WebAppExamplesDir + 'manifest.json'
   const Manifest_ShExMap = 'packages/extension-map/examples/manifest.json'
   const Manifest_InlineOne = 'packages/shex-webapp/test/browser/manifest-inline-one.json'
   const Manifest_UrlTwo = 'packages/shex-webapp/test/browser/manifest-URL-two.json'
-  function rel (file) { return `../../../${file}` }
-  function abs (file) { return `/shex.js/${file}` }
+  const ToProjectRoot = '../../..'
+
+  function rel (file) { return Path.join(ToProjectRoot, file) }
+
+  function abs (file) { return Path.join('/shex.js', file) }
+
+  async function set (jquery, selector, value) {
+    jquery(selector).val(value)
+    jquery(selector).trigger("change")
+    await SharedForTests.promise
+  }
+
+  async function wait (timeout) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve(timeout)
+      }, timeout)
+    })
+  }
 
   TESTS.forEach(test => {
+
     describe(`WEBapp ${test.page}`, function () {
       const {page, schemaLabel, dataLabel} = test
 
@@ -83,6 +103,49 @@ if (!TEST_browser) {
         })
       })
 
+      describe('schema translation', function () {
+        this.timeout(SCRIPT_CALLBACK_TIMEOUT);
+        const ClinObs = 'ClinObs'
+        const base = 'http://a.example/'
+
+        let dom, $, loaded, shexc, shexj, shexr
+        before(async () => {
+          ({ dom, $, loaded } = await loadPage(page, `?manifest=[]`)); // force empty manifest
+          shexc = Fs.readFileSync(Path.join(WebAppExamplesDir, ClinObs + '.shex'), 'utf8')
+          shexj = Fs.readFileSync(Path.join(WebAppExamplesDir, ClinObs + '.json'), 'utf8')
+          shexr = Fs.readFileSync(Path.join(WebAppExamplesDir, ClinObs + '.ttl' ), 'utf8')
+          expect(loaded.manifest).not.to.have.property('fromUrl')
+        })
+
+        it("from ShExC to ShExJ ", async function () {
+          // await set($, "#inputSchema textarea.schema", shexc)
+          SharedForTests.Caches.inputSchema.set(shexc, base + 'foo/') // will also mark as dirty
+          $("#validate").trigger('click')
+          await SharedForTests.promise
+          const fromShExC = $("#results pre").text()
+          expect(JSON.parse(fromShExC)).to.deep.equal(JSON.parse(shexj));
+        }).timeout(STARTUP_TIMEOUT)
+
+        it("from ShExR to ShExJ ", async function () {
+          // await set($, "#inputSchema textarea.schema", shexr)
+          SharedForTests.Caches.inputSchema.set(shexr, base + 'bar/')
+          $("#validate").trigger('click')
+          await SharedForTests.promise
+          const fromShExR = $("#results pre").text()
+          expect(JSON.parse(fromShExR)).to.deep.equal(JSON.parse(shexj));
+        }).timeout(STARTUP_TIMEOUT)
+
+        it("from ShExJ to ShExC ", async function () {
+          // await set($, "#inputSchema textarea.schema", shexj)
+          SharedForTests.Caches.inputSchema.set(shexj, base + 'baz/')
+          $("#validate").trigger('click')
+          await SharedForTests.promise
+          const fromShExJ = $("#results pre").text()
+          const p = ShExParser.construct(base + 'bip/')
+          expect(p.parse(fromShExJ)).to.deep.equal(p.parse(shexc))
+        }).timeout(STARTUP_TIMEOUT)
+      })
+
       describe('explicit manifest URL', function () {
         this.timeout(SCRIPT_CALLBACK_TIMEOUT);
         let dom, $, loaded
@@ -114,7 +177,7 @@ if (!TEST_browser) {
 
         describe('should set query map to', function () {
           it("empty", async function () {
-            await set("#textMap", "")
+            await set($, "#textMap", "")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(0)
             expect(mapToText($("#editMap"))).to.equal("@")
@@ -122,7 +185,7 @@ if (!TEST_browser) {
           })
 
           it("one entry", async function () {
-            await set("#textMap", "{FOCUS :subject _}@START")
+            await set($, "#textMap", "{FOCUS :subject _}@START")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
             expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START")
@@ -130,7 +193,7 @@ if (!TEST_browser) {
           })
 
           it("one entry with trailing comma", async function () {
-            await set("#textMap", "{FOCUS :subject _}@START,")
+            await set($, "#textMap", "{FOCUS :subject _}@START,")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
             expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START")
@@ -138,26 +201,12 @@ if (!TEST_browser) {
           })
 
           it("two entries with produce one fixed map entry", async function () {
-            await set("#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
+            await set($, "#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
             expect($("#editMap .pair").length).to.equal(2)
             expect($("#fixedMap .pair").length).to.equal(1)
             expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START,{FOCUS <http://hl7.org/fhir/lalala> _}@START")
             expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
           })
-
-          async function set (selector, value) {
-            $(selector).val(value)
-            $(selector).trigger("change")
-            await SharedForTests.promise
-          }
-
-          async function wait (timeout) {
-            return new Promise((resolve, reject) => {
-              setTimeout(() => {
-                resolve(timeout)
-              }, timeout)
-            })
-          }
 
           function mapToText (map) {
             return map.find(".pair").map((idx, pair) => fixedMapPairToText(pair)).get().join(',')
@@ -549,12 +598,18 @@ async function testResults ($, expected, resultsProperty) {
 function startServer () {
   // Three possibilities to serve page resources.
   if (true) {
-    return require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
-        .get(RegExp(WEBROOT))
-        .reply(function(path, requestBody) {
-          return [200, readFromFilesystem(path), {}];
-        })
-        .persist()
+    const Nock = require('nock');
+    Nock(PROTOCOL + '//' + HOST + ':' + PORT)
+      .get(RegExp(WEBROOT))
+      .reply(function(path, requestBody) {
+        return readFromFilesystem(path);
+      })
+      .persist();
+    Nock('https://cdnjs.cloudflare.com')
+      .get('/ajax/libs/jquery-csv/1.0.21/jquery.csv.js')
+      .replyWithFile(200, Path.join(__dirname, 'static/jquery.csv-1.0.21.js'))
+      .persist();
+    return Nock;
   } else if (false) {
     const srvr = new (require("mock-http-server"))({ host: HOST, port: PORT });
     srvr.start(() => {});
@@ -566,13 +621,13 @@ function startServer () {
       reply: {
         status:  200,
         // headers: { "content-type": "application/json" },
-        body: (req) => [200, readFromFilesystem(req.originalUrl), {}],
+        body: (req) => readFromFilesystem(req.originalUrl),
       }
     });
     return srvr
   } else {
     const http = require('http')
-    const requestHandler = (request, response) => response.end(readFromFilesystem(request.url))
+    const requestHandler = (request, response) => response.end(readFromFilesystem(request.url)) // rotted. needs 404-ness
     const srvr = http.createsrvr(requestHandler)
 
     srvr.listen(PORT, (err) => {
@@ -593,10 +648,10 @@ function startServer () {
     if (ret !== undefined) {
       const ret = Fs.readFileSync(last, 'utf8')
       log200(path, last, ret.length)
-      return ret
+      return [200, ret, {}]
     } else {
       log404(path)
-      throw Error(`Not Found ${path}`)
+      return [404, `${last} not found`, {}]
     }
   }
 

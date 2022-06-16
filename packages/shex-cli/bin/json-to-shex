@@ -4,7 +4,11 @@
 
 const ShExWriter = require("@shexjs/writer"); // for verbose output
 const N3 = require("n3");
-const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+  fetch: require('node-fetch'),
+  jsonld: require('jsonld'),
+});
 
 // Generate command line interface
 const CommandLineOptions = [

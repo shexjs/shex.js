@@ -431,7 +431,7 @@ const ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      ret.shapes = Object.keys(index.shapeExprs).sort().map(k => {
+      ret.shapes = Object.keys(index.shapeExprs).map(k => {
         if ("extra" in index.shapeExprs[k])
           index.shapeExprs[k].extra.sort();
         return v.visitShapeExpr(index.shapeExprs[k]);
@@ -1049,7 +1049,7 @@ const ShExUtil = {
             _dive1(s.referenced);
           }
         });
-      } else if (solns.type === "Recursion") {
+      } else if (["ShapeNotResults", "Recursion"].indexOf(solns.type) !== -1) {
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
@@ -1922,11 +1922,12 @@ const ShExUtil = {
         case "uri": return elt.value;
         case "bnode": return "_:" + elt.value;
         case "literal":
-          return "\"" + elt.value.replace(/"/g, '\\""') + "\"" + (
-            "xml:lang" in elt ? "@" + elt["xml:lang"] : "");
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
+            + ("xml:lang" in elt ? "@" + elt["xml:lang"] : "")
+            + ("datatype" in elt ? "^^" + elt.datatype : "");
         case "typed-literal": // encountered in wikidata query service
-          return "\"" + elt.value.replace(/"/g, '\\""') + "\"" + (
-            "^^" + elt.datatype);
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
+            + ("^^" + elt.datatype);
         default: throw "unknown XML results type: " + elt.type;
         }
       })
