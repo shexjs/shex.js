@@ -85,7 +85,8 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
+shexParserOptions = {index: true, duplicateShape: "abort"};
+const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
 function parseShEx (text, meta, base) {
   $("#schemaDialect").text(Caches.inputSchema.language);
   var resolverText = $("#inputMeta textarea").val();
@@ -97,7 +98,7 @@ function parseShEx (text, meta, base) {
     shexParser._setTermResolver(ShEx.Parser.disabledTermResolver());
   }
 
-  shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParserOptions.duplicateShape = $("#duplicateShape").val();
   shexParser._setBase(base);
   const ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
@@ -2098,7 +2099,6 @@ async function loadSearchParameters () {
 }
 
 function setTextAreaHandlers (listItems) {
-  const textAreaCaches = ["inputSchema", "inputData", "shapeMap"]
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;

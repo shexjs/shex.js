@@ -45,7 +45,11 @@ const ShExWriter = require("@shexjs/writer"); // for verbose output
 const ShExValidator = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
 const N3 = require("n3");
-const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+  fetch: require('node-fetch'),
+  jsonld: require('jsonld'),
+});
 
 ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
@@ -1068,7 +1072,7 @@ async function mergeParm (parms, parm, text, url, type) {
       part = JSON.parse(text);
     } catch (e) {
       const parser = ShExParser.construct(url.href, prefixes);
-      part = parser.parse(text);
+      part = parser.parse(text/*, base, opts, filename*/);
     }
     ShExUtil.merge(parms.schema, part, true, true);
     parms.schemaMeta.push({prefixes, base: url.href})
