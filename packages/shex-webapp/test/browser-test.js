@@ -604,12 +604,18 @@ async function testResults ($, expected, resultsProperty) {
 function startServer () {
   // Three possibilities to serve page resources.
   if (true) {
-    return require('nock')(PROTOCOL + '//' + HOST + ':' + PORT)
-        .get(RegExp(WEBROOT))
-        .reply(function(path, requestBody) {
-          return [200, readFromFilesystem(path), {}];
-        })
-        .persist()
+    const Nock = require('nock');
+    Nock(PROTOCOL + '//' + HOST + ':' + PORT)
+      .get(RegExp(WEBROOT))
+      .reply(function(path, requestBody) {
+        return readFromFilesystem(path);
+      })
+      .persist();
+    Nock('https://cdnjs.cloudflare.com')
+      .get('/ajax/libs/jquery-csv/1.0.21/jquery.csv.js')
+      .replyWithFile(200, Path.join(__dirname, 'static/jquery.csv-1.0.21.js'))
+      .persist();
+    return Nock;
   } else if (false) {
     const srvr = new (require("mock-http-server"))({ host: HOST, port: PORT });
     srvr.start(() => {});
@@ -621,13 +627,13 @@ function startServer () {
       reply: {
         status:  200,
         // headers: { "content-type": "application/json" },
-        body: (req) => [200, readFromFilesystem(req.originalUrl), {}],
+        body: (req) => readFromFilesystem(req.originalUrl),
       }
     });
     return srvr
   } else {
     const http = require('http')
-    const requestHandler = (request, response) => response.end(readFromFilesystem(request.url))
+    const requestHandler = (request, response) => response.end(readFromFilesystem(request.url)) // rotted. needs 404-ness
     const srvr = http.createsrvr(requestHandler)
 
     srvr.listen(PORT, (err) => {
@@ -648,10 +654,10 @@ function startServer () {
     if (ret !== undefined) {
       const ret = Fs.readFileSync(last, 'utf8')
       log200(path, last, ret.length)
-      return ret
+      return [200, ret, {}]
     } else {
       log404(path)
-      throw Error(`Not Found ${path}`)
+      return [404, `${last} not found`, {}]
     }
   }
 

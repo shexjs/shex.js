@@ -15,8 +15,6 @@ var manifestFile = __dirname + '/../test/partitionedSchemas/Manifest.json';
 describe('Partitioning', function () {
   var parser = ShExParser.construct();
 
-  // Ensure the same blank node identifiers are used in every test
-  beforeEach(function () { parser._resetBlanks(); });
   var manifest = parseJSON(fs.readFileSync(manifestFile, 'utf8'));
   if (TESTS)
     manifest.tests = manifest.tests.filter(function (t) {
@@ -27,9 +25,9 @@ describe('Partitioning', function () {
 
     var schemaFile = schemasPath + test.from + ".shex";
     var expectedFile = partitionedSchemasPath + test.expect + ".shex";
-    var schema = parser.parse(fs.readFileSync(schemaFile, 'utf8')); parser._resetBlanks();
+    var schema = parser.parse(fs.readFileSync(schemaFile, 'utf8'));
     var partition = ShExUtil.partition(schema, test.include);
-    var expected = parser.parse(fs.readFileSync(expectedFile, 'utf8')); parser._resetBlanks();
+    var expected = parser.parse(fs.readFileSync(expectedFile, 'utf8'));
 
     it((VERBOSE ? schemaFile : test.from) + 
        ' for ' + test.include.join(', ') + ' should match ' + 
