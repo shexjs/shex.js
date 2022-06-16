@@ -287,9 +287,24 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         shape: shapeLabel
       };
     seen[seenKey] = { point: point, shapeLabel: shapeLabel };
-    const ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
+    const ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
     delete seen[seenKey];
     return ret;
+  }
+
+  this._validateShapeDecl = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
+    const expr = shapeExpr.type === "ShapeDecl" ? shapeExpr.shapeExpr : shapeExpr;
+    return this._validateShapeExpr(db, point, expr, shapeLabel, depth, tracker, seen, subgraph);
+  }
+
+  this._lookupShape = function (label) {
+    if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
+      runtimeError("shape " + label + " not found; no shapes in schema");
+    } else if (label in index.shapeExprs) {
+      return index.shapeExprs[label]
+    } else {
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+    }
   }
 
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, seen) {

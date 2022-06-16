@@ -95,7 +95,7 @@ const ShExUtil = {
       shapes: schema.shapes.reduce(function (ret, shape) {
         ret[shape.id] = {
           type: "ASTshape",
-          expression: _compileShapeToAST(shape.expression, [], schema)
+          expression: _compileShapeToAST(shape.shapeExpr.expression, [], schema)
         };
         return ret;
       }, {})
@@ -424,7 +424,7 @@ const ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
+    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression, oldVisitExtra = v.visitExtra;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion) === -1 &&
           inclusion in index.tripleExprs) {
@@ -443,6 +443,9 @@ const ShExUtil = {
       }
       return oldVisitExpression.call(v, expression);
     };
+    v.visitExtra = function (l) {
+      return l.slice().sort();
+    }
     if (trimIRI) {
       v.visitIRI = function (i) {
         return i.replace(trimIRI, "");
@@ -807,10 +810,10 @@ const ShExUtil = {
    */
   getDependencies: function (schema, ret) {
     ret = ret || this.BiDiClosure();
-    (schema.shapes || []).forEach(function (shape) {
+    (schema.shapes || []).forEach(function (shapeDecl) {
       function _walkShapeExpression (shapeExpr, negated) {
         if (typeof shapeExpr === "string") { // ShapeRef
-          ret.add(shape.id, shapeExpr);
+          ret.add(shapeDecl.id, shapeExpr);
         } else if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
           shapeExpr.shapeExprs.forEach(function (expr) {
             _walkShapeExpression(expr, negated);
@@ -837,15 +840,15 @@ const ShExUtil = {
           function _walkTripleConstraint (tc, negated) {
             if (tc.valueExpr)
               _walkShapeExpression(tc.valueExpr, negated);
-            if (negated && ret.inCycle.indexOf(shape.id) !== -1) // illDefined/negatedRefCycle.err
-              throw Error("Structural error: " + shape.id + " appears in negated cycle");
+            if (negated && ret.inCycle.indexOf(shapeDecl.id) !== -1) // illDefined/negatedRefCycle.err
+              throw Error("Structural error: " + shapeDecl.id + " appears in negated cycle");
           }
 
           if (typeof tripleExpr === "string") { // Inclusion
-            ret.add(shape.id, tripleExpr);
+            ret.add(shapeDecl.id, tripleExpr);
           } else {
             if ("id" in tripleExpr)
-              ret.addIn(tripleExpr.id, shape.id)
+              ret.addIn(tripleExpr.id, shapeDecl.id)
             if (tripleExpr.type === "TripleConstraint") {
               _walkTripleConstraint(tripleExpr, negated);
             } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
@@ -859,15 +862,13 @@ const ShExUtil = {
         (["extends", "restricts"]).forEach(attr => {
         if (shape[attr] && shape[attr].length > 0)
           shape[attr].forEach(function (i) {
-            ret.add(shape.id, i);
+            ret.add(shapeDecl.id, i);
           });
         })
         if (shape.expression)
           _walkTripleExpression(shape.expression, negated);
       }
-      if (shape.type === "ShapeDecl")
-        shape = shape.shapeExpr;
-      _walkShapeExpression(shape, 0); // 0 means false for bitwise XOR
+      _walkShapeExpression(shapeDecl.shapeExpr, 0); // 0 means false for bitwise XOR
     });
     return ret;
   },

@@ -8757,9 +8757,24 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         shape: shapeLabel
       };
     seen[seenKey] = { point: point, shapeLabel: shapeLabel };
-    const ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
+    const ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
     delete seen[seenKey];
     return ret;
+  }
+
+  this._validateShapeDecl = function (db, point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
+    const expr = shapeExpr.type === "ShapeDecl" ? shapeExpr.shapeExpr : shapeExpr;
+    return this._validateShapeExpr(db, point, expr, shapeLabel, depth, tracker, seen, subgraph);
+  }
+
+  this._lookupShape = function (label) {
+    if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
+      runtimeError("shape " + label + " not found; no shapes in schema");
+    } else if (label in index.shapeExprs) {
+      return index.shapeExprs[label]
+    } else {
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+    }
   }
 
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, seen) {
@@ -10756,7 +10771,7 @@ function trivialMaterializer (schema, nextBNode) {
       const oldVisitShapeRef = v.visitShapeRef;
 
       v.visitShapeRef = function (shapeRef) {
-        this.visitShapeExpr(index.shapeExprs[shapeRef], shapeRef);
+        this.visitShapeDecl(index.shapeExprs[shapeRef], shapeRef);
         return oldVisitShapeRef.call(v, shapeRef);
       };
 
@@ -12334,13 +12349,9 @@ this.$ = appendTo($$[$0-1], $$[$0]) // t: startCode3;
 break;
 case 26:
  // t: 1dot 1val1vsMinusiri3??
-        if ($$[$0-3].abstract || $$[$0-1].length) { // t: $$[$0-3]: 1dotAbstractShapeCode1  $$[$0-2]: @@
-          yy.addShape($$[$0-2], Object.assign({type: "ShapeDecl"}, $$[$0-3],
-                                     $$[$0-1].length > 0 ? { restricts: $$[$0-1] } : { },
-                                     {shapeExpr: $$[$0]})) // $$[$01]: t: @@
-        } else {
-          yy.addShape($$[$0-2],  $$[$0]);
-        }
+        yy.addShape($$[$0-2], Object.assign({type: "ShapeDecl"}, $$[$0-3],
+                                   $$[$0-1].length > 0 ? { restricts: $$[$0-1] } : { },
+                                   {shapeExpr: $$[$0]})) // $$[$01]: t: @@
       
 break;
 case 27:
@@ -13855,7 +13866,7 @@ const ShExUtil = {
       shapes: schema.shapes.reduce(function (ret, shape) {
         ret[shape.id] = {
           type: "ASTshape",
-          expression: _compileShapeToAST(shape.expression, [], schema)
+          expression: _compileShapeToAST(shape.shapeExpr.expression, [], schema)
         };
         return ret;
       }, {})
@@ -14085,14 +14096,19 @@ const ShExUtil = {
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
       schema.shapes = schema.shapes.map((sh, idx) => {
-        return sh.type === SX.ShapeDecl ?
+        return sh.type === SX.ShapeExternal
+          ?
           {
-            type: "ShapeDecl",
+            type: "ShapeExternal",
             id: sh.id,
-            abstract: sh.abstract,
-            shapeExpr: v.visitShapeExpr(sh.shapeExpr)
-          } :
-        knownShapeExprs.get(sh.id) ? knownShapeExprs.get(sh.id) : (() => {const n = v.keepShapeExpr(sh); knownShapeExprs.set(sh.id, n); return n;})();
+          }
+        :
+        {
+          type: "ShapeDecl",
+          id: sh.id,
+          abstract: sh.abstract,
+          shapeExpr: v.visitShapeExpr(sh.shapeExpr)
+        };
       });
 
     // remove extraneous BNode IDs
@@ -14179,7 +14195,7 @@ const ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
+    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression, oldVisitExtra = v.visitExtra;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion) === -1 &&
           inclusion in index.tripleExprs) {
@@ -14198,6 +14214,9 @@ const ShExUtil = {
       }
       return oldVisitExpression.call(v, expression);
     };
+    v.visitExtra = function (l) {
+      return l.slice().sort();
+    }
     if (trimIRI) {
       v.visitIRI = function (i) {
         return i.replace(trimIRI, "");
@@ -14562,10 +14581,10 @@ const ShExUtil = {
    */
   getDependencies: function (schema, ret) {
     ret = ret || this.BiDiClosure();
-    (schema.shapes || []).forEach(function (shape) {
+    (schema.shapes || []).forEach(function (shapeDecl) {
       function _walkShapeExpression (shapeExpr, negated) {
         if (typeof shapeExpr === "string") { // ShapeRef
-          ret.add(shape.id, shapeExpr);
+          ret.add(shapeDecl.id, shapeExpr);
         } else if (shapeExpr.type === "ShapeOr" || shapeExpr.type === "ShapeAnd") {
           shapeExpr.shapeExprs.forEach(function (expr) {
             _walkShapeExpression(expr, negated);
@@ -14592,15 +14611,15 @@ const ShExUtil = {
           function _walkTripleConstraint (tc, negated) {
             if (tc.valueExpr)
               _walkShapeExpression(tc.valueExpr, negated);
-            if (negated && ret.inCycle.indexOf(shape.id) !== -1) // illDefined/negatedRefCycle.err
-              throw Error("Structural error: " + shape.id + " appears in negated cycle");
+            if (negated && ret.inCycle.indexOf(shapeDecl.id) !== -1) // illDefined/negatedRefCycle.err
+              throw Error("Structural error: " + shapeDecl.id + " appears in negated cycle");
           }
 
           if (typeof tripleExpr === "string") { // Inclusion
-            ret.add(shape.id, tripleExpr);
+            ret.add(shapeDecl.id, tripleExpr);
           } else {
             if ("id" in tripleExpr)
-              ret.addIn(tripleExpr.id, shape.id)
+              ret.addIn(tripleExpr.id, shapeDecl.id)
             if (tripleExpr.type === "TripleConstraint") {
               _walkTripleConstraint(tripleExpr, negated);
             } else if (tripleExpr.type === "OneOf" || tripleExpr.type === "EachOf") {
@@ -14614,15 +14633,13 @@ const ShExUtil = {
         (["extends", "restricts"]).forEach(attr => {
         if (shape[attr] && shape[attr].length > 0)
           shape[attr].forEach(function (i) {
-            ret.add(shape.id, i);
+            ret.add(shapeDecl.id, i);
           });
         })
         if (shape.expression)
           _walkTripleExpression(shape.expression, negated);
       }
-      if (shape.type === "ShapeDecl")
-        shape = shape.shapeExpr;
-      _walkShapeExpression(shape, 0); // 0 means false for bitwise XOR
+      _walkShapeExpression(shapeDecl.shapeExpr, 0); // 0 means false for bitwise XOR
     });
     return ret;
   },
@@ -15220,14 +15237,17 @@ const ShExUtil = {
       const shapes = values[SX.shapes];
       if (shapes) {
         ret.shapes = shapes.map(v => { // @@ console.log(v.nested);
-          var t = v.nested[RDF.type][0].ldterm;
-          var obj = t === SX.ShapeDecl ?
-              {
-                type: SX.ShapeDecl,
-                abstract: !!v.nested[SX["abstract"]][0].ldterm.value,
-                shapeExpr: shapeExpr(v.nested[SX.shapeExpr][0].nested)
-              } :
-              shapeExpr(v.nested);
+          var t = v.nested[RDF.type][0].ldterm;debugger;
+          const obj = t === SX.ShapeExternal
+                ? { type: t }
+                : Object.assign(
+                  {},
+                  { type: SX.ShapeDecl },
+                  SX["abstract"] in v.nested
+                    ? {abstract: !!v.nested[SX["abstract"]]?.[0].ldterm.value}
+                    : {},
+                  {shapeExpr: shapeExpr(v.nested[SX.shapeExpr][0].nested)}
+                );
           return extend({id: v.ldterm}, obj);
         });
       }
