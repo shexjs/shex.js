@@ -74,7 +74,8 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
+shexParserOptions = {index: true, duplicateShape: "abort"};
+const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
 function parseShEx (text, meta, base) {
   $("#schemaDialect").text(Caches.inputSchema.language);
   var resolverText = $("#inputMeta textarea").val();
@@ -86,7 +87,7 @@ function parseShEx (text, meta, base) {
     shexParser._setTermResolver(ShEx.Parser.disabledTermResolver());
   }
 
-  shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParserOptions.duplicateShape = $("#duplicateShape").val();
   shexParser._setBase(base);
   const ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
@@ -779,9 +780,9 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      const errors = await copyEditMapToTextMap() // will update if #editMap is dirty
+      const errors = await copyEditMapToTextMap(); // will update if #editMap is dirty
       if (errors.length === 0)
-        resolve(await callValidator())
+        resolve(await callValidator());
     }, 0);
   })
 }
@@ -1688,7 +1689,6 @@ async function loadSearchParameters () {
 }
 
 function setTextAreaHandlers (listItems) {
-  const textAreaCaches = ["inputSchema", "inputData", "shapeMap"]
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;
