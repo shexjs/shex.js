@@ -225,7 +225,7 @@ const ShExUtil = {
 
   ShExJtoAS: function (schema) {
     const _ShExUtil = this;
-    schema._prefixes = schema.prefixes || {  };
+    schema._prefixes = schema._prefixes || {  };
     schema._index = this.index(schema);
     return schema;
   },
@@ -431,7 +431,7 @@ const ShExUtil = {
         ret.imports = v.visitImports(ret.imports);
     }
     if ("shapes" in ret) {
-      ret.shapes = Object.keys(index.shapeExprs).sort().map(k => {
+      ret.shapes = Object.keys(index.shapeExprs).map(k => {
         if ("extra" in index.shapeExprs[k])
           index.shapeExprs[k].extra.sort();
         return v.visitShapeExpr(index.shapeExprs[k]);
@@ -1051,7 +1051,7 @@ const ShExUtil = {
             _dive1(s.referenced);
           }
         });
-      } else if (solns.type === "Recursion") {
+      } else if (["ShapeNotResults", "Recursion"].indexOf(solns.type) !== -1) {
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
       }
@@ -1339,7 +1339,7 @@ const ShExUtil = {
       function crush (elt) {
         if (crushed === null)
           return elt;
-        if (elt.constructor === Array) {
+        if (Array.isArray(elt)) {
           crushed = null;
           return elt;
         }
@@ -1358,7 +1358,7 @@ const ShExUtil = {
             list.push(crush(ldify(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
-          if (nested.constructor === Array)
+          if (Array.isArray(nested))
             nested.forEach(crush);
           else
             crush(nested);
@@ -1448,13 +1448,13 @@ const ShExUtil = {
                    "ShapeNot"     : { nary: false, expr: true , prop: "shapeExpr"  },
                    "ShapeRef"     : { nary: false, expr: false, prop: "reference"  },
                    "ShapeExternal": { nary: false, expr: false, prop: null         } };
-      const ret = findType(v, elts, shapeExpr);
+      let ret = findType(v, elts, shapeExpr);
       if (ret !== Missed)
         return ret;
 
       const t = v[RDF.type][0].ldterm;
       if (t === SX.Shape) {
-        const ret = { type: "Shape" };
+        ret = { type: "Shape" };
         ["closed"].forEach(a => {
           if (SX[a] in v)
             ret[a] = !!v[SX[a]][0].ldterm.value;
@@ -1770,20 +1770,20 @@ const ShExUtil = {
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
     } else if (val.type === "TypeMismatch") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
     } else if (val.type === "ShapeAndFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
     } else if (val.type === "ShapeOrFailure") {
-      return val.errors.constructor === Array ?
+      return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
@@ -1810,7 +1810,7 @@ const ShExUtil = {
       return ["Missing property: " + val.property];
     } else if (val.type === "NegatedProperty") {
       return ["Unexpected property: " + val.property];
-    } else if (val.constructor === Array) {debugger;
+    } else if (Array.isArray(val)) {debugger;
       return val.reduce((ret, e) => {
         const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
@@ -1818,7 +1818,7 @@ const ShExUtil = {
     } else if (val.type === "ValueComparisonFailure") {
       return ["ValueComparisonFailure: expected " + val.left + val.comparator + val.right];
     } else if (val.type === "SemActFailure") {
-      const nested = val.errors.constructor === Array ?
+      const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
@@ -1899,26 +1899,8 @@ const ShExUtil = {
     return fetch(queryURL, {
       headers: {
         'Accept': 'application/sparql-results+json'
-      }}).then(resp => resp.json()).then(t => {
-        const selects = t.head.vars;
-        return t.results.bindings.map(row => {
-          return selects.map(sel => {
-            const elt = row[sel];
-            switch (elt.type) {
-            case "uri": return elt.value;
-            case "bnode": return "_:" + elt.value;
-            case "literal":
-              const datatype = elt.datatype;
-              const lang = elt["xml:lang"];
-              return "\"" + elt.value + "\"" + (
-                datatype ? "^^" + datatype :
-                  lang ? "@" + lang :
-                  "");
-            default: throw "unknown XML results type: " + elt.prop("tagName");
-            }
-            return row[sel];
-          })
-        });
+      }}).then(resp => resp.json()).then(jsonObject => {
+        return this.parseSparqlJsonResults(jsonObject);
       })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
   },
 
@@ -1931,50 +1913,81 @@ const ShExUtil = {
     xhr.send();
     // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
     // const selects = selectsBlock.match(/\?[^\s?]+/g);
-    const t = JSON.parse(xhr.responseText);
-    const selects = t.head.vars;
-    return t.results.bindings.map(row => {
+    const jsonObject = JSON.parse(xhr.responseText);
+    return this.parseSparqlJsonResults(jsonObject);
+  },
+
+  parseSparqlJsonResults: function (jsonObject) {
+    const selects = jsonObject.head.vars;
+    return jsonObject.results.bindings.map(row => {
+      // spec: https://www.w3.org/TR/rdf-sparql-json-res/#variable-binding-results
       return selects.map(sel => {
         const elt = row[sel];
         switch (elt.type) {
         case "uri": return elt.value;
         case "bnode": return "_:" + elt.value;
         case "literal":
-          const datatype = elt.datatype;
-          const lang = elt["xml:lang"];
-          return "\"" + elt.value + "\"" + (
-            datatype ? "^^" + datatype :
-              lang ? "@" + lang :
-              "");
-        default: throw "unknown XML results type: " + elt.prop("tagName");
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
+            + ("xml:lang" in elt ? "@" + elt["xml:lang"] : "")
+            + ("datatype" in elt ? "^^" + elt.datatype : "");
+        case "typed-literal": // encountered in wikidata query service
+          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
+            + ("^^" + elt.datatype);
+        default: throw "unknown XML results type: " + elt.type;
         }
-        return row[sel];
       })
     });
+  },
 
 /* TO ADD? XML results format parsed with jquery:
-        $(data).find("sparql > results > result").
-          each((_, row) => {
-            rows.push($(row).find("binding > *:nth-child(1)").
-              map((idx, elt) => {
-                elt = $(elt);
-                const text = elt.text();
-                switch (elt.prop("tagName")) {
-                case "uri": return text;
-                case "bnode": return "_:" + text;
-                case "literal":
-                  const datatype = elt.attr("datatype");
-                  const lang = elt.attr("xml:lang");
-                  return "\"" + text + "\"" + (
-                    datatype ? "^^" + datatype :
-                    lang ? "@" + lang :
-                      "");
-                default: throw "unknown XML results type: " + elt.prop("tagName");
-                }
-              }).get());
-          });
-*/
+  // parse..._dom(new window.DOMParser().parseFromString(str, "text/xml"));
+
+  parseSparqlXmlResults_dom: function (doc) {
+    Array.from(X.querySelectorAll('sparql > results > result')).map(row => {
+      Array.from(row.querySelectorAll("binding")).map(elt => {
+        const typed = Array.from(elt.children)[0];
+        const text = typed.textContent;
+
+        switch (elt.tagName) {
+        case "uri": return text;
+        case "bnode": return "_:" + text;
+        case "literal":
+          const datatype = typed.getAttribute("datatype");
+          const lang = typed.getAttribute("xml:lang");
+          return "\"" + text + "\"" + (
+            datatype ? "^^" + datatype :
+            lang ? "@" + lang :
+              "");
+        default: throw "unknown XML results type: " + elt.tagName;
+        }
+      })
+    })
   },
+
+  parseSparqlXmlResults_jquery: function (jqObj) {
+    $(jqObj).find("sparql > results > result").
+      each((_, row) => {
+        rows.push($(row).find("binding > *:nth-child(1)").
+          map((idx, elt) => {
+            elt = $(elt);
+            const text = elt.text();
+
+            switch (elt.prop("tagName")) {
+            case "uri": return text;
+            case "bnode": return "_:" + text;
+            case "literal":
+              const datatype = elt.attr("datatype");
+              const lang = elt.attr("xml:lang");
+              return "\"" + text + "\"" + (
+                datatype ? "^^" + datatype :
+                lang ? "@" + lang :
+                  "");
+            default: throw "unknown XML results type: " + elt.prop("tagName");
+            }
+          }).get());
+      });
+  }
+*/
 
   rdfjsDB: function (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 

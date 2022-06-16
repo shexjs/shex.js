@@ -1,6 +1,6 @@
 {
   "name": "shape-map",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.15",
   "description": "RDF Node/ShEx Shape mapping format.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -29,15 +29,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shexSpec/shex.js.git"
+    "url": "https://github.com/shexjs/shex.js.git"
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
   },
   "dependencies": {
-    "@ts-jison/parser": "^0.0.9"
+    "@ts-jison/parser": "^0.3.0"
   },
   "devDependencies": {
-    "@ts-jison/parser-generator": "^0.0.9"
+    "@ts-jison/parser-generator": "^0.3.0"
   }
 }

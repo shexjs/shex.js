@@ -221,7 +221,7 @@ function binder (tree) {
       let toAdd = null;
       if (typeof obj[k] === "object" && !("value" in obj[k])) {
         toAdd = _mults(obj[k]);
-        if (obj[k].constructor === Array)
+        if (Array.isArray(obj[k]))
           rays.push(k);
         else
           objs.push(k);
@@ -268,7 +268,7 @@ function binder (tree) {
   }
   function _cross (list, map) {
     for (let listIndex in list) {
-      if (list[listIndex].constructor === Array) {
+      if (Array.isArray(list[listIndex])) {
         _cross(list[listIndex], map);
       } else {
         Object.keys(map).forEach(mapKey => {
@@ -283,17 +283,17 @@ function binder (tree) {
   function _simplify (list) {
     const ret = list.reduce((r, elt) => {
       return r.concat(
-        elt.constructor === Array ?
+        Array.isArray(elt) ?
           _simplify(elt) :
           elt
       );
     }, []);
     return ret.length === 1 ? ret[0] : ret;
   }
-  tree = tree.constructor === Array ? _simplify(tree) : [tree]; // expects an array
+  tree = Array.isArray(tree) ? _simplify(tree) : [tree]; // expects an array
 
   // const globals = tree.reduce((r, e, idx) => {
-  //   if (e.constructor !== Array) {
+  //   if (!Array.isArray(e)) {
   //     Object.keys(e).forEach(k => {
   //       r[k] = e[k];
   //     });
@@ -312,7 +312,7 @@ function binder (tree) {
     let next = diveIntoObj(nextStack); // no effect if in obj
     while (!(v in next)) {
       let last;
-      while(next.constructor !== Array) {
+      while(!Array.isArray(next)) {
         last = nextStack.pop();
         next = getObj(nextStack);
       }
@@ -337,7 +337,7 @@ function binder (tree) {
     }
 
     function diveIntoObj (s) {
-      while (getObj(s).constructor === Array)
+      while (Array.isArray(getObj(s)))
         s.push(0);
       return getObj(s);
     }
