@@ -4,6 +4,7 @@
  */
 
 const ShapeMapCjsModule = (function () {
+
   const symbols = require("./lib/ShapeMapSymbols")
 
   // Write the parser object directly into the symbols so the caller shares a

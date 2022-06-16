@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/extension-map",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.15",
   "description": "Shape Expressions schema-to-schema mapping extension.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -23,20 +23,20 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/api": "1.0.0-alpha.6",
-    "@shexjs/parser": "1.0.0-alpha.6",
-    "@shexjs/term": "1.0.0-alpha.6",
-    "@shexjs/util": "1.0.0-alpha.6",
-    "@shexjs/validator": "1.0.0-alpha.6",
-    "@shexjs/writer": "1.0.0-alpha.6",
+    "@shexjs/api": "^1.0.0-alpha.15",
+    "@shexjs/parser": "^1.0.0-alpha.15",
+    "@shexjs/term": "^1.0.0-alpha.15",
+    "@shexjs/util": "^1.0.0-alpha.15",
+    "@shexjs/validator": "^1.0.0-alpha.15",
+    "@shexjs/writer": "^1.0.0-alpha.15",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "hierarchy-closure": "^1.2.1",
     "n3": "^1.6.2",
-    "shape-map": "1.0.0-alpha.6"
+    "shape-map": "^1.0.0-alpha.15"
   },
   "devDependencies": {
-    "@shexjs/node": "1.0.0-alpha.6",
+    "@shexjs/node": "^1.0.0-alpha.15",
     "jquery": "^3.5.1",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.12.1"
@@ -54,7 +54,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shexSpec/shex.js.git"
+    "url": "https://github.com/shexjs/shex.js.git"
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"

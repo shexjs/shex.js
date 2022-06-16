@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/writer",
-  "version": "1.0.0-alpha.6",
+  "version": "1.0.0-alpha.15",
   "description": "Shape Expressions - convert ShExJ to ShExC.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shexSpec/shex.js.git"
+    "url": "https://github.com/shexjs/shex.js.git"
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
