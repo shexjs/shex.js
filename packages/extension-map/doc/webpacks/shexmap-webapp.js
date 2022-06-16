@@ -12746,7 +12746,7 @@ function ShExValidator_constructor(schema, db, options) {
       // Override visitShapeRef to follow references.
       // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
       visitor.visitShapeRef = function (inclusion) {
-        return visitor.visitShapeDecl(this._lookupShape(inclusion));
+        return visitor.visitShapeDecl(_ShExValidator._lookupShape(inclusion));
       };
 
       // Visit shape's EXTENDS and expression.
