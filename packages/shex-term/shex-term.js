@@ -48,7 +48,8 @@ const ShExTermCjsModule = (function () {
       return iri;
 
     // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    const result = '', length = iri.length, i = -1, pathStart = -1, segmentStart = 0, next = '/';
+    const length = iri.length;
+    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
 
     while (i < length) {
       switch (next) {
@@ -110,7 +111,7 @@ const ShExTermCjsModule = (function () {
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
-      return "\"" + node.value + "\"" + (
+      return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
         node.datatypeString === RdfLangString
           ? "@" + node.language
           : node.datatypeString === XsdString
@@ -129,7 +130,7 @@ const ShExTermCjsModule = (function () {
     };
   }
 
-  function externalTerm (node, factory) { // !!intermalTermToRdfjs
+  function externalTerm (node, factory) { // !!internalTermToRdfjs
     if (isIRI(node)) {
       return factory.namedNode(node);
     } else if (isBlank(node)) {
@@ -153,7 +154,7 @@ const ShExTermCjsModule = (function () {
     );
   }
 
-  function intermalTermToTurtle (node, base, prefixes) {
+  function internalTermToTurtle (node, base, prefixes) {
     if (isIRI(node)) {
       // if (node === RDF_TYPE) // only valid in Turtle predicates
       //   return "a";
@@ -175,7 +176,7 @@ const ShExTermCjsModule = (function () {
     } else if (isBlank(node)) {
       return node;
     } else if (isLiteral(node)) {
-      const value = getLiteralValue(node);
+      let value = getLiteralValue(node);
       const type = getLiteralType(node);
       const language = getLiteralLanguage(node);
       // Escape special characters
@@ -185,7 +186,7 @@ const ShExTermCjsModule = (function () {
       if (language)
         return '"' + value + '"@' + language;
       else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.intermalTermToTurtle(type, base, prefixes);
+        return '"' + value + '"^^' + this.internalTermToTurtle(type, base, prefixes);
       else
         return '"' + value + '"';
     } else {
@@ -230,7 +231,7 @@ const ShExTermCjsModule = (function () {
     const match = /^"([^]*)"/.exec(literal);
     if (!match)
       throw new Error(literal + ' is not a literal');
-    return match[1];
+    return match[1].replace(/\\"/g, '"');
   }
 
   // Gets the type of a literal in the N3 library
@@ -249,11 +250,6 @@ const ShExTermCjsModule = (function () {
     return match[1] ? match[1].toLowerCase() : '';
   }
 
-
-// rdf:type predicate (for 'a' abbreviation)
-const RDF_PREFIX = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-    RDF_TYPE   = RDF_PREFIX + 'type';
-
 // Characters in literals that require escaping
 const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
@@ -265,7 +261,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
   // Replaces a character by its escaped version
   function characterReplacer (character) {
     // Replace a single character by its escaped version
-    const result = escapeReplacements[character];
+    let result = escapeReplacements[character]; // @@ const should be let
     if (result === undefined) {
       // Replace a single character with its 4-bit unicode escape sequence
       if (character.length === 1) {
@@ -298,7 +294,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     internalTriple: internalTriple,
     externalTerm: externalTerm,
     externalTriple: externalTriple,
-    intermalTermToTurtle: intermalTermToTurtle,
+    internalTermToTurtle: internalTermToTurtle,
   }
 })();
 
