@@ -123,6 +123,8 @@ describe("A ShEx parser", function () {
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
+              "type": "ShapeDecl",
+              "shapeExpr": {
               "type": "ShapeAnd",
               "shapeExprs": [
                 {
@@ -132,7 +134,7 @@ describe("A ShEx parser", function () {
                 },
                 "http://ex.example/S"
               ]
-            }
+            } }
           ]
         });
       }, "unknown property: \"nested\"");
