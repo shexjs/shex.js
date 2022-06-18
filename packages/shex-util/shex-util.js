@@ -1415,6 +1415,41 @@ const ShExUtil = {
     return extensions(map);
   },
 
+  /**
+   * Convert a ShExR property tree to ShexJ.
+   * A schema like:
+   *   <Schema> a :Schema; :shapes (<#S1> <#S2>).
+   *   <#S1> a :ShapeDecl; :shapeExpr [ a :ShapeNot; :shapeExpr <#S2> ].
+   *   <#S2> a :ShapeDecl; :shapeExpr [ a :Shape; :expression [ a :TripleConstraint; :predicate <#p3> ] ].
+   * will parse into a property tree with <#S2> duplicated inside <#S1>:
+   *   {  "rdf:type": [ { "ldterm": ":Schema" } ], ":shapes": [
+   *       { "ldterm": "#S1", "nested": {
+   *           "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
+   *             { "ldterm": "_:n3-41", "nested": {
+   *                  "rdf:type": [ { "ldterm": ":ShapeNot" } ], ":shapeExpr": [
+   *                   { "ldterm": "#S2", "nested": {
+   *                        "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
+   *                         { "ldterm": "_:n3-42", "nested": {
+   *                              "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
+   *                               { "ldterm": "_:n3-43", "nested": {
+   *                                    "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
+   *                             ] } }
+   *                       ] } }
+   *                 ] } }
+   *           ] } },
+   *       { "ldterm": "#S2", "nested": {
+   *            "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
+   *             { "ldterm": "_:n3-42", "nested": {
+   *                  "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
+   *                   { "ldterm": "_:n3-43", "nested": {
+   *                        "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
+   *                 ] } }
+   *           ] } }
+   *     ] }
+   * This method de-duplicates and normalizes all moves all ShapeDecls to be immediate children of the :shapes collection.
+   * @exports
+   * @returns ShEx schema
+   */
   valuesToSchema: function (values) {
     // console.log(JSON.stringify(values, null, "  "));
     const v = values;
@@ -1484,7 +1519,8 @@ const ShExUtil = {
         return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
       }
     }
-    /** shapeDeclOrExpr - transform ShapeDecls and shapeExprs. called from .shapes and .valueExpr
+    /* transform ShapeDecls and shapeExprs. called from .shapes and .valueExpr.
+     * The calls from .valueExpr can be Shapes or ShapeDecls because the ShExR graph is not yet normalized.
      */
     function shapeDeclOrExpr (v) {
       // <#shapeDeclOrExpr> @<#ShapeDecl> OR @<#shapeExpr>
