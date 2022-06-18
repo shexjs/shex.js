@@ -324,21 +324,7 @@ const ShExUtil = {
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map((sh, idx) => {
-        return sh.type === SX.ShapeExternal
-          ?
-          {
-            type: "ShapeExternal",
-            id: sh.id,
-          }
-        :
-        {
-          type: "ShapeDecl",
-          id: sh.id,
-          abstract: sh.abstract,
-          shapeExpr: v.visitShapeExpr(sh.shapeExpr)
-        };
-      });
+      schema.shapes = schema.shapes.map((sh, idx) => v.visitShapeDecl(sh));
 
     // remove extraneous BNode IDs
     v.cleanIds();
@@ -1435,7 +1421,7 @@ const ShExUtil = {
     const t = values[RDF.type][0].ldterm;
     if (t === SX.Schema) {
       /* Schema { "@context":"http://www.w3.org/ns/shex.jsonld"
-       *           startActs:[SemAct+]? start:(shapeExpr|labeledShapeExpr)?
+       *           startActs:[SemAct+]? start:(shapeDeclOrExpr|labeledShapeExpr)?
        *           shapes:[labeledShapeExpr+]? }
        */
       const ret = {
@@ -1457,21 +1443,12 @@ const ShExUtil = {
           return e.ldterm;
         });
       if (values[SX.start])
-        ret.start = extend({id: values[SX.start][0].ldterm}, shapeExpr(values[SX.start][0].nested));
+        ret.start = extend({id: values[SX.start][0].ldterm}, shapeDeclOrExpr(values[SX.start][0].nested));
       const shapes = values[SX.shapes];
       if (shapes) {
         ret.shapes = shapes.map(v => { // @@ console.log(v.nested);
           var t = v.nested[RDF.type][0].ldterm;
-          const obj = t === SX.ShapeExternal
-                ? { type: t }
-                : Object.assign(
-                  {},
-                  { type: SX.ShapeDecl },
-                  SX["abstract"] in v.nested
-                    ? {abstract: !!v.nested[SX["abstract"]]?.[0].ldterm.value}
-                    : {},
-                  {shapeExpr: shapeExpr(v.nested[SX.shapeExpr][0].nested)}
-                );
+          const obj = shapeDeclOrExpr(v.nested)
           return extend({id: v.ldterm}, obj);
         });
       }
@@ -1507,14 +1484,17 @@ const ShExUtil = {
         return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
       }
     }
-    function shapeExpr (v) {
+    /** shapeDeclOrExpr - transform ShapeDecls and shapeExprs. called from .shapes and .valueExpr
+     */
+    function shapeDeclOrExpr (v) {
+      // <#shapeDeclOrExpr> @<#ShapeDecl> OR @<#shapeExpr>
       // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
       const elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
                    "ShapeOr"      : { nary: true , expr: true , prop: "shapeExprs" },
                    "ShapeNot"     : { nary: false, expr: true , prop: "shapeExpr"  },
                    "ShapeRef"     : { nary: false, expr: false, prop: "reference"  },
                    "ShapeExternal": { nary: false, expr: false, prop: null         } };
-      let ret = findType(v, elts, shapeExpr);
+      let ret = findType(v, elts, shapeDeclOrExpr);
       if (ret !== Missed)
         return ret;
 
@@ -1528,7 +1508,7 @@ const ShExUtil = {
         if (SX.shapeExpr in v) {
           ret.shapeExpr =
             "nested" in v[SX.shapeExpr][0] ?
-            extend({id: v[SX.shapeExpr][0].ldterm}, shapeExpr(v[SX.shapeExpr][0].nested)) :
+            extend({id: v[SX.shapeExpr][0].ldterm}, shapeDeclOrExpr(v[SX.shapeExpr][0].nested)) :
             v[SX.shapeExpr][0].ldterm;
         }
         return ret;
@@ -1585,7 +1565,7 @@ const ShExUtil = {
           ret.datatype = v[SX.datatype][0].ldterm;
         return ret;
       } else {
-        throw Error("unknown shapeExpr type in " + JSON.stringify(v));
+        throw Error("unknown shapeDeclOrExpr type in " + JSON.stringify(v));
       }
 
     }
@@ -1674,7 +1654,7 @@ const ShExUtil = {
             ret[a] = !!v[SX[a]][0].ldterm.value;
         });
         if (SX.valueExpr in v)
-          ret.valueExpr = extend({id: v[SX.valueExpr][0].ldterm}, "nested" in v[SX.valueExpr][0] ? shapeExpr(v[SX.valueExpr][0].nested) : {});
+          ret.valueExpr = extend({id: v[SX.valueExpr][0].ldterm}, "nested" in v[SX.valueExpr][0] ? shapeDeclOrExpr(v[SX.valueExpr][0].nested) : {});
         minMaxAnnotSemActs(v, ret);
         return ret;
       } else {
