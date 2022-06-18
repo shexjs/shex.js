@@ -97,22 +97,21 @@ ShExWriter.prototype = {
     if (schema.start)
       _ShExWriter._write("start = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
     if ("shapes" in schema)
-      schema.shapes.forEach(function (shapeExpr) {
-        let id = shapeExpr.id;
-        let abstract = "";
-        if (shapeExpr.type === "ShapeDecl") {
-          if (shapeExpr.abstract)
-            abstract = "abstract "
-          shapeExpr = shapeExpr.shapeExpr;
-        }
+      schema.shapes.forEach(function (shapeDecl) {
         _ShExWriter._write(
-          abstract +
-          _ShExWriter._encodeShapeName(id, false) +
-            " " +
-            _ShExWriter._writeShapeExpr(shapeExpr, done, true, 0).join("")+"\n",
+          _ShExWriter._writeShapeDecl(shapeDecl, done, true, 0).join("")+"\n",
           done
         );
       })
+  },
+
+  _writeShapeDecl: function (shapeDecl, done, forceBraces, parentPrec) {
+    const _ShExWriter = this;
+    const pieces = [];
+    if (shapeDecl.abstract)
+      pieces.push("ABSTRACT ");
+    pieces.push(_ShExWriter._encodeShapeName(shapeDecl.id, false), " ");
+    return pieces.concat(_ShExWriter._writeShapeExpr(shapeDecl.shapeExpr, done, true, 0));
   },
 
   _writeShapeExpr: function (shapeExpr, done, forceBraces, parentPrec) {
@@ -121,8 +120,6 @@ ShExWriter.prototype = {
     if (typeof shapeExpr === "string") // ShapeRef
       pieces.push("@", _ShExWriter._encodeShapeName(shapeExpr));
     // !!! []s for precedence!
-    else if (shapeExpr.type === "ShapeDecl")
-      pieces.push(_ShExWriter._writeShapeExpr(shapeExpr.shapeExpr, done, false, 3));
     else if (shapeExpr.type === "ShapeExternal")
       pieces.push("EXTERNAL");
     else if (shapeExpr.type === "ShapeAnd") {
