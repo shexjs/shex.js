@@ -356,7 +356,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
-      return this._validateShapeDecl(point, shape, Start, 0, tracker, seen);
+      return this._validateShapeExpr(point, shape, Start, 0, tracker, seen);
 
     if (seen === undefined)
       seen = {};
@@ -408,8 +408,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     // Aggregate results in a SolutionList or FailureList.
     const results = candidates.reduce((ret, candidateShapeLabel) => {
-      const shapeExpr = this._lookupShape(candidateShapeLabel);
-      const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, subGraph);
+      const res = this._validateShapeDecl(point, this._lookupShape(candidateShapeLabel), candidateShapeLabel, 0, tracker, seen, subGraph);
       return "errors" in res ?
         { passes: ret.passes, failures: ret.failures.concat(res) } :
         { passes: ret.passes.concat(res), failures: ret.failures } ;
@@ -473,8 +472,6 @@ function ShExValidator_constructor(schema, db, options) {
   }
 
   this._validateShapeDecl = function (point, shapeDecl, shapeLabel, depth, tracker, seen, subGraph) {
-    if (shapeDecl.type !== "ShapeDecl")
-      return this._validateShapeExpr(point, shapeDecl, shapeLabel, depth, tracker, seen, subGraph);
     const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr])
     const expr = conjuncts.length === 1
           ? conjuncts[0]
