@@ -1160,7 +1160,9 @@ const ShExUtil = {
     const _ShExUtil = this;
     if (typeof val === "string") { // ShapeRef
       return null; // 1NOTRefOR1dot_pass-inOR
-    } else if (val.type === "SolutionList") { // dependent_shape
+    }
+    switch (val.type) {
+    case "SolutionList": // dependent_shape
       return val.solutions.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1172,11 +1174,11 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "NodeConstraintTest") { // 1iri_pass-iri
+    case "NodeConstraintTest": // 1iri_pass-iri
       return _ShExUtil.walkVal(val.shapeExpr, cb);
-    } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
+    case "NodeConstraint": // 1iri_pass-iri
       return null;
-    } else if (val.type === "ShapeTest") { // 0_empty
+    case "ShapeTest": // 0_empty
       const vals = [];
       visitSolution(val, vals); // A ShapeTest is a sort of Solution.
       const ret = vals.length
@@ -1185,19 +1187,19 @@ const ShExUtil = {
       if ("solution" in val)
         Object.assign(ret, _ShExUtil.walkVal(val.solution, cb))
       return Object.keys(ret).length ? ret : null;
-    } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
+    case "Shape": // 1NOTNOTdot_passIv1
       return null;
-    } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
+    case "ShapeNotTest": // 1NOT_vsANDvs__passIv1
       return _ShExUtil.walkVal(val.shapeExpr, cb);
-    } else if (val.type === "ShapeNotResults") { // NOT1dotOR2dot_pass-empty
+    case "ShapeNotResults": // NOT1dotOR2dot_pass-empty
       return _ShExUtil.walkVal(val.solution, cb);
-    } else if (val.type === "Failure") { // NOT1dotOR2dot_pass-empty
+    case "Failure": // NOT1dotOR2dot_pass-empty
       return null; // !!TODO
-    } else if (val.type === "ShapeNot") { // 1NOTNOTIRI_passIo1,
+    case "ShapeNot": // 1NOTNOTIRI_passIo1,
       return _ShExUtil.walkVal(val.shapeExpr, cb);
-    } else if (val.type === "ShapeOrResults") { // 1dotRefOR3_passShape1
+    case "ShapeOrResults": // 1dotRefOR3_passShape1
       return _ShExUtil.walkVal(val.solution, cb);
-    } else if (val.type === "ShapeOr") { // 1NOT_literalORvs__passIo1
+    case "ShapeOr": // 1NOT_literalORvs__passIo1
       return val.shapeExprs.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1209,7 +1211,7 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "ShapeAndResults") { // 1iriRef1_pass-iri
+    case "ShapeAndResults": // 1iriRef1_pass-iri
       return val.solutions.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1221,7 +1223,7 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "ShapeAnd") { // 1NOT_literalANDvs__passIv1
+    case "ShapeAnd": // 1NOT_literalANDvs__passIv1
       return val.shapeExprs.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1233,7 +1235,8 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
+    case "EachOfSolutions":
+    case "OneOfSolutions":
       // 1dotOne2dot_pass_p1
       return val.solutions.reduce((ret, sln) => {
         sln.expressions.forEach(exp => {
@@ -1248,7 +1251,7 @@ const ShExUtil = {
         });
         return ret;
       }, {});
-    } else if (val.type === "TripleConstraintSolutions") { // 1dot_pass-noOthers
+    case "TripleConstraintSolutions": // 1dot_pass-noOthers
       if ("solutions" in val) {
         const ret = {};
         const vals = [];
@@ -1258,9 +1261,9 @@ const ShExUtil = {
       } else {
         return null;
       }
-    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
+    case "Recursion": // 3circRefPlus1_pass-recursiveData
       return null;
-    } else {
+    default:
       // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
     }
@@ -1627,117 +1630,6 @@ const ShExUtil = {
       return ret;
     }
   },
-/* -- deprecated
-  valToSimple: function (val) {
-    const _ShExUtil = this;
-    function _join (list) {
-      return list.reduce((ret, elt) => {
-        Object.keys(elt).forEach(k => {
-          if (k in ret) {
-            ret[k] = Array.from(new Set(ret[k].concat(elt[k])));
-          } else {
-            ret[k] = elt[k];
-          }
-        });
-        return ret;
-      }, {});
-    }
-    if (typeof val === "string") {
-      return val
-    } else if (val.type === "TripleConstraintSolutions") {
-      if ("solutions" in val) {
-        return val.solutions.reduce((ret, sln) => {
-          if (!("referenced" in sln))
-            return {};
-          const toAdd = {};
-          if (chaseList(sln.referenced, toAdd)) {
-            return _join(ret, toAdd);
-          } else {
-            return _join(ret, _ShExUtil.valToSimple(sln.referenced));
-          }
-          function chaseList (li) {
-            if (!li) return false;
-            if (li.node === RDF.nil) return true;
-            if ("solution" in li && "solutions" in li.solution &&
-                li.solution.solutions.length === 1 &&
-                "expressions" in li.solution.solutions[0] &&
-                li.solution.solutions[0].expressions.length === 2 &&
-                "predicate" in li.solution.solutions[0].expressions[0] &&
-                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
-                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
-              const expressions = li.solution.solutions[0].expressions;
-              const ent = expressions[0];
-              const rest = expressions[1].solutions[0];
-              const member = ent.solutions[0];
-              const newElt = { ldterm: member.object };
-              if ("referenced" in member) {
-                const t = _ShExUtil.valToSimple(member.referenced);
-                if (t)
-                  newElt.nested = t;
-              }
-              toAdd = _join(toAdd, newElt);
-              return rest.object === RDF.nil ?
-                true :
-                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
-                          ? rest.referenced.solution
-                          : rest.referenced);
-            }
-          }
-        }, []);
-      } else {
-        return [];
-      }
-    } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
-      return {  };
-    } else if (val.type === "NodeConstraintTest") {
-      return _ShExUtil.valToSimple(val.shapeExpr);
-    } else if (val.type === "NodeConstraint") {
-      const thisNode = {  };
-      thisNode[n3ify(val.focus)] = [val.shape];
-      return thisNode;
-    } else if (val.type === "ShapeTest") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return "solution" in val ? _join([thisNode].concat(_ShExUtil.valToSimple(val.solution))) : thisNode;
-    } else if (val.type === "Shape") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return thisNode;
-    } else if (val.type === "ShapeNotTest") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return _join(['NOT1'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
-    } else if (val.type === "ShapeNot") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return _join(['NOT'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
-    } else if (val.type === "ShapeAnd") {
-      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('AND');
-    } else if (val.type === "ShapeOr") {
-      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('OR');
-    } else if (val.type === "Failure") {
-      return _ShExUtil.errsToSimple(val);
-    } else if (val.type === "Recursion") {
-      return {  };
-    } else if ("solutions" in val) {
-      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
-      return _join(val.solutions.map(sln => {
-        return _ShExUtil.valToSimple(sln);
-      }));
-    } else if ("solution" in val) {
-      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
-      return _ShExUtil.valToSimple(val.solution);
-    } else if ("expressions" in val) {
-      return _join(val.expressions.map(sln => {
-        return _ShExUtil.valToSimple(sln);
-      }));
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
-  },
-*/
   simpleToShapeMap: function (x) {
     return Object.keys(x).reduce((ret, k) => {
       x[k].forEach(s => {
