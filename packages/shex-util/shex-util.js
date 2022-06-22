@@ -1650,45 +1650,53 @@ const ShExUtil = {
 
   errsToSimple: function (val) {
     const _ShExUtil = this;
-    if (val.type === "FailureList") {
+    if (Array.isArray(val)) {
+      return val.reduce((ret, e) => {
+        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
+        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
+      }, []);
+    }
+    switch (val.type) {
+    case "FailureList":
       return val.errors.reduce((ret, e) => {
         return ret.concat(_ShExUtil.errsToSimple(e));
       }, []);
-    } else if (val.type === "Failure") {
+    case "Failure":
       return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
         const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
-    } else if (val.type === "TypeMismatch") {
+    case "TypeMismatch": {
       const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
-    } else if (val.type === "ShapeAndFailure") {
+    }
+    case "ShapeAndFailure":
       return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    } else if (val.type === "ShapeOrFailure") {
+    case "ShapeOrFailure":
       return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
           " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    } else if (val.type === "ShapeNotFailure") {
+    case "ShapeNotFailure":
       return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-    } else if (val.type === "ExcessTripleViolation") {
+    case "ExcessTripleViolation":
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-    } else if (val.type === "ClosedShapeViolation") {
+    case "ClosedShapeViolation":
       return ["Unexpected triple(s): {"].concat(
         val.unexpectedTriples.map(t => {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })
       ).concat(["}"]);
-    } else if (val.type === "NodeConstraintViolation") {
+    case "NodeConstraintViolation":
       const w = require("@shexjs/writer")();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
@@ -1696,27 +1704,23 @@ const ShExUtil = {
         txt = res;
       });
       return ["NodeConstraintError: expected to match " + txt];
-    } else if (val.type === "MissingProperty") {
+    case "MissingProperty":
       return ["Missing property: " + val.property];
-    } else if (val.type === "NegatedProperty") {
+    case "NegatedProperty":
       return ["Unexpected property: " + val.property];
-    } else if (Array.isArray(val)) {debugger;
-      return val.reduce((ret, e) => {
-        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
-      }, []);
-    } else if (val.type === "SemActFailure") {
+    case "SemActFailure": {
       const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["rejected by semantic action:"].concat(nested);
-    } else if (val.type === "SemActViolation") {
+    }
+    case "SemActViolation":
       return [val.message];
-    } else if (val.type === "BooleanSemActFailure") {
+    case "BooleanSemActFailure":
       return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
-    } else {
+    default:
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
     }
