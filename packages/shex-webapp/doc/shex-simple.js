@@ -290,7 +290,9 @@ function makeManifestCache (selection) {
       }
       try {
         // exceptions pass through to caller (asyncGet)
-        textOrObj = JSON.parse(textOrObj);
+        textOrObj = url.endsWith(".yaml")
+          ? ShExWebApp.JsYaml.load(textOrObj)
+          : JSON.parse(textOrObj);
       } catch (e) {
         $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
         const throwMe = Error(e + '\n' + textOrObj);
