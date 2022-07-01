@@ -723,6 +723,14 @@ async function pickData (name, dataTest, elt, listItems, side) {
       }
       await copyTextMapToEditMap();
 
+      /* This is kind of a wart 'cause I haven't made a 3rd level of manifest entry for materialization */
+      if (dataTest.entry.outputSchema === undefined && dataTest.outputSchemaUrl) {
+        dataTest.outputSchemaUrl = new URL(dataTest.entry.outputSchemaURL, dataTest.url).href; // absolutize
+        const resp = await fetch(dataTest.outputSchemaUrl);
+        if (!resp.ok)
+          throw Error("fetch <" + dataTest.outputSchemaUrl + "> got error response " + resp.status + ": " + resp.statusText);
+        dataTest.entry.outputSchema = await resp.text();
+      }
       Caches.outputSchema.set(dataTest.entry.outputSchema, dataTest.outputSchemaUrl);
       $("#outputSchema .status").text(name);
       Caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
