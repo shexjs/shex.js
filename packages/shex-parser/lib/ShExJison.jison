@@ -90,11 +90,6 @@
     return array.push(item), array;
   }
 
-  // Appends the items to the array and returns the array
-  function appendAllTo(array, items) {
-    return array.push.apply(array, items), array;
-  }
-
   // Extends a base object with properties of other objects
   function extend(base) {
     if (!base) base = {};

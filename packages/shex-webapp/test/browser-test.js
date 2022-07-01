@@ -413,7 +413,7 @@ if (!TEST_browser) {
 
         it("single test without URLs as simple object", async function () {
           // Construction of JsDom's internal Blob is idiomatic. Have fun in the debugger!
-          const manifest = Blob.create([
+          const manifest = Blob.create(dom.window, [
             [Fs.readFileSync(Manifest_InlineOne)],
             {type: "application/json"}
           ])

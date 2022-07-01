@@ -11,6 +11,7 @@ ShExWebApp = (function () {
     "eval-threaded-nerr": require("@shexjs/eval-threaded-nerr"),
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
+    JsYaml:               require("js-yaml"),
     DcTap:                require("dctap").DcTap,
   })
 })()
