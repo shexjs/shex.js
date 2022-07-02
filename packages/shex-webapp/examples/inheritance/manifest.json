@@ -1,5 +1,13 @@
 [
   {
+    "schemaLabel": "Customer EXTENDS Person and Employee",
+    "schemaURL": "PersonEmployee.shex",
+    "dataLabel": "percust, empcust, xcust",
+    "dataURL": "PersonEmployee.ttl",
+    "queryMap": "<http://a.example/percust>@ <http://a.example/Person>,\n<http://a.example/percust>@!<http://a.example/Employee>,\n<http://a.example/percust>@ <http://a.example/Customer>,\n<http://a.example/empcust>@!<http://a.example/Person>,\n<http://a.example/empcust>@ <http://a.example/Employee>,\n<http://a.example/empcust>@ <http://a.example/Customer>,\n<http://a.example/xcust>  @!<http://a.example/Person>,\n<http://a.example/xcust>  @!<http://a.example/Employee>,\n<http://a.example/xcust>  @ <http://a.example/Customer>",
+    "status": "conformant"
+  },
+  {
     "schemaLabel": "Issue with EXTENDS",
     "schemaURL": "IssueShape-EXTENDS.shex",
     "dataLabel": "Issue1",
