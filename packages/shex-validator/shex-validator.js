@@ -387,8 +387,12 @@ function ShExValidator_constructor(schema, db, options) {
   }
 
   this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, subGraph, allowAbstract) {
-    if (subGraph) // Shape inference doesn't apply when validating base shapes.
+    const _ShExValidator = this;
+    if (subGraph) {
+      // subGraph indicates that shape substitution has already been applied.
+      // Now we're testing a subgraph against the base shapes.
       return this._validateShapeDecl(point, this._lookupShape(shapeLabel), shapeLabel, 0, tracker, seen, subGraph);
+    }
 
     // Find all non-abstract shapeExprs extended with label. 
     let candidates = [shapeLabel];
@@ -454,10 +458,11 @@ function ShExValidator_constructor(schema, db, options) {
               const extendsVisitor = ShExUtil.Visitor();
               extendsVisitor.visitShapeRef = function (parent) {
                 extensions.add(parent, curLabel);
+                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(parent))
                 // makeSchemaVisitor().visitSchema(schema);
                 return "null";
               };
-              extendsVisitor.visitShapeExpr(ext);
+              extendsVisitor.visitShapeDecl(ext);
             })
           }
           return "null";
@@ -467,9 +472,14 @@ function ShExValidator_constructor(schema, db, options) {
     }
   }
 
-  this._validateShapeDecl = function (point, shapeExpr, shapeLabel, depth, tracker, seen, subgraph) {
-    const expr = shapeExpr.type === "ShapeDecl" ? shapeExpr.shapeExpr : shapeExpr;
-    return this._validateShapeExpr(point, expr, shapeLabel, depth, tracker, seen, subgraph);
+  this._validateShapeDecl = function (point, shapeDecl, shapeLabel, depth, tracker, seen, subGraph) {
+    if (shapeDecl.type !== "ShapeDecl")
+      return this._validateShapeExpr(point, shapeDecl, shapeLabel, depth, tracker, seen, subGraph);
+    const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr])
+    const expr = conjuncts.length === 1
+          ? conjuncts[0]
+          : { type: "ShapeAnd", shapeExprs: conjuncts };
+    return this._validateShapeExpr(point, expr, shapeLabel, depth, tracker, seen, subGraph);
   }
 
   this._lookupShape = function (label) {
@@ -874,7 +884,7 @@ function ShExValidator_constructor(schema, db, options) {
       };
 
       // Call constructed visitor on expr.
-      visitor.visitShapeExpr(expr);
+      visitor.visitShapeDecl(expr);
     }
   }
 
