@@ -461,7 +461,7 @@ function ShExValidator_constructor(schema, db, options) {
                 // makeSchemaVisitor().visitSchema(schema);
                 return "null";
               };
-              extendsVisitor.visitShapeDecl(ext);
+              extendsVisitor.visitShapeExpr(ext);
             })
           }
           return "null";
@@ -881,7 +881,7 @@ function ShExValidator_constructor(schema, db, options) {
       };
 
       // Call constructed visitor on expr.
-      visitor.visitShapeDecl(expr);
+      visitor.visitShapeExpr(expr);
     }
   }
 
