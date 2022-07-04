@@ -790,7 +790,7 @@ function ShExValidator_constructor(schema, db, options) {
       const extend = expr.extends[eNo];
       const subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      const sub = _ShExValidator.validate(point, extend, valParms.tracker, valParms.seen, matchTarget, subgraph)
+      const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
       if ("errors" in sub)
         errors.push(sub);
       else
