@@ -31,7 +31,7 @@
   dataURL: Person_OR_Employee.ttl
   queryMapURL: Person_OR_Employee.smap
   status: conformant
-- schemaLabel: XX - Customer ᐃ ↦(∅ OR Person OR Employee)
+- schemaLabel: Customer ᐃ ↦(∅ OR Person OR Employee)
   schema: |-
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX : <http://a.example/ns#>
@@ -46,7 +46,7 @@
   dataURL: Person_OR_Employee.ttl
   queryMapURL: Person_OR_Employee.smap
   status: conformant
-- schemaLabel: XX - Customer ᐃ ↦(∅ OR ({} AND ᐃ Person) OR Employee)
+- schemaLabel: Customer ᐃ ↦(∅ OR ({} AND ᐃ Person) OR Employee)
   schema: |-
     PREFIX foaf: <http://xmlns.com/foaf/0.1/>
     PREFIX : <http://a.example/ns#>
@@ -54,6 +54,22 @@
     BASE <http://a.example/>
     
     <Empty> CLOSED { }
+    <Person> CLOSED { foaf:name xsd:string }
+    <Employee> CLOSED { :employeeId xsd:integer }
+    <Customer> EXTENDS @<Empty> OR ({} AND EXTENDS @<Person> {}) OR @<Employee> CLOSED { :customerId xsd:integer }
+  dataLabel: percust, empcust, xcust
+  dataURL: Person_OR_Employee.ttl
+  queryMapURL: Person_OR_Employee.smap
+  status: conformant
+- schemaLabel: Customer ᐃ ↦(*∅ OR ({} AND ᐃ Person) OR Employee)
+  schema: |-
+    PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+    PREFIX : <http://a.example/ns#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    BASE <http://a.example/>
+    
+    ABSTRACT <Empty> @<Empty_impl>
+    <Empty_impl> CLOSED { }
     <Person> CLOSED { foaf:name xsd:string }
     <Employee> CLOSED { :employeeId xsd:integer }
     <Customer> EXTENDS @<Empty> OR ({} AND EXTENDS @<Person> {}) OR @<Employee> CLOSED { :customerId xsd:integer }
@@ -165,12 +181,6 @@
   status: conformant
 - schemaLabel: vitals RESTRICTS
   schemaURL: vitals-RESTRICTS.shex
-  dataLabel: data
-  dataURL: vitals.ttl
-  queryMapURL: vitals.smap
-  status: conformant
-- schemaLabel: XX - vitals path
-  schemaURL: vitals-path.shex
   dataLabel: data
   dataURL: vitals.ttl
   queryMapURL: vitals.smap

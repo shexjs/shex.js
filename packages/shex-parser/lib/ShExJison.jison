@@ -504,7 +504,7 @@ statement:
     ;
 
 shapeExprDecl:
-      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
         yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
                                    $3.length > 0 ? { restricts: $3 } : { },
                                    {shapeExpr: $4})) // $5: t: @@
@@ -521,7 +521,7 @@ _Qrestriction_E_Star:
     | _Qrestriction_E_Star restriction	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
-_O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
+_O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C:
       // _QstringFacet_E_Star shapeExpression	{
       //   if (Object.keys($1).length === 0) { $$ = $2; }
       //   // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
@@ -535,6 +535,7 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
       shapeExpression	{
         $$ = nonest($1);
       }
+    | shapeRef	
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
 
