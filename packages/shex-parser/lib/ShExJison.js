@@ -272,13 +272,9 @@ this.$ = appendTo($$[$0-1], $$[$0]) // t: startCode3;
 break;
 case 26:
  // t: 1dot 1val1vsMinusiri3??
-        if ($$[$0-3].abstract || $$[$0-1].length) { // t: $$[$0-3]: 1dotAbstractShapeCode1  $$[$0-2]: @@
-          yy.addShape($$[$0-2], Object.assign({type: "ShapeDecl"}, $$[$0-3],
-                                     $$[$0-1].length > 0 ? { restricts: $$[$0-1] } : { },
-                                     {shapeExpr: $$[$0]})) // $$[$01]: t: @@
-        } else {
-          yy.addShape($$[$0-2],  $$[$0]);
-        }
+        yy.addShape($$[$0-2], Object.assign({type: "ShapeDecl"}, $$[$0-3],
+                                   $$[$0-1].length > 0 ? { restricts: $$[$0-1] } : { },
+                                   {shapeExpr: $$[$0]})) // $$[$01]: t: @@
       
 break;
 case 27:

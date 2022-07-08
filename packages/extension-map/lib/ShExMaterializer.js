@@ -287,9 +287,23 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         shape: shapeLabel
       };
     seen[seenKey] = { point: point, shapeLabel: shapeLabel };
-    const ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
+    const ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
     delete seen[seenKey];
     return ret;
+  }
+
+  this._validateShapeDecl = function (db, point, shapeDecl, shapeLabel, depth, tracker, seen, subgraph) {
+    return this._validateShapeExpr(db, point, shapeDecl.shapeExpr, shapeLabel, depth, tracker, seen, subgraph);
+  }
+
+  this._lookupShape = function (label) {
+    if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
+      runtimeError("shape " + label + " not found; no shapes in schema");
+    } else if (label in index.shapeExprs) {
+      return index.shapeExprs[label]
+    } else {
+      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
+    }
   }
 
   this._validateShapeExpr = function (db, point, shapeExpr, shapeLabel, depth, seen) {
@@ -299,7 +313,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     if (typeof(shapeExpr) === "string") { // ShapeRef
-      ret = this._validateShapeExpr(db, point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, seen);
+      ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[shapeExpr], shapeExpr, depth, seen);
     } else if (shapeExpr.type === "NodeConstraint") {
       const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       ret = errors.length ? {

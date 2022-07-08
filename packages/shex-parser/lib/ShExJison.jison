@@ -505,13 +505,9 @@ statement:
 
 shapeExprDecl:
       _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        if ($1.abstract || $3.length) { // t: $1: 1dotAbstractShapeCode1  $2: @@
-          yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
-                                     $3.length > 0 ? { restricts: $3 } : { },
-                                     {shapeExpr: $4})) // $5: t: @@
-        } else {
-          yy.addShape($2,  $4);
-        }
+        yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
+                                   $3.length > 0 ? { restricts: $3 } : { },
+                                   {shapeExpr: $4})) // $5: t: @@
       }
     ;
 

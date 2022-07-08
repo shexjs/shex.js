@@ -104,10 +104,8 @@ function ShExVisitor () {
     },
 
     visitShapeDecl: function (decl, label) {
-      return decl.type === "ShapeDecl" ?
-        this._maybeSet(decl, { type: "ShapeDecl" }, "ShapeDecl",
-                       ["id", "abstract", "restricts", "shapeExpr"]) :
-        this.visitShapeExpr(decl, label);
+      return this._maybeSet(decl, { type: "ShapeDecl" }, "ShapeDecl",
+                            ["id", "abstract", "restricts", "shapeExpr"]);
     },
 
     visitShapeExpr: function (expr, label) {
@@ -381,7 +379,7 @@ ShExVisitor.index = function (schema) {
   };
 
   let oldVisitShapeDecl = v.visitShapeDecl;
-  v.visitShapeDecl = v.visitValueExpr = function (shapeExpr, label) {
+  v.visitShapeDecl = function (shapeExpr, label) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
       index.shapeExprs[shapeExpr.id] = shapeExpr;
     return oldVisitShapeDecl.call(v, shapeExpr, label);
