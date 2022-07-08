@@ -504,7 +504,7 @@ statement:
     ;
 
 shapeExprDecl:
-      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
         yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
                                    $3.length > 0 ? { restricts: $3 } : { },
                                    {shapeExpr: $4})) // $5: t: @@
@@ -521,7 +521,7 @@ _Qrestriction_E_Star:
     | _Qrestriction_E_Star restriction	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
-_O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
+_O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C:
       // _QstringFacet_E_Star shapeExpression	{
       //   if (Object.keys($1).length === 0) { $$ = $2; }
       //   // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
@@ -535,6 +535,7 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
       shapeExpression	{
         $$ = nonest($1);
       }
+    | shapeRef	
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
 
@@ -1339,7 +1340,51 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C extendsShapeExpression	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
+    ;
+
+extendsShapeExpression:
+      extendsShapeOr	
+    ;
+
+extendsShapeOr:
+      extendsShapeAnd _Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
+    ;
+
+_O_QIT_OR_E_S_QextendsShapeAnd_E_C: // IT_OR extendsShapeAnd
+      IT_OR extendsShapeAnd	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star: // (IT_OR extendsShapeAnd)*
+      	-> []
+    | _Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QextendsShapeAnd_E_C	-> $1.concat($2)
+    ;
+
+extendsShapeAnd:
+      extendsShapeNot _Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
+    ;
+
+_O_QIT_AND_E_S_QextendsShapeNot_E_C: // IT_AND extendsShapeNot
+      IT_AND extendsShapeNot	-> $2
+    ;
+
+_Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star: // (IT_AND extendsShapeNot)*
+      	-> []
+    | _Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star _O_QIT_AND_E_S_QextendsShapeNot_E_C	-> $1.concat($2)
+    ;
+
+extendsShapeNot: // IT_NOT? extendsShapeAtom
+      _QIT_NOT_E_Opt extendsShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
+    ;
+
+extendsShapeAtom:
+      nonLitInlineNodeConstraint inlineShapeOrRef	// _QinlineShapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | litInlineNodeConstraint	
+    | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true})
+    | '.'	-> yy.EmptyShape
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
