@@ -24,8 +24,9 @@ const VERBOSE = false; // "VERBOSE" in process.env;
 const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = require("@shexjs/term");
-let ShExVisitor = require("@shexjs/visitor");
-let ShExUtil = require("@shexjs/util");
+const ShExVisitor = require("@shexjs/visitor");
+const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
+const ShExUtil = require("@shexjs/util");
 const Hierarchy = require('hierarchy-closure')
 
 function getLexicalValue (term) {
@@ -603,7 +604,7 @@ function ShExValidator_constructor(schema, db, options) {
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
-    const xp = crossProduct(tripleList.constraintList, "NO_TRIPLE_CONSTRAINT");
+    const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
     const partitionErrors = [];
     const regexEngine = regexModule.compile(schema, shape, index);
     while (xp.next() && ret === null) {
@@ -618,11 +619,11 @@ function ShExValidator_constructor(schema, db, options) {
       const tripleToExtends = []
       const extendsToTriples = _seq((shape.extends || []).length).map(() => [])
       t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
-        if (cNo !== "NO_TRIPLE_CONSTRAINT" && cNo < extendedTCs.length) {
+        if (cNo !== NoTripleConstraint && cNo < extendedTCs.length) {
           const extNo = extendedTCs[cNo].extendsNo;
           extendsToTriples[extNo].push(neighborhood[tNo]);
           tripleToExtends[tNo] = cNo;
-          t2tcForThisShape[tNo] = "NO_TRIPLE_CONSTRAINT";
+          t2tcForThisShape[tNo] = NoTripleConstraint;
         } else {
           tripleToExtends[tNo] = "NO_EXTENDS";
           t2tcForThisShape[tNo] = cNo;
@@ -632,7 +633,7 @@ function ShExValidator_constructor(schema, db, options) {
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
+          return t2tcForThisShape[i] === NoTripleConstraint && // didn't match a constraint
             tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
             extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
@@ -645,7 +646,7 @@ function ShExValidator_constructor(schema, db, options) {
 
       // Set usedTriples and constraintMatchCount.
       t2tcForThisShape.forEach(function (tpNumber, ord) {
-        if (tpNumber !== "NO_TRIPLE_CONSTRAINT") {
+        if (tpNumber !== NoTripleConstraint) {
           usedTriples.push(neighborhood[ord]);
           ++constraintMatchCount[tpNumber];
         }
@@ -775,7 +776,7 @@ function ShExValidator_constructor(schema, db, options) {
   function _constraintToTriples (t2tc, constraintList, tripleList) {
     return t2tc.slice().
       reduce(function (ret, cNo, tNo) {
-        if (cNo !== "NO_TRIPLE_CONSTRAINT")
+        if (cNo !== NoTripleConstraint)
           ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
         return ret;
       }, _seq(constraintList.length).map(() => [])); // [length][]

@@ -55,6 +55,7 @@
   },
   "scripts": {
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
+    "compile": "cd packages/eval-validator-api/ && tsc",
     "rebuild": "npm run clean-all && npx lerna bootstrap && for d in packages/*; do (cd $d && npm install); done && npm ci",
     "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",

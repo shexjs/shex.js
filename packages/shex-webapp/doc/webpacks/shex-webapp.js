@@ -7738,6 +7738,7 @@ module.exports = {
 
 const EvalSimple1ErrCjsModule = (function () {
   const ShExTerm = __webpack_require__(1118);
+  const { NoTripleConstraint } = __webpack_require__(3530);
 
   const Split = "<span class='keyword' title='Split'>|</span>";
   const Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -7961,7 +7962,7 @@ const EvalSimple1ErrCjsModule = (function () {
               elt.matched.reduce((ret, m) => {
                 return ret + m.triples.length; // count matched triples
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === "NO_TRIPLE_CONSTRAINT" ? ret : ret + 1; // count expected
+                return t === NoTripleConstraint ? ret : ret + 1; // count expected
               }, 0);
           return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)
@@ -8000,7 +8001,7 @@ const EvalSimple1ErrCjsModule = (function () {
             const unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
+              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.
@@ -8276,6 +8277,7 @@ if (true)
 
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = __webpack_require__(1118);
+const { NoTripleConstraint } = __webpack_require__(3530);
 const UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -8568,7 +8570,7 @@ function vpEngine (schema, shape, index) {
             const unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
+              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.
@@ -8712,6 +8714,18 @@ return {
 
 if (true)
   module.exports = EvalThreadedNErrCjsModule;
+
+
+/***/ }),
+
+/***/ 3530:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NoTripleConstraint = void 0;
+exports.NoTripleConstraint = ["NO_TRIPLE_CONSTRAINT"];
 
 
 /***/ }),
@@ -13619,8 +13633,9 @@ const VERBOSE = false; // "VERBOSE" in process.env;
 const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = __webpack_require__(1118);
-let ShExVisitor = __webpack_require__(8806);
-let ShExUtil = __webpack_require__(9443);
+const ShExVisitor = __webpack_require__(8806);
+const { NoTripleConstraint } = __webpack_require__(3530);
+const ShExUtil = __webpack_require__(9443);
 const Hierarchy = __webpack_require__(2515)
 
 function getLexicalValue (term) {
@@ -14184,7 +14199,7 @@ function ShExValidator_constructor(schema, db, options) {
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
-    const xp = crossProduct(tripleList.constraintList, "NO_TRIPLE_CONSTRAINT");
+    const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
     const partitionErrors = [];
     const regexEngine = regexModule.compile(schema, shape, index);
     while (xp.next() && ret === null) {
@@ -14199,11 +14214,11 @@ function ShExValidator_constructor(schema, db, options) {
       const tripleToExtends = []
       const extendsToTriples = _seq((shape.extends || []).length).map(() => [])
       t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
-        if (cNo !== "NO_TRIPLE_CONSTRAINT" && cNo < extendedTCs.length) {
+        if (cNo !== NoTripleConstraint && cNo < extendedTCs.length) {
           const extNo = extendedTCs[cNo].extendsNo;
           extendsToTriples[extNo].push(neighborhood[tNo]);
           tripleToExtends[tNo] = cNo;
-          t2tcForThisShape[tNo] = "NO_TRIPLE_CONSTRAINT";
+          t2tcForThisShape[tNo] = NoTripleConstraint;
         } else {
           tripleToExtends[tNo] = "NO_EXTENDS";
           t2tcForThisShape[tNo] = cNo;
@@ -14213,7 +14228,7 @@ function ShExValidator_constructor(schema, db, options) {
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return t2tcForThisShape[i] === "NO_TRIPLE_CONSTRAINT" && // didn't match a constraint
+          return t2tcForThisShape[i] === NoTripleConstraint && // didn't match a constraint
             tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
             extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
@@ -14226,7 +14241,7 @@ function ShExValidator_constructor(schema, db, options) {
 
       // Set usedTriples and constraintMatchCount.
       t2tcForThisShape.forEach(function (tpNumber, ord) {
-        if (tpNumber !== "NO_TRIPLE_CONSTRAINT") {
+        if (tpNumber !== NoTripleConstraint) {
           usedTriples.push(neighborhood[ord]);
           ++constraintMatchCount[tpNumber];
         }
@@ -14356,7 +14371,7 @@ function ShExValidator_constructor(schema, db, options) {
   function _constraintToTriples (t2tc, constraintList, tripleList) {
     return t2tc.slice().
       reduce(function (ret, cNo, tNo) {
-        if (cNo !== "NO_TRIPLE_CONSTRAINT")
+        if (cNo !== NoTripleConstraint)
           ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
         return ret;
       }, _seq(constraintList.length).map(() => [])); // [length][]
