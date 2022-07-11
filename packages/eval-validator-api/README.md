@@ -1,14 +1,14 @@
-[![NPM Version](https://badge.fury.io/js/@shexjs%2Fterm.png)](https://npmjs.org/package/shex)
+[![NPM Version](https://badge.fury.io/js/@shexjs%2Feval-validator-api.png)](https://npmjs.org/package/shex)
 [![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
 
-# @shexjs/term
-Internal shexjs library subject to revision at any time.
+# @shexjs/eval-validator-api
+API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
 
 ## install
 
 ``` shell
-npm install --save @shexjs/term
+npm install --save @shexjs/eval-validator-api
 ```
 
 
@@ -24,7 +24,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/visitor`](../shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
 - [`@shexjs/validator`](../shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
 - [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
-- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
+!- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
 - [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
 - [`@shexjs/api`](../shex-api#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
