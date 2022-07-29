@@ -724,6 +724,14 @@ async function pickData (name, dataTest, elt, listItems, side) {
       }
       await copyTextMapToEditMap();
 
+      /* This is kind of a wart 'cause I haven't made a 3rd level of manifest entry for materialization */
+      if (dataTest.entry.outputSchema === undefined && dataTest.outputSchemaUrl) {
+        dataTest.outputSchemaUrl = new URL(dataTest.entry.outputSchemaURL, dataTest.url).href; // absolutize
+        const resp = await fetch(dataTest.outputSchemaUrl);
+        if (!resp.ok)
+          throw Error("fetch <" + dataTest.outputSchemaUrl + "> got error response " + resp.status + ": " + resp.statusText);
+        dataTest.entry.outputSchema = await resp.text();
+      }
       Caches.outputSchema.set(dataTest.entry.outputSchema, dataTest.outputSchemaUrl);
       $("#outputSchema .status").text(name);
       Caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
@@ -1904,17 +1912,26 @@ async function loadSearchParameters () {
       const smErrors = await dataInputHandler();
       if (smErrors.length === 0)
         $("#validate")/*.focus()*/.click();
-      // at.focus();
-      return false; // same as e.preventDefault();
+      return false;
+    } else if (e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.code) !== -1) { // ctrl-arrow
+      let newLi = null;
+      if ($(':focus').length !== 1) {
+        newLi = $('[data-navColumn="0"] li').first();
+      } else if ($('ul[data-navColumn] button:focus').length === 1) {
+        newLi = navFrom(e.code, $(':focus').parent());
+      }
+      if (newLi)
+        $(newLi).find('button').focus();
+      return false;
     } else if (e.ctrlKey && e.key === "\\") {
       $("#materialize").click();
-      return false; // same as e.preventDefault();
+      return false;
     } else if (e.ctrlKey && e.key === "[") {
       bindingsToTable()
-      return false; // same as e.preventDefault();
+      return false;
     } else if (e.ctrlKey && e.key === "]") {
       tableToBindings()
-      return false; // same as e.preventDefault();
+      return false;
     } else {
       return true;
     }
@@ -1930,6 +1947,51 @@ async function loadSearchParameters () {
     return callValidator();
   }
   return loaded;
+
+  function navFrom (keyCode, fromLi) {
+    const fromColumn = fromLi.parent();
+    const fromLiNo = fromLi.index();
+    const lis = fromColumn.children();
+    const fromColumnNo = parseInt(fromColumn.attr('data-navColumn'));
+    const columns = $('ul[data-navColumn]').get().sort(
+      (l, r) =>
+        parseInt($(l).attr('data-navColumn')) - parseInt($(r).attr('data-navColumn'))
+    );
+    switch (keyCode) {
+    case 'ArrowLeft':
+      if (fromColumnNo > 0) {
+        const newColumn = $(columns[fromColumnNo - 1]);
+        return firstOf(newColumn, '.selected', 'li:first-child');
+      }
+      break;
+    case 'ArrowRight':
+      if (fromColumnNo < columns.length - 1) {
+        const newColumn = $(columns[fromColumnNo + 1]);
+        return firstOf(newColumn, '.selected', 'li:first-child');
+      }
+      break;
+    case 'ArrowUp':
+      if (fromLiNo > 0) {
+        return lis[fromLiNo - 1];
+      }
+      break;
+    case 'ArrowDown':
+      if (fromLiNo < lis.length - 1) {
+        return lis[fromLiNo + 1];
+      }
+      break;
+    default: throw Error(e.code);
+    }
+  }
+
+  function firstOf (node, ...selectors) { // return first successful selector. gotta be an idiom for this in jquery
+    for (let i = 0; i < selectors.length; ++i) {
+      const ret = node.find(selectors[i]);
+      if (ret.length > 0) {
+        return ret.get(0);
+      }
+    }
+  }
 }
 
 function setTextAreaHandlers (listItems) {

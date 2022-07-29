@@ -304,7 +304,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/util`](packages/shex-util#readme) -- some utilities for transforming schemas or validation output
 - [`@shexjs/visitor`](packages/shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
 - [`@shexjs/validator`](packages/shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) -- eval-simple-1err
+!- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) -- eval-simple-1err
 - [`@shexjs/eval-threaded-nerr`](packages/eval-threaded-nerr#readme) -- eval-threaded-nerr
 - [`@shexjs/api`](packages/shex-api#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](packages/shex-node#readme) -- additional API functionality for a node environment
