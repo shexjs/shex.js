@@ -1656,6 +1656,9 @@ const ShExUtil = {
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
     }
+    if (typeof val === "string")
+      return string;
+
     switch (val.type) {
     case "FailureList":
       return val.errors.reduce((ret, e) => {
