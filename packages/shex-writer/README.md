@@ -176,8 +176,9 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/util`](../shex-util#readme) -- some utilities for transforming schemas or validation output
 - [`@shexjs/visitor`](../shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
 - [`@shexjs/validator`](../shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- eval-simple-1err
-- [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- eval-threaded-nerr
+- [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
+- [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
+- [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
 - [`@shexjs/api`](../shex-api#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
