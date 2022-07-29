@@ -1657,7 +1657,7 @@ const ShExUtil = {
       }, []);
     }
     if (typeof val === "string")
-      return string;
+      return val;
 
     switch (val.type) {
     case "FailureList":
