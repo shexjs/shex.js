@@ -39,6 +39,8 @@
         border-width: 2px;
         padding: 1px 0px;
       }
+      ul[data-navColumn] button:focus::before { content: "> "; color: #730; margin-left: -1em; }
+      ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-right: -1em; }
       .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
       #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
       #inputMeta textarea, .inputMeta { background-color: #fffff4; color: #000000; }
@@ -299,7 +301,7 @@ ul {
           <div id="manifestDrop" class="droparea">
             <p>Manifest:</p>
             <div class="manifest">
-              <ul>
+              <ul data-navColumn="0">
                 <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
               </ul>
             </div>
@@ -347,27 +349,26 @@ ul {
           <div style="margin-left: .1em;">
             <div class="passes" style="float:left; display:none;">
               <p></p>
-              <ul>
+              <ul data-navColumn="1">
                 <li>Select an example schema on the left for passing data.</li>
               </ul>
             </div>
             <div class="fails" style="float:left; display:none;">
               <p></p>
-              <ul>
+              <ul data-navColumn="2">
                 <li>Select an example schema on the left for failing data.</li>
               </ul>
             </div>
             <div class="indeterminant" style="float:left; display:none;">
               <p></p>
-              <ul>
+              <ul data-navColumn="3">
                 <li>Select an example schema on the left for untested data.</li>
               </ul>
             </div>
           </div>
-          </div>
-          <div style="clear:both; padding-top: .5em;"/>
-              <button id="validate">validate (ctl-enter)</button>
         </div>
+        <div style="clear:both; padding-top: .5em;"/>
+        <button id="validate">validate (ctl-enter)</button>
       </div>
     </div>
     <div id="results">
