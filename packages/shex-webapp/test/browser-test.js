@@ -4,10 +4,6 @@
 const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TEST_browser"]) : false;
 const STARTUP_TIMEOUT = 10000
 const SCRIPT_CALLBACK_TIMEOUT = 40000
-const PROTOCOL = 'http:'
-const HOST = 'localhost'
-const PORT = 9999
-const WEBROOT = '/shex.js/'
 const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
 const SHEXMAP_SIMPLE = 'packages/extension-map/doc/shexmap-simple.html'
 const TESTS = [ // page and the labels on the top-most buttons on the default manifest
@@ -25,15 +21,15 @@ const Blob = require('jsdom/lib/jsdom/living/generated/Blob')
 const ShExParser = require('@shexjs/parser')
 let SharedForTests = null // gets set by shex-simple.js
 
-const Server = startServer()
-
-// Uncomment logs to watch HTTP traffic.
-function log200 (url, filePath, length) {
-  // console.log(200, url, filePath, length)
-}
-function log404 (url) {
-  // console.warn(404, url)
-}
+const [[GitRootServer]] = require('../../../tools/testServer')
+      .startServer(
+        [ { url: 'http://localhost:9999/shex.js/',
+            fromDir: Path.join(__dirname, '../../..') }
+        ],
+        [ { url: 'https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js',
+            file: Path.join(__dirname, 'static/jquery.csv-1.0.21.js') }
+        ]
+      )
 
 if (!TEST_browser) {
   console.warn("Skipping browser-tests; to activate these tests, set environment variable TEST_browser=true");
@@ -595,73 +591,6 @@ async function testResults ($, expected, resultsProperty) {
   return validationResponse
 }
 
-function startServer () {
-  // Three possibilities to serve page resources.
-  if (true) {
-    const Nock = require('nock');
-    Nock(PROTOCOL + '//' + HOST + ':' + PORT)
-      .get(RegExp(WEBROOT))
-      .reply(function(path, requestBody) {
-        return readFromFilesystem(path);
-      })
-      .persist();
-    Nock('https://cdnjs.cloudflare.com')
-      .get('/ajax/libs/jquery-csv/1.0.21/jquery.csv.js')
-      .replyWithFile(200, Path.join(__dirname, 'static/jquery.csv-1.0.21.js'))
-      .persist();
-    return Nock;
-  } else if (false) {
-    const srvr = new (require("mock-http-server"))({ host: HOST, port: PORT });
-    srvr.start(() => {});
-    // srvr.stop(done);
-
-    srvr.on({
-      method: 'GET',
-      path: '*',
-      reply: {
-        status:  200,
-        // headers: { "content-type": "application/json" },
-        body: (req) => readFromFilesystem(req.originalUrl),
-      }
-    });
-    return srvr
-  } else {
-    const http = require('http')
-    const requestHandler = (request, response) => response.end(readFromFilesystem(request.url)) // rotted. needs 404-ness
-    const srvr = http.createsrvr(requestHandler)
-
-    srvr.listen(PORT, (err) => {
-      if (err)
-        throw Error(`server.listen got ${err}`)
-    })
-    return srvr
-  }
-
-  // blindly tries file extensions. should look at request headers.
-  function readFromFilesystem (path) {
-    let filePath = Path.join(__dirname, '../../..', getRelPath(path));
-    let last
-    const extensions = ['', '.shex', '.ttl']
-    const ret = extensions.find(
-      ext => Fs.existsSync(last = filePath + ext)
-    )
-    if (ret !== undefined) {
-      const ret = Fs.readFileSync(last, 'utf8')
-      log200(path, last, ret.length)
-      return [200, ret, {}]
-    } else {
-      log404(path)
-      return [404, `${last} not found`, {}]
-    }
-  }
-
-  function getRelPath (url) {
-    url = url.replace(/^\/shexSpec/, '') // do any of the servers need this?
-    let filePath = url.substr(WEBROOT.length)
-    return filePath.replace(/\?.*$/, '')
-  }
-}
-
 async function loadPage (page, searchParms) {
   const base = Path.join(__dirname, '../../..', page) // paths relative to repo root
   // let start = Date.now()
@@ -695,7 +624,7 @@ async function loadPage (page, searchParms) {
   // }
 
   function getDom (page, searchParms) {
-    let url = PROTOCOL + '//' + HOST + ':' + PORT + WEBROOT + page + searchParms
+    let url = GitRootServer.urlFor(page + searchParms)
     return new JSDOM(Fs.readFileSync(base, 'utf8'), {
       url: url,
       runScripts: "dangerously",
