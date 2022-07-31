@@ -852,7 +852,7 @@ async function callValidator (done) {
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
       try {
-        const loaded = await ShExApi.load([alreadLoaded], [], [], []);
+        const loaded = await ShExApi.load({shexc: [alreadLoaded]}, null);
         let time;
         const validator = ShEx.Validator.construct(
           loaded.schema,

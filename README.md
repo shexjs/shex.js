@@ -160,7 +160,7 @@ const node = "http://shex.io/examples/Issue1";
 const ShExApi = require("@shexjs/api");
 const ShExUtil = require("@shexjs/util");
 const ShExValidator = require("@shexjs/validator");
-ShExApi.load([shexc], [], [data], []).then(function (loaded) {
+ShExApi.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
     var db = ShExUtil.rdfjsDB(loaded.data);
     var validator = ShExValidator.construct(loaded.schema, ShExUtil.rdfjsDB(db), { results: "api" });
     var result = validator.validate([{node: node, shape: ShExValidator.start}]);
@@ -216,7 +216,7 @@ As with validation, the ShExLoader wrapes callbacks and simplifies parsing the l
 var shexc = "http://shex.io/examples/Issue.shex";
 
 var shex = require("shex");
-shex.Loader.load([shexc], [], [], []).then(function (loaded) {
+shex.Loader.load({shexc: [shexc]}, null).then(function (loaded) {
     console.log(JSON.stringify(loaded.schema, null, "  "));
 });
 ```

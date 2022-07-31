@@ -242,10 +242,10 @@ const ShExUtil = {
     const knownExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
-        oldVisitExpression = v.visitExpression;
+        oldVisitTripleExpr = v.visitTripleExpr;
     v.keepShapeExpr = oldVisitShapeExpr;
 
-    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
+    v.visitShapeExpr = function (expr, label) {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
@@ -256,16 +256,17 @@ const ShExUtil = {
       return oldVisitShapeExpr.call(this, expr, label);
     };
 
-    v.visitExpression = function (expr) {
-      if (typeof expr === "string") // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
+    v.visitTripleExpr = function (expr) {
+      if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
+      }
       if ("id" in expr) {
         if (expr.id in knownExpressions) {
           knownExpressions[expr.id].refCount++;
           return expr.id;
         }
       }
-      const ret = oldVisitExpression.call(this, expr);
+      const ret = oldVisitTripleExpr.call(this, expr);
       // Everything from RDF has an ID, usually a BNode.
       knownExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
@@ -404,24 +405,24 @@ const ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
+    const oldVisitInclusion = v.visitInclusion, oldVisitTripleExpr = v.visitTripleExpr, oldVisitExtra = v.visitExtra;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion) === -1 &&
           inclusion in index.tripleExprs) {
         knownExpressions.push(inclusion)
-        return oldVisitExpression.call(v, index.tripleExprs[inclusion]);
+        return oldVisitTripleExpr.call(v, index.tripleExprs[inclusion]);
       }
       return oldVisitInclusion.call(v, inclusion);
     };
-    v.visitExpression = function (expression) {
+    v.visitTripleExpr = function (expression) {
       if (typeof expression === "object" && "id" in expression) {
         if (knownExpressions.indexOf(expression.id) === -1) {
           knownExpressions.push(expression.id)
-          return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
+          return oldVisitTripleExpr.call(v, index.tripleExprs[expression.id]);
         }
         return expression.id; // Inclusion
       }
-      return oldVisitExpression.call(v, expression);
+      return oldVisitTripleExpr.call(v, expression);
     };
     if (trimIRI) {
       v.visitIRI = function (i) {
@@ -902,7 +903,17 @@ const ShExUtil = {
       type: "Schema"
     };
   },
-  merge: function (left, right, overwrite, inPlace) {
+  merge: function (left, right, collision = 'throw', inPlace) {
+    const overwrite =
+          collision === 'left'
+          ? () => false
+          : collision === 'right'
+          ? () => true
+          : typeof collision === 'function'
+          ? collision
+          : (type, left, right) => {
+            throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
+          };
     const ret = inPlace ? left : this.emptySchema();
 
     function mergeArray (attr) {
@@ -912,7 +923,7 @@ const ShExUtil = {
         ret[attr][key] = left[attr][key];
       });
       Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key])) {
           if (!(attr in ret))
             ret[attr] = {};
           ret[attr][key] = right[attr][key];
@@ -927,7 +938,7 @@ const ShExUtil = {
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || overwrite) {
+        if (!(attr  in left) || !(left[attr].has(key)) || overwrite(attr, ret[attr].get(key), right[attr].get(key))) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -939,7 +950,7 @@ const ShExUtil = {
     if ("_base" in left)
       ret._base = left._base;
     if ("_base" in right)
-      if (!("_base" in left) || overwrite)
+      if (!("_base" in left)/* || overwrite('_base', ret._base, right._base)*/) // _base favors the left
         ret._base = right._base;
 
     mergeArray("_prefixes");
@@ -947,24 +958,29 @@ const ShExUtil = {
     mergeMap("_sourceMap");
 
     if ("imports" in right)
-      if (!("imports" in left) || overwrite)
+      if (!("imports" in left)) {
         ret.imports = right.imports;
+      } else {
+        [].push.apply(ret.imports, right.imports.filter(
+          mprt => ret.imports.indexOf(mprt) === -1
+        ))
+      }
 
     // startActs
     if ("startActs" in left)
       ret.startActs = left.startActs;
     if ("startActs" in right)
-      if (!("startActs" in left) || overwrite)
+      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs))
         ret.startActs = right.startActs;
 
     // start
     if ("start" in left)
       ret.start = left.start;
     if ("start" in right)
-      if (!("start" in left) || overwrite)
+      if (!("start" in left) || overwrite('start', ret.start, right.start))
         ret.start = right.start;
 
-    let lindex = left._index || this.index(left);
+    const lindex = left._index || this.index(left);
 
     // shapes
     if (!inPlace)
@@ -974,10 +990,19 @@ const ShExUtil = {
         ret.shapes.push(lshape);
       });
     (right.shapes || []).forEach(function (rshape) {
-      if (!("shapes"  in left) || !(rshape.id in lindex.shapeExprs) || overwrite) {
-        if (!("shapes" in ret))
-          ret.shapes = [];
+      if (!("shapes" in ret)) {
+        ret.shapes = [];
         ret.shapes.push(rshape)
+        lindex.shapeExprs[rshape.id] = rshape;
+      } else {
+        const previousDecl = lindex.shapeExprs[rshape.id];
+        if (!previousDecl) {
+          ret.shapes.push(rshape)
+        } else if (overwrite('shapeExpr', previousDecl, rshape)) {
+          ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
+          lindex.shapeExprs[rshape.id] = rshape;
+          ret.shapes.push(rshape)
+        }
       }
     });
 
