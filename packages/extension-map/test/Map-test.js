@@ -31,8 +31,8 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
     inputDataFilePath = Path.resolve(__dirname, inputDataFilePath);
     expectedRdfFilePath = Path.resolve(__dirname, expectedRdfFilePath);
     // Lean on ShExNode to load all the schemas and data graphs.
-    const loads = await Promise.all([ShExNode.load(srcSchemas, [], [inputDataFilePath], [], {index: true}),
-                                     ShExNode.load(targetSchemas, [], [expectedRdfFilePath], [], {index: true})])
+    const loads = await Promise.all([ShExNode.load({shexc: srcSchemas}, {turtle: [inputDataFilePath]}, {index: true}),
+                                     ShExNode.load({shexc: targetSchemas}, {turtle: [expectedRdfFilePath]}, {index: true})])
     loads[0].data.toString = loads[1].data.toString = graphToString;
     const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
     const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }

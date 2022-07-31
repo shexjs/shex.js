@@ -50,35 +50,37 @@ The ShExJ format is defined in [JSG](http://shex.io/shex-semantics/index.html#sh
 
 ## Methods
 
-* visitSchema(schema)
-* visitPrefixes(prefixes)
-* visitIRI(i)
-* visitImports(imports)
-* visitStartActs(startActs)
-* visitSemActs([semActs])
-* visitSemAct(semAct, label)
-* visitAnnotations([annotations])
-* TODO visitAnnotation(annotation)
-* visitShapes(shapes)
-* visitShapeExpr(expr, label)
-* visitShapeOr(shapeExpr)
-* visitShapeAnd(shapeExpr)
-* visitShapeNot(expr, label)
-* visitShapeRef(reference)
-* visitShapeExternal(expr)
-* visitShape(shape, label)
-* visitExtra([extra])
-* visitExpression(expr)
-* visitOneOf(tripleExpr)
-* visitEachOf(tripleExpr)
-* visitTripleConstraint(expr)
-* visitValueExpr(shapeExpr)
-* visitNodeConstraint(shape, label)
-* visitValues(values)
-* visitValueExpr(shapeExpr)
-* visitStemRange(t)
-* visitExclusion(c)
-* visitInclusion(inclusion)
+* visitSchema(schema, ...args
+* visitPrefixes(prefixes, ...args
+* visitIRI(i, ...args
+* visitImports(imports, ...args
+* visitStartActs(startActs, ...args
+* visitSemActs([semActs], ...args
+* visitSemAct(semAct, label, ...args
+* visitAnnotations([annotations], ...args
+* TODO visitAnnotation(annotation, ...args
+* visitShapes(shapes, ...args
+* visitShapeDecl(decl, ...args
+* visitShapeExpr(expr, ...args - calls one of the following
+  * visitShapeOr(shapeExpr, ...args
+  * visitShapeAnd(shapeExpr, ...args
+  * visitShapeNot(expr, ...args
+  * visitShapeRef(reference, ...args
+  * visitShapeExternal(expr, ...args
+  * visitNodeConstraint(shape, ...args
+  * visitShape(shape, ...args
+* visitExtra([extra], ...args
+* visitExpression(expr, ...args - calls visitTripleExpr
+* visitTripleExpr(expr, ...args - calls one of the following
+  * visitOneOf(tripleExpr, ...args
+  * visitEachOf(tripleExpr, ...args
+  * visitTripleConstraint(expr, ...args
+* visitValueExpr(shapeExpr, ...args
+* visitValues(values, ...args
+* visitValueExpr(shapeExpr, ...args
+* visitStemRange(t, ...args
+* visitExclusion(c, ...args
+* visitInclusion(inclusion, ...args
 
 ### simple value visitors
 * visitBase
