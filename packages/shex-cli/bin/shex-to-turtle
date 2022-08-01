@@ -53,7 +53,7 @@ if (cmds['schema-keep-imports']) {
   schemaOptions.keepImports = cmds['schema-keep-imports']
 }
 
-ShExNode.load(cmds.shex, cmds.json, [], [], schemaOptions).then(function (loaded) {
+ShExNode.load({shexc: cmds.shex, json: cmds.json}, null, schemaOptions).then(function (loaded) {
   if (false) {
     let w;
     new ShExRWriter({ base: cmds['schema-base'] || loaded.schemaMeta[0].base }).

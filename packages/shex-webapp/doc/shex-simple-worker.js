@@ -24,7 +24,7 @@ importScripts("../../shex-parser/shex-parser.js"               ); modules["@shex
 
 importScripts("../shex-webapp.js");
 }
-importScripts("Util.js");
+importScripts("./Util.js");
 // importScripts('promise-worker/register.js');
 
 const ShEx = ShExWebApp; // @@ rename globally
@@ -55,10 +55,9 @@ try {
       url: msg.data.schemaURL
     };
     // shex-loader loads IMPORTs and tests the schema for structural faults.
-    const loaded = await ShExApi.load([alreadLoaded], [], [], [])
-    let createOpts = msg.data.options || {};
-    if ("regexModule" in createOpts)
-      createOpts.regexModule = modules[createOpts.regexModule];
+    const loaded = await ShExApi.load({shexc: [alreadLoaded]}, null)
+    let createOpts = msg.data.options;
+    createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results
     validator = ShEx.Validator.construct(
       loaded.schema,

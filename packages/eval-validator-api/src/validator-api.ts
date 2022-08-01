@@ -1,6 +1,6 @@
 import * as ShExJ from 'shexj';
 import * as ShExUtil from '@shexjs/util';
-import * as RdfJs from "@rdfjs/types/data-model";
+import * as RdfJs from '@rdfjs/types/data-model';
 
 export interface ValidatorRegexpApi {
   compile(
@@ -11,11 +11,11 @@ export interface ValidatorRegexpApi {
 }
 
 export interface Tc2t {
-  "tNo": number,
-  "res": object // ShExR type
+  'tNo': number,
+  'res': object // ShExR type
 }
 
-export const NoTripleConstraint = ["NO_TRIPLE_CONSTRAINT"];
+export const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
 export type TcAssignment = number | typeof NoTripleConstraint;
 

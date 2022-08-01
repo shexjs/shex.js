@@ -28,11 +28,10 @@ importScripts("../../shex-webapp/doc/Util.js");
 // importScripts('promise-worker/register.js');
 
 const ShEx = ShExWebApp; // @@ rename globally
-const RdfJs = N3js;
 const ShExApi = ShEx.Api({
   fetch, rdfjs: N3js, jsonld: null
 })
-const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
+const MapModule = ShEx.Map({rdfjs: N3js, Validator: ShEx.Validator});
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 let validator = null;
 let Mapper = null;
@@ -58,10 +57,9 @@ try {
       url: msg.data.schemaURL
     };
     // shex-loader loads IMPORTs and tests the schema for structural faults.
-    const loaded = await ShExApi.load([alreadLoaded], [], [], [])
-    let createOpts = msg.data.options || {};
-    if ("regexModule" in createOpts)
-      createOpts.regexModule = modules[createOpts.regexModule];
+    const loaded = await ShExApi.load({shexc: [alreadLoaded]}, null)
+    let createOpts = msg.data.options;
+    createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results
     validator = ShEx.Validator.construct(
       loaded.schema,
