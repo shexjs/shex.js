@@ -322,7 +322,7 @@ function makeManifestCache (selection) {
     if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
-      if ("action" in elt) {
+      if ("action" in elt) { // TODO: move to ShExUtil
         // compatibility with test suite structure.
 
         const action = elt.action;
@@ -351,14 +351,14 @@ function makeManifestCache (selection) {
             schemaURL: action.schema || url,
             // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
             dataLabel: dataLabel,
-            dataURL: action.data || DefaultBase
+            dataURL: action.data || url
           },
           (queryMap ? { queryMap: queryMap } : { queryMapURL: queryMapURL }),
           { status: elt["@type"] === "sht:ValidationFailure" ? "nonconformant" : "conformant" }
         );
         if ("termResolver" in action || "termResolverURL" in action) {
           elt.meta = action.termResolver;
-          elt.metaURL = action.termResolverURL || DefaultBase;
+          elt.metaURL = action.termResolverURL || url;
         }
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
@@ -836,7 +836,7 @@ async function callValidator (done) {
             schema: inputSchema,
             schemaURL: Caches.inputSchema.url || DefaultBase,
             slurp: $("#slurp").is(":checked"),
-            /*options: { regexModule: modules["../lib/regex/nfax-val-1err"] },*/
+            options: { regexModule: $("#regexpEngine").val() },
           },
           "endpoint" in Caches.inputData ?
             { endpoint: Caches.inputData.endpoint } :

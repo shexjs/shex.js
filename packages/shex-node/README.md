@@ -6,7 +6,7 @@
 
 Introduction
 ------------
-This module provides HTTP access functions for @shexjs library. For `file:` access or dynamic loading of ShEx extensions, use `@shexjs/node`.
+This module extends [@shexjs/api](../api) with file: access. This modules is probably not appropriate for use in a browser.
 
 Installation
 ------------
@@ -48,7 +48,7 @@ const ShExIo = require('@shexjs/node');
 * [@shexjs/eval-simple-1err](../eval-simple-1err) - fast regular expression engine stops on first error
 * [@shexjs/eval-threaded-nerr](../eval-threaded-nerr) - thorough regular expression engine accumulates all errors
 
-#### validation
+#### extensions
 
 * [extension-test](../extension-test) - eval test suite extensions ([spec](http://shex.io/extensions/Test/))
 * [extension-eval](../extension-eval) - eval javascript extensions ([spec](http://shex.io/extensions/Eval/))
@@ -60,9 +60,91 @@ const ShExIo = require('@shexjs/node');
 
 ### Methods
 
-#### load(shExC, shExJ, turtle, jsonld, schemaOptions = {}, dataOptions = {})
+#### load(schema, data, schemaOptions = {}, dataOptions = {})
 
-return promise of loaded schema URLs (ShExC and ShExJ), data files (turle, and jsonld)
+load shex and json files into a single ShEx schema and turtle into a graph.
+
+@shexjs/node extends the [@shexjs/api load method](https://github.com/shexjs/shex.js/tree/extends/packages/shex-api#loadschema-data--schemaoptions---dataoptions--) to allow the source to be a file path.
+
+SOURCE may be
+* file path or URL - where to load item.
+* object: {text: string, url: string} - text and URL of already-loaded resource.
+* (schema) ShExJ object
+* (data) RdfJs data store
+
+parameters:
+* schema - { shexc: [ShExC SOURCE], json: [JSON SOURCE] }
+* data - { turtle: [Turtle SOURCE], jsonld: [JSON-LD SOURCE] }
+* schemaOptions
+* dataOptions
+
+returns: {Promise<{schema: any, dataMeta: *[], data: (*|null), schemaMeta: *[]}>}
+
+example (same as @shexjs/api example, but using file paths):
+``` js
+// Initialize @shexjs/api with implementations of APIs.
+const ShExApi = require("@shexjs/node")({
+  rdfjs: require('n3'),         // use N3 as an RdfJs implementation
+  fetch: require('node-fetch'), // fetch implementation
+  jsonld: require('jsonld')     // JSON-LD (if you need it)
+});
+
+// Schemas from URL and filepath:
+const schemaFromUrl =
+      "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex";
+const schemaFromFile =
+      "../shex-cli/test/cli/1dotOr2dot.shex";
+
+// Data graphs from URL, text and graph API:
+const graphFromUrl =
+      "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl";
+const graphFromFile =
+      "../shex-cli/test/cli/p2p3.ttl";
+
+// ShExApi.load returns a promise to load and merge schema and data.
+const schemaAndDataP = ShExApi.load(
+  { shexc: [ schemaFromUrl, schemaFromFile ] },
+  { turtle: [ graphFromUrl, graphFromFile ] }
+);
+
+// Print out results to show off returned structure.
+schemaAndDataP.then(({schema, schemaMeta, data, dataMeta}) => {
+  console.log('schemaMeta:\n' + JSON.stringify(schemaMeta, null, 2));
+  console.log('shapes:\n' + schema.shapes.map(s => '  ' + s.id).join('\n'));
+  console.log('dataMeta:\n' + JSON.stringify(dataMeta, null, 2));
+  console.log('triples:\n' + data.getQuads().map(
+    q => '  ' +
+      (['subject', 'predicate', 'object'])
+      .map(t => q[t].value).join(' ')).join('\n'));
+});
+```
+output:
+``` json
+schemaMeta:
+[ { "mediaType": "text/shex", "url": "file:…cli/1dotOr2dot.shex",
+    "base": "file:…cli/1dotOr2dot.shex", "prefixes": {} },
+  { "mediaType": "text/shex", "url": "https:…cli/1dotOr2dot.shex",
+    "base": "https:…cli/1dotOr2dot.shex", "prefixes": {} }
+]
+shapes:
+  http://a.example/S1
+dataMeta:
+[ { "mediaType": "text/turtle", "url": "file:…cli/p2p3.ttl",
+    "base": "file:…cli/p2p3.ttl", "prefixes": {
+      "": "http://a.example/",
+      "xsd": "http://www.w3.org/2001/XMLSchema#" } },
+  { "mediaType": "text/turtle", "url": "https:…cli/p1.ttl",
+    "base": "https:…cli/p1.ttl", "prefixes": {
+      "": "http://a.example/"
+    } }
+]
+triples:
+  file:…cli/x http://a.example/p2 p2-0
+  file:…cli/x http://a.example/p3 p3-0
+  https:…cli/x http://a.example/p1 p1-0
+```
+
+See [@shexjs/api load method](https://github.com/shexjs/shex.js/tree/extends/packages/shex-api#loadschema-data--schemaoptions---dataoptions--) for more description.
 
 #### loadExtensions function(globs[])
 
