@@ -85,6 +85,7 @@ const CommandLineOptions = [
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "data query endpoint" },
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
@@ -200,6 +201,14 @@ function findNodesAndValidate (loaded, parms, options) {
     }
   }
   const shapeMapExtensions = {
+    "http://www.w3.org/ns/shex#Extensions-sparql": function (query) {
+      const prefixesStr = loaded.dataMeta.length > 0
+            ? Object.keys(loaded.dataMeta[0].prefixes).map(
+              k => `PREFIX ${k}: <${loaded.dataMeta[0].prefixes[k]}>\n`
+            ).join("")
+            : "";
+      return ShExUtil.executeQuery(prefixesStr + query, parms.endpoint).map(row => row[0]);
+    }
   }
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP) {
@@ -336,11 +345,15 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     valParms.data = valParms.json.splice(1); // push all but one into data
   }
   if (!valParms.serve) {
-    if (valParms.data.length === 0 && valParms.jsonld.length === 0) abort("No data specified");
-    if (valParms.shex.length === 0 && valParms.json.length === 0) abort("No shex specified");
+    if (valParms.data.length === 0 && valParms.jsonld.length === 0 && !valParms.serve && !valParms.endpoint) abort("No data specified");
+    if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified");
   }
   // Loaded schema and data.
-  const schemaAndDataP = ShExNode.load({shexc: valParms.shex, shexj:valParms.json}, {turtle: valParms.data, jsonld: valParms.jsonld}, schemaOptions, undefined);
+  const schemaAndDataP = ShExNode.load(
+    {shexc: valParms.shex, shexj:valParms.json},
+    {turtle: valParms.data, jsonld: valParms.jsonld},
+    schemaOptions, undefined
+  );
   // Expected results, if provided.
   const expectedResultsP = !("result" in valParms)
         ? Promise.resolve(undefined)
@@ -388,8 +401,9 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             metaToResolver(schemaAndData.schemaMeta[0]),
             metaToResolver(schemaAndData.dataMeta[0]))
           : null;
-    schemaAndData.data =
-      ShExUtil.rdfjsDB(schemaAndData.data, queryTracker);
+    schemaAndData.data = valParms.endpoint
+      ? ShExUtil.sparqlDB(valParms.endpoint, queryTracker, {allOutgoing: valParms["slurp-all"]})
+      : ShExUtil.rdfjsDB(schemaAndData.data, queryTracker);
 
     if (valParms.serve) {
       if (valParms.shape) {
@@ -706,8 +720,11 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   const mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   const sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExNode.load(null, {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []}, SchemaOptions, undefined).then(function (loaded) {
-
+  return ShExNode.load(
+    null, // no schema
+    {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []},
+    SchemaOptions, undefined
+  ).then(function (loaded) {
     const testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
           const pattern = RegExp(testName);

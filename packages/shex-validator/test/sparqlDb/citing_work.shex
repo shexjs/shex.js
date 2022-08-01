@@ -1,0 +1,52 @@
+# useful for ./packages/shex-cli/bin/validate -x test/sparqlDb/citing_work.shex -d test/sparqlDb/wikidata-prefixes.ttl --track --slurp --endpoint http://localhost:8088/sparql -m "SPARQL 'SELECT ?s { ?s wdt:P999 ?o }'@:middle"
+
+PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
+PREFIX :    <http://bigcat.unimaas.nl/>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX wdt:    <http://www.wikidata.org/prop/direct/>
+
+start=@:citing_work
+
+:middle {
+   wdt:P999 @:citing_work
+}
+
+:citing_work {
+   wdt:P2860 @:work *; 
+   wdt:P577 xsd:dateTime *;
+   wdt:P184 @:advisor *;
+}
+
+:work {
+  wdt:P31      . *;
+  wdt:P50  @:researcher * ;
+  wdt:P921 IRI * ;
+  wdt:P1104  xsd:string OR xsd:decimal * ;
+  wdt:P577  xsd:dateTime * ;
+}
+
+:researcher {
+  
+  wdt:P108 @:organizationTemp *;
+  wdt:P463 @:organizationTemp * ;
+  wdt:P1416 @:organizationTemp * ; 
+  rdfs:label xsd:string * ;
+  wdt:P496 xsd:string * ;
+  wdt:P166 IRI * ;
+  wdt:P21 IRI * ;
+  wdt:P184 @:researcher * ;
+}
+
+:organizationTemp {
+  wdt:P361 @:organization *;
+}
+
+:organization  {
+  wdt:P31     .* ;
+}
+
+:advisor {
+  wdt:P000 . * ;
+  wdt:P001 . * ;
+  wdt:P735 xsd:string ; # name
+}

@@ -1,3 +1,7 @@
+long validation:
+  # → wd:Q47522362@:pharmaceutical_product 2 triples (310 μs)
+  # → wd:Q75843001@:pharmacologic_action 1 triples (331 μs)
+
 // var ShExWriter = require("@shexjs/writer");
 // console.log(new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join(''));
 

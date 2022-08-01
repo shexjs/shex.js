@@ -15,6 +15,9 @@ const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id 
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";
 const LOG_PROGRESS = false;
+const EXTENSION_sparql = "http://www.w3.org/ns/shex#Extensions-sparql";
+const SPARQL_get_items_limit = 50;
+const MENU_ITEM_materialize = "- materialize -"
 
 const DefaultBase = location.origin + location.pathname;
 
@@ -267,15 +270,50 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
   ret.parse = async function (text, base) {
-    const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+    var text = Caches.inputData.get();
+    var m = text.match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
+    if (m) {
+      ret.endpoint = m[1];
+      if ($("#slurp").length === 0) {
+        // Add a #slurp checkbox
+        $("#load-data-button").append(
+          $("<span/>", {id: "slurpSpan",
+                        style: "float:right",
+                        title: "fill data pane with data queried from <" + Caches.inputData.endpoint + ">"})
+            .append(
+              $("<input/>", {id: "slurp", type: "checkbox"}),
+              $("<label/>", {for: "slurp"}).text("slurp")
+            ).on("click", () => {
+              // HACK: disable propagation and toggle after handler is done.
+              setTimeout(() => {
+                $("#slurp").prop("checked", !$("#slurp").prop("checked"));
+              }, 0);
+              return false; // don't pass to load data button
+            })
+        );
+      }
+    } else {
+      delete ret.endpoint; // make sure it's not set
+      $("#slurpSpan").remove();
+    }
+    const res = ret.endpoint
+      ? ShEx.Util.sparqlDB(ret.endpoint, $("#slurp").is(":checked") ? queryTracker() : null)
+      : ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   };
   ret.getItems = async function () {
-    const data = await this.refresh();
-    return data.getQuads().map(t => {
-      return Caches.inputData.meta.termToLex(t.subject); // !!check
-    });
+    const m = this.get().match(/^[\s]*Endpoint:[\s]*(https?:\/\/.*?)[\s]*$/i);
+    if (m) {
+      const q = "SELECT DISTINCT ?s { ?s ?p ?o } LIMIT " + SPARQL_get_items_limit;
+      return [MENU_ITEM_materialize]
+        .concat(ShEx.Util.executeQuery(q, m[1]).map(lexifyFirstColumn));
+    } else {
+      const data = await this.refresh();
+      return data.getQuads().map(t => {
+        return Caches.inputData.meta.termToLex(t.subject); // !!check
+      });
+    }
   };
   return ret;
 }
@@ -608,6 +646,7 @@ async function clearData () {
   // Clear out data textarea.
   await Caches.inputData.set("", DefaultBase);
   $("#inputData .status").text(" ");
+  delete Caches.inputData.endpoint;
 
   // Clear out every form of ShapeMap.
   $("#textMap").val("").removeClass("error");
@@ -812,7 +851,7 @@ async function callValidator (done) {
     if (hasFocusNode()) {
       currentAction = "parsing input data";
       $("#results .status").text("parsing data...").show();
-      const inputData = await Caches.inputData.refresh(); // need prefixes for ShapeMap
+      let inputData = await Caches.inputData.refresh(); // need prefixes for ShapeMap
       // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
       currentAction = "parsing shape map";
       const fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
@@ -821,6 +860,12 @@ async function callValidator (done) {
           shape: Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
         };
       }).get());
+      if ($("#slurp").is(":checked")) {
+        // .set() sets inputData's dirty bit.
+        Caches.inputData.set("# slurping from <" + Caches.inputData.endpoint + ">...\n\n\n");
+        Caches.inputData.slurpWriter = new RdfJs.Writer({ prefixes: Caches.inputSchema.meta.prefixes });
+        inputData = ShEx.Util.sparqlDB(Caches.inputData.endpoint, queryTracker());
+      }
 
       currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
@@ -1096,6 +1141,18 @@ async function callValidator (done) {
   }
 
   function finishRendering (done) {
+    if ("slurpWriter" in Caches.inputData) {
+      Caches.inputData.slurpWriter.end((err, chunk) => {
+        $("#inputData textarea").val((i, text) => {
+          return text + "\n\n# Visited data:\n" + chunk; // cheaper than set() but a pain to maintain...
+        });
+        $("#slurpSpan").remove();
+        // delete Caches.intputData.endpoint;
+        Caches.inputData.refresh();
+        delete Caches.inputData.slurpWriter;
+      });
+    }
+
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
           if ($("#interface").val() !== "human")
@@ -1117,6 +1174,34 @@ async function callValidator (done) {
       // }
       results.finish();
   }
+
+
+/** attempt to disable scrolling if not at bottom of target.
+ * tried both selectionState and scrollTop.
+ */
+function noScrollAppend (target, toAdd) {
+  var e = target.get(0);
+  // var oldLen = target.val().length
+  // var oldSel = target.prop("selectionStart");
+  // var oldScrollTop = e.scrollTop;
+  // var oldScrollHeight = e.scrollHeight;
+  target.val((i, text) => {
+    return text + toAdd;
+  });
+  // console.log(oldScrollTop, oldScrollHeight);
+  // if (oldScrollTop === oldScrollHeight) {
+  e.scrollTop = e.scrollHeight;
+  //   target.prop("selectionStart", target.val().length);
+  // } else {
+  //   target.prop("selectionStart", oldScrollTop);
+  // }
+  // if (oldSel === oldLen) {
+  //   e.scrollTop = e.scrollHeight;
+  //   target.prop("selectionStart", target.val().length);
+  // } else {
+  //   target.prop("selectionStart", oldSel);
+  // }
+}
 
 function failMessage (e, action, text) {
   $("#results .status").empty().text("Errors encountered:").show()
@@ -1147,9 +1232,14 @@ function addEditMapPairs (pairs, target) {
     case "node": node = ldToTurtle(pair.node, Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
     case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
     case "Extension":
-      failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
-                  "parsing Query Map", pair.node.lexical);
-      skip = true; // skip this entry.
+      if (pair.node.language === EXTENSION_sparql) {
+        node = "SPARQL '''" + (pair.node.lexical.replace(/'''/g, "''\\'")) + "'''";
+        shape = startOrLdToTurtle(pair.shape);
+      } else {
+        failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
+                    "parsing Query Map", pair.node.lexical);
+        skip = true; // skip this entry.
+      }
       break;
     default:
       results.append($("<div/>").append(
@@ -1395,6 +1485,23 @@ async function toggleControls (evt) {
   }
 }
 
+function queryTracker () {
+  return {
+    start: function (isOut, term, shapeLabel) {
+      var node = Caches.inputSchema.meta.termToLex(term);
+      var shape = Caches.inputSchema.meta.termToLex(shapeLabel);
+      var slurpStatus = (isOut ? "←" : "→") + " " + node + "@" + shape;
+      noScrollAppend($("#inputData textarea"), "# " + slurpStatus);
+    },
+    end: function (triples, time) {
+      noScrollAppend($("#inputData textarea"), " " + triples.length + " triples (" + time + " μs)\n");
+      Caches.inputData.slurpWriter.addQuads(triples.map(
+        t => ShEx.ShExTerm.externalTriple(t, RdfJs.DataFactory)
+      ));
+    }
+  }
+}
+
 function toggleControlsArrow (which) {
   // jQuery can't find() a prefixed attribute (xlink:href); fall back to DOM:
   if (document.getElementById("menu-button") === null)
@@ -1481,9 +1588,12 @@ async function copyEditMapToFixedMap () {
     try {
       const sm = smparser.parse(node + '@' + shape)[0];
       const added = typeof sm.node === "string" || "@value" in sm.node
-            ? Promise.resolve({nodes: [node], shape: shape, status: status})
-            : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
-            .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
+        ? Promise.resolve({nodes: [node], shape: shape, status: status})
+        : sm.node.language === EXTENSION_sparql
+        ? ShEx.Util.executeQueryPromise(sm.node.lexical, Caches.inputData.endpoint)
+          .then(rows => Promise.resolve({nodes: rows.map(lexifyFirstColumn), shape: shape}))
+        : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
+          .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
       return acc.concat(added);
     } catch (e) {
       // find which cell was broken
@@ -2185,6 +2295,29 @@ function addContextMenus (inputSelector, cache) {
         if (terms.match === null)
           return false; // prevent contextMenu from whining about an empty list
         return listToCTHash(getTermsFunctions[terms.match]())
+      } else if (nodeLex && shapeLex) {
+        try {
+          var smparser = ShEx.ShapeMapParser.construct(
+            Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+          var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
+          if (sm.node.language === EXTENSION_sparql) {
+            let q = sm.node.lexical;
+            let obj = {}
+            obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
+            return {
+              items: ShEx.Util.executeQuery(q, Caches.inputData.endpoint).reduce(
+                (ret, row) => {
+                  let name = lexifyFirstColumn(row);
+                  ret[name] = { name: name };
+                  return ret;
+                }, obj
+              )
+            }
+          }
+        } catch (e) {
+          failMessage(e, "query");
+          return false
+        }
       }
     }
     terms = nodeLex = null;
@@ -2240,7 +2373,20 @@ function addContextMenus (inputSelector, cache) {
 
   function menuCallback (key, options) {
     markEditMapDirty();
-    if (options.items[key].ignore) { // ignore the event
+    if (key === MENU_ITEM_materialize) {
+      var toAdd = Object.keys(options.items).filter(k => {
+        return k !== MENU_ITEM_materialize;
+      });
+      $(options.selector).val(toAdd.shift());
+      var shape = $(options.selector.replace(/focus/, "inputShape")).val();
+      addEditMapPairs(toAdd.map(
+        node => {
+          return {
+            node: Caches.inputData.meta.lexToTerm(node),
+            shape: Caches.inputSchema.meta.lexToTerm(shape)
+          };
+        }), null);
+    } else if (options.items[key].ignore) { // ignore the event
     } else if (terms) {
       const term = terms.tz[terms.match];
       let val = nodeLex.substr(0, term[0]) +
