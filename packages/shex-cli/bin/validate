@@ -349,7 +349,11 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     if (valParms.shex.length === 0 && valParms.json.length === 0 && !valParms.serve) abort("No shex specified");
   }
   // Loaded schema and data.
-  const schemaAndDataP = ShExNode.load(valParms.shex, valParms.json, valParms.data, valParms.jsonld, schemaOptions, undefined);
+  const schemaAndDataP = ShExNode.load(
+    {shexc: valParms.shex, shexj:valParms.json},
+    {turtle: valParms.data, jsonld: valParms.jsonld},
+    schemaOptions, undefined
+  );
   // Expected results, if provided.
   const expectedResultsP = !("result" in valParms)
         ? Promise.resolve(undefined)
@@ -716,8 +720,11 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   const mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   const sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExNode.load(null, {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []}, SchemaOptions, undefined).then(function (loaded) {
-
+  return ShExNode.load(
+    null, // no schema
+    {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []},
+    SchemaOptions, undefined
+  ).then(function (loaded) {
     const testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
           const pattern = RegExp(testName);
