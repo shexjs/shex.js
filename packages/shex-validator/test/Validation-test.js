@@ -143,7 +143,7 @@ describe("A ShEx validator", function () {
           function pickShEx (i) {
             return i + ".shex";
           }
-          ShExNode.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
+          ShExNode.load({shexc: [schemaFile]}, null, { parser: shexParser, iriTransform: pickShEx }, {}).
             then(function (loaded) {
               var schema = loaded.schema;
 

@@ -1,4 +1,5 @@
 import * as N3 from 'n3';
+import * as RdfJs from "@rdfjs/types/data-model";
 import * as ShExJ from 'shexj';
 
 export = shexjs__util;
@@ -90,7 +91,7 @@ declare namespace shexjs__util {
 
     function version(): any;
     function Visitor(...args: any[]): any;
-    function index(schema: any): any;
+    function index(schema: any): Index;
     function getAST(schema: any): any;
     function ShExJtoAS(schema: any): any;
     function AStoShExJ(schema: any, abbreviate: any): any;
@@ -139,21 +140,35 @@ declare namespace shexjs__util {
     // function makeTriplesDB(queryTracker: any): any;
 
     interface QueryTracker {
-        start (isOut: boolean, term: N3.Term, shapeLabel: string): void;
-        end (triples: N3.Quad[], time: number): void;
+        start (isOut: boolean, term: RdfJs.Term, shapeLabel: string): void;
+        end (triples: RdfJs.Quad[], time: number): void;
     }
 
     interface Neighborhood {
-      incoming: N3.Quad[];
-      outgoing: N3.Quad[];
+      incoming: RdfJs.Quad[];
+      outgoing: RdfJs.Quad[];
     }
 
     interface NeighborhoodDb {
-      getSubjects(): N3.Term[];
-      getPredicates(): N3.Term[];
-      getObjects(): N3.Term[];
-      getQuads(): N3.Quad[];
-      getNeighborhood (point: N3.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
+      getSubjects(): RdfJs.Term[];
+      getPredicates(): RdfJs.Term[];
+      getObjects(): RdfJs.Term[];
+      getQuads(): RdfJs.Quad[];
+      getNeighborhood (point: RdfJs.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
+      size(): number
     }
+
+    interface Index {
+      shapeExprs: { [key: string]: ShExJ.shapeExpr; }
+      tripelExprs: { [key: string]: ShExJ.tripleExpr; }
+    }
+
+    interface SemActHandler {
+      dispatchAll(semActs: any[], ctx: object, resultsArtifact: object): object[],
+      handlers: object,
+      register(name: string, handler: object): void,
+      results: object
+    }
+
 }
 
