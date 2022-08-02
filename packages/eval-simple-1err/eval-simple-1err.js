@@ -1,5 +1,6 @@
 const EvalSimple1ErrCjsModule = (function () {
   const ShExTerm = require("@shexjs/term");
+  const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
 
   const Split = "<span class='keyword' title='Split'>|</span>";
   const Rept  = "<span class='keyword' title='Repeat'>×</span>";
@@ -307,7 +308,7 @@ const EvalSimple1ErrCjsModule = (function () {
               elt.matched.reduce((ret, m) => {
                 return ret + m.triples.length; // count matched triples
               }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === "NO_TRIPLE_CONSTRAINT" ? ret : ret + 1; // count expected
+                return t === NoTripleConstraint ? ret : ret + 1; // count expected
               }, 0);
           return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
         }, null)
@@ -346,7 +347,7 @@ const EvalSimple1ErrCjsModule = (function () {
             const unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
+              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.

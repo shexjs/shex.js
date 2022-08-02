@@ -1,5 +1,6 @@
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = require("@shexjs/term");
+const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
 const UNBOUNDED = -1;
 
 function vpEngine (schema, shape, index) {
@@ -388,7 +389,7 @@ function vpEngine (schema, shape, index) {
             const unmatchedTriples = {};
             // Collect triples assigned to some constraint.
             Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== "NO_TRIPLE_CONSTRAINT")
+              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
                 unmatchedTriples[k] = tripleToConstraintMapping[k];
             });
             // Removed triples matched in this thread.

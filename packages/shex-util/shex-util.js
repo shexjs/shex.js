@@ -242,10 +242,10 @@ const ShExUtil = {
     const knownExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
-        oldVisitExpression = v.visitExpression;
+        oldVisitTripleExpr = v.visitTripleExpr;
     v.keepShapeExpr = oldVisitShapeExpr;
 
-    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
+    v.visitShapeExpr = function (expr, label) {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
@@ -256,16 +256,17 @@ const ShExUtil = {
       return oldVisitShapeExpr.call(this, expr, label);
     };
 
-    v.visitExpression = function (expr) {
-      if (typeof expr === "string") // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
+    v.visitTripleExpr = function (expr) {
+      if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
+      }
       if ("id" in expr) {
         if (expr.id in knownExpressions) {
           knownExpressions[expr.id].refCount++;
           return expr.id;
         }
       }
-      const ret = oldVisitExpression.call(this, expr);
+      const ret = oldVisitTripleExpr.call(this, expr);
       // Everything from RDF has an ID, usually a BNode.
       knownExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
@@ -404,24 +405,24 @@ const ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
+    const oldVisitInclusion = v.visitInclusion, oldVisitTripleExpr = v.visitTripleExpr, oldVisitExtra = v.visitExtra;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion) === -1 &&
           inclusion in index.tripleExprs) {
         knownExpressions.push(inclusion)
-        return oldVisitExpression.call(v, index.tripleExprs[inclusion]);
+        return oldVisitTripleExpr.call(v, index.tripleExprs[inclusion]);
       }
       return oldVisitInclusion.call(v, inclusion);
     };
-    v.visitExpression = function (expression) {
+    v.visitTripleExpr = function (expression) {
       if (typeof expression === "object" && "id" in expression) {
         if (knownExpressions.indexOf(expression.id) === -1) {
           knownExpressions.push(expression.id)
-          return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
+          return oldVisitTripleExpr.call(v, index.tripleExprs[expression.id]);
         }
         return expression.id; // Inclusion
       }
-      return oldVisitExpression.call(v, expression);
+      return oldVisitTripleExpr.call(v, expression);
     };
     if (trimIRI) {
       v.visitIRI = function (i) {
@@ -904,7 +905,17 @@ const ShExUtil = {
       type: "Schema"
     };
   },
-  merge: function (left, right, overwrite, inPlace) {
+  merge: function (left, right, collision = 'throw', inPlace) {
+    const overwrite =
+          collision === 'left'
+          ? () => false
+          : collision === 'right'
+          ? () => true
+          : typeof collision === 'function'
+          ? collision
+          : (type, left, right) => {
+            throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
+          };
     const ret = inPlace ? left : this.emptySchema();
 
     function mergeArray (attr) {
@@ -914,7 +925,7 @@ const ShExUtil = {
         ret[attr][key] = left[attr][key];
       });
       Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key])) {
           if (!(attr in ret))
             ret[attr] = {};
           ret[attr][key] = right[attr][key];
@@ -929,7 +940,7 @@ const ShExUtil = {
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || overwrite) {
+        if (!(attr  in left) || !(left[attr].has(key)) || overwrite(attr, ret[attr].get(key), right[attr].get(key))) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -941,7 +952,7 @@ const ShExUtil = {
     if ("_base" in left)
       ret._base = left._base;
     if ("_base" in right)
-      if (!("_base" in left) || overwrite)
+      if (!("_base" in left)/* || overwrite('_base', ret._base, right._base)*/) // _base favors the left
         ret._base = right._base;
 
     mergeArray("_prefixes");
@@ -949,24 +960,29 @@ const ShExUtil = {
     mergeMap("_sourceMap");
 
     if ("imports" in right)
-      if (!("imports" in left) || overwrite)
+      if (!("imports" in left)) {
         ret.imports = right.imports;
+      } else {
+        [].push.apply(ret.imports, right.imports.filter(
+          mprt => ret.imports.indexOf(mprt) === -1
+        ))
+      }
 
     // startActs
     if ("startActs" in left)
       ret.startActs = left.startActs;
     if ("startActs" in right)
-      if (!("startActs" in left) || overwrite)
+      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs))
         ret.startActs = right.startActs;
 
     // start
     if ("start" in left)
       ret.start = left.start;
     if ("start" in right)
-      if (!("start" in left) || overwrite)
+      if (!("start" in left) || overwrite('start', ret.start, right.start))
         ret.start = right.start;
 
-    let lindex = left._index || this.index(left);
+    const lindex = left._index || this.index(left);
 
     // shapes
     if (!inPlace)
@@ -976,10 +992,19 @@ const ShExUtil = {
         ret.shapes.push(lshape);
       });
     (right.shapes || []).forEach(function (rshape) {
-      if (!("shapes"  in left) || !(rshape.id in lindex.shapeExprs) || overwrite) {
-        if (!("shapes" in ret))
-          ret.shapes = [];
+      if (!("shapes" in ret)) {
+        ret.shapes = [];
         ret.shapes.push(rshape)
+        lindex.shapeExprs[rshape.id] = rshape;
+      } else {
+        const previousDecl = lindex.shapeExprs[rshape.id];
+        if (!previousDecl) {
+          ret.shapes.push(rshape)
+        } else if (overwrite('shapeExpr', previousDecl, rshape)) {
+          ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
+          lindex.shapeExprs[rshape.id] = rshape;
+          ret.shapes.push(rshape)
+        }
       }
     });
 
@@ -1162,7 +1187,9 @@ const ShExUtil = {
     const _ShExUtil = this;
     if (typeof val === "string") { // ShapeRef
       return null; // 1NOTRefOR1dot_pass-inOR
-    } else if (val.type === "SolutionList") { // dependent_shape
+    }
+    switch (val.type) {
+    case "SolutionList": // dependent_shape
       return val.solutions.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1174,11 +1201,11 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "NodeConstraintTest") { // 1iri_pass-iri
+    case "NodeConstraintTest": // 1iri_pass-iri
       return _ShExUtil.walkVal(val.shapeExpr, cb);
-    } else if (val.type === "NodeConstraint") { // 1iri_pass-iri
+    case "NodeConstraint": // 1iri_pass-iri
       return null;
-    } else if (val.type === "ShapeTest") { // 0_empty
+    case "ShapeTest": // 0_empty
       const vals = [];
       visitSolution(val, vals); // A ShapeTest is a sort of Solution.
       const ret = vals.length
@@ -1187,19 +1214,19 @@ const ShExUtil = {
       if ("solution" in val)
         Object.assign(ret, _ShExUtil.walkVal(val.solution, cb))
       return Object.keys(ret).length ? ret : null;
-    } else if (val.type === "Shape") { // 1NOTNOTdot_passIv1
+    case "Shape": // 1NOTNOTdot_passIv1
       return null;
-    } else if (val.type === "ShapeNotTest") { // 1NOT_vsANDvs__passIv1
+    case "ShapeNotTest": // 1NOT_vsANDvs__passIv1
       return _ShExUtil.walkVal(val.shapeExpr, cb);
-    } else if (val.type === "ShapeNotResults") { // NOT1dotOR2dot_pass-empty
+    case "ShapeNotResults": // NOT1dotOR2dot_pass-empty
       return _ShExUtil.walkVal(val.solution, cb);
-    } else if (val.type === "Failure") { // NOT1dotOR2dot_pass-empty
+    case "Failure": // NOT1dotOR2dot_pass-empty
       return null; // !!TODO
-    } else if (val.type === "ShapeNot") { // 1NOTNOTIRI_passIo1,
+    case "ShapeNot": // 1NOTNOTIRI_passIo1,
       return _ShExUtil.walkVal(val.shapeExpr, cb);
-    } else if (val.type === "ShapeOrResults") { // 1dotRefOR3_passShape1
+    case "ShapeOrResults": // 1dotRefOR3_passShape1
       return _ShExUtil.walkVal(val.solution, cb);
-    } else if (val.type === "ShapeOr") { // 1NOT_literalORvs__passIo1
+    case "ShapeOr": // 1NOT_literalORvs__passIo1
       return val.shapeExprs.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1211,7 +1238,7 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "ShapeAndResults") { // 1iriRef1_pass-iri
+    case "ShapeAndResults": // 1iriRef1_pass-iri
       return val.solutions.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1223,7 +1250,7 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "ShapeAnd") { // 1NOT_literalANDvs__passIv1
+    case "ShapeAnd": // 1NOT_literalANDvs__passIv1
       return val.shapeExprs.reduce((ret, exp) => {
         const n = _ShExUtil.walkVal(exp, cb);
         if (n)
@@ -1235,7 +1262,8 @@ const ShExUtil = {
           })
         return ret;
       }, {});
-    } else if (val.type === "EachOfSolutions" || val.type === "OneOfSolutions") {
+    case "EachOfSolutions":
+    case "OneOfSolutions":
       // 1dotOne2dot_pass_p1
       return val.solutions.reduce((ret, sln) => {
         sln.expressions.forEach(exp => {
@@ -1250,7 +1278,7 @@ const ShExUtil = {
         });
         return ret;
       }, {});
-    } else if (val.type === "TripleConstraintSolutions") { // 1dot_pass-noOthers
+    case "TripleConstraintSolutions": // 1dot_pass-noOthers
       if ("solutions" in val) {
         const ret = {};
         const vals = [];
@@ -1260,9 +1288,9 @@ const ShExUtil = {
       } else {
         return null;
       }
-    } else if (val.type === "Recursion") { // 3circRefPlus1_pass-recursiveData
+    case "Recursion": // 3circRefPlus1_pass-recursiveData
       return null;
-    } else {
+    default:
       // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
     }
@@ -1629,117 +1657,6 @@ const ShExUtil = {
       return ret;
     }
   },
-/* -- deprecated
-  valToSimple: function (val) {
-    const _ShExUtil = this;
-    function _join (list) {
-      return list.reduce((ret, elt) => {
-        Object.keys(elt).forEach(k => {
-          if (k in ret) {
-            ret[k] = Array.from(new Set(ret[k].concat(elt[k])));
-          } else {
-            ret[k] = elt[k];
-          }
-        });
-        return ret;
-      }, {});
-    }
-    if (typeof val === "string") {
-      return val
-    } else if (val.type === "TripleConstraintSolutions") {
-      if ("solutions" in val) {
-        return val.solutions.reduce((ret, sln) => {
-          if (!("referenced" in sln))
-            return {};
-          const toAdd = {};
-          if (chaseList(sln.referenced, toAdd)) {
-            return _join(ret, toAdd);
-          } else {
-            return _join(ret, _ShExUtil.valToSimple(sln.referenced));
-          }
-          function chaseList (li) {
-            if (!li) return false;
-            if (li.node === RDF.nil) return true;
-            if ("solution" in li && "solutions" in li.solution &&
-                li.solution.solutions.length === 1 &&
-                "expressions" in li.solution.solutions[0] &&
-                li.solution.solutions[0].expressions.length === 2 &&
-                "predicate" in li.solution.solutions[0].expressions[0] &&
-                li.solution.solutions[0].expressions[0].predicate === RDF.first &&
-                li.solution.solutions[0].expressions[1].predicate === RDF.rest) {
-              const expressions = li.solution.solutions[0].expressions;
-              const ent = expressions[0];
-              const rest = expressions[1].solutions[0];
-              const member = ent.solutions[0];
-              const newElt = { ldterm: member.object };
-              if ("referenced" in member) {
-                const t = _ShExUtil.valToSimple(member.referenced);
-                if (t)
-                  newElt.nested = t;
-              }
-              toAdd = _join(toAdd, newElt);
-              return rest.object === RDF.nil ?
-                true :
-                chaseList(rest.referenced.type === "ShapeOrResults" // heuristic for `nil  OR @<list>` idiom
-                          ? rest.referenced.solution
-                          : rest.referenced);
-            }
-          }
-        }, []);
-      } else {
-        return [];
-      }
-    } else if (["TripleConstraintSolutions"].indexOf(val.type) !== -1) {
-      return {  };
-    } else if (val.type === "NodeConstraintTest") {
-      return _ShExUtil.valToSimple(val.shapeExpr);
-    } else if (val.type === "NodeConstraint") {
-      const thisNode = {  };
-      thisNode[n3ify(val.focus)] = [val.shape];
-      return thisNode;
-    } else if (val.type === "ShapeTest") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return "solution" in val ? _join([thisNode].concat(_ShExUtil.valToSimple(val.solution))) : thisNode;
-    } else if (val.type === "Shape") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return thisNode;
-    } else if (val.type === "ShapeNotTest") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return _join(['NOT1'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
-    } else if (val.type === "ShapeNot") {
-      const thisNode = {  };
-      thisNode[n3ify(val.node)] = [val.shape];
-      return _join(['NOT'].concat(_ShExUtil.valToSimple(val.shapeExpr)));
-    } else if (val.type === "ShapeAnd") {
-      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('AND');
-    } else if (val.type === "ShapeOr") {
-      return val.shapeExprs.map(shapeExpr => _ShExUtil.valToSimple(shapeExpr)).join ('OR');
-    } else if (val.type === "Failure") {
-      return _ShExUtil.errsToSimple(val);
-    } else if (val.type === "Recursion") {
-      return {  };
-    } else if ("solutions" in val) {
-      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
-      return _join(val.solutions.map(sln => {
-        return _ShExUtil.valToSimple(sln);
-      }));
-    } else if ("solution" in val) {
-      // ["SolutionList", "EachOfSolutions", "OneOfSolutions", "ShapeAndResults", "ShapeOrResults"].indexOf(val.type) !== -1
-      return _ShExUtil.valToSimple(val.solution);
-    } else if ("expressions" in val) {
-      return _join(val.expressions.map(sln => {
-        return _ShExUtil.valToSimple(sln);
-      }));
-    } else {
-      // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
-    }
-    return val;
-  },
-*/
   simpleToShapeMap: function (x) {
     return Object.keys(x).reduce((ret, k) => {
       x[k].forEach(s => {
@@ -1760,45 +1677,56 @@ const ShExUtil = {
 
   errsToSimple: function (val) {
     const _ShExUtil = this;
-    if (val.type === "FailureList") {
+    if (Array.isArray(val)) {
+      return val.reduce((ret, e) => {
+        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
+        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
+      }, []);
+    }
+    if (typeof val === "string")
+      return [val];
+
+    switch (val.type) {
+    case "FailureList":
       return val.errors.reduce((ret, e) => {
         return ret.concat(_ShExUtil.errsToSimple(e));
       }, []);
-    } else if (val.type === "Failure") {
+    case "Failure":
       return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
         const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
         return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
       }, []));
-    } else if (val.type === "TypeMismatch") {
+    case "TypeMismatch": {
       const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
-    } else if (val.type === "ShapeAndFailure") {
+    }
+    case "ShapeAndFailure":
       return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    } else if (val.type === "ShapeOrFailure") {
+    case "ShapeOrFailure":
       return Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
           }, []) :
           " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    } else if (val.type === "ShapeNotFailure") {
+    case "ShapeNotFailure":
       return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-    } else if (val.type === "ExcessTripleViolation") {
+    case "ExcessTripleViolation":
       return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-    } else if (val.type === "ClosedShapeViolation") {
+    case "ClosedShapeViolation":
       return ["Unexpected triple(s): {"].concat(
         val.unexpectedTriples.map(t => {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })
       ).concat(["}"]);
-    } else if (val.type === "NodeConstraintViolation") {
+    case "NodeConstraintViolation":
       const w = require("@shexjs/writer")();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;
@@ -1806,29 +1734,25 @@ const ShExUtil = {
         txt = res;
       });
       return ["NodeConstraintError: expected to match " + txt];
-    } else if (val.type === "MissingProperty") {
+    case "MissingProperty":
       return ["Missing property: " + val.property];
-    } else if (val.type === "NegatedProperty") {
+    case "NegatedProperty":
       return ["Unexpected property: " + val.property];
-    } else if (Array.isArray(val)) {debugger;
-      return val.reduce((ret, e) => {
-        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
-      }, []);
-    } else if (val.type === "ValueComparisonFailure") {
+    case "ValueComparisonFailure":
       return ["ValueComparisonFailure: expected " + val.left + val.comparator + val.right];
-    } else if (val.type === "SemActFailure") {
+    case "SemActFailure": {
       const nested = Array.isArray(val.errors) ?
           val.errors.reduce((ret, e) => {
             return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
           }, []) :
           "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
       return ["rejected by semantic action:"].concat(nested);
-    } else if (val.type === "SemActViolation") {
+    }
+    case "SemActViolation":
       return [val.message];
-    } else if (val.type === "BooleanSemActFailure") {
+    case "BooleanSemActFailure":
       return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
-    } else {
+    default:
       debugger; // console.log(val);
       throw Error("unknown shapeExpression type in " + JSON.stringify(val));
     }
