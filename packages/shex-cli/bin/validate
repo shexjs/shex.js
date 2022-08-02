@@ -351,7 +351,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   }
   // Loaded schema and data.
   const schemaAndDataP = ShExNode.load(
-    {shexc: valParms.shex, json:valParms.json},
+    {shexc: valParms.shex, shexj:valParms.json},
     {turtle: valParms.data, jsonld: valParms.jsonld},
     schemaOptions, undefined
   );
@@ -721,8 +721,11 @@ function loadRDFmanifest (cmds) {
   // from a manifest supplied on the command line
   const mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   const sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExNode.load(null, {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []}, SchemaOptions, undefined).then(function (loaded) {
-
+  return ShExNode.load(
+    null, // no schema
+    {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []},
+    SchemaOptions, undefined
+  ).then(function (loaded) {
     const testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
           const pattern = RegExp(testName);
