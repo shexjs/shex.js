@@ -20,7 +20,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "^1.0.0-alpha.15"
+    "@shexjs/term": "^1.0.0-alpha.15",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.15"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

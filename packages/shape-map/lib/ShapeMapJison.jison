@@ -8,6 +8,7 @@
     ShapeMap parser in the Jison parser generator format.
   */
 
+  const ShExUtil = require("@shexjs/util");
   const ShapeMap = require("./ShapeMapSymbols");
 
   // Common namespaces and entities
@@ -40,9 +41,7 @@
       XSD + "positiveInteger"
   ];
 
-  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
-    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
-    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i;
 
   const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
@@ -84,7 +83,7 @@
   // Translates string escape codes in the string into their textual equivalent
   function unescapeString(string, trimLength) {
     string = string.substring(trimLength, string.length - trimLength);
-    return obj("@value", unescapeText(string, stringEscapeReplacements));
+    return obj("@value", ShExUtil.unescapeText(string, stringEscapeReplacements));
   }
 
   function unescapeLangString(string, trimLength) {
@@ -96,52 +95,14 @@
   }
 
   // Parse a prefix out of a PName or throw Error
-  function parsePName (pname, prefixes) {
+  function parsePName (pname, meta) {
     const namePos = pname.indexOf(':');
-    return expandPrefix(prefixes, pname.substr(0, namePos)) + unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
-  }
-
-  // Expand declared prefix or throw Error
-  function expandPrefix (prefixes, prefix) {
-    if (!(prefix in prefixes))
-      error('Parse error; unknown prefix: ' + prefix);
-    return prefixes[prefix];
+    return meta.expandPrefix(pname.substr(0, namePos)) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   const EmptyObject = {  };
   const EmptyShape = { type: "Shape" };
 
-  // <?INCLUDE from ShExUtil. Factor into `rdf-token` module? ?>
-  /**
-   * unescape numerics and allowed single-character escapes.
-   * throws: if there are any unallowed sequences
-   */
-  function unescapeText (string, replacements) { // !! ShExUtil.unescapeText ?
-    const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
-    try {
-      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
-        let charCode;
-        if (unicode4) {
-          charCode = parseInt(unicode4, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          return String.fromCharCode(charCode);
-        }
-        else if (unicode8) {
-          charCode = parseInt(unicode8, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          if (charCode < 0xFFFF) return String.fromCharCode(charCode);
-          return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
-        }
-        else {
-          const replacement = replacements[escapedChar];
-          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
-          return replacement;
-        }
-      });
-      return string;
-    }
-    catch (error) { console.warn(error); return ''; }
-  }
 %}
 
 /* lexical grammar */
@@ -469,21 +430,21 @@ nodePredicate:
 
 nodeIri:
       IRIREF	{
-        const node = unescapeText($1.slice(1,-1), {});
+        const node = ShExUtil.unescapeText($1.slice(1,-1), {});
         $$ = yy.dataMeta.base === null || absoluteIRI.test(node) ? node : yy.dataMeta._resolveIRI(node)
       }
-    | PNAME_LN	-> parsePName($1, yy.dataMeta.prefixes)
-    | APPINFO_COLON	-> parsePName($1, yy.dataMeta.prefixes)
-    | PNAME_NS	-> expandPrefix(yy.dataMeta.prefixes, $1.substr(0, $1.length - 1));
+    | PNAME_LN	-> parsePName($1, yy.dataMeta)
+    | APPINFO_COLON	-> parsePName($1, yy.dataMeta)
+    | PNAME_NS	-> yy.dataMeta.expandPrefix($1.substr(0, $1.length - 1));
     ;
 
 shapeIri:
       IRIREF	{
-        const shape = unescapeText($1.slice(1,-1), {});
+        const shape = ShExUtil.unescapeText($1.slice(1,-1), {});
         $$ = yy.schemaMeta.base === null || absoluteIRI.test(shape) ? shape : yy.schemaMeta._resolveIRI(shape)
       }
-    | PNAME_LN	-> parsePName($1, yy.schemaMeta.prefixes)
-    | APPINFO_COLON	-> parsePName($1, yy.schemaMeta.prefixes)
-    | PNAME_NS	-> expandPrefix(yy.schemaMeta.prefixes, $1.substr(0, $1.length - 1));
+    | PNAME_LN	-> parsePName($1, yy.schemaMeta)
+    | APPINFO_COLON	-> parsePName($1, yy.schemaMeta)
+    | PNAME_NS	-> yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1));
     ;
 
