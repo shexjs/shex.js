@@ -42,7 +42,7 @@ if (cmds.help)
 if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
 
 
-ShExNode.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
+ShExNode.load({shexc: cmds.shex, json: cmds.json}, null).then(function (loaded) {
   console.log('%s', JSON.stringify(ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate), null, '  '));
 }).catch(function (e) {
   console.error("aborting:", e.stack || e);
