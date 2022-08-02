@@ -655,7 +655,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     } else if (valueExpr.type === "Shape") {
       return direct === undefined ? [] : direct(value, valueExpr);
     } else if (valueExpr.type === "ShapeOr") {
-      const ret = [];
+      let ret = [];
       for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
         const nested = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExprs[i], recurse, direct);
         if (nested.length === 0)
