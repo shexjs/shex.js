@@ -5,7 +5,7 @@
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const RdfJs = N3js;
-const ShExApi = ShEx.Api({
+const ShExLoader = ShEx.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 ShEx.ShapeMap.start = ShEx.Validator.start
@@ -808,7 +808,7 @@ async function callValidator (done) {
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
       try {
-        const loaded = await ShExApi.load({shexc: [alreadLoaded]}, null);
+        const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null);
         let time;
         const validator = ShEx.Validator.construct(
           loaded.schema,

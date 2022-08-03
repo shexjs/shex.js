@@ -11037,7 +11037,7 @@ ShExWebApp = (function () {
     Util:           __webpack_require__(9443),
     Validator:      __webpack_require__(3457),
     Writer:         __webpack_require__(95),
-    Api:            __webpack_require__(9237),
+    Loader:         __webpack_require__(2863),
     Parser:         __webpack_require__(931),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,
@@ -11729,10 +11729,10 @@ if (true)
 
 /***/ }),
 
-/***/ 9237:
+/***/ 2863:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/** @shexjs/api - HTTP access functions for @shexjs library.
+/** @shexjs/loader - HTTP access functions for @shexjs library.
  * For `file:` access or dynamic loading of ShEx extensions, use `@shexjs/node`.
  *
  * load function(shExC, shExJ, turtle, jsonld, schemaOptions = {}, dataOptions = {})
@@ -11743,7 +11743,7 @@ if (true)
  *   return promise of {contents, url}
  */
 
-const ShExApiCjsModule = function (config = {}) {
+const ShExLoaderCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(9443);
   const ShExParser = __webpack_require__(931);
@@ -11790,14 +11790,14 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  const api = {
+  const loader = {
     load: load,
     loadExtensions: LoadNoExtensions,
     GET,
     ResourceLoadControler,
     loadSchemaImports,
   };
-  return api
+  return loader
   
   async function GET (url, mediaType) {
     let m;
@@ -11880,7 +11880,7 @@ const ShExApiCjsModule = function (config = {}) {
     ).filter(
       i => resourceLoadControler.loadNovelUrl(i)
     ).map(i => {
-      resourceLoadControler.add(api.GET(i).then(loaded => {
+      resourceLoadControler.add(loader.GET(i).then(loaded => {
         const meta = {
           // mediaType: mediaType,
           url: loaded.url,
@@ -11917,7 +11917,7 @@ const ShExApiCjsModule = function (config = {}) {
       if (typeof p === "object") {
         return await parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler)
       } else {
-        const loaded = await api.GET(p, mediaType)
+        const loaded = await loader.GET(p, mediaType)
         meta.base = meta.url = loaded.url // update with wherever if ultimately loaded from after URL fixups and redirects
         resourceLoadControler.loadNovelUrl(loaded.url, p) // replace p with loaded.url in loaded list
         return await parserWrapper(loaded.text, mediaType, loaded.url,
@@ -12059,7 +12059,7 @@ const ShExApiCjsModule = function (config = {}) {
 }
 
 if (true)
-  module.exports = ShExApiCjsModule
+  module.exports = ShExLoaderCjsModule
 
 
 /***/ }),
