@@ -924,7 +924,17 @@ const ShExUtil = {
       type: "Schema"
     };
   },
-  merge: function (left, right, overwrite, inPlace) {
+  merge: function (left, right, collision = 'throw', inPlace) {
+    const overwrite =
+          collision === 'left'
+          ? () => false
+          : collision === 'right'
+          ? () => true
+          : typeof collision === 'function'
+          ? collision
+          : (type, left, right) => {
+            throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
+          };
     const ret = inPlace ? left : this.emptySchema();
 
     function mergeArray (attr) {
@@ -934,7 +944,7 @@ const ShExUtil = {
         ret[attr][key] = left[attr][key];
       });
       Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key])) {
           if (!(attr in ret))
             ret[attr] = {};
           ret[attr][key] = right[attr][key];
@@ -949,7 +959,7 @@ const ShExUtil = {
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || overwrite) {
+        if (!(attr  in left) || !(left[attr].has(key)) || overwrite(attr, ret[attr].get(key), right[attr].get(key))) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -961,7 +971,7 @@ const ShExUtil = {
     if ("_base" in left)
       ret._base = left._base;
     if ("_base" in right)
-      if (!("_base" in left) || overwrite)
+      if (!("_base" in left)/* || overwrite('_base', ret._base, right._base)*/) // _base favors the left
         ret._base = right._base;
 
     mergeArray("_prefixes");
@@ -969,24 +979,29 @@ const ShExUtil = {
     mergeMap("_sourceMap");
 
     if ("imports" in right)
-      if (!("imports" in left) || overwrite)
+      if (!("imports" in left)) {
         ret.imports = right.imports;
+      } else {
+        [].push.apply(ret.imports, right.imports.filter(
+          mprt => ret.imports.indexOf(mprt) === -1
+        ))
+      }
 
     // startActs
     if ("startActs" in left)
       ret.startActs = left.startActs;
     if ("startActs" in right)
-      if (!("startActs" in left) || overwrite)
+      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs))
         ret.startActs = right.startActs;
 
     // start
     if ("start" in left)
       ret.start = left.start;
     if ("start" in right)
-      if (!("start" in left) || overwrite)
+      if (!("start" in left) || overwrite('start', ret.start, right.start))
         ret.start = right.start;
 
-    let lindex = left._index || this.index(left);
+    const lindex = left._index || this.index(left);
 
     // shapes
     if (!inPlace)
@@ -996,10 +1011,19 @@ const ShExUtil = {
         ret.shapes.push(lshape);
       });
     (right.shapes || []).forEach(function (rshape) {
-      if (!("shapes"  in left) || !(rshape.id in lindex.shapeExprs) || overwrite) {
-        if (!("shapes" in ret))
-          ret.shapes = [];
+      if (!("shapes" in ret)) {
+        ret.shapes = [];
         ret.shapes.push(rshape)
+        lindex.shapeExprs[rshape.id] = rshape;
+      } else {
+        const previousDecl = lindex.shapeExprs[rshape.id];
+        if (!previousDecl) {
+          ret.shapes.push(rshape)
+        } else if (overwrite('shapeDecl', previousDecl, rshape)) {
+          ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
+          lindex.shapeExprs[rshape.id] = rshape;
+          ret.shapes.push(rshape)
+        }
       }
     });
 
@@ -1752,6 +1776,9 @@ const ShExUtil = {
         return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
       }, []);
     }
+    if (typeof val === "string")
+      return [val];
+
     switch (val.type) {
     case "FailureList":
       return val.errors.reduce((ret, e) => {

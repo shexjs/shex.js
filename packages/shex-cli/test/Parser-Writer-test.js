@@ -256,7 +256,7 @@ describe("A ShEx parser", function () {
          ? dir + '/manifest#' + test.name
          : "should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
-        ShExNode.load([path], [], [], [], { parser: parser }, {}).
+        ShExNode.load({shexc: [path]}, null, { parser: parser }, {}).
           then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
           }).
@@ -365,35 +365,6 @@ describe("A ShEx parser", function () {
     });
   }
 });
-
-if (!EARL && TEST_Vestiges) {
-  /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
-   * want it in the API.
-   */
-  describe("loadShExImports_NotUsed", function () {
-    schemas.filter(test => {
-      return "trait" in test && test.trait.indexOf("Import") !== -1;
-    }).filter(t => {
-      return true;
-    }).forEach(test => {
-      const path = schemasPath + test.shex;
-      it("should load the same imports as ShExNode.load in '" + path + "'", function () {
-        parser._setBase("file://"+path);
-        return Promise.all([
-          ShExNode.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
-          ShExNode.loadShExImports_NotUsed(path, parser, pickShEx).then(schema => ({ schema })), // make resolve look like above structure
-        ]).then(function (loadedAndSchema) {
-          const load_res = ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE);
-          const loadShExImports_res = ShExUtil.canonicalize(loadedAndSchema[1].schema, BASE);
-          expect(loadShExImports_res).to.deep.equal(load_res);
-        });
-        function pickShEx (i) {
-          return i + ".shex";
-        }
-      });
-    });
-  });
-}
 
 function loadGraphSchema () {
   if (TEST_ShExR) {

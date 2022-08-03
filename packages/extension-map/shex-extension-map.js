@@ -192,7 +192,7 @@ function trivialMaterializer (schema, nextBNode) {
       };
 
       v.visitValueRef = function (r) {
-        this.visitExpression(schema.shapes[r], r);
+        this.visitTripleExpr(schema.shapes[r], r);
         return this._visitValue(r);
       };
 
