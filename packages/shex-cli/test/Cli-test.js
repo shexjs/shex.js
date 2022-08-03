@@ -76,8 +76,8 @@ const AllTests = {
     { name: "turtle-override-fail" , args: ["--turtle-manifest", "cli/manifest-simple.ttl", "-n", "<x999>", "-s", "<http://a.example/S1>"], result: "cli/1dotOr2dot_fail_p1_p2_p3.val", status: 2 },
     { name: "results", args: ["--json-manifest", "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
     { name: "test-name", args: ["--json-manifest", "cli/manifest-results.json", "--test-name", "1dotOr2dot-someOf_pass_p1-p2p3"], resultText: "true\n", status: 0 },
-    { name: "shape-map", args: ["--json-manifest", "cli/manifest-results.json", "--map", '[{"node":"x", "shape":"http://a.example/S1"}]'], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
-    { name: "shape-map-fail", args: ["--json-manifest", "cli/manifest-results.json", "--map", '[{"node":"y", "shape":"http://a.example/S1"}]'], resultMatch: "false", status: 3 },
+    { name: "shape-map", args: ["--json-manifest", "cli/manifest-results.json", "--queryMap", '[{"node":"x", "shape":"http://a.example/S1"}]'], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: 0 },
+    { name: "shape-map-fail", args: ["--json-manifest", "cli/manifest-results.json", "--queryMap", '[{"node":"y", "shape":"http://a.example/S1"}]'], resultMatch: "false", status: 3 },
     //  --dry-run
     { name: "simple-dry" , args: ["-x", "cli/1dotOr2dot.shex", "-s", "<http://a.example/S1>", "-d", "cli/p1.ttl", "-n", "<x>", "--dry-run"], resultText: "", status: 0 },
     { name: "simple-as-jsonld-dry" , args: ["--jsonld-manifest", "cli/manifest-simple.jsonld", "--dry-run"], resultText: "", status: 0 },

@@ -321,7 +321,7 @@ function makeManifestCache (selection) {
     if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
-      if ("action" in elt) {
+      if ("action" in elt) { // TODO: move to ShExUtil
         // compatibility with test suite structure.
 
         const action = elt.action;
