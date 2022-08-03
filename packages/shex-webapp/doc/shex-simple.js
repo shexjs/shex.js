@@ -346,23 +346,24 @@ function makeManifestCache (selection) {
             null;
         elt = Object.assign(
           {
+            '@id': new URL(elt['@id'], url).href,
             schemaLabel: schemaLabel,
             schemaURL: action.schema || url,
             // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
             dataLabel: dataLabel,
-            dataURL: action.data || DefaultBase
+            dataURL: action.data || url
           },
           (queryMap ? { queryMap: queryMap } : { queryMapURL: queryMapURL }),
           { status: elt["@type"] === "sht:ValidationFailure" ? "nonconformant" : "conformant" }
         );
         if ("termResolver" in action || "termResolverURL" in action) {
           elt.meta = action.termResolver;
-          elt.metaURL = action.termResolverURL || DefaultBase;
+          elt.metaURL = action.termResolverURL || url;
         }
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], new URL(url, DefaultBase).href).href;
+          elt[parm] = new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }

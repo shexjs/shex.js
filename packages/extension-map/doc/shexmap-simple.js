@@ -374,7 +374,7 @@ function makeManifestCache (selection) {
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], new URL(url, url).href).href;
+          elt[parm] = new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }
