@@ -5,7 +5,7 @@ ShExWebApp = (function () {
     Util:                 require('@shexjs/util'),
     Validator:            require('@shexjs/validator'),
     Writer:               require('@shexjs/writer'),
-    Api:                  require("@shexjs/api"),
+    Loader:               require("@shexjs/loader"),
     Parser:               require("@shexjs/parser"),
     "eval-simple-1err":   require("@shexjs/eval-simple-1err"),
     "eval-threaded-nerr": require("@shexjs/eval-threaded-nerr"),
