@@ -245,7 +245,7 @@ const ShExUtil = {
         oldVisitTripleExpr = v.visitTripleExpr;
     v.keepShapeExpr = oldVisitShapeExpr;
 
-    v.visitShapeExpr = function (expr, label) {
+    v.visitShapeExpr = function (expr, ...args) {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
@@ -253,10 +253,10 @@ const ShExUtil = {
           return expr.id;
         delete expr.id;
       }
-      return oldVisitShapeExpr.call(this, expr, label);
+      return oldVisitShapeExpr.call(this, expr, ...args);
     };
 
-    v.visitTripleExpr = function (expr) {
+    v.visitTripleExpr = function (expr, ...args) {
       if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
       }
@@ -266,7 +266,7 @@ const ShExUtil = {
           return expr.id;
         }
       }
-      const ret = oldVisitTripleExpr.call(this, expr);
+      const ret = oldVisitTripleExpr.call(this, expr, ...args);
       // Everything from RDF has an ID, usually a BNode.
       knownExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
@@ -1095,53 +1095,53 @@ const ShExUtil = {
     const positiveDeps = Hierarchy.create();
     let index = schema.index || this.index(schema);
 
-    visitor.visitShape = function (shape, label) {
+    visitor.visitShape = function (shape, ...args) {
       const lastExtra = currentExtra;
       currentExtra = shape.extra;
-      const ret = oldVisitShape.call(visitor, shape, label);
+      const ret = oldVisitShape.call(visitor, shape, ...args);
       currentExtra = lastExtra;
       return ret;
     }
 
     const oldVisitShapeNot = visitor.visitShapeNot;
-    visitor.visitShapeNot = function (shapeNot, label) {
+    visitor.visitShapeNot = function (shapeNot, ...args) {
       const lastNegated = currentNegated;
       currentNegated ^= true;
-      const ret = oldVisitShapeNot.call(visitor, shapeNot, label);
+      const ret = oldVisitShapeNot.call(visitor, shapeNot, ...args);
       currentNegated = lastNegated;
       return ret;
     }
 
     const oldVisitTripleConstraint = visitor.visitTripleConstraint;
-    visitor.visitTripleConstraint = function (expr) {
+    visitor.visitTripleConstraint = function (expr, ...args) {
       const lastNegated = currentNegated;
       if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
         currentNegated ^= true;
       inTE = true;
-      const ret = oldVisitTripleConstraint.call(visitor, expr);
+      const ret = oldVisitTripleConstraint.call(visitor, expr, ...args);
       inTE = false;
       currentNegated = lastNegated;
       return ret;
     };
 
     const oldVisitShapeRef = visitor.visitShapeRef;
-    visitor.visitShapeRef = function (shapeRef) {
+    visitor.visitShapeRef = function (shapeRef, ...args) {
       if (!(shapeRef in index.shapeExprs))
         throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
       if (!inTE && shapeRef === currentLabel)
         throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
-      return oldVisitShapeRef.call(visitor, shapeRef);
+      return oldVisitShapeRef.call(visitor, shapeRef, ...args);
     }
 
     const oldVisitInclusion = visitor.visitInclusion;
-    visitor.visitInclusion = function (inclusion) {
+    visitor.visitInclusion = function (inclusion, ...args) {
       let refd;
       if (!(refd = index.tripleExprs[inclusion]))
         throw firstError(Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + "."), inclusion);
       // if (refd.type !== "Shape")
       //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
-      return oldVisitInclusion.call(visitor, inclusion);
+      return oldVisitInclusion.call(visitor, inclusion, ...args);
     };
 
     (schema.shapes || []).forEach(function (shape) {
