@@ -11657,7 +11657,7 @@ const ShExUtil = {
 
   ShExRVisitor: function (knownShapeExprs) {
     const v = ShExUtil.Visitor();
-    const knownExpressions = {};
+    const knownTripleExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
         oldVisitTripleExpr = v.visitTripleExpr;
@@ -11667,7 +11667,7 @@ const ShExUtil = {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
-        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
+        if (knownShapeExprs.has(expr.id) || Object.keys(expr).length === 1) // {
           return expr.id;
         delete expr.id;
       }
@@ -11677,22 +11677,21 @@ const ShExUtil = {
     v.visitTripleExpr = function (expr, ...args) {
       if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
-      }
-      if ("id" in expr) {
-        if (expr.id in knownExpressions) {
-          knownExpressions[expr.id].refCount++;
+      } else if ("id" in expr) {
+        if (expr.id in knownTripleExpressions) {
+          knownTripleExpressions[expr.id].refCount++;
           return expr.id;
         }
       }
       const ret = oldVisitTripleExpr.call(this, expr, ...args);
       // Everything from RDF has an ID, usually a BNode.
-      knownExpressions[expr.id] = { refCount: 1, expr: ret };
+      knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
     }
 
     v.cleanIds = function () {
-      for (let k in knownExpressions) {
-        const known = knownExpressions[k];
+      for (let k in knownTripleExpressions) {
+        const known = knownTripleExpressions[k];
         if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
@@ -11726,18 +11725,16 @@ const ShExUtil = {
 
   ShExRtoShExJ: function (schema) {
     // compile a list of known shapeExprs
-    const knownShapeExprs = [];
+    const knownShapeExprs = new Map();
     if ("shapes" in schema)
-      [].push.apply(knownShapeExprs, schema.shapes.map(sh => { return sh.id; }));
+      schema.shapes.forEach(sh => knownShapeExprs.set(sh.id, null))
 
     // normalize references to those shapeExprs
     const v = this.ShExRVisitor(knownShapeExprs);
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map(sh => {
-        return v.keepShapeExpr(sh);
-      });
+      schema.shapes = schema.shapes.map(sh => v.keepShapeExpr(sh));
 
     // remove extraneous BNode IDs
     v.cleanIds();
@@ -11842,6 +11839,9 @@ const ShExUtil = {
       }
       return oldVisitTripleExpr.call(v, expression);
     };
+    v.visitExtra = function (l) {
+      return l.slice().sort();
+    }
     if (trimIRI) {
       v.visitIRI = function (i) {
         return i.replace(trimIRI, "");
@@ -11941,7 +11941,7 @@ const ShExUtil = {
     let shapeLabels = Object.keys(index.shapeExprs || [])
     let shapeReferences = {}
     shapeLabels.forEach(label => {
-      let shape = index.shapeExprs[label]
+      const shape = index.shapeExprs[label]
       noteReference(label, null) // just note the shape so we have a complete list at the end
       if (shape.type === 'Shape') {
         if ('expression' in shape) {
@@ -12818,6 +12818,12 @@ const ShExUtil = {
     return extensions(map);
   },
 
+  /**
+   * Convert a ShExR property tree to ShexJ.
+   * This method de-duplicates and normalizes all moves all ShapeDecls to be immediate children of the :shapes collection.
+   * @exports
+   * @returns ShEx schema
+   */
   valuesToSchema: function (values) {
     // console.log(JSON.stringify(values, null, "  "));
     const v = values;
@@ -12885,6 +12891,9 @@ const ShExUtil = {
         return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
       }
     }
+    /* transform shapeExprs. called from .shapes and .valueExpr.
+     * The calls from .valueExpr can be Shapes or ShapeDecls because the ShExR graph is not yet normalized.
+     */
     function shapeExpr (v) {
       // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
       const elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
@@ -13168,7 +13177,7 @@ const ShExUtil = {
       return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     default:
       debugger; // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
     }
     function errorList (errors) {
       return errors.reduce(function (acc, e) {
