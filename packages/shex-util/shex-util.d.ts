@@ -137,7 +137,6 @@ declare namespace shexjs__util {
     // namespace Visitor {
     //     function index(schema: any): any;
     // }
-    // function makeTriplesDB(queryTracker: any): any;
 
     interface QueryTracker {
         start (isOut: boolean, term: RdfJs.Term, shapeLabel: string): void;

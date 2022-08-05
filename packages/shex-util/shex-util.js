@@ -324,7 +324,7 @@ const ShExUtil = {
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map((sh, idx) => v.visitShapeDecl(sh));
+      schema.shapes = schema.shapes.map(sh => v.visitShapeDecl(sh));
 
     // remove extraneous BNode IDs
     v.cleanIds();
