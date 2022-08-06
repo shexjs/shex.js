@@ -36,11 +36,3 @@ da-web/
 .coveralls.yml
 .nyc_output/
 
-packages/shape-map/browser/
-packages/shex-core/browser/
-packages/shex-node/browser/
-packages/shex-api/browser/
-packages/shex-parser/browser/
-packages/shex-webapp/browser/shex-webapp-browserify.js
-packages/shex-webapp/browser/shex-webapp-browserify.min.js
-packages/extension-map/browser/

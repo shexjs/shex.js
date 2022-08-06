@@ -228,8 +228,6 @@ export namespace Util {
 
     function isWellDefined(schema: any): any;
 
-    function makeTriplesDB(queryTracker: any): any;
-
     function merge(left: any, right: any, overwrite: any, inPlace: any): any;
 
     function n3jsToTurtle(n3js: any): any;

@@ -352,17 +352,17 @@ ShExVisitor.index = function (schema) {
   let v = ShExVisitor();
 
   let oldVisitExpression = v.visitTripleExpr;
-  v.visitTripleExpr = function (expression) {
+  v.visitTripleExpr = function (expression, ...args) {
     if (typeof expression === "object" && "id" in expression)
       index.tripleExprs[expression.id] = expression;
-    return oldVisitExpression.call(v, expression);
+    return oldVisitExpression.call(v, expression, ...args);
   };
 
   let oldVisitShapeExpr = v.visitShapeExpr;
-  v.visitShapeExpr = function (shapeExpr) {
+  v.visitShapeExpr = function (shapeExpr, ...args) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
       index.shapeExprs[shapeExpr.id] = shapeExpr;
-    return oldVisitShapeExpr.call(v, shapeExpr);
+    return oldVisitShapeExpr.call(v, shapeExpr, ...args);
   };
 
   v.visitSchema(schema);

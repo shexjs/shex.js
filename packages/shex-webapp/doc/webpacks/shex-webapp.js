@@ -8725,7 +8725,7 @@ if (true)
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NoTripleConstraint = void 0;
-exports.NoTripleConstraint = ["NO_TRIPLE_CONSTRAINT"];
+exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
 
 /***/ }),
@@ -9406,10 +9406,10 @@ if (true)
 
 /***/ }),
 
-/***/ 9237:
+/***/ 1837:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/** @shexjs/api - HTTP access functions for @shexjs library.
+/** @shexjs/loader - HTTP access functions for @shexjs library.
  * For `file:` access or dynamic loading of ShEx extensions, use `@shexjs/node`.
  *
  * load function(shExC, shExJ, turtle, jsonld, schemaOptions = {}, dataOptions = {})
@@ -9420,18 +9420,61 @@ if (true)
  *   return promise of {contents, url}
  */
 
-const ShExApiCjsModule = function (config = {}) {
+const ShExLoaderCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(9443);
   const ShExParser = __webpack_require__(931);
 
-  const api = {
-    load: LoadPromise,
+  class ResourceLoadControler {
+    constructor (src) {
+      this.schemasSeen = src.map(p => typeof p === "object" ? p.url : p) // loaded URLs
+      this.promise = new Promise((resolve, reject) => {
+        this.resolve = resolve
+        this.reject = reject
+      })
+      this.toLoad = []
+      this.results = []
+      this.loaded = 0
+    }
+    add (promise) {
+      this.toLoad.push(promise)
+      const index = this.toLoad.length - 1
+      promise.then(value => {
+        ++this.loaded
+        this.results[index] = value
+        if (this.loaded === this.toLoad.length) {
+          this.resolve(this.results)
+        }
+      }).catch(error => this.reject(error))
+      return promise
+    }
+    allLoaded () {
+      return this.toLoad.length > 0
+        ? this.promise
+        : Promise.resolve([])
+    }
+    loadNovelUrl (url, oldUrl = null) {
+      if (this.schemasSeen.indexOf(url) !== -1)
+        return false
+      this.schemasSeen.push(url)
+      if (oldUrl) {
+        const oldI = this.schemasSeen.indexOf(oldUrl)
+        if (oldI !== -1) {
+          this.schemasSeen.splice(oldI, 1)
+        }
+      }
+      return true
+    }
+  }
+
+  const loader = {
+    load: load,
     loadExtensions: LoadNoExtensions,
-    GET: GET,
-    loadShExImports_NotUsed: loadShExImports_NotUsed // possible load imports function
+    GET,
+    ResourceLoadControler,
+    loadSchemaImports,
   };
-  return api
+  return loader
   
   async function GET (url, mediaType) {
     let m;
@@ -9464,156 +9507,157 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  function loadList (src, metaList, mediaType, parserWrapper, target, options, loadImports) {
-    return src.map(
-      async p =>
-        typeof p === "object" ? mergeSchema(p) : await loadParseMergeSchema(p)
-    )
-
-    async function mergeSchema (obj) {
-      const meta = addMeta(obj.url, mediaType)
-      try {
-        ShExUtil.merge(target, obj.schema, true, true)
-        meta._prefixes = target._prefixes || {}
-        meta.base = target._base
-        loadImports(obj.schema)
-        return [mediaType, obj.url]
-      } catch (e) {
-        const e2 = Error("error merging schema object " + obj.schema + ": " + e)
-        e2.stack = e.stack
-        throw e2
-      }
-    }
-
-    async function loadParseMergeSchema (p) {
-      return api.GET(p, mediaType).then(function (loaded) {
-        return parserWrapper(loaded.text, mediaType, loaded.url, target,
-                             addMeta(loaded.url, mediaType), options, loadImports)
-      })
-    }
-
-    function addMeta (url, mediaType) {
+  function addMeta (url, mediaType, metaList) {
       const meta = {
-        mediaType: mediaType,
-        url: url,
+        mediaType,
+        url,
         base: url,
         prefixes: {}
       }
       metaList.push(meta)
       return meta
     }
+
+  async function mergeSchema (obj, mediaType, resourceLoadControler, options) {
+    try {
+      loadSchemaImports(obj.schema, resourceLoadControler, options)
+      return {mediaType, url: obj.url, schema: obj.schema}
+    } catch (e) {
+      const e2 = Error("error merging schema object " + obj.schema + ": " + e)
+      e2.stack = e.stack
+      throw e2
+    }
   }
 
-  /* LoadPromise - load shex and json files into a single Schema and turtle into
+  async function mergeGraph (obj, mediaType, resourceLoadControler, options) {
+    try {
+      const graph = Array.isArray(typeof obj.graph)
+            ? obj.graph
+            : obj.graph.getQuads()
+      return {mediaType, url: obj.url, graph}
+    } catch (e) {
+      const e2 = Error("error merging graph object " + obj.graph + ": " + e)
+      e2.stack = e.stack
+      throw e2
+    }
+  }
+
+  function loadSchemaImports (schema, resourceLoadControler, schemaOptions) {
+    if (!("imports" in schema))
+      return schema
+    if (schemaOptions.keepImports) {
+      return schema
+    }
+    const ret = Object.assign({}, schema)
+    const imports = ret.imports
+    delete ret.imports // @@ needed? useful?
+
+    schema.imports.map(
+      i => "iriTransform" in schemaOptions ? schemaOptions.iriTransform(i) : i
+    ).filter(
+      i => resourceLoadControler.loadNovelUrl(i)
+    ).map(i => {
+      resourceLoadControler.add(loader.GET(i).then(loaded => {
+        const meta = {
+          // mediaType: mediaType,
+          url: loaded.url,
+          base: loaded.url,
+          prefixes: {}
+        }
+        // metaList.push(meta)
+        return parseShExC(loaded.text, "text/shex", loaded.url,
+                          meta, schemaOptions, resourceLoadControler)
+          .then(({mediaType, url, schema}) => {
+            if (schema.start) // When some schema A imports schema B, B's start member is ignored.
+              delete schema.start // — http://shex.io/spec/#import
+            return {mediaType, url, schema}
+          })
+      })); // addAfter would be after invoking schema.
+    })
+    return ret
+  }
+
+  function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler) {
+    return src.map(
+      async p => {
+        const meta = addMeta(typeof p === "string" ? p : p.url, mediaType, metaList)
+        const ret =
+              typeof p === "object" && !("text" in p)
+              ? merger(p, mediaType, resourceLoadControler, options)
+              : loadParseMergeSchema(p, meta)
+        resourceLoadControler.add(ret)
+        return ret
+      }
+    )
+
+    async function loadParseMergeSchema (p, meta) {
+      if (typeof p === "object") {
+        return await parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler)
+      } else {
+        const loaded = await loader.GET(p, mediaType)
+        meta.base = meta.url = loaded.url // update with wherever if ultimately loaded from after URL fixups and redirects
+        resourceLoadControler.loadNovelUrl(loaded.url, p) // replace p with loaded.url in loaded list
+        return await parserWrapper(loaded.text, mediaType, loaded.url,
+                             meta, options, resourceLoadControler)
+      }
+    }
+  }
+
+  /* load - load shex and json files into a single Schema and turtle into
    * a graph (Data).
+   * SOURCE may be
+   * * file path or URL - where to load item.
+   * * object: {text: string, url: string} - text and URL of already-loaded resource.
+   * * (schema) ShExJ object
+   * * (data) RdfJs data store
+   * @param schema - { shexc: [ShExC SOURCE], json: [JSON SOURCE] }
+   * @param data - { turtle: [Turtle SOURCE], jsonld: [JSON-LD SOURCE] }
+   * @param schemaOptions
+   * @param dataOptions
+   * @returns {Promise<{schema: any, dataMeta: *[], data: (*|null), schemaMeta: *[]}>}
+   * @constructor
    */
-  async function LoadPromise (shex, json, turtle, jsonld, schemaOptions = {}, dataOptions = {}) {
+  async function load (schema, data, schemaOptions = {}, dataOptions = {}) {
+    const {shexc = [], json = []} = schema || {};
+    
+    const {turtle = [], jsonld = []} = data || {};
     const returns = {
       schema: ShExUtil.emptySchema(),
       data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
-    }
-    const promises = []
-    const schemasSeen = shex.concat(json).map(p => {
-      // might be already loaded objects with a url property.
-      return typeof p === "object" ? p.url : p
-    })
-    let transform = null
-    if (schemaOptions && "iriTransform" in schemaOptions) {
-      transform = schemaOptions.iriTransform
-      delete schemaOptions.iriTransform
-    }
-
-    const allLoaded = DynamicPromise()
-    function loadImports (schema) {
-      if (!("imports" in schema))
-        return schema
-      if (schemaOptions.keepImports) {
-        return schema
-      }
-      const ret = Object.assign({}, schema)
-      const imports = ret.imports
-      delete ret.imports
-      schema.imports.map(function (i) {
-        return transform ? transform(i) : i
-      }).filter(function (i) {
-        return schemasSeen.indexOf(i) === -1
-      }).map(i => {
-        schemasSeen.push(i)
-        allLoaded.add(api.GET(i).then(function (loaded) {
-          const meta = {
-            // mediaType: mediaType,
-            url: loaded.url,
-            base: loaded.url,
-            prefixes: {}
-          }
-          // metaList.push(meta)
-          return parseShExC(loaded.text, "text/shex", loaded.url,
-                            returns.schema, meta, schemaOptions, loadImports)
-        })); // addAfter would be after invoking schema.
-      })
-      return ret
-    }
+    };
 
     // gather all the potentially remote inputs
-    [].push.apply(promises, [
-      loadList(shex, returns.schemaMeta, "text/shex",
-               parseShExC, returns.schema, schemaOptions, loadImports),
-      loadList(json, returns.schemaMeta, "text/json",
-               parseShExJ, returns.schema, schemaOptions, loadImports),
-      loadList(turtle, returns.dataMeta, "text/turtle",
-               parseTurtle, returns.data, dataOptions),
-      loadList(jsonld, returns.dataMeta, "application/ld+json",
-               parseJSONLD, returns.data, dataOptions)
-    ].reduce((acc, l) => acc.concat(l), [])) // .flat() in node > 8.x
-    return allLoaded.all(promises).then(function (resources) {
-      if (returns.schemaMeta.length > 0)
-        ShExUtil.isWellDefined(returns.schema)
-      return returns
+    const allSchemas = new ResourceLoadControler(shexc.concat(json));
+    loadList(shexc, returns.schemaMeta, "text/shex",
+             parseShExC, mergeSchema, schemaOptions, allSchemas)
+    loadList(json, returns.schemaMeta, "application/json",
+             parseShExJ, mergeSchema, schemaOptions, allSchemas)
+
+    const allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
+    loadList(turtle, returns.dataMeta, "text/turtle",
+             parseTurtle, mergeGraph, dataOptions, allGraphs)
+    loadList(jsonld, returns.dataMeta, "application/ld+json",
+             parseJSONLD, mergeGraph, dataOptions, allGraphs)
+
+
+    const [schemaSrcs, dataSrcs] = await Promise.all([allSchemas.allLoaded(),
+                                                      allGraphs.allLoaded()])
+    schemaSrcs.forEach(sSrc => {
+      ShExUtil.merge(returns.schema, sSrc.schema, schemaOptions.collisionPolicy, true)
+      delete sSrc.schema;
     })
+    dataSrcs.forEach(dSrc => {
+      returns.data.addQuads(dSrc.graph)
+      delete dSrc.graph;
+    })
+    if (returns.schemaMeta.length > 0)
+      ShExUtil.isWellDefined(returns.schema)
+    return returns
   }
 
-  function DynamicPromise () {
-    const promises = []
-    const results = []
-    let completedPromises = 0
-    let resolveSelf, rejectSelf
-    const self = new Promise(function (resolve, reject) {
-      resolveSelf = resolve; rejectSelf = reject
-    })
-    self.all = function (pz) {
-      if (pz.length === 0)
-        resolveSelf([]) // otherwise it returns a Promise which never .thens
-      // (and oddly doesn't have a slot in nodes pending promises?)
-      else
-        pz.forEach(function (promise, index) {
-          promises.push(promise)
-          addThen(promise, index)
-        })
-      return self
-    }
-    self.add = function (promise) {
-      promises.push(promise)
-      addThen(promise, promises.length - 1)
-      return self
-    }
-    return self
-
-    function addThen (promise, index) {
-      promise.then(function (value) {
-        results[index] = value
-        ++completedPromises
-        if(completedPromises === promises.length) {
-          resolveSelf(results)
-        }
-      }).catch(function (error) {
-        rejectSelf(error)
-      })
-    }
-  }
-
-  function parseShExC (text, mediaType, url, schema, meta, schemaOptions, loadImports) {
+  function parseShExC (text, mediaType, url, meta, schemaOptions, resourceLoadControler) {
     const parser = schemaOptions && "parser" in schemaOptions ?
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
@@ -9623,54 +9667,21 @@ const ShExApiCjsModule = function (config = {}) {
       if (s.base === url) delete s.base
       meta.prefixes = s._prefixes || {}
       meta.base = s._base || meta.base
-      ShExUtil.merge(schema, loadImports(s), false, true)
-      return Promise.resolve([mediaType, url])
+      loadSchemaImports(s, resourceLoadControler, schemaOptions)
+      return Promise.resolve({mediaType, url, schema: s})
     } catch (e) {
       e.message = "error parsing ShEx " + url + ": " + e.message
       return Promise.reject(e)
     }
   }
 
-  function loadShExImports_NotUsed (from, parser, transform) {
-    const schemasSeen = [from]
-    const ret = { type: "Schema" }
-    return api.GET(from).then(load999Imports).then(function () {
-      ShExUtil.isWellDefined(ret)
-      return ret
-    })
-    function load999Imports (loaded) {
-      const schema = parser.parse(loaded.text/*, base, opts, filename*/)
-      const imports = schema.imports
-      delete schema.imports
-      ShExUtil.merge(ret, schema, false, true)
-      if (imports) {
-        const rest = imports
-            .map(function (i) {
-              return transform ? transform(i) : i
-            }).
-            filter(function (i) {
-              return schemasSeen.indexOf(i) === -1
-            })
-        return Promise.all(rest.map(i => {
-          schemasSeen.push(i)
-          return api.GET(i).then(load999Imports)
-        })).then(a => {
-          return null
-        })
-      } else {
-        return null
-      }
-    }
-  }
-
-  function parseShExJ (text, mediaType, url, schema, meta, schemaOptions, loadImports) {
+  function parseShExJ (text, mediaType, url, meta, schemaOptions, resourceLoadControler) {
     try {
       const s = ShExUtil.ShExJtoAS(JSON.parse(text))
-      ShExUtil.merge(schema, s, true, true)
-      meta.prefixes = schema._prefixes
-      meta.base = schema.base
-      loadImports(s)
-      return Promise.resolve([mediaType, url])
+      meta.prefixes = {}
+      meta.base = null
+      loadSchemaImports(s, resourceLoadControler)
+      return Promise.resolve({mediaType, url, schema: s})
     } catch (e) {
       const e2 = Error("error parsing JSON " + url + ": " + e)
       // e2.stack = e.stack
@@ -9678,42 +9689,26 @@ const ShExApiCjsModule = function (config = {}) {
     }
   }
 
-  function parseTurtle (text, mediaType, url, data, meta, dataOptions) {
+  function parseTurtle (text, mediaType, url, meta, dataOptions) {
     return new Promise(function (resolve, reject) {
+      const graph = []
       new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
         parse(text,
-              function (error, triple, prefixes) {
+              function (error, quad, prefixes) {
                 if (prefixes) {
                   meta.prefixes = prefixes
                   // data.addPrefixes(prefixes)
                 }
                 if (error) {
                   reject("error parsing " + url + ": " + error)
-                } else if (triple) {
-                  data.addQuad(triple)
+                } else if (quad) {
+                  graph.push(quad)
                 } else {
                   meta.base = this._base
-                  resolve([mediaType, url])
+                  resolve({mediaType, url, graph})
                 }
               })
     })
-  }
-
-  /* parseTurtle999 - a variant of parseTurtle with no callback.
-   * so, which is "better"?
-   */
-  function parseTurtle999 (text, mediaType, url, data, meta, dataOptions) {
-    try {
-      const p = new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"})
-      const triples = p.parse(text)
-      meta.prefixes = p._prefixes
-      meta.base = p._base
-      data.addPrefixes(p._prefixes)
-      data.addTriples(triples)
-      return Promise.resolve([mediaType, url])
-    } catch (e) {
-      return Promise.reject(Error("error parsing " + url + ": " + e))
-    }
   }
 
   async function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
@@ -9741,7 +9736,7 @@ const ShExApiCjsModule = function (config = {}) {
 }
 
 if (true)
-  module.exports = ShExApiCjsModule
+  module.exports = ShExLoaderCjsModule
 
 
 /***/ }),
@@ -11662,41 +11657,41 @@ const ShExUtil = {
 
   ShExRVisitor: function (knownShapeExprs) {
     const v = ShExUtil.Visitor();
-    const knownExpressions = {};
+    const knownTripleExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
-        oldVisitExpression = v.visitExpression;
+        oldVisitTripleExpr = v.visitTripleExpr;
     v.keepShapeExpr = oldVisitShapeExpr;
 
-    v.visitShapeExpr = v.visitValueExpr = function (expr, label) {
+    v.visitShapeExpr = function (expr, ...args) {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
-        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
+        if (knownShapeExprs.has(expr.id) || Object.keys(expr).length === 1) // {
           return expr.id;
         delete expr.id;
       }
-      return oldVisitShapeExpr.call(this, expr, label);
+      return oldVisitShapeExpr.call(this, expr, ...args);
     };
 
-    v.visitExpression = function (expr) {
-      if (typeof expr === "string") // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
+    v.visitTripleExpr = function (expr, ...args) {
+      if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
-      if ("id" in expr) {
-        if (expr.id in knownExpressions) {
-          knownExpressions[expr.id].refCount++;
+      } else if ("id" in expr) {
+        if (expr.id in knownTripleExpressions) {
+          knownTripleExpressions[expr.id].refCount++;
           return expr.id;
         }
       }
-      const ret = oldVisitExpression.call(this, expr);
+      const ret = oldVisitTripleExpr.call(this, expr, ...args);
       // Everything from RDF has an ID, usually a BNode.
-      knownExpressions[expr.id] = { refCount: 1, expr: ret };
+      knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
     }
 
     v.cleanIds = function () {
-      for (let k in knownExpressions) {
-        const known = knownExpressions[k];
+      for (let k in knownTripleExpressions) {
+        const known = knownTripleExpressions[k];
         if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
@@ -11730,18 +11725,16 @@ const ShExUtil = {
 
   ShExRtoShExJ: function (schema) {
     // compile a list of known shapeExprs
-    const knownShapeExprs = [];
+    const knownShapeExprs = new Map();
     if ("shapes" in schema)
-      [].push.apply(knownShapeExprs, schema.shapes.map(sh => { return sh.id; }));
+      schema.shapes.forEach(sh => knownShapeExprs.set(sh.id, null))
 
     // normalize references to those shapeExprs
     const v = this.ShExRVisitor(knownShapeExprs);
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map(sh => {
-        return v.keepShapeExpr(sh);
-      });
+      schema.shapes = schema.shapes.map(sh => v.keepShapeExpr(sh));
 
     // remove extraneous BNode IDs
     v.cleanIds();
@@ -11827,25 +11820,28 @@ const ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression;
+    const oldVisitInclusion = v.visitInclusion, oldVisitTripleExpr = v.visitTripleExpr, oldVisitExtra = v.visitExtra;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion) === -1 &&
           inclusion in index.tripleExprs) {
         knownExpressions.push(inclusion)
-        return oldVisitExpression.call(v, index.tripleExprs[inclusion]);
+        return oldVisitTripleExpr.call(v, index.tripleExprs[inclusion]);
       }
       return oldVisitInclusion.call(v, inclusion);
     };
-    v.visitExpression = function (expression) {
+    v.visitTripleExpr = function (expression) {
       if (typeof expression === "object" && "id" in expression) {
         if (knownExpressions.indexOf(expression.id) === -1) {
           knownExpressions.push(expression.id)
-          return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
+          return oldVisitTripleExpr.call(v, index.tripleExprs[expression.id]);
         }
         return expression.id; // Inclusion
       }
-      return oldVisitExpression.call(v, expression);
+      return oldVisitTripleExpr.call(v, expression);
     };
+    v.visitExtra = function (l) {
+      return l.slice().sort();
+    }
     if (trimIRI) {
       v.visitIRI = function (i) {
         return i.replace(trimIRI, "");
@@ -11945,7 +11941,7 @@ const ShExUtil = {
     let shapeLabels = Object.keys(index.shapeExprs || [])
     let shapeReferences = {}
     shapeLabels.forEach(label => {
-      let shape = index.shapeExprs[label]
+      const shape = index.shapeExprs[label]
       noteReference(label, null) // just note the shape so we have a complete list at the end
       if (shape.type === 'Shape') {
         if ('expression' in shape) {
@@ -12325,7 +12321,17 @@ const ShExUtil = {
       type: "Schema"
     };
   },
-  merge: function (left, right, overwrite, inPlace) {
+  merge: function (left, right, collision = 'throw', inPlace) {
+    const overwrite =
+          collision === 'left'
+          ? () => false
+          : collision === 'right'
+          ? () => true
+          : typeof collision === 'function'
+          ? collision
+          : (type, left, right) => {
+            throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
+          };
     const ret = inPlace ? left : this.emptySchema();
 
     function mergeArray (attr) {
@@ -12335,7 +12341,7 @@ const ShExUtil = {
         ret[attr][key] = left[attr][key];
       });
       Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key])) {
           if (!(attr in ret))
             ret[attr] = {};
           ret[attr][key] = right[attr][key];
@@ -12350,7 +12356,7 @@ const ShExUtil = {
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || overwrite) {
+        if (!(attr  in left) || !(left[attr].has(key)) || overwrite(attr, ret[attr].get(key), right[attr].get(key))) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -12362,7 +12368,7 @@ const ShExUtil = {
     if ("_base" in left)
       ret._base = left._base;
     if ("_base" in right)
-      if (!("_base" in left) || overwrite)
+      if (!("_base" in left)/* || overwrite('_base', ret._base, right._base)*/) // _base favors the left
         ret._base = right._base;
 
     mergeArray("_prefixes");
@@ -12370,24 +12376,29 @@ const ShExUtil = {
     mergeMap("_sourceMap");
 
     if ("imports" in right)
-      if (!("imports" in left) || overwrite)
+      if (!("imports" in left)) {
         ret.imports = right.imports;
+      } else {
+        [].push.apply(ret.imports, right.imports.filter(
+          mprt => ret.imports.indexOf(mprt) === -1
+        ))
+      }
 
     // startActs
     if ("startActs" in left)
       ret.startActs = left.startActs;
     if ("startActs" in right)
-      if (!("startActs" in left) || overwrite)
+      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs))
         ret.startActs = right.startActs;
 
     // start
     if ("start" in left)
       ret.start = left.start;
     if ("start" in right)
-      if (!("start" in left) || overwrite)
+      if (!("start" in left) || overwrite('start', ret.start, right.start))
         ret.start = right.start;
 
-    let lindex = left._index || this.index(left);
+    const lindex = left._index || this.index(left);
 
     // shapes
     if (!inPlace)
@@ -12397,10 +12408,19 @@ const ShExUtil = {
         ret.shapes.push(lshape);
       });
     (right.shapes || []).forEach(function (rshape) {
-      if (!("shapes"  in left) || !(rshape.id in lindex.shapeExprs) || overwrite) {
-        if (!("shapes" in ret))
-          ret.shapes = [];
+      if (!("shapes" in ret)) {
+        ret.shapes = [];
         ret.shapes.push(rshape)
+        lindex.shapeExprs[rshape.id] = rshape;
+      } else {
+        const previousDecl = lindex.shapeExprs[rshape.id];
+        if (!previousDecl) {
+          ret.shapes.push(rshape)
+        } else if (overwrite('shapeExpr', previousDecl, rshape)) {
+          ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
+          lindex.shapeExprs[rshape.id] = rshape;
+          ret.shapes.push(rshape)
+        }
       }
     });
 
@@ -12493,53 +12513,53 @@ const ShExUtil = {
     const positiveDeps = Hierarchy.create();
     let index = schema.index || this.index(schema);
 
-    visitor.visitShape = function (shape, label) {
+    visitor.visitShape = function (shape, ...args) {
       const lastExtra = currentExtra;
       currentExtra = shape.extra;
-      const ret = oldVisitShape.call(visitor, shape, label);
+      const ret = oldVisitShape.call(visitor, shape, ...args);
       currentExtra = lastExtra;
       return ret;
     }
 
     const oldVisitShapeNot = visitor.visitShapeNot;
-    visitor.visitShapeNot = function (shapeNot, label) {
+    visitor.visitShapeNot = function (shapeNot, ...args) {
       const lastNegated = currentNegated;
       currentNegated ^= true;
-      const ret = oldVisitShapeNot.call(visitor, shapeNot, label);
+      const ret = oldVisitShapeNot.call(visitor, shapeNot, ...args);
       currentNegated = lastNegated;
       return ret;
     }
 
     const oldVisitTripleConstraint = visitor.visitTripleConstraint;
-    visitor.visitTripleConstraint = function (expr) {
+    visitor.visitTripleConstraint = function (expr, ...args) {
       const lastNegated = currentNegated;
       if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
         currentNegated ^= true;
       inTE = true;
-      const ret = oldVisitTripleConstraint.call(visitor, expr);
+      const ret = oldVisitTripleConstraint.call(visitor, expr, ...args);
       inTE = false;
       currentNegated = lastNegated;
       return ret;
     };
 
     const oldVisitShapeRef = visitor.visitShapeRef;
-    visitor.visitShapeRef = function (shapeRef) {
+    visitor.visitShapeRef = function (shapeRef, ...args) {
       if (!(shapeRef in index.shapeExprs))
         throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
       if (!inTE && shapeRef === currentLabel)
         throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
-      return oldVisitShapeRef.call(visitor, shapeRef);
+      return oldVisitShapeRef.call(visitor, shapeRef, ...args);
     }
 
     const oldVisitInclusion = visitor.visitInclusion;
-    visitor.visitInclusion = function (inclusion) {
+    visitor.visitInclusion = function (inclusion, ...args) {
       let refd;
       if (!(refd = index.tripleExprs[inclusion]))
         throw firstError(Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + "."), inclusion);
       // if (refd.type !== "Shape")
       //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
-      return oldVisitInclusion.call(visitor, inclusion);
+      return oldVisitInclusion.call(visitor, inclusion, ...args);
     };
 
     (schema.shapes || []).forEach(function (shape) {
@@ -12798,6 +12818,12 @@ const ShExUtil = {
     return extensions(map);
   },
 
+  /**
+   * Convert a ShExR property tree to ShexJ.
+   * This method de-duplicates and normalizes all moves all ShapeDecls to be immediate children of the :shapes collection.
+   * @exports
+   * @returns ShEx schema
+   */
   valuesToSchema: function (values) {
     // console.log(JSON.stringify(values, null, "  "));
     const v = values;
@@ -12865,6 +12891,9 @@ const ShExUtil = {
         return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
       }
     }
+    /* transform shapeExprs. called from .shapes and .valueExpr.
+     * The calls from .valueExpr can be Shapes or ShapeDecls because the ShExR graph is not yet normalized.
+     */
     function shapeExpr (v) {
       // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
       const elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
@@ -13148,7 +13177,7 @@ const ShExUtil = {
       return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     default:
       debugger; // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
     }
     function errorList (errors) {
       return errors.reduce(function (acc, e) {
@@ -14865,7 +14894,8 @@ if (true)
 /***/ ((module) => {
 
 
-function ShExVisitor () {
+function ShExVisitor (...ctor_args) {
+  this.ctor_args = ctor_args;
 
     function isTerm (t) {
       return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
@@ -14892,17 +14922,18 @@ function ShExVisitor () {
       throw e;
     },
 
-    visitSchema: function (schema) {
+    visitSchema: function (schema, ...args) {
       const ret = { type: "Schema" };
       this._expect(schema, "type", "Schema");
       this._maybeSet(schema, ret, "Schema",
                      ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
-                     ["_base", "_prefixes", "_index", "_sourceMap"]
+                     ["_base", "_prefixes", "_index", "_sourceMap"],
+                     ...args
                     );
       return ret;
     },
 
-    visitPrefixes: function (prefixes) {
+    visitPrefixes: function (prefixes, ...args) {
       return prefixes === undefined ?
         undefined :
         visitMap(prefixes, function (val) {
@@ -14910,119 +14941,117 @@ function ShExVisitor () {
         });
     },
 
-    visitIRI: function (i) {
+    visitIRI: function (i, ...args) {
       return i;
     },
 
-    visitImports: function (imports) {
+    visitImports: function (imports, ...args) {
       const _Visitor = this;
       return imports.map(function (imp) {
-        return _Visitor.visitIRI(imp);
+        return _Visitor.visitIRI(imp, args);
       });
     },
 
-    visitStartActs: function (startActs) {
+    visitStartActs: function (startActs, ...args) {
       const _Visitor = this;
       return startActs === undefined ?
         undefined :
         startActs.map(function (act) {
-          return _Visitor.visitSemAct(act);
+          return _Visitor.visitSemAct(act, ...args);
         });
     },
-    visitSemActs: function (semActs) {
+    visitSemActs: function (semActs, ...args) {
       const _Visitor = this;
       if (semActs === undefined)
         return undefined;
       const ret = []
       Object.keys(semActs).forEach(function (label) {
-        ret.push(_Visitor.visitSemAct(semActs[label], label));
+        ret.push(_Visitor.visitSemAct(semActs[label], label, ...args));
       });
       return ret;
     },
-    visitSemAct: function (semAct, label) {
+    visitSemAct: function (semAct, label, ...args) {
       const ret = { type: "SemAct" };
       this._expect(semAct, "type", "SemAct");
 
       this._maybeSet(semAct, ret, "SemAct",
-                     ["name", "code"]);
+                     ["name", "code"], null, ...args);
       return ret;
     },
 
-    visitShapes: function (shapes) {
+    visitShapes: function (shapes, ...args) {
       const _Visitor = this;
       if (shapes === undefined)
         return undefined;
       return shapes.map(
         shapeExpr =>
-          _Visitor.visitShapeExpr(shapeExpr)
+          _Visitor.visitShapeExpr(shapeExpr, ...args)
       );
     },
 
-    visitProductions999: function (productions) { // !! DELETE
-      const _Visitor = this;
-      if (productions === undefined)
-        return undefined;
-      const ret = {}
-      Object.keys(productions).forEach(function (label) {
-        ret[label] = _Visitor.visitExpression(productions[label], label);
-      });
-      return ret;
+    visitShapeExpr: function (expr, ...args) {
+      if (isShapeRef(expr))
+        return this.visitShapeRef(expr, ...args)
+      switch (expr.type) {
+      case "Shape": return this.visitShape(expr, ...args);
+      case "NodeConstraint": return this.visitNodeConstraint(expr, ...args);
+      case "ShapeAnd": return this.visitShapeAnd(expr, ...args);
+      case "ShapeOr": return this.visitShapeOr(expr, ...args);
+      case "ShapeNot": return this.visitShapeNot(expr, ...args);
+      case "ShapeExternal": return this.visitShapeExternal(expr, ...args);
+      default:
+        throw Error("unexpected shapeExpr type: " + expr.type);
+      }
     },
 
-    visitShapeExpr: function (expr, label) {
-      if (isShapeRef(expr))
-        return this.visitShapeRef(expr)
-      const r =
-          expr.type === "Shape" ? this.visitShape(expr, label) :
-          expr.type === "NodeConstraint" ? this.visitNodeConstraint(expr, label) :
-          expr.type === "ShapeAnd" ? this.visitShapeAnd(expr, label) :
-          expr.type === "ShapeOr" ? this.visitShapeOr(expr, label) :
-          expr.type === "ShapeNot" ? this.visitShapeNot(expr, label) :
-          expr.type === "ShapeExternal" ? this.visitShapeExternal(expr) :
-          null;// if (expr.type === "ShapeRef") r = 0; // console.warn("visitShapeExpr:", r);
-      if (r === null)
-        throw Error("unexpected shapeExpr type: " + expr.type);
-      else
-        return r;
+    visitValueExpr: function (expr, ...args) {
+      return this.visitShapeExpr(expr, ...args); // call potentially overloaded visitShapeExpr
     },
 
     // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
-    _visitShapeGroup: function (expr, label) {
+    _visitShapeGroup: function (expr, ...args) {
       this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
       const _Visitor = this;
       const r = { type: expr.type };
       if ("id" in expr)
         r.id = expr.id;
       r.shapeExprs = expr.shapeExprs.map(function (nested) {
-        return _Visitor.visitShapeExpr(nested, label);
+        return _Visitor.visitShapeExpr(nested, ...args);
       });
       return r;
     },
 
     // _visitShapeNot: visit negated shape
-    visitShapeNot: function (expr, label) {
+    visitShapeNot: function (expr, ...args) {
       this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
       const r = { type: expr.type };
       if ("id" in expr)
         r.id = expr.id;
-      r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, label);
+      r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, ...args);
       return r;
     },
 
     // ### `visitNodeConstraint` deep-copies the structure of a shape
-    visitShape: function (shape, label) {
+    visitShape: function (shape, ...args) {
       const ret = { type: "Shape" };
       this._expect(shape, "type", "Shape");
 
       this._maybeSet(shape, ret, "Shape",
                      [ "id",
                        "closed",
-                       "expression", "extra", "semActs", "annotations"]);
+                       "expression", "extra", "semActs", "annotations"], null, ...args);
       return ret;
     },
 
+    _visitShapeExprList: function (ext, ...args) {
+      const _Visitor = this;
+      return ext.map(function (t) {
+        return _Visitor.visitShapeExpr(t, ...args);
+      });
+    },
+
     // ### `visitNodeConstraint` deep-copies the structure of a shape
-    visitNodeConstraint: function (shape, label) {
+    visitNodeConstraint: function (shape, ...args) {
       const ret = { type: "NodeConstraint" };
       this._expect(shape, "type", "NodeConstraint");
 
@@ -15031,11 +15060,11 @@ function ShExVisitor () {
                        "nodeKind", "datatype", "pattern", "flags", "length",
                        "reference", "minlength", "maxlength",
                        "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
-                       "totaldigits", "fractiondigits", "values", "annotations", "semActs"]);
+                       "totaldigits", "fractiondigits", "values", "annotations", "semActs"], null, ...args);
       return ret;
     },
 
-    visitShapeRef: function (reference) {
+    visitShapeRef: function (reference, ...args) {
       if (typeof reference !== "string") {
         let ex = Exception("visitShapeRef expected a string, not " + JSON.stringify(reference));
         console.warn(ex);
@@ -15044,13 +15073,13 @@ function ShExVisitor () {
       return reference;
     },
 
-    visitShapeExternal: function (expr) {
+    visitShapeExternal: function (expr, ...args) {
       this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
       return Object.assign("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
     },
 
     // _visitGroup: visit a grouping expression (someOf or eachOf)
-    _visitGroup: function (expr, type) {
+    _visitGroup: function (expr, type, ...args) {
       const _Visitor = this;
       const r = Object.assign(
         // pre-declare an id so it sorts to the top
@@ -15058,13 +15087,13 @@ function ShExVisitor () {
         { type: expr.type }
       );
       r.expressions = expr.expressions.map(function (nested) {
-        return _Visitor.visitExpression(nested);
+        return _Visitor.visitExpression(nested, ...args);
       });
       return this._maybeSet(expr, r, "expr",
-                            ["id", "min", "max", "annotations", "semActs"], ["expressions"]);
+                            ["id", "min", "max", "annotations", "semActs"], ["expressions"], ...args);
     },
 
-    visitTripleConstraint: function (expr) {
+    visitTripleConstraint: function (expr, ...args) {
       return this._maybeSet(expr,
                             Object.assign(
                               // pre-declare an id so it sorts to the top
@@ -15073,32 +15102,35 @@ function ShExVisitor () {
                             ),
                             "TripleConstraint",
                             ["id", "inverse", "predicate", "valueExpr",
-                             "min", "max", "annotations", "semActs"])
+                             "min", "max", "annotations", "semActs"], null, ...args)
     },
 
-    visitExpression: function (expr) {
+    visitTripleExpr: function (expr, ...args) {
       if (typeof expr === "string")
         return this.visitInclusion(expr);
-      const r = expr.type === "TripleConstraint" ? this.visitTripleConstraint(expr) :
-          expr.type === "OneOf" ? this.visitOneOf(expr) :
-          expr.type === "EachOf" ? this.visitEachOf(expr) :
-          null;
-      if (r === null)
+      switch (expr.type) {
+      case "TripleConstraint": return this.visitTripleConstraint(expr, ...args);
+      case "OneOf": return this.visitOneOf(expr, ...args);
+      case "EachOf": return this.visitEachOf(expr, ...args);
+      default:
         throw Error("unexpected expression type: " + expr.type);
-      else
-        return r;
+      }
     },
 
-    visitValues: function (values) {
+    visitExpression: function (expr, ...args) {
+      return this.visitTripleExpr(expr, ...args); // call potentially overloaded visitTripleExpr
+    },
+
+    visitValues: function (values, ...args) {
       const _Visitor = this;
       return values.map(function (t) {
         return isTerm(t) || t.type === "Language" ?
           t :
-          _Visitor.visitStemRange(t);
+          _Visitor.visitStemRange(t, ...args);
       });
     },
 
-    visitStemRange: function (t) {
+    visitStemRange: function (t, ...args) {
       const _Visitor = this; // console.log(Error(t.type).stack);
       // this._expect(t, "type", "IriStemRange");
       if (!("type" in t))
@@ -15115,13 +15147,13 @@ function ShExVisitor () {
       }
       if (t.exclusions) {
         stem.exclusions = t.exclusions.map(function (c) {
-          return _Visitor.visitExclusion(c);
+          return _Visitor.visitExclusion(c, ...args);
         });
       }
       return stem;
     },
 
-    visitExclusion: function (c) {
+    visitExclusion: function (c, ...args) {
       if (!isTerm(c)) {
         // this._expect(c, "type", "IriStem");
         if (!("type" in c))
@@ -15135,7 +15167,7 @@ function ShExVisitor () {
       }
     },
 
-    visitInclusion: function (inclusion) {
+    visitInclusion: function (inclusion, ...args) {
       if (typeof inclusion !== "string") {
         let ex = Exception("visitInclusion expected a string, not " + JSON.stringify(inclusion));
         console.warn(ex);
@@ -15144,7 +15176,7 @@ function ShExVisitor () {
       return inclusion;
     },
 
-    _maybeSet: function (obj, ret, context, members, ignore) {
+    _maybeSet: function (obj, ret, context, members, ignore, ...args) {
       const _Visitor = this;
       this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
       members.forEach(function (member) {
@@ -15154,7 +15186,7 @@ function ShExVisitor () {
           if (typeof f !== "function") {
             throw Error(methodName + " not found in Visitor");
           }
-          const t = f.call(_Visitor, obj[member]);
+          const t = f.call(_Visitor, obj[member], ...args);
           if (t !== undefined) {
             ret[member] = t;
           }
@@ -15162,10 +15194,10 @@ function ShExVisitor () {
       });
       return ret;
     },
-    _visitValue: function (v) {
+    _visitValue: function (v, ...args) {
       return v;
     },
-    _visitList: function (l) {
+    _visitList: function (l, ...args) {
       return l.slice();
     },
     _testUnknownAttributes: function (obj, expected, context, captureFrame) {
@@ -15199,7 +15231,6 @@ function ShExVisitor () {
   r.visitOneOf = r.visitEachOf = r._visitGroup;
   r.visitShapeAnd = r.visitShapeOr = r._visitShapeGroup;
   r.visitInclude = r._visitValue;
-  r.visitValueExpr = r.visitShapeExpr;
   return r;
 
   // Expect property p with value v in object o
@@ -15215,18 +15246,18 @@ ShExVisitor.index = function (schema) {
   };
   let v = ShExVisitor();
 
-  let oldVisitExpression = v.visitExpression;
-  v.visitExpression = function (expression) {
+  let oldVisitExpression = v.visitTripleExpr;
+  v.visitTripleExpr = function (expression, ...args) {
     if (typeof expression === "object" && "id" in expression)
       index.tripleExprs[expression.id] = expression;
-    return oldVisitExpression.call(v, expression);
+    return oldVisitExpression.call(v, expression, ...args);
   };
 
   let oldVisitShapeExpr = v.visitShapeExpr;
-  v.visitShapeExpr = v.visitValueExpr = function (shapeExpr, label) {
+  v.visitShapeExpr = function (shapeExpr, ...args) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
       index.shapeExprs[shapeExpr.id] = shapeExpr;
-    return oldVisitShapeExpr.call(v, shapeExpr, label);
+    return oldVisitShapeExpr.call(v, shapeExpr, ...args);
   };
 
   v.visitSchema(schema);
@@ -15250,7 +15281,7 @@ ShExWebApp = (function () {
     Util:                 __webpack_require__(9443),
     Validator:            __webpack_require__(3457),
     Writer:               __webpack_require__(95),
-    Api:                  __webpack_require__(9237),
+    Loader:               __webpack_require__(1837),
     Parser:               __webpack_require__(931),
     "eval-simple-1err":   __webpack_require__(6540),
     "eval-threaded-nerr": __webpack_require__(6863),
