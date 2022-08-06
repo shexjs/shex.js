@@ -6,7 +6,7 @@ const USE_INCREMENTAL_RESULTS = true;
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const RdfJs = N3js;
-const ShExApi = ShEx.Api({
+const ShExLoader = ShEx.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 ShEx.ShapeMap.start = ShEx.Validator.start
@@ -347,6 +347,7 @@ function makeManifestCache (selection) {
             null;
         elt = Object.assign(
           {
+            '@id': new URL(elt['@id'], url).href,
             schemaLabel: schemaLabel,
             schemaURL: action.schema || url,
             // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
@@ -363,7 +364,7 @@ function makeManifestCache (selection) {
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], new URL(url, DefaultBase).href).href;
+          elt[parm] = new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }

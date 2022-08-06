@@ -13,7 +13,7 @@ importScripts("../../shape-map/shape-map.js"                   ); modules["shape
 importScripts("../../shex-term/shex-term.js"                   ); modules["@shexjs/term"              ] = module.exports;
 importScripts("../../shex-visitor/shex-visitor.js"             ); modules["@shexjs/visitor"           ] = module.exports;
 importScripts("../../shex-util/shex-util.js"                   ); modules["@shexjs/util"              ] = module.exports;
-importScripts("../../shex-api/shex-api.js"                     ); modules["@shexjs/api"               ] = module.exports;
+importScripts("../../shex-loader/shex-loader.js"               ); modules["@shexjs/loader"               ] = module.exports;
 importScripts("../../eval-threaded-nerr/eval-threaded-nerr.js" ); modules["@shexjs/eval-threaded-nerr"] = module.exports;
 importScripts("../../eval-simple-1err/eval-simple-1err.js"     ); modules["@shexjs/eval-simple-1err"  ] = module.exports;
 importScripts("../../shex-validator/shex-validator.js"         ); modules["@shexjs/validator"         ] = module.exports;
@@ -28,7 +28,7 @@ importScripts("./Util.js");
 // importScripts('promise-worker/register.js');
 
 const ShEx = ShExWebApp; // @@ rename globally
-const ShExApi = ShEx.Api({
+const ShExLoader = ShEx.Loader({
   fetch, rdfjs: N3js, jsonld: null
 })
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -55,7 +55,7 @@ try {
       url: msg.data.schemaURL
     };
     // shex-loader loads IMPORTs and tests the schema for structural faults.
-    const loaded = await ShExApi.load({shexc: [alreadLoaded]}, null)
+    const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null)
     let createOpts = msg.data.options;
     createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results

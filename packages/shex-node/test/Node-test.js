@@ -5,8 +5,8 @@ const expect = require("chai").expect
 const Path = require('path')
 const TestDir = Path.join(__dirname, "../../shex-cli/test");
 
-// Initialize @shexjs/api with implementations of APIs.
-const ShExApi = require("..")({
+// Initialize @shexjs/loader with implementations of APIs.
+const ShExLoader = require("..")({
   rdfjs: require('n3'),         // use N3 as an RdfJs implementation
   fetch: require('node-fetch'), // fetch implementation
   jsonld: require('jsonld')     // JSON-LD (if you need it)
@@ -29,8 +29,8 @@ describe("@shexjs/node", function () {
   // could break this up into multiple tests
   it("should load schema and data from URLs and files" , async function () {
 
-    // ShExApi.load returns a promise to load and merge schema and data.
-    const {schema, schemaMeta, data, dataMeta} = await ShExApi.load(
+    // ShExLoader.load returns a promise to load and merge schema and data.
+    const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
       { shexc: [ schemaFromFile, schemaFromUrl ] },
       { turtle: [ graphFromUrl, graphFromFile ] },
       { // schemaOptions
