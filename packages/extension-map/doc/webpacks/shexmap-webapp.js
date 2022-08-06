@@ -16550,10 +16550,21 @@ function ShExValidator_constructor(schema, db, options) {
     ));
 
     const localTCs = this.indexTripleConstraints(shape.expression);
-    const extendedTCs = getExtendedTripleConstraints(shape);
-    const constraintList = extendedTCs.map(
+    const extendedTCs_old = getExtendedTripleConstraints_old(shape);
+    const { byExtends, labelToTcs } = getExtendedTripleConstraints_new(shape);
+    const constraintList = extendedTCs_old.map(
       ext => ext.tripleConstraint
     ).concat(localTCs);
+    const e2c = byExtends.map(      // TC structure for each EXTENDS
+      forExt => forExt.tcs              //   TCs in EXTENDS's shapeExpr
+        .concat(                        //  +
+          Array.from(forExt.refClosure) //   TCs in each shapeDecls referenced that EXTENDS
+            .flatMap(
+              ref => labelToTcs[ref].tcs
+            )
+        )
+    )
+    const cl2 = e2c.flatMap(x => x).concat(localTCs);                 // + TCs in shape.expression
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
@@ -16572,8 +16583,8 @@ function ShExValidator_constructor(schema, db, options) {
       const tripleToExtends = []
       const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
       t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
-        if (cNo !== NoTripleConstraint && cNo < extendedTCs.length) {
-          const extNo = extendedTCs[cNo].extendsNo;
+        if (cNo !== NoTripleConstraint && cNo < extendedTCs_old.length) {
+          const extNo = extendedTCs_old[cNo].extendsNo;
           extendsToTriples[extNo].push(neighborhood[tNo]);
           tripleToExtends[tNo] = cNo;
           t2tcForThisShape[tNo] = NoTripleConstraint;
@@ -16756,13 +16767,145 @@ function ShExValidator_constructor(schema, db, options) {
     return { type: "ExtensionResults", solutions: passes };
   }
 
-  /** getExtendedTripleConstraints - walk shape's extends to get all
+  /** getExtendedTripleConstraints_new - walk shape's extends to get all
+   * referenced triple constraints.
+   *
+   * @param {} shape
+   * @returns { extendedTCs_new: { tcs: TripleConstraint[], refs: shapeLabel[] }[], referencedTCs: Map<shapeLabel, TripleConstraint[]> }
+   */
+  function getExtendedTripleConstraints_new (shape) {
+    const labelToTcs = new Map(); // shapeLabel -> TripleConstration[] // acts as cache in case of diamond inheritance @@ move to index
+    const visitor = ShExUtil.Visitor(labelToTcs);
+    const byExtends = (shape.extends || []).map((expr) => {
+      const transitive = new Set();
+
+      /* shapeExprs return {
+           tcs: list of TripleConstraints
+           directRefs: list of directly-refrenced ShapeDecls,
+           refClosure: closure of referenced ShapeDecls
+         }
+      */
+
+      function emptyShapeExpr () { return { tcs: [], directRefs: new Set(), refClosure: new Set() }; }
+
+      function sum (results) {debugger
+        return results.reduce((acc, result) => {
+          return expr;
+          const idx = expr.inverse ? ins : outs; // pick an index
+          const min = n(outerMin, expr);
+          const max = x(outerMax, expr);
+          if (expr.predicate in idx) {
+            const reuse = idx[expr.predicate];
+            reuse.min = Math.max(idx[expr.predicate].min, min);
+            reuse.max = Math.min(idx[expr.predicate].max, max);
+            // reuse.seen++;
+            // tcs.push(expr);
+          } else {
+            idx[expr.predicate] = {
+              type: "TripleConstraint",
+              predicate: expr.predicate,
+              min,
+              max,
+              // seen: 1,
+              // tc: [expr]
+            }
+          }
+          return expr;
+        }, emptyShapeExpr());
+      }
+
+      visitor.visitShapeDecl = function (decl, min, max) {
+        if (labelToTcs.has(decl.id))
+          return labelToTcs[decl.id];
+        const nested = decl.shapeExpr
+              ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
+              : emptyShapeExpr();
+        labelToTcs[decl.id] = nested;
+        const tcs = [];
+        const directRefs = new Set([decl.id]);
+        const refClosure = new Set([decl.id]);
+          // ?? .forEach(i => a.add(i));
+        return { tcs, directRefs, refClosure };
+      }
+      visitor.visitShapeOr = function (shapeExpr, min, max) {
+        return sum(shapeExpr.shapeExprs.map(disjunct => this.visitShapeExpr(disjunct, 0, max)))
+      }
+
+      visitor.visitShapeAnd = function (shapeExpr, min, max) {
+        return sum(shapeExpr.shapeExprs.map(disjunct => this.visitShapeExpr(disjunct, min, max)))
+      }
+
+      visitor.visitShapeNot = function (expr, min, max) {
+        throw 1;
+      }
+
+      visitor.visitShapeExternal = emptyShapeExpr
+
+      visitor.visitNodeConstraint = emptyShapeExpr;
+
+      // Override visitShapeRef to follow references.
+      // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
+      visitor.visitShapeRef = function (inclusion, min, max) {
+        const {tcs, directRefs, refClosure } = visitor.visitShapeDecl(_ShExValidator._lookupShape(inclusion), min, max);
+        return {tcs, directRefs, refClosure };
+      };
+
+      // Visit shape's EXTENDS and expression.
+      visitor.visitShape = function (shape, min, max) {
+        const {tcs, directRefs, refClosure} = "extends" in shape
+              ? sum(shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max)))
+              : emptyShapeExpr();
+        const exprTcs = "expression" in shape
+              ? visitor.visitExpression(shape.expression, min, max)
+              : [];
+        return { tcs: and([tcs, exprTcs]), directRefs, refClosure };
+      }
+
+      // tripleExprs return list of TripleConstraints
+
+      function n (l, expr) {
+        if (!("min" in expr)) return l;
+        return l * expr.min;
+      }
+
+      function x (l, expr) {
+        if (!("max" in expr)) return l;
+        if (l === -1 || expr.max === -1) return -1;
+        return l * expr.max;
+      }
+
+      function and (tes) { return [].concat.apply([], tes); }
+
+      // Any TC inside a OneOf implicitly has a min cardinality of 0.
+      visitor.visitOneOf = function (expr, outerMin, outerMax) {
+        return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, 0, x(outerMax, expr))))
+      }
+
+      visitor.visitEachOf = function (expr, outerMin, outerMax) {
+        return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, n(outerMin, expr), x(outerMax, expr))))
+      }
+
+      // Synthesize a TripleConstraint with the implicit cardinality.
+      visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
+        const ret = JSON.parse(JSON.stringify(expr));
+        ret.min = n(outerMin, expr);
+        ret.max = x(outerMax, expr);
+        return [ret];
+      };
+
+      // Call constructed visitor on expr.
+      return visitor.visitShapeExpr(expr, 1, 1);
+    });
+    return { byExtends, labelToTcs };
+  }
+
+  /** getExtendedTripleConstraints_old - walk shape's extends to get all
    * referenced triple constraints.
    *
    * @param {} shape
    * @returns {}
    */
-  function getExtendedTripleConstraints (shape) {
+  function getExtendedTripleConstraints_old (shape) {
     const ret = []
     if ("extends" in shape) {
       shape.extends.forEach((se, extendsNo) => {
@@ -16771,7 +16914,7 @@ function ShExValidator_constructor(schema, db, options) {
         // cardinality span. (@@Does this actually reduce permutations?)
         // tests: Extend3G-pass
         const ins = {}, outs = {};
-        visitTripleConstraints(se, ins, outs);
+        visitTripleConstraints_old(se, ins, outs);
 
         [ins, outs].forEach(directionIndex => {
           Object.keys(directionIndex).forEach(predicate => {
@@ -16788,7 +16931,7 @@ function ShExValidator_constructor(schema, db, options) {
      * @ins - incoming arcs: map from IRI to {min, max, seen}
      * @outs - outgoing arcs
      */
-    function visitTripleConstraints (expr, ins, outs) {
+    function visitTripleConstraints_old (expr, ins, outs) {
       const visitor = ShExUtil.Visitor();
       let outerMin = 1;
       let outerMax = 1;
@@ -16804,7 +16947,7 @@ function ShExValidator_constructor(schema, db, options) {
       visitor.visitShape = function (shape, label) {
         if ("extends" in shape) {
           shape.extends.forEach( // extension of an extension...
-            se => visitTripleConstraints(se, ins, outs)
+            se => visitTripleConstraints_old(se, ins, outs)
           )
         }
         if ("expression" in shape) {
@@ -16831,10 +16974,10 @@ function ShExValidator_constructor(schema, db, options) {
         idx[expr.predicate] = {
           type: "TripleConstraint",
           predicate: expr.predicate,
-          min: expr.predicate in idx ? Math.max(idx[expr.predicate].min, min) : min,
-          max: expr.predicate in idx ? Math.min(idx[expr.predicate].max, max) : max,
-          seen: expr.predicate in idx ? idx[expr.predicate].seen + 1 : 1,
-          tcs: expr.predicate in idx ? idx[expr.predicate].tcs.concat([expr]) : [expr]
+          min: 0, // expr.predicate in idx ? Math.max(idx[expr.predicate].min, min) : min,
+          max: -1, // expr.predicate in idx ? Math.min(idx[expr.predicate].max, max) : max,
+          // seen: expr.predicate in idx ? idx[expr.predicate].seen + 1 : 1,
+          // tcs: expr.predicate in idx ? idx[expr.predicate].tcs.concat([expr]) : [expr]
         }
         return expr;
       };
