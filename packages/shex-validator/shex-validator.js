@@ -26,6 +26,7 @@ const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "Untracked
 const ShExTerm = require("@shexjs/term");
 const ShExVisitor = require("@shexjs/visitor");
 const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
+const NoExtends = Symbol("NO_EXTENDS");
 const ShExUtil = require("@shexjs/util");
 const Hierarchy = require('hierarchy-closure')
 
@@ -617,7 +618,7 @@ function ShExValidator_constructor(schema, db, options) {
       const t2tcForThisShapeAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
       const t2tcForThisShape = []
       const tripleToExtends = []
-      const extendsToTriples = _seq((shape.extends || []).length).map(() => [])
+      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
       t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
         if (cNo !== NoTripleConstraint && cNo < extendedTCs.length) {
           const extNo = extendedTCs[cNo].extendsNo;
@@ -625,7 +626,7 @@ function ShExValidator_constructor(schema, db, options) {
           tripleToExtends[tNo] = cNo;
           t2tcForThisShape[tNo] = NoTripleConstraint;
         } else {
-          tripleToExtends[tNo] = "NO_EXTENDS";
+          tripleToExtends[tNo] = NoExtends;
           t2tcForThisShape[tNo] = cNo;
         }
       });
@@ -634,7 +635,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return t2tcForThisShape[i] === NoTripleConstraint && // didn't match a constraint
-            tripleToExtends[i] === "NO_EXTENDS" && // didn't match an EXTENDS
+            tripleToExtends[i] === NoExtends && // didn't match an EXTENDS
             extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
