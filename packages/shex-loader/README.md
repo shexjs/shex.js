@@ -2,7 +2,7 @@
 [![ShapeExpressions Gitter chat https://gitter.im/shapeExpressions/Lobby](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/shapeExpressions/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1213693.svg)](https://doi.org/10.5281/zenodo.1213693)
 
-# @shexjs/api
+# @shexjs/loader
 
 Introduction
 ------------
@@ -14,18 +14,18 @@ Installation
 ### Node.js + npm
 
 ```
-npm install @shexjs/api
+npm install @shexjs/loader
 ```
 
 ```js
-const ShExIo = require('@shexjs/api');
+const ShExIo = require('@shexjs/loader');
 ```
 
 ### Used with @shexjs suite:
 
 #### core functions
-* [@shexjs/api](../api) - HTTP access functions for @shexjs library
-* [@shexjs/node](../node) - extend @shexjs/api with file: access
+* [@shexjs/loader](../loader) - HTTP access functions for @shexjs library
+* [@shexjs/node](../node) - extend @shexjs/loader with file: access
 * [@shexjs/term](../term) - RDF terms, relative URL resolution, JSON-LD terms
 * [@shexjs/visitor](../visitor) - Walk a ShExJ object
 
@@ -82,8 +82,8 @@ example:
 ``` js
 const N3 = require('n3'); // used for graph API example
 
-// Initialize @shexjs/api with implementations of APIs.
-const ShExApi = require("@shexjs/api")({
+// Initialize @shexjs/loader with implementations of APIs.
+const ShExLoader = require("@shexjs/loader")({
   rdfjs: N3,                    // use N3 as an RdfJs implementation
   fetch: require('node-fetch'), // fetch implementation
   jsonld: require('jsonld')     // JSON-LD (if you need it)
@@ -139,13 +139,13 @@ graphFromApi.graph.add(quad(
 ));
 
 
-// ShExApi.load returns a promise to load and merge schema and data.
+// ShExLoader.load returns a promise to load and merge schema and data.
 function collisionPolicy (type, left, right) {
   console.log(type, 'collision between', left, right);
   return false; // keep left assignment (i.e. no reassignment)
 }
 
-const schemaAndDataP = ShExApi.load(
+const schemaAndDataP = ShExLoader.load(
   { shexc: [ schemaFromUrl, schemaAsText, schemaAsShExJ ] },
   { turtle: [ graphFromUrl, graphAsText, graphFromApi ] },
   { // schemaOptions
@@ -215,17 +215,17 @@ return promise of {contents, url}
 Examples
 --------
 
-Use `@shexjs/api` directly:
+Use `@shexjs/loader` directly:
 ```js
-const ShExIo = require("@shexjs/api")({
+const ShExIo = require("@shexjs/loader")({
   rdfjs: N3,
   fetch: require('node-fetch')
 });
 ```
 
-Extend `@shexjs/api` with jsonld and a non-standard jsonld document loader:
+Extend `@shexjs/loader` with jsonld and a non-standard jsonld document loader:
 ```js
-const ShExIo = require("@shexjs/api")({
+const ShExIo = require("@shexjs/loader")({
   rdfjs: N3,
   fetch: require('node-fetch'),
   jsonld: require('jsonld'),
@@ -251,7 +251,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
 - [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
 - [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/api`](../shex-api#readme) -- an API for loading and using ShEx schemas
+- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
 - [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp
