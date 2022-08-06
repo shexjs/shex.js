@@ -242,7 +242,7 @@ const ShExUtil = {
     const knownTripleExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
-        oldVisitExpression = v.visitExpression;
+        oldVisitTripleExpr = v.visitTripleExpr;
     v.keepShapeExpr = oldVisitShapeExpr;
 
     v.visitShapeExpr = function (expr, ...args) {
@@ -256,15 +256,13 @@ const ShExUtil = {
               knownShapeExprs.set(expr.id, oldVisitShapeExpr.call(this, expr, label));
           }
           return expr.id;
-        } else {
-          delete expr.id;
-          return oldVisitShapeExpr.call(this, expr, ...args);
         }
+        delete expr.id;
       }
       return oldVisitShapeExpr.call(this, expr, ...args);
     };
 
-    v.visitExpression = function (expr, ...args) {
+    v.visitTripleExpr = function (expr, ...args) {
       if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
       } else if ("id" in expr) {
@@ -273,7 +271,7 @@ const ShExUtil = {
           return expr.id;
         }
       }
-      const ret = oldVisitExpression.call(this, expr, ...args);
+      const ret = oldVisitTripleExpr.call(this, expr, ...args);
       // Everything from RDF has an ID, usually a BNode.
       knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
@@ -410,24 +408,24 @@ const ShExUtil = {
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitExpression = v.visitExpression, oldVisitExtra = v.visitExtra;
+    const oldVisitInclusion = v.visitInclusion, oldVisitTripleExpr = v.visitTripleExpr, oldVisitExtra = v.visitExtra;
     v.visitInclusion = function (inclusion) {
       if (knownExpressions.indexOf(inclusion) === -1 &&
           inclusion in index.tripleExprs) {
         knownExpressions.push(inclusion)
-        return oldVisitExpression.call(v, index.tripleExprs[inclusion]);
+        return oldVisitTripleExpr.call(v, index.tripleExprs[inclusion]);
       }
       return oldVisitInclusion.call(v, inclusion);
     };
-    v.visitExpression = function (expression) {
+    v.visitTripleExpr = function (expression) {
       if (typeof expression === "object" && "id" in expression) {
         if (knownExpressions.indexOf(expression.id) === -1) {
           knownExpressions.push(expression.id)
-          return oldVisitExpression.call(v, index.tripleExprs[expression.id]);
+          return oldVisitTripleExpr.call(v, index.tripleExprs[expression.id]);
         }
         return expression.id; // Inclusion
       }
-      return oldVisitExpression.call(v, expression);
+      return oldVisitTripleExpr.call(v, expression);
     };
     v.visitExtra = function (l) {
       return l.slice().sort();
@@ -1505,7 +1503,7 @@ const ShExUtil = {
         ret.start = extend({id: values[SX.start][0].ldterm}, shapeDeclOrExpr(values[SX.start][0].nested));
       const shapes = values[SX.shapes];
       if (shapes) {
-        ret.shapes = shapes.map(v => { // @@ console.log(v.nested);
+        ret.shapes = shapes.map(v => {
           var t = v.nested[RDF.type][0].ldterm;
           const obj = shapeDeclOrExpr(v.nested)
           return extend({id: v.ldterm}, obj);

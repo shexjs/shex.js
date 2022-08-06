@@ -94,9 +94,9 @@ function ShExVisitor (...ctor_args) {
       );
     },
 
-    visitShapeDecl: function (decl, label) {
+    visitShapeDecl: function (decl, ...args) {
       return this._maybeSet(decl, { type: "ShapeDecl" }, "ShapeDecl",
-                            ["id", "abstract", "restricts", "shapeExpr"]);
+                            ["id", "abstract", "restricts", "shapeExpr"], null, ...args);
     },
 
     visitShapeExpr: function (expr, ...args) {
@@ -168,7 +168,6 @@ function ShExVisitor (...ctor_args) {
 
       this._maybeSet(shape, ret, "NodeConstraint",
                      [ "id",
-                       // "abstract", "extends", "restricts", -- futureWork
                        "nodeKind", "datatype", "pattern", "flags", "length",
                        "reference", "minlength", "maxlength",
                        "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
@@ -366,18 +365,11 @@ ShExVisitor.index = function (schema) {
     return oldVisitExpression.call(v, expression, ...args);
   };
 
-  let oldVisitShapeExpr = v.visitShapeExpr;
-  v.visitShapeExpr = function (shapeExpr, ...args) {
-    if (typeof shapeExpr === "object" && "id" in shapeExpr)
-      index.shapeExprs[shapeExpr.id] = shapeExpr;
-    return oldVisitShapeExpr.call(v, shapeExpr, ...args);
-  };
-
   let oldVisitShapeDecl = v.visitShapeDecl;
-  v.visitShapeDecl = function (shapeExpr, label) {
+  v.visitShapeDecl = function (shapeExpr, ...args) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
       index.shapeExprs[shapeExpr.id] = shapeExpr;
-    return oldVisitShapeDecl.call(v, shapeExpr, label);
+    return oldVisitShapeDecl.call(v, shapeExpr, ...args);
   };
 
   v.visitSchema(schema);
