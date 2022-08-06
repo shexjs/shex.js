@@ -6,7 +6,7 @@
 
 Introduction
 ------------
-This module extends [@shexjs/api](../api) with file: access. This modules is probably not appropriate for use in a browser.
+This module extends [@shexjs/loader](../loader) with file: access. This modules is probably not appropriate for use in a browser.
 
 Installation
 ------------
@@ -24,8 +24,8 @@ const ShExIo = require('@shexjs/node');
 ### Used with @shexjs suite:
 
 #### core functions
-* [@shexjs/api](../api) - HTTP access functions for @shexjs library
-* [@shexjs/node](../node) - extend @shexjs/api with file: access
+* [@shexjs/loader](../loader) - HTTP access functions for @shexjs library
+* [@shexjs/node](../node) - extend @shexjs/loader with file: access
 * [@shexjs/term](../term) - RDF terms, relative URL resolution, JSON-LD terms
 * [@shexjs/visitor](../visitor) - Walk a ShExJ object
 
@@ -64,7 +64,7 @@ const ShExIo = require('@shexjs/node');
 
 load shex and json files into a single ShEx schema and turtle into a graph.
 
-@shexjs/node extends the [@shexjs/api load method](https://github.com/shexjs/shex.js/tree/extends/packages/shex-api#loadschema-data--schemaoptions---dataoptions--) to allow the source to be a file path.
+@shexjs/node extends the [@shexjs/loader load method](https://github.com/shexjs/shex.js/tree/extends/packages/shex-loader#loadschema-data--schemaoptions---dataoptions--) to allow the source to be a file path.
 
 SOURCE may be
 * file path or URL - where to load item.
@@ -80,10 +80,10 @@ parameters:
 
 returns: {Promise<{schema: any, dataMeta: *[], data: (*|null), schemaMeta: *[]}>}
 
-example (same as @shexjs/api example, but using file paths):
+example (same as @shexjs/loader example, but using file paths):
 ``` js
-// Initialize @shexjs/api with implementations of APIs.
-const ShExApi = require("@shexjs/node")({
+// Initialize @shexjs/loader with implementations of APIs.
+const ShExLoader = require("@shexjs/node")({
   rdfjs: require('n3'),         // use N3 as an RdfJs implementation
   fetch: require('node-fetch'), // fetch implementation
   jsonld: require('jsonld')     // JSON-LD (if you need it)
@@ -101,8 +101,8 @@ const graphFromUrl =
 const graphFromFile =
       "../shex-cli/test/cli/p2p3.ttl";
 
-// ShExApi.load returns a promise to load and merge schema and data.
-const schemaAndDataP = ShExApi.load(
+// ShExLoader.load returns a promise to load and merge schema and data.
+const schemaAndDataP = ShExLoader.load(
   { shexc: [ schemaFromUrl, schemaFromFile ] },
   { turtle: [ graphFromUrl, graphFromFile ] }
 );
@@ -144,7 +144,7 @@ triples:
   https:…cli/x http://a.example/p1 p1-0
 ```
 
-See [@shexjs/api load method](https://github.com/shexjs/shex.js/tree/extends/packages/shex-api#loadschema-data--schemaoptions---dataoptions--) for more description.
+See [@shexjs/loader load method](https://github.com/shexjs/shex.js/tree/extends/packages/shex-loader#loadschema-data--schemaoptions---dataoptions--) for more description.
 
 #### loadExtensions function(globs[])
 
@@ -193,7 +193,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
 - [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
 - [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/api`](../shex-api#readme) -- an API for loading and using ShEx schemas
+- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
 - [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp

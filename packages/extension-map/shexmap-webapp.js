@@ -5,7 +5,7 @@ ShExWebApp = (function () {
     Util:           require('@shexjs/util'),
     Validator:      require('@shexjs/validator'),
     Writer:         require('@shexjs/writer'),
-    Api:            require("@shexjs/api"),
+    Loader:         require("@shexjs/loader"),
     Parser:         require("@shexjs/parser"),
     ShapeMap:       shapeMap,
     ShapeMapParser: shapeMap.Parser,

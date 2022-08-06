@@ -38,6 +38,7 @@ The regular expression engine is loaded from either:
 
 const Path = require("path");
 const Util = require("util");
+const JsYaml = require('js-yaml');
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
@@ -78,13 +79,13 @@ const CommandLineOptions = [
   { name: "help",      alias: "h", type: Boolean , description: "print usage information and quit" },
   { name: "node",      alias: "n", type: String, typeLabel: "RDFTerm",   multiple: false, defaultValue: undefined, description: "node to validate" },
   { name: "node-type", alias: "t", type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "validate nodes of this type" },
-  { name: "map",       alias: "m", type: String, typeLabel: "string",    multiple: false, defaultValue: undefined, description: "QueryMap" },
+  { name: "queryMap",  alias: "m", type: String, typeLabel: "string",    multiple: false, defaultValue: undefined, description: "QueryMap" },
   { name: "mapURL",    alias: "M", type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "QueryMap" },
   { name: "shape",     alias: "s", type: String, typeLabel: "IRI|Bnode", multiple: false, defaultValue: undefined, description: "shape to validate" },
-  { name: "shex",      alias: "x", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExC schema" },
+  { name: "schemaURL", alias: "x", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "term-resolver",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "description resolver" }, // @@ add URL
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
-  { name: "data",      alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
+  { name: "dataURL",   alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
@@ -94,6 +95,7 @@ const CommandLineOptions = [
   { name: "duplicate-shape",       type: String, typeLabel: dupChoices,  multiple: false, defaultValue: undefined, description: "what to do with duplicate shapes" },
 //{ name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
   { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
+  { name: "yaml-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
   { name: "jsonld-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD manifest" },
@@ -261,7 +263,7 @@ function findNodesAndValidate (loaded, parms, options) {
       if (shape === undefined && !("start" in schema)) {
         const schemaKeys = Object.keys(schema.shapes);
         schemaKeys.join(", ");
-        msgs.push("No shape specified on command line or in shex" +
+        msgs.push("No shape specified on command line or in ShEx schema" +
                   (schemaKeys.length < 50 ?
                    "; try -n with one of: " + schemaKeys.join(", ") :
                    "")
@@ -274,8 +276,8 @@ function findNodesAndValidate (loaded, parms, options) {
 
   const ret = {};
 
-  const shapeMap = "map" in parms
-      ? parms.map.reduce(
+  const shapeMap = "queryMap" in parms
+      ? parms.queryMap.reduce(
         (acc, pair) => acc.concat(_makeShapeMap(pair.node, pair.shape, null)), []
       ).reduce(
         (acc, pair) => acc.seen.indexOf(pair.node) === -1
@@ -330,20 +332,20 @@ function findNodesAndValidate (loaded, parms, options) {
 }
 
 async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
-  if (valParms.shex.length > 1 && valParms.data.length === 0) {
-    valParms.data = valParms.shex.splice(1); // push all but one into data
+  if (valParms.schemaURL.length > 1 && valParms.dataURL.length === 0) {
+    valParms.dataURL = valParms.schemaURL.splice(1); // push all but first into data
   }
-  if (valParms.json.length > 1 && valParms.data.length === 0) {
-    valParms.data = valParms.json.splice(1); // push all but one into data
+  if (valParms.json.length > 1 && valParms.dataURL.length === 0) {
+    valParms.dataURL = valParms.json.splice(1); // push all but first into data
   }
   if (!valParms.serve) {
-    if (valParms.data.length === 0 && valParms.jsonld.length === 0) abort("No data specified");
-    if (valParms.shex.length === 0 && valParms.json.length === 0) abort("No shex specified");
+    if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified");
+    if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified");
   }
   // Loaded schema and data.
   const schemaAndDataP = ShExNode.load(
-    {shexc: valParms.shex, shexj:valParms.json},
-    {turtle: valParms.data, jsonld: valParms.jsonld},
+    {shexc: valParms.schemaURL, json: valParms.json},
+    {turtle: valParms.dataURL, jsonld: valParms.jsonld},
     schemaOptions, undefined
   );
   // Expected results, if provided.
@@ -359,8 +361,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         ? ShExNode.GET(valParms.mapURL).then(function (body) {
           return { shapeMapBody: body.text, shapeMapBase: valParms.mapURL };
         })
-        : Promise.resolve("map" in valParms
-                          ? { shapeMapBody: valParms.map,
+        : Promise.resolve("queryMap" in valParms
+                          ? { shapeMapBody: valParms.queryMap,
                               shapeMapBase: "file://" + Path.resolve(process.cwd()) }
                           : undefined)
 
@@ -409,12 +411,12 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       }
       runServer(schemaAndData, valParms, validatorOptions, schemaOptions);
     } else {
-      if (shapeMap) { // if we loaded a map
+      if (shapeMap) { // if we loaded a queryMap
         try {
-          valParms.map = ShExUtil.absolutizeShapeMap(JSON.parse(shapeMap.shapeMapBody),
+          valParms.queryMap = ShExUtil.absolutizeShapeMap(JSON.parse(shapeMap.shapeMapBody),
                                                      schemaAndData.dataMeta[0].base); // @@ relative to data[0]'s base instead of shapeMap.shapeMapBase -- is that good?
         } catch (e) {
-          valParms.map = ShapeMap.Parser.construct(shapeMap.shapeMapBase,
+          valParms.queryMap = ShapeMap.Parser.construct(shapeMap.shapeMapBase,
                                                    schemaAndData.schemaMeta[0],
                                                    schemaAndData.dataMeta[0] || {})
             .parse(shapeMap.shapeMapBody);
@@ -554,14 +556,14 @@ function getInvocation (parms) {
   function dataFileArg (u) { return u ? "-d "+shortenFile(u) : ''; }
   function jsonldFileArg (u) { return u ? "-l "+shortenFile(u) : ''; }
   const res = [Path.relative(process.cwd(), arg0),
-             parms.shex.map(shexFileArg).join(' '),
+             parms.schemaURL.map(shexFileArg).join(' '),
              parms.json.map(jsonFileArg).join(' '),
-             parms.data.map(dataFileArg).join(' '),
+             parms.dataURL.map(dataFileArg).join(' '),
              parms.jsonld.map(jsonldFileArg).join(' '),
              parms.shape ? "-s " + parms.shape : '',
              parms.node ? "-n " + parms.node : '',
              parms.mapURL ? "-M " + parms.mapURL : '',
-             parms.map ? "-m " + parms.map : ''
+             parms.queryMap ? "-m " + parms.queryMap : ''
             ];
   if ("options" in parms)
     Object.keys(parms.options).forEach(k => { // e.g. --regex-module eval-simple-1err
@@ -603,8 +605,15 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
   loadRDFmanifest(cmds).then(function (exitCode) {
     process.on('exit', function() { process.exit(exitCode); });
   });
+} else if (cmds["yaml-manifest"].length) {
+  Promise.all(loadJSONmanifest(cmds["yaml-manifest"], JsYaml.load)).then(function (results) {
+    // exit with a 0 if all returned 0, else a failure code.
+    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
+      return soFar ? soFar : result;
+    }, 0)); });
+  });
 } else if (cmds["json-manifest"].length) {
-  Promise.all(loadJSONmanifest(cmds["json-manifest"])).then(function (results) {
+  Promise.all(loadJSONmanifest(cmds["json-manifest"], JSON.parse)).then(function (results) {
     // exit with a 0 if all returned 0, else a failure code.
     process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
       return soFar ? soFar : result;
@@ -619,9 +628,9 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
 /* queueTests - take a structure like
 [ { json: [],
     validatorOptions: {},
-    shex: [ 'file:///tmp/t/t.shex' ],
+    schemaURL: [ 'file:///tmp/t/t.shex' ],
     shape: 'http://www.w3.org/fhir-rdf-shapes/MedicationOrder',
-    data: [ 'file:///tmp/t/t.ttl' ],
+    dataURL: [ 'file:///tmp/t/t.ttl' ],
     node: 'file:///tmp/t/MedicationOrder/12345-67' } ]
 and some constructor args like {or: "someOf", coverage: "exhaustive"}
 */
@@ -743,20 +752,20 @@ function loadRDFmanifest (cmds) {
       if (resolver.length)
         schemaOptions["termResolver"] = resolver.map(function (t) { return ShExTerm.internalTerm(t.object) });
 
-      return [["shex"  , "schema", true ],
-              ["shape" , "shape" , false],
-              ["data"  , "data"  , true ],
-              ["node"  , "focus" , false],
-              ["mapURL", "map"   , false]].reduce(function (ret, elt) {
+      return [["schema", "schemaURL", true ],
+              ["shape" , "shape"    , false],
+              ["data"  , "dataURL"  , true ],
+              ["focus" , "node"     , false],
+              ["map"   , "mapURL"   , false]].reduce(function (ret, elt) {
                 // Command like arguments override *each* manifest entry.
-                if (cmds[elt[0]] &&
-                    !(Array.isArray(cmds[elt[0]]) && cmds[elt[0]].length === 0)) {
-                  ret[elt[0]] = cmds[elt[0]];
+                if (cmds[elt[1]] &&
+                    !(Array.isArray(cmds[elt[1]]) && cmds[elt[1]].length === 0)) {
+                  ret[elt[1]] = cmds[elt[1]];
                 } else {
-                  const m = loaded.data.getQuads(action, sht+elt[1], null);
+                  const m = loaded.data.getQuads(action, sht+elt[0], null);
                   if (m.length > 0) {
                     const v = ShExTerm.internalTerm(m[0].object);
-                    ret[elt[0]] = elt[2] ? [v] : v;
+                    ret[elt[1]] = elt[2] ? [v] : v;
                   }
                 }
                 return ret;
@@ -780,11 +789,17 @@ function useCommandLineDefaults (run) {
   return ret;
 }
 
-function loadJSONmanifest (jsonManifests) {
+function relUrlOrFile (rel, base) {
+  if (base.match(/^[a-z]+:\/\//))
+    return new URL(rel, base).href;
+  return Path.join(base, base.endsWith('/') ? '.' : '..', rel);
+}
+
+function loadJSONmanifest (jsonManifests, parser) {
   return jsonManifests.map(function (jm) {
     return ShExNode.GET(jm).then(function (p) {
       try {
-        let d = JSON.parse(p.text);
+        let d = parser(p.text);
 
         // normalize the input
         if (!Array.isArray(d)) {
@@ -798,16 +813,16 @@ function loadJSONmanifest (jsonManifests) {
               });
               return Object.assign(
                 { name: t.name,
-                  shex: t.action.schema,
+                  schemaURL: [relUrlOrFile(t.action.schema, jm)],
                   termResolver: t.action.termResolver,
-                  data: t.action.data,
+                  dataURL: [relUrlOrFile(t.action.data, jm)],
                   options: options },
                 "shape" in t.action ? {shape: t.action.shape} : {},
                 "focus" in t.action ? {node: t.action.focus} : {},
-                "map" in t.action ? {map: t.action.map} : {}
+                "map" in t.action ? {queryMap: t.action.map} : {}
               );
             });
-          else // Hopefully an object like { shex: "t.shex" , shape: "S", data: "t.ttl", "node": "s" }
+          else // Hopefully an object like { schemaURL: "t.shex" , shape: "S", dataURL: "t.ttl", "node": "s" }
             d = [d];
         }
 
@@ -821,29 +836,31 @@ function loadJSONmanifest (jsonManifests) {
             }, false);
           });
         d.forEach(function (elt) {
-          // Turn common ShEx manifest format into test manifest format
-          ([{from: "queryMap", to: "map"},
-            {from: "schemaURL", to: "shex"},
-            {from: "dataURL", to: "data"}]).forEach(pair => {
-              if (pair.from in elt) {
-                elt[pair.to] = elt[pair.from];
+          // Turn test manifest format into common ShEx manifest format.
+          ([{from: "schema", asText: "schemaP", mediaType: "text/shex"  , asUrl: "schemaURL"}, // found in demo manifests
+            {from: "shex"  , asText: "schemaP", mediaType: "text/shex"  , asUrl: "schemaURL"}, // found in test manifests
+            {from: "json"  , asText: "schemaP", mediaType: "text/json"  , asUrl: "json"},
+            {from: "data"  , asText: "dataP"  , mediaType: "text/turtle", asUrl: "dataURL"  },
+            {from: "jsonld", asText: "dataP"  , mediaType: "text/jsonld", asUrl: "jsonld"  }])
+            .forEach(pair => {
+              if (pair.from in elt) { // looks URL-ish
+                const values = Array.isArray(elt[pair.from])
+                      ? elt[pair.from]
+                      : [elt[pair.from]];
                 delete elt[pair.from];
+                elt[pair.asUrl] = values.map(
+                  text =>
+                    (/[ <>]/.test(text))
+                    ? { text, /*mediaType: pair.mediaType,*/ url: p.url }
+                  : relUrlOrFile(text, p.url)
+                );
+              } else if (!(pair.asUrl in elt)) {
+                elt[pair.asUrl] = [];
               }
             });
 
-          // FileURL parameters are lists of URLs relative to the manifest file.
-          ["shex", "json", "data", "jsonld"].forEach(function (attr) {
-            if (!(attr in elt))
-              elt[attr] = [];
-            else if (!Array.isArray(elt[attr]))
-              elt[attr] = [elt[attr]];
-            elt[attr] = elt[attr].map(function (url) {
-              return ShExUtil.resolveRelativeIRI(p.url, url); // note that these don't permit prefixes (for now).
-            });
-          });
-
           // Command like arguments override *each* manifest entry.
-          ["node", "shape", "map"].forEach(function (attr) {
+          ["node", "shape", "queryMap"].forEach(function (attr) {
             if (attr in cmds)
               elt[attr] = cmds[attr]
           })
@@ -858,8 +875,7 @@ function loadJSONmanifest (jsonManifests) {
           } else
             elt.validatorOptions = ValidatorOptions;
           if ("result" in elt && elt.result !== null && typeof elt.result !== "boolean")
-            elt.result = ShExUtil.resolveRelativeIRI(p.url, elt.result);
-          elt.jsonld = []; // @@ no way to specify jsonld in manifest
+            elt.result = relUrlOrFile(elt.result, p.url);
         });
         return queueTests(d, cmds);
       } catch (e) {
