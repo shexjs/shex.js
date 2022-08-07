@@ -132,9 +132,6 @@ Parse XML results in a DOM to internal RDF term representations.
 ## parseSparqlXmlResults_jquery(jqObj)
 Parse XML results to internal RDF term representations using JQuery.
 
-## rdfjsDB(db:typeof N3Store, queryTracker:QueryTracker)
-Wrap rdfjs DB (apparently an n3.js DB -- oops) to the Neighborhood API.
-
 # Lerna Monorepo
 
 This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
