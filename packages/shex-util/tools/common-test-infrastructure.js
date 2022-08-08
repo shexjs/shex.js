@@ -7,7 +7,7 @@ const Fs = require("fs");
 const Path = require("path");
 
 /* devDependency on @shexjs/node makes lerna whine:
-   > WARN ECYCLE @shexjs/api -> @shexjs/util -> @shexjs/node -> @shexjs/api
+   > WARN ECYCLE @shexjs/loader -> @shexjs/util -> @shexjs/node -> @shexjs/loader
    so we can't use:
    > const ShExNode = require("@shexjs/node")({
    >   rdfjs: N3,

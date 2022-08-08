@@ -157,12 +157,12 @@ const shexc = "http://shex.io/examples/Issue.shex";
 const data = "http://shex.io/examples/Issue1.ttl";
 const node = "http://shex.io/examples/Issue1";
 
-const ShExApi = require("@shexjs/api");
-const ShExUtil = require("@shexjs/util");
+const ShExLoader = require("@shexjs/loader");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator");
-ShExApi.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
-    var db = ShExUtil.rdfjsDB(loaded.data);
-    var validator = ShExValidator.construct(loaded.schema, ShExUtil.rdfjsDB(db), { results: "api" });
+ShExLoader.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
+    var db = RdfJsDb(loaded.data);
+    var validator = ShExValidator.construct(loaded.schema, db, { results: "api" });
     var result = validator.validate([{node: node, shape: ShExValidator.start}]);
     console.log(result);
 });
@@ -306,7 +306,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/validator`](packages/shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
 !- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) -- eval-simple-1err
 - [`@shexjs/eval-threaded-nerr`](packages/eval-threaded-nerr#readme) -- eval-threaded-nerr
-- [`@shexjs/api`](packages/shex-api#readme) -- an API for loading and using ShEx schemas
+- [`@shexjs/loader`](packages/shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](packages/shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](packages/shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
 - [`@shexjs/webapp`](packages/shex-webapp#readme) -- the shex-simple WEBApp

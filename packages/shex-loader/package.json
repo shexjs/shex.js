@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/node",
+  "name": "@shexjs/loader",
   "version": "1.0.0-alpha.15",
-  "description": "Shape Expressions packages for node.",
+  "description": "Shape Expressions simple API",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,12 +15,13 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-node.js",
+  "main": "./shex-loader.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/loader": "^1.0.0-alpha.15"
+    "@shexjs/parser": "^1.0.0-alpha.15",
+    "@shexjs/util": "^1.0.0-alpha.15"
   },
   "scripts": {
     "test": "cd ../.. && npm run test"

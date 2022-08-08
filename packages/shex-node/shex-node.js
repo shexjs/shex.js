@@ -1,4 +1,4 @@
-/** @shexjs/node - extend @shexjs/api with file: access
+/** @shexjs/node - extend @shexjs/loader with file: access
  * GET: add access to:
  *   `file:` read from flle system relative to cwd
  *   `-` read from stdin
@@ -11,16 +11,16 @@ const ShExNodeCjsModule = function (config = {}) {
 
   const Fs = require('fs')
   const Glob = require("glob").glob
-  const ShExApi = require("@shexjs/api")
+  const ShExLoader = require("@shexjs/loader")
   const FileColonUrlRe = "^file://[^/]*(/.*)$";
-  const myApiOpts = {
+  const myLoaderOpts = {
     loadExtensions: LoadExtensions,
   }
 
 
   const NodeDocLoader = config?.jsonld?.documentLoaders?.node()
   if (NodeDocLoader) {
-    myApiOpts.jsonLdOptions = { documentLoader }
+    myLoaderOpts.jsonLdOptions = { documentLoader }
 
     async function documentLoader (url, options) {
       const m = url.match(FileColonUrlRe);
@@ -41,10 +41,10 @@ const ShExNodeCjsModule = function (config = {}) {
       }
     }
   }
-  const newApi = ShExApi(Object.assign(myApiOpts, config))
+  const newLoader = ShExLoader(Object.assign(myLoaderOpts, config))
 
-  const oldGet = newApi.GET
-  newApi.GET = async function (url, mediaType) {
+  const oldGet = newLoader.GET
+  newLoader.GET = async function (url, mediaType) {
     const FS = require("fs")
     const Path = require("path")
 
@@ -86,7 +86,7 @@ const ShExNodeCjsModule = function (config = {}) {
       })
   }
 
-  return newApi
+  return newLoader
 
   function LoadExtensions (globs) {
     return globs.reduce(
