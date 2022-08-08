@@ -28,6 +28,6 @@ export interface Validator {
   validate (smap: ShapeMap, tracker?: ShExUtil.QueryTracker, seen?: object): ValidationResult;
 }
 
-export function construct(schema: ShExJ.Schema, db: any, options: object): Validator;
+export function construct(schema: ShExJ.Schema, db: ValidatorNeighborhood, options: object): Validator;
 
 
