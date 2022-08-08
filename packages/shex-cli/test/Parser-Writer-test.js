@@ -9,6 +9,7 @@ const BASE = "http://a.example/application/base/";
 const Fs = require("fs");
 const ShExParser = require("@shexjs/parser");
 const ShExUtil = require("@shexjs/util");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExValidator = require("@shexjs/validator");
 const ShExWriter = require("@shexjs/writer");
 const N3 = require("n3");
@@ -177,7 +178,7 @@ describe("A ShEx parser", function () {
              const schemaGraph = new N3.Store();
              schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(shexR));
              // console.log(schemaGraph.getQuads());
-             const schemaDriver = ShExUtil.rdfjsDB(schemaGraph);
+             const schemaDriver = RdfJsDb(schemaGraph);
              const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "Schema")[0].subject;
              const graphParser = ShExValidator.construct(
                GraphSchema,

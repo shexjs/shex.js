@@ -13,7 +13,7 @@ const SpGrep = require(Sp.scripts.spgrep)
 process.env._INCLUDE_DEPTH = oldDepth
 
 // data query
-const ShExUtil = require('@shexjs/util');
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShapeMap = require('shape-map');
 
 const SPQuery = require('../shape-path-query');
@@ -29,7 +29,7 @@ class QueryValidator {
     this.graph = readTurtle(dataFile);
   }
   query(schema, nodeSet) {
-    const db = ShExUtil.rdfjsDB(this.graph)
+    const db = RdfJsDb(this.graph)
     const schemaMeta = {
       base: Base,
       prefixes: {}
