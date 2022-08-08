@@ -158,11 +158,11 @@ const data = "http://shex.io/examples/Issue1.ttl";
 const node = "http://shex.io/examples/Issue1";
 
 const ShExLoader = require("@shexjs/loader");
-const ShExUtil = require("@shexjs/util");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator");
 ShExLoader.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
-    var db = ShExUtil.rdfjsDB(loaded.data);
-    var validator = ShExValidator.construct(loaded.schema, ShExUtil.rdfjsDB(db), { results: "api" });
+    var db = RdfJsDb(loaded.data);
+    var validator = ShExValidator.construct(loaded.schema, db, { results: "api" });
     var result = validator.validate([{node: node, shape: ShExValidator.start}]);
     console.log(result);
 });

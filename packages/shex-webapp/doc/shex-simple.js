@@ -246,7 +246,7 @@ function makeSchemaCache (selection) {
     function parseShExR () {
       const graphParser = ShEx.Validator.construct(
         parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
-        ShEx.Util.rdfjsDB(graph),
+        ShEx.RdfJsDb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
@@ -266,7 +266,7 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
   ret.parse = async function (text, base) {
-    const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+    const res = ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   };
