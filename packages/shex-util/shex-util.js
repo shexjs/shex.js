@@ -239,42 +239,41 @@ const ShExUtil = {
 
   ShExRVisitor: function (knownShapeExprs) {
     const v = ShExUtil.Visitor();
-    const knownExpressions = {};
+    const knownTripleExpressions = {};
     const oldVisitShapeExpr = v.visitShapeExpr,
         oldVisitValueExpr = v.visitValueExpr,
         oldVisitTripleExpr = v.visitTripleExpr;
     v.keepShapeExpr = oldVisitShapeExpr;
 
-    v.visitShapeExpr = function (expr, label) {
+    v.visitShapeExpr = function (expr, ...args) {
       if (typeof expr === "string")
         return expr;
       if ("id" in expr) {
-        if (knownShapeExprs.indexOf(expr.id) !== -1 || Object.keys(expr).length === 1)
+        if (knownShapeExprs.has(expr.id) || Object.keys(expr).length === 1) // {
           return expr.id;
         delete expr.id;
       }
-      return oldVisitShapeExpr.call(this, expr, label);
+      return oldVisitShapeExpr.call(this, expr, ...args);
     };
 
-    v.visitTripleExpr = function (expr) {
+    v.visitTripleExpr = function (expr, ...args) {
       if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
         return expr;
-      }
-      if ("id" in expr) {
-        if (expr.id in knownExpressions) {
-          knownExpressions[expr.id].refCount++;
+      } else if ("id" in expr) {
+        if (expr.id in knownTripleExpressions) {
+          knownTripleExpressions[expr.id].refCount++;
           return expr.id;
         }
       }
-      const ret = oldVisitTripleExpr.call(this, expr);
+      const ret = oldVisitTripleExpr.call(this, expr, ...args);
       // Everything from RDF has an ID, usually a BNode.
-      knownExpressions[expr.id] = { refCount: 1, expr: ret };
+      knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
       return ret;
     }
 
     v.cleanIds = function () {
-      for (let k in knownExpressions) {
-        const known = knownExpressions[k];
+      for (let k in knownTripleExpressions) {
+        const known = knownTripleExpressions[k];
         if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
           delete known.expr.id;
       };
@@ -308,18 +307,16 @@ const ShExUtil = {
 
   ShExRtoShExJ: function (schema) {
     // compile a list of known shapeExprs
-    const knownShapeExprs = [];
+    const knownShapeExprs = new Map();
     if ("shapes" in schema)
-      [].push.apply(knownShapeExprs, schema.shapes.map(sh => { return sh.id; }));
+      schema.shapes.forEach(sh => knownShapeExprs.set(sh.id, null))
 
     // normalize references to those shapeExprs
     const v = this.ShExRVisitor(knownShapeExprs);
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
-      schema.shapes = schema.shapes.map(sh => {
-        return v.keepShapeExpr(sh);
-      });
+      schema.shapes = schema.shapes.map(sh => v.keepShapeExpr(sh));
 
     // remove extraneous BNode IDs
     v.cleanIds();
@@ -424,6 +421,9 @@ const ShExUtil = {
       }
       return oldVisitTripleExpr.call(v, expression);
     };
+    v.visitExtra = function (l) {
+      return l.slice().sort();
+    }
     if (trimIRI) {
       v.visitIRI = function (i) {
         return i.replace(trimIRI, "");
@@ -523,7 +523,7 @@ const ShExUtil = {
     let shapeLabels = Object.keys(index.shapeExprs || [])
     let shapeReferences = {}
     shapeLabels.forEach(label => {
-      let shape = index.shapeExprs[label]
+      const shape = index.shapeExprs[label]
       noteReference(label, null) // just note the shape so we have a complete list at the end
       if (shape.type === 'Shape') {
         if ('expression' in shape) {
@@ -1095,53 +1095,53 @@ const ShExUtil = {
     const positiveDeps = Hierarchy.create();
     let index = schema.index || this.index(schema);
 
-    visitor.visitShape = function (shape, label) {
+    visitor.visitShape = function (shape, ...args) {
       const lastExtra = currentExtra;
       currentExtra = shape.extra;
-      const ret = oldVisitShape.call(visitor, shape, label);
+      const ret = oldVisitShape.call(visitor, shape, ...args);
       currentExtra = lastExtra;
       return ret;
     }
 
     const oldVisitShapeNot = visitor.visitShapeNot;
-    visitor.visitShapeNot = function (shapeNot, label) {
+    visitor.visitShapeNot = function (shapeNot, ...args) {
       const lastNegated = currentNegated;
       currentNegated ^= true;
-      const ret = oldVisitShapeNot.call(visitor, shapeNot, label);
+      const ret = oldVisitShapeNot.call(visitor, shapeNot, ...args);
       currentNegated = lastNegated;
       return ret;
     }
 
     const oldVisitTripleConstraint = visitor.visitTripleConstraint;
-    visitor.visitTripleConstraint = function (expr) {
+    visitor.visitTripleConstraint = function (expr, ...args) {
       const lastNegated = currentNegated;
       if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
         currentNegated ^= true;
       inTE = true;
-      const ret = oldVisitTripleConstraint.call(visitor, expr);
+      const ret = oldVisitTripleConstraint.call(visitor, expr, ...args);
       inTE = false;
       currentNegated = lastNegated;
       return ret;
     };
 
     const oldVisitShapeRef = visitor.visitShapeRef;
-    visitor.visitShapeRef = function (shapeRef) {
+    visitor.visitShapeRef = function (shapeRef, ...args) {
       if (!(shapeRef in index.shapeExprs))
         throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
       if (!inTE && shapeRef === currentLabel)
         throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
-      return oldVisitShapeRef.call(visitor, shapeRef);
+      return oldVisitShapeRef.call(visitor, shapeRef, ...args);
     }
 
     const oldVisitInclusion = visitor.visitInclusion;
-    visitor.visitInclusion = function (inclusion) {
+    visitor.visitInclusion = function (inclusion, ...args) {
       let refd;
       if (!(refd = index.tripleExprs[inclusion]))
         throw firstError(Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + "."), inclusion);
       // if (refd.type !== "Shape")
       //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
-      return oldVisitInclusion.call(visitor, inclusion);
+      return oldVisitInclusion.call(visitor, inclusion, ...args);
     };
 
     (schema.shapes || []).forEach(function (shape) {
@@ -1400,6 +1400,12 @@ const ShExUtil = {
     return extensions(map);
   },
 
+  /**
+   * Convert a ShExR property tree to ShexJ.
+   * This method de-duplicates and normalizes all moves all ShapeDecls to be immediate children of the :shapes collection.
+   * @exports
+   * @returns ShEx schema
+   */
   valuesToSchema: function (values) {
     // console.log(JSON.stringify(values, null, "  "));
     const v = values;
@@ -1467,6 +1473,9 @@ const ShExUtil = {
         return elt.expr && "nested" in x ? extend({ id: x.ldterm, }, f(x.nested)) : x.ldterm;
       }
     }
+    /* transform shapeExprs. called from .shapes and .valueExpr.
+     * The calls from .valueExpr can be Shapes or ShapeDecls because the ShExR graph is not yet normalized.
+     */
     function shapeExpr (v) {
       // shapeExpr = ShapeOr | ShapeAnd | ShapeNot | NodeConstraint | Shape | ShapeRef | ShapeExternal;
       const elts = { "ShapeAnd"     : { nary: true , expr: true , prop: "shapeExprs" },
@@ -1750,7 +1759,7 @@ const ShExUtil = {
       return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
     default:
       debugger; // console.log(val);
-      throw Error("unknown shapeExpression type in " + JSON.stringify(val));
+      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
     }
     function errorList (errors) {
       return errors.reduce(function (acc, e) {
@@ -1908,59 +1917,6 @@ const ShExUtil = {
       });
   }
 */
-
-  rdfjsDB: function (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
-
-    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
-
-    function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
-      // I'm guessing a local DB doesn't benefit from shape optimization.
-      let startTime;
-      if (queryTracker) {
-        startTime = new Date();
-        queryTracker.start(false, point, shapeLabel);
-      }
-      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
-      if (queryTracker) {
-        const time = new Date();
-        queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
-        startTime = time;
-      }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
-      }
-      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
-      }
-      return {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      // size: db.size,
-      getNeighborhood: getNeighborhood,
-      getSubjects: getSubjects,
-      getPredicates: getPredicates,
-      getObjects: getObjects,
-      getQuads: getQuads,
-      get size() { return db.size; },
-      // getQuads: function (s, p, o, graph, shapeLabel) {
-      //   // console.log(Error(s + p + o).stack)
-      //   if (queryTracker)
-      //     queryTracker.start(!!s, s ? s : o, shapeLabel);
-      //   const quads = db.getQuads(s, p, o, graph)
-      //   if (queryTracker)
-      //     queryTracker.end(quads, new Date() - startTime);
-      //   return quads;
-      // }
-    }
-  },
 
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
 

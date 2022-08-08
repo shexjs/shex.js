@@ -1,11 +1,12 @@
 ShExWebApp = (function () {
-  let shapeMap = require("shape-map")
+  const shapeMap = require("shape-map")
   return Object.assign({}, {
     ShExTerm:             require('@shexjs/term'),
     Util:                 require('@shexjs/util'),
+    RdfJsDb:              require('@shexjs/neighborhood-rdfjs').ctor,
     Validator:            require('@shexjs/validator'),
     Writer:               require('@shexjs/writer'),
-    Api:                  require("@shexjs/api"),
+    Loader:               require("@shexjs/loader"),
     Parser:               require("@shexjs/parser"),
     "eval-simple-1err":   require("@shexjs/eval-simple-1err"),
     "eval-threaded-nerr": require("@shexjs/eval-threaded-nerr"),

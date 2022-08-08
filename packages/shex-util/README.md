@@ -132,9 +132,6 @@ Parse XML results in a DOM to internal RDF term representations.
 ## parseSparqlXmlResults_jquery(jqObj)
 Parse XML results to internal RDF term representations using JQuery.
 
-## rdfjsDB(db:typeof N3Store, queryTracker:QueryTracker)
-Wrap rdfjs DB (apparently an n3.js DB -- oops) to the Neighborhood API.
-
 # Lerna Monorepo
 
 This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
@@ -149,7 +146,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
 - [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
 - [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/api`](../shex-api#readme) -- an API for loading and using ShEx schemas
+- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
 - [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp
