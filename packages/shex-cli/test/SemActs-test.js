@@ -2,6 +2,7 @@ const VERBOSE = "VERBOSE" in process.env
 const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null
 
 const ShExUtil = require("@shexjs/util")
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator")
 const ShExParser = require("@shexjs/parser")
 const ShapeMapParser = require("shape-map").Parser
@@ -65,7 +66,7 @@ describe('Invoking SemActs', function () {
     const expected = JSON.parse(Fs.readFileSync(expectedFile, 'utf8'))
 
     // Parse ShapeMap and validate.
-    const validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(data))
+    const validator = ShExValidator.construct(schema, RdfJsDb(data))
     Extensions.forEach(ext => ext.register(validator, {ShExTerm, DataFactory: N3.DataFactory}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
