@@ -15,7 +15,7 @@ npm install --save @shexjs/validator
 Using `Partition(<schema>, [<URL>s])` as an example, an illustrative way to invoke from it from the command line uses `@shexjs/parser` and `N3.js`:
 ``` js
 const ShExParser = require('@shexjs/parser');
-const ShExUtil = require('@shexjs/util');
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require('@shexjs/validator');
 const {Parser: N3Parser, Store: N3Store} = require('n3');
 const base = 'http://a.example/';
@@ -39,7 +39,7 @@ new N3Parser({baseIRI: base}).parse(turtle, (error, quad, prefixes) => {
     g.addQuad(quad);
   else
     console.log(JSON.stringify(
-      ShExValidator.construct(schema, ShExUtil.rdfjsDB(g))
+      ShExValidator.construct(schema, RdfJsDb(g))
         .validate([{node: base + 'n1', shape: base + 'S1'},
                    {node: base + 'n2', shape: base + 'S1'}]),
       null, 2 # stringify args
@@ -191,7 +191,7 @@ The triple expression in a Shape is essentially a fancy regular expression. shex
 
 You can specify which module to use with the schema options parameter to the validator constructor:
 ``` js
-      ShExValidator.construct(schema, ShExUtil.rdfjsDB(g), {
+      ShExValidator.construct(schema, RdfJsDb(g), {
         regexModule: require('@shexjs/eval-simple-1err')
       })
 ```
@@ -206,7 +206,7 @@ One form of ShEx extensibility is the declaration of external shapes:
 ```
 These must be supplied to your validator but the ShEx specification does not specify how. In ShExJS, these must be supplied as a constructor argument:
 ``` js
-      ShExValidator.construct(schema, ShExUtil.rdfjsDB(g), {
+      ShExValidator.construct(schema, RdfJsDb(g), {
         regexModule: require('@shexjs/eval-simple-1err'),
         validateExtern: myValidator
       })
@@ -256,7 +256,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/eval-validator-api`](../eval-validator-api#readme) -- API called by [`@shexjs/validator`](../shex-validator#readme) for validating Shapes, with tripleExpressions and EXTENDS etc.
 - [`@shexjs/eval-simple-1err`](../eval-simple-1err#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which reports only one error.
 - [`@shexjs/eval-threaded-nerr`](../eval-threaded-nerr#readme) -- Implementation of [`@shexjs/eval-validator-api`](../eval-validator-api#readme) which exhaustively enumerate combinations of ways the data fails to satisfy a shape's expression.
-- [`@shexjs/api`](../shex-api#readme) -- an API for loading and using ShEx schemas
+- [`@shexjs/loader`](../shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](../shex-node#readme) -- additional API functionality for a node environment
 - [`@shexjs/cli`](../shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
 - [`@shexjs/webapp`](../shex-webapp#readme) -- the shex-simple WEBApp

@@ -1,7 +1,7 @@
 {
-  "name": "@shexjs/node",
+  "name": "@shexjs/neighborhood-api",
   "version": "1.0.0-alpha.15",
-  "description": "Shape Expressions packages for node.",
+  "description": "API called by @shexjs/validator to get a neighborhood (arcs in and out of a node)",
   "author": {
     "name": "Eric Prud'hommeaux",
     "email": "eric@w3.org",
@@ -15,15 +15,15 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-node.js",
+  "main": "./lib/neighborhood-api.js",
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/loader": "^1.0.0-alpha.15"
+    "@shexjs/term": "^1.0.0-alpha.15"
   },
   "scripts": {
-    "test": "cd ../.. && npm run test"
+    "test": "echo 'no tests for neighborhood-api'"
   },
   "publishConfig": {
     "access": "public"
@@ -34,5 +34,9 @@
   },
   "bugs": {
     "url": "https://github.com/shexSpec/grammar/issues"
+  },
+  "devDependencies": {
+    "@rdfjs/types": "^1.1.0",
+    "@shexjs/util": "^1.0.0-alpha.15"
   }
 }

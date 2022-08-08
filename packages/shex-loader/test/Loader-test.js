@@ -16,8 +16,8 @@ const [[SchemaServer, GitRootServer]] = require('../../../tools/testServer')
           fromDir: Path.join(__dirname, '../../..') }
       ] );
 
-// Initialize @shexjs/api with implementations of APIs.
-const ShExApi = require("..")({
+// Initialize @shexjs/loader with implementations of APIs.
+const ShExLoader = require("..")({
   rdfjs: N3,                    // use N3 as an RdfJs implementation
   fetch: require('node-fetch'), // fetch implementation
   jsonld: require('jsonld')     // JSON-LD (if you need it)
@@ -77,12 +77,12 @@ graphFromApi.graph.add(quad(
 ));
 
 
-describe("@shexjs/api", function () {
+describe("@shexjs/loader", function () {
 
   // could break this up into multiple tests
   it("should load schema and data from URLs, text, and pre-loaded structures" , async function () {
 
-    // ShExApi.load returns a promise to load and merge schema and data.
+    // ShExLoader.load returns a promise to load and merge schema and data.
     function collisionPolicy (type, left, right) {
 
       expect(type).to.equal('shapeExpr');
@@ -107,7 +107,7 @@ describe("@shexjs/api", function () {
       return true; // override the left assignment with the right (Shape)
     }
 
-    const {schema, schemaMeta, data, dataMeta} = await ShExApi.load(
+    const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
       { shexc: [ schemaFromUrl, schemaAsText, schemaAsShExJ ] },
       { turtle: [ graphFromUrl, graphAsText, graphFromApi ] },
       { // schemaOptions
@@ -147,7 +147,7 @@ describe("@shexjs/api", function () {
   });
 
   it("should handle circular imports" , async function () {
-    const {schema, schemaMeta, data, dataMeta} = await ShExApi.load(
+    const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
       { shexc: [ schemaWithCircularImports + ".shex" ] },
       null,
       { iriTransform: i => i + '.shex' }
@@ -193,7 +193,7 @@ describe("@shexjs/api", function () {
   });
 
   it("should handle (circular) imports when loaded from text" , async function () {
-    const {schema, schemaMeta, data, dataMeta} = await ShExApi.load(
+    const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
       { shexc: [ { url: schemaWith3CircularImports, text: `IMPORT <3circRefS2-IS3>
 IMPORT <3circRefS3>
 <http://a.example/S1> {
@@ -254,7 +254,7 @@ IMPORT <3circRefS3>
   });
 
   it("should handle (circular) imports when loaded from shexJ" , async function () {
-    const {schema, schemaMeta, data, dataMeta} = await ShExApi.load(
+    const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
       {
         shexc: [
           { url: schemaWith3CircularImports, schema: {
@@ -324,7 +324,7 @@ IMPORT <3circRefS3>
   });
 
   it("should work with one parameter" , async function () {
-    const {schema, schemaMeta, data, dataMeta} = await ShExApi.load(
+    const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
       { shexc: [ schemaFromUrl ] }
     );
     // test returned structure.
@@ -352,7 +352,7 @@ IMPORT <3circRefS3>
 
   it("should throw on collisions under default schema options" , async function () {
     try {
-      await ShExApi.load( { shexc: [ schemaFromUrl, schemaFromUrl ] } );
+      await ShExLoader.load( { shexc: [ schemaFromUrl, schemaFromUrl ] } );
       assert.isOk(false, 'call to load should have rejected')
     } catch (e) {
       expect(e).to.match(/ collides with /)

@@ -7,6 +7,7 @@ var EARL = "EARL" in process.env;
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("..");
 const TestExtension = require("@shexjs/extension-test")
 
@@ -187,7 +188,7 @@ describe("A ShEx validator", function () {
                         var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
-                      validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(store), schemaOptions);
+                      validator = ShExValidator.construct(schema, RdfJsDb(store), schemaOptions);
                       var testResults = TestExtension.register(validator, {ShExTerm});
                       var validationResult = validator.validate(map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }

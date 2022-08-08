@@ -127,7 +127,6 @@ declare namespace shexjs__util {
     function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
     function executeQueryPromise(query: any, endpoint: any): any;
     function executeQuery(query: any, endpoint: any): any;
-    function rdfjsDB(db: N3.Store, queryTracker?: QueryTracker): NeighborhoodDb;
     const NotSupplied: string;
     const UnknownIRI: string;
     function unescapeText(string: any, replacements: any): any;
@@ -137,25 +136,10 @@ declare namespace shexjs__util {
     // namespace Visitor {
     //     function index(schema: any): any;
     // }
-    // function makeTriplesDB(queryTracker: any): any;
 
     interface QueryTracker {
         start (isOut: boolean, term: RdfJs.Term, shapeLabel: string): void;
         end (triples: RdfJs.Quad[], time: number): void;
-    }
-
-    interface Neighborhood {
-      incoming: RdfJs.Quad[];
-      outgoing: RdfJs.Quad[];
-    }
-
-    interface NeighborhoodDb {
-      getSubjects(): RdfJs.Term[];
-      getPredicates(): RdfJs.Term[];
-      getObjects(): RdfJs.Term[];
-      getQuads(): RdfJs.Quad[];
-      getNeighborhood (point: RdfJs.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
-      size(): number
     }
 
     interface Index {
