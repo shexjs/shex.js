@@ -27,7 +27,7 @@ const ShExTerm = require("@shexjs/term");
 const ShExVisitor = require("@shexjs/visitor");
 const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
 const NoExtends = Symbol("NO_EXTENDS");
-const ShExUtil = require("@shexjs/util");
+const RdfJsDb = require("@shexjs/neighborhood-rdfjs").ctor;
 const Hierarchy = require('hierarchy-closure')
 
 function getLexicalValue (term) {
@@ -447,7 +447,7 @@ function ShExValidator_constructor(schema, db, options) {
       return extensions.children;
 
       function makeSchemaVisitor (schema) {
-        const schemaVisitor = ShExUtil.Visitor();
+        const schemaVisitor = ShExVisitor();
         let curLabel;
         let curAbstract;
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -461,7 +461,7 @@ function ShExValidator_constructor(schema, db, options) {
         schemaVisitor.visitShape = function (shape) {
           if ("extends" in shape) {
             shape.extends.forEach(ext => {
-              const extendsVisitor = ShExUtil.Visitor();
+              const extendsVisitor = ShExVisitor();
               extendsVisitor.visitShapeRef = function (parent) {
                 extensions.add(parent, curLabel);
                 extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(parent))
@@ -790,7 +790,7 @@ function ShExValidator_constructor(schema, db, options) {
     const errors = [];
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
-      const subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
+      const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
       const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
       if ("errors" in sub)
@@ -803,6 +803,42 @@ function ShExValidator_constructor(schema, db, options) {
     }
     return { type: "ExtensionResults", solutions: passes };
   }
+
+  /** Directly construct a DB from triples.
+   * TODO: should this be in @shexjs/neighborhood-something ?
+   */
+  function makeTriplesDB (queryTracker) { // implements ValidatorNeighborhood
+    var incoming = [];
+    var outgoing = [];
+
+    function getTriplesByIRI(s, p, o, g) {
+      return incoming.concat(outgoing).filter(
+        t =>
+          (!s || s === t.subject) &&
+          (!p || p === t.predicate) &&
+          (!s || s === t.object)
+      );
+    }
+
+    function getNeighborhood (point, shapeLabel, shape) {
+      return {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      getNeighborhood: getNeighborhood,
+      getTriplesByIRI: getTriplesByIRI,
+      getSubjects: function () { return ["!Triples DB can't index subjects"] },
+      getPredicates: function () { return ["!Triples DB can't index predicates"] },
+      getObjects: function () { return ["!Triples DB can't index objects"] },
+      get size() { return undefined; },
+      addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
+      addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
+    };
+  }
+
 
   /** getExtendedTripleConstraints - walk shape's extends to get all
    * referenced triple constraints.
@@ -837,7 +873,7 @@ function ShExValidator_constructor(schema, db, options) {
      * @outs - outgoing arcs
      */
     function visitTripleConstraints (expr, ins, outs) {
-      const visitor = ShExUtil.Visitor();
+      const visitor = ShExVisitor();
       let outerMin = 1;
       let outerMax = 1;
       const oldVisitOneOf = visitor.visitOneOf;

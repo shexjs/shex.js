@@ -8730,6 +8730,83 @@ exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
 /***/ }),
 
+/***/ 319:
+/***/ ((module, exports, __webpack_require__) => {
+
+/** Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset
+ */
+const NeighborhoodRdfJsModule = (function () {
+  const ShExTerm = __webpack_require__(1118);
+
+  function rdfjsDB (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
+
+    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
+    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
+    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
+    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
+
+    function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
+      // I'm guessing a local DB doesn't benefit from shape optimization.
+      let startTime;
+      if (queryTracker) {
+        startTime = new Date();
+        queryTracker.start(false, point, shapeLabel);
+      }
+      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
+      if (queryTracker) {
+        const time = new Date();
+        queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
+        startTime = time;
+      }
+      if (queryTracker) {
+        queryTracker.start(true, point, shapeLabel);
+      }
+      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
+      if (queryTracker) {
+        queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
+      }
+      return {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      // size: db.size,
+      getNeighborhood: getNeighborhood,
+      getSubjects: getSubjects,
+      getPredicates: getPredicates,
+      getObjects: getObjects,
+      getQuads: getQuads,
+      get size() { return db.size; },
+      // getQuads: function (s, p, o, graph, shapeLabel) {
+      //   // console.log(Error(s + p + o).stack)
+      //   if (queryTracker)
+      //     queryTracker.start(!!s, s ? s : o, shapeLabel);
+      //   const quads = db.getQuads(s, p, o, graph)
+      //   if (queryTracker)
+      //     queryTracker.end(quads, new Date() - startTime);
+      //   return quads;
+      // }
+    }
+  }
+
+// ## Exports
+
+return exports = {
+  name: "neighborhood-rdfjs",
+  description: "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset",
+  ctor: rdfjsDB
+};
+
+})();
+
+if (true)
+  module.exports = NeighborhoodRdfJsModule;
+
+
+/***/ }),
+
 /***/ 2839:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
@@ -13465,94 +13542,6 @@ const ShExUtil = {
   }
 */
 
-  rdfjsDB: function (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
-
-    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
-
-    function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
-      // I'm guessing a local DB doesn't benefit from shape optimization.
-      let startTime;
-      if (queryTracker) {
-        startTime = new Date();
-        queryTracker.start(false, point, shapeLabel);
-      }
-      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
-      if (queryTracker) {
-        const time = new Date();
-        queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
-        startTime = time;
-      }
-      if (queryTracker) {
-        queryTracker.start(true, point, shapeLabel);
-      }
-      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
-      if (queryTracker) {
-        queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
-      }
-      return {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      // size: db.size,
-      getNeighborhood: getNeighborhood,
-      getSubjects: getSubjects,
-      getPredicates: getPredicates,
-      getObjects: getObjects,
-      getQuads: getQuads,
-      get size() { return db.size; },
-      // getQuads: function (s, p, o, graph, shapeLabel) {
-      //   // console.log(Error(s + p + o).stack)
-      //   if (queryTracker)
-      //     queryTracker.start(!!s, s ? s : o, shapeLabel);
-      //   const quads = db.getQuads(s, p, o, graph)
-      //   if (queryTracker)
-      //     queryTracker.end(quads, new Date() - startTime);
-      //   return quads;
-      // }
-    }
-  },
-
-  /** Directly construct a DB from triples.
-   */
-  makeTriplesDB: function (queryTracker) {
-    var _ShExUtil = this;
-    var incoming = [];
-    var outgoing = [];
-
-    function getTriplesByIRI(s, p, o, g) {
-      return incoming.concat(outgoing).filter(
-        t =>
-          (!s || s === t.subject) &&
-          (!p || p === t.predicate) &&
-          (!s || s === t.object)
-      );
-    }
-
-    function getNeighborhood (point, shapeLabel, shape) {
-      return {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      getNeighborhood: getNeighborhood,
-      getTriplesByIRI: getTriplesByIRI,
-      getSubjects: function () { return ["!Triples DB can't index subjects"] },
-      getPredicates: function () { return ["!Triples DB can't index predicates"] },
-      getObjects: function () { return ["!Triples DB can't index objects"] },
-      get size() { return undefined; },
-      addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
-      addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
-    };
-  },
-
   NotSupplied: "-- not supplied --", UnknownIRI: "-- not found --",
 
   /**
@@ -13656,7 +13645,7 @@ const ShExTerm = __webpack_require__(1118);
 const ShExVisitor = __webpack_require__(8806);
 const { NoTripleConstraint } = __webpack_require__(3530);
 const NoExtends = Symbol("NO_EXTENDS");
-const ShExUtil = __webpack_require__(9443);
+const RdfJsDb = (__webpack_require__(319).ctor);
 const Hierarchy = __webpack_require__(2515)
 
 function getLexicalValue (term) {
@@ -14062,7 +14051,7 @@ function ShExValidator_constructor(schema, db, options) {
       return extensions.children;
 
       function makeSchemaVisitor (schema) {
-        const schemaVisitor = ShExUtil.Visitor();
+        const schemaVisitor = ShExVisitor();
         let curLabel;
         let curAbstract;
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -14076,7 +14065,7 @@ function ShExValidator_constructor(schema, db, options) {
         schemaVisitor.visitShape = function (shape) {
           if ("extends" in shape) {
             shape.extends.forEach(ext => {
-              const extendsVisitor = ShExUtil.Visitor();
+              const extendsVisitor = ShExVisitor();
               extendsVisitor.visitShapeRef = function (parent) {
                 extensions.add(parent, curLabel);
                 extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(parent))
@@ -14405,7 +14394,7 @@ function ShExValidator_constructor(schema, db, options) {
     const errors = [];
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
-      const subgraph = ShExUtil.makeTriplesDB(null); // These triples were tracked earlier.
+      const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
       const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
       if ("errors" in sub)
@@ -14418,6 +14407,42 @@ function ShExValidator_constructor(schema, db, options) {
     }
     return { type: "ExtensionResults", solutions: passes };
   }
+
+  /** Directly construct a DB from triples.
+   * TODO: should this be in @shexjs/neighborhood-something ?
+   */
+  function makeTriplesDB (queryTracker) { // implements ValidatorNeighborhood
+    var incoming = [];
+    var outgoing = [];
+
+    function getTriplesByIRI(s, p, o, g) {
+      return incoming.concat(outgoing).filter(
+        t =>
+          (!s || s === t.subject) &&
+          (!p || p === t.predicate) &&
+          (!s || s === t.object)
+      );
+    }
+
+    function getNeighborhood (point, shapeLabel, shape) {
+      return {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      getNeighborhood: getNeighborhood,
+      getTriplesByIRI: getTriplesByIRI,
+      getSubjects: function () { return ["!Triples DB can't index subjects"] },
+      getPredicates: function () { return ["!Triples DB can't index predicates"] },
+      getObjects: function () { return ["!Triples DB can't index objects"] },
+      get size() { return undefined; },
+      addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
+      addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
+    };
+  }
+
 
   /** getExtendedTripleConstraints - walk shape's extends to get all
    * referenced triple constraints.
@@ -14452,7 +14477,7 @@ function ShExValidator_constructor(schema, db, options) {
      * @outs - outgoing arcs
      */
     function visitTripleConstraints (expr, ins, outs) {
-      const visitor = ShExUtil.Visitor();
+      const visitor = ShExVisitor();
       let outerMin = 1;
       let outerMax = 1;
       const oldVisitOneOf = visitor.visitOneOf;
@@ -15388,10 +15413,11 @@ if (true)
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 ShExWebApp = (function () {
-  let shapeMap = __webpack_require__(6261)
+  const shapeMap = __webpack_require__(6261)
   return Object.assign({}, {
     ShExTerm:             __webpack_require__(1118),
     Util:                 __webpack_require__(9443),
+    RdfJsDb:              (__webpack_require__(319).ctor),
     Validator:            __webpack_require__(3457),
     Writer:               __webpack_require__(95),
     Loader:               __webpack_require__(1837),

@@ -40,6 +40,7 @@ const Path = require("path");
 const Util = require("util");
 const JsYaml = require('js-yaml');
 const ShExUtil = require("@shexjs/util");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
@@ -395,7 +396,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             metaToResolver(schemaAndData.dataMeta[0]))
           : null;
     schemaAndData.data =
-      ShExUtil.rdfjsDB(schemaAndData.data, queryTracker);
+      RdfJsDb(schemaAndData.data, queryTracker);
 
     if (valParms.serve) {
       if (valParms.shape) {
@@ -999,7 +1000,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           });
 
         if (!("getNeighborhood" in parms.data)) // !! clean up db chaos
-          parms.data = ShExUtil.rdfjsDB(parms.data);
+          parms.data = RdfJsDb(parms.data);
         let result = findNodesAndValidate(parms, parms, options);
         if ("results" in result)
           result = result.results; // otherwise just report the invoked parms.
