@@ -42,8 +42,8 @@ try {
   case "create":
     errorText = "creating validator";
     const inputData = "endpoint" in msg.data
-      ? ShEx.Util.sparqlDB(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-      : ShEx.Util.rdfjsDB(makeStaticDB(msg.data.data));
+      ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+      : ShEx.RdfJsDb(makeStaticDB(msg.data.data));
 
     // const dataURL = "data:text/json," +
     //     JSON.stringify(

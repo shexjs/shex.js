@@ -269,7 +269,7 @@ function makeSchemaCache (selection) {
     function parseShExR () {
       const graphParser = ShEx.Validator.construct(
         parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
-        ShEx.Util.rdfjsDB(graph),
+        ShEx.RdfJsDb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
@@ -321,8 +321,8 @@ function makeTurtleCache (selection, dependencies = []) {
       $("#slurpSpan").remove();
     }
     const res = ret.endpoint
-      ? ShEx.Util.sparqlDB(ret.endpoint, $("#slurp").is(":checked") ? queryTracker() : null)
-      : ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+      ? ShEx.SparqlDb(ret.endpoint, $("#slurp").is(":checked") ? queryTracker() : null)
+      : ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   };
