@@ -501,7 +501,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     const constraintList = this.indexTripleConstraints(shape.expression);
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms);
-    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
+    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
 
     const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
     const partitionErrors = [];

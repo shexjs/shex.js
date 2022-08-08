@@ -5,7 +5,7 @@
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const RdfJs = N3js;
-const ShExApi = ShEx.Api({
+const ShExLoader = ShEx.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 ShEx.ShapeMap.start = ShEx.Validator.start
@@ -246,7 +246,7 @@ function makeSchemaCache (selection) {
     function parseShExR () {
       const graphParser = ShEx.Validator.construct(
         parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
-        ShEx.Util.rdfjsDB(graph),
+        ShEx.RdfJsDb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
@@ -266,7 +266,7 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
   ret.parse = async function (text, base) {
-    const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+    const res = ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   };
@@ -321,7 +321,7 @@ function makeManifestCache (selection) {
     if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
-      if ("action" in elt) {
+      if ("action" in elt) { // TODO: move to ShExUtil
         // compatibility with test suite structure.
 
         const action = elt.action;
@@ -346,23 +346,24 @@ function makeManifestCache (selection) {
             null;
         elt = Object.assign(
           {
+            '@id': new URL(elt['@id'], url).href,
             schemaLabel: schemaLabel,
             schemaURL: action.schema || url,
             // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
             dataLabel: dataLabel,
-            dataURL: action.data || DefaultBase
+            dataURL: action.data || url
           },
           (queryMap ? { queryMap: queryMap } : { queryMapURL: queryMapURL }),
           { status: elt["@type"] === "sht:ValidationFailure" ? "nonconformant" : "conformant" }
         );
         if ("termResolver" in action || "termResolverURL" in action) {
           elt.meta = action.termResolver;
-          elt.metaURL = action.termResolverURL || DefaultBase;
+          elt.metaURL = action.termResolverURL || url;
         }
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], new URL(url, DefaultBase).href).href;
+          elt[parm] = new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }
@@ -807,7 +808,7 @@ async function callValidator (done) {
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
       try {
-        const loaded = await ShExApi.load({shexc: [alreadLoaded]}, null);
+        const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null);
         let time;
         const validator = ShEx.Validator.construct(
           loaded.schema,
