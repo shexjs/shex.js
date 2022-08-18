@@ -223,6 +223,8 @@ const ShExLoaderCjsModule = function (config = {}) {
              parseShExC, mergeSchema, schemaOptions, allSchemas)
     loadList(json, returns.schemaMeta, "application/json",
              parseShExJ, mergeSchema, schemaOptions, allSchemas)
+    loadList(schema.turtle || [], returns.schemaMeta, "text/turtle",
+             parseShExR, mergeSchema, schemaOptions, allSchemas)
 
     const allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
     loadList(turtle, returns.dataMeta, "text/turtle",
@@ -274,6 +276,31 @@ const ShExLoaderCjsModule = function (config = {}) {
     } catch (e) {
       const e2 = Error("error parsing JSON " + url + ": " + e)
       // e2.stack = e.stack
+      return Promise.reject(e2)
+    }
+  }
+
+  async function parseShExR (text, mediaType, url, meta, schemaOptions, resourceLoadControler) {
+    try {
+      const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler)
+      const graph = new config.rdfjs.Store();
+      graph.addQuads(x.graph);
+      const graphParser = schemaOptions.graphParser.validator.construct(
+        schemaOptions.graphParser.schema,
+        schemaOptions.graphParser.rdfjsdb(graph),
+        {}
+      );
+      const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
+      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.start);
+      if ("errors" in val)
+        throw Error(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`)
+      const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
+      await loadSchemaImports(schema, resourceLoadControler); // shouldn't be any
+      return Promise.resolve({mediaType, url, schema})
+    } catch (e) {
+      const e2 = Error("error parsing Turtle schema " + url + ": " + e)
+      if (typeof e === "object" && "stack" in e)
+        e2.stack = e.stack
       return Promise.reject(e2)
     }
   }
