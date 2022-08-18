@@ -7,7 +7,7 @@ const Fs = require("fs");
 const Path = require("path");
 
 /* devDependency on @shexjs/node makes lerna whine:
-   > WARN ECYCLE @shexjs/api -> @shexjs/util -> @shexjs/node -> @shexjs/api
+   > WARN ECYCLE @shexjs/loader -> @shexjs/util -> @shexjs/node -> @shexjs/loader
    so we can't use:
    > const ShExNode = require("@shexjs/node")({
    >   rdfjs: N3,
@@ -64,6 +64,7 @@ function runCliTests (scriptArgumentLists, fromDir, dumpTimeStamps) {
         ShExNode.GET(fromHere(test.result)).then(function (loaded) { return { result: loaded }; });
 
         test.exec = Queue.add(cancel => new Promise(function (resolve, reject) {
+
           const program = child_process.spawn("../bin/" + script, test.args, {cwd: fromDir});
 
           if (typeof test.stdin !== "undefined") {  
@@ -163,6 +164,44 @@ function runCliTests (scriptArgumentLists, fromDir, dumpTimeStamps) {
   }
 }
 
+/** create a server and return the URL the start of the tests hierarchy
+ * @param hostname e.g. localhost, 127.0.0.1, ...
+ * @param servedTestsPath URL path where serverRoot will be served from
+ * @param path to test files in filesystem
+ */
+function startLocalServer (hostname, servedTestsPath, serverRoot) {
+  const Fs = require('fs');
+  const Path = require("path");
+
+  var http = require('http')
+  var server = http.createServer(function (request, response) {
+    const { method, url: path, rawHeaders } = request;
+    if (!path.startsWith(servedTestsPath)) throw Error(`${method} ${path} is outside of ${servedTestsPath}`);
+
+    const filePath = Path.join(serverRoot, path.substr(servedTestsPath.length));
+    if (!Fs.existsSync(filePath)) {
+      response.writeHead(404, {"Content-Type" : "text/plain"});
+      response.end(`${method} ${path} not found`);
+    } else {
+      const ext = Path.parse(path).ext;
+      const mediaType = {
+        ".val": "application/json+ld",
+        ".ttl": "text/turtle",
+        ".shex": "text/shex",
+        ".json": "application/json",
+        ".jsonld": "application/json+ld",
+      }[ext] || "text/plain";
+      response.writeHead(200, {"Content-Type" : mediaType});
+      response.end(Fs.readFileSync(filePath, 'utf8'));
+    }
+  });
+  server.listen(); // picks a free port
+  const ret = "http://" + hostname + ':' + server.address().port + servedTestsPath;
+  after(() => { server.close(); }); // shut down this server when mocha thinks it's done (otherwise process will wait).
+  return ret;
+}
+
 module.exports = {
   runCliTests,
+  startLocalServer,
 };

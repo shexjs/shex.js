@@ -113,7 +113,7 @@ app.
 
       var _this = this;
       yield ShExLoader
-        .load([parms.schemaFile], [], [parms.dataFile], [])
+        .load({shexc: [parms.schemaFile]}, {turtle: [parms.dataFile]}, [])
         .then(function (loaded) {
           function knownShape (label) {
             return label in loaded.schema.shapes;

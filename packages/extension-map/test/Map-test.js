@@ -5,6 +5,7 @@ const TERSE = VERBOSE;
 const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 
 const ShExUtil = require("@shexjs/util");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExTerm = require("@shexjs/term");
 const RdfJs = require("n3");
 const ShExNode = require("@shexjs/node")({
@@ -31,8 +32,8 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
     inputDataFilePath = Path.resolve(__dirname, inputDataFilePath);
     expectedRdfFilePath = Path.resolve(__dirname, expectedRdfFilePath);
     // Lean on ShExNode to load all the schemas and data graphs.
-    const loads = await Promise.all([ShExNode.load(srcSchemas, [], [inputDataFilePath], [], {index: true}),
-                                     ShExNode.load(targetSchemas, [], [expectedRdfFilePath], [], {index: true})])
+    const loads = await Promise.all([ShExNode.load({shexc: srcSchemas}, {turtle: [inputDataFilePath]}, {index: true}),
+                                     ShExNode.load({shexc: targetSchemas}, {turtle: [expectedRdfFilePath]}, {index: true})])
     loads[0].data.toString = loads[1].data.toString = graphToString;
     const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
     const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }
@@ -46,7 +47,7 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
   // console.log([inputData.graph.size, JSON.stringify(smap), expectedRdf.graph.size])
 
   // prepare validator    
-  var validator = ShExValidator.construct(srcSchema, ShExUtil.rdfjsDB(inputData.graph), {noCache: true});
+  var validator = ShExValidator.construct(srcSchema, RdfJsDb(inputData.graph), {noCache: true});
   const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
   // run validator

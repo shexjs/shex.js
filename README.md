@@ -157,12 +157,12 @@ const shexc = "http://shex.io/examples/Issue.shex";
 const data = "http://shex.io/examples/Issue1.ttl";
 const node = "http://shex.io/examples/Issue1";
 
-const ShExApi = require("@shexjs/api");
-const ShExUtil = require("@shexjs/util");
+const ShExLoader = require("@shexjs/loader");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator");
-ShExApi.load([shexc], [], [data], []).then(function (loaded) {
-    var db = ShExUtil.rdfjsDB(loaded.data);
-    var validator = ShExValidator.construct(loaded.schema, ShExUtil.rdfjsDB(db), { results: "api" });
+ShExLoader.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
+    var db = RdfJsDb(loaded.data);
+    var validator = ShExValidator.construct(loaded.schema, db, { results: "api" });
     var result = validator.validate([{node: node, shape: ShExValidator.start}]);
     console.log(result);
 });
@@ -216,7 +216,7 @@ As with validation, the ShExLoader wrapes callbacks and simplifies parsing the l
 var shexc = "http://shex.io/examples/Issue.shex";
 
 var shex = require("shex");
-shex.Loader.load([shexc], [], [], []).then(function (loaded) {
+shex.Loader.load({shexc: [shexc]}, null).then(function (loaded) {
     console.log(JSON.stringify(loaded.schema, null, "  "));
 });
 ```
@@ -298,22 +298,22 @@ It should validate, which involves the IMPORT of `3circRefS2-IS3` and `3circRefS
 This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:
 
 - [`shape-map`](packages/shape-map#readme) -- a [ShapeMap](https://shexspec.github.io/shape-map/) parser
-- ['@shexjs/parser'](packages/shex-parser#readme) -- parse ShExC into ShExJ
-- ['@shexjs/writer'](packages/shex-writer#readme) -- serialize ShExK as ShExC
-- ['@shexjs/term'](packages/shex-term#readme) -- RDF terms uses in ShEx
-- ['@shexjs/util'](packages/shex-util#readme) -- some utilities for transforming schemas or validation output
-- ['@shexjs/visitor'](packages/shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
-- ['@shexjs/validator'](packages/shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-- ['@shexjs/eval-simple-1err'](packages/eval-simple-1err#readme) -- eval-simple-1err
-- ['@shexjs/eval-threaded-nerr'](packages/eval-threaded-nerr#readme) -- eval-threaded-nerr
-- ['@shexjs/api'](packages/shex-api#readme) -- an API for loading and using ShEx schemas
-- ['@shexjs/node'](packages/shex-node#readme) -- additional API functionality for a node environment
-- ['@shexjs/cli'](packages/shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
-- ['@shexjs/webapp'](packages/shex-webapp#readme) -- the shex-simple WEBApp
-- ['@shexjs/path'](packages/shex-path#readme) -- traverse ShEx schemas with a path language
-- ['@shexjs/extension-test'](packages/extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
-- ['@shexjs/extension-map'](packages/extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
-- ['@shexjs/extension-eval'](packages/extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
+- [`@shexjs/parser`](packages/shex-parser#readme) -- parse ShExC into ShExJ
+- [`@shexjs/writer`](packages/shex-writer#readme) -- serialize ShExK as ShExC
+- [`@shexjs/term`](packages/shex-term#readme) -- RDF terms uses in ShEx
+- [`@shexjs/util`](packages/shex-util#readme) -- some utilities for transforming schemas or validation output
+- [`@shexjs/visitor`](packages/shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
+- [`@shexjs/validator`](packages/shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
+!- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) -- eval-simple-1err
+- [`@shexjs/eval-threaded-nerr`](packages/eval-threaded-nerr#readme) -- eval-threaded-nerr
+- [`@shexjs/loader`](packages/shex-loader#readme) -- an API for loading and using ShEx schemas
+- [`@shexjs/node`](packages/shex-node#readme) -- additional API functionality for a node environment
+- [`@shexjs/cli`](packages/shex-cli#readme) -- a set of command line tools for transformaing and validating with schemas
+- [`@shexjs/webapp`](packages/shex-webapp#readme) -- the shex-simple WEBApp
+- [`@shexjs/shape-path-query`](packages/shex-shape-path-query#readme) -- traverse ShEx schemas with a path language
+- [`@shexjs/extension-test`](packages/extension-test#readme) -- a small language for testing semantic actions in ShEx implementations ([more](http://shex.io/extensions/Test/))
+- [`@shexjs/extension-map`](packages/extension-map#readme) -- an extension for transforming data from one schema to another ([more](http://shex.io/extensions/Map/))
+- [`@shexjs/extension-eval`](packages/extension-eval#readme) -- simple extension which evaluates Javascript semantic action code ([more](http://shex.io/extensions/Eval/))
 
 
 

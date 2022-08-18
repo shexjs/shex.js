@@ -9,6 +9,7 @@ const BASE = "http://a.example/application/base/";
 const Fs = require("fs");
 const ShExParser = require("@shexjs/parser");
 const ShExUtil = require("@shexjs/util");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExValidator = require("@shexjs/validator");
 const ShExWriter = require("@shexjs/writer");
 const N3 = require("n3");
@@ -28,7 +29,7 @@ const negativeTests = [
   {path: findPath("negativeStructure"), include: "Structural error"}
 ];
 const illDefinedTestsPath = findPath("illDefined");
-const nsPath = "http://www.w3.org/ns/" // ShExUtil.SX._namespace has "shex#" at end
+const nsPath = "http://www.w3.org/ns/shex#";
 
 const parser = ShExParser.construct(BASE, null, {index: true});
 
@@ -46,7 +47,7 @@ describe("A ShEx parser", function () {
   // });
 
   // Ensure the same blank node identifiers are used in every test
-  beforeEach(function () { parser._resetBlanks(); });
+  beforeEach(function () { /*parser._resetBlanks();*/ });
 
   function expectError (f, match) {
     let error = null;
@@ -123,6 +124,8 @@ describe("A ShEx parser", function () {
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
+              "type": "ShapeDecl",
+              "shapeExpr": {
               "type": "ShapeAnd",
               "shapeExprs": [
                 {
@@ -132,7 +135,7 @@ describe("A ShEx parser", function () {
                 },
                 "http://ex.example/S"
               ]
-            }
+            } }
           ]
         });
       }, "unknown property: \"nested\"");
@@ -156,10 +159,7 @@ describe("A ShEx parser", function () {
 
            const schema = Fs.readFileSync(shexCFile, "utf8");
            if (VERBOSE) console.log("schema: [[\n" + schema + "\n]]");
-           try {
-             parser._setFileName(shexCFile);
-             parser._setBase(BASE);
-             const parsedSchema = parser.parse(schema);
+             const parsedSchema = parser.parse(schema, BASE, {}, shexCFile);
              meta.base = parsedSchema._base;
              meta.prefixes = parsedSchema._prefixes;
              const canonParsed = ShExUtil.canonicalize(parsedSchema, BASE);
@@ -167,10 +167,6 @@ describe("A ShEx parser", function () {
              if (VERBOSE) console.log("parsed:" + JSON.stringify(canonParsed));
              if (VERBOSE) console.log("expected:" + JSON.stringify(canonAbstractSyntax));
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
-           } catch (e) {
-             parser.reset();
-             throw(e);
-           }
          });
 
     if (TEST_ShExR && !EARL) {
@@ -181,13 +177,11 @@ describe("A ShEx parser", function () {
 
            const shexR = Fs.readFileSync(shexRFile, "utf8");
            if (VERBOSE) console.log("\nShExR:", shexR);
-           try {
              const schemaGraph = new N3.Store();
              schemaGraph.addQuads(new N3.Parser({baseIRI: BASE, blankNodePrefix: "", format: "text/turtle"}).parse(shexR));
              // console.log(schemaGraph.getQuads());
-             const schemaDriver = ShExUtil.rdfjsDB(schemaGraph);
-             const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "shex#Schema")[0].subject;
-             parser._setFileName(ShExRSchemaFile);
+             const schemaDriver = RdfJsDb(schemaGraph);
+             const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "Schema")[0].subject;
              const graphParser = ShExValidator.construct(
                GraphSchema,
                schemaDriver,
@@ -205,10 +199,6 @@ describe("A ShEx parser", function () {
              delete canonParsed.productions;
              delete canonAbstractSyntax.productions;
              expect(canonParsed).to.deep.equal(canonAbstractSyntax);
-           } catch (e) {
-             parser.reset();
-             throw(e);
-           }
          });
     }
 
@@ -225,18 +215,11 @@ describe("A ShEx parser", function () {
               else w = text;
             });
           if (VERBOSE) console.log("\nwritten: [[\n" + w + "\n]]");
-          parser._setFileName(shexCFile + " (generated)");
-          try {
-            parser._setBase(BASE); // reset 'cause ShExR has a BASE directive.
-            const parsed2 = parser.parse(w);
+            const parsed2 = parser.parse(w, BASE, {}, shexCFile + " (generated)");
             if (VERBOSE) console.log("re-parsed:", JSON.stringify(parsed2));
             const canonParsed2 = ShExUtil.canonicalize(parsed2, BASE);
             const canonAbstractSyntax = ShExUtil.canonicalize(abstractSyntax);
             expect(canonParsed2).to.deep.equal(canonAbstractSyntax);
-          } catch (e) {
-            parser.reset();
-            throw(e);
-          }
         });
 
         it ("should write '" + jsonSchemaFile + "' with as few ()s as possible.", function () {
@@ -247,13 +230,7 @@ describe("A ShEx parser", function () {
               else w = text;
             });
           if (VERBOSE) console.log("\nsimple: [[\n" + w + "\n]]");
-          parser._setFileName(shexCFile + " (simplified)");
-          try {
-            const parsed3 = parser.parse(w); // test that simplified also parses
-          } catch (e) {
-            parser.reset();
-            throw(e);
-          }
+          parser.parse(w, "http://should.not/appear", {}, shexCFile + " (simplified)"); // test that simplified also parses
         });
       }
     } catch (e) {
@@ -280,7 +257,7 @@ describe("A ShEx parser", function () {
          ? dir + '/manifest#' + test.name
          : "should not parse schema '" + path + "'", function (report) {
         if (VERBOSE) console.log(test.name);
-        ShExNode.load([path], [], [], [], { parser: parser }, {}).
+        ShExNode.load({shexc: [path]}, null, { parser: parser }, {}).
           then(function (loaded) {
             report(Error("Expected " + path + " to fail with " + testSet.include));
           }).
@@ -324,7 +301,7 @@ describe("A ShEx parser", function () {
 
       it("should use those prefixes", function () {
         const schema = "a:a { b:b .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -340,15 +317,15 @@ describe("A ShEx parser", function () {
 
       it("should use those prefixes", function () {
         const schema = "a:a { b:b .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
       it("should allow temporarily overriding prefixes", function () {
         const schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
-        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -358,7 +335,7 @@ describe("A ShEx parser", function () {
 
       it("should not take over changes to the original prefixes", function () {
         prefixes.a = "http://a.example/xyz#";
-        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -372,15 +349,15 @@ describe("A ShEx parser", function () {
 
       it("should use those prefixes", function () {
         const schema = "a: { b: .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
       it("should allow temporarily overriding prefixes", function () {
         const schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#");
-        expect(parser.parse("a: { b: .+ }")._index.shapeExprs["http://a.example/abc#"].expression.predicate)
+        expect(parser.parse("a: { b: .+ }")._index.shapeExprs["http://a.example/abc#"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
@@ -390,45 +367,18 @@ describe("A ShEx parser", function () {
   }
 });
 
-if (!EARL && TEST_Vestiges) {
-  /* Make sure loadShExImports_NotUsed doesn't rot before we decide whether we
-   * want it in the API.
-   */
-  describe("loadShExImports_NotUsed", function () {
-    schemas.filter(test => {
-      return "trait" in test && test.trait.indexOf("Import") !== -1;
-    }).filter(t => {
-      return true;
-    }).forEach(test => {
-      const path = schemasPath + test.shex;
-      it("should load the same imports as ShExNode.load in '" + path + "'", function () {
-        parser._setBase("file://"+path);
-        return Promise.all([
-          ShExNode.load(["file://"+path], [], [], [], { parser: parser, iriTransform: pickShEx }, {}),
-          ShExNode.loadShExImports_NotUsed(path, parser, pickShEx)
-        ]).then(function (loadedAndSchema) {
-          expect(ShExUtil.canonicalize(loadedAndSchema[0].schema, BASE)).to.deep.equal(ShExUtil.canonicalize(loadedAndSchema[1], BASE));
-        });
-        function pickShEx (i) {
-          return i + ".shex";
-        }
-      });
-    });
-  });
-}
-
 function loadGraphSchema () {
   if (TEST_ShExR) {
-    const ret = parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8"));
+    const ret = parser.parse(Fs.readFileSync(ShExRSchemaFile, "utf8"), 'file://' + ShExRSchemaFile, {}, ShExRSchemaFile);
 
-    // @@ What the heck is this for?
+    // For testing, wrap TC.valueExprs in ShapeOr to allow references undefined shapes (i.e. no properties ergo empty shape).
     const valueExpr_tripleCnstrnt = ret._index.shapeExprs[nsPath + "TripleConstraint"].
-          expression.expressions.find(e => {
-            return e.predicate === nsPath + "shex#valueExpr";
+          shapeExpr.expression.expressions.find(e => {
+            return e.predicate === nsPath + "valueExpr";
           });
     valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",
                                           shapeExprs:
-                                          [ nsPath + "shapeExpr",
+                                          [ valueExpr_tripleCnstrnt.valueExpr, // should be nsPath + "shapeDeclOrExpr"
                                             { type: "Shape", closed: true } ] }
 
     return ret;

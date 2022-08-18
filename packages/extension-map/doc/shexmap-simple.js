@@ -5,7 +5,7 @@
 const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const RdfJs = N3js;
-const ShExApi = ShEx.Api({
+const ShExLoader = ShEx.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
@@ -79,9 +79,10 @@ function parseTurtle (text, meta, base) {
   return ret;
 }
 
-const shexParser = ShEx.Parser.construct(DefaultBase, null, {index: true});
+shexParserOptions = {index: true, duplicateShape: "abort"};
+const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
 function parseShEx (text, meta, base) {
-  shexParser._setOptions({duplicateShape: $("#duplicateShape").val()});
+  shexParserOptions.duplicateShape = $("#duplicateShape").val();
   shexParser._setBase(base);
   const ret = shexParser.parse(text);
   // ret = ShEx.Util.canonicalize(ret, DefaultBase);
@@ -252,7 +253,7 @@ function makeSchemaCache (selection) {
     function parseShExR () {
       const graphParser = ShEx.Validator.construct(
         parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
-        ShEx.Util.rdfjsDB(graph),
+        ShEx.RdfJsDb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
@@ -272,7 +273,7 @@ function makeSchemaCache (selection) {
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
   ret.parse = async function (text, base) {
-    const res = ShEx.Util.rdfjsDB(parseTurtle(text, ret.meta, base));
+    const res = ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   };
@@ -296,7 +297,9 @@ function makeManifestCache (selection) {
       }
       try {
         // exceptions pass through to caller (asyncGet)
-        textOrObj = JSON.parse(textOrObj);
+        textOrObj = url.endsWith(".yaml")
+          ? ShExWebApp.JsYaml.load(textOrObj)
+          : JSON.parse(textOrObj);
       } catch (e) {
         $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
         const throwMe = Error(e + '\n' + textOrObj);
@@ -329,7 +332,7 @@ function makeManifestCache (selection) {
     if (!Array.isArray(textOrObj))
       textOrObj = [textOrObj];
     const demos = textOrObj.reduce((acc, elt) => {
-      if ("action" in elt) {
+      if ("action" in elt) { // TODO: move to ShExUtil
         // compatibility with test suite structure.
 
         const action = elt.action;
@@ -354,23 +357,24 @@ function makeManifestCache (selection) {
             null;
         elt = Object.assign(
           {
+            '@id': new URL(elt['@id'], url).href,
             schemaLabel: schemaLabel,
             schemaURL: action.schema || url,
             // dataLabel: "comment" in elt ? elt.comment : (queryMap || dataURL),
             dataLabel: dataLabel,
-            dataURL: action.data || DefaultBase
+            dataURL: action.data || url
           },
           (queryMap ? { queryMap: queryMap } : { queryMapURL: queryMapURL }),
           { status: elt["@type"] === "sht:ValidationFailure" ? "nonconformant" : "conformant" }
         );
         if ("termResolver" in action || "termResolverURL" in action) {
           elt.meta = action.termResolver;
-          elt.metaURL = action.termResolverURL || DefaultBase;
+          elt.metaURL = action.termResolverURL || url;
         }
       }
       ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
         if (parm in elt) {
-          elt[parm] = new URL(elt[parm], new URL(url, DefaultBase).href).href;
+          elt[parm] = new URL(elt[parm], url).href;
         } else {
           delete elt[parm];
         }
@@ -720,6 +724,14 @@ async function pickData (name, dataTest, elt, listItems, side) {
       }
       await copyTextMapToEditMap();
 
+      /* This is kind of a wart 'cause I haven't made a 3rd level of manifest entry for materialization */
+      if (dataTest.entry.outputSchema === undefined && dataTest.outputSchemaUrl) {
+        dataTest.outputSchemaUrl = new URL(dataTest.entry.outputSchemaURL, dataTest.url).href; // absolutize
+        const resp = await fetch(dataTest.outputSchemaUrl);
+        if (!resp.ok)
+          throw Error("fetch <" + dataTest.outputSchemaUrl + "> got error response " + resp.status + ": " + resp.statusText);
+        dataTest.entry.outputSchema = await resp.text();
+      }
       Caches.outputSchema.set(dataTest.entry.outputSchema, dataTest.outputSchemaUrl);
       $("#outputSchema .status").text(name);
       Caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
@@ -783,9 +795,9 @@ function disableResultsAndValidate (evt) {
   results.start();
   SharedForTests.promise = new Promise((resolve, reject) => {
     setTimeout(async function () {
-      const errors = await copyEditMapToTextMap() // will update if #editMap is dirty
+      const errors = await copyEditMapToTextMap(); // will update if #editMap is dirty
       if (errors.length === 0)
-        resolve(await callValidator())
+        resolve(await callValidator());
     }, 0);
   })
 }
@@ -832,7 +844,7 @@ async function callValidator (done) {
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
       try {
-        const loaded = await ShExApi.load([alreadLoaded], [], [], []);
+        const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null);
         let time;
         const validator = ShEx.Validator.construct(
           loaded.schema,
@@ -1773,17 +1785,26 @@ async function loadSearchParameters () {
       const smErrors = await dataInputHandler();
       if (smErrors.length === 0)
         $("#validate")/*.focus()*/.click();
-      // at.focus();
-      return false; // same as e.preventDefault();
+      return false;
+    } else if (e.ctrlKey && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.code) !== -1) { // ctrl-arrow
+      let newLi = null;
+      if ($(':focus').length !== 1) {
+        newLi = $('[data-navColumn="0"] li').first();
+      } else if ($('ul[data-navColumn] button:focus').length === 1) {
+        newLi = navFrom(e.code, $(':focus').parent());
+      }
+      if (newLi)
+        $(newLi).find('button').focus();
+      return false;
     } else if (e.ctrlKey && e.key === "\\") {
       $("#materialize").click();
-      return false; // same as e.preventDefault();
+      return false;
     } else if (e.ctrlKey && e.key === "[") {
       bindingsToTable()
-      return false; // same as e.preventDefault();
+      return false;
     } else if (e.ctrlKey && e.key === "]") {
       tableToBindings()
-      return false; // same as e.preventDefault();
+      return false;
     } else {
       return true;
     }
@@ -1799,10 +1820,54 @@ async function loadSearchParameters () {
     return callValidator();
   }
   return loaded;
+
+  function navFrom (keyCode, fromLi) {
+    const fromColumn = fromLi.parent();
+    const fromLiNo = fromLi.index();
+    const lis = fromColumn.children();
+    const fromColumnNo = parseInt(fromColumn.attr('data-navColumn'));
+    const columns = $('ul[data-navColumn]').get().sort(
+      (l, r) =>
+        parseInt($(l).attr('data-navColumn')) - parseInt($(r).attr('data-navColumn'))
+    );
+    switch (keyCode) {
+    case 'ArrowLeft':
+      if (fromColumnNo > 0) {
+        const newColumn = $(columns[fromColumnNo - 1]);
+        return firstOf(newColumn, '.selected', 'li:first-child');
+      }
+      break;
+    case 'ArrowRight':
+      if (fromColumnNo < columns.length - 1) {
+        const newColumn = $(columns[fromColumnNo + 1]);
+        return firstOf(newColumn, '.selected', 'li:first-child');
+      }
+      break;
+    case 'ArrowUp':
+      if (fromLiNo > 0) {
+        return lis[fromLiNo - 1];
+      }
+      break;
+    case 'ArrowDown':
+      if (fromLiNo < lis.length - 1) {
+        return lis[fromLiNo + 1];
+      }
+      break;
+    default: throw Error(e.code);
+    }
+  }
+
+  function firstOf (node, ...selectors) { // return first successful selector. gotta be an idiom for this in jquery
+    for (let i = 0; i < selectors.length; ++i) {
+      const ret = node.find(selectors[i]);
+      if (ret.length > 0) {
+        return ret.get(0);
+      }
+    }
+  }
 }
 
 function setTextAreaHandlers (listItems) {
-  const textAreaCaches = ["inputSchema", "inputData", "shapeMap"]
   const timeouts = Object.keys(Caches).reduce((acc, k) => {
     acc[k] = undefined;
     return acc;

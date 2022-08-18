@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/eval-threaded-nerr",
-  "version": "1.0.0-alpha.21",
+  "version": "1.0.0-alpha.15",
   "description": "Shape Expressions triple expression evaluator - hard-working regexp engine returning multiple errors.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,7 +20,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "^1.0.0-alpha.21"
+    "@shexjs/term": "^1.0.0-alpha.15",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.15"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

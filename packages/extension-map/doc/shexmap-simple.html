@@ -39,6 +39,8 @@
         border-width: 2px;
         padding: 1px 0px;
       }
+      ul[data-navColumn] button:focus::before { content: "> "; color: #730; margin-left: -1em; }
+      ul[data-navColumn] button:focus::after  { content: " <"; color: #730; margin-right: -1em; }
       .schema.textarea, .schema, .schema.ui-dialog-content { background-color: #f4f4ff; color: #000000; border-color: #fc561c }
       #inputSchema li.selected button { background-color: #e8e8ff; color: #000000; }
       #inputData textarea, .data, .data.ui-dialog-content { background-color: #f4fff4; color: #000000; border-color: #f0a133 }
@@ -298,7 +300,7 @@ ul {
           <div id="manifestDrop" class="droparea">
             <p>Manifest:</p>
             <div class="manifest">
-              <ul>
+              <ul data-navColumn="0">
                 <li>Javascript is disabled or slow to load or something went a bit pear-shaped.</li>
               </ul>
             </div>
@@ -341,14 +343,20 @@ ul {
         <div style="margin-left: .1em;">
           <div class="passes" style="float:left; display:none;">
             <p></p>
-            <ul>
+            <ul data-navColumn="1">
               <li>Select an example schema on the left for passing data.</li>
             </ul>
           </div>
           <div class="fails" style="float:left; display:none;">
             <p></p>
-            <ul>
+            <ul data-navColumn="2">
               <li>Select an example schema on the left for failing data.</li>
+            </ul>
+          </div>
+          <div class="indeterminant" style="float:left; display:none;">
+            <p></p>
+            <ul data-navColumn="3">
+              <li>Select an example schema on the left for untested data.</li>
             </ul>
           </div>
         </div>
@@ -408,7 +416,7 @@ ul {
     <script src="../../shex-term/shex-term.js"                   ></script><script>modules["@shexjs/term"              ] = module.exports;</script>
     <script src="../../shex-visitor/shex-visitor.js"             ></script><script>modules["@shexjs/visitor"           ] = module.exports;</script>
     <script src="../../shex-util/shex-util.js"                   ></script><script>modules["@shexjs/util"              ] = module.exports;</script>
-    <script src="../../shex-api/shex-api.js"                     ></script><script>modules["@shexjs/api"               ] = module.exports;</script>
+    <script src="../../shex-loader/shex-loader.js"               ></script><script>modules["@shexjs/loader"               ] = module.exports;</script>
     <script src="../../eval-threaded-nerr/eval-threaded-nerr.js" ></script><script>modules["@shexjs/eval-threaded-nerr"] = module.exports;</script>
     <script src="../../eval-simple-1err/eval-simple-1err.js"     ></script><script>modules["@shexjs/eval-simple-1err"  ] = module.exports;</script>
     <script src="../../shex-validator/shex-validator.js"         ></script><script>modules["@shexjs/validator"         ] = module.exports;</script>

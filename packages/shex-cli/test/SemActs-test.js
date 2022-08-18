@@ -2,6 +2,7 @@ const VERBOSE = "VERBOSE" in process.env
 const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null
 
 const ShExUtil = require("@shexjs/util")
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator")
 const ShExParser = require("@shexjs/parser")
 const ShapeMapParser = require("shape-map").Parser
@@ -25,9 +26,6 @@ const ManifestBase = new URL(ManifestFile, Base)
 describe('Invoking SemActs', function () {
   const schemaParser = ShExParser.construct(ManifestBase.href, null, {index: true})
 
-  // Ensure the same blank node identifiers are used in every test
-  beforeEach(function () { schemaParser._resetBlanks(); })
-
   // Load manifest
   const manifest = parseJSON(Fs.readFileSync(ManifestFile, 'utf8'))
   if (TESTS)
@@ -43,7 +41,7 @@ describe('Invoking SemActs', function () {
     const schemaStr = Fs.readFileSync(schemaFile + (test.schemaURL.endsWith(".json") ? "" : ".shex"), 'utf8')
     const schema = test.schemaURL.endsWith(".json")
           ? JSON.parse(schemaStr)
-          : schemaParser.parse(schemaStr); schemaParser._resetBlanks()
+          : schemaParser.parse(schemaStr);
     const schemaMeta = {
       base: schema._base,
       prefixes: schema._prefixes || {}
@@ -68,7 +66,7 @@ describe('Invoking SemActs', function () {
     const expected = JSON.parse(Fs.readFileSync(expectedFile, 'utf8'))
 
     // Parse ShapeMap and validate.
-    const validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(data))
+    const validator = ShExValidator.construct(schema, RdfJsDb(data))
     Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)

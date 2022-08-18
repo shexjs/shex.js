@@ -75,9 +75,7 @@
       XSD + "positiveInteger"
   ];
 
-  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
-    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
-    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
+  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i;
 
   const numericFacets = ["mininclusive", "minexclusive",
                        "maxinclusive", "maxexclusive"];
@@ -90,11 +88,6 @@
   // Appends the item to the array and returns the array
   function appendTo(array, item) {
     return array.push(item), array;
-  }
-
-  // Appends the items to the array and returns the array
-  function appendAllTo(array, items) {
-    return array.push.apply(array, items), array;
   }
 
   // Extends a base object with properties of other objects
@@ -112,113 +105,6 @@
     for (let i = 0, l = arguments.length; i < l; i++)
       union = union.concat.apply(union, arguments[i]);
     return union;
-  }
-
-  // N3.js:lib/N3Parser.js<0.4.5>:58 with
-  //   s/this\./ShExJisonParser./g
-  // ### `_setBase` sets the base IRI to resolve relative IRIs.
-  ShExJisonParser._setBase = function (baseIRI) {
-    if (!baseIRI)
-      baseIRI = null;
-
-    // baseIRI '#' check disabled to allow -x 'data:text/shex,...#'
-    // else if (baseIRI.indexOf('#') >= 0)
-    //   throw new Error('Invalid base IRI ' + baseIRI);
-
-    // Set base IRI and its components
-    if (ShExJisonParser._base = baseIRI) {
-      ShExJisonParser._basePath   = baseIRI.replace(/[^\/?]*(?:\?.*)?$/, '');
-      baseIRI = baseIRI.match(schemeAuthority);
-      ShExJisonParser._baseRoot   = baseIRI[0];
-      ShExJisonParser._baseScheme = baseIRI[1];
-    }
-  }
-
-  // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./ShExJisonParser./g
-  //   s/token/iri/
-  // ### `_resolveIRI` resolves a relative IRI token against the base path,
-  // assuming that a base path has been set and that the IRI is indeed relative.
-  function _resolveIRI (iri) {
-    switch (iri[0]) {
-    // An empty relative IRI indicates the base IRI
-    case undefined: return ShExJisonParser._base;
-    // Resolve relative fragment IRIs against the base IRI
-    case '#': return ShExJisonParser._base + iri;
-    // Resolve relative query string IRIs by replacing the query string
-    case '?': return ShExJisonParser._base.replace(/(?:\?.*)?$/, iri);
-    // Resolve root-relative IRIs at the root of the base IRI
-    case '/':
-      // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? ShExJisonParser._baseScheme : ShExJisonParser._baseRoot) + _removeDotSegments(iri);
-    // Resolve all other IRIs at the base IRI's path
-    default: {
-      return _removeDotSegments(ShExJisonParser._basePath + iri);
-    }
-    }
-  }
-
-  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
-  function _removeDotSegments (iri) {
-    // Don't modify the IRI if it does not contain any dot segments
-    if (!dotSegments.test(iri))
-      return iri;
-
-    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    const length = iri.length;
-    let result = '', i = -1, pathStart = -1, next = '/', segmentStart = 0;
-
-    while (i < length) {
-      switch (next) {
-      // The path starts with the first slash after the authority
-      case ':':
-        if (pathStart < 0) {
-          // Skip two slashes before the authority
-          if (iri[++i] === '/' && iri[++i] === '/')
-            // Skip to slash after the authority
-            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
-              i = pathStart;
-        }
-        break;
-      // Don't modify a query string or fragment
-      case '?':
-      case '#':
-        i = length;
-        break;
-      // Handle '/.' or '/..' path segments
-      case '/':
-        if (iri[i + 1] === '.') {
-          next = iri[++i + 1];
-          switch (next) {
-          // Remove a '/.' segment
-          case '/':
-            result += iri.substring(segmentStart, i - 1);
-            segmentStart = i + 1;
-            break;
-          // Remove a trailing '/.' segment
-          case undefined:
-          case '?':
-          case '#':
-            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
-          // Remove a '/..' segment
-          case '.':
-            next = iri[++i + 1];
-            if (next === undefined || next === '/' || next === '?' || next === '#') {
-              result += iri.substring(segmentStart, i - 2);
-              // Try to remove the parent path from result
-              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
-                result = result.substr(0, segmentStart);
-              // Remove a trailing '/..' segment
-              if (next !== '/')
-                return result + '/' + iri.substr(i + 1);
-              segmentStart = i + 1;
-            }
-          }
-        }
-      }
-      next = iri[++i];
-    }
-    return result + iri.substring(segmentStart);
   }
 
   // Creates an expression with the given type and attributes
@@ -239,19 +125,6 @@
   function createLiteral(value, type) {
     return { value: value, type: type };
   }
-
-  // Creates a new blank node identifier
-  function blank() {
-    return '_:b' + blankId++;
-  };
-  let blankId = 0;
-  ShExJisonParser._resetBlanks = function () { blankId = 0; }
-  ShExJisonParser.reset = function () {
-    ShExJisonParser._prefixes = ShExJisonParser._imports = ShExJisonParser._sourceMap = ShExJisonParser.shapes = ShExJisonParser.productions = ShExJisonParser.start = ShExJisonParser.startActs = null; // Reset state.
-    ShExJisonParser._base = ShExJisonParser._baseIRI = ShExJisonParser._baseIRIPath = ShExJisonParser._baseIRIRoot = null;
-  }
-  let _fileName; // for debugging
-  ShExJisonParser._setFileName = function (fn) { _fileName = fn; }
 
   // Regular expression and replacement strings to escape strings
   const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
@@ -316,74 +189,6 @@
     };
   }
 
-  function error (e, yy) {
-    const hash = {
-      text: yy.lexer.match,
-      // token: this.terminals_[symbol] || symbol,
-      line: yy.lexer.yylineno,
-      loc: yy.lexer.yylloc,
-      // expected: expected
-      pos: yy.lexer.showPosition()
-    }
-    e.hash = hash;
-    if (ShExJisonParser.recoverable) {
-      ShExJisonParser.recoverable(e)
-    } else {
-      throw e;
-      ShExJisonParser.reset();
-    }
-  }
-
-  // Expand declared prefix or throw Error
-  function expandPrefix (prefix, yy) {
-    if (!(prefix in ShExJisonParser._prefixes))
-      error(new Error('Parse error; unknown prefix "' + prefix + ':"'), yy);
-    return ShExJisonParser._prefixes[prefix];
-  }
-
-  // Add a shape to the map
-  function addShape (label, shape, yy) {
-    if (shape === EmptyShape)
-      shape = { type: "Shape" };
-    if (ShExJisonParser.productions && label in ShExJisonParser.productions)
-      error(new Error("Structural error: "+label+" is a triple expression"), yy);
-    if (!ShExJisonParser.shapes)
-      ShExJisonParser.shapes = {};
-    if (label in ShExJisonParser.shapes) {
-      if (ShExJisonParser.options.duplicateShape === "replace")
-        ShExJisonParser.shapes[label] = shape;
-      else if (ShExJisonParser.options.duplicateShape !== "ignore")
-        error(new Error("Parse error: "+label+" already defined"), yy);
-    } else {
-      ShExJisonParser.shapes[label] = Object.assign({id: label}, shape);
-    }
-  }
-
-  // Add a production to the map
-  function addProduction (label, production, yy) {
-    if (ShExJisonParser.shapes && label in ShExJisonParser.shapes)
-      error(new Error("Structural error: "+label+" is a shape expression"), yy);
-    if (!ShExJisonParser.productions)
-      ShExJisonParser.productions = {};
-    if (label in ShExJisonParser.productions) {
-      if (ShExJisonParser.options.duplicateShape === "replace")
-        ShExJisonParser.productions[label] = production;
-      else if (ShExJisonParser.options.duplicateShape !== "ignore")
-        error(new Error("Parse error: "+label+" already defined"), yy);
-    } else
-      ShExJisonParser.productions[label] = production;
-  }
-
-  function addSourceMap (obj, yy) {
-    if (!ShExJisonParser._sourceMap)
-      ShExJisonParser._sourceMap = new Map();
-    let list = ShExJisonParser._sourceMap.get(obj)
-    if (!list)
-      ShExJisonParser._sourceMap.set(obj, list = []);
-    list.push(yy.lexer.yylloc);
-    return obj;
-  }
-
   // shapeJunction judiciously takes a shapeAtom and an optional list of con/disjuncts.
   // No created Shape{And,Or,Not} will have a `nested` shapeExpr.
   // Don't nonest arguments to shapeJunction.
@@ -407,9 +212,6 @@
     delete shapeAtom.nested;
     return shapeAtom;
   }
-
-  const EmptyObject = {  };
-  const EmptyShape = { type: "Shape" };
 %}
 
 /* lexical grammar */
@@ -598,22 +400,22 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 shexDoc:
       _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        let imports = Object.keys(ShExJisonParser._imports).length ? { imports: ShExJisonParser._imports } : {}
-        const startObj = ShExJisonParser.start ? { start: ShExJisonParser.start } : {};
-        const startActs = ShExJisonParser.startActs ? { startActs: ShExJisonParser.startActs } : {};
-        let shapes = ShExJisonParser.shapes ? { shapes: Object.values(ShExJisonParser.shapes) } : {};
+        let imports = Object.keys(yy._imports).length ? { imports: yy._imports } : {}
+        const startObj = yy.start ? { start: yy.start } : {};
+        const startActs = yy.startActs ? { startActs: yy.startActs } : {};
+        let shapes = yy.shapes ? { shapes: Object.values(yy.shapes) } : {};
         const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
-        if (ShExJisonParser.options.index) {
-          if (ShExJisonParser._base !== null)
-            shexj._base = ShExJisonParser._base;
-          shexj._prefixes = ShExJisonParser._prefixes;
+        if (yy.options.index) {
+          if (yy._base !== null)
+            shexj._base = yy._base;
+          shexj._prefixes = yy._prefixes;
           shexj._index = {
-            shapeExprs: ShExJisonParser.shapes || {},
-            tripleExprs: ShExJisonParser.productions || {}
+            shapeExprs: yy.shapes || {},
+            tripleExprs: yy.productions || {}
           };
-          shexj._sourceMap = ShExJisonParser._sourceMap;
+          shexj._sourceMap = yy._sourceMap;
         }
         return shexj;
       }
@@ -655,20 +457,20 @@ directive:
 
 baseDecl:
       IT_BASE IRIREF	{ // t: @@
-        ShExJisonParser._setBase(ShExJisonParser._base === null ||
-                    absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : _resolveIRI($2.slice(1, -1)));
+        yy._setBase(yy._base === null ||
+                    absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : yy._resolveIRI($2.slice(1, -1)));
       }
     ;
 
 prefixDecl:
       IT_PREFIX PNAME_NS iri	{ // t: ShExParser-test.js/with pre-defined prefixes
-        ShExJisonParser._prefixes[$2.slice(0, -1)] = $3;
+        yy._prefixes[$2.slice(0, -1)] = $3;
       }
     ;
 
 importDecl:
       IT_IMPORT iri	{ // t: @@
-        ShExJisonParser._imports.push($2);
+        yy._imports.push($2);
       }
     ;
 
@@ -679,15 +481,15 @@ notStartAction:
 
 start:
       IT_start '=' shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
-        if (ShExJisonParser.start)
-          error(new Error("Parse error: start already defined"), yy);
-        ShExJisonParser.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
+        if (yy.start)
+          yy.error(new Error("Parse error: start already defined"));
+        yy.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
       }
     ;
 
 startActions:
       _QcodeDecl_E_Plus	{
-        ShExJisonParser.startActs = $1; // t: startCode1
+        yy.startActs = $1; // t: startCode1
       }
     ;
 
@@ -702,14 +504,10 @@ statement:
     ;
 
 shapeExprDecl:
-      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        if ($1.abstract || $3.length) { // t: $1: 1dotAbstractShapeCode1  $2: @@
-          addShape($2, Object.assign({type: "ShapeDecl"}, $1,
-                                     $3.length > 0 ? { restricts: $3 } : { },
-                                     {shapeExpr: $4}), yy) // $5: t: @@
-        } else {
-          addShape($2,  $4, yy);
-        }
+      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+        yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
+                                   $3.length > 0 ? { restricts: $3 } : { },
+                                   {shapeExpr: $4})) // $5: t: @@
       }
     ;
 
@@ -723,7 +521,7 @@ _Qrestriction_E_Star:
     | _Qrestriction_E_Star restriction	-> appendTo($1, $2) // t: 1dotAnnot3
     ;
 
-_O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
+_O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C:
       // _QstringFacet_E_Star shapeExpression	{
       //   if (Object.keys($1).length === 0) { $$ = $2; }
       //   // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
@@ -737,6 +535,7 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
       shapeExpression	{
         $$ = nonest($1);
       }
+    | shapeRef	
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
 
@@ -882,7 +681,7 @@ shapeAtom:
     | shapeOrRef _QnonLitNodeConstraint_E_Opt	
         -> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t: 1dotRef1 */ : $1 // t:@@
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+    | '.'	-> yy.EmptyShape // t: 1dot
     ;
 
 _QshapeOrRef_E_Opt:
@@ -902,7 +701,7 @@ shapeAtomNoRef:
     | shapeDefinition _QnonLitNodeConstraint_E_Opt	
 	-> $2 ? shapeJunction("ShapeAnd", $1, [$2]) /* t:@@ */ : $1	 // t: 1dotRef1 -- use _QnonLitNodeConstraint_E_Opt like below?
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+    | '.'	-> yy.EmptyShape // t: 1dot
     ;
 
 inlineShapeAtom:
@@ -912,7 +711,7 @@ inlineShapeAtom:
     | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
         -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1 // t: !! look to 1dotRef1
     | '(' shapeExpression ')'	-> Object.assign($2, {nested: true}) // t: 1val1vsMinusiri3
-    | '.'	-> EmptyShape // t: 1dot
+    | '.'	-> yy.EmptyShape // t: 1dot
     ;
 
 _QinlineShapeOrRef_E_Opt:
@@ -939,13 +738,13 @@ shapeRef:
       ATPNAME_LN	{ // t: 1dotRefLNex@@
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
-        $$ = addSourceMap(expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1), yy); // ShapeRef
+        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1)); // ShapeRef
       }
     | ATPNAME_NS	{ // t: 1dotRefNS1@@
         $1 = $1.substr(1, $1.length-1);
-        $$ = addSourceMap(expandPrefix($1.substr(0, $1.length - 1), yy), yy); // ShapeRef
+        $$ = yy.addSourceMap(yy.expandPrefix($1.substr(0, $1.length - 1), yy)); // ShapeRef
       }
-    | '@' shapeExprLabel	-> addSourceMap($2, yy) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
+    | '@' shapeExprLabel	-> yy.addSourceMap($2) // ShapeRef // t: 1dotRef1, 1dotRefSpaceLNex, 1dotRefSpaceNS1
     ;
 
 litNodeConstraint:
@@ -975,7 +774,7 @@ litInlineNodeConstraint:
         if (numericDatatypes.indexOf($1) === -1)
           numericFacets.forEach(function (facet) {
             if (facet in $2)
-              error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1), yy);
+              yy.error(new Error("Parse error: facet " + facet + " not allowed for unknown datatype " + $1));
           });
         $$ = extend({ type: "NodeConstraint", datatype: $1 }, $2) // t: 1datatype
       }
@@ -987,7 +786,7 @@ _QxsFacet_E_Star:
       	-> {} // t: 1literalPattern
     | _QxsFacet_E_Star xsFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
+          yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
         $$ = extend($1, $2) // t: 1literalLength
       }
@@ -997,7 +796,7 @@ _QnumericFacet_E_Plus:
       numericFacet	// t: !! look to 1literalPattern
     | _QnumericFacet_E_Plus numericFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
+          yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
         $$ = extend($1, $2) // t: !! look to 1literalLength
       }
@@ -1013,7 +812,7 @@ _QstringFacet_E_Star:
       	-> {}
     | _QstringFacet_E_Star stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
+          yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
         $$ = extend($1, $2)
       }
@@ -1023,7 +822,7 @@ _QstringFacet_E_Plus:
       stringFacet	// t: !! look to 1literalPattern
     | _QstringFacet_E_Plus stringFacet	{
         if (Object.keys($1).indexOf(Object.keys($2)[0]) !== -1) {
-          error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"), yy);
+          yy.error(new Error("Parse error: facet "+Object.keys($2)[0]+" defined multiple times"));
         }
         $$ = extend($1, $2) // t: !! look to 1literalLength
       }
@@ -1066,7 +865,7 @@ _rawNumeric: // like numericLiteral but doesn't parse as RDF literal
         else if (numericDatatypes.indexOf($3) !== -1)
           $$ = parseInt($1.value)
         else
-          error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $3), yy);
+          yy.error(new Error("Parse error: numeric range facet expected numeric datatype instead of " + $3));
       }
     ;
 
@@ -1084,7 +883,7 @@ numericLength:
 
 shapeDefinition:
       inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
-        $$ = $1 === EmptyShape ? { type: "Shape" } : $1; // t: 0
+        $$ = $1 === yy.EmptyShape ? { type: "Shape" } : $1; // t: 0
         if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
       }
@@ -1092,9 +891,9 @@ shapeDefinition:
 
 inlineShapeDefinition:
       _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
-        const exprObj = $3 ? { expression: $3 } : EmptyObject; // t: 0, 0Extend1
-        $$ = (exprObj === EmptyObject && $1 === EmptyObject) ?
-	  EmptyShape :
+        const exprObj = $3 ? { expression: $3 } : yy.EmptyObject; // t: 0, 0Extend1
+        $$ = (exprObj === yy.EmptyObject && $1 === yy.EmptyObject) ?
+	  yy.EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
       }
     ;
@@ -1106,9 +905,9 @@ _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
     ;
 
 _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
-      	-> EmptyObject
+      	-> yy.EmptyObject
     | _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
-        if ($1 === EmptyObject)
+        if ($1 === yy.EmptyObject)
           $1 = {};
         if ($2[0] === "closed")
           $1["closed"] = true; // t: 1dotClosed
@@ -1189,7 +988,7 @@ unaryTripleExpr:
       _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt _O_QtripleConstraint_E_Or_QbracketedTripleExpr_E_C	{
         if ($1) {
           $$ = extend({ id: $1 }, $2);
-          addProduction($1,  $$, yy);
+          yy.addProduction($1,  $$);
         } else {
           $$ = $2
         }
@@ -1198,7 +997,7 @@ unaryTripleExpr:
     ;
 
 _O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C:
-      '$' tripleExprLabel	-> addSourceMap($2, yy)
+      '$' tripleExprLabel	-> yy.addSourceMap($2)
     ;
 
 _Q_O_QGT_DOLLAR_E_S_QtripleExprLabel_E_C_E_Opt:
@@ -1231,13 +1030,13 @@ _Qcardinality_E_Opt:
 tripleConstraint:
       _QsenseFlags_E_Opt predicate inlineShapeExpression _Qcardinality_E_Opt _Qannotation_E_Star semanticActions	{
         // $6: t: 1dotCode1
-	if ($3 !== EmptyShape && false) {
-	  const t = blank();
-	  addShape(t, $3, yy);
+	if ($3 !== yy.EmptyShape && false) {
+	  const t = yy.blank();
+	  yy.addShape(t, $3);
 	  $3 = t; // ShapeRef
 	}
         // %7: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot, 1inversedot
+        $$ = extend({ type: "TripleConstraint" }, $1, { predicate: $2 }, ($3 === yy.EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot, 1inversedot
         if ($5.length)
           $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3
       }
@@ -1422,7 +1221,7 @@ languageExclusion:
     ;
 
 include:
-      '&' tripleExprLabel	-> addSourceMap($2, yy) // Inclusion // t: 2groupInclude1
+      '&' tripleExprLabel	-> yy.addSourceMap($2) // Inclusion // t: 2groupInclude1
     ;
 
 annotation:
@@ -1521,7 +1320,7 @@ langString:
 iri:
       IRIREF	{ // t: 1dot
         const unesc = ShExUtil.unescapeText($1.slice(1,-1), {});
-        $$ = ShExJisonParser._base === null || absoluteIRI.test(unesc) ? unesc : _resolveIRI(unesc)
+        $$ = yy._base === null || absoluteIRI.test(unesc) ? unesc : yy._resolveIRI(unesc)
       }
     | prefixedName	
     ;
@@ -1529,10 +1328,10 @@ iri:
 prefixedName:
       PNAME_LN	{ // t:1dotPNex, 1dotPNdefault, ShExParser-test.js/with pre-defined prefixes
         const namePos1 = $1.indexOf(':');
-        $$ = expandPrefix($1.substr(0, namePos1), yy) + ShExUtil.unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
+        $$ = yy.expandPrefix($1.substr(0, namePos1), yy) + ShExUtil.unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
       }
     | PNAME_NS	{ // t: 1dotNS2, 1dotNSdefault, ShExParser-test.js/PNAME_NS with pre-defined prefixes
-        $$ = expandPrefix($1.substr(0, $1.length - 1), yy);
+        $$ = yy.expandPrefix($1.substr(0, $1.length - 1), yy);
       }
     ;
 
@@ -1541,7 +1340,51 @@ blankNode:
     ;
 
 extension:
-      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C shapeOrRef	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C extendsShapeExpression	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
+    ;
+
+extendsShapeExpression:
+      extendsShapeOr	
+    ;
+
+extendsShapeOr:
+      extendsShapeAnd _Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
+    ;
+
+_O_QIT_OR_E_S_QextendsShapeAnd_E_C: // IT_OR extendsShapeAnd
+      IT_OR extendsShapeAnd	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star: // (IT_OR extendsShapeAnd)*
+      	-> []
+    | _Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QextendsShapeAnd_E_C	-> $1.concat($2)
+    ;
+
+extendsShapeAnd:
+      extendsShapeNot _Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
+    ;
+
+_O_QIT_AND_E_S_QextendsShapeNot_E_C: // IT_AND extendsShapeNot
+      IT_AND extendsShapeNot	-> $2
+    ;
+
+_Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star: // (IT_AND extendsShapeNot)*
+      	-> []
+    | _Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star _O_QIT_AND_E_S_QextendsShapeNot_E_C	-> $1.concat($2)
+    ;
+
+extendsShapeNot: // IT_NOT? extendsShapeAtom
+      _QIT_NOT_E_Opt extendsShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
+    ;
+
+extendsShapeAtom:
+      nonLitInlineNodeConstraint inlineShapeOrRef	// _QinlineShapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | litInlineNodeConstraint	
+    | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true})
+    | '.'	-> yy.EmptyShape
     ;
 
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:

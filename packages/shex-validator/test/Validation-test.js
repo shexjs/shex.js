@@ -7,6 +7,7 @@ var EARL = "EARL" in process.env;
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("..");
 const TestExtension = require("@shexjs/extension-test")
 
@@ -40,12 +41,6 @@ describe("A ShEx validator", function () {
   "use strict";
 
   var shexParser = ShExParser.construct();
-  beforeEach(shexParser._resetBlanks);
-  /*
-    Note that the tests.forEach will run before any of the it() functions.
-    shexParser._setBase() must execute before shexParser.parse().
-   */
-
   var tests = parseJSONFile(manifestFile)["@graph"][0]["entries"];
   var resultMap = parseJSONFile(__dirname + "/val/test-result-map.json");
 
@@ -117,18 +112,15 @@ describe("A ShEx validator", function () {
         function doIt (report, referenceResult, params, required) {
           var semActs, shapeExterns;
           if (semActsFile) {
-            shexParser._setBase(semActsURL);
-            semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8")).
+            semActs = shexParser.parse(fs.readFileSync(semActsFile, "utf8"), semActsURL, {}, semActsFile).
               startActs.reduce(function (ret, a) {
                 ret[a.name] = a.code;
                 return ret;
               }, {});
           }
           if (shapeExternsFile) {
-            shexParser._setBase(shapeExternsURL);
-            shapeExterns = ShExUtil.index(shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8"))).shapeExprs;
+            shapeExterns = ShExUtil.index(shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8"), shapeExternsURL, {}, shapeExternsFile)).shapeExprs;
           }
-          shexParser._setBase(schemaURL);
           var validator;
           var schemaOptions = Object.assign({
             regexModule: regexModule,
@@ -145,14 +137,14 @@ describe("A ShEx validator", function () {
               "greedy",
             semActs: semActs,
             validateExtern: function (point, shapeLabel, depth, seen) {
-              return validator._validateShapeExpr(point, shapeExterns[shapeLabel],
+              return validator._validateShapeDecl(point, shapeExterns[shapeLabel],
                                                   shapeLabel, depth, seen);
             }
           }, params);
           function pickShEx (i) {
             return i + ".shex";
           }
-          ShExNode.load([schemaFile], [], [], [], { parser: shexParser, iriTransform: pickShEx }, {}).
+          ShExNode.load({shexc: [schemaFile]}, null, { parser: shexParser, iriTransform: pickShEx }, {}).
             then(function (loaded) {
               var schema = loaded.schema;
 
@@ -196,7 +188,7 @@ describe("A ShEx validator", function () {
                         var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
                         map = [{node: focus, shape: shape}];
                       }
-                      validator = ShExValidator.construct(schema, ShExUtil.rdfjsDB(store), schemaOptions);
+                      validator = ShExValidator.construct(schema, RdfJsDb(store), schemaOptions);
                       var testResults = TestExtension.register(validator, {ShExTerm});
                       var validationResult = validator.validate(map);
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }

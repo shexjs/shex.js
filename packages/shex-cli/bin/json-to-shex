@@ -4,7 +4,11 @@
 
 const ShExWriter = require("@shexjs/writer"); // for verbose output
 const N3 = require("n3");
-const ShExNode = require("@shexjs/node")({rdfjs: N3});
+const ShExNode = require("@shexjs/node")({
+  rdfjs: N3,
+  fetch: require('node-fetch'),
+  jsonld: require('jsonld'),
+});
 
 // Generate command line interface
 const CommandLineOptions = [
@@ -46,7 +50,7 @@ if (cmds.prefixes.length > 0) {
 }
 
 
-ShExNode.load(cmds.shex, cmds.json, [], []).then(function (loaded) {
+ShExNode.load({shexc: cmds.shex, json: cmds.json}, null).then(function (loaded) {
   new ShExWriter(null, options).
     writeSchema(loaded.schema,
                 function (error, text, prefixes) {

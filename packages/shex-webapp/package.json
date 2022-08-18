@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/webapp",
-  "version": "1.0.0-alpha.21",
+  "version": "1.0.0-alpha.15",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,18 +20,19 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/api": "^1.0.0-alpha.21",
-    "@shexjs/parser": "^1.0.0-alpha.21",
-    "@shexjs/term": "^1.0.0-alpha.21",
-    "@shexjs/util": "^1.0.0-alpha.21",
-    "@shexjs/validator": "^1.0.0-alpha.21",
-    "@shexjs/writer": "^1.0.0-alpha.19",
+    "@shexjs/loader": "^1.0.0-alpha.15",
+    "@shexjs/parser": "^1.0.0-alpha.15",
+    "@shexjs/term": "^1.0.0-alpha.15",
+    "@shexjs/util": "^1.0.0-alpha.15",
+    "@shexjs/validator": "^1.0.0-alpha.15",
+    "@shexjs/writer": "^1.0.0-alpha.15",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^5.0.5",
     "dctap": "^0.0.5",
     "hierarchy-closure": "^1.2.1",
+    "js-yaml": "^4.1.0",
     "n3": "^1.6.2",
-    "shape-map": "^1.0.0-alpha.21"
+    "shape-map": "^1.0.0-alpha.15"
   },
   "scripts": {
     "make": "(cd test/ && make test)",
