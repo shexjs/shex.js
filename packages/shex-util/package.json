@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/util",
-  "version": "1.0.0-alpha.21",
+  "version": "1.0.0-alpha.22",
   "description": "Shape Expressions validation and utilities.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@shexjs/term": "^1.0.0-alpha.21",
-    "@shexjs/visitor": "^1.0.0-alpha.21",
-    "@shexjs/writer": "^1.0.0-alpha.19",
+    "@shexjs/visitor": "^1.0.0-alpha.22",
+    "@shexjs/writer": "^1.0.0-alpha.22",
     "hierarchy-closure": "^1.2.1"
   },
   "scripts": {

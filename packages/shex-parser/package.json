@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/parser",
-  "version": "1.0.0-alpha.15",
+  "version": "1.0.0-alpha.22",
   "description": "Shape Expressions Compact Syntax (ShExC) parser.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/util": "^1.0.0-alpha.15",
+    "@shexjs/util": "^1.0.0-alpha.22",
     "@ts-jison/parser": "^0.3.0"
   },
   "devDependencies": {
