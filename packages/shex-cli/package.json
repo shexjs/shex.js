@@ -35,7 +35,8 @@
     "koa-body": "^4.2.0",
     "n3": "^1.6.2",
     "node-fetch": "^2.6.0",
-    "shape-map": "1.0.0-alpha.15"
+    "shape-map": "1.0.0-alpha.15",
+    "shex-examples": "^0.1.0"
   },
   "bin": {
     "json-to-shex": "bin/json-to-shex",
