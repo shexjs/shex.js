@@ -27,7 +27,6 @@ const ShExTerm = require("@shexjs/term");
 const ShExVisitor = require("@shexjs/visitor");
 const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
 const NoExtends = Symbol("NO_EXTENDS");
-const RdfJsDb = require("@shexjs/neighborhood-rdfjs").ctor;
 const Hierarchy = require('hierarchy-closure')
 
 function getLexicalValue (term) {
