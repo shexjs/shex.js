@@ -40,7 +40,7 @@
     "@shexjs/node": "^1.0.0-alpha.15",
     "jquery": "^3.5.1",
     "jquery-contextmenu": "^2.9.2",
-    "jquery-ui": "^1.12.1"
+    "jquery-ui": "^1.13.2"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

@@ -48,7 +48,7 @@
     "dctap": "^0.0.5",
     "jquery": "^3.5.1",
     "jquery-contextmenu": "^2.9.2",
-    "jquery-ui": "^1.12.1"
+    "jquery-ui": "^1.13.2"
   },
   "publishConfig": {
     "access": "public"
