@@ -25,7 +25,7 @@
     "@shexjs/term": "^1.0.0-alpha.15",
     "@shexjs/util": "^1.0.0-alpha.15",
     "@shexjs/validator": "^1.0.0-alpha.15",
-    "shape-path-core": "^0.0.2"
+    "shape-path-core": "^0.0.5"
   },
   "devDependencies": {
     "sinon": "^14.0.0"
