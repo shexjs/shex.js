@@ -40,6 +40,6 @@
     "url": "https://github.com/shexSpec/grammar/issues"
   },
   "devDependencies": {
-    "@types/shexj": "^2.1.1"
+    "@types/shexj": "^2.1.2"
   }
 }
