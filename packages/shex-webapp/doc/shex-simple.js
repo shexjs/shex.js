@@ -1781,11 +1781,12 @@ async function loadSearchParameters () {
     const fromColumn = fromLi.parent();
     const fromLiNo = fromLi.index();
     const lis = fromColumn.children();
-    const fromColumnNo = parseInt(fromColumn.attr('data-navColumn'));
-    const columns = $('ul[data-navColumn]').get().sort(
+    const columns = $('ul[data-navColumn]:visible').get().sort(
       (l, r) =>
         parseInt($(l).attr('data-navColumn')) - parseInt($(r).attr('data-navColumn'))
     );
+    const fromColumnNo = columns.indexOf(fromColumn.get(0)); // index in visible columns
+
     switch (keyCode) {
     case 'ArrowLeft':
       if (fromColumnNo > 0) {
