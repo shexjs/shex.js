@@ -6,34 +6,140 @@
 
 Command line tools for ShEx.
 
-###  validation executable
+##  validation executable
 
-Validate something in HTTP-land:
-
+### Validate over HTTP:
 ```sh
-./node_modules/shex/bin/validate \
-    -x http://shex.io/examples/Issue.shex \
-    -d http://shex.io/examples/Issue1.ttl \
-    -s http://shex.io/examples/IssueShape \
-    -n http://shex.io/examples/Issue1
+./node_modules/.bin/shex-validate \
+    -x http://shex.io/examples/IssueSchema \
+    -d http://shex.io/examples/Issue1 \
+    -s http://shex.io/examples/IssueSchema#IssueShape \
+    -n http://shex.io/examples/Issue1#Issue1
 ```
 
-That validates node `http://shex.io/examples/Issue` in `http://shex.io/examples/Issue1.ttl` against shape `http://shex.io/examples/IssueShape` in `http://shex.io/examples/Issue.shex`.
+That validates node `http://shex.io/examples/Issue` in `http://shex.io/examples/Issue1.ttl` against shape `http://shex.io/examples/IssueSchema#IssueShape` in `http://shex.io/examples/Issue.shex`.
 The result is a JSON structure which tells you exactly how the data matched the schema.
 
 ```json
 {
-  "type": "test",
-  "node": "http://shex.io/examples/Issue1",
-  "shape": "http://shex.io/examples/IssueShape",
+  "type": "ShapeTest",
+  "node": "http://shex.io/examples/Issue1#Issue1",
+  "shape": "http://shex.io/examples/IssueSchema#IssueShape",
   "solution": {
-...
+    …
+  }
+}
+```
+The '-x' (shex) indicates a ShEx compact syntax file, which is the preferred type on shex.io; `-j … examples/IssueSchema.json` selects ShExJ and `-t … examples/IssueSchema.ttl` selects ShExR.
+
+Had we gotten a `Failure`, we'd know that the document was invalid with respect to the schema. For instance, tru this again changing `#Issue1` to `#User2` (because that User2 should not conform to IssueShape):
+``` json
+{
+  "type": "Failure",
+  "node": "http://shex.io/examples/Issue1#User2",
+  "shape": "http://shex.io/examples/IssueSchema#IssueShape",
+  "errors": [
+    {
+      "type": "MissingProperty",
+      "property": "http://ex.example/ns#state",
+      "valueExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          "http://ex.example/ns#unassigned",
+          "http://ex.example/ns#assigned"
+        ]
+      }
+    },
+    {
+      "type": "MissingProperty",
+      "property": "http://ex.example/ns#reportedBy",
+      "valueExpr": "http://shex.io/examples/IssueSchema#UserShape"
+    },
+    {
+      "type": "MissingProperty",
+      "property": "http://ex.example/ns#reportedOn",
+      "valueExpr": {
+        "type": "NodeConstraint",
+        "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    }
+  ]
+}
+```
+
+See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validation and the [ShExJ specification](http://shex.io/primer/ShExJ) for more details about the results format.
+
+### Validate local files:
+Command line arguments which don't match "^(blob:)?[a-z]+://." (and don't start with 'file:') are assumed to be file paths.
+```sh
+./node_modules/.bin/shex-validate \
+    -x ./node_modules/shex-examples/IssueSchema.shex \
+    -d ./node_modules/shex-examples/Issue1.ttl \
+    -s '#IssueShape' \
+    -n '#Issue1'
+```
+Note that the -s (--shape) and the -n (--node) are relative to the schema and data locations respectively.
+This means you don't have to try to construct the entire file: URL.
+
+In the output, we'll see that the response has file: URLs in it:
+``` json
+{
+  "type": "ShapeTest",
+  "node": "file:///…/examples/Issue1.ttl#Issue1",
+  "shape": "file:///…/examples/IssueSchema.shex#IssueShape",
+  "solution": {
+    …
   }
 }
 ```
 
-Had we gotten a `null`, we'd know that the document was invalid with respect to the schema.
-See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validation and the [ShExJ specification](http://shex.io/primer/ShExJ) for more details about the results format.
+Of course the schema can use http: and the data file: or visa-versa.
+
+Happy validating!
+
+
+
+### Validation server:
+
+The `-S` switch specifies a URL at which to run a validation server:
+```sh
+./node_modules/.bin/shex-validate \
+    -S http://localhost:1234/validate \
+    -x ./node_modules/shex-examples/IssueSchema.shex \
+    -d ./node_modules/shex-examples/Issue1.ttl \
+    -s '#IssueShape' \
+    -n '#Issue1'
+```
+The output of this command will direct you to
+  `http://localhost:1234/validate`.
+Because you supplied all necessary parameters in the invocation, by default, this server will validate `#Issue1` in `Issue1.ttl` against `#IssueShape` in `IssueSchema.shex`. If you play override the node
+  `http://localhost:1234/validate?node=%23Issue2`
+(note that with curl, you must encode the '#' as "%23"), you will see an error because that node has no arcs out in that graph.
+
+#### POSTing with curl
+
+`curl` offers a convenient way to construct POST requests. Supposed you wanted a validation server with no default schema or data:
+```sh
+./node_modules/.bin/shex-validate -S http://localhost:1234/validate
+```
+You could submit all the parameters as body parameters in a POST:
+```
+curl -i http://localhost:1234/validate \
+  -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \
+  -F "shape=#IssueShape" \
+  -F "data=@./node_modules/shex-examples/Issue1.ttl" \
+  -F "node=#Issue1"
+```
+(prefixing a curl -F value with an '@' reads from the following filename)
+
+you can mix and match between URL search string and body parameters:
+```
+curl -i http://localhost:1234/validate?node=%23Issue1 \
+  -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \
+  -F "shape=#IssueShape" \
+  -F "data=@./node_modules/shex-examples/Issue1.ttl"
+```
+(Don't forget to escape the '#' as "%23".)
 
 ## conversion
 
@@ -52,9 +158,9 @@ PREFIX ex: <http://ex.example/#>
 ```
 or in JSON:
 ```json
-{ "type": "schema", "start": "http://shex.io/examples/IssueShape",
+{ "type": "schema", "start": "http://shex.io/examples/IssueSchema#IssueShape",
   "shapes": {
-    "http://shex.io/examples/IssueShape": { "type": "shape",
+    "http://shex.io/examples/IssueSchema#IssueShape": { "type": "shape",
       "expression": { "type": "eachOf",
         "expressions": [
           { "type": "tripleConstraint", "predicate": "http://ex.example/#state",
@@ -72,26 +178,6 @@ You can convert between them with shex-to-json:
 ./node_modules/shex/bin/shex-to-json http://shex.io/examples/Issue.shex
 ```
 and, less elegantly, back with json-to-shex.
-
-## local files
-
-Command line arguments which don't start with http:// or https:// are assumed to be file paths.
-We can create a local JSON version of the Issues schema:
-```sh
-./node_modules/shex/bin/shex-to-json http://shex.io/examples/Issue.shex > Issue.json
-```
-and use it to validate the Issue1.ttl as we did above:
-```sh
-./node_modules/shex/bin/validate \
-    -j Issue.json \
-    -d http://shex.io/examples/Issue1.ttl \
-    -s http://shex.io/examples/IssueShape \
-    -n http://shex.io/examples/Issue1
-```
-
-Of course the data file can be local as well.
-
-Happy validating!
 
 ## materialize
 

@@ -945,10 +945,12 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         host    = match[1],
         srvpath = match[3],
         fs      = require("fs"),
-        baseUrl = `http://${host}:${port}${srvpath}`;
+        baseUrl = new URL(`http://${host}:${port}${srvpath}`);
 
+  const parsedMethods = ["GET", "POST"];
   const server = app
         .use(koaBody({
+          parsedMethods,
           multipart: true,
           // formLimit: "64 kb",
           formidable: {
@@ -956,14 +958,14 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           }
         }))
         .use(async (ctx, next) => {
-    switch (ctx.originalUrl) {
+    switch (new URL(ctx.originalUrl, "http://a.example").pathname) {
     case srvpath:
       const parms = {
         schema: { type: "Schema" }, shape:undefined, schemaMeta: [],
         data: new N3.Store(), node:undefined, dataMeta: [], nodeType:undefined
       };
-      if (ctx.request.method !== "POST")
-        ctx.throw(500, "only supports POST now");
+      if (parsedMethods.indexOf(ctx.request.method) === -1) // @@ needed?
+        ctx.throw(500, `only supports ${parsedMethods.join(', ')} now`);
 
       const unlinkMe = await Promise.all(Object.keys(ctx.request.files || []).reduce((acc, key) => {
         let fz = ctx.request.files[key];
@@ -979,11 +981,12 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         ))
       }, []))
 
-      // (['schema', 'shape', 'data', 'node', 'node-type']).forEach...
-      for (let key in ctx.request.body)
-        await mergeParm(parms, key, ctx.request.body[key], baseUrl, null);
-
       try {
+        for (let key of ['query', 'body'])
+          // e.g. schema, shape, data, node, ...
+          for (let param in ctx.request[key])
+            await mergeParm(parms, param, ctx.request[key][param], baseUrl, null);
+
         (['schema', 'data']).forEach(
           key => {
             if (parms[key + "Meta"].length === 0) {
@@ -1040,7 +1043,6 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         ctx.type = 'application/json'
         ctx.status = "status" in e ? e.status : 500;
       }
-
       unlinkMe.forEach(x => fs.unlinkSync(x.file.path));
       await next;
       break;
@@ -1063,14 +1065,23 @@ function runServer (serverLoaded, serverParms, serverOptions) {
   if (serverParms.terse) {
     log('host: %s port: %s', host, port);
   } else {
-    log('Visit http://%s:%s/ in browser.', host, port);
+    log('Visit http://%s:%s%s in browser.', host, port, srvpath);
     log();
     log('Test with a supplied schema and data:');
-    log('  curl -i http://%s:%s%s -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir, CliDir);
+    log(`  curl -i http://%s:%s%s \\
+    -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \\
+    -F "shape=#IssueShape" \\
+    -F "data=@./node_modules/shex-examples/Issue1.ttl" \\
+    -F "node=#Issue1"`, host, port, srvpath);
     log('or preload the schema and just supply the data:');
-    log('  %s -x %s1dotOr2dot.shex -s http://a.example/S1 -S ', Argv1, CliDir, serverParms.serve);
+    log(`  %s \\
+    -x ./node_modules/shex-examples/IssueSchema.shex \\
+    -s \'#IssueShape\' \\
+    -S `, Argv1, serverParms.serve);
     log('and pass only the data parameters:');
-    log('  curl -i http://%s:%s%s -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir);
+    log(`  curl -i http://%s:%s%s \\
+    -F "data=@./node_modules/shex-examples/Issue1.ttl" \\
+    -F "node=#Issue1"`, host, port, srvpath);
     log('Note that shape and node can be relative or prefixed URLs.');
     log();
     log('Press CTRL+C to stop...');
@@ -1095,8 +1106,12 @@ async function mergeParm (parms, parm, text, url, type) {
     const tpz = await new Promise((resolve, reject) => {
       const parser = new N3.Parser({ baseIRI: url.href });
       parser.parse(text, function (error, quad, prefixes) {
-        if (error)
-          throw error;
+        if (error) {
+          error.message = 'Error parsing data: ' + error.message;
+          if (text.indexOf("\n") === -1)
+            error.message += "\n  did you send a filename instead of a file?";
+          reject(error);
+        }
         if (quad)
           parms.data.addQuad(quad);
         else

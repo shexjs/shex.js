@@ -4,10 +4,10 @@
 # All rights reserved; please contact copyright holders for any use outside of the ShEx semantics.
 # http://www.w3.org/2005/01/yacker/uploads/ShEx2/bnf
 #
-# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2?lang=perl
-# repo: https://github.com/shexSpec/spec/
-# branch: gh-pages
-# path: index.html
+# yacker: https://www.w3.org/2005/01/yacker/uploads/ShEx2_EXTENDS?lang=perl
+# repo: https://github.com/shexSpec/shex.js/
+# branch: main
+# path: doc/bnf
 # TODO:
 #   annotations on shapes
 #   look hard at EXTERNAL valueClassDefinitions
@@ -81,6 +81,7 @@
 # ~ nodeConstraint split into litNodeConstraint and nonLitNodeConstraint
 # - tripleExprLable -= '$'
 # ~ align REGEXP with XML Schema
+# ~ align with current EXTENDS/RESTRICTS consensus
 
 # Notation:
 #   in-line terminals in ""s are case-insensitive
@@ -95,7 +96,7 @@
 [6]     start                 ::= "start" '=' inlineShapeExpression
 [7]     startActions          ::= codeDecl+
 [8]     statement             ::= directive | notStartAction
-[9]     shapeExprDecl         ::= shapeExprLabel (shapeExpression | "EXTERNAL")
+[9]     shapeExprDecl         ::= "ABSTRACT"? shapeExprLabel restrictions* (shapeExpression | "EXTERNAL")
 [10]    shapeExpression       ::= "NOT"? shapeAtomNoRef shapeOr?
                                 | "NOT" shapeRef shapeOr?
                                 | shapeRef shapeOr
@@ -141,8 +142,8 @@
                                 | numericLength INTEGER
 [31]    numericRange          ::= "MININCLUSIVE" | "MINEXCLUSIVE" | "MAXINCLUSIVE" | "MAXEXCLUSIVE"
 [32]    numericLength         ::= "TOTALDIGITS" | "FRACTIONDIGITS"
-[33]    shapeDefinition       ::= (extraPropertySet | "CLOSED")* '{' tripleExpression? '}' annotation* semanticActions
-[34]    inlineShapeDefinition ::= (extraPropertySet | "CLOSED")* '{' tripleExpression? '}'
+[33]    shapeDefinition       ::= (extensions | extraPropertySet | "CLOSED")* '{' tripleExpression? '}' annotation* semanticActions
+[34]    inlineShapeDefinition ::= (extensions | extraPropertySet | "CLOSED")* '{' tripleExpression? '}'
 [35]    extraPropertySet      ::= "EXTRA" predicate+
 [36]    tripleExpression      ::= oneOfTripleExpr
 [37]    oneOfTripleExpr       ::= groupTripleExpr | multiElementOneOf
@@ -181,6 +182,11 @@
 [136s]  iri                   ::= IRIREF | prefixedName
 [137s]  prefixedName          ::= PNAME_LN | PNAME_NS
 [138s]  blankNode             ::= BLANK_NODE_LABEL
+
+[57]    extensions            ::= "EXTENDS" shapeExprLabel+
+                                | '&' shapeExprLabel+
+[00]    restrictions          ::= "RESTRICTS" shapeExprLabel
+                                | '-' shapeExprLabel
 
 @terminals
 
