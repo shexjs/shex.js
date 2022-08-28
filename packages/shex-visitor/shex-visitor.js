@@ -90,8 +90,13 @@ function ShExVisitor (...ctor_args) {
         return undefined;
       return shapes.map(
         shapeExpr =>
-          _Visitor.visitShapeExpr(shapeExpr, ...args)
+          _Visitor.visitShapeDecl(shapeExpr, ...args)
       );
+    },
+
+    visitShapeDecl: function (decl, ...args) {
+      return this._maybeSet(decl, { type: "ShapeDecl" }, "ShapeDecl",
+                            ["id", "abstract", "restricts", "shapeExpr"], null, ...args);
     },
 
     visitShapeExpr: function (expr, ...args) {
@@ -143,6 +148,7 @@ function ShExVisitor (...ctor_args) {
 
       this._maybeSet(shape, ret, "Shape",
                      [ "id",
+                       "abstract", "extends",
                        "closed",
                        "expression", "extra", "semActs", "annotations"], null, ...args);
       return ret;
@@ -328,8 +334,9 @@ function ShExVisitor (...ctor_args) {
   };
 
   r.visitBase = r.visitStart = r.visitClosed = r["visit@context"] = r._visitValue;
+  r.visitRestricts = r.visitExtends = r._visitShapeExprList;
   r.visitExtra = r.visitAnnotations = r._visitList;
-  r.visitInverse = r.visitPredicate = r._visitValue;
+  r.visitAbstract = r.visitInverse = r.visitPredicate = r._visitValue;
   r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
 
   r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
@@ -358,11 +365,11 @@ ShExVisitor.index = function (schema) {
     return oldVisitExpression.call(v, expression, ...args);
   };
 
-  let oldVisitShapeExpr = v.visitShapeExpr;
-  v.visitShapeExpr = function (shapeExpr, ...args) {
+  let oldVisitShapeDecl = v.visitShapeDecl;
+  v.visitShapeDecl = function (shapeExpr, ...args) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
       index.shapeExprs[shapeExpr.id] = shapeExpr;
-    return oldVisitShapeExpr.call(v, shapeExpr, ...args);
+    return oldVisitShapeDecl.call(v, shapeExpr, ...args);
   };
 
   v.visitSchema(schema);

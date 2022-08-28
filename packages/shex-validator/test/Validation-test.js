@@ -147,7 +147,7 @@ describe("A ShEx validator", function () {
               "greedy",
             semActs: semActs,
             validateExtern: function (point, shapeLabel, depth, seen) {
-              return validator._validateShapeExpr(point, shapeExterns[shapeLabel],
+              return validator._validateShapeDecl(point, shapeExterns[shapeLabel],
                                                   shapeLabel, depth, seen);
             }
           }, params, resolverOptions);
