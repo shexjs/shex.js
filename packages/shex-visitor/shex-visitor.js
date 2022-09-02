@@ -120,7 +120,7 @@ function ShExVisitor (...ctor_args) {
 
     // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
     _visitShapeGroup: function (expr, ...args) {
-      this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
+      this._testUnknownAttributes(expr, ["shapeExprs"], expr.type, this.visitShapeNot)
       const _Visitor = this;
       const r = { type: expr.type };
       if ("id" in expr)
@@ -133,7 +133,7 @@ function ShExVisitor (...ctor_args) {
 
     // _visitShapeNot: visit negated shape
     visitShapeNot: function (expr, ...args) {
-      this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
+      this._testUnknownAttributes(expr, ["shapeExpr"], "ShapeNot", this.visitShapeNot)
       const r = { type: expr.type };
       if ("id" in expr)
         r.id = expr.id;
@@ -147,8 +147,7 @@ function ShExVisitor (...ctor_args) {
       this._expect(shape, "type", "Shape");
 
       this._maybeSet(shape, ret, "Shape",
-                     [ "id",
-                       "abstract", "extends",
+                     [ "abstract", "extends",
                        "closed",
                        "expression", "extra", "semActs", "annotations"], null, ...args);
       return ret;
@@ -167,8 +166,7 @@ function ShExVisitor (...ctor_args) {
       this._expect(shape, "type", "NodeConstraint");
 
       this._maybeSet(shape, ret, "NodeConstraint",
-                     [ "id",
-                       "nodeKind", "datatype", "pattern", "flags", "length",
+                     [ "nodeKind", "datatype", "pattern", "flags", "length",
                        "reference", "minlength", "maxlength",
                        "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
                        "totaldigits", "fractiondigits", "values", "annotations", "semActs"], null, ...args);
