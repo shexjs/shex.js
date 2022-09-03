@@ -461,9 +461,10 @@ function ShExValidator_constructor(schema, db, options) {
           if ("extends" in shape) {
             shape.extends.forEach(ext => {
               const extendsVisitor = ShExVisitor();
-              extendsVisitor.visitShapeRef = function (parent) {
-                extensions.add(parent, curLabel);
-                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(parent))
+              extendsVisitor.visitExpression = function (expr, ...args) { return "null"; }
+              extendsVisitor.visitShapeRef = function (reference, ...args) {
+                extensions.add(reference, curLabel);
+                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(reference))
                 // makeSchemaVisitor().visitSchema(schema);
                 return "null";
               };
