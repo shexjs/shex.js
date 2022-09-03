@@ -12,8 +12,8 @@
 :sit@<#Vital>,
 :sit@<#BP>,
 :sit@<#PostureVital>,
-:sit@<#ReclinedVital>,
+:sit@!<#ReclinedVital>,
 :sit@<#PostureBP>,
-:sit@<#ReclinedBP>,
+:sit@!<#ReclinedBP>,
 :sit@<#Posture>,
-:sit@<#Reclined>
+:sit@!<#Reclined>

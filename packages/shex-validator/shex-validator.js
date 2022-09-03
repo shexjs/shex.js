@@ -26,6 +26,8 @@ const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "Untracked
 const ShExTerm = require("@shexjs/term");
 const ShExVisitor = require("@shexjs/visitor");
 const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
+const NoExtends = Symbol("NO_EXTENDS");
+const Hierarchy = require('hierarchy-closure')
 
 function getLexicalValue (term) {
   return ShExTerm.isIRI(term) ? term :
@@ -287,7 +289,7 @@ function ShExValidator_constructor(schema, db, options) {
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
-  this.validate = function (point, label, tracker, seen) {
+  this.validate = function (point, label, tracker, seen, matchTarget, subGraph) {
     // default to schema's start shape
     if (typeof point === "object" && "termType" in point) {
       point = ShExTerm.internalTerm(point)
@@ -309,7 +311,7 @@ function ShExValidator_constructor(schema, db, options) {
         });
       }
       const results = shapeMap.reduce((ret, pair) => {
-        const res = this.validate(pair.node, pair.shape, label, tracker); // really tracker and seen
+        const res = this.validate(pair.node, pair.shape, label, tracker, matchTarget, subGraph); // really tracker and seen
         return "errors" in res ?
           { passes: ret.passes, failures: ret.failures.concat(res) } :
           { passes: ret.passes.concat(res), failures: ret.failures } ;
@@ -358,30 +360,133 @@ function ShExValidator_constructor(schema, db, options) {
 
     // if we passed in an expression rather than a label, validate it directly.
     if (typeof label !== "string")
-      return this._validateShapeExpr(point, shape, Start, tracker, seen);
+      return this._validateShapeExpr(point, shape, Start, 0, tracker, seen);
 
     if (seen === undefined)
       seen = {};
     const seenKey = point + "@" + (label === Start ? "_: -start-" : label);
-    if (seenKey in seen)
-      return tracker.recurse({
-        type: "Recursion",
-        node: ldify(point),
-        shape: label
-      });
-    if ("known" in this && seenKey in this.known)
-      return tracker.known(this.known[seenKey]);
-    seen[seenKey] = { point: point, shape: label };
-    tracker.enter(point, label);
-    const ret = this._validateShapeExpr(point, shape, label, tracker, seen);
-    tracker.exit(point, label, ret);
-    delete seen[seenKey];
-    if ("known" in this)
-      this.known[seenKey] = ret;
+    if (!subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
+      if (seenKey in seen)
+        return tracker.recurse({
+          type: "Recursion",
+          node: ldify(point),
+          shape: label
+        });
+      if ("known" in this && seenKey in this.known)
+        return tracker.known(this.known[seenKey]);
+      seen[seenKey] = { point: point, shape: label };
+      tracker.enter(point, label);
+    }
+    const ret = this._validateDescendants(point, label, 0, tracker, seen, matchTarget, subGraph);
+    if (!subGraph) {
+      tracker.exit(point, label, ret);
+      delete seen[seenKey];
+      if ("known" in this)
+        this.known[seenKey] = ret;
+    }
     if ("startActs" in schema && outside) {
       ret.startActs = schema.startActs;
     }
-    return this.options.noResults ? {} : ret;
+    return ret;
+  }
+
+  this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, matchTarget, subGraph, allowAbstract) {
+    const _ShExValidator = this;
+    if (subGraph) { // !! matchTarget?
+      // matchTarget indicates that shape substitution has already been applied.
+      // Now we're testing a subgraph against the base shapes.
+      const res = this._validateShapeDecl(point, this._lookupShape(shapeLabel), shapeLabel, 0, tracker, seen, matchTarget, subGraph);
+      if (matchTarget && shapeLabel === matchTarget.label && !("errors" in res))
+        matchTarget.count++;
+      return res;
+    }
+
+    // Find all non-abstract shapeExprs extended with label. 
+    let candidates = [shapeLabel];
+    candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+    // Uniquify list.
+    for (let i = candidates.length - 1; i >= 0; --i) {
+      if (candidates.indexOf(candidates[i]) < i)
+        candidates.splice(i, 1);
+    }
+    // Filter out abstract shapes.
+    if (!allowAbstract)
+      candidates = candidates.filter(l => !this._lookupShape(l).abstract);
+
+    // Aggregate results in a SolutionList or FailureList.
+    const results = candidates.reduce((ret, candidateShapeLabel) => {
+      const shapeExpr = this._lookupShape(candidateShapeLabel);
+      const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
+      const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, matchTarget, subGraph);
+      return "errors" in res || matchTarget && matchTarget.count === 0 ?
+        { passes: ret.passes, failures: ret.failures.concat(res) } :
+        { passes: ret.passes.concat(res), failures: ret.failures } ;
+
+    }, {passes: [], failures: []});
+    let ret;
+    if (results.passes.length > 0) {
+      ret = results.passes.length !== 1 ?
+        { type: "SolutionList", solutions: results.passes } :
+      results.passes [0];
+    } else if (results.failures.length > 0) {
+      ret = results.failures.length !== 1 ?
+        { type: "FailureList", errors: results.failures } :
+      results.failures [0];
+    } else {
+      ret = {
+        type: "AbstractShapeFailure",
+        shape: shapeLabel,
+        errors: shapeLabel + " has no non-abstract children"
+      };
+    }
+    return ret;
+
+    // @TODO move to Vistior.index
+    function indexExtensions (schema) {
+      const abstractness = {};
+      const extensions = Hierarchy.create();
+      makeSchemaVisitor().visitSchema(schema);
+      return extensions.children;
+
+      function makeSchemaVisitor (schema) {
+        const schemaVisitor = ShExVisitor();
+        let curLabel;
+        let curAbstract;
+        const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
+        schemaVisitor.visitShapeDecl = function (decl) {
+          curLabel = decl.id;
+          curAbstract = decl.abstract;
+          abstractness[decl.id] = decl.abstract;
+          return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
+        };
+        const oldVisitShape = schemaVisitor.visitShape;
+        schemaVisitor.visitShape = function (shape) {
+          if ("extends" in shape) {
+            shape.extends.forEach(ext => {
+              const extendsVisitor = ShExVisitor();
+              extendsVisitor.visitExpression = function (expr, ...args) { return "null"; }
+              extendsVisitor.visitShapeRef = function (reference, ...args) {
+                extensions.add(reference, curLabel);
+                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(reference))
+                // makeSchemaVisitor().visitSchema(schema);
+                return "null";
+              };
+              extendsVisitor.visitShapeExpr(ext);
+            })
+          }
+          return "null";
+        };
+        return schemaVisitor;
+      }
+    }
+  }
+
+  this._validateShapeDecl = function (point, shapeDecl, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
+    const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr])
+    const expr = conjuncts.length === 1
+          ? conjuncts[0]
+          : { type: "ShapeAnd", shapeExprs: conjuncts };
+    return this._validateShapeExpr(point, expr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
   }
 
   this._lookupShape = function (label) {
@@ -394,12 +499,12 @@ function ShExValidator_constructor(schema, db, options) {
     }
   }
 
-  this._validateShapeExpr = function (point, shapeExpr, shapeLabel, tracker, seen) {
+  this._validateShapeExpr = function (point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
     if (point === "")
       throw Error("validation needs a valid focus node");
     let ret = null
     if (typeof shapeExpr === "string") { // ShapeRef
-      ret = this._validateShapeExpr(point, this._lookupShape(shapeExpr), shapeExpr, tracker, seen);
+      ret = this._validateDescendants(point, shapeExpr, depth, tracker, seen, matchTarget, subGraph, true);
     } else if (shapeExpr.type === "NodeConstraint") {
       const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       ret = sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
@@ -420,22 +525,22 @@ function ShExValidator_constructor(schema, db, options) {
         shapeExpr: shapeExpr
       };
     } else if (shapeExpr.type === "Shape") {
-      ret = this._validateShape(point, shapeExpr, shapeLabel, tracker, seen);
+      ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
     } else if (shapeExpr.type === "ShapeExternal") {
       ret = this.options.validateExtern(point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
       const errors = [];
       for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         const nested = shapeExpr.shapeExprs[i];
-        const sub = this._validateShapeExpr(point, nested, shapeLabel, tracker, seen);
+        const sub = this._validateShapeExpr(point, nested, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
         if ("errors" in sub)
           errors.push(sub);
-        else
+        else if (!matchTarget || matchTarget.count > 0)
           return { type: "ShapeOrResults", solution: sub };
       }
       ret = { type: "ShapeOrFailure", errors: errors };
     } else if (shapeExpr.type === "ShapeNot") {
-      const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, tracker, seen);
+      const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
       if ("errors" in sub)
           ret = { type: "ShapeNotResults", solution: sub };
         else
@@ -445,7 +550,7 @@ function ShExValidator_constructor(schema, db, options) {
       const errors = [];
       for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
         const nested = shapeExpr.shapeExprs[i];
-        const sub = this._validateShapeExpr(point, nested, shapeLabel, tracker, seen);
+        const sub = this._validateShapeExpr(point, nested, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -454,7 +559,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (errors.length > 0)
         ret = { type: "ShapeAndFailure", errors: errors };
       else
-        ret = { type: "ShapeAndResults", solutions: passes };      
+        ret = { type: "ShapeAndResults", solutions: passes };
     } else {
       throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
     }
@@ -470,9 +575,9 @@ function ShExValidator_constructor(schema, db, options) {
     return ret;
   }
 
-  this._validateShape = function (point, shape, shapeLabel, tracker, seen) {
+  this._validateShape = function (point, shape, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
     const _ShExValidator = this;
-    const valParms = { db, shapeLabel, tracker, seen };
+    const valParms = { db, shapeLabel, depth, tracker, seen };
 
     let ret = null;
     const startAcionStorage = {}; // !!! need test to see this write to results structure.
@@ -487,7 +592,7 @@ function ShExValidator_constructor(schema, db, options) {
         }; // some semAct aborted !! return a better error
     }
 
-    const fromDB  = db.getNeighborhood(point, shapeLabel, shape);
+    const fromDB  = (subGraph || db).getNeighborhood(point, shapeLabel, shape);
     const outgoingLength = fromDB.outgoing.length;
     const neighborhood = fromDB.outgoing.sort(
       (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
@@ -495,9 +600,13 @@ function ShExValidator_constructor(schema, db, options) {
       (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
     ));
 
-    const constraintList = this.indexTripleConstraints(shape.expression);
-    const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms);
-    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
+    const localTCs = this.indexTripleConstraints(shape.expression);
+    const extendedTCs = getExtendedTripleConstraints(shape);
+    const constraintList = extendedTCs.map(
+      ext => ext.tripleConstraint
+    ).concat(localTCs);
+    const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
+    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
     const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
     const partitionErrors = [];
@@ -509,12 +618,27 @@ function ShExValidator_constructor(schema, db, options) {
             _seq(neighborhood.length).map(function () { return 0; });
 
       // t2tc - array mapping neighborhood index to TripleConstraint
-      const t2tcForThisShape = xp.get(); // [0,1,0,3] mapping from triple to constraint
+      const t2tcForThisShapeAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
+      const t2tcForThisShape = []
+      const tripleToExtends = []
+      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
+      t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
+        if (cNo !== NoTripleConstraint && cNo < extendedTCs.length) {
+          const extNo = extendedTCs[cNo].extendsNo;
+          extendsToTriples[extNo].push(neighborhood[tNo]);
+          tripleToExtends[tNo] = cNo;
+          t2tcForThisShape[tNo] = NoTripleConstraint;
+        } else {
+          tripleToExtends[tNo] = NoExtends;
+          t2tcForThisShape[tNo] = cNo;
+        }
+      });
 
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return t2tcForThisShape[i] === NoTripleConstraint && // didn't match a constraint
+            tripleToExtends[i] === NoExtends && // didn't match an EXTENDS
             extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
@@ -533,7 +657,17 @@ function ShExValidator_constructor(schema, db, options) {
       });
       const tc2t = _constraintToTriples(t2tcForThisShape, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
 
-      const results = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
+      let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget);
+      if (results === null || !("errors" in results)) {
+        const sub = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
+        if (!("errors" in sub) && results) {
+          results = { type: "ExtendedResults", extensions: results };
+          if (Object.keys(sub).length > 0) // no empty objects from {}s.
+            results.local = sub;
+        } else {
+          results = sub;
+        }
+      }
       if ("errors" in results)
         [].push.apply(errors, results.errors);
 
@@ -583,7 +717,7 @@ function ShExValidator_constructor(schema, db, options) {
     return addShapeAttributes(shape, ret);
   };
 
-  function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms) {
+  function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget) {
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
     return constraintList.reduce(function (ret, constraint, cNo) {
@@ -599,7 +733,7 @@ function ShExValidator_constructor(schema, db, options) {
 
       // strip to triples matching value constraints (apart from @<someShape>)
       const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
-        matchPredicate, constraint, valParms
+        matchPredicate, constraint, valParms, matchTarget
       );
 
       matchConstraints.hits.forEach(function (evidence) {
@@ -652,7 +786,152 @@ function ShExValidator_constructor(schema, db, options) {
       }, _seq(constraintList.length).map(() => [])); // [length][]
   }
 
-  this._triplesMatchingShapeExpr = function (triples, constraint, valParms) {
+  function testExtends (expr, point, extendsToTriples, valParms, matchTarget) {
+    if (!("extends" in expr))
+      return null;
+    const passes = [];
+    const errors = [];
+    for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
+      const extend = expr.extends[eNo];
+      const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
+      extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+      const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
+      if ("errors" in sub)
+        errors.push(sub);
+      else
+        passes.push(sub);
+    }
+    if (errors.length > 0) {
+      return { type: "ExtensionFailure", errors: errors };
+    }
+    return { type: "ExtensionResults", solutions: passes };
+  }
+
+  /** Directly construct a DB from triples.
+   * TODO: should this be in @shexjs/neighborhood-something ?
+   */
+  function makeTriplesDB (queryTracker) { // implements ValidatorNeighborhood
+    var incoming = [];
+    var outgoing = [];
+
+    function getTriplesByIRI(s, p, o, g) {
+      return incoming.concat(outgoing).filter(
+        t =>
+          (!s || s === t.subject) &&
+          (!p || p === t.predicate) &&
+          (!s || s === t.object)
+      );
+    }
+
+    function getNeighborhood (point, shapeLabel, shape) {
+      return {
+        outgoing: outgoing,
+        incoming: incoming
+      };
+    }
+
+    return {
+      getNeighborhood: getNeighborhood,
+      getTriplesByIRI: getTriplesByIRI,
+      getSubjects: function () { return ["!Triples DB can't index subjects"] },
+      getPredicates: function () { return ["!Triples DB can't index predicates"] },
+      getObjects: function () { return ["!Triples DB can't index objects"] },
+      get size() { return undefined; },
+      addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
+      addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
+    };
+  }
+
+
+  /** getExtendedTripleConstraints - walk shape's extends to get all
+   * referenced triple constraints.
+   *
+   * @param {} shape
+   * @returns {}
+   */
+  function getExtendedTripleConstraints (shape) {
+    const ret = []
+    if ("extends" in shape) {
+      shape.extends.forEach((se, extendsNo) => {
+        // Index incoming and outgoing arcs by predicate.  Multiple TCs with the
+        // same predicate are aggregated into a single TC with the maximum
+        // cardinality span. (@@Does this actually reduce permutations?)
+        // tests: Extend3G-pass
+        const ins = {}, outs = {};
+        visitTripleConstraints(se, ins, outs);
+
+        [ins, outs].forEach(directionIndex => {
+          Object.keys(directionIndex).forEach(predicate => {
+            let tripleConstraint = directionIndex[predicate]
+            ret.push({tripleConstraint, extendsNo});
+          });
+        });
+      })
+    }
+    return ret;
+
+    /*
+     * @expr - shape expression to walk
+     * @ins - incoming arcs: map from IRI to {min, max, seen}
+     * @outs - outgoing arcs
+     */
+    function visitTripleConstraints (expr, ins, outs) {
+      const visitor = ShExVisitor();
+      let outerMin = 1;
+      let outerMax = 1;
+      const oldVisitOneOf = visitor.visitOneOf;
+
+      // Override visitShapeRef to follow references.
+      // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
+      visitor.visitShapeRef = function (inclusion) {
+        return visitor.visitShapeDecl(_ShExValidator._lookupShape(inclusion));
+      };
+
+      // Visit shape's EXTENDS and expression.
+      visitor.visitShape = function (shape, label) {
+        if ("extends" in shape) {
+          shape.extends.forEach( // extension of an extension...
+            se => visitTripleConstraints(se, ins, outs)
+          )
+        }
+        if ("expression" in shape) {
+          visitor.visitExpression(shape.expression);
+        }
+        return { type: "Shape" }; // NOP
+      }
+
+      // Any TC inside a OneOf implicitly has a min cardinality of 0.
+      visitor.visitOneOf = function (expr) {
+        const oldOuterMin = outerMin;
+        const oldOuterMax = outerMax;
+        outerMin = 0;
+        oldVisitOneOf.call(visitor, expr);
+        outerMin = oldOuterMin;
+        outerMax = oldOuterMax;
+      }
+
+      // Synthesize a TripleConstraint with the implicit cardinality.
+      visitor.visitTripleConstraint = function (expr) {
+        const idx = expr.inverse ? ins : outs; // pick an index
+        let min = "min" in expr ? expr.min : 1; min = min * outerMin;
+        let max = "max" in expr ? expr.max : 1; max = max * outerMax;
+        idx[expr.predicate] = {
+          type: "TripleConstraint",
+          predicate: expr.predicate,
+          min: expr.predicate in idx ? Math.max(idx[expr.predicate].min, min) : min,
+          max: expr.predicate in idx ? Math.min(idx[expr.predicate].max, max) : max,
+          seen: expr.predicate in idx ? idx[expr.predicate].seen + 1 : 1,
+          tcs: expr.predicate in idx ? idx[expr.predicate].tcs.concat([expr]) : [expr]
+        }
+        return expr;
+      };
+
+      // Call constructed visitor on expr.
+      visitor.visitShapeExpr(expr);
+    }
+  }
+
+  this._triplesMatchingShapeExpr = function (triples, constraint, valParms, matchTarget) {
     const _ShExValidator = this;
     const misses = [];
     const hits = [];
@@ -662,7 +941,7 @@ function ShExValidator_constructor(schema, db, options) {
       const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
       const errors = constraint.valueExpr === undefined ?
           undefined :
-          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms)).errors;
+          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms, matchTarget)).errors;
       if (!errors) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
@@ -672,19 +951,19 @@ function ShExValidator_constructor(schema, db, options) {
     });
     return { hits: hits, misses: misses };
   }
-  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms) {
+  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, matchTarget, subgraph) {
     const _ShExValidator = this;
     if (typeof valueExpr === "string") { // ShapeRef
-      return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen);
+      return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen, matchTarget, subgraph);
     } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {
-      return _ShExValidator._validateShapeExpr(value, valueExpr, valParms.shapeLabel, valParms.tracker, valParms.seen)
+      return _ShExValidator._validateShapeExpr(value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph)
     } else if (valueExpr.type === "ShapeOr") {
       const errors = [];
       for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
         const nested = valueExpr.shapeExprs[i];
-        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
+        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, matchTarget, subgraph);
         if ("errors" in sub)
           errors.push(sub);
         else
@@ -695,7 +974,7 @@ function ShExValidator_constructor(schema, db, options) {
       const passes = [];
       for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
         const nested = valueExpr.shapeExprs[i];
-        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms);
+        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, matchTarget, subgraph);
         if ("errors" in sub)
           return { type: "ShapeAndFailure", errors: [sub] };
         else
@@ -703,7 +982,7 @@ function ShExValidator_constructor(schema, db, options) {
       }
       return { type: "ShapeAndResults", solutions: passes };
     } else if (valueExpr.type === "ShapeNot") {
-      const sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms);
+      const sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, matchTarget, subgraph);
       // return sub.errors && sub.errors.length ? {} : {
       //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
       const ret = Object.assign({

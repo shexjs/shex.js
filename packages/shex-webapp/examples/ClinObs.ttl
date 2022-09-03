@@ -12,53 +12,59 @@ PREFIX sx: <http://www.w3.org/ns/shex#>
  ) .
 
 <ObservationShape>                 # An Observation has:
-  a sx:Shape ;
-  sx:expression [
-    a sx:EachOf ;
-    sx:expressions (
-      [                             #   status in this value set
-        a sx:TripleConstraint ;
-        sx:predicate :status ;
-        sx:valueExpr [
-          a sx:NodeConstraint ;
-          sx:values (
-            "preliminary"
-            "final"
-          )
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:Shape ;
+    sx:expression [
+      a sx:EachOf ;
+      sx:expressions (
+        [                             #   status in this value set
+          a sx:TripleConstraint ;
+          sx:predicate :status ;
+          sx:valueExpr [
+            a sx:NodeConstraint ;
+            sx:values (
+              "preliminary"
+              "final"
+            )
+          ]
         ]
-      ]
-      [                             #   a subject matching <PatientShape>.
-        a sx:TripleConstraint ;
-        sx:predicate :subject ;
-        sx:valueExpr <PatientShape>
-      ]
-    )
+        [                             #   a subject matching <PatientShape>.
+          a sx:TripleConstraint ;
+          sx:predicate :subject ;
+          sx:valueExpr <PatientShape>
+        ]
+      )
+    ]
   ] .
 
 <PatientShape>                     # A Patient has:
-  a sx:Shape ;
-  sx:expression [
-    a sx:EachOf ;
-    sx:expressions (
-      [                             #   one or more names
-        a sx:TripleConstraint ;
-        sx:max -1 ;
-        sx:min 0 ;
-        sx:predicate :name ;
-        sx:valueExpr [
-          a sx:NodeConstraint ;
-          sx:datatype xsd:string
+  a sx:ShapeDecl ;
+  sx:shapeExpr [
+    a sx:Shape ;
+    sx:expression [
+      a sx:EachOf ;
+      sx:expressions (
+        [                             #   one or more names
+          a sx:TripleConstraint ;
+          sx:max -1 ;
+          sx:min 0 ;
+          sx:predicate :name ;
+          sx:valueExpr [
+            a sx:NodeConstraint ;
+            sx:datatype xsd:string
+          ]
         ]
-      ]
-      [                             #   and an optional birthdate.
-        a sx:TripleConstraint ;
-        sx:max 1 ;
-        sx:min 0 ;
-        sx:predicate :birthdate ;
-        sx:valueExpr [
-          a sx:NodeConstraint ;
-          sx:datatype xsd:date
+        [                             #   and an optional birthdate.
+          a sx:TripleConstraint ;
+          sx:max 1 ;
+          sx:min 0 ;
+          sx:predicate :birthdate ;
+          sx:valueExpr [
+            a sx:NodeConstraint ;
+            sx:datatype xsd:date
+          ]
         ]
-      ]
-    )
+      )
+    ]
   ] .

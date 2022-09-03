@@ -5,32 +5,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX shexmi: <http://www.w3.org/ns/shex-xmi#>
 PREFIX mark: <https://github.com/commonmark/commonmark.js>
 
-ddi:ConceptSystem {
-  ddi:baseProp ["a" "b"];
-  ddi:baseP2 xsd:string;
-    ddi:name xsd:string;
-#  | ddi:givenName xsd:string;
-    ddi:familyName xsd:string;
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
-  ddi:hasAnnotation @ddi:Annotation ?;
-  ddi:relatedMaterial @ddi:ExternalMaterial *;
+ddi:ConceptSystem EXTENDS ddi:Foo ddi:AnnotatedIdentifiable {
   ddi:type @ddi:CollectionType ? // shexmi:comment """Whether the collection is a bag or a set: a bag is a collection with duplicates allowed, a set is a collection without duplicates.""";
   a [ddi:Foo ddi:Bar];
   ddi:name @ddi:ObjectName * // shexmi:comment """A linguistic signifier. Human understandable name (word, phrase, or mnemonic) that reflects the ISO/IEC 11179-5 naming principles. If more than one name is provided provide a context to differentiate usage.""";
@@ -40,25 +15,7 @@ ddi:ConceptSystem {
     ddi:member @ddi:Concept *;
   } * // shexmi:comment """MemberIndicator Allows for the identification of the member and optionally provides an index for the member within an ordered array""";
   ddi:isOrdered xsd:boolean ?;
-  ddi:isStructuredBy {
-      ddi:agency xsd:string ;
-      ddi:id xsd:string ;
-      ddi:version xsd:string ;
-      ddi:versionResponsibility xsd:string ?;
-      ddi:versionRationale xsd:string ?;
-      ddi:versionDate ddi:IsoDateType ?;
-      ddi:isUniversallyUnique xsd:boolean ;
-      ddi:isPersistent xsd:boolean ;
-      ddi:localId  {
-          ddi:localIdValue xsd:string ;
-          ddi:localIdType xsd:string ;
-          ddi:localIdVersion xsd:string ?;
-      } *;
-      ddi:basedOnObject  {
-          ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-          ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-          ddi:basedOn @ddi:Identifiable *;
-      } ?;
+  ddi:isStructuredBy  EXTENDS ddi:Identifiable ddi:Foo {
       ddi:hasRelationSpecification @ddi:RelationSpecification ;
       ddi:semantic @ddi:ExternalControlledVocabularyEntry ?;
       ddi:totality @ddi:TotalityType ?;
@@ -85,44 +42,27 @@ Explanatory notes
 ===================
 Note that this structure can be used to structure Concept, Classification, Universe, Population, Unit Type and any other class that extends from Concept.
 
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 c:ConceptSchemeType
-
-RDF mapping
-=============
-
 
 GSIM mapping
 ==============
 Concept System
 """^^mark:
 
-ddi:Concept {
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
-  ddi:hasAnnotation @ddi:Annotation ?;
-  ddi:relatedMaterial @ddi:ExternalMaterial *;
+ddi:Foo EXTENDS ddi:Base {
+    ddi:name xsd:string;
+#  | ddi:givenName xsd:string;
+    ddi:familyName xsd:string;
+}
+
+ddi:Base {
+  ddi:baseProp ["a" "b"];
+  ddi:baseP2 xsd:string
+}
+
+ddi:Concept EXTENDS ddi:AnnotatedIdentifiable {
   ddi:name @ddi:ObjectName *;
   ddi:definition @ddi:InternationalStructuredString ?;
 } // shexmi:package "Conceptual"
@@ -138,75 +78,25 @@ Explanatory notes
 ===================
 Many DDI4 classes are subtypes of the Concept class including Category, Universe, UnitType, ConceptualVariable. This class realizes the pattern class Signified and as such a Concept can be denoted by a Sign.
 
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 c:ConceptType
-
-RDF mapping
-=============
-
 
 GSIM mapping
 ==============
 Concept
 """^^mark:
 
-ddi:AnnotatedIdentifiable {
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
+ABSTRACT ddi:AnnotatedIdentifiable EXTENDS ddi:Identifiable {
   ddi:hasAnnotation @ddi:Annotation ?;
   ddi:relatedMaterial @ddi:ExternalMaterial *;
 } // shexmi:package "Identification"
  // shexmi:comment """Definition
 ============
 Used to identify objects for purposes of internal and/or external referencing. Elements of this type are versioned. Provides identification and administrative metadata about the object. Adds optional annotation. Use this as the extension base for First Order Classes that contain intellectual content that needs to be discoverable in its own right.
-
-Examples
-==========
-
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
-ddi:Identifiable {
+ABSTRACT ddi:Identifiable {
   ddi:agency xsd:string ;
   ddi:id xsd:string ;
   ddi:version xsd:string ;
@@ -229,30 +119,6 @@ ddi:Identifiable {
  // shexmi:comment """Definition
 ============
 Used to identify objects for purposes of internal and/or external referencing. Elements of this type are versioned. Provides identification and administrative metadata about the object. Adds optional annotation. Use this as the extension base for First Order Classes that contain intellectual content that needs to be discoverable in its own right.
-
-Examples
-==========
-
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:ObjectName {
@@ -263,29 +129,13 @@ ddi:ObjectName {
 ============
 A standard means of expressing a Name for a class object.  A linguistic signifier. Human understandable name (word, phrase, or mnemonic) that reflects the ISO/IEC 11179-5 naming principles.
 
-Examples
-==========
-
-
 Explanatory notes
 ===================
 USE in Model: In general the property name should be "name" as it is the name of the class object which contains it. Use a specific name (i.e. xxxName) only when naming something other than the class object which contains it.
 
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 r:NameType
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:ExternalControlledVocabularyEntry {
@@ -307,26 +157,6 @@ Examples
 When used to assign a role to an actor within a specific activity this term would express the degree of contribution. Contributor with Role=Editor and extent=Lead.
 
 Alternatively. the term might be a controlled vocabulary from a list of controlled vocabularies, e.g. the Generic Longitudinal Business Process Model (GLBPM) in a list that could include other business process model frameworks. In this context the extent becomes the name of a business process model task, e.g. "integrate data" from the GLBPM.
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:InternationalStructuredString {
@@ -336,29 +166,9 @@ ddi:InternationalStructuredString {
 ============
 Packaging structure for multiple language versions of the same string content, for objects that allow for internal formatting using XHTML tags. Where an element of this type is repeatable, the expectation is that each repetition contains different content, each of which can be expressed in multiple languages.
 
-Examples
-==========
-
-
-Explanatory notes
-===================
-
-
-Synonyms
-==========
-
-
 DDI 3.2 mapping
 =================
 r:StructuredStringType
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
-
 """^^mark:
 
 ddi:LanguageSpecificStructuredStringType {
@@ -374,10 +184,6 @@ ddi:LanguageSpecificStructuredStringType {
 ============
 Relation between components in a layout as specified by RelationSpecification
 
-Examples
-==========
-
-
 Explanatory notes
 ===================
 A layout may consist of other components in addition to instance variables. In the RDF Data Cube Vocabulary at https://dvcs.w3.org/hg/gld/raw-file/29a3dd6dc12c/data-cube/index.html#dsd in addition to instance variables functioning in various roles (dimension, measure, attribute) there are categories or more precisely sdmx-codes. In the RDF Data Cube Vocabulary sdmx-codes are associated with observations together with their associated dimensions. These observations contain measurements that in turn are rolled up into aggregates.
@@ -385,22 +191,6 @@ A layout may consist of other components in addition to instance variables. In t
 So at least when it comes to data cubes both instance variables AND their codes need to be represented in the layout mix. The way this works in LayoutComponentRelation with data cubes is that instance variables as dimensions have codes and codes participate in instance variables as measurements.
 
 By way of an example see: https://ddi-alliance.atlassian.net/wiki/download/attachments/491696/Data%20Cube%20Graph%20for%20RDF%20Data%20Cube%20Vocabulary%20Example.png?api=v2
-
-
-Synonyms
-==========
-
-
-DDI 3.2 mapping
-=================
-
-
-RDF mapping
-=============
-
-
-GSIM mapping
-==============
 
 """^^mark:
 
@@ -470,10 +260,7 @@ ddi:Annotation {
   ddi:versionIdentification xsd:string ?;
   ddi:versioningAgent @ddi:AgentAssociation *;
   ddi:abstract @ddi:InternationalString ?;
-  ddi:relatedResource {
-    ddi:identifierContent xsd:string ?;
-    ddi:managingAgency @ddi:ExternalControlledVocabularyEntry ?;
-    ddi:isURI xsd:boolean ?;
+  ddi:relatedResource EXTENDS ddi:InternationalIdentifier {
     ddi:typeOfRelatedResource @ddi:ExternalControlledVocabularyEntry *;
   } *;
   ddi:provenance @ddi:InternationalString *;
@@ -491,15 +278,7 @@ r:citationtype
 									"""^^mark:
 
 ddi:AgentAssociation {
-  ddi:agentName {
-    ddi:languageSpecificString {
-      ddi:content xsd:string ;
-      ddi:language xsd:language ?;
-      ddi:isTranslated xsd:boolean ?;
-      ddi:isTranslatable xsd:boolean ?;
-      ddi:translationSourceLanguage xsd:language *;
-      ddi:translationDate umld:UnlimitedNatural ?;
-    } *;
+  ddi:agentName EXTENDS ddi:InternationalString {
     ddi:affiliation xsd:string ?;
   } ?;
   ddi:role @ddi:PairedExternalControlledVocabularyEntry *;
@@ -515,13 +294,7 @@ ddi 3.2 mapping
 r:contributortype
 									"""^^mark:
 
-ddi:AnnotationDate {
-  ddi:isoDate ddi:IsoDateType ?;
-  ddi:nonIsoDate {
-    ddi:dateContent xsd:string ;
-    ddi:nonIsoDateFormat @ddi:ExternalControlledVocabularyEntry ?;
-    ddi:calendar @ddi:ExternalControlledVocabularyEntry ?;
-  } *;
+ddi:AnnotationDate EXTENDS ddi:Date {
   ddi:typeOfDate @ddi:ExternalControlledVocabularyEntry *;
 } // rdfs:definedBy <http://lion.ddialliance.org/ddiobjects/annotationdate> // shexmi:package "complexdatatypes" // shexmi:comment """
 definition
@@ -614,25 +387,7 @@ ddi 3.2 mapping
 r:datetype
 									"""^^mark:
 
-ddi:ExternalMaterial {
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
+ddi:ExternalMaterial EXTENDS ddi:Identifiable {
   ddi:typeOfMaterial @ddi:ExternalControlledVocabularyEntry ?;
   ddi:descriptiveText @ddi:InternationalStructuredString ?;
   ddi:uri xsd:anyURI *;
@@ -688,37 +443,13 @@ ddi 3.2 mapping
 r:othermaterialtype
 									"""^^mark:
 
-ddi:Agent {
-  ddi:agency xsd:string ;
-  ddi:id xsd:string ;
-  ddi:version xsd:string ;
-  ddi:versionResponsibility xsd:string ?;
-  ddi:versionRationale xsd:string ?;
-  ddi:versionDate ddi:IsoDateType ?;
-  ddi:isUniversallyUnique xsd:boolean ;
-  ddi:isPersistent xsd:boolean ;
-  ddi:localId  {
-      ddi:localIdValue xsd:string ;
-      ddi:localIdType xsd:string ;
-      ddi:localIdVersion xsd:string ?;
-  } *;
-  ddi:basedOnObject  {
-      ddi:basedOnRationaleDescription @ddi:InternationalString ?;
-      ddi:basedOnRationaleCode @ddi:ExternalControlledVocabularyEntry ?;
-      ddi:basedOn @ddi:Identifiable *;
-  } ?;
-  ddi:hasAnnotation @ddi:Annotation ?;
-  ddi:relatedMaterial @ddi:ExternalMaterial *;
+ABSTRACT ddi:Agent EXTENDS ddi:AnnotatedIdentifiable {
   ddi:hasAgentId {
     ddi:agentIdValue xsd:string ;
     ddi:agentIdType xsd:string ;
   } *;
   ddi:purpose @ddi:InternationalStructuredString ?;
-  ddi:image {
-    ddi:uri xsd:anyURI ?;
-    ddi:typeOfImage @ddi:ExternalControlledVocabularyEntry ?;
-    ddi:dpi xsd:integer ?;
-    ddi:languageOfImage ddi:LanguageSpecification ?;
+  ddi:image EXTENDS ddi:Image {
     ddi:effectiveDates @ddi:DateRange ?;
     ddi:privacy @ddi:ExternalControlledVocabularyEntry ?;
   } *;
