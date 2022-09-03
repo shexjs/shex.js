@@ -124,6 +124,8 @@ describe("A ShEx parser", function () {
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
+              "type": "ShapeDecl",
+              "shapeExpr": {
               "type": "ShapeAnd",
               "shapeExprs": [
                 {
@@ -133,7 +135,7 @@ describe("A ShEx parser", function () {
                 },
                 "http://ex.example/S"
               ]
-            }
+            } }
           ]
         });
       }, "unknown property: \"nested\"");
@@ -299,7 +301,7 @@ describe("A ShEx parser", function () {
 
       it("should use those prefixes", function () {
         const schema = "a:a { b:b .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -315,15 +317,15 @@ describe("A ShEx parser", function () {
 
       it("should use those prefixes", function () {
         const schema = "a:a { b:b .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
       it("should allow temporarily overriding prefixes", function () {
         const schema = "PREFIX a: <http://a.example/xyz#> a:a { b:b .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#a"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
-        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -333,7 +335,7 @@ describe("A ShEx parser", function () {
 
       it("should not take over changes to the original prefixes", function () {
         prefixes.a = "http://a.example/xyz#";
-        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].expression.predicate)
+        expect(parser.parse("a:a { b:b .+ }")._index.shapeExprs["http://a.example/abc#a"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#b");
       });
 
@@ -347,15 +349,15 @@ describe("A ShEx parser", function () {
 
       it("should use those prefixes", function () {
         const schema = "a: { b: .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/abc#"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
       it("should allow temporarily overriding prefixes", function () {
         const schema = "PREFIX a: <http://a.example/xyz#> a: { b: .+ }";
-        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#"].expression.predicate)
+        expect(parser.parse(schema)._index.shapeExprs["http://a.example/xyz#"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#");
-        expect(parser.parse("a: { b: .+ }")._index.shapeExprs["http://a.example/abc#"].expression.predicate)
+        expect(parser.parse("a: { b: .+ }")._index.shapeExprs["http://a.example/abc#"].shapeExpr.expression.predicate)
           .to.deep.equal("http://a.example/def#");
       });
 
@@ -371,7 +373,7 @@ function loadGraphSchema () {
 
     // For testing, wrap TC.valueExprs in ShapeOr to allow references undefined shapes (i.e. no properties ergo empty shape).
     const valueExpr_tripleCnstrnt = ret._index.shapeExprs[nsPath + "TripleConstraint"].
-          expression.expressions.find(e => {
+          shapeExpr.expression.expressions.find(e => {
             return e.predicate === nsPath + "valueExpr";
           });
     valueExpr_tripleCnstrnt.valueExpr = { type: "ShapeOr",

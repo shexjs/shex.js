@@ -24,7 +24,8 @@
     "@shexjs/eval-simple-1err": "^1.0.0-alpha.15",
     "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.15",
     "@shexjs/term": "^1.0.0-alpha.15",
-    "@shexjs/visitor": "^1.0.0-alpha.15"
+    "@shexjs/visitor": "^1.0.0-alpha.15",
+    "hierarchy-closure": "^1.2.1"
   },
   "devDependencies": {
     "@rdfjs/types": "^1.1.0",

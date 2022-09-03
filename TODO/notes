@@ -1,3 +1,13 @@
+is this test covered by Extend3G-pass?:
+<#Base> {
+  <p1> [1];
+  <p1> [2];
+}
+<#Leaf> EXTENDS @<#Base> {
+  <p1> [3]
+}
+(I *think* so...)
+
 // var ShExWriter = require("@shexjs/writer");
 // console.log(new ShExWriter({simplifyParentheses: true})._writeShapeExpr(effectiveExpr).join(''));
 
