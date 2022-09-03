@@ -90,8 +90,13 @@ function ShExVisitor (...ctor_args) {
         return undefined;
       return shapes.map(
         shapeExpr =>
-          _Visitor.visitShapeExpr(shapeExpr, ...args)
+          _Visitor.visitShapeDecl(shapeExpr, ...args)
       );
+    },
+
+    visitShapeDecl: function (decl, ...args) {
+      return this._maybeSet(decl, { type: "ShapeDecl" }, "ShapeDecl",
+                            ["id", "abstract", "restricts", "shapeExpr"], null, ...args);
     },
 
     visitShapeExpr: function (expr, ...args) {
@@ -115,7 +120,7 @@ function ShExVisitor (...ctor_args) {
 
     // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
     _visitShapeGroup: function (expr, ...args) {
-      this._testUnknownAttributes(expr, ["id", "shapeExprs"], expr.type, this.visitShapeNot)
+      this._testUnknownAttributes(expr, ["shapeExprs"], expr.type, this.visitShapeNot)
       const _Visitor = this;
       const r = { type: expr.type };
       if ("id" in expr)
@@ -128,7 +133,7 @@ function ShExVisitor (...ctor_args) {
 
     // _visitShapeNot: visit negated shape
     visitShapeNot: function (expr, ...args) {
-      this._testUnknownAttributes(expr, ["id", "shapeExpr"], "ShapeNot", this.visitShapeNot)
+      this._testUnknownAttributes(expr, ["shapeExpr"], "ShapeNot", this.visitShapeNot)
       const r = { type: expr.type };
       if ("id" in expr)
         r.id = expr.id;
@@ -142,7 +147,7 @@ function ShExVisitor (...ctor_args) {
       this._expect(shape, "type", "Shape");
 
       this._maybeSet(shape, ret, "Shape",
-                     [ "id",
+                     [ "abstract", "extends",
                        "closed",
                        "expression", "extra", "semActs", "annotations"], null, ...args);
       return ret;
@@ -161,8 +166,7 @@ function ShExVisitor (...ctor_args) {
       this._expect(shape, "type", "NodeConstraint");
 
       this._maybeSet(shape, ret, "NodeConstraint",
-                     [ "id",
-                       "nodeKind", "datatype", "pattern", "flags", "length",
+                     [ "nodeKind", "datatype", "pattern", "flags", "length",
                        "reference", "minlength", "maxlength",
                        "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
                        "totaldigits", "fractiondigits", "values", "annotations", "semActs"], null, ...args);
@@ -328,8 +332,9 @@ function ShExVisitor (...ctor_args) {
   };
 
   r.visitBase = r.visitStart = r.visitClosed = r["visit@context"] = r._visitValue;
+  r.visitRestricts = r.visitExtends = r._visitShapeExprList;
   r.visitExtra = r.visitAnnotations = r._visitList;
-  r.visitInverse = r.visitNegated = r.visitPredicate = r._visitValue;
+  r.visitAbstract = r.visitInverse = r.visitNegated = r.visitPredicate = r._visitValue;
   r.visitName = r.visitId = r.visitCode = r.visitMin = r.visitMax = r._visitValue;
 
   r.visitType = r.visitNodeKind = r.visitDatatype = r.visitPattern = r.visitFlags = r.visitLength = r.visitMinlength = r.visitMaxlength = r.visitMininclusive = r.visitMinexclusive = r.visitMaxinclusive = r.visitMaxexclusive = r.visitTotaldigits = r.visitFractiondigits = r._visitValue;
@@ -358,11 +363,11 @@ ShExVisitor.index = function (schema) {
     return oldVisitExpression.call(v, expression, ...args);
   };
 
-  let oldVisitShapeExpr = v.visitShapeExpr;
-  v.visitShapeExpr = function (shapeExpr, ...args) {
+  let oldVisitShapeDecl = v.visitShapeDecl;
+  v.visitShapeDecl = function (shapeExpr, ...args) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
       index.shapeExprs[shapeExpr.id] = shapeExpr;
-    return oldVisitShapeExpr.call(v, shapeExpr, ...args);
+    return oldVisitShapeDecl.call(v, shapeExpr, ...args);
   };
 
   v.visitSchema(schema);
