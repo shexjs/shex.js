@@ -9,12 +9,14 @@ const ShExNode = require("@shexjs/node")({
   fetch: require('node-fetch'),
   jsonld: require('jsonld'),
 });
+const schemaOptions = {};
 
 // Generate command line interface
 const CommandLineOptions = [
     { name: "help",  alias: "h", type: Boolean },
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
+    { name: "turtle",alias: "t", type: String, multiple:  true, defaultValue:   [] },
     { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }
 ];
 const CLI = require("command-line-args")(CommandLineOptions);
@@ -39,10 +41,17 @@ function abort (msg) {
 const cmds = CLI;
 if (cmds.help)
     abort("");
-if (cmds.shex.length === 0 && cmds.json.length === 0) abort("no shex specified");
+if (cmds.turtle.length > 0) {
+  const validator = require("@shexjs/validator");
+  const schema = require(/*"shexr-schema"*/ "../lib/ShExR.cjs.js");
+  const rdfjsdb = require("@shexjs/neighborhood-rdfjs").ctor;
+  schemaOptions.graphParser = { validator, schema, rdfjsdb };
+} else if ([].concat(cmds.shex).concat(cmds.json).length === 0) {
+ abort("no shex specified");
+}
 
 
-ShExNode.load({shexc: cmds.shex, json: cmds.json}, null).then(function (loaded) {
+ShExNode.load({shexc: cmds.shex, json: cmds.json, turtle: cmds.turtle}, null, schemaOptions).then(function (loaded) {
   console.log('%s', JSON.stringify(ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate), null, '  '));
 }).catch(function (e) {
   console.error("aborting:", e.stack || e);

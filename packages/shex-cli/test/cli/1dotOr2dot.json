@@ -3,31 +3,33 @@
   "type": "Schema",
   "shapes": [
     {
+      "type": "ShapeDecl",
       "id": "http://a.example/S1",
-      "type": "Shape",
-      "expression": {
-        "type": "OneOf",
-        "expressions": [
-          {
-            "type": "TripleConstraint",
-            "predicate": "http://a.example/p1"
-          },
-          {
-            "type": "EachOf",
-            "expressions": [
-              {
-                "type": "TripleConstraint",
-                "predicate": "http://a.example/p2"
-              },
-              {
-                "type": "TripleConstraint",
-                "predicate": "http://a.example/p3"
-              }
-            ]
-          }
-        ]
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "OneOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://a.example/p1"
+            },
+            {
+              "type": "EachOf",
+              "expressions": [
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "http://a.example/p2"
+                },
+                {
+                  "type": "TripleConstraint",
+                  "predicate": "http://a.example/p3"
+                }
+              ]
+            }
+          ]
+        }
       }
     }
   ]
 }
-

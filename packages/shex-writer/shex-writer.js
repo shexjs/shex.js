@@ -97,14 +97,21 @@ ShExWriter.prototype = {
     if (schema.start)
       _ShExWriter._write("start = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
     if ("shapes" in schema)
-      schema.shapes.forEach(function (shapeExpr) {
+      schema.shapes.forEach(function (shapeDecl) {
         _ShExWriter._write(
-          _ShExWriter._encodeShapeName(shapeExpr.id, false) +
-            " " +
-            _ShExWriter._writeShapeExpr(shapeExpr, done, true, 0).join("")+"\n",
+          _ShExWriter._writeShapeDecl(shapeDecl, done, true, 0).join("")+"\n",
           done
         );
       })
+  },
+
+  _writeShapeDecl: function (shapeDecl, done, forceBraces, parentPrec) {
+    const _ShExWriter = this;
+    const pieces = [];
+    if (shapeDecl.abstract)
+      pieces.push("ABSTRACT ");
+    pieces.push(_ShExWriter._encodeShapeName(shapeDecl.id, false), " ");
+    return pieces.concat(_ShExWriter._writeShapeExpr(shapeDecl.shapeExpr, done, true, 0));
   },
 
   _writeShapeExpr: function (shapeExpr, done, forceBraces, parentPrec) {
@@ -195,6 +202,19 @@ ShExWriter.prototype = {
       this._expect(shape, "type", "Shape");
 
       if (shape.closed) pieces.push("CLOSED ");
+
+      [{keyword: "extends", marker: "EXTENDS "}].forEach(pair => {
+         // pieces = pieces.concat(_ShExWriter._writeShapeExpr(expr.valueExpr, done, true, 0));
+         if (shape[pair.keyword] && shape[pair.keyword].length > 0) {
+           shape[pair.keyword].forEach(function (i, ord) {
+             if (ord)
+               pieces.push(" ")
+             pieces.push(pair.marker);
+             [].push.apply(pieces, _ShExWriter._writeShapeExpr(i, done, true, 0));
+           });
+           pieces.push(" ");
+         }
+       });
 
       if (shape.extra && shape.extra.length > 0) {
         pieces.push("EXTRA ");
@@ -295,7 +315,7 @@ ShExWriter.prototype = {
         }
       }
 
-      if (shape.expression) // t: 0
+      if (shape.expression) // t: 0, 0Extend1
         _writeExpression(shape.expression, "  ", 0);
       pieces.push("\n}");
       this._writeShapeActions(pieces, shape.semActs, "  ");
