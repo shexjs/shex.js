@@ -44,7 +44,7 @@ describe("@shexjs/node", function () {
       { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
         "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {} }
     ])
-    const loadedShapes = schema.shapes.map(s => [s.id, s.type])
+    const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type])
     expect(loadedShapes).to.deep.equal([
       ["http://a.example/S1", "Shape"],
     ])

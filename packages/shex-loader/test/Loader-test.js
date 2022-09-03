@@ -46,10 +46,12 @@ const schemaAsShExJ = {
   schema: {
     type: "Schema",             // simple schema with single NodeConstraint
     shapes: [
-      { "type": "NodeConstraint",
+      { "type": "ShapeDecl",
         "id": "http://a.example/S1", // replace schemaFromUrl's S1
-          "nodeKind": "iri",         // with a NodeConstraint
-          "pattern": "^https?:" }
+        "shapeExpr": {               // with a NodeConstraint
+          "type": "NodeConstraint",
+          "nodeKind": "iri",
+          "pattern": "^https?:" } }
     ] }
 };
 
@@ -85,11 +87,12 @@ describe("@shexjs/loader", function () {
     // ShExLoader.load returns a promise to load and merge schema and data.
     function collisionPolicy (type, left, right) {
 
-      expect(type).to.equal('shapeExpr');
+      expect(type).to.equal('shapeDecl');
 
       // TODO: fix API to respect order passed to load() and update left/right here.
       expect(left).to.deep.equal({
-        "type": "Shape", "id": "http://a.example/S1",
+        "type": "ShapeDecl", "id": "http://a.example/S1",
+        "shapeExpr": { "type": "Shape",
           "expression": { "type": "OneOf",
             "expressions": [
               { "type": "TripleConstraint", "predicate": "http://a.example/p1" },
@@ -98,13 +101,14 @@ describe("@shexjs/loader", function () {
                   { "type": "TripleConstraint", "predicate": "http://a.example/p2" },
                   { "type": "TripleConstraint", "predicate": "http://a.example/p3" }
                 ] }
-            ] }
+            ] } }
       });
       expect(right).to.deep.equal({
+        type: 'ShapeDecl',
         id: 'http://a.example/S1',
-        type: 'NodeConstraint', nodeKind: 'iri', pattern: '^https?:'
+        shapeExpr: { type: 'NodeConstraint', nodeKind: 'iri', pattern: '^https?:' }
       });
-      return true; // override the left assignment with the right (Shape)
+      return true; // override the left assignment with the right (ShapeDecl)
     }
 
     const {schema, schemaMeta, data, dataMeta} = await ShExLoader.load(
@@ -124,7 +128,7 @@ describe("@shexjs/loader", function () {
       { "mediaType": "text/shex", "url": "http://a.example/ShExJ",
         "prefixes": {}, "base": "http://a.example/ShExJ" }
     ]);
-    const loadedShapes = schema.shapes.map(s => [s.id, s.type]);
+    const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
     expect(loadedShapes).to.deep.equal([
       ["http://a.example/schemaAsText#ShapeFromText", "Shape"],
       ["http://a.example/S1", "NodeConstraint"]
@@ -169,23 +173,29 @@ describe("@shexjs/loader", function () {
   "shapes": [
     {
       "id": "http://a.example/S1",
-      "type": "Shape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "TripleConstraint",
           "predicate": "http://a.example/p1",
           "valueExpr": "http://a.example/S2"
         }
+      }
     },
     {
       "id": "http://a.example/S2",
-      "type": "Shape",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "TripleConstraint",
           "predicate": "http://a.example/p2"
         }
+      }
     }
   ]})
-    const loadedShapes = schema.shapes.map(s => [s.id, s.type]);
+    const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
     expect(loadedShapes).to.deep.equal([
       [ 'http://a.example/S1', 'Shape' ],
       [ 'http://a.example/S2', 'Shape' ]
@@ -220,17 +230,23 @@ IMPORT <3circRefS3>
     "https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/3circRefS2-IS3",
   ],
   "shapes": [
-    { "id": "http://a.example/S2", "type": "Shape",
+    { "id": "http://a.example/S2", "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "TripleConstraint",
           "predicate": "http://a.example/p3",
-          "valueExpr": "http://a.example/S3" } },
-    { "id": "http://a.example/S3", "type": "Shape",
+          "valueExpr": "http://a.example/S3" } } },
+    { "id": "http://a.example/S3", "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "TripleConstraint",
           "predicate": "http://a.example/p4",
-          "valueExpr": "http://a.example/S1" } },
-    { "id": "http://a.example/S1", "type": "Shape",
+          "valueExpr": "http://a.example/S1" } } },
+    { "id": "http://a.example/S1", "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "EachOf",
           "expressions": [
@@ -243,9 +259,9 @@ IMPORT <3circRefS3>
               "predicate": "http://a.example/p2", "min": 0, "max": 1,
               "valueExpr": "http://a.example/S2" }
           ]
-        } }
+        } } }
   ]})
-    const loadedShapes = schema.shapes.map(s => [s.id, s.type]);
+    const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
     expect(loadedShapes).to.deep.equal([
       [ 'http://a.example/S2', 'Shape' ],
       [ 'http://a.example/S3', 'Shape' ],
@@ -262,14 +278,14 @@ IMPORT <3circRefS3>
             "imports": [ new URL("3circRefS2-IS3", schemaWith3CircularImports).href,
                          new URL("3circRefS3", schemaWith3CircularImports).href ],
             "shapes": [
-              { "type": "Shape", "id": "http://a.example/S1",
+              { "type": "ShapeDecl", "id": "http://a.example/S1", "shapeExpr": {
                 type: "Shape",
                 "expression": {
                   "type": "EachOf", "expressions": [
                     { "type": "TripleConstraint", "predicate": "http://a.example/p1" },
                     { "type": "TripleConstraint", "predicate": "http://a.example/p2",
                       "min": 0, "max": 1, "valueExpr": "http://a.example/S2" }
-                  ] } }
+                  ] } } }
             ] } }
         ] },
       null,
@@ -290,17 +306,23 @@ IMPORT <3circRefS3>
     "https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/3circRefS2-IS3",
   ],
   "shapes": [
-    { "id": "http://a.example/S2", "type": "Shape",
+    { "id": "http://a.example/S2", "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "TripleConstraint",
           "predicate": "http://a.example/p3",
-          "valueExpr": "http://a.example/S3" } },
-    { "id": "http://a.example/S3", "type": "Shape",
+          "valueExpr": "http://a.example/S3" } } },
+    { "id": "http://a.example/S3", "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "TripleConstraint",
           "predicate": "http://a.example/p4",
-          "valueExpr": "http://a.example/S1" } },
-    { "id": "http://a.example/S1", "type": "Shape",
+          "valueExpr": "http://a.example/S1" } } },
+    { "id": "http://a.example/S1", "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
         "expression": {
           "type": "EachOf",
           "expressions": [
@@ -313,9 +335,9 @@ IMPORT <3circRefS3>
               "predicate": "http://a.example/p2", "min": 0, "max": 1,
               "valueExpr": "http://a.example/S2" }
           ]
-        } }
+        } } }
   ]})
-    const loadedShapes = schema.shapes.map(s => [s.id, s.type]);
+    const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
     expect(loadedShapes).to.deep.equal([
       [ 'http://a.example/S2', 'Shape' ],
       [ 'http://a.example/S3', 'Shape' ],
@@ -334,7 +356,7 @@ IMPORT <3circRefS3>
     ])
     expect(schema).to.deep.equal({
       "type": "Schema", "shapes": [
-        { "id": "http://a.example/S1",
+        { "id": "http://a.example/S1", "type": "ShapeDecl", "shapeExpr": {
           "type": "Shape", "expression": {
             "type": "OneOf", "expressions":[
               {"type":"TripleConstraint","predicate":"http://a.example/p1"},
@@ -342,9 +364,9 @@ IMPORT <3circRefS3>
                 {"type":"TripleConstraint","predicate":"http://a.example/p2"},
                 {"type":"TripleConstraint","predicate":"http://a.example/p3"}
               ]}
-            ] } }
+            ] } } }
       ] } )
-    const loadedShapes = schema.shapes.map(s => [s.id, s.type]);
+    const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
     expect(loadedShapes).to.deep.equal([
       [ 'http://a.example/S1', 'Shape' ],
     ]);

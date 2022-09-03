@@ -77,7 +77,12 @@ function runCliTests (scriptArgumentLists, fromDir, dumpTimeStamps) {
           program.stdout.on("data", function (data) { stdout += data; });
           program.stderr.on("data", function (data) { stderr += data; });
           program.on("close", function (exitCode) {
-            resolve({stdout:stdout, stderr:stderr, exitCode:exitCode})
+            // stupid hack 'cause I can't pass node flags
+            const SWALLOW_WARNINGS = /\(node\:[0-9]+\) ExperimentalWarning: The Fetch API.*?\n\(Use.*?created\)\n/g;
+            if (stderr.length > 0) {
+              stderr = stderr.replace(SWALLOW_WARNINGS, "");
+            }
+            resolve({stdout, stderr, exitCode})
           });
           program.on("error", function(err) { reject(err); });
           cancel.on('timeout', err => {

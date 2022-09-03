@@ -222,6 +222,9 @@ IT_PREFIX               [Pp][Rr][Ee][Ff][Ii][Xx]
 IT_IMPORT               [iI][mM][pP][oO][rR][tT]
 IT_START                [sS][tT][aA][rR][tT]
 IT_EXTERNAL             [eE][xX][tT][eE][rR][nN][aA][lL]
+IT_ABSTRACT             [Aa][Bb][Ss][Tt][Rr][Aa][Cc][Tt]
+IT_RESTRICTS		[Rr][Ee][Ss][Tt][Rr][Ii][Cc][Tt][Ss]
+IT_EXTENDS		[Ee][Xx][Tt][Ee][Nn][Dd][Ss]
 IT_CLOSED               [Cc][Ll][Oo][Ss][Ee][Dd]
 IT_EXTRA                [Ee][Xx][Tt][Rr][Aa]
 IT_LITERAL              [Ll][Ii][Tt][Ee][Rr][Aa][Ll]
@@ -340,6 +343,9 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IT_IMPORT}             return 'IT_IMPORT';
 {IT_START}              return 'IT_start';
 {IT_EXTERNAL}           return 'IT_EXTERNAL';
+{IT_ABSTRACT}           return 'IT_ABSTRACT';
+{IT_RESTRICTS}		return 'IT_RESTRICTS';
+{IT_EXTENDS}		return 'IT_EXTENDS';
 {IT_CLOSED}             return 'IT_CLOSED';
 {IT_EXTRA}              return 'IT_EXTRA';
 {IT_LITERAL}            return 'IT_LITERAL';
@@ -509,12 +515,24 @@ statement:
     ;
 
 shapeExprDecl:
-      shapeExprLabel _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        yy.addShape($1,  $2);
+      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
+        yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
+                                   $3.length > 0 ? { restricts: $3 } : { },
+                                   {shapeExpr: $4})) // $5: t: @@
       }
     ;
 
-_O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
+_QIT_ABSTRACT_E_Opt:
+      	-> {  }
+    | IT_ABSTRACT	-> { abstract: true }
+    ;
+
+_Qrestriction_E_Star:
+      	-> [] // t: 1dot, 1dotAnnot3
+    | _Qrestriction_E_Star restriction	-> appendTo($1, $2) // t: 1dotAnnot3
+    ;
+
+_O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C:
       // _QstringFacet_E_Star shapeExpression	{
       //   if (Object.keys($1).length === 0) { $$ = $2; }
       //   // else if ($2.type === "NodeConstraint") { $$ = extend($2, $2); } // delme
@@ -528,6 +546,7 @@ _O_QshapeExpression_E_Or_QIT_EXTERNAL_E_C:
       shapeExpression	{
         $$ = nonest($1);
       }
+    | shapeRef	
     | IT_EXTERNAL	-> { type: "ShapeExternal" }
     ;
 
@@ -874,7 +893,7 @@ numericLength:
     ;
 
 shapeDefinition:
-      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: @@
+      inlineShapeDefinition _Qannotation_E_Star semanticActions	{ // t: 1dotExtend3
         $$ = $1 === yy.EmptyShape ? { type: "Shape" } : $1; // t: 0
         if ($2.length) { $$.annotations = $2; } // t: !! look to open3groupdotcloseAnnot3, open3groupdotclosecard23Annot3Code2
         if ($3) { $$.semActs = $3.semActs; } // t: !! look to open3groupdotcloseCode1, !open1dotOr1dot
@@ -882,30 +901,31 @@ shapeDefinition:
     ;
 
 inlineShapeDefinition:
-      _Q_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: @@
-        const exprObj = $3 ? { expression: $3 } : yy.EmptyObject; // t: 0
+      _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star '{' _QtripleExpression_E_Opt '}'	{ // t: 1dotExtend3
+        const exprObj = $3 ? { expression: $3 } : yy.EmptyObject; // t: 0, 0Extend1
         $$ = (exprObj === yy.EmptyObject && $1 === yy.EmptyObject) ?
 	  yy.EmptyShape :
 	  extend({ type: "Shape" }, exprObj, $1);
       }
     ;
 
-_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
-      extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
+_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C:
+      extension	-> [ "extends", [$1] ] // t: 1dotExtend1
+    | extraPropertySet	-> [ "extra", $1 ] // t: 1dotExtra1, 3groupdot3Extra, 3groupdotExtra3
     | IT_CLOSED	-> [ "closed", true ] // t: 1dotClosed
     ;
 
-_Q_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
+_Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star:
       	-> yy.EmptyObject
-    | _Q_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
+    | _Q_O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C_E_Star _O_Qextension_E_Or_QextraPropertySet_E_Or_QIT_CLOSED_E_C	{
         if ($1 === yy.EmptyObject)
           $1 = {};
         if ($2[0] === "closed")
           $1["closed"] = true; // t: 1dotClosed
         else if ($2[0] in $1)
-          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 3groupdot3Extra, 3groupdotExtra3
+          $1[$2[0]] = unionAll($1[$2[0]], $2[1]); // t: 1dotExtend3, 3groupdot3Extra, 3groupdotExtra3
         else
-          $1[$2[0]] = $2[1]; // t: @@
+          $1[$2[0]] = $2[1]; // t: 1dotExtend1
         $$ = $1;
       }
     ;
@@ -1028,9 +1048,9 @@ tripleConstraint:
 	  $3 = t; // ShapeRef
 	}
         // %6: t: 1inversedotCode1
-        $$ = extend({ type: "TripleConstraint" }, $1 ? $1 : {}, { predicate: $2 }, ($3 === yy.EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot // t: 1inversedot, 1negatedinversedot
+        $$ = extend({ type: "TripleConstraint" }, $1 ? $1 : {}, { predicate: $2 }, ($3 === yy.EmptyShape ? {} : { valueExpr: $3 }), $4, $6); // t: 1dot, 1inversedot, 1negatedinversedot
         if ($5.length)
-          $$["annotations"] = $5; // t: 1dotAnnot3 // t: 1inversedotAnnot3
+          $$["annotations"] = $5; // t: 1dotAnnot3, 1inversedotAnnot3
       }
     ;
 
@@ -1374,8 +1394,65 @@ blankNode:
       BLANK_NODE_LABEL	// t: 1dotInline1
     ;
 
+extension:
+      _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C extendsShapeExpression	-> $2 // t: 0Extends1, 1dotExtends1, 1dot3ExtendsLN
+    ;
+
+extendsShapeExpression:
+      extendsShapeOr	
+    ;
+
+extendsShapeOr:
+      extendsShapeAnd _Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star	-> shapeJunction("ShapeOr", $1, $2)
+    ;
+
+_O_QIT_OR_E_S_QextendsShapeAnd_E_C: // IT_OR extendsShapeAnd
+      IT_OR extendsShapeAnd	-> $2
+    ;
+
+_Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star: // (IT_OR extendsShapeAnd)*
+      	-> []
+    | _Q_O_QIT_OR_E_S_QextendsShapeAnd_E_C_E_Star _O_QIT_OR_E_S_QextendsShapeAnd_E_C	-> $1.concat($2)
+    ;
+
+extendsShapeAnd:
+      extendsShapeNot _Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star	-> shapeJunction("ShapeAnd", $1, $2)
+    ;
+
+_O_QIT_AND_E_S_QextendsShapeNot_E_C: // IT_AND extendsShapeNot
+      IT_AND extendsShapeNot	-> $2
+    ;
+
+_Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star: // (IT_AND extendsShapeNot)*
+      	-> []
+    | _Q_O_QIT_AND_E_S_QextendsShapeNot_E_C_E_Star _O_QIT_AND_E_S_QextendsShapeNot_E_C	-> $1.concat($2)
+    ;
+
+extendsShapeNot: // IT_NOT? extendsShapeAtom
+      _QIT_NOT_E_Opt extendsShapeAtom	-> $1 ? { type: "ShapeNot", "shapeExpr": nonest($2) } : $2
+    ;
+
+extendsShapeAtom:
+      nonLitInlineNodeConstraint inlineShapeOrRef	// _QinlineShapeOrRef_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | litInlineNodeConstraint	
+    | inlineShapeOrRef _QnonLitInlineNodeConstraint_E_Opt	
+        -> $2 ? { type: "ShapeAnd", shapeExprs: [ extend({ type: "NodeConstraint" }, $1), $2 ] } : $1
+    | '(' shapeExpression ')'	-> Object.assign($2, {nested: true})
+    | '.'	-> yy.EmptyShape
+    ;
+
 _O_QIT_EXTENDS_E_Or_QGT_AMP_E_C:
       IT_EXTENDS	
     | '&'	
+    ;
+
+restriction:
+      _O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C shapeOrRef	-> $2 // t: @@1dotSpecialize1, @@1dot3Specialize, @@1dotSpecialize3
+    ;
+
+_O_QIT_RESTRICTS_E_Or_QGT_MINUS_E_C:
+      IT_RESTRICTS	
+    | '-'	
     ;
 
