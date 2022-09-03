@@ -166,6 +166,148 @@ PREFIX : <${Voc}>
         polymorphic: false
       }
     }
+  },
+  { name: 'extended',
+    schema: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#extended> ;
+  :p2 @<#notExtended>
+}
+<#another> EXTENDS @<#extended> {}
+<#extended> { :p2 [1] }
+<#notExtended> { :p2 [2] }
+`,
+    renamed: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#extended> ;
+  :p2 @_:renamed3
+}
+<#another> EXTENDS @<#extended> {}
+<#extended> { :p2 [1] }
+_:renamed3 { :p2 [2] }
+`,
+    transformed: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#extended> ;
+  :p2 @_:notExtended
+}
+<#another> EXTENDS @<#extended> {}
+<#extended> { :p2 [1] }
+_:notExtended { :p2 [2] }
+`,
+    nested: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#extended> ;
+  :p2 { :p2 [2] }
+}
+<#another> EXTENDS @<#extended> {}
+<#extended> { :p2 [1] }
+`,
+    nestedList: {
+      'http://schema.example/shape#notExtended': {
+        referrer: 'http://schema.example/shape#outer',
+        predicate: 'http://schema.example/vocab#p2'
+      }
+    },
+    renamedList: {
+      '_:renamed3': {
+        referrer: 'http://schema.example/shape#outer',
+        predicate: 'http://schema.example/vocab#p2',
+        was: 'http://schema.example/shape#notExtended'
+      }
+    },
+    transformedList: {
+      '_:notExtended': {
+        referrer: 'http://schema.example/shape#outer',
+        predicate: 'http://schema.example/vocab#p2',
+        was: 'http://schema.example/shape#notExtended'
+      }
+    },
+    predicateUsage: {
+      'http://schema.example/vocab#p1': {
+        uses: [ '0' ],
+        commonType: 'http://schema.example/shape#extended',
+        polymorphic: false
+      },
+      'http://schema.example/vocab#p2': {
+        uses: [ '0', '2', '3' ],
+        commonType: null,
+        polymorphic: false
+      }
+    }
+  },
+  { name: 'abstract',
+    schema: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#abstract> ;
+  :p2 @<#notAbstract>
+}
+ABSTRACT <#abstract> { :p2 [1] }
+<#notAbstract> { :p2 [2] }
+`,
+    renamed: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#abstract> ;
+  :p2 @_:renamed2
+}
+ABSTRACT <#abstract> { :p2 [1] }
+_:renamed2 { :p2 [2] }
+`,
+    transformed: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#abstract> ;
+  :p2 @_:notAbstract
+}
+ABSTRACT <#abstract> { :p2 [1] }
+_:notAbstract { :p2 [2] }
+`,
+    nested: `
+PREFIX : <${Voc}>
+<#outer> {
+  :p1 @<#abstract> ;
+  :p2 { :p2 [2] }
+}
+ABSTRACT <#abstract> { :p2 [1] }
+`,
+    nestedList: {
+      'http://schema.example/shape#notAbstract': {
+        referrer: 'http://schema.example/shape#outer',
+        predicate: 'http://schema.example/vocab#p2'
+      }
+    },
+    renamedList: {
+      '_:renamed2': {
+        referrer: 'http://schema.example/shape#outer',
+        predicate: 'http://schema.example/vocab#p2',
+        was: 'http://schema.example/shape#notAbstract'
+      }
+    },
+    transformedList: {
+      '_:notAbstract': {
+        referrer: 'http://schema.example/shape#outer',
+        predicate: 'http://schema.example/vocab#p2',
+        was: 'http://schema.example/shape#notAbstract'
+      }
+    },
+    predicateUsage: {
+      'http://schema.example/vocab#p1': {
+        uses: [ '0' ],
+        commonType: 'http://schema.example/shape#abstract',
+        polymorphic: false
+      },
+      'http://schema.example/vocab#p2': {
+        uses: [ '0', '1', '2' ],
+        commonType: null,
+        polymorphic: false
+      }
+    }
   }
 ]
 

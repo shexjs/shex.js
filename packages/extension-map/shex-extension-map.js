@@ -187,7 +187,7 @@ function trivialMaterializer (schema, nextBNode) {
       const oldVisitShapeRef = v.visitShapeRef;
 
       v.visitShapeRef = function (shapeRef) {
-        this.visitShapeExpr(index.shapeExprs[shapeRef], shapeRef);
+        this.visitShapeDecl(index.shapeExprs[shapeRef], shapeRef);
         return oldVisitShapeRef.call(v, shapeRef);
       };
 

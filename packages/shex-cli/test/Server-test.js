@@ -36,7 +36,7 @@ const RestTests = {
       { curl: [], errors: ["No schema specified."], status: 400 },
       { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], errors: ["No schema specified."], status: 400 },
       { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], errors: ["No data specified."], status: 400 },
-      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
+      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true , status: 200 },
     ]
   },
   "default-schema-and-data": {
@@ -44,8 +44,8 @@ const RestTests = {
     posts: [
       { curl: [], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
       { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
-      { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
-      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", status: 200 },
+      { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true, status: 200 },
+      { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true, status: 200 },
     ]
   },
 }
@@ -200,7 +200,7 @@ if (!TEST_server) {
              else if ("resultNoSpace" in ref)
                expect(exec.stdout.replace(/[ \n]/g, "")).to.equal(ref.resultNoSpace.text.replace(/[ \n]/g, ""));
              else if ("result" in ref)// {console.warn('got:', exec.respBody); console.warn('exp:', JSON.stringify(ShExUtil.absolutizeResults(JSON.parse(ref.result.text), ref.result.url), null, 2));}
-               expect(ShExUtil.absolutizeResults(JSON.parse(exec.respBody), ref.result.url)).to.deep.equal(ShExUtil.absolutizeResults(JSON.parse(ref.result.text), ref.result.url));
+               expect(JSON.parse(exec.respBody)).to.deep.equal(ShExUtil.absolutizeResults(JSON.parse(ref.result.text), postTest.resultBaseIsEndpoint ? ServerEndpoint : ref.result.url));
              else if (!("errorMatch" in ref))
                throw Error("unknown test criteria in " + JSON.stringify(ref));
              const serverLogRe = /^([a-f0-9:.]+): (GET|POST) ([^ ]+) ([0-9]+) ([a-z]+)\/([a-z]+) ([0-9]+)\n$/;
