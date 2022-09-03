@@ -14478,7 +14478,9 @@ function ShExValidator_constructor(schema, db, options) {
     const constraintList = extendedTCs.map(
       ext => ext.tripleConstraint
     ).concat(localTCs);
-    const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget, null, uniques); // don't override with passed subGraph
+
+    // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
+    const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget, uniques);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
     const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
@@ -14590,7 +14592,7 @@ function ShExValidator_constructor(schema, db, options) {
     return addShapeAttributes(shape, ret);
   };
 
-  function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget, subgraph, uniques) {
+  function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget, uniques) {
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
     return constraintList.reduce(function (ret, constraint, cNo) {
@@ -14606,7 +14608,7 @@ function ShExValidator_constructor(schema, db, options) {
 
       // strip to triples matching value constraints (apart from @<someShape>)
       const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
-        matchPredicate, constraint, valParms, matchTarget, subgraph, uniques
+        matchPredicate, constraint, valParms, matchTarget, uniques
       );
 
       matchConstraints.hits.forEach(function (evidence) {
@@ -14804,7 +14806,7 @@ function ShExValidator_constructor(schema, db, options) {
     }
   }
 
-  this._triplesMatchingShapeExpr = function (triples, constraint, valParms, matchTarget, subgraph, uniques) {
+  this._triplesMatchingShapeExpr = function (triples, constraint, valParms, matchTarget, uniques) {
     const _ShExValidator = this;
     const misses = [];
     const hits = [];
@@ -14814,7 +14816,7 @@ function ShExValidator_constructor(schema, db, options) {
       const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
       const errors = constraint.valueExpr === undefined ?
           undefined :
-          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms, matchTarget, subgraph, uniques)).errors;
+          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms, matchTarget, null, uniques)).errors;
       if (!errors) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
