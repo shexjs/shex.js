@@ -4,7 +4,7 @@
   </head>
   <body>
   <h1>ShEx validator</h1>
-    <form action="validate" enctype="multipart/form-data" method="post">
+    <form id="validateForm" action="validate" enctype="multipart/form-data" method="post">
       <p>
         schema: <input type="file" name="schema" size="40" />
         shape: <input type="text" name="shape" size="30" />
@@ -15,12 +15,24 @@
         | type: <input type="text" name="nodeType" size="30" />
       </p>
       <div>
-        <input type="submit" value="Send" />
+        <input type="submit" value="Validate" />
         <select name="output">
           <option value="raw">raw</option>
           <option value="html">HTML</option>
-      </select>
+        </select>
+        <select name="method">
+          <option value="post">POST</option>
+          <option value="get">GET</option>
+        </select>
        </div>
     </form>
+    <script>
+      const validateForm = document.querySelector('#validateForm');
+      const methodSelect = document.querySelector('select[name="method"]');
+
+      const lastMethod = validateForm.getAttribute("method");
+      methodSelect.querySelector(`:scope > option[value="${lastMethod}"]`).selected = 'selected';
+      methodSelect.addEventListener('change', evt => validateForm.setAttribute("method", methodSelect.value));
+    </script>
   </body>
 </html>
