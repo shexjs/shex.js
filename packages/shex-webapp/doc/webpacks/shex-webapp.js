@@ -14236,6 +14236,8 @@ function ShExValidator_constructor(schema, db, options) {
     const constraintList = extendedTCs.map(
       ext => ext.tripleConstraint
     ).concat(localTCs);
+
+    // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
