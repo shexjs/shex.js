@@ -957,16 +957,15 @@ function runServer (serverLoaded, serverParms, serverOptions) {
     stopAfter = Infinity;
 
   const parsedMethods = ["GET", "POST"];
-  const server = app
-        .use(koaBody({
-          parsedMethods,
-          multipart: true,
-          // formLimit: "64 kb",
-          formidable: {
-            uploadDir: Path.resolve(__dirname, "../rest/uploads")
-          }
-        }))
-        .use(koaHandler).listen(requestedPort);
+
+  const server = app.use(koaBody({
+    parsedMethods,
+    multipart: true,
+    // formLimit: "64 kb",
+    formidable: {
+      uploadDir: Path.resolve(__dirname, "../rest/uploads")
+    }
+  })).use(koaHandler).listen(requestedPort);
   const serverAddress = server.address();
   if (!serverAddress) {
     const suggestion = serverUrl.port === ''
@@ -1010,6 +1009,24 @@ function runServer (serverLoaded, serverParms, serverOptions) {
   async function koaHandler (ctx, next) {
     switch (new URL(ctx.originalUrl, "http://a.example").pathname) {
     case serverUrl.pathname:
+      await serveKoaValidationRequest(ctx);
+      await next;
+      break;
+    case "/":
+      ctx.body = Fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
+      ctx.type = 'text/html'
+      break;
+    default:
+      ctx.status = 404;
+      ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
+      ctx.type = 'text/plain';
+    }
+    log(`${ctx.ips.length > 0 ? ctx.ips[ctx.ips.length - 1] : ctx.ip}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
+    if (!--stopAfter)
+      server.close();
+  }
+
+  async function serveKoaValidationRequest (ctx) {
       const parms = {
         schema: { type: "Schema" }, shape:undefined, schemaMeta: [],
         data: new N3.Store(), node:undefined, dataMeta: [], nodeType:undefined
@@ -1094,21 +1111,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         ctx.status = "status" in e ? e.status : 500;
       }
 
-      unlinkMe.forEach(x => Fs.unlinkSync(x.file.filepath));
-      await next;
-      break;
-    case "/":
-      ctx.body = Fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
-      ctx.type = 'text/html'
-      break;
-    default:
-      ctx.status = 404;
-      ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
-      ctx.type = 'text/plain';
-    }
-    log(`${ctx.ips.length > 0 ? ctx.ips[ctx.ips.length - 1] : ctx.ip}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
-    if (!--stopAfter)
-      server.close();
+    unlinkMe.forEach(x => Fs.unlinkSync(x.file.filepath));
   }
 }
 
