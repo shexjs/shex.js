@@ -461,9 +461,10 @@ function ShExValidator_constructor(schema, db, options) {
           if ("extends" in shape) {
             shape.extends.forEach(ext => {
               const extendsVisitor = ShExVisitor();
-              extendsVisitor.visitShapeRef = function (parent) {
-                extensions.add(parent, curLabel);
-                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(parent))
+              extendsVisitor.visitExpression = function (expr, ...args) { return "null"; }
+              extendsVisitor.visitShapeRef = function (reference, ...args) {
+                extensions.add(reference, curLabel);
+                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(reference))
                 // makeSchemaVisitor().visitSchema(schema);
                 return "null";
               };
@@ -612,6 +613,8 @@ function ShExValidator_constructor(schema, db, options) {
         )
     )
     const cl2 = e2c.flatMap(x => x).concat(localTCs);                 // + TCs in shape.expression
+
+    // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 

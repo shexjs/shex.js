@@ -21,13 +21,14 @@
   },
   "dependencies": {
     "@shexjs/loader": "^1.0.0-alpha.15",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.15",
     "@shexjs/parser": "^1.0.0-alpha.15",
     "@shexjs/term": "^1.0.0-alpha.15",
     "@shexjs/util": "^1.0.0-alpha.15",
     "@shexjs/validator": "^1.0.0-alpha.15",
     "@shexjs/writer": "^1.0.0-alpha.15",
     "command-line-args": "^5.0.2",
-    "command-line-usage": "^5.0.5",
+    "command-line-usage": "^6.1.3",
     "dctap": "^0.0.5",
     "hierarchy-closure": "^1.2.1",
     "js-yaml": "^4.1.0",
@@ -48,7 +49,7 @@
     "dctap": "^0.0.5",
     "jquery": "^3.5.1",
     "jquery-contextmenu": "^2.9.2",
-    "jquery-ui": "^1.12.1"
+    "jquery-ui": "^1.13.2"
   },
   "publishConfig": {
     "access": "public"

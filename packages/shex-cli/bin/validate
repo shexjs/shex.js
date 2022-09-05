@@ -36,6 +36,7 @@ The regular expression engine is loaded from either:
 
 */
 
+const Fs = require("fs");
 const Path = require("path");
 const Util = require("util");
 const JsYaml = require('js-yaml');
@@ -162,7 +163,7 @@ function abort (msg) {
 /* Leverage N3.js's relative IRI parsing.
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
  */
-function findNodesAndValidate (loaded, parms, options) {
+function findNodesAndValidate (loaded, parms, options, schemaStart) {
   let shapeIndex = loaded.schema._shapes || ShExUtil.index(loaded.schema)
   function knownShape (label) {
     return label in shapeIndex.shapeExprs;
@@ -205,7 +206,7 @@ function findNodesAndValidate (loaded, parms, options) {
   const shapeMapExtensions = {
   }
 
-  function _makeShapeMap (nodeP, shapeP, nodeTypeP) {
+  function _makeShapeMap (nodeP, shapeP, nodeTypeP, schemaStart) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
     const nodes = nodeTypeP
         ? allNodesWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
@@ -249,7 +250,7 @@ function findNodesAndValidate (loaded, parms, options) {
     }
 
     // console.log("runValidator ("+graph+", "+node+", "+schema+", "+shape+")");
-    if (nodes[0] === undefined || (shape === undefined && !("start" in schema))) {
+    if (nodes[0] === undefined || (shape === undefined && schemaStart === undefined)) {
       const msgs = [];
       if (nodes[0] === undefined) {
         const subjectNodes = loaded.data.size < 50 ? Object.keys(loaded.data.getQuads(null, null, null).reduce(function (r, t) { r[t.subject] = t.subject; return r; }, {})) : 0;
@@ -278,14 +279,14 @@ function findNodesAndValidate (loaded, parms, options) {
 
   const shapeMap = "queryMap" in parms
       ? parms.queryMap.reduce(
-        (acc, pair) => acc.concat(_makeShapeMap(pair.node, pair.shape, null)), []
+        (acc, pair) => acc.concat(_makeShapeMap(pair.node, pair.shape, null, schemaStart)), []
       ).reduce(
         (acc, pair) => acc.seen.indexOf(pair.node) === -1
           ? {ret: acc.ret.concat(pair), seen: acc.seen.concat(pair.node)}
         : acc,
         {ret: [], seen: []}
       ).ret
-      : _makeShapeMap(parms.node, parms.shape, parms["node-type"]);
+      : _makeShapeMap(parms.node, parms.shape, parms["node-type"], schemaStart);
   if (cmds.verbose) {
     let tz = shapeMap.map(p => { return p.node + " AS " + p.shape; });
     tz = tz.length > 1 ? JSON.stringify(tz) : tz[0];
@@ -426,7 +427,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       const valOpts2 = valParms.slurp
             ? Object.assign({}, {noResults: true}, validatorOptions)
             : validatorOptions;
-      const res = findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaOptions).results;
+      const res = findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaOptions, schemaAndData.schema.start).results;
 
       if (cmds["dry-run"])
         return res;
@@ -779,7 +780,7 @@ function loadRDFmanifest (cmds) {
   });
 }
 
-function useCommandLineDefaults (run) {
+function injectCertainCommandLineArgs (run) {
   const ret = Object.assign({}, run);
   if ("quiet" in cmds)
     ret.quiet = cmds.quiet;
@@ -810,8 +811,8 @@ function loadJSONmanifest (jsonManifests, parser) {
               });
               return Object.assign(
                 { name: t.name,
-                  schemaURL: [relUrlOrFile(t.action.schema, jm)],
-                  dataURL: [relUrlOrFile(t.action.data, jm)],
+                  schemaURL: t.action.schema,
+                  dataURL: t.action.data,
                   options: options },
                 "shape" in t.action ? {shape: t.action.shape} : {},
                 "focus" in t.action ? {node: t.action.focus} : {},
@@ -822,7 +823,7 @@ function loadJSONmanifest (jsonManifests, parser) {
             d = [d];
         }
 
-        d = d.map(useCommandLineDefaults);
+        d = d.map(injectCertainCommandLineArgs);
 
         if (cmds["test-name"].length) // Include only tests listed in --test-name.
           d = d.filter(function (elt) {
@@ -831,10 +832,20 @@ function loadJSONmanifest (jsonManifests, parser) {
               return ret || ("name" in elt && elt.name.match(pattern));
             }, false);
           });
+
         d.forEach(function (elt) {
+          // change .shex as found in test manifest to .schema as found in demo manifests
+          if ("shex" in elt) {
+            elt["schema"] = elt["shex"]
+            delete elt["shex"];
+          }
+          if ("queryMapURL" in elt) {
+            elt["mapURL"] = elt["queryMapURL"]
+            delete elt["queryMapURL"];
+          }
+
           // Turn test manifest format into common ShEx manifest format.
-          ([{from: "schema", asText: "schemaP", mediaType: "text/shex"  , asUrl: "schemaURL"}, // found in demo manifests
-            {from: "shex"  , asText: "schemaP", mediaType: "text/shex"  , asUrl: "schemaURL"}, // found in test manifests
+          ([{from: "schema", asText: "schemaP", mediaType: "text/shex"  , asUrl: "schemaURL"},
             {from: "json"  , asText: "schemaP", mediaType: "text/json"  , asUrl: "json"},
             {from: "data"  , asText: "dataP"  , mediaType: "text/turtle", asUrl: "dataURL"  },
             {from: "jsonld", asText: "dataP"  , mediaType: "text/jsonld", asUrl: "jsonld"  }])
@@ -846,20 +857,30 @@ function loadJSONmanifest (jsonManifests, parser) {
                 delete elt[pair.from];
                 elt[pair.asUrl] = values.map(
                   text =>
-                    (/[ <>]/.test(text))
+                    /[ <>]/.test(text)
                     ? { text, /*mediaType: pair.mediaType,*/ url: p.url }
                   : relUrlOrFile(text, p.url)
                 );
-              } else if (!(pair.asUrl in elt)) {
+              } else if (pair.asUrl in elt) {
+                elt[pair.asUrl] = [relUrlOrFile(elt[pair.asUrl], p.url)];
+              } else {
                 elt[pair.asUrl] = [];
               }
             });
 
           // Command like arguments override *each* manifest entry.
-          ["node", "shape", "queryMap"].forEach(function (attr) {
+          ["node", "shape", "queryMap", "mapURL"].forEach(function (attr) {
             if (attr in cmds)
-              elt[attr] = cmds[attr]
-          })
+              elt[attr] = cmds[attr];
+          });
+
+          // Resolve URL parameters.
+          ["mapURL"].forEach(function (attr) {
+            if (attr in elt) {
+              elt[attr] = relUrlOrFile(elt[attr], p.url)
+            }
+          });
+
           elt.schemaOptions = Object.assign({}, SchemaOptions);
           if ("options" in elt) {
             elt.validatorOptions = elt.options;
@@ -898,7 +919,7 @@ function loadCommandLine (cmds) {
     if (cmds["regex-module"] === "?") {
       // "--regex-module ?" lists the known regular expression modules.
       return new Promise(function (resolve, reject) {
-        require('fs').readdir(Path.join(__dirname, REGEX_MODULES), (err, fns) => {
+        Fs.readdir(Path.join(__dirname, REGEX_MODULES), (err, fns) => {
           if (err) throw Error(err);
           fns.forEach(fn => {
             if (fn.endsWith(".js")) {
@@ -918,40 +939,110 @@ function loadCommandLine (cmds) {
   return loadSchemaAndData(cmds, ValidatorOptions, SchemaOptions);
 }
 
+class FileCache {
+  constructor () { this.seen = {}; }
+
+  async read (path) {
+    if (!(path in this.seen))
+      this.seen[path] = Fs.promises.readFile(Path.resolve(__dirname, path), "utf-8");
+    return this.seen[path];
+  }
+}
+
 function runServer (serverLoaded, serverParms, serverOptions) {
-  const match = serverParms.serve.match(/^(?:http:\/\/)?([a-zA-Z0-9.]+)(?::([0-9]+))?(\/.*)/);
-  if (!match)
-    throw Error("server parameter expected to be an HTTP URL");
+  const app       = new (require("koa"))();
+  const koaBody   = require("koa-body");
+  const log       = serverParms.quiet ? () => undefined : console.log;
+  const fileCache = new FileCache();
+  let serverUrl;
+  try {
+    serverUrl = new URL(serverParms.serve);
+  } catch (e) {
+    throw Error(`Unable to parse requested server URL "${serverParms.serve}"`)
+  }
+  const requestedPort = serverUrl.port === '' ? 80 : serverUrl.port;
+
   let stopAfter = serverParms["serve-n"];
   if (stopAfter === undefined || stopAfter === -1)
     stopAfter = Infinity;
 
-  const log     = serverParms.quiet ? () => undefined : console.log,
-        app     = new (require("koa"))(),
-        koaBody = require("koa-body"),
-        port    = match[2] || 80,
-        host    = match[1],
-        srvpath = match[3],
-        fs      = require("fs"),
-        baseUrl = `http://${host}:${port}${srvpath}`;
+  const parsedMethods = ["GET", "POST"];
 
-  const server = app
-        .use(koaBody({
-          multipart: true,
-          // formLimit: "64 kb",
-          formidable: {
-            uploadDir: Path.resolve(__dirname, "../rest/uploads")
-          }
-        }))
-        .use(async (ctx, next) => {
-    switch (ctx.originalUrl) {
-    case srvpath:
+  const server = app.use(koaBody({
+    parsedMethods,
+    multipart: true,
+    // formLimit: "64 kb",
+    formidable: {
+      uploadDir: Path.resolve(__dirname, "../rest/uploads")
+    }
+  })).use(koaHandler).listen(requestedPort);
+  const serverAddress = server.address();
+  if (!serverAddress) {
+    const suggestion = serverUrl.port === ''
+          ? ` Try adding a port (> 1024) like http://${serverUrl.hostname}:1234${serverUrl.pathname}`:
+          serverUrl.port < 1024 ?
+          ' Try a port > 1023'
+          : '';
+    throw Error(`Unable to bind port ${serverUrl.port || 80}.${suggestion}`);
+  }
+
+  const rootUrl = new URL(`http://${serverUrl.hostname}:${serverAddress.port}/`);
+  const baseUrl = new URL(serverUrl.pathname, rootUrl)
+
+  if (serverParms.terse) {
+    log('host: %s port: %s', serverUrl.hostname, serverAddress.port);
+  } else {
+      log('Web interface: <%s>', baseUrl.href);
+    if (baseUrl.pathname !== '/')
+      log('HTML interface: <%s>', rootUrl.href);
+    log();
+    log('Test with a supplied schema and data:');
+    log(`  curl -i %s \\
+    -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \\
+    -F "shape=#IssueShape" \\
+    -F "data=@./node_modules/shex-examples/Issue1.ttl" \\
+    -F "node=#Issue1"`, baseUrl.href);
+    log('or preload the schema and just supply the data:');
+    log(`  %s \\
+    -x ./node_modules/shex-examples/IssueSchema.shex \\
+    -s \'#IssueShape\' \\
+    -S `, Argv1, serverParms.serve);
+    log('and pass only the data parameters:');
+    log(`  curl -i %s \\
+    -F "data=@./node_modules/shex-examples/Issue1.ttl" \\
+    -F "node=#Issue1"`, baseUrl.href);
+    log('Note that shape and node can be relative or prefixed URLs.');
+    log();
+    log('Press CTRL+C to stop...');
+  }
+
+  async function koaHandler (ctx, next) {
+    switch (new URL(ctx.originalUrl, "http://a.example").pathname) {
+    case serverUrl.pathname:
+      await serveKoaValidationRequest(ctx);
+      await next;
+      break;
+    case "/":
+      ctx.body = await fileCache.read("../rest/index.html");
+      ctx.type = 'text/html'
+      break;
+    default:
+      ctx.status = 404;
+      ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
+      ctx.type = 'text/plain';
+    }
+    log(`${ctx.ips.length > 0 ? ctx.ips[ctx.ips.length - 1] : ctx.ip}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
+    if (!--stopAfter)
+      server.close();
+  }
+
+  async function serveKoaValidationRequest (ctx) {
       const parms = {
         schema: { type: "Schema" }, shape:undefined, schemaMeta: [],
         data: new N3.Store(), node:undefined, dataMeta: [], nodeType:undefined
       };
-      if (ctx.request.method !== "POST")
-        ctx.throw(500, "only supports POST now");
+      if (parsedMethods.indexOf(ctx.request.method) === -1)
+        ctx.throw(500, `only supports ${parsedMethods.join(', ')} now`);
 
       const unlinkMe = await Promise.all(Object.keys(ctx.request.files || []).reduce((acc, key) => {
         let fz = ctx.request.files[key];
@@ -960,18 +1051,19 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         return acc.concat(fz.map(
           async file => {
             const url = new URL(file.name, baseUrl);
-            const text = await fs.promises.readFile(file.path, "utf8");
+            const text = await Fs.promises.readFile(file.filepath, "utf8");
             await mergeParm(parms, key, text, url, file.type);
             return {key, text, url, file}; // only really need file.path; rest for debugging
           }
         ))
       }, []))
 
-      // (['schema', 'shape', 'data', 'node', 'node-type']).forEach...
-      for (let key in ctx.request.body)
-        await mergeParm(parms, key, ctx.request.body[key], baseUrl, null);
-
       try {
+        for (let key of ['query', 'body'])
+          // e.g. schema, shape, data, node, ...
+          for (let param in ctx.request[key])
+            await mergeParm(parms, param, ctx.request[key][param], baseUrl, null);
+
         (['schema', 'data']).forEach(
           key => {
             if (parms[key + "Meta"].length === 0) {
@@ -983,6 +1075,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
               }
             }
           });
+
         (['node', 'shape']).forEach( // "regex-module"
           key => {
             if (!parms[key]) {
@@ -1001,18 +1094,24 @@ function runServer (serverLoaded, serverParms, serverOptions) {
 
         if (!("getNeighborhood" in parms.data)) // !! clean up db chaos
           parms.data = RdfJsDb(parms.data);
-        let result = findNodesAndValidate(parms, parms, options);
+        let result = findNodesAndValidate(parms, parms, options, parms.schema.start);
+
         if ("results" in result)
           result = result.results; // otherwise just report the invoked parms.
+
         if (ctx.request.body.output === "html") {
-          ctx.body = Object.keys(parms).reduce((r, p) => {
-            return r.replace("["+p+"]", parms[p]);
-          }, fs.readFileSync("./validate.template", "utf-8")).
-            replace(/\[result\]/, JSON.stringify(result, null, 2));
+          ctx.body = populateTemplate(
+            await fileCache.read("../rest/validate.template"),
+            Object.assign({}, parms,
+                          {result: JSON.stringify(result, null, 2)}
+                         )
+          );
+          ctx.type = 'text/html'
         } else {
           ctx.body = JSON.stringify(result, null, 2)+"\n";
+          ctx.type = 'application/json'
         }
-        ctx.type = 'application/json'
+
       } catch (e) {
         const stack = typeof e === "object" && "stack" in e ? e.stack : e;
         const msg = typeof e === "object" && "message" in e ? e.message : e;
@@ -1025,40 +1124,14 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         ctx.status = "status" in e ? e.status : 500;
       }
 
-      unlinkMe.forEach(x => fs.unlinkSync(x.file.path));
-      await next;
-      break;
-    case "/":
-      ctx.body = fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
-      ctx.type = 'text/html'
-      break;
-    default:
-      ctx.status = 404;
-      ctx.body = `failed to ${ctx.method} ${ctx.request.url}\n`
-      ctx.type = 'text/plain';
-    }
-    log(`${ctx.ips.length > 0 ? ctx.ips[ctx.ips.length - 1] : ctx.ip}: ${ctx.method} ${ctx.request.url} ${ctx.status} ${ctx.type} ${ctx.length}`);
-    if (!--stopAfter)
-      server.close();
-  }).listen(port);
-  // For some reason, this doesn't detect "EACCES: permission denied 0.0.0.0:80":
-  //   server.on('error', (e) => { console.error('Network error:', e) });
-
-  if (serverParms.terse) {
-    log('host: %s port: %s', host, port);
-  } else {
-    log('Visit http://%s:%s/ in browser.', host, port);
-    log();
-    log('Test with a supplied schema and data:');
-    log('  curl -i http://%s:%s%s -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir, CliDir);
-    log('or preload the schema and just supply the data:');
-    log('  %s -x %s1dotOr2dot.shex -s http://a.example/S1 -S ', Argv1, CliDir, serverParms.serve);
-    log('and pass only the data parameters:');
-    log('  curl -i http://%s:%s%s -F "data=@%sp2p3.ttl" -F "node=x"', host, port, srvpath, CliDir);
-    log('Note that shape and node can be relative or prefixed URLs.');
-    log();
-    log('Press CTRL+C to stop...');
+    unlinkMe.forEach(x => Fs.unlinkSync(x.file.filepath));
   }
+}
+
+function populateTemplate (templateStr, vars) {
+  return Object.keys(vars).reduce((r, p) => {
+    return r.replace("["+p+"]", vars[p]);
+  }, templateStr)
 }
 
 async function mergeParm (parms, parm, text, url, type) {
@@ -1079,8 +1152,12 @@ async function mergeParm (parms, parm, text, url, type) {
     const tpz = await new Promise((resolve, reject) => {
       const parser = new N3.Parser({ baseIRI: url.href });
       parser.parse(text, function (error, quad, prefixes) {
-        if (error)
-          throw error;
+        if (error) {
+          error.message = 'Error parsing data: ' + error.message;
+          if (text.indexOf("\n") === -1)
+            error.message += "\n  did you send a filename instead of a file?";
+          reject(error);
+        }
         if (quad)
           parms.data.addQuad(quad);
         else

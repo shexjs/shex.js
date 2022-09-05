@@ -10,7 +10,7 @@ Command line tools for ShEx.
 
 ### Validate over HTTP:
 ```sh
-./node_modules/@shexjs/cli/bin/validate \
+./node_modules/.bin/shex-validate \
     -x http://shex.io/examples/IssueSchema \
     -d http://shex.io/examples/Issue1 \
     -s http://shex.io/examples/IssueSchema#IssueShape \
@@ -72,7 +72,7 @@ See the [ShExJ primer](http://shex.io/primer/) for a description of ShEx validat
 ### Validate local files:
 Command line arguments which don't match "^(blob:)?[a-z]+://." (and don't start with 'file:') are assumed to be file paths.
 ```sh
-./node_modules/@shexjs/cli/bin/validate \
+./node_modules/.bin/shex-validate \
     -x ./node_modules/shex-examples/IssueSchema.shex \
     -d ./node_modules/shex-examples/Issue1.ttl \
     -s '#IssueShape' \
@@ -98,6 +98,48 @@ Of course the schema can use http: and the data file: or visa-versa.
 Happy validating!
 
 
+
+### Validation server:
+
+The `-S` switch specifies a URL at which to run a validation server:
+```sh
+./node_modules/.bin/shex-validate \
+    -S http://localhost:1234/validate \
+    -x ./node_modules/shex-examples/IssueSchema.shex \
+    -d ./node_modules/shex-examples/Issue1.ttl \
+    -s '#IssueShape' \
+    -n '#Issue1'
+```
+The output of this command will direct you to
+  `http://localhost:1234/validate`.
+Because you supplied all necessary parameters in the invocation, by default, this server will validate `#Issue1` in `Issue1.ttl` against `#IssueShape` in `IssueSchema.shex`. If you play override the node
+  `http://localhost:1234/validate?node=%23Issue2`
+(note that with curl, you must encode the '#' as "%23"), you will see an error because that node has no arcs out in that graph.
+
+#### POSTing with curl
+
+`curl` offers a convenient way to construct POST requests. Supposed you wanted a validation server with no default schema or data:
+```sh
+./node_modules/.bin/shex-validate -S http://localhost:1234/validate
+```
+You could submit all the parameters as body parameters in a POST:
+```
+curl -i http://localhost:1234/validate \
+  -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \
+  -F "shape=#IssueShape" \
+  -F "data=@./node_modules/shex-examples/Issue1.ttl" \
+  -F "node=#Issue1"
+```
+(prefixing a curl -F value with an '@' reads from the following filename)
+
+you can mix and match between URL search string and body parameters:
+```
+curl -i http://localhost:1234/validate?node=%23Issue1 \
+  -F "schema=@./node_modules/shex-examples/IssueSchema.shex" \
+  -F "shape=#IssueShape" \
+  -F "data=@./node_modules/shex-examples/Issue1.ttl"
+```
+(Don't forget to escape the '#' as "%23".)
 
 ## conversion
 

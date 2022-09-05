@@ -199,7 +199,7 @@ const ShExLoaderCjsModule = function (config = {}) {
    * * object: {text: string, url: string} - text and URL of already-loaded resource.
    * * (schema) ShExJ object
    * * (data) RdfJs data store
-   * @param schema - { shexc: [ShExC SOURCE], json: [JSON SOURCE] }
+   * @param schema - { shexc: [ShExC SOURCE], json: [JSON SOURCE], turtle: [ShExR SOURCE] }
    * @param data - { turtle: [Turtle SOURCE], jsonld: [JSON-LD SOURCE] }
    * @param schemaOptions
    * @param dataOptions
@@ -207,31 +207,34 @@ const ShExLoaderCjsModule = function (config = {}) {
    * @constructor
    */
   async function load (schema, data, schemaOptions = {}, dataOptions = {}) {
-    const {shexc = [], json = []} = schema || {};
-    
-    const {turtle = [], jsonld = []} = data || {};
     const returns = {
       schema: ShExUtil.emptySchema(),
       data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
     };
+    let allSchemas, allGraphs;
 
     // gather all the potentially remote inputs
-    const allSchemas = new ResourceLoadControler(shexc.concat(json));
-    loadList(shexc, returns.schemaMeta, "text/shex",
-             parseShExC, mergeSchema, schemaOptions, allSchemas)
-    loadList(json, returns.schemaMeta, "application/json",
-             parseShExJ, mergeSchema, schemaOptions, allSchemas)
-    loadList(schema.turtle || [], returns.schemaMeta, "text/turtle",
-             parseShExR, mergeSchema, schemaOptions, allSchemas)
+    {
+      const {shexc = [], json = [], turtle = []} = schema || {};
+      allSchemas = new ResourceLoadControler(shexc.concat(json).concat(turtle));
+      loadList(shexc, returns.schemaMeta, "text/shex",
+               parseShExC, mergeSchema, schemaOptions, allSchemas)
+      loadList(json, returns.schemaMeta, "application/json",
+               parseShExJ, mergeSchema, schemaOptions, allSchemas)
+      loadList(turtle || [], returns.schemaMeta, "text/turtle",
+               parseShExR, mergeSchema, schemaOptions, allSchemas)
+    }
 
-    const allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
-    loadList(turtle, returns.dataMeta, "text/turtle",
-             parseTurtle, mergeGraph, dataOptions, allGraphs)
-    loadList(jsonld, returns.dataMeta, "application/ld+json",
-             parseJSONLD, mergeGraph, dataOptions, allGraphs)
-
+    {
+      const {turtle = [], jsonld = []} = data || {};
+      allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
+      loadList(turtle, returns.dataMeta, "text/turtle",
+               parseTurtle, mergeGraph, dataOptions, allGraphs)
+      loadList(jsonld, returns.dataMeta, "application/ld+json",
+               parseJSONLD, mergeGraph, dataOptions, allGraphs)
+    }
 
     const [schemaSrcs, dataSrcs] = await Promise.all([allSchemas.allLoaded(),
                                                       allGraphs.allLoaded()])
