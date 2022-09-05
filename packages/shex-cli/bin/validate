@@ -939,11 +939,21 @@ function loadCommandLine (cmds) {
   return loadSchemaAndData(cmds, ValidatorOptions, SchemaOptions);
 }
 
-function runServer (serverLoaded, serverParms, serverOptions) {
-  const app     = new (require("koa"))();
-  const koaBody = require("koa-body");
-  const log     = serverParms.quiet ? () => undefined : console.log;
+class FileCache {
+  constructor () { this.seen = {}; }
 
+  async read (path) {
+    if (!(path in this.seen))
+      this.seen[path] = Fs.promises.readFile(Path.resolve(__dirname, path), "utf-8");
+    return this.seen[path];
+  }
+}
+
+function runServer (serverLoaded, serverParms, serverOptions) {
+  const app       = new (require("koa"))();
+  const koaBody   = require("koa-body");
+  const log       = serverParms.quiet ? () => undefined : console.log;
+  const fileCache = new FileCache();
   let serverUrl;
   try {
     serverUrl = new URL(serverParms.serve);
@@ -1013,7 +1023,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
       await next;
       break;
     case "/":
-      ctx.body = Fs.readFileSync(Path.resolve(__dirname, "../rest/index.html"), "utf-8");
+      ctx.body = await fileCache.read("../rest/index.html");
       ctx.type = 'text/html'
       break;
     default:
@@ -1031,7 +1041,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         schema: { type: "Schema" }, shape:undefined, schemaMeta: [],
         data: new N3.Store(), node:undefined, dataMeta: [], nodeType:undefined
       };
-      if (parsedMethods.indexOf(ctx.request.method) === -1) // @@ needed?
+      if (parsedMethods.indexOf(ctx.request.method) === -1)
         ctx.throw(500, `only supports ${parsedMethods.join(', ')} now`);
 
       const unlinkMe = await Promise.all(Object.keys(ctx.request.files || []).reduce((acc, key) => {
@@ -1090,15 +1100,18 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           result = result.results; // otherwise just report the invoked parms.
 
         if (ctx.request.body.output === "html") {
-          ctx.body = Object.keys(parms).reduce((r, p) => {
-            return r.replace("["+p+"]", parms[p]);
-          }, Fs.readFileSync("./validate.template", "utf-8")).
-            replace(/\[result\]/, JSON.stringify(result, null, 2));
+          ctx.body = populateTemplate(
+            await fileCache.read("../rest/validate.template"),
+            Object.assign({}, parms,
+                          {result: JSON.stringify(result, null, 2)}
+                         )
+          );
+          ctx.type = 'text/html'
         } else {
           ctx.body = JSON.stringify(result, null, 2)+"\n";
+          ctx.type = 'application/json'
         }
 
-        ctx.type = 'application/json'
       } catch (e) {
         const stack = typeof e === "object" && "stack" in e ? e.stack : e;
         const msg = typeof e === "object" && "message" in e ? e.message : e;
@@ -1113,6 +1126,12 @@ function runServer (serverLoaded, serverParms, serverOptions) {
 
     unlinkMe.forEach(x => Fs.unlinkSync(x.file.filepath));
   }
+}
+
+function populateTemplate (templateStr, vars) {
+  return Object.keys(vars).reduce((r, p) => {
+    return r.replace("["+p+"]", vars[p]);
+  }, templateStr)
 }
 
 async function mergeParm (parms, parm, text, url, type) {
