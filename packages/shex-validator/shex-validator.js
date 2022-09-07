@@ -225,6 +225,8 @@ function ShExValidator_constructor(schema, db, options) {
   if (!(this instanceof ShExValidator_constructor))
     return new ShExValidator_constructor(schema, db, options);
   let index = schema._index || ShExVisitor.index(schema)
+  if (!("labelToTcs" in index))
+    index.labelToTcs = new Map();
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -599,11 +601,12 @@ function ShExValidator_constructor(schema, db, options) {
 
     const localTCs = this.indexTripleConstraints(shape.expression);
     const extendedTCs_old = getExtendedTripleConstraints_old(shape);
-    const { byExtends, labelToTcs } = getExtendedTripleConstraints_new(shape);
     const constraintList = extendedTCs_old.map(
       ext => ext.tripleConstraint
     ).concat(localTCs);
-    const e2c = byExtends.map(      // TC structure for each EXTENDS
+
+    const { extendsTCs, localTCs: localTCs_new } = TripleConstraintsVisitor(index.labelToTcs).visitShape(shape);
+    const e2c = extendsTCs.flat().concat(localTCs_new)(      // TC structure for each EXTENDS
       forExt => forExt.tcs              //   TCs in EXTENDS's shapeExpr
         .concat(                        //  +
           Array.from(forExt.refClosure) //   TCs in each shapeDecls referenced that EXTENDS
@@ -852,71 +855,60 @@ function ShExValidator_constructor(schema, db, options) {
     };
   }
 
-  /** getExtendedTripleConstraints_new - walk shape's extends to get all
+  /** getTripleConstraintsForShape - walk shape's extends to get all
    * referenced triple constraints.
    *
-   * @param {} shape
+   * @param {} shape shape to be examined
+   * @param {} labelToTcs shapeLabel -> TripleConstration[]
    * @returns { extendedTCs_new: { tcs: TripleConstraint[], refs: shapeLabel[] }[], referencedTCs: Map<shapeLabel, TripleConstraint[]> }
    */
-  function getExtendedTripleConstraints_new (shape) {
-    const labelToTcs = new Map(); // shapeLabel -> TripleConstration[] // acts as cache in case of diamond inheritance @@ move to index
+  function getTripleConstraintsForShape (shape, labelToTcs) {
+    return ;
+  }
+
+  /** TripleConstraintsVisitor - walk shape's extends to get all
+   * referenced triple constraints.
+   *
+   * @param {} labelToTcs: Map<shapeLabel, TripleConstraint[]>
+   * @returns { extendsTCs: [[TripleConstraint]], localTCs: [TripleConstraint] }
+   */
+  function TripleConstraintsVisitor (labelToTcs) {
     const visitor = ShExVisitor(labelToTcs);
-    const byExtends = (shape.extends || []).map((expr) => {
-      const transitive = new Set();
 
-      /* shapeExprs return {
-           tcs: list of TripleConstraints
-           directRefs: list of directly-refrenced ShapeDecls,
-           refClosure: closure of referenced ShapeDecls
-         }
-      */
+    function emptyShapeExpr () { return { extendsTCs: [], localTCs: [] }; }
 
-      function emptyShapeExpr () { return { tcs: [], directRefs: new Set(), refClosure: new Set() }; }
-
-      function sum (results) {debugger
-        return results.reduce((acc, result) => {
-          return expr;
-          const idx = expr.inverse ? ins : outs; // pick an index
-          const min = n(outerMin, expr);
-          const max = x(outerMax, expr);
-          if (expr.predicate in idx) {
-            const reuse = idx[expr.predicate];
-            reuse.min = Math.max(idx[expr.predicate].min, min);
-            reuse.max = Math.min(idx[expr.predicate].max, max);
-            // reuse.seen++;
-            // tcs.push(expr);
-          } else {
-            idx[expr.predicate] = {
-              type: "TripleConstraint",
-              predicate: expr.predicate,
-              min,
-              max,
-              // seen: 1,
-              // tc: [expr]
-            }
-          }
-          return expr;
+      visitor.visitShapeDecl = function (decl, min, max) {
+        // if (labelToTcs.has(decl.id)) !! uncomment cache for production
+        //   return labelToTcs[decl.id];
+        const tcs = decl.shapeExpr
+              ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
+              : emptyShapeExpr();
+        labelToTcs[decl.id] = tcs;
+        return { extendsTCs: [], localTCs:[{ref: decl.id }] };
+      }
+      visitor.visitShapeOr = function (shapeExpr, min, max) {
+        return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
+          const { extendsTCs, localTCs } = this.visitShapeExpr(disjunct, 0, max);
+          acc.extendsTCs.push.apply(acc.extendsTCs, extendsTCs);
+          acc.localTCs.push.apply(acc.localTCs, localTCs);
+          return acc
         }, emptyShapeExpr());
       }
 
-      visitor.visitShapeDecl = function (decl, min, max) {
-        if (labelToTcs.has(decl.id))
-          return labelToTcs[decl.id];
-        const nested = decl.shapeExpr
-              ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
-              : emptyShapeExpr();
-        labelToTcs[decl.id] = nested;
-        const tcs = [];
-        const directRefs = new Set([decl.id]);
-        const refClosure = new Set([decl.id]);
-          // ?? .forEach(i => a.add(i));
-        return { tcs, directRefs, refClosure };
-      }
-      visitor.visitShapeOr = function (shapeExpr, min, max) {
-        return sum(shapeExpr.shapeExprs.map(disjunct => this.visitShapeExpr(disjunct, 0, max)))
-      }
-
       visitor.visitShapeAnd = function (shapeExpr, min, max) {
+        const seen = new Set();
+        return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
+          this.visitShapeExpr(disjunct, 0, max).forEach(tc => {
+            const key = `${tc.min} ${tc.max} ${tc.predicate}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              acc.push(tc);
+            }
+          });
+
+          // @@ TODO: calculate intersection with acc
+          return acc;
+        }, []);
         return sum(shapeExpr.shapeExprs.map(disjunct => this.visitShapeExpr(disjunct, min, max)))
       }
 
@@ -930,20 +922,22 @@ function ShExValidator_constructor(schema, db, options) {
 
       // Override visitShapeRef to follow references.
       // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
-      visitor.visitShapeRef = function (inclusion, min, max) {
-        const {tcs, directRefs, refClosure } = visitor.visitShapeDecl(_ShExValidator._lookupShape(inclusion), min, max);
-        return {tcs, directRefs, refClosure };
+      visitor.visitShapeRef = function (shapeLabel, min, max) {
+        return visitor.visitShapeDecl(_ShExValidator._lookupShape(shapeLabel), min, max);
       };
 
       // Visit shape's EXTENDS and expression.
       visitor.visitShape = function (shape, min, max) {
-        const {tcs, directRefs, refClosure} = "extends" in shape
-              ? sum(shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max)))
-              : emptyShapeExpr();
-        const exprTcs = "expression" in shape
+        const extendsTCs = "extends" in shape
+              ? shape.extends.map(ext => {
+                const { extendsTCs, localTCs } = visitor.visitShapeExpr(ext, min, max);
+                return extendsTCs.flat().concat(localTCs);
+              })
+              : [];
+        const localTCs = "expression" in shape
               ? visitor.visitExpression(shape.expression, min, max)
               : [];
-        return { tcs: and([tcs, exprTcs]), directRefs, refClosure };
+        return { extendsTCs, localTCs };
       }
 
       // tripleExprs return list of TripleConstraints
@@ -971,17 +965,14 @@ function ShExValidator_constructor(schema, db, options) {
       }
 
       // Synthesize a TripleConstraint with the implicit cardinality.
-      visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
-        const ret = JSON.parse(JSON.stringify(expr));
-        ret.min = n(outerMin, expr);
-        ret.max = x(outerMax, expr);
-        return [ret];
-      };
+    visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
+      const ret = JSON.parse(JSON.stringify(expr));
+      ret.min = n(outerMin, expr);
+      ret.max = x(outerMax, expr);
+      return [ret];
+    };
 
-      // Call constructed visitor on expr.
-      return visitor.visitShapeExpr(expr, 1, 1);
-    });
-    return { byExtends, labelToTcs };
+    return visitor;
   }
 
   /** getExtendedTripleConstraints_old - walk shape's extends to get all

@@ -140,7 +140,8 @@
   queryMap: <n>@<A>
   status: conformant
 
-- schemaLabel: 8 - A ⫏{p 2}⏎ B ᐃ@A{p 3}⏎ C ᐃ@A{:p 4}⏎ D ᐃ@Bᐃ@C{:p 5}
+- name: foo
+  schemaLabel: 8 - A ⫏{p 2}⏎ B ᐃ@A{p 3}⏎ C ᐃ@A{:p 4}⏎ D ᐃ@Bᐃ@C{:p 5}
   schema: |-
     PREFIX : <http://a.example/ns#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -156,6 +157,46 @@
     BASE <http://a.example/>
 
     <n> :p 2 ; :p 3 ; :p 4 ; :p 5 .
+  queryMap: <n>@<D>
+  status: conformant
+
+- name: bar
+  schemaLabel: crazy
+  schema: |-
+    PREFIX : <http://a.example/ns#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    BASE <http://a.example/>
+    
+    <A> CLOSED { :p [1]; :p [2] }
+    <B> EXTENDS @<A> OR { :p [3] } { :p [4] }
+    <C> EXTENDS { :p [5] } AND @<A> { :p [6] }
+    <D> EXTENDS @<B> EXTENDS @<C> { :p [7] }
+  dataLabel: 8 - np2,3,4,5 @ D
+  data: |-
+    PREFIX : <http://a.example/ns#>
+    BASE <http://a.example/>
+
+    <n> :p 1, 2, 4, 5, 6, 7 .
+  queryMap: <n>@<D>
+  status: conformant
+
+- name: bar
+  schemaLabel: crazy
+  schema: |-
+    PREFIX : <http://a.example/ns#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    BASE <http://a.example/>
+    
+    <A> CLOSED { :p [1]; :p [2] }
+    <B> EXTENDS @<A> OR { :p [3] } { :p [4] }
+    <C> EXTENDS { :p [5] } AND @<A> { :p [6] }
+    <D> EXTENDS @<B> EXTENDS @<C> { :p [7] }
+  dataLabel: 8 - np2,3,4,5 @ D
+  data: |-
+    PREFIX : <http://a.example/ns#>
+    BASE <http://a.example/>
+
+    <n> :p 1, 2, 3, 4, 5, 6, 7 .
   queryMap: <n>@<D>
   status: conformant
 
