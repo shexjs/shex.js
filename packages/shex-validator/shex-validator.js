@@ -26,7 +26,6 @@ const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "Untracked
 const ShExTerm = require("@shexjs/term");
 const ShExVisitor = require("@shexjs/visitor");
 const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
-const NoExtends = Symbol("NO_EXTENDS");
 const Hierarchy = require('hierarchy-closure')
 
 function getLexicalValue (term) {
@@ -599,23 +598,9 @@ function ShExValidator_constructor(schema, db, options) {
       (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
     ));
 
-    const localTCs = this.indexTripleConstraints(shape.expression);
-    const extendedTCs_old = getExtendedTripleConstraints_old(shape);
-    const constraintList = extendedTCs_old.map(
-      ext => ext.tripleConstraint
-    ).concat(localTCs);
-
-    const { extendsTCs, localTCs: localTCs_new } = TripleConstraintsVisitor(index.labelToTcs).visitShape(shape);
-    const e2c = extendsTCs.flat().concat(localTCs_new)(      // TC structure for each EXTENDS
-      forExt => forExt.tcs              //   TCs in EXTENDS's shapeExpr
-        .concat(                        //  +
-          Array.from(forExt.refClosure) //   TCs in each shapeDecls referenced that EXTENDS
-            .flatMap(
-              ref => labelToTcs[ref].tcs
-            )
-        )
-    )
-    const cl2 = e2c.flatMap(x => x).concat(localTCs);                 // + TCs in shape.expression
+    const { extendsTCs, tc2exts, localTCs } = TripleConstraintsVisitor(index.labelToTcs).getAllTripleConstraints(shape);
+    const extendsToTNo = (shape.extends || []).map(_ => []);
+    const constraintList = extendsTCs.concat(localTCs);
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
@@ -623,6 +608,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
     const partitionErrors = [];
+    const subgraphCache = new Map();
     const regexEngine = regexModule.compile(schema, shape, index);
     while (xp.next() && ret === null) {
       const errors = []
@@ -633,16 +619,16 @@ function ShExValidator_constructor(schema, db, options) {
       // t2tc - array mapping neighborhood index to TripleConstraint
       const t2tcForThisShapeAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
       const t2tcForThisShape = []
-      const tripleToExtends = []
-      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
+      const extendsToTriples = _seq((shape.extends || []).length).map(() => []); // if (DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList)) debugger;
       t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
-        if (cNo !== NoTripleConstraint && cNo < extendedTCs_old.length) {
-          const extNo = extendedTCs_old[cNo].extendsNo;
-          extendsToTriples[extNo].push(neighborhood[tNo]);
-          tripleToExtends[tNo] = cNo;
-          t2tcForThisShape[tNo] = NoTripleConstraint;
+        if (cNo !== NoTripleConstraint && cNo < extendsTCs.length) {
+          for (let extNo of tc2exts[cNo]) {
+            // allocated to multiple extends if diamond inheritance
+            extendsToTriples[extNo].push(neighborhood[tNo]);
+            t2tcForThisShape[tNo] = NoTripleConstraint;
+            extendsToTNo[extNo].push(tNo);
+          }
         } else {
-          tripleToExtends[tNo] = NoExtends;
           t2tcForThisShape[tNo] = cNo;
         }
       });
@@ -651,7 +637,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
           return t2tcForThisShape[i] === NoTripleConstraint && // didn't match a constraint
-            tripleToExtends[i] === NoExtends && // didn't match an EXTENDS
+            i >= extendsTCs.length && // wasn't allocated to an EXTENDS
             extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
@@ -670,7 +656,7 @@ function ShExValidator_constructor(schema, db, options) {
       });
       const tc2t = _constraintToTriples(t2tcForThisShape, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
 
-      let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget);
+      let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget, subgraphCache, extendsToTNo);
       if (results === null || !("errors" in results)) {
         const sub = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
@@ -729,6 +715,23 @@ function ShExValidator_constructor(schema, db, options) {
 
     return addShapeAttributes(shape, ret);
   };
+
+  function DBG_matchValues (fromDB, constraintList) {
+    const expectedValues = constraintList.map(
+      tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
+    );
+    const tripleValues = fromDB.outgoing.map(
+      t => parseInt(t.object.substr(1))
+    );
+    return tripleValues.map(
+      i => expectedValues.indexOf(i)
+    );
+  }
+
+  function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList) {
+    const solution = DBG_matchValues (fromDB, constraintList);
+    return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
+  }
 
   function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget) {
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
@@ -799,16 +802,23 @@ function ShExValidator_constructor(schema, db, options) {
       }, _seq(constraintList.length).map(() => [])); // [length][]
   }
 
-  function testExtends (expr, point, extendsToTriples, valParms, matchTarget) {
+  function testExtends (expr, point, extendsToTriples, valParms, matchTarget, subgraphCache, extendsToTNo) {
     if (!("extends" in expr))
       return null;
     const passes = [];
     const errors = [];
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
-      const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
-      extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
+      const subgraphKey = extendsToTNo[eNo].sort().join('-');
+      let sub = null;
+      if (subgraphCache.has(subgraphKey)) {
+        sub = subgraphCache.get(subgraphKey);
+      } else {
+        const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
+        extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+        sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
+        subgraphCache.set(subgraphKey, sub);
+      }
       if ("errors" in sub)
         errors.push(sub);
       else
@@ -875,7 +885,7 @@ function ShExValidator_constructor(schema, db, options) {
   function TripleConstraintsVisitor (labelToTcs) {
     const visitor = ShExVisitor(labelToTcs);
 
-    function emptyShapeExpr () { return { extendsTCs: [], localTCs: [] }; }
+    function emptyShapeExpr () { return []; }
 
       visitor.visitShapeDecl = function (decl, min, max) {
         // if (labelToTcs.has(decl.id)) !! uncomment cache for production
@@ -884,21 +894,19 @@ function ShExValidator_constructor(schema, db, options) {
               ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
               : emptyShapeExpr();
         labelToTcs[decl.id] = tcs;
-        return { extendsTCs: [], localTCs:[{ref: decl.id }] };
+        return [{ ref: decl.id }];
       }
       visitor.visitShapeOr = function (shapeExpr, min, max) {
-        return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
-          const { extendsTCs, localTCs } = this.visitShapeExpr(disjunct, 0, max);
-          acc.extendsTCs.push.apply(acc.extendsTCs, extendsTCs);
-          acc.localTCs.push.apply(acc.localTCs, localTCs);
-          return acc
-        }, emptyShapeExpr());
+        return shapeExpr.shapeExprs.reduce(
+          (acc, disjunct) => acc.concat(this.visitShapeExpr(disjunct, 0, max))
+          , emptyShapeExpr()
+        );
       }
 
       visitor.visitShapeAnd = function (shapeExpr, min, max) {
         const seen = new Set();
         return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
-          this.visitShapeExpr(disjunct, 0, max).forEach(tc => {
+          this.visitShapeExpr(disjunct, min, max).forEach(tc => {
             const key = `${tc.min} ${tc.max} ${tc.predicate}`;
             if (!seen.has(key)) {
               seen.add(key);
@@ -909,7 +917,6 @@ function ShExValidator_constructor(schema, db, options) {
           // @@ TODO: calculate intersection with acc
           return acc;
         }, []);
-        return sum(shapeExpr.shapeExprs.map(disjunct => this.visitShapeExpr(disjunct, min, max)))
       }
 
       visitor.visitShapeNot = function (expr, min, max) {
@@ -926,13 +933,15 @@ function ShExValidator_constructor(schema, db, options) {
         return visitor.visitShapeDecl(_ShExValidator._lookupShape(shapeLabel), min, max);
       };
 
-      // Visit shape's EXTENDS and expression.
       visitor.visitShape = function (shape, min, max) {
+        const { extendsTCs, localTCs } = this.shapePieces(shape, min, max);
+        return extendsTCs.flat().concat(localTCs);
+      }
+
+      // Visit shape's EXTENDS and expression.
+      visitor.shapePieces = function (shape, min, max) {
         const extendsTCs = "extends" in shape
-              ? shape.extends.map(ext => {
-                const { extendsTCs, localTCs } = visitor.visitShapeExpr(ext, min, max);
-                return extendsTCs.flat().concat(localTCs);
-              })
+              ? shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max))
               : [];
         const localTCs = "expression" in shape
               ? visitor.visitExpression(shape.expression, min, max)
@@ -940,6 +949,38 @@ function ShExValidator_constructor(schema, db, options) {
         return { extendsTCs, localTCs };
       }
 
+      visitor.getAllTripleConstraints = function (shape) {
+        const { extendsTCs: extendsTcOrRefsz, localTCs } = this.shapePieces(shape, 1, 1);
+        const tcs = [];
+        const tc2exts = [];
+        extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
+        return { extendsTCs: tcs, tc2exts, localTCs };
+
+        function flattenExtends (tcOrRefs, ord) {
+          return tcOrRefs.forEach(tcOrRef => {
+            if (tcOrRef.type === "TripleConstraint") {
+              add(tcOrRef); // as TC
+            } else {
+              flattenExtends(labelToTcs[tcOrRef.ref], ord);
+            }
+          });
+          function add (tc) {
+            const idx = tcs.indexOf(tc);
+            if (idx === -1) {
+              // new TC
+              tcs.push(tc);
+              tc2exts.push([ord]);
+            } else {
+              // new ref to old TC
+              if (tc2exts[idx].indexOf(ord) === -1) {
+                tc2exts[idx].push(ord);
+              } else {
+                throw 1; // probably fine, but let's sanity check with test
+              }
+            }
+          }
+        }
+      }
       // tripleExprs return list of TripleConstraints
 
       function n (l, expr) {
@@ -964,12 +1005,19 @@ function ShExValidator_constructor(schema, db, options) {
         return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, n(outerMin, expr), x(outerMax, expr))))
       }
 
+    visitor.visitInclusion = function (inclusion, outerMin, outerMax) {
+      return visitor.visitTripleExpr(index.tripleExprs[inclusion], outerMin, outerMax);
+    },
+
       // Synthesize a TripleConstraint with the implicit cardinality.
     visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
+      return [expr];
+      /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimizes with:
       const ret = JSON.parse(JSON.stringify(expr));
       ret.min = n(outerMin, expr);
       ret.max = x(outerMax, expr);
       return [ret];
+      */
     };
 
     return visitor;
