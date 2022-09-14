@@ -599,7 +599,7 @@ function ShExValidator_constructor(schema, db, options) {
     ));
 
     const { extendsTCs, tc2exts, localTCs } = TripleConstraintsVisitor(index.labelToTcs).getAllTripleConstraints(shape);
-    const extendsToTNo = (shape.extends || []).map(_ => []);
+    const subgraphCache = new Map();
     const constraintList = extendsTCs.concat(localTCs);
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
@@ -608,30 +608,47 @@ function ShExValidator_constructor(schema, db, options) {
 
     const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
     const partitionErrors = [];
-    const subgraphCache = new Map();
     const regexEngine = regexModule.compile(schema, shape, index);
-    while (xp.next() && ret === null) {
-      const errors = []
-      const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-      const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-            _seq(neighborhood.length).map(function () { return 0; });
 
+    NEXT: while (xp.next() && ret === null) {
       // t2tc - array mapping neighborhood index to TripleConstraint
       const t2tcForThisShapeAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
+      // if (DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList)) debugger;
+      /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
+         Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
+           t2tcForThisShapeAndExtends: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
+           tc2exts: [ [ 0 ], [ 0 ], [ 0 ], [ 0 ] ] (There's only one EXTENDS.)
+      */
+      const subgraphKey = t2tcForThisShapeAndExtends.map(cNo =>
+        cNo === NoTripleConstraint
+          ? '_'
+          : cNo < extendsTCs.length
+          ? '' + tc2exts[cNo].map(eNo => 'E' + eNo)
+          : 'L' + cNo
+      ).join('-')
+      if (subgraphCache.has(subgraphKey)) {
+        continue NEXT;
+      }
+      subgraphCache.set(subgraphKey, true);
+
       const t2tcForThisShape = []
-      const extendsToTriples = _seq((shape.extends || []).length).map(() => []); // if (DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList)) debugger;
+      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
       t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
         if (cNo !== NoTripleConstraint && cNo < extendsTCs.length) {
           for (let extNo of tc2exts[cNo]) {
             // allocated to multiple extends if diamond inheritance
             extendsToTriples[extNo].push(neighborhood[tNo]);
             t2tcForThisShape[tNo] = NoTripleConstraint;
-            extendsToTNo[extNo].push(tNo);
           }
         } else {
           t2tcForThisShape[tNo] = cNo;
         }
       });
+
+      const errors = []
+      const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
+      const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
+            _seq(neighborhood.length).map(function () { return 0; });
 
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
@@ -656,7 +673,7 @@ function ShExValidator_constructor(schema, db, options) {
       });
       const tc2t = _constraintToTriples(t2tcForThisShape, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
 
-      let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget, subgraphCache, extendsToTNo);
+      let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget);
       if (results === null || !("errors" in results)) {
         const sub = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
@@ -715,7 +732,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     return addShapeAttributes(shape, ret);
   };
-
+/*
   function DBG_matchValues (fromDB, constraintList) {
     const expectedValues = constraintList.map(
       tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
@@ -732,7 +749,7 @@ function ShExValidator_constructor(schema, db, options) {
     const solution = DBG_matchValues (fromDB, constraintList);
     return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
   }
-
+*/
   function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget) {
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -802,23 +819,16 @@ function ShExValidator_constructor(schema, db, options) {
       }, _seq(constraintList.length).map(() => [])); // [length][]
   }
 
-  function testExtends (expr, point, extendsToTriples, valParms, matchTarget, subgraphCache, extendsToTNo) {
+  function testExtends (expr, point, extendsToTriples, valParms, matchTarget) {
     if (!("extends" in expr))
       return null;
     const passes = [];
     const errors = [];
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
-      const subgraphKey = extendsToTNo[eNo].sort().join('-');
-      let sub = null;
-      if (subgraphCache.has(subgraphKey)) {
-        sub = subgraphCache.get(subgraphKey);
-      } else {
-        const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
-        extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-        sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
-        subgraphCache.set(subgraphKey, sub);
-      }
+      const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
+      extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+      const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
       if ("errors" in sub)
         errors.push(sub);
       else
@@ -971,11 +981,10 @@ function ShExValidator_constructor(schema, db, options) {
               tcs.push(tc);
               tc2exts.push([ord]);
             } else {
-              // new ref to old TC
+              // ref to TC already seen in this or earlier EXTENDS
               if (tc2exts[idx].indexOf(ord) === -1) {
+                // not yet included in this EXTENDS
                 tc2exts[idx].push(ord);
-              } else {
-                throw 1; // probably fine, but let's sanity check with test
               }
             }
           }
