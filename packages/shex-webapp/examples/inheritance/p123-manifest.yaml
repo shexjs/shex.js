@@ -1,6 +1,8 @@
 # notation:
 #  ᐃ: EXTENDS
 #  ↦: inline shapeExpr
+#  ⫏: CLOSED
+#  ⏎: ShapeDecl separator
 ---
 - schemaLabel: 1-5 - A = ⫏{:p 3}⏎ B = ᐃ@A{:p 2} OR {:q 4}
   schema: |-
@@ -140,8 +142,7 @@
   queryMap: <n>@<A>
   status: conformant
 
-- name: foo
-  schemaLabel: 8 - A ⫏{p 2}⏎ B ᐃ@A{p 3}⏎ C ᐃ@A{:p 4}⏎ D ᐃ@Bᐃ@C{:p 5}
+- schemaLabel: 8 - A ⫏{p 2}⏎ B ᐃ@A{p 3}⏎ C ᐃ@A{:p 4}⏎ D ᐃ@Bᐃ@C{:p 5}
   schema: |-
     PREFIX : <http://a.example/ns#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -160,8 +161,7 @@
   queryMap: <n>@<D>
   status: conformant
 
-- name: EXTENDS OR shared parent
-  schemaLabel: EXTENDS OR
+- schemaLabel: EXTENDS OR
   schema: |-
     PREFIX : <http://a.example/ns#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -180,8 +180,7 @@
   queryMap: <n>@<D>
   status: conformant
 
-- name: EXTENDS OR non-shared parent
-  schemaLabel: EXTENDS OR
+- schemaLabel: EXTENDS OR
   schema: |-
     PREFIX : <http://a.example/ns#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
