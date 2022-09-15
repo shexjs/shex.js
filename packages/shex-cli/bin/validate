@@ -100,7 +100,7 @@ const CommandLineOptions = [
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "turtle-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle manifest" },
   { name: "jsonld-manifest",       type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD manifest" },
-  { name: "test-name",             type: String, typeLabel: "IRI",       multiple:  true, defaultValue:        [], description: "what tests to run in the manifest" },
+  { name: "test-name",             type: String, typeLabel: "IRI",       multiple:  true, defaultValue:        [], description: "what tests to run in the manifest (.name OR .schemaLabel/.dataLabel)" },
   { name: "invocation",alias: "i", type: Boolean, desc: "show invocation" },
   { name: "dry-run",   alias: "N", type: Boolean, desc: "prepare validation but don't execute" },
   { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression modules to use" },
@@ -829,7 +829,10 @@ function loadJSONmanifest (jsonManifests, parser) {
           d = d.filter(function (elt) {
             return cmds["test-name"].reduce(function (ret, n) {
               const pattern = RegExp(n);
-              return ret || ("name" in elt && elt.name.match(pattern));
+              const name = "name" in elt
+                    ? elt.name
+                    : "".concat(elt.schemaLabel || '', '/', elt.dataLabel || '');
+              return ret || name.match(pattern);
             }, false);
           });
 
