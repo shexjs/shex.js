@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/neighborhood-api",
-  "version": "1.0.0-alpha.23",
+  "version": "1.0.0-alpha.24",
   "description": "API called by @shexjs/validator to get a neighborhood (arcs in and out of a node)",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,7 +20,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "^1.0.0-alpha.15"
+    "@shexjs/term": "^1.0.0-alpha.24"
   },
   "scripts": {
     "test": "echo 'no tests for neighborhood-api'"
@@ -37,6 +37,6 @@
   },
   "devDependencies": {
     "@rdfjs/types": "^1.1.0",
-    "@shexjs/util": "^1.0.0-alpha.23"
+    "@shexjs/util": "^1.0.0-alpha.24"
   }
 }

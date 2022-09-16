@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/shape-path-query",
-  "version": "1.0.0-alpha.23",
+  "version": "1.0.0-alpha.24",
   "description": "ShapePath query interface for ShEx.js",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -21,10 +21,10 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/extension-map": "^1.0.0-alpha.23",
-    "@shexjs/term": "^1.0.0-alpha.15",
-    "@shexjs/util": "^1.0.0-alpha.23",
-    "@shexjs/validator": "^1.0.0-alpha.23",
+    "@shexjs/extension-map": "^1.0.0-alpha.24",
+    "@shexjs/term": "^1.0.0-alpha.24",
+    "@shexjs/util": "^1.0.0-alpha.24",
+    "@shexjs/validator": "^1.0.0-alpha.24",
     "shape-path-core": "^0.0.5"
   },
   "devDependencies": {
