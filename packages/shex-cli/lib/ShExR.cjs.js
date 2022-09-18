@@ -24,16 +24,14 @@ const ShExRSchema = {
             "predicate": "http://www.w3.org/ns/shex#shapes", "min": 0, "max": 1,
             "valueExpr": "http://www.w3.org/ns/shex#ShapeDeclList1Plus" }
         ] } } },
-    { "id": "http://www.w3.org/ns/shex#shapeDeclOrExpr",
-      "type": "ShapeDecl",
+    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#shapeDeclOrExpr",
       "shapeExpr": {
         "type": "ShapeOr",
         "shapeExprs": [
           "http://www.w3.org/ns/shex#ShapeDecl",
           "http://www.w3.org/ns/shex#shapeExpr"
         ] } },
-    { "id": "http://www.w3.org/ns/shex#ShapeDecl",
-      "type": "ShapeDecl",
+    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#ShapeDecl",
       "shapeExpr": {
         "type": "Shape", "closed": true,
         "expression": {
@@ -126,54 +124,7 @@ const ShExRSchema = {
           { "type": "TripleConstraint",
             "predicate": "http://www.w3.org/ns/shex#datatype", "min": 0, "max": 1,
             "valueExpr": { "type": "NodeConstraint", "nodeKind": "iri" } },
-          { "id": "http://www.w3.org/ns/shex#xsFacets",
-            "type": "OneOf", "min": 0, "max": -1,
-            "expressions": [
-              { "id": "http://www.w3.org/ns/shex#stringFacet",
-                "type": "OneOf",
-                "expressions": [
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#length",
-                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#minlength",
-                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#maxlength",
-                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
-                  { "type": "EachOf",
-                    "expressions": [
-                      { "type": "TripleConstraint",
-                        "predicate": "http://www.w3.org/ns/shex#pattern",
-                        "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#string" } },
-                      { "type": "TripleConstraint",
-                        "predicate": "http://www.w3.org/ns/shex#flags", "min": 0, "max": 1,
-                        "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#string" } }
-                    ] }
-                ] },
-              { "id": "http://www.w3.org/ns/shex#numericFacet",
-                "type": "OneOf",
-                "expressions": [
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#mininclusive",
-                    "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#minexclusive",
-                    "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#maxinclusive",
-                    "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#maxexclusive",
-                    "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#totaldigits",
-                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
-                  { "type": "TripleConstraint",
-                    "predicate": "http://www.w3.org/ns/shex#fractiondigits",
-                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
-                ] }
-            ] },
+          "http://www.w3.org/ns/shex#xsFacets",
           { "type": "TripleConstraint",
             "predicate": "http://www.w3.org/ns/shex#values", "min": 0, "max": 1,
             "valueExpr": "http://www.w3.org/ns/shex#valueSetValueList1Plus" },
@@ -262,9 +213,53 @@ const ShExRSchema = {
       "expression": {
         "type": "EachOf",
         "expressions": [
-          "http://www.w3.org/ns/shex#xsFacets",
-          "http://www.w3.org/ns/shex#stringFacet",
-          "http://www.w3.org/ns/shex#numericFacet"
+          { "type": "OneOf", "id": "http://www.w3.org/ns/shex#xsFacets", "min": 0, "max": -1,
+            "expressions": [
+              "http://www.w3.org/ns/shex#stringFacet",
+              "http://www.w3.org/ns/shex#numericFacet"
+            ] },
+          { "type": "OneOf", "id": "http://www.w3.org/ns/shex#stringFacet",
+            "expressions": [
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#length",
+                "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#minlength",
+                "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#maxlength",
+                "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
+              { "type": "EachOf",
+                "expressions": [
+                  { "type": "TripleConstraint",
+                    "predicate": "http://www.w3.org/ns/shex#pattern",
+                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#string" } },
+                  { "type": "TripleConstraint",
+                    "predicate": "http://www.w3.org/ns/shex#flags", "min": 0, "max": 1,
+                    "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#string" } }
+                ] }
+            ] },
+          { "type": "OneOf", "id": "http://www.w3.org/ns/shex#numericFacet",
+            "expressions": [
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#mininclusive",
+                "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#minexclusive",
+                "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#maxinclusive",
+                "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#maxexclusive",
+                "valueExpr": "http://www.w3.org/ns/shex#numericLiteral" },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#totaldigits",
+                "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } },
+              { "type": "TripleConstraint",
+                "predicate": "http://www.w3.org/ns/shex#fractiondigits",
+                "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#integer" } }
+            ] }
         ] } } },
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#numericLiteral",
       "shapeExpr": { "type": "ShapeOr",
@@ -291,19 +286,6 @@ const ShExRSchema = {
         { "type": "NodeConstraint", "nodeKind": "iri" },
         { "type": "NodeConstraint", "nodeKind": "literal" }
       ] } },
-    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#Language",
-      "shapeExpr": {
-      "type": "Shape", "closed": true,
-      "expression": {
-        "type": "EachOf",
-        "expressions": [
-          { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
-            "valueExpr": { "type": "NodeConstraint", "values": [ "http://www.w3.org/ns/shex#Language" ] } },
-          { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/ns/shex#languageTag",
-            "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#string" } }
-        ] } } },
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#IriStem",
       "shapeExpr": {
       "type": "Shape", "closed": true,
@@ -372,6 +354,19 @@ const ShExRSchema = {
             "predicate": "http://www.w3.org/ns/shex#exclusion",
             "valueExpr": "http://www.w3.org/ns/shex#LiteralStemExclusionList1Plus" }
         ] } } },
+    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#Language",
+      "shapeExpr": {
+      "type": "Shape", "closed": true,
+      "expression": {
+        "type": "EachOf",
+        "expressions": [
+          { "type": "TripleConstraint",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+            "valueExpr": { "type": "NodeConstraint", "values": [ "http://www.w3.org/ns/shex#Language" ] } },
+          { "type": "TripleConstraint",
+            "predicate": "http://www.w3.org/ns/shex#languageTag",
+            "valueExpr": { "type": "NodeConstraint", "datatype": "http://www.w3.org/2001/XMLSchema#string" } }
+        ] } } },
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#LanguageStem",
       "shapeExpr": {
       "type": "Shape", "closed": true,
@@ -419,11 +414,13 @@ const ShExRSchema = {
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#tripleExpression",
       "shapeExpr": { "type": "ShapeOr",
       "shapeExprs": [
+        "http://www.w3.org/ns/shex#NotYetResolvedInclusion",
         "http://www.w3.org/ns/shex#TripleConstraint",
         "http://www.w3.org/ns/shex#OneOf",
-        "http://www.w3.org/ns/shex#EachOf",
-        { "type": "Shape", "closed": true }
+        "http://www.w3.org/ns/shex#EachOf"
       ] } },
+    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#NotYetResolvedInclusion",
+      "shapeExpr": { "type": "Shape", "closed": true } },
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#OneOf",
       "shapeExpr": {
       "type": "Shape", "closed": true,
@@ -474,37 +471,6 @@ const ShExRSchema = {
             "predicate": "http://www.w3.org/ns/shex#annotation", "min": 0, "max": 1,
             "valueExpr": "http://www.w3.org/ns/shex#AnnotationList1Plus" }
         ] } } },
-    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#tripleExpressionList2Plus",
-      "shapeExpr": {
-      "type": "Shape", "closed": true,
-      "expression": {
-        "type": "EachOf",
-        "expressions": [
-          { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
-            "valueExpr": "http://www.w3.org/ns/shex#tripleExpression" },
-          { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
-            "valueExpr": "http://www.w3.org/ns/shex#tripleExpressionList1Plus" }
-        ] } } },
-    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#tripleExpressionList1Plus",
-      "shapeExpr": {
-      "type": "Shape", "closed": true,
-      "expression": {
-        "type": "EachOf",
-        "expressions": [
-          { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
-            "valueExpr": "http://www.w3.org/ns/shex#tripleExpression" },
-          { "type": "TripleConstraint",
-            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
-            "valueExpr": {
-              "type": "ShapeOr",
-              "shapeExprs": [
-                { "type": "NodeConstraint", "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ] },
-                "http://www.w3.org/ns/shex#tripleExpressionList1Plus"
-              ] } }
-        ] } } },
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#TripleConstraint",
       "shapeExpr": {
       "type": "Shape", "closed": true,
@@ -548,6 +514,37 @@ const ShExRSchema = {
           { "type": "TripleConstraint",
             "predicate": "http://www.w3.org/ns/shex#annotation", "min": 0, "max": 1,
             "valueExpr": "http://www.w3.org/ns/shex#AnnotationList1Plus" }
+        ] } } },
+    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#tripleExpressionList2Plus",
+      "shapeExpr": {
+      "type": "Shape", "closed": true,
+      "expression": {
+        "type": "EachOf",
+        "expressions": [
+          { "type": "TripleConstraint",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+            "valueExpr": "http://www.w3.org/ns/shex#tripleExpression" },
+          { "type": "TripleConstraint",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+            "valueExpr": "http://www.w3.org/ns/shex#tripleExpressionList1Plus" }
+        ] } } },
+    { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#tripleExpressionList1Plus",
+      "shapeExpr": {
+      "type": "Shape", "closed": true,
+      "expression": {
+        "type": "EachOf",
+        "expressions": [
+          { "type": "TripleConstraint",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+            "valueExpr": "http://www.w3.org/ns/shex#tripleExpression" },
+          { "type": "TripleConstraint",
+            "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+            "valueExpr": {
+              "type": "ShapeOr",
+              "shapeExprs": [
+                { "type": "NodeConstraint", "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ] },
+                "http://www.w3.org/ns/shex#tripleExpressionList1Plus"
+              ] } }
         ] } } },
     { "type": "ShapeDecl", "id": "http://www.w3.org/ns/shex#IriList1Plus",
       "shapeExpr": {
