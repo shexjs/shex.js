@@ -492,6 +492,8 @@ function ShExValidator_constructor(schema, db, options) {
     } else if (shapeExpr.type === "Shape") {
       ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
     } else if (shapeExpr.type === "ShapeExternal") {
+      if (typeof this.options.validateExtern !== "function")
+        throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point, null, {})} as EXTERNAL shapeExpr ${shapeLabel} requires a 'validateExtern' option`)
       ret = this.options.validateExtern(point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
       const errors = [];
