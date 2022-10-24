@@ -105,21 +105,22 @@ const ShExTermCjsModule = (function () {
   }
 
   function internalTerm (node) { // !!rdfjsTermToInternal
-    switch (node.termType) {
-    case ("NamedNode"):
-      return node.value;
-    case ("BlankNode"):
-      return "_:" + node.value;
-    case ("Literal"):
-      return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
-        node.datatypeString === RdfLangString
-          ? "@" + node.language
-          : node.datatypeString === XsdString
-          ? ""
-          : "^^" + node.datatypeString
-      );
-    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
-    }
+    return node;
+    // switch (node.termType) {  
+    // case ("NamedNode"):
+    //   return node.value;
+    // case ("BlankNode"):
+    //   return "_:" + node.value;
+    // case ("Literal"):
+    //   return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
+    //     node.datatypeString === RdfLangString
+    //       ? "@" + node.language
+    //       : node.datatypeString === XsdString
+    //       ? ""
+    //       : "^^" + node.datatypeString
+    //   );
+    // default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
+    // }
   }
 
   function internalTriple (triple) { // !!rdfjsTripleToInternal
@@ -196,58 +197,42 @@ const ShExTermCjsModule = (function () {
 
   // Tests whether the given entity (triple object) represents an IRI in the N3 library
   function isIRI (entity) {
-    if (typeof entity !== 'string')
-      return false;
-    else if (entity.length === 0)
-      return true;
-    else {
-      const firstChar = entity[0];
-      return firstChar !== '"' && firstChar !== '_';
-    }
+    return entity.termType === 'NamedNode';
   }
 
   // Tests whether the given entity (triple object) represents a literal in the N3 library
   function isLiteral (entity) {
-    return typeof entity === 'string' && entity[0] === '"';
+    return entity.termType === 'Literal';
   }
 
   // Tests whether the given entity (triple object) represents a blank node in the N3 library
   function isBlank (entity) {
-    return typeof entity === 'string' && entity.substr(0, 2) === '_:';
+    return entity.termType === 'BlankNode';
+  }
+
+  // Tests whether the given triple is in the default graph
+  function inDefaultGraph (quad) {
+    return isDefaultGraph(quad.graph);
   }
 
   // Tests whether the given entity represents the default graph
   function isDefaultGraph (entity) {
-    return !entity;
-  }
-
-  // Tests whether the given triple is in the default graph
-  function inDefaultGraph (triple) {
-    return !triple.graph;
+    return entity.termType === 'DefaultGraph';
   }
 
   // Gets the string value of a literal in the N3 library
   function getLiteralValue (literal) {
-    const match = /^"([^]*)"/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1].replace(/\\"/g, '"');
+    return literal.value;
   }
 
   // Gets the type of a literal in the N3 library
   function getLiteralType (literal) {
-    const match = /^"[^]*"(?:\^\^([^"]+)|(@)[^@"]+)?$/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1] || (match[2] ? RdfLangString : XsdString);
+    return literal.dataType;
   }
 
   // Gets the language of a literal in the N3 library
   function getLiteralLanguage (literal) {
-    const match = /^"[^]*"(?:@([^@"]+)|\^\^[^"]+)?$/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1] ? match[1].toLowerCase() : '';
+    return literal.langauge;
   }
 
 // Characters in literals that require escaping

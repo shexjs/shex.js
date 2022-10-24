@@ -13144,7 +13144,7 @@ const ShExUtil = {
           return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
         })
       ).concat(["}"]);
-    case "NodeConstraintViolation":
+    case "NodeConstraintViolation":debugger
       const w = __webpack_require__(95)();
       w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
       let txt;

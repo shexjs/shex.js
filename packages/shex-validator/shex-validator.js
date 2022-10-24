@@ -561,9 +561,9 @@ function ShExValidator_constructor(schema, db, options) {
     const fromDB  = (subGraph || db).getNeighborhood(point, shapeLabel, shape);
     const outgoingLength = fromDB.outgoing.length;
     const neighborhood = fromDB.outgoing.sort(
-      (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
+      (l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)
     ).concat(fromDB.incoming.sort(
-      (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
+      (l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)
     ));
 
     const { extendsTCs, tc2exts, localTCs } = TripleConstraintsVisitor(index.labelToTcs).getAllTripleConstraints(shape);

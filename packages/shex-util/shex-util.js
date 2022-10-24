@@ -29,7 +29,7 @@ RDF._namespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 });
 const XSD = {}
 XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
-["anyURI"].forEach(p => {
+["anyURI", "string"].forEach(p => {
   XSD[p] = XSD._namespace+p;
 });
 const OWL = {}
@@ -1826,13 +1826,21 @@ const ShExUtil = {
         })
       ).concat(["}"]);
     case "NodeConstraintViolation":
-      const w = require("@shexjs/writer")();
-      w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
-      let txt;
-      w.end((err, res) => {
-        txt = res;
-      });
-      return ["NodeConstraintError: expected to match " + txt];
+      const elts = [];
+      if ('nodeKind' in val.shapeExpr) elts.push(`be a ${val.shapeExpr.nodeKind.toUpperCase()}`);
+      if ('datatype' in val.shapeExpr) elts.push(`have datatype ${val.shapeExpr.datatype}`);
+      if ('length' in val.shapeExpr) elts.push(`have length ${val.shapeExpr.length}`);
+      if ('minlength' in val.shapeExpr) elts.push(`have length at least ${val.shapeExpr.length}`);
+      if ('maxlength' in val.shapeExpr) elts.push(`have length at most ${val.shapeExpr.length}`);
+      if ('pattern' in val.shapeExpr) elts.push(`match regex ${val.shapeExpr.pattern}`);
+      if ('mininclusive' in val.shapeExpr) elts.push(`have value at least ${val.shapeExpr.mininclusive}`);
+      if ('minexclusive' in val.shapeExpr) elts.push(`have value more than ${val.shapeExpr.minexclusive}`);
+      if ('maxinclusive' in val.shapeExpr) elts.push(`have value at most ${val.shapeExpr.maxinclusive}`);
+      if ('maxexclusive' in val.shapeExpr) elts.push(`have value less than ${val.shapeExpr.maxexclusive}`);
+      if ('totaldigits' in val.shapeExpr) elts.push(`have have ${val.shapeExpr.totaldigits} digits`);
+      if ('fractiondigits' in val.shapeExpr) elts.push(`have have ${val.shapeExpr.fractiondigits} digits after the decimal`);
+      if ('values' in val.shapeExpr) elts.push(`have a value in [${this.trim(this.valuesToSimple(val.shapeExpr.values).join(', '), 80, /[, ]^>/)}]`);
+      return ["NodeConstraintError: expected to " + elts.join(', ')];
     case "MissingProperty":
       return ["Missing property: " + val.property];
     case "NegatedProperty":
@@ -1864,6 +1872,38 @@ const ShExUtil = {
             : e);
       }, []);
     }
+  },
+
+  // static
+  valuesToSimple: function (values) {
+    return values.map(v => {
+      // non stems
+      /* IRIREF */ if (typeof v === 'string') return `<${v}>`;
+      /* ObjectLiteral */ if ('value' in v) return this.objectLiteralToSimple(v);
+      /* Language */ if (v.type === 'Language') return `literal with langauge tag ${v.languageTag}`;
+
+      // stems and stem ranges
+      const [undefined, type, range] = v.match(/^(Iri|Literal|Language)Stem(Range)?$/);
+      let str = `${type.toLowerCase()} starting with ${v.stem}`
+      
+    )
+  },
+
+  // static
+  objectLiteralToSimple: function (v) {
+    return v ? (`"${v}` +
+                ('type' in v && v.type !== XSD.string `^^<${v.type}>` : '') +
+                  ('language' in v `@${v.language}` : ''))
+  },
+
+  // static
+  trim: function (str, desired, skip) {
+    if (str.length <= desired)
+      return str;
+    --desired; // leave room for '…'
+    while (desired > 0 && str[desired].match(skip))
+      --desired;
+    return str.slice(0, desired) + '…';
   },
 
   resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
