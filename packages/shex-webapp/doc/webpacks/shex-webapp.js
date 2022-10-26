@@ -568,247 +568,6 @@ exports.o = o;
 
 /***/ }),
 
-/***/ 5281:
-/***/ ((module) => {
-
-"use strict";
-
-
-class DcTap {
-
-  dontResolveIris = false
-  prefixes = {}
-  shapes = []
-  curShape = null
-  conjuncts = null
-  headers = ["shapeID", "shapeLabel", "propertyID", "propertyLabel", "mandatory", "repeatable", "valueNodeType", "valueDataType", "valueConstraint", "valueConstraintType", "valueShape", "note"]
-
-  constructor (opts = {}) {
-    Object.assign(this, opts)
-  }
-
-  parseRows (rows, base) {
-    rows.forEach((row) => {
-
-      // Ignore headers.
-      if (row[0].toLowerCase() === this.headers[0].toLowerCase()
-          && row[1].toLowerCase() === this.headers[1].toLowerCase()
-          && row[2].toLowerCase() === this.headers[2].toLowerCase()
-          || row[0].toLowerCase() === "prefix"
-          && row[1].toLowerCase() === "namespace")
-        ;
-
-      // Ignore blank lines.
-      else if (row.length === 1)
-        ;
-
-      // Two columns means it's a prefix decl,
-      else if (row.length === 2)
-        this.prefixes[row[0]] = row[1]
-
-      // otherwise, it's a regular row.
-      else
-        this.parseRow(row, base)
-    })
-    return this
-  }
-
-  parseRow (row, base) {
-
-    // Interpret has object with usual keys.
-    if (Array.isArray(row)) {
-      row = this.headers.reduce((acc, header, idx) => {
-        acc[header] = row[idx]
-        return acc
-      }, {})
-    }
-
-    // Ignore case on keywords.
-    row.valueNodeType = row.valueNodeType.toLowerCase()
-    row.valueConstraintType = row.valueConstraintType.toLowerCase()
-
-    // If this row defines a shape,
-    if (row.shapeID) {
-      // set the current shape.
-      this.curShape = {
-        type: "Shape",
-        shapeID: this.parseIri(row.shapeID, base),
-        tripleConstraints: [],
-      }
-      this.shapes.push(this.curShape)
-    } else if (!this.curShape) {
-      throw new Error(`no current shape into which to add ${JSON.stringify(row)}`)
-    }
-
-    // Add TripleConstraints to current row
-    this.curShape.tripleConstraints.push(this.toTripleConstraint(row, base))
-    return this
-  }
-
-  toTripleConstraint (sc, base) {
-    // Return minimal object which preserves semantics.
-    return Object.assign(
-      {
-        propertyID: this.parseIri(sc.propertyID, base),
-      },
-      sc.mandatory ? { mandatory: true } : {},
-      sc.repeatable ? { repeatable: true } : {},
-      this.parseValueConstraint(sc, base),
-      sc.valueShape ? { valueShape: this.parseIri(sc.valueShape, base) } : {},
-    )
-  }
-
-  parseValueConstraint (sc, base) {
-    switch (sc.valueConstraintType) {
-
-    case "iristem":
-    case "literalstem":
-    case "picklist":
-    case "languagetag":
-      // These get split on whitespase and their values coersed according to the constraintType and the valueNodeType.
-      const values = sc.valueConstraint.split(/\s+/)
-      return {
-        values: values.map(v => this.coerseValue(v, sc, base, sc.valueConstraintType.endsWith('stem')))
-      }
-
-    case "pattern":
-      // Value is a regular expression (unanchored PCRE per XML Schema?)
-      return {
-        pattern: sc.valueConstraint
-      }
-
-    case "":
-      // No constraintType means the value is a datatype.
-      return sc.valueDataType
-        ? { datatype: this.parseIri(sc.valueDataType, base) }
-      : {} // no valueConstraint property
-    default: throw Error(`Unknown valueConstraintType ${sc.valueConstraintType} in ${JSON.stringify(sc, null, 2)}?`)
-    }
-  }
-
-  coerseValue (v, sc, base, isStem = false) {
-    if (sc.valueConstraintType === "languagetag")
-      return {
-        type: "Language",
-        languageTag: v
-      }
-
-    switch (sc.valueNodeType) {
-    case "literal":
-      const ret = isStem
-        ? {
-          type: "LiteralStem",
-          stem: v
-        }
-      : {
-        value: v
-      }
-      // if (sc.valueDataType && sc.valueDataType !== "xsd:string")
-      //   ret.datatype = sc.valueDataType
-      return ret
-    case "iri":
-      return isStem
-        ? {
-          type: "IriStem",
-          stem: this.parseIri(v, base)
-        }
-      : this.parseIri(v, base)
-    case "":
-      return {
-        value: v
-      }
-    default:
-      throw Error(`Unknown valueNodeType ${sc.valueNodeType} in ${JSON.stringify(sc, null, 2)}?`)
-    }
-  }
-
-  parseIri (lex, base) {
-    // Grandfather in old form which kinda ignores IRI resolution.
-    if (this.dontResolveIris)
-      return lex // new URL(lex, base).href
-
-    // Parse IRI forms according to Turtle rules.
-    if (lex[0] === "<") {
-      if (lex[lex.length - 1] !== ">")
-        throw new Error(`Malformed URL: ${lex}`)
-      return new URL(lex.substr(1, lex.length - 2), base).href
-    } else {
-      const at = lex.indexOf(":")
-      if (at === -1)
-        throw new Error(`Expected ':' in IRI ${lex}`)
-      const prefix = lex.substr(0, at)
-      if (!(prefix in this.prefixes))
-        throw new Error(`Prefix ${prefix} not found in known prefixes: ${Object.keys(this.prefixes).join(" ,")}`)
-      const lname = lex.substr(at + 1)
-      return this.prefixes[prefix] + lname
-    }
-  }
-
-  toJson () {
-    return this.shapes
-  }
-
-  toShEx () {
-    const schema = {
-      type: "Schema",
-      shapes: this.shapes.map(sh => ({
-        type: "Shape",
-        id: sh.shapeID,
-        expression: maybeAnd(sh.tripleConstraints.map(tc => Object.assign(
-          {
-            type: "TripleConstraint",
-            predicate: tc.propertyID,
-          },
-          tc.mandatory ? { min: 1 } : {},
-          tc.repeatable ? { max: -1 } : {},
-          shexValueExpr(tc),
-        )), "EachOf", "expressions")
-      }))
-    }
-    return schema
-  }
-}
-
-function shexValueExpr (tc) {
-  const valueExprs = []
-  if (tc.values)
-    valueExprs.push({
-      type: "NodeConstraint",
-      values: tc.values
-    })
-  if (tc.pattern)
-    valueExprs.push({
-      type: "NodeConstraint",
-      pattern: tc.pattern
-    })
-  if (tc.datatype)
-    valueExprs.push({
-      type: "NodeConstraint",
-      datatype: tc.datatype
-    })
-  if (tc.valueShape)
-    valueExprs.push(tc.valueShape)
-  const valueExpr = maybeAnd(valueExprs, "ShapeAnd", "shapeExprs")
-  return valueExpr ? { valueExpr } : {}
-}
-
-function maybeAnd (conjuncts, type, property) {
-  if (conjuncts.length === 0)
-    return  undefined
-
-  if (conjuncts.length === 1)
-    return conjuncts[0]
-
-  const ret = { type }
-  ret[property] = conjuncts
-  return ret
-}
-
-module.exports = { DcTap }
-
-
-/***/ }),
-
 /***/ 2515:
 /***/ ((module) => {
 
@@ -14087,7 +13846,6 @@ if (true)
  */
 
 const ShExValidatorCjsModule = (function () {
-const UNBOUNDED = -1;
 
 // interface constants
 const Start = { term: "START" }
@@ -14099,14 +13857,10 @@ const InterfaceOptions = {
 };
 
 const VERBOSE = false; // "VERBOSE" in process.env;
-// **ShExValidator** provides ShEx utility functions
-
-const ProgramFlowError = { type: "ProgramFlowError", errors: [{ type: "UntrackedError" }] };
 
 const ShExTerm = __webpack_require__(1118);
 const ShExVisitor = __webpack_require__(8806);
 const { NoTripleConstraint } = __webpack_require__(3530);
-const NoExtends = Symbol("NO_EXTENDS");
 const Hierarchy = __webpack_require__(2515)
 
 function getLexicalValue (term) {
@@ -14305,6 +14059,8 @@ function ShExValidator_constructor(schema, db, options) {
   if (!(this instanceof ShExValidator_constructor))
     return new ShExValidator_constructor(schema, db, options);
   let index = schema._index || ShExVisitor.index(schema)
+  if (!("labelToTcs" in index))
+    index.labelToTcs = new Map();
   this.type = "ShExValidator";
   options = options || {};
   this.options = options;
@@ -14320,35 +14076,6 @@ function ShExValidator_constructor(schema, db, options) {
   this.reset = function () {  }; // included in case we need it later.
   // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
   const regexModule = this.options.regexModule || __webpack_require__(6863);
-
-  /* indexTripleConstraints - compile regular expression and index triple constraints
-   */
-  this.indexTripleConstraints = function (expression) {
-    // list of triple constraints from (:p1 ., (:p2 . | :p3 .))
-    const tripleConstraints = [];
-
-    if (expression)
-      indexTripleConstraints_dive(expression);
-    return tripleConstraints;
-
-    function indexTripleConstraints_dive (expr) {
-      if (typeof expr === "string") // Inclusion
-        return indexTripleConstraints_dive(index.tripleExprs[expr]);
-
-      else if (expr.type === "TripleConstraint") {
-        tripleConstraints.push(expr);
-        return [tripleConstraints.length - 1]; // index of expr
-      }
-
-      else if (expr.type === "OneOf" || expr.type === "EachOf")
-        return expr.expressions.reduce(function (acc, nested) {
-          return acc.concat(indexTripleConstraints_dive(nested));
-        }, []);
-
-      else
-        return runtimeError("unexpected expr type: " + expr.type);
-    };
-  };
 
   /* emptyTracker - a tracker that does nothing
    */
@@ -14415,7 +14142,7 @@ function ShExValidator_constructor(schema, db, options) {
     }
 
     let shape = null;
-    if (label == Start) {
+    if (label === Start) {
       shape = schema.start;
     } else {
       shape = this._lookupShape(label);
@@ -14454,7 +14181,6 @@ function ShExValidator_constructor(schema, db, options) {
   }
 
   this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, matchTarget, subGraph, allowAbstract) {
-    const _ShExValidator = this;
     if (subGraph) { // !! matchTarget?
       // matchTarget indicates that shape substitution has already been applied.
       // Now we're testing a subgraph against the base shapes.
@@ -14511,18 +14237,19 @@ function ShExValidator_constructor(schema, db, options) {
       makeSchemaVisitor().visitSchema(schema);
       return extensions.children;
 
-      function makeSchemaVisitor (schema) {
+      function makeSchemaVisitor () {
         const schemaVisitor = ShExVisitor();
         let curLabel;
         let curAbstract;
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
+
         schemaVisitor.visitShapeDecl = function (decl) {
           curLabel = decl.id;
           curAbstract = decl.abstract;
           abstractness[decl.id] = decl.abstract;
           return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
         };
-        const oldVisitShape = schemaVisitor.visitShape;
+
         schemaVisitor.visitShape = function (shape) {
           if ("extends" in shape) {
             shape.extends.forEach(ext => {
@@ -14590,6 +14317,8 @@ function ShExValidator_constructor(schema, db, options) {
     } else if (shapeExpr.type === "Shape") {
       ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
     } else if (shapeExpr.type === "ShapeExternal") {
+      if (typeof this.options.validateExtern !== "function")
+        throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point, null, {})} as EXTERNAL shapeExpr ${shapeLabel} requires a 'validateExtern' option`)
       ret = this.options.validateExtern(point, shapeLabel, tracker, seen);
     } else if (shapeExpr.type === "ShapeOr") {
       const errors = [];
@@ -14639,7 +14368,6 @@ function ShExValidator_constructor(schema, db, options) {
   }
 
   this._validateShape = function (point, shape, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
-    const _ShExValidator = this;
     const valParms = { db, shapeLabel, depth, tracker, seen };
 
     let ret = null;
@@ -14663,45 +14391,42 @@ function ShExValidator_constructor(schema, db, options) {
       (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
     ));
 
-    const localTCs = this.indexTripleConstraints(shape.expression);
-    const extendedTCs = getExtendedTripleConstraints(shape);
-    const constraintList = extendedTCs.map(
-      ext => ext.tripleConstraint
-    ).concat(localTCs);
+    const { extendsTCs, tc2exts, localTCs } = TripleConstraintsVisitor(index.labelToTcs).getAllTripleConstraints(shape);
+    const constraintList = extendsTCs.concat(localTCs);
+
+    // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
     const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
-    const xp = crossProduct(tripleList.constraintList, NoTripleConstraint);
+    const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
     const partitionErrors = [];
     const regexEngine = regexModule.compile(schema, shape, index);
-    while (xp.next() && ret === null) {
+
+    for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
+      const localT2Tc = []; // subset of TCs assigned to shape.expression
+      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
+      t2tc.forEach((cNo, tNo) => {
+        if (cNo !== NoTripleConstraint && cNo < extendsTCs.length) {
+          for (let extNo of tc2exts[cNo]) {
+            // allocated to multiple extends if diamond inheritance
+            extendsToTriples[extNo].push(neighborhood[tNo]);
+            localT2Tc[tNo] = NoTripleConstraint;
+          }
+        } else {
+          localT2Tc[tNo] = cNo;
+        }
+      });
+
       const errors = []
       const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
       const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
             _seq(neighborhood.length).map(function () { return 0; });
 
-      // t2tc - array mapping neighborhood index to TripleConstraint
-      const t2tcForThisShapeAndExtends = xp.get(); // [0,1,0,3] mapping from triple to constraint
-      const t2tcForThisShape = []
-      const tripleToExtends = []
-      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
-      t2tcForThisShapeAndExtends.forEach((cNo, tNo) => {
-        if (cNo !== NoTripleConstraint && cNo < extendedTCs.length) {
-          const extNo = extendedTCs[cNo].extendsNo;
-          extendsToTriples[extNo].push(neighborhood[tNo]);
-          tripleToExtends[tNo] = cNo;
-          t2tcForThisShape[tNo] = NoTripleConstraint;
-        } else {
-          tripleToExtends[tNo] = NoExtends;
-          t2tcForThisShape[tNo] = cNo;
-        }
-      });
-
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed) {
         const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return t2tcForThisShape[i] === NoTripleConstraint && // didn't match a constraint
-            tripleToExtends[i] === NoExtends && // didn't match an EXTENDS
+          return localT2Tc[i] === NoTripleConstraint && // didn't match a constraint
+            i >= extendsTCs.length && // wasn't allocated to an EXTENDS
             extras.indexOf(i) === -1; // wasn't in EXTRAs.
         });
         if (unexpectedTriples.length > 0)
@@ -14712,17 +14437,17 @@ function ShExValidator_constructor(schema, db, options) {
       }
 
       // Set usedTriples and constraintMatchCount.
-      t2tcForThisShape.forEach(function (tpNumber, ord) {
+      localT2Tc.forEach(function (tpNumber, ord) {
         if (tpNumber !== NoTripleConstraint) {
           usedTriples.push(neighborhood[ord]);
           ++constraintMatchCount[tpNumber];
         }
       });
-      const tc2t = _constraintToTriples(t2tcForThisShape, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
+      const tc2t = _constraintToTriples(localT2Tc, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
 
       let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget);
       if (results === null || !("errors" in results)) {
-        const sub = regexEngine.match(db, point, constraintList, tc2t, t2tcForThisShape, neighborhood, this.semActHandler, null);
+        const sub = regexEngine.match(db, point, constraintList, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
           results = { type: "ExtendedResults", extensions: results };
           if (Object.keys(sub).length > 0) // no empty objects from {}s.
@@ -14779,7 +14504,24 @@ function ShExValidator_constructor(schema, db, options) {
 
     return addShapeAttributes(shape, ret);
   };
+/*
+  function DBG_matchValues (fromDB, constraintList) {
+    const expectedValues = constraintList.map(
+      tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
+    );
+    const tripleValues = fromDB.outgoing.map(
+      t => parseInt(t.object.substr(1))
+    );
+    return tripleValues.map(
+      i => expectedValues.indexOf(i)
+    );
+  }
 
+  function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList) {
+    const solution = DBG_matchValues (fromDB, constraintList);
+    return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
+  }
+*/
   function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget) {
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -14874,8 +14616,8 @@ function ShExValidator_constructor(schema, db, options) {
    * TODO: should this be in @shexjs/neighborhood-something ?
    */
   function makeTriplesDB (queryTracker) { // implements ValidatorNeighborhood
-    var incoming = [];
-    var outgoing = [];
+    const incoming = [];
+    const outgoing = [];
 
     function getTriplesByIRI(s, p, o, g) {
       return incoming.concat(outgoing).filter(
@@ -14905,97 +14647,153 @@ function ShExValidator_constructor(schema, db, options) {
     };
   }
 
-
-  /** getExtendedTripleConstraints - walk shape's extends to get all
+  /** TripleConstraintsVisitor - walk shape's extends to get all
    * referenced triple constraints.
    *
-   * @param {} shape
-   * @returns {}
+   * @param {} labelToTcs: Map<shapeLabel, TripleConstraint[]>
+   * @returns { extendsTCs: [[TripleConstraint]], localTCs: [TripleConstraint] }
    */
-  function getExtendedTripleConstraints (shape) {
-    const ret = []
-    if ("extends" in shape) {
-      shape.extends.forEach((se, extendsNo) => {
-        // Index incoming and outgoing arcs by predicate.  Multiple TCs with the
-        // same predicate are aggregated into a single TC with the maximum
-        // cardinality span. (@@Does this actually reduce permutations?)
-        // tests: Extend3G-pass
-        const ins = {}, outs = {};
-        visitTripleConstraints(se, ins, outs);
+  function TripleConstraintsVisitor (labelToTcs) {
+    const visitor = ShExVisitor(labelToTcs);
 
-        [ins, outs].forEach(directionIndex => {
-          Object.keys(directionIndex).forEach(predicate => {
-            let tripleConstraint = directionIndex[predicate]
-            ret.push({tripleConstraint, extendsNo});
-          });
+    function emptyShapeExpr () { return []; }
+
+    visitor.visitShapeDecl = function (decl, min, max) {
+      // if (labelToTcs.has(decl.id)) !! uncomment cache for production
+      //   return labelToTcs[decl.id];
+      const tcs = decl.shapeExpr
+            ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
+            : emptyShapeExpr();
+      labelToTcs[decl.id] = tcs;
+      return [{ ref: decl.id }];
+    }
+    visitor.visitShapeOr = function (shapeExpr, min, max) {
+      return shapeExpr.shapeExprs.reduce(
+        (acc, disjunct) => acc.concat(this.visitShapeExpr(disjunct, 0, max))
+        , emptyShapeExpr()
+      );
+    }
+
+    visitor.visitShapeAnd = function (shapeExpr, min, max) {
+      const seen = new Set();
+      return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
+        this.visitShapeExpr(disjunct, min, max).forEach(tc => {
+          const key = `${tc.min} ${tc.max} ${tc.predicate}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            acc.push(tc);
+          }
         });
-      })
+
+        // @@ TODO: calculate intersection with acc
+        return acc;
+      }, []);
     }
-    return ret;
 
-    /*
-     * @expr - shape expression to walk
-     * @ins - incoming arcs: map from IRI to {min, max, seen}
-     * @outs - outgoing arcs
-     */
-    function visitTripleConstraints (expr, ins, outs) {
-      const visitor = ShExVisitor();
-      let outerMin = 1;
-      let outerMax = 1;
-      const oldVisitOneOf = visitor.visitOneOf;
-
-      // Override visitShapeRef to follow references.
-      // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
-      visitor.visitShapeRef = function (inclusion) {
-        return visitor.visitShapeDecl(_ShExValidator._lookupShape(inclusion));
-      };
-
-      // Visit shape's EXTENDS and expression.
-      visitor.visitShape = function (shape, label) {
-        if ("extends" in shape) {
-          shape.extends.forEach( // extension of an extension...
-            se => visitTripleConstraints(se, ins, outs)
-          )
-        }
-        if ("expression" in shape) {
-          visitor.visitExpression(shape.expression);
-        }
-        return { type: "Shape" }; // NOP
-      }
-
-      // Any TC inside a OneOf implicitly has a min cardinality of 0.
-      visitor.visitOneOf = function (expr) {
-        const oldOuterMin = outerMin;
-        const oldOuterMax = outerMax;
-        outerMin = 0;
-        oldVisitOneOf.call(visitor, expr);
-        outerMin = oldOuterMin;
-        outerMax = oldOuterMax;
-      }
-
-      // Synthesize a TripleConstraint with the implicit cardinality.
-      visitor.visitTripleConstraint = function (expr) {
-        const idx = expr.inverse ? ins : outs; // pick an index
-        let min = "min" in expr ? expr.min : 1; min = min * outerMin;
-        let max = "max" in expr ? expr.max : 1; max = max * outerMax;
-        idx[expr.predicate] = {
-          type: "TripleConstraint",
-          predicate: expr.predicate,
-          min: expr.predicate in idx ? Math.max(idx[expr.predicate].min, min) : min,
-          max: expr.predicate in idx ? Math.min(idx[expr.predicate].max, max) : max,
-          seen: expr.predicate in idx ? idx[expr.predicate].seen + 1 : 1,
-          tcs: expr.predicate in idx ? idx[expr.predicate].tcs.concat([expr]) : [expr]
-        }
-        return expr;
-      };
-
-      // Call constructed visitor on expr.
-      visitor.visitShapeExpr(expr);
+    visitor.visitShapeNot = function (expr, min, max) {
+      throw 1;
     }
+
+    visitor.visitShapeExternal = emptyShapeExpr
+
+    visitor.visitNodeConstraint = emptyShapeExpr;
+
+    // Override visitShapeRef to follow references.
+    // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
+    visitor.visitShapeRef = function (shapeLabel, min, max) {
+      return visitor.visitShapeDecl(_ShExValidator._lookupShape(shapeLabel), min, max);
+    };
+
+    visitor.visitShape = function (shape, min, max) {
+      const { extendsTCs, localTCs } = this.shapePieces(shape, min, max);
+      return extendsTCs.flat().concat(localTCs);
+    }
+
+    // Visit shape's EXTENDS and expression.
+    visitor.shapePieces = function (shape, min, max) {
+      const extendsTCs = "extends" in shape
+            ? shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max))
+            : [];
+      const localTCs = "expression" in shape
+            ? visitor.visitExpression(shape.expression, min, max)
+            : [];
+      return { extendsTCs, localTCs };
+    }
+
+    visitor.getAllTripleConstraints = function (shape) {
+      const { extendsTCs: extendsTcOrRefsz, localTCs } = this.shapePieces(shape, 1, 1);
+      const tcs = [];
+      const tc2exts = [];
+      extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
+      return { extendsTCs: tcs, tc2exts, localTCs };
+
+      function flattenExtends (tcOrRefs, ord) {
+        return tcOrRefs.forEach(tcOrRef => {
+          if (tcOrRef.type === "TripleConstraint") {
+            add(tcOrRef); // as TC
+          } else {
+            flattenExtends(labelToTcs[tcOrRef.ref], ord);
+          }
+        });
+        function add (tc) {
+          const idx = tcs.indexOf(tc);
+          if (idx === -1) {
+            // new TC
+            tcs.push(tc);
+            tc2exts.push([ord]);
+          } else {
+            // ref to TC already seen in this or earlier EXTENDS
+            if (tc2exts[idx].indexOf(ord) === -1) {
+              // not yet included in this EXTENDS
+              tc2exts[idx].push(ord);
+            }
+          }
+        }
+      }
+    }
+    // tripleExprs return list of TripleConstraints
+
+    function n (l, expr) {
+      if (!("min" in expr)) return l;
+      return l * expr.min;
+    }
+
+    function x (l, expr) {
+      if (!("max" in expr)) return l;
+      if (l === -1 || expr.max === -1) return -1;
+      return l * expr.max;
+    }
+
+    function and (tes) { return [].concat.apply([], tes); }
+
+    // Any TC inside a OneOf implicitly has a min cardinality of 0.
+    visitor.visitOneOf = function (expr, outerMin, outerMax) {
+      return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, 0, x(outerMax, expr))))
+    }
+
+    visitor.visitEachOf = function (expr, outerMin, outerMax) {
+      return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, n(outerMin, expr), x(outerMax, expr))))
+    }
+
+    visitor.visitInclusion = function (inclusion, outerMin, outerMax) {
+      return visitor.visitTripleExpr(index.tripleExprs[inclusion], outerMin, outerMax);
+    }
+
+    // Synthesize a TripleConstraint with the implicit cardinality.
+    visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
+      return [expr];
+      /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
+         const ret = JSON.parse(JSON.stringify(expr));
+         ret.min = n(outerMin, expr);
+         ret.max = x(outerMax, expr);
+         return [ret];
+      */
+    };
+
+    return visitor;
   }
 
   this._triplesMatchingShapeExpr = function (triples, constraint, valParms, matchTarget) {
-    const _ShExValidator = this;
     const misses = [];
     const hits = [];
     triples.forEach(function (triple) {
@@ -15015,7 +14813,6 @@ function ShExValidator_constructor(schema, db, options) {
     return { hits: hits, misses: misses };
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, matchTarget, subgraph) {
-    const _ShExValidator = this;
     if (typeof valueExpr === "string") { // ShapeRef
       return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen, matchTarget, subgraph);
     } else if (valueExpr.type === "NodeConstraint") {
@@ -15100,7 +14897,7 @@ function ShExValidator_constructor(schema, db, options) {
         }
       }
 
-      if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
+      if (valueExpr.datatype  && valueExpr.values) validationError("found both datatype and values in " + valueExpr);
 
       if (valueExpr.datatype) {
         if (!ShExTerm.isLiteral(value)) {
@@ -15323,8 +15120,76 @@ function ShExValidator_constructor(schema, db, options) {
   };
 }
 
+/** Explore permutations of mapping from Triples to TripleConstraints
+ * documented using test ExtendsRepeatedP-pass
+ */
+class TripleToTripleConstraints {
+  /**
+   *
+   * @param constraintList mapping from Triple to possible TripleConstraints, e.g. [
+   *      [0,2,4], # try T0 against TC0, TC2, TC4
+   *      [0,2,4], # try T1 against same
+   *      [0,2,4], # try T2 against same
+   *      [1,3]    # try T3 against TC1, TC3
+   *   ]
+   * @param extendsTCcount how many TCs are in EXTENDS,
+   *   e.g. 4 says that TCs 0-3 are assigned to some EXTENDS; only TC4 is "local".
+   * @param tc2exts which TripleConstraints came from which EXTENDS, e.g. [
+   *     [0], # TC0 is assignable to EXTENDS 0
+   *     [0], # TC1 is assignable to EXTENDS 0
+   *     [0], # TC2 is assignable to EXTENDS 0
+   *     [0], # TC3 is assignable to EXTENDS 0
+   *   ]
+   */
+  constructor (constraintList, extendsTCcount, tc2exts) {
+    this.extendsTCcount = extendsTCcount; this.tc2exts = tc2exts;
+    this.subgraphCache = new Map();
+    this.crossProduct = CrossProduct(constraintList, NoTripleConstraint);
+  }
+
+  /**
+   * Find next mapping of Triples to TripleConstraints.
+   * Exclude any that differ only in an irrelevent order difference in assinment to EXTENDS.
+   * @returns {number[] | null}
+   */
+  next () {
+    while (this.crossProduct.next()) {
+      /* t2tc - array mapping neighborhood index to TripleConstraint
+       * CrossProduct counts through constraintList from the right:
+       *   [ 0, 0, 0, 1 ] # first call
+       *   [ 0, 0, 0, 3 ] # second call
+       *   [ 0, 0, 2, 1 ] # third call
+       *   [ 0, 0, 2, 3 ] # fourth call
+       *   [ 0, 0, 4, 1 ] # fifth call
+       *   [ 0, 2, 0, 1 ] # sixth call...
+       */
+      const t2tc = this.crossProduct.get(); // [0,1,0,3] mapping from triple to constraint
+      // if (DBG_gonnaMatch (t2tc, fromDB, constraintList)) debugger;
+
+      /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
+         Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
+         t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
+         tc2exts: [[0], [0], [0], [0]] (All four TCs assignable to first EXTENDS.)
+      */
+      const subgraphKey = t2tc.map(cNo =>
+        cNo === NoTripleConstraint
+          ? '_'
+          : cNo < this.extendsTCcount
+          ? '' + this.tc2exts[cNo].map(eNo => 'E' + eNo)
+          : 'L' + cNo
+      ).join('-')
+
+      if (!this.subgraphCache.has(subgraphKey)) {
+        this.subgraphCache.set(subgraphKey, true);
+        return t2tc;
+      }
+    }
+    return null;
+  }
+}
+
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
-function crossProduct(sets, emptyValue) {
+function CrossProduct(sets, emptyValue) {
   const n = sets.length, carets = [];
   let args = null;
 
@@ -15353,7 +15218,7 @@ function crossProduct(sets, emptyValue) {
       return true;
     }
     while (carets[i] >= sets[i].length) {
-      if (i == 0) {
+      if (i === 0) {
         return false;
       }
       carets[i] = 0;
@@ -15869,6 +15734,250 @@ if (true)
 
 /***/ }),
 
+/***/ 89:
+/***/ ((module) => {
+
+"use strict";
+
+
+class DcTap {
+
+  dontResolveIris = false
+  prefixes = {}
+  shapes = []
+  curShape = null
+  conjuncts = null
+  headers = ["shapeID", "shapeLabel", "propertyID", "propertyLabel", "mandatory", "repeatable", "valueNodeType", "valueDataType", "valueConstraint", "valueConstraintType", "valueShape", "note"]
+
+  constructor (opts = {}) {
+    Object.assign(this, opts)
+  }
+
+  parseRows (rows, base) {
+    rows.forEach((row) => {
+
+      // Ignore headers.
+      if (row[0].toLowerCase() === this.headers[0].toLowerCase()
+          && row[1].toLowerCase() === this.headers[1].toLowerCase()
+          && row[2].toLowerCase() === this.headers[2].toLowerCase()
+          || row[0].toLowerCase() === "prefix"
+          && row[1].toLowerCase() === "namespace")
+        ;
+
+      // Ignore blank lines.
+      else if (row.length === 1)
+        ;
+
+      // Two columns means it's a prefix decl,
+      else if (row.length === 2)
+        this.prefixes[row[0]] = row[1]
+
+      // otherwise, it's a regular row.
+      else
+        this.parseRow(row, base)
+    })
+    return this
+  }
+
+  parseRow (row, base) {
+
+    // Interpret has object with usual keys.
+    if (Array.isArray(row)) {
+      row = this.headers.reduce((acc, header, idx) => {
+        acc[header] = row[idx]
+        return acc
+      }, {})
+    }
+
+    // Ignore case on keywords.
+    row.valueNodeType = row.valueNodeType.toLowerCase()
+    row.valueConstraintType = row.valueConstraintType.toLowerCase()
+
+    // If this row defines a shape,
+    if (row.shapeID) {
+      // set the current shape.
+      this.curShape = {
+        type: "Shape",
+        shapeID: this.parseIri(row.shapeID, base),
+        tripleConstraints: [],
+      }
+      this.shapes.push(this.curShape)
+    } else if (!this.curShape) {
+      throw new Error(`no current shape into which to add ${JSON.stringify(row)}`)
+    }
+
+    // Add TripleConstraints to current row
+    this.curShape.tripleConstraints.push(this.toTripleConstraint(row, base))
+    return this
+  }
+
+  toTripleConstraint (sc, base) {
+    // Return minimal object which preserves semantics.
+    return Object.assign(
+      {
+        propertyID: this.parseIri(sc.propertyID, base),
+      },
+      sc.mandatory ? { mandatory: true } : {},
+      sc.repeatable ? { repeatable: true } : {},
+      this.parseValueConstraint(sc, base),
+      sc.valueShape ? { valueShape: this.parseIri(sc.valueShape, base) } : {},
+    )
+  }
+
+  parseValueConstraint (sc, base) {
+    switch (sc.valueConstraintType) {
+
+    case "iristem":
+    case "literalstem":
+    case "picklist":
+    case "languagetag":
+      // These get split on whitespase and their values coersed according to the constraintType and the valueNodeType.
+      const values = sc.valueConstraint.split(/\s+/)
+      return {
+        values: values.map(v => this.coerseValue(v, sc, base, sc.valueConstraintType.endsWith('stem')))
+      }
+
+    case "pattern":
+      // Value is a regular expression (unanchored PCRE per XML Schema?)
+      return {
+        pattern: sc.valueConstraint
+      }
+
+    case "":
+      // No constraintType means the value is a datatype.
+      return sc.valueDataType
+        ? { datatype: this.parseIri(sc.valueDataType, base) }
+      : {} // no valueConstraint property
+    default: throw Error(`Unknown valueConstraintType ${sc.valueConstraintType} in ${JSON.stringify(sc, null, 2)}?`)
+    }
+  }
+
+  coerseValue (v, sc, base, isStem = false) {
+    if (sc.valueConstraintType === "languagetag")
+      return {
+        type: "Language",
+        languageTag: v
+      }
+
+    switch (sc.valueNodeType) {
+    case "literal":
+      const ret = isStem
+        ? {
+          type: "LiteralStem",
+          stem: v
+        }
+      : {
+        value: v
+      }
+      // if (sc.valueDataType && sc.valueDataType !== "xsd:string")
+      //   ret.datatype = sc.valueDataType
+      return ret
+    case "iri":
+      return isStem
+        ? {
+          type: "IriStem",
+          stem: this.parseIri(v, base)
+        }
+      : this.parseIri(v, base)
+    case "":
+      return {
+        value: v
+      }
+    default:
+      throw Error(`Unknown valueNodeType ${sc.valueNodeType} in ${JSON.stringify(sc, null, 2)}?`)
+    }
+  }
+
+  parseIri (lex, base) {
+    // Grandfather in old form which kinda ignores IRI resolution.
+    if (this.dontResolveIris)
+      return lex // new URL(lex, base).href
+
+    // Parse IRI forms according to Turtle rules.
+    if (lex[0] === "<") {
+      if (lex[lex.length - 1] !== ">")
+        throw new Error(`Malformed URL: ${lex}`)
+      return new URL(lex.substr(1, lex.length - 2), base).href
+    } else {
+      const at = lex.indexOf(":")
+      if (at === -1)
+        throw new Error(`Expected ':' in IRI ${lex}`)
+      const prefix = lex.substr(0, at)
+      if (!(prefix in this.prefixes))
+        throw new Error(`Prefix ${prefix} not found in known prefixes: ${Object.keys(this.prefixes).join(" ,")}`)
+      const lname = lex.substr(at + 1)
+      return this.prefixes[prefix] + lname
+    }
+  }
+
+  toJson () {
+    return this.shapes
+  }
+
+  toShEx () {
+    const schema = {
+      type: "Schema",
+      shapes: this.shapes.map(sh => ({
+        type: "ShapeDecl",
+        id: sh.shapeID,
+        shapeExpr: {
+          type: "Shape",
+          expression: maybeAnd(sh.tripleConstraints.map(tc => Object.assign(
+            {
+              type: "TripleConstraint",
+              predicate: tc.propertyID,
+            },
+            tc.mandatory ? { min: 1 } : {},
+            tc.repeatable ? { max: -1 } : {},
+            shexValueExpr(tc),
+          )), "EachOf", "expressions")
+        }
+      }))
+    }
+    return schema
+  }
+}
+
+function shexValueExpr (tc) {
+  const valueExprs = []
+  if (tc.values)
+    valueExprs.push({
+      type: "NodeConstraint",
+      values: tc.values
+    })
+  if (tc.pattern)
+    valueExprs.push({
+      type: "NodeConstraint",
+      pattern: tc.pattern
+    })
+  if (tc.datatype)
+    valueExprs.push({
+      type: "NodeConstraint",
+      datatype: tc.datatype
+    })
+  if (tc.valueShape)
+    valueExprs.push(tc.valueShape)
+  const valueExpr = maybeAnd(valueExprs, "ShapeAnd", "shapeExprs")
+  return valueExpr ? { valueExpr } : {}
+}
+
+function maybeAnd (conjuncts, type, property) {
+  if (conjuncts.length === 0)
+    return  undefined
+
+  if (conjuncts.length === 1)
+    return conjuncts[0]
+
+  const ret = { type }
+  ret[property] = conjuncts
+  return ret
+}
+
+module.exports = { DcTap }
+
+
+/***/ }),
+
 /***/ 2863:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -15888,7 +15997,7 @@ ShExWebApp = (function () {
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               __webpack_require__(9431),
-    DcTap:                (__webpack_require__(5281).DcTap),
+    DcTap:                (__webpack_require__(89).DcTap),
   })
 })()
 
