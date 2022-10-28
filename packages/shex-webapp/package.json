@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "dctap": "^0.0.6",
-    "jquery": "^3.5.1",
+    "jquery": "^3.6.1",
     "jquery-contextmenu": "^2.9.2",
     "jquery-ui": "^1.13.2"
   },
