@@ -36,7 +36,7 @@
         "object": { "value": "septante", "language": "fr" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"septante\"@fr",
+          "focus": { "value": "septante", "language": "fr" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

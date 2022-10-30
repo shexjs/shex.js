@@ -16,7 +16,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"-1.0\"^^http://www.w3.org/2001/XMLSchema#double",
+          "focus": { "value": "-1.0", "type": "http://www.w3.org/2001/XMLSchema#double" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#double"

@@ -18,7 +18,7 @@
         "object": { "value": "\/\t\n\r-\\\u0061\uD835\uDCB8" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"/\t\n\r-\\a𝒸\"",
+          "focus": { "value": "/\t\n\r-\\a𝒸" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",
@@ -27,7 +27,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"/\t\n\r-\\a𝒸\"",
+          "focus": { "value": "/\t\n\r-\\a𝒸" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

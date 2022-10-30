@@ -18,7 +18,7 @@
         "object": { "value": "abcde" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"abcde\"",
+          "focus": { "value": "abcde" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "maxlength": 5,

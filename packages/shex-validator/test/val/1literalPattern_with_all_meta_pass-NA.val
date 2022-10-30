@@ -18,7 +18,7 @@
         "object": { "value": "abc\\N/Adef" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"abc\\N/Adef\"",
+          "focus": { "value": "abc\\N/Adef" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

@@ -18,7 +18,7 @@
         "object": { "value": "05", "type": "http://www.w3.org/2001/XMLSchema#float" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"05\"^^http://www.w3.org/2001/XMLSchema#float",
+          "focus": { "value": "05", "type": "http://www.w3.org/2001/XMLSchema#float" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#float",

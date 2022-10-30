@@ -9,7 +9,7 @@
       { "type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "5.1", "type": "http://www.w3.org/2001/XMLSchema#float" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"5.1\"^^http://www.w3.org/2001/XMLSchema#float",
+          "focus": { "value": "5.1", "type": "http://www.w3.org/2001/XMLSchema#float" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#float",

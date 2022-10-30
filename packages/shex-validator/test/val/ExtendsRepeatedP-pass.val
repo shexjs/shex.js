@@ -69,7 +69,7 @@
                             },
                             "referenced": {
                               "type": "NodeConstraintTest",
-                              "focus": "\"3\"^^http://www.w3.org/2001/XMLSchema#integer",
+                              "focus": { "value": "3", "type": "http://www.w3.org/2001/XMLSchema#integer" },
                               "shapeExpr": {
                                 "type": "NodeConstraint",
                                 "values": [

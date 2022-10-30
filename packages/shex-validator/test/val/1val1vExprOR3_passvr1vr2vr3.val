@@ -34,7 +34,7 @@
         "referenced": {
           "solution": {
             "type": "NodeConstraintTest",
-            "focus": "\"abcdef\"",
+            "focus": { "value": "abcdef" },
             "shapeExpr": {
               "type": "NodeConstraint",
               "nodeKind": "literal",

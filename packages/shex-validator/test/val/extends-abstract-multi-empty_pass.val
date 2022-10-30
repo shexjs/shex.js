@@ -71,7 +71,7 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Bob\"",
+                                                          "focus": { "value": "Bob" },
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -97,7 +97,7 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Smith\"",
+                                                          "focus": { "value": "Smith" },
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -208,7 +208,7 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "focus": "\"Joe\"",
+                                                                    "focus": { "value": "Joe" },
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
                                                                       "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -224,7 +224,7 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "focus": "\"Joseph\"",
+                                                                    "focus": { "value": "Joseph" },
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
                                                                       "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -250,7 +250,7 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "focus": "\"Thompson\"",
+                                                                    "focus": { "value": "Thompson" },
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
                                                                       "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -404,7 +404,7 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Joe\"",
+                                                          "focus": { "value": "Joe" },
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -420,7 +420,7 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Joseph\"",
+                                                          "focus": { "value": "Joseph" },
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -446,7 +446,7 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Thompson\"",
+                                                          "focus": { "value": "Thompson" },
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"

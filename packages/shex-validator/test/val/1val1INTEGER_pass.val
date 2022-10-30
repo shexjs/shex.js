@@ -19,7 +19,7 @@
         "object": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#integer" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#integer",
+          "focus": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#integer" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

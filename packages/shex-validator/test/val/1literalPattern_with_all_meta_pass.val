@@ -18,7 +18,7 @@
         "object": { "value": "\tv:0,  v:12v:3/.\r\n" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"\tv:0,  v:12v:3/.\r\n\"",
+          "focus": { "value": "\tv:0,  v:12v:3/.\r\n" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

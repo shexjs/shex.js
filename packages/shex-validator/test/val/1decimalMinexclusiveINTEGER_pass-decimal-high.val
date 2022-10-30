@@ -18,7 +18,7 @@
         "object": { "value": "5.6", "type": "http://www.w3.org/2001/XMLSchema#decimal" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"5.6\"^^http://www.w3.org/2001/XMLSchema#decimal",
+          "focus": { "value": "5.6", "type": "http://www.w3.org/2001/XMLSchema#decimal" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#decimal",

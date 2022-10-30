@@ -19,7 +19,7 @@
         "object": { "value": "BC" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"BC\"",
+          "focus": { "value": "BC" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "flags": "i",

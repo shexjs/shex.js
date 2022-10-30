@@ -18,7 +18,7 @@
         "object": { "value": "\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8\"",
+          "focus": { "value": "\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

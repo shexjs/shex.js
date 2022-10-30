@@ -35,7 +35,7 @@
           "solutions": [
             {
               "type": "NodeConstraintTest",
-              "focus": "\"abab\"",
+              "focus": { "value": "abab" },
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "minlength": 4,
@@ -44,7 +44,7 @@
             },
             {
               "type": "NodeConstraintTest",
-              "focus": "\"abab\"",
+              "focus": { "value": "abab" },
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "maxlength": 5,
@@ -53,7 +53,7 @@
             },
             {
               "type": "NodeConstraintTest",
-              "focus": "\"abab\"",
+              "focus": { "value": "abab" },
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "nodeKind": "literal",

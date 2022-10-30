@@ -22,7 +22,7 @@
         "object": { "value": "v1" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"v1\"",
+          "focus": { "value": "v1" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

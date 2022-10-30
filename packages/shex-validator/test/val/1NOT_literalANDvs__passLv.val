@@ -14,7 +14,7 @@
           "value": "v"
         },
         "referenced": {
-          "focus": "\"v\"",
+          "focus": { "value": "v" },
           "shapeExpr": {
             "shapeExprs": [
               {

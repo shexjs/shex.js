@@ -16,7 +16,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"255\"^^http://www.w3.org/2001/XMLSchema#unsignedByte",
+          "focus": { "value": "255", "type": "http://www.w3.org/2001/XMLSchema#unsignedByte" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#unsignedByte"

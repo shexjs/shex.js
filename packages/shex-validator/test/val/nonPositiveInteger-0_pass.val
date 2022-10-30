@@ -16,7 +16,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#nonPositiveInteger",
+          "focus": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#nonPositiveInteger"

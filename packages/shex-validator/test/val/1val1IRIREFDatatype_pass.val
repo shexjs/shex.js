@@ -19,7 +19,7 @@
         "object": { "value": "ab", "type": "http://a.example/bloodType" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"ab\"^^http://a.example/bloodType",
+          "focus": { "value": "ab", "type": "http://a.example/bloodType" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

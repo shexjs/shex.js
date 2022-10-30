@@ -22,7 +22,7 @@
         "object": { "value": "septante", "language": "fr-be-fbcl" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"septante\"@fr-be-fbcl",
+          "focus": { "value": "septante", "language": "fr-be-fbcl" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

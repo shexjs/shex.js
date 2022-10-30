@@ -18,7 +18,7 @@
         "object": { "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽\"",
+          "focus": { "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

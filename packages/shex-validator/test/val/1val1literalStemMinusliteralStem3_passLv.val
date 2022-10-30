@@ -36,7 +36,7 @@
         "object": { "value": "v" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"v\"",
+          "focus": { "value": "v" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

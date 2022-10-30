@@ -21,7 +21,7 @@
             "object": { "value": "abab" },
             "referenced": {
               "type": "NodeConstraintTest",
-              "focus": "\"abab\"",
+              "focus": { "value": "abab" },
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "nodeKind": "literal",
@@ -52,7 +52,7 @@
             "object": { "value": "abab" },
             "referenced": {
               "type": "NodeConstraintTest",
-              "focus": "\"abab\"",
+              "focus": { "value": "abab" },
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "nodeKind": "literal",
@@ -83,7 +83,7 @@
             "object": { "value": "abab" },
             "referenced": {
               "type": "NodeConstraintTest",
-              "focus": "\"abab\"",
+              "focus": { "value": "abab" },
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "nodeKind": "literal",

@@ -16,7 +16,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"2012-01-02T12:34:56.78Z\"^^http://www.w3.org/2001/XMLSchema#dateTime",
+          "focus": { "value": "2012-01-02T12:34:56.78Z", "type": "http://www.w3.org/2001/XMLSchema#dateTime" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"

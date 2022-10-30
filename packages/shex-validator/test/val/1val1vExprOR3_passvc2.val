@@ -34,7 +34,7 @@
         "referenced": {
           "solution": {
             "type": "NodeConstraintTest",
-            "focus": "\"cd\"",
+            "focus": { "value": "cd" },
             "shapeExpr": {
               "type": "NodeConstraint",
               "nodeKind": "literal",

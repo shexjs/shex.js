@@ -19,7 +19,7 @@
         "object": { "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\" !\\\"#$%&'()/:;<=>?@[]^_`{|}~\"",
+          "focus": { "value": " !\"#$%&'()/:;<=>?@[]^_`{|}~" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

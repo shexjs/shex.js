@@ -16,7 +16,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"1\"^^http://www.w3.org/2001/XMLSchema#unsignedLong",
+          "focus": { "value": "1", "type": "http://www.w3.org/2001/XMLSchema#unsignedLong" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#unsignedLong"

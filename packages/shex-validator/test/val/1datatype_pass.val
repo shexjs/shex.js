@@ -9,7 +9,7 @@
       {"type":"TestedTriple","subject":"http://a.example/s1","predicate":"http://a.example/p1","object":{ "value": "ab", "type": "http://a.example/dt1" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"ab\"^^http://a.example/dt1",
+          "focus": { "value": "ab", "type": "http://a.example/dt1" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://a.example/dt1"

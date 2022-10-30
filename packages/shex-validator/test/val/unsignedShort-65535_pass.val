@@ -16,7 +16,7 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"65535\"^^http://www.w3.org/2001/XMLSchema#unsignedShort",
+          "focus": { "value": "65535", "type": "http://www.w3.org/2001/XMLSchema#unsignedShort" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#unsignedShort"

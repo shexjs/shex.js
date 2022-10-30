@@ -36,7 +36,7 @@
                     "object": { "value": "ab", "type": "http://a.example/dt1" },
                     "referenced": {
                       "type": "NodeConstraintTest",
-                      "focus": "\"ab\"^^http://a.example/dt1",
+                      "focus": { "value": "ab", "type": "http://a.example/dt1" },
                       "shapeExpr": {
                         "type": "NodeConstraint",
                         "datatype": "http://a.example/dt1"
@@ -154,7 +154,7 @@
                                         },
                                         "referenced": {
                                           "type": "NodeConstraintTest",
-                                          "focus": "\"ab\"",
+                                          "focus": { "value": "ab" },
                                           "shapeExpr": {
                                             "type": "NodeConstraint",
                                             "nodeKind": "literal"

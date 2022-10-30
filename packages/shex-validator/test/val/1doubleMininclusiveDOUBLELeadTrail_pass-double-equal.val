@@ -18,7 +18,7 @@
         "object": { "value": "4.5e0", "type": "http://www.w3.org/2001/XMLSchema#double" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"4.5e0\"^^http://www.w3.org/2001/XMLSchema#double",
+          "focus": { "value": "4.5e0", "type": "http://www.w3.org/2001/XMLSchema#double" },
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#double",
