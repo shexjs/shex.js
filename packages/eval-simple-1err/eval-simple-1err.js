@@ -454,24 +454,29 @@ const EvalSimple1ErrCjsModule = (function () {
           const triple = neighborhood[tNo];
           const ret = {
             type: "TestedTriple",
-            subject: triple.subject,
-            predicate: triple.predicate,
+            subject: ldify(triple.subject),
+            predicate: ldify(triple.predicate),
             object: ldify(triple.object)
           };
 
         function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
+          switch (term.termType) {
+          case "NamedNode": return term.value;
+          case "BlankNode": return "_:" + term.value;
+          case "Literal":
+            const ret = { value: term.value };
+            const dt = term.datatypeString;
+            const lang = term.language;
+            if (dt &&
+                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+              ret.type = dt;
+            if (lang)
+              ret.language = lang;
+            return ret;
+          default:
+            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
+          }
         }
           const constraintNo = constraintList.indexOf(m.c);
                       const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);

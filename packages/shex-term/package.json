@@ -19,7 +19,9 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rdf-data-factory": "^1.1.1"
+  },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
     "browser999": "browserify shex.js -s ShEx -o browser/shex-term-browserify.js && uglifyjs browser/shex-term-browserify.js --comments -mco browser/shex-term-browserify.min.js"

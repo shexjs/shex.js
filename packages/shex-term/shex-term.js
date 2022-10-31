@@ -5,6 +5,8 @@
 
 const ShExTermCjsModule = (function () {
 
+  const DataFactory = require('rdf-data-factory');
+
   const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
     schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
@@ -106,21 +108,24 @@ const ShExTermCjsModule = (function () {
 
   function internalTerm (node) { // !!rdfjsTermToInternal
     return node;
-    // switch (node.termType) {  
-    // case ("NamedNode"):
-    //   return node.value;
-    // case ("BlankNode"):
-    //   return "_:" + node.value;
-    // case ("Literal"):
-    //   return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
-    //     node.datatypeString === RdfLangString
-    //       ? "@" + node.language
-    //       : node.datatypeString === XsdString
-    //       ? ""
-    //       : "^^" + node.datatypeString
-    //   );
-    // default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
-    // }
+  }
+
+  function rdfJsTermToTurtle (node) {
+    switch (node.termType) {  
+    case ("NamedNode"):
+      return node.value;
+    case ("BlankNode"):
+      return "_:" + node.value;
+    case ("Literal"):
+      return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
+        node.datatypeString === RdfLangString
+          ? "@" + node.language
+          : node.datatypeString === XsdString
+          ? ""
+          : "^^" + node.datatypeString
+      );
+    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
+    }
   }
 
   function internalTriple (triple) { // !!rdfjsTripleToInternal
@@ -227,12 +232,12 @@ const ShExTermCjsModule = (function () {
 
   // Gets the type of a literal in the N3 library
   function getLiteralType (literal) {
-    return literal.dataType;
+    return literal.datatypeString;
   }
 
   // Gets the language of a literal in the N3 library
   function getLiteralLanguage (literal) {
-    return literal.langauge;
+    return literal.language;
   }
 
 // Characters in literals that require escaping
@@ -263,6 +268,32 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     return result;
   }
 
+  function LdToRdfJsTerm (ld) {
+    switch (typeof ld) {
+
+    case 'object':
+      const copy = JSON.parse(JSON.stringify(ld));
+      if (!copy.value)
+        throw Error(`JSON-LD-style object literal has no value: ${JSON.stringify(ld)}`)
+      const value = copy.value;
+      delete copy.value;
+      if (copy.language)
+        return new DataFactory.Literal(value, copy.language);
+      if (copy.type)
+        return new DataFactory.Literal(value, new DataFactory.NamedNode(copy.type));
+      if (Object.keys(copy).length > 0)
+        throw Error(`Unrecognized attributes inn JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`)
+      return new DataFactory.Literal(value);
+
+    case 'string':
+      return ld.startsWith('_:')
+        ? new DataFactory.BlankNode(ld.substr(2))
+        : new DataFactory.NamedNode(ld);
+
+    default: throw Error(`Unrecognized JSON-LD-style term: ${JSON.stringify(ld)}`)
+    }
+  }
+
   return {
     RdfLangString: RdfLangString,
     XsdString: XsdString,
@@ -275,11 +306,13 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralValue: getLiteralValue,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
+    rdfJsTermToTurtle,
     internalTerm: internalTerm,
     internalTriple: internalTriple,
     externalTerm: externalTerm,
     externalTriple: externalTriple,
     internalTermToTurtle: internalTermToTurtle,
+    LdToRdfJsTerm,
   }
 })();
 

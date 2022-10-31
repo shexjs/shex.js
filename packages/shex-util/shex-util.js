@@ -1883,17 +1883,28 @@ const ShExUtil = {
       /* Language */ if (v.type === 'Language') return `literal with langauge tag ${v.languageTag}`;
 
       // stems and stem ranges
-      const [undefined, type, range] = v.match(/^(Iri|Literal|Language)Stem(Range)?$/);
-      let str = `${type.toLowerCase()} starting with ${v.stem}`
-      
-    )
+      const [undefined, type, range] = v.type.match(/^(Iri|Literal|Language)Stem(Range)?$/);
+      let str = type.toLowerCase();
+
+      if (typeof v.stem !== "object")
+        str += ` starting with ${v.stem}`
+
+      if ("exclusions" in v)
+        str += ` excluding ${
+v.exclusions.map(excl => typeof excl === "string"
+ ? excl
+ : "anything starting with " + excl.stem).join(', ')
+}`;
+
+      return str;
+    })
   },
 
   // static
   objectLiteralToSimple: function (v) {
-    return v ? (`"${v}` +
-                ('type' in v && v.type !== XSD.string `^^<${v.type}>` : '') +
-                  ('language' in v `@${v.language}` : ''))
+    return `"${v}` +
+      ('type' in v && v.type !== XSD.string ? `^^<${v.type}>` : '') +
+      ('language' in v ? `@${v.language}` : '')
   },
 
   // static
