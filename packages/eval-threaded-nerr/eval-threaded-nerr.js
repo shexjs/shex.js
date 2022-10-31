@@ -104,8 +104,8 @@ function vpEngine (schema, shape, index) {
                 const t = neighborhood[tripleNo]
                 const tested = {
                   type: "TestedTriple",
-                  subject: t.subject,
-                  predicate: t.predicate,
+                  subject: ldify(t.subject),
+                  predicate: ldify(t.predicate),
                   object: ldify(t.object)
                 }
                 const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
@@ -113,7 +113,7 @@ function vpEngine (schema, shape, index) {
                   tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(
                   "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, tested, tested)
+                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
                     : []
                 )
                 if (semActErrors.length > 0)
@@ -326,18 +326,23 @@ function vpEngine (schema, shape, index) {
     }
 
         function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
+          switch (term.termType) {
+          case "NamedNode": return term.value;
+          case "BlankNode": return "_:" + term.value;
+          case "Literal":
+            const ret = { value: term.value };
+            const dt = term.datatypeString;
+            const lang = term.language;
+            if (dt &&
+                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+              ret.type = dt;
+            if (lang)
+              ret.language = lang;
+            return ret;
+          default:
+            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
+          }
         }
 
     function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
@@ -356,7 +361,7 @@ function vpEngine (schema, shape, index) {
             const t = neighborhood[x.tripleNo];
             const expr = constraintList[x.constraintNo];
             const ret = {
-              type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
+              type: "TestedTriple", subject: ldify(t.subject), predicate: ldify(t.predicate), object: ldify(t.object)
             };
             function diver (focus, shapeLabel, dive) {
               const sub = dive(focus, shapeLabel);

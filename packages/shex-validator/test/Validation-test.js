@@ -83,11 +83,11 @@ describe("A ShEx validator", function () {
                // resolve relative URLs in results file
                if (["shape", "reference", "valueExprRef", "node", "focus", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
-                   ShExTerm.isIRI(obj[k])) {
+                   (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) {
                  obj[k] = ShExTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
                } else if (["values"].indexOf(k) !== -1) {
                  for (var i = 0; i < obj[k].length; ++i) {
-                   if (typeof obj[k][i] !== "object" && ShExTerm.isIRI(obj[k][i])) {
+                   if (typeof obj[k][i] !== "object") {
                      obj[k][i] = ShExTerm.resolveRelativeIRI(dataURL, obj[k][i]);
                    }
                  };
@@ -169,11 +169,11 @@ describe("A ShEx validator", function () {
                     try {
                       function maybeGetTerm (base, s) {
                         return s === undefined ? null :
-                          typeof(s) === "object" ? "\""+s["@value"]+"\""+(
-                            "@type" in s ? "^^"+s["@type"] :
-                              "@language" in s ? "@"+s["@language"] :
-                              ""
-                          ):
+                          typeof(s) === "object" ? {
+                            value: s["@value"],
+                            type: s["@type"],
+                            language: s["@language"],
+                          }:
                         s.substr(0, 2) === "_:" ? s :
                           ShExTerm.resolveRelativeIRI(base, s);
                       }

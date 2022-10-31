@@ -194,7 +194,7 @@ const decimalLexicalTests = {
           case "BlankNode": return "_:" + term.value;
           case "Literal":
             const ret = { value: term.value };
-            const dt = term.datatypeString;
+            const dt = term.datatype.value;
             const lang = term.language;
             if (dt &&
                 dt !== "http://www.w3.org/2001/XMLSchema#string" &&
@@ -671,7 +671,7 @@ function ShExValidator_constructor(schema, db, options) {
     if (errors.length > 0)
       ret = {
         type: "Failure",
-        node: point,
+        node: ldify(point),
         shape: shapeLabel,
         errors: errors
       };
@@ -740,7 +740,7 @@ function ShExValidator_constructor(schema, db, options) {
       if (constraints.length === 0 &&   // matches no constraints
           ord < outgoingLength &&       // not an incoming triple
           ord in tripleList.misses) {   // predicate matched some constraint(s)
-        if (extras.indexOf(neighborhood[ord].predicate) !== -1) {
+        if (extras.indexOf(neighborhood[ord].predicate.value) !== -1) {
           matchedExtras.push(ord);
         } else {                        // not declared extra
           ret.push({                    // so it's a missed triple.
@@ -1034,7 +1034,7 @@ function ShExValidator_constructor(schema, db, options) {
         // ret = {};
       } else {
         ret.type = "ShapeNotFailure";
-        ret.errors = ["Error validating " + ldify(value) + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"]
+        ret.errors = ["Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"]
       }
       return ret;
     } else {
@@ -1053,7 +1053,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     function validationError () {
       const errorStr = Array.prototype.join.call(arguments, "");
-      errors.push("Error validating " + JSON.stringify(ldify(value)) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
       return false;
     }
     // if (negated) ;
@@ -1081,7 +1081,7 @@ function ShExValidator_constructor(schema, db, options) {
 
       if (valueExpr.datatype) {
         if (!ShExTerm.isLiteral(value)) {
-          validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
+          validationError("mismatched datatype: " + JSON.stringify(ldify(value)) + " is not a literal with datatype " + valueExpr.datatype);
         }
         else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
           validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
@@ -1109,7 +1109,7 @@ function ShExValidator_constructor(schema, db, options) {
           if (!(typeof v === "object" && "value" in v)) // don't check for equivalent term if not a simple literal
             return false;
           return v.value === label
-            && (!("type" in v) || v.type === value.datatypeString)
+            && (!("type" in v) || v.type === value.datatype.value)
             && (!("language" in v) || v.language === value.language);
         }, false)) {
           // literal match

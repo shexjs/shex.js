@@ -41,7 +41,9 @@
           },
           "errors": {
             "type": "NodeConstraintViolation",
-            "focus": "\"just fine\"",
+            "focus": {
+              "value": "just fine"
+            },
             "errors": [
               "Error validating \"just fine\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
             ],

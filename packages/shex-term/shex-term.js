@@ -118,11 +118,11 @@ const ShExTermCjsModule = (function () {
       return "_:" + node.value;
     case ("Literal"):
       return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
-        node.datatypeString === RdfLangString
+        node.datatype.value === RdfLangString
           ? "@" + node.language
-          : node.datatypeString === XsdString
+          : node.datatype.value === XsdString
           ? ""
-          : "^^" + node.datatypeString
+          : "^^" + node.datatype.value
       );
     default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
     }
@@ -232,7 +232,7 @@ const ShExTermCjsModule = (function () {
 
   // Gets the type of a literal in the N3 library
   function getLiteralType (literal) {
-    return literal.datatypeString;
+    return literal.datatype.value;
   }
 
   // Gets the language of a literal in the N3 library
