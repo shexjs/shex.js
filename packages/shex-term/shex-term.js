@@ -137,19 +137,7 @@ const ShExTermCjsModule = (function () {
   }
 
   function externalTerm (node, factory) { // !!internalTermToRdfjs
-    if (isIRI(node)) {
-      return factory.namedNode(node);
-    } else if (isBlank(node)) {
-      return factory.blankNode(node.substr(2));
-    } else if (isLiteral(node)) {
-      let dtOrLang = getLiteralLanguage(node) ||
-          (getLiteralType(node) === XsdString
-           ? null // seems to screw up N3.js
-           : factory.namedNode(getLiteralType(node)))
-      return factory.literal(getLiteralValue(node), dtOrLang)
-    } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
-    }
+    return node;
   }
 
   function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
@@ -294,6 +282,64 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     }
   }
 
+  /** N3id functions
+   * Some tests and algorithms use n3.js ids as syntax for input graphs in tests.
+   *   NamedNode: bare word, e.g. http://a.example/
+   *   BlankNode: "_:" + label, e.g. _:b1
+   *   Literal: quoted value plus ntriples lang or datatype, e.g:
+   *     "I said \"Hello World\"."
+   *     "I said \"Hello World\"."@en
+   *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
+   */
+
+  /**
+   * Map an N3id quad to an RdfJs quad
+   * @param {*} s subject
+   * @param {*} p predicate
+   * @param {*} o object
+   * @param {*} g graph
+   * @returns RdfJs quad
+   */
+  function n3idQuadToRdfJs (s, p, o, g) {
+    return new DataFactory.Quad(
+      n3idTermToRdfJs(s),
+      n3idTermToRdfJs(p),
+      n3idTermToRdfJs(o),
+      g ? n3idTermToRdfJs(g) : new DataFactory.DefaultGraph(),
+    );
+  }
+
+  /**
+   * Map an N3id term to an RdfJs Term.
+   * @param {*} term N3Id term
+   * @returns RdfJs Term
+   */
+  function n3idTermToRdfJs (term) {
+    if (term[0] === "_" && term[1] === ":")
+      return new DataFactory.BlankNode(term.substr(2));
+
+    if (term[0] === "\"" || term[0] === "'") {
+      const closeQuote = term.lastIndexOf(term[0]);
+      if (closeQuote === -1)
+        throw new Error(`no close ${term[0]}: ${term}`);
+      const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
+      const langOrDt = term.length === closeQuote + 1
+            ? null
+            : term[closeQuote + 1] === "@"
+            ? term.substr(closeQuote + 2)
+            : parseDt(closeQuote + 1)
+      return new DataFactory.Literal(value, langOrDt);
+    }
+
+    return new DataFactory.NamedNode(term);
+
+    function parseDt (from) {
+      if (term[from] !== "^" || term[from + 1] !== "^")
+        throw new Error(`garbage after closing ": ${term}`);
+      return new DataFactory.NamedNode(term.substr(from + 2));
+    }
+  }
+
   return {
     RdfLangString: RdfLangString,
     XsdString: XsdString,
@@ -313,6 +359,8 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     externalTriple: externalTriple,
     internalTermToTurtle: internalTermToTurtle,
     LdToRdfJsTerm,
+    n3idQuadToRdfJs,
+    n3idTermToRdfJs,
   }
 })();
 

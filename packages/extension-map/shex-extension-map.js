@@ -7,6 +7,7 @@
 
 const ShExMapCjsModule = function (config) {
 
+const ShExTerm = require("@shexjs/term");
 const extensions = require("./lib/extensions");
 const N3Util = require("n3/lib/N3Util");
 const N3DataFactory = require("n3/lib/N3DataFactory").default;
@@ -58,7 +59,7 @@ function register (validator, api) {
             }
 
             const prefixedName = getPrefixedName(bindingName);
-            const quotedValue = value; // value.match(/"(.+)"/) === null ? '"' + value + '"' : value;
+            const quotedValue = ldify(value);
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
@@ -85,17 +86,33 @@ function register (validator, api) {
     visitTripleConstraint
   }
 
+        function ldify (term) {
+          switch (term.termType) {
+          case "NamedNode": return term.value;
+          case "BlankNode": return "_:" + term.value;
+          case "Literal":
+            const ret = { value: term.value };
+            const dt = term.datatype.value;
+            const lang = term.language;
+            if (dt &&
+                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+              ret.type = dt;
+            if (lang)
+              ret.language = lang;
+            return ret;
+          default:
+            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
+          }
+        }
+
 function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
-      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) {
-        target.addQuad(api.ShExTerm.externalTriple({
-          subject: s,
-          predicate: p,
-          object: o
-        }, N3DataFactory));
+        target.addQuad(api.ShExTerm.n3idQuadToRdfJs(s, p, o));
         return s;
       }
 
@@ -123,10 +140,8 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
             if (tripleObject === undefined)
               ; // console.warn('Not in bindings: ',code);
             else if (expr.inverse)
-            //add(tripleObject, expr.predicate, curSubject);
               add(tripleObject, expr.predicate, curSubjectx.cs);
             else
-            //add(curSubject    , expr.predicate, tripleObject);
               add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 

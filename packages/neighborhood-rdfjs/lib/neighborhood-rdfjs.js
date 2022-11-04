@@ -17,7 +17,7 @@ const NeighborhoodRdfJsModule = (function () {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      const outgoing/*: Quad[]*/ = [...db.match(point, null, null, null)].map(ShExTerm.internalTriple);
+      const outgoing/*: Quad[]*/ = [... db.match(point, null, null, null)].map(ShExTerm.internalTriple);
       if (queryTracker) {
         const time = new Date();
         queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());

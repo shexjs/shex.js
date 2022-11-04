@@ -518,7 +518,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         const target = new config.rdfjs.Store();
         mapper.visitTripleConstraint(tc, curSubjectx, nextBNode, target, { _maybeSet: () => {} }, _ShExValidator.schema, db, _recurse, _direct, _testExpr);
         const oldLen = neighborhood.length;
-        const created = target.getQuads().map(ShExTerm.internalTriple);
+        const created = [... target.match()];
         neighborhood.push.apply(neighborhood, created);
         if (false) console.log("adding: " + created.length + " triples: " + created.map(
           q => (['subject', 'predicate', 'object']).map(
