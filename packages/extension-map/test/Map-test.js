@@ -35,7 +35,7 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
     // Lean on ShExNode to load all the schemas and data graphs.
     const loads = await Promise.all([ShExNode.load({shexc: srcSchemas}, {turtle: [inputDataFilePath]}, {index: true}),
                                      ShExNode.load({shexc: targetSchemas}, {turtle: [expectedRdfFilePath]}, {index: true})])
-    loads[0].data.toString = loads[1].data.toString = graphToString;
+    // loads[0].data.toString = loads[1].data.toString = g => graphToString(g);
     const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
     const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }
     return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
@@ -101,7 +101,7 @@ function materialize (registered, schema, resultBindings, createRoot) {
   return store
 }
 
-if (false) describe('A ShEx Mapper', function () {
+describe('A ShEx Mapper', function () {
   var tests = [
     ["there", ["Map/BPDAMFHIR/BPFHIR.shex"], ["Map/BPDAMFHIR/BPunitsDAM.shex"], "Map/BPDAMFHIR/BPFHIR.ttl", "tag:BPfhir123", "tag:b0", null, "Map/BPDAMFHIR/BPunitsDAM.ttl", true],
     ["back" , ["Map/BPDAMFHIR/BPunitsDAM.shex"], ["Map/BPDAMFHIR/BPFHIR.shex"], "Map/BPDAMFHIR/BPunitsDAM.ttl", "tag:b0", "tag:BPfhir123", null, "Map/BPDAMFHIR/BPFHIR.ttl", true],
@@ -149,7 +149,7 @@ before(() => {
   return Promise.all(Awaiting)
 })
 
-xdescribe('Examples manifest', function () {
+describe('Examples manifest', function () {
   Examples.forEach((manifest) => {
     const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
     if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))

@@ -92,6 +92,53 @@ numericParsers[XSD + "double" ] = function (label, parseError) {
   return Number(label);
 };
 
+function testRange (value, datatype, parseError) {
+  const ranges = {
+    //    integer            -1 0 1 +1 | "" -1.0 +1.0 1e0 NaN INF
+    //    decimal            -1 0 1 +1 -1.0 +1.0 | "" 1e0 NaN INF
+    //    float              -1 0 1 +1 -1.0 +1.0 1e0 1E0 NaN INF -INF | "" +INF
+    //    double             -1 0 1 +1 -1.0 +1.0 1e0 1E0 NaN INF -INF | "" +INF
+    //    nonPositiveInteger -1 0 +0 -0 | 1 +1 1a a1
+    //    negativeInteger    -1 | 0 +0 -0 1
+    //    long               -1 0 1 +1 |
+    //    int                -1 0 1 +1 |
+    //    short              -32768 0 32767 | -32769 32768
+    //    byte               -128 0 127 | "" -129 128
+    //    nonNegativeInteger 0 -0 +0 1 +1 | -1
+    //    unsignedLong       0 1 | -1
+    //    unsignedInt        0 1 | -1
+    //    unsignedShort      0 65535 | -1 65536
+    //    unsignedByte       0 255 | -1 256
+    //    positiveInteger    1 | -1 0
+    //    string             "" "a" "0"
+    //    boolean            true false 0 1 | "" TRUE FALSE tRuE fAlSe -1 2 10 01
+    //    dateTime           "2012-01-02T12:34:56.78Z" | "" "2012-01-02T" "2012-01-02"
+    integer:            { min: -Infinity           , max: Infinity },
+    decimal:            { min: -Infinity           , max: Infinity },
+    float:              { min: -Infinity           , max: Infinity },
+    double:             { min: -Infinity           , max: Infinity },
+    nonPositiveInteger: { min: -Infinity           , max: 0        },
+    negativeInteger:    { min: -Infinity           , max: -1       },
+    long:               { min: -9223372036854775808, max: 9223372036854775807 },
+    int:                { min: -2147483648         , max: 2147483647 },
+    short:              { min: -32768              , max: 32767    },
+    byte:               { min: -128                , max: 127      },
+    nonNegativeInteger: { min: 0                   , max: Infinity },
+    unsignedLong:       { min: 0                   , max: 18446744073709551615 },
+    unsignedInt:        { min: 0                   , max: 4294967295 },
+    unsignedShort:      { min: 0                   , max: 65535    },
+    unsignedByte:       { min: 0                   , max: 255      },
+    positiveInteger:    { min: 1                   , max: Infinity }
+  }
+  const parms = ranges[datatype.substr(XSD.length)];
+  if (!parms) throw Error("unexpected datatype: " + datatype);
+  if (value < parms.min) {
+    parseError("\"" + value + "\"^^<" + datatype + "> is less than the min:", parms.min);
+  } else if (value > parms.max) {
+    parseError("\"" + value + "\"^^<" + datatype + "> is greater than the max:", parms.min);
+  }
+};
+
 /*
 function intSubType (spec, label, parseError) {
   const ret = numericParsers[XSD + "integer"](label, parseError);
@@ -710,10 +757,14 @@ function ShExMaterializer_constructor(schema, mapper, options) {
    */
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     const errors = [];
+    const label = value.value;
+    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
+    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
       const errorStr = Array.prototype.join.call(arguments, "");
-      errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      return false;
     }
     // if (negated) ;
     if (false) {
@@ -736,49 +787,115 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         }
       }
 
-      if (valueExpr.datatype  && valueExpr.values  ) validationError("found both datatype and values in "   +tripleConstraint);
+      if (valueExpr.datatype  && valueExpr.values) validationError("found both datatype and values in " + valueExpr);
 
       if (valueExpr.datatype) {
         if (!ShExTerm.isLiteral(value)) {
-          validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
+          validationError("mismatched datatype: " + JSON.stringify(ldify(value)) + " is not a literal with datatype " + valueExpr.datatype);
         }
         else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
           validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        }
+        else if (numeric) {
+          testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
+        }
+        else if (valueExpr.datatype === XSD + "boolean") {
+          if (label !== "true" && label !== "false" && label !== "1" && label !== "0")
+            validationError("illegal boolean value: " + label);
+        }
+        else if (valueExpr.datatype === XSD + "dateTime") {
+          if (!label.match(/^[+-]?\d{4}-[01]\d-[0-3]\dT[0-5]\d:[0-5]\d:[0-5]\d(\.\d+)?([+-][0-2]\d:[0-5]\d|Z)?$/))
+            validationError("illegal dateTime value: " + label);
         }
       }
 
       if (valueExpr.values) {
         if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          if (!(typeof v === "object" && "value" in v))
-            return false;
           const ld = ldify(value);
-          return v.value === ld.value &&
-            v.type === ld.type &&
-            v.language === ld.language;
+          if (v.type === "Language") {
+            return v.languageTag === ld.language; // @@ use equals/normalizeTest
+          }
+          if (!(typeof v === "object" && "value" in v)) // don't check for equivalent term if not a simple literal
+            return false;
+          return v.value === label
+            && (!("type" in v) || v.type === value.datatype.value)
+            && (!("language" in v) || v.language === value.language);
         }, false)) {
           // literal match
-        } else if (valueExpr.values.indexOf(value) !== -1) {
+        } else if (valueExpr.values.indexOf(label) !== -1) {
           // trivial match
         } else {
           if (!(valueExpr.values.some(function (valueConstraint) {
-            if (typeof valueConstraint === "object" && !("value" in valueConstraint)) {
-              expect(valueConstraint, "type", "StemRange");
-              if (typeof valueConstraint.stem === "object") {
+            if (typeof valueConstraint === "object" && !("value" in valueConstraint)) { // i.e. not a simple term
+              if (!("type" in valueConstraint))
+                runtimeError("expected "+JSON.stringify(valueConstraint)+" to have a 'type' attribute.");
+              const ExpectedTypePattern = /(Iri|Literal|Language)(Stem)?(Range)?/;
+              const matchType = valueConstraint.type.match(ExpectedTypePattern);
+              if (!matchType)
+                runtimeError("expected type attribute '" + valueConstraint.type + "' to match " + ExpectedTypePattern + ".");
+              const [undefined, valType, isStem, isRange] = matchType;
+              if (valType === 'Iri') {
+                if (value.termType !== 'NamedNode')
+                  return false;
+              } else {
+                if (value.termType !== 'Literal')
+                  return false;
+              }
+
+              /* expect N3.js literals with {Literal,Language}StemRange
+               *       or non-literals with IriStemRange
+               */
+              function normalizedTest (val, ref, func) {
+                if (["Literal", "Language"].indexOf(valType) !== -1) { // ShExTerm.isLiteral(val)
+                  if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
+                    return func(ShExTerm.getLiteralValue(val), ref);
+                  } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
+                    return func(ShExTerm.getLiteralLanguage(val) || null, ref);
+                  } else {
+                    return validationError("literal " + JSON.stringify(val) + " not comparable with non-literal " + ref);
+                  }
+                } else {
+                  if (["IriStem", "IriStemRange"].indexOf(valueConstraint.type) === -1) {
+                    return validationError("nonliteral " + JSON.stringify(val) + " not comparable with literal " + JSON.stringify(ref));
+                  } else {
+                    return func(ShExTerm.getLiteralValue(val), ref);
+                  }
+                }
+              }
+              function startsWith (val, ref) {
+                return normalizedTest(val, ref, (l, r) => {
+                  return (valueConstraint.type === "LanguageStem" ||
+                          valueConstraint.type === "LanguageStemRange") ?
+                    // rfc4647 basic filtering
+                    l !== null && (l === r || r === "" || l[r.length] === "-") :
+                    // simple substring
+                    l.startsWith(r);
+                });
+              }
+              function equals (val, ref) {
+                return normalizedTest(val, ref, (l, r) => { return l === r; });
+              }
+
+              if (!isTerm(valueConstraint.stem)) {
                 expect(valueConstraint.stem, "type", "Wildcard");
                 // match whatever but check exclusions below
               } else {
-                if (!(value.startsWith(valueConstraint.stem))) {
+                if (!(startsWith(value, valueConstraint.stem))) {
                   return false;
                 }
               }
               if (valueConstraint.exclusions) {
                 return !valueConstraint.exclusions.some(function (c) {
-                  if (typeof c === "object") {
-                    expect(c, "type", "Stem");
-                    return value.startsWith(c.stem);
+                  if (!isTerm(c)) {
+                    if (!("type" in c))
+                      runtimeError("expected "+JSON.stringify(c)+" to have a 'type' attribute.");
+                    const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
+                    if (stemTypes.indexOf(c.type) === -1)
+                      runtimeError("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'.");
+                    return startsWith(value, c.stem);
                   } else {
-                    return value === c;
+                    return equals(value, c);
                   }
                 });
               }
@@ -787,27 +904,23 @@ function ShExMaterializer_constructor(schema, mapper, options) {
               // ignore -- would have caught it above
             }
           }))) {
-            validationError("value " + value + " not found in set " + valueExpr.values);
+            validationError("value " + label + " not found in set " + JSON.stringify(valueExpr.values));
           }
         }
       }
     }
 
     if ("pattern" in valueExpr) {
-      const regexp = new RegExp(valueExpr.pattern);
-      if (!(getLexicalValue(value).match(regexp)))
-        validationError("value " + value + " did not match pattern " + valueExpr.pattern);
+      const regexp = "flags" in valueExpr ?
+	  new RegExp(valueExpr.pattern, valueExpr.flags) :
+	  new RegExp(valueExpr.pattern);
+      if (!(label.match(regexp)))
+        validationError("value " + label + " did not match pattern " + valueExpr.pattern);
     }
-
-    const label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
-      ShExTerm.isBlank(value) ? value.substring(2) :
-      value;
-    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     Object.keys(stringTests).forEach(function (test) {
       if (test in valueExpr && !stringTests[test](label, valueExpr[test])) {
-        validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
+        validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + label);
       }
     });
 
@@ -815,10 +928,10 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       if (test in valueExpr) {
         if (numeric) {
           if (!numericValueTests[test](numericParsers[numeric](label, validationError), valueExpr[test])) {
-            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
+            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + label);
           }
         } else {
-          validationError("facet violation: numeric facet " + test + " can't apply to " + value);
+          validationError("facet violation: numeric facet " + test + " can't apply to " + label);
         }
       }
     });
@@ -827,14 +940,25 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       if (test in valueExpr) {
         if (numeric === XSD + "integer" || numeric === XSD + "decimal") {
           if (!decimalLexicalTests[test](""+numericParsers[numeric](label, validationError), valueExpr[test])) {
-            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
+            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + label);
           }
         } else {
-          validationError("facet violation: numeric facet " + test + " can't apply to " + value);
+          validationError("facet violation: numeric facet " + test + " can't apply to " + label);
         }
       }
     });
-    return errors;
+    const ret = {
+      type: null,
+      focus: ldify(value),
+      shapeExpr: valueExpr
+    };
+    if (errors.length) {
+      ret.type = "NodeConstraintViolation";
+      ret.errors = errors;
+    } else {
+      ret.type = "NodeConstraintTest";
+    }
+    return ret;
   };
 
   this.semActHandler = {

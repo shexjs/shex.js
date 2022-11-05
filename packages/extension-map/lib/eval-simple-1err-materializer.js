@@ -478,8 +478,11 @@ function compileNFA (schema, shape) {
           function diveDirect (focus, shapeLabel) {
             return diver(focus, shapeLabel, direct);
           }
-          if ("valueExpr" in ptr)
-            [].push.apply(errors, checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect));
+          if ("valueExpr" in ptr) {
+            const sub = checkValueExpr(ptr.inverse ? triple.subject : triple.object, ptr.valueExpr, diveRecurse, diveDirect);
+            if ("errors" in sub)
+              [].push.apply(errors, sub.errors);
+          }
 
           if (errors.length === 0 && "semActs" in m.c &&
               !semActHandler.dispatchAll(m.c.semActs, triple, ret))
