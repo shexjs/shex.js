@@ -161,7 +161,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           for (let repetition = 0; repetition < maxAdd; ++repetition) {
             curSubjectx.cs = B();
             if (recurse) {
-              const res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+              const res = checkValueExpr(api.ShExTerm.n3idTermToRdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
               if ("errors" in res)
                 break;
             }
@@ -185,7 +185,11 @@ function trivialMaterializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = !shape || shape === validator.start ? schema.start : shape;
+      shape = !shape || shape === validator.start
+        ? schema.start
+        : schema.shapes.indexOf(shape) !== -1
+        ? shape
+        : this._lookupShape(shape);
       target = target || new config.rdfjs.Store();
       // target.addPrefixes(schema.prefixes); // not used, but seems polite
 

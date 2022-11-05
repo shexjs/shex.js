@@ -8,6 +8,8 @@
 
 const ShExMapMaterializerCjsModule = function (config) {
 
+const Start = config.Validator.start;
+
 // interface constants
 const InterfaceOptions = {
   "or": {
@@ -160,27 +162,29 @@ function makeCache () {
   const _keys = {}; // _keys[http://abcd] = [obj1, obj2]
   const _vals = {}; // _vals[http://abcd] = [res1, res2]
   return {
-    cached: function (point, shape) {
-      let cache = _keys[point];
+    cached: function (focus, shape) {
+     const key = ShExTerm.rdfJsTermToTurtle(focus);
+      let cache = _keys[key];
       if (!cache) {
-        _keys[point] = cache = [];
-        _vals[point] = [];
+        _keys[key] = cache = [];
+        _vals[key] = [];
         return undefined;
       }
       const idx = cache.indexOf(shape);
-      return idx === -1 ? undefined : _vals[point][idx];
+      return idx === -1 ? undefined : _vals[key][idx];
     },
-    remember: function (point, shape, res) {
-      const cache = _keys[point];
+    remember: function (focus, shape, res) {
+     const key = ShExTerm.rdfJsTermToTurtle(focus);
+      const cache = _keys[key];
       if (!cache) {
-        _keys[point] = [];
-        _vals[point] = [];
+        _keys[key] = [];
+        _vals[key] = [];
       } else if (cache.indexOf(shape) !== -1) {
         // we're conservative in the use here.
         throw Error("not expecting duplicate key " + key);
       }
-      _keys[point].push(shape);
-      _vals[point].push(res);
+      _keys[key].push(shape);
+      _vals[key].push(res);
     }
   };
 }
@@ -260,6 +264,21 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     };
   };
 
+  this.validateShapeMap = function (db, shapeMap, depth, seen) {
+    return shapeMap.map(pair => {
+      let time = new Date();
+      const res = this.validate(db, ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, depth, seen); // really tracker and seen
+      time = new Date() - time;
+      return {
+        node: pair.node,
+        shape: pair.shape,
+        status: "errors" in res ? "nonconformant" : "conformant",
+        appinfo: res,
+        elapsed: time
+      };
+    });
+  }
+
   /* validate - test point in db against the schema for labelOrShape
    * depth: level of recurssion; for logging.
    */
@@ -276,18 +295,18 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     if (!(labelOrShape in this.schema._index.shapeExprs))
       runtimeError("shape " + labelOrShape + " not defined");
 
-    const shapeLabel = labelOrShape; // for clarity
+    const label = labelOrShape; // for clarity
     if (seen === undefined)
       seen = {};
-    const seenKey = point + "|" + shapeLabel;
+    const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + (label === Start ? "_: -start-" : label);
     if (seenKey in seen)
       return {
         type: "Recursion",
         node: ldify(point),
-        shape: shapeLabel
+        shape: label
       };
-    seen[seenKey] = { point: point, shapeLabel: shapeLabel };
-    const ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[shapeLabel], shapeLabel, depth, seen);
+    seen[seenKey] = { point: point, shapeLabel: label };
+    const ret = this._validateShapeDecl(db, point, schema._index.shapeExprs[label], label, depth, seen);
     delete seen[seenKey];
     return ret;
   }

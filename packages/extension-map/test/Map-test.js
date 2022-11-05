@@ -74,12 +74,11 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
 function testGraph (got, expected, mapstr) {
   const passed = graphEquals(got, expected);
   if (!passed) {
-    expected.toString = got.toString = graphToString;
     maybeLog(mapstr);
     maybeLog("output:");
-    maybeLog(got.toString());
+    maybeLog(graphToString(got));
     maybeLog("expect:");
-    maybeLog(expected.toString());
+    maybeLog(graphToString(expected));
     // console.log(got.toString(), "\n--\n", expected.toString());
   }
   expect(passed).to.be.true;
@@ -94,7 +93,9 @@ function trivial (registered, schema, resultBindings, createRoot) {
 function materialize (registered, schema, resultBindings, createRoot) {
   const materializer = Mapper.materializer.construct(schema, registered, {});
   const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
-  const res2 = materializer.validate(binder, createRoot, undefined)
+  const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.start}])
+  if ("errors" in res2)
+    throw Error(`unexpectd materialization error`)
   const store = new RdfJs.Store()
   store.addQuads(ShExUtil.valToN3js(res2, DataFactory))
   return store
@@ -151,6 +152,8 @@ before(() => {
 xdescribe('Examples manifest', function () {
   Examples.forEach((manifest) => {
     const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
+    if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))
+      return;
     const createRoot = manifest.createRoot.startsWith('_:')
           ? manifest.createRoot
           : manifest.createRoot.substr(1, manifest.createRoot.length-2)
@@ -217,12 +220,12 @@ async function parseTurtle (text, url) {
   })
 }
 
-function graphToString () {
+function graphToString (g) {
   var output = '';
   var w = new (require("n3")).Writer({
       write: function (chunk, encoding, done) { output += chunk; done && done(); },
   });
-  w.addQuads([... this.match(null, null, null, null)]); // is this kosher with no end method?
+  w.addQuads([... g.match(null, null, null, null)]); // is this kosher with no end method?
   return "{\n" + output + "\n}";
 }
 
@@ -286,8 +289,8 @@ function findIsomorphism (g, right, l2r, r2l) {
 
     if (!add(matchTarget.subject, triple.subject) || // If the bindings for tₗ.s→tᵣ.s fail
         !add(matchTarget.object, triple.object) ||   // or the bindings for tₗ.o→tᵣ.o fail
-        !findIsomorphism(g, right, l2r, r2l)) {                       // of the remaining triples fail,
-      for (let {leftKey, rightKey} in trialMappings) {
+        !findIsomorphism(g, right, l2r, r2l)) {      // of the remaining triples fail,
+      for (let {leftKey, rightKey} of trialMappings) {
         delete r2l[rightKey];
         delete l2r[leftKey];
       };
@@ -340,95 +343,8 @@ class OrderedStore {
   }
 }
 
-function testEquiv (name, g1, g2, equals, mapping) {
-  it("should test " + name + " to be " + equals, function () {
-    var l = new OrderedStore(); l.toString = graphToString;
-    var r = new OrderedStore(); r.toString = graphToString;
-    g1.forEach(function (triple) { l.addQuad(n3idQuadToRdfJs(triple[0], triple[1], triple[2])) });
-    g2.forEach(function (triple) { r.addQuad(n3idQuadToRdfJs(triple[0], triple[1], triple[2])) });
-    var m = {};
-    var ret = graphEquals(l, r, m);
-    expect(ret).to.equal(equals, m);
-    if (mapping) {
-      const f = Object.keys(m).reduce((acc, key) => {
-        acc[key] = ShExTerm.rdfJsTermToTurtle(m[key]);
-        return acc;
-      }, {});
-      if (Array.isArray(mapping)) {
-        var found = 0;
-        mapping.forEach(function (thisMap) {
-          try {
-            expect(f).to.deep.equal(thisMap);
-            ++found;
-          } catch (e) {
-          }
-        });
-        if (found !== 1) // slightly misleading error, but adequate.
-          expect(f).to.deep.equal(mapping);
-      } else {
-        expect(f).to.deep.equal(mapping);
-      }
-    }
-  });
-}
-
-/** N3id functions
- * Some tests and algorithms use n3.js ids as syntax for input graphs in tests.
- *   NamedNode: bare word, e.g. http://a.example/
- *   BlankNode: "_:" + label, e.g. _:b1
- *   Literal: quoted value plus ntriples lang or datatype, e.g:
- *     "I said \"Hello World\"."
- *     "I said \"Hello World\"."@en
- *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
- */
-
-/**
- * Map an N3id quad to an RdfJs quad
- * @param {*} s subject
- * @param {*} p predicate
- * @param {*} o object
- * @param {*} g graph
- * @returns RdfJs quad
- */
-function n3idQuadToRdfJs (s, p, o, g) {
-  return new DataFactory.quad(
-    n3idTermToRdfJs(s),
-    n3idTermToRdfJs(p),
-    n3idTermToRdfJs(o),
-    g ? n3idTermToRdfJs(g) : DataFactory.DefaultGraph,
-  );
-}
-
-/**
- * Map an N3id term to an RdfJs Term.
- * @param {*} term N3Id term
- * @returns RdfJs Term
- */
-function n3idTermToRdfJs (term) {
-  if (term[0] === "_" && term[1] === ":")
-    return new DataFactory.blankNode(term.substr(2));
-
-  if (term[0] === "\"" || term[0] === "'") {
-    const closeQuote = term.lastIndexOf(term[0]);
-    if (closeQuote === -1)
-      throw new Error(`no close ${term[0]}: ${term}`);
-    const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
-    const langOrDt = term.length === closeQuote + 1
-          ? null
-          : term[closeQuote + 1] === "@"
-          ? term.substr(closeQuote + 2)
-          : parseDt(closeQuote + 1)
-    return new DataFactory.literal(value, langOrDt);
-  }
-
-  return new DataFactory.namedNode(term);
-
-  function parseDt (from) {
-    if (term[from] !== "^" || term[from + 1] !== "^")
-      throw new Error(`garbage after closing ": ${term}`);
-    return new DataFactory.namedNode(term.substr(from + 2));
-  }
-}
+const DAM = 'http://dam.example/med#';
+const XSD = 'http://www.w3.org/2001/XMLSchema#';
 
 describe("Graph equivalence", function () {
   var p12Permute = [
@@ -441,7 +357,7 @@ describe("Graph equivalence", function () {
     {"_:l1": "_:r2", "_:l2": "_:r3", "_:r3": "_:r1"},
     {"_:l1": "_:r3", "_:l2": "_:r1", "_:r3": "_:r2"},
     {"_:l1": "_:r3", "_:l2": "_:r2", "_:r3": "_:r1"}];
-  var tests = [
+  var equivTests = [
     {name:"spo123=spo123", p:true, m:{},
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
@@ -528,9 +444,58 @@ describe("Graph equivalence", function () {
     {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt2"]]},
+    {name:"order 1", p:true, m:[{"_:lsys": "_:rsys", "_:ldia": "_:rdia"}], l:[
+      [`_:lsys`,         `${DAM}units`,     `"mmHg"`            ],
+      [`_:lsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
+      [`tag:a.example/`, `${DAM}systolic`,  `_:lsys`            ],
+      [`tag:a.example/`, `${DAM}diastolic`, `_:ldia`            ],
+      [`_:ldia`,         `${DAM}value`,     `"110"^^${XSD}float`],
+      [`_:ldia`,         `${DAM}units`,     `"mmHg"`            ],
+    ], r:[
+      [`_:rdia`,         `${DAM}units`,     `"mmHg"`            ],
+      [`_:rsys`,         `${DAM}units`,     `"mmHg"`            ],
+      [`tag:a.example/`, `${DAM}systolic`,  `_:rsys`            ],
+      [`tag:a.example/`, `${DAM}diastolic`, `_:rdia`            ],
+      [`_:rdia`,         `${DAM}value`,     `"110"^^${XSD}float`],
+      [`_:rsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
+    ]},
   ];
-  if (TESTS)
-    tests = tests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
-  tests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
+
+  if (TESTS) // in case we want to filter these tests.
+    equivTests = equivTests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
+
+  equivTests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
 });
+
+function testEquiv (name, g1, g2, equals, mapping) {
+  it("should test " + name + " to be " + equals, function () {
+    var l = new OrderedStore(); // l.toString = g => graphToString(g);
+    var r = new OrderedStore(); // r.toString = g => graphToString(g);
+    g1.forEach(function (triple) { l.addQuad(ShExTerm.n3idQuadToRdfJs(triple[0], triple[1], triple[2])) });
+    g2.forEach(function (triple) { r.addQuad(ShExTerm.n3idQuadToRdfJs(triple[0], triple[1], triple[2])) });
+    var m = {};
+    var ret = graphEquals(l, r, m);
+    expect(ret).to.equal(equals, m);
+    if (mapping) {
+      const f = Object.keys(m).reduce((acc, key) => {
+        acc[key] = ShExTerm.rdfJsTermToTurtle(m[key]);
+        return acc;
+      }, {});
+      if (Array.isArray(mapping)) {
+        var found = 0;
+        mapping.forEach(function (thisMap) {
+          try {
+            expect(f).to.deep.equal(thisMap);
+            ++found;
+          } catch (e) {
+          }
+        });
+        if (found !== 1) // slightly misleading error, but adequate.
+          expect(f).to.deep.equal(mapping);
+      } else {
+        expect(f).to.deep.equal(mapping);
+      }
+    }
+  });
+}
 
