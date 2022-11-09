@@ -280,14 +280,13 @@ const ShExUtil = {
     v.cleanIds = function () {
       for (let k in knownTripleExpressions) {
         const known = knownTripleExpressions[k];
-        if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
+        if (known.refCount === 1 && known.expr.id.startsWith("_:"))
           delete known.expr.id;
       };
     }
 
     return v;
   },
-
 
   // tests
   // const shexr = ShExUtil.ShExRtoShExJ({ "type": "Schema", "shapes": [
@@ -1036,7 +1035,7 @@ const ShExUtil = {
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          ShExTerm.isIRI(obj[k])) {
+          (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) { // !! needs ShExTerm.ldTermIsIri
         obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
       }}
 

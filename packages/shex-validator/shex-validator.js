@@ -612,7 +612,11 @@ function ShExValidator_constructor(schema, db, options) {
         if (unexpectedTriples.length > 0)
           errors.push({
             type: "ClosedShapeViolation",
-            unexpectedTriples: unexpectedTriples
+            unexpectedTriples: unexpectedTriples.map(q => ({
+              subject: ldify(q.subject),
+              predicate: ldify(q.predicate),
+              object: ldify(q.object),
+            }))
           });
       }
 

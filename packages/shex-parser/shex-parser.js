@@ -205,7 +205,7 @@ class ShExCParserState {
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
-  schemaOptions = schemaOptions || {};
+                                                                                schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
   const prefixesCopy = {};
   for (const prefix in prefixes || {})

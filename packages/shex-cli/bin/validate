@@ -53,6 +53,7 @@ const ShExNode = require("@shexjs/node")({
   fetch: require('node-fetch'),
   jsonld: require('jsonld'),
 });
+const ExitCode = require('../lib/ExitCode')
 
 ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
@@ -107,13 +108,19 @@ const CommandLineOptions = [
 ];
 
 // Generate command line interface
-const CLI = require("command-line-args")(CommandLineOptions);
 const Argv1 = Path.relative("", process.argv[1]);
 const CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
+let CLI;
+try {
+  CLI = require("command-line-args")(CommandLineOptions);
+} catch (e) {
+  abort(e.message, ExitCode.bad_argument);
+}
 
-function abort (msg) {
-  console.error(msg);
-  console.error(require('command-line-usage')([
+function abort (msg, exitCode) {
+  const output = exitCode === ExitCode.help ? console.log : console.error;
+  output(msg);
+  output(require('command-line-usage')([
     {
       header: 'validate',
       content: 'validate nodes in RDF graphs with respect to ShEx schemas.'
@@ -157,8 +164,10 @@ function abort (msg) {
       content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
     }
   ]));
-  process.exit(1);
+  process.exit(exitCode);
 }
+
+class TermError extends Error {  }
 
 /* Leverage N3.js's relative IRI parsing.
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
@@ -169,7 +178,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
     return label in shapeIndex.shapeExprs;
   }
   function unknownShape (label) {
-    throw Error(label + " not found in\n" + Object.keys(shapeIndex.shapeExprs).map(n => "  " + n + "\n").join(''));
+    throw new TermError(label + " not found in\n" + Object.keys(shapeIndex.shapeExprs).map(n => "  " + n + "\n").join(''));
   }
   function someShape () {
     return Object.keys(shapeIndex.shapeExprs)[0];
@@ -270,7 +279,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
                    "")
                  );
       }
-      abort(msgs.join("\n"));
+      abort(msgs.join("\n"), ExitCode.bad_argument);
     }
     return nodes.map(node => ({ node: node, shape: shape }));
   }
@@ -340,8 +349,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     valParms.dataURL = valParms.json.splice(1); // push all but first into data
   }
   if (!valParms.serve) {
-    if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified");
-    if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified");
+    if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified", ExitCode.bad_argument);
+    if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
   }
   // Loaded schema and data.
   const schemaAndDataP = ShExNode.load(
@@ -430,7 +439,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       const res = findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaOptions, schemaAndData.schema.start).results;
 
       if (cmds["dry-run"])
-        return res;
+        return res || ExitCode.dry_run;
+
       const passed = !("errors" in res);
       // display results and return error codes
       if (expectedResults !== undefined) {
@@ -439,8 +449,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
               JSON.stringify(expectedResults) == JSON.stringify(res);
         if (!valParms.quiet)
           console.log(match);
-        // Exit status 3 means match failure.
-        return match ? 0 : 3;
+        return match ? ExitCode.val_match_pass : ExitCode.val_match_fail;
       } else {
         if (res.graph) {
           const wr = new N3.Writer({ prefixes: schemaAndData.dataMeta[0].prefixes || {} });
@@ -460,15 +469,30 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             console.log(text);
           else
             console.log(JSON.stringify(res, null, "  "));
-        } else if (!valParms.quiet && !valParms.slurp)
+          return passed ? ExitCode.graph_match_pass : ExitCode.graph_match_fail;
+        } else if (!valParms.quiet && !valParms.slurp) {
           console.log(JSON.stringify(res, null, "  "));
-        // Exit status 2 means validation failure.
-        return passed ? 0 : 2;
+          return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;
+        }
       }
     }
   } catch (e) {
-    console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
-    return 1;
+    let exitCode;
+    if (e instanceof TermError) {
+      exitCode = ExitCode.term_not_found;
+      console.error("Term argument error:", e.message);
+    } else if (e instanceof ShExNode.WebError) {
+      exitCode = ExitCode.resource_not_found;
+      console.error("Resource error:", e.message);
+    } else if (e instanceof Error) {
+      exitCode = e.code === "ENOENT" ? ExitCode.file_not_found : ExitCode.unspecified_error;
+      console.error(e.stack);
+    } else {
+      exitCode = ExitCode.unspecified_error;
+      console.error("Aborting:", e);
+      e = Error(e);
+    }
+    return exitCode;
   };
 
   function makeQueryTracker (schemaMeta, dataMeta) {
@@ -580,17 +604,10 @@ function getInvocation (parms) {
   return res.join(' ');
 }
 
-const cmds = (function () {
-  try {
-    return CLI;
-  } catch (e) {
-    console.error(e.message);
-    process.exit(1);
-  }
-})();
+const cmds = CLI;
 
 if (cmds.help)
-  abort("");
+  abort("", ExitCode.help);
 
 if ("duplicate-shape" in cmds)
   SchemaOptions.duplicateShape = cmds["duplicate-shape"];
@@ -646,9 +663,9 @@ function queueTests (tests, cmds) {
     const schemaOptions = Object.assign({}, SchemaOptions, test.schemaOptions || {});
     return loadSchemaAndData(test, test.validatorOptions, schemaOptions);
   })).then(function (results) {
-    // exit with a 0 if all returned 0, else a failure code.
-    return results.reduce(function (soFar, result) {
-      return soFar ? soFar : result;
+    // exit with a 0 if all returned 0, else hightest (worst) ExitCode.x code.
+    return results.reduce(function (worst, result) {
+      return worst < result ? result : worst;
     }, 0);
   });
 }
@@ -744,7 +761,7 @@ function loadRDFmanifest (cmds) {
       const schemaOptions = Object.assign({}, SchemaOptions);
       const traits = loaded.data.getQuads(subject, sht+"trait", null);
       traits.forEach(function (t) {
-        let tStr = ShExTerm.internalTerm(t.object).substr(sht.length);
+        let tStr = t.object.value.substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
         if (tStr in TraitToOption)
           validatorOptions[TraitToOption[tStr]] = tStr;
@@ -762,7 +779,7 @@ function loadRDFmanifest (cmds) {
                 } else {
                   const m = loaded.data.getQuads(action, sht+elt[0], null);
                   if (m.length > 0) {
-                    const v = ShExTerm.internalTerm(m[0].object);
+                    const v = ShExTerm.rdfJsTermToTurtle(m[0].object);
                     ret[elt[1]] = elt[2] ? [v] : v;
                   }
                 }
@@ -776,7 +793,7 @@ function loadRDFmanifest (cmds) {
     console.error("failed to load manifest file \"" +
                   ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
                   "\":", e, e.stack);
-    return 1;
+    return ExitCode.manifest_not_found;
   });
 }
 
@@ -896,11 +913,11 @@ function loadJSONmanifest (jsonManifests, parser) {
         return queueTests(d, cmds);
       } catch (e) {
         console.error("failed to process json manifest: " + (e.stack || e));
-        return 1;
+        return ExitCode.manifest_error;
       }
     }).catch(function (e) {
       console.error("failed to load json manifest: ", e.stack || e);
-      return 1;
+      return ExitCode.manifest_not_found;
     });
   });
 }
