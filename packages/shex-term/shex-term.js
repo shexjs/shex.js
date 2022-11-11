@@ -149,7 +149,7 @@ const ShExTermCjsModule = (function () {
   }
 
   function internalTermToTurtle (node, base, prefixes) {
-    if (isIRI(node)) {
+    if (typeof node === "string" && !node.startsWith("_:")) {
       // if (node === RDF_TYPE) // only valid in Turtle predicates
       //   return "a";
 
@@ -167,7 +167,7 @@ const ShExTermCjsModule = (function () {
       } else {
         return "<" + node + ">";
       }
-    } else if (isBlank(node)) {
+    } else if (typeof node === "string" && node.startsWith("_:")) {
       return node;
     } else if (isLiteral(node)) {
       let value = getLiteralValue(node);

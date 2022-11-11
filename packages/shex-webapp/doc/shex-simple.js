@@ -1414,7 +1414,7 @@ async function copyEditMapToFixedMap () {
   async function getQuads (s, p, o) {
     const get = s === ShEx.ShapeMap.focus ? "subject" : "object";
     return (await Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);// !!check
+      return Caches.inputData.meta.termToLex(t[get].id); // count on unpublished N3.js id API
     });
     function mine (term) {
       return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard

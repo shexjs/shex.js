@@ -1109,7 +1109,7 @@ async function materializeAsync () {
     outputShapeMap.forEach(pair => {
       try {
         const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const res = materializer.validate(binder, pair.node, pair.shape);
+        const res = materializer.validate(binder, ShEx.ShExTerm.n3idTermToRdfJs(pair.node), pair.shape);
         if ("errors" in res) {
           renderEntry( {
             node: pair.node,
@@ -1555,7 +1555,7 @@ async function copyEditMapToFixedMap () {
   async function getQuads (s, p, o) {
     const get = s === ShEx.ShapeMap.focus ? "subject" : "object";
     return (await Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
-      return Caches.inputData.meta.termToLex(t[get]);// !!check
+      return Caches.inputData.meta.termToLex(t[get].id); // count on unpublished N3.js id API
     });
     function mine (term) {
       return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
