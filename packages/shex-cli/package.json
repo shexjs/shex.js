@@ -35,7 +35,7 @@
     "koa": "^2.13.0",
     "koa-body": "^5.0.0",
     "n3": "^1.6.2",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^3.3.0",
     "shape-map": "1.0.0-alpha.15",
     "shex-examples": "^0.1.0"
   },
