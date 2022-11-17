@@ -11624,6 +11624,33 @@ if (true)
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /**
+ * Terms used in ShEx.
+ *
+ * There are four representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * 1. LD (short for JSON-LD) @ids used in ShExJ.
+ *   "http://a.example/some/Iri
+ *   "_:someBlankNode
+ *   { "value": "1.0", "datatype": "http://www.w3.org/2001/XMLSchema#float" }
+ *   { "value": "chat", "language": "fr" }
+ * 2. RdfJs Terms [RdfJsTerm] specification used in validation
+ *   { "termType": "NamedNode": "value": "http://a.example/some/Iri" }
+ *   { "termType": "BlankNode": "value": "someBlankNode" }
+ *   { "termType": "Literal": "value": "1.0", "datatype": "http://www.w3.org/2001/XMLSchema#float" }
+ *   { "termType": "Literal": "value": "chat", "language": "fr" }
+ * 3. Turtle representation is used for human interfaces
+ *   <http://a.example/some/Iri>, p:IRI, p:, :
+ *   _:someBlankNode, []
+ *   "1.0"^^<http://www.w3.org/2001/XMLSchema#float>, "1.0"^^xsd:float, 1.0
+ *   "chat"@fr
+ * 4. N3id - webapps and scripts that rely specifically on N3.js leverage the
+ *    fact that term.id is Turtle for all terms except typed literals which lack
+ *    <>s around data types:
+ *   "1.0"^^http://www.w3.org/2001/XMLSchema#float
+ *
+ * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
+ */
+
+/**
  *
  * isIRI, isBlank, getLiteralType, getLiteralValue
  */
@@ -11736,7 +11763,7 @@ const ShExTermCjsModule = (function () {
   }
 
   function rdfJsTermToTurtle (node) {
-    switch (node.termType) {  
+    switch (node.termType) {
     case ("NamedNode"):
       return node.value;
     case ("BlankNode"):
