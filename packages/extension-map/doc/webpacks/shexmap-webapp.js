@@ -752,17 +752,20 @@ class DcTap {
     const schema = {
       type: "Schema",
       shapes: this.shapes.map(sh => ({
-        type: "Shape",
+        type: "ShapeDecl",
         id: sh.shapeID,
-        expression: maybeAnd(sh.tripleConstraints.map(tc => Object.assign(
-          {
-            type: "TripleConstraint",
-            predicate: tc.propertyID,
-          },
-          tc.mandatory ? { min: 1 } : {},
-          tc.repeatable ? { max: -1 } : {},
-          shexValueExpr(tc),
-        )), "EachOf", "expressions")
+        shapeExpr: {
+          type: "Shape",
+          expression: maybeAnd(sh.tripleConstraints.map(tc => Object.assign(
+            {
+              type: "TripleConstraint",
+              predicate: tc.propertyID,
+            },
+            tc.mandatory ? { min: 1 } : {},
+            tc.repeatable ? { max: -1 } : {},
+            shexValueExpr(tc),
+          )), "EachOf", "expressions")
+        }
       }))
     }
     return schema
