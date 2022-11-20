@@ -291,11 +291,10 @@ const ShExLoaderCjsModule = function (config = {}) {
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
     try {
-      const s = parser.parse(text, url/*, opts, filename*/)
+      meta.prefixes = {};
+      const s = parser.parse(text, url, {meta}, /*filename*/)
       // !! horrible hack until I set a variable to know if there's a BASE.
       if (s.base === url) delete s.base
-      meta.prefixes = s._prefixes || {}
-      meta.base = s._base || meta.base
       loadSchemaImports(s, resourceLoadControler, schemaOptions)
       return Promise.resolve({mediaType, url, schema: s})
     } catch (e) {

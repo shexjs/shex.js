@@ -12539,9 +12539,9 @@ var __webpack_unused_export__;
   }
 
   // Parse a prefix out of a PName or throw Error
-  function parsePName (pname, meta) {
+  function parsePName (pname, meta, parserState) {
     const namePos = pname.indexOf(':');
-    return meta.expandPrefix(pname.substr(0, namePos)) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
+    return meta.expandPrefix(pname.substr(0, namePos), parserState) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   const EmptyObject = {  };
@@ -12597,14 +12597,14 @@ break;
 case 15:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
-        this.$ = { shape: expandPrefix(yy.schemaMeta.prefixes, $$[$0].substr(0, $$[$0].length - 1)) };
+        this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy) };
       
 break;
 case 16:
 
         $$[$0] = $$[$0].substr(1, $$[$0].length-1);
         const namePos = $$[$0].indexOf(':');
-        this.$ = { shape: expandPrefix(yy.schemaMeta.prefixes, $$[$0].substr(0, namePos)) + $$[$0].substr(namePos + 1) };
+        this.$ = { shape: yy.schemaMeta.expandPrefix($$[$0].substr(0, namePos), yy) + $$[$0].substr(namePos + 1) };
       
 break;
 case 17:
@@ -12708,10 +12708,10 @@ case 84:
       
 break;
 case 85: case 86:
-this.$ = parsePName($$[$0], yy.dataMeta);
+this.$ = parsePName($$[$0], yy.dataMeta, yy);
 break;
 case 87:
-this.$ = yy.dataMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1));;
+this.$ = yy.dataMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy);;
 break;
 case 88:
 
@@ -12720,10 +12720,10 @@ case 88:
       
 break;
 case 89: case 90:
-this.$ = parsePName($$[$0], yy.schemaMeta);
+this.$ = parsePName($$[$0], yy.schemaMeta, yy);
 break;
 case 91:
-this.$ = yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1));;
+this.$ = yy.schemaMeta.expandPrefix($$[$0].substr(0, $$[$0].length - 1), yy);;
 break;
         }
     }
@@ -12970,9 +12970,9 @@ class ResourceMetadata {
   }
 
   // Expand declared prefix or throw Error
-  expandPrefix (prefix) {
+  expandPrefix (prefix, parserState) {
     if (!(prefix in this.prefixes))
-      this.error(new Error('Parse error; unknown prefix "' + prefix + ':"'));
+      parserState.error(new Error('Parse error; unknown prefix "' + prefix + ':"'));
     return this.prefixes[prefix];
   }
 
@@ -13411,11 +13411,10 @@ const ShExLoaderCjsModule = function (config = {}) {
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
     try {
-      const s = parser.parse(text, url/*, opts, filename*/)
+      meta.prefixes = {};
+      const s = parser.parse(text, url, {meta}, /*filename*/)
       // !! horrible hack until I set a variable to know if there's a BASE.
       if (s.base === url) delete s.base
-      meta.prefixes = s._prefixes || {}
-      meta.base = s._base || meta.base
       loadSchemaImports(s, resourceLoadControler, schemaOptions)
       return Promise.resolve({mediaType, url, schema: s})
     } catch (e) {
@@ -14862,6 +14861,10 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
       ret = oldParse.call(parser, input, parserState);
     } catch (e) {
       errors.push(e);
+    }
+    if ("meta" in options) {
+      options.meta.base = parserState._base;
+      options.meta.prefixes = parserState._prefixes;
     }
     parserState.reset();
     errors.forEach(e => {
