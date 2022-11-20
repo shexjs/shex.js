@@ -40,9 +40,9 @@ describe("@shexjs/node", function () {
     // test returned structure.
     expect(schemaMeta).to.deep.equal([
       { "mediaType": "text/shex", "url": "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"),
-        "base": "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"), "prefixes": {} },
+        "base": "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"), "prefixes": {"": "http://a.example/"} },
       { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
-        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {} }
+        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} }
     ])
     const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type])
     expect(loadedShapes).to.deep.equal([
