@@ -30,6 +30,7 @@ da-web/
 .emacs.desktop*
 .dependabot/
 .idea/
+.vscode/
 
 *-stats.json
 
