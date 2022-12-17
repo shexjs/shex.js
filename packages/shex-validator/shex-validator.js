@@ -584,16 +584,23 @@ function ShExValidator_constructor(schema, db, options) {
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
       const localT2Tc = []; // subset of TCs assigned to shape.expression
+      const unexpectedOrds = [];
       const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
       t2tc.forEach((cNo, tNo) => {
         if (cNo !== NoTripleConstraint && cNo < extendsTCs.length) {
+          // allocate to EXTENDS
           for (let extNo of tc2exts[cNo]) {
             // allocated to multiple extends if diamond inheritance
             extendsToTriples[extNo].push(neighborhood[tNo]);
             localT2Tc[tNo] = NoTripleConstraint;
           }
         } else {
+          // allocate to local shape
           localT2Tc[tNo] = cNo;
+          if (cNo === NoTripleConstraint // didn't match anything
+              && tNo < outgoingLength // is an outgoing triple
+              && extras.indexOf(tNo) === -1) // isn't in EXTRAs
+            unexpectedOrds.push(tNo);
         }
       });
 
@@ -603,21 +610,18 @@ function ShExValidator_constructor(schema, db, options) {
             _seq(neighborhood.length).map(function () { return 0; });
 
       // Triples not mapped to triple constraints are not allowed in closed shapes.
-      if (shape.closed) {
-        const unexpectedTriples = neighborhood.slice(0, outgoingLength).filter((t, i) => {
-          return localT2Tc[i] === NoTripleConstraint && // didn't match a constraint
-            i >= extendsTCs.length && // wasn't allocated to an EXTENDS
-            extras.indexOf(i) === -1; // wasn't in EXTRAs.
-        });
-        if (unexpectedTriples.length > 0)
-          errors.push({
-            type: "ClosedShapeViolation",
-            unexpectedTriples: unexpectedTriples.map(q => ({
+      if (shape.closed && unexpectedOrds.length > 0) {
+        errors.push({
+          type: "ClosedShapeViolation",
+          unexpectedTriples: unexpectedOrds.map(tNo => {
+            q = neighborhood[tNo];
+            return {
               subject: ldify(q.subject),
               predicate: ldify(q.predicate),
               object: ldify(q.object),
-            }))
-          });
+            }
+          })
+        });
       }
 
       // Set usedTriples and constraintMatchCount.
