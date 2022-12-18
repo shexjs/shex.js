@@ -72,6 +72,7 @@ const CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean , description: "print extra information" },           //
   { name: "quiet",     alias: "q", type: Boolean , description: "don't print anything" },              // switch to logger
   { name: "terse",     alias: "Q", type: Boolean , description: "don't print diagnistics or advice" }, //
+  { name: "human",                type: Boolean , description: "print human-readable results" }, //
   { name: "query",                 type: Boolean , description: "show matching RDF graph" },
   { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
@@ -471,7 +472,13 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             console.log(JSON.stringify(res, null, "  "));
           return passed ? ExitCode.graph_match_pass : ExitCode.graph_match_fail;
         } else if (!valParms.quiet && !valParms.slurp) {
-          console.log(JSON.stringify(res, null, "  "));
+          console.log(
+            cmds["human"]
+              ? passed
+              ? `${res.node}@${res.shape}`
+              : ShExUtil.errsToSimple(res)
+              : JSON.stringify(res, null, "  ")
+          );
           return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;
         }
       }

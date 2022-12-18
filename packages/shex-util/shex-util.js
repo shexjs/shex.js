@@ -1825,21 +1825,7 @@ const ShExUtil = {
         })
       ).concat(["}"]);
     case "NodeConstraintViolation":
-      const elts = [];
-      if ('nodeKind' in val.shapeExpr) elts.push(`be a ${val.shapeExpr.nodeKind.toUpperCase()}`);
-      if ('datatype' in val.shapeExpr) elts.push(`have datatype ${val.shapeExpr.datatype}`);
-      if ('length' in val.shapeExpr) elts.push(`have length ${val.shapeExpr.length}`);
-      if ('minlength' in val.shapeExpr) elts.push(`have length at least ${val.shapeExpr.length}`);
-      if ('maxlength' in val.shapeExpr) elts.push(`have length at most ${val.shapeExpr.length}`);
-      if ('pattern' in val.shapeExpr) elts.push(`match regex ${val.shapeExpr.pattern}`);
-      if ('mininclusive' in val.shapeExpr) elts.push(`have value at least ${val.shapeExpr.mininclusive}`);
-      if ('minexclusive' in val.shapeExpr) elts.push(`have value more than ${val.shapeExpr.minexclusive}`);
-      if ('maxinclusive' in val.shapeExpr) elts.push(`have value at most ${val.shapeExpr.maxinclusive}`);
-      if ('maxexclusive' in val.shapeExpr) elts.push(`have value less than ${val.shapeExpr.maxexclusive}`);
-      if ('totaldigits' in val.shapeExpr) elts.push(`have have ${val.shapeExpr.totaldigits} digits`);
-      if ('fractiondigits' in val.shapeExpr) elts.push(`have have ${val.shapeExpr.fractiondigits} digits after the decimal`);
-      if ('values' in val.shapeExpr) elts.push(`have a value in [${this.trim(this.valuesToSimple(val.shapeExpr.values).join(', '), 80, /[, ]^>/)}]`);
-      return ["NodeConstraintError: expected to " + elts.join(', ')];
+      return ["NodeConstraintError: expected to " + this.nodeConstraintToSimple(val.shapeExpr).join(', ')];
     case "MissingProperty":
       return ["Missing property: " + val.property];
     case "NegatedProperty":
@@ -1873,6 +1859,24 @@ const ShExUtil = {
     }
   },
 
+  nodeConstraintToSimple: function (nc) {
+    const elts = [];
+    if ('nodeKind' in nc) elts.push(`be a ${nc.nodeKind.toUpperCase()}`);
+    if ('datatype' in nc) elts.push(`have datatype ${nc.datatype}`);
+    if ('length' in nc) elts.push(`have length ${nc.length}`);
+    if ('minlength' in nc) elts.push(`have length at least ${nc.length}`);
+    if ('maxlength' in nc) elts.push(`have length at most ${nc.length}`);
+    if ('pattern' in nc) elts.push(`match regex /${nc.pattern}/${nc.flags ? nc.flags : ''}`);
+    if ('mininclusive' in nc) elts.push(`have value at least ${nc.mininclusive}`);
+    if ('minexclusive' in nc) elts.push(`have value more than ${nc.minexclusive}`);
+    if ('maxinclusive' in nc) elts.push(`have value at most ${nc.maxinclusive}`);
+    if ('maxexclusive' in nc) elts.push(`have value less than ${nc.maxexclusive}`);
+    if ('totaldigits' in nc) elts.push(`have have ${nc.totaldigits} digits`);
+    if ('fractiondigits' in nc) elts.push(`have have ${nc.fractiondigits} digits after the decimal`);
+    if ('values' in nc) elts.push(`have a value in [${this.trim(this.valuesToSimple(nc.values).join(', '), 80, /[, ]^>/)}]`);
+    return elts;
+  },
+
   // static
   valuesToSimple: function (values) {
     return values.map(v => {
@@ -1892,7 +1896,7 @@ const ShExUtil = {
         str += ` excluding ${
 v.exclusions.map(excl => typeof excl === "string"
  ? excl
- : "anything starting with " + excl.stem).join(', ')
+ : "anything starting with " + excl.stem).join(' or ')
 }`;
 
       return str;
