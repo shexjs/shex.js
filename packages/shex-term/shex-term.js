@@ -140,7 +140,7 @@ const ShExTermCjsModule = (function () {
   function rdfJsTermToTurtle (node) {
     switch (node.termType) {
     case ("NamedNode"):
-      return node.value;
+      return "<" + node.value + ">";
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
@@ -388,6 +388,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     LdToRdfJsTerm,
     n3idQuadToRdfJs,
     n3idTermToRdfJs,
+    rdfJsTermToTurtle,
   }
 })();
 

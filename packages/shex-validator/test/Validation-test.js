@@ -191,6 +191,7 @@ describe("A ShEx validator", function () {
                       validator = ShExValidator.construct(schema, RdfJsDb(store), schemaOptions);
                       var testResults = TestExtension.register(validator, {ShExTerm});
                       var validationResult = validator.validate(map);
+                      expect(JSON.stringify(validationResult).match(/\[Object\]/)).to.be.null;
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
                       if (params.results !== "api") {

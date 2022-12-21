@@ -31,7 +31,7 @@
           "type": "ShapeNotFailure",
           "focus": "http://a.example/v1",
           "errors": [
-            "Error validating http://a.example/v1 as {\"type\":\"ShapeNot\",\"shapeExpr\":{\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\",\"http://a.example/v2\"]}}: expected NOT to pass"
+            "Error validating <http://a.example/v1> as {\"type\":\"ShapeNot\",\"shapeExpr\":{\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\",\"http://a.example/v2\"]}}: expected NOT to pass"
           ],
           "shapeExpr": {
             "type": "NodeConstraint",

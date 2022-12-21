@@ -278,7 +278,7 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) { return  n3idTermToTurtle(trm, new IRIResolver(ret.meta)); };
+  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, new IRIResolver(ret.meta)); };
   ret.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(ret.meta)); };
   ret.parse = async function (text, base) {
     const res = ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
@@ -542,7 +542,13 @@ return module.exports;
 
 
         function ldToTurtle (ld, termToLex) {
-          return typeof ld === "object" ? lit(ld) : termToLex(ld);
+          return typeof ld === "object"
+            ? lit(ld)
+            : termToLex(
+              ld.startsWith("_:")
+                ? RdfJs.DataFactory.blankNode(ld.substr(2))
+                : RdfJs.DataFactory.namedNode(ld)
+            );
           function lit (o) {
             let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
               return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
@@ -557,7 +563,7 @@ return module.exports;
 
 function makeShapeMapCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) { return  n3idTermToTurtle(trm, new IRIResolver(ret.meta)); };
+  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, new IRIResolver(ret.meta)); };
   ret.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(ret.meta)); };
   ret.parse = async function (text) {
     removeEditMapPair(null);
@@ -969,7 +975,7 @@ async function callValidator (done) {
         elt = $("<div class='human'/>").append(
           $("<span/>").text(resultStr),
           $("<span/>").text(
-            `${Caches.inputData.meta.termToLex(entry.node)}@${fails ? "!" : ""}${Caches.inputSchema.meta.termToLex(entry.shape)}`
+            `${ldToTurtle(entry.node, Caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${Caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
@@ -1134,7 +1140,7 @@ function addEditMapPairs (pairs, target) {
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ldToTurtle(term, Caches.inputSchema.meta.termToLex);
+    return term === ShEx.Validator.start ? START_SHAPE_LABEL : n3idTermToTurtle(term, Caches.inputSchema);
   }
 }
 
