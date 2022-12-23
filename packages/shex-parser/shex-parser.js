@@ -244,6 +244,10 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
     } catch (e) {
       errors.push(e);
     }
+    if ("meta" in options) {
+      options.meta.base = parserState._base;
+      options.meta.prefixes = parserState._prefixes;
+    }
     parserState.reset();
     errors.forEach(e => {
       if ("hash" in e) {
