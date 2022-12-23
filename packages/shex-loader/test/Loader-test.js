@@ -122,7 +122,7 @@ describe("@shexjs/loader", function () {
     // test returned structure.
     expect(schemaMeta).to.deep.equal([
       { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
-        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {} },
+        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} },
       { "mediaType": "text/shex", "url": "http://a.example/schemaAsText",
         "base": "http://a.example/schemaAsText", "prefixes": {} },
       { "mediaType": "text/shex", "url": "http://a.example/ShExJ",
@@ -352,7 +352,7 @@ IMPORT <3circRefS3>
     // test returned structure.
     expect(schemaMeta).to.deep.equal([
       { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
-        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {} }
+        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} }
     ])
     expect(schema).to.deep.equal({
       "type": "Schema", "shapes": [
