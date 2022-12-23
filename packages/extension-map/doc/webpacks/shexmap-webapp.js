@@ -15072,9 +15072,30 @@ const ShExTermCjsModule = (function () {
           ? ""
           : "^^" + node.datatype.value
       );
-    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
+    default: throw Error(`rdfJsTermToTurtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
     }
   }
+
+  function rdfJsTermToLd (term) {
+    switch (term.termType) {
+    case "NamedNode": return term.value;
+    case "BlankNode": return "_:" + term.value;
+    case "Literal":
+      const ret = { value: term.value };
+      const dt = term.datatype.value;
+      const lang = term.language;
+      if (dt &&
+          dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+          dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+        ret.type = dt;
+      if (lang)
+        ret.language = lang;
+      return ret;
+    default:
+      throw Error(`rdfJsTermToLd: Unrecognized termType ${term.termType} in ${JSON.stringify(term)}`);
+    }
+  }
+
 
   function internalTriple (triple) { // !!rdfjsTripleToInternal
     return {
@@ -15310,6 +15331,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     n3idQuadToRdfJs,
     n3idTermToRdfJs,
     rdfJsTermToTurtle,
+    rdfJsTermToLd,
   }
 })();
 

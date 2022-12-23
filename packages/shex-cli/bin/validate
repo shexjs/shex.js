@@ -786,7 +786,7 @@ function loadRDFmanifest (cmds) {
                 } else {
                   const m = loaded.data.getQuads(action, sht+elt[0], null);
                   if (m.length > 0) {
-                    const v = ShExTerm.rdfJsTermToTurtle(m[0].object);
+                    const v = ShExTerm.rdfJsTermToLd(m[0].object);
                     ret[elt[1]] = elt[2] ? [v] : v;
                   }
                 }
