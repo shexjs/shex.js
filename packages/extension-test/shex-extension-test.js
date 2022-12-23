@@ -3,7 +3,7 @@ function register (validator, api) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
-  const pattern = /^ *(fail|print) *\( *(?:(\"(?:[^\\"]|\\\\|\\")*\")|([spo])) *\) *$/;
+  const pattern = /^ *(fail|print) *\( *(?:("(?:[^\\"]|\\\\|\\")*")|([spo])) *\) *$/;
 
   validator.semActHandler.results[TestExt] = [];
   validator.semActHandler.register(
