@@ -1365,7 +1365,6 @@ async function copyEditMapToFixedMap () {
       return acc;
     const smparser = ShEx.ShapeMapParser.construct(
       Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
-    const nodes = [];
     try {
       const sm = smparser.parse(node + '@' + shape)[0];
       const added = typeof sm.node === "string" || "@value" in sm.node
@@ -1382,7 +1381,6 @@ async function copyEditMapToFixedMap () {
         $(queryPair).find(".inputShape").addClass("error");
       }
       failMessage(e, "parsing Edit Map", node + '@' + shape);
-      nodes = Promise.resolve([]); // skip this entry
       return acc;
     }
   }, []);
