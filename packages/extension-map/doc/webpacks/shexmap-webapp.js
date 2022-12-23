@@ -15058,7 +15058,7 @@ const ShExTermCjsModule = (function () {
     return node;
   }
 
-  function rdfJsTermToTurtle (node) {
+  function rdfJsTermToTurtle (node, resolver) {
     switch (node.termType) {
     case ("NamedNode"):
       return "<" + node.value + ">";
