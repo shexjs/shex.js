@@ -867,7 +867,7 @@ function ShExValidator_constructor(schema, db, options) {
     }
 
     visitor.visitShapeNot = function (expr, min, max) {
-      throw 1;
+      return this.visitShapeExpr(expr.shapeExpr);
     }
 
     visitor.visitShapeExternal = emptyShapeExpr
