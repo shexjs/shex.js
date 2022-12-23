@@ -45,22 +45,11 @@ try {
       ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
       : ShEx.RdfJsDb(makeStaticDB(msg.data.data));
 
-    // const dataURL = "data:text/json," +
-    //     JSON.stringify(
-    //       ShEx.Util.AStoShExJ(
-    //         ShEx.Util.canonicalize(
-    //           msg.data.schema)));
-    const alreadLoaded = {
-      schema: msg.data.schema,
-      url: msg.data.schemaURL
-    };
-    // shex-loader loads IMPORTs and tests the schema for structural faults.
-    const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null)
     let createOpts = msg.data.options;
     createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results
     validator = ShEx.Validator.construct(
-      loaded.schema,
+      msg.data.schema,
       inputData,
       createOpts
     );
