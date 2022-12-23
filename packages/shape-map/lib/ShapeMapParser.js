@@ -127,9 +127,9 @@ class ResourceMetadata {
   }
 
   // Expand declared prefix or throw Error
-  expandPrefix (prefix) {
+  expandPrefix (prefix, parserState) {
     if (!(prefix in this.prefixes))
-      this.error(new Error('Parse error; unknown prefix "' + prefix + ':"'));
+      parserState.error(new Error('Parse error; unknown prefix "' + prefix + ':"'));
     return this.prefixes[prefix];
   }
 

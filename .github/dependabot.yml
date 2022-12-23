@@ -8,6 +8,9 @@ updates:
     open-pull-requests-limit: 10
     labels: [dependencies]
     versioning-strategy: increase
+    ignore:
+      - dependency-name: "node-fetch"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
@@ -16,3 +19,6 @@ updates:
       time: "10:00"
     open-pull-requests-limit: 10
     labels: [dependencies]
+    ignore:
+      - dependency-name: "node-fetch"
+        update-types: ["version-update:semver-major"]

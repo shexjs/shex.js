@@ -95,9 +95,9 @@
   }
 
   // Parse a prefix out of a PName or throw Error
-  function parsePName (pname, meta) {
+  function parsePName (pname, meta, parserState) {
     const namePos = pname.indexOf(':');
-    return meta.expandPrefix(pname.substr(0, namePos)) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
+    return meta.expandPrefix(pname.substr(0, namePos), parserState) + ShExUtil.unescapeText(pname.substr(namePos + 1), pnameEscapeReplacements);
   }
 
   const EmptyObject = {  };
@@ -246,12 +246,12 @@ statusAndShape:
     | ATSTART	-> { shape: ShapeMap.start }
     | ATPNAME_NS	{
         $1 = $1.substr(1, $1.length-1);
-        $$ = { shape: expandPrefix(yy.schemaMeta.prefixes, $1.substr(0, $1.length - 1)) };
+        $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1), yy) };
       }
     | ATPNAME_LN	{
         $1 = $1.substr(1, $1.length-1);
         const namePos = $1.indexOf(':');
-        $$ = { shape: expandPrefix(yy.schemaMeta.prefixes, $1.substr(0, namePos)) + $1.substr(namePos + 1) };
+        $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, namePos), yy) + $1.substr(namePos + 1) };
       }
     ;
 
@@ -433,9 +433,9 @@ nodeIri:
         const node = ShExUtil.unescapeText($1.slice(1,-1), {});
         $$ = yy.dataMeta.base === null || absoluteIRI.test(node) ? node : yy.dataMeta._resolveIRI(node)
       }
-    | PNAME_LN	-> parsePName($1, yy.dataMeta)
-    | APPINFO_COLON	-> parsePName($1, yy.dataMeta)
-    | PNAME_NS	-> yy.dataMeta.expandPrefix($1.substr(0, $1.length - 1));
+    | PNAME_LN	-> parsePName($1, yy.dataMeta, yy)
+    | APPINFO_COLON	-> parsePName($1, yy.dataMeta, yy)
+    | PNAME_NS	-> yy.dataMeta.expandPrefix($1.substr(0, $1.length - 1), yy);
     ;
 
 shapeIri:
@@ -443,8 +443,8 @@ shapeIri:
         const shape = ShExUtil.unescapeText($1.slice(1,-1), {});
         $$ = yy.schemaMeta.base === null || absoluteIRI.test(shape) ? shape : yy.schemaMeta._resolveIRI(shape)
       }
-    | PNAME_LN	-> parsePName($1, yy.schemaMeta)
-    | APPINFO_COLON	-> parsePName($1, yy.schemaMeta)
-    | PNAME_NS	-> yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1));
+    | PNAME_LN	-> parsePName($1, yy.schemaMeta, yy)
+    | APPINFO_COLON	-> parsePName($1, yy.schemaMeta, yy)
+    | PNAME_NS	-> yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1), yy);
     ;
 
