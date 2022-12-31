@@ -20,7 +20,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "rdf-data-factory": "^1.1.1"
+    "rdf-data-factory": "^1.1.1",
+    "relativize-url": "^0.0.2"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

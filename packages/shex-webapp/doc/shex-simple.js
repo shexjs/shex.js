@@ -91,21 +91,6 @@ function sum (s) { // cheap way to identify identical strings
   },0);
 }
 
-// <n3.js-specific>
-function n3idTermToTurtle (node, resolver) {
-  if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
-    return "a";
-  if (node === resolver._base)
-    return "<>";
-  if (node.indexOf(resolver._base) === 0/* &&
-      ['#', '?'].indexOf(node.substr(resolver._base.length)) !== -1 */)
-    return "<" + node.substr(resolver._base.length) + ">";
-  if (node.indexOf(resolver._basePath) === 0 &&
-      ['#', '?', '/', '\\'].indexOf(node.substr(resolver._basePath.length)) === -1)
-    return "<" + node.substr(resolver._basePath.length) + ">";
-  return ShEx.ShExTerm.internalTermToTurtle(node, resolver.meta.base, resolver.meta.prefixes);
-}
-
 function turtleTermToLd (lex, resolver) {
   const nz = new RdfJs.Lexer().tokenize(lex + " ");
   switch (nz[0].type) {
@@ -201,10 +186,10 @@ function _makeCache (selection) {
 
 function makeSchemaCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) {
+  ret.meta.termToLex = function (trm, aForTypes = true) {
     return trm === ShEx.Validator.start
       ? START_SHAPE_LABEL
-      : n3idTermToTurtle(trm, new IRIResolver(ret.meta));
+      : ShEx.ShExTerm.internalTermToTurtle(trm, ret.meta, true);
   };
   ret.meta.lexToTerm = function (lex) {
     return lex === START_SHAPE_LABEL
@@ -278,7 +263,7 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, new IRIResolver(ret.meta)); };
+  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, ret.meta); };
   ret.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(ret.meta)); };
   ret.parse = async function (text, base) {
     const res = ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
@@ -355,7 +340,9 @@ function makeManifestCache (selection) {
         }
         const queryMap = "map" in action ?
             null :
-            ldToTurtle(action.focus, Caches.inputData.meta.termToLex) + "@" + ("shape" in action ? ldToTurtle(action.shape, Caches.inputSchema.meta.termToLex) : START_SHAPE_LABEL);
+              ldToTurtle(action.focus, Caches.inputData.meta.termToLex)
+              + "@"
+              + ("shape" in action ? Caches.inputSchema.meta.termToLex(action.shape, false) : START_SHAPE_LABEL);
         const queryMapURL = "map" in action ?
             action.map :
             null;
@@ -563,7 +550,7 @@ return module.exports;
 
 function makeShapeMapCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, new IRIResolver(ret.meta)); };
+  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, ret.meta); };
   ret.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(ret.meta)); };
   ret.parse = async function (text) {
     removeEditMapPair(null);
@@ -1140,7 +1127,7 @@ function addEditMapPairs (pairs, target) {
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.start ? START_SHAPE_LABEL : n3idTermToTurtle(term, Caches.inputSchema);
+    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ShEx.ShExTerm.internalTermToTurtle(term, Caches.inputSchema);
   }
 }
 

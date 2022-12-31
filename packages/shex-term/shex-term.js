@@ -32,6 +32,7 @@
 
 const ShExTermCjsModule = (function () {
 
+  const RelativizeIri = require("relativize-url").relativize;
   const DataFactory = require('rdf-data-factory');
 
   const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
@@ -137,10 +138,21 @@ const ShExTermCjsModule = (function () {
     return node;
   }
 
-  function rdfJsTermToTurtle (node, resolver) {
+  const Turtle = {};
+  Turtle.PN_CHARS_BASE = "A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}"; // escape anything outside BMP: \u{10000}-\u{EFFFF}
+  Turtle.PN_CHARS_U = Turtle.PN_CHARS_BASE + "_";
+  Turtle.PN_CHARS_WO_HYPHEN = Turtle.PN_CHARS_U + "0-9\u{B7}\u{300}-\u{36F}\u{203F}-\u{2040}";
+  Turtle.PN_PREFIX = [Turtle.PN_CHARS_BASE, Turtle.PN_CHARS_WO_HYPHEN + '.-', Turtle.PN_CHARS];
+  Turtle.PN_LOCAL = [
+    Turtle.PN_CHARS_U + ":0-9",
+    Turtle.PN_CHARS_WO_HYPHEN + ".:-",
+    Turtle.PN_CHARS_WO_HYPHEN + ":-"
+  ];
+
+  function rdfJsTermToTurtle (node, meta) {
     switch (node.termType) {
     case ("NamedNode"):
-      return "<" + node.value + ">";
+      return iriToTurtle(node.value, meta);
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
@@ -153,6 +165,27 @@ const ShExTermCjsModule = (function () {
       );
     default: throw Error(`rdfJsTermToTurtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
     }
+  }
+
+  function iriToTurtle (iri, meta = {}, aForType = true) {
+    const {base, prefixes = {}} = meta;
+    if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+      return "a";
+
+    const rel = "<" + (base ? RelativizeIri(iri, base) : iri) + ">";
+    for (prefix in prefixes) {
+      const ns = prefixes[prefix];
+      if (iri.startsWith(ns)) {
+        const localName = iri.substr(ns.length);
+        const first = localName.slice(0, 1).replaceAll(new RegExp("[^" + Turtle.PN_LOCAL[0] + "]", "g"), s => '\\' + s);
+        const middle = localName.slice(1, localName.length - 1).replaceAll(new RegExp("[^" + Turtle.PN_LOCAL[1] + "]", "g"), s => '\\' + s);
+        const last = localName.length > 1 ? localName.slice(localName.length - 1).replaceAll(new RegExp("[^" + Turtle.PN_LOCAL[2] + "]", "g"), s => '\\' + s) : '';
+        const pName = prefix + ':' + first + middle + last;
+        if (pName.length < rel.length)
+          return pName;
+      }
+    }
+    return rel;
   }
 
   function rdfJsTermToLd (term) {
@@ -196,27 +229,14 @@ const ShExTermCjsModule = (function () {
     );
   }
 
-  function internalTermToTurtle (node, base, prefixes) {
-    if (typeof node === "string" && !node.startsWith("_:")) {
-      // if (node === RDF_TYPE) // only valid in Turtle predicates
-      //   return "a";
-
-      // Escape special characters
-      if (escape.test(node))
-        node = node.replace(escapeAll, characterReplacer);
-      const pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
-      if (pref) {
-        const rest = node.substr(prefixes[pref].length);
-        if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
-          return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
-      }
-      if (node.startsWith(base)) {
-        return "<" + node.substr(base.length) + ">";
+  function internalTermToTurtle (node, meta = {}, aForType = true) {
+    const {base, prefixes = {}} = meta;
+    if (typeof node === "string") {
+      if (node.startsWith("_:")) {
+        return node;
       } else {
-        return "<" + node + ">";
+        return this.iriToTurtle(node, meta, aForType);
       }
-    } else if (typeof node === "string" && node.startsWith("_:")) {
-      return node;
     } else if (isLiteral(node)) {
       let value = getLiteralValue(node);
       const type = getLiteralType(node);
@@ -228,7 +248,7 @@ const ShExTermCjsModule = (function () {
       if (language)
         return '"' + value + '"@' + language;
       else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.internalTermToTurtle(type, base, prefixes);
+        return '"' + value + '"^^' + this.iriToTurtle(type, meta, false);
       else
         return '"' + value + '"';
     } else {
@@ -405,11 +425,11 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     internalTriple: internalTriple,
     externalTerm: externalTerm,
     externalTriple: externalTriple,
-    internalTermToTurtle: internalTermToTurtle,
+    internalTermToTurtle,
     LdToRdfJsTerm,
     n3idQuadToRdfJs,
     n3idTermToRdfJs,
-    rdfJsTermToTurtle,
+    iriToTurtle,
     rdfJsTermToLd,
   }
 })();

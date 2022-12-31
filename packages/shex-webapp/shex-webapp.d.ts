@@ -77,7 +77,7 @@ export namespace ShExTerm {
 
     function inDefaultGraph(triple: any): any;
 
-    function internalTermToTurtle(node: any, base: any, prefixes: any): any;
+    function internalTermToTurtle(node: any, meta: {base: string, prefixes: {[name: string]: string[]}}, aForType: boolean): any;
 
     function internalTerm(node: any): any;
 
