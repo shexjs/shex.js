@@ -326,7 +326,6 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
 
   function LdToRdfJsTerm (ld) {
     switch (typeof ld) {
-
     case 'object':
       const copy = JSON.parse(JSON.stringify(ld));
       if (!copy.value)

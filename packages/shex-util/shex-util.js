@@ -1078,13 +1078,11 @@ const ShExUtil = {
         solns.solutions.map(s => {
           if (s.type !== "TestedTriple")
             throw Error("unexpected result type: " + s.type);
-          const s2 = s;
-          if (typeof s2.object === "object")
-            s2.object = "\"" + s2.object.value.replace(/"/g, "\\\"") + "\""
-            + (s2.object.language ? ("@" + s2.object.language) : 
-               s2.object.type ? ("^^" + s2.object.type) :
-               "");
-          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
+          const subject = ShExTerm.LdToRdfJsTerm(s.subject);
+          const predicate = ShExTerm.LdToRdfJsTerm(s.predicate);
+          const object = ShExTerm.LdToRdfJsTerm(s.object);
+          const graph = "graph" in s ? ShExTerm.LdToRdfJsTerm(s.graph) : dataFactory.defaultGraph();
+          db.addQuad(dataFactory.quad(subject, predicate, object, graph));
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
