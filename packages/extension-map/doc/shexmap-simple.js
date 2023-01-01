@@ -66,11 +66,19 @@ const QueryParams = Getables.concat([
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
 ]);
 
-// utility functions
+// Re-use BNode IDs for good(-enough) user experience. Recipe from:
+// https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
+let TurtleBlankNodeId;
+RdfJs.Parser.prototype._blankNode = name => RdfJs.DataFactory.blankNode(name || `b${TurtleBlankNodeId++}`);
 function parseTurtle (text, meta, base) {
   const ret = new RdfJs.Store();
+  TurtleBlankNodeId = 0;
   RdfJs.Parser._resetBlankNodePrefix();
-  const parser = new RdfJs.Parser({baseIRI: base, format: "text/turtle" });
+  const parser = new RdfJs.Parser({
+    baseIRI: base,
+    format: "text/turtle",
+    blankNodePrefix: ""
+  });
   const quads = parser.parse(text);
   if (quads !== undefined)
     ret.addQuads(quads);

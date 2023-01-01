@@ -719,7 +719,7 @@
         schema:location "Lupo’s Heartbreak Hotel";
         schema:address "79 Washington St...."
       ] .
-  queryMap: _:n3-0@START
+  queryMap: _:b0@START
   outputSchema: |
     PREFIX    : <http://a.example/>
     PREFIX schema: <http://schema.org/>
@@ -771,7 +771,7 @@
         schema:location "Lupo’s Heartbreak Hotel";
         schema:address "79 Washington St...."
       ] .
-  queryMap: _:n3-0@START
+  queryMap: _:b0@START
   outputSchema: |
     PREFIX    : <http://a.example/>
     PREFIX schema: <http://schema.org/>

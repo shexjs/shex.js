@@ -217,7 +217,7 @@ function myValidator (point, shapeLabel, depth, seen) {
     if (p2z.length === 1) {
       return {
         "type": "ShapeTest",
-        "node": "_:n3-0",
+        "node": "_:b0",
         "shape": "http://a.example/S2",
         "solution": {
           "type": "TripleConstraintSolutions",

@@ -1442,13 +1442,13 @@ const ShExUtil = {
    *   {  "rdf:type": [ { "ldterm": ":Schema" } ], ":shapes": [
    *       { "ldterm": "#S1", "nested": {
    *           "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-41", "nested": {
+   *             { "ldterm": "_:b41", "nested": {
    *                  "rdf:type": [ { "ldterm": ":ShapeNot" } ], ":shapeExpr": [
    *                   { "ldterm": "#S2", "nested": {
    *                        "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *                         { "ldterm": "_:n3-42", "nested": {
+   *                         { "ldterm": "_:b42", "nested": {
    *                              "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                               { "ldterm": "_:n3-43", "nested": {
+   *                               { "ldterm": "_:b43", "nested": {
    *                                    "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                             ] } }
    *                       ] } }
@@ -1456,9 +1456,9 @@ const ShExUtil = {
    *           ] } },
    *       { "ldterm": "#S2", "nested": {
    *            "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-42", "nested": {
+   *             { "ldterm": "_:b42", "nested": {
    *                  "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                   { "ldterm": "_:n3-43", "nested": {
+   *                   { "ldterm": "_:b43", "nested": {
    *                        "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                 ] } }
    *           ] } }
