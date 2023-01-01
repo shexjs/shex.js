@@ -1127,21 +1127,21 @@ async function materializeAsync () {
     outputShapeMap.forEach(pair => {
       try {
         const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const res = materializer.validate(binder, ShEx.ShExTerm.n3idTermToRdfJs(pair.node), pair.shape);
-        if ("errors" in res) {
+        const resM = materializer.validate(binder, ShEx.ShExTerm.n3idTermToRdfJs(pair.node), pair.shape);
+        if ("errors" in resM) {
           renderEntry( {
             node: pair.node,
             shape: pair.shape,
-            status: "errors" in res ? "nonconformant" : "conformant",
-            appinfo: res,
+            status: "errors" in resM ? "nonconformant" : "conformant",
+            appinfo: resM,
             elapsed: -1
           })
           // $("#results .status").text("validation errors:").show();
           // $("#results .status").text("synthesis errors:").show();
           // failMessage(e, currentAction);
         } else {
-          // console.log("g:", ShEx.Util.valToTurtle(res));
-          generatedGraph.addQuads(ShEx.Util.valToN3js(res, RdfJs.DataFactory));
+          // console.log("g:", ShEx.Util.valToTurtle(resM));
+          generatedGraph.addQuads(ShEx.Util.valToN3js(resM, RdfJs.DataFactory));
         }
       } catch (e) {
         console.dir(e);
@@ -1149,21 +1149,61 @@ async function materializeAsync () {
     });
     finishRendering();
     $("#results .status").text("materialization results").show();
-    const writer = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
-    writer.addQuads(generatedGraph.getQuads());
-    writer.end(function (error, result) {
-      results.append(
-        $("<div/>", {class: "passes"}).append(
-          $("<span/>", {class: "shapeMap"}).append(
-            "# ",
-            $("<span/>", {class: "data"}).text($("#createRoot").val()),
-            $("<span/>", {class: "valStatus"}).text("@"),
-            $("<span/>", {class: "schema"}).text($("#outputShape").val()),
-          ),
-          $("<pre/>").text(result)
-        )
-      )
-      // results.append($("<pre/>").text(result));
+
+    // Extract rdf:Collection heads.
+    const lists = generatedGraph.extractLists({
+      remove: true // Remove quads involved in lists (RDF Collections).
+    });
+
+    outputShapeMap.forEach(pair => {
+      const {node, shape} = pair;
+      try {
+        const nestedWriter = new ShEx.NestedTurtleWriter.Writer(null, {
+          // lists: {}, -- lists will require some thinking
+          format: 'text/turtle',
+          // baseIRI: resource.base,
+          prefixes: Caches.outputSchema.parsed._prefixes,
+          lists,
+          version: 1.1,
+          indent: '    ',
+          checkCorefs: n => false,
+          // debug: true,
+        });
+        const db = ShEx.RdfJsDb(generatedGraph, null); // no query tracker needed
+        const validator = ShEx.Validator.construct(outputSchema, db, {
+          results: "api",
+          regexModule: ShEx["eval-simple-1err"],
+        });
+        const res = validator.validate([{node, shape}])[0].appinfo;
+        if (!("solution" in res))
+          throw res;
+        const matched = [];
+        const seen = new RdfJs.Store(); // use N3Store to de-duplicate quads that were validated multiple ways.
+        const matchedDb = {
+          addQuad: function (q) {
+            if (!seen.countQuads(q.subject, q.predicate, q.object, q.graph)) {
+              seen.addQuad(q);
+              matched.push(q);
+            }
+          }
+        }
+        ShEx.Util.getProofGraph(res, matchedDb, RdfJs.DataFactory);
+        const rest = new RdfJs.Store();
+        rest.addQuads(generatedGraph.getQuads()); // the resource giveth
+        matched.forEach(q => rest.removeQuad(q)); // the matched taketh away
+        nestedWriter.addQuads(matched.filter(q => ([ShEx.Util.RDF.first, ShEx.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
+        if (rest.size > 0) {
+          nestedWriter.comment("\n# Triples not in the schema:");
+          nestedWriter.addQuads(rest.getQuads())
+        }
+        nestedWriter.end(addResult);
+      } catch (e) {
+        console.error(`NestedWriter(${node}@${shape}) failure:`);
+        console.error(e);
+        const fallbackWriter = new RdfJs.Writer({ prefixes: Caches.outputSchema.parsed._prefixes });
+        fallbackWriter.addQuads(generatedGraph.getQuads());
+        fallbackWriter.end(addResult);
+      }
     });
     results.finish();
     return { materializationResults: generatedGraph };
@@ -1173,6 +1213,21 @@ async function materializeAsync () {
     // results.finish();
     return null;
   }
+}
+
+function addResult (error, result) {
+  results.append(
+    $("<div/>", {class: "passes"}).append(
+      $("<span/>", {class: "shapeMap"}).append(
+        "# ",
+        $("<span/>", {class: "data"}).text($("#createRoot").val()),
+        $("<span/>", {class: "valStatus"}).text("@"),
+        $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+      ),
+      $("<pre/>").text(result)
+    )
+  )
+  // results.append($("<pre/>").text(result));
 }
 
 function addEmptyEditMapPair (evt) {

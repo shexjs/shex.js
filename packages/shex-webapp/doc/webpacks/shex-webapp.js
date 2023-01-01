@@ -9272,7 +9272,6 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
 
   function LdToRdfJsTerm (ld) {
     switch (typeof ld) {
-
     case 'object':
       const copy = JSON.parse(JSON.stringify(ld));
       if (!copy.value)
@@ -10654,13 +10653,11 @@ const ShExUtil = {
         solns.solutions.map(s => {
           if (s.type !== "TestedTriple")
             throw Error("unexpected result type: " + s.type);
-          const s2 = s;
-          if (typeof s2.object === "object")
-            s2.object = "\"" + s2.object.value.replace(/"/g, "\\\"") + "\""
-            + (s2.object.language ? ("@" + s2.object.language) : 
-               s2.object.type ? ("^^" + s2.object.type) :
-               "");
-          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
+          const subject = ShExTerm.LdToRdfJsTerm(s.subject);
+          const predicate = ShExTerm.LdToRdfJsTerm(s.predicate);
+          const object = ShExTerm.LdToRdfJsTerm(s.object);
+          const graph = "graph" in s ? ShExTerm.LdToRdfJsTerm(s.graph) : dataFactory.defaultGraph();
+          db.addQuad(dataFactory.quad(subject, predicate, object, graph));
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
@@ -11018,13 +11015,13 @@ const ShExUtil = {
    *   {  "rdf:type": [ { "ldterm": ":Schema" } ], ":shapes": [
    *       { "ldterm": "#S1", "nested": {
    *           "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-41", "nested": {
+   *             { "ldterm": "_:b41", "nested": {
    *                  "rdf:type": [ { "ldterm": ":ShapeNot" } ], ":shapeExpr": [
    *                   { "ldterm": "#S2", "nested": {
    *                        "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *                         { "ldterm": "_:n3-42", "nested": {
+   *                         { "ldterm": "_:b42", "nested": {
    *                              "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                               { "ldterm": "_:n3-43", "nested": {
+   *                               { "ldterm": "_:b43", "nested": {
    *                                    "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                             ] } }
    *                       ] } }
@@ -11032,9 +11029,9 @@ const ShExUtil = {
    *           ] } },
    *       { "ldterm": "#S2", "nested": {
    *            "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-42", "nested": {
+   *             { "ldterm": "_:b42", "nested": {
    *                  "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                   { "ldterm": "_:n3-43", "nested": {
+   *                   { "ldterm": "_:b43", "nested": {
    *                        "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                 ] } }
    *           ] } }

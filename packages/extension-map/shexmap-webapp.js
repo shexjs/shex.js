@@ -15,6 +15,7 @@ ShExWebApp = (function () {
     JsYaml:               require("js-yaml"),
     DcTap:                require("dctap").DcTap,
     Map:                  require("."),
+    NestedTurtleWriter:   require("./lib/NestedWriter"),
   })
 })()
 
