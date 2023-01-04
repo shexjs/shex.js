@@ -691,7 +691,7 @@ function runValidator (db, shapeMap, schema, options) {
   // run validator
   const res = cmds.grep
       ? grep(shapeMap)
-      : validator.validate(shapeMap);
+      : validator.validateObj(shapeMap);
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -723,7 +723,7 @@ function runValidator (db, shapeMap, schema, options) {
     const passes = fixedMap.reduce((acc, row) => {
       if (cmds.verbose)
         process.stdout.write('checking ' + JSON.stringify(row))
-      const res = validator.validate([row]);
+      const res = validator.validateObj([row]);
       if (cmds.verbose)
         process.stdout.write(' -> ' + !('errors' in res) + "\n")
       return "errors" in res

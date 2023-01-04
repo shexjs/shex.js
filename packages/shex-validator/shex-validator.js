@@ -256,62 +256,44 @@ function ShExValidator_constructor(schema, db, options) {
     };
   };
 
-  /* validate - test point in db against the schema for labelOrShape
-   * depth: level of recurssion; for logging.
-   */
-  this.validate = function (point, label, tracker, seen, matchTarget, subGraph) {
-    // default to schema's start shape
-    if (typeof point === "object" && "termType" in point) {
-      point = ShExTerm.internalTerm(point)
-    }
-    if (typeof point === "object" && !point.termType) {
-      const shapeMap = point;
-      if (this.options.results === "api") {
-        return shapeMap.map(pair => {
-          let time = new Date();
-          const res = this.validate(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, label, tracker); // really tracker and seen
-          time = new Date() - time;
-          return {
-            node: pair.node,
-            shape: pair.shape,
-            status: "errors" in res ? "nonconformant" : "conformant",
-            appinfo: res,
-            elapsed: time
-          };
-        });
-      }
-      const results = shapeMap.reduce((ret, pair) => {
-        const res = this.validate(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, label, tracker, matchTarget, subGraph); // really tracker and seen
-        return "errors" in res ?
-          { passes: ret.passes, failures: ret.failures.concat(res) } :
-          { passes: ret.passes.concat(res), failures: ret.failures } ;
-      }, {passes: [], failures: []});
-      if (false && this.options.results === "api") {
-        const ret = {};
-        function _add (n, s, r) {
-          if (!(n in ret)) {
-            ret[n] = [{shape: s, result: r}];
-            return;
-          }
-          if (ret[n].filter(p => { return p.shape === s; }))
-            return;
-          ret[n].push({shape: s, results: r});
-        }
-        results.passes.forEach(p => { _add(p.node, p.shape, true); });
-        results.failures.forEach(p => { _add(p.node, p.shape, false); });
-        return ret;
-      }
-      if (results.failures.length > 0) {
-        return results.failures.length !== 1 ?
-          { type: "FailureList", errors: results.failures } :
-          results.failures [0];
-      } else {
-        return results.passes.length !== 1 ?
-          { type: "SolutionList", solutions: results.passes } :
-          results.passes [0];
-      }
-    }
+  this.validateApi = function (shapeMap, tracker, seen) {
+    return shapeMap.map(pair => {
+      let time = +new Date();
+      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen); // really tracker and seen
+      time = +new Date() - time;
+      return {
+        node: pair.node,
+        shape: pair.shape,
+        status: "errors" in res ? "nonconformant" : "conformant",
+        appinfo: res,
+        elapsed: time
+      };
+    });
+  }
 
+  this.validateObj = function (shapeMap, tracker, seen) {
+    const results = shapeMap.reduce((ret, pair) => {
+      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen); // really tracker and seen
+      return "errors" in res
+        ? { passes: ret.passes, failures: ret.failures.concat(res) }
+        : { passes: ret.passes.concat(res), failures: ret.failures } ;
+    }, {passes: [], failures: []});
+    if (results.failures.length > 0) {
+      return results.failures.length !== 1
+        ? { type: "FailureList", errors: results.failures }
+        : results.failures [0];
+    } else {
+      return results.passes.length !== 1
+        ? { type: "SolutionList", solutions: results.passes }
+        : results.passes [0];
+    }
+  }
+
+  this.validatePair = function (point, label, tracker, seen) {
+    return this.validateShapeLabel (point, label, tracker, seen);
+  }
+
+  this.validateShapeLabel = function (point, label, tracker, seen, matchTarget, subGraph) {
     const outside = tracker === undefined;
     // logging stuff
     if (!tracker)
@@ -321,16 +303,11 @@ function ShExValidator_constructor(schema, db, options) {
         runtimeError("start production not defined");
     }
 
-    let shape = null;
     if (label === Start) {
-      shape = schema.start;
-    } else {
-      shape = this._lookupShape(label);
+      return this._validateShapeExpr(point, schema.start, Start, 0, tracker, seen);
     }
 
-    // if we passed in an expression rather than a label, validate it directly.
-    if (typeof label !== "string")
-      return this._validateShapeExpr(point, shape, Start, 0, tracker, seen);
+    const shape = this._lookupShape(label);
 
     if (seen === undefined)
       seen = {};
@@ -1002,7 +979,7 @@ function ShExValidator_constructor(schema, db, options) {
   }
   this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, matchTarget, subgraph) {
     if (typeof valueExpr === "string") { // ShapeRef
-      return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen, matchTarget, subgraph);
+      return _ShExValidator.validateShapeLabel(value, valueExpr, valParms.tracker, valParms.seen, matchTarget, subgraph);
     } else if (valueExpr.type === "NodeConstraint") {
       return this._errorsMatchingNodeConstraint(value, valueExpr, null);
     } else if (valueExpr.type === "Shape") {

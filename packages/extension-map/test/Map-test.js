@@ -52,7 +52,7 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
   const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
   // run validator
-  var res = validator.validate(smap);
+  var res = validator.validateObj(smap);
   expect(res.errors || []).to.deep.equal([]); // Trick chai into displaying errors.
 
   // var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];

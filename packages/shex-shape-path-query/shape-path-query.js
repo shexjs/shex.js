@@ -24,7 +24,7 @@ function shapePathQuery (schema, nodeSet, db, smap) {
   MapModule.register(validator, { ShExTerm })
 
   // Validate data against schema.
-  const valRes = validator.validate(smap)
+  const valRes = validator.validateObj(smap)
   if ("errors" in valRes) {
     throw Error(JSON.stringify(valRes, undefined, 2));
   } else {

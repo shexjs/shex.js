@@ -70,7 +70,7 @@ describe('Invoking SemActs', function () {
     Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
-    const res = validator.validate(sm)
+    const res = validator.validateObj(sm)
 
     // Test results
     const blurb = ''

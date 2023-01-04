@@ -187,7 +187,7 @@ describe("A ShEx parser", function () {
                schemaDriver,
                {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
-             const val = graphParser.validate(schemaRoot, ShExValidator.start); // start shape
+             const val = graphParser.validatePair(schemaRoot, ShExValidator.start); // start shape
              if ("errors" in val)
                throw Error(`${shexRFile} did not comply with ShExR.shex\n${JSON.stringify(val.errors, null, 2)}`);
              const parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));
