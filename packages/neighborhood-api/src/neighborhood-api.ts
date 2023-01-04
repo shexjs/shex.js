@@ -4,6 +4,8 @@ import {shapeExpr} from 'shexj';
 import {Neighborhood} from '@shexjs/util';
 import * as RdfJs from "@rdfjs/types/data-model";
 
+export {};
+
 export interface ValidatorNeighborhood {
   getNeighborhood(
     point: string | RdfJs.Term,

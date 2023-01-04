@@ -1,10 +1,72 @@
-export = shexjs__visitor;
+import * as ShExJ from 'shexj';
+import {SchemaIndex} from "@shexjs/term";
 
-declare function shexjs__visitor(...args: any[]): any;
+export {}
+export class ShExVisitor {
+    constructor(...args: any[]);
+    visitBase: (v: any, ...args: any[]) => any;
+    visitStart: (v: any, ...args: any[]) => any;
+    visitClosed: (v: any, ...args: any[]) => any;
+    "visit@context": (v: any, ...args: any[]) => any;
+    visitRestricts: (v: any, ...args: any[]) => any;
+    visitExtends: (v: any, ...args: any[]) => any;
+    visitExtra: (l: any, ...args: any[]) => any;
+    visitAnnotations: (l: any, ...args: any[]) => any;
+    visitAbstract: (v: any, ...args: any[]) => any;
+    visitInverse: (v: any, ...args: any[]) => any;
+    visitPredicate: (v: any, ...args: any[]) => any;
+    visitName: (v: any, ...args: any[]) => any;
+    visitId: (v: any, ...args: any[]) => any;
+    visitCode: (v: any, ...args: any[]) => any;
+    visitMin: (v: any, ...args: any[]) => any;
+    visitMax: (v: any, ...args: any[]) => any;
+    visitType: (v: any, ...args: any[]) => any;
+    visitNodeKind: (v: any, ...args: any[]) => any;
+    visitDatatype: (v: any, ...args: any[]) => any;
+    visitPattern: (v: any, ...args: any[]) => any;
+    visitFlags: (v: any, ...args: any[]) => any;
+    visitLength: (v: any, ...args: any[]) => any;
+    visitMinlength: (v: any, ...args: any[]) => any;
+    visitMaxlength: (v: any, ...args: any[]) => any;
+    visitMininclusive: (v: any, ...args: any[]) => any;
+    visitMinexclusive: (v: any, ...args: any[]) => any;
+    visitMaxinclusive: (v: any, ...args: any[]) => any;
+    visitMaxexclusive: (v: any, ...args: any[]) => any;
+    visitTotaldigits: (v: any, ...args: any[]) => any;
+    visitFractiondigits: (v: any, ...args: any[]) => any;
+    visitOneOf: (v: any, ...args: any[]) => any;
+    visitEachOf: (v: any, ...args: any[]) => any;
+    visitShapeAnd: (v: any, ...args: any[]) => any;
+    visitShapeOr: (v: any, ...args: any[]) => any;
+    visitInclude: (v: any, ...args: any[]) => any;
+    visitSchema(schema: any, ...args: any[]): any;
+    visitPrefixes(prefixes: any, ...args: any[]): any;
+    visitIRI(i: any, ...args: any[]): any;
+    visitImports(imports: any, ...args: any[]): any;
+    visitStartActs(startActs: any, ...args: any[]): any;
+    visitSemActs(semActs: any, ...args: any[]): any[];
+    visitSemAct(semAct: any, label: any, ...args: any[]): any;
+    visitShapes(shapes: any, ...args: any[]): any;
+    visitShapeDecl(decl: any, ...args: any[]): any;
+    visitShapeExpr(expr: any, ...args: any[]): any;
+    visitValueExpr(expr: any, ...args: any[]): any;
+    visitShapeNot(expr: any, ...args: any[]): any;
+    visitShape(shape: any, ...args: any[]): any;
+    visitNodeConstraint(shape: any, ...args: any[]): any;
+    visitShapeRef(reference: any, ...args: any[]): string;
+    visitShapeExternal(expr: any, ...args: any[]): any;
+    visitTripleConstraint(expr: any, ...args: any[]): any;
+    visitTripleExpr(expr: any, ...args: any[]): any;
+    visitExpression(expr: any, ...args: any[]): any;
+    visitValues(values: any, ...args: any[]): any;
+    visitStemRange(t: any, ...args: any[]): any;
+    visitExclusion(c: any, ...args: any[]): any;
+    visitInclusion(inclusion: any, ...args: any[]): string;
 
-declare namespace shexjs__visitor {
-    function index(schema: any): any;
-
+    _maybeSet(obj: any, ret: any, context: any, members: any, ignore: any, ...args: any[]): any;
+    _visitValue(v: any, ...args: any[]): any;
+    _visitList(l: any, ...args: any[]): any;
+    _testUnknownAttributes(obj: any, expected: any, context: any, captureFrame: any): void;
+    _expect(o: any, p: any, v: any, ...args: any[]): void;
 }
-
-
+export function index (schema: ShExJ.Schema): SchemaIndex

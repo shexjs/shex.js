@@ -1,5 +1,5 @@
-import * as ShExJ from 'shexj';
-import * as ShExUtil from '@shexjs/util';
+import {Schema} as ShExJ from 'shexj';
+import {QueryTracker} from '@shexjs/validator-api';
 
 export const options: {
     coverage: {
@@ -12,22 +12,15 @@ export const start: {
     term: string;
 };
 
-export interface ShapeMapEntry {
-    node: string;
-    shape: string;
-}
-
-export type ShapeMap = ShapeMapEntry[];
-
 export interface ValidationResult {
   errors?: any[]; // need to model http://github.com/shexSpec/shexTest/blob/doc/ShExV.jsg the same way ShExJ was modeled
 }
 
 export interface Validator {
-  validate (point: string, label: string, tracker?: ShExUtil.QueryTracker, seen?: object): ValidationResult;
-  validate (smap: ShapeMap, tracker?: ShExUtil.QueryTracker, seen?: object): ValidationResult;
+  validate (point: string, label: string, tracker?: QueryTracker, seen?: object): ValidationResult;
+  validate (smap: ShapeMap, tracker?: QueryTracker, seen?: object): ValidationResult;
 }
 
-export function construct(schema: ShExJ.Schema, db: ValidatorNeighborhood, options: object): Validator;
+export function construct(schema: Schema, db: ValidatorNeighborhood, options: object): Validator;
 
 

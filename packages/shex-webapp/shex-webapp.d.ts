@@ -1,3 +1,5 @@
+export {};
+
 export class DcTap {
     constructor(...args: any[]);
 

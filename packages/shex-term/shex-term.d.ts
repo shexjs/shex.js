@@ -1,3 +1,33 @@
+import * as ShExJ from 'shexj';
+import {Term as RdfJsTerm} from 'rdfjs';
+
+export {};
+
+export interface SchemaIndex {
+    shapeExprs: { [id: string]: ShExJ.ShapeDecl };
+    tripleExprs: { [id: string]: ShExJ.TripleExpr };
+    labelToTcs: { [id: string]: ShExJ.TripleConstraint[] }
+}
+
+export interface InternalSchema extends ShExJ.Schema {
+  _index?: SchemaIndex
+}
+
+export interface ObjectLiteral {
+  value: string;
+  type?: string;
+  language?: string;
+}
+
+export interface ShapeMapEntry {
+    node: string;
+    shape: string;
+}
+
+export type ShapeMap = ShapeMapEntry[];
+
+export type LdTerm = string | ObjectLiteral;
+
 export const RdfLangString: string;
 
 export const XsdString: string;
@@ -30,4 +60,13 @@ export function isLiteral(entity: any): any;
 
 export function resolveRelativeIRI(base: any, iri: any): any;
 
+export function LdToRdfJsTerm (ld: LdTerm): RdfJsTerm;
 
+export interface Meta {
+  base: string;
+  prefixes = {
+    [id: string]: string
+  };
+}
+
+export function rdfJsTermToTurtle (node: Term, meta?: Meta): string;
