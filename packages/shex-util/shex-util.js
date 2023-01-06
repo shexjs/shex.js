@@ -1234,7 +1234,7 @@ const ShExUtil = {
     case "ShapeNotTest": // 1NOT_vsANDvs__passIv1
       return _ShExUtil.walkVal(val.shapeExpr, cb);
     case "ShapeNotResults": // NOT1dotOR2dot_pass-empty
-      return _ShExUtil.walkVal(val.solution, cb);
+      return null; // we don't bind variables from negative tests
     case "Failure": // NOT1dotOR2dot_pass-empty
       return null; // !!TODO
     case "ShapeNot": // 1NOTNOTIRI_passIo1,

@@ -19,7 +19,8 @@
         "object": { "value": "\u0000\t\u000b\f\u000e&([]" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "\u0000\t\u000b\f\u000e&([]" },
+          "node": { "value": "\u0000\t\u000b\f\u000e&([]" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

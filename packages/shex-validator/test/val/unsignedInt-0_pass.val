@@ -16,7 +16,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#unsignedInt" },
+          "node": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#unsignedInt" },
+          "shape": "http://a.example/S-unsignedInt",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#unsignedInt"

@@ -18,7 +18,8 @@
         "object": { "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽" },
+          "node": { "value": "߿ࠀ࿿က쿿퀀퟿�𐀀𿿽񀀀󿿽􀀀􏿽" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

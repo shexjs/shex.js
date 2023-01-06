@@ -16,7 +16,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "-INF", "type": "http://www.w3.org/2001/XMLSchema#double" },
+          "node": { "value": "-INF", "type": "http://www.w3.org/2001/XMLSchema#double" },
+          "shape": "http://a.example/S-double",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#double"

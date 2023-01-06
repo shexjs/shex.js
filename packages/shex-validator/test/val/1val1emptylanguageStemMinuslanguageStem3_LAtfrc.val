@@ -36,7 +36,8 @@
         "object": { "value": "septante", "language": "frc" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "septante", "language": "frc" },
+          "node": { "value": "septante", "language": "frc" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

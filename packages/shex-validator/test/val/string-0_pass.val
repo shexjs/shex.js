@@ -15,7 +15,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "0" },
+          "node": { "value": "0" },
+          "shape": "http://a.example/S-string",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#string"

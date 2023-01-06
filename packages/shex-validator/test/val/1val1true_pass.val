@@ -19,7 +19,8 @@
         "object": { "value": "true", "type": "http://www.w3.org/2001/XMLSchema#boolean" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "true", "type": "http://www.w3.org/2001/XMLSchema#boolean" },
+          "node": { "value": "true", "type": "http://www.w3.org/2001/XMLSchema#boolean" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

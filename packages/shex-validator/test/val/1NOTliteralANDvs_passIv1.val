@@ -5,38 +5,6 @@
   "solution": {
     "type": "TripleConstraintSolutions",
     "predicate": "http://a.example/p1",
-    "solutions": [
-      {
-        "type": "TestedTriple",
-        "subject": "http://a.example/s1",
-        "predicate": "http://a.example/p1",
-        "object": "http://a.example/v1",
-        "referenced": {
-          "solutions": [
-            {
-              "focus": "http://a.example/v1",
-              "shapeExpr": {
-                "nodeKind": "literal",
-                "type": "NodeConstraint"
-              },
-              "type": "ShapeNotTest"
-            },
-            {
-              "type": "NodeConstraintTest",
-              "focus": "http://a.example/v1",
-              "shapeExpr": {
-                "type": "NodeConstraint",
-                "values": [
-                  "http://a.example/v1",
-                  "http://a.example/v2"
-                ]
-              }
-            }
-          ],
-          "type": "ShapeAndResults"
-        }
-      }
-    ],
     "valueExpr": {
       "type": "ShapeAnd",
       "shapeExprs": [
@@ -55,6 +23,46 @@
           ]
         }
       ]
-    }
+    },
+    "solutions": [
+      {
+        "type": "TestedTriple",
+        "subject": "http://a.example/s1",
+        "predicate": "http://a.example/p1",
+        "object": "http://a.example/v1",
+        "referenced": {
+          "type": "ShapeAndResults",
+          "solutions": [
+            {
+              "type": "ShapeNotResults",
+              "solution": {
+                "type": "NodeConstraintViolation",
+                "node": "http://a.example/v1",
+                "shape": "http://a.example/S1",
+                "shapeExpr": {
+                  "type": "NodeConstraint",
+                  "nodeKind": "literal"
+                },
+                "errors": [
+                  "Error validating <http://a.example/v1> as {\"type\":\"NodeConstraint\",\"nodeKind\":\"literal\"}: iri found when literal expected"
+                ]
+              }
+            },
+            {
+              "type": "NodeConstraintTest",
+              "node": "http://a.example/v1",
+              "shape": "http://a.example/S1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://a.example/v1",
+                  "http://a.example/v2"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }

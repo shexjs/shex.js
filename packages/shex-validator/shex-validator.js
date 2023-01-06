@@ -298,12 +298,10 @@ function ShExValidator_constructor(schema, db, options) {
     // logging stuff
     if (!tracker)
       tracker = this.emptyTracker();
-    if (!label || label === Start) {
-      if (!schema.start)
-        runtimeError("start production not defined");
-    }
 
     if (label === Start) {
+      if (!schema.start)
+        runtimeError("start production not defined");
       return this._validateShapeExpr(point, schema.start, Start, 0, tracker, seen);
     }
 
@@ -447,30 +445,18 @@ function ShExValidator_constructor(schema, db, options) {
   }
 
   this._validateShapeExpr = function (point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
-    if (point === "")
-      throw Error("validation needs a valid focus node");
     let ret = null
     if (typeof shapeExpr === "string") { // ShapeRef
-      ret = this._validateDescendants(point, shapeExpr, depth, tracker, seen, matchTarget, subGraph, true);
+      ret = this.validateShapeLabel(point, shapeExpr, tracker, seen, matchTarget, subGraph);
     } else if (shapeExpr.type === "NodeConstraint") {
-      const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-      ret = sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
-        type: "Failure",
-        node: ldify(point),
-        shape: shapeLabel,
-        errors: sub.errors.map(function (error) { // !!! just sub.errors?
-          return {
-            type: "NodeConstraintViolation",
-            shapeExpr: shapeExpr,
-            error: error
-          };
-        })
-      } : {
-        type: "NodeConstraintTest",
-        node: ldify(point),
-        shape: shapeLabel,
-        shapeExpr: shapeExpr
-      };
+      const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      ret = Object.assign({}, {type: null, node: ldify(point)}, (shapeLabel ? {shape: shapeLabel} : {}), {shapeExpr});
+      Object.assign(
+        ret,
+        errors.length > 0
+          ? { type: "NodeConstraintViolation", errors: errors }
+          : { type: "NodeConstraintTest", }
+      );
     } else if (shapeExpr.type === "Shape") {
       ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
     } else if (shapeExpr.type === "ShapeExternal") {
@@ -967,7 +953,7 @@ function ShExValidator_constructor(schema, db, options) {
       const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
       const errors = constraint.valueExpr === undefined ?
           undefined :
-          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms, matchTarget)).errors;
+            (sub = _ShExValidator._validateShapeExpr(value, constraint.valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, null)).errors;
       if (!errors) {
         hits.push({triple: triple, sub: sub});
       } else if (hits.indexOf(triple) === -1) {
@@ -977,55 +963,6 @@ function ShExValidator_constructor(schema, db, options) {
     });
     return { hits: hits, misses: misses };
   }
-  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, matchTarget, subgraph) {
-    if (typeof valueExpr === "string") { // ShapeRef
-      return _ShExValidator.validateShapeLabel(value, valueExpr, valParms.tracker, valParms.seen, matchTarget, subgraph);
-    } else if (valueExpr.type === "NodeConstraint") {
-      return this._errorsMatchingNodeConstraint(value, valueExpr, null);
-    } else if (valueExpr.type === "Shape") {
-      return _ShExValidator._validateShapeExpr(value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph)
-    } else if (valueExpr.type === "ShapeOr") {
-      const errors = [];
-      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        const nested = valueExpr.shapeExprs[i];
-        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, matchTarget, subgraph);
-        if ("errors" in sub)
-          errors.push(sub);
-        else
-          return { type: "ShapeOrResults", solution: sub };
-      }
-      return { type: "ShapeOrFailure", errors: errors };
-    } else if (valueExpr.type === "ShapeAnd") {
-      const passes = [];
-      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        const nested = valueExpr.shapeExprs[i];
-        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, matchTarget, subgraph);
-        if ("errors" in sub)
-          return { type: "ShapeAndFailure", errors: [sub] };
-        else
-          passes.push(sub);
-      }
-      return { type: "ShapeAndResults", solutions: passes };
-    } else if (valueExpr.type === "ShapeNot") {
-      const sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, matchTarget, subgraph);
-      // return sub.errors && sub.errors.length ? {} : {
-      //   errors: ["Error validating " + ldify(value) + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
-      const ret = Object.assign({
-        type: null,
-        focus: ldify(value)
-      }, valueExpr);
-      if (sub.errors && sub.errors.length) {
-        ret.type = "ShapeNotTest";
-        // ret = {};
-      } else {
-        ret.type = "ShapeNotFailure";
-        ret.errors = ["Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"]
-      }
-      return ret;
-    } else {
-      throw Error("unknown value expression type '" + valueExpr.type + "'");
-    }
-  };
 
   /* _errorsMatchingNodeConstraint - return whether the value matches the value
    * expression without checking shape references.
@@ -1222,6 +1159,7 @@ function ShExValidator_constructor(schema, db, options) {
         }
       }
     });
+    return errors;
     const ret = {
       type: null,
       focus: ldify(value),

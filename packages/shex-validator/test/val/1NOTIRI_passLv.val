@@ -14,11 +14,20 @@
           "value": "v"
         },
         "referenced": {
-          "type": "ShapeNotTest",
-          "focus": { "value": "v" },
-          "shapeExpr": {
-            "nodeKind": "iri",
-            "type": "NodeConstraint"
+          "type": "ShapeNotResults",
+          "solution": {
+            "type": "NodeConstraintViolation",
+            "node": {
+              "value": "v"
+            },
+            "shape": "http://a.example/S1",
+            "shapeExpr": {
+              "type": "NodeConstraint",
+              "nodeKind": "iri"
+            },
+            "errors": [
+              "Error validating \"v\" as {\"type\":\"NodeConstraint\",\"nodeKind\":\"iri\"}: literal found when iri expected"
+            ]
           }
         }
       }

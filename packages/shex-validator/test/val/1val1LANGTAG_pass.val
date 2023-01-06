@@ -19,7 +19,8 @@
         "object": { "value": "ab", "language": "en-fr" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "ab", "language": "en-fr" },
+          "node": { "value": "ab", "language": "en-fr" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

@@ -19,7 +19,8 @@
         "object": { "value": "0.0", "type": "http://www.w3.org/2001/XMLSchema#decimal" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "0.0", "type": "http://www.w3.org/2001/XMLSchema#decimal" },
+          "node": { "value": "0.0", "type": "http://www.w3.org/2001/XMLSchema#decimal" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

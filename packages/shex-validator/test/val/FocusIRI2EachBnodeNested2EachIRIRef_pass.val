@@ -36,7 +36,8 @@
                     "object": { "value": "ab", "type": "http://a.example/dt1" },
                     "referenced": {
                       "type": "NodeConstraintTest",
-                      "focus": { "value": "ab", "type": "http://a.example/dt1" },
+                      "node": { "value": "ab", "type": "http://a.example/dt1" },
+                      "shape": "http://a.example/S1",
                       "shapeExpr": {
                         "type": "NodeConstraint",
                         "datatype": "http://a.example/dt1"
@@ -121,7 +122,8 @@
                       "solutions": [
                         {
                           "type": "NodeConstraintTest",
-                          "focus": "_:n2",
+                          "node": "_:n2",
+                          "shape": "http://a.example/S1",
                           "shapeExpr": {
                             "type": "NodeConstraint",
                             "nodeKind": "bnode"
@@ -154,7 +156,8 @@
                                         },
                                         "referenced": {
                                           "type": "NodeConstraintTest",
-                                          "focus": { "value": "ab" },
+                                          "node": { "value": "ab" },
+                                          "shape": "http://a.example/S1",
                                           "shapeExpr": {
                                             "type": "NodeConstraint",
                                             "nodeKind": "literal"
@@ -193,7 +196,8 @@
                                           "solutions": [
                                             {
                                               "type": "NodeConstraintTest",
-                                              "focus": "http://a.example/n1",
+                                              "node": "http://a.example/n1",
+                                              "shape": "http://a.example/S1",
                                               "shapeExpr": {
                                                 "type": "NodeConstraint",
                                                 "nodeKind": "iri",

@@ -16,7 +16,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "-1.0", "type": "http://www.w3.org/2001/XMLSchema#float" },
+          "node": { "value": "-1.0", "type": "http://www.w3.org/2001/XMLSchema#float" },
+          "shape": "http://a.example/S-float",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#float"

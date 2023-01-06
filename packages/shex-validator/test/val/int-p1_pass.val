@@ -16,7 +16,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "+1", "type": "http://www.w3.org/2001/XMLSchema#int" },
+          "node": { "value": "+1", "type": "http://www.w3.org/2001/XMLSchema#int" },
+          "shape": "http://a.example/S-int",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#int"

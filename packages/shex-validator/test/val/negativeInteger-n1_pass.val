@@ -16,7 +16,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": { "value": "-1", "type": "http://www.w3.org/2001/XMLSchema#negativeInteger" },
+          "node": { "value": "-1", "type": "http://www.w3.org/2001/XMLSchema#negativeInteger" },
+          "shape": "http://a.example/S-negativeInteger",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#negativeInteger"

@@ -199,13 +199,17 @@ describe("A ShEx validator", function () {
                       if (params.results !== "api") {
                         if (test["@type"] === "sht:ValidationFailure") {
                           assert(!validationResult || "errors" in validationResult, "test expected to fail");
-                          if (referenceResult)
+                          if (referenceResult) {
+                            // console.log(JSON.stringify(validationResult, null, 2)); // , "\n---\n", JSON.stringify(referenceResult, null, 2));
                             expect(canonicalizeJ(validationResult)).to.deep.equal(canonicalizeJ(referenceResult));
+                          }
                           ShExUtil.errsToSimple(validationResult);
                         } else {
                           assert(validationResult && !("errors" in validationResult), "test expected to succeed; got " + JSON.stringify(validationResult));
-                          if (referenceResult !== null)
+                          if (referenceResult !== null) {
+                            // console.log(JSON.stringify(validationResult, null, 2), "\n---\n", JSON.stringify(referenceResult, null, 2));
                             expect(canonicalizeJ(validationResult, {})).to.deep.equal(canonicalizeJ(referenceResult, {}));
+                          }
                           ShExUtil.valToValues(validationResult);
                         }
                       }

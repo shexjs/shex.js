@@ -5,39 +5,6 @@
   "solution": {
     "type": "TripleConstraintSolutions",
     "predicate": "http://a.example/p1",
-    "solutions": [
-      {
-        "type": "TestedTriple",
-        "subject": "http://a.example/s1",
-        "predicate": "http://a.example/p1",
-        "object": "http://a.example/v2",
-        "referenced": {
-          "solutions": [
-            {
-              "focus": "http://a.example/v2",
-              "shapeExpr": {
-                "type": "NodeConstraint",
-                "values": [
-                  "http://a.example/v1"
-                ]
-              },
-              "type": "ShapeNotTest"
-            },
-            {
-              "type": "NodeConstraintTest",
-              "focus": "http://a.example/v2",
-              "shapeExpr": {
-                "type": "NodeConstraint",
-                "values": [
-                  "http://a.example/v2"
-                ]
-              }
-            }
-          ],
-          "type": "ShapeAndResults"
-        }
-      }
-    ],
     "valueExpr": {
       "type": "ShapeAnd",
       "shapeExprs": [
@@ -57,6 +24,47 @@
           ]
         }
       ]
-    }
+    },
+    "solutions": [
+      {
+        "type": "TestedTriple",
+        "subject": "http://a.example/s1",
+        "predicate": "http://a.example/p1",
+        "object": "http://a.example/v2",
+        "referenced": {
+          "type": "ShapeAndResults",
+          "solutions": [
+            {
+              "type": "ShapeNotResults",
+              "solution": {
+                "type": "NodeConstraintViolation",
+                "node": "http://a.example/v2",
+                "shape": "http://a.example/S1",
+                "shapeExpr": {
+                  "type": "NodeConstraint",
+                  "values": [
+                    "http://a.example/v1"
+                  ]
+                },
+                "errors": [
+                  "Error validating <http://a.example/v2> as {\"type\":\"NodeConstraint\",\"values\":[\"http://a.example/v1\"]}: value http://a.example/v2 not found in set [\"http://a.example/v1\"]"
+                ]
+              }
+            },
+            {
+              "type": "NodeConstraintTest",
+              "node": "http://a.example/v2",
+              "shape": "http://a.example/S1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://a.example/v2"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }
