@@ -15712,6 +15712,9 @@ function ShExValidator_constructor(schema, db, options) {
     if (!tracker)
       tracker = this.emptyTracker();
 
+    if (seen === undefined)
+      seen = {};
+
     if (label === Start) {
       if (!schema.start)
         runtimeError("start production not defined");
@@ -15719,9 +15722,6 @@ function ShExValidator_constructor(schema, db, options) {
     }
 
     const shape = this._lookupShape(label);
-
-    if (seen === undefined)
-      seen = {};
     const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + (label === Start ? "_: -start-" : label);
     if (!subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
       if (seenKey in seen)
