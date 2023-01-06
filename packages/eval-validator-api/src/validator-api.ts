@@ -53,7 +53,7 @@ export interface SemActModule {
 
 export interface SemActDispatcher {
   register(name: string, handler: SemActHandler): void;
-  dispatchAll(semActs: [ShExJ.SemAct], ctx: any, resultsArtifact: any): (SemActFailure | BooleanSemActFailure)[];
+  dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): (SemActFailure | BooleanSemActFailure)[];
 }
 
 export interface SemActHandler {

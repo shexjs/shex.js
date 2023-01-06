@@ -1,19 +1,21 @@
 /** API called by @shexjs/validator to get a neighborhood (arcs in and out of a node)
  */
-import {shapeExpr} from 'shexj';
-import {Neighborhood} from '@shexjs/util';
+import {shapeExpr, Shape} from 'shexj';
+// import {Neighborhood} from '@shexjs/neighborhood-api';
 import * as RdfJs from "@rdfjs/types/data-model";
+import {Start} from "@shexjs/validator";
 
 export {};
 
+/*
 export interface ValidatorNeighborhood {
   getNeighborhood(
-    point: string | RdfJs.Term,
+    point: RdfJs.Term,
     shapeLabel: string,
     shape: shapeExpr,
-  ): NeighborhoodDb;
+  ): Neighborhood;
 }
-
+*/
 export interface Neighborhood {
   incoming: RdfJs.Quad[];
   outgoing: RdfJs.Quad[];
@@ -24,7 +26,7 @@ export interface NeighborhoodDb {
   getPredicates(): RdfJs.Term[];
   getObjects(): RdfJs.Term[];
   getQuads(): RdfJs.Quad[];
-  getNeighborhood (point: RdfJs.Term | string, shapeLabel: string, shape: ShExJ.Shape): Neighborhood;
-  size(): number
+  getNeighborhood (point: RdfJs.Term, shapeLabel: string | typeof Start, shape: Shape): Neighborhood;
+  get size(): number
 }
 

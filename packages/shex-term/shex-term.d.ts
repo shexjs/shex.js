@@ -44,7 +44,7 @@ export function getLiteralValue(literal: any): any;
 
 export function inDefaultGraph(triple: any): any;
 
-export function internalTermToTurtle(node: any, meta: {base: string, prefixes: {[name: string]: string[]}}, aForType: boolean): any;
+export function internalTermToTurtle(node: any, meta?: {base: string, prefixes: {[name: string]: string[]}}, aForType?: boolean): any;
 
 export function internalTerm(node: any): any;
 

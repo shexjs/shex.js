@@ -15862,7 +15862,7 @@ function ShExValidator_constructor(schema, db, options) {
     if (typeof shapeExpr === "string") { // ShapeRef
       ret = this.validateShapeLabel(point, shapeExpr, tracker, seen, matchTarget, subGraph);
     } else if (shapeExpr.type === "NodeConstraint") {
-      const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
+      const errors = this._errorsMatchingNodeConstraint(point, shapeExpr);
       ret = Object.assign({}, {type: null, node: ldify(point)}, (shapeLabel ? {shape: shapeLabel} : {}), {shapeExpr});
       Object.assign(
         ret,
@@ -15952,7 +15952,7 @@ function ShExValidator_constructor(schema, db, options) {
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
     const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
-    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
+    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
 
     const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
     const partitionErrors = [];
@@ -16570,19 +16570,7 @@ function ShExValidator_constructor(schema, db, options) {
         }
       }
     });
-    return errors;
-    const ret = {
-      type: null,
-      focus: ldify(value),
-      shapeExpr: valueExpr
-    };
-    if (errors.length) {
-      ret.type = "NodeConstraintViolation";
-      ret.errors = errors;
-    } else {
-      ret.type = "NodeConstraintTest";
-    }
-    return ret;
+    return errors; // validateShapeExpr creates a ShExV result, but it could go down here.
   };
 
   this.semActHandler = {
