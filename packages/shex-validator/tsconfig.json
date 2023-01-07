@@ -1,0 +1,19 @@
+{
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "outDir": "./lib",
+        "rootDir": "./src",
+        "target": "es6",
+        "sourceMap": true,
+        "skipLibCheck": true,
+        "strict": true
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}

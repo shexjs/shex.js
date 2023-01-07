@@ -4,6 +4,7 @@ import * as RdfJs from '@rdfjs/types/data-model';
 import {shapeExprTest, Recursion} from "@shexjs/term/shexv";
 import {BooleanSemActFailure, SemActFailure} from "@shexjs/term/shexv";
 import {NeighborhoodDb} from "@shexjs/neighborhood-api";
+import {SchemaIndex} from "@shexjs/term";
 
 export {};
 
@@ -23,6 +24,11 @@ export interface Tc2t {
 export const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
 export type TcAssignment = number | typeof NoTripleConstraint;
+export type T2TcPartition = TcAssignment[];
+
+export interface ValidatorRegexModule {
+  compile(schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine
+}
 
 export interface ValidatorRegexEngine {
   match(
@@ -30,10 +36,10 @@ export interface ValidatorRegexEngine {
     point: string | object,
     constraintList: ShExJ.TripleConstraint[],
     tc2t: Tc2t[][],
-    t2tcForThisShape: TcAssignment[][],
+    t2tcForThisShape: T2TcPartition,
     neighborhood: RdfJs.Quad[] | null,
     semActHandler: SemActDispatcher,
-    trace: object[]
+    trace: object[] | null
   ): object;
 }
 
@@ -54,6 +60,7 @@ export interface SemActModule {
 export interface SemActDispatcher {
   register(name: string, handler: SemActHandler): void;
   dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): (SemActFailure | BooleanSemActFailure)[];
+  results: string | undefined; // TODO: still needed?
 }
 
 export interface SemActHandler {
