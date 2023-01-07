@@ -307,7 +307,7 @@ export class ShExValidator {
   validateApi (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): ShExJsResultMap {
     return shapeMap.map(pair => {
       let time = +new Date();
-      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen); // really tracker and seen
+      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
       time = +new Date() - time;
       return {
         node: pair.node,
@@ -321,7 +321,7 @@ export class ShExValidator {
 
   validateObj (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): shapeExprTest {
     const results = shapeMap.reduce<ResList>((ret, pair) => {
-      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen); // really tracker and seen
+      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
       return "errors" in res
           ? { passes: ret.passes, failures: ret.failures.concat([res]) }
           : { passes: ret.passes.concat([res]), failures: ret.failures } ;
@@ -338,24 +338,21 @@ export class ShExValidator {
   }
 
   validatePair (point: RdfJsTerm, label: string, tracker?: QueryTracker, seen?: SeenIndex) {
-    return this.validateShapeLabel (point, label, tracker, seen);
+    return this.validateShapeLabel (point, label, tracker || null, seen || {}, null, null);
   }
 
-  validateShapeLabel (point: RdfJsTerm, label: string | typeof Start, tracker?: QueryTracker, seen?: SeenIndex, matchTarget?: MatchTarget, subGraph?: NeighborhoodDb): shapeExprTest {
+  validateShapeLabel (point: RdfJsTerm, label: string | typeof Start, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     const outside = tracker === undefined;
     // logging stuff
     if (!tracker)
       tracker = this.emptyTracker;
-
-    if (seen === undefined)
-      seen = {};
 
     if (typeof label !== "string") {
       if (label !== Start)
         runtimeError(`unknown shape label ${JSON.stringify(label)}`);
       if (!this.schema.start)
         runtimeError("start production not defined");
-      return this._validateShapeExpr(point, this.schema.start, Start, 0, tracker, seen);
+      return this._validateShapeExpr(point, this.schema.start, Start, 0, tracker, seen, matchTarget, subGraph);
     }
 
     const shape = this._lookupShape(label);
@@ -392,7 +389,7 @@ export class ShExValidator {
     return ret;
   }
 
-  _validateDescendants(point: RdfJsTerm, shapeLabel: string, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | undefined, subGraph?: NeighborhoodDb, allowAbstract: boolean = false): shapeExprTest {
+  _validateDescendants(point: RdfJsTerm, shapeLabel: string, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null, allowAbstract: boolean = false): shapeExprTest {
     const _ShExValidator = this;
     if (subGraph) { // !! matchTarget?
       // matchTarget indicates that shape substitution has already been applied.
@@ -418,7 +415,7 @@ export class ShExValidator {
     // Aggregate results in a SolutionList or FailureList.
     const results = candidates.reduce<ResList>((ret, candidateShapeLabel) => {
       const shapeExpr = this._lookupShape(candidateShapeLabel);
-      const matchTarget = candidateShapeLabel === shapeLabel ? undefined : { label: shapeLabel, count: 0 };
+      const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
       const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, matchTarget, subGraph);
       return "errors" in res || matchTarget && matchTarget.count === 0 ?
         { passes: ret.passes, failures: ret.failures.concat(res) } :
@@ -484,7 +481,7 @@ export class ShExValidator {
     }
   }
 
-  _validateShapeDecl(point: RdfJsTerm, shapeDecl: ShExJ.ShapeDecl, shapeLabel: string, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | undefined, subGraph?: NeighborhoodDb): shapeExprTest {
+  _validateShapeDecl(point: RdfJsTerm, shapeDecl: ShExJ.ShapeDecl, shapeLabel: string, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr])
     const expr = conjuncts.length === 1
           ? conjuncts[0]
@@ -502,7 +499,7 @@ export class ShExValidator {
     runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
   }
 
-  _validateShapeExpr(point: RdfJsTerm, shapeExpr: shapeExprOrRef, shapeLabel: string | typeof Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget?: MatchTarget | undefined, subGraph?: NeighborhoodDb): shapeExprTest {
+  _validateShapeExpr(point: RdfJsTerm, shapeExpr: shapeExprOrRef, shapeLabel: string | typeof Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     if (typeof shapeExpr === "string") // ShapeRef
       return this._validateDescendants(point, shapeExpr, depth, tracker, seen, matchTarget, subGraph, true);
 
@@ -575,7 +572,7 @@ export class ShExValidator {
     return ret;
   }
 
-  _validateShape(point: RdfJsTerm, shape: Shape, shapeLabel: string | typeof  Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | undefined, subGraph?: NeighborhoodDb): shapeExprTest {
+  _validateShape(point: RdfJsTerm, shape: Shape, shapeLabel: string | typeof  Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     const valParms: ValParms = { db: this.db, shapeLabel, depth, tracker, seen };
 
     let ret = null;
@@ -731,6 +728,7 @@ export class ShExValidator {
         delete t.toString;
       });
 
+    // @ts-ignore
     return this.addShapeAttributes(shape, ret);
   }
 /*
@@ -751,7 +749,7 @@ export class ShExValidator {
     return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
   }
 */
-  matchByPredicate (constraintList: TripleConstraint[], neighborhood: Quad[], outgoingLength: number, point: RdfJsTerm, valParms: ValParms, matchTarget: MatchTarget | undefined): ByPredicateResult {
+  matchByPredicate (constraintList: TripleConstraint[], neighborhood: Quad[], outgoingLength: number, point: RdfJsTerm, valParms: ValParms, matchTarget: MatchTarget | null): ByPredicateResult {
     const _ShExValidator = this;
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -1031,7 +1029,7 @@ export class ShExValidator {
     return {getAllTripleConstraints};
   }
 
-  _triplesMatchingShapeExpr(triples: Quad[], constraint: TripleConstraint, valParms: ValParms, matchTarget: MatchTarget | undefined): TriplesMatching {
+  _triplesMatchingShapeExpr(triples: Quad[], constraint: TripleConstraint, valParms: ValParms, matchTarget: MatchTarget | null): TriplesMatching {
     const _ShExValidator = this;
     const misses: Miss[] = [];
     const hits: Hit[] = [];
@@ -1042,7 +1040,7 @@ export class ShExValidator {
       if (constraint.valueExpr === undefined)
         hits.push({triple, sub: undefined});
       else {
-        const sub = _ShExValidator._validateShapeExpr(value, constraint.valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, undefined) as any;
+        const sub = _ShExValidator._validateShapeExpr(value, constraint.valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, null) as any;
         if (sub.errors === undefined) {
           hits.push({triple: triple, sub: sub});
         } else /* !! if (!hits.find(h => h.triple === triple)) */ {
