@@ -185,7 +185,7 @@ function trivialMaterializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = !shape || shape === validator.start
+      shape = !shape || shape === validator.Start
         ? schema.start
         : schema.shapes.indexOf(shape) !== -1
         ? shape

@@ -4,7 +4,7 @@ ShExWebApp = (function () {
     ShExTerm:             require('@shexjs/term'),
     Util:                 require('@shexjs/util'),
     RdfJsDb:              require('@shexjs/neighborhood-rdfjs').ctor,
-    Validator:            require('@shexjs/validator'),
+    Validator:            require('@shexjs/validator').ShExValidator,
     Writer:               require('@shexjs/writer'),
     Loader:               require("@shexjs/loader"),
     Parser:               require("@shexjs/parser"),

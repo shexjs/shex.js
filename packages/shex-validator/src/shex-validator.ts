@@ -14,7 +14,7 @@ import {
 } from "@shexjs/eval-validator-api";
 import * as Hierarchy from 'hierarchy-closure';
 import type {Quad, Term as RdfJsTerm} from 'rdf-js';
-import {Neighborhood, NeighborhoodDb, Start} from "@shexjs/neighborhood-api";
+import {Neighborhood, NeighborhoodDb, Start as NeighborhoodStart} from "@shexjs/neighborhood-api";
 import {
   BooleanSemActFailure,
   FailureList,
@@ -182,6 +182,8 @@ class EmptyTracker implements QueryTracker {
   exit(term: RdfJsTerm, shapeLabel: string, res: shapeExprTest) { --this.depth; }
 }
 
+type LabelOrStart = string | typeof NeighborhoodStart;
+
 interface SeenIndex {
   [id: string]: { node: RdfJsTerm, shape: string };
 }
@@ -253,15 +255,10 @@ type Miss = {
   errors: shapeExprTest;
 };
 
-/* ShExValidator_constructor - construct an object for validating a schema.
- *
- * schema: a structure produced by a ShEx parser or equivalent.
- * options: object with controls for
- *   lax(true): boolean: whine about missing types in schema.
- *   diagnose(false): boolean: makde validate return a structure with errors.
- */
 export class ShExValidator {
-  public static start = Start;
+  public static Start = NeighborhoodStart;
+  public static InterfaceOptions = InterfaceOptions;
+
   public type: string;
   public options: ValidatorOptions;
   public known: {
@@ -274,9 +271,14 @@ export class ShExValidator {
   private db: NeighborhoodDb;
   private regexModule: ValidatorRegexModule;
 
+  /* ShExValidator - construct an object for validating a schema.
+   *
+   * schema: a structure produced by a ShEx parser or equivalent.
+   * options: object with controls for
+   *   lax(true): boolean: whine about missing types in schema.
+   *   diagnose(false): boolean: makde validate return a structure with errors.
+   */
   constructor(schema: InternalSchema, db: NeighborhoodDb, options: ValidatorOptions = {}) {
-    // if (!(this instanceof ShExValidator_constructor))
-    //   return new ShExValidator_constructor(schema, db, options);
     this.index = schema._index || indexSchema(schema)
     if (!("labelToTcs" in this.index)) // !! what is this?
       this.index.labelToTcs = {};
@@ -294,14 +296,6 @@ export class ShExValidator {
      */
     this.emptyTracker = new EmptyTracker();
     this.semActHandler = new SemActDispatcherImpl(options.semActs);
-
-/*
-    return {
-      construct: ShExValidator_constructor,
-      start: Start,
-      options: InterfaceOptions
-    };
- */
   }
 
   validateApi (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): ShExJsResultMap {
@@ -341,24 +335,24 @@ export class ShExValidator {
     return this.validateRoot (point, label, tracker || null, seen || {}, null, null);
   }
 
-  validateRoot (point: RdfJsTerm, label: string | typeof Start, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
+  validateRoot (point: RdfJsTerm, label: LabelOrStart, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     const ret: shapeExprTest = this.validateShapeLabel (point, label, tracker, seen, matchTarget, subGraph);
     if ("startActs" in this.schema) {
       (ret as ShapeTest).startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
     }
     return ret;
   }
-  validateShapeLabel (point: RdfJsTerm, label: string | typeof Start, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
+  validateShapeLabel (point: RdfJsTerm, label: LabelOrStart, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     // logging stuff
     if (!tracker)
       tracker = this.emptyTracker;
 
     if (typeof label !== "string") {
-      if (label !== Start)
+      if (label !== ShExValidator.Start)
         runtimeError(`unknown shape label ${JSON.stringify(label)}`);
       if (!this.schema.start)
         runtimeError("start production not defined");
-      return this._validateShapeExpr(point, this.schema.start, Start, 0, tracker, seen, matchTarget, subGraph);
+      return this._validateShapeExpr(point, this.schema.start, label, 0, tracker, seen, matchTarget, subGraph);
     }
 
     const shape = this._lookupShape(label);
@@ -502,7 +496,7 @@ export class ShExValidator {
     runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
   }
 
-  _validateShapeExpr(point: RdfJsTerm, shapeExpr: shapeExprOrRef, shapeLabel: string | typeof Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
+  _validateShapeExpr(point: RdfJsTerm, shapeExpr: shapeExprOrRef, shapeLabel: LabelOrStart, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     if (typeof shapeExpr === "string") // ShapeRef
       return this.validateShapeLabel(point, shapeExpr, tracker, seen, matchTarget, subGraph);
 
@@ -565,7 +559,7 @@ export class ShExValidator {
     }
   }
 
-  private evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: string | typeof Start) {
+  private evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
     if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
       const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
       if (semActErrors.length)
@@ -575,7 +569,7 @@ export class ShExValidator {
     return ret;
   }
 
-  _validateShape(point: RdfJsTerm, shape: Shape, shapeLabel: string | typeof  Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
+  _validateShape(point: RdfJsTerm, shape: Shape, shapeLabel: LabelOrStart, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     const valParms: ValParms = { db: this.db, shapeLabel, depth, tracker, seen };
 
     let ret = null;
@@ -860,7 +854,7 @@ export class ShExValidator {
       );
     }
 
-    function getNeighborhood (point: RdfJsTerm, shapeLabel: string | typeof Start, shape: Shape): Neighborhood {
+    function getNeighborhood (point: RdfJsTerm, shapeLabel: LabelOrStart, shape: Shape): Neighborhood {
       return {
         outgoing: outgoing,
         incoming: incoming

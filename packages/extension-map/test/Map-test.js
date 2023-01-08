@@ -13,7 +13,7 @@ const ShExNode = require("@shexjs/node")({
   rdfjs: RdfJs,
 });
 const ShExParser = require("@shexjs/parser");
-const ShExValidator = require("@shexjs/validator");
+const {ShExValidator} = require("@shexjs/validator");
 const Mapper = require("..")({rdfjs: RdfJs, Validator: ShExValidator});
 
 // var Promise = require("promise");
@@ -38,7 +38,7 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
     // loads[0].data.toString = loads[1].data.toString = g => graphToString(g);
     const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
     const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }
-    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
+    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.Start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
   })
 
 }
@@ -48,7 +48,7 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
   // console.log([inputData.graph.size, JSON.stringify(smap), expectedRdf.graph.size])
 
   // prepare validator    
-  var validator = ShExValidator.construct(srcSchema, RdfJsDb(inputData.graph), {noCache: true});
+  var validator = new ShExValidator(srcSchema, RdfJsDb(inputData.graph), {noCache: true});
   const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
   // run validator
@@ -93,7 +93,7 @@ function trivial (registered, schema, resultBindings, createRoot) {
 function materialize (registered, schema, resultBindings, createRoot) {
   const materializer = Mapper.materializer.construct(schema, registered, {});
   const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
-  const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.start}])
+  const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.Start}])
   if ("errors" in res2)
     throw Error(`unexpectd materialization error`)
   const store = new RdfJs.Store()
@@ -141,7 +141,7 @@ describe('A ShEx Mapper', function () {
 */
 });
 const ShapeMap = require("shape-map");
-ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const Awaiting = []
 const Examples = loadManifest()

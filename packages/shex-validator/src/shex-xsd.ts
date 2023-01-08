@@ -272,7 +272,7 @@ export function _errorsMatchingNodeConstraint_noCheck(value: RdfJsTerm, valueExp
       }
 
       if (valueExpr.values !== undefined) {
-        if (value instanceof Literal && valueExpr.values.reduce((ret, v) => {
+        if (value.termType === "Literal" && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           const ld = ldify(value);
           if (v.type === "Language") {

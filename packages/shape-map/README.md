@@ -36,7 +36,7 @@ const ShExLoader = require("@shexjs/loader")({
   // fetch: require('node-fetch'), // not needed with string arguments
 })
 const ShapeMap = require('shape-map')
-ShapeMap.start = ShExValidator.start // ShapeMap parser can use Validators's start symbol
+ShapeMap.start = ShExValidator.Start // ShapeMap parser can use Validators's start symbol
 
 main()
 async function main () {
@@ -140,13 +140,13 @@ example:
 ``` js
 const BASE = 'http://my.example/url/'
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const ShExValidator = require("..")
+const {ShExValidator} = require("..")
 const ShExLoader = require("@shexjs/loader")({
   rdfjs: require('n3'),         // use N3 as an RdfJs implementation
   // fetch: require('node-fetch'), // not needed with string arguments
 })
 const ShapeMap = require('shape-map')
-ShapeMap.start = ShExValidator.start // ShapeMap parser can use Validators's start symbol
+ShapeMap.start = ShExValidator.Start // ShapeMap parser can use Validators's start symbol
 
 main()
 async function main () {
@@ -165,7 +165,7 @@ s:S1 { p:p1 [1 2]; p:p2 [3 4] }`}]},
   )
   const smap = shapeMapParser.parse(`<#n>@s:S1`)
   console.log(smap)
-  const validator = ShExValidator.construct(schema, RdfJsDb(data), {})
+  const validator = new ShExValidator(schema, RdfJsDb(data), {})
   const res = validator.validate(smap)
   console.log(res)
 }

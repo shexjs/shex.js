@@ -9,7 +9,7 @@ const ShExLoader = ShEx.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
-ShEx.ShapeMap.start = ShEx.Validator.start
+ShEx.ShapeMap.Start = ShEx.Validator.Start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
@@ -202,13 +202,13 @@ function _makeCache (selection) {
 function makeSchemaCache (selection) {
   const ret = _makeCache(selection);
   ret.meta.termToLex = function (trm, aForTypes = true) {
-    return trm === ShEx.Validator.start
+    return trm === ShEx.Validator.Start
       ? START_SHAPE_LABEL
       : ShEx.ShExTerm.internalTermToTurtle(trm, ret.meta, true);
   };
   ret.meta.lexToTerm = function (lex) {
     return lex === START_SHAPE_LABEL
-      ? ShEx.Validator.start
+      ? ShEx.Validator.Start
       : turtleTermToLd(lex, new IRIResolver(ret.meta));
   };
   let graph = null;
@@ -257,13 +257,13 @@ function makeSchemaCache (selection) {
     }
 
     function parseShExR () {
-      const graphParser = ShEx.Validator.construct(
+      const graphParser = new ShEx.Validator(
         parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         ShEx.RdfJsDb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      const val = graphParser.validatePair(schemaRoot, ShEx.Validator.start); // start shape
+      const val = graphParser.validatePair(schemaRoot, ShEx.Validator.Start); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -864,7 +864,7 @@ async function callValidator (done) {
       try {
         const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null);
         let time;
-        const validator = ShEx.Validator.construct(
+        const validator = new ShEx.Validator(
           loaded.schema,
           inputData,
           { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
@@ -964,7 +964,7 @@ async function callValidator (done) {
     const fails = entry.status === "nonconformant";
 
     // locate FixedMap entry
-    const shapeString = entry.shape === ShEx.Validator.start ? START_SHAPE_INDEX_ENTRY : entry.shape;
+    const shapeString = entry.shape === ShEx.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
     const fixedMapEntry = $("#fixedMap .pair"+
                           "[data-node='"+entry.node+"']"+
                           "[data-shape='"+shapeString+"']");
@@ -1170,7 +1170,7 @@ async function materializeAsync () {
           // debug: true,
         });
         const db = ShEx.RdfJsDb(generatedGraph, null); // no query tracker needed
-        const validator = ShEx.Validator.construct(outputSchema, db, {
+        const validator = new ShEx.Validator(outputSchema, db, {
           results: "api",
           regexModule: ShEx["eval-simple-1err"],
         });
@@ -1320,7 +1320,7 @@ function addEditMapPairs (pairs, target) {
   function renderTP (tp) {
     const ret = ["subject", "predicate", "object"].map(k => {
       const ld = tp[k];
-      if (ld === ShEx.ShapeMap.focus)
+      if (ld === ShEx.ShapeMap.Focus)
         return "FOCUS";
       if (!ld) // ?? ShEx.Uti.any
         return "_";
@@ -1330,7 +1330,7 @@ function addEditMapPairs (pairs, target) {
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.start ? START_SHAPE_LABEL : ShEx.ShExTerm.internalTermToTurtle(term, Caches.inputSchema);
+    return term === ShEx.Validator.Start ? START_SHAPE_LABEL : ShEx.ShExTerm.internalTermToTurtle(term, Caches.inputSchema);
   }
 }
 
@@ -1604,7 +1604,7 @@ async function copyEditMapToFixedMap () {
     pair.nodes.forEach(node => {
       const nodeTerm = Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
       let shapeTerm = Caches.inputSchema.meta.lexToTerm(pair.shape);
-      if (shapeTerm === ShEx.Validator.start)
+      if (shapeTerm === ShEx.Validator.Start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       const key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
@@ -1624,12 +1624,12 @@ async function copyEditMapToFixedMap () {
   return []; // no errors
 
   async function getQuads (s, p, o) {
-    const get = s === ShEx.ShapeMap.focus ? "subject" : "object";
+    const get = s === ShEx.ShapeMap.Focus ? "subject" : "object";
     return (await Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
       return Caches.inputData.meta.termToLex(t[get]); // count on unpublished N3.js id API
     });
     function mine (term) {
-      return term === ShEx.ShapeMap.focus || term === ShEx.ShapeMap.wildcard
+      return term === ShEx.ShapeMap.Focus || term === ShEx.ShapeMap.Wildcard
         ? null
         : term;
     }
@@ -2322,7 +2322,7 @@ function addContextMenus (inputSelector, cache) {
       function tpToM (tp) {
         return [nodeLex, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
         function lex (node) {
-          return node === ShEx.ShapeMap.focus
+          return node === ShEx.ShapeMap.Focus
             ? "FOCUS"
             : node === null
             ? "_"

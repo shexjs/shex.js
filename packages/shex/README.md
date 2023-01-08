@@ -90,7 +90,7 @@ var Schema = null; // will be loaded and compiled asynchronously
 var Triples = null; // will be loaded and parsed asynchronously
 function validateWhenEverythingsLoaded () {
   if (Schema !== null && Triples !== null) {
-    console.log(shex.Validator.construct(Schema).validate(Triples, node, shape));
+    console.log(new shex.Validator(Schema).validate(Triples, node, shape));
   }
 }
 
@@ -132,8 +132,8 @@ const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator");
 ShExLoader.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
     var db = RdfJsDb(loaded.data);
-    var validator = ShExValidator.construct(loaded.schema, db, { results: "api" });
-    var result = validator.validate([{node: node, shape: ShExValidator.start}]);
+    var validator = new ShExValidator(loaded.schema, db, { results: "api" });
+    var result = validator.validate([{node: node, shape: ShExValidator.Start}]);
     console.log(result);
 });
 ```

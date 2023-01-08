@@ -45,7 +45,7 @@ const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
-const ShExValidator = require("@shexjs/validator");
+const {ShExValidator} = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
@@ -55,7 +55,7 @@ const ShExNode = require("@shexjs/node")({
 });
 const ExitCode = require('../lib/ExitCode')
 
-ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+ShapeMap.start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const ValidatorOptions = { diagnose: true };
 const SchemaOptions = { duplicateShape: "abort", index: true };
@@ -64,8 +64,8 @@ const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
 const START_SHAPE_LABEL = "START";
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-//const orChoices = Object.keys(ShExValidator.options.or).join("|");
-const covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
+//const orChoices = Object.keys(ShExValidator.InterfaceOptions.or).join("|");
+const covgChoices = Object.keys(ShExValidator.InterfaceOptions.coverage).join("|");
 const dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
 const CommandLineOptions = [
@@ -203,12 +203,12 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
     return triples.length > 0 ? triples.map(t => t.subject) : [ShExUtil.NotSupplied];
   };
   function getQuads (s, p, o) {
-    const get = s === ShapeMap.focus ? "subject" : "object";
+    const get = s === ShapeMap.Focus ? "subject" : "object";
     return loaded.data.getQuads(mine(s), mine(p), mine(o)).map(
       t => t[get]
     );
     function mine (term) {
-      return term === ShapeMap.focus || term === ShapeMap.wildcard
+      return term === ShapeMap.Focus || term === ShapeMap.Wildcard
         ? null
         : term;
     }
@@ -231,7 +231,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
 
     if (!shapeP && loaded.schema.start) {
       shape = loaded.schema.start;
-      shapeLabel = ShExValidator.start;
+      shapeLabel = ShExValidator.Start;
       ret.shape = shapeLabel;
     } else {
       const found = typeof shapeP === "string"
@@ -561,7 +561,7 @@ function rdflib_termToLex (node, resolver) {
     return node;
   if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     return "a";
-  if (node === ShExValidator.start)
+  if (node === ShExValidator.Start)
     return START_SHAPE_LABEL;
   if (node === resolver._base)
     return "<>";
@@ -620,8 +620,8 @@ if ("duplicate-shape" in cmds)
   SchemaOptions.duplicateShape = cmds["duplicate-shape"];
 
 if (cmds.coverage) {
-  if (!(cmds.coverage in ShExValidator.options.coverage))
-    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.options.coverage).join(", ") + "\".");
+  if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
+    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
   ValidatorOptions.coverage = cmds.coverage;
 }
 
@@ -679,7 +679,7 @@ function queueTests (tests, cmds) {
 
 function runValidator (db, shapeMap, schema, options) {
   // prepare validator
-  const validator = ShExValidator.construct(schema, db, options);
+  const validator = new ShExValidator(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);

@@ -243,7 +243,7 @@ _QjsonAttributes_E_Opt:
 
 statusAndShape:
       GT_AT _Qstatus_E_Opt shapeSelector	-> extend({ shape: $3 }, $2)
-    | ATSTART	-> { shape: ShapeMap.start }
+    | ATSTART	-> { shape: ShapeMap.Start }
     | ATPNAME_NS	{
         $1 = $1.substr(1, $1.length-1);
         $$ = { shape: yy.schemaMeta.expandPrefix($1.substr(0, $1.length - 1), yy) };
@@ -275,7 +275,7 @@ nodeSelector:
 
 shapeSelector:
       shapeIri	
-    | START	-> ShapeMap.start
+    | START	-> ShapeMap.Start
     ;
 
 subjectTerm:
@@ -289,8 +289,8 @@ objectTerm:
     ;
 
 triplePattern:
-      GT_LCURLEY IT_FOCUS nodePredicate _O_QobjectTerm_E_Or_QIT___E_C GT_RCURLEY	-> { type: "TriplePattern", subject: ShapeMap.focus, predicate: $3, object: $4 }
-    | GT_LCURLEY _O_QsubjectTerm_E_Or_QIT___E_C nodePredicate IT_FOCUS GT_RCURLEY	-> { type: "TriplePattern", subject: $2, predicate: $3, object: ShapeMap.focus }
+      GT_LCURLEY IT_FOCUS nodePredicate _O_QobjectTerm_E_Or_QIT___E_C GT_RCURLEY	-> { type: "TriplePattern", subject: ShapeMap.Focus, predicate: $3, object: $4 }
+    | GT_LCURLEY _O_QsubjectTerm_E_Or_QIT___E_C nodePredicate IT_FOCUS GT_RCURLEY	-> { type: "TriplePattern", subject: $2, predicate: $3, object: ShapeMap.Focus }
     ;
 
 _O_QobjectTerm_E_Or_QIT___E_C:

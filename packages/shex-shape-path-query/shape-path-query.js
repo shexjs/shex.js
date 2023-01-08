@@ -1,4 +1,4 @@
-const ShExValidator = require('@shexjs/validator')
+const {ShExValidator} = require('@shexjs/validator')
 const ShExUtil = require('@shexjs/util')
 const ShExTerm = require('@shexjs/term')
 const ShExMap = require('@shexjs/extension-map')
@@ -20,7 +20,7 @@ function shapePathQuery (schema, nodeSet, db, smap) {
   })
 
   // Construct validator with ShapeMap semantic action handler.
-  const validator = ShExValidator.construct(schema, db, {})
+  const validator = new ShExValidator(schema, db, {})
   MapModule.register(validator, { ShExTerm })
 
   // Validate data against schema.

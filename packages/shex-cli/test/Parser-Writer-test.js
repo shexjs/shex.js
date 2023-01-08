@@ -10,7 +10,7 @@ const Fs = require("fs");
 const ShExParser = require("@shexjs/parser");
 const ShExUtil = require("@shexjs/util");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
-const ShExValidator = require("@shexjs/validator");
+const {ShExValidator} = require("@shexjs/validator");
 const ShExWriter = require("@shexjs/writer");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
@@ -182,12 +182,12 @@ describe("A ShEx parser", function () {
              // console.log(schemaGraph.getQuads());
              const schemaDriver = RdfJsDb(schemaGraph);
              const schemaRoot = schemaDriver.getQuads(null, ShExUtil.RDF.type, nsPath + "Schema")[0].subject;
-             const graphParser = ShExValidator.construct(
+             const graphParser = new ShExValidator(
                GraphSchema,
                schemaDriver,
                {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
-             const val = graphParser.validatePair(schemaRoot, ShExValidator.start); // start shape
+             const val = graphParser.validatePair(schemaRoot, ShExValidator.Start); // start shape
              if ("errors" in val)
                throw Error(`${shexRFile} did not comply with ShExR.shex\n${JSON.stringify(val.errors, null, 2)}`);
              const parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));

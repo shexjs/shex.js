@@ -8,7 +8,7 @@ const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const ShExValidator = require("..").ShExValidator;
+const {ShExValidator} = require("..");
 const TestExtension = require("@shexjs/extension-test")
 
 const N3 = require("n3");
@@ -185,7 +185,7 @@ describe("A ShEx validator", function () {
                         // }, [])
                       } else {
                         var focus = maybeGetTerm(dataURL, test.action.focus);
-                        var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.start;
+                        var shape = maybeGetTerm(schemaURL, test.action.shape) || ShExValidator.Start;
                         map = [{node: focus, shape: shape}];
                       }
                       validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);

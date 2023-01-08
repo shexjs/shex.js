@@ -322,13 +322,13 @@ const ShExLoaderCjsModule = function (config = {}) {
       const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler)
       const graph = new config.rdfjs.Store();
       graph.addQuads(x.graph);
-      const graphParser = schemaOptions.graphParser.validator.construct(
+      const graphParser = new schemaOptions.graphParser.validator(
         schemaOptions.graphParser.schema,
         schemaOptions.graphParser.rdfjsdb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.start);
+      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.Start);
       if ("errors" in val)
         throw ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));

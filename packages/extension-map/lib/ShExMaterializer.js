@@ -8,7 +8,7 @@
 
 const ShExMapMaterializerCjsModule = function (config) {
 
-const Start = config.Validator.start;
+const Start = config.Validator.Start;
 
 // interface constants
 const InterfaceOptions = {
@@ -236,7 +236,7 @@ function makeCache () {
   };
 }
 
-/* ShExValidator_constructor - construct an object for validating a schema.
+/* ShExValidator - construct an object for validating a schema.
  *
  * schema: a structure produced by a ShEx parser or equivalent.
  * options: object with controls for
@@ -331,7 +331,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
    */
   this.validate = function (db, point, labelOrShape, depth, seen) {
     // default to schema's start shape
-    if (!labelOrShape || labelOrShape === config.Validator.start) {
+    if (!labelOrShape || labelOrShape === config.Validator.Start) {
       if (!schema.start)
         runtimeError("start production not defined");
       labelOrShape = schema.start;
