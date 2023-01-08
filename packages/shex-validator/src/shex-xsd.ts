@@ -289,8 +289,8 @@ export function _errorsMatchingNodeConstraint_noCheck(value: RdfJsTerm, valueExp
           // trivial match
         } else {
           if (!(valueExpr.values.some(function (valueConstraint) {
-            if (typeof valueConstraint === "object" && !(valueConstraint.value !== undefined)) { // i.e. not a simple term
-              if (!(valueConstraint.type !== undefined))
+            if (typeof valueConstraint === "object" && valueConstraint.value === undefined) { // i.e. not a simple term
+              if (!("type" in valueConstraint)) // got undefined is undefined when testing ```valueConstraint.type === undefined```
                 runtimeError("expected "+JSON.stringify(valueConstraint)+" to have a 'type' attribute.");
               const ExpectedTypePattern = /(Iri|Literal|Language)(Stem)?(Range)?/;
               const matchType = valueConstraint.type.match(ExpectedTypePattern);

@@ -3,7 +3,8 @@
 import {shapeExpr, Shape} from 'shexj';
 // import {Neighborhood} from '@shexjs/neighborhood-api';
 import * as RdfJs from "@rdfjs/types/data-model";
-import {Start} from "@shexjs/validator";
+//import {Start} from "@shexjs/validator";
+export const Start = { term: "START" }
 
 export {};
 

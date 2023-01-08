@@ -60,7 +60,7 @@ export interface SemActModule {
 export interface SemActDispatcher {
   register(name: string, handler: SemActHandler): void;
   dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): (SemActFailure | BooleanSemActFailure)[];
-  results: string | undefined; // TODO: still needed?
+  results: { [id: string]: string | undefined }; // TODO: improve this trivial storage mechanism
 }
 
 export interface SemActHandler {

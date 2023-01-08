@@ -15,7 +15,7 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-validator.js",
+  "main": "./lib/shex-validator.js",
   "engines": {
     "node": ">=0.10.0"
   },

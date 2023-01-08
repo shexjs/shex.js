@@ -44,7 +44,7 @@ export function executeQueryPromise(query: any, endpoint: any): any;
 export function executeQuery(query: any, endpoint: any): any;
 export function unescapeText(string: any, replacements: any): any;
 
-    // interface Index {
-    //   shapeExprs: { [key: string]: ShExJ.ShapeDecl; }
-    //   tripelExprs: { [key: string]: ShExJ.tripleExpr; }
-    // }
+export interface Index {
+  shapeExprs: { [key: string]: ShExJ.ShapeDecl; }
+  tripelExprs: { [key: string]: ShExJ.tripleExpr; }
+}

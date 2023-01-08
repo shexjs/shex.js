@@ -64,7 +64,7 @@ export function LdToRdfJsTerm (ld: LdTerm): RdfJsTerm;
 
 export interface Meta {
   base: string;
-  prefixes = {
+  prefixes: {
     [id: string]: string
   };
 }

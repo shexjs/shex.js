@@ -4,7 +4,8 @@
 // interface constants
 import * as ShExTerm from "@shexjs/term";
 import {InternalSchema, SchemaIndex, ShapeMap, ShapeMapEntry} from "@shexjs/term";
-import {ShExVisitor, index as indexSchema} from "@shexjs/visitor";
+const ShExVisitor = require("@shexjs/visitor");
+const indexSchema = ShExVisitor.index;
 import {
   NoTripleConstraint,
   QueryTracker,
@@ -13,7 +14,7 @@ import {
 } from "@shexjs/eval-validator-api";
 import * as Hierarchy from 'hierarchy-closure';
 import type {Quad, Term as RdfJsTerm} from 'rdf-js';
-import {Neighborhood, NeighborhoodDb} from "@shexjs/neighborhood-api";
+import {Neighborhood, NeighborhoodDb, Start} from "@shexjs/neighborhood-api";
 import {
   BooleanSemActFailure,
   FailureList,
@@ -39,7 +40,7 @@ import {
   shapeDeclRef,
   shapeExprOrRef, ShapeNot, ShapeOr,
   EachOf, OneOf,
-  TripleConstraint,
+  TripleConstraint, tripleExpr,
 } from "shexj";
 import {_errorsMatchingNodeConstraint_noCheck} from "./shex-xsd";
 
@@ -51,7 +52,6 @@ interface Xdb extends NeighborhoodDb {
   addOutgoingTriples(tz: Quad[]): void;
 }
 
-export const Start = { term: "START" }
 export const InterfaceOptions = {
   "coverage": {
     "firstError": "fail on first error (usually used with eval-simple-1err)",
@@ -113,7 +113,7 @@ interface NeighborhoodIndex {
 class SemActDispatcherImpl implements SemActDispatcher {
   handlers: { [id: string]: SemActHandler; } = {};
   externalCode: SemActCodeIndex;
-  results: string | undefined;
+  public results: { [id: string]: string | undefined } = {};
 
   constructor(externalCode?: SemActCodeIndex) {
     this.externalCode = externalCode || {};
@@ -261,6 +261,7 @@ type Miss = {
  *   diagnose(false): boolean: makde validate return a structure with errors.
  */
 export class ShExValidator {
+  public static start = Start;
   public type: string;
   public options: ValidatorOptions;
   public known: {
@@ -284,7 +285,6 @@ export class ShExValidator {
     this.options = options;
     this.known = {};
 
-    const _ShExValidator = this;
     this.schema = schema;
     this.db = db;
     // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
@@ -307,7 +307,7 @@ export class ShExValidator {
   validateApi (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): ShExJsResultMap {
     return shapeMap.map(pair => {
       let time = +new Date();
-      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
+      const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
       time = +new Date() - time;
       return {
         node: pair.node,
@@ -321,7 +321,7 @@ export class ShExValidator {
 
   validateObj (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): shapeExprTest {
     const results = shapeMap.reduce<ResList>((ret, pair) => {
-      const res = this.validateShapeLabel(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
+      const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
       return "errors" in res
           ? { passes: ret.passes, failures: ret.failures.concat([res]) }
           : { passes: ret.passes.concat([res]), failures: ret.failures } ;
@@ -338,11 +338,17 @@ export class ShExValidator {
   }
 
   validatePair (point: RdfJsTerm, label: string, tracker?: QueryTracker, seen?: SeenIndex) {
-    return this.validateShapeLabel (point, label, tracker || null, seen || {}, null, null);
+    return this.validateRoot (point, label, tracker || null, seen || {}, null, null);
   }
 
+  validateRoot (point: RdfJsTerm, label: string | typeof Start, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
+    const ret: shapeExprTest = this.validateShapeLabel (point, label, tracker, seen, matchTarget, subGraph);
+    if ("startActs" in this.schema) {
+      (ret as ShapeTest).startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
+    }
+    return ret;
+  }
   validateShapeLabel (point: RdfJsTerm, label: string | typeof Start, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
-    const outside = tracker === undefined;
     // logging stuff
     if (!tracker)
       tracker = this.emptyTracker;
@@ -383,9 +389,6 @@ export class ShExValidator {
       if ("known" in this)
         this.known[seenKey] = ret;
     }
-    if ("startActs" in this.schema && outside) {
-      (ret as ShapeTest).startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
-    }
     return ret;
   }
 
@@ -410,7 +413,7 @@ export class ShExValidator {
     }
     // Filter out abstract shapes.
     if (!allowAbstract)
-      candidates = candidates.filter(l => this._lookupShape(l).abstract);
+      candidates = candidates.filter(l => !this._lookupShape(l).abstract);
 
     // Aggregate results in a SolutionList or FailureList.
     const results = candidates.reduce<ResList>((ret, candidateShapeLabel) => {
@@ -453,10 +456,10 @@ export class ShExValidator {
         let curAbstract;
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
 
-        schemaVisitor.visitShapeDecl = function (decl) {
+        schemaVisitor.visitShapeDecl = function (decl: ShapeDecl) {
           curLabel = decl.id;
           curAbstract = decl.abstract;
-          abstractness[decl.id] = decl.abstract;
+          abstractness[decl.id] = !!decl.abstract;
           return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
         };
 
@@ -464,8 +467,8 @@ export class ShExValidator {
           if (shape.extends !== undefined) {
             shape.extends.forEach(ext => {
               const extendsVisitor = new ShExVisitor();
-              extendsVisitor.visitExpression = function (expr, ...args) { return "null"; }
-              extendsVisitor.visitShapeRef = function (reference, ...args) {
+              extendsVisitor.visitExpression = function (expr: tripleExpr, ...args: never[]) { return "null"; }
+              extendsVisitor.visitShapeRef = function (reference: string, ...args: never[]) {
                 extensions.add(reference, curLabel);
                 extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(reference))
                 // makeSchemaVisitor().visitSchema(schema);
@@ -491,7 +494,7 @@ export class ShExValidator {
 
   _lookupShape(label: string): ShapeDecl {
     const shapes = this.schema.shapes;
-    if (shapes !== undefined) {
+    if (shapes === undefined) {
       runtimeError("shape " + label + " not found; no shapes in schema");
     } else if (label in this.index.shapeExprs) {
       return this.index.shapeExprs[label]
@@ -501,7 +504,7 @@ export class ShExValidator {
 
   _validateShapeExpr(point: RdfJsTerm, shapeExpr: shapeExprOrRef, shapeLabel: string | typeof Start, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     if (typeof shapeExpr === "string") // ShapeRef
-      return this._validateDescendants(point, shapeExpr, depth, tracker, seen, matchTarget, subGraph, true);
+      return this.validateShapeLabel(point, shapeExpr, tracker, seen, matchTarget, subGraph);
 
     switch (shapeExpr.type) {
       case "NodeConstraint":
@@ -997,7 +1000,7 @@ export class ShExValidator {
       return l * expr.max;
     }
 
-    function and<T> (... tes: T[][]): T[] {
+    function and<T> (tes: T[][]): T[] {
       // @ts-ignore
       return [].concat.apply([], tes);
     }
@@ -1011,12 +1014,12 @@ export class ShExValidator {
       return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, n(outerMin, expr), x(outerMax, expr))))
     }
 
-    visitor.visitInclusion = function (inclusion, outerMin: number, outerMax: number) {
+    visitor.visitInclusion = function (inclusion: string, outerMin: number, outerMax: number) {
       return visitor.visitTripleExpr(_ShExValidator.index.tripleExprs[inclusion], outerMin, outerMax);
     }
 
     // Synthesize a TripleConstraint with the implicit cardinality.
-    visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
+    visitor.visitTripleConstraint = function (expr: TripleConstraint, outerMin: number, outerMax: number) {
       return [expr];
       /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
          const ret = JSON.parse(JSON.stringify(expr));
@@ -1088,6 +1091,7 @@ class TripleToTripleConstraints {
   constructor (constraintList: T2TCs, extendsTCcount: number, tc2exts:number[][]) {
     this.extendsTCcount = extendsTCcount; this.tc2exts = tc2exts;
     this.subgraphCache = new Map();
+    // @ts-ignore
     this.crossProduct = CrossProduct<typeof NoTripleConstraint>(constraintList, NoTripleConstraint);
   }
 
@@ -1136,7 +1140,7 @@ class TripleToTripleConstraints {
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function CrossProduct<T>(sets: number[][], emptyValue: T) {
   const n = sets.length, carets: number[] = [];
-  let args: (number | T)[] = [];
+  let args: (number | T)[] | null = null;
 
   function init() {
     args = [];
