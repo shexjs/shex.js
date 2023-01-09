@@ -15586,7 +15586,7 @@ class ShExValidator {
     validateApi(shapeMap, tracker, seen) {
         return shapeMap.map(pair => {
             let time = +new Date();
-            const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
+            const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null);
             time = +new Date() - time;
             return {
                 node: pair.node,
@@ -15599,7 +15599,7 @@ class ShExValidator {
     }
     validateObj(shapeMap, tracker, seen) {
         const results = shapeMap.reduce((ret, pair) => {
-            const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
+            const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null);
             return "errors" in res
                 ? { passes: ret.passes, failures: ret.failures.concat([res]) }
                 : { passes: ret.passes.concat([res]), failures: ret.failures };
@@ -15773,15 +15773,7 @@ class ShExValidator {
             return this.validateShapeLabel(point, shapeExpr, tracker, seen, matchTarget, subGraph);
         switch (shapeExpr.type) {
             case "NodeConstraint":
-                const ncErrors = this._errorsMatchingNodeConstraint(point, shapeExpr);
-                const ncRet = Object.assign({}, {
-                    type: null,
-                    node: ldify(point)
-                }, (shapeLabel ? { shape: shapeLabel } : {}), { shapeExpr });
-                Object.assign(ncRet, ncErrors.length > 0
-                    ? { type: "NodeConstraintViolation", errors: ncErrors }
-                    : { type: "NodeConstraintTest", });
-                return this.evaluateShapeExprSemActs(ncRet, shapeExpr, point, shapeLabel);
+                return this._validateNodeConstraint(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
                 break;
             case "Shape":
                 return this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
@@ -16257,47 +16249,54 @@ class ShExValidator {
         });
         return { hits: hits, misses: misses };
     }
-    /* _errorsMatchingNodeConstraint - return whether the value matches the value
+    /* _validateNodeConstraint - return whether the value matches the value
      * expression without checking shape references.
      */
-    _errorsMatchingNodeConstraint(value, valueExpr) {
+    _validateNodeConstraint(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
         const errors = [];
         function validationError(...s) {
             const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+            errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(point) + " as " + JSON.stringify(shapeExpr) + ": " + errorStr);
             return false;
         }
-        if (valueExpr.nodeKind !== undefined) {
-            if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
-                validationError(`unknown node kind '${valueExpr.nodeKind}'`);
+        if (shapeExpr.nodeKind !== undefined) {
+            if (["iri", "bnode", "literal", "nonliteral"].indexOf(shapeExpr.nodeKind) === -1) {
+                validationError(`unknown node kind '${shapeExpr.nodeKind}'`);
             }
-            if (ShExTerm.isBlank(value)) {
-                if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
-                    validationError(`blank node found when ${valueExpr.nodeKind} expected`);
+            if (ShExTerm.isBlank(point)) {
+                if (shapeExpr.nodeKind === "iri" || shapeExpr.nodeKind === "literal") {
+                    validationError(`blank node found when ${shapeExpr.nodeKind} expected`);
                 }
             }
-            else if (ShExTerm.isLiteral(value)) {
-                if (valueExpr.nodeKind !== "literal") {
-                    validationError(`literal found when ${valueExpr.nodeKind} expected`);
+            else if (ShExTerm.isLiteral(point)) {
+                if (shapeExpr.nodeKind !== "literal") {
+                    validationError(`literal found when ${shapeExpr.nodeKind} expected`);
                 }
             }
-            else if (valueExpr.nodeKind === "bnode" || valueExpr.nodeKind === "literal") {
-                validationError(`iri found when ${valueExpr.nodeKind} expected`);
+            else if (shapeExpr.nodeKind === "bnode" || shapeExpr.nodeKind === "literal") {
+                validationError(`iri found when ${shapeExpr.nodeKind} expected`);
             }
         }
-        if (valueExpr.datatype && valueExpr.values)
-            validationError("found both datatype and values in " + valueExpr);
-        if (valueExpr.values !== undefined) {
-            if (!valueExpr.values.some(valueSetValue => testValueSetValue(valueSetValue, value))) {
-                validationError(`value ${(value.value)} not found in set ${JSON.stringify(valueExpr.values)}`);
+        if (shapeExpr.datatype && shapeExpr.values)
+            validationError("found both datatype and values in " + shapeExpr);
+        if (shapeExpr.values !== undefined) {
+            if (!shapeExpr.values.some(valueSetValue => testValueSetValue(valueSetValue, point))) {
+                validationError(`value ${(point.value)} not found in set ${JSON.stringify(shapeExpr.values)}`);
             }
         }
-        const numeric = (0, shex_xsd_1.getNumericDatatype)(value);
-        if (valueExpr.datatype !== undefined) {
-            (0, shex_xsd_1.testKnownTypes)(value, validationError, ldify, valueExpr.datatype, numeric, value.value);
+        const numeric = (0, shex_xsd_1.getNumericDatatype)(point);
+        if (shapeExpr.datatype !== undefined) {
+            (0, shex_xsd_1.testKnownTypes)(point, validationError, ldify, shapeExpr.datatype, numeric, point.value);
         }
-        (0, shex_xsd_1.testFacets)(valueExpr, value.value, validationError, numeric);
-        return errors; // validateShapeExpr creates a ShExV result, but it could go down here.
+        (0, shex_xsd_1.testFacets)(shapeExpr, point.value, validationError, numeric);
+        const ncRet = Object.assign({}, {
+            type: null,
+            node: ldify(point)
+        }, (shapeLabel ? { shape: shapeLabel } : {}), { shapeExpr });
+        Object.assign(ncRet, errors.length > 0
+            ? { type: "NodeConstraintViolation", errors: errors }
+            : { type: "NodeConstraintTest", });
+        return this.evaluateShapeExprSemActs(ncRet, shapeExpr, point, shapeLabel);
     }
 }
 exports.ShExValidator = ShExValidator;

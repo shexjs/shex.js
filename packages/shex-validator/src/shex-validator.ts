@@ -221,7 +221,6 @@ interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]};
 type TripleNo = number;
 type ConsraintNo = number;
 
-
 interface ValParms {
   db: NeighborhoodDb;
   shapeLabel: string | { term: string };
@@ -320,7 +319,7 @@ export class ShExValidator {
   validateApi (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): ShExJsResultMap {
     return shapeMap.map(pair => {
       let time = +new Date();
-      const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
+      const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null);
       time = +new Date() - time;
       return {
         node: pair.node,
@@ -334,7 +333,7 @@ export class ShExValidator {
 
   validateObj (shapeMap: ShapeMap, tracker?: QueryTracker, seen?: SeenIndex): shapeExprTest {
     const results = shapeMap.reduce<ResList>((ret, pair) => {
-      const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null); // really tracker and seen
+      const res = this.validateRoot(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker || null, seen || {}, null, null);
       return "errors" in res
           ? { passes: ret.passes, failures: ret.failures.concat([res]) }
           : { passes: ret.passes.concat([res]), failures: ret.failures } ;
@@ -361,6 +360,7 @@ export class ShExValidator {
     }
     return ret;
   }
+
   validateShapeLabel (point: RdfJsTerm, label: LabelOrStart, tracker: QueryTracker | null, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     // logging stuff
     if (!tracker)
@@ -521,18 +521,7 @@ export class ShExValidator {
 
     switch (shapeExpr.type) {
       case "NodeConstraint":
-        const ncErrors = this._errorsMatchingNodeConstraint(point, shapeExpr);
-        const ncRet = Object.assign({}, {
-          type: null,
-          node: ldify(point)
-        }, (shapeLabel ? {shape: shapeLabel} : {}), {shapeExpr});
-        Object.assign(
-            ncRet,
-            ncErrors.length > 0
-                ? {type: "NodeConstraintViolation", errors: ncErrors}
-                : {type: "NodeConstraintTest",}
-        );
-        return this.evaluateShapeExprSemActs(ncRet as any as shapeExprTest, shapeExpr, point, shapeLabel);
+        return this._validateNodeConstraint(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
         break;
       case "Shape":
         return this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
@@ -1068,51 +1057,61 @@ export class ShExValidator {
     return { hits: hits, misses: misses };
   }
 
-  /* _errorsMatchingNodeConstraint - return whether the value matches the value
+  /* _validateNodeConstraint - return whether the value matches the value
    * expression without checking shape references.
    */
-  _errorsMatchingNodeConstraint(value: RdfJsTerm, valueExpr: NodeConstraint): string[] {
+  _validateNodeConstraint(point: RdfJsTerm, shapeExpr: NodeConstraint, shapeLabel: LabelOrStart, depth: number, tracker: QueryTracker, seen: SeenIndex, matchTarget: MatchTarget | null, subGraph: NeighborhoodDb | null): shapeExprTest {
     const errors: string[] = [];
     function validationError (...s:string[]): boolean {
       const errorStr = Array.prototype.join.call(s, "");
-      errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(point) + " as " + JSON.stringify(shapeExpr) + ": " + errorStr);
       return false;
     }
 
-    if (valueExpr.nodeKind !== undefined) {
-      if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
-        validationError(`unknown node kind '${valueExpr.nodeKind}'`);
+    if (shapeExpr.nodeKind !== undefined) {
+      if (["iri", "bnode", "literal", "nonliteral"].indexOf(shapeExpr.nodeKind) === -1) {
+        validationError(`unknown node kind '${shapeExpr.nodeKind}'`);
       }
-      if (ShExTerm.isBlank(value)) {
-        if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
-          validationError(`blank node found when ${valueExpr.nodeKind} expected`);
+      if (ShExTerm.isBlank(point)) {
+        if (shapeExpr.nodeKind === "iri" || shapeExpr.nodeKind === "literal") {
+          validationError(`blank node found when ${shapeExpr.nodeKind} expected`);
         }
-      } else if (ShExTerm.isLiteral(value)) {
-        if (valueExpr.nodeKind !== "literal") {
-          validationError(`literal found when ${valueExpr.nodeKind} expected`);
+      } else if (ShExTerm.isLiteral(point)) {
+        if (shapeExpr.nodeKind !== "literal") {
+          validationError(`literal found when ${shapeExpr.nodeKind} expected`);
         }
-      } else if (valueExpr.nodeKind === "bnode" || valueExpr.nodeKind === "literal") {
-        validationError(`iri found when ${valueExpr.nodeKind} expected`);
+      } else if (shapeExpr.nodeKind === "bnode" || shapeExpr.nodeKind === "literal") {
+        validationError(`iri found when ${shapeExpr.nodeKind} expected`);
       }
     }
 
-    if (valueExpr.datatype  && valueExpr.values) validationError("found both datatype and values in " + valueExpr);
+    if (shapeExpr.datatype  && shapeExpr.values) validationError("found both datatype and values in " + shapeExpr);
 
-    if (valueExpr.values !== undefined) {
-      if (!valueExpr.values.some(valueSetValue => testValueSetValue(valueSetValue, value))) {
-        validationError(`value ${(value.value)} not found in set ${JSON.stringify(valueExpr.values)}`);
+    if (shapeExpr.values !== undefined) {
+      if (!shapeExpr.values.some(valueSetValue => testValueSetValue(valueSetValue, point))) {
+        validationError(`value ${(point.value)} not found in set ${JSON.stringify(shapeExpr.values)}`);
       }
     }
 
-    const numeric = getNumericDatatype(value);
+    const numeric = getNumericDatatype(point);
 
-    if (valueExpr.datatype !== undefined) {
-      testKnownTypes(value, validationError, ldify, valueExpr.datatype, numeric, value.value);
+    if (shapeExpr.datatype !== undefined) {
+      testKnownTypes(point, validationError, ldify, shapeExpr.datatype, numeric, point.value);
     }
 
-    testFacets(valueExpr, value.value, validationError, numeric);
+    testFacets(shapeExpr, point.value, validationError, numeric);
 
-    return errors; // validateShapeExpr creates a ShExV result, but it could go down here.
+    const ncRet = Object.assign({}, {
+      type: null,
+      node: ldify(point)
+    }, (shapeLabel ? {shape: shapeLabel} : {}), {shapeExpr});
+    Object.assign(
+      ncRet,
+      errors.length > 0
+        ? {type: "NodeConstraintViolation", errors: errors}
+      : {type: "NodeConstraintTest",}
+    );
+    return this.evaluateShapeExprSemActs(ncRet as any as shapeExprTest, shapeExpr, point, shapeLabel);
   }
 }
 
@@ -1199,6 +1198,7 @@ function testValueSetValue(valueSetValueP: string | ObjectLiteral | IriStem | Ir
     }
   }
 }
+
 /** Explore permutations of mapping from Triples to TripleConstraints
  * documented using test ExtendsRepeatedP-pass
  */
