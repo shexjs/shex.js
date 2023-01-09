@@ -4,45 +4,64 @@
 // interface constants
 import * as ShExTerm from "@shexjs/term";
 import {InternalSchema, SchemaIndex, ShapeMap, ShapeMapEntry} from "@shexjs/term";
-const ShExVisitor = require("@shexjs/visitor");
-const indexSchema = ShExVisitor.index;
 import {
   NoTripleConstraint,
   QueryTracker,
   SemActDispatcher,
-  SemActHandler, T2TcPartition, ValidatorRegexEngine, ValidatorRegexModule
+  SemActHandler,
+  T2TcPartition,
+  ValidatorRegexEngine,
+  ValidatorRegexModule
 } from "@shexjs/eval-validator-api";
 import * as Hierarchy from 'hierarchy-closure';
 import type {Quad, Term as RdfJsTerm} from 'rdf-js';
 import {Neighborhood, NeighborhoodDb, Start as NeighborhoodStart} from "@shexjs/neighborhood-api";
 import {
   BooleanSemActFailure,
+  error,
+  Failure,
   FailureList,
+  NodeConstraintTest,
+  NodeConstraintViolation,
   Recursion,
   SemActFailure,
+  ShapeAndFailure,
   shapeExprTest,
+  ShapeNotFailure,
+  ShapeNotResults,
   ShapeTest,
   SolutionList,
-  Failure,
-  NodeConstraintViolation,
-  NodeConstraintTest,
-  ShapeAndFailure,
-  ShapeNotResults,
-  ShapeNotFailure,
-  error,
 } from "@shexjs/term/shexv";
 import * as ShExJ from "shexj";
 import {
+  EachOf,
+  IRIREF,
+  IriStem,
+  IriStemRange,
+  Language,
+  LanguageStem,
+  LanguageStemRange,
+  LiteralStem,
+  LiteralStemRange,
   NodeConstraint,
+  ObjectLiteral,
+  OneOf,
   Schema,
-  Shape, ShapeAnd,
+  Shape,
+  ShapeAnd,
   ShapeDecl,
   shapeDeclRef,
-  shapeExprOrRef, ShapeNot, ShapeOr,
-  EachOf, OneOf,
-  TripleConstraint, tripleExpr,
+  shapeExprOrRef,
+  ShapeNot,
+  ShapeOr,
+  TripleConstraint,
+  tripleExpr
 } from "shexj";
-import {_errorsMatchingNodeConstraint_noCheck} from "./shex-xsd";
+import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
+import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
+
+const ShExVisitor = require("@shexjs/visitor");
+const indexSchema = ShExVisitor.index;
 
 export {};
 
@@ -1053,10 +1072,133 @@ export class ShExValidator {
    * expression without checking shape references.
    */
   _errorsMatchingNodeConstraint(value: RdfJsTerm, valueExpr: NodeConstraint): string[] {
-    return _errorsMatchingNodeConstraint_noCheck(value, valueExpr, ldify, runtimeError);
+    const errors: string[] = [];
+    function validationError (...s:string[]): boolean {
+      const errorStr = Array.prototype.join.call(s, "");
+      errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      return false;
+    }
+
+    if (valueExpr.nodeKind !== undefined) {
+      if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
+        validationError(`unknown node kind '${valueExpr.nodeKind}'`);
+      }
+      if (ShExTerm.isBlank(value)) {
+        if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
+          validationError(`blank node found when ${valueExpr.nodeKind} expected`);
+        }
+      } else if (ShExTerm.isLiteral(value)) {
+        if (valueExpr.nodeKind !== "literal") {
+          validationError(`literal found when ${valueExpr.nodeKind} expected`);
+        }
+      } else if (valueExpr.nodeKind === "bnode" || valueExpr.nodeKind === "literal") {
+        validationError(`iri found when ${valueExpr.nodeKind} expected`);
+      }
+    }
+
+    if (valueExpr.datatype  && valueExpr.values) validationError("found both datatype and values in " + valueExpr);
+
+    if (valueExpr.values !== undefined) {
+      if (!valueExpr.values.some(valueSetValue => testValueSetValue(valueSetValue, value))) {
+        validationError(`value ${(value.value)} not found in set ${JSON.stringify(valueExpr.values)}`);
+      }
+    }
+
+    const numeric = getNumericDatatype(value);
+
+    if (valueExpr.datatype !== undefined) {
+      testKnownTypes(value, validationError, ldify, valueExpr.datatype, numeric, value.value);
+    }
+
+    testFacets(valueExpr, value.value, validationError, numeric);
+
+    return errors; // validateShapeExpr creates a ShExV result, but it could go down here.
   }
 }
 
+function testLanguageStem(typedValue: string, stem: string) {
+  const trail = typedValue.substring(stem.length);
+  return (typedValue !== "" && typedValue.startsWith(stem) && (stem === "" || trail === "" || trail[0] === "-"));
+}
+
+function valueInExclusions(exclusions: Array<IRIREF | IriStem | ObjectLiteral | LiteralStem | Language | LanguageStem>, value: string): boolean {
+  return exclusions.some(exclusion => {
+    if (typeof exclusion === "string") { // Iri
+      return (value === exclusion)
+    } else if (typeof exclusion === "object" // Literal
+        && exclusion.type !== undefined
+        && !exclusion.type.match(/^(?:Iri|Literal|Language)(?:Stem(?:Range)?)?$/)) {
+      return (value === (exclusion as ObjectLiteral).value)
+    } else {
+      const valueConstraint = exclusion as IriStem | LiteralStem | Language | LanguageStem;
+      switch (valueConstraint.type) {
+          // "Iri" covered above
+        case "IriStem":
+          return (value.startsWith(valueConstraint.stem));
+          // "Literal" covered above
+        case "LiteralStem":
+          return (value.startsWith(valueConstraint.stem));
+        case "Language":
+          return (value === valueConstraint.languageTag);
+        case "LanguageStem":
+          return testLanguageStem(value, valueConstraint.stem);
+      }
+    }
+    return false;
+  })
+}
+
+function testValueSetValue(valueSetValueP: string | ObjectLiteral | IriStem | IriStemRange | LiteralStem | LiteralStemRange | Language | LanguageStem | LanguageStemRange, value: RdfJsTerm) {
+  if (typeof valueSetValueP === "string") { // Iri
+    return (value.termType === "NamedNode" && value.value === valueSetValueP);
+  } else if (typeof valueSetValueP === "object" // Literal
+      && (valueSetValueP.type === undefined
+          || !valueSetValueP.type.match(/^(?:Iri|Literal|Language)(?:Stem(?:Range)?)?$/))) {
+    if (value.termType !== "Literal") {
+      return false;
+    } else {
+      const vsValueLiteral = valueSetValueP as ObjectLiteral;
+      const valLiteral = value as RdfJsLiteral;
+      return (value.value === vsValueLiteral.value
+          && (vsValueLiteral.language === undefined || vsValueLiteral.language === valLiteral.language)
+          && (vsValueLiteral.type === undefined || vsValueLiteral.type === valLiteral.datatype.value));
+    }
+  } else {
+    // Do a little dance to rule out ObjectLiteral and IRIREF
+    const valueSetValue = valueSetValueP as IriStem | IriStemRange | LiteralStem | LiteralStemRange | Language | LanguageStem | LanguageStemRange
+    switch (valueSetValue.type) {
+        // "Iri" covered above
+      case "IriStem":
+        if (value.termType !== "NamedNode") return false;
+        return (value.value.startsWith(valueSetValue.stem));
+      case "IriStemRange":
+        if (value.termType !== "NamedNode") return false;
+        if (typeof valueSetValue.stem === "string" && !value.value.startsWith(valueSetValue.stem))
+          return false;
+        return (!valueInExclusions(valueSetValue.exclusions, value.value));
+        // "Literal" covered above
+      case "LiteralStem":
+        if (value.termType !== "Literal") return false;
+        return (value.value.startsWith(valueSetValue.stem));
+      case "LiteralStemRange":
+        if (value.termType !== "Literal") return false;
+        if (typeof valueSetValue.stem === "string" && !value.value.startsWith(valueSetValue.stem as string))
+          return false;
+        return (!valueInExclusions(valueSetValue.exclusions, value.value));
+      case "Language":
+        if (value.termType !== "Literal") return false;
+        return (value.language === valueSetValue.languageTag);
+      case "LanguageStem":
+        if (value.termType !== "Literal") return false;
+        return testLanguageStem(value.language, valueSetValue.stem);
+      case "LanguageStemRange":
+        if (value.termType !== "Literal") return false;
+        if (typeof valueSetValue.stem === "string" && !testLanguageStem(value.language, valueSetValue.stem))
+          return false;
+        return (!valueInExclusions(valueSetValue.exclusions, value.language));
+    }
+  }
+}
 /** Explore permutations of mapping from Triples to TripleConstraints
  * documented using test ExtendsRepeatedP-pass
  */
