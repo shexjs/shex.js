@@ -11652,7 +11652,7 @@ class SemActDispatcherImpl {
      * @param {array} semActs - list of semantic actions to invoke.
      * @return {bool} false if any result was false.
      */
-    dispatchAll(semActs, ctx, resultsArtifact) {
+    dispatchAll(semActs, semActParm, resultsArtifact) {
         const strs = ["abc", "def"];
         const lens = strs.reduce((ret, str) => {
             return ret.concat(str.length);
@@ -11662,10 +11662,10 @@ class SemActDispatcherImpl {
                 const code = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
                 const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
                 const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-                const response = this.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
+                const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
                 if (typeof response === 'boolean') {
                     if (!response)
-                        ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] });
+                        ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx: semActParm }] });
                 }
                 else if (typeof response === 'object' && Array.isArray(response)) {
                     if (response.length > 0)
@@ -11696,21 +11696,27 @@ class EmptyTracker {
 }
 ;
 class ShapeExprValidationContext {
-    constructor(depth, tracker, seen, matchTarget, subGraph) {
+    constructor(parent, label, // Can only be Start if it's the root of a context list.
+    depth, tracker, seen, matchTarget, subGraph) {
+        this.parent = parent;
+        this.label = label;
         this.depth = depth;
         this.tracker = tracker;
         this.seen = seen;
         this.matchTarget = matchTarget;
         this.subGraph = subGraph;
     }
-    checkExtends(subGraph) {
-        return new ShapeExprValidationContext(this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+    checkShapeLabel(label) {
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph);
     }
     followTripleConstraint() {
-        return new ShapeExprValidationContext(this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
     }
-    visitParent(matchTarget) {
-        return new ShapeExprValidationContext(this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
+    checkExtendsPartition(subGraph) {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+    }
+    checkExtendingClass(label, matchTarget) {
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
 }
 class ShExValidator {
@@ -11777,32 +11783,28 @@ class ShExValidator {
         // logging stuff
         if (!tracker)
             tracker = this.emptyTracker;
-        const ctx = new ShapeExprValidationContext(0, // public depth: number,
-        tracker, // public tracker: QueryTracker,
-        seen, // public seen: SeenIndex,
-        null, // public matchTarget: MatchTarget | null,
-        null);
-        const ret = this.validateShapeLabel(point, label, ctx);
+        const ctx = new ShapeExprValidationContext(null, label, 0, tracker, seen, null, null);
+        const ret = this.validateShapeLabel(point, ctx);
         if ("startActs" in this.schema) {
             ret.startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
         }
         return ret;
     }
-    validateShapeLabel(point, label, ctx) {
-        if (typeof label !== "string") {
-            if (label !== ShExValidator.Start)
-                runtimeError(`unknown shape label ${JSON.stringify(label)}`);
+    validateShapeLabel(point, ctx) {
+        if (typeof ctx.label !== "string") {
+            if (ctx.label !== ShExValidator.Start)
+                runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
             if (!this.schema.start)
                 runtimeError("start production not defined");
-            return this._validateShapeExpr(point, this.schema.start, label, ctx);
+            return this._validateShapeExpr(point, this.schema.start, ctx);
         }
-        const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + label;
+        const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + ctx.label;
         if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
             if (seenKey in ctx.seen) {
                 let ret = {
                     type: "Recursion",
                     node: ldify(point),
-                    shape: label
+                    shape: ctx.label
                 };
                 ctx.tracker.recurse(ret);
                 return ret;
@@ -11812,24 +11814,32 @@ class ShExValidator {
                 ctx.tracker.known(ret);
                 return ret;
             }
-            ctx.seen[seenKey] = { node: point, shape: label };
-            ctx.tracker.enter(point, label);
+            ctx.seen[seenKey] = { node: point, shape: ctx.label };
+            ctx.tracker.enter(point, ctx.label);
         }
-        const ret = this._validateDescendants(point, label, ctx, false);
+        const ret = this._validateDescendants(point, ctx.label, ctx, false);
         if (!ctx.subGraph) {
-            ctx.tracker.exit(point, label, ret);
+            ctx.tracker.exit(point, ctx.label, ret);
             delete ctx.seen[seenKey];
             if ("known" in this)
                 this.known[seenKey] = ret;
         }
         return ret;
     }
+    /**
+     * Validate shapeLabel and shepeExprs which extend shapeLabel
+     *
+     * @param point - focus of validation
+     * @param shapeLabel - same as ctx.label, but with stronger typing (can't be Start)
+     * @param ctx - validation context
+     * @param allowAbstract - if true, don't strip out abstract classes (needed for validating abstract base shapes)
+     */
     _validateDescendants(point, shapeLabel, ctx, allowAbstract = false) {
         const _ShExValidator = this;
         if (ctx.subGraph) { // !! matchTarget?
             // matchTarget indicates that shape substitution has already been applied.
             // Now we're testing a subgraph against the base shapes.
-            const res = this._validateShapeDecl(point, this._lookupShape(shapeLabel), shapeLabel, ctx);
+            const res = this._validateShapeDecl(point, this._lookupShape(shapeLabel), ctx);
             if (ctx.matchTarget && shapeLabel === ctx.matchTarget.label && !("errors" in res))
                 ctx.matchTarget.count++;
             return res;
@@ -11849,8 +11859,8 @@ class ShExValidator {
         const results = candidates.reduce((ret, candidateShapeLabel) => {
             const shapeExpr = this._lookupShape(candidateShapeLabel);
             const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
-            ctx = ctx.visitParent(matchTarget);
-            const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, ctx);
+            ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
+            const res = this._validateShapeDecl(point, shapeExpr, ctx);
             return "errors" in res || matchTarget && matchTarget.count === 0 ?
                 { passes: ret.passes, failures: ret.failures.concat(res) } :
                 { passes: ret.passes.concat(res), failures: ret.failures };
@@ -11911,12 +11921,19 @@ class ShExValidator {
             }
         }
     }
-    _validateShapeDecl(point, shapeDecl, shapeLabel, ctx) {
+    /**
+     * Validate a ShapeDecl, including any shapes it restricts
+     *
+     * @param point - focus of validation
+     * @param shapeDecl - ShExJ ShapeDecl object
+     * @param ctx - validation context
+     */
+    _validateShapeDecl(point, shapeDecl, ctx) {
         const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr]);
         const expr = conjuncts.length === 1
             ? conjuncts[0]
             : { type: "ShapeAnd", shapeExprs: conjuncts };
-        return this._validateShapeExpr(point, expr, shapeLabel, ctx);
+        return this._validateShapeExpr(point, expr, ctx);
     }
     _lookupShape(label) {
         const shapes = this.schema.shapes;
@@ -11928,27 +11945,27 @@ class ShExValidator {
         }
         runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
-    _validateShapeExpr(point, shapeExpr, shapeLabel, ctx) {
+    _validateShapeExpr(point, shapeExpr, ctx) {
         if (typeof shapeExpr === "string") { // ShapeRef
-            return this.validateShapeLabel(point, shapeExpr, ctx);
+            return this.validateShapeLabel(point, ctx.checkShapeLabel(shapeExpr));
         }
         switch (shapeExpr.type) {
             case "NodeConstraint":
-                return this._validateNodeConstraint(point, shapeExpr, shapeLabel, ctx);
+                return this._validateNodeConstraint(point, shapeExpr, ctx);
                 break;
             case "Shape":
-                return this._validateShape(point, shapeExpr, shapeLabel, ctx);
+                return this._validateShape(point, shapeExpr, ctx);
                 break;
             case "ShapeExternal":
                 if (typeof this.options.validateExtern !== "function")
-                    throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point)} as EXTERNAL shapeExpr ${shapeLabel} requires a 'validateExtern' option`);
-                return this.options.validateExtern(point, shapeLabel, ctx.tracker, ctx.seen);
+                    throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
+                return this.options.validateExtern(point, ctx.label, ctx.checkShapeLabel(ctx.label));
                 break;
             case "ShapeOr":
                 const orErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
                     const nested = shapeExpr.shapeExprs[i];
-                    const sub = this._validateShapeExpr(point, nested, shapeLabel, ctx);
+                    const sub = this._validateShapeExpr(point, nested, ctx);
                     if ("errors" in sub)
                         orErrors.push(sub);
                     else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
@@ -11957,7 +11974,7 @@ class ShExValidator {
                 return { type: "ShapeOrFailure", errors: orErrors };
                 break;
             case "ShapeNot":
-                const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, ctx);
+                const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
                     ? { type: "ShapeNotResults", solution: sub }
                     : { type: "ShapeNotFailure", errors: sub }; // ugh
@@ -11966,7 +11983,7 @@ class ShExValidator {
                 const andErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
                     const nested = shapeExpr.shapeExprs[i];
-                    const sub = this._validateShapeExpr(point, nested, shapeLabel, ctx);
+                    const sub = this._validateShapeExpr(point, nested, ctx);
                     if ("errors" in sub)
                         andErrors.push(sub);
                     else
@@ -11988,8 +12005,8 @@ class ShExValidator {
         }
         return ret;
     }
-    _validateShape(point, shape, shapeLabel, ctx) {
-        const valParms = { db: this.db, shapeLabel, depth: ctx.depth, tracker: ctx.tracker, seen: ctx.seen };
+    _validateShape(point, shape, ctx) {
+        const valParms = { db: this.db, shapeLabel: ctx.label, depth: ctx.depth, tracker: ctx.tracker, seen: ctx.seen };
         let ret = null;
         const startAcionStorage = {}; // !!! need test to see this write to results structure.
         if ("startActs" in this.schema) {
@@ -11998,11 +12015,11 @@ class ShExValidator {
                 return {
                     type: "Failure",
                     node: ldify(point),
-                    shape: shapeLabel,
+                    shape: ctx.label,
                     errors: semActErrors
                 }; // some semAct aborted !! return a better error
         }
-        const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, shapeLabel, shape);
+        const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
         const outgoingLength = fromDB.outgoing.length;
         const neighborhood = fromDB.outgoing.sort((l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)).concat(fromDB.incoming.sort((l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)));
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
@@ -12080,7 +12097,7 @@ class ShExValidator {
             if (results !== null && results.errors !== undefined) { // @ts-ignore
                 [].push.apply(errors, results.errors);
             }
-            const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+            const possibleRet = { type: "ShapeTest", node: ldify(point), shape: ctx.label };
             // @ts-ignore
             if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
              { // @ts-ignore
@@ -12116,7 +12133,7 @@ class ShExValidator {
             ret = {
                 type: "Failure",
                 node: ldify(point),
-                shape: shapeLabel,
+                shape: ctx.label,
                 errors: errors
             };
         // remove N3jsTripleToString
@@ -12216,8 +12233,8 @@ class ShExValidator {
             const extend = expr.extends[eNo];
             const subgraph = this.makeTriplesDB(null); // These triples were tracked earlier.
             extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-            ctx = ctx.checkExtends(subgraph);
-            const sub = this._validateShapeExpr(point, extend, valParms.shapeLabel, ctx);
+            ctx = ctx.checkExtendsPartition(subgraph);
+            const sub = this._validateShapeExpr(point, extend, ctx);
             if ("errors" in sub)
                 errors.push(sub);
             else
@@ -12400,7 +12417,7 @@ class ShExValidator {
                 hits.push({ triple, sub: undefined });
             else {
                 ctx = ctx.followTripleConstraint();
-                const sub = _ShExValidator._validateShapeExpr(value, constraint.valueExpr, valParms.shapeLabel, ctx);
+                const sub = _ShExValidator._validateShapeExpr(value, constraint.valueExpr, ctx);
                 if (sub.errors === undefined) {
                     hits.push({ triple: triple, sub: sub });
                 }
@@ -12415,7 +12432,7 @@ class ShExValidator {
     /* _validateNodeConstraint - return whether the value matches the value
      * expression without checking shape references.
      */
-    _validateNodeConstraint(point, shapeExpr, shapeLabel, ctx) {
+    _validateNodeConstraint(point, shapeExpr, ctx) {
         const errors = [];
         function validationError(...s) {
             const errorStr = Array.prototype.join.call(s, "");
@@ -12455,11 +12472,11 @@ class ShExValidator {
         const ncRet = Object.assign({}, {
             type: null,
             node: ldify(point)
-        }, (shapeLabel ? { shape: shapeLabel } : {}), { shapeExpr });
+        }, (ctx.label ? { shape: ctx.label } : {}), { shapeExpr });
         Object.assign(ncRet, errors.length > 0
             ? { type: "NodeConstraintViolation", errors: errors }
             : { type: "NodeConstraintTest", });
-        return this.evaluateShapeExprSemActs(ncRet, shapeExpr, point, shapeLabel);
+        return this.evaluateShapeExprSemActs(ncRet, shapeExpr, point, ctx.label);
     }
 }
 exports.ShExValidator = ShExValidator;

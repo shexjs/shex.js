@@ -136,9 +136,8 @@ describe("A ShEx validator", function () {
               "exhaustive" :
               "greedy",
             semActs: semActs,
-            validateExtern: function (point, shapeLabel, depth, seen) {
-              return validator._validateShapeDecl(point, shapeExterns[shapeLabel],
-                                                  shapeLabel, depth, seen);
+            validateExtern: function (point, shapeLabel, ctx) {
+              return validator._validateShapeDecl(point, shapeExterns[shapeLabel], ctx);
             }
           }, params);
           function pickShEx (i) {

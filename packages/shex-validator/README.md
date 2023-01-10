@@ -211,7 +211,7 @@ These must be supplied to your validator but the ShEx specification does not spe
         validateExtern: myValidator
       })
 
-function myValidator (point, shapeLabel, depth, seen) {
+function myValidator (point, shapeLabel, ctx) { // (RdfJs.Term, string, ShapeExprValidationContext) -> ShExV.shapeExprTest
   if (shapeLabel === "http://a.example/S2") {
     const p2z = g.getQuads(point, 'http://a.example/p2', null);
     if (p2z.length === 1) {
