@@ -223,21 +223,29 @@ type ConsraintNo = number;
 
 class ShapeExprValidationContext {
   constructor(
+      public parent: ShapeExprValidationContext | null,
+      public label: LabelOrStart,
       public depth: number,
       public tracker: QueryTracker,
       public seen: SeenIndex,
       public matchTarget: MatchTarget | null,
       public subGraph: NeighborhoodDb | null) {
   }
-  public checkExtends(subGraph: NeighborhoodDb): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
-  }
-  public followTripleConstraint(): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+
+  public checkShapeLabel(label: LabelOrStart): ShapeExprValidationContext {
+    return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph);
   }
 
-  visitParent(matchTarget: MatchTarget | null): ShapeExprValidationContext {
-    return new ShapeExprValidationContext(this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
+  public followTripleConstraint(): ShapeExprValidationContext {
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+  }
+
+  public checkExtendsPartition(subGraph: NeighborhoodDb): ShapeExprValidationContext {
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+  }
+
+  checkExtendingClass(matchTarget: MatchTarget | null): ShapeExprValidationContext {
+    return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
   }
 }
 
@@ -378,13 +386,7 @@ export class ShExValidator {
     if (!tracker)
       tracker = this.emptyTracker;
 
-    const ctx = new ShapeExprValidationContext(
-          0, // public depth: number,
-          tracker, // public tracker: QueryTracker,
-          seen, // public seen: SeenIndex,
-          null, // public matchTarget: MatchTarget | null,
-          null, // public subGraph: NeighborhoodDb | null
-    )
+    const ctx = new ShapeExprValidationContext(null, label, 0, tracker, seen, null, null,)
     const ret: shapeExprTest = this.validateShapeLabel (point, label, ctx);
     if ("startActs" in this.schema) {
       (ret as ShapeTest).startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
@@ -458,7 +460,7 @@ export class ShExValidator {
     const results = candidates.reduce<ResList>((ret, candidateShapeLabel) => {
       const shapeExpr = this._lookupShape(candidateShapeLabel);
       const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
-      ctx = ctx.visitParent(matchTarget);
+      ctx = ctx.checkExtendingClass(matchTarget);
       const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, ctx);
       return "errors" in res || matchTarget && matchTarget.count === 0 ?
         { passes: ret.passes, failures: ret.failures.concat(res) } :
@@ -544,7 +546,7 @@ export class ShExValidator {
 
   _validateShapeExpr(point: RdfJsTerm, shapeExpr: shapeExprOrRef, shapeLabel: LabelOrStart, ctx: ShapeExprValidationContext): shapeExprTest {
     if (typeof shapeExpr === "string") { // ShapeRef
-      return this.validateShapeLabel(point, shapeExpr, ctx);
+      return this.validateShapeLabel(point, shapeExpr, ctx.checkShapeLabel(shapeExpr));
     }
 
     switch (shapeExpr.type) {
@@ -860,7 +862,7 @@ export class ShExValidator {
       const extend = expr.extends[eNo];
       const subgraph = this.makeTriplesDB(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      ctx = ctx.checkExtends(subgraph);
+      ctx = ctx.checkExtendsPartition(subgraph);
       const sub = this._validateShapeExpr(point, extend, valParms.shapeLabel, ctx);
       if ("errors" in sub)
         errors.push(sub);
