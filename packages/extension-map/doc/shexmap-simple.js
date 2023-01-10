@@ -263,7 +263,7 @@ function makeSchemaCache (selection) {
         {}
       );
       const schemaRoot = graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      const val = graphParser.validatePair(schemaRoot, ShEx.Validator.Start); // start shape
+      const val = graphParser.validateNodeShapePair(schemaRoot, ShEx.Validator.Start); // start shape
       return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
     }
   };
@@ -876,7 +876,7 @@ async function callValidator (done) {
         currentAction = "validating";
         $("#results .status").text("validating...").show();
         time = new Date();
-        const ret = validator.validateApi(fixedMap, LOG_PROGRESS ? makeConsoleTracker() : null);
+        const ret = validator.validateShapeMap(fixedMap, LOG_PROGRESS ? makeConsoleTracker() : undefined); // undefined to trigger default parameter assignment
         time = new Date() - time;
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
         // const dated = Object.assign({ _when: new Date().toISOString() }, ret);
@@ -1174,7 +1174,7 @@ async function materializeAsync () {
           results: "api",
           regexModule: ShEx["eval-simple-1err"],
         });
-        const res = validator.validateApi([{node, shape}])[0].appinfo;
+        const res = validator.validateShapeMap([{node, shape}])[0].appinfo;
         if (!("solution" in res))
           throw res;
         const matched = [];

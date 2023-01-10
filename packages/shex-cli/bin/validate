@@ -45,7 +45,7 @@ const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
-const {ShExValidator} = require("@shexjs/validator");
+const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
@@ -691,7 +691,7 @@ function runValidator (db, shapeMap, schema, options) {
   // run validator
   const res = cmds.grep
       ? grep(shapeMap)
-      : validator.validateObj(shapeMap);
+      : resultMapToShapeExprTest(validator.validateShapeMap(shapeMap));
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -723,7 +723,7 @@ function runValidator (db, shapeMap, schema, options) {
     const passes = fixedMap.reduce((acc, row) => {
       if (cmds.verbose)
         process.stdout.write('checking ' + JSON.stringify(row))
-      const res = validator.validateObj([row]);
+      const res = resultMapToShapeExprTest(validator.validateShapeMap([row]));
       if (cmds.verbose)
         process.stdout.write(' -> ' + !('errors' in res) + "\n")
       return "errors" in res

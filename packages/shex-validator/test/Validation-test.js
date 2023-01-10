@@ -8,7 +8,7 @@ const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const {ShExValidator} = require("..");
+const {ShExValidator, resultMapToShapeExprTest} = require("..");
 const TestExtension = require("@shexjs/extension-test")
 
 const N3 = require("n3");
@@ -137,7 +137,7 @@ describe("A ShEx validator", function () {
               "greedy",
             semActs: semActs,
             validateExtern: function (point, shapeLabel, ctx) {
-              return validator._validateShapeDecl(point, shapeExterns[shapeLabel], ctx);
+              return validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx);
             }
           }, params);
           function pickShEx (i) {
@@ -190,8 +190,8 @@ describe("A ShEx validator", function () {
                       validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
                       var testResults = TestExtension.register(validator, {ShExTerm});
                       var validationResult = schemaOptions.results === 'api'
-                          ? validator.validateApi(map)
-                          : validator.validateObj(map);
+                          ? validator.validateShapeMap(map)
+                          : resultMapToShapeExprTest(validator.validateShapeMap(map));
                       expect(JSON.stringify(validationResult).match(/\[Object\]/)).to.be.null;
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }

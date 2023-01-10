@@ -13,7 +13,7 @@ const ShExNode = require("@shexjs/node")({
   rdfjs: RdfJs,
 });
 const ShExParser = require("@shexjs/parser");
-const {ShExValidator} = require("@shexjs/validator");
+const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const Mapper = require("..")({rdfjs: RdfJs, Validator: ShExValidator});
 
 // var Promise = require("promise");
@@ -52,7 +52,7 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
   const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
   // run validator
-  var res = validator.validateObj(smap);
+  var res = resultMapToShapeExprTest(validator.validateShapeMap(smap));
   expect(res.errors || []).to.deep.equal([]); // Trick chai into displaying errors.
 
   // var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];

@@ -1,4 +1,4 @@
-const {ShExValidator} = require('@shexjs/validator')
+const {ShExValidator, resultMapToShapeExprTest} = require('@shexjs/validator')
 const ShExUtil = require('@shexjs/util')
 const ShExTerm = require('@shexjs/term')
 const ShExMap = require('@shexjs/extension-map')
@@ -24,7 +24,7 @@ function shapePathQuery (schema, nodeSet, db, smap) {
   MapModule.register(validator, { ShExTerm })
 
   // Validate data against schema.
-  const valRes = validator.validateObj(smap)
+  const valRes = resultMapToShapeExprTest(validator.validateShapeMap(smap))
   if ("errors" in valRes) {
     throw Error(JSON.stringify(valRes, undefined, 2));
   } else {
