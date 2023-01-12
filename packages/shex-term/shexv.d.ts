@@ -59,10 +59,6 @@ export interface ShapeNotFailure extends TypedFailure {
   type: "ShapeNotFailure";
   errors: error[];
 }
-export interface BooleanSemActFailure extends TypedFailure {
-  type: "BooleanSemActFailure";
-  errors: error[];
-}
 export interface ClosedShapeViolation extends TypedFailure {
   type: "ClosedShapeViolation";
   unexpectedTriples: {

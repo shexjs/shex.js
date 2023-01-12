@@ -74,10 +74,10 @@ class SemActDispatcherImpl {
      * @param {object} handler - handler function.
      *
      * The handler object has a dispatch function is invoked with:
-     * @param {string} code - text of the semantic action.
-     * @param {object} ctx - matched triple or results subset.
-     * @param {object} extensionStorage - place where the extension writes into the result structure.
-     * @return {bool} false if the extension failed or did not accept the ctx object.
+     *   code: string - text of the semantic action.
+     *   ctx: object - matched triple or results subset.
+     *   extensionStorage: object - place where the extension writes into the result structure.
+     *   return :bool - false if the extension failed or did not accept the ctx object.
      */
     register(name, handler) {
         this.handlers[name] = handler;
@@ -86,7 +86,7 @@ class SemActDispatcherImpl {
      * Calls all semantic actions, allowing each to write to resultsArtifact.
      *
      * @param {array} semActs - list of semantic actions to invoke.
-     * @return {bool} false if any result was false.
+     * @return {SemActFailure[]} false if any result was false.
      */
     dispatchAll(semActs, semActParm, resultsArtifact) {
         const strs = ["abc", "def"];
@@ -99,11 +99,7 @@ class SemActDispatcherImpl {
                 const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
                 const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
                 const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
-                if (typeof response === 'boolean') {
-                    if (!response)
-                        ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx: semActParm }] });
-                }
-                else if (typeof response === 'object' && Array.isArray(response)) {
+                if (typeof response === 'object' && Array.isArray(response)) {
                     if (response.length > 0)
                         ret.push({ type: "SemActFailure", errors: response });
                 }
@@ -403,15 +399,12 @@ class ShExValidator {
         switch (shapeExpr.type) {
             case "NodeConstraint":
                 return this._validateNodeConstraint(point, shapeExpr, ctx);
-                break;
             case "Shape":
                 return this.validateShape(point, shapeExpr, ctx);
-                break;
             case "ShapeExternal":
                 if (typeof this.options.validateExtern !== "function")
                     throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
                 return this.options.validateExtern(point, ctx.label, ctx.checkShapeLabel(ctx.label));
-                break;
             case "ShapeOr":
                 const orErrors = [];
                 for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
@@ -423,7 +416,6 @@ class ShExValidator {
                         return { type: "ShapeOrResults", solution: sub };
                 }
                 return { type: "ShapeOrFailure", errors: orErrors };
-                break;
             case "ShapeNot":
                 const sub = this.validateShapeExpr(point, shapeExpr.shapeExpr, ctx);
                 return ("errors" in sub)
@@ -738,10 +730,9 @@ class ShExValidator {
         visitor.visitShapeDecl = function (decl, min, max) {
             // if (labelToTcs.has(decl.id)) !! uncomment cache for production
             //   return labelToTcs[decl.id];
-            const tcs = decl.shapeExpr
+            labelToTcs[decl.id] = decl.shapeExpr
                 ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
                 : emptyShapeExpr();
-            labelToTcs[decl.id] = tcs;
             return [{ type: "Ref", ref: decl.id }];
         };
         visitor.visitShapeOr = function (shapeExpr, min, max) {

@@ -28,7 +28,7 @@ function register (validator, api) {
           m[3] === "o" ? ctx.object.value :
           "???";
         validator.semActHandler.results[TestExt].push(arg);
-        return m[1] !== "fail"; // "fail" => false, "print" => true
+        return m[1] === "fail" ? [{type: "SemActFailure", errors: [`fail(${arg})`]}] : [];
       }
     }
   );

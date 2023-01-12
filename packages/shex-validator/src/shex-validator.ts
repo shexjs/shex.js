@@ -17,7 +17,6 @@ import * as Hierarchy from 'hierarchy-closure';
 import type {Quad, Term as RdfJsTerm} from 'rdf-js';
 import {Neighborhood, NeighborhoodDb, Start as NeighborhoodStart} from "@shexjs/neighborhood-api";
 import {
-  BooleanSemActFailure,
   error,
   Failure,
   FailureList,
@@ -145,10 +144,10 @@ class SemActDispatcherImpl implements SemActDispatcher {
    * @param {object} handler - handler function.
    *
    * The handler object has a dispatch function is invoked with:
-   * @param {string} code - text of the semantic action.
-   * @param {object} ctx - matched triple or results subset.
-   * @param {object} extensionStorage - place where the extension writes into the result structure.
-   * @return {bool} false if the extension failed or did not accept the ctx object.
+   *   code: string - text of the semantic action.
+   *   ctx: object - matched triple or results subset.
+   *   extensionStorage: object - place where the extension writes into the result structure.
+   *   return :bool - false if the extension failed or did not accept the ctx object.
    */
   register (name: string, handler: SemActHandler) {
     this.handlers[name] = handler;
@@ -158,24 +157,18 @@ class SemActDispatcherImpl implements SemActDispatcher {
    * Calls all semantic actions, allowing each to write to resultsArtifact.
    *
    * @param {array} semActs - list of semantic actions to invoke.
-   * @return {bool} false if any result was false.
+   * @param {object} semActParm - evaluation context for SemAct.
+   * @param {object} resultsArtifact - simple storage for SemAct.
+   * @return {SemActFailure[]} false if any result was false.
    */
-  dispatchAll (semActs: [ShExJ.SemAct], semActParm: any, resultsArtifact: any): (SemActFailure | BooleanSemActFailure)[] {
-    const strs: string[] = ["abc", "def"];
-    const lens: number[] = strs.reduce((ret: number[], str: string) => {
-      return ret.concat(str.length);
-    }, []);
-
-    return semActs.reduce((ret: (SemActFailure | BooleanSemActFailure)[], semAct) => {
+  dispatchAll (semActs: [ShExJ.SemAct], semActParm: any, resultsArtifact: any): SemActFailure[] {
+    return semActs.reduce((ret: SemActFailure[], semAct) => {
       if (ret.length === 0 && semAct.name in this.handlers) {
         const code: string | null = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
         const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
         const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
         const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
-        if (typeof response === 'boolean') {
-          if (!response)
-            ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx: semActParm }] })
-        } else if (typeof response === 'object' && Array.isArray(response)) {
+        if (typeof response === 'object' && Array.isArray(response)) {
           if (response.length > 0)
             ret.push({ type: "SemActFailure", errors: response })
         } else {
@@ -217,7 +210,7 @@ interface ExtensionIndex {
   [id:string]: shapeDeclRef[]
 }
 
-interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]};
+interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]}
 
 type TripleNo = number;
 type ConsraintNo = number;
@@ -377,9 +370,9 @@ export class ShExValidator {
    */
   validateShapeMap (shapeMap: ShapeMap, tracker: QueryTracker = this.emptyTracker, seen: SeenIndex = {}): ShExJsResultMap {
     return shapeMap.map(pair => {
-      let time = +new Date();
+      // let time = +new Date();
       const res = this.validateNodeShapePair(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen);
-      time = +new Date() - time;
+      // time = +new Date() - time;
       return {
         node: pair.node,
         shape: pair.shape,
@@ -580,15 +573,12 @@ export class ShExValidator {
     switch (shapeExpr.type) {
       case "NodeConstraint":
         return this._validateNodeConstraint(point, shapeExpr, ctx);
-        break;
       case "Shape":
         return this.validateShape(point, shapeExpr, ctx);
-        break;
       case "ShapeExternal":
         if (typeof this.options.validateExtern !== "function")
           throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`)
         return this.options.validateExtern(point, ctx.label, ctx.checkShapeLabel(ctx.label));
-        break;
       case "ShapeOr":
         const orErrors = [];
         for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
@@ -600,7 +590,6 @@ export class ShExValidator {
             return {type: "ShapeOrResults", solution: sub};
         }
         return {type: "ShapeOrFailure", errors: orErrors} as any as shapeExprTest;
-        break;
       case "ShapeNot":
         const sub = this.validateShapeExpr(point, shapeExpr.shapeExpr, ctx);
         return ("errors" in sub)
@@ -721,7 +710,7 @@ export class ShExValidator {
       });
       const tc2t = this._constraintToTriples(localT2Tc, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
 
-      let results = this.testExtends(shape, point, extendsToTriples, ctx, valParms);
+      let results = this.testExtends(shape, point, extendsToTriples, ctx);
       if (results === null || !("errors" in results)) {
         const sub = regexEngine.match(this.db, point, constraintList, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
         if (!("errors" in sub) && results) {
@@ -881,7 +870,7 @@ export class ShExValidator {
       }, _seq(constraintList.length).map(() => [])); // [length][]
   }
 
-  testExtends (expr: ShExJ.Shape, point: RdfJsTerm, extendsToTriples: Quad[][], ctx: ShapeExprValidationContext, valParms: ValParms) {
+  testExtends(expr: Shape, point: RdfJsTerm, extendsToTriples: Quad[][], ctx: ShapeExprValidationContext) {
     if (expr.extends === undefined)
       return null;
     const passes = [];
@@ -954,10 +943,9 @@ export class ShExValidator {
     visitor.visitShapeDecl = function (decl: ShapeDecl, min: number, max: number) {
       // if (labelToTcs.has(decl.id)) !! uncomment cache for production
       //   return labelToTcs[decl.id];
-      const tcs = decl.shapeExpr
-            ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
-            : emptyShapeExpr();
-      labelToTcs[decl.id] = tcs;
+      labelToTcs[decl.id] = decl.shapeExpr
+          ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
+          : emptyShapeExpr();
       return [{ type: "Ref", ref: decl.id }];
     }
     visitor.visitShapeOr = function (shapeExpr: ShapeOr, min: number, max: number) {

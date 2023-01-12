@@ -75,7 +75,7 @@ function register (validator, api) {
           update(bindingName, ctx.node || ctx.object);
         }
 
-        return true;
+        return []; // There are no evaluation failures. Any parsing problem throws.
       }
     }
   );

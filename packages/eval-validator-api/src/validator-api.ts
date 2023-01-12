@@ -1,20 +1,11 @@
 import * as ShExJ from 'shexj';
-import * as ShExUtil from '@shexjs/util';
 import * as RdfJs from '@rdfjs/types/data-model';
 import {shapeExprTest, Recursion} from "@shexjs/term/shexv";
-import {BooleanSemActFailure, SemActFailure} from "@shexjs/term/shexv";
+import {SemActFailure} from "@shexjs/term/shexv";
 import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {SchemaIndex} from "@shexjs/term";
 
 export {};
-
-export interface ValidatorRegexpApi {
-  compile(
-    schema: ShExJ.Schema,
-    shape: ShExJ.Shape,
-    index: ShExUtil.Index,
-  ): ValidatorRegexEngine;
-}
 
 export interface Tc2t {
   'tNo': number,
@@ -50,19 +41,12 @@ export interface QueryTracker {
   known (res: shapeExprTest): void;
 }
 
-export interface SemActModule {
-  dispatchAll(semActs: any[], ctx: object, resultsArtifact: object): object[],
-  handlers: object,
-  register(name: string, handler: object): void,
-  results: object
-}
-
 export interface SemActDispatcher {
   register(name: string, handler: SemActHandler): void;
-  dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): (SemActFailure | BooleanSemActFailure)[];
+  dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): SemActFailure[];
   results: { [id: string]: string | undefined }; // TODO: improve this trivial storage mechanism
 }
 
 export interface SemActHandler {
-  dispatch(code: string | null, ctx: any, extensionStorage: any): (SemActFailure | BooleanSemActFailure)[];
+  dispatch(code: string | null, ctx: any, extensionStorage: any): SemActFailure[];
 }
