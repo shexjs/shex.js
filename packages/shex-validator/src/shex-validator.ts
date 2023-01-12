@@ -58,17 +58,12 @@ import {
 } from "shexj";
 import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
+import * as RdfJs from "@rdfjs/types/data-model";
 
 const ShExVisitor = require("@shexjs/visitor");
 const indexSchema = ShExVisitor.index;
 
 export {};
-
-interface Xdb extends NeighborhoodDb {
-  getTriplesByIRI(s: RdfJsTerm, p: RdfJsTerm, o: RdfJsTerm, g?: RdfJsTerm): Quad[];
-  addIncomingTriples(tz: Quad[]): void;
-  addOutgoingTriples(tz: Quad[]): void;
-}
 
 export const InterfaceOptions = {
   "coverage": {
@@ -186,6 +181,9 @@ class SemActDispatcherImpl implements SemActDispatcher {
   }
 }
 
+/**
+ * A QueryTracker that's all no-ops.
+ */
 class EmptyTracker implements QueryTracker {
   depth = 0;
 
@@ -213,7 +211,7 @@ interface ExtensionIndex {
 interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]}
 
 type TripleNo = number;
-type ConsraintNo = number;
+type ConstraintNo = number;
 
 class ShapeExprValidationContext {
   constructor(
@@ -243,14 +241,6 @@ class ShapeExprValidationContext {
   }
 }
 
-interface ValParms {
-  db: NeighborhoodDb;
-  shapeLabel: LabelOrStart;
-  depth: number;
-  tracker: QueryTracker;
-  seen: SeenIndex;
-}
-
 interface ReferenceToExtendedShapeDecl { type: "Ref", ref: string; }
 type RefOrTc = ReferenceToExtendedShapeDecl | TripleConstraint;
 type RefsAndTCsForOneExtension = RefOrTc[];
@@ -260,7 +250,7 @@ type ByPredicateResult = {
   results: TC2TResult; // for each TC, for each passing T, what was the result
   constraintList: T2TCs; // for each T, which constraints does it match
 };
-type T2TCErrors = { [index: TripleNo]: { constraintNo: ConsraintNo, errors: shapeExprTest } };
+type T2TCErrors = { [index: TripleNo]: { constraintNo: ConstraintNo, errors: shapeExprTest } };
 type TC2TResult = (shapeExprTest | undefined)[][];
 type T2TCs = number[][];
 type TripleNoList = number[];
@@ -278,7 +268,7 @@ type WhatsMissingResult = {
 
 type Missing = {
   tripleNo: TripleNo;
-  constraintNo: ConsraintNo;
+  constraintNo: ConstraintNo;
   errors: shapeExprTest;
 };
 
@@ -318,20 +308,57 @@ export function resultMapToShapeExprTest(resultsMap: ShExJsResultMapEntry[]): sh
   }
 }
 
-export class ShExValidator {
-  public static Start = NeighborhoodStart;
-  public static InterfaceOptions = InterfaceOptions;
+/** Directly construct a DB from triples.
+ * TODO: should this be in @shexjs/neighborhood-something ?
+ */
+class TrivialNeighborhood implements NeighborhoodDb {
+  incoming: Quad[] = [];
+  outgoing: Quad[] = [];
+  private queryTracker: QueryTracker | null;
 
-  public type: string;
-  public options: ValidatorOptions;
-  public known: {
+  constructor(queryTracker: QueryTracker | null) {
+    this.queryTracker = queryTracker;
+  }
+
+  getTriplesByIRI(s: RdfJsTerm, p: RdfJsTerm, o: RdfJsTerm, g?: RdfJsTerm): Quad[] {
+    return this.incoming.concat(this.outgoing).filter(
+        t =>
+            (!s || s === t.subject) &&
+            (!p || p === t.predicate) &&
+            (!s || s === t.object)
+    );
+  }
+
+  getNeighborhood (point: RdfJsTerm, shapeLabel: LabelOrStart, shape: Shape): Neighborhood {
+    return {
+      outgoing: this.outgoing,
+      incoming: this.incoming
+    };
+  }
+
+  getSubjects (): RdfJs.Term[] { throw Error("!Triples DB can't index subjects"); }
+  getPredicates (): RdfJs.Term[] { throw Error("!Triples DB can't index predicates"); }
+  getObjects (): RdfJs.Term[] { throw Error("!Triples DB can't index objects"); }
+  getQuads (): RdfJs.Quad[] { throw Error("!Triples DB doesn't have Quads"); }
+  get size(): number { return this.incoming.length + this.outgoing.length; }
+  addIncomingTriples (tz: Quad[]) { Array.prototype.push.apply(this.incoming, tz); }
+  addOutgoingTriples (tz: Quad[]) { Array.prototype.push.apply(this.outgoing, tz); }
+}
+
+
+export class ShExValidator {
+  public static readonly Start = NeighborhoodStart;
+  public static readonly InterfaceOptions = InterfaceOptions;
+  public static readonly type = "ShExValidator";
+
+  public readonly options: ValidatorOptions;
+  public readonly known: {
     [id: string]: shapeExprTest;
   }
-  public schema: InternalSchema;
-  public emptyTracker: QueryTracker;
-  public semActHandler: SemActDispatcher;
-  public index: SchemaIndex;
-  private db: NeighborhoodDb;
+  public readonly schema: InternalSchema;
+  public readonly semActHandler: SemActDispatcher;
+  public readonly index: SchemaIndex;
+  private readonly db: NeighborhoodDb;
   private regexModule: ValidatorRegexModule;
 
   /* ShExValidator - construct an object for validating a schema.
@@ -339,13 +366,12 @@ export class ShExValidator {
    * schema: a structure produced by a ShEx parser or equivalent.
    * options: object with controls for
    *   lax(true): boolean: whine about missing types in schema.
-   *   diagnose(false): boolean: makde validate return a structure with errors.
+   *   diagnose(false): boolean: make validate return a structure with errors.
    */
   constructor(schema: InternalSchema, db: NeighborhoodDb, options: ValidatorOptions = {}) {
     this.index = schema._index || indexSchema(schema)
     if (!("labelToTcs" in this.index)) // !! what is this?
       this.index.labelToTcs = {};
-    this.type = "ShExValidator";
     options = options || {};
     this.options = options;
     this.known = {};
@@ -354,10 +380,6 @@ export class ShExValidator {
     this.db = db;
     // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
     this.regexModule = this.options.regexModule || EvalThreadedNErr;
-
-    /* emptyTracker - a tracker that does nothing
-     */
-    this.emptyTracker = new EmptyTracker();
     this.semActHandler = new SemActDispatcherImpl(options.semActs);
   }
 
@@ -366,9 +388,9 @@ export class ShExValidator {
    *
    * @param shapeMap - list of node/shape pairs to validate
    * @param tracker - optional implementation of QueryTracker to log validation
-   * @param seen - optional (and discrouaged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
+   * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
    */
-  validateShapeMap (shapeMap: ShapeMap, tracker: QueryTracker = this.emptyTracker, seen: SeenIndex = {}): ShExJsResultMap {
+  validateShapeMap (shapeMap: ShapeMap, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): ShExJsResultMap {
     return shapeMap.map(pair => {
       // let time = +new Date();
       const res = this.validateNodeShapePair(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen);
@@ -389,9 +411,9 @@ export class ShExValidator {
    * @param node - RdfJs Term to validate
    * @param shapeExprLabel - shapeExprLabel of shape to validate node against. May be `ShExValidator.Start`.
    * @param tracker - optional implementation of QueryTracker to log validation
-   * @param seen - optional (and discrouaged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
+   * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
    */
-  validateNodeShapePair (node: RdfJsTerm, shapeExprLabel: LabelOrStart, tracker: QueryTracker = this.emptyTracker, seen: SeenIndex = {}): shapeExprTest {
+  validateNodeShapePair (node: RdfJsTerm, shapeExprLabel: LabelOrStart, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): shapeExprTest {
     const ctx = new ShapeExprValidationContext(null, shapeExprLabel, 0, tracker, seen, null, null,)
     const ret: shapeExprTest = this.validateShapeLabel (node, ctx);
     if ("startActs" in this.schema) {
@@ -440,7 +462,7 @@ export class ShExValidator {
   }
 
   /**
-   * Validate shapeLabel and shepeExprs which extend shapeLabel
+   * Validate shapeLabel and shapeExprs which extend shapeLabel
    *
    * @param point - focus of validation
    * @param shapeLabel - same as ctx.label, but with stronger typing (can't be Start)
@@ -499,7 +521,7 @@ export class ShExValidator {
     }
     return ret;
 
-    // @TODO move to Vistior.index
+    // @TODO move to Visitor.index
     function indexExtensions (schema: Schema): ExtensionIndex {
       const abstractness: { [id:string]: boolean } = {};
       const extensions = Hierarchy.create();
@@ -625,12 +647,10 @@ export class ShExValidator {
   }
 
   validateShape(point: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext): shapeExprTest {
-    const valParms: ValParms = { db: this.db, shapeLabel: ctx.label, depth: ctx.depth, tracker: ctx.tracker, seen: ctx.seen };
-
     let ret = null;
-    const startAcionStorage = {}; // !!! need test to see this write to results structure.
+    const startActionStorage = {}; // !!! need test to see this write to results structure.
     if ("startActs" in this.schema) {
-      const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startAcionStorage)
+      const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage)
       if (semActErrors.length)
         return {
           type: "Failure",
@@ -652,7 +672,7 @@ export class ShExValidator {
     const constraintList = extendsTCs.concat(localTCs);
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-    const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx, valParms);
+    const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx);
     const {misses, extras} = this.whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
     const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
@@ -801,7 +821,7 @@ export class ShExValidator {
     return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
   }
 */
-  matchByPredicate (constraintList: TripleConstraint[], neighborhood: Quad[], outgoingLength: number, point: RdfJsTerm, ctx: ShapeExprValidationContext, valParms: ValParms): ByPredicateResult {
+  matchByPredicate(constraintList: TripleConstraint[], neighborhood: Quad[], outgoingLength: number, point: RdfJsTerm, ctx: ShapeExprValidationContext): ByPredicateResult {
     const _ShExValidator = this;
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -811,12 +831,12 @@ export class ShExValidator {
       // subject and object depend on direction of constraint.
       const index = constraint.inverse ? incoming : outgoing;
 
-      // get triples matching predciate
+      // get triples matching predicate
       const matchPredicate = index.byPredicate.get(constraint.predicate) ||
             []; // empty list when no triple matches that constraint
 
       // strip to triples matching value constraints (apart from @<someShape>)
-      const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(matchPredicate, constraint, ctx, valParms);
+      const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
 
       matchConstraints.hits.forEach(function (evidence) {
         const tNo = neighborhood.indexOf(evidence.triple);
@@ -877,7 +897,7 @@ export class ShExValidator {
     const errors = [];
     for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
       const extend = expr.extends[eNo];
-      const subgraph = this.makeTriplesDB(null); // These triples were tracked earlier.
+      const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
       ctx = ctx.checkExtendsPartition(subgraph);
       const sub = this.validateShapeExpr(point, extend, ctx);
@@ -890,42 +910,6 @@ export class ShExValidator {
       return { type: "ExtensionFailure", errors: errors };
     }
     return { type: "ExtensionResults", solutions: passes };
-  }
-
-  /** Directly construct a DB from triples.
-   * TODO: should this be in @shexjs/neighborhood-something ?
-   */
-  makeTriplesDB (queryTracker: QueryTracker | null): Xdb {
-    const incoming: Quad[] = [];
-    const outgoing: Quad[] = [];
-
-    function getTriplesByIRI(s: RdfJsTerm, p: RdfJsTerm, o: RdfJsTerm, g?: RdfJsTerm): Quad[] {
-      return incoming.concat(outgoing).filter(
-        t =>
-          (!s || s === t.subject) &&
-          (!p || p === t.predicate) &&
-          (!s || s === t.object)
-      );
-    }
-
-    function getNeighborhood (point: RdfJsTerm, shapeLabel: LabelOrStart, shape: Shape): Neighborhood {
-      return {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      getNeighborhood: getNeighborhood,
-      getTriplesByIRI: getTriplesByIRI,
-      getSubjects: function () { throw Error("!Triples DB can't index subjects"); },
-      getPredicates: function () { throw Error("!Triples DB can't index predicates"); },
-      getObjects: function () { throw Error("!Triples DB can't index objects"); },
-      getQuads: function () { throw Error("!Triples DB doesn't have Quads"); },
-      get size(): number { return incoming.length + outgoing.length; },
-      addIncomingTriples: function (tz: Quad[]) { Array.prototype.push.apply(incoming, tz); },
-      addOutgoingTriples: function (tz: Quad[]) { Array.prototype.push.apply(outgoing, tz); }
-    };
   }
 
   /** TripleConstraintsVisitor - walk shape's extends to get all
@@ -997,9 +981,9 @@ export class ShExValidator {
       const extendsTCs = shape.extends !== undefined
             ? shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max))
             : [];
-      const localTCs = "expression" in shape
-            ? visitor.visitExpression(shape.expression, min, max)
-            : [];
+      const localTCs = shape.expression === undefined
+            ? []
+            : visitor.visitExpression(shape.expression, min, max);
       return { extendsTCs, localTCs };
     }
 
@@ -1079,13 +1063,12 @@ export class ShExValidator {
     return {getAllTripleConstraints};
   }
 
-  _triplesMatchingShapeExpr(triples: Quad[], constraint: TripleConstraint, ctx: ShapeExprValidationContext, valParms: ValParms): TriplesMatching {
+  triplesMatchingShapeExpr(triples: Quad[], constraint: TripleConstraint, ctx: ShapeExprValidationContext): TriplesMatching {
     const _ShExValidator = this;
     const misses: Miss[] = [];
     const hits: Hit[] = [];
     triples.forEach(function (triple) {
       const value = constraint.inverse ? triple.subject : triple.object;
-      let sub;
       const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
       if (constraint.valueExpr === undefined)
         hits.push({triple, sub: undefined});
@@ -1279,10 +1262,10 @@ class TripleToTripleConstraints {
 
   /**
    * Find next mapping of Triples to TripleConstraints.
-   * Exclude any that differ only in an irrelevent order difference in assinment to EXTENDS.
+   * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
    * @returns {number[] | null}
    */
-  next (): (ConsraintNo | typeof NoTripleConstraint)[] | null {
+  next (): (ConstraintNo | typeof NoTripleConstraint)[] | null {
     while (this.crossProduct.next()) {
       /* t2tc - array mapping neighborhood index to TripleConstraint
        * CrossProduct counts through constraintList from the right:
@@ -1402,7 +1385,7 @@ const N3jsTripleToString = function () {
  *                 empty set indicate a triple which didn't matching anything in
  *                 the shape.
  *
- *     misses: list to recieve value constraint failures.
+ *     misses: list to receive value constraint failures.
  *   }
  */
 function indexNeighborhood (triples: Quad[]): NeighborhoodIndex {
@@ -1443,8 +1426,6 @@ function sparqlOrder (l: RdfJsTerm, r: RdfJsTerm): number {
 function _seq<T> (n: number): (T | undefined)[] {
   return Array.from(Array(n)); // hahaha, javascript, you suck.
 }
-
-function noop () {  }
 
 function runtimeError (... args: string[]): never {
   const errorStr = args.join("");

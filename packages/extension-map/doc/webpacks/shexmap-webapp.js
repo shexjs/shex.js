@@ -15511,13 +15511,11 @@ class SemActDispatcherImpl {
      * Calls all semantic actions, allowing each to write to resultsArtifact.
      *
      * @param {array} semActs - list of semantic actions to invoke.
+     * @param {object} semActParm - evaluation context for SemAct.
+     * @param {object} resultsArtifact - simple storage for SemAct.
      * @return {SemActFailure[]} false if any result was false.
      */
     dispatchAll(semActs, semActParm, resultsArtifact) {
-        const strs = ["abc", "def"];
-        const lens = strs.reduce((ret, str) => {
-            return ret.concat(str.length);
-        }, []);
         return semActs.reduce((ret, semAct) => {
             if (ret.length === 0 && semAct.name in this.handlers) {
                 const code = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
@@ -15542,6 +15540,9 @@ class SemActDispatcherImpl {
         }, []);
     }
 }
+/**
+ * A QueryTracker that's all no-ops.
+ */
 class EmptyTracker {
     constructor() {
         this.depth = 0;
@@ -15551,7 +15552,6 @@ class EmptyTracker {
     enter(term, shapeLabel) { ++this.depth; }
     exit(term, shapeLabel, res) { --this.depth; }
 }
-;
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
     depth, tracker, seen, matchTarget, subGraph) {
@@ -15600,19 +15600,46 @@ function resultMapToShapeExprTest(resultsMap) {
     }
 }
 exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
+/** Directly construct a DB from triples.
+ * TODO: should this be in @shexjs/neighborhood-something ?
+ */
+class TrivialNeighborhood {
+    constructor(queryTracker) {
+        this.incoming = [];
+        this.outgoing = [];
+        this.queryTracker = queryTracker;
+    }
+    getTriplesByIRI(s, p, o, g) {
+        return this.incoming.concat(this.outgoing).filter(t => (!s || s === t.subject) &&
+            (!p || p === t.predicate) &&
+            (!s || s === t.object));
+    }
+    getNeighborhood(point, shapeLabel, shape) {
+        return {
+            outgoing: this.outgoing,
+            incoming: this.incoming
+        };
+    }
+    getSubjects() { throw Error("!Triples DB can't index subjects"); }
+    getPredicates() { throw Error("!Triples DB can't index predicates"); }
+    getObjects() { throw Error("!Triples DB can't index objects"); }
+    getQuads() { throw Error("!Triples DB doesn't have Quads"); }
+    get size() { return this.incoming.length + this.outgoing.length; }
+    addIncomingTriples(tz) { Array.prototype.push.apply(this.incoming, tz); }
+    addOutgoingTriples(tz) { Array.prototype.push.apply(this.outgoing, tz); }
+}
 class ShExValidator {
     /* ShExValidator - construct an object for validating a schema.
      *
      * schema: a structure produced by a ShEx parser or equivalent.
      * options: object with controls for
      *   lax(true): boolean: whine about missing types in schema.
-     *   diagnose(false): boolean: makde validate return a structure with errors.
+     *   diagnose(false): boolean: make validate return a structure with errors.
      */
     constructor(schema, db, options = {}) {
         this.index = schema._index || indexSchema(schema);
         if (!("labelToTcs" in this.index)) // !! what is this?
             this.index.labelToTcs = {};
-        this.type = "ShExValidator";
         options = options || {};
         this.options = options;
         this.known = {};
@@ -15620,9 +15647,6 @@ class ShExValidator {
         this.db = db;
         // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
         this.regexModule = this.options.regexModule || EvalThreadedNErr;
-        /* emptyTracker - a tracker that does nothing
-         */
-        this.emptyTracker = new EmptyTracker();
         this.semActHandler = new SemActDispatcherImpl(options.semActs);
     }
     /**
@@ -15630,13 +15654,13 @@ class ShExValidator {
      *
      * @param shapeMap - list of node/shape pairs to validate
      * @param tracker - optional implementation of QueryTracker to log validation
-     * @param seen - optional (and discrouaged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
+     * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
-    validateShapeMap(shapeMap, tracker = this.emptyTracker, seen = {}) {
+    validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
         return shapeMap.map(pair => {
-            let time = +new Date();
+            // let time = +new Date();
             const res = this.validateNodeShapePair(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen);
-            time = +new Date() - time;
+            // time = +new Date() - time;
             return {
                 node: pair.node,
                 shape: pair.shape,
@@ -15652,9 +15676,9 @@ class ShExValidator {
      * @param node - RdfJs Term to validate
      * @param shapeExprLabel - shapeExprLabel of shape to validate node against. May be `ShExValidator.Start`.
      * @param tracker - optional implementation of QueryTracker to log validation
-     * @param seen - optional (and discrouaged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
+     * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
-    validateNodeShapePair(node, shapeExprLabel, tracker = this.emptyTracker, seen = {}) {
+    validateNodeShapePair(node, shapeExprLabel, tracker = new EmptyTracker(), seen = {}) {
         const ctx = new ShapeExprValidationContext(null, shapeExprLabel, 0, tracker, seen, null, null);
         const ret = this.validateShapeLabel(node, ctx);
         if ("startActs" in this.schema) {
@@ -15699,7 +15723,7 @@ class ShExValidator {
         return ret;
     }
     /**
-     * Validate shapeLabel and shepeExprs which extend shapeLabel
+     * Validate shapeLabel and shapeExprs which extend shapeLabel
      *
      * @param point - focus of validation
      * @param shapeLabel - same as ctx.label, but with stronger typing (can't be Start)
@@ -15756,7 +15780,7 @@ class ShExValidator {
             };
         }
         return ret;
-        // @TODO move to Vistior.index
+        // @TODO move to Visitor.index
         function indexExtensions(schema) {
             const abstractness = {};
             const extensions = Hierarchy.create();
@@ -15874,11 +15898,10 @@ class ShExValidator {
         return ret;
     }
     validateShape(point, shape, ctx) {
-        const valParms = { db: this.db, shapeLabel: ctx.label, depth: ctx.depth, tracker: ctx.tracker, seen: ctx.seen };
         let ret = null;
-        const startAcionStorage = {}; // !!! need test to see this write to results structure.
+        const startActionStorage = {}; // !!! need test to see this write to results structure.
         if ("startActs" in this.schema) {
-            const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startAcionStorage);
+            const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage);
             if (semActErrors.length)
                 return {
                     type: "Failure",
@@ -15893,7 +15916,7 @@ class ShExValidator {
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const constraintList = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx, valParms);
+        const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx);
         const { misses, extras } = this.whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
         const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
@@ -15946,7 +15969,7 @@ class ShExValidator {
                 }
             });
             const tc2t = this._constraintToTriples(localT2Tc, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
-            let results = this.testExtends(shape, point, extendsToTriples, ctx, valParms);
+            let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
                 const sub = regexEngine.match(this.db, point, constraintList, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
                 if (!("errors" in sub) && results) {
@@ -16031,7 +16054,7 @@ class ShExValidator {
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
-    matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx, valParms) {
+    matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx) {
         const _ShExValidator = this;
         const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
         const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -16039,11 +16062,11 @@ class ShExValidator {
         return constraintList.reduce(function (ret, constraint, cNo) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
-            // get triples matching predciate
+            // get triples matching predicate
             const matchPredicate = index.byPredicate.get(constraint.predicate) ||
                 []; // empty list when no triple matches that constraint
             // strip to triples matching value constraints (apart from @<someShape>)
-            const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(matchPredicate, constraint, ctx, valParms);
+            const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
                 const tNo = neighborhood.indexOf(evidence.triple);
                 ret.constraintList[tNo].push(cNo);
@@ -16092,14 +16115,14 @@ class ShExValidator {
             return ret;
         }, _seq(constraintList.length).map(() => [])); // [length][]
     }
-    testExtends(expr, point, extendsToTriples, ctx, valParms) {
+    testExtends(expr, point, extendsToTriples, ctx) {
         if (expr.extends === undefined)
             return null;
         const passes = [];
         const errors = [];
         for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
             const extend = expr.extends[eNo];
-            const subgraph = this.makeTriplesDB(null); // These triples were tracked earlier.
+            const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
             extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
             ctx = ctx.checkExtendsPartition(subgraph);
             const sub = this.validateShapeExpr(point, extend, ctx);
@@ -16112,35 +16135,6 @@ class ShExValidator {
             return { type: "ExtensionFailure", errors: errors };
         }
         return { type: "ExtensionResults", solutions: passes };
-    }
-    /** Directly construct a DB from triples.
-     * TODO: should this be in @shexjs/neighborhood-something ?
-     */
-    makeTriplesDB(queryTracker) {
-        const incoming = [];
-        const outgoing = [];
-        function getTriplesByIRI(s, p, o, g) {
-            return incoming.concat(outgoing).filter(t => (!s || s === t.subject) &&
-                (!p || p === t.predicate) &&
-                (!s || s === t.object));
-        }
-        function getNeighborhood(point, shapeLabel, shape) {
-            return {
-                outgoing: outgoing,
-                incoming: incoming
-            };
-        }
-        return {
-            getNeighborhood: getNeighborhood,
-            getTriplesByIRI: getTriplesByIRI,
-            getSubjects: function () { throw Error("!Triples DB can't index subjects"); },
-            getPredicates: function () { throw Error("!Triples DB can't index predicates"); },
-            getObjects: function () { throw Error("!Triples DB can't index objects"); },
-            getQuads: function () { throw Error("!Triples DB doesn't have Quads"); },
-            get size() { return incoming.length + outgoing.length; },
-            addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
-            addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
-        };
     }
     /** TripleConstraintsVisitor - walk shape's extends to get all
      * referenced triple constraints.
@@ -16196,9 +16190,9 @@ class ShExValidator {
             const extendsTCs = shape.extends !== undefined
                 ? shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max))
                 : [];
-            const localTCs = "expression" in shape
-                ? visitor.visitExpression(shape.expression, min, max)
-                : [];
+            const localTCs = shape.expression === undefined
+                ? []
+                : visitor.visitExpression(shape.expression, min, max);
             return { extendsTCs, localTCs };
         }
         function getAllTripleConstraints(shape) {
@@ -16272,13 +16266,12 @@ class ShExValidator {
         };
         return { getAllTripleConstraints };
     }
-    _triplesMatchingShapeExpr(triples, constraint, ctx, valParms) {
+    triplesMatchingShapeExpr(triples, constraint, ctx) {
         const _ShExValidator = this;
         const misses = [];
         const hits = [];
         triples.forEach(function (triple) {
             const value = constraint.inverse ? triple.subject : triple.object;
-            let sub;
             const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
             if (constraint.valueExpr === undefined)
                 hits.push({ triple, sub: undefined });
@@ -16349,6 +16342,7 @@ class ShExValidator {
 exports.ShExValidator = ShExValidator;
 ShExValidator.Start = neighborhood_api_1.Start;
 ShExValidator.InterfaceOptions = exports.InterfaceOptions;
+ShExValidator.type = "ShExValidator";
 function testLanguageStem(typedValue, stem) {
     const trail = typedValue.substring(stem.length);
     return (typedValue !== "" && typedValue.startsWith(stem) && (stem === "" || trail === "" || trail[0] === "-"));
@@ -16472,7 +16466,7 @@ class TripleToTripleConstraints {
     }
     /**
      * Find next mapping of Triples to TripleConstraints.
-     * Exclude any that differ only in an irrelevent order difference in assinment to EXTENDS.
+     * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
      * @returns {number[] | null}
      */
     next() {
@@ -16583,7 +16577,7 @@ const N3jsTripleToString = function () {
  *                 empty set indicate a triple which didn't matching anything in
  *                 the shape.
  *
- *     misses: list to recieve value constraint failures.
+ *     misses: list to receive value constraint failures.
  *   }
  */
 function indexNeighborhood(triples) {
@@ -16618,7 +16612,6 @@ function sparqlOrder(l, r) {
 function _seq(n) {
     return Array.from(Array(n)); // hahaha, javascript, you suck.
 }
-function noop() { }
 function runtimeError(...args) {
     const errorStr = args.join("");
     const e = new Error(errorStr);
