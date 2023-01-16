@@ -11712,6 +11712,29 @@ class ShapeExprValidationContext {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
 }
+class TriplesMatching {
+    constructor(hits, misses) {
+        this.hits = hits;
+        this.misses = misses;
+    }
+}
+class TriplesMatchingResult {
+    constructor(triple) {
+        this.triple = triple;
+    }
+}
+class NewHit extends TriplesMatchingResult {
+    constructor(triple, sub) {
+        super(triple);
+        this.sub = sub;
+    }
+}
+class NewMiss extends TriplesMatchingResult {
+    constructor(triple, errors) {
+        super(triple);
+        this.errors = errors;
+    }
+}
 /**
  * Convert a ResultMap to a shapeExprTest by examining each shape association.
  * TODO: migrate to ShExUtil when ShExUtil is TS-ified
@@ -12415,16 +12438,18 @@ class ShExValidator {
             else {
                 ctx = ctx.followTripleConstraint();
                 const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
+                // @ts-ignore
                 if (sub.errors === undefined) {
-                    hits.push({ triple: triple, sub: sub });
+                    hits.push(new NewHit(triple, sub));
                 }
                 else /* !! if (!hits.find(h => h.triple === triple)) */ {
                     _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-                    misses.push({ triple: triple, errors: sub });
+                    // @ts-ignore
+                    misses.push(new NewMiss(triple, sub));
                 }
             }
         });
-        return { hits: hits, misses: misses };
+        return new TriplesMatching(hits, misses);
     }
     /* _validateNodeConstraint - return whether the value matches the value
      * expression without checking shape references.
