@@ -2,7 +2,7 @@
 
 const ShExUtilCjsModule = (function () {
 const ShExTerm = require("@shexjs/term");
-const Visitor = require('@shexjs/visitor')
+const {Visitor, index} = require('@shexjs/visitor')
 const Hierarchy = require('hierarchy-closure')
 const ShExHumanErrorWriter = require('./shex-human-error-writer.js')
 
@@ -79,7 +79,7 @@ const ShExUtil = {
   },
 
   Visitor: Visitor,
-  index: Visitor.index,
+  index: index,
 
 
   /* getAST - compile a traditional regular expression abstract syntax tree.

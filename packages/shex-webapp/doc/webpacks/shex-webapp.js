@@ -9588,7 +9588,7 @@ if (true)
 
 const ShExUtilCjsModule = (function () {
 const ShExTerm = __webpack_require__(1118);
-const Visitor = __webpack_require__(8806)
+const {Visitor, index} = __webpack_require__(8806)
 const Hierarchy = __webpack_require__(2515)
 const ShExHumanErrorWriter = __webpack_require__(7625)
 
@@ -9665,7 +9665,7 @@ const ShExUtil = {
   },
 
   Visitor: Visitor,
-  index: Visitor.index,
+  index: index,
 
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
@@ -11594,8 +11594,7 @@ const eval_validator_api_1 = __webpack_require__(3530);
 const Hierarchy = __importStar(__webpack_require__(2515));
 const neighborhood_api_1 = __webpack_require__(3486);
 const shex_xsd_1 = __webpack_require__(8994);
-const ShExVisitor = __webpack_require__(8806);
-const indexSchema = ShExVisitor.index;
+const visitor_1 = __webpack_require__(8806);
 exports.InterfaceOptions = {
     "coverage": {
         "firstError": "fail on first error (usually used with eval-simple-1err)",
@@ -11774,9 +11773,10 @@ class ShExValidator {
      *   diagnose(false): boolean: make validate return a structure with errors.
      */
     constructor(schema, db, options = {}) {
-        this.index = schema._index || indexSchema(schema);
-        if (!("labelToTcs" in this.index)) // !! what is this?
-            this.index.labelToTcs = {};
+        const index = schema._index || (0, visitor_1.index)(schema);
+        if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
+            index.labelToTcs = {};
+        this.index = index;
         options = options || {};
         this.options = options;
         this.known = {};
@@ -11924,7 +11924,7 @@ class ShExValidator {
             makeSchemaVisitor().visitSchema(schema);
             return extensions.children;
             function makeSchemaVisitor() {
-                const schemaVisitor = new ShExVisitor();
+                const schemaVisitor = (0, visitor_1.Visitor)();
                 let curLabel;
                 let curAbstract;
                 const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -11937,7 +11937,7 @@ class ShExValidator {
                 schemaVisitor.visitShape = function (shape) {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
-                            const extendsVisitor = new ShExVisitor();
+                            const extendsVisitor = (0, visitor_1.Visitor)();
                             extendsVisitor.visitExpression = function (expr, ...args) { return "null"; };
                             extendsVisitor.visitShapeRef = function (reference, ...args) {
                                 extensions.add(reference, curLabel);
@@ -12281,7 +12281,7 @@ class ShExValidator {
      */
     TripleConstraintsVisitor(labelToTcs) {
         const _ShExValidator = this;
-        const visitor = new ShExVisitor(labelToTcs);
+        const visitor = (0, visitor_1.Visitor)(labelToTcs);
         function emptyShapeExpr() { return []; }
         visitor.visitShapeDecl = function (decl, min, max) {
             // if (labelToTcs.has(decl.id)) !! uncomment cache for production
@@ -13383,7 +13383,7 @@ function ShExVisitor (...ctor_args) {
 // The ShEx Vistor is here to minimize deps for ShExValidator.
 /** create indexes for schema
  */
-ShExVisitor.index = function (schema) {
+function index (schema) {
   let index = {
     shapeExprs: {},
     tripleExprs: {}
@@ -13409,7 +13409,10 @@ ShExVisitor.index = function (schema) {
 }
 
 if (true)
-  module.exports = ShExVisitor;
+  module.exports = {
+    Visitor: ShExVisitor,
+    index: index,
+  };
 
 
 

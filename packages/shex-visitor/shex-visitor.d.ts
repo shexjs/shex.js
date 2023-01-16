@@ -1,72 +1,111 @@
 import * as ShExJ from 'shexj';
 import {SchemaIndex} from "@shexjs/term";
+import {
+    Annotation,
+    BNODE,
+    EachOf, exclusion,
+    IRIREF, IriStemRange, LanguageStemRange, LiteralStemRange, NodeConstraint,
+    OneOf,
+    SemAct,
+    ShapeAnd, ShapeDecl, shapeDeclRef, shapeExpr,
+    shapeExprOrRef, ShapeExternal, ShapeNot,
+    ShapeOr, TripleConstraint, tripleExprOrRef,
+    tripleExprRef, valueSetValue
+} from 'shexj';
 
 export {}
-export class ShExVisitor {
-    constructor(...args: any[]);
-    visitBase: (v: any, ...args: any[]) => any;
-    visitStart: (v: any, ...args: any[]) => any;
-    visitClosed: (v: any, ...args: any[]) => any;
-    "visit@context": (v: any, ...args: any[]) => any;
-    visitRestricts: (v: any, ...args: any[]) => any;
-    visitExtends: (v: any, ...args: any[]) => any;
-    visitExtra: (l: any, ...args: any[]) => any;
-    visitAnnotations: (l: any, ...args: any[]) => any;
-    visitAbstract: (v: any, ...args: any[]) => any;
-    visitInverse: (v: any, ...args: any[]) => any;
-    visitPredicate: (v: any, ...args: any[]) => any;
-    visitName: (v: any, ...args: any[]) => any;
-    visitId: (v: any, ...args: any[]) => any;
-    visitCode: (v: any, ...args: any[]) => any;
-    visitMin: (v: any, ...args: any[]) => any;
-    visitMax: (v: any, ...args: any[]) => any;
-    visitType: (v: any, ...args: any[]) => any;
-    visitNodeKind: (v: any, ...args: any[]) => any;
-    visitDatatype: (v: any, ...args: any[]) => any;
-    visitPattern: (v: any, ...args: any[]) => any;
-    visitFlags: (v: any, ...args: any[]) => any;
-    visitLength: (v: any, ...args: any[]) => any;
-    visitMinlength: (v: any, ...args: any[]) => any;
-    visitMaxlength: (v: any, ...args: any[]) => any;
-    visitMininclusive: (v: any, ...args: any[]) => any;
-    visitMinexclusive: (v: any, ...args: any[]) => any;
-    visitMaxinclusive: (v: any, ...args: any[]) => any;
-    visitMaxexclusive: (v: any, ...args: any[]) => any;
-    visitTotaldigits: (v: any, ...args: any[]) => any;
-    visitFractiondigits: (v: any, ...args: any[]) => any;
-    visitOneOf: (v: any, ...args: any[]) => any;
-    visitEachOf: (v: any, ...args: any[]) => any;
-    visitShapeAnd: (v: any, ...args: any[]) => any;
-    visitShapeOr: (v: any, ...args: any[]) => any;
-    visitInclude: (v: any, ...args: any[]) => any;
-    visitSchema(schema: any, ...args: any[]): any;
-    visitPrefixes(prefixes: any, ...args: any[]): any;
-    visitIRI(i: any, ...args: any[]): any;
-    visitImports(imports: any, ...args: any[]): any;
-    visitStartActs(startActs: any, ...args: any[]): any;
-    visitSemActs(semActs: any, ...args: any[]): any[];
-    visitSemAct(semAct: any, label: any, ...args: any[]): any;
-    visitShapes(shapes: any, ...args: any[]): any;
-    visitShapeDecl(decl: any, ...args: any[]): any;
-    visitShapeExpr(expr: any, ...args: any[]): any;
-    visitValueExpr(expr: any, ...args: any[]): any;
-    visitShapeNot(expr: any, ...args: any[]): any;
-    visitShape(shape: any, ...args: any[]): any;
-    visitNodeConstraint(shape: any, ...args: any[]): any;
-    visitShapeRef(reference: any, ...args: any[]): string;
-    visitShapeExternal(expr: any, ...args: any[]): any;
-    visitTripleConstraint(expr: any, ...args: any[]): any;
-    visitTripleExpr(expr: any, ...args: any[]): any;
-    visitExpression(expr: any, ...args: any[]): any;
-    visitValues(values: any, ...args: any[]): any;
-    visitStemRange(t: any, ...args: any[]): any;
-    visitExclusion(c: any, ...args: any[]): any;
-    visitInclusion(inclusion: any, ...args: any[]): string;
+export class ShExVisitorIface {
+  // constructor(...args: any[]); pass extra args in your constructor
 
+  visitSchema(schema: Schema, ...args: any[]): any;
+    // visitBase: (v: IRIREF, ...args: any[]) => any;
+    // visitPrefixes(prefixes: any, ...args: any[]): any;
+    // "visit@context": (v: string, ...args: any[]) => any;
+    visitStartActs(startActs: SemAct[], ...args: any[]): any;
+    visitStart: (v: shapeExprOrRef, ...args: any[]) => any;
+    visitImports(imports: IRIREF, ...args: any[]): any;
+    visitShapes(shapes: ShapeDecl[], ...args: any[]): any;
+
+    // SemActs and Annotations can appear in multiple places
+    visitSemActs(semActs: SemAct[], ...args: any[]): any[];
+    visitSemAct(semAct: SemAct, label: any, ...args: any[]): any;
+    visitName: (v: IRIREF, ...args: any[]) => any;
+    visitCode: (v: string, ...args: any[]) => any;
+    visitAnnotations: (l: Annotation[], ...args: any[]) => any;
+    visitPredicate: (v: IRIREF, ...args: any[]) => any;
+    // !! visitObject
+
+  visitId: (v: shapeDeclRef | tripleExprRef, ...args: any[]) => any;
+
+  visitShapeExpr(expr: shapeExprOrRef, ...args: any[]): any;
+    visitShapeRef(reference: shapeDeclRef, ...args: any[]): any;
+
+  visitShapeDecl(decl: ShapeDecl, ...args: any[]): any;
+    visitAbstract: (v: boolean, ...args: any[]) => any;
+    visitRestricts: (v: shapeExprOrRef, ...args: any[]) => any;
+
+  visitShapeOr: (v: ShapeOr, ...args: any[]) => any;
+
+  visitShapeAnd: (v: ShapeAnd, ...args: any[]) => any;
+
+  visitShapeNot(expr: ShapeNot, ...args: any[]): any;
+
+  visitShapeExternal(expr: ShapeExternal, ...args: any[]): any;
+
+  visitNodeConstraint(shape: NodeConstraint, ...args: any[]): any;
+    visitNodeKind: (v: nodeKind, ...args: any[]) => any;
+    visitDatatype: (v: IRIREF, ...args: any[]) => any;
+    visitValues(values: valueSetValue, ...args: any[]): any;
+
+    // stringFacets
+    visitLength: (v: number, ...args: any[]) => any;
+    visitMinlength: (v: number, ...args: any[]) => any;
+    visitMaxlength: (v: number, ...args: any[]) => any;
+    visitPattern: (v: string, ...args: any[]) => any;
+    visitFlags: (v: string, ...args: any[]) => any;
+
+    // numericFacets
+    visitMininclusive: (v: number, ...args: any[]) => any;
+    visitMinexclusive: (v: number, ...args: any[]) => any;
+    visitMaxinclusive: (v: number, ...args: any[]) => any;
+    visitMaxexclusive: (v: number, ...args: any[]) => any;
+    visitTotaldigits: (v: number, ...args: any[]) => any;
+    visitFractiondigits: (v: number, ...args: any[]) => any;
+
+    // value sets
+    visitIRI(i: IRIREF, ...args: any[]): any;
+    visitStemRange(t: IriStemRange | LiteralStemRange | LanguageStemRange, ...args: any[]): any;
+    visitExclusion(c: exclusion, ...args: any[]): any;
+    visitType: (v: string, ...args: any[]) => any;
+
+  visitShape(shape: Shape, ...args: any[]): any;
+    visitClosed: (v: boolean, ...args: any[]) => any;
+    visitExtends: (v: shapeExprOrRef, ...args: any[]) => any;
+    visitExtra: (l: IRIREF, ...args: any[]) => any;
+
+  visitExpression(expr: tripleExprOrRef, ...args: any[]): any;
+    visitInclusion(inclusion: tripleExprRef, ...args: any[]): string;
+    visitInclude: (v: tripleExprRef, ...args: any[]) => any;
+    visitMin: (v: number, ...args: any[]) => any;
+    visitMax: (v: number, ...args: any[]) => any;
+
+  visitTripleExpr(expr: tripleExpr, ...args: any[]): any;
+
+  visitOneOf: (v: OneOf, ...args: any[]) => any;
+
+  visitEachOf: (v: EachOf, ...args: any[]) => any;
+
+  visitTripleConstraint(expr: TripleConstraint, ...args: any[]): any;
+    visitInverse: (v: boolean, ...args: any[]) => any;
+    visitValueExpr(expr: shapeExprOrRef, ...args: any[]): any;
+
+    /*
     _maybeSet(obj: any, ret: any, context: any, members: any, ignore: any, ...args: any[]): any;
     _visitValue(v: any, ...args: any[]): any;
     _visitList(l: any, ...args: any[]): any;
     _testUnknownAttributes(obj: any, expected: any, context: any, captureFrame: any): void;
     _expect(o: any, p: any, v: any, ...args: any[]): void;
+     */
 }
 export function index (schema: ShExJ.Schema): SchemaIndex
+export function Visitor (... x: any): ShExVisitorIface

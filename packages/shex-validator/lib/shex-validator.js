@@ -32,8 +32,7 @@ const eval_validator_api_1 = require("@shexjs/eval-validator-api");
 const Hierarchy = __importStar(require("hierarchy-closure"));
 const neighborhood_api_1 = require("@shexjs/neighborhood-api");
 const shex_xsd_1 = require("./shex-xsd");
-const ShExVisitor = require("@shexjs/visitor");
-const indexSchema = ShExVisitor.index;
+const visitor_1 = require("@shexjs/visitor");
 exports.InterfaceOptions = {
     "coverage": {
         "firstError": "fail on first error (usually used with eval-simple-1err)",
@@ -212,9 +211,10 @@ class ShExValidator {
      *   diagnose(false): boolean: make validate return a structure with errors.
      */
     constructor(schema, db, options = {}) {
-        this.index = schema._index || indexSchema(schema);
-        if (!("labelToTcs" in this.index)) // !! what is this?
-            this.index.labelToTcs = {};
+        const index = schema._index || (0, visitor_1.index)(schema);
+        if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
+            index.labelToTcs = {};
+        this.index = index;
         options = options || {};
         this.options = options;
         this.known = {};
@@ -362,7 +362,7 @@ class ShExValidator {
             makeSchemaVisitor().visitSchema(schema);
             return extensions.children;
             function makeSchemaVisitor() {
-                const schemaVisitor = new ShExVisitor();
+                const schemaVisitor = (0, visitor_1.Visitor)();
                 let curLabel;
                 let curAbstract;
                 const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -375,7 +375,7 @@ class ShExValidator {
                 schemaVisitor.visitShape = function (shape) {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
-                            const extendsVisitor = new ShExVisitor();
+                            const extendsVisitor = (0, visitor_1.Visitor)();
                             extendsVisitor.visitExpression = function (expr, ...args) { return "null"; };
                             extendsVisitor.visitShapeRef = function (reference, ...args) {
                                 extensions.add(reference, curLabel);
@@ -719,7 +719,7 @@ class ShExValidator {
      */
     TripleConstraintsVisitor(labelToTcs) {
         const _ShExValidator = this;
-        const visitor = new ShExVisitor(labelToTcs);
+        const visitor = (0, visitor_1.Visitor)(labelToTcs);
         function emptyShapeExpr() { return []; }
         visitor.visitShapeDecl = function (decl, min, max) {
             // if (labelToTcs.has(decl.id)) !! uncomment cache for production

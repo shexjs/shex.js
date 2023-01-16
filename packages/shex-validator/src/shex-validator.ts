@@ -59,9 +59,7 @@ import {
 import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
 import * as RdfJs from "@rdfjs/types/data-model";
-
-const ShExVisitor = require("@shexjs/visitor");
-const indexSchema = ShExVisitor.index;
+import {Visitor as ShExVisitor, index as indexSchema} from "@shexjs/visitor";
 
 export {};
 
@@ -369,9 +367,11 @@ export class ShExValidator {
    *   diagnose(false): boolean: make validate return a structure with errors.
    */
   constructor(schema: InternalSchema, db: NeighborhoodDb, options: ValidatorOptions = {}) {
-    this.index = schema._index || indexSchema(schema)
-    if (!("labelToTcs" in this.index)) // !! what is this?
-      this.index.labelToTcs = {};
+    const index: SchemaIndex = schema._index || indexSchema(schema);
+    if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
+      index.labelToTcs = {};
+    this.index = index;
+
     options = options || {};
     this.options = options;
     this.known = {};
@@ -529,7 +529,7 @@ export class ShExValidator {
       return extensions.children;
 
       function makeSchemaVisitor () {
-        const schemaVisitor = new ShExVisitor();
+        const schemaVisitor = ShExVisitor();
         let curLabel: string;
         let curAbstract;
         const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -544,7 +544,7 @@ export class ShExValidator {
         schemaVisitor.visitShape = function (shape: ShExJ.Shape) {
           if (shape.extends !== undefined) {
             shape.extends.forEach(ext => {
-              const extendsVisitor = new ShExVisitor();
+              const extendsVisitor = ShExVisitor();
               extendsVisitor.visitExpression = function (expr: tripleExpr, ...args: never[]) { return "null"; }
               extendsVisitor.visitShapeRef = function (reference: string, ...args: never[]) {
                 extensions.add(reference, curLabel);
@@ -920,7 +920,7 @@ export class ShExValidator {
    */
   TripleConstraintsVisitor (labelToTcs: { [id: string]: ShExJ.TripleConstraint[] }) {
     const _ShExValidator = this;
-    const visitor = new ShExVisitor(labelToTcs);
+    const visitor = ShExVisitor(labelToTcs);
 
     function emptyShapeExpr () { return []; }
 
