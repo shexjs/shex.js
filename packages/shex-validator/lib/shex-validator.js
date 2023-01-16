@@ -882,7 +882,6 @@ class ShExValidator {
                 }
                 else /* !! if (!hits.find(h => h.triple === triple)) */ {
                     _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-                    // @ts-ignore
                     misses.push(new NewMiss(triple, sub));
                 }
             }
