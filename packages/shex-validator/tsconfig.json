@@ -11,7 +11,8 @@
         "target": "es6",
         "sourceMap": true,
         "skipLibCheck": true,
-        "strict": true
+        "strict": true,
+        "noUnusedParameters": true
     },
     "exclude": [
         "node_modules"

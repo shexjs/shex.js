@@ -15546,10 +15546,10 @@ class EmptyTracker {
     constructor() {
         this.depth = 0;
     }
-    recurse(rec) { }
-    known(res) { }
-    enter(term, shapeLabel) { ++this.depth; }
-    exit(term, shapeLabel, res) { --this.depth; }
+    recurse(_rec) { }
+    known(_res) { }
+    enter(_term, _shapeLabel) { ++this.depth; }
+    exit(_term, _shapeLabel, _res) { --this.depth; }
 }
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
@@ -15608,12 +15608,12 @@ class TrivialNeighborhood {
         this.outgoing = [];
         this.queryTracker = queryTracker;
     }
-    getTriplesByIRI(s, p, o, g) {
+    getTriplesByIRI(s, p, o, _g) {
         return this.incoming.concat(this.outgoing).filter(t => (!s || s === t.subject) &&
             (!p || p === t.predicate) &&
-            (!s || s === t.object));
+            (!o || o === t.object));
     }
-    getNeighborhood(point, shapeLabel, shape) {
+    getNeighborhood(_point, _shapeLabel, _shape) {
         return {
             outgoing: this.outgoing,
             incoming: this.incoming
@@ -15801,8 +15801,8 @@ class ShExValidator {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
                             const extendsVisitor = (0, visitor_1.Visitor)();
-                            extendsVisitor.visitExpression = function (expr, ...args) { return "null"; };
-                            extendsVisitor.visitShapeRef = function (reference, ...args) {
+                            extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
+                            extendsVisitor.visitShapeRef = function (reference, ..._args) {
                                 extensions.add(reference, curLabel);
                                 extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
                                 // makeSchemaVisitor().visitSchema(schema);
@@ -15916,7 +15916,7 @@ class ShExValidator {
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const constraintList = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx);
+        const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, ctx);
         const { misses, extras } = this.whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
         const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
@@ -16054,7 +16054,7 @@ class ShExValidator {
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
-    matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx) {
+    matchByPredicate(constraintList, neighborhood, outgoingLength, ctx) {
         const _ShExValidator = this;
         const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
         const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -16146,7 +16146,7 @@ class ShExValidator {
         const _ShExValidator = this;
         const visitor = (0, visitor_1.Visitor)(labelToTcs);
         function emptyShapeExpr() { return []; }
-        visitor.visitShapeDecl = function (decl, min, max) {
+        visitor.visitShapeDecl = function (decl, _min, _max) {
             // if (labelToTcs.has(decl.id)) !! uncomment cache for production
             //   return labelToTcs[decl.id];
             labelToTcs[decl.id] = decl.shapeExpr
@@ -16154,7 +16154,7 @@ class ShExValidator {
                 : emptyShapeExpr();
             return [{ type: "Ref", ref: decl.id }];
         };
-        visitor.visitShapeOr = function (shapeExpr, min, max) {
+        visitor.visitShapeOr = function (shapeExpr, _min, max) {
             return shapeExpr.shapeExprs.reduce((acc, disjunct) => acc.concat(this.visitShapeExpr(disjunct, 0, max)), emptyShapeExpr());
         };
         visitor.visitShapeAnd = function (shapeExpr, min, max) {
@@ -16171,8 +16171,8 @@ class ShExValidator {
                 return acc;
             }, []);
         };
-        visitor.visitShapeNot = function (expr, min, max) {
-            throw 1;
+        visitor.visitShapeNot = function (expr, _min, _max) {
+            throw Error(`don't know what to do when extending ${JSON.stringify(expr)}`);
         };
         visitor.visitShapeExternal = emptyShapeExpr;
         visitor.visitNodeConstraint = emptyShapeExpr;
@@ -16245,7 +16245,7 @@ class ShExValidator {
             return [].concat.apply([], tes);
         }
         // Any TC inside a OneOf implicitly has a min cardinality of 0.
-        visitor.visitOneOf = function (expr, outerMin, outerMax) {
+        visitor.visitOneOf = function (expr, _outerMin, outerMax) {
             return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, 0, x(outerMax, expr))));
         };
         visitor.visitEachOf = function (expr, outerMin, outerMax) {
@@ -16255,7 +16255,7 @@ class ShExValidator {
             return visitor.visitTripleExpr(_ShExValidator.index.tripleExprs[inclusion], outerMin, outerMax);
         };
         // Synthesize a TripleConstraint with the implicit cardinality.
-        visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
+        visitor.visitTripleConstraint = function (expr, _outerMin, _outerMax) {
             return [expr];
             /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
                const ret = JSON.parse(JSON.stringify(expr));

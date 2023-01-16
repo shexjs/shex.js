@@ -185,10 +185,10 @@ class SemActDispatcherImpl implements SemActDispatcher {
 class EmptyTracker implements QueryTracker {
   depth = 0;
 
-  recurse(rec: Recursion) {}
-  known(res: shapeExprTest) {}
-  enter(term: RdfJsTerm, shapeLabel: string) { ++this.depth; }
-  exit(term: RdfJsTerm, shapeLabel: string, res: shapeExprTest) { --this.depth; }
+  recurse(_rec: Recursion) {}
+  known(_res: shapeExprTest) {}
+  enter(_term: RdfJsTerm, _shapeLabel: string) { ++this.depth; }
+  exit(_term: RdfJsTerm, _shapeLabel: string, _res: shapeExprTest) { --this.depth; }
 }
 
 type LabelOrStart = string | typeof NeighborhoodStart;
@@ -318,16 +318,16 @@ class TrivialNeighborhood implements NeighborhoodDb {
     this.queryTracker = queryTracker;
   }
 
-  getTriplesByIRI(s: RdfJsTerm, p: RdfJsTerm, o: RdfJsTerm, g?: RdfJsTerm): Quad[] {
+  getTriplesByIRI(s: RdfJsTerm, p: RdfJsTerm, o: RdfJsTerm, _g?: RdfJsTerm): Quad[] {
     return this.incoming.concat(this.outgoing).filter(
         t =>
             (!s || s === t.subject) &&
             (!p || p === t.predicate) &&
-            (!s || s === t.object)
+            (!o || o === t.object)
     );
   }
 
-  getNeighborhood (point: RdfJsTerm, shapeLabel: LabelOrStart, shape: Shape): Neighborhood {
+  getNeighborhood (_point: RdfJsTerm, _shapeLabel: LabelOrStart, _shape: Shape): Neighborhood {
     return {
       outgoing: this.outgoing,
       incoming: this.incoming
@@ -545,8 +545,8 @@ export class ShExValidator {
           if (shape.extends !== undefined) {
             shape.extends.forEach(ext => {
               const extendsVisitor = ShExVisitor();
-              extendsVisitor.visitExpression = function (expr: tripleExpr, ...args: never[]) { return "null"; }
-              extendsVisitor.visitShapeRef = function (reference: string, ...args: never[]) {
+              extendsVisitor.visitExpression = function (_expr: tripleExpr, ..._args: never[]) { return "null"; }
+              extendsVisitor.visitShapeRef = function (reference: string, ..._args: never[]) {
                 extensions.add(reference, curLabel);
                 extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference))
                 // makeSchemaVisitor().visitSchema(schema);
@@ -672,7 +672,7 @@ export class ShExValidator {
     const constraintList = extendsTCs.concat(localTCs);
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-    const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, point, ctx);
+    const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, ctx);
     const {misses, extras} = this.whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
 
     const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
@@ -821,7 +821,7 @@ export class ShExValidator {
     return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
   }
 */
-  matchByPredicate(constraintList: TripleConstraint[], neighborhood: Quad[], outgoingLength: number, point: RdfJsTerm, ctx: ShapeExprValidationContext): ByPredicateResult {
+  matchByPredicate(constraintList: TripleConstraint[], neighborhood: Quad[], outgoingLength: number, ctx: ShapeExprValidationContext): ByPredicateResult {
     const _ShExValidator = this;
     const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
     const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
@@ -924,7 +924,7 @@ export class ShExValidator {
 
     function emptyShapeExpr () { return []; }
 
-    visitor.visitShapeDecl = function (decl: ShapeDecl, min: number, max: number) {
+    visitor.visitShapeDecl = function (decl: ShapeDecl, _min: number, _max: number) {
       // if (labelToTcs.has(decl.id)) !! uncomment cache for production
       //   return labelToTcs[decl.id];
       labelToTcs[decl.id] = decl.shapeExpr
@@ -932,7 +932,7 @@ export class ShExValidator {
           : emptyShapeExpr();
       return [{ type: "Ref", ref: decl.id }];
     }
-    visitor.visitShapeOr = function (shapeExpr: ShapeOr, min: number, max: number) {
+    visitor.visitShapeOr = function (shapeExpr: ShapeOr, _min: number, max: number) {
       return shapeExpr.shapeExprs.reduce(
         (acc, disjunct) => acc.concat(this.visitShapeExpr(disjunct, 0, max))
         , emptyShapeExpr()
@@ -955,8 +955,8 @@ export class ShExValidator {
       }, []);
     }
 
-    visitor.visitShapeNot = function (expr: ShapeNot, min: number, max: number) {
-      throw 1;
+    visitor.visitShapeNot = function (expr: ShapeNot, _min: number, _max: number) {
+      throw Error(`don't know what to do when extending ${JSON.stringify(expr)}`);
     }
 
     visitor.visitShapeExternal = emptyShapeExpr
@@ -1037,7 +1037,7 @@ export class ShExValidator {
     }
 
     // Any TC inside a OneOf implicitly has a min cardinality of 0.
-    visitor.visitOneOf = function (expr: OneOf, outerMin: number, outerMax: number) {
+    visitor.visitOneOf = function (expr: OneOf, _outerMin: number, outerMax: number) {
       return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, 0, x(outerMax, expr))))
     }
 
@@ -1050,7 +1050,7 @@ export class ShExValidator {
     }
 
     // Synthesize a TripleConstraint with the implicit cardinality.
-    visitor.visitTripleConstraint = function (expr: TripleConstraint, outerMin: number, outerMax: number) {
+    visitor.visitTripleConstraint = function (expr: TripleConstraint, _outerMin: number, _outerMax: number) {
       return [expr];
       /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
          const ret = JSON.parse(JSON.stringify(expr));
