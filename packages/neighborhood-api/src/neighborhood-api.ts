@@ -1,6 +1,6 @@
 /** API called by @shexjs/validator to get a neighborhood (arcs in and out of a node)
  */
-import {shapeExpr, Shape} from 'shexj';
+import {Shape} from 'shexj';
 // import {Neighborhood} from '@shexjs/neighborhood-api';
 import * as RdfJs from "@rdfjs/types/data-model";
 //import {Start} from "@shexjs/validator";
