@@ -7,6 +7,7 @@ const EARL = "EARL" in process.env;
 const ShExUtil = require("@shexjs/util");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
+const ShapeMapParser = require("shape-map").Parser;
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const {ShExValidator, resultMapToShapeExprTest} = require("..");
 const TestExtension = require("@shexjs/extension-test")
@@ -89,6 +90,7 @@ describe("A ShEx validator", function () {
             function (report) {
               test.schemaURL = manifestURL + '/data';
               test.dataURL = manifestURL + '/data';
+              test.pass = test.status === "conformant";
 
               const schemaParser = ShExParser.construct(test.schemaURL, null, {index: true})
               const schema = schemaParser.parse(test.schema);
@@ -122,17 +124,14 @@ describe("A ShEx validator", function () {
                       // (point, shapeLabel, ctx) => validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx)
                     };
                     const validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
-                    const ShapeMapParser = require("shape-map").Parser;
                     const smParser = ShapeMapParser.construct(manifestURL, schemaMeta, dataMeta);
-                    const smap = smParser.parse(test.queryMap)
+                    const smap = smParser.parse(test.queryMap);
                     const validationResults = validator.validateShapeMap(smap);
                     validationResults.forEach(validationResult => {
-                      // console.log(test.status === "conformant", validationResult)
-                      if (test.status === "conformant") {
-                        assert(validationResult.appinfo.errors === undefined)
-                      } else {
-                        assert(validationResult.appinfo.errors !== undefined)
-                      }
+                      assert(
+                        validationResult.appinfo.errors !== undefined ^ test.pass,
+                        `expected to ${test.pass ? 'pass' : 'fail'}; got: ${JSON.stringify(validationResult.appinfo, null, 2)}`
+                      );
                     });
                     report();
                   }

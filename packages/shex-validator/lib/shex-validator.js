@@ -157,21 +157,20 @@ class TriplesMatching {
     }
 }
 class TriplesMatchingResult {
-    constructor(triple) {
-        this.triple = triple;
-    }
-}
-class NewHit extends TriplesMatchingResult {
     constructor(triple, sub) {
-        super(triple);
+        this.triple = triple;
         this.sub = sub;
     }
 }
-class NewMiss extends TriplesMatchingResult {
-    constructor(triple, errors) {
-        super(triple);
-        this.errors = errors;
+class TriplesMatchingHit extends TriplesMatchingResult {
+}
+class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
+    constructor(triple) {
+        // @ts-ignore
+        super(triple, undefined); // could weaken typing on the hits, but also weakens the misses
     }
+}
+class TriplesMatchingMiss extends TriplesMatchingResult {
 }
 /**
  * Convert a ResultMap to a shapeExprTest by examining each shape association.
@@ -515,7 +514,7 @@ class ShExValidator {
         const constraintList = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, ctx);
-        const { misses, extras } = this.whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
+        const { misses, extras } = this.whatsMissing(tripleList, neighborhood, shape.extra || []);
         const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
         const regexEngine = this.regexModule.compile(this.schema, shape, this.index);
@@ -652,6 +651,13 @@ class ShExValidator {
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
+    /**
+     * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
+     * @param constraintList - list of TripleConstraint
+     * @param neighborhood - list of Quad
+     * @param outgoingLength - first n of neighborhood are outgoing triples
+     * @param ctx - evaluation context
+     */
     matchByPredicate(constraintList, neighborhood, outgoingLength, ctx) {
         const _ShExValidator = this;
         const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
@@ -672,16 +678,15 @@ class ShExValidator {
             });
             matchConstraints.misses.forEach(function (evidence) {
                 const tNo = neighborhood.indexOf(evidence.triple);
-                ret.misses[tNo] = { constraintNo: cNo, errors: evidence.errors };
+                ret.misses[tNo] = { constraintNo: cNo, errors: evidence.sub };
             });
             return ret;
         }, init);
     }
-    whatsMissing(tripleList, neighborhood, outgoingLength, extras) {
+    whatsMissing(tripleList, neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
         const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
             if (constraints.length === 0 && // matches no constraints
-                ord < outgoingLength && // not an incoming triple
                 ord in tripleList.misses) { // predicate matched some constraint(s)
                 if (extras.indexOf(neighborhood[ord].predicate.value) !== -1) {
                     matchedExtras.push(ord);
@@ -872,17 +877,17 @@ class ShExValidator {
             const value = constraint.inverse ? triple.subject : triple.object;
             const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
             if (constraint.valueExpr === undefined)
-                hits.push({ triple, sub: undefined });
+                hits.push(new TriplesMatchingNoValueConstraint(triple));
             else {
                 ctx = ctx.followTripleConstraint();
                 const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
                 // @ts-ignore
                 if (sub.errors === undefined) {
-                    hits.push(new NewHit(triple, sub));
+                    hits.push(new TriplesMatchingHit(triple, sub));
                 }
                 else /* !! if (!hits.find(h => h.triple === triple)) */ {
                     _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-                    misses.push(new NewMiss(triple, sub));
+                    misses.push(new TriplesMatchingMiss(triple, sub));
                 }
             }
         });
