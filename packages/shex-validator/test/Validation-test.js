@@ -14,6 +14,7 @@ const TestExtension = require("@shexjs/extension-test")
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({ rdfjs: N3 });
 const fs = require("fs");
+const JsYaml = require('js-yaml');
 const path = require("path");
 const chai = require("chai");
 const expect = chai.expect;
@@ -29,6 +30,10 @@ let regexModules = [
 ];
 if (EARL)
   regexModules = regexModules.slice(1);
+
+const examplesManifests = [
+  "../../shex-webapp/examples/inheritance/p123-manifest.yaml"
+];
 
 const TODO = [
   // delightfully empty (for now)
@@ -52,6 +57,91 @@ describe("A ShEx validator", function () {
 
   tests = tests.filter(test => {
     return TODO.indexOf(test.name) === -1;
+  });
+
+  examplesManifests.forEach(manifestFile => {
+    describe(`manifest file ${path.parse(manifestFile).base}:`, () => {
+      const manifestFilePath = path.join(__dirname, manifestFile);
+      let examples = JsYaml.load(fs.readFileSync(manifestFilePath, "utf8"))
+      const manifestURL = "file://" + manifestFilePath;
+      if (TESTS)
+        examples = examples.filter(function (t) {
+          return t.schemaLabel.indexOf(TESTS) !== -1 || t.schemaLabel.match(TESTS) ||
+            t.dataLabel.indexOf(TESTS) !== -1 || t.dataLabel.match(TESTS) ||
+            t.schema.match(TESTS) ||
+            t.data.match(TESTS);
+        });
+
+      // beforeEach(async () => {
+      //   examples.forEach(function (test) {
+      //   });
+      //   return Promise.resolve(1);
+      // });
+
+      regexModules.forEach(regexModule => {
+        examples.forEach(function (test) {
+          it(
+            "should " + (test.status === "conformant" ? "pass" : "fail") + " validation of data '" + test.dataLabel
+              + "' against schema '" + test.schemaLabel
+              + "' and " + (test.status === "conformant" ? "pass" : "fail")
+              + " using " + regexModule.name
+              + ".",
+            function (report) {
+              test.schemaURL = manifestURL + '/data';
+              test.dataURL = manifestURL + '/data';
+
+              const schemaParser = ShExParser.construct(test.schemaURL, null, {index: true})
+              const schema = schemaParser.parse(test.schema);
+              const schemaMeta = {
+                base: schema._base,
+                prefixes: schema._prefixes || {}
+              }
+
+              const store = new N3.Store();
+              // Crappy hack 'cause N3Parser._resetBlankNodePrefix() isn't exported.
+              const bnodeRenumberer = makeBNodeRenumberer().start(0);
+              const dataParser = new N3.Parser({baseIRI: test.dataURL, blankNodePrefix: "", format: "text/turtle", factory: N3.DataFactory});
+              dataParser.parse(
+                test.data,
+                function (error, triple, prefixes) {
+                  if (error) {
+                    report("error parsing " + dataFile + ": " + error);
+                  } else if (triple) {
+                    store.addQuad(triple);
+                  } else {
+                    bnodeRenumberer.restore();
+                    const dataMeta = {
+                      base: dataParser._base,
+                      prefixes: Object.assign({}, dataParser._prefixes)
+                    }
+                    const schemaOptions = {
+                      regexModule: regexModule,
+                      diagnose: true,
+                      semActs: undefined,
+                      validateExtern: undefined
+                      // (point, shapeLabel, ctx) => validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx)
+                    };
+                    const validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
+                    const ShapeMapParser = require("shape-map").Parser;
+                    const smParser = ShapeMapParser.construct(manifestURL, schemaMeta, dataMeta);
+                    const smap = smParser.parse(test.queryMap)
+                    const validationResults = validator.validateShapeMap(smap);
+                    validationResults.forEach(validationResult => {
+                      // console.log(test.status === "conformant", validationResult)
+                      if (test.status === "conformant") {
+                        assert(validationResult.appinfo.errors === undefined)
+                      } else {
+                        assert(validationResult.appinfo.errors !== undefined)
+                      }
+                    });
+                    report();
+                  }
+                }
+              )                     
+            });
+        });
+      });
+    });
   });
 
   regexModules.forEach(regexModule => {
