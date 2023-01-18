@@ -148,7 +148,7 @@ const ShExTermCjsModule = (function () {
   function rdfJsTerm2Turtle (node, meta) {
     switch (node.termType) {
     case ("NamedNode"):
-      return iriToTurtle(node.value, meta);
+      return iri2Turtle(node.value, meta);
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
@@ -163,7 +163,7 @@ const ShExTermCjsModule = (function () {
     }
   }
 
-  function iriToTurtle (iri, meta = {}, aForType = true) {
+  function iri2Turtle (iri, meta = {}, aForType = true) {
     const {base, prefixes = {}} = meta;
     if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
       return "a";
@@ -184,13 +184,13 @@ const ShExTermCjsModule = (function () {
     return rel;
   }
 
-  function internalTermToTurtle (node, meta = {}, aForType = true) {
+  function shExJsTerm2Turtle (node, meta = {}, aForType = true) {
     const {base, prefixes = {}} = meta;
     if (typeof node === "string") {
       if (node.startsWith("_:")) {
         return node;
       } else {
-        return this.iriToTurtle(node, meta, aForType);
+        return this.iri2Turtle(node, meta, aForType);
       }
     } else if (isLiteral(node)) {
       let value = getLiteralValue(node);
@@ -203,12 +203,27 @@ const ShExTermCjsModule = (function () {
       if (language)
         return '"' + value + '"@' + language;
       else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.iriToTurtle(type, meta, false);
+        return '"' + value + '"^^' + this.iri2Turtle(type, meta, false);
       else
         return '"' + value + '"';
     } else {
       throw Error("Unknown internal term type: " + JSON.stringify(node));
     }
+  }
+
+  function shExJsTerm2Ld (term) {
+    if (term[0] !== "\"")
+      return term;
+    const ret = { value: ShExTerm.getLiteralValue(term) };
+    const dt = ShExTerm.getLiteralType(term);
+    if (dt &&
+        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+      ret.type = dt;
+    const lang = ShExTerm.getLiteralLanguage(term)
+    if (lang)
+      ret.language = lang;
+    return ret;
   }
 
   // Tests whether the given entity (triple object) represents an IRI in the N3 library
@@ -395,12 +410,13 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
     rdfJsTerm2Turtle,
-    internalTermToTurtle,
+    shExJsTerm2Turtle,
+    shExJsTerm2Ld,
     ld2RdfJsTerm,
     rdfJsTerm2Ld,
     n3idQuad2RdfJs,
     n3idTerm2RdfJs,
-    iriToTurtle,
+    iri2Turtle,
   }
 })();
 

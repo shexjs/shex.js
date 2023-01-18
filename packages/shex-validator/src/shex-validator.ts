@@ -587,7 +587,7 @@ export class ShExValidator {
         return this.validateShape(point, shapeExpr, ctx);
       case "ShapeExternal":
         if (typeof this.options.validateExtern !== "function")
-          throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`)
+          throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`)
         return this.options.validateExtern(point, ctx.label, ctx.checkShapeLabel(ctx.label));
       case "ShapeOr":
         const orErrors = [];

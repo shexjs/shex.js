@@ -67,9 +67,6 @@ Remove `._prefixes` and `._index` from internal schema structure and add `schema
 ## ShExRVisitor:(knownShapeExprs), ShExRtoShExJ(schema-like-object)
 Internal functions for parsing ShExR
 
-## n3jsToTurtle(), valToN3js(res, factory), n3jsToTurtle(n3js)
-Internal functions for mapping between ShExJ terms and n3.js terms
-
 ## canonicalize(schema, trimIRI)
 Normalize ShExJ by moving all tripleExpression references to their first expression.
 

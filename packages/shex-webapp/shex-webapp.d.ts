@@ -1,3 +1,7 @@
+/**
+ * automatic ts-ified annotation for webpack product -- probably garbage
+ */
+
 export {};
 
 export class DcTap {
@@ -79,7 +83,7 @@ export namespace ShExTerm {
 
     function inDefaultGraph(triple: any): any;
 
-    function internalTermToTurtle(node: any, meta: {base: string, prefixes: {[name: string]: string[]}}, aForType: boolean): any;
+    function shExJsTerm2Turtle(node: any, meta: {base: string, prefixes: {[name: string]: string[]}}, aForType: boolean): any;
 
     function internalTerm(node: any): any;
 
@@ -231,8 +235,6 @@ export namespace Util {
     function isWellDefined(schema: any): any;
 
     function merge(left: any, right: any, overwrite: any, inPlace: any): any;
-
-    function n3jsToTurtle(n3js: any): any;
 
     function nestShapes(schema: any, options: any): any;
 

@@ -9079,7 +9079,7 @@ const ShExTermCjsModule = (function () {
   function rdfJsTerm2Turtle (node, meta) {
     switch (node.termType) {
     case ("NamedNode"):
-      return iriToTurtle(node.value, meta);
+      return iri2Turtle(node.value, meta);
     case ("BlankNode"):
       return "_:" + node.value;
     case ("Literal"):
@@ -9094,7 +9094,7 @@ const ShExTermCjsModule = (function () {
     }
   }
 
-  function iriToTurtle (iri, meta = {}, aForType = true) {
+  function iri2Turtle (iri, meta = {}, aForType = true) {
     const {base, prefixes = {}} = meta;
     if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
       return "a";
@@ -9115,13 +9115,13 @@ const ShExTermCjsModule = (function () {
     return rel;
   }
 
-  function internalTermToTurtle (node, meta = {}, aForType = true) {
+  function shExJsTerm2Turtle (node, meta = {}, aForType = true) {
     const {base, prefixes = {}} = meta;
     if (typeof node === "string") {
       if (node.startsWith("_:")) {
         return node;
       } else {
-        return this.iriToTurtle(node, meta, aForType);
+        return this.iri2Turtle(node, meta, aForType);
       }
     } else if (isLiteral(node)) {
       let value = getLiteralValue(node);
@@ -9134,12 +9134,27 @@ const ShExTermCjsModule = (function () {
       if (language)
         return '"' + value + '"@' + language;
       else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.iriToTurtle(type, meta, false);
+        return '"' + value + '"^^' + this.iri2Turtle(type, meta, false);
       else
         return '"' + value + '"';
     } else {
       throw Error("Unknown internal term type: " + JSON.stringify(node));
     }
+  }
+
+  function shExJsTerm2Ld (term) {
+    if (term[0] !== "\"")
+      return term;
+    const ret = { value: ShExTerm.getLiteralValue(term) };
+    const dt = ShExTerm.getLiteralType(term);
+    if (dt &&
+        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+      ret.type = dt;
+    const lang = ShExTerm.getLiteralLanguage(term)
+    if (lang)
+      ret.language = lang;
+    return ret;
   }
 
   // Tests whether the given entity (triple object) represents an IRI in the N3 library
@@ -9326,12 +9341,13 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
     rdfJsTerm2Turtle,
-    internalTermToTurtle,
+    shExJsTerm2Turtle,
+    shExJsTerm2Ld,
     ld2RdfJsTerm,
     rdfJsTerm2Ld,
     n3idQuad2RdfJs,
     n3idTerm2RdfJs,
-    iriToTurtle,
+    iri2Turtle,
   }
 })();
 
@@ -9579,21 +9595,6 @@ function extend (base) {
   }
 
   let isInclusion = isShapeRef;
-
-  function shExJsTerm2Ld (term) {
-    if (term[0] !== "\"")
-      return term;
-    const ret = { value: ShExTerm.getLiteralValue(term) };
-    const dt = ShExTerm.getLiteralType(term);
-    if (dt &&
-        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-      ret.type = dt;
-    const lang = ShExTerm.getLiteralLanguage(term)
-    if (lang)
-      ret.language = lang;
-    return ret;
-  }
 
 const ShExUtil = {
 
@@ -9863,24 +9864,6 @@ const ShExUtil = {
     return ret;
   },
 
-  n3jsToTurtle: function (res) {
-    function termToLex (node) {
-      return typeof node === "object" ? ("\"" + node.value + "\"" + (
-        "type" in node ? "^^<" + node.type + ">" :
-          "language" in node ? "@" + node.language :
-          ""
-      )) :
-      ShExTerm.isIRI(node) ? "<" + node + ">" :
-      ShExTerm.isBlank(node) ? node :
-      "???";
-    }
-    return this.valGrep(res, "TestedTriple", function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
-    });
-  },
-
   valToN3js: function (res, factory) {
     return this.valGrep(res, "TestedTriple", function (t) {
       const ret = JSON.parse(JSON.stringify(t));
@@ -9891,25 +9874,6 @@ const ShExUtil = {
             ""
         ));
       return ret;
-    });
-  },
-
-  n3jsToTurtle: function (n3js) {
-    function termToLex (node) {
-      if (ShExTerm.isIRI(node))
-        return "<" + node + ">";
-      if (ShExTerm.isBlank(node))
-        return node;
-      const t = ShExTerm.getLiteralType(node);
-      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
-        "^^<" + t + ">";
-      return node;
-    }
-    return n3js.map(function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
     });
   },
 
@@ -10929,14 +10893,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = shExJsTerm2Ld(elt[k]);
+          crushed[k] = ShExTerm.shExJsTerm2Ld(elt[k]);
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(shExJsTerm2Ld(obj[k][lookfor])));
+            list.push(crush(ShExTerm.shExJsTerm2Ld(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))
@@ -11932,7 +11896,7 @@ class ShExValidator {
                 return this.validateShape(point, shapeExpr, ctx);
             case "ShapeExternal":
                 if (typeof this.options.validateExtern !== "function")
-                    throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
+                    throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(point)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
                 return this.options.validateExtern(point, ctx.label, ctx.checkShapeLabel(ctx.label));
             case "ShapeOr":
                 const orErrors = [];

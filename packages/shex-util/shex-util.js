@@ -51,21 +51,6 @@ function extend (base) {
 
   let isInclusion = isShapeRef;
 
-  function shExJsTerm2Ld (term) {
-    if (term[0] !== "\"")
-      return term;
-    const ret = { value: ShExTerm.getLiteralValue(term) };
-    const dt = ShExTerm.getLiteralType(term);
-    if (dt &&
-        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-      ret.type = dt;
-    const lang = ShExTerm.getLiteralLanguage(term)
-    if (lang)
-      ret.language = lang;
-    return ret;
-  }
-
 const ShExUtil = {
 
   SX: SX,
@@ -334,24 +319,6 @@ const ShExUtil = {
     return ret;
   },
 
-  n3jsToTurtle: function (res) {
-    function termToLex (node) {
-      return typeof node === "object" ? ("\"" + node.value + "\"" + (
-        "type" in node ? "^^<" + node.type + ">" :
-          "language" in node ? "@" + node.language :
-          ""
-      )) :
-      ShExTerm.isIRI(node) ? "<" + node + ">" :
-      ShExTerm.isBlank(node) ? node :
-      "???";
-    }
-    return this.valGrep(res, "TestedTriple", function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
-    });
-  },
-
   valToN3js: function (res, factory) {
     return this.valGrep(res, "TestedTriple", function (t) {
       const ret = JSON.parse(JSON.stringify(t));
@@ -362,25 +329,6 @@ const ShExUtil = {
             ""
         ));
       return ret;
-    });
-  },
-
-  n3jsToTurtle: function (n3js) {
-    function termToLex (node) {
-      if (ShExTerm.isIRI(node))
-        return "<" + node + ">";
-      if (ShExTerm.isBlank(node))
-        return node;
-      const t = ShExTerm.getLiteralType(node);
-      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
-        "^^<" + t + ">";
-      return node;
-    }
-    return n3js.map(function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
     });
   },
 
@@ -1400,14 +1348,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = shExJsTerm2Ld(elt[k]);
+          crushed[k] = ShExTerm.shExJsTerm2Ld(elt[k]);
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(shExJsTerm2Ld(obj[k][lookfor])));
+            list.push(crush(ShExTerm.shExJsTerm2Ld(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))

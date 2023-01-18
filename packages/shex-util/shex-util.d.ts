@@ -14,7 +14,6 @@ export function ShExRVisitor(knownShapeExprs: any): any;
 export function ShExRtoShExJ(schema: any): any;
 export function valGrep(obj: any, type: any, f: any): any;
 export function valToN3js(res: any, factory: any): any;
-export function n3jsToTurtle(n3js: any): any;
 export function canonicalize(schema: any, trimIRI: any): any;
 export function BiDiClosure(): any;
 export function nestShapes(schema: any, options: any): any;

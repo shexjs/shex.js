@@ -204,7 +204,7 @@ function makeSchemaCache (selection) {
   ret.meta.termToLex = function (trm, aForTypes = true) {
     return trm === ShEx.Validator.Start
       ? START_SHAPE_LABEL
-      : ShEx.ShExTerm.internalTermToTurtle(trm, ret.meta, true);
+      : ShEx.ShExTerm.shExJsTerm2Turtle(trm, ret.meta, true);
   };
   ret.meta.lexToTerm = function (lex) {
     return lex === START_SHAPE_LABEL
@@ -1330,7 +1330,7 @@ function addEditMapPairs (pairs, target) {
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.Start ? START_SHAPE_LABEL : ShEx.ShExTerm.internalTermToTurtle(term, Caches.inputSchema);
+    return term === ShEx.Validator.Start ? START_SHAPE_LABEL : ShEx.ShExTerm.shExJsTerm2Turtle(term, Caches.inputSchema);
   }
 }
 
