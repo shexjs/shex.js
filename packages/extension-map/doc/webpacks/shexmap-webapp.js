@@ -12769,104 +12769,8 @@ const ShExTermCjsModule = (function () {
   const RelativizeIri = (__webpack_require__(4436).relativize);
   const DataFactory = __webpack_require__(1194);
 
-  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
-    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
-    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
-
   const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
   const XsdString = "http://www.w3.org/2001/XMLSchema#string";
-
-  // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./Parser./g
-  //   s/token/iri/
-  // ### `_resolveIRI` resolves a relative IRI token against the base path,
-  // assuming that a base path has been set and that the IRI is indeed relative.
-  function resolveRelativeIRI (base, iri) {
-
-    if (absoluteIRI.test(iri))
-      return iri
-
-    switch (iri[0]) {
-    // An empty relative IRI indicates the base IRI
-    case undefined: return base;
-    // Resolve relative fragment IRIs against the base IRI
-    case '#': return base + iri;
-    // Resolve relative query string IRIs by replacing the query string
-    case '?': return base.replace(/(?:\?.*)?$/, iri);
-    // Resolve root-relative IRIs at the root of the base IRI
-    case '/':
-      let m = base.match(schemeAuthority);
-      // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? m[1] : m[0]) + _removeDotSegments(iri);
-    // Resolve all other IRIs at the base IRI's path
-    default: {
-      return _removeDotSegments(base.replace(/[^\/?]*(?:\?.*)?$/, '') + iri);
-    }
-    }
-  }
-
-  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
-  function _removeDotSegments (iri) {
-    // Don't modify the IRI if it does not contain any dot segments
-    if (!dotSegments.test(iri))
-      return iri;
-
-    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    const length = iri.length;
-    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
-
-    while (i < length) {
-      switch (next) {
-      // The path starts with the first slash after the authority
-      case ':':
-        if (pathStart < 0) {
-          // Skip two slashes before the authority
-          if (iri[++i] === '/' && iri[++i] === '/')
-            // Skip to slash after the authority
-            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
-              i = pathStart;
-        }
-        break;
-      // Don't modify a query string or fragment
-      case '?':
-      case '#':
-        i = length;
-        break;
-      // Handle '/.' or '/..' path segments
-      case '/':
-        if (iri[i + 1] === '.') {
-          next = iri[++i + 1];
-          switch (next) {
-          // Remove a '/.' segment
-          case '/':
-            result += iri.substring(segmentStart, i - 1);
-            segmentStart = i + 1;
-            break;
-          // Remove a trailing '/.' segment
-          case undefined:
-          case '?':
-          case '#':
-            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
-          // Remove a '/..' segment
-          case '.':
-            next = iri[++i + 1];
-            if (next === undefined || next === '/' || next === '?' || next === '#') {
-              result += iri.substring(segmentStart, i - 2);
-              // Try to remove the parent path from result
-              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
-                result = result.substr(0, segmentStart);
-              // Remove a trailing '/..' segment
-              if (next !== '/')
-                return result + '/' + iri.substr(i + 1);
-              segmentStart = i + 1;
-            }
-          }
-        }
-      }
-      next = iri[++i];
-    }
-    return result + iri.substring(segmentStart);
-  }
 
   const Turtle = {};
   Turtle.PN_CHARS_BASE = "A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}"; // escape anything outside BMP: \u{10000}-\u{EFFFF}
@@ -13092,9 +12996,8 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
   }
 
   return {
-    RdfLangString: RdfLangString,
-    XsdString: XsdString,
-    resolveRelativeIRI: resolveRelativeIRI,
+    RdfLangString,
+    XsdString,
     rdfJsTerm2Turtle,
     shExJsTerm2Turtle,
     shExJsTerm2Ld,
@@ -14276,7 +14179,7 @@ const ShExUtil = {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
           (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) { // !! needs ShExTerm.ldTermIsIri
-        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
+        obj[k] = new URL(obj[k], base).href;
       }}
 
     function resolveRelativeURLs (obj) {
@@ -14997,8 +14900,8 @@ const ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: ShExTerm.resolveRelativeIRI(base, elt.node),
-        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
+        node: new URL(elt.node, base).href,
+        shape: new URL(elt.shape, base).href
       });
     });
   },
@@ -15008,8 +14911,6 @@ const ShExUtil = {
   },
 
   // static
-  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
-
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     const colon = prefixedIri.indexOf(":");
     if (colon === -1)
@@ -15038,7 +14939,7 @@ const ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + new URL(rel, meta.base).href;
       return quoted;
     }
     if (!meta)
@@ -15046,7 +14947,7 @@ const ShExUtil = {
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    const t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    const t = new URL(passedValue, meta.base || "").href; // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {

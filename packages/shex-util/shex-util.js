@@ -976,7 +976,7 @@ const ShExUtil = {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
           (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) { // !! needs ShExTerm.ldTermIsIri
-        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
+        obj[k] = new URL(obj[k], base).href;
       }}
 
     function resolveRelativeURLs (obj) {
@@ -1697,8 +1697,8 @@ const ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: ShExTerm.resolveRelativeIRI(base, elt.node),
-        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
+        node: new URL(elt.node, base).href,
+        shape: new URL(elt.shape, base).href
       });
     });
   },
@@ -1708,8 +1708,6 @@ const ShExUtil = {
   },
 
   // static
-  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
-
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     const colon = prefixedIri.indexOf(":");
     if (colon === -1)
@@ -1738,7 +1736,7 @@ const ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + new URL(rel, meta.base).href;
       return quoted;
     }
     if (!meta)
@@ -1746,7 +1744,7 @@ const ShExUtil = {
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    const t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    const t = new URL(passedValue, meta.base || "").href; // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {

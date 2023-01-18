@@ -36,7 +36,6 @@ export function valuesToSchema(values: any): any;
 export function simpleToShapeMap(x: any): any;
 export function absolutizeShapeMap(parsed: any, base: any): any;
 export function errsToSimple(val: any): any;
-export function resolveRelativeIRI(base: any, iri: any): any;
 export function resolvePrefixedIRI(prefixedIri: any, prefixes: any): any;
 export function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
 export function executeQueryPromise(query: any, endpoint: any): any;

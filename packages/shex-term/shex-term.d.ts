@@ -34,8 +34,6 @@ export const XsdString: string;
 
 export function shExJsTerm2Turtle(node: any, meta?: {base: string, prefixes: {[name: string]: string[]}}, aForType?: boolean): any;
 
-export function resolveRelativeIRI(base: any, iri: any): any;
-
 export function ld2RdfJsTerm (ld: LdTerm): RdfJsTerm;
 
 export function rdfJsTerm2Ld (term: RdfJsTerm): ShExTerm.LdTerm;

@@ -170,11 +170,11 @@ describe("A ShEx validator", function () {
                if (["shape", "reference", "valueExprRef", "node", "focus", "subject", "predicate", "object"].indexOf(k) !== -1 &&
                    typeof obj[k] !== "object" &&
                    (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) {
-                 obj[k] = ShExTerm.resolveRelativeIRI(["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL, obj[k]);
+                 obj[k] = new URL(obj[k], ["shape", "reference", "valueExprRef"].indexOf(k) !== -1 ? schemaURL : dataURL).href;
                } else if (["values"].indexOf(k) !== -1) {
                  for (let i = 0; i < obj[k].length; ++i) {
                    if (typeof obj[k][i] !== "object") {
-                     obj[k][i] = ShExTerm.resolveRelativeIRI(dataURL, obj[k][i]);
+                     obj[k][i] = new URL(obj[k][i], dataURL).href;
                    }
                  }
                }
@@ -260,11 +260,11 @@ describe("A ShEx validator", function () {
                             language: s["@language"],
                           }:
                         s.substr(0, 2) === "_:" ? s :
-                          ShExTerm.resolveRelativeIRI(base, s);
+                          new URL(s, base).href;
                       }
-                      let map = maybeGetTerm(manifestFile, test.action.map);
+                      let map = maybeGetTerm("file://" + manifestFile, test.action.map);
                       if (map) {
-                        map = JSON.parse(fs.readFileSync(map, "utf8"));
+                        map = JSON.parse(fs.readFileSync(map.substr("file://".length), "utf8"));
                         // map = Object.keys(map).reduce((r, k) => {
                         //   return r.concat({node: k, shape: map[k]});
                         // }, [])
