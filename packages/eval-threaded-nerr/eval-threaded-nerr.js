@@ -1,3 +1,5 @@
+const {rdfJsTerm2Ld} = require("@shexjs/term");
+
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = require("@shexjs/term");
 const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
@@ -104,9 +106,9 @@ function vpEngine (schema, shape, index) {
                 const t = neighborhood[tripleNo]
                 const tested = {
                   type: "TestedTriple",
-                  subject: ldify(t.subject),
-                  predicate: ldify(t.predicate),
-                  object: ldify(t.object)
+                  subject: rdfJsTerm2Ld(t.subject),
+                  predicate: rdfJsTerm2Ld(t.predicate),
+                  object: rdfJsTerm2Ld(t.object)
                 }
                 const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
                 if (hit.res && Object.keys(hit.res).length > 0)
@@ -325,26 +327,6 @@ function vpEngine (schema, shape, index) {
         } : ret[0];
     }
 
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatypeString;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
-
     function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
       function _dive (solns) {
         if (solns.type === "OneOfSolutions" ||
@@ -361,7 +343,7 @@ function vpEngine (schema, shape, index) {
             const t = neighborhood[x.tripleNo];
             const expr = constraintList[x.constraintNo];
             const ret = {
-              type: "TestedTriple", subject: ldify(t.subject), predicate: ldify(t.predicate), object: ldify(t.object)
+              type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)
             };
             function diver (focus, shapeLabel, dive) {
               const sub = dive(focus, shapeLabel);
@@ -409,21 +391,6 @@ function vpEngine (schema, shape, index) {
       return fromValidatePoint;
     }
   }
-
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: N3Util.getLiteralValue(term) };
-          const dt = N3Util.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = N3Util.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
 
 function extend(base) {
   if (!base) base = {};

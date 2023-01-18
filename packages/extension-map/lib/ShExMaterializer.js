@@ -6,6 +6,8 @@
  *   constraint violation reporting.
  */
 
+const {rdfJsTerm2Ld} = require("@shexjs/term");
+
 const ShExMapMaterializerCjsModule = function (config) {
 
 const Start = config.Validator.Start;
@@ -190,21 +192,6 @@ const decimalLexicalTests = {
   }
 };
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
-
 function makeCache () {
   const _keys = {}; // _keys[http://abcd] = [obj1, obj2]
   const _vals = {}; // _vals[http://abcd] = [res1, res2]
@@ -349,7 +336,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     if (seenKey in seen)
       return {
         type: "Recursion",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: label
       };
     seen[seenKey] = { point: point, shapeLabel: label };
@@ -384,7 +371,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       ret = errors.length ? {
         type: "Failure",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: shapeLabel,
         errors: errors.map(function (miss) {
           return {
@@ -394,7 +381,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         })
       } : {
         type: "NodeConstraintTest",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: shapeLabel,
         shapeExpr: shapeExpr
       };
@@ -660,7 +647,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       // _log("post-regexp " + usedTriples.join(" "));
 
-      const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+      const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: shapeLabel };
       if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape &&
@@ -684,14 +671,14 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       //   const t = neighborhood[miss.tripleNo];
       //   return {
       //     type: "TypeMismatch",
-      //     triple: {subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+      //     triple: {subject: t.subject, predicate: t.predicate, object: rdfJsTerm2Ld(t.object)},
       //     constraint: constraintList[miss.constraintNo],
       //     errors: miss.errors
       //   };
       // });
       ret = {
         type: "Failure",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: shapeLabel,
         errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
       };
@@ -791,7 +778,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       if (valueExpr.datatype) {
         if (!ShExTerm.isLiteral(value)) {
-          validationError("mismatched datatype: " + JSON.stringify(ldify(value)) + " is not a literal with datatype " + valueExpr.datatype);
+          validationError("mismatched datatype: " + JSON.stringify(rdfJsTerm2Ld(value)) + " is not a literal with datatype " + valueExpr.datatype);
         }
         else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
           validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
@@ -812,7 +799,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       if (valueExpr.values) {
         if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          const ld = ldify(value);
+          const ld = rdfJsTerm2Ld(value);
           if (v.type === "Language") {
             return v.languageTag === ld.language; // @@ use equals/normalizeTest
           }
@@ -949,7 +936,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     });
     const ret = {
       type: null,
-      focus: ldify(value),
+      focus: rdfJsTerm2Ld(value),
       shapeExpr: valueExpr
     };
     if (errors.length) {

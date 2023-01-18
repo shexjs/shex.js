@@ -1,3 +1,5 @@
+const {rdfJsTerm2Ld} = require("@shexjs/term");
+
 const EvalSimple1ErrCjsModule = (function () {
   const ShExTerm = require("@shexjs/term");
   const { NoTripleConstraint } = require("@shexjs/eval-validator-api");
@@ -112,13 +114,13 @@ const EvalSimple1ErrCjsModule = (function () {
         return "<" + tc.predicate + ">";
       }
       function card (obj) {
-        const x = "";
+        let x = "";
         if ("min" in obj) x += obj.min;
         if ("max" in obj) x += "," + obj.max;
         return x ? "{" + x + "}" : "";
       }
       function junct (j) {
-        const id = known[j.type].indexOf(j);
+        let id = known[j.type].indexOf(j);
         if (id === -1)
           id = known[j.type].push(j)-1;
         return j.type + id; // + card(j);
@@ -185,8 +187,8 @@ const EvalSimple1ErrCjsModule = (function () {
           // may be Accept!
           if (state.c.type === "TripleConstraint") {
             const constraintNo = constraintList.indexOf(state.c);
-            const min = "min" in state.c ? state.c.min : 1;
-            const max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+            let min = "min" in state.c ? state.c.min : 1;
+            let max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
             if ("negated" in state.c && state.c.negated)
               min = max = 0;
             if (thread.avail[constraintNo] === undefined)
@@ -454,30 +456,11 @@ const EvalSimple1ErrCjsModule = (function () {
           const triple = neighborhood[tNo];
           const ret = {
             type: "TestedTriple",
-            subject: ldify(triple.subject),
-            predicate: ldify(triple.predicate),
-            object: ldify(triple.object)
+            subject: rdfJsTerm2Ld(triple.subject),
+            predicate: rdfJsTerm2Ld(triple.predicate),
+            object: rdfJsTerm2Ld(triple.object)
           };
 
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatypeString;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
           const constraintNo = constraintList.indexOf(m.c);
                       const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
                       if (hit.res && Object.keys(hit.res).length > 0)

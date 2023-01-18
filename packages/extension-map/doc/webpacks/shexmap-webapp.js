@@ -5911,6 +5911,8 @@ if (true)
 /***/ 6540:
 /***/ ((module, exports, __webpack_require__) => {
 
+const {rdfJsTerm2Ld} = __webpack_require__(1118);
+
 const EvalSimple1ErrCjsModule = (function () {
   const ShExTerm = __webpack_require__(1118);
   const { NoTripleConstraint } = __webpack_require__(3530);
@@ -6025,13 +6027,13 @@ const EvalSimple1ErrCjsModule = (function () {
         return "<" + tc.predicate + ">";
       }
       function card (obj) {
-        const x = "";
+        let x = "";
         if ("min" in obj) x += obj.min;
         if ("max" in obj) x += "," + obj.max;
         return x ? "{" + x + "}" : "";
       }
       function junct (j) {
-        const id = known[j.type].indexOf(j);
+        let id = known[j.type].indexOf(j);
         if (id === -1)
           id = known[j.type].push(j)-1;
         return j.type + id; // + card(j);
@@ -6098,8 +6100,8 @@ const EvalSimple1ErrCjsModule = (function () {
           // may be Accept!
           if (state.c.type === "TripleConstraint") {
             const constraintNo = constraintList.indexOf(state.c);
-            const min = "min" in state.c ? state.c.min : 1;
-            const max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+            let min = "min" in state.c ? state.c.min : 1;
+            let max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
             if ("negated" in state.c && state.c.negated)
               min = max = 0;
             if (thread.avail[constraintNo] === undefined)
@@ -6367,30 +6369,11 @@ const EvalSimple1ErrCjsModule = (function () {
           const triple = neighborhood[tNo];
           const ret = {
             type: "TestedTriple",
-            subject: ldify(triple.subject),
-            predicate: ldify(triple.predicate),
-            object: ldify(triple.object)
+            subject: rdfJsTerm2Ld(triple.subject),
+            predicate: rdfJsTerm2Ld(triple.predicate),
+            object: rdfJsTerm2Ld(triple.object)
           };
 
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatypeString;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
           const constraintNo = constraintList.indexOf(m.c);
                       const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
                       if (hit.res && Object.keys(hit.res).length > 0)
@@ -6454,6 +6437,8 @@ if (true)
 
 /***/ 6863:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const {rdfJsTerm2Ld} = __webpack_require__(1118);
 
 const EvalThreadedNErrCjsModule = (function () {
 const ShExTerm = __webpack_require__(1118);
@@ -6561,9 +6546,9 @@ function vpEngine (schema, shape, index) {
                 const t = neighborhood[tripleNo]
                 const tested = {
                   type: "TestedTriple",
-                  subject: ldify(t.subject),
-                  predicate: ldify(t.predicate),
-                  object: ldify(t.object)
+                  subject: rdfJsTerm2Ld(t.subject),
+                  predicate: rdfJsTerm2Ld(t.predicate),
+                  object: rdfJsTerm2Ld(t.object)
                 }
                 const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
                 if (hit.res && Object.keys(hit.res).length > 0)
@@ -6782,26 +6767,6 @@ function vpEngine (schema, shape, index) {
         } : ret[0];
     }
 
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatypeString;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
-
     function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
       function _dive (solns) {
         if (solns.type === "OneOfSolutions" ||
@@ -6818,7 +6783,7 @@ function vpEngine (schema, shape, index) {
             const t = neighborhood[x.tripleNo];
             const expr = constraintList[x.constraintNo];
             const ret = {
-              type: "TestedTriple", subject: ldify(t.subject), predicate: ldify(t.predicate), object: ldify(t.object)
+              type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)
             };
             function diver (focus, shapeLabel, dive) {
               const sub = dive(focus, shapeLabel);
@@ -6866,21 +6831,6 @@ function vpEngine (schema, shape, index) {
       return fromValidatePoint;
     }
   }
-
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: N3Util.getLiteralValue(term) };
-          const dt = N3Util.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = N3Util.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
 
 function extend(base) {
   if (!base) base = {};
@@ -7498,6 +7448,8 @@ if (true)
  *   constraint violation reporting.
  */
 
+const {rdfJsTerm2Ld} = __webpack_require__(1118);
+
 const ShExMapMaterializerCjsModule = function (config) {
 
 const Start = config.Validator.Start;
@@ -7682,21 +7634,6 @@ const decimalLexicalTests = {
   }
 };
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
-
 function makeCache () {
   const _keys = {}; // _keys[http://abcd] = [obj1, obj2]
   const _vals = {}; // _vals[http://abcd] = [res1, res2]
@@ -7841,7 +7778,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     if (seenKey in seen)
       return {
         type: "Recursion",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: label
       };
     seen[seenKey] = { point: point, shapeLabel: label };
@@ -7876,7 +7813,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       const errors = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
       ret = errors.length ? {
         type: "Failure",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: shapeLabel,
         errors: errors.map(function (miss) {
           return {
@@ -7886,7 +7823,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         })
       } : {
         type: "NodeConstraintTest",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: shapeLabel,
         shapeExpr: shapeExpr
       };
@@ -8148,7 +8085,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       // _log("post-regexp " + usedTriples.join(" "));
 
-      const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
+      const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: shapeLabel };
       if (Object.keys(results).length > 0) // only include .solution for non-empty pattern
         possibleRet.solution = results;
       if ("semActs" in shape &&
@@ -8172,14 +8109,14 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       //   const t = neighborhood[miss.tripleNo];
       //   return {
       //     type: "TypeMismatch",
-      //     triple: {subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
+      //     triple: {subject: t.subject, predicate: t.predicate, object: rdfJsTerm2Ld(t.object)},
       //     constraint: constraintList[miss.constraintNo],
       //     errors: miss.errors
       //   };
       // });
       ret = {
         type: "Failure",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: shapeLabel,
         errors: missErrors.concat(partitionErrors.length === 1 ? partitionErrors[0].errors : partitionErrors) 
       };
@@ -8277,7 +8214,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       if (valueExpr.datatype) {
         if (!ShExTerm.isLiteral(value)) {
-          validationError("mismatched datatype: " + JSON.stringify(ldify(value)) + " is not a literal with datatype " + valueExpr.datatype);
+          validationError("mismatched datatype: " + JSON.stringify(rdfJsTerm2Ld(value)) + " is not a literal with datatype " + valueExpr.datatype);
         }
         else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
           validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
@@ -8298,7 +8235,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       if (valueExpr.values) {
         if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
-          const ld = ldify(value);
+          const ld = rdfJsTerm2Ld(value);
           if (v.type === "Language") {
             return v.languageTag === ld.language; // @@ use equals/normalizeTest
           }
@@ -8435,7 +8372,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     });
     const ret = {
       type: null,
-      focus: ldify(value),
+      focus: rdfJsTerm2Ld(value),
       shapeExpr: valueExpr
     };
     if (errors.length) {
@@ -8782,6 +8719,8 @@ if (true)
 /***/ 1670:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
+const {rdfJsTerm2Ld} = __webpack_require__(1118);
+
 const NFAXVal1ErrMaterializer = (function () {
 
   const ShExTerm = __webpack_require__(1118);
@@ -8896,13 +8835,13 @@ function compileNFA (schema, shape) {
         return "<" + tc.predicate + ">";
       }
       function card (obj) {
-        const x = "";
+        let x = "";
         if ("min" in obj) x += obj.min;
         if ("max" in obj) x += "," + obj.max;
         return x ? "{" + x + "}" : "";
       }
       function junct (j) {
-        const id = known[j.type].indexOf(j);
+        let id = known[j.type].indexOf(j);
         if (id === -1)
           id = known[j.type].push(j)-1;
         return j.type + id; // + card(j);
@@ -8985,7 +8924,7 @@ function compileNFA (schema, shape) {
           }, []);
         // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
         } else if (s.c === Rept) {
-          const ret = [];
+          let ret = [];
           // matched = [matched].concat("Rept" + s.expr);
           if (!(stateNo in thread.repeats))
             thread.repeats[stateNo] = 0;
@@ -9039,8 +8978,8 @@ function compileNFA (schema, shape) {
           const nlistlen = nlist.length;
           const constraintNo = constraintList.indexOf(state.c);
           // may be Accept!
-          const min = "min" in state.c ? state.c.min : 1;
-          const max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+          let min = "min" in state.c ? state.c.min : 1;
+          let max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
           if ("negated" in state.c && state.c.negated)
             min = max = 0;
           if (thread.avail[constraintNo] === undefined)
@@ -9215,30 +9154,11 @@ function compileNFA (schema, shape) {
           const triple = neighborhood[tno];
           const ret = {
             type: "TestedTriple",
-            subject: ldify(triple.subject),
-            predicate: ldify(triple.predicate),
-            object: ldify(triple.object)
+            subject: rdfJsTerm2Ld(triple.subject),
+            predicate: rdfJsTerm2Ld(triple.predicate),
+            object: rdfJsTerm2Ld(triple.object)
           };
 
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatypeString;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
           function diver (focus, shape, dive) {
             const sub = dive(focus, shape);
             if ("errors" in sub) {
@@ -9761,6 +9681,8 @@ if (true)
  *   multiplicity: ...
  */
 
+const {rdfJsTerm2Ld} = __webpack_require__(1118);
+
 const ShExMapCjsModule = function (config) {
 
 const ShExTerm = __webpack_require__(1118);
@@ -9815,7 +9737,7 @@ function register (validator, api) {
             }
 
             const prefixedName = getPrefixedName(bindingName);
-            const quotedValue = ldify(value);
+            const quotedValue = rdfJsTerm2Ld(value);
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
@@ -9841,26 +9763,6 @@ function register (validator, api) {
     trivialMaterializer,
     visitTripleConstraint
   }
-
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatype.value;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
 
 function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
@@ -12978,10 +12880,6 @@ const ShExTermCjsModule = (function () {
     return result + iri.substring(segmentStart);
   }
 
-  function internalTerm (node) { // !!rdfjsTermToInternal
-    return node;
-  }
-
   const Turtle = {};
   Turtle.PN_CHARS_BASE = "A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}"; // escape anything outside BMP: \u{10000}-\u{EFFFF}
   Turtle.PN_CHARS_U = Turtle.PN_CHARS_BASE + "_";
@@ -13030,47 +12928,6 @@ const ShExTermCjsModule = (function () {
       }
     }
     return rel;
-  }
-
-  function rdfJsTermToLd (term) {
-    switch (term.termType) {
-    case "NamedNode": return term.value;
-    case "BlankNode": return "_:" + term.value;
-    case "Literal":
-      const ret = { value: term.value };
-      const dt = term.datatype.value;
-      const lang = term.language;
-      if (dt &&
-          dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-          dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-        ret.type = dt;
-      if (lang)
-        ret.language = lang;
-      return ret;
-    default:
-      throw Error(`rdfJsTermToLd: Unrecognized termType ${term.termType} in ${JSON.stringify(term)}`);
-    }
-  }
-
-
-  function internalTriple (triple) { // !!rdfjsTripleToInternal
-    return {
-      subject: internalTerm(triple.subject),
-      predicate: internalTerm(triple.predicate),
-      object: internalTerm(triple.object)
-    };
-  }
-
-  function externalTerm (node, factory) { // !!internalTermToRdfjs
-    return node;
-  }
-
-  function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return factory.quad(
-      externalTerm(triple.subject, factory),
-      externalTerm(triple.predicate, factory),
-      externalTerm(triple.object, factory)
-    );
   }
 
   function internalTermToTurtle (node, meta = {}, aForType = true) {
@@ -13193,6 +13050,26 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     }
   }
 
+  function rdfJsTerm2Ld (term) {
+    switch (term.termType) {
+    case "NamedNode": return term.value;
+    case "BlankNode": return "_:" + term.value;
+    case "Literal":
+      const ret = { value: term.value };
+      const dt = term.datatype.value;
+      const lang = term.language;
+      if (dt &&
+          dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+          dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+        ret.type = dt;
+      if (lang)
+        ret.language = lang;
+      return ret;
+    default:
+      throw Error(`Unrecognized termType ${term.termType} ${term.value}`);
+    }
+  }
+
   /** N3id functions
    * Some tests and algorithms use n3.js ids as syntax for input graphs in tests.
    *   NamedNode: bare word, e.g. http://a.example/
@@ -13264,14 +13141,12 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
     rdfJsTermToTurtle,
-    externalTerm: externalTerm,
-    externalTriple: externalTriple,
     internalTermToTurtle,
     LdToRdfJsTerm,
     n3idQuadToRdfJs,
     n3idTermToRdfJs,
     iriToTurtle,
-    rdfJsTermToLd,
+    rdfJsTerm2Ld,
   }
 })();
 
@@ -13514,31 +13389,27 @@ function extend (base) {
   return base;
 }
 
-    function isTerm (t) {
-      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
-        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
-      }, true);
-    }
-
   function isShapeRef (expr) {
     return typeof expr === "string" // test for JSON-LD @ID
   }
+
   let isInclusion = isShapeRef;
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
+  function shExJsTerm2Ld (term) {
+    if (term[0] !== "\"")
+      return term;
+    const ret = { value: ShExTerm.getLiteralValue(term) };
+    const dt = ShExTerm.getLiteralType(term);
+    if (dt &&
+        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+      ret.type = dt;
+    const lang = ShExTerm.getLiteralLanguage(term)
+    if (lang)
+      ret.language = lang;
+    return ret;
+  }
+
 const ShExUtil = {
 
   SX: SX,
@@ -13834,7 +13705,7 @@ const ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return ShExTerm.externalTriple(ret, factory);
+      return ret;
     });
   },
 
@@ -14873,14 +14744,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = ldify(elt[k]);
+          crushed[k] = shExJsTerm2Ld(elt[k]);
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(ldify(obj[k][lookfor])));
+            list.push(crush(shExJsTerm2Ld(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))
@@ -15473,6 +15344,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShExValidator = exports.resultMapToShapeExprTest = exports.InterfaceOptions = void 0;
 // interface constants
 const ShExTerm = __importStar(__webpack_require__(1118));
+const term_1 = __webpack_require__(1118);
 const eval_validator_api_1 = __webpack_require__(3530);
 const Hierarchy = __importStar(__webpack_require__(2515));
 const neighborhood_api_1 = __webpack_require__(3486);
@@ -15486,25 +15358,6 @@ exports.InterfaceOptions = {
 };
 const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = __webpack_require__(6863);
-function ldify(term) {
-    switch (term.termType) {
-        case "NamedNode": return term.value;
-        case "BlankNode": return "_:" + term.value;
-        case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatype.value;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-                ret.type = dt;
-            if (lang)
-                ret.language = lang;
-            return ret;
-        default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-    }
-}
 class SemActDispatcherImpl {
     constructor(externalCode) {
         this.handlers = {};
@@ -15741,7 +15594,7 @@ class ShExValidator {
             if (seenKey in ctx.seen) {
                 let ret = {
                     type: "Recursion",
-                    node: ldify(point),
+                    node: (0, term_1.rdfJsTerm2Ld)(point),
                     shape: ctx.label
                 };
                 ctx.tracker.recurse(ret);
@@ -15935,7 +15788,7 @@ class ShExValidator {
             const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({ node: point }, ret), ret);
             if (semActErrors.length)
                 // some semAct aborted
-                return { type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors };
+                return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
         }
         return ret;
     }
@@ -15947,7 +15800,7 @@ class ShExValidator {
             if (semActErrors.length)
                 return {
                     type: "Failure",
-                    node: ldify(point),
+                    node: (0, term_1.rdfJsTerm2Ld)(point),
                     shape: ctx.label,
                     errors: semActErrors
                 }; // some semAct aborted !! return a better error
@@ -15996,9 +15849,9 @@ class ShExValidator {
                     unexpectedTriples: unexpectedOrds.map(tNo => {
                         const q = neighborhood[tNo];
                         return {
-                            subject: ldify(q.subject),
-                            predicate: ldify(q.predicate),
-                            object: ldify(q.object),
+                            subject: (0, term_1.rdfJsTerm2Ld)(q.subject),
+                            predicate: (0, term_1.rdfJsTerm2Ld)(q.predicate),
+                            object: (0, term_1.rdfJsTerm2Ld)(q.object),
                         };
                     })
                 });
@@ -16030,7 +15883,7 @@ class ShExValidator {
             if (results !== null && results.errors !== undefined) { // @ts-ignore
                 [].push.apply(errors, results.errors);
             }
-            const possibleRet = { type: "ShapeTest", node: ldify(point), shape: ctx.label };
+            const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(point), shape: ctx.label };
             // @ts-ignore
             if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
              { // @ts-ignore
@@ -16053,7 +15906,7 @@ class ShExValidator {
             const t = neighborhood[miss.tripleNo];
             return {
                 type: "TypeMismatch",
-                triple: { type: "TestedTriple", subject: ldify(t.subject), predicate: ldify(t.predicate), object: ldify(t.object) },
+                triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
                 constraint: constraintList[miss.constraintNo],
                 errors: miss.errors
             };
@@ -16065,7 +15918,7 @@ class ShExValidator {
         if (errors.length > 0)
             ret = {
                 type: "Failure",
-                node: ldify(point),
+                node: (0, term_1.rdfJsTerm2Ld)(point),
                 shape: ctx.label,
                 errors: errors
             };
@@ -16375,12 +16228,12 @@ class ShExValidator {
         }
         const numeric = (0, shex_xsd_1.getNumericDatatype)(point);
         if (shapeExpr.datatype !== undefined) {
-            (0, shex_xsd_1.testKnownTypes)(point, validationError, ldify, shapeExpr.datatype, numeric, point.value);
+            (0, shex_xsd_1.testKnownTypes)(point, validationError, term_1.rdfJsTerm2Ld, shapeExpr.datatype, numeric, point.value);
         }
         (0, shex_xsd_1.testFacets)(shapeExpr, point.value, validationError, numeric);
         const ncRet = Object.assign({}, {
             type: null,
-            node: ldify(point)
+            node: (0, term_1.rdfJsTerm2Ld)(point)
         }, (ctx.label ? { shape: ctx.label } : {}), { shapeExpr });
         Object.assign(ncRet, errors.length > 0
             ? { type: "NodeConstraintViolation", errors: errors }

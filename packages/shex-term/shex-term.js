@@ -184,26 +184,6 @@ const ShExTermCjsModule = (function () {
     return rel;
   }
 
-  function rdfJsTermToLd (term) {
-    switch (term.termType) {
-    case "NamedNode": return term.value;
-    case "BlankNode": return "_:" + term.value;
-    case "Literal":
-      const ret = { value: term.value };
-      const dt = term.datatype.value;
-      const lang = term.language;
-      if (dt &&
-          dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-          dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-        ret.type = dt;
-      if (lang)
-        ret.language = lang;
-      return ret;
-    default:
-      throw Error(`rdfJsTermToLd: Unrecognized termType ${term.termType} in ${JSON.stringify(term)}`);
-    }
-  }
-
   function internalTermToTurtle (node, meta = {}, aForType = true) {
     const {base, prefixes = {}} = meta;
     if (typeof node === "string") {
@@ -324,6 +304,26 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     }
   }
 
+  function rdfJsTerm2Ld (term) {
+    switch (term.termType) {
+    case "NamedNode": return term.value;
+    case "BlankNode": return "_:" + term.value;
+    case "Literal":
+      const ret = { value: term.value };
+      const dt = term.datatype.value;
+      const lang = term.language;
+      if (dt &&
+          dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+          dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+        ret.type = dt;
+      if (lang)
+        ret.language = lang;
+      return ret;
+    default:
+      throw Error(`Unrecognized termType ${term.termType} ${term.value}`);
+    }
+  }
+
   /** N3id functions
    * Some tests and algorithms use n3.js ids as syntax for input graphs in tests.
    *   NamedNode: bare word, e.g. http://a.example/
@@ -400,7 +400,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     n3idQuadToRdfJs,
     n3idTermToRdfJs,
     iriToTurtle,
-    rdfJsTermToLd,
+    rdfJsTerm2Ld,
   }
 })();
 

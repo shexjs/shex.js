@@ -5,6 +5,8 @@
  *   multiplicity: ...
  */
 
+const {rdfJsTerm2Ld} = require("@shexjs/term");
+
 const ShExMapCjsModule = function (config) {
 
 const ShExTerm = require("@shexjs/term");
@@ -59,7 +61,7 @@ function register (validator, api) {
             }
 
             const prefixedName = getPrefixedName(bindingName);
-            const quotedValue = ldify(value);
+            const quotedValue = rdfJsTerm2Ld(value);
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
@@ -85,26 +87,6 @@ function register (validator, api) {
     trivialMaterializer,
     visitTripleConstraint
   }
-
-        function ldify (term) {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret = { value: term.value };
-            const dt = term.datatype.value;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
 
 function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
       // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))

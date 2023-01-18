@@ -3,7 +3,7 @@
 
 // interface constants
 import * as ShExTerm from "@shexjs/term";
-import {InternalSchema, SchemaIndex, ShapeMap, ShapeMapEntry} from "@shexjs/term";
+import {InternalSchema, rdfJsTerm2Ld, SchemaIndex, ShapeMap, ShapeMapEntry} from "@shexjs/term";
 import {
   NoTripleConstraint,
   QueryTracker,
@@ -72,26 +72,6 @@ export const InterfaceOptions = {
 
 const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr");
-
-        function ldify (term: RdfJsTerm): ShExTerm.LdTerm {
-          switch (term.termType) {
-          case "NamedNode": return term.value;
-          case "BlankNode": return "_:" + term.value;
-          case "Literal":
-            const ret: ShExTerm.ObjectLiteral = { value: term.value };
-            const dt = term.datatype.value;
-            const lang = term.language;
-            if (dt &&
-                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-              ret.type = dt;
-            if (lang)
-              ret.language = lang;
-            return ret;
-          default:
-            throw Error(`Unrecognized termType ${term.termType} in ${term}`);
-          }
-        }
 
 interface ValidatorOptions {
   regexModule?: ValidatorRegexEngine;
@@ -445,7 +425,7 @@ export class ShExValidator {
         {
           let ret: Recursion = {
             type: "Recursion",
-            node: ldify(point),
+            node: rdfJsTerm2Ld(point),
             shape: ctx.label
           };
           ctx.tracker.recurse(ret);
@@ -649,7 +629,7 @@ export class ShExValidator {
       const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
       if (semActErrors.length)
           // some semAct aborted
-        return {type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors} as Failure;
+        return {type: "Failure", node: rdfJsTerm2Ld(point), shape: shapeLabel, errors: semActErrors} as Failure;
     }
     return ret;
   }
@@ -662,7 +642,7 @@ export class ShExValidator {
       if (semActErrors.length)
         return {
           type: "Failure",
-          node: ldify(point),
+          node: rdfJsTerm2Ld(point),
           shape: ctx.label,
           errors: semActErrors
         }; // some semAct aborted !! return a better error
@@ -717,9 +697,9 @@ export class ShExValidator {
           unexpectedTriples: unexpectedOrds.map(tNo => {
             const q = neighborhood[tNo];
             return {
-              subject: ldify(q.subject),
-              predicate: ldify(q.predicate),
-              object: ldify(q.object),
+              subject: rdfJsTerm2Ld(q.subject),
+              predicate: rdfJsTerm2Ld(q.predicate),
+              object: rdfJsTerm2Ld(q.object),
             }
           })
         });
@@ -754,7 +734,7 @@ export class ShExValidator {
           [].push.apply(errors, results.errors);
         }
 
-      const possibleRet = { type: "ShapeTest", node: ldify(point), shape: ctx.label };
+      const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: ctx.label };
       // @ts-ignore
       if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
         { // @ts-ignore
@@ -779,7 +759,7 @@ export class ShExValidator {
       const t = neighborhood[miss.tripleNo];
       return {
         type: "TypeMismatch",
-        triple: {type: "TestedTriple", subject: ldify(t.subject), predicate: ldify(t.predicate), object: ldify(t.object)},
+        triple: {type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)},
         constraint: constraintList[miss.constraintNo],
         errors: miss.errors
       };
@@ -792,7 +772,7 @@ export class ShExValidator {
     if (errors.length > 0)
       ret = {
         type: "Failure",
-        node: ldify(point),
+        node: rdfJsTerm2Ld(point),
         shape: ctx.label,
         errors: errors
       };
@@ -1136,14 +1116,14 @@ export class ShExValidator {
     const numeric = getNumericDatatype(point);
 
     if (shapeExpr.datatype !== undefined) {
-      testKnownTypes(point, validationError, ldify, shapeExpr.datatype, numeric, point.value);
+      testKnownTypes(point, validationError, rdfJsTerm2Ld, shapeExpr.datatype, numeric, point.value);
     }
 
     testFacets(shapeExpr, point.value, validationError, numeric);
 
     const ncRet = Object.assign({}, {
       type: null,
-      node: ldify(point)
+      node: rdfJsTerm2Ld(point)
     }, (ctx.label ? {shape: ctx.label} : {}), {shapeExpr});
     Object.assign(
       ncRet,

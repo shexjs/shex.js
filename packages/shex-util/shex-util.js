@@ -45,31 +45,27 @@ function extend (base) {
   return base;
 }
 
-    function isTerm (t) {
-      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
-        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
-      }, true);
-    }
-
   function isShapeRef (expr) {
     return typeof expr === "string" // test for JSON-LD @ID
   }
+
   let isInclusion = isShapeRef;
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
+  function shExJsTerm2Ld (term) {
+    if (term[0] !== "\"")
+      return term;
+    const ret = { value: ShExTerm.getLiteralValue(term) };
+    const dt = ShExTerm.getLiteralType(term);
+    if (dt &&
+        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+      ret.type = dt;
+    const lang = ShExTerm.getLiteralLanguage(term)
+    if (lang)
+      ret.language = lang;
+    return ret;
+  }
+
 const ShExUtil = {
 
   SX: SX,
@@ -1404,14 +1400,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = ldify(elt[k]);
+          crushed[k] = shExJsTerm2Ld(elt[k]);
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(ldify(obj[k][lookfor])));
+            list.push(crush(shExJsTerm2Ld(obj[k][lookfor])));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))
