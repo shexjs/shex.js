@@ -5636,7 +5636,7 @@ const EvalSimple1ErrCjsModule = (function () {
           let valueExpr = null;
           if (typeof c.valueExpr === "string") { // ShapeRef
             valueExpr = c.valueExpr;
-            if (ShExTerm.isBlank(valueExpr))
+            if (valueExpr.termType === "BlankNode")
               valueExpr = schema.shapes[valueExpr];
           } else if (c.valueExpr) {
             valueExpr = extend({}, c.valueExpr)
@@ -6088,7 +6088,7 @@ function vpEngine (schema, shape, index) {
             let valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
-              if (ShExTerm.isBlank(valueExpr))
+              if (valueExpr.termType === "BlankNode")
                 valueExpr = index.shapeExprs[valueExpr];
             } else if (expr.valueExpr) {
               valueExpr = extend({}, expr.valueExpr)
@@ -6265,7 +6265,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && shapeLabel.termType === "BlankNode")
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];
@@ -8956,11 +8956,6 @@ if (true)
  * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
  */
 
-/**
- *
- * isIRI, isBlank, getLiteralType, getLiteralValue
- */
-
 const ShExTermCjsModule = (function () {
 
   const RelativizeIri = (__webpack_require__(4436).relativize);
@@ -9123,10 +9118,10 @@ const ShExTermCjsModule = (function () {
       } else {
         return this.iri2Turtle(node, meta, aForType);
       }
-    } else if (isLiteral(node)) {
-      let value = getLiteralValue(node);
-      const type = getLiteralType(node);
-      const language = getLiteralLanguage(node);
+    } else if (node.termType === "Literal") {
+      let value = node.value;
+      const type = node.datatype.value;
+      const language = node.language;
       // Escape special characters
       if (escape.test(value))
         value = value.replace(escapeAll, characterReplacer);
@@ -9145,56 +9140,16 @@ const ShExTermCjsModule = (function () {
   function shExJsTerm2Ld (term) {
     if (term[0] !== "\"")
       return term;
-    const ret = { value: ShExTerm.getLiteralValue(term) };
-    const dt = ShExTerm.getLiteralType(term);
+    const ret = { value: ShExTerm.term.value };
+    const dt = ShExTerm.term.datatype.value;
     if (dt &&
         dt !== "http://www.w3.org/2001/XMLSchema#string" &&
         dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
       ret.type = dt;
-    const lang = ShExTerm.getLiteralLanguage(term)
+    const lang = term.language;
     if (lang)
       ret.language = lang;
     return ret;
-  }
-
-  // Tests whether the given entity (triple object) represents an IRI in the N3 library
-  function isIRI (entity) {
-    return entity.termType === 'NamedNode';
-  }
-
-  // Tests whether the given entity (triple object) represents a literal in the N3 library
-  function isLiteral (entity) {
-    return entity.termType === 'Literal';
-  }
-
-  // Tests whether the given entity (triple object) represents a blank node in the N3 library
-  function isBlank (entity) {
-    return entity.termType === 'BlankNode';
-  }
-
-  // Tests whether the given triple is in the default graph
-  function inDefaultGraph (quad) {
-    return isDefaultGraph(quad.graph);
-  }
-
-  // Tests whether the given entity represents the default graph
-  function isDefaultGraph (entity) {
-    return entity.termType === 'DefaultGraph';
-  }
-
-  // Gets the string value of a literal in the N3 library
-  function getLiteralValue (literal) {
-    return literal.value;
-  }
-
-  // Gets the type of a literal in the N3 library
-  function getLiteralType (literal) {
-    return literal.datatype.value;
-  }
-
-  // Gets the language of a literal in the N3 library
-  function getLiteralLanguage (literal) {
-    return literal.language;
   }
 
 // Characters in literals that require escaping
@@ -9332,14 +9287,6 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     RdfLangString: RdfLangString,
     XsdString: XsdString,
     resolveRelativeIRI: resolveRelativeIRI,
-    isIRI: isIRI,
-    isLiteral: isLiteral,
-    isBlank: isBlank,
-    isDefaultGraph: isDefaultGraph,
-    inDefaultGraph: inDefaultGraph,
-    getLiteralValue: getLiteralValue,
-    getLiteralType: getLiteralType,
-    getLiteralLanguage: getLiteralLanguage,
     rdfJsTerm2Turtle,
     shExJsTerm2Turtle,
     shExJsTerm2Ld,
@@ -12354,12 +12301,12 @@ class ShExValidator {
             if (["iri", "bnode", "literal", "nonliteral"].indexOf(shapeExpr.nodeKind) === -1) {
                 validationError(`unknown node kind '${shapeExpr.nodeKind}'`);
             }
-            if (ShExTerm.isBlank(point)) {
+            if (point.termType === "BlankNode") {
                 if (shapeExpr.nodeKind === "iri" || shapeExpr.nodeKind === "literal") {
                     validationError(`blank node found when ${shapeExpr.nodeKind} expected`);
                 }
             }
-            else if (ShExTerm.isLiteral(point)) {
+            else if (point.termType === "Literal") {
                 if (shapeExpr.nodeKind !== "literal") {
                     validationError(`literal found when ${shapeExpr.nodeKind} expected`);
                 }
@@ -12604,14 +12551,14 @@ function CrossProduct(sets, emptyValue) {
  */
 const N3jsTripleToString = function () {
     function fmt(n) {
-        return ShExTerm.isLiteral(n) ?
+        return n.termType === "Literal" ?
             ["http://www.w3.org/2001/XMLSchema#integer",
                 "http://www.w3.org/2001/XMLSchema#float",
                 "http://www.w3.org/2001/XMLSchema#double"
-            ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
-                parseInt(ShExTerm.getLiteralValue(n)) :
+            ].indexOf(n.datatype.value) !== -1 ?
+                parseInt(n.value) :
                 n :
-            ShExTerm.isBlank(n) ?
+            n.termType === "BlankNode" ?
                 n :
                 "<" + n + ">";
     }
@@ -12671,39 +12618,12 @@ function _alist(len) {
 /***/ }),
 
 /***/ 8994:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.testFacets = exports.testKnownTypes = exports.getNumericDatatype = void 0;
-/**
- * Support functions associated with XSD datatypes (or any other DT ShEx should support).
- */
-const ShExTerm = __importStar(__webpack_require__(1118));
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const integerDatatypes = [
     XSD + "integer",
@@ -12862,17 +12782,21 @@ const decimalLexicalTests = {
     }
 };
 function getNumericDatatype(value) {
-    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : null;
-    return numeric;
+    return value.termType !== "Literal"
+        ? null
+        : integerDatatypes.indexOf(value.datatype.value) !== -1
+            ? XSD + "integer"
+            : numericDatatypes.indexOf(value.datatype.value) !== -1
+                ? value.datatype.value
+                : null;
 }
 exports.getNumericDatatype = getNumericDatatype;
 function testKnownTypes(value, validationError, ldify, datatype, numeric, label) {
-    if (!ShExTerm.isLiteral(value)) {
+    if (value.termType !== "Literal") {
         validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
     }
-    else if (ShExTerm.getLiteralType(value) !== datatype) {
-        validationError(`mismatched datatype: ${ShExTerm.getLiteralType(value)} !== ${datatype}`);
+    else if (value.datatype.value !== datatype) {
+        validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
     }
     else if (numeric) {
         testRange(numericParsers[numeric](label, validationError), datatype, validationError);

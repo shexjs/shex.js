@@ -251,7 +251,7 @@ const EvalSimple1ErrCjsModule = (function () {
           let valueExpr = null;
           if (typeof c.valueExpr === "string") { // ShapeRef
             valueExpr = c.valueExpr;
-            if (ShExTerm.isBlank(valueExpr))
+            if (valueExpr.termType === "BlankNode")
               valueExpr = schema.shapes[valueExpr];
           } else if (c.valueExpr) {
             valueExpr = extend({}, c.valueExpr)

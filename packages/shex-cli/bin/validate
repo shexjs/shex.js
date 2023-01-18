@@ -194,7 +194,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
   function someIRInode () {
     const triples = loaded.data.getQuads(null, null, null);
     for (const i = 0; i < triples.length; ++i)
-      if (N3.Util.isIRI(triples[i].subject))
+      if (triples[i].subject.termType === "NamedNode")
         return triples[i].subject;
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
@@ -752,7 +752,7 @@ function loadRDFmanifest (cmds) {
         cmds["test-name"].reduce((ret, testName) => {
           const pattern = RegExp(testName);
           loaded.data.getQuads(null, mf+"name", null).filter(function (triple) {
-            if (N3.Util.getLiteralValue(triple.object).match(pattern))
+            if (triple.object.value.match(pattern))
               ret.push(triple.subject);
           });
           return ret;

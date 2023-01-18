@@ -339,7 +339,7 @@ function compileNFA (schema, shape) {
           const valueExpr = extend({}, c.valueExpr);
           if ("reference" in valueExpr) {
             const ref = valueExpr.reference;
-            if (ShExTerm.isBlank(ref))
+            if (ref.termType === "BlankNode")
               valueExpr.reference = schema.shapes[ref];
           }
           return extend({
@@ -446,7 +446,7 @@ function compileNFA (schema, shape) {
                 type: "ReferenceError", focus: focus,
                 shape: shape, errors: sub
               };
-              if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
+              if (shapeLabel.termType === "BlankNode")
                 err.referencedShape = shape;
               return [err];
             }

@@ -79,8 +79,6 @@ export namespace ShExTerm {
 
     function getLiteralType(literal: any): any;
 
-    function getLiteralValue(literal: any): any;
-
     function inDefaultGraph(triple: any): any;
 
     function shExJsTerm2Turtle(node: any, meta: {base: string, prefixes: {[name: string]: string[]}}, aForType: boolean): any;

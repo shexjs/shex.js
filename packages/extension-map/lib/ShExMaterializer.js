@@ -35,13 +35,6 @@ const ShExMap = require("../shex-extension-map");
 
 const UNBOUNDED = -1;
 
-function getLexicalValue (term) {
-  return ShExTerm.isIRI(term) ? term :
-    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
-    term.substr(2); // bnodes start with "_:"
-}
-
-
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const integerDatatypes = [
   XSD + "integer",
@@ -745,7 +738,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
   this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
     const errors = [];
     const label = value.value;
-    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
+    const dt = value.termType === "Literal" ? value.datatype.value : null;
     const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
 
     function validationError () {
@@ -761,11 +754,11 @@ function ShExMaterializer_constructor(schema, mapper, options) {
         if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
           validationError("unknown node kind '" + valueExpr.nodeKind + "'");
         }
-        if (ShExTerm.isBlank(value)) {
+        if (value.termType === "BlankNode") {
           if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
             validationError("blank node found when " + valueExpr.nodeKind + " expected");
           }
-        } else if (ShExTerm.isLiteral(value)) {
+        } else if (value.termType === "Literal") {
           if (valueExpr.nodeKind !== "literal") {
             validationError("literal found when " + valueExpr.nodeKind + " expected");
           }
@@ -777,11 +770,11 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       if (valueExpr.datatype  && valueExpr.values) validationError("found both datatype and values in " + valueExpr);
 
       if (valueExpr.datatype) {
-        if (!ShExTerm.isLiteral(value)) {
+        if (value.termType !== "Literal") {
           validationError("mismatched datatype: " + JSON.stringify(rdfJsTerm2Ld(value)) + " is not a literal with datatype " + valueExpr.datatype);
         }
-        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
+        else if (value.datatype.value !== valueExpr.datatype) {
+          validationError("mismatched datatype: " + value.datatype.value + " !== " + valueExpr.datatype);
         }
         else if (numeric) {
           testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
@@ -797,7 +790,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       }
 
       if (valueExpr.values) {
-        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
+        if (value.termType === "Literal" && valueExpr.values.reduce((ret, v) => {
           if (ret) return true;
           const ld = rdfJsTerm2Ld(value);
           if (v.type === "Language") {
@@ -834,11 +827,11 @@ function ShExMaterializer_constructor(schema, mapper, options) {
                *       or non-literals with IriStemRange
                */
               function normalizedTest (val, ref, func) {
-                if (["Literal", "Language"].indexOf(valType) !== -1) { // ShExTerm.isLiteral(val)
+                if (["Literal", "Language"].indexOf(valType) !== -1) { // val.termType === "Literal"
                   if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(ShExTerm.getLiteralValue(val), ref);
+                    return func(val.value, ref);
                   } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(ShExTerm.getLiteralLanguage(val) || null, ref);
+                    return func(val.language || null, ref);
                   } else {
                     return validationError("literal " + JSON.stringify(val) + " not comparable with non-literal " + ref);
                   }
@@ -846,7 +839,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
                   if (["IriStem", "IriStemRange"].indexOf(valueConstraint.type) === -1) {
                     return validationError("nonliteral " + JSON.stringify(val) + " not comparable with literal " + JSON.stringify(ref));
                   } else {
-                    return func(ShExTerm.getLiteralValue(val), ref);
+                    return func(val.value, ref);
                   }
                 }
               }
@@ -1164,14 +1157,14 @@ function crossProduct(sets) {
  */
 const N3jsTripleToString = function () {
   function fmt (n) {
-    return ShExTerm.isLiteral(n) ?
+    return n.termType === "Literal" ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
-      parseInt(ShExTerm.getLiteralValue(n)) :
+      ].indexOf(n.datatype.value) !== -1 ?
+      parseInt(n.value) :
       n :
-    ShExTerm.isBlank(n) ?
+    n.termType === "BlankNode" ?
       n :
       "<" + n + ">";
   }
@@ -1219,8 +1212,8 @@ function bySubject (t1, t2) {
   // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
   //   return t1.predicate > t2.predicate;
   const l = t1.subject, r = t2.subject;
-  const lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
-  const rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
+  const lprec = l.termType === "BlankNode" ? 1 : l.termType === "Literal" ? 2 : 3;
+  const rprec = r.termType === "BlankNode" ? 1 : r.termType === "Literal" ? 2 : 3;
   return lprec === rprec ? l > r : lprec > rprec;
 }
 
@@ -1230,8 +1223,8 @@ function byObject (t1, t2) {
   // if (t1.predicate !== t2.predicate) // sort predicate first for easier scanning of results
   //   return t1.predicate > t2.predicate;
   const l = t1.object, r = t2.object;
-  const lprec = ShExTerm.isBlank(l) ? 1 : ShExTerm.isLiteral(l) ? 2 : 3;
-  const rprec = ShExTerm.isBlank(r) ? 1 : ShExTerm.isLiteral(r) ? 2 : 3;
+  const lprec = l.termType === "BlankNode" ? 1 : l.termType === "Literal" ? 2 : 3;
+  const rprec = r.termType === "BlankNode" ? 1 : r.termType === "Literal" ? 2 : 3;
   return lprec === rprec ? l > r : lprec > rprec;
 }
 

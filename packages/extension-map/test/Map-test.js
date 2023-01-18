@@ -309,7 +309,7 @@ function findIsomorphism (g, right, l2r, r2l) {
 function mapppedTo (term, mapping) {
   if (!mapping) throw Error('1');
   mapping = mapping || leftToRight;                     // Mostly used for left→right mappings.
-  if (ShExTerm.isBlank(term)) {
+  if (term.termType === "BlankNode") {
     const key = ShExTerm.rdfJsTerm2Turtle(term);
     return (key in mapping) ? mapping[key] : null // Bnodes get current binding or null.
   } else {

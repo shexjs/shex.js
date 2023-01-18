@@ -32,23 +32,7 @@ export const RdfLangString: string;
 
 export const XsdString: string;
 
-export function getLiteralLanguage(literal: any): any;
-
-export function getLiteralType(literal: any): any;
-
-export function getLiteralValue(literal: any): any;
-
-export function inDefaultGraph(triple: any): any;
-
 export function shExJsTerm2Turtle(node: any, meta?: {base: string, prefixes: {[name: string]: string[]}}, aForType?: boolean): any;
-
-export function isBlank(entity: any): any;
-
-export function isDefaultGraph(entity: any): any;
-
-export function isIRI(entity: any): any;
-
-export function isLiteral(entity: any): any;
 
 export function resolveRelativeIRI(base: any, iri: any): any;
 

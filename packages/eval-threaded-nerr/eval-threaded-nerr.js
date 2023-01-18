@@ -176,7 +176,7 @@ function vpEngine (schema, shape, index) {
             let valueExpr = null;
             if (typeof expr.valueExpr === "string") { // ShapeRef
               valueExpr = expr.valueExpr;
-              if (ShExTerm.isBlank(valueExpr))
+              if (valueExpr.termType === "BlankNode")
                 valueExpr = index.shapeExprs[valueExpr];
             } else if (expr.valueExpr) {
               valueExpr = extend({}, expr.valueExpr)
@@ -353,7 +353,7 @@ function vpEngine (schema, shape, index) {
                   type: "ReferenceError", focus: focus,
                   shape: shapeLabel
                 };
-                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
+                if (typeof shapeLabel === "string" && shapeLabel.termType === "BlankNode")
                   err.referencedShape = shape;
                 err.errors = sub;
                 return [err];

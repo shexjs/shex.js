@@ -183,16 +183,20 @@ const decimalLexicalTests: {
 };
 
 export function getNumericDatatype(value: RdfJsTerm): string | null {
-  const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-  const numeric: string | null = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : null;
-  return numeric;
+  return value.termType !== "Literal"
+    ? null
+    : integerDatatypes.indexOf(value.datatype.value) !== -1
+          ? XSD + "integer"
+          : numericDatatypes.indexOf(value.datatype.value) !== -1
+              ? value.datatype.value
+              : null;
 }
 
 export function testKnownTypes(value: RdfJsTerm, validationError: (...s: string[]) => boolean, ldify: (term: RdfJsTerm) => LdTerm, datatype: string, numeric: string | null, label: string | "") {
-  if (!ShExTerm.isLiteral(value)) {
+  if (value.termType !== "Literal") {
     validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
-  } else if (ShExTerm.getLiteralType(value) !== datatype) {
-    validationError(`mismatched datatype: ${ShExTerm.getLiteralType(value)} !== ${datatype}`);
+  } else if (value.datatype.value !== datatype) {
+    validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
   } else if (numeric) {
     testRange(numericParsers[numeric](label, validationError), datatype, validationError);
   } else if (datatype === XSD + "boolean") {

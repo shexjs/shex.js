@@ -1,33 +1,6 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testFacets = exports.testKnownTypes = exports.getNumericDatatype = void 0;
-/**
- * Support functions associated with XSD datatypes (or any other DT ShEx should support).
- */
-const ShExTerm = __importStar(require("@shexjs/term"));
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const integerDatatypes = [
     XSD + "integer",
@@ -186,17 +159,21 @@ const decimalLexicalTests = {
     }
 };
 function getNumericDatatype(value) {
-    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : null;
-    return numeric;
+    return value.termType !== "Literal"
+        ? null
+        : integerDatatypes.indexOf(value.datatype.value) !== -1
+            ? XSD + "integer"
+            : numericDatatypes.indexOf(value.datatype.value) !== -1
+                ? value.datatype.value
+                : null;
 }
 exports.getNumericDatatype = getNumericDatatype;
 function testKnownTypes(value, validationError, ldify, datatype, numeric, label) {
-    if (!ShExTerm.isLiteral(value)) {
+    if (value.termType !== "Literal") {
         validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
     }
-    else if (ShExTerm.getLiteralType(value) !== datatype) {
-        validationError(`mismatched datatype: ${ShExTerm.getLiteralType(value)} !== ${datatype}`);
+    else if (value.datatype.value !== datatype) {
+        validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
     }
     else if (numeric) {
         testRange(numericParsers[numeric](label, validationError), datatype, validationError);

@@ -25,11 +25,6 @@
  * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
  */
 
-/**
- *
- * isIRI, isBlank, getLiteralType, getLiteralValue
- */
-
 const ShExTermCjsModule = (function () {
 
   const RelativizeIri = require("relativize-url").relativize;
@@ -192,10 +187,10 @@ const ShExTermCjsModule = (function () {
       } else {
         return this.iri2Turtle(node, meta, aForType);
       }
-    } else if (isLiteral(node)) {
-      let value = getLiteralValue(node);
-      const type = getLiteralType(node);
-      const language = getLiteralLanguage(node);
+    } else if (node.termType === "Literal") {
+      let value = node.value;
+      const type = node.datatype.value;
+      const language = node.language;
       // Escape special characters
       if (escape.test(value))
         value = value.replace(escapeAll, characterReplacer);
@@ -214,56 +209,16 @@ const ShExTermCjsModule = (function () {
   function shExJsTerm2Ld (term) {
     if (term[0] !== "\"")
       return term;
-    const ret = { value: ShExTerm.getLiteralValue(term) };
-    const dt = ShExTerm.getLiteralType(term);
+    const ret = { value: ShExTerm.term.value };
+    const dt = ShExTerm.term.datatype.value;
     if (dt &&
         dt !== "http://www.w3.org/2001/XMLSchema#string" &&
         dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
       ret.type = dt;
-    const lang = ShExTerm.getLiteralLanguage(term)
+    const lang = term.language;
     if (lang)
       ret.language = lang;
     return ret;
-  }
-
-  // Tests whether the given entity (triple object) represents an IRI in the N3 library
-  function isIRI (entity) {
-    return entity.termType === 'NamedNode';
-  }
-
-  // Tests whether the given entity (triple object) represents a literal in the N3 library
-  function isLiteral (entity) {
-    return entity.termType === 'Literal';
-  }
-
-  // Tests whether the given entity (triple object) represents a blank node in the N3 library
-  function isBlank (entity) {
-    return entity.termType === 'BlankNode';
-  }
-
-  // Tests whether the given triple is in the default graph
-  function inDefaultGraph (quad) {
-    return isDefaultGraph(quad.graph);
-  }
-
-  // Tests whether the given entity represents the default graph
-  function isDefaultGraph (entity) {
-    return entity.termType === 'DefaultGraph';
-  }
-
-  // Gets the string value of a literal in the N3 library
-  function getLiteralValue (literal) {
-    return literal.value;
-  }
-
-  // Gets the type of a literal in the N3 library
-  function getLiteralType (literal) {
-    return literal.datatype.value;
-  }
-
-  // Gets the language of a literal in the N3 library
-  function getLiteralLanguage (literal) {
-    return literal.language;
   }
 
 // Characters in literals that require escaping
@@ -401,14 +356,6 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     RdfLangString: RdfLangString,
     XsdString: XsdString,
     resolveRelativeIRI: resolveRelativeIRI,
-    isIRI: isIRI,
-    isLiteral: isLiteral,
-    isBlank: isBlank,
-    isDefaultGraph: isDefaultGraph,
-    inDefaultGraph: inDefaultGraph,
-    getLiteralValue: getLiteralValue,
-    getLiteralType: getLiteralType,
-    getLiteralLanguage: getLiteralLanguage,
     rdfJsTerm2Turtle,
     shExJsTerm2Turtle,
     shExJsTerm2Ld,

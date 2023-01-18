@@ -1092,11 +1092,11 @@ export class ShExValidator {
       if (["iri", "bnode", "literal", "nonliteral"].indexOf(shapeExpr.nodeKind) === -1) {
         validationError(`unknown node kind '${shapeExpr.nodeKind}'`);
       }
-      if (ShExTerm.isBlank(point)) {
+      if (point.termType === "BlankNode") {
         if (shapeExpr.nodeKind === "iri" || shapeExpr.nodeKind === "literal") {
           validationError(`blank node found when ${shapeExpr.nodeKind} expected`);
         }
-      } else if (ShExTerm.isLiteral(point)) {
+      } else if (point.termType === "Literal") {
         if (shapeExpr.nodeKind !== "literal") {
           validationError(`literal found when ${shapeExpr.nodeKind} expected`);
         }
@@ -1351,14 +1351,14 @@ function CrossProduct<T>(sets: number[][], emptyValue: T) {
  */
 const N3jsTripleToString = function () {
   function fmt (n: RdfJsTerm) {
-    return ShExTerm.isLiteral(n) ?
+    return n.termType === "Literal" ?
       [ "http://www.w3.org/2001/XMLSchema#integer",
         "http://www.w3.org/2001/XMLSchema#float",
         "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
-      parseInt(ShExTerm.getLiteralValue(n)) :
+      ].indexOf(n.datatype.value) !== -1 ?
+      parseInt(n.value) :
       n :
-    ShExTerm.isBlank(n) ?
+    n.termType === "BlankNode" ?
       n :
       "<" + n + ">";
   }
