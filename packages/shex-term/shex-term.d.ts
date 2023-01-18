@@ -52,7 +52,7 @@ export function isLiteral(entity: any): any;
 
 export function resolveRelativeIRI(base: any, iri: any): any;
 
-export function LdToRdfJsTerm (ld: LdTerm): RdfJsTerm;
+export function ld2RdfJsTerm (ld: LdTerm): RdfJsTerm;
 
 export function rdfJsTerm2Ld (term: RdfJsTerm): ShExTerm.LdTerm;
 
@@ -64,4 +64,4 @@ export interface Meta {
   };
 }
 
-export function rdfJsTermToTurtle (node: Term, meta?: Meta): string;
+export function rdfJsTerm2Turtle (node: Term, meta?: Meta): string;

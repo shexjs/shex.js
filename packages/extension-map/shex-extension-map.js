@@ -94,7 +94,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       function add (s, p, o) {
-        target.addQuad(api.ShExTerm.n3idQuadToRdfJs(s, p, o));
+        target.addQuad(api.ShExTerm.n3idQuad2RdfJs(s, p, o));
         return s;
       }
 
@@ -143,7 +143,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           for (let repetition = 0; repetition < maxAdd; ++repetition) {
             curSubjectx.cs = B();
             if (recurse) {
-              const res = checkValueExpr(api.ShExTerm.n3idTermToRdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
+              const res = checkValueExpr(api.ShExTerm.n3idTerm2RdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
               if ("errors" in res)
                 break;
             }

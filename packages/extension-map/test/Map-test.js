@@ -273,8 +273,8 @@ function findIsomorphism (g, right, l2r, r2l) {
     function add (from, to) {
       if (mapppedTo(from, l2r) === null) {   // If there's no binding from tₗ to tᵣ,
         if (mapppedTo(to, r2l) === null) {   //   If we can bind to to the object
-          const leftKey = ShExTerm.rdfJsTermToTurtle(from);
-          const rightKey = ShExTerm.rdfJsTermToTurtle(to);
+          const leftKey = ShExTerm.rdfJsTerm2Turtle(from);
+          const rightKey = ShExTerm.rdfJsTerm2Turtle(to);
           l2r[leftKey] = to;                 //      add a candidate binding.
           r2l[rightKey] = from;
           trialMappings.push({from, leftKey, rightKey});
@@ -310,7 +310,7 @@ function mapppedTo (term, mapping) {
   if (!mapping) throw Error('1');
   mapping = mapping || leftToRight;                     // Mostly used for left→right mappings.
   if (ShExTerm.isBlank(term)) {
-    const key = ShExTerm.rdfJsTermToTurtle(term);
+    const key = ShExTerm.rdfJsTerm2Turtle(term);
     return (key in mapping) ? mapping[key] : null // Bnodes get current binding or null.
   } else {
     return term;                              // Other terms evaluate to themselves.
@@ -471,14 +471,14 @@ function testEquiv (name, g1, g2, equals, mapping) {
   it("should test " + name + " to be " + equals, function () {
     var l = new OrderedStore(); // l.toString = g => graphToString(g);
     var r = new OrderedStore(); // r.toString = g => graphToString(g);
-    g1.forEach(function (triple) { l.addQuad(ShExTerm.n3idQuadToRdfJs(triple[0], triple[1], triple[2])) });
-    g2.forEach(function (triple) { r.addQuad(ShExTerm.n3idQuadToRdfJs(triple[0], triple[1], triple[2])) });
+    g1.forEach(function (triple) { l.addQuad(ShExTerm.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
+    g2.forEach(function (triple) { r.addQuad(ShExTerm.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
     var m = {};
     var ret = graphEquals(l, r, m);
     expect(ret).to.equal(equals, m);
     if (mapping) {
       const f = Object.keys(m).reduce((acc, key) => {
-        acc[key] = ShExTerm.rdfJsTermToTurtle(m[key]);
+        acc[key] = ShExTerm.rdfJsTerm2Turtle(m[key]);
         return acc;
       }, {});
       if (Array.isArray(mapping)) {

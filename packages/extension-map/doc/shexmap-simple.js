@@ -278,7 +278,7 @@ function makeSchemaCache (selection) {
 
 function makeTurtleCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, ret.meta); };
+  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTerm2Turtle(trm, ret.meta); };
   ret.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(ret.meta)); };
   ret.parse = async function (text, base) {
     const res = ShEx.RdfJsDb(parseTurtle(text, ret.meta, base));
@@ -569,7 +569,7 @@ return module.exports;
 
 function makeShapeMapCache (selection) {
   const ret = _makeCache(selection);
-  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTermToTurtle(trm, ret.meta); };
+  ret.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTerm2Turtle(trm, ret.meta); };
   ret.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(ret.meta)); };
   ret.parse = async function (text) {
     removeEditMapPair(null);
@@ -1127,7 +1127,7 @@ async function materializeAsync () {
     outputShapeMap.forEach(pair => {
       try {
         const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const resM = materializer.validate(binder, ShEx.ShExTerm.n3idTermToRdfJs(pair.node), pair.shape);
+        const resM = materializer.validate(binder, ShEx.ShExTerm.n3idTerm2RdfJs(pair.node), pair.shape);
         if ("errors" in resM) {
           renderEntry( {
             node: pair.node,

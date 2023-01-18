@@ -9076,7 +9076,7 @@ const ShExTermCjsModule = (function () {
     Turtle.PN_CHARS_WO_HYPHEN + ":-"
   ];
 
-  function rdfJsTermToTurtle (node, meta) {
+  function rdfJsTerm2Turtle (node, meta) {
     switch (node.termType) {
     case ("NamedNode"):
       return iriToTurtle(node.value, meta);
@@ -9090,7 +9090,7 @@ const ShExTermCjsModule = (function () {
           ? ""
           : "^^" + node.datatype.value
       );
-    default: throw Error(`rdfJsTermToTurtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
+    default: throw Error(`rdfJsTerm2Turtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
     }
   }
 
@@ -9210,7 +9210,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     return result;
   }
 
-  function LdToRdfJsTerm (ld) {
+  function ld2RdfJsTerm (ld) {
     switch (typeof ld) {
     case 'object':
       const copy = JSON.parse(JSON.stringify(ld));
@@ -9273,12 +9273,12 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
    * @param {*} g graph
    * @returns RdfJs quad
    */
-  function n3idQuadToRdfJs (s, p, o, g) {
+  function n3idQuad2RdfJs (s, p, o, g) {
     return new DataFactory.Quad(
-      n3idTermToRdfJs(s),
-      n3idTermToRdfJs(p),
-      n3idTermToRdfJs(o),
-      g ? n3idTermToRdfJs(g) : new DataFactory.DefaultGraph(),
+      n3idTerm2RdfJs(s),
+      n3idTerm2RdfJs(p),
+      n3idTerm2RdfJs(o),
+      g ? n3idTerm2RdfJs(g) : new DataFactory.DefaultGraph(),
     );
   }
 
@@ -9287,7 +9287,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
    * @param {*} term N3Id term
    * @returns RdfJs Term
    */
-  function n3idTermToRdfJs (term) {
+  function n3idTerm2RdfJs (term) {
     if (term[0] === "_" && term[1] === ":")
       return new DataFactory.BlankNode(term.substr(2));
 
@@ -9325,13 +9325,13 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralValue: getLiteralValue,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
-    rdfJsTermToTurtle,
+    rdfJsTerm2Turtle,
     internalTermToTurtle,
-    LdToRdfJsTerm,
-    n3idQuadToRdfJs,
-    n3idTermToRdfJs,
-    iriToTurtle,
+    ld2RdfJsTerm,
     rdfJsTerm2Ld,
+    n3idQuad2RdfJs,
+    n3idTerm2RdfJs,
+    iriToTurtle,
   }
 })();
 
@@ -10603,10 +10603,10 @@ const ShExUtil = {
         solns.solutions.map(s => {
           if (s.type !== "TestedTriple")
             throw Error("unexpected result type: " + s.type);
-          const subject = ShExTerm.LdToRdfJsTerm(s.subject);
-          const predicate = ShExTerm.LdToRdfJsTerm(s.predicate);
-          const object = ShExTerm.LdToRdfJsTerm(s.object);
-          const graph = "graph" in s ? ShExTerm.LdToRdfJsTerm(s.graph) : dataFactory.defaultGraph();
+          const subject = ShExTerm.ld2RdfJsTerm(s.subject);
+          const predicate = ShExTerm.ld2RdfJsTerm(s.predicate);
+          const object = ShExTerm.ld2RdfJsTerm(s.object);
+          const graph = "graph" in s ? ShExTerm.ld2RdfJsTerm(s.graph) : dataFactory.defaultGraph();
           db.addQuad(dataFactory.quad(subject, predicate, object, graph));
           if ("referenced" in s) {
             _dive1(s.referenced);
@@ -11739,7 +11739,7 @@ class ShExValidator {
     validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
         return shapeMap.map(pair => {
             // let time = +new Date();
-            const res = this.validateNodeShapePair(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen);
+            const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
             // time = +new Date() - time;
             return {
                 node: pair.node,
@@ -11774,7 +11774,7 @@ class ShExValidator {
                 runtimeError("start production not defined");
             return this.validateShapeExpr(point, this.schema.start, ctx);
         }
-        const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + ctx.label;
+        const seenKey = ShExTerm.rdfJsTerm2Turtle(point) + "@" + ctx.label;
         if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
             if (seenKey in ctx.seen) {
                 let ret = {
@@ -12383,7 +12383,7 @@ class ShExValidator {
         const errors = [];
         function validationError(...s) {
             const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(point) + " as " + JSON.stringify(shapeExpr) + ": " + errorStr);
+            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(point) + " as " + JSON.stringify(shapeExpr) + ": " + errorStr);
             return false;
         }
         if (shapeExpr.nodeKind !== undefined) {

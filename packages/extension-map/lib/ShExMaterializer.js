@@ -197,7 +197,7 @@ function makeCache () {
   const _vals = {}; // _vals[http://abcd] = [res1, res2]
   return {
     cached: function (focus, shape) {
-     const key = ShExTerm.rdfJsTermToTurtle(focus);
+     const key = ShExTerm.rdfJsTerm2Turtle(focus);
       let cache = _keys[key];
       if (!cache) {
         _keys[key] = cache = [];
@@ -208,7 +208,7 @@ function makeCache () {
       return idx === -1 ? undefined : _vals[key][idx];
     },
     remember: function (focus, shape, res) {
-     const key = ShExTerm.rdfJsTermToTurtle(focus);
+     const key = ShExTerm.rdfJsTerm2Turtle(focus);
       const cache = _keys[key];
       if (!cache) {
         _keys[key] = [];
@@ -301,7 +301,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
   this.validateShapeMap = function (db, shapeMap, depth, seen) {
     return shapeMap.map(pair => {
       let time = new Date();
-      const res = this.validate(db, ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, depth, seen); // really tracker and seen
+      const res = this.validate(db, ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, depth, seen); // really tracker and seen
       time = new Date() - time;
       return {
         node: pair.node,
@@ -332,7 +332,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     const label = labelOrShape; // for clarity
     if (seen === undefined)
       seen = {};
-    const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + (label === Start ? "_: -start-" : label);
+    const seenKey = ShExTerm.rdfJsTerm2Turtle(point) + "@" + (label === Start ? "_: -start-" : label);
     if (seenKey in seen)
       return {
         type: "Recursion",
@@ -750,7 +750,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
     function validationError () {
       const errorStr = Array.prototype.join.call(arguments, "");
-      errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
+      errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(value) + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
       return false;
     }
     // if (negated) ;

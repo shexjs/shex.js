@@ -145,7 +145,7 @@ const ShExTermCjsModule = (function () {
     Turtle.PN_CHARS_WO_HYPHEN + ":-"
   ];
 
-  function rdfJsTermToTurtle (node, meta) {
+  function rdfJsTerm2Turtle (node, meta) {
     switch (node.termType) {
     case ("NamedNode"):
       return iriToTurtle(node.value, meta);
@@ -159,7 +159,7 @@ const ShExTermCjsModule = (function () {
           ? ""
           : "^^" + node.datatype.value
       );
-    default: throw Error(`rdfJsTermToTurtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
+    default: throw Error(`rdfJsTerm2Turtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
     }
   }
 
@@ -279,7 +279,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     return result;
   }
 
-  function LdToRdfJsTerm (ld) {
+  function ld2RdfJsTerm (ld) {
     switch (typeof ld) {
     case 'object':
       const copy = JSON.parse(JSON.stringify(ld));
@@ -342,12 +342,12 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
    * @param {*} g graph
    * @returns RdfJs quad
    */
-  function n3idQuadToRdfJs (s, p, o, g) {
+  function n3idQuad2RdfJs (s, p, o, g) {
     return new DataFactory.Quad(
-      n3idTermToRdfJs(s),
-      n3idTermToRdfJs(p),
-      n3idTermToRdfJs(o),
-      g ? n3idTermToRdfJs(g) : new DataFactory.DefaultGraph(),
+      n3idTerm2RdfJs(s),
+      n3idTerm2RdfJs(p),
+      n3idTerm2RdfJs(o),
+      g ? n3idTerm2RdfJs(g) : new DataFactory.DefaultGraph(),
     );
   }
 
@@ -356,7 +356,7 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
    * @param {*} term N3Id term
    * @returns RdfJs Term
    */
-  function n3idTermToRdfJs (term) {
+  function n3idTerm2RdfJs (term) {
     if (term[0] === "_" && term[1] === ":")
       return new DataFactory.BlankNode(term.substr(2));
 
@@ -394,13 +394,13 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralValue: getLiteralValue,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
-    rdfJsTermToTurtle,
+    rdfJsTerm2Turtle,
     internalTermToTurtle,
-    LdToRdfJsTerm,
-    n3idQuadToRdfJs,
-    n3idTermToRdfJs,
-    iriToTurtle,
+    ld2RdfJsTerm,
     rdfJsTerm2Ld,
+    n3idQuad2RdfJs,
+    n3idTerm2RdfJs,
+    iriToTurtle,
   }
 })();
 

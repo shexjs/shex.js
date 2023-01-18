@@ -238,7 +238,7 @@ class ShExValidator {
     validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
         return shapeMap.map(pair => {
             // let time = +new Date();
-            const res = this.validateNodeShapePair(ShExTerm.LdToRdfJsTerm(pair.node), pair.shape, tracker, seen);
+            const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
             // time = +new Date() - time;
             return {
                 node: pair.node,
@@ -273,7 +273,7 @@ class ShExValidator {
                 runtimeError("start production not defined");
             return this.validateShapeExpr(point, this.schema.start, ctx);
         }
-        const seenKey = ShExTerm.rdfJsTermToTurtle(point) + "@" + ctx.label;
+        const seenKey = ShExTerm.rdfJsTerm2Turtle(point) + "@" + ctx.label;
         if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
             if (seenKey in ctx.seen) {
                 let ret = {
@@ -882,7 +882,7 @@ class ShExValidator {
         const errors = [];
         function validationError(...s) {
             const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTermToTurtle(point) + " as " + JSON.stringify(shapeExpr) + ": " + errorStr);
+            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(point) + " as " + JSON.stringify(shapeExpr) + ": " + errorStr);
             return false;
         }
         if (shapeExpr.nodeKind !== undefined) {
