@@ -509,7 +509,7 @@ class ShExValidator {
         }
         const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
         const outgoingLength = fromDB.outgoing.length;
-        const neighborhood = fromDB.outgoing.sort((l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)).concat(fromDB.incoming.sort((l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)));
+        const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const constraintList = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
@@ -1201,12 +1201,6 @@ function indexNeighborhood(triples) {
         }),
         misses: []
     };
-}
-/* sparqlOrder - sort triples by subject following SPARQL partial ordering.
- */
-function sparqlOrder(l, r) {
-    const [lprec, rprec] = [l, r].map(x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3);
-    return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
 /* Return a list of n `undefined`s.
  *

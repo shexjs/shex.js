@@ -134,10 +134,6 @@ const ShExTermCjsModule = (function () {
     return result + iri.substring(segmentStart);
   }
 
-  function internalTerm (node) { // !!rdfjsTermToInternal
-    return node;
-  }
-
   const Turtle = {};
   Turtle.PN_CHARS_BASE = "A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}"; // escape anything outside BMP: \u{10000}-\u{EFFFF}
   Turtle.PN_CHARS_U = Turtle.PN_CHARS_BASE + "_";
@@ -206,27 +202,6 @@ const ShExTermCjsModule = (function () {
     default:
       throw Error(`rdfJsTermToLd: Unrecognized termType ${term.termType} in ${JSON.stringify(term)}`);
     }
-  }
-
-
-  function internalTriple (triple) { // !!rdfjsTripleToInternal
-    return {
-      subject: internalTerm(triple.subject),
-      predicate: internalTerm(triple.predicate),
-      object: internalTerm(triple.object)
-    };
-  }
-
-  function externalTerm (node, factory) { // !!internalTermToRdfjs
-    return node;
-  }
-
-  function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return factory.quad(
-      externalTerm(triple.subject, factory),
-      externalTerm(triple.predicate, factory),
-      externalTerm(triple.object, factory)
-    );
   }
 
   function internalTermToTurtle (node, meta = {}, aForType = true) {
@@ -420,10 +395,6 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
     rdfJsTermToTurtle,
-    internalTerm: internalTerm,
-    internalTriple: internalTriple,
-    externalTerm: externalTerm,
-    externalTriple: externalTriple,
     internalTermToTurtle,
     LdToRdfJsTerm,
     n3idQuadToRdfJs,

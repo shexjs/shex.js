@@ -10256,9 +10256,27 @@ if (true)
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Start = void 0;
+exports.sparqlOrder = exports.Start = void 0;
 //import {Start} from "@shexjs/validator";
 exports.Start = { term: "START" };
+/* sparqlOrder - sort triples by subject following SPARQL partial ordering.
+ */
+function sparqlOrder(l, r) {
+    const [lprec, rprec] = [prec(l), prec(r)];
+    return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
+}
+exports.sparqlOrder = sparqlOrder;
+const termType2Prec = {
+    'BlankNode': 1,
+    'Literal': 2,
+    'NamedNode': 3,
+};
+function prec(t) {
+    let typeLabel = t.termType;
+    if (typeLabel === 'Quad' || typeLabel === 'Variable' || typeLabel === 'DefaultGraph')
+        throw Error(`no defined SPARQL order for ${typeLabel} ${t.value}`);
+    return termType2Prec[typeLabel];
+}
 
 
 /***/ }),
@@ -10269,14 +10287,14 @@ exports.Start = { term: "START" };
 /** Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset
  */
 const NeighborhoodRdfJsModule = (function () {
-  const ShExTerm = __webpack_require__(1118);
+  const Api = __webpack_require__(3486);
 
   function rdfjsDB (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 
-    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects(); }
+    function getPredicates () { return db.getPredicates(); }
+    function getObjects () { return db.getObjects(); }
+    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments); }
 
     function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -10285,7 +10303,9 @@ const NeighborhoodRdfJsModule = (function () {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      const outgoing/*: Quad[]*/ = [... db.match(point, null, null, null)].map(ShExTerm.internalTriple);
+      const outgoing/*: Quad[]*/ = [... db.match(point, null, null, null)].sort(
+        (l, r) => Api.sparqlOrder(l.object, r.object)
+      );
       if (queryTracker) {
         const time = new Date();
         queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
@@ -10294,7 +10314,9 @@ const NeighborhoodRdfJsModule = (function () {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      const incoming/*: Quad[]*/ = [...db.match(null, null, point, null)].map(ShExTerm.internalTriple);
+      const incoming/*: Quad[]*/ = [...db.match(null, null, point, null)].sort(
+        (l, r) => Api.sparqlOrder(l.object, r.object)
+      );
       if (queryTracker) {
         queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
       }
@@ -13242,8 +13264,6 @@ const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
     getLiteralType: getLiteralType,
     getLiteralLanguage: getLiteralLanguage,
     rdfJsTermToTurtle,
-    internalTerm: internalTerm,
-    internalTriple: internalTriple,
     externalTerm: externalTerm,
     externalTriple: externalTriple,
     internalTermToTurtle,
@@ -15582,21 +15602,20 @@ class TriplesMatching {
     }
 }
 class TriplesMatchingResult {
-    constructor(triple) {
-        this.triple = triple;
-    }
-}
-class NewHit extends TriplesMatchingResult {
     constructor(triple, sub) {
-        super(triple);
+        this.triple = triple;
         this.sub = sub;
     }
 }
-class NewMiss extends TriplesMatchingResult {
-    constructor(triple, errors) {
-        super(triple);
-        this.errors = errors;
+class TriplesMatchingHit extends TriplesMatchingResult {
+}
+class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
+    constructor(triple) {
+        // @ts-ignore
+        super(triple, undefined); // could weaken typing on the hits, but also weakens the misses
     }
+}
+class TriplesMatchingMiss extends TriplesMatchingResult {
 }
 /**
  * Convert a ResultMap to a shapeExprTest by examining each shape association.
@@ -15935,12 +15954,12 @@ class ShExValidator {
         }
         const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
         const outgoingLength = fromDB.outgoing.length;
-        const neighborhood = fromDB.outgoing.sort((l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)).concat(fromDB.incoming.sort((l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)));
+        const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const constraintList = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, ctx);
-        const { misses, extras } = this.whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || []);
+        const { misses, extras } = this.whatsMissing(tripleList, neighborhood, shape.extra || []);
         const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
         const regexEngine = this.regexModule.compile(this.schema, shape, this.index);
@@ -16077,6 +16096,13 @@ class ShExValidator {
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
+    /**
+     * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
+     * @param constraintList - list of TripleConstraint
+     * @param neighborhood - list of Quad
+     * @param outgoingLength - first n of neighborhood are outgoing triples
+     * @param ctx - evaluation context
+     */
     matchByPredicate(constraintList, neighborhood, outgoingLength, ctx) {
         const _ShExValidator = this;
         const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
@@ -16097,16 +16123,15 @@ class ShExValidator {
             });
             matchConstraints.misses.forEach(function (evidence) {
                 const tNo = neighborhood.indexOf(evidence.triple);
-                ret.misses[tNo] = { constraintNo: cNo, errors: evidence.errors };
+                ret.misses[tNo] = { constraintNo: cNo, errors: evidence.sub };
             });
             return ret;
         }, init);
     }
-    whatsMissing(tripleList, neighborhood, outgoingLength, extras) {
+    whatsMissing(tripleList, neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
         const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
             if (constraints.length === 0 && // matches no constraints
-                ord < outgoingLength && // not an incoming triple
                 ord in tripleList.misses) { // predicate matched some constraint(s)
                 if (extras.indexOf(neighborhood[ord].predicate.value) !== -1) {
                     matchedExtras.push(ord);
@@ -16297,18 +16322,17 @@ class ShExValidator {
             const value = constraint.inverse ? triple.subject : triple.object;
             const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
             if (constraint.valueExpr === undefined)
-                hits.push({ triple, sub: undefined });
+                hits.push(new TriplesMatchingNoValueConstraint(triple));
             else {
                 ctx = ctx.followTripleConstraint();
                 const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
                 // @ts-ignore
                 if (sub.errors === undefined) {
-                    hits.push(new NewHit(triple, sub));
+                    hits.push(new TriplesMatchingHit(triple, sub));
                 }
                 else /* !! if (!hits.find(h => h.triple === triple)) */ {
                     _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-                    // @ts-ignore
-                    misses.push(new NewMiss(triple, sub));
+                    misses.push(new TriplesMatchingMiss(triple, sub));
                 }
             }
         });
@@ -16622,12 +16646,6 @@ function indexNeighborhood(triples) {
         }),
         misses: []
     };
-}
-/* sparqlOrder - sort triples by subject following SPARQL partial ordering.
- */
-function sparqlOrder(l, r) {
-    const [lprec, rprec] = [l, r].map(x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3);
-    return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
 /* Return a list of n `undefined`s.
  *

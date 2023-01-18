@@ -522,9 +522,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
           process.stdout.write(" " + triples.length + " triples (" + time + " μs)\n");
         if (valParms.slurp) {
           const wr = new N3.Writer({ prefixes: dataMeta.meta.prefixes || {} });
-          wr.addQuads(triples.map(
-            t => ShExTerm.externalTriple(t, N3.DataFactory)
-          ));
+          wr.addQuads(triples);
           wr.end((error, results) => {
             if (error)
               console.warn(error.replace(/^/mg, "# "));

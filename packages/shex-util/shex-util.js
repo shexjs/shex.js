@@ -365,7 +365,7 @@ const ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return ShExTerm.externalTriple(ret, factory);
+      return ret;
     });
   },
 

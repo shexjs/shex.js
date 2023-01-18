@@ -15,7 +15,7 @@ import {
 } from "@shexjs/eval-validator-api";
 import * as Hierarchy from 'hierarchy-closure';
 import type {Quad, Term as RdfJsTerm} from 'rdf-js';
-import {Neighborhood, NeighborhoodDb, Start as NeighborhoodStart} from "@shexjs/neighborhood-api";
+import {Neighborhood, NeighborhoodDb, sparqlOrder, Start as NeighborhoodStart} from "@shexjs/neighborhood-api";
 import {
   error,
   Failure,
@@ -670,11 +670,7 @@ export class ShExValidator {
 
     const fromDB  = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
     const outgoingLength = fromDB.outgoing.length;
-    const neighborhood = fromDB.outgoing.sort(
-      (l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)
-    ).concat(fromDB.incoming.sort(
-      (l, r) => l.predicate.value.localeCompare(r.predicate.value) || sparqlOrder(l.object, r.object)
-    ));
+    const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
     const constraintList = extendsTCs.concat(localTCs);
@@ -1422,15 +1418,6 @@ function indexNeighborhood (triples: Quad[]): NeighborhoodIndex {
     }),
     misses: []
   };
-}
-
-/* sparqlOrder - sort triples by subject following SPARQL partial ordering.
- */
-function sparqlOrder (l: RdfJsTerm, r: RdfJsTerm): number {
-  const [lprec, rprec] = [l, r].map(
-    x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
-  );
-  return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
 }
 
 /* Return a list of n `undefined`s.

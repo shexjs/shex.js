@@ -247,8 +247,8 @@ function graphEquals (left, right, leftToRight) {
     return ret;
   }, {});
 
-  return findIsomorphism([... left.match(null, null, null, null)]     // Start with all triples.
-               .map(ShExTerm.internalTriple), right, leftToRight, rightToLeft);
+  return findIsomorphism([... left.match(null, null, null, null)],    // Start with all triples.
+                         right, leftToRight, rightToLeft);
 }
 
 /**
