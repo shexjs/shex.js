@@ -16,6 +16,8 @@ const ShExParser = require("@shexjs/parser");
 const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const Mapper = require("..")({rdfjs: RdfJs, Validator: ShExValidator});
 
+const StringToRdfJs = require("../lib/stringToRdfJs");
+
 // var Promise = require("promise");
 const expect = require("chai").expect;
 const Path = require("path");
@@ -471,8 +473,8 @@ function testEquiv (name, g1, g2, equals, mapping) {
   it("should test " + name + " to be " + equals, function () {
     var l = new OrderedStore(); // l.toString = g => graphToString(g);
     var r = new OrderedStore(); // r.toString = g => graphToString(g);
-    g1.forEach(function (triple) { l.addQuad(ShExTerm.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
-    g2.forEach(function (triple) { r.addQuad(ShExTerm.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
+    g1.forEach(function (triple) { l.addQuad(StringToRdfJs.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
+    g2.forEach(function (triple) { r.addQuad(StringToRdfJs.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
     var m = {};
     var ret = graphEquals(l, r, m);
     expect(ret).to.equal(equals, m);

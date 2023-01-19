@@ -1127,7 +1127,7 @@ async function materializeAsync () {
     outputShapeMap.forEach(pair => {
       try {
         const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
-        const resM = materializer.validate(binder, ShEx.ShExTerm.n3idTerm2RdfJs(pair.node), pair.shape);
+        const resM = materializer.validate(binder, ShEx.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
         if ("errors" in resM) {
           renderEntry( {
             node: pair.node,

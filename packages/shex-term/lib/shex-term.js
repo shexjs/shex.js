@@ -2,7 +2,7 @@
 /**
  * Terms used in ShEx.
  *
- * There are four representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * There are three representations of RDF terms used in ShEx NamedNodevalidation and applications:
  * 1. LD (short for JSON-LD) @ids used in ShExJ.
  *   "http://a.example/some/Iri
  *   "_:someBlankNode
@@ -18,16 +18,14 @@
  *   _:someBlankNode, []
  *   "1.0"^^<http://www.w3.org/2001/XMLSchema#float>, "1.0"^^xsd:float, 1.0
  *   "chat"@fr
- * 4. N3id - webapps and scripts that rely specifically on N3.js leverage the
- *    fact that term.id is Turtle for all terms except typed literals which lack
- *    <>s around data types:
  *   "1.0"^^http://www.w3.org/2001/XMLSchema#float
  *
  * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.n3idTerm2RdfJs = exports.n3idQuad2RdfJs = exports.rdfJsTerm2Ld = exports.ld2RdfJsTerm = exports.shExJsTerm2Turtle = exports.rdfJsTerm2Turtle = exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
+exports.rdfJsTerm2Ld = exports.ld2RdfJsTerm = exports.shExJsTerm2Turtle = exports.rdfJsTerm2Turtle = exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
 const RelativizeIri = require("relativize-url").relativize;
+// import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
 const rdf_data_factory_1 = require("rdf-data-factory");
 const RdfJsFactory = new rdf_data_factory_1.DataFactory();
 exports.RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
@@ -67,7 +65,6 @@ function rdfJsTerm2Turtle(node, meta) {
 }
 exports.rdfJsTerm2Turtle = rdfJsTerm2Turtle;
 function shExJsTerm2Turtle(node, meta = { base: "", prefixes: {} }, aForType) {
-    const { base: string, prefixes: PrefixMap = {} } = meta;
     if (typeof node === "string") {
         if (node.startsWith("_:")) {
             return node;
@@ -174,49 +171,6 @@ exports.rdfJsTerm2Ld = rdfJsTerm2Ld;
  *     "I said \"Hello World\"."@en
  *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
  */
-/**
- * Map an N3id quad to an RdfJs quad
- * @param {*} s subject
- * @param {*} p predicate
- * @param {*} o object
- * @param {*} g graph
- * @returns RdfJs quad
- */
-function n3idQuad2RdfJs(s, p, o, g) {
-    const graph = g ? n3idTerm2RdfJs(g) : RdfJsFactory.defaultGraph();
-    return RdfJsFactory.quad(
-    // there probably some elegant way to do this without lots of casting
-    n3idTerm2RdfJs(s), n3idTerm2RdfJs(p), n3idTerm2RdfJs(o), graph);
-}
-exports.n3idQuad2RdfJs = n3idQuad2RdfJs;
-/**
- * Map an N3id term to an RdfJs Term.
- * @param {*} term N3Id term
- * @returns RdfJs Term
- */
-function n3idTerm2RdfJs(term) {
-    if (term[0] === "_" && term[1] === ":")
-        return RdfJsFactory.blankNode(term.substr(2));
-    if (term[0] === "\"" || term[0] === "'") {
-        const closeQuote = term.lastIndexOf(term[0]);
-        if (closeQuote === -1)
-            throw new Error(`no close ${term[0]}: ${term}`);
-        const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
-        const langOrDt = term.length === closeQuote + 1
-            ? undefined
-            : term[closeQuote + 1] === "@"
-                ? term.substr(closeQuote + 2)
-                : parseDt(closeQuote + 1);
-        return RdfJsFactory.literal(value, langOrDt);
-    }
-    return RdfJsFactory.namedNode(term);
-    function parseDt(from) {
-        if (term[from] !== "^" || term[from + 1] !== "^")
-            throw new Error(`garbage after closing \": ${term}`);
-        return RdfJsFactory.namedNode(term.substr(from + 2));
-    }
-}
-exports.n3idTerm2RdfJs = n3idTerm2RdfJs;
 function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
     const { base, prefixes = {} } = meta;
     if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")

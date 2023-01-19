@@ -14,6 +14,7 @@ const extensions = require("./lib/extensions");
 const N3Util = require("n3/lib/N3Util");
 const N3DataFactory = require("n3/lib/N3DataFactory").default;
 const materializer = require("./lib/ShExMaterializer")(config);
+const StringToRdfJs = require("./lib/stringToRdfJs");
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -94,7 +95,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       function add (s, p, o) {
-        target.addQuad(api.ShExTerm.n3idQuad2RdfJs(s, p, o));
+        target.addQuad(StringToRdfJs.n3idQuad2RdfJs(s, p, o));
         return s;
       }
 
@@ -143,7 +144,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           for (let repetition = 0; repetition < maxAdd; ++repetition) {
             curSubjectx.cs = B();
             if (recurse) {
-              const res = checkValueExpr(api.ShExTerm.n3idTerm2RdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
+              const res = checkValueExpr(StringToRdfJs.n3idTerm2RdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
               if ("errors" in res)
                 break;
             }

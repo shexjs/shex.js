@@ -9664,6 +9664,78 @@ if (true)
 
 /***/ }),
 
+/***/ 3146:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+
+/**
+ * N3id - webapps and scripts that rely specifically on N3.js leverage the
+ * fact that term.id is Turtle for all terms except typed literals which lack
+ * <>s around data types. This is handy for testing.
+ */
+
+const {DataFactory} = __webpack_require__(1194);
+const RdfJsFactory = new DataFactory();
+
+/**
+ * Map an N3id quad to an RdfJs quad
+ * @param {*} s subject
+ * @param {*} p predicate
+ * @param {*} o object
+ * @param {*} g graph
+ * @returns RdfJs quad
+ */
+function n3idQuad2RdfJs (s/*: string*/, p/*: string*/, o/*: string*/, g/*: string*/)/*: Quad*/ {
+  const graph = g ? n3idTerm2RdfJs(g) : RdfJsFactory.defaultGraph();
+  return RdfJsFactory.quad(
+      // there probably some elegant way to do this without lots of casting
+    n3idTerm2RdfJs(s)/* as NamedNode | BlankNode*/,
+    n3idTerm2RdfJs(p)/* as NamedNode*/,
+    n3idTerm2RdfJs(o)/* as NamedNode | BlankNode | Literal*/,
+    graph/* as NamedNode | BlankNode*/,
+  );
+}
+
+/**
+ * Map an N3id term to an RdfJs Term.
+ * @param {*} term N3Id term
+ * @returns RdfJs Term
+ */
+function n3idTerm2RdfJs (term/*: string*/)/*: RdfJsTerm*/ {
+  if (term[0] === "_" && term[1] === ":")
+    return RdfJsFactory.blankNode(term.substr(2));
+
+  if (term[0] === "\"" || term[0] === "'") {
+    const closeQuote = term.lastIndexOf(term[0]);
+    if (closeQuote === -1)
+      throw new Error(`no close ${term[0]}: ${term}`);
+    const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
+    const langOrDt = term.length === closeQuote + 1
+      ? undefined
+      : term[closeQuote + 1] === "@"
+      ? term.substr(closeQuote + 2)
+      : parseDt(closeQuote + 1)
+    return RdfJsFactory.literal(value, langOrDt);
+  }
+
+  return RdfJsFactory.namedNode(term);
+
+  function parseDt (from/*: number*/)/*: NamedNode*/ {
+    if (term[from] !== "^" || term[from + 1] !== "^")
+      throw new Error(`garbage after closing \": ${term}`);
+    return RdfJsFactory.namedNode(term.substr(from + 2));
+  }
+}
+
+module.exports = {
+  n3idQuad2RdfJs,
+  n3idTerm2RdfJs,
+}
+
+
+/***/ }),
+
 /***/ 1279:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -9683,6 +9755,7 @@ const extensions = __webpack_require__(1386);
 const N3Util = __webpack_require__(7141);
 const N3DataFactory = (__webpack_require__(713)["default"]);
 const materializer = __webpack_require__(4865)(config);
+const StringToRdfJs = __webpack_require__(3146);
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -9763,7 +9836,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
       function add (s, p, o) {
-        target.addQuad(api.ShExTerm.n3idQuad2RdfJs(s, p, o));
+        target.addQuad(StringToRdfJs.n3idQuad2RdfJs(s, p, o));
         return s;
       }
 
@@ -9812,7 +9885,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           for (let repetition = 0; repetition < maxAdd; ++repetition) {
             curSubjectx.cs = B();
             if (recurse) {
-              const res = checkValueExpr(api.ShExTerm.n3idTerm2RdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
+              const res = checkValueExpr(StringToRdfJs.n3idTerm2RdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
               if ("errors" in res)
                 break;
             }
@@ -10135,6 +10208,7 @@ ShExWebApp = (function () {
     JsYaml:               __webpack_require__(9431),
     DcTap:                (__webpack_require__(5281).DcTap),
     Map:                  __webpack_require__(1279),
+    StringToRdfJs:        __webpack_require__(3146),
     NestedTurtleWriter:   __webpack_require__(6053),
   })
 })()
@@ -12742,7 +12816,7 @@ if (true)
 /**
  * Terms used in ShEx.
  *
- * There are four representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * There are three representations of RDF terms used in ShEx NamedNodevalidation and applications:
  * 1. LD (short for JSON-LD) @ids used in ShExJ.
  *   "http://a.example/some/Iri
  *   "_:someBlankNode
@@ -12758,16 +12832,14 @@ if (true)
  *   _:someBlankNode, []
  *   "1.0"^^<http://www.w3.org/2001/XMLSchema#float>, "1.0"^^xsd:float, 1.0
  *   "chat"@fr
- * 4. N3id - webapps and scripts that rely specifically on N3.js leverage the
- *    fact that term.id is Turtle for all terms except typed literals which lack
- *    <>s around data types:
  *   "1.0"^^http://www.w3.org/2001/XMLSchema#float
  *
  * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
  */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.n3idTerm2RdfJs = exports.n3idQuad2RdfJs = exports.rdfJsTerm2Ld = exports.ld2RdfJsTerm = exports.shExJsTerm2Turtle = exports.rdfJsTerm2Turtle = exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
+exports.rdfJsTerm2Ld = exports.ld2RdfJsTerm = exports.shExJsTerm2Turtle = exports.rdfJsTerm2Turtle = exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
 const RelativizeIri = (__webpack_require__(4436).relativize);
+// import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
 const rdf_data_factory_1 = __webpack_require__(1194);
 const RdfJsFactory = new rdf_data_factory_1.DataFactory();
 exports.RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
@@ -12807,7 +12879,6 @@ function rdfJsTerm2Turtle(node, meta) {
 }
 exports.rdfJsTerm2Turtle = rdfJsTerm2Turtle;
 function shExJsTerm2Turtle(node, meta = { base: "", prefixes: {} }, aForType) {
-    const { base: string, prefixes: PrefixMap = {} } = meta;
     if (typeof node === "string") {
         if (node.startsWith("_:")) {
             return node;
@@ -12914,49 +12985,6 @@ exports.rdfJsTerm2Ld = rdfJsTerm2Ld;
  *     "I said \"Hello World\"."@en
  *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
  */
-/**
- * Map an N3id quad to an RdfJs quad
- * @param {*} s subject
- * @param {*} p predicate
- * @param {*} o object
- * @param {*} g graph
- * @returns RdfJs quad
- */
-function n3idQuad2RdfJs(s, p, o, g) {
-    const graph = g ? n3idTerm2RdfJs(g) : RdfJsFactory.defaultGraph();
-    return RdfJsFactory.quad(
-    // there probably some elegant way to do this without lots of casting
-    n3idTerm2RdfJs(s), n3idTerm2RdfJs(p), n3idTerm2RdfJs(o), graph);
-}
-exports.n3idQuad2RdfJs = n3idQuad2RdfJs;
-/**
- * Map an N3id term to an RdfJs Term.
- * @param {*} term N3Id term
- * @returns RdfJs Term
- */
-function n3idTerm2RdfJs(term) {
-    if (term[0] === "_" && term[1] === ":")
-        return RdfJsFactory.blankNode(term.substr(2));
-    if (term[0] === "\"" || term[0] === "'") {
-        const closeQuote = term.lastIndexOf(term[0]);
-        if (closeQuote === -1)
-            throw new Error(`no close ${term[0]}: ${term}`);
-        const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
-        const langOrDt = term.length === closeQuote + 1
-            ? undefined
-            : term[closeQuote + 1] === "@"
-                ? term.substr(closeQuote + 2)
-                : parseDt(closeQuote + 1);
-        return RdfJsFactory.literal(value, langOrDt);
-    }
-    return RdfJsFactory.namedNode(term);
-    function parseDt(from) {
-        if (term[from] !== "^" || term[from + 1] !== "^")
-            throw new Error(`garbage after closing \": ${term}`);
-        return RdfJsFactory.namedNode(term.substr(from + 2));
-    }
-}
-exports.n3idTerm2RdfJs = n3idTerm2RdfJs;
 function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
     const { base, prefixes = {} } = meta;
     if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")

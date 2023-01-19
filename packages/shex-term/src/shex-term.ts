@@ -1,7 +1,7 @@
 /**
  * Terms used in ShEx.
  *
- * There are four representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * There are three representations of RDF terms used in ShEx NamedNodevalidation and applications:
  * 1. LD (short for JSON-LD) @ids used in ShExJ.
  *   "http://a.example/some/Iri
  *   "_:someBlankNode
@@ -17,9 +17,6 @@
  *   _:someBlankNode, []
  *   "1.0"^^<http://www.w3.org/2001/XMLSchema#float>, "1.0"^^xsd:float, 1.0
  *   "chat"@fr
- * 4. N3id - webapps and scripts that rely specifically on N3.js leverage the
- *    fact that term.id is Turtle for all terms except typed literals which lack
- *    <>s around data types:
  *   "1.0"^^http://www.w3.org/2001/XMLSchema#float
  *
  * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
@@ -34,16 +31,13 @@
     shExJsTerm2Ld,
     ld2RdfJsTerm,
     rdfJsTerm2Ld,
-    n3idQuad2RdfJs,
-    n3idTerm2RdfJs,
     iri2Turtle,
 */
 
 import * as ShExJ from 'shexj';
-import {Term as RdfJsTerm, NamedNode as RdfJsIri} from 'rdf-js';
+import {Term as RdfJsTerm} from 'rdf-js';
 const RelativizeIri = require("relativize-url").relativize;
 // import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
-import {Quad, BlankNode, Literal, NamedNode} from 'rdf-js';
 import {DataFactory} from 'rdf-data-factory';
 const RdfJsFactory = new DataFactory();
 import {ObjectLiteral, objectValue} from "shexj";
@@ -123,7 +117,6 @@ export function rdfJsTerm2Turtle (node: RdfJsTerm, meta?: Meta): string {
 }
 
 export function shExJsTerm2Turtle (node: any, meta: Meta = {base: "", prefixes: {}}, aForType?: boolean): any {
-  const {base: string, prefixes: PrefixMap = {}} = meta;
   if (typeof node === "string") {
     if (node.startsWith("_:")) {
       return node;
@@ -233,56 +226,6 @@ export function rdfJsTerm2Ld (term: RdfJsTerm): objectValue {
  *     "I said \"Hello World\"."@en
  *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
  */
-
-/**
- * Map an N3id quad to an RdfJs quad
- * @param {*} s subject
- * @param {*} p predicate
- * @param {*} o object
- * @param {*} g graph
- * @returns RdfJs quad
- */
-export function n3idQuad2RdfJs (s: string, p: string, o: string, g: string) : Quad {
-  const graph = g ? n3idTerm2RdfJs(g) : RdfJsFactory.defaultGraph();
-  return RdfJsFactory.quad(
-      // there probably some elegant way to do this without lots of casting
-    n3idTerm2RdfJs(s) as NamedNode | BlankNode,
-    n3idTerm2RdfJs(p) as NamedNode,
-    n3idTerm2RdfJs(o) as NamedNode | BlankNode | Literal,
-    graph as NamedNode | BlankNode,
-  );
-}
-
-/**
- * Map an N3id term to an RdfJs Term.
- * @param {*} term N3Id term
- * @returns RdfJs Term
- */
-export function n3idTerm2RdfJs (term: string): RdfJsTerm {
-  if (term[0] === "_" && term[1] === ":")
-    return RdfJsFactory.blankNode(term.substr(2));
-
-  if (term[0] === "\"" || term[0] === "'") {
-    const closeQuote = term.lastIndexOf(term[0]);
-    if (closeQuote === -1)
-      throw new Error(`no close ${term[0]}: ${term}`);
-    const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
-    const langOrDt = term.length === closeQuote + 1
-      ? undefined
-      : term[closeQuote + 1] === "@"
-      ? term.substr(closeQuote + 2)
-      : parseDt(closeQuote + 1)
-    return RdfJsFactory.literal(value, langOrDt);
-  }
-
-  return RdfJsFactory.namedNode(term);
-
-  function parseDt (from: number): NamedNode {
-    if (term[from] !== "^" || term[from + 1] !== "^")
-      throw new Error(`garbage after closing \": ${term}`);
-    return RdfJsFactory.namedNode(term.substr(from + 2));
-  }
-}
 
 function iri2Turtle (iri: string, meta: Meta = { base: "", prefixes: {}}, aForType: boolean = true) {
   const {base, prefixes = {}} = meta;
