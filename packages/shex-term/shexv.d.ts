@@ -1,3 +1,10 @@
+/**
+ * An attempt to capture types emitted when constructing a validation proof
+ *
+ * This is currently in root of @shexjs/term to signal that there's no build
+ * product (which would erroneously fire make).
+ */
+
 import * as ShExJ from '@types/shexj';
 export {};
 
