@@ -228,8 +228,19 @@ type ByPredicateResult = {
   results: TC2TResult; // for each TC, for each passing T, what was the result
   constraintList: T2TCs; // for each T, which constraints does it match
 };
+class MapMap<A, B, T> {
+  protected data: Map<A, Map<B, T>> = new Map();
+  set (a:A, b:B, t:T): void {
+    if (!this.data.has(a)) { this.data.set(a, new Map<B, T>()); }
+    if (this.data.get(a)!.has(b)) { throw Error(`Error setting [${a}][${b}]={$c}; already has value ${this.data.get(a)!.get(b)}`); }
+    this.data.get(a)!.set(b, t);
+  }
+  get (a:A, b:B): T {
+    return this.data.get(a)!.get(b)!;
+  }
+}
 type T2TCErrors = Map<TripleNo, { constraintNo: ConstraintNo, errors: shapeExprTest }>;
-type TC2TResult = (shapeExprTest | undefined)[][];
+type TC2TResult = MapMap<TripleNo, ConstraintNo, (shapeExprTest | undefined)>;
 type T2TCs = number[][];
 type TripleNoList = number[];
 
@@ -805,7 +816,7 @@ export class ShExValidator {
     const outgoing = indexNeighborhood(neighborhood.outgoing);
     const incoming = indexNeighborhood(neighborhood.incoming);
     const all = neighborhood.outgoing.concat(neighborhood.incoming);
-    const init: ByPredicateResult = { misses: new Map(), results: _alist(constraintList.length), constraintList:_alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
+    const init: ByPredicateResult = { misses: new Map(), results: new MapMap(), constraintList:_alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
     return constraintList.reduce<ByPredicateResult>(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
@@ -821,7 +832,7 @@ export class ShExValidator {
       matchConstraints.hits.forEach(function (evidence) {
         const tNo = all.indexOf(evidence.triple);
         ret.constraintList[tNo].push(cNo);
-        ret.results[cNo][tNo] = evidence.sub;
+        ret.results.set(cNo, tNo, evidence.sub);
       });
       matchConstraints.misses.forEach(function (evidence) {
         const tNo = all.indexOf(evidence.triple);
@@ -866,7 +877,7 @@ export class ShExValidator {
     return t2tc.slice().
       reduce<ConstraintToTriples>(function (ret, cNo, tNo) {
         if (cNo !== NoTripleConstraint)
-          ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo] as shapeExprTest});
+          ret[cNo].push({tNo: tNo, res: tripleList.results.get(cNo, tNo) as shapeExprTest});
         return ret;
       }, _seq(constraintList.length).map(() => [])); // [length][]
   }

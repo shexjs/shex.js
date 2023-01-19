@@ -132,6 +132,23 @@ class ShapeExprValidationContext {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
 }
+class MapMap {
+    constructor() {
+        this.data = new Map();
+    }
+    set(a, b, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, new Map());
+        }
+        if (this.data.get(a).has(b)) {
+            throw Error(`Error setting [${a}][${b}]={$c}; already has value ${this.data.get(a).get(b)}`);
+        }
+        this.data.get(a).set(b, t);
+    }
+    get(a, b) {
+        return this.data.get(a).get(b);
+    }
+}
 class TriplesMatching {
     constructor(hits, misses) {
         this.hits = hits;
@@ -634,7 +651,7 @@ class ShExValidator {
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const all = neighborhood.outgoing.concat(neighborhood.incoming);
-        const init = { misses: new Map(), results: _alist(constraintList.length), constraintList: _alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
+        const init = { misses: new Map(), results: new MapMap(), constraintList: _alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
         return constraintList.reduce(function (ret, constraint, cNo) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
@@ -646,7 +663,7 @@ class ShExValidator {
             matchConstraints.hits.forEach(function (evidence) {
                 const tNo = all.indexOf(evidence.triple);
                 ret.constraintList[tNo].push(cNo);
-                ret.results[cNo][tNo] = evidence.sub;
+                ret.results.set(cNo, tNo, evidence.sub);
             });
             matchConstraints.misses.forEach(function (evidence) {
                 const tNo = all.indexOf(evidence.triple);
@@ -688,7 +705,7 @@ class ShExValidator {
         return t2tc.slice().
             reduce(function (ret, cNo, tNo) {
             if (cNo !== eval_validator_api_1.NoTripleConstraint)
-                ret[cNo].push({ tNo: tNo, res: tripleList.results[cNo][tNo] });
+                ret[cNo].push({ tNo: tNo, res: tripleList.results.get(cNo, tNo) });
             return ret;
         }, _seq(constraintList.length).map(() => [])); // [length][]
     }
