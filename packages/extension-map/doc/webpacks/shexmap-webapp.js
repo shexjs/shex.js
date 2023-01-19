@@ -7886,7 +7886,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     const neighborhood = []; // outgoing.triples.concat(incoming.triples); // @@ make fancy array holder.
 
     const constraintList = this.indexTripleConstraints(shape.expression);
-    // const tripleList = constraintList.reduce(function (ret, constraint, ord) {
+    // const tripleList = triple2constraintList.reduce(function (ret, constraint, ord) {
 
     //   // subject and object depend on direction of constraint.
     //   const searchSubject = constraint.inverse ? null : point;
@@ -7915,17 +7915,17 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     //   );
 
     //   matchConstraints.hits.forEach(function (t) {
-    //     ret.constraintList[neighborhood.indexOf(t)].push(ord);
+    //     ret.triple2constraintList[neighborhood.indexOf(t)].push(ord);
     //   });
     //   matchConstraints.misses.forEach(function (t) {
     //     ret.misses[neighborhood.indexOf(t.triple)] = {constraintNo: ord, errors: t.errors};
     //   });
     //   return ret;
-    // }, { misses: {}, constraintList:_seq(neighborhood.length).map(function () { return []; }) }); // start with [[],[]...]
+    // }, { misses: {}, triple2constraintList:_seq(neighborhood.length).map(function () { return []; }) }); // start with [[],[]...]
 
-    // _log("constraints by triple: ", JSON.stringify(tripleList.constraintList));
+    // _log("constraints by triple: ", JSON.stringify(tripleList.triple2constraintList));
 
-    // const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+    // const misses = tripleList.triple2constraintList.reduce(function (ret, constraints, ord) {
     //   if (constraints.length === 0 &&                       // matches no constraints
     //       ord < outgoing.triples.length &&                  // not an incoming triple
     //       ord in tripleList.misses &&                       // predicate matched some constraint(s)
@@ -7936,7 +7936,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
     //   return ret;
     // }, []);
 
-    // const xp = crossProduct(tripleList.constraintList);
+    // const xp = crossProduct(tripleList.triple2constraintList);
     const partitionErrors = [];
     // while (misses.length === 0 && xp.next() && ret === null) {
     //   // caution: early continues
@@ -7976,7 +7976,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       // // Pivot to triples by constraint.
       // function _constraintToTriples () {
-      //   const cll = constraintList.length;
+      //   const cll = triple2constraintList.length;
       //   return tripleToConstraintMapping.slice().
       //     reduce(function (ret, c, ord) {
       //       if (c !== undefined)
@@ -8000,7 +8000,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       }
       const results = regexEngine.match(db, point, constraintList, _synthesize, /*_constraintToTriples(), tripleToConstraintMapping, */ neighborhood, _recurse, _direct, this.semActHandler, _testExpr, null);
       function _synthesize (constraintNo, min, max, neighborhood) {
-        // console.log({"constraintNo": constraintNo, "min": min, "max": max, "constraintList": constraintList, "db": db, "point": point, "regexEngine": regexEngine, "shape": shape, "shapeLabel": shapeLabel, "depth": depth, "seen": seen});
+        // console.log({"constraintNo": constraintNo, "min": min, "max": max, "triple2constraintList": triple2constraintList, "db": db, "point": point, "regexEngine": regexEngine, "shape": shape, "shapeLabel": shapeLabel, "depth": depth, "seen": seen});
         const tc = constraintList[constraintNo];
         const curSubjectx = {cs: point};
         const target = new config.rdfjs.Store();
@@ -8062,7 +8062,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
 
       // {// testing parity between two engines
       //   const nfa = require("@shexjs/eval-simple-1err").compile(schema, shape);
-      //   const fromNFA = nfa.match(db, point, constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
+      //   const fromNFA = nfa.match(db, point, triple2constraintList, _constraintToTriples(), tripleToConstraintMapping, neighborhood, _recurse, this.semActHandler, _testExpr, null);
       //   if ("errors" in fromNFA !== "errors" in results)
       //     { throw Error(JSON.stringify(results) + " vs " + JSON.stringify(fromNFA)); }
       // }
@@ -8103,7 +8103,7 @@ function ShExMaterializer_constructor(schema, mapper, options) {
       //   return {
       //     type: "TypeMismatch",
       //     triple: {subject: t.subject, predicate: t.predicate, object: rdfJsTerm2Ld(t.object)},
-      //     constraint: constraintList[miss.constraintNo],
+      //     constraint: triple2constraintList[miss.constraintNo],
       //     errors: miss.errors
       //   };
       // });
@@ -15730,8 +15730,8 @@ class ShExValidator {
         return this.addShapeAttributes(shape, ret);
     }
     /*
-      function DBG_matchValues (fromDB, constraintList) {
-        const expectedValues = constraintList.map(
+      function DBG_matchValues (fromDB, triple2constraintList) {
+        const expectedValues = triple2constraintList.map(
           tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
         );
         const tripleValues = fromDB.outgoing.map(
@@ -15742,8 +15742,8 @@ class ShExValidator {
         );
       }
     
-      function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList) {
-        const solution = DBG_matchValues (fromDB, constraintList);
+      function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, triple2constraintList) {
+        const solution = DBG_matchValues (fromDB, triple2constraintList);
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
@@ -15956,7 +15956,7 @@ class ShExValidator {
         // Synthesize a TripleConstraint with the implicit cardinality.
         visitor.visitTripleConstraint = function (expr, _outerMin, _outerMax) {
             return [expr];
-            /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
+            /* eval-threaded-n-err counts on triple2constraintList.indexOf(expr) so we can't optimize with:
                const ret = JSON.parse(JSON.stringify(expr));
                ret.min = n(outerMin, expr);
                ret.max = x(outerMax, expr);
@@ -16172,7 +16172,7 @@ class TripleToTripleConstraints {
     next() {
         while (this.crossProduct.next()) {
             /* t2tc - array mapping neighborhood index to TripleConstraint
-             * CrossProduct counts through constraintList from the right:
+             * CrossProduct counts through triple2constraintList from the right:
              *   [ 0, 0, 0, 1 ] # first call
              *   [ 0, 0, 0, 3 ] # second call
              *   [ 0, 0, 2, 1 ] # third call
@@ -16181,7 +16181,7 @@ class TripleToTripleConstraints {
              *   [ 0, 2, 0, 1 ] # sixth call...
              */
             const t2tc = this.crossProduct.get(); // [0,1,0,3] mapping from triple to constraint
-            // if (DBG_gonnaMatch (t2tc, fromDB, constraintList)) debugger;
+            // if (DBG_gonnaMatch (t2tc, fromDB, triple2constraintList)) debugger;
             /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
                Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
                t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]

@@ -509,11 +509,11 @@ class ShExValidator {
         const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
         const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
-        const constraintList = extendsTCs.concat(localTCs);
+        const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const tripleList = this.matchByPredicate(constraintList, fromDB, ctx);
-        const { missErrors, matchedExtras } = this.whatsMissing(tripleList, constraintList, neighborhood, shape.extra || []);
-        const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
+        const tripleList = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        const { missErrors, matchedExtras } = this.whatsMissing(tripleList, tripleConstraints, neighborhood, shape.extra || []);
+        const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
         const regexEngine = this.regexModule.compile(this.schema, shape, this.index);
         for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
@@ -563,10 +563,10 @@ class ShExValidator {
                     ++constraintMatchCount[tpNumber];
                 }
             });
-            const tc2t = this._constraintToTriples(localT2Tc, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
+            const tc2t = this._constraintToTriples(localT2Tc, tripleConstraints, tripleList); // e.g. [[t0, t2], [t1, t3]]
             let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
-                const sub = regexEngine.match(this.db, point, constraintList, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
+                const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
                 if (!("errors" in sub) && results) {
                     // @ts-ignore
                     results = { type: "ExtendedResults", extensions: results };
@@ -623,8 +623,8 @@ class ShExValidator {
         return this.addShapeAttributes(shape, ret);
     }
     /*
-      function DBG_matchValues (fromDB, constraintList) {
-        const expectedValues = constraintList.map(
+      function DBG_matchValues (fromDB, triple2constraintList) {
+        const expectedValues = triple2constraintList.map(
           tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
         );
         const tripleValues = fromDB.outgoing.map(
@@ -635,8 +635,8 @@ class ShExValidator {
         );
       }
     
-      function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList) {
-        const solution = DBG_matchValues (fromDB, constraintList);
+      function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, triple2constraintList) {
+        const solution = DBG_matchValues (fromDB, triple2constraintList);
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
@@ -651,7 +651,7 @@ class ShExValidator {
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const all = neighborhood.outgoing.concat(neighborhood.incoming);
-        const init = { misses: new Map(), results: new MapMap(), constraintList: _alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
+        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: _alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
         return constraintList.reduce(function (ret, constraint, cNo) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
@@ -662,7 +662,7 @@ class ShExValidator {
             const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
                 const tNo = all.indexOf(evidence.triple);
-                ret.constraintList[tNo].push(cNo);
+                ret.triple2constraintList[tNo].push(cNo);
                 ret.results.set(cNo, tNo, evidence.sub);
             });
             matchConstraints.misses.forEach(function (evidence) {
@@ -674,7 +674,7 @@ class ShExValidator {
     }
     whatsMissing(tripleList, constraintList, neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
-        const missErrors = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+        const missErrors = tripleList.triple2constraintList.reduce(function (ret, constraints, ord) {
             if (constraints.length === 0 && // matches no constraints
                 tripleList.misses.has(ord)) { // predicate matched some constraint(s)
                 const t = neighborhood[ord];
@@ -851,7 +851,7 @@ class ShExValidator {
         // Synthesize a TripleConstraint with the implicit cardinality.
         visitor.visitTripleConstraint = function (expr, _outerMin, _outerMax) {
             return [expr];
-            /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
+            /* eval-threaded-n-err counts on triple2constraintList.indexOf(expr) so we can't optimize with:
                const ret = JSON.parse(JSON.stringify(expr));
                ret.min = n(outerMin, expr);
                ret.max = x(outerMax, expr);
@@ -1067,7 +1067,7 @@ class TripleToTripleConstraints {
     next() {
         while (this.crossProduct.next()) {
             /* t2tc - array mapping neighborhood index to TripleConstraint
-             * CrossProduct counts through constraintList from the right:
+             * CrossProduct counts through triple2constraintList from the right:
              *   [ 0, 0, 0, 1 ] # first call
              *   [ 0, 0, 0, 3 ] # second call
              *   [ 0, 0, 2, 1 ] # third call
@@ -1076,7 +1076,7 @@ class TripleToTripleConstraints {
              *   [ 0, 2, 0, 1 ] # sixth call...
              */
             const t2tc = this.crossProduct.get(); // [0,1,0,3] mapping from triple to constraint
-            // if (DBG_gonnaMatch (t2tc, fromDB, constraintList)) debugger;
+            // if (DBG_gonnaMatch (t2tc, fromDB, triple2constraintList)) debugger;
             /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
                Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
                t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]

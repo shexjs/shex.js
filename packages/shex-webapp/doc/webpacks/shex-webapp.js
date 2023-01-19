@@ -11848,8 +11848,8 @@ class ShExValidator {
         return this.addShapeAttributes(shape, ret);
     }
     /*
-      function DBG_matchValues (fromDB, constraintList) {
-        const expectedValues = constraintList.map(
+      function DBG_matchValues (fromDB, triple2constraintList) {
+        const expectedValues = triple2constraintList.map(
           tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
         );
         const tripleValues = fromDB.outgoing.map(
@@ -11860,8 +11860,8 @@ class ShExValidator {
         );
       }
     
-      function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList) {
-        const solution = DBG_matchValues (fromDB, constraintList);
+      function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, triple2constraintList) {
+        const solution = DBG_matchValues (fromDB, triple2constraintList);
         return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
       }
     */
@@ -12074,7 +12074,7 @@ class ShExValidator {
         // Synthesize a TripleConstraint with the implicit cardinality.
         visitor.visitTripleConstraint = function (expr, _outerMin, _outerMax) {
             return [expr];
-            /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
+            /* eval-threaded-n-err counts on triple2constraintList.indexOf(expr) so we can't optimize with:
                const ret = JSON.parse(JSON.stringify(expr));
                ret.min = n(outerMin, expr);
                ret.max = x(outerMax, expr);
@@ -12290,7 +12290,7 @@ class TripleToTripleConstraints {
     next() {
         while (this.crossProduct.next()) {
             /* t2tc - array mapping neighborhood index to TripleConstraint
-             * CrossProduct counts through constraintList from the right:
+             * CrossProduct counts through triple2constraintList from the right:
              *   [ 0, 0, 0, 1 ] # first call
              *   [ 0, 0, 0, 3 ] # second call
              *   [ 0, 0, 2, 1 ] # third call
@@ -12299,7 +12299,7 @@ class TripleToTripleConstraints {
              *   [ 0, 2, 0, 1 ] # sixth call...
              */
             const t2tc = this.crossProduct.get(); // [0,1,0,3] mapping from triple to constraint
-            // if (DBG_gonnaMatch (t2tc, fromDB, constraintList)) debugger;
+            // if (DBG_gonnaMatch (t2tc, fromDB, triple2constraintList)) debugger;
             /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
                Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
                t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
