@@ -1,7 +1,7 @@
 /**
  * Terms used in ShEx.
  *
- * There are three representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * There are three representations of RDF terms used in ShEx NamedNode validation and applications:
  * 1. LD (short for JSON-LD) @ids used in ShExJ.
  *   "http://a.example/some/Iri
  *   "_:someBlankNode

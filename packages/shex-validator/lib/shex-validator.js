@@ -490,13 +490,12 @@ class ShExValidator {
                 }; // some semAct aborted !! return a better error
         }
         const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
-        const outgoingLength = fromDB.outgoing.length;
         const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const constraintList = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, ctx);
-        const { misses, extras } = this.whatsMissing(tripleList, neighborhood, shape.extra || []);
+        const tripleList = this.matchByPredicate(constraintList, fromDB, ctx);
+        const { missErrors, matchedExtras } = this.whatsMissing(tripleList, constraintList, neighborhood, shape.extra || []);
         const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
         const regexEngine = this.regexModule.compile(this.schema, shape, this.index);
@@ -517,8 +516,8 @@ class ShExValidator {
                     // allocate to local shape
                     localT2Tc[tNo] = cNo;
                     if (cNo === eval_validator_api_1.NoTripleConstraint // didn't match anything
-                        && tNo < outgoingLength // is an outgoing triple
-                        && extras.indexOf(tNo) === -1) // isn't in EXTRAs
+                        && tNo < fromDB.outgoing.length // is an outgoing triple
+                        && matchedExtras.indexOf(tNo) === -1) // isn't in EXTRAs
                         unexpectedOrds.push(tNo);
                 }
             });
@@ -586,15 +585,16 @@ class ShExValidator {
                 ret = possibleRet;
         }
         // end of while(xp.next())
-        const missErrors = misses.map(function (miss) {
-            const t = neighborhood[miss.tripleNo];
-            return {
-                type: "TypeMismatch",
-                triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
-                constraint: constraintList[miss.constraintNo],
-                errors: miss.errors
-            };
-        });
+        // const missErrors = misses.map(function (miss) {
+        //   const t = neighborhood[miss.tripleNo];
+        //   // @ts-ignore
+        //   return {
+        //     type: "TypeMismatch",
+        //     triple: {type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)},
+        //     constraint: constraintList[miss.constraintNo],
+        //     errors: miss.errors
+        //   };
+        // });
         // Report only last errors until we have a better idea.
         const lastErrors = partitionErrors[partitionErrors.length - 1];
         // @ts-ignore
@@ -637,14 +637,14 @@ class ShExValidator {
      * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
      * @param constraintList - list of TripleConstraint
      * @param neighborhood - list of Quad
-     * @param outgoingLength - first n of neighborhood are outgoing triples
      * @param ctx - evaluation context
      */
-    matchByPredicate(constraintList, neighborhood, outgoingLength, ctx) {
+    matchByPredicate(constraintList, neighborhood, ctx) {
         const _ShExValidator = this;
-        const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
-        const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
-        const init = { misses: {}, results: _alist(constraintList.length), constraintList: _alist(neighborhood.length) };
+        const outgoing = indexNeighborhood(neighborhood.outgoing);
+        const incoming = indexNeighborhood(neighborhood.incoming);
+        const all = neighborhood.outgoing.concat(neighborhood.incoming);
+        const init = { misses: {}, results: _alist(constraintList.length), constraintList: _alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
         return constraintList.reduce(function (ret, constraint, cNo) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
@@ -654,36 +654,38 @@ class ShExValidator {
             // strip to triples matching value constraints (apart from @<someShape>)
             const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
-                const tNo = neighborhood.indexOf(evidence.triple);
+                const tNo = all.indexOf(evidence.triple);
                 ret.constraintList[tNo].push(cNo);
                 ret.results[cNo][tNo] = evidence.sub;
             });
             matchConstraints.misses.forEach(function (evidence) {
-                const tNo = neighborhood.indexOf(evidence.triple);
+                const tNo = all.indexOf(evidence.triple);
                 ret.misses[tNo] = { constraintNo: cNo, errors: evidence.sub };
             });
             return ret;
         }, init);
     }
-    whatsMissing(tripleList, neighborhood, extras) {
+    whatsMissing(tripleList, constraintList, neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
-        const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+        const missErrors = tripleList.constraintList.reduce(function (ret, constraints, ord) {
             if (constraints.length === 0 && // matches no constraints
                 ord in tripleList.misses) { // predicate matched some constraint(s)
-                if (extras.indexOf(neighborhood[ord].predicate.value) !== -1) {
+                const t = neighborhood[ord];
+                if (extras.indexOf(t.predicate.value) !== -1) {
                     matchedExtras.push(ord);
                 }
                 else { // not declared extra
                     ret.push({
-                        tripleNo: ord,
-                        constraintNo: tripleList.misses[ord].constraintNo,
+                        type: "TypeMismatch",
+                        triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
+                        constraint: constraintList[tripleList.misses[ord].constraintNo],
                         errors: tripleList.misses[ord].errors
                     });
                 }
             }
             return ret;
         }, []);
-        return { misses, extras: matchedExtras };
+        return { missErrors, matchedExtras };
     }
     addShapeAttributes(shape, ret) {
         if (shape.annotations !== undefined) { // @ts-ignore
