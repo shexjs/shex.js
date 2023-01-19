@@ -1,7 +1,6 @@
 import * as ShExJ from 'shexj';
 import * as RdfJs from '@rdfjs/types/data-model';
-import {shapeExprTest, Recursion} from "@shexjs/term/shexv";
-import {SemActFailure} from "@shexjs/term/shexv";
+import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/src/shexv";
 import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {SchemaIndex} from "@shexjs/term";
 

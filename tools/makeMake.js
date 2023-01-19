@@ -26,7 +26,7 @@ const allTargets = Object.keys(pkgInfo)
     const info = pkgInfo[pkg]
     if (info.tsConfig === null)
       return allTargets
-    const deps = Object.keys(info.pkg.dependencies)
+    const deps = Object.keys(info.pkg.dependencies || [])
       .filter(dep => dep in pkgInfo && pkgInfo[dep].tsConfig !== null)
       .map(
         dep => getSourceOrTargetFilePaths(pkgInfo[dep], pkgInfo[dep].tsConfig.compilerOptions.outDir, '.js')

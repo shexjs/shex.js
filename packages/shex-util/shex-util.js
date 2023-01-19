@@ -1348,14 +1348,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = ShExTerm.shExJsTerm2Ld(elt[k]);
+          crushed[k] = elt[k];
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(ShExTerm.shExJsTerm2Ld(obj[k][lookfor])));
+            list.push(crush(obj[k][lookfor]));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))

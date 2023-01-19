@@ -1,0 +1,306 @@
+/**
+ * Terms used in ShEx.
+ *
+ * There are four representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * 1. LD (short for JSON-LD) @ids used in ShExJ.
+ *   "http://a.example/some/Iri
+ *   "_:someBlankNode
+ *   { "value": "1.0", "datatype": "http://www.w3.org/2001/XMLSchema#float" }
+ *   { "value": "chat", "language": "fr" }
+ * 2. RdfJs Terms [RdfJsTerm] specification used in validation
+ *   { "termType": "NamedNode": "value": "http://a.example/some/Iri" }
+ *   { "termType": "BlankNode": "value": "someBlankNode" }
+ *   { "termType": "Literal": "value": "1.0", "datatype": "http://www.w3.org/2001/XMLSchema#float" }
+ *   { "termType": "Literal": "value": "chat", "language": "fr" }
+ * 3. Turtle representation is used for human interfaces
+ *   <http://a.example/some/Iri>, p:IRI, p:, :
+ *   _:someBlankNode, []
+ *   "1.0"^^<http://www.w3.org/2001/XMLSchema#float>, "1.0"^^xsd:float, 1.0
+ *   "chat"@fr
+ * 4. N3id - webapps and scripts that rely specifically on N3.js leverage the
+ *    fact that term.id is Turtle for all terms except typed literals which lack
+ *    <>s around data types:
+ *   "1.0"^^http://www.w3.org/2001/XMLSchema#float
+ *
+ * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
+ */
+
+/*
+    RdfLangString,
+    XsdString,
+    Terminals,
+    rdfJsTerm2Turtle,
+    shExJsTerm2Turtle,
+    shExJsTerm2Ld,
+    ld2RdfJsTerm,
+    rdfJsTerm2Ld,
+    n3idQuad2RdfJs,
+    n3idTerm2RdfJs,
+    iri2Turtle,
+*/
+
+import * as ShExJ from 'shexj';
+import {Term as RdfJsTerm, NamedNode as RdfJsIri} from 'rdf-js';
+const RelativizeIri = require("relativize-url").relativize;
+// import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
+import {Quad, BlankNode, Literal, NamedNode} from 'rdf-js';
+import {DataFactory} from 'rdf-data-factory';
+const RdfJsFactory = new DataFactory();
+import {ObjectLiteral, objectValue} from "shexj";
+
+export {};
+
+export interface SchemaIndex {
+    shapeExprs: { [id: string]: ShExJ.ShapeDecl };
+    tripleExprs: { [id: string]: ShExJ.tripleExpr };
+    labelToTcs: { [id: string]: ShExJ.TripleConstraint[] }
+}
+
+export interface InternalSchema extends ShExJ.Schema {
+  _index?: SchemaIndex
+}
+
+export interface ShapeMapEntry {
+    node: string;
+    shape: string;
+}
+
+export type ShapeMap = ShapeMapEntry[];
+
+export type LdTerm = string | ObjectLiteral; // TODO: delme
+
+interface PrefixMap {
+  [id: string]: string;
+}
+
+export interface Meta {
+  base: string;
+  prefixes: PrefixMap;
+}
+
+export const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
+export const XsdString = "http://www.w3.org/2001/XMLSchema#string";
+
+const PN_CHARS_BASE = "A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}"; // escape anything outside BMP: \u{10000}-\u{EFFFF}
+const PN_CHARS_U = PN_CHARS_BASE + "_";
+const PN_CHARS_WO_HYPHEN = PN_CHARS_U + "0-9\u{B7}\u{300}-\u{36F}\u{203F}-\u{2040}";
+const PN_PREFIX = [PN_CHARS_BASE, PN_CHARS_WO_HYPHEN + '.-', PN_CHARS_WO_HYPHEN + '-'];
+const PN_LOCAL = [
+  PN_CHARS_U + ":0-9",
+  PN_CHARS_WO_HYPHEN + ".:-",
+  PN_CHARS_WO_HYPHEN + ":-"
+];
+export const Terminals: {
+  [key: string]: {
+    [key: string]: string | string[]
+  }
+} = {
+  Turtle: {
+    PN_CHARS_BASE,
+    PN_CHARS_U,
+    PN_CHARS_WO_HYPHEN,
+    PN_PREFIX,
+    PN_LOCAL,
+  }
+};
+
+export function rdfJsTerm2Turtle (node: RdfJsTerm, meta?: Meta): string {
+  switch (node.termType) {
+  case ("NamedNode"):
+    return iri2Turtle(node.value, meta);
+  case ("BlankNode"):
+    return "_:" + node.value;
+  case ("Literal"):
+    return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
+      node.datatype.value === RdfLangString
+        ? "@" + node.language
+        : node.datatype.value === XsdString
+        ? ""
+        : "^^" + node.datatype.value
+    );
+  default: throw Error(`rdfJsTerm2Turtle: unknown RDFJS node type: ${JSON.stringify(node)}`)
+  }
+}
+
+export function shExJsTerm2Turtle (node: any, meta: Meta = {base: "", prefixes: {}}, aForType?: boolean): any {
+  const {base: string, prefixes: PrefixMap = {}} = meta;
+  if (typeof node === "string") {
+    if (node.startsWith("_:")) {
+      return node;
+    } else {
+      return iri2Turtle(node, meta, aForType);
+    }
+  } else if (node.termType === "Literal") {
+    let value = node.value;
+    const type = node.datatype.value;
+    const language = node.language;
+    // Escape special characters
+    if (escape.test(value))
+      value = value.replace(escapeAll, characterReplacer);
+    // Write the literal, possibly with type or language
+    if (language)
+      return '"' + value + '"@' + language;
+    else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
+      return '"' + value + '"^^' + iri2Turtle(type, meta, false);
+    else
+      return '"' + value + '"';
+  } else {
+    throw Error("Unknown internal term type: " + JSON.stringify(node));
+  }
+}
+
+// Characters in literals that require escaping
+const escape = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/;
+const escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g;
+const escapeReplacements: {
+  [key: string]: string
+} = {
+  '\\': '\\\\', '"': '\\"', '\t': '\\t',
+  '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f',
+};
+
+  // Replaces a character by its escaped version
+function characterReplacer (character: string): string {
+  // Replace a single character by its escaped version
+  let result = escapeReplacements[character]; // @@ const should be let
+  if (result === undefined) {
+    // Replace a single character with its 4-bit unicode escape sequence
+    if (character.length === 1) {
+      result = character.charCodeAt(0).toString(16);
+      result = '\\u0000'.substr(0, 6 - result.length) + result;
+    }
+    // Replace a surrogate pair with its 8-bit unicode escape sequence
+    else {
+      result = ((character.charCodeAt(0) - 0xD800) * 0x400 +
+                character.charCodeAt(1) + 0x2400).toString(16);
+      result = '\\U00000000'.substr(0, 10 - result.length) + result;
+    }
+  }
+  return result;
+}
+
+export function ld2RdfJsTerm (ld: objectValue): RdfJsTerm {
+  switch (typeof ld) {
+  case 'object':
+    const copy = JSON.parse(JSON.stringify(ld));
+    if (!copy.value)
+      throw Error(`JSON-LD-style object literal has no value: ${JSON.stringify(ld)}`)
+    const value = copy.value;
+    delete copy.value;
+    if (copy.language)
+      return RdfJsFactory.literal(value, copy.language);
+    if (copy.type)
+      return RdfJsFactory.literal(value, RdfJsFactory.namedNode(copy.type));
+    if (Object.keys(copy).length > 0)
+      throw Error(`Unrecognized attributes inn JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`)
+    return RdfJsFactory.literal(value);
+
+  case 'string':
+    return ld.startsWith('_:')
+      ? RdfJsFactory.blankNode(ld.substr(2))
+      : RdfJsFactory.namedNode(ld);
+
+  default: throw Error(`Unrecognized JSON-LD-style term: ${JSON.stringify(ld)}`)
+  }
+}
+
+export function rdfJsTerm2Ld (term: RdfJsTerm): objectValue {
+  switch (term.termType) {
+  case "NamedNode": return term.value;
+  case "BlankNode": return "_:" + term.value;
+  case "Literal":
+    const ret: ObjectLiteral = { value: term.value };
+    const dt = term.datatype.value;
+    const lang = term.language;
+    if (dt &&
+        dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+        dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+      ret.type = dt;
+    if (lang)
+      ret.language = lang;
+    return ret;
+  default:
+    throw Error(`Unrecognized termType ${term.termType} ${term.value}`);
+  }
+}
+
+/** N3id functions
+ * Some tests and algorithms use n3.js ids as syntax for input graphs in tests.
+ *   NamedNode: bare word, e.g. http://a.example/
+ *   BlankNode: "_:" + label, e.g. _:b1
+ *   Literal: quoted value plus ntriples lang or datatype, e.g:
+ *     "I said \"Hello World\"."
+ *     "I said \"Hello World\"."@en
+ *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
+ */
+
+/**
+ * Map an N3id quad to an RdfJs quad
+ * @param {*} s subject
+ * @param {*} p predicate
+ * @param {*} o object
+ * @param {*} g graph
+ * @returns RdfJs quad
+ */
+export function n3idQuad2RdfJs (s: string, p: string, o: string, g: string) : Quad {
+  const graph = g ? n3idTerm2RdfJs(g) : RdfJsFactory.defaultGraph();
+  return RdfJsFactory.quad(
+      // there probably some elegant way to do this without lots of casting
+    n3idTerm2RdfJs(s) as NamedNode | BlankNode,
+    n3idTerm2RdfJs(p) as NamedNode,
+    n3idTerm2RdfJs(o) as NamedNode | BlankNode | Literal,
+    graph as NamedNode | BlankNode,
+  );
+}
+
+/**
+ * Map an N3id term to an RdfJs Term.
+ * @param {*} term N3Id term
+ * @returns RdfJs Term
+ */
+export function n3idTerm2RdfJs (term: string): RdfJsTerm {
+  if (term[0] === "_" && term[1] === ":")
+    return RdfJsFactory.blankNode(term.substr(2));
+
+  if (term[0] === "\"" || term[0] === "'") {
+    const closeQuote = term.lastIndexOf(term[0]);
+    if (closeQuote === -1)
+      throw new Error(`no close ${term[0]}: ${term}`);
+    const value = term.substr(1, closeQuote - 1).replace(/\\"/g, '"');
+    const langOrDt = term.length === closeQuote + 1
+      ? undefined
+      : term[closeQuote + 1] === "@"
+      ? term.substr(closeQuote + 2)
+      : parseDt(closeQuote + 1)
+    return RdfJsFactory.literal(value, langOrDt);
+  }
+
+  return RdfJsFactory.namedNode(term);
+
+  function parseDt (from: number): NamedNode {
+    if (term[from] !== "^" || term[from + 1] !== "^")
+      throw new Error(`garbage after closing \": ${term}`);
+    return RdfJsFactory.namedNode(term.substr(from + 2));
+  }
+}
+
+function iri2Turtle (iri: string, meta: Meta = { base: "", prefixes: {}}, aForType: boolean = true) {
+  const {base, prefixes = {}} = meta;
+  if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    return "a";
+
+  const rel = "<" + (base.length > 0 ? RelativizeIri(iri, base) : iri) + ">";
+  for (const prefix in prefixes) {
+    const ns = prefixes[prefix];
+    if (iri.startsWith(ns)) {
+      const localName = iri.substr(ns.length);
+      const first = localName.slice(0, 1).replaceAll(new RegExp("[^" + Terminals.Turtle.PN_LOCAL[0] + "]", "g"), s => '\\' + s);
+      const middle = localName.slice(1, localName.length - 1).replaceAll(new RegExp("[^" + Terminals.Turtle.PN_LOCAL[1] + "]", "g"), s => '\\' + s);
+      const last = localName.length > 1 ? localName.slice(localName.length - 1).replaceAll(new RegExp("[^" + Terminals.Turtle.PN_LOCAL[2] + "]", "g"), s => '\\' + s) : '';
+      const pName = prefix + ':' + first + middle + last;
+      if (pName.length < rel.length)
+        return pName;
+    }
+  }
+  return rel;
+}

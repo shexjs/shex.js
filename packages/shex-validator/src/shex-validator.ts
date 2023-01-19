@@ -30,7 +30,7 @@ import {
   ShapeNotResults,
   ShapeTest,
   SolutionList,
-} from "@shexjs/term/shexv";
+} from "@shexjs/term/src/shexv";
 import * as ShExJ from "shexj";
 import {
   EachOf,

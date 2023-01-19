@@ -15,7 +15,8 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./shex-term.js",
+  "main": "./lib/shex-term.js",
+  "types": "./src/shex-term.ts",
   "engines": {
     "node": ">=0.10.0"
   },
