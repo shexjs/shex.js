@@ -228,7 +228,7 @@ type ByPredicateResult = {
   results: TC2TResult; // for each TC, for each passing T, what was the result
   constraintList: T2TCs; // for each T, which constraints does it match
 };
-type T2TCErrors = { [index: TripleNo]: { constraintNo: ConstraintNo, errors: shapeExprTest } };
+type T2TCErrors = Map<TripleNo, { constraintNo: ConstraintNo, errors: shapeExprTest }>;
 type TC2TResult = (shapeExprTest | undefined)[][];
 type T2TCs = number[][];
 type TripleNoList = number[];
@@ -805,7 +805,7 @@ export class ShExValidator {
     const outgoing = indexNeighborhood(neighborhood.outgoing);
     const incoming = indexNeighborhood(neighborhood.incoming);
     const all = neighborhood.outgoing.concat(neighborhood.incoming);
-    const init: ByPredicateResult = { misses: {}, results: _alist(constraintList.length), constraintList:_alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
+    const init: ByPredicateResult = { misses: new Map(), results: _alist(constraintList.length), constraintList:_alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
     return constraintList.reduce<ByPredicateResult>(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
@@ -825,7 +825,7 @@ export class ShExValidator {
       });
       matchConstraints.misses.forEach(function (evidence) {
         const tNo = all.indexOf(evidence.triple);
-        ret.misses[tNo] = {constraintNo: cNo, errors: evidence.sub};
+        ret.misses.set(tNo, {constraintNo: cNo, errors: evidence.sub});
       });
       return ret;
     }, init);
@@ -835,7 +835,7 @@ export class ShExValidator {
     const matchedExtras: TripleNo[] = []; // triples accounted for by EXTRA
     const missErrors = tripleList.constraintList.reduce<error[]>(function (ret, constraints, ord) {
       if (constraints.length === 0 &&   // matches no constraints
-          ord in tripleList.misses) {   // predicate matched some constraint(s)
+          tripleList.misses.has(ord)) {   // predicate matched some constraint(s)
         const t = neighborhood[ord];
         if (extras.indexOf(t.predicate.value) !== -1) {
           matchedExtras.push(ord);
@@ -843,8 +843,8 @@ export class ShExValidator {
           ret.push({             // so it's a missing triple.
             type: "TypeMismatch",
             triple: {type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)},
-            constraint: constraintList[tripleList.misses[ord].constraintNo],
-            errors: tripleList.misses[ord].errors
+            constraint: constraintList[tripleList.misses.get(ord)!.constraintNo],
+            errors: tripleList.misses.get(ord)!.errors
           });
         }
       }
