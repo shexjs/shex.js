@@ -141,13 +141,36 @@ class MapMap {
             this.data.set(a, new Map());
         }
         if (this.data.get(a).has(b)) {
-            throw Error(`Error setting [${a}][${b}]={$c}; already has value ${this.data.get(a).get(b)}`);
+            throw Error(`Error setting [${a}][${b}]=${t}; already has value ${this.data.get(a).get(b)}`);
         }
         this.data.get(a).set(b, t);
     }
     get(a, b) {
         return this.data.get(a).get(b);
     }
+}
+class MapArray {
+    constructor() {
+        this.data = new Map(); // public 'cause i don't know how to fix reduce to use this.data
+        this.reduce = (f, acc) => {
+            const keys = [...this.data.keys()];
+            for (let ord = 0; ord < keys.length; ++ord)
+                acc = f(acc, this.data.get(keys[ord]), ord);
+            return acc;
+        };
+    }
+    add(a, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, []);
+        }
+        if (this.data.get(a).indexOf(t) !== -1) {
+            throw Error(`Error adding [${a}] ${t}; already included`);
+        }
+        this.data.get(a).push(t);
+    }
+    get length() { return this.data.size; }
+    get keys() { return this.data.keys(); }
+    get(key) { return this.data.get(key); }
 }
 class TriplesMatching {
     constructor(hits, misses) {
@@ -651,7 +674,9 @@ class ShExValidator {
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const all = neighborhood.outgoing.concat(neighborhood.incoming);
-        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: _alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
+        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: new MapArray() };
+        for (let tNo = 0; tNo < all.length; ++tNo) // !!@@ horrible hack to set NoTripleConstraint values in permutations
+            init.triple2constraintList.data.set(tNo, []);
         return constraintList.reduce(function (ret, constraint, cNo) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
@@ -662,7 +687,7 @@ class ShExValidator {
             const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
                 const tNo = all.indexOf(evidence.triple);
-                ret.triple2constraintList[tNo].push(cNo);
+                ret.triple2constraintList.add(tNo, cNo);
                 ret.results.set(cNo, tNo, evidence.sub);
             });
             matchConstraints.misses.forEach(function (evidence) {
@@ -674,7 +699,7 @@ class ShExValidator {
     }
     whatsMissing(tripleList, constraintList, neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
-        const missErrors = tripleList.triple2constraintList.reduce(function (ret, constraints, ord) {
+        const missErrors = tripleList.triple2constraintList.reduce((ret, constraints, ord) => {
             if (constraints.length === 0 && // matches no constraints
                 tripleList.misses.has(ord)) { // predicate matched some constraint(s)
                 const t = neighborhood[ord];
@@ -1099,12 +1124,13 @@ class TripleToTripleConstraints {
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function CrossProduct(sets, emptyValue) {
     const n = sets.length, carets = [];
+    const keys = [...sets.keys];
     let args = null;
     function init() {
         args = [];
         for (let i = 0; i < n; i++) {
             carets[i] = 0;
-            args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
+            args[i] = sets.get(keys[i]).length > 0 ? sets.get(keys[i])[0] : emptyValue;
         }
     }
     function next() {
@@ -1117,19 +1143,19 @@ function CrossProduct(sets, emptyValue) {
         }
         let i = n - 1;
         carets[i]++;
-        if (carets[i] < sets[i].length) {
-            args[i] = sets[i][carets[i]];
+        if (carets[i] < sets.get(keys[i]).length) {
+            args[i] = sets.get(keys[i])[carets[i]];
             return true;
         }
-        while (carets[i] >= sets[i].length) {
+        while (carets[i] >= sets.get(keys[i]).length) {
             if (i === 0) {
                 return false;
             }
             carets[i] = 0;
-            args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
+            args[i] = sets.get(keys[i]).length > 0 ? sets.get(keys[i])[0] : emptyValue;
             carets[--i]++;
         }
-        args[i] = sets[i][carets[i]];
+        args[i] = sets.get(keys[i])[carets[i]];
         return true;
     }
     return {

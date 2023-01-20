@@ -232,16 +232,39 @@ class MapMap<A, B, T> {
   protected data: Map<A, Map<B, T>> = new Map();
   set (a:A, b:B, t:T): void {
     if (!this.data.has(a)) { this.data.set(a, new Map<B, T>()); }
-    if (this.data.get(a)!.has(b)) { throw Error(`Error setting [${a}][${b}]={$c}; already has value ${this.data.get(a)!.get(b)}`); }
+    if (this.data.get(a)!.has(b)) { throw Error(`Error setting [${a}][${b}]=${t}; already has value ${this.data.get(a)!.get(b)}`); }
     this.data.get(a)!.set(b, t);
   }
   get (a:A, b:B): T {
     return this.data.get(a)!.get(b)!;
   }
 }
+
+class MapArray<A, T> {
+  public data: Map<A, T[]> = new Map(); // public 'cause i don't know how to fix reduce to use this.data
+  add (a:A, t:T): void {
+    if (!this.data.has(a)) { this.data.set(a, []); }
+    if (this.data.get(a)!.indexOf(t) !== -1) { throw Error(`Error adding [${a}] ${t}; already included`); }
+    this.data.get(a)!.push(t);
+  }
+
+  get length () { return this.data.size; }
+
+  get keys () { return this.data.keys(); }
+
+  reduce: <U>(f: (acc: U, x: T[], ord:number) => U, acc: U) => U = (f, acc) => {
+    const keys = [...this.data.keys()];
+    for (let ord = 0; ord < keys.length; ++ord)
+      acc = f(acc, this.data.get(keys[ord])!, ord);
+    return acc
+  }
+
+  get(key: A) { return this.data.get(key); }
+}
+
 type T2TCErrors = Map<TripleNo, { constraintNo: ConstraintNo, errors: shapeExprTest }>;
 type TC2TResult = MapMap<TripleNo, ConstraintNo, (shapeExprTest | undefined)>;
-type T2TCs = number[][];
+type T2TCs = MapArray<TripleNo, ConstraintNo>;
 type TripleNoList = number[];
 
 type TripleResult = {
@@ -816,7 +839,9 @@ export class ShExValidator {
     const outgoing = indexNeighborhood(neighborhood.outgoing);
     const incoming = indexNeighborhood(neighborhood.incoming);
     const all = neighborhood.outgoing.concat(neighborhood.incoming);
-    const init: ByPredicateResult = { misses: new Map(), results: new MapMap(), triple2constraintList:_alist(neighborhood.outgoing.length + neighborhood.incoming.length) };
+    const init: ByPredicateResult = { misses: new Map(), results: new MapMap(), triple2constraintList:new MapArray() };
+    for (let tNo = 0; tNo < all.length; ++tNo) // !!@@ horrible hack to set NoTripleConstraint values in permutations
+      init.triple2constraintList.data.set(tNo, []);
     return constraintList.reduce<ByPredicateResult>(function (ret, constraint, cNo) {
 
       // subject and object depend on direction of constraint.
@@ -831,7 +856,7 @@ export class ShExValidator {
 
       matchConstraints.hits.forEach(function (evidence) {
         const tNo = all.indexOf(evidence.triple);
-        ret.triple2constraintList[tNo].push(cNo);
+        ret.triple2constraintList.add(tNo, cNo);
         ret.results.set(cNo, tNo, evidence.sub);
       });
       matchConstraints.misses.forEach(function (evidence) {
@@ -844,7 +869,7 @@ export class ShExValidator {
 
   whatsMissing (tripleList: ByPredicateResult, constraintList: TripleConstraint[], neighborhood: Quad[], extras: string[]): WhatsMissingResult {
     const matchedExtras: TripleNo[] = []; // triples accounted for by EXTRA
-    const missErrors = tripleList.triple2constraintList.reduce<error[]>(function (ret, constraints, ord) {
+    const missErrors = tripleList.triple2constraintList.reduce<error[]>((ret, constraints, ord) => {
       if (constraints.length === 0 &&   // matches no constraints
           tripleList.misses.has(ord)) {   // predicate matched some constraint(s)
         const t = neighborhood[ord];
@@ -1250,7 +1275,7 @@ class TripleToTripleConstraints {
     this.extendsTCcount = extendsTCcount; this.tc2exts = tc2exts;
     this.subgraphCache = new Map();
     // @ts-ignore
-    this.crossProduct = CrossProduct<typeof NoTripleConstraint>(constraintList, NoTripleConstraint);
+    this.crossProduct = CrossProduct<TripleNo, ConstraintNo, typeof NoTripleConstraint>(constraintList, NoTripleConstraint);
   }
 
   /**
@@ -1296,15 +1321,16 @@ class TripleToTripleConstraints {
 
 // { next: () => (boolean); get: () => number[] | null }
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
-function CrossProduct<T>(sets: number[][], emptyValue: T) {
+function CrossProduct<KEY, LISTELT, EMPTY_VALUE>(sets: MapArray<KEY, LISTELT>, emptyValue: EMPTY_VALUE) {
   const n = sets.length, carets: number[] = [];
-  let args: (number | T)[] | null = null;
+  const keys = [...sets.keys];
+  let args: (LISTELT | EMPTY_VALUE)[] | null = null;
 
   function init() {
     args = [];
     for (let i = 0; i < n; i++) {
       carets[i] = 0;
-      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
+      args[i] = sets.get(keys[i])!.length > 0 ? sets.get(keys[i])![0] : emptyValue;
     }
   }
 
@@ -1320,19 +1346,19 @@ function CrossProduct<T>(sets: number[][], emptyValue: T) {
     }
     let i = n - 1;
     carets[i]++;
-    if (carets[i] < sets[i].length) {
-      args[i] = sets[i][carets[i]];
+    if (carets[i] < sets.get(keys[i])!.length) {
+      args[i] = sets.get(keys[i])![carets[i]];
       return true;
     }
-    while (carets[i] >= sets[i].length) {
+    while (carets[i] >= sets.get(keys[i])!.length) {
       if (i === 0) {
         return false;
       }
       carets[i] = 0;
-      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
+      args[i] = sets.get(keys[i])!.length > 0 ? sets.get(keys[i])![0] : emptyValue;
       carets[--i]++;
     }
-    args[i] = sets[i][carets[i]];
+    args[i] = sets.get(keys[i])![carets[i]];
     return true;
   }
 
