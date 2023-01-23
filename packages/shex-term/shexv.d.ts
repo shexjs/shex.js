@@ -6,6 +6,7 @@
  */
 
 import * as ShExJ from '@types/shexj';
+import {BNODE} from "@types/shexj";
 export {};
 
 export type shapeExprTest = ShapeOrResults | ShapeAndResults | ShapeNotResults | ShapeTest | NodeTest | NodeConstraintTest | SolutionList | Failure | FailureList | Recursion | AbstractShapeFailure;
@@ -37,6 +38,12 @@ export interface TypedFailure { }
 export interface MissingProperty extends TypedFailure {
   type: "MissingProperty";
   property:IRI;
+  valueExpr?:NodeConstraint
+}
+export interface ExcessTripleViolation extends TypedFailure {
+  type: "ExcessTripleViolation";
+  property:IRI;
+  triple: Quad;
   valueExpr?:NodeConstraint
 }
 export interface TypeMismatch extends TypedFailure {
@@ -101,6 +108,7 @@ export interface SolutionList {
   solutions:shapeExprTest[] // 1 or more
 }
 export type tripleExprSolutions = EachOfSolutions | OneOfSolutions | TripleConstraintSolutions ;
+export type tripleExprSolution = EachOfSolution | OneOfSolution | TestedTriple ;
 export interface EachOfSolutions {
   type: "EachOfSolutions";
   solutions:EachOfSolution[]; // 1 or more
@@ -126,9 +134,10 @@ export interface OneOfSolution {
   expressions:tripleExprSolutions[] // 1 or more
 }
 export interface TripleConstraintSolutions {
+  productionLabel?:(IRI|BNODE);
   type: "TripleConstraintSolutions";
   predicate:IRI;
-  valueExpr?:ShExJ.shapeExpr;
+  valueExpr?:ShExJ.shapeExprOrRef;
   min?:INTEGER;
   max?:INTEGER;
   solutions:TestedTriple[];

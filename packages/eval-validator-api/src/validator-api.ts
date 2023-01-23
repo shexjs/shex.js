@@ -23,7 +23,7 @@ export interface ValidatorRegexModule {
 export interface ValidatorRegexEngine {
   match(
     db: NeighborhoodDb,
-    point: string | object,
+    point: RdfJs.Term,
     constraintList: ShExJ.TripleConstraint[],
     tc2t: Tc2t[][],
     t2tcForThisShape: T2TcPartition,
