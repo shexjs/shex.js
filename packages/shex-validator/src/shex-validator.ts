@@ -694,7 +694,7 @@ export class ShExValidator {
 
     const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs.length, tc2exts);
     const partitionErrors = [];
-    const regexEngine = this.regexModule.compile(this.schema, shape, this.index);
+    const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
       const localT2Tc: T2TcPartition = []; // subset of TCs assigned to shape.expression
@@ -749,17 +749,18 @@ export class ShExValidator {
 
       let results = this.testExtends(shape, point, extendsToTriples, ctx);
       if (results === null || !("errors" in results)) {
+        if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
         const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
-        if (!("errors" in sub) && results) {
+          if (!("errors" in sub) && results) {
+            // @ts-ignore
+            results = {type: "ExtendedResults", extensions: results, local: sub};
+          } else {
+            // @ts-ignore
+            results = sub;
+          }
+        } else if (results) { // TODO: remove and fix up .val files?
           // @ts-ignore
-          results = { type: "ExtendedResults", extensions: results };
-          if (Object.keys(sub).length > 0) // no empty objects from {}s.
-            { // @ts-ignore
-              results.local = sub;
-            }
-        } else {
-          // @ts-ignore
-          results = sub;
+          results = {type: "ExtendedResults", extensions: results};
         }
       }
       if (results !== null && results.errors !== undefined)
@@ -769,7 +770,7 @@ export class ShExValidator {
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: ctx.label };
       // @ts-ignore
-      if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
+      if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
         { // @ts-ignore
           possibleRet.solution = results;
         }
