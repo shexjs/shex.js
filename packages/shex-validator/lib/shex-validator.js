@@ -301,7 +301,7 @@ class ShExValidator {
         const ctx = new ShapeExprValidationContext(null, shapeExprLabel, 0, tracker, seen, null, null);
         const ret = this.validateShapeLabel(node, ctx);
         if ("startActs" in this.schema) {
-            ret.startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
+            ret.startActs = this.schema.startActs;
         }
         return ret;
     }
@@ -600,9 +600,9 @@ class ShExValidator {
                         results = sub;
                     }
                 }
-                else if (results) { // TODO: remove and fix up .val files?
+                else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
                     // @ts-ignore
-                    results = { type: "ExtendedResults", extensions: results };
+                    results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
             if (results !== null && results.errors !== undefined) { // @ts-ignore
@@ -788,7 +788,6 @@ class ShExValidator {
                         acc.push(tc);
                     }
                 });
-                // @@ TODO: calculate intersection with acc
                 return acc;
             }, []);
         };

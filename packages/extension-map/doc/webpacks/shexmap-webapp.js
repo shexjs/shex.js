@@ -6169,8 +6169,6 @@ class EvalSimple1ErrRegexEngine {
                     const constraintNo = constraintList.indexOf(state.c);
                     let min = state.c.min !== undefined ? state.c.min : 1;
                     let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-                    // if ("negated" in state.c && state.c.negated)
-                    //   min = max = 0;
                     if (thread.avail[constraintNo] === undefined)
                         thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
                     const taken = thread.avail[constraintNo].splice(0, max);
@@ -6269,7 +6267,7 @@ class EvalSimple1ErrRegexEngine {
                         };
                         if (valueExpr)
                             error.valueExpr = valueExpr;
-                        return error; // TODO: why?
+                        return error;
                     });
                     return acc.concat(errors);
                 }
@@ -6378,7 +6376,7 @@ class EvalSimple1ErrRegexEngine {
                 }
                 let xOfSolns;
                 if (m.stack[mis].c !== last[mis].c) {
-                    const t = []; // TODO: really just EachOfSolutions or OneOfSolution
+                    const t = [];
                     ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions";
                     ptr.solutions = t; // arbitrary down cast
                     if ("min" in m.stack[mis].c)
@@ -6410,8 +6408,7 @@ class EvalSimple1ErrRegexEngine {
                         expressions: t
                     };
                     texprSolns = t;
-                    // @ts-ignore
-                    last[mis].e = null;
+                    last[mis].e = -1; // trigger m.stack[mis].e !== last[mis].e below
                 }
                 else {
                     texprSolns = xOfSolns[last[mis].i].expressions;
@@ -10290,7 +10287,6 @@ if (true)
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.sparqlOrder = exports.Start = void 0;
-//import {Start} from "@shexjs/validator";
 exports.Start = { term: "START" };
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.
  */
@@ -15479,7 +15475,7 @@ class ShExValidator {
         const ctx = new ShapeExprValidationContext(null, shapeExprLabel, 0, tracker, seen, null, null);
         const ret = this.validateShapeLabel(node, ctx);
         if ("startActs" in this.schema) {
-            ret.startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
+            ret.startActs = this.schema.startActs;
         }
         return ret;
     }
@@ -15966,7 +15962,6 @@ class ShExValidator {
                         acc.push(tc);
                     }
                 });
-                // @@ TODO: calculate intersection with acc
                 return acc;
             }, []);
         };

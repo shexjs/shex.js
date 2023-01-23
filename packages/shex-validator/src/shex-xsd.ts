@@ -2,9 +2,8 @@
  * Support functions associated with XSD datatypes (or any other DT ShEx should support).
  */
 import * as ShExTerm from "@shexjs/term";
-import {LdTerm} from "@shexjs/term";
 import type {Term as RdfJsTerm} from 'rdf-js';
-import {NodeConstraint} from "shexj";
+import {NodeConstraint, objectValue} from "shexj";
 
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const integerDatatypes = [
@@ -192,7 +191,7 @@ export function getNumericDatatype(value: RdfJsTerm): string | null {
               : null;
 }
 
-export function testKnownTypes(value: RdfJsTerm, validationError: (...s: string[]) => boolean, ldify: (term: RdfJsTerm) => LdTerm, datatype: string, numeric: string | null, label: string | "") {
+export function testKnownTypes(value: RdfJsTerm, validationError: (...s: string[]) => boolean, ldify: (term: RdfJsTerm) => objectValue, datatype: string, numeric: string | null, label: string | "") {
   if (value.termType !== "Literal") {
     validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
   } else if (value.datatype.value !== datatype) {

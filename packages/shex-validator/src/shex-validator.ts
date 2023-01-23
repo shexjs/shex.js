@@ -224,7 +224,7 @@ type RefOrTc = ReferenceToExtendedShapeDecl | TripleConstraint;
 type RefsAndTCsForOneExtension = RefOrTc[];
 type RefsAndTCsForShapesExtensions = RefsAndTCsForOneExtension[];
 type ByPredicateResult = {
-  misses: T2TCErrors; // TODO: for each T, some failing constraint ??
+  misses: T2TCErrors; // for each T, some failing constraint ??
   results: TC2TResult; // for each TC, for each passing T, what was the result
   triple2constraintList: T2TCs; // for each T, which constraints does it match
 };
@@ -439,7 +439,7 @@ export class ShExValidator {
     const ctx = new ShapeExprValidationContext(null, shapeExprLabel, 0, tracker, seen, null, null,)
     const ret: shapeExprTest = this.validateShapeLabel (node, ctx);
     if ("startActs" in this.schema) {
-      (ret as ShapeTest).startActs = this.schema.startActs; // TODO: figure out where startActs can appear in ShExJ
+      (ret as ShapeTest).startActs = this.schema.startActs;
     }
     return ret;
   }
@@ -750,7 +750,7 @@ export class ShExValidator {
       let results = this.testExtends(shape, point, extendsToTriples, ctx);
       if (results === null || !("errors" in results)) {
         if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-        const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
+          const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
           if (!("errors" in sub) && results) {
             // @ts-ignore
             results = {type: "ExtendedResults", extensions: results, local: sub};
@@ -758,9 +758,9 @@ export class ShExValidator {
             // @ts-ignore
             results = sub;
           }
-        } else if (results) { // TODO: remove and fix up .val files?
+        } else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
           // @ts-ignore
-          results = {type: "ExtendedResults", extensions: results};
+          results = {type: "ExtendedResults", extensions: results}; // TODO: keep that redundant nesting for consistency?
         }
       }
       if (results !== null && results.errors !== undefined)
@@ -967,8 +967,6 @@ export class ShExValidator {
             acc.push(tc);
           }
         });
-
-        // @@ TODO: calculate intersection with acc
         return acc;
       }, []);
     }

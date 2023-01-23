@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sparqlOrder = exports.Start = void 0;
-//import {Start} from "@shexjs/validator";
 exports.Start = { term: "START" };
 /* sparqlOrder - sort triples by subject following SPARQL partial ordering.
  */

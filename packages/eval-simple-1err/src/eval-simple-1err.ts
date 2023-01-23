@@ -20,7 +20,7 @@ import {
   OneOfSolutions,
   EachOfSolutions,
   TripleConstraintSolutions,
-  tripleExprSolution, TestedTriple, Recursion
+  tripleExprSolution, TestedTriple, Recursion, groupSolution, groupSolutions
 } from "@shexjs/term/shexv";
 
 export {};
@@ -44,7 +44,6 @@ class RegExpState {
 }
 class TripleConstraintState extends RegExpState {
   c: ShExJ.TripleConstraint;
-  negated: boolean | undefined; // TODO: remove? needed in negation branch?
   expr: ShExJ.EachOf | ShExJ.OneOf | undefined;
   stack: StackEntry[];
   constructor(
@@ -338,8 +337,6 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           const constraintNo = constraintList.indexOf(state.c);
           let min = state.c.min !== undefined ? state.c.min : 1;
           let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-          // if ("negated" in state.c && state.c.negated)
-          //   min = max = 0;
           if (thread.avail[constraintNo] === undefined)
             thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
           const taken = thread.avail[constraintNo].splice(0, max);
@@ -439,7 +436,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             };
             if (valueExpr)
               error.valueExpr = valueExpr;
-            return error as unknown as shapeExprTest; // TODO: why?
+            return error as shapeExprTest;
           });
           return acc.concat(errors);
         }
@@ -572,9 +569,9 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           if (mis >= last.length) {
             last.push({} as StackEntry); // to be filled in below
           }
-          let xOfSolns: tripleExprSolution[];
+          let xOfSolns: groupSolution[];
           if (m.stack[mis].c !== last[mis].c) {
-            const t: tripleExprSolution[] = []; // TODO: really just EachOfSolutions or OneOfSolution
+            const t: groupSolution[] = [];
             ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions";
             (ptr as EachOfSolutions).solutions = t as EachOfSolution[]; // arbitrary down cast
             if ("min" in m.stack[mis].c)
@@ -595,18 +592,17 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             }
             // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
           } else {
-            xOfSolns = ptr.solutions;
+            xOfSolns = ptr.solutions as groupSolution[];
           }
           let texprSolns: tripleExprSolutions[];
           if (m.stack[mis].i !== last[mis].i) {
             const t: tripleExprSolutions[] = [];
             xOfSolns[m.stack[mis].i!] = {
               type:m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
-              expressions: t
+              expressions: t as groupSolutions[]
             };
             texprSolns = t;
-            // @ts-ignore
-            last[mis].e = null;
+            last[mis].e = -1; // trigger m.stack[mis].e !== last[mis].e below
           } else {
             texprSolns = (xOfSolns[last[mis].i!] as EachOfSolution).expressions;
           }

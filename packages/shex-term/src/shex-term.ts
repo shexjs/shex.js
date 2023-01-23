@@ -61,8 +61,6 @@ export interface ShapeMapEntry {
 
 export type ShapeMap = ShapeMapEntry[];
 
-export type LdTerm = string | ObjectLiteral; // TODO: delme
-
 interface PrefixMap {
   [id: string]: string;
 }
