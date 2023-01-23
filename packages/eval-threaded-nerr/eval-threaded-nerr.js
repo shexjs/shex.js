@@ -401,9 +401,11 @@ function extend(base) {
 }
 
 return {
-  name: "eval-threaded-nerr",
-  description: "emulation of regular expression engine with error permutations",
-  compile: vpEngine
+  RegexpModule: {
+    name: "eval-threaded-nerr",
+    description: "emulation of regular expression engine with error permutations",
+    compile: vpEngine
+  }
 };
 })();
 

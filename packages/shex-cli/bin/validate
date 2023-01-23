@@ -1213,10 +1213,10 @@ function makeError (msg, status) {
 function getRegexModule (module) {
   if (module) {
     try {
-      return require(module);
+      return require(module).RegexpModule;
     } catch (e1) {
       try {
-        return require(REGEX_MODULES + module);
+        return require(REGEX_MODULES + module).RegexpModule;
       } catch (e2) {
         throw e1;
       }

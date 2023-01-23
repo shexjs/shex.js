@@ -103,13 +103,13 @@ class RegExpPair {
 
 const UNBOUNDED = -1;
 
-export class EvalSimple1Err implements ValidatorRegexModule {
-  public name = "eval-simple-1err";
-  public description = "simple regular expression engine with n out states";
+export const RegexpModule: ValidatorRegexModule = {
+  name: "eval-simple-1err",
+  description: "simple regular expression engine with n out states",
 
   /* compile - compile regular expression and index triple constraints
    */
-  public compile(_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine {
+  compile: (_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine => {
     const expression = shape.expression;
     return NFA();
 

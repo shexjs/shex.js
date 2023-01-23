@@ -41,7 +41,7 @@ exports.InterfaceOptions = {
     }
 };
 const VERBOSE = false; // "VERBOSE" in process.env;
-const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr");
+const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 class SemActDispatcherImpl {
     constructor(externalCode) {
         this.handlers = {};

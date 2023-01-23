@@ -5380,530 +5380,592 @@ if (true)
 
 /***/ }),
 
-/***/ 6540:
-/***/ ((module, exports, __webpack_require__) => {
+/***/ 8986:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-const {rdfJsTerm2Ld} = __webpack_require__(1101);
+"use strict";
+var __webpack_unused_export__;
 
-const EvalSimple1ErrCjsModule = (function () {
-  const ShExTerm = __webpack_require__(1101);
-  const { NoTripleConstraint } = __webpack_require__(3530);
-
-  const Split = "<span class='keyword' title='Split'>|</span>";
-  const Rept  = "<span class='keyword' title='Repeat'>×</span>";
-  const Match = "<span class='keyword' title='Match'>␃</span>";
-  /* compileNFA - compile regular expression and index triple constraints
-   */
-  const UNBOUNDED = -1;
-
-  function compileNFA (schema, shape, index) {
-    const expression = shape.expression;
-    return NFA();
-
-    function NFA () {
-      // wrapper for states, startNo and matchstate
-      const states = [];
-      const matchstate = State_make(Match, []);
-      let startNo = matchstate;
-      const stack = [];
-      let pair;
-      if (expression) {
-        const pair = walkExpr(expression, []);
-        patch(pair.tail, matchstate);
-        startNo = pair.start;
-      }
-      const ret = {
-        algorithm: "rbenx",
-        end: matchstate,
-        states: states,
-        start: startNo,
-        match: rbenx_match
-      }
-      // matchstate = states = startNo = null;
-      return ret;
-
-      function walkExpr (expr, stack) {
-        let s, starts;
-        let lastTail;
-        function maybeAddRept (start, tail) {
-          if ((expr.min == undefined || expr.min === 1) &&
-              (expr.max == undefined || expr.max === 1))
-            return {start: start, tail: tail}
-          s = State_make(Rept, [start]);
-          states[s].expr = expr;
-          // cache min/max in normalized form for simplicity of comparison.
-          states[s].min = "min" in expr ? expr.min : 1;
-          states[s].max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-          patch(tail, s);
-          return {start: s, tail: [s]}
-        }
-
-        if (typeof expr === "string") { // Inclusion
-          const included = index.tripleExprs[expr];
-          return walkExpr(included, stack);
-        }
-
-        else if (expr.type === "TripleConstraint") {
-          s = State_make(expr, []);
-          states[s].stack = stack;
-          return {start: s, tail: [s]};
-        }
-
-        else if (expr.type === "OneOf") {
-          lastTail = [];
-          starts = [];
-          expr.expressions.forEach(function (nested, ord) {
-            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
-            starts.push(pair.start);
-            lastTail = lastTail.concat(pair.tail);
-          });
-          s = State_make(Split, starts);
-          states[s].expr = expr;
-          return maybeAddRept(s, lastTail);
-        }
-
-        else if (expr.type === "EachOf") {
-          expr.expressions.forEach(function (nested, ord) {
-            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
-            if (ord === 0)
-              s = pair.start;
-            else
-              patch(lastTail, pair.start);
-            lastTail = pair.tail;
-          });
-          return maybeAddRept(s, lastTail);
-        }
-
-        throw Error("unexpected expr type: " + expr.type);
-      };
-
-      function State_make (c, outs, negated) {
-        const ret = states.length;
-        states.push({c:c, outs:outs});
-        if (negated)
-          states[ret].negated = true; // only include if true for brevity
-        return ret;
-      }
-
-      function patch (l, target) {
-        l.forEach(elt => {
-          states[elt].outs.push(target);
-        });
-      }
+__webpack_unused_export__ = ({ value: true });
+exports.G = void 0;
+const term_1 = __webpack_require__(1101);
+const eval_validator_api_1 = __webpack_require__(3530);
+var ControlType;
+(function (ControlType) {
+    ControlType[ControlType["Split"] = 0] = "Split";
+    ControlType[ControlType["Rept"] = 1] = "Rept";
+    ControlType[ControlType["Match"] = 2] = "Match";
+})(ControlType || (ControlType = {}));
+class StackEntry {
+    constructor(c, e) {
+        this.c = c;
+        this.e = e;
+        this.i = null;
     }
-
-
-    function nfaToString () {
-      const known = {OneOf: [], EachOf: []};
-      function dumpTripleConstraint (tc) {
-        return "<" + tc.predicate + ">";
-      }
-      function card (obj) {
-        let x = "";
-        if ("min" in obj) x += obj.min;
-        if ("max" in obj) x += "," + obj.max;
-        return x ? "{" + x + "}" : "";
-      }
-      function junct (j) {
-        let id = known[j.type].indexOf(j);
-        if (id === -1)
-          id = known[j.type].push(j)-1;
-        return j.type + id; // + card(j);
-      }
-      function dumpStackElt (elt) {
-        return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-      }
-      function dumpStack (stack) {
-        return stack.map(elt => { return dumpStackElt(elt); }).join("/");
-      }
-      function dumpNFA (states, startNo) {
-        return states.map((s, i) => {
-          return (i === startNo ? s.c === Match ? "." : "S" : s.c === Match ? "E" : " ") + i + " " + (
-            s.c === Split ? ("Split-" + junct(s.expr)) :
-              s.c === Rept ? ("Rept-" + junct(s.expr)) :
-              s.c === Match ? "Match" :
-              dumpTripleConstraint(s.c)
-          ) + card(s) + "→" + s.outs.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
-        }).join("\n");
-      }
-      function dumpMatched (matched) {
-        return matched.map(m => {
-          return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
-        }).join(",");
-      }
-      function dumpThread (thread) {
-        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-          return k + "×" + thread.repeats[k];
-        }).join(",") + " " + dumpMatched(thread.matched);
-      }
-      function dumpThreadList (list) {
-        return "[[" + list.map(thread => { return dumpThread(thread); }).join("\n  ") + "]]";
-      }
-      return {
-        nfa: dumpNFA,
-        stack: dumpStack,
-        stackElt: dumpStackElt,
-        thread: dumpThread,
-        threadList: dumpThreadList
-      };
-    }
-
-    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
-      const rbenx = this;
-      let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
-      if (rbenx.states.length === 1)
-        return matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
-
-      let chosen = null;
-      // const dump = nfaToString();
-      // console.log(dump.nfa(this.states, this.start));
-      addstate(rbenx, clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
-      while (clist.length) {
-        nlist = [];
-        if (trace)
-          trace.push({threads:[]});
-        for (let threadno = 0; threadno < clist.length; ++threadno) {
-          const thread = clist[threadno];
-          if (thread.state === rbenx.end)
-            continue;
-          const state = rbenx.states[thread.state];
-          const nlistlen = nlist.length;
-          // may be Accept!
-          if (state.c.type === "TripleConstraint") {
-            const constraintNo = constraintList.indexOf(state.c);
-            let min = "min" in state.c ? state.c.min : 1;
-            let max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-            if ("negated" in state.c && state.c.negated)
-              min = max = 0;
-            if (thread.avail[constraintNo] === undefined)
-              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-            const taken = thread.avail[constraintNo].splice(0, max);
-            if (taken.length >= min) {
-              do {
-                addStates(rbenx, nlist, thread, taken);
-              } while ((function () {
-                if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                  taken.push(thread.avail[constraintNo].shift());
-                  return true; // stay in look to take more.
-                } else {
-                  return false; // no more to take or we're already at max
-                }
-              })());
-            }
-          }
-          if (trace)
-            trace[trace.length-1].threads.push({
-              state: clist[threadno].state,
-              to:nlist.slice(nlistlen).map(x => {
-                return stateString(x.state, x.repeats);
-              })
-            });
-        }
-        // console.log(dump.threadList(nlist));
-        if (nlist.length === 0 && chosen === null)
-          return reportError(localExpect(clist, rbenx.states));
-        const t = clist;
-        clist = nlist;
-        nlist = t;
-        const longerChosen = clist.reduce((ret, elt) => {
-          const matchedAll =
-              elt.matched.reduce((ret, m) => {
-                return ret + m.triples.length; // count matched triples
-              }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === NoTripleConstraint ? ret : ret + 1; // count expected
-              }, 0);
-          return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
-        }, null)
-        if (longerChosen)
-          chosen = longerChosen;
-        // if (longerChosen !== null)
-        //   console.log(JSON.stringify(matchedToResult(longerChosen.matched)));
-      }
-      if (chosen === null)
-        return reportError();
-      function reportError () { return {
-        type: "Failure",
-        node: node,
-        errors: localExpect(clist, rbenx.states)
-      } }
-      function localExpect (clist, states) {
-        const lastState = states[states.length - 1];
-        return clist.reduce((acc, elt) => {
-          const c = rbenx.states[elt.state].c;
-          // if (c === Match)
-          //   return { type: "EndState999" };
-          let valueExpr = null;
-          if (typeof c.valueExpr === "string") { // ShapeRef
-            valueExpr = c.valueExpr;
-            if (valueExpr.termType === "BlankNode")
-              valueExpr = schema.shapes[valueExpr];
-          } else if (c.valueExpr) {
-            valueExpr = extend({}, c.valueExpr)
-          }
-          if (elt.state !== rbenx.end) {
-            return acc.concat([extend({
-              type: "MissingProperty",
-              property: lastState.c.predicate,
-            }, valueExpr ? { valueExpr: valueExpr } : {})])
-          } else {
-            const unmatchedTriples = {};
-            // Collect triples assigned to some constraint.
-            Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
-                unmatchedTriples[k] = tripleToConstraintMapping[k];
-            });
-            // Removed triples matched in this thread.
-            elt.matched.forEach(m => {
-              m.triples.forEach(t => {
-                delete unmatchedTriples[t];
-              });
-            });
-
-          return acc.concat(Object.keys(unmatchedTriples).map(i => extend({
-            type: "ExcessTripleViolation",
-            property: lastState.c.predicate,
-            triple: neighborhood[unmatchedTriples[i]],
-          }, valueExpr ? { valueExpr: valueExpr } : {})));
-          }
-        }, []);
-      }
-      // console.log("chosen:", dump.thread(chosen));
-      return "errors" in chosen.matched ?
-        chosen.matched :
-        matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
-    }
-
-    function addStates (rbenx, nlist, thread, taken) {
-      const state = rbenx.states[thread.state];
-      // find the exprs that require repetition
-      const exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
-      const newStack = state.stack.map(e => {
-        let i = thread.repeats[exprs.indexOf(e.c)];
-        if (i === undefined)
-          i = 0; // expr has no repeats
-        else
-          i = i-1;
-        return { c:e.c, e:e.e, i:i };
-      });
-      const withIndexes = {
-        c: state.c,
-        triples: taken,
-        stack: newStack
-      };
-      thread.matched = thread.matched.concat(withIndexes);
-      state.outs.forEach(o => { // single out if NFA includes epsilons
-        addstate(rbenx, nlist, o, thread);
-      });
-    }
-
-    function addstate (rbenx, list, stateNo, thread, seen) {
-      seen = seen || [];
-      const seenkey = stateString(stateNo, thread.repeats);
-      if (seen.indexOf(seenkey) !== -1)
-        return;
-      seen.push(seenkey);
-
-      const s = rbenx.states[stateNo];
-      if (s.c === Split) {
-        return s.outs.reduce((ret, o, idx) => {
-          return ret.concat(addstate(rbenx, list, o, thread, seen));
-        }, []);
-        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
-      } else if (s.c === Rept) {
-        const ret = [];
-        // matched = [matched].concat("Rept" + s.expr);
-        if (!(stateNo in thread.repeats))
-          thread.repeats[stateNo] = 0;
-        const repetitions = thread.repeats[stateNo];
-        // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-        if (repetitions < s.max)
-          [].push.apply(ret, addstate(rbenx, list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-        if (repetitions >= s.min && repetitions <= s.max)
-          [].push.apply(ret, addstate(rbenx, list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
-        return ret;
-      } else {
-        // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
-        //   return r2 || avail.length > 0;
-        // }, false))
-        return [list.push({ // return [new list element index]
-          state:stateNo,
-          repeats:thread.repeats,
-          avail:thread.avail.map(a => { // copy parent thread's avail vector
-            return a.slice();
-          }),
-          stack:thread.stack,
-          matched:thread.matched,
-          errors: thread.errors
-        }) - 1];
-      }
-    }
-
-    function resetRepeat (thread, repeatedState) {
-      const trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-        if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
-          r[k] = thread.repeats[k];
-        return r;
-      }, {});
-      return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-    }
-
-    function incrmRepeat (thread, repeatedState) {
-      const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-        r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
-        return r;
-      }, {});
-      return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-    }
-
-    function stateString (state, repeats) {
-      const rs = Object.keys(repeats).map(rpt => {
-        return rpt+":"+repeats[rpt];
-      }).join(",");
-      return rs.length ? state + "-" + rs : ""+state;
-    }
-
-    function matchedToResult (matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler) {
-      let last = [];
-      const errors = [];
-      const skips = [];
-      const ret = matched.reduce((out, m) => {
-        let mis = 0;
-        let ptr = out, t;
-        while (mis < last.length &&
-               m.stack[mis].c === last[mis].c && // constraint
-               m.stack[mis].i === last[mis].i && // iteration number
-               m.stack[mis].e === last[mis].e) { // (dis|con)junction number
-            ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
-          ++mis;
-        }
-        while (mis < m.stack.length) {
-          if (mis >= last.length) {
-            last.push({});
-          }
-          if (m.stack[mis].c !== last[mis].c) {
-            t = [];
-            ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions", ptr.solutions = t;
-            if ("min" in m.stack[mis].c)
-              ptr.min = m.stack[mis].c.min;
-            if ("max" in m.stack[mis].c)
-              ptr.max = m.stack[mis].c.max;
-            if ("annotations" in m.stack[mis].c)
-              ptr.annotations = m.stack[mis].c.annotations;
-            if ("semActs" in m.stack[mis].c)
-              ptr.semActs = m.stack[mis].c.semActs;
-            ptr = t;
-            last[mis].i = null;
-            // !!! on the way out to call after valueExpr test
-            if ("semActs" in m.stack[mis].c) {
-              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
-              if (errors.length)
-                throw errors;
-            }
-            // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
-          } else {
-            ptr = ptr.solutions;
-          }
-          if (m.stack[mis].i !== last[mis].i) {
-            t = [];
-            ptr[m.stack[mis].i] = {
-              type:m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
-              expressions: t};
-            ptr = t;
-            last[mis].e = null;
-          } else {
-            ptr = ptr[last[mis].i].expressions;
-          }
-          if (m.stack[mis].e !== last[mis].e) {
-            t = {};
-            ptr[m.stack[mis].e] = t;
-            if (m.stack[mis].e > 0 && ptr[m.stack[mis].e-1] === undefined && skips.indexOf(ptr) === -1)
-              skips.push(ptr);
-            ptr = t;
-            last.length = mis + 1; // chop off last so we create everything underneath
-          } else {
-            throw "how'd we get here?"
-            ptr = ptr[last[mis].e];
-          }
-          ++mis;
-        }
-        ptr.type = "TripleConstraintSolutions";
-        if ("min" in m.c)
-          ptr.min = m.c.min;
-        if ("max" in m.c)
-          ptr.max = m.c.max;
-        ptr.predicate = m.c.predicate;
-        if ("valueExpr" in m.c)
-          ptr.valueExpr = m.c.valueExpr;
-        if ("id" in m.c)
-          ptr.productionLabel = m.c.id;
-        ptr.solutions = m.triples.map(tNo => {
-          const triple = neighborhood[tNo];
-          const ret = {
-            type: "TestedTriple",
-            subject: rdfJsTerm2Ld(triple.subject),
-            predicate: rdfJsTerm2Ld(triple.predicate),
-            object: rdfJsTerm2Ld(triple.object)
-          };
-
-          const constraintNo = constraintList.indexOf(m.c);
-                      const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
-                      if (hit.res && Object.keys(hit.res).length > 0)
-                        ret.referenced = hit.res;
-          if (errors.length === 0 && "semActs" in m.c)
-            [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
-          return ret;
-        })
-        if ("annotations" in m.c)
-          ptr.annotations = m.c.annotations;
-        if ("semActs" in m.c)
-          ptr.semActs = m.c.semActs;
-        last = m.stack.slice();
-        return out;
-      }, {});
-
-      if (errors.length)
-        return {
-          type: "SemActFailure",
-          errors: errors
-        };
-
-      // Clear out the nulls for the expressions with min:0 and no matches.
-      // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
-      // Maybe we want these nulls in expressions[] to make it clear that there are holes?
-      skips.forEach(skip => {
-        for (let exprNo = 0; exprNo < skip.length; ++exprNo)
-          if (skip[exprNo] === null || skip[exprNo] === undefined)
-            skip.splice(exprNo--, 1);
-      });
-
-      if ("semActs" in shape)
-        ret.semActs = shape.semActs;
-      return ret;
-    }
-  }
-
-function extend(base) {
-  if (!base) base = {};
-  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (let name in arg)
-      base[name] = arg[name];
-  return base;
 }
-
-// ## Exports
-
-return exports = {
-  name: "eval-simple-1err",
-  description: "simple regular expression engine with n out states",
-  compile: compileNFA
+class RegExpState {
+    constructor(outs) {
+        this.outs = outs;
+    }
+}
+class TripleConstraintState extends RegExpState {
+    constructor(c, outs, stack) {
+        super(outs);
+        this.c = c;
+        this.stack = stack;
+    }
+}
+class ControlState extends RegExpState {
+}
+class SplitState extends ControlState {
+    constructor(c, outs, expr) {
+        super(outs);
+        this.c = c;
+        this.expr = expr;
+    }
+}
+class ReptState extends ControlState {
+    constructor(c, outs, expr) {
+        super(outs);
+        this.c = c;
+        this.expr = expr;
+        this.min = expr.min === undefined ? 1 : expr.min;
+        this.max = expr.max === undefined
+            ? 1
+            : expr.max === UNBOUNDED
+                ? Infinity
+                : expr.max;
+    }
+}
+class MatchState extends ControlState {
+    constructor(c) {
+        super([]);
+        this.c = c;
+    }
+}
+class RegExpPair {
+    constructor(start, tail) {
+        this.start = start;
+        this.tail = tail;
+    }
+}
+const UNBOUNDED = -1;
+exports.G = {
+    name: "eval-simple-1err",
+    description: "simple regular expression engine with n out states",
+    /* compile - compile regular expression and index triple constraints
+     */
+    compile: (_schema, shape, index) => {
+        const expression = shape.expression;
+        return NFA();
+        function NFA() {
+            // wrapper for states, startNo and matchstate
+            const states = [];
+            const matchstate = addState(new MatchState(ControlType.Match));
+            let startNo = matchstate;
+            const stack = [];
+            let pair;
+            if (expression) {
+                const pair = walkExpr(expression, []);
+                patch(pair.tail, matchstate);
+                startNo = pair.start;
+            }
+            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate);
+            function maybeAddRept(expr, start, tail) {
+                if ((expr.min == undefined || expr.min === 1) &&
+                    (expr.max == undefined || expr.max === 1))
+                    return new RegExpPair(start, tail);
+                const s = addState(new ReptState(ControlType.Rept, [start], expr));
+                patch(tail, s);
+                return new RegExpPair(s, [s]);
+            }
+            function walkExpr(expr, stack) {
+                let s, starts;
+                let lastTail;
+                if (typeof expr === "string") { // Inclusion
+                    const included = index.tripleExprs[expr];
+                    return walkExpr(included, stack);
+                }
+                else {
+                    switch (expr.type) {
+                        case "TripleConstraint":
+                            s = addState(new TripleConstraintState(expr, [], stack));
+                            return new RegExpPair(s, [s]);
+                        case "OneOf":
+                            lastTail = [];
+                            starts = [];
+                            expr.expressions.forEach(function (nested, ord) {
+                                pair = walkExpr(nested, stack.concat([new StackEntry(expr, ord)]));
+                                starts.push(pair.start);
+                                lastTail = lastTail.concat(pair.tail);
+                            });
+                            s = addState(new SplitState(ControlType.Split, starts, expr));
+                            return maybeAddRept(expr, s, lastTail);
+                        case "EachOf":
+                            expr.expressions.forEach(function (nested, ord) {
+                                pair = walkExpr(nested, stack.concat([new StackEntry(expr, ord)]));
+                                if (ord === 0)
+                                    s = pair.start;
+                                else
+                                    patch(lastTail, pair.start);
+                                lastTail = pair.tail;
+                            });
+                            return maybeAddRept(expr, s, lastTail); // ShExJ says that EachOf has at least two expressions
+                    }
+                }
+            }
+            function addState(state) {
+                const ret = states.length;
+                states.push(state);
+                return ret;
+            }
+            function patch(l, target) {
+                l.forEach(elt => {
+                    states[elt].outs.push(target);
+                });
+            }
+        }
+        /**
+         * debugging tool; lots of ts-ignores
+         */
+        function nfaToString() {
+            const known = { OneOf: [], EachOf: [] };
+            function dumpTripleConstraint(tc) {
+                return "<" + tc.predicate + ">";
+            }
+            function card(obj) {
+                let x = "";
+                if ("min" in obj)
+                    // @ts-ignore
+                    x += obj.min;
+                if ("max" in obj)
+                    // @ts-ignore
+                    x += "," + obj.max;
+                return x ? "{" + x + "}" : "";
+            }
+            function junct(j) {
+                // @ts-ignore
+                let id = known[j.type].indexOf(j);
+                if (id === -1) { // @ts-ignore
+                    id = known[j.type].push(j) - 1;
+                }
+                // @ts-ignore
+                return j.type + id; // + card(j);
+            }
+            function dumpStackElt(elt) {
+                // @ts-ignore
+                return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
+            }
+            function dumpStack(stack) {
+                return stack.map(elt => {
+                    return dumpStackElt(elt);
+                }).join("/");
+            }
+            function dumpNFA(states, startNo) {
+                return states.map((s, i) => {
+                    // @ts-ignore
+                    return (i === startNo ? s instanceof MatchState ? "." : "S" : s instanceof MatchState ? "E" : " ") + i + " " + (s instanceof SplitState ? ("Split-" + junct(s.expr)) :
+                        s instanceof ReptState ? ("Rept-" + junct(s.expr)) :
+                            s instanceof MatchState ? "Match" :
+                                // @ts-ignore
+                                dumpTripleConstraint(s.c)
+                    // @ts-ignore
+                    ) + card(s) + "→" + s.outs.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
+                }).join("\n");
+            }
+            function dumpMatched(matched) {
+                return matched.map(m => {
+                    // @ts-ignore
+                    return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
+                }).join(",");
+            }
+            function dumpThread(thread) {
+                return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
+                    // @ts-ignore
+                    return k + "×" + thread.repeats[k];
+                }).join(",") + " " + dumpMatched(thread.matched);
+            }
+            function dumpThreadList(list) {
+                return "[[" + list.map(thread => {
+                    return dumpThread(thread);
+                }).join("\n  ") + "]]";
+            }
+            return {
+                nfa: dumpNFA,
+                stack: dumpStack,
+                stackElt: dumpStackElt,
+                thread: dumpThread,
+                threadList: dumpThreadList
+            };
+        }
+    }
 };
-
-})();
-
-if (true)
-  module.exports = EvalSimple1ErrCjsModule;
-
+class RegExpThread {
+    constructor(state = -1, repeats = {}, avail = [], stack = [], matched = [], errors = []) {
+        this.state = state;
+        this.repeats = repeats;
+        this.avail = avail;
+        this.stack = stack;
+        this.matched = matched;
+        this.errors = errors;
+    }
+}
+class EvalSimple1ErrRegexEngine {
+    constructor(shape, states, startNo, matchstate) {
+        this.shape = shape;
+        this.end = matchstate;
+        this.states = states;
+        this.start = startNo;
+    }
+    match(_db, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
+        const rbenx = this;
+        let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+        if (rbenx.states.length === 1)
+            return this.matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
+        let chosen = null;
+        // const dump = nfaToString();
+        // console.log(dump.nfa(this.states, this.start));
+        this.addstate(clist, this.start, new RegExpThread());
+        while (clist.length) {
+            nlist = [];
+            if (trace)
+                trace.push({ threads: [] });
+            for (let threadno = 0; threadno < clist.length; ++threadno) {
+                const thread = clist[threadno];
+                if (thread.state === rbenx.end)
+                    continue;
+                const state = rbenx.states[thread.state];
+                const nlistlen = nlist.length;
+                // may be Accept!
+                if (state instanceof TripleConstraintState) {
+                    const constraintNo = constraintList.indexOf(state.c);
+                    let min = state.c.min !== undefined ? state.c.min : 1;
+                    let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+                    // if ("negated" in state.c && state.c.negated)
+                    //   min = max = 0;
+                    if (thread.avail[constraintNo] === undefined)
+                        thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
+                    const taken = thread.avail[constraintNo].splice(0, max);
+                    if (taken.length >= min) {
+                        do {
+                            this.addStates(nlist, thread, taken);
+                        } while ((function () {
+                            if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                                taken.push(thread.avail[constraintNo].shift());
+                                return true; // stay in look to take more.
+                            }
+                            else {
+                                return false; // no more to take or we're already at max
+                            }
+                        })());
+                    }
+                }
+                if (trace)
+                    // @ts-ignore
+                    trace[trace.length - 1].threads.push({
+                        state: clist[threadno].state,
+                        to: nlist.slice(nlistlen).map(x => {
+                            return this.stateString(x.state, x.repeats);
+                        })
+                    });
+            }
+            // console.log(dump.threadList(nlist));
+            if (nlist.length === 0 && chosen === null)
+                return reportError(localExpect(clist, rbenx.states));
+            const t = clist;
+            clist = nlist;
+            nlist = t;
+            const longerChosen = clist.reduce((ret, elt) => {
+                const matchedAll = elt.matched.reduce((ret, m) => {
+                    return ret + m.triples.length; // count matched triples
+                }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
+                    return t === eval_validator_api_1.NoTripleConstraint ? ret : ret + 1; // count expected
+                }, 0);
+                return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
+            }, null);
+            if (longerChosen)
+                chosen = longerChosen;
+            // if (longerChosen !== null)
+            //   console.log(JSON.stringify(this.matchedToResult(longerChosen.matched)));
+        }
+        if (chosen === null)
+            return reportError([]);
+        function reportError(_x) {
+            return {
+                type: "Failure",
+                node: node,
+                errors: localExpect(clist, rbenx.states)
+            };
+        }
+        function localExpect(clist, states) {
+            const lastState = states[states.length - 1];
+            return clist.reduce((acc, elt) => {
+                const c = rbenx.states[elt.state].c; // Always fails on a TCState
+                // if (c === ControlType.Match)
+                //   return { type: "EndState999" };
+                let valueExpr = null;
+                if (typeof c.valueExpr === "string") { // ShapeRef
+                    valueExpr = c.valueExpr;
+                }
+                else if (c.valueExpr) {
+                    valueExpr = c.valueExpr;
+                }
+                if (elt.state !== rbenx.end) {
+                    const error = {
+                        type: "MissingProperty",
+                        property: lastState.c.predicate,
+                    };
+                    if (valueExpr)
+                        error.valueExpr = valueExpr;
+                    // @ts-ignore -- Type 'MissingProperty' is not assignable to type 'shapeExprTest'?
+                    return acc.concat([error]);
+                }
+                else {
+                    const unmatchedTriples = {};
+                    // Collect triples assigned to some constraint.
+                    for (const k in tripleToConstraintMapping) {
+                        if (tripleToConstraintMapping[k] !== eval_validator_api_1.NoTripleConstraint)
+                            unmatchedTriples[k] = tripleToConstraintMapping[k];
+                    }
+                    // Removed triples matched in this thread.
+                    elt.matched.forEach(m => {
+                        m.triples.forEach(t => {
+                            delete unmatchedTriples[t];
+                        });
+                    });
+                    const errors = Object.keys(unmatchedTriples).map(i => {
+                        const error = {
+                            type: "ExcessTripleViolation",
+                            property: lastState.c.predicate,
+                            triple: neighborhood[unmatchedTriples[i]], // TODOL doesn't really get TcAssignment?
+                        };
+                        if (valueExpr)
+                            error.valueExpr = valueExpr;
+                        return error; // TODO: why?
+                    });
+                    return acc.concat(errors);
+                }
+            }, []);
+        }
+        // console.log("chosen:", dump.thread(chosen));
+        return "errors" in chosen.matched ?
+            chosen.matched :
+            this.matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
+    }
+    addStates(nlist, thread, taken) {
+        const state = this.states[thread.state];
+        // find the exprs that require repetition
+        const exprs = this.states.map(x => { return x instanceof ReptState ? x.expr : null; });
+        const newStack = state.stack.map(e => {
+            let i = thread.repeats[exprs.indexOf(e.c)];
+            if (i === undefined)
+                i = 0; // expr has no repeats
+            else
+                i = i - 1;
+            return { c: e.c, e: e.e, i: i };
+        });
+        const withIndexes = {
+            c: state.c,
+            triples: taken,
+            stack: newStack
+        };
+        thread.matched = thread.matched.concat([withIndexes]);
+        state.outs.forEach(o => {
+            this.addstate(nlist, o, thread);
+        });
+    }
+    addstate(list, stateNo, thread, seen = []) {
+        const seenkey = this.stateString(stateNo, thread.repeats);
+        if (seen.indexOf(seenkey) !== -1)
+            return [];
+        seen.push(seenkey);
+        const s = this.states[stateNo];
+        if (s instanceof SplitState) {
+            return s.outs.reduce((ret, o) => {
+                return ret.concat(this.addstate(list, o, thread, seen));
+            }, []);
+            // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
+        }
+        else if (s instanceof ReptState) {
+            const ret = [];
+            // matched = [matched].concat("Rept" + s.expr);
+            if (!(stateNo in thread.repeats))
+                thread.repeats[stateNo] = 0;
+            const repetitions = thread.repeats[stateNo];
+            // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
+            if (repetitions < s.max)
+                Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], this.incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
+            if (repetitions >= s.min && repetitions <= s.max)
+                Array.prototype.push.apply(ret, this.addstate(list, s.outs[1], this.resetRepeat(thread, stateNo), seen)); // outs[1] when done
+            return ret;
+        }
+        else {
+            // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
+            //   return r2 || avail.length > 0;
+            // }, false))
+            return [list.push(new RegExpThread(// return [new list element index]
+                stateNo, thread.repeats, thread.avail.map(a => {
+                    return a.slice();
+                }), thread.stack, thread.matched, thread.errors)) - 1];
+        }
+    }
+    resetRepeat(thread, repeatedState) {
+        const trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+            if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
+                r[k] = thread.repeats[k];
+            return r;
+        }, {});
+        return new RegExpThread(thread.state /*???*/, trimmedRepeats, thread.avail.slice(), thread.stack, thread.matched, []);
+    }
+    incrmRepeat(thread, repeatedState) {
+        const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+            r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
+            return r;
+        }, {});
+        return new RegExpThread(thread.state /*???*/, incrmedRepeats, thread.avail.slice(), thread.stack, thread.matched, []);
+    }
+    stateString(state, repeats) {
+        const rs = Object.keys(repeats).map(rpt => {
+            return rpt + ":" + repeats[rpt];
+        }).join(",");
+        return rs.length ? state + "-" + rs : "" + state;
+    }
+    matchedToResult(matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler) {
+        let last = [];
+        const errors = [];
+        const skips = [];
+        const ret = matched.reduce((out, m) => {
+            let mis = 0;
+            let ptr = out;
+            while (mis < last.length &&
+                m.stack[mis].c === last[mis].c && // constraint
+                m.stack[mis].i === last[mis].i && // iteration number
+                m.stack[mis].e === last[mis].e) { // (dis|con)junction number
+                ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
+                ++mis;
+            }
+            while (mis < m.stack.length) {
+                if (mis >= last.length) {
+                    last.push({}); // to be filled in below
+                }
+                let xOfSolns;
+                if (m.stack[mis].c !== last[mis].c) {
+                    const t = []; // TODO: really just EachOfSolutions or OneOfSolution
+                    ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions";
+                    ptr.solutions = t; // arbitrary down cast
+                    if ("min" in m.stack[mis].c)
+                        ptr.min = m.stack[mis].c.min;
+                    if ("max" in m.stack[mis].c)
+                        ptr.max = m.stack[mis].c.max;
+                    if ("annotations" in m.stack[mis].c)
+                        ptr.annotations = m.stack[mis].c.annotations;
+                    if ("semActs" in m.stack[mis].c)
+                        ptr.semActs = m.stack[mis].c.semActs;
+                    xOfSolns = t;
+                    last[mis].i = null;
+                    // !!! on the way out to call after valueExpr test
+                    if ("semActs" in m.stack[mis].c) {
+                        const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
+                        if (errors.length)
+                            throw errors;
+                    }
+                    // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
+                }
+                else {
+                    xOfSolns = ptr.solutions;
+                }
+                let texprSolns;
+                if (m.stack[mis].i !== last[mis].i) {
+                    const t = [];
+                    xOfSolns[m.stack[mis].i] = {
+                        type: m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
+                        expressions: t
+                    };
+                    texprSolns = t;
+                    // @ts-ignore
+                    last[mis].e = null;
+                }
+                else {
+                    texprSolns = xOfSolns[last[mis].i].expressions;
+                }
+                if (m.stack[mis].e !== last[mis].e) {
+                    const t = {};
+                    texprSolns[m.stack[mis].e] = t;
+                    if (m.stack[mis].e > 0 && texprSolns[m.stack[mis].e - 1] === undefined && skips.indexOf(texprSolns) === -1)
+                        skips.push(texprSolns);
+                    ptr = t;
+                    last.length = mis + 1; // chop off last so we create everything underneath
+                }
+                else {
+                    throw "how'd we get here?";
+                    ptr = texprSolns[last[mis].e];
+                }
+                ++mis;
+            }
+            const tcSolns = ptr;
+            tcSolns.type = "TripleConstraintSolutions";
+            if ("min" in m.c)
+                tcSolns.min = m.c.min;
+            if ("max" in m.c)
+                tcSolns.max = m.c.max;
+            tcSolns.predicate = m.c.predicate;
+            if ("valueExpr" in m.c)
+                tcSolns.valueExpr = m.c.valueExpr;
+            if ("id" in m.c)
+                tcSolns.productionLabel = m.c.id;
+            tcSolns.solutions = m.triples.map(tNo => {
+                const triple = neighborhood[tNo];
+                const ret = {
+                    type: "TestedTriple",
+                    subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                    predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                    object: (0, term_1.rdfJsTerm2Ld)(triple.object)
+                };
+                const constraintNo = constraintList.indexOf(m.c);
+                const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
+                if (hit.res && Object.keys(hit.res).length > 0)
+                    ret.referenced = hit.res;
+                if (errors.length === 0 && "semActs" in m.c) { // @ts-ignore
+                    [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
+                }
+                return ret;
+            });
+            if ("annotations" in m.c)
+                tcSolns.annotations = m.c.annotations;
+            if ("semActs" in m.c)
+                tcSolns.semActs = m.c.semActs;
+            last = m.stack.slice();
+            return out;
+        }, {});
+        if (errors.length)
+            return {
+                type: "SemActFailure",
+                errors: errors
+            };
+        // Clear out the nulls for the expressions with min:0 and no matches.
+        // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
+        // Maybe we want these nulls in expressions[] to make it clear that there are holes?
+        skips.forEach(skip => {
+            for (let exprNo = 0; exprNo < skip.length; ++exprNo)
+                if (skip[exprNo] === null || skip[exprNo] === undefined)
+                    skip.splice(exprNo--, 1);
+        });
+        if ("semActs" in this.shape)
+            ret.semActs = this.shape.semActs;
+        return ret;
+    }
+}
+EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
+function extend(base) {
+    if (!base)
+        base = {};
+    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
+        for (let name in arg) { // @ts-ignore
+            base[name] = arg[name];
+        }
+    return base;
+}
+//# sourceMappingURL=eval-simple-1err.js.map
 
 /***/ }),
 
@@ -6313,9 +6375,11 @@ function extend(base) {
 }
 
 return {
-  name: "eval-threaded-nerr",
-  description: "emulation of regular expression engine with error permutations",
-  compile: vpEngine
+  RegexpModule: {
+    name: "eval-threaded-nerr",
+    description: "emulation of regular expression engine with error permutations",
+    compile: vpEngine
+  }
 };
 })();
 
@@ -8934,7 +8998,7 @@ if (true)
 /**
  * Terms used in ShEx.
  *
- * There are three representations of RDF terms used in ShEx NamedNodevalidation and applications:
+ * There are three representations of RDF terms used in ShEx NamedNode validation and applications:
  * 1. LD (short for JSON-LD) @ids used in ShExJ.
  *   "http://a.example/some/Iri
  *   "_:someBlankNode
@@ -11273,7 +11337,7 @@ exports.InterfaceOptions = {
     }
 };
 const VERBOSE = false; // "VERBOSE" in process.env;
-const EvalThreadedNErr = __webpack_require__(6863);
+const EvalThreadedNErr = (__webpack_require__(6863).RegexpModule);
 class SemActDispatcherImpl {
     constructor(externalCode) {
         this.handlers = {};
@@ -11363,6 +11427,46 @@ class ShapeExprValidationContext {
     checkExtendingClass(label, matchTarget) {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
+}
+class MapMap {
+    constructor() {
+        this.data = new Map();
+    }
+    set(a, b, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, new Map());
+        }
+        if (this.data.get(a).has(b)) {
+            throw Error(`Error setting [${a}][${b}]=${t}; already has value ${this.data.get(a).get(b)}`);
+        }
+        this.data.get(a).set(b, t);
+    }
+    get(a, b) {
+        return this.data.get(a).get(b);
+    }
+}
+class MapArray {
+    constructor() {
+        this.data = new Map(); // public 'cause i don't know how to fix reduce to use this.data
+        this.reduce = (f, acc) => {
+            const keys = [...this.data.keys()];
+            for (let ord = 0; ord < keys.length; ++ord)
+                acc = f(acc, this.data.get(keys[ord]), ord);
+            return acc;
+        };
+    }
+    add(a, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, []);
+        }
+        if (this.data.get(a).indexOf(t) !== -1) {
+            throw Error(`Error adding [${a}] ${t}; already included`);
+        }
+        this.data.get(a).push(t);
+    }
+    get length() { return this.data.size; }
+    get keys() { return this.data.keys(); }
+    get(key) { return this.data.get(key); }
 }
 class TriplesMatching {
     constructor(hits, misses) {
@@ -11722,16 +11826,15 @@ class ShExValidator {
                 }; // some semAct aborted !! return a better error
         }
         const fromDB = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
-        const outgoingLength = fromDB.outgoing.length;
         const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
-        const constraintList = extendsTCs.concat(localTCs);
+        const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const tripleList = this.matchByPredicate(constraintList, neighborhood, outgoingLength, ctx);
-        const { misses, extras } = this.whatsMissing(tripleList, neighborhood, shape.extra || []);
-        const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
+        const tripleList = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        const { missErrors, matchedExtras } = this.whatsMissing(tripleList, tripleConstraints, neighborhood, shape.extra || []);
+        const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs.length, tc2exts);
         const partitionErrors = [];
-        const regexEngine = this.regexModule.compile(this.schema, shape, this.index);
+        const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
         for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
             const localT2Tc = []; // subset of TCs assigned to shape.expression
             const unexpectedOrds = [];
@@ -11749,8 +11852,8 @@ class ShExValidator {
                     // allocate to local shape
                     localT2Tc[tNo] = cNo;
                     if (cNo === eval_validator_api_1.NoTripleConstraint // didn't match anything
-                        && tNo < outgoingLength // is an outgoing triple
-                        && extras.indexOf(tNo) === -1) // isn't in EXTRAs
+                        && tNo < fromDB.outgoing.length // is an outgoing triple
+                        && matchedExtras.indexOf(tNo) === -1) // isn't in EXTRAs
                         unexpectedOrds.push(tNo);
                 }
             });
@@ -11779,21 +11882,23 @@ class ShExValidator {
                     ++constraintMatchCount[tpNumber];
                 }
             });
-            const tc2t = this._constraintToTriples(localT2Tc, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
+            const tc2t = this._constraintToTriples(localT2Tc, tripleConstraints, tripleList); // e.g. [[t0, t2], [t1, t3]]
             let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
-                const sub = regexEngine.match(this.db, point, constraintList, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
-                if (!("errors" in sub) && results) {
-                    // @ts-ignore
-                    results = { type: "ExtendedResults", extensions: results };
-                    if (Object.keys(sub).length > 0) // no empty objects from {}s.
-                     { // @ts-ignore
-                        results.local = sub;
+                if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
+                    const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
+                    if (!("errors" in sub) && results) {
+                        // @ts-ignore
+                        results = { type: "ExtendedResults", extensions: results, local: sub };
+                    }
+                    else {
+                        // @ts-ignore
+                        results = sub;
                     }
                 }
-                else {
+                else if (results) { // TODO: remove and fix up .val files?
                     // @ts-ignore
-                    results = sub;
+                    results = { type: "ExtendedResults", extensions: results };
                 }
             }
             if (results !== null && results.errors !== undefined) { // @ts-ignore
@@ -11801,7 +11906,7 @@ class ShExValidator {
             }
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(point), shape: ctx.label };
             // @ts-ignore
-            if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
+            if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
              { // @ts-ignore
                 possibleRet.solution = results;
             }
@@ -11818,15 +11923,6 @@ class ShExValidator {
                 ret = possibleRet;
         }
         // end of while(xp.next())
-        const missErrors = misses.map(function (miss) {
-            const t = neighborhood[miss.tripleNo];
-            return {
-                type: "TypeMismatch",
-                triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
-                constraint: constraintList[miss.constraintNo],
-                errors: miss.errors
-            };
-        });
         // Report only last errors until we have a better idea.
         const lastErrors = partitionErrors[partitionErrors.length - 1];
         // @ts-ignore
@@ -11869,14 +11965,16 @@ class ShExValidator {
      * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
      * @param constraintList - list of TripleConstraint
      * @param neighborhood - list of Quad
-     * @param outgoingLength - first n of neighborhood are outgoing triples
      * @param ctx - evaluation context
      */
-    matchByPredicate(constraintList, neighborhood, outgoingLength, ctx) {
+    matchByPredicate(constraintList, neighborhood, ctx) {
         const _ShExValidator = this;
-        const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
-        const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
-        const init = { misses: {}, results: _alist(constraintList.length), constraintList: _alist(neighborhood.length) };
+        const outgoing = indexNeighborhood(neighborhood.outgoing);
+        const incoming = indexNeighborhood(neighborhood.incoming);
+        const all = neighborhood.outgoing.concat(neighborhood.incoming);
+        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: new MapArray() };
+        for (let tNo = 0; tNo < all.length; ++tNo) // !!@@ horrible hack to set NoTripleConstraint values in permutations
+            init.triple2constraintList.data.set(tNo, []);
         return constraintList.reduce(function (ret, constraint, cNo) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
@@ -11886,36 +11984,38 @@ class ShExValidator {
             // strip to triples matching value constraints (apart from @<someShape>)
             const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
-                const tNo = neighborhood.indexOf(evidence.triple);
-                ret.constraintList[tNo].push(cNo);
-                ret.results[cNo][tNo] = evidence.sub;
+                const tNo = all.indexOf(evidence.triple);
+                ret.triple2constraintList.add(tNo, cNo);
+                ret.results.set(cNo, tNo, evidence.sub);
             });
             matchConstraints.misses.forEach(function (evidence) {
-                const tNo = neighborhood.indexOf(evidence.triple);
-                ret.misses[tNo] = { constraintNo: cNo, errors: evidence.sub };
+                const tNo = all.indexOf(evidence.triple);
+                ret.misses.set(tNo, { constraintNo: cNo, errors: evidence.sub });
             });
             return ret;
         }, init);
     }
-    whatsMissing(tripleList, neighborhood, extras) {
+    whatsMissing(tripleList, constraintList, neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
-        const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
+        const missErrors = tripleList.triple2constraintList.reduce((ret, constraints, ord) => {
             if (constraints.length === 0 && // matches no constraints
-                ord in tripleList.misses) { // predicate matched some constraint(s)
-                if (extras.indexOf(neighborhood[ord].predicate.value) !== -1) {
+                tripleList.misses.has(ord)) { // predicate matched some constraint(s)
+                const t = neighborhood[ord];
+                if (extras.indexOf(t.predicate.value) !== -1) {
                     matchedExtras.push(ord);
                 }
                 else { // not declared extra
                     ret.push({
-                        tripleNo: ord,
-                        constraintNo: tripleList.misses[ord].constraintNo,
-                        errors: tripleList.misses[ord].errors
+                        type: "TypeMismatch",
+                        triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
+                        constraint: constraintList[tripleList.misses.get(ord).constraintNo],
+                        errors: tripleList.misses.get(ord).errors
                     });
                 }
             }
             return ret;
         }, []);
-        return { misses, extras: matchedExtras };
+        return { missErrors, matchedExtras };
     }
     addShapeAttributes(shape, ret) {
         if (shape.annotations !== undefined) { // @ts-ignore
@@ -11928,7 +12028,7 @@ class ShExValidator {
         return t2tc.slice().
             reduce(function (ret, cNo, tNo) {
             if (cNo !== eval_validator_api_1.NoTripleConstraint)
-                ret[cNo].push({ tNo: tNo, res: tripleList.results[cNo][tNo] });
+                ret[cNo].push({ tNo: tNo, res: tripleList.results.get(cNo, tNo) });
             return ret;
         }, _seq(constraintList.length).map(() => [])); // [length][]
     }
@@ -12322,12 +12422,13 @@ class TripleToTripleConstraints {
 // http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
 function CrossProduct(sets, emptyValue) {
     const n = sets.length, carets = [];
+    const keys = [...sets.keys];
     let args = null;
     function init() {
         args = [];
         for (let i = 0; i < n; i++) {
             carets[i] = 0;
-            args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
+            args[i] = sets.get(keys[i]).length > 0 ? sets.get(keys[i])[0] : emptyValue;
         }
     }
     function next() {
@@ -12340,19 +12441,19 @@ function CrossProduct(sets, emptyValue) {
         }
         let i = n - 1;
         carets[i]++;
-        if (carets[i] < sets[i].length) {
-            args[i] = sets[i][carets[i]];
+        if (carets[i] < sets.get(keys[i]).length) {
+            args[i] = sets.get(keys[i])[carets[i]];
             return true;
         }
-        while (carets[i] >= sets[i].length) {
+        while (carets[i] >= sets.get(keys[i]).length) {
             if (i === 0) {
                 return false;
             }
             carets[i] = 0;
-            args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
+            args[i] = sets.get(keys[i]).length > 0 ? sets.get(keys[i])[0] : emptyValue;
             carets[--i]++;
         }
-        args[i] = sets[i][carets[i]];
+        args[i] = sets.get(keys[i])[carets[i]];
         return true;
     }
     return {
@@ -13083,8 +13184,8 @@ ShExWebApp = (function () {
     Writer:               __webpack_require__(95),
     Loader:               __webpack_require__(1837),
     Parser:               __webpack_require__(931),
-    "eval-simple-1err":   __webpack_require__(6540),
-    "eval-threaded-nerr": __webpack_require__(6863),
+    "eval-simple-1err":   (__webpack_require__(8986)/* .RegexpModule */ .G),
+    "eval-threaded-nerr": (__webpack_require__(6863).RegexpModule),
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               __webpack_require__(9431),

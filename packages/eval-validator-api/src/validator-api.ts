@@ -17,6 +17,8 @@ export type TcAssignment = number | typeof NoTripleConstraint;
 export type T2TcPartition = TcAssignment[];
 
 export interface ValidatorRegexModule {
+  name: string;
+  description: string;
   compile(schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine
 }
 

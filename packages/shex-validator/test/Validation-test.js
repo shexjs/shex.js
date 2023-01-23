@@ -26,8 +26,8 @@ const schemasPath = findPath("schemas");
 const validationPath = findPath("validation");
 const manifestFile = validationPath + "manifest.jsonld";
 const regexModules = [
-  new (require("@shexjs/eval-simple-1err").EvalSimple1Err)(), // TODO: make static (I don't know how to define the ValidatorRegexModule interface)
-  require("@shexjs/eval-threaded-nerr")
+  require("@shexjs/eval-simple-1err").RegexpModule,
+  require("@shexjs/eval-threaded-nerr").RegexpModule
 ];
 if (EARL)
   regexModules = regexModules.slice(1);
