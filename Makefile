@@ -13,14 +13,18 @@ packages/neighborhood-api/lib/neighborhood-api.js: packages/neighborhood-api/src
 packages/shex-term/lib/shex-term.js: packages/shex-term/src/shex-term.ts packages/shex-term/shexv.d.ts packages/shex-term/package.json packages/shex-term/tsconfig.json
 	(cd packages/shex-term && tsc)
 
-# @shexjs/validator
+# @shexjs/eval-simple-1err
 packages/eval-simple-1err/lib/eval-simple-1err.js: packages/eval-simple-1err/src/eval-simple-1err.ts packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/shex-visitor.d.ts packages/eval-simple-1err/package.json packages/eval-simple-1err/tsconfig.json
 	(cd packages/eval-simple-1err && tsc)
+
+# @shexjs/eval-threaded-nerr
+packages/eval-threaded-nerr/lib/eval-threaded-nerr.js: packages/eval-threaded-nerr/src/eval-threaded-nerr.ts packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/shex-visitor.d.ts packages/eval-threaded-nerr/package.json packages/eval-threaded-nerr/tsconfig.json
+	(cd packages/eval-threaded-nerr && tsc)
 
 # @shexjs/validator
 packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js: packages/shex-validator/src/shex-validator.ts packages/shex-validator/src/shex-xsd.ts packages/neighborhood-api/lib/neighborhood-api.js packages/eval-validator-api/lib/validator-api.js packages/shex-term/lib/shex-term.js packages/shex-term/shexv.d.ts packages/shex-visitor/shex-visitor.d.ts packages/shex-validator/package.json packages/shex-validator/tsconfig.json
 	(cd packages/shex-validator && tsc)
 
 .PHONY: ALL
-ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js
+ALL: packages/eval-validator-api/lib/validator-api.js packages/neighborhood-api/lib/neighborhood-api.js packages/shex-term/lib/shex-term.js packages/eval-simple-1err/lib/eval-simple-1err.js packages/eval-threaded-nerr/lib/eval-threaded-nerr.js packages/shex-validator/lib/shex-validator.js packages/shex-validator/lib/shex-xsd.js
 

@@ -5953,436 +5953,332 @@ class EvalSimple1ErrRegexEngine {
     }
 }
 EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
-function extend(base) {
-    if (!base)
-        base = {};
-    for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-        for (let name in arg) { // @ts-ignore
-            base[name] = arg[name];
-        }
-    return base;
-}
 //# sourceMappingURL=eval-simple-1err.js.map
 
 /***/ }),
 
-/***/ 6863:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 6201:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
-const {rdfJsTerm2Ld} = __webpack_require__(1101);
+"use strict";
+var __webpack_unused_export__;
 
-const EvalThreadedNErrCjsModule = (function () {
-const ShExTerm = __webpack_require__(1101);
-const { NoTripleConstraint } = __webpack_require__(3530);
+__webpack_unused_export__ = ({ value: true });
+exports.G = void 0;
+const term_1 = __webpack_require__(1101);
+const eval_validator_api_1 = __webpack_require__(3530);
 const UNBOUNDED = -1;
-
-function vpEngine (schema, shape, index) {
-    const outerExpression = shape.expression;
-    return {
-      match:match
-    };
-
-    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
-
-      /*
-       * returns: list of passing or failing threads (no heterogeneous lists)
-       */
-      function validateExpr (expr, thread) {
-        if (typeof expr === "string") { // Inclusion
-          const included = index.tripleExprs[expr];
-          return validateExpr(included, thread);
-        }
-
-        const constraintNo = constraintList.indexOf(expr);
-        let min = "min" in expr ? expr.min : 1;
-        let max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-
-        function validateRept (type, val) {
-          let repeated = 0, errOut = false;
-          let newThreads = [thread];
-          const minmax = {  };
-          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
-            minmax.min = expr.min;
-            minmax.max = expr.max;
-          }
-          if ("semActs" in expr)
-            minmax.semActs = expr.semActs;
-          if ("annotations" in expr)
-            minmax.annotations = expr.annotations;
-          for (; repeated < max && !errOut; ++repeated) {
-            let inner = [];
-            for (let t = 0; t < newThreads.length; ++t) {
-              const newt = newThreads[t];
-              const sub = val(newt);
-              if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
-                sub.forEach(newThread => {
-                  const solutions =
-                      "expression" in newt ? newt.expression.solutions.slice() : [];
-                  if ("solution" in newThread)
-                    solutions.push(newThread.solution);
-                  delete newThread.solution;
-                  newThread.expression = extend({
-                    type: type,
-                    solutions: solutions
-                  }, minmax);
-                });
-              }
-              if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
-                return repeated < min ? sub : newThreads;
-              else
-                inner = inner.concat(sub);
-              // newThreads.expressions.push(sub);
+exports.G = {
+    name: "eval-threaded-nerr",
+    description: "emulation of regular expression engine with error permutations",
+    /* compile - compile regular expression and index triple constraints
+     */
+    compile: (_schema, shape, index) => {
+        return new EvalThreadedNErrRegexEngine(shape, index); // not called if there's no expression
+    }
+};
+class EvalThreadedNErrRegexEngine {
+    constructor(shape, index) {
+        this.shape = shape;
+        this.index = index;
+        this.outerExpression = shape.expression;
+    }
+    match(_db, _node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+        const _EvalThreadedNErrRegexEngine = this;
+        /*
+         * returns: list of passing or failing threads (no heterogeneous lists)
+         */
+        function validateExpr(expr, thread) {
+            if (typeof expr === "string") { // Inclusion
+                const included = _EvalThreadedNErrRegexEngine.index.tripleExprs[expr];
+                return validateExpr(included, thread);
             }
-            newThreads = inner;
-          }
-          if (newThreads.length > 0 && newThreads[0].errors.length === 0 && "semActs" in expr) {
-            const passes = [];
-            const failures = [];
-            newThreads.forEach(newThread => {
-              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
-              if (semActErrors.length === 0) {
-                passes.push(newThread)
-              } else {
-                [].push.apply(newThread.errors, semActErrors);
-                failures.push(newThread);
-              }
-            });
-            newThreads = passes.length > 0 ? passes : failures;
-          }
-          return newThreads;
-        }
-
-        if (expr.type === "TripleConstraint") {
-          const negated = "negated" in expr && expr.negated || max === 0;
-          if (negated)
-            min = max = Infinity;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-          const minmax = {  };
-          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
-            minmax.min = expr.min;
-            minmax.max = expr.max;
-          }
-          if ("semActs" in expr)
-            minmax.semActs = expr.semActs;
-          if ("annotations" in expr)
-            minmax.annotations = expr.annotations;
-          const taken = thread.avail[constraintNo].splice(0, min);
-          const passed = negated ? taken.length === 0 : taken.length >= min;
-          const ret = [];
-          const matched = thread.matched;
-          if (passed) {
-            do {
-              const passFail = taken.reduce((acc, tripleNo) => {
-                const t = neighborhood[tripleNo]
-                const tested = {
-                  type: "TestedTriple",
-                  subject: rdfJsTerm2Ld(t.subject),
-                  predicate: rdfJsTerm2Ld(t.predicate),
-                  object: rdfJsTerm2Ld(t.object)
+            const constraintNo = expr.type === "TripleConstraint" ? constraintList.indexOf(expr) : -1;
+            let min = expr.min !== undefined ? expr.min : 1;
+            let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+            function validateRept(groupTE, type, val) {
+                let repeated = 0, errOut = false;
+                let newThreads = [thread];
+                const minmax = {};
+                if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
+                    minmax.min = groupTE.min;
+                    minmax.max = groupTE.max;
                 }
-                const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
-                if (hit.res && Object.keys(hit.res).length > 0)
-                  tested.referenced = hit.res;
-                const semActErrors = thread.errors.concat(
-                  "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, t, tested)
-                    : []
-                )
-                if (semActErrors.length > 0)
-                  acc.fail.push({tripleNo, tested, semActErrors})
-                else
-                  acc.pass.push({tripleNo, tested, semActErrors})
-                return acc
-              }, {pass: [], fail: []})
-
-
-              // return an empty solution if min card was 0
-              if (passFail.fail.length === 0) {
-                // If we didn't take anything, fall back to old errors.
-                // Could do something fancy here with a semAct registration for negative matches.
-                const totalErrors = taken.length === 0 ? thread.errors.slice() : []
-                const myThread = makeThread(passFail.pass, totalErrors)
-                ret.push(myThread);
-              } else {
-                passFail.fail.forEach(
-                  f => ret.push(makeThread([f], f.semActErrors))
-                )
-              }
-
-              function makeThread (tests, errors) {
-                return {
-                  avail: thread.avail.map(a => { // copy parent thread's avail vector
-                    return a.slice();
-                  }),
-                  errors: errors,
-                  matched: matched.concat({
-                    tNos: tests.map(p => p.tripleNo)
-                  }),
-                  expression: extend(
-                    {
-                      type: "TripleConstraintSolutions",
-                      predicate: expr.predicate
-                    },
-                    "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                    "id" in expr ? { productionLabel: expr.id } : {},
-                    minmax,
-                    {
-                      solutions: tests.map(p => p.tested)
+                if (groupTE.semActs !== undefined)
+                    minmax.semActs = groupTE.semActs;
+                if (groupTE.annotations !== undefined)
+                    minmax.annotations = groupTE.annotations;
+                for (; repeated < max && !errOut; ++repeated) {
+                    let inner = [];
+                    for (let t = 0; t < newThreads.length; ++t) {
+                        const newt = newThreads[t];
+                        const sub = val(newt);
+                        if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
+                            sub.forEach(newThread => {
+                                const solutions = newt.expression !== undefined ? newt.expression.solutions.slice() : [];
+                                if (newThread.solution !== undefined)
+                                    solutions.push(newThread.solution);
+                                delete newThread.solution;
+                                newThread.expression = Object.assign({
+                                    type: type,
+                                    solutions: solutions
+                                }, minmax);
+                            });
+                        }
+                        if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
+                            return repeated < min ? sub : newThreads;
+                        else
+                            inner = inner.concat(sub);
+                        // newThreads.expressions.push(sub);
                     }
-                  )
+                    newThreads = inner;
                 }
-              }
-            } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                // build another thread.
-                taken.push(thread.avail[constraintNo].shift());
-                return true;
-              } else {
-                // no more threads
-                return false;
-              }
-            })());
-          } else {
-            let valueExpr = null;
-            if (typeof expr.valueExpr === "string") { // ShapeRef
-              valueExpr = expr.valueExpr;
-              if (valueExpr.termType === "BlankNode")
-                valueExpr = index.shapeExprs[valueExpr];
-            } else if (expr.valueExpr) {
-              valueExpr = extend({}, expr.valueExpr)
+                if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
+                    const passes = [];
+                    const failures = [];
+                    newThreads.forEach(newThread => {
+                        const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread);
+                        if (semActErrors.length === 0) {
+                            passes.push(newThread);
+                        }
+                        else {
+                            Array.prototype.push.apply(newThread.errors, semActErrors);
+                            failures.push(newThread);
+                        }
+                    });
+                    newThreads = passes.length > 0 ? passes : failures;
+                }
+                return newThreads;
             }
-            ret.push({
-              avail: thread.avail,
-              errors: thread.errors.concat([
-                extend({
-                  type: negated ? "NegatedProperty" : "MissingProperty",
-                  property: expr.predicate
-                }, valueExpr ? { valueExpr: valueExpr } : {})
-              ]),
-              matched: matched
-            });
-          }
-
-          return ret;
-        }
-
-        else if (expr.type === "OneOf") {
-          return validateRept("OneOfSolutions", (th) => {
-            // const accept = null;
-            const matched = [];
-            const failed = [];
-            expr.expressions.forEach(nested => {
-              const thcopy = {
-                avail: th.avail.map(a => { return a.slice(); }),
-                errors: th.errors,
-                matched: th.matched//.slice() ever needed??
-              };
-              const sub = validateExpr(nested, thcopy);
-              if (sub[0].errors.length === 0) { // all subs pass or all fail
-                [].push.apply(matched, sub);
-                sub.forEach(newThread => {
-                  const expressions =
-                      "solution" in thcopy ? thcopy.solution.expressions : [];
-                  if ("expression" in newThread) // undefined for no matches on min card:0
-                    expressions.push(newThread.expression);
-                  delete newThread.expression;
-                  newThread.solution = {
-                    type: "OneOfSolution",
-                    expressions: expressions
-                  };
-                });
-              } else
-                [].push.apply(failed, sub);
-            });
-            return matched.length > 0 ? matched : failed;
-          });
-        }
-
-        else if (expr.type === "EachOf") {
-          return homogenize(validateRept("EachOfSolutions", (th) => {
-            // Iterate through nested expressions, exprThreads starts as [th].
-            return expr.expressions.reduce((exprThreads, nested) => {
-              // Iterate through current thread list composing nextThreads.
-              // Consider e.g.
-              // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
-              // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-              return homogenize(exprThreads.reduce((nextThreads, exprThread) => {
-                const sub = validateExpr(nested, exprThread);
-                // Move newThread.expression into a hierarchical solution structure.
-                sub.forEach(newThread => {
-                  if (newThread.errors.length === 0) {
-                    const expressions =
-                        "solution" in exprThread ? exprThread.solution.expressions.slice() : [];
-                    if ("expression" in newThread) // undefined for no matches on min card:0
-                      expressions.push(newThread.expression);
-                    delete newThread.expression;
-                    newThread.solution = {
-                      type: "EachOfSolution",
-                      expressions: expressions // exprThread.expression + newThread.expression
-                    };
-                  }
-                });
-                return nextThreads.concat(sub);
-              }, []));
-            }, [th]);
-          }));
-        }
-
-        runtimeError("unexpected expr type: " + expr.type);
-
-        function homogenize (list) {
-          return list.reduce((acc, elt) => {
-            if (elt.errors.length === 0) {
-              if (acc.errors) {
-                return { errors: false, l: [elt] };
-              } else {
-                return { errors: false, l: acc.l.concat(elt) };
-              }
-            } else {
-              if (acc.errors) {
-                return { errors: true, l: acc.l.concat(elt) };
-              } else {
-                return acc; }
+            if (expr.type === "TripleConstraint") {
+                if (thread.avail[constraintNo] === undefined)
+                    thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
+                const minmax = {};
+                if (expr.min !== undefined && expr.min !== 1 || expr.max !== undefined && expr.max !== 1) {
+                    minmax.min = expr.min;
+                    minmax.max = expr.max;
+                }
+                if (expr.semActs !== undefined)
+                    minmax.semActs = expr.semActs;
+                if (expr.annotations !== undefined)
+                    minmax.annotations = expr.annotations;
+                const taken = thread.avail[constraintNo].splice(0, min);
+                const passed = taken.length >= min;
+                const ret = [];
+                const matched = thread.matched;
+                if (passed) {
+                    do {
+                        const passFail = taken.reduce((acc, tripleNo) => {
+                            const triple = neighborhood[tripleNo];
+                            const tested = {
+                                type: "TestedTriple",
+                                subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                                predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                                object: (0, term_1.rdfJsTerm2Ld)(triple.object)
+                            };
+                            const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo); // will definitely find one
+                            if (hit.res && Object.keys(hit.res).length > 0)
+                                tested.referenced = hit.res;
+                            const semActErrors = thread.errors.concat(expr.semActs !== undefined
+                                ? semActHandler.dispatchAll(expr.semActs, triple, tested)
+                                : []);
+                            if (semActErrors.length > 0)
+                                acc.fail.push({ tripleNo, tested, semActErrors });
+                            else
+                                acc.pass.push({ tripleNo, tested, semActErrors });
+                            return acc;
+                        }, { pass: [], fail: [] });
+                        // return an empty solution if min card was 0
+                        if (passFail.fail.length === 0) {
+                            // If we didn't take anything, fall back to old errors.
+                            // Could do something fancy here with a semAct registration for negative matches.
+                            const totalErrors = taken.length === 0 ? thread.errors.slice() : [];
+                            const myThread = makeThread(expr, passFail.pass, totalErrors);
+                            ret.push(myThread);
+                        }
+                        else {
+                            passFail.fail.forEach(f => ret.push(makeThread(expr, [f], f.semActErrors)));
+                        }
+                        function makeThread(expr, tests, errors) {
+                            return {
+                                avail: thread.avail.map(a => {
+                                    return a.slice();
+                                }),
+                                errors: errors,
+                                matched: matched.concat({
+                                    tNos: tests.map(p => p.tripleNo)
+                                }),
+                                expression: Object.assign({
+                                    type: "TripleConstraintSolutions",
+                                    predicate: expr.predicate
+                                }, expr.valueExpr !== undefined ? { valueExpr: expr.valueExpr } : {}, expr.id !== undefined ? { productionLabel: expr.id } : {}, minmax, {
+                                    solutions: tests.map(p => p.tested)
+                                })
+                            };
+                        }
+                    } while ((function () {
+                        if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                            // build another thread.
+                            taken.push(thread.avail[constraintNo].shift());
+                            return true;
+                        }
+                        else {
+                            // no more threads
+                            return false;
+                        }
+                    })());
+                }
+                else {
+                    ret.push({
+                        avail: thread.avail,
+                        errors: thread.errors.concat([
+                            Object.assign({
+                                type: "MissingProperty",
+                                property: expr.predicate
+                            }, expr.valueExpr ? { valueExpr: expr.valueExpr } : {})
+                        ]),
+                        matched: matched
+                    });
+                }
+                return ret;
             }
-          }, {errors: true, l: []}).l;
+            else if (expr.type === "OneOf") {
+                return validateRept(expr, "OneOfSolutions", (th) => {
+                    // const accept = null;
+                    const matched = [];
+                    const failed = [];
+                    expr.expressions.forEach(nested => {
+                        const thcopy = {
+                            avail: th.avail.map(a => {
+                                return a.slice();
+                            }),
+                            errors: th.errors,
+                            matched: th.matched //.slice() ever needed??
+                        };
+                        const sub = validateExpr(nested, thcopy);
+                        if (sub[0].errors.length === 0) { // all subs pass or all fail
+                            Array.prototype.push.apply(matched, sub);
+                            sub.forEach(newThread => {
+                                const expressions = thcopy.solution !== undefined ? thcopy.solution.expressions : [];
+                                if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                                    expressions.push(newThread.expression);
+                                delete newThread.expression;
+                                newThread.solution = {
+                                    type: "OneOfSolution",
+                                    expressions: expressions
+                                };
+                            });
+                        }
+                        else
+                            Array.prototype.push.apply(failed, sub);
+                    });
+                    return matched.length > 0 ? matched : failed;
+                });
+            }
+            else if (expr.type === "EachOf") {
+                return homogenize(validateRept(expr, "EachOfSolutions", (th) => {
+                    // Iterate through nested expressions, exprThreads starts as [th].
+                    return expr.expressions.reduce((exprThreads, nested) => {
+                        // Iterate through current thread list composing nextThreads.
+                        // Consider e.g.
+                        // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
+                        // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
+                        return homogenize(exprThreads.reduce((nextThreads, exprThread) => {
+                            const sub = validateExpr(nested, exprThread);
+                            // Move newThread.expression into a hierarchical solution structure.
+                            sub.forEach(newThread => {
+                                if (newThread.errors.length === 0) {
+                                    const expressions = exprThread.solution !== undefined ? exprThread.solution.expressions.slice() : [];
+                                    if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                                        expressions.push(newThread.expression);
+                                    delete newThread.expression;
+                                    newThread.solution = {
+                                        type: "EachOfSolution",
+                                        expressions: expressions // exprThread.expression + newThread.expression
+                                    };
+                                }
+                            });
+                            return nextThreads.concat(sub);
+                        }, []));
+                    }, [th]);
+                }));
+            }
+            else {
+                // runtimeError("unexpected expr type: " + expr.type);
+                throw Error("how'd we get here?");
+            }
+            function homogenize(list) {
+                return list.reduce((acc, elt) => {
+                    if (elt.errors.length === 0) {
+                        if (acc.errors) {
+                            return { errors: false, l: [elt] };
+                        }
+                        else {
+                            return { errors: false, l: acc.l.concat(elt) };
+                        }
+                    }
+                    else {
+                        if (acc.errors) {
+                            return { errors: true, l: acc.l.concat(elt) };
+                        }
+                        else {
+                            return acc;
+                        }
+                    }
+                }, { errors: true, l: [] }).l;
+            }
         }
-      }
-
-      const startingThread = {
-        avail:[],   // triples remaining by constraint number
-        matched:[], // triples matched in this thread
-        errors:[]   // errors encounted
-      };
-      if (!outerExpression)
-        return { }; // vapid match if no expression
-      const ret = validateExpr(outerExpression, startingThread);
-      // console.log(JSON.stringify(ret));
-      // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
-      const longerChosen =
-          ret.reduce((ret, elt) => {
+        const startingThread = {
+            avail: [],
+            matched: [],
+            errors: [] // errors encounted
+        };
+        const ret = validateExpr(this.outerExpression, startingThread);
+        // console.log(JSON.stringify(ret));
+        // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
+        const longerChosen = ret.reduce((ret, elt) => {
             if (elt.errors.length > 0)
-              return ret;              // early return
+                return ret; // early return
             const unmatchedTriples = {};
             // Collect triples assigned to some constraint.
-            Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
-                unmatchedTriples[k] = tripleToConstraintMapping[k];
-            });
+            for (const k in tripleToConstraintMapping) {
+                if (tripleToConstraintMapping[k] !== eval_validator_api_1.NoTripleConstraint)
+                    unmatchedTriples[k] = tripleToConstraintMapping[k];
+            }
             // Removed triples matched in this thread.
             elt.matched.forEach(m => {
-              m.tNos.forEach(t => {
-                delete unmatchedTriples[t];
-              });
+                m.tNos.forEach(t => {
+                    delete unmatchedTriples[t];
+                });
             });
             // Remaining triples are unaccounted for.
             Object.keys(unmatchedTriples).forEach(t => {
-              elt.errors.push({
-                type: "ExcessTripleViolation",
-                triple: neighborhood[t],
-                constraint: constraintList[unmatchedTriples[t]]
-              });
+                elt.errors.push({
+                    type: "ExcessTripleViolation",
+                    triple: neighborhood[t],
+                    constraint: constraintList[unmatchedTriples[t]]
+                });
             });
             return ret !== null ? ret : // keep first solution
-            // Accept thread with no unmatched triples.
-            Object.keys(unmatchedTriples).length > 0 ? null : elt;
-          }, null);
-      return longerChosen !== null ?
-        finish(longerChosen.expression, constraintList,
-               neighborhood, semActHandler) :
-        ret.length > 1 ? {
-          type: "PossibleErrors",
-          errors: ret.reduce((all, e) => {
-            return all.concat([e.errors]);
-          }, [])
-        } : ret[0];
+                // Accept thread with no unmatched triples.
+                Object.keys(unmatchedTriples).length > 0 ? null : elt;
+        }, null);
+        return longerChosen !== null ?
+            this.finish(longerChosen.expression, constraintList, neighborhood, semActHandler) :
+            ret.length > 1 ? {
+                type: "PossibleErrors",
+                errors: ret.reduce((all, e) => {
+                    return all.concat([e.errors]);
+                }, [])
+            } : ret[0];
     }
-
-    function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
-      function _dive (solns) {
-        if (solns.type === "OneOfSolutions" ||
-            solns.type === "EachOfSolutions") {
-          solns.solutions.forEach(s => {
-            s.expressions.forEach(e => {
-              _dive(e);
-            });
-          });
-        } else if (solns.type === "TripleConstraintSolutions") {
-          solns.solutions = solns.solutions.map(x => {
-            if (x.type === "TestedTriple") // already done
-              return x; // c.f. validation/3circularRef1_pass-open
-            const t = neighborhood[x.tripleNo];
-            const expr = constraintList[x.constraintNo];
-            const ret = {
-              type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)
-            };
-            function diver (focus, shapeLabel, dive) {
-              const sub = dive(focus, shapeLabel);
-              if ("errors" in sub) {
-                // console.dir(sub);
-                const err = {
-                  type: "ReferenceError", focus: focus,
-                  shape: shapeLabel
-                };
-                if (typeof shapeLabel === "string" && shapeLabel.termType === "BlankNode")
-                  err.referencedShape = shape;
-                err.errors = sub;
-                return [err];
-              }
-              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
-                  sub.type === "Recursion")
-                ret.referenced = sub; // !!! needs to aggregate errors and solutions
-              return [];
-            }
-            function diveRecurse (focus, shapeLabel) {
-              return diver(focus, shapeLabel, recurse);
-            }
-            function diveDirect (focus, shapeLabel) {
-              return diver(focus, shapeLabel, direct);
-            }
-            const subErrors = "valueExpr" in expr ?
-                checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
-                [];
-            if (subErrors.length === 0 && "semActs" in expr)
-              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, ret, ret))
-            if (subErrors.length > 0) {
-              fromValidatePoint.errors = fromValidatePoint.errors || [];
-              fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
-            }
-            return ret;
-          });
-        } else {
-          throw Error("unexpected expr type in " + JSON.stringify(solns));
-        }
-      }
-      if (Object.keys(fromValidatePoint).length > 0) // guard against {}
-        _dive(fromValidatePoint);
-      if ("semActs" in shape)
-        fromValidatePoint.semActs = shape.semActs;
-      return fromValidatePoint;
+    finish(fromValidatePoint, _constraintList, _neighborhood, _semActHandler) {
+        if (this.shape.semActs !== undefined)
+            fromValidatePoint.semActs = this.shape.semActs;
+        return fromValidatePoint;
     }
-  }
-
-function extend(base) {
-  if (!base) base = {};
-  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (let name in arg)
-      base[name] = arg[name];
-  return base;
 }
-
-return {
-  RegexpModule: {
-    name: "eval-threaded-nerr",
-    description: "emulation of regular expression engine with error permutations",
-    compile: vpEngine
-  }
-};
-})();
-
-if (true)
-  module.exports = EvalThreadedNErrCjsModule;
-
+//# sourceMappingURL=eval-threaded-nerr.js.map
 
 /***/ }),
 
@@ -11333,7 +11229,7 @@ exports.InterfaceOptions = {
     }
 };
 const VERBOSE = false; // "VERBOSE" in process.env;
-const EvalThreadedNErr = (__webpack_require__(6863).RegexpModule);
+const EvalThreadedNErr = (__webpack_require__(6201)/* .RegexpModule */ .G);
 class SemActDispatcherImpl {
     constructor(externalCode) {
         this.handlers = {};
@@ -11892,9 +11788,9 @@ class ShExValidator {
                         results = sub;
                     }
                 }
-                else if (results) { // TODO: remove and fix up .val files?
+                else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
                     // @ts-ignore
-                    results = { type: "ExtendedResults", extensions: results };
+                    results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
             if (results !== null && results.errors !== undefined) { // @ts-ignore
@@ -13180,7 +13076,7 @@ ShExWebApp = (function () {
     Loader:               __webpack_require__(1837),
     Parser:               __webpack_require__(931),
     "eval-simple-1err":   (__webpack_require__(8986)/* .RegexpModule */ .G),
-    "eval-threaded-nerr": (__webpack_require__(6863).RegexpModule),
+    "eval-threaded-nerr": (__webpack_require__(6201)/* .RegexpModule */ .G),
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               __webpack_require__(9431),

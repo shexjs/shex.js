@@ -677,14 +677,3 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return ret;
     }
   }
-
-function extend(base: object): object {
-  if (!base) base = {};
-  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (let name in arg)
-      { // @ts-ignore
-        base[name] = arg[name];
-      }
-  return base;
-}
-
