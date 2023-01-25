@@ -15122,7 +15122,7 @@ class SemActDispatcherImpl {
      * Store a semantic action handler.
      *
      * @param {string} name - semantic action's URL.
-     * @param {object} handler - handler function.
+     * @param {SemActHandler} handler - handler function.
      *
      * The handler object has a dispatch function is invoked with:
      *   code: string - text of the semantic action.
@@ -15136,9 +15136,9 @@ class SemActDispatcherImpl {
     /**
      * Calls all semantic actions, allowing each to write to resultsArtifact.
      *
-     * @param {array} semActs - list of semantic actions to invoke.
-     * @param {object} semActParm - evaluation context for SemAct.
-     * @param {object} resultsArtifact - simple storage for SemAct.
+     * @param {ShExJ.SemAct[]} semActs - list of semantic actions to invoke.
+     * @param {any} semActParm - evaluation context for SemAct.
+     * @param {any} resultsArtifact - simple storage for SemAct.
      * @return {SemActFailure[]} false if any result was false.
      */
     dispatchAll(semActs, semActParm, resultsArtifact) {
@@ -15221,7 +15221,7 @@ class MapMap {
 }
 class MapArray {
     constructor() {
-        this.data = new Map(); // public 'cause i don't know how to fix reduce to use this.data
+        this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
         this.reduce = (f, acc) => {
             const keys = [...this.data.keys()];
             for (let ord = 0; ord < keys.length; ++ord)
@@ -16158,7 +16158,7 @@ class TripleToTripleConstraints {
     /**
      * Find next mapping of Triples to TripleConstraints.
      * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
-     * @returns {number[] | null}
+     * @returns {(ConstraintNo | typeof NoTripleConstraint)[] | null}
      */
     next() {
         while (this.crossProduct.next()) {
@@ -16294,18 +16294,17 @@ function indexNeighborhood(triples) {
  *
  * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
  * never calls f.
+ * This doesn't work without both a fill and a map (‽):
+ *   extendsToTriples: Quad[][] = Array((shape.extends || []).length).fill([]]).map(() => []);
  */
 function _seq(n) {
-    return Array.from(Array(n)); // hahaha, javascript, you suck.
+    return Array.from(Array(n)); // ha ha ha, javascript, you suck.
 }
 function runtimeError(...args) {
     const errorStr = args.join("");
     const e = new Error(errorStr);
     Error.captureStackTrace(e, runtimeError);
     throw e;
-}
-function _alist(len) {
-    return _seq(len).map(() => []);
 }
 //# sourceMappingURL=shex-validator.js.map
 

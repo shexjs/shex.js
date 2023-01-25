@@ -20,7 +20,7 @@ import {
   OneOfSolutions,
   EachOfSolutions,
   TripleConstraintSolutions,
-  tripleExprSolution, TestedTriple, Recursion, groupSolution, groupSolutions
+  TestedTriple, Recursion, groupSolution, groupSolutions
 } from "@shexjs/term/shexv";
 
 export {};
