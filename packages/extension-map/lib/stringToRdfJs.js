@@ -3,6 +3,12 @@
  * N3id - webapps and scripts that rely specifically on N3.js leverage the fact
  * that term.id is N-Triples for all terms except typed literals, which lack
  * <>s around data types. This is handy for testing.
+ *   NamedNode: bare word, e.g. http://a.example/
+ *   BlankNode: "_:" + label, e.g. _:b1
+ *   Literal: quoted value plus ntriples lang or datatype, e.g:
+ *     "I said \"Hello World\"."
+ *     "I said \"Hello World\"."@en
+ *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
  */
 
 const {DataFactory} = require("rdf-data-factory");

@@ -162,15 +162,6 @@ function rdfJsTerm2Ld(term) {
     }
 }
 exports.rdfJsTerm2Ld = rdfJsTerm2Ld;
-/** N3id functions
- * Some tests and algorithms use n3.js ids as syntax for input graphs in tests.
- *   NamedNode: bare word, e.g. http://a.example/
- *   BlankNode: "_:" + label, e.g. _:b1
- *   Literal: quoted value plus ntriples lang or datatype, e.g:
- *     "I said \"Hello World\"."
- *     "I said \"Hello World\"."@en
- *     "1.1"^^http://www.w3.org/2001/XMLSchema#float
- */
 function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
     const { base, prefixes = {} } = meta;
     if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
