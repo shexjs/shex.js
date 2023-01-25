@@ -76,7 +76,6 @@ exports.RegexpModule = {
             const states = [];
             const matchstate = addState(new MatchState(ControlType.Match));
             let startNo = matchstate;
-            const stack = [];
             let pair;
             if (expression) {
                 const pair = walkExpr(expression, []);
@@ -138,81 +137,82 @@ exports.RegexpModule = {
                 });
             }
         }
-        /**
-         * debugging tool; lots of ts-ignores
-         */
-        function nfaToString() {
-            const known = { OneOf: [], EachOf: [] };
-            function dumpTripleConstraint(tc) {
-                return "<" + tc.predicate + ">";
-            }
-            function card(obj) {
-                let x = "";
-                if ("min" in obj)
-                    // @ts-ignore
-                    x += obj.min;
-                if ("max" in obj)
-                    // @ts-ignore
-                    x += "," + obj.max;
-                return x ? "{" + x + "}" : "";
-            }
-            function junct(j) {
-                // @ts-ignore
-                let id = known[j.type].indexOf(j);
-                if (id === -1) { // @ts-ignore
-                    id = known[j.type].push(j) - 1;
-                }
-                // @ts-ignore
-                return j.type + id; // + card(j);
-            }
-            function dumpStackElt(elt) {
-                // @ts-ignore
-                return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-            }
-            function dumpStack(stack) {
-                return stack.map(elt => {
-                    return dumpStackElt(elt);
-                }).join("/");
-            }
-            function dumpNFA(states, startNo) {
-                return states.map((s, i) => {
-                    // @ts-ignore
-                    return (i === startNo ? s instanceof MatchState ? "." : "S" : s instanceof MatchState ? "E" : " ") + i + " " + (s instanceof SplitState ? ("Split-" + junct(s.expr)) :
-                        s instanceof ReptState ? ("Rept-" + junct(s.expr)) :
-                            s instanceof MatchState ? "Match" :
-                                // @ts-ignore
-                                dumpTripleConstraint(s.c)
-                    // @ts-ignore
-                    ) + card(s) + "→" + s.outs.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
-                }).join("\n");
-            }
-            function dumpMatched(matched) {
-                return matched.map(m => {
-                    // @ts-ignore
-                    return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
-                }).join(",");
-            }
-            function dumpThread(thread) {
-                return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-                    // @ts-ignore
-                    return k + "×" + thread.repeats[k];
-                }).join(",") + " " + dumpMatched(thread.matched);
-            }
-            function dumpThreadList(list) {
-                return "[[" + list.map(thread => {
-                    return dumpThread(thread);
-                }).join("\n  ") + "]]";
-            }
-            return {
-                nfa: dumpNFA,
-                stack: dumpStack,
-                stackElt: dumpStackElt,
-                thread: dumpThread,
-                threadList: dumpThreadList
-            };
-        }
     }
 };
+/**
+ * debugging tool; lots of ts-ignores
+ */
+class NfaToString {
+    constructor() {
+        this.known = { OneOf: [], EachOf: [] };
+    }
+    dumpTripleConstraint(tc) {
+        return "<" + tc.predicate + ">";
+    }
+    card(obj) {
+        let x = "";
+        if ("min" in obj)
+            // @ts-ignore
+            x += obj.min;
+        if ("max" in obj)
+            // @ts-ignore
+            x += "," + obj.max;
+        return x ? "{" + x + "}" : "";
+    }
+    junct(j) {
+        // @ts-ignore
+        let id = known[j.type].indexOf(j);
+        if (id === -1) { // @ts-ignore
+            id = known[j.type].push(j) - 1;
+        }
+        // @ts-ignore
+        return j.type + id; // + card(j);
+    }
+    dumpStackElt(elt) {
+        return this.junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
+    }
+    dumpStack(stack) {
+        return stack.map(elt => {
+            return this.dumpStackElt(elt);
+        }).join("/");
+    }
+    dumpNFA(states, startNo) {
+        return states.map((s, i) => {
+            return (i === startNo
+                ? s instanceof MatchState
+                    ? "."
+                    : "S"
+                : s instanceof MatchState
+                    ? "E"
+                    : " ")
+                + i + " " + (s instanceof SplitState
+                ? ("Split-" + this.junct(s.expr))
+                : s instanceof ReptState
+                    ? ("Rept-" + this.junct(s.expr))
+                    : s instanceof MatchState
+                        ? "Match"
+                        : this.dumpTripleConstraint(s.c))
+                + this.card(s) + "→" + s.outs.join(" | ") + ("stack" in s
+                ? this.dumpStack(s.stack)
+                : "");
+        }).join("\n");
+    }
+    dumpMatched(matched) {
+        return matched.map(m => {
+            return this.dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + this.dumpStack(m.stack);
+        }).join(",");
+    }
+    dumpThread(thread) {
+        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
+            return k + "×" + thread.repeats[k];
+        }).join(",") + " " + this.dumpMatched(thread.matched);
+    }
+    dumpThreadList(list) {
+        return "[[" + list.map(thread => {
+            return this.dumpThread(thread);
+        }).join("\n  ") + "]]";
+    }
+}
 class RegExpThread {
     constructor(state = -1, repeats = {}, avail = [], stack = [], matched = [], errors = []) {
         this.state = state;
@@ -236,8 +236,7 @@ class EvalSimple1ErrRegexEngine {
         if (rbenx.states.length === 1)
             return this.matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
         let chosen = null;
-        // const dump = nfaToString();
-        // console.log(dump.nfa(this.states, this.start));
+        // console.log(new NfaToString().dumpNFA(this.states, this.start));
         this.addstate(clist, this.start, new RegExpThread());
         while (clist.length) {
             nlist = [];
@@ -249,7 +248,7 @@ class EvalSimple1ErrRegexEngine {
                     continue;
                 const state = rbenx.states[thread.state];
                 const nlistlen = nlist.length;
-                // may be Accept!
+                // may be an Accept state
                 if (state instanceof TripleConstraintState) {
                     const constraintNo = constraintList.indexOf(state.c);
                     let min = state.c.min !== undefined ? state.c.min : 1;
@@ -280,7 +279,6 @@ class EvalSimple1ErrRegexEngine {
                         })
                     });
             }
-            // console.log(dump.threadList(nlist));
             if (nlist.length === 0 && chosen === null)
                 return reportError(localExpect(clist, rbenx.states));
             const t = clist;
@@ -296,8 +294,6 @@ class EvalSimple1ErrRegexEngine {
             }, null);
             if (longerChosen)
                 chosen = longerChosen;
-            // if (longerChosen !== null)
-            //   console.log(JSON.stringify(this.matchedToResult(longerChosen.matched)));
         }
         if (chosen === null)
             return reportError([]);
@@ -508,7 +504,7 @@ class EvalSimple1ErrRegexEngine {
                 }
                 else {
                     throw "how'd we get here?";
-                    ptr = texprSolns[last[mis].e];
+                    // ptr = texprSolns[last[mis].e];
                 }
                 ++mis;
             }

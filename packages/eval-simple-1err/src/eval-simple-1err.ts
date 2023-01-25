@@ -4,23 +4,28 @@ import type {Quad as RdfJsQuad, Term as RdfJsTerm} from 'rdf-js';
 import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {
   NoTripleConstraint,
-  ValidatorRegexModule,
-  ValidatorRegexEngine,
+  SemActDispatcher,
+  T2TcPartition,
   Tc2t,
-  T2TcPartition, SemActDispatcher, TcAssignment
+  TcAssignment,
+  ValidatorRegexEngine,
+  ValidatorRegexModule
 } from "@shexjs/eval-validator-api";
 import {
-  MissingProperty,
-  ExcessTripleViolation,
-  shapeExprTest,
-  SemActFailure,
-  tripleExprSolutions,
   EachOfSolution,
+  EachOfSolutions,
+  ExcessTripleViolation,
+  groupSolution,
+  groupSolutions,
+  MissingProperty,
   OneOfSolution,
   OneOfSolutions,
-  EachOfSolutions,
+  Recursion,
+  SemActFailure,
+  shapeExprTest,
+  TestedTriple,
   TripleConstraintSolutions,
-  TestedTriple, Recursion, groupSolution, groupSolutions
+  tripleExprSolutions
 } from "@shexjs/term/shexv";
 
 export {};
@@ -117,7 +122,6 @@ export const RegexpModule: ValidatorRegexModule = {
       const states: RegExpState[] = [];
       const matchstate = addState(new MatchState(ControlType.Match));
       let startNo = matchstate;
-      const stack = [];
       let pair;
       if (expression) {
         const pair = walkExpr(expression, []);
@@ -183,98 +187,98 @@ export const RegexpModule: ValidatorRegexModule = {
         });
       }
     }
-
-
-    /**
-     * debugging tool; lots of ts-ignores
-     */
-    function nfaToString() {
-      const known: {
-        OneOf: ShExJ.tripleExpr[],
-        EachOf: ShExJ.tripleExpr[]
-      } = {OneOf: [], EachOf: []};
-
-      function dumpTripleConstraint(tc: ShExJ.TripleConstraint) {
-        return "<" + tc.predicate + ">";
-      }
-
-      function card(obj: RegExpState) {
-        let x = "";
-        if ("min" in obj)
-          // @ts-ignore
-          x += obj.min;
-        if ("max" in obj)
-          // @ts-ignore
-          x += "," + obj.max;
-        return x ? "{" + x + "}" : "";
-      }
-
-      function junct(j: string | ShExJ.tripleExpr) { // string.type is undefined so this works in js
-        // @ts-ignore
-        let id = known[j.type].indexOf(j);
-        if (id === -1) { // @ts-ignore
-          id = known[j.type].push(j) - 1;
-        }
-        // @ts-ignore
-        return j.type + id; // + card(j);
-      }
-
-      function dumpStackElt(elt: RegExpState) {
-        // @ts-ignore
-        return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-      }
-
-      function dumpStack(stack: RegExpState[]) {
-        return stack.map(elt => {
-          return dumpStackElt(elt);
-        }).join("/");
-      }
-
-      function dumpNFA(states: RegExpState[], startNo: number) {
-        return states.map((s, i) => {
-          // @ts-ignore
-          return (i === startNo ? s instanceof MatchState ? "." : "S" : s instanceof MatchState ? "E" : " ") + i + " " + (
-              s instanceof SplitState ? ("Split-" + junct(s.expr)) :
-                  s instanceof ReptState ? ("Rept-" + junct(s.expr)) :
-                      s instanceof MatchState ? "Match" :
-                          // @ts-ignore
-                          dumpTripleConstraint(s.c as ShExJ.TripleConstraint)
-              // @ts-ignore
-          ) + card(s) + "→" + s.outs!.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
-        }).join("\n");
-      }
-
-      function dumpMatched(matched: TriplesMatch[]) {
-        return matched.map(m => {
-          // @ts-ignore
-          return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
-        }).join(",");
-      }
-
-      function dumpThread(thread: RegExpThread) {
-        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-          // @ts-ignore
-          return k + "×" + thread.repeats[k];
-        }).join(",") + " " + dumpMatched(thread.matched);
-      }
-
-      function dumpThreadList(list: RegExpThread[]) {
-        return "[[" + list.map(thread => {
-          return dumpThread(thread);
-        }).join("\n  ") + "]]";
-      }
-
-      return {
-        nfa: dumpNFA,
-        stack: dumpStack,
-        stackElt: dumpStackElt,
-        thread: dumpThread,
-        threadList: dumpThreadList
-      };
-    }
   }
 }
 
+/**
+ * debugging tool; lots of ts-ignores
+ */
+class NfaToString {
+  public known: {
+    OneOf: ShExJ.tripleExpr[],
+    EachOf: ShExJ.tripleExpr[]
+  } = {OneOf: [], EachOf: []};
+
+  dumpTripleConstraint (tc: ShExJ.TripleConstraint) {
+    return "<" + tc.predicate + ">";
+  }
+
+  card (obj: RegExpState) {
+    let x = "";
+    if ("min" in obj)
+        // @ts-ignore
+      x += obj.min;
+    if ("max" in obj)
+        // @ts-ignore
+      x += "," + obj.max;
+    return x ? "{" + x + "}" : "";
+  }
+
+  junct (j: string | ShExJ.tripleExpr) { // string.type is undefined so this works in js
+    // @ts-ignore
+    let id = known[j.type].indexOf(j);
+    if (id === -1) { // @ts-ignore
+      id = known[j.type].push(j) - 1;
+    }
+    // @ts-ignore
+    return j.type + id; // + card(j);
+  }
+
+  public dumpStackElt (elt: StackEntry) {
+    return this.junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
+  }
+
+  public dumpStack (stack: StackEntry[]) {
+    return stack.map(elt => {
+      return this.dumpStackElt(elt);
+    }).join("/");
+  }
+
+  public dumpNFA (states: RegExpState[], startNo: number) {
+    return states.map((s, i) => {
+      return (i === startNo
+                  ? s instanceof MatchState
+                      ? "."
+                      : "S"
+                  : s instanceof MatchState
+                      ? "E"
+                      : " "
+          )
+          + i + " " + (
+              s instanceof SplitState
+                  ? ("Split-" + this.junct(s.expr))
+                  : s instanceof ReptState
+                      ? ("Rept-" + this.junct(s.expr))
+                      : s instanceof MatchState
+                          ? "Match"
+                          : this.dumpTripleConstraint((s as TripleConstraintState).c as ShExJ.TripleConstraint)
+          )
+          + this.card(s) + "→" + s.outs!.join(" | ") + (
+              "stack" in s
+                  ? this.dumpStack((s as TripleConstraintState).stack)
+                  : ""
+          );
+    }).join("\n");
+  }
+
+  public dumpMatched (matched: TriplesMatch[]) {
+    return matched.map(m => {
+      return this.dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + this.dumpStack(m.stack);
+    }).join(",");
+  }
+
+  public dumpThread (thread: RegExpThread) {
+    return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
+      return k + "×" + thread.repeats[k];
+    }).join(",") + " " + this.dumpMatched(thread.matched);
+  }
+
+  public dumpThreadList(list: RegExpThread[]) {
+    return "[[" + list.map(thread => {
+      return this.dumpThread(thread);
+    }).join("\n  ") + "]]";
+  }
+}
 
 interface Repeats {
   [key: string]: number;
@@ -300,9 +304,9 @@ interface TriplesMatch {
 class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
   static algorithm = "rbenx"; // rename at will; only used for debugging
   private end: number;
-  private states: RegExpState[];
-  private start: number;
-  private shape: ShExJ.Shape;
+  private readonly states: RegExpState[];
+  private readonly start: number;
+  private readonly shape: ShExJ.Shape;
 
   constructor(shape: ShExJ.Shape, states: RegExpState[], startNo: number, matchstate: number) {
     this.shape = shape;
@@ -319,8 +323,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return this.matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
 
     let chosen = null;
-    // const dump = nfaToString();
-    // console.log(dump.nfa(this.states, this.start));
+    // console.log(new NfaToString().dumpNFA(this.states, this.start));
     this.addstate(clist, this.start, new RegExpThread());
     while (clist.length) {
       nlist = [];
@@ -332,7 +335,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           continue;
         const state = rbenx.states[thread.state];
         const nlistlen = nlist.length;
-        // may be Accept!
+        // may be an Accept state
         if (state instanceof TripleConstraintState) {
           const constraintNo = constraintList.indexOf(state.c);
           let min = state.c.min !== undefined ? state.c.min : 1;
@@ -362,7 +365,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             })
           });
       }
-      // console.log(dump.threadList(nlist));
+
       if (nlist.length === 0 && chosen === null)
         return reportError(localExpect(clist, rbenx.states));
       const t = clist;
@@ -379,8 +382,6 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       }, null)
       if (longerChosen)
         chosen = longerChosen;
-      // if (longerChosen !== null)
-      //   console.log(JSON.stringify(this.matchedToResult(longerChosen.matched)));
     }
     if (chosen === null)
       return reportError([]);
@@ -615,7 +616,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             last.length = mis + 1; // chop off last so we create everything underneath
           } else {
             throw "how'd we get here?"
-            ptr = texprSolns[last[mis].e];
+            // ptr = texprSolns[last[mis].e];
           }
           ++mis;
         }
