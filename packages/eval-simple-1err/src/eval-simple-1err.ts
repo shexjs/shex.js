@@ -3,11 +3,10 @@ import {rdfJsTerm2Ld, SchemaIndex} from "@shexjs/term";
 import type {Quad as RdfJsQuad, Term as RdfJsTerm} from 'rdf-js';
 import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {
+  ConstraintToTripleResults, MapArray,
   NoTripleConstraint,
   SemActDispatcher,
   T2TcPartition,
-  Tc2t,
-  TcAssignment,
   ValidatorRegexEngine,
   ValidatorRegexModule
 } from "@shexjs/eval-validator-api";
@@ -29,6 +28,8 @@ import {
 } from "@shexjs/term/shexv";
 
 export {};
+
+type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: prefer MapArray<>?
 
 enum ControlType {
   Split, Rept, Match
@@ -288,7 +289,7 @@ class RegExpThread {
   constructor(
       public state: number = -1,
       public repeats: Repeats = {},
-      public avail: number[][] = [],
+      public avail: ConstraintToTriples = new Map(),
       public stack = [],
       public matched: TriplesMatch[] = [],
       public errors = [],
@@ -297,7 +298,7 @@ class RegExpThread {
 
 interface TriplesMatch {
   c: ShExJ.TripleConstraint;
-  triples: number[];
+  triples: RdfJsQuad[];
   stack: StackEntry[];
 }
 
@@ -315,12 +316,15 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     this.start = startNo;
   }
 
-  match(_db: NeighborhoodDb, node: RdfJsTerm, constraintList: ShExJ.TripleConstraint[], constraintToTripleMapping: Tc2t[][], tripleToConstraintMapping: T2TcPartition, neighborhood: RdfJsQuad[], semActHandler: SemActDispatcher, trace: object[] | null): object {
+  match(_db: NeighborhoodDb, node: RdfJsTerm, _constraintList: ShExJ.TripleConstraint[], constraintToTripleMapping: ConstraintToTripleResults, _tripleToConstraintMapping: T2TcPartition, _neighborhood: RdfJsQuad[], semActHandler: SemActDispatcher, trace: object[] | null): object {
     const rbenx = this;
     let clist: RegExpThread[] = [], nlist: RegExpThread[] = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
+    const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {
+      tripleResult.forEach(res => allTriples.add(res.triple));
+      return allTriples;
+    }, new Set())
     if (rbenx.states.length === 1)
-      return this.matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
+      return this.matchedToResult([], constraintToTripleMapping, semActHandler);
 
     let chosen = null;
     // console.log(new NfaToString().dumpNFA(this.states, this.start));
@@ -337,18 +341,18 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         const nlistlen = nlist.length;
         // may be an Accept state
         if (state instanceof TripleConstraintState) {
-          const constraintNo = constraintList.indexOf(state.c);
+          const tripleConstraint = state.c;
           let min = state.c.min !== undefined ? state.c.min : 1;
           let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-          const taken = thread.avail[constraintNo].splice(0, max);
+          if (!thread.avail.has(tripleConstraint))
+            thread.avail.set(tripleConstraint, constraintToTripleMapping.get(tripleConstraint)!.map(pair => pair.triple));
+          const taken = thread.avail.get(tripleConstraint)!.splice(0, max);
           if (taken.length >= min) {
             do {
               this.addStates(nlist, thread, taken);
             } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                taken.push(thread.avail[constraintNo].shift()!);
+              if (thread.avail.get(tripleConstraint)!.length > 0 && taken.length < max) {
+                taken.push(thread.avail.get(tripleConstraint)!.shift()!);
                 return true; // stay in look to take more.
               } else {
                 return false; // no more to take or we're already at max
@@ -375,9 +379,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         const matchedAll =
             elt.matched.reduce<number>((ret, m) => {
               return ret + m.triples.length; // count matched triples
-            }, 0) === tripleToConstraintMapping.reduce<number>((ret, t) => {
-              return t === NoTripleConstraint ? ret : ret + 1; // count expected
-            }, 0);
+            }, 0) === allTriples.size;
         return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
       }, null)
       if (longerChosen)
@@ -416,29 +418,24 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           // @ts-ignore -- Type 'MissingProperty' is not assignable to type 'shapeExprTest'?
           return acc.concat([error]);
         } else {
-          const unmatchedTriples: {[key: number]: TcAssignment} = {};
-          // Collect triples assigned to some constraint.
-          for (const k in tripleToConstraintMapping) {
-            if (tripleToConstraintMapping[k] !== NoTripleConstraint)
-              unmatchedTriples[k] = tripleToConstraintMapping[k];
-          }
-          // Removed triples matched in this thread.
-          elt.matched.forEach(m => {
-            m.triples.forEach(t => {
-              delete unmatchedTriples[t];
-            });
-          });
-
-          const errors = Object.keys(unmatchedTriples).map(i => {
-            const error: ExcessTripleViolation = {
-              type: "ExcessTripleViolation",
-              property: lastState.c.predicate,
-              triple: neighborhood![unmatchedTriples[i as unknown as number] as number], // TODOL doesn't really get TcAssignment?
-            };
-            if (valueExpr)
-              error.valueExpr = valueExpr;
-            return error as shapeExprTest;
-          });
+          const unmatchedTriples: Map<RdfJsQuad, ShExJ.TripleConstraint> = new Map();
+          const threadMatches = elt.matched.reduce<Set<RdfJsQuad>>((threadMatches, eltMatched) => {
+            eltMatched.triples.forEach(triple => threadMatches.add(triple))
+            return threadMatches;
+          }, new Set());
+          const errors = Array.from(allTriples).reduce<ExcessTripleViolation[]>((errors, triple) => { // can reduce to ShExV.error
+            if (!threadMatches.has(triple)) {
+              const error: ExcessTripleViolation = {
+                type: "ExcessTripleViolation",
+                property: lastState.c.predicate, // TODO: needed?
+                triple: triple,
+              };
+              if (valueExpr)
+                error.valueExpr = valueExpr;
+              errors.push(error);
+            }
+            return errors;
+          }, [])
           return acc.concat(errors);
         }
       }, []);
@@ -447,10 +444,10 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     // console.log("chosen:", dump.thread(chosen));
     return "errors" in chosen.matched ?
         chosen.matched :
-        this.matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
+        this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
   }
 
-  addStates (nlist: RegExpThread[], thread: RegExpThread, taken: number[]) {
+  addStates (nlist: RegExpThread[], thread: RegExpThread, taken: RdfJsQuad[]) {
       const state = this.states[thread.state] as TripleConstraintState;
       // find the exprs that require repetition
       const exprs = this.states.map(x => { return x instanceof ReptState ? x.expr : null; });
@@ -504,9 +501,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
         return [list.push(new RegExpThread( // return [new list element index]
             stateNo,
             thread.repeats,
-            thread.avail.map(a => { // copy parent thread's avail vector
-              return a.slice();
-            }),
+            thread.avail, // Experiments indicate this and it's arrays safe to reuse, but I've not thought about it.
             thread.stack,
             thread.matched,
             thread.errors
@@ -523,7 +518,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return new RegExpThread(
           thread.state/*???*/,
           trimmedRepeats,
-          thread.avail.slice(),
+          thread.avail, // Experiments indicate this is safe to reuse, but I've not thought about it.
           thread.stack,
           thread.matched,
           []
@@ -538,7 +533,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return new RegExpThread(
         thread.state/*???*/,
         incrmedRepeats,
-        thread.avail.slice(),
+        [...thread.avail.keys()].reduce<ConstraintToTriples>((acc, tc) => {acc.set(tc, thread.avail.get(tc)!); return acc;}, new Map()),
         thread.stack,
         thread.matched,
         []
@@ -552,7 +547,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return rs.length ? state + "-" + rs : ""+state;
     }
 
-    matchedToResult (matched: TriplesMatch[], constraintList: ShExJ.TripleConstraint[], constraintToTripleMapping: Tc2t[][], neighborhood: RdfJsQuad[], semActHandler: SemActDispatcher): tripleExprSolutions | SemActFailure {
+    matchedToResult(matched: TriplesMatch[], constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher): tripleExprSolutions | SemActFailure {
       let last: StackEntry[] = [];
       const errors: SemActFailure[] = [];
       const skips: ((tripleExprSolutions | null)[])[] = [];
@@ -631,8 +626,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           tcSolns.valueExpr = m.c.valueExpr;
         if ("id" in m.c)
           tcSolns.productionLabel = m.c.id;
-        tcSolns.solutions = m.triples.map(tNo => {
-          const triple = neighborhood[tNo];
+        tcSolns.solutions = m.triples.map(triple => {
           const ret = {
             type: "TestedTriple",
             subject: rdfJsTerm2Ld(triple.subject),
@@ -640,10 +634,9 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             object: rdfJsTerm2Ld(triple.object)
           } as TestedTriple;
 
-          const constraintNo = constraintList.indexOf(m.c);
-                      const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
-                      if (hit!.res && Object.keys(hit!.res).length > 0)
-                        ret.referenced = hit!.res as shapeExprTest|Recursion;
+          const hit = constraintToTripleMapping.get(m.c)!.find(x => x.triple === triple);
+          if (hit!.res && Object.keys(hit!.res).length > 0)
+             ret.referenced = hit!.res as shapeExprTest|Recursion;
           if (errors.length === 0 && "semActs" in m.c)
             { // @ts-ignore
               [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));

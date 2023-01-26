@@ -149,29 +149,6 @@ class MapMap {
         return this.data.get(a).get(b);
     }
 }
-class MapArray {
-    constructor() {
-        this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
-        this.reduce = (f, acc) => {
-            const keys = [...this.data.keys()];
-            for (let ord = 0; ord < keys.length; ++ord)
-                acc = f(acc, this.data.get(keys[ord]), ord);
-            return acc;
-        };
-    }
-    add(a, t) {
-        if (!this.data.has(a)) {
-            this.data.set(a, []);
-        }
-        if (this.data.get(a).indexOf(t) !== -1) {
-            throw Error(`Error adding [${a}] ${t}; already included`);
-        }
-        this.data.get(a).push(t);
-    }
-    get length() { return this.data.size; }
-    get keys() { return this.data.keys(); }
-    get(key) { return this.data.get(key); }
-}
 class TriplesMatching {
     constructor(hits, misses) {
         this.hits = hits;
@@ -536,41 +513,38 @@ class ShExValidator {
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const tripleList = this.matchByPredicate(tripleConstraints, fromDB, ctx);
         const { missErrors, matchedExtras } = this.whatsMissing(tripleList, tripleConstraints, neighborhood, shape.extra || []);
-        const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs.length, tc2exts);
+        const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs, tc2exts);
         const partitionErrors = [];
         const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
         for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-            const localT2Tc = []; // subset of TCs assigned to shape.expression
+            const localT2Tc = new Map(); // subset of TCs assigned to shape.expression TODO: use the same Tc2Tz in regexEngine.match and extends (so cool!!!)
             const unexpectedOrds = [];
             const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
-            t2tc.forEach((cNo, tNo) => {
-                if (cNo !== eval_validator_api_1.NoTripleConstraint && cNo < extendsTCs.length) {
+            t2tc.forEach((TripleConstraint, triple) => {
+                if (extendsTCs.indexOf(TripleConstraint) !== -1) {
                     // allocate to EXTENDS
-                    for (let extNo of tc2exts[cNo]) {
+                    for (let extNo of tc2exts.get(TripleConstraint)) {
                         // allocated to multiple extends if diamond inheritance
-                        extendsToTriples[extNo].push(neighborhood[tNo]);
-                        localT2Tc[tNo] = eval_validator_api_1.NoTripleConstraint;
+                        extendsToTriples[extNo].push(triple);
+                        // localT2Tc.set(triple, NoTripleConstraint);
                     }
                 }
                 else {
                     // allocate to local shape
-                    localT2Tc[tNo] = cNo;
-                    if (cNo === eval_validator_api_1.NoTripleConstraint // didn't match anything
-                        && tNo < fromDB.outgoing.length // is an outgoing triple
-                        && matchedExtras.indexOf(tNo) === -1) // isn't in EXTRAs
-                        unexpectedOrds.push(tNo);
+                    localT2Tc.set(triple, TripleConstraint);
                 }
             });
+            fromDB.outgoing.forEach(triple => {
+                if (!t2tc.has(triple) // didn't match anything
+                    && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
+                    unexpectedOrds.push(triple);
+            });
             const errors = [];
-            const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-            const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-             _seq(neighborhood.length).map(function () { return 0; });
             // Triples not mapped to triple constraints are not allowed in closed shapes.
             if (shape.closed && unexpectedOrds.length > 0) {
                 errors.push({
                     type: "ClosedShapeViolation",
-                    unexpectedTriples: unexpectedOrds.map(tNo => {
-                        const q = neighborhood[tNo];
+                    unexpectedTriples: unexpectedOrds.map(q => {
                         return {
                             subject: (0, term_1.rdfJsTerm2Ld)(q.subject),
                             predicate: (0, term_1.rdfJsTerm2Ld)(q.predicate),
@@ -579,13 +553,6 @@ class ShExValidator {
                     })
                 });
             }
-            // Set usedTriples and constraintMatchCount.
-            localT2Tc.forEach(function (tpNumber, ord) {
-                if (tpNumber !== eval_validator_api_1.NoTripleConstraint) {
-                    usedTriples.push(neighborhood[ord]);
-                    ++constraintMatchCount[tpNumber];
-                }
-            });
             const tc2t = this._constraintToTriples(localT2Tc, tripleConstraints, tripleList); // e.g. [[t0, t2], [t1, t3]]
             let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
@@ -605,8 +572,8 @@ class ShExValidator {
                     results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
-            if (results !== null && results.errors !== undefined) { // @ts-ignore
-                [].push.apply(errors, results.errors);
+            if (results !== null && results.errors !== undefined) {
+                Array.prototype.push.apply(errors, results.errors);
             }
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(point), shape: ctx.label };
             // @ts-ignore
@@ -676,10 +643,9 @@ class ShExValidator {
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const all = neighborhood.outgoing.concat(neighborhood.incoming);
-        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: new MapArray() };
-        for (let tNo = 0; tNo < all.length; ++tNo) // !!@@ horrible hack to set NoTripleConstraint values in permutations
-            init.triple2constraintList.data.set(tNo, []);
-        return constraintList.reduce(function (ret, constraint, cNo) {
+        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: new eval_validator_api_1.MapArray() };
+        [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.triple2constraintList.data.set(triple, [])));
+        return constraintList.reduce(function (ret, constraint) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
             // get triples matching predicate
@@ -688,32 +654,29 @@ class ShExValidator {
             // strip to triples matching value constraints (apart from @<someShape>)
             const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
-                const tNo = all.indexOf(evidence.triple);
-                ret.triple2constraintList.add(tNo, cNo);
-                ret.results.set(cNo, tNo, evidence.sub);
+                ret.triple2constraintList.add(evidence.triple, constraint);
+                ret.results.set(constraint, evidence.triple, evidence.sub);
             });
             matchConstraints.misses.forEach(function (evidence) {
-                const tNo = all.indexOf(evidence.triple);
-                ret.misses.set(tNo, { constraintNo: cNo, errors: evidence.sub });
+                ret.misses.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
             });
             return ret;
         }, init);
     }
-    whatsMissing(tripleList, constraintList, neighborhood, extras) {
+    whatsMissing(tripleList, _constraintList, _neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
-        const missErrors = tripleList.triple2constraintList.reduce((ret, constraints, ord) => {
+        const missErrors = tripleList.triple2constraintList.reduce((ret, t, constraints) => {
             if (constraints.length === 0 && // matches no constraints
-                tripleList.misses.has(ord)) { // predicate matched some constraint(s)
-                const t = neighborhood[ord];
+                tripleList.misses.has(t)) { // predicate matched some constraint(s)
                 if (extras.indexOf(t.predicate.value) !== -1) {
-                    matchedExtras.push(ord);
+                    matchedExtras.push(t);
                 }
                 else { // not declared extra
                     ret.push({
                         type: "TypeMismatch",
                         triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
-                        constraint: constraintList[tripleList.misses.get(ord).constraintNo],
-                        errors: tripleList.misses.get(ord).errors
+                        constraint: tripleList.misses.get(t).constraint,
+                        errors: tripleList.misses.get(t).errors
                     });
                 }
             }
@@ -729,12 +692,12 @@ class ShExValidator {
     }
     // Pivot to triples by constraint.
     _constraintToTriples(t2tc, constraintList, tripleList) {
-        return t2tc.slice().
-            reduce(function (ret, cNo, tNo) {
-            if (cNo !== eval_validator_api_1.NoTripleConstraint)
-                ret[cNo].push({ tNo: tNo, res: tripleList.results.get(cNo, tNo) });
-            return ret;
-        }, _seq(constraintList.length).map(() => [])); // [length][]
+        const ret = new eval_validator_api_1.MapArray();
+        constraintList.forEach(tc => ret.empty(tc));
+        t2tc.forEach((tripleConstraint, triple) => {
+            ret.add(tripleConstraint, { triple: triple, res: tripleList.results.get(tripleConstraint, triple) });
+        });
+        return ret;
     }
     testExtends(expr, point, extendsToTriples, ctx) {
         if (expr.extends === undefined)
@@ -818,7 +781,7 @@ class ShExValidator {
         function getAllTripleConstraints(shape) {
             const { extendsTCs: extendsTcOrRefsz, localTCs } = shapePieces(shape, 1, 1);
             const tcs = [];
-            const tc2exts = [];
+            const tc2exts = new Map();
             extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
             return { extendsTCs: tcs, tc2exts, localTCs };
             function flattenExtends(tcOrRefs, ord) {
@@ -835,13 +798,13 @@ class ShExValidator {
                     if (idx === -1) {
                         // new TC
                         tcs.push(tc);
-                        tc2exts.push([ord]);
+                        tc2exts.set(tc, [ord]);
                     }
                     else {
                         // ref to TC already seen in this or earlier EXTENDS
-                        if (tc2exts[idx].indexOf(ord) === -1) {
+                        if (tc2exts.get(tc).indexOf(ord) === -1) {
                             // not yet included in this EXTENDS
-                            tc2exts[idx].push(ord);
+                            tc2exts.get(tc).push(ord);
                         }
                     }
                 }
@@ -1069,7 +1032,7 @@ class TripleToTripleConstraints {
      *      [0,2,4], # try T2 against same
      *      [1,3]    # try T3 against TC1, TC3
      *   ]
-     * @param extendsTCcount how many TCs are in EXTENDS,
+     * @param extendsTCs how many TCs are in EXTENDS,
      *   e.g. 4 says that TCs 0-3 are assigned to some EXTENDS; only TC4 is "local".
      * @param tc2exts which TripleConstraints came from which EXTENDS, e.g. [
      *     [0], # TC0 is assignable to EXTENDS 0
@@ -1078,8 +1041,9 @@ class TripleToTripleConstraints {
      *     [0], # TC3 is assignable to EXTENDS 0
      *   ]
      */
-    constructor(constraintList, extendsTCcount, tc2exts) {
-        this.extendsTCcount = extendsTCcount;
+    constructor(constraintList, extendsTCs, tc2exts) {
+        this.uniqueTCs = [];
+        this.extendsTCs = extendsTCs;
         this.tc2exts = tc2exts;
         this.subgraphCache = new Map();
         // @ts-ignore
@@ -1088,7 +1052,7 @@ class TripleToTripleConstraints {
     /**
      * Find next mapping of Triples to TripleConstraints.
      * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
-     * @returns {(ConstraintNo | typeof NoTripleConstraint)[] | null}
+     * @returns {(Quad | typeof NoTripleConstraint)[] | null}
      */
     next() {
         while (this.crossProduct.next()) {
@@ -1108,17 +1072,23 @@ class TripleToTripleConstraints {
                t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
                tc2exts: [[0], [0], [0], [0]] (All four TCs assignable to first EXTENDS.)
             */
-            const subgraphKey = t2tc.map(cNo => cNo === eval_validator_api_1.NoTripleConstraint
-                ? '_'
-                : cNo < this.extendsTCcount
-                    ? '' + this.tc2exts[cNo].map(eNo => 'E' + eNo)
-                    : 'L' + cNo).join('-');
+            const subgraphKey = [...t2tc.entries()].map(([_triple, tripleConstraint]) => this.extendsTCs.indexOf(tripleConstraint) !== -1
+                ? '' + this.tc2exts.get(tripleConstraint).map(eNo => 'E' + eNo)
+                : 'L' + this.getUniqueTcNo(tripleConstraint)).join('-');
             if (!this.subgraphCache.has(subgraphKey)) {
                 this.subgraphCache.set(subgraphKey, true);
                 return t2tc;
             }
         }
         return null;
+    }
+    getUniqueTcNo(tripleConstraint) {
+        let idx = this.uniqueTCs.indexOf(tripleConstraint);
+        if (idx === -1) {
+            idx = this.uniqueTCs.length;
+            this.uniqueTCs.push(tripleConstraint);
+        }
+        return idx;
     }
 }
 // { next: () => (boolean); get: () => number[] | null }
@@ -1167,7 +1137,13 @@ function CrossProduct(sets, emptyValue) {
         // new API because
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
         // cautions about functions over arguments.
-        get: function () { return args; }
+        get: function () {
+            return args.reduce((acc, listElt, ord) => {
+                if (listElt !== emptyValue)
+                    acc.set(keys[ord], listElt);
+                return acc;
+            }, new Map());
+        }
     };
 }
 /* N3jsTripleToString - simple toString function to make N3.js's triples
@@ -1214,9 +1190,9 @@ function indexNeighborhood(triples) {
                 t.toString = N3jsTripleToString;
             return ret;
         }, new Map()),
-        candidates: _seq(triples.length).map(function () {
-            return [];
-        }),
+        // candidates: _seq<number>(triples.length).map(function () {
+        //   return [];
+        // }),
         misses: []
     };
 }

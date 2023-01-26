@@ -11,7 +11,9 @@ import {
   SemActHandler,
   T2TcPartition,
   ValidatorRegexEngine,
-  ValidatorRegexModule
+  ValidatorRegexModule,
+  MapArray,
+  ConstraintToTripleResults, TripleResult
 } from "@shexjs/eval-validator-api";
 import * as Hierarchy from 'hierarchy-closure';
 import type {Quad, Term as RdfJsTerm} from 'rdf-js';
@@ -60,6 +62,8 @@ import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import * as RdfJs from "@rdfjs/types/data-model";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
 import {index as indexSchema, Visitor as ShExVisitor} from "@shexjs/visitor";
+import {DataFactory} from "n3";
+import quad = DataFactory.quad;
 
 export {};
 
@@ -97,7 +101,7 @@ interface SemActCodeIndex {
 
 interface NeighborhoodIndex {
   byPredicate: Map<string, Quad[]>;
-  candidates: number[][];
+  // candidates: number[][];
   misses: any[];
 }
 
@@ -188,9 +192,6 @@ interface ExtensionIndex {
 
 interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]}
 
-type TripleNo = number;
-type ConstraintNo = number;
-
 class ShapeExprValidationContext {
   constructor(
       public parent: ShapeExprValidationContext | null,
@@ -240,42 +241,13 @@ class MapMap<A, B, T> {
   }
 }
 
-class MapArray<A, T> {
-  public data: Map<A, T[]> = new Map(); // public 'cause I don't know how to fix reduce to use this.data
-  add (a:A, t:T): void {
-    if (!this.data.has(a)) { this.data.set(a, []); }
-    if (this.data.get(a)!.indexOf(t) !== -1) { throw Error(`Error adding [${a}] ${t}; already included`); }
-    this.data.get(a)!.push(t);
-  }
-
-  get length () { return this.data.size; }
-
-  get keys () { return this.data.keys(); }
-
-  reduce: <U>(f: (acc: U, x: T[], ord:number) => U, acc: U) => U = (f, acc) => {
-    const keys = [...this.data.keys()];
-    for (let ord = 0; ord < keys.length; ++ord)
-      acc = f(acc, this.data.get(keys[ord])!, ord);
-    return acc
-  }
-
-  get(key: A) { return this.data.get(key); }
-}
-
-type T2TCErrors = Map<TripleNo, { constraintNo: ConstraintNo, errors: shapeExprTest }>;
-type TC2TResult = MapMap<TripleNo, ConstraintNo, (shapeExprTest | undefined)>;
-type T2TCs = MapArray<TripleNo, ConstraintNo>;
-type TripleNoList = number[];
-
-type TripleResult = {
-  tNo: TripleNo;
-  res: shapeExprTest;
-}
-type ConstraintToTriples = TripleResult[][];
+type T2TCErrors = Map<Quad, { constraint: TripleConstraint, errors: shapeExprTest }>;
+type TC2TResult = MapMap<TripleConstraint, Quad, (shapeExprTest | undefined)>;
+type T2TCs = MapArray<Quad, TripleConstraint>;
 
 type WhatsMissingResult = {
   missErrors: error[];
-  matchedExtras: TripleNo[];
+  matchedExtras: Quad[];
 }
 
 class TriplesMatching {
@@ -686,43 +658,40 @@ export class ShExValidator {
     const tripleList = this.matchByPredicate(tripleConstraints, fromDB, ctx);
     const {missErrors, matchedExtras} = this.whatsMissing(tripleList, tripleConstraints, neighborhood, shape.extra || [])
 
-    const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs.length, tc2exts);
+    const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs, tc2exts);
     const partitionErrors = [];
     const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-      const localT2Tc: T2TcPartition = []; // subset of TCs assigned to shape.expression
-      const unexpectedOrds: TripleNoList = [];
+      const localT2Tc: T2TcPartition = new Map(); // subset of TCs assigned to shape.expression TODO: use the same Tc2Tz in regexEngine.match and extends (so cool!!!)
+      const unexpectedOrds: Quad[] = [];
       const extendsToTriples: Quad[][] = _seq((shape.extends || []).length).map(() => []);
-      t2tc.forEach((cNo, tNo) => {
-        if (cNo !== NoTripleConstraint && cNo < extendsTCs.length) {
+      t2tc.forEach((TripleConstraint, triple) => {
+        if (extendsTCs.indexOf(TripleConstraint) !== -1) {
           // allocate to EXTENDS
-          for (let extNo of tc2exts[cNo]) {
+          for (let extNo of tc2exts.get(TripleConstraint)!) {
             // allocated to multiple extends if diamond inheritance
-            extendsToTriples[extNo].push(neighborhood[tNo]);
-            localT2Tc[tNo] = NoTripleConstraint;
+            extendsToTriples[extNo].push(triple);
+            // localT2Tc.set(triple, NoTripleConstraint);
           }
         } else {
           // allocate to local shape
-          localT2Tc[tNo] = cNo;
-          if (cNo === NoTripleConstraint // didn't match anything
-              && tNo < fromDB.outgoing.length // is an outgoing triple
-              && matchedExtras.indexOf(tNo) === -1) // isn't in EXTRAs
-            unexpectedOrds.push(tNo);
+          localT2Tc.set(triple, TripleConstraint);
         }
       });
+      fromDB.outgoing.forEach(triple => {
+        if (!t2tc!.has(triple) // didn't match anything
+            && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
+          unexpectedOrds.push(triple);
+      })
 
       const errors: error[] = []
-      const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-      const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-            _seq(neighborhood.length).map(function () { return 0; });
 
       // Triples not mapped to triple constraints are not allowed in closed shapes.
       if (shape.closed && unexpectedOrds.length > 0) {
         errors.push({
           type: "ClosedShapeViolation",
-          unexpectedTriples: unexpectedOrds.map(tNo => {
-            const q = neighborhood[tNo];
+          unexpectedTriples: unexpectedOrds.map(q => {
             return {
               subject: rdfJsTerm2Ld(q.subject),
               predicate: rdfJsTerm2Ld(q.predicate),
@@ -732,13 +701,6 @@ export class ShExValidator {
         });
       }
 
-      // Set usedTriples and constraintMatchCount.
-      localT2Tc.forEach(function (tpNumber, ord) {
-        if (tpNumber !== NoTripleConstraint) {
-          usedTriples.push(neighborhood[ord]);
-          ++constraintMatchCount[tpNumber];
-        }
-      });
       const tc2t = this._constraintToTriples(localT2Tc, tripleConstraints, tripleList); // e.g. [[t0, t2], [t1, t3]]
 
       let results = this.testExtends(shape, point, extendsToTriples, ctx);
@@ -758,8 +720,8 @@ export class ShExValidator {
         }
       }
       if (results !== null && results.errors !== undefined)
-        { // @ts-ignore
-          [].push.apply(errors, results.errors);
+        {
+          Array.prototype.push.apply(errors, results.errors);
         }
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: ctx.label };
@@ -835,9 +797,12 @@ export class ShExValidator {
     const incoming = indexNeighborhood(neighborhood.incoming);
     const all = neighborhood.outgoing.concat(neighborhood.incoming);
     const init: ByPredicateResult = { misses: new Map(), results: new MapMap(), triple2constraintList:new MapArray() };
-    for (let tNo = 0; tNo < all.length; ++tNo) // !!@@ horrible hack to set NoTripleConstraint values in permutations
-      init.triple2constraintList.data.set(tNo, []);
-    return constraintList.reduce<ByPredicateResult>(function (ret, constraint, cNo) {
+    [neighborhood.outgoing, neighborhood.incoming].forEach(quads =>
+        quads.forEach(triple =>
+            init.triple2constraintList.data.set(triple, [])
+        )
+    );
+    return constraintList.reduce<ByPredicateResult>(function (ret, constraint) {
 
       // subject and object depend on direction of constraint.
       const index = constraint.inverse ? incoming : outgoing;
@@ -850,32 +815,29 @@ export class ShExValidator {
       const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
 
       matchConstraints.hits.forEach(function (evidence) {
-        const tNo = all.indexOf(evidence.triple);
-        ret.triple2constraintList.add(tNo, cNo);
-        ret.results.set(cNo, tNo, evidence.sub);
+        ret.triple2constraintList.add(evidence.triple, constraint);
+        ret.results.set(constraint, evidence.triple, evidence.sub);
       });
       matchConstraints.misses.forEach(function (evidence) {
-        const tNo = all.indexOf(evidence.triple);
-        ret.misses.set(tNo, {constraintNo: cNo, errors: evidence.sub});
+        ret.misses.set(evidence.triple, {constraint: constraint, errors: evidence.sub});
       });
       return ret;
     }, init);
   }
 
-  whatsMissing (tripleList: ByPredicateResult, constraintList: TripleConstraint[], neighborhood: Quad[], extras: string[]): WhatsMissingResult {
-    const matchedExtras: TripleNo[] = []; // triples accounted for by EXTRA
-    const missErrors = tripleList.triple2constraintList.reduce<error[]>((ret, constraints, ord) => {
+  whatsMissing (tripleList: ByPredicateResult, _constraintList: TripleConstraint[], _neighborhood: Quad[], extras: string[]): WhatsMissingResult {
+    const matchedExtras: Quad[] = []; // triples accounted for by EXTRA
+    const missErrors = tripleList.triple2constraintList.reduce<error[]>((ret, t, constraints) => {
       if (constraints.length === 0 &&   // matches no constraints
-          tripleList.misses.has(ord)) {   // predicate matched some constraint(s)
-        const t = neighborhood[ord];
+          tripleList.misses.has(t)) {   // predicate matched some constraint(s)
         if (extras.indexOf(t.predicate.value) !== -1) {
-          matchedExtras.push(ord);
+          matchedExtras.push(t);
         } else {                        // not declared extra
           ret.push({             // so it's a missing triple.
             type: "TypeMismatch",
             triple: {type: "TestedTriple", subject: rdfJsTerm2Ld(t.subject), predicate: rdfJsTerm2Ld(t.predicate), object: rdfJsTerm2Ld(t.object)},
-            constraint: constraintList[tripleList.misses.get(ord)!.constraintNo],
-            errors: tripleList.misses.get(ord)!.errors
+            constraint: tripleList.misses.get(t)!.constraint,
+            errors: tripleList.misses.get(t)!.errors
           });
         }
       }
@@ -893,13 +855,13 @@ export class ShExValidator {
   }
 
   // Pivot to triples by constraint.
-  _constraintToTriples (t2tc: T2TcPartition, constraintList: TripleConstraint[], tripleList: ByPredicateResult): ConstraintToTriples {
-    return t2tc.slice().
-      reduce<ConstraintToTriples>(function (ret, cNo, tNo) {
-        if (cNo !== NoTripleConstraint)
-          ret[cNo].push({tNo: tNo, res: tripleList.results.get(cNo, tNo) as shapeExprTest});
-        return ret;
-      }, _seq(constraintList.length).map(() => [])); // [length][]
+  _constraintToTriples (t2tc: T2TcPartition, constraintList: TripleConstraint[], tripleList: ByPredicateResult): ConstraintToTripleResults {
+    const ret: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
+    constraintList.forEach(tc => ret.empty(tc))
+    t2tc.forEach((tripleConstraint, triple) => {
+      ret.add(tripleConstraint, {triple: triple, res: tripleList.results.get(tripleConstraint, triple)!});
+    });
+    return ret;
   }
 
   testExtends(expr: Shape, point: RdfJsTerm, extendsToTriples: Quad[][], ctx: ShapeExprValidationContext) {
@@ -1000,7 +962,7 @@ export class ShExValidator {
     function getAllTripleConstraints (shape: Shape) {
       const { extendsTCs: extendsTcOrRefsz, localTCs } = shapePieces(shape, 1, 1);
       const tcs: TripleConstraint[] = [];
-      const tc2exts: number[][] = [];
+      const tc2exts: Map<TripleConstraint, number[]> = new Map();
       extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
       return { extendsTCs: tcs, tc2exts, localTCs };
 
@@ -1017,12 +979,12 @@ export class ShExValidator {
           if (idx === -1) {
             // new TC
             tcs.push(tc);
-            tc2exts.push([ord]);
+            tc2exts.set(tc, [ord]);
           } else {
             // ref to TC already seen in this or earlier EXTENDS
-            if (tc2exts[idx].indexOf(ord) === -1) {
+            if (tc2exts.get(tc)!.indexOf(ord) === -1) {
               // not yet included in this EXTENDS
-              tc2exts[idx].push(ord);
+              tc2exts.get(tc)!.push(ord);
             }
           }
         }
@@ -1243,10 +1205,11 @@ function testValueSetValue(valueSetValueP: string | ObjectLiteral | IriStem | Ir
  * documented using test ExtendsRepeatedP-pass
  */
 class TripleToTripleConstraints {
-  private extendsTCcount: number;
-  private tc2exts: number[][];
+  private extendsTCs: TripleConstraint[];
+  private tc2exts: Map<TripleConstraint, number[]>;
   private subgraphCache: Map<string, boolean>;
-  private crossProduct: { next: () => (boolean); get: () => (number | typeof NoTripleConstraint)[]; };
+  private crossProduct: { next: () => (boolean); get: () => T2TcPartition; };
+  private uniqueTCs: TripleConstraint[] = [];
   /**
    *
    * @param constraintList mapping from Triple to possible TripleConstraints, e.g. [
@@ -1255,7 +1218,7 @@ class TripleToTripleConstraints {
    *      [0,2,4], # try T2 against same
    *      [1,3]    # try T3 against TC1, TC3
    *   ]
-   * @param extendsTCcount how many TCs are in EXTENDS,
+   * @param extendsTCs how many TCs are in EXTENDS,
    *   e.g. 4 says that TCs 0-3 are assigned to some EXTENDS; only TC4 is "local".
    * @param tc2exts which TripleConstraints came from which EXTENDS, e.g. [
    *     [0], # TC0 is assignable to EXTENDS 0
@@ -1264,19 +1227,19 @@ class TripleToTripleConstraints {
    *     [0], # TC3 is assignable to EXTENDS 0
    *   ]
    */
-  constructor (constraintList: T2TCs, extendsTCcount: number, tc2exts:number[][]) {
-    this.extendsTCcount = extendsTCcount; this.tc2exts = tc2exts;
+  constructor (constraintList: T2TCs, extendsTCs: TripleConstraint[], tc2exts:Map<TripleConstraint, number[]>) {
+    this.extendsTCs = extendsTCs; this.tc2exts = tc2exts;
     this.subgraphCache = new Map();
     // @ts-ignore
-    this.crossProduct = CrossProduct<TripleNo, ConstraintNo, typeof NoTripleConstraint>(constraintList, NoTripleConstraint);
+    this.crossProduct = CrossProduct<Quad, TripleConstraint, typeof NoTripleConstraint>(constraintList, NoTripleConstraint);
   }
 
   /**
    * Find next mapping of Triples to TripleConstraints.
    * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
-   * @returns {(ConstraintNo | typeof NoTripleConstraint)[] | null}
+   * @returns {(Quad | typeof NoTripleConstraint)[] | null}
    */
-  next (): (ConstraintNo | typeof NoTripleConstraint)[] | null {
+  next (): T2TcPartition | null {
     while (this.crossProduct.next()) {
       /* t2tc - array mapping neighborhood index to TripleConstraint
        * CrossProduct counts through triple2constraintList from the right:
@@ -1295,12 +1258,10 @@ class TripleToTripleConstraints {
          t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
          tc2exts: [[0], [0], [0], [0]] (All four TCs assignable to first EXTENDS.)
       */
-      const subgraphKey = t2tc.map(cNo =>
-        cNo === NoTripleConstraint
-          ? '_'
-          : cNo < this.extendsTCcount
-          ? '' + this.tc2exts[cNo].map(eNo => 'E' + eNo)
-          : 'L' + cNo
+      const subgraphKey = [...t2tc.entries()].map(([_triple, tripleConstraint]) =>
+        this.extendsTCs.indexOf(tripleConstraint) !== -1
+          ? '' + this.tc2exts.get(tripleConstraint)!.map(eNo => 'E' + eNo)
+          : 'L' + this.getUniqueTcNo(tripleConstraint)
       ).join('-')
 
       if (!this.subgraphCache.has(subgraphKey)) {
@@ -1309,6 +1270,15 @@ class TripleToTripleConstraints {
       }
     }
     return null;
+  }
+
+  private getUniqueTcNo(tripleConstraint: TripleConstraint) {
+    let idx = this.uniqueTCs.indexOf(tripleConstraint);
+    if (idx === -1) {
+      idx = this.uniqueTCs.length;
+      this.uniqueTCs.push(tripleConstraint);
+    }
+    return idx;
   }
 }
 
@@ -1363,7 +1333,13 @@ function CrossProduct<KEY, LISTELT, EMPTY_VALUE>(sets: MapArray<KEY, LISTELT>, e
     // new API because
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
     // cautions about functions over arguments.
-    get: function () { return args; }
+    get: function () {
+      return args!.reduce<Map<KEY, LISTELT>>((acc, listElt, ord) => {
+        if (listElt !== emptyValue)
+          acc.set(keys[ord], listElt as LISTELT);
+        return acc;
+      }, new Map());
+    }
   };
 }
 
@@ -1414,9 +1390,9 @@ function indexNeighborhood (triples: Quad[]): NeighborhoodIndex {
 
       return ret;
     }, new Map()),
-    candidates: _seq<number>(triples.length).map(function () {
-      return [];
-    }),
+    // candidates: _seq<number>(triples.length).map(function () {
+    //   return [];
+    // }),
     misses: []
   };
 }

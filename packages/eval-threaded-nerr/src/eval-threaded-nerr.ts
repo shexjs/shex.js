@@ -6,8 +6,7 @@ import {
   NoTripleConstraint,
   ValidatorRegexModule,
   ValidatorRegexEngine,
-  Tc2t,
-  T2TcPartition, SemActDispatcher, TcAssignment
+  T2TcPartition, SemActDispatcher, ConstraintToTripleResults
 } from "@shexjs/eval-validator-api";
 import {
   MissingProperty,
@@ -23,19 +22,21 @@ export {};
 
 const UNBOUNDED = -1;
 
+type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: prefer MapArray<>?
+
 interface PossibleErrors {
   type: "PossibleErrors"
   errors: error[][];
 }
 
-interface TNoList {
-  tNos: number[];
+interface TripleList {
+  triples: RdfJsQuad[];
 }
 
 interface RegexpThread {
-  avail: number[][];
+  avail: ConstraintToTriples;
   errors: error[];
-  matched: TNoList[];
+  matched: TripleList[];
   solution?: groupSolution
   expression?: tripleExprSolutions
 }
@@ -59,7 +60,7 @@ interface GroupAttrs {
 }
 
 interface TripleTestedErrors {
-  tripleNo: number;
+  triple: RdfJsQuad;
   tested: TestedTriple;
   semActErrors: any;
 }
@@ -73,7 +74,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     this.outerExpression = shape.expression!;
   }
 
-  match(_db: NeighborhoodDb, _node: RdfJsTerm, constraintList: ShExJ.TripleConstraint[], constraintToTripleMapping: Tc2t[][], tripleToConstraintMapping: T2TcPartition, neighborhood: RdfJsQuad[], semActHandler: SemActDispatcher, _trace: object[] | null): object {
+  match(_db: NeighborhoodDb, node: RdfJsTerm, constraintList: ShExJ.TripleConstraint[], constraintToTripleMapping: ConstraintToTripleResults, _tripleToConstraintMapping: T2TcPartition, neighborhood: RdfJsQuad[], semActHandler: SemActDispatcher, _trace: object[] | null): object {
+    const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {
+      tripleResult.forEach(res => allTriples.add(res.triple));
+      return allTriples;
+    }, new Set())
     const _EvalThreadedNErrRegexEngine = this;
     /*
      * returns: list of passing or failing threads (no heterogeneous lists)
@@ -84,7 +89,6 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         return validateExpr(included, thread);
       }
 
-      const constraintNo = expr.type === "TripleConstraint" ? constraintList.indexOf(expr) : -1;
       let min = expr.min !== undefined ? expr.min : 1;
       let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
 
@@ -144,8 +148,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       }
 
       if (expr.type === "TripleConstraint") {
-        if (thread.avail[constraintNo] === undefined)
-          thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
+        const constraint = expr;
+        if (thread.avail.get(constraint) === undefined)
+          thread.avail.set(constraint, constraintToTripleMapping.get(constraint)!.map(pair => pair.triple));
         const minmax = {} as GroupAttrs;
         if (expr.min !== undefined && expr.min !== 1 || expr.max !== undefined && expr.max !== 1) {
           minmax.min = expr.min;
@@ -155,22 +160,21 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           minmax.semActs = expr.semActs;
         if (expr.annotations !== undefined)
           minmax.annotations = expr.annotations;
-        const taken = thread.avail[constraintNo].splice(0, min);
+        const taken = thread.avail.get(constraint)!.splice(0, min);
         const passed = taken.length >= min;
         const ret: RegexpThread[] = [];
         const matched = thread.matched;
         if (passed) {
           do {
-            const passFail = taken.reduce<{pass: TripleTestedErrors[], fail: TripleTestedErrors[]}>((acc, tripleNo) => {
-              const triple = neighborhood[tripleNo]
+            const passFail = taken.reduce<{pass: TripleTestedErrors[], fail: TripleTestedErrors[]}>((acc, triple) => {
               const tested = {
                 type: "TestedTriple",
                 subject: rdfJsTerm2Ld(triple.subject),
                 predicate: rdfJsTerm2Ld(triple.predicate),
                 object: rdfJsTerm2Ld(triple.object)
               } as TestedTriple
-              const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo) as Tc2t; // will definitely find one
-              if (hit.res && Object.keys(hit.res).length > 0)
+              const hit = constraintToTripleMapping.get(constraint)!.find(x => x.triple === triple)!; // will definitely find one
+              if (hit.res !== undefined)
                 tested.referenced = hit.res;
               const semActErrors = thread.errors.concat(
                   expr.semActs !== undefined
@@ -178,9 +182,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
                       : []
               )
               if (semActErrors.length > 0)
-                acc.fail.push(<TripleTestedErrors>{tripleNo, tested, semActErrors})
+                acc.fail.push(<TripleTestedErrors>{triple, tested, semActErrors})
               else
-                acc.pass.push(<TripleTestedErrors>{tripleNo, tested, semActErrors})
+                acc.pass.push(<TripleTestedErrors>{triple, tested, semActErrors})
               return acc
             }, {pass: [], fail: []})
 
@@ -200,12 +204,10 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
 
             function makeThread(expr: ShExJ.TripleConstraint, tests: TripleTestedErrors[], errors: error[]) {
               return {
-                avail: thread.avail.map(a => { // copy parent thread's avail vector
-                  return a.slice();
-                }),
+                avail: new Map(thread.avail), // copy parent thread's avail vector,
                 errors: errors,
                 matched: matched.concat({
-                  tNos: tests.map(p => p.tripleNo)
+                  triples: tests.map(p => p.triple)
                 }),
                 expression: Object.assign(
                     {
@@ -222,9 +224,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
               }
             }
           } while ((function () {
-            if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+            if (thread.avail.get(constraint)!.length > 0 && taken.length < max) {
               // build another thread.
-              taken.push(thread.avail[constraintNo].shift()!);
+              taken.push(thread.avail.get(constraint)!.shift()!);
               return true;
             } else {
               // no more threads
@@ -252,9 +254,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           const failed: RegexpThread[] = [];
           expr.expressions.forEach(nested => {
             const thcopy = {
-              avail: th.avail.map(a => {
-                return a.slice();
-              }),
+              avail: new Map(th.avail),
               errors: th.errors,
               matched: th.matched//.slice() ever needed??
             } as RegexpThread;
@@ -330,7 +330,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     }
 
     const startingThread = {
-      avail: [],   // triples remaining by constraint number
+      avail: new Map(),   // triples remaining by constraint
       matched: [], // triples matched in this thread
       errors: []   // errors encounted
     } as RegexpThread;
@@ -341,29 +341,24 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         ret.reduce<RegexpThread | null>((ret, elt) => {
           if (elt.errors.length > 0)
             return ret;              // early return
-          const unmatchedTriples: {[key: number]: TcAssignment} = {};
-          // Collect triples assigned to some constraint.
-          for (const k in tripleToConstraintMapping) {
-            if (tripleToConstraintMapping[k] !== NoTripleConstraint)
-              unmatchedTriples[k] = tripleToConstraintMapping[k];
-          }
+          const unmatchedTriples = new Set<RdfJsQuad>(allTriples);
+
           // Removed triples matched in this thread.
           elt.matched.forEach(m => {
-            m.tNos.forEach(t => {
-              delete unmatchedTriples[t];
+            m.triples.forEach(t => {
+              unmatchedTriples.delete(t);
             });
           });
           // Remaining triples are unaccounted for.
-          Object.keys(unmatchedTriples).forEach(t => { // TODO: for in -ify
+          unmatchedTriples.forEach(t => { // TODO: for in -ify
             elt.errors.push({
               type: "ExcessTripleViolation",
-              triple: neighborhood[t as unknown as number],
-              constraint: constraintList[unmatchedTriples[t as unknown as number] as number]
+              triple: t,
             });
           });
           return ret !== null ? ret : // keep first solution
               // Accept thread with no unmatched triples.
-              Object.keys(unmatchedTriples).length > 0 ? null : elt;
+              unmatchedTriples.size > 0 ? null : elt;
         }, null);
 
     return longerChosen !== null ?
@@ -374,7 +369,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           errors: ret.reduce<error[]>((all, e) => {
             return all.concat([e.errors]);
           }, [])
-        } : ret[0];
+        } : {
+          type: "Failure",
+          node: node,
+          errors: ret[0].errors
+        };
   }
 
   finish(fromValidatePoint: tripleExprSolutions, _constraintList: ShExJ.TripleConstraint[], _neighborhood: RdfJsQuad[], _semActHandler: SemActDispatcher): tripleExprSolutions {

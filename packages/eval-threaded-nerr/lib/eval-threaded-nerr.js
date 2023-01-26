@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegexpModule = void 0;
 const term_1 = require("@shexjs/term");
-const eval_validator_api_1 = require("@shexjs/eval-validator-api");
 const UNBOUNDED = -1;
 exports.RegexpModule = {
     name: "eval-threaded-nerr",
@@ -19,7 +18,11 @@ class EvalThreadedNErrRegexEngine {
         this.index = index;
         this.outerExpression = shape.expression;
     }
-    match(_db, _node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+    match(_db, node, constraintList, constraintToTripleMapping, _tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+            tripleResult.forEach(res => allTriples.add(res.triple));
+            return allTriples;
+        }, new Set());
         const _EvalThreadedNErrRegexEngine = this;
         /*
          * returns: list of passing or failing threads (no heterogeneous lists)
@@ -29,7 +32,6 @@ class EvalThreadedNErrRegexEngine {
                 const included = _EvalThreadedNErrRegexEngine.index.tripleExprs[expr];
                 return validateExpr(included, thread);
             }
-            const constraintNo = expr.type === "TripleConstraint" ? constraintList.indexOf(expr) : -1;
             let min = expr.min !== undefined ? expr.min : 1;
             let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
             function validateRept(groupTE, type, val) {
@@ -87,8 +89,9 @@ class EvalThreadedNErrRegexEngine {
                 return newThreads;
             }
             if (expr.type === "TripleConstraint") {
-                if (thread.avail[constraintNo] === undefined)
-                    thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
+                const constraint = expr;
+                if (thread.avail.get(constraint) === undefined)
+                    thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
                 const minmax = {};
                 if (expr.min !== undefined && expr.min !== 1 || expr.max !== undefined && expr.max !== 1) {
                     minmax.min = expr.min;
@@ -98,30 +101,29 @@ class EvalThreadedNErrRegexEngine {
                     minmax.semActs = expr.semActs;
                 if (expr.annotations !== undefined)
                     minmax.annotations = expr.annotations;
-                const taken = thread.avail[constraintNo].splice(0, min);
+                const taken = thread.avail.get(constraint).splice(0, min);
                 const passed = taken.length >= min;
                 const ret = [];
                 const matched = thread.matched;
                 if (passed) {
                     do {
-                        const passFail = taken.reduce((acc, tripleNo) => {
-                            const triple = neighborhood[tripleNo];
+                        const passFail = taken.reduce((acc, triple) => {
                             const tested = {
                                 type: "TestedTriple",
                                 subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
                                 predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
                                 object: (0, term_1.rdfJsTerm2Ld)(triple.object)
                             };
-                            const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo); // will definitely find one
-                            if (hit.res && Object.keys(hit.res).length > 0)
+                            const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple); // will definitely find one
+                            if (hit.res !== undefined)
                                 tested.referenced = hit.res;
                             const semActErrors = thread.errors.concat(expr.semActs !== undefined
                                 ? semActHandler.dispatchAll(expr.semActs, triple, tested)
                                 : []);
                             if (semActErrors.length > 0)
-                                acc.fail.push({ tripleNo, tested, semActErrors });
+                                acc.fail.push({ triple, tested, semActErrors });
                             else
-                                acc.pass.push({ tripleNo, tested, semActErrors });
+                                acc.pass.push({ triple, tested, semActErrors });
                             return acc;
                         }, { pass: [], fail: [] });
                         // return an empty solution if min card was 0
@@ -137,12 +139,10 @@ class EvalThreadedNErrRegexEngine {
                         }
                         function makeThread(expr, tests, errors) {
                             return {
-                                avail: thread.avail.map(a => {
-                                    return a.slice();
-                                }),
+                                avail: new Map(thread.avail),
                                 errors: errors,
                                 matched: matched.concat({
-                                    tNos: tests.map(p => p.tripleNo)
+                                    triples: tests.map(p => p.triple)
                                 }),
                                 expression: Object.assign({
                                     type: "TripleConstraintSolutions",
@@ -153,9 +153,9 @@ class EvalThreadedNErrRegexEngine {
                             };
                         }
                     } while ((function () {
-                        if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                        if (thread.avail.get(constraint).length > 0 && taken.length < max) {
                             // build another thread.
-                            taken.push(thread.avail[constraintNo].shift());
+                            taken.push(thread.avail.get(constraint).shift());
                             return true;
                         }
                         else {
@@ -185,9 +185,7 @@ class EvalThreadedNErrRegexEngine {
                     const failed = [];
                     expr.expressions.forEach(nested => {
                         const thcopy = {
-                            avail: th.avail.map(a => {
-                                return a.slice();
-                            }),
+                            avail: new Map(th.avail),
                             errors: th.errors,
                             matched: th.matched //.slice() ever needed??
                         };
@@ -265,7 +263,7 @@ class EvalThreadedNErrRegexEngine {
             }
         }
         const startingThread = {
-            avail: [],
+            avail: new Map(),
             matched: [],
             errors: [] // errors encounted
         };
@@ -275,29 +273,23 @@ class EvalThreadedNErrRegexEngine {
         const longerChosen = ret.reduce((ret, elt) => {
             if (elt.errors.length > 0)
                 return ret; // early return
-            const unmatchedTriples = {};
-            // Collect triples assigned to some constraint.
-            for (const k in tripleToConstraintMapping) {
-                if (tripleToConstraintMapping[k] !== eval_validator_api_1.NoTripleConstraint)
-                    unmatchedTriples[k] = tripleToConstraintMapping[k];
-            }
+            const unmatchedTriples = new Set(allTriples);
             // Removed triples matched in this thread.
             elt.matched.forEach(m => {
-                m.tNos.forEach(t => {
-                    delete unmatchedTriples[t];
+                m.triples.forEach(t => {
+                    unmatchedTriples.delete(t);
                 });
             });
             // Remaining triples are unaccounted for.
-            Object.keys(unmatchedTriples).forEach(t => {
+            unmatchedTriples.forEach(t => {
                 elt.errors.push({
                     type: "ExcessTripleViolation",
-                    triple: neighborhood[t],
-                    constraint: constraintList[unmatchedTriples[t]]
+                    triple: t,
                 });
             });
             return ret !== null ? ret : // keep first solution
                 // Accept thread with no unmatched triples.
-                Object.keys(unmatchedTriples).length > 0 ? null : elt;
+                unmatchedTriples.size > 0 ? null : elt;
         }, null);
         return longerChosen !== null ?
             this.finish(longerChosen.expression, constraintList, neighborhood, semActHandler) :
@@ -306,7 +298,11 @@ class EvalThreadedNErrRegexEngine {
                 errors: ret.reduce((all, e) => {
                     return all.concat([e.errors]);
                 }, [])
-            } : ret[0];
+            } : {
+                type: "Failure",
+                node: node,
+                errors: ret[0].errors
+            };
     }
     finish(fromValidatePoint, _constraintList, _neighborhood, _semActHandler) {
         if (this.shape.semActs !== undefined)

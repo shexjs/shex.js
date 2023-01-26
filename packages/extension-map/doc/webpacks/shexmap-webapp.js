@@ -5917,7 +5917,6 @@ var __webpack_unused_export__;
 __webpack_unused_export__ = ({ value: true });
 exports.G = void 0;
 const term_1 = __webpack_require__(1101);
-const eval_validator_api_1 = __webpack_require__(3530);
 var ControlType;
 (function (ControlType) {
     ControlType[ControlType["Split"] = 0] = "Split";
@@ -6129,7 +6128,7 @@ class NfaToString {
     }
 }
 class RegExpThread {
-    constructor(state = -1, repeats = {}, avail = [], stack = [], matched = [], errors = []) {
+    constructor(state = -1, repeats = {}, avail = new Map(), stack = [], matched = [], errors = []) {
         this.state = state;
         this.repeats = repeats;
         this.avail = avail;
@@ -6145,11 +6144,15 @@ class EvalSimple1ErrRegexEngine {
         this.states = states;
         this.start = startNo;
     }
-    match(_db, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
+    match(_db, node, _constraintList, constraintToTripleMapping, _tripleToConstraintMapping, _neighborhood, semActHandler, trace) {
         const rbenx = this;
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+            tripleResult.forEach(res => allTriples.add(res.triple));
+            return allTriples;
+        }, new Set());
         if (rbenx.states.length === 1)
-            return this.matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
+            return this.matchedToResult([], constraintToTripleMapping, semActHandler);
         let chosen = null;
         // console.log(new NfaToString().dumpNFA(this.states, this.start));
         this.addstate(clist, this.start, new RegExpThread());
@@ -6165,18 +6168,18 @@ class EvalSimple1ErrRegexEngine {
                 const nlistlen = nlist.length;
                 // may be an Accept state
                 if (state instanceof TripleConstraintState) {
-                    const constraintNo = constraintList.indexOf(state.c);
+                    const tripleConstraint = state.c;
                     let min = state.c.min !== undefined ? state.c.min : 1;
                     let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-                    if (thread.avail[constraintNo] === undefined)
-                        thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-                    const taken = thread.avail[constraintNo].splice(0, max);
+                    if (!thread.avail.has(tripleConstraint))
+                        thread.avail.set(tripleConstraint, constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple));
+                    const taken = thread.avail.get(tripleConstraint).splice(0, max);
                     if (taken.length >= min) {
                         do {
                             this.addStates(nlist, thread, taken);
                         } while ((function () {
-                            if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                                taken.push(thread.avail[constraintNo].shift());
+                            if (thread.avail.get(tripleConstraint).length > 0 && taken.length < max) {
+                                taken.push(thread.avail.get(tripleConstraint).shift());
                                 return true; // stay in look to take more.
                             }
                             else {
@@ -6202,9 +6205,7 @@ class EvalSimple1ErrRegexEngine {
             const longerChosen = clist.reduce((ret, elt) => {
                 const matchedAll = elt.matched.reduce((ret, m) => {
                     return ret + m.triples.length; // count matched triples
-                }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                    return t === eval_validator_api_1.NoTripleConstraint ? ret : ret + 1; // count expected
-                }, 0);
+                }, 0) === allTriples.size;
                 return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
             }, null);
             if (longerChosen)
@@ -6243,28 +6244,24 @@ class EvalSimple1ErrRegexEngine {
                     return acc.concat([error]);
                 }
                 else {
-                    const unmatchedTriples = {};
-                    // Collect triples assigned to some constraint.
-                    for (const k in tripleToConstraintMapping) {
-                        if (tripleToConstraintMapping[k] !== eval_validator_api_1.NoTripleConstraint)
-                            unmatchedTriples[k] = tripleToConstraintMapping[k];
-                    }
-                    // Removed triples matched in this thread.
-                    elt.matched.forEach(m => {
-                        m.triples.forEach(t => {
-                            delete unmatchedTriples[t];
-                        });
-                    });
-                    const errors = Object.keys(unmatchedTriples).map(i => {
-                        const error = {
-                            type: "ExcessTripleViolation",
-                            property: lastState.c.predicate,
-                            triple: neighborhood[unmatchedTriples[i]], // TODOL doesn't really get TcAssignment?
-                        };
-                        if (valueExpr)
-                            error.valueExpr = valueExpr;
-                        return error;
-                    });
+                    const unmatchedTriples = new Map();
+                    const threadMatches = elt.matched.reduce((threadMatches, eltMatched) => {
+                        eltMatched.triples.forEach(triple => threadMatches.add(triple));
+                        return threadMatches;
+                    }, new Set());
+                    const errors = Array.from(allTriples).reduce((errors, triple) => {
+                        if (!threadMatches.has(triple)) {
+                            const error = {
+                                type: "ExcessTripleViolation",
+                                property: lastState.c.predicate,
+                                triple: triple,
+                            };
+                            if (valueExpr)
+                                error.valueExpr = valueExpr;
+                            errors.push(error);
+                        }
+                        return errors;
+                    }, []);
                     return acc.concat(errors);
                 }
             }, []);
@@ -6272,7 +6269,7 @@ class EvalSimple1ErrRegexEngine {
         // console.log("chosen:", dump.thread(chosen));
         return "errors" in chosen.matched ?
             chosen.matched :
-            this.matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
+            this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
     }
     addStates(nlist, thread, taken) {
         const state = this.states[thread.state];
@@ -6326,9 +6323,8 @@ class EvalSimple1ErrRegexEngine {
             //   return r2 || avail.length > 0;
             // }, false))
             return [list.push(new RegExpThread(// return [new list element index]
-                stateNo, thread.repeats, thread.avail.map(a => {
-                    return a.slice();
-                }), thread.stack, thread.matched, thread.errors)) - 1];
+                stateNo, thread.repeats, thread.avail, // Experiments indicate this and it's arrays safe to reuse, but I've not thought about it.
+                thread.stack, thread.matched, thread.errors)) - 1];
         }
     }
     resetRepeat(thread, repeatedState) {
@@ -6337,14 +6333,15 @@ class EvalSimple1ErrRegexEngine {
                 r[k] = thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, trimmedRepeats, thread.avail.slice(), thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, trimmedRepeats, thread.avail, // Experiments indicate this is safe to reuse, but I've not thought about it.
+        thread.stack, thread.matched, []);
     }
     incrmRepeat(thread, repeatedState) {
         const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
             r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
             return r;
         }, {});
-        return new RegExpThread(thread.state /*???*/, incrmedRepeats, thread.avail.slice(), thread.stack, thread.matched, []);
+        return new RegExpThread(thread.state /*???*/, incrmedRepeats, [...thread.avail.keys()].reduce((acc, tc) => { acc.set(tc, thread.avail.get(tc)); return acc; }, new Map()), thread.stack, thread.matched, []);
     }
     stateString(state, repeats) {
         const rs = Object.keys(repeats).map(rpt => {
@@ -6352,7 +6349,7 @@ class EvalSimple1ErrRegexEngine {
         }).join(",");
         return rs.length ? state + "-" + rs : "" + state;
     }
-    matchedToResult(matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler) {
+    matchedToResult(matched, constraintToTripleMapping, semActHandler) {
         let last = [];
         const errors = [];
         const skips = [];
@@ -6434,16 +6431,14 @@ class EvalSimple1ErrRegexEngine {
                 tcSolns.valueExpr = m.c.valueExpr;
             if ("id" in m.c)
                 tcSolns.productionLabel = m.c.id;
-            tcSolns.solutions = m.triples.map(tNo => {
-                const triple = neighborhood[tNo];
+            tcSolns.solutions = m.triples.map(triple => {
                 const ret = {
                     type: "TestedTriple",
                     subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
                     predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
                     object: (0, term_1.rdfJsTerm2Ld)(triple.object)
                 };
-                const constraintNo = constraintList.indexOf(m.c);
-                const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
+                const hit = constraintToTripleMapping.get(m.c).find(x => x.triple === triple);
                 if (hit.res && Object.keys(hit.res).length > 0)
                     ret.referenced = hit.res;
                 if (errors.length === 0 && "semActs" in m.c) { // @ts-ignore
@@ -6490,7 +6485,6 @@ var __webpack_unused_export__;
 __webpack_unused_export__ = ({ value: true });
 exports.G = void 0;
 const term_1 = __webpack_require__(1101);
-const eval_validator_api_1 = __webpack_require__(3530);
 const UNBOUNDED = -1;
 exports.G = {
     name: "eval-threaded-nerr",
@@ -6507,7 +6501,11 @@ class EvalThreadedNErrRegexEngine {
         this.index = index;
         this.outerExpression = shape.expression;
     }
-    match(_db, _node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+    match(_db, _node, constraintList, constraintToTripleMapping, _tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+            tripleResult.forEach(res => allTriples.add(res.triple));
+            return allTriples;
+        }, new Set());
         const _EvalThreadedNErrRegexEngine = this;
         /*
          * returns: list of passing or failing threads (no heterogeneous lists)
@@ -6517,7 +6515,6 @@ class EvalThreadedNErrRegexEngine {
                 const included = _EvalThreadedNErrRegexEngine.index.tripleExprs[expr];
                 return validateExpr(included, thread);
             }
-            const constraintNo = expr.type === "TripleConstraint" ? constraintList.indexOf(expr) : -1;
             let min = expr.min !== undefined ? expr.min : 1;
             let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
             function validateRept(groupTE, type, val) {
@@ -6575,8 +6572,9 @@ class EvalThreadedNErrRegexEngine {
                 return newThreads;
             }
             if (expr.type === "TripleConstraint") {
-                if (thread.avail[constraintNo] === undefined)
-                    thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
+                const constraint = expr;
+                if (thread.avail.get(constraint) === undefined)
+                    thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
                 const minmax = {};
                 if (expr.min !== undefined && expr.min !== 1 || expr.max !== undefined && expr.max !== 1) {
                     minmax.min = expr.min;
@@ -6586,30 +6584,29 @@ class EvalThreadedNErrRegexEngine {
                     minmax.semActs = expr.semActs;
                 if (expr.annotations !== undefined)
                     minmax.annotations = expr.annotations;
-                const taken = thread.avail[constraintNo].splice(0, min);
+                const taken = thread.avail.get(constraint).splice(0, min);
                 const passed = taken.length >= min;
                 const ret = [];
                 const matched = thread.matched;
                 if (passed) {
                     do {
-                        const passFail = taken.reduce((acc, tripleNo) => {
-                            const triple = neighborhood[tripleNo];
+                        const passFail = taken.reduce((acc, triple) => {
                             const tested = {
                                 type: "TestedTriple",
                                 subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
                                 predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
                                 object: (0, term_1.rdfJsTerm2Ld)(triple.object)
                             };
-                            const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo); // will definitely find one
-                            if (hit.res && Object.keys(hit.res).length > 0)
+                            const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple); // will definitely find one
+                            if (hit.res !== undefined)
                                 tested.referenced = hit.res;
                             const semActErrors = thread.errors.concat(expr.semActs !== undefined
                                 ? semActHandler.dispatchAll(expr.semActs, triple, tested)
                                 : []);
                             if (semActErrors.length > 0)
-                                acc.fail.push({ tripleNo, tested, semActErrors });
+                                acc.fail.push({ triple, tested, semActErrors });
                             else
-                                acc.pass.push({ tripleNo, tested, semActErrors });
+                                acc.pass.push({ triple, tested, semActErrors });
                             return acc;
                         }, { pass: [], fail: [] });
                         // return an empty solution if min card was 0
@@ -6625,12 +6622,10 @@ class EvalThreadedNErrRegexEngine {
                         }
                         function makeThread(expr, tests, errors) {
                             return {
-                                avail: thread.avail.map(a => {
-                                    return a.slice();
-                                }),
+                                avail: new Map(thread.avail),
                                 errors: errors,
                                 matched: matched.concat({
-                                    tNos: tests.map(p => p.tripleNo)
+                                    triples: tests.map(p => p.triple)
                                 }),
                                 expression: Object.assign({
                                     type: "TripleConstraintSolutions",
@@ -6641,9 +6636,9 @@ class EvalThreadedNErrRegexEngine {
                             };
                         }
                     } while ((function () {
-                        if (thread.avail[constraintNo].length > 0 && taken.length < max) {
+                        if (thread.avail.get(constraint).length > 0 && taken.length < max) {
                             // build another thread.
-                            taken.push(thread.avail[constraintNo].shift());
+                            taken.push(thread.avail.get(constraint).shift());
                             return true;
                         }
                         else {
@@ -6673,9 +6668,7 @@ class EvalThreadedNErrRegexEngine {
                     const failed = [];
                     expr.expressions.forEach(nested => {
                         const thcopy = {
-                            avail: th.avail.map(a => {
-                                return a.slice();
-                            }),
+                            avail: new Map(th.avail),
                             errors: th.errors,
                             matched: th.matched //.slice() ever needed??
                         };
@@ -6753,7 +6746,7 @@ class EvalThreadedNErrRegexEngine {
             }
         }
         const startingThread = {
-            avail: [],
+            avail: new Map(),
             matched: [],
             errors: [] // errors encounted
         };
@@ -6763,29 +6756,23 @@ class EvalThreadedNErrRegexEngine {
         const longerChosen = ret.reduce((ret, elt) => {
             if (elt.errors.length > 0)
                 return ret; // early return
-            const unmatchedTriples = {};
-            // Collect triples assigned to some constraint.
-            for (const k in tripleToConstraintMapping) {
-                if (tripleToConstraintMapping[k] !== eval_validator_api_1.NoTripleConstraint)
-                    unmatchedTriples[k] = tripleToConstraintMapping[k];
-            }
+            const unmatchedTriples = new Set(allTriples);
             // Removed triples matched in this thread.
             elt.matched.forEach(m => {
-                m.tNos.forEach(t => {
-                    delete unmatchedTriples[t];
+                m.triples.forEach(t => {
+                    unmatchedTriples.delete(t);
                 });
             });
             // Remaining triples are unaccounted for.
-            Object.keys(unmatchedTriples).forEach(t => {
+            unmatchedTriples.forEach(t => {
                 elt.errors.push({
                     type: "ExcessTripleViolation",
-                    triple: neighborhood[t],
-                    constraint: constraintList[unmatchedTriples[t]]
+                    triple: t,
                 });
             });
             return ret !== null ? ret : // keep first solution
                 // Accept thread with no unmatched triples.
-                Object.keys(unmatchedTriples).length > 0 ? null : elt;
+                unmatchedTriples.size > 0 ? null : elt;
         }, null);
         return longerChosen !== null ?
             this.finish(longerChosen.expression, constraintList, neighborhood, semActHandler) :
@@ -6812,7 +6799,34 @@ class EvalThreadedNErrRegexEngine {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NoTripleConstraint = void 0;
+exports.NoTripleConstraint = exports.MapArray = void 0;
+class MapArray {
+    constructor() {
+        this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
+        this.reduce = (f, acc) => {
+            const keys = [...this.data.keys()];
+            for (const key of keys)
+                acc = f(acc, key, this.data.get(key));
+            return acc;
+        };
+    }
+    add(a, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, []);
+        }
+        if (this.data.get(a).indexOf(t) !== -1) {
+            throw Error(`Error adding [${a}] ${t}; already included`);
+        }
+        this.data.get(a).push(t);
+    }
+    get length() { return this.data.size; }
+    get keys() { return this.data.keys(); }
+    get(key) { return this.data.get(key); }
+    empty(key) {
+        this.data.set(key, []);
+    }
+}
+exports.MapArray = MapArray;
 exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
 
@@ -15212,29 +15226,6 @@ class MapMap {
         return this.data.get(a).get(b);
     }
 }
-class MapArray {
-    constructor() {
-        this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
-        this.reduce = (f, acc) => {
-            const keys = [...this.data.keys()];
-            for (let ord = 0; ord < keys.length; ++ord)
-                acc = f(acc, this.data.get(keys[ord]), ord);
-            return acc;
-        };
-    }
-    add(a, t) {
-        if (!this.data.has(a)) {
-            this.data.set(a, []);
-        }
-        if (this.data.get(a).indexOf(t) !== -1) {
-            throw Error(`Error adding [${a}] ${t}; already included`);
-        }
-        this.data.get(a).push(t);
-    }
-    get length() { return this.data.size; }
-    get keys() { return this.data.keys(); }
-    get(key) { return this.data.get(key); }
-}
 class TriplesMatching {
     constructor(hits, misses) {
         this.hits = hits;
@@ -15599,41 +15590,38 @@ class ShExValidator {
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
         const tripleList = this.matchByPredicate(tripleConstraints, fromDB, ctx);
         const { missErrors, matchedExtras } = this.whatsMissing(tripleList, tripleConstraints, neighborhood, shape.extra || []);
-        const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs.length, tc2exts);
+        const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs, tc2exts);
         const partitionErrors = [];
         const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
         for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-            const localT2Tc = []; // subset of TCs assigned to shape.expression
+            const localT2Tc = new Map(); // subset of TCs assigned to shape.expression TODO: use the same Tc2Tz in regexEngine.match and extends (so cool!!!)
             const unexpectedOrds = [];
             const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
-            t2tc.forEach((cNo, tNo) => {
-                if (cNo !== eval_validator_api_1.NoTripleConstraint && cNo < extendsTCs.length) {
+            t2tc.forEach((TripleConstraint, triple) => {
+                if (extendsTCs.indexOf(TripleConstraint) !== -1) {
                     // allocate to EXTENDS
-                    for (let extNo of tc2exts[cNo]) {
+                    for (let extNo of tc2exts.get(TripleConstraint)) {
                         // allocated to multiple extends if diamond inheritance
-                        extendsToTriples[extNo].push(neighborhood[tNo]);
-                        localT2Tc[tNo] = eval_validator_api_1.NoTripleConstraint;
+                        extendsToTriples[extNo].push(triple);
+                        // localT2Tc.set(triple, NoTripleConstraint);
                     }
                 }
                 else {
                     // allocate to local shape
-                    localT2Tc[tNo] = cNo;
-                    if (cNo === eval_validator_api_1.NoTripleConstraint // didn't match anything
-                        && tNo < fromDB.outgoing.length // is an outgoing triple
-                        && matchedExtras.indexOf(tNo) === -1) // isn't in EXTRAs
-                        unexpectedOrds.push(tNo);
+                    localT2Tc.set(triple, TripleConstraint);
                 }
             });
+            fromDB.outgoing.forEach(triple => {
+                if (!t2tc.has(triple) // didn't match anything
+                    && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
+                    unexpectedOrds.push(triple);
+            });
             const errors = [];
-            const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-            const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-             _seq(neighborhood.length).map(function () { return 0; });
             // Triples not mapped to triple constraints are not allowed in closed shapes.
             if (shape.closed && unexpectedOrds.length > 0) {
                 errors.push({
                     type: "ClosedShapeViolation",
-                    unexpectedTriples: unexpectedOrds.map(tNo => {
-                        const q = neighborhood[tNo];
+                    unexpectedTriples: unexpectedOrds.map(q => {
                         return {
                             subject: (0, term_1.rdfJsTerm2Ld)(q.subject),
                             predicate: (0, term_1.rdfJsTerm2Ld)(q.predicate),
@@ -15642,13 +15630,6 @@ class ShExValidator {
                     })
                 });
             }
-            // Set usedTriples and constraintMatchCount.
-            localT2Tc.forEach(function (tpNumber, ord) {
-                if (tpNumber !== eval_validator_api_1.NoTripleConstraint) {
-                    usedTriples.push(neighborhood[ord]);
-                    ++constraintMatchCount[tpNumber];
-                }
-            });
             const tc2t = this._constraintToTriples(localT2Tc, tripleConstraints, tripleList); // e.g. [[t0, t2], [t1, t3]]
             let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
@@ -15668,8 +15649,8 @@ class ShExValidator {
                     results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
-            if (results !== null && results.errors !== undefined) { // @ts-ignore
-                [].push.apply(errors, results.errors);
+            if (results !== null && results.errors !== undefined) {
+                Array.prototype.push.apply(errors, results.errors);
             }
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(point), shape: ctx.label };
             // @ts-ignore
@@ -15739,10 +15720,9 @@ class ShExValidator {
         const outgoing = indexNeighborhood(neighborhood.outgoing);
         const incoming = indexNeighborhood(neighborhood.incoming);
         const all = neighborhood.outgoing.concat(neighborhood.incoming);
-        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: new MapArray() };
-        for (let tNo = 0; tNo < all.length; ++tNo) // !!@@ horrible hack to set NoTripleConstraint values in permutations
-            init.triple2constraintList.data.set(tNo, []);
-        return constraintList.reduce(function (ret, constraint, cNo) {
+        const init = { misses: new Map(), results: new MapMap(), triple2constraintList: new eval_validator_api_1.MapArray() };
+        [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.triple2constraintList.data.set(triple, [])));
+        return constraintList.reduce(function (ret, constraint) {
             // subject and object depend on direction of constraint.
             const index = constraint.inverse ? incoming : outgoing;
             // get triples matching predicate
@@ -15751,32 +15731,29 @@ class ShExValidator {
             // strip to triples matching value constraints (apart from @<someShape>)
             const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
             matchConstraints.hits.forEach(function (evidence) {
-                const tNo = all.indexOf(evidence.triple);
-                ret.triple2constraintList.add(tNo, cNo);
-                ret.results.set(cNo, tNo, evidence.sub);
+                ret.triple2constraintList.add(evidence.triple, constraint);
+                ret.results.set(constraint, evidence.triple, evidence.sub);
             });
             matchConstraints.misses.forEach(function (evidence) {
-                const tNo = all.indexOf(evidence.triple);
-                ret.misses.set(tNo, { constraintNo: cNo, errors: evidence.sub });
+                ret.misses.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
             });
             return ret;
         }, init);
     }
-    whatsMissing(tripleList, constraintList, neighborhood, extras) {
+    whatsMissing(tripleList, _constraintList, _neighborhood, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
-        const missErrors = tripleList.triple2constraintList.reduce((ret, constraints, ord) => {
+        const missErrors = tripleList.triple2constraintList.reduce((ret, t, constraints) => {
             if (constraints.length === 0 && // matches no constraints
-                tripleList.misses.has(ord)) { // predicate matched some constraint(s)
-                const t = neighborhood[ord];
+                tripleList.misses.has(t)) { // predicate matched some constraint(s)
                 if (extras.indexOf(t.predicate.value) !== -1) {
-                    matchedExtras.push(ord);
+                    matchedExtras.push(t);
                 }
                 else { // not declared extra
                     ret.push({
                         type: "TypeMismatch",
                         triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
-                        constraint: constraintList[tripleList.misses.get(ord).constraintNo],
-                        errors: tripleList.misses.get(ord).errors
+                        constraint: tripleList.misses.get(t).constraint,
+                        errors: tripleList.misses.get(t).errors
                     });
                 }
             }
@@ -15792,12 +15769,12 @@ class ShExValidator {
     }
     // Pivot to triples by constraint.
     _constraintToTriples(t2tc, constraintList, tripleList) {
-        return t2tc.slice().
-            reduce(function (ret, cNo, tNo) {
-            if (cNo !== eval_validator_api_1.NoTripleConstraint)
-                ret[cNo].push({ tNo: tNo, res: tripleList.results.get(cNo, tNo) });
-            return ret;
-        }, _seq(constraintList.length).map(() => [])); // [length][]
+        const ret = new eval_validator_api_1.MapArray();
+        constraintList.forEach(tc => ret.empty(tc));
+        t2tc.forEach((tripleConstraint, triple) => {
+            ret.add(tripleConstraint, { triple: triple, res: tripleList.results.get(tripleConstraint, triple) });
+        });
+        return ret;
     }
     testExtends(expr, point, extendsToTriples, ctx) {
         if (expr.extends === undefined)
@@ -15881,7 +15858,7 @@ class ShExValidator {
         function getAllTripleConstraints(shape) {
             const { extendsTCs: extendsTcOrRefsz, localTCs } = shapePieces(shape, 1, 1);
             const tcs = [];
-            const tc2exts = [];
+            const tc2exts = new Map();
             extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
             return { extendsTCs: tcs, tc2exts, localTCs };
             function flattenExtends(tcOrRefs, ord) {
@@ -15898,13 +15875,13 @@ class ShExValidator {
                     if (idx === -1) {
                         // new TC
                         tcs.push(tc);
-                        tc2exts.push([ord]);
+                        tc2exts.set(tc, [ord]);
                     }
                     else {
                         // ref to TC already seen in this or earlier EXTENDS
-                        if (tc2exts[idx].indexOf(ord) === -1) {
+                        if (tc2exts.get(tc).indexOf(ord) === -1) {
                             // not yet included in this EXTENDS
-                            tc2exts[idx].push(ord);
+                            tc2exts.get(tc).push(ord);
                         }
                     }
                 }
@@ -16132,7 +16109,7 @@ class TripleToTripleConstraints {
      *      [0,2,4], # try T2 against same
      *      [1,3]    # try T3 against TC1, TC3
      *   ]
-     * @param extendsTCcount how many TCs are in EXTENDS,
+     * @param extendsTCs how many TCs are in EXTENDS,
      *   e.g. 4 says that TCs 0-3 are assigned to some EXTENDS; only TC4 is "local".
      * @param tc2exts which TripleConstraints came from which EXTENDS, e.g. [
      *     [0], # TC0 is assignable to EXTENDS 0
@@ -16141,8 +16118,9 @@ class TripleToTripleConstraints {
      *     [0], # TC3 is assignable to EXTENDS 0
      *   ]
      */
-    constructor(constraintList, extendsTCcount, tc2exts) {
-        this.extendsTCcount = extendsTCcount;
+    constructor(constraintList, extendsTCs, tc2exts) {
+        this.uniqueTCs = [];
+        this.extendsTCs = extendsTCs;
         this.tc2exts = tc2exts;
         this.subgraphCache = new Map();
         // @ts-ignore
@@ -16151,7 +16129,7 @@ class TripleToTripleConstraints {
     /**
      * Find next mapping of Triples to TripleConstraints.
      * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
-     * @returns {(ConstraintNo | typeof NoTripleConstraint)[] | null}
+     * @returns {(Quad | typeof NoTripleConstraint)[] | null}
      */
     next() {
         while (this.crossProduct.next()) {
@@ -16171,17 +16149,23 @@ class TripleToTripleConstraints {
                t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
                tc2exts: [[0], [0], [0], [0]] (All four TCs assignable to first EXTENDS.)
             */
-            const subgraphKey = t2tc.map(cNo => cNo === eval_validator_api_1.NoTripleConstraint
-                ? '_'
-                : cNo < this.extendsTCcount
-                    ? '' + this.tc2exts[cNo].map(eNo => 'E' + eNo)
-                    : 'L' + cNo).join('-');
+            const subgraphKey = [...t2tc.entries()].map(([_triple, tripleConstraint]) => this.extendsTCs.indexOf(tripleConstraint) !== -1
+                ? '' + this.tc2exts.get(tripleConstraint).map(eNo => 'E' + eNo)
+                : 'L' + this.getUniqueTcNo(tripleConstraint)).join('-');
             if (!this.subgraphCache.has(subgraphKey)) {
                 this.subgraphCache.set(subgraphKey, true);
                 return t2tc;
             }
         }
         return null;
+    }
+    getUniqueTcNo(tripleConstraint) {
+        let idx = this.uniqueTCs.indexOf(tripleConstraint);
+        if (idx === -1) {
+            idx = this.uniqueTCs.length;
+            this.uniqueTCs.push(tripleConstraint);
+        }
+        return idx;
     }
 }
 // { next: () => (boolean); get: () => number[] | null }
@@ -16230,7 +16214,13 @@ function CrossProduct(sets, emptyValue) {
         // new API because
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
         // cautions about functions over arguments.
-        get: function () { return args; }
+        get: function () {
+            return args.reduce((acc, listElt, ord) => {
+                if (listElt !== emptyValue)
+                    acc.set(keys[ord], listElt);
+                return acc;
+            }, new Map());
+        }
     };
 }
 /* N3jsTripleToString - simple toString function to make N3.js's triples
@@ -16277,9 +16267,9 @@ function indexNeighborhood(triples) {
                 t.toString = N3jsTripleToString;
             return ret;
         }, new Map()),
-        candidates: _seq(triples.length).map(function () {
-            return [];
-        }),
+        // candidates: _seq<number>(triples.length).map(function () {
+        //   return [];
+        // }),
         misses: []
     };
 }
