@@ -35,16 +35,39 @@ export interface ShapeNotResults {
   solution: Failure
 }
 
-export interface Failure {
-  type: "Failure";
-  node: ShExJ.objectValue;
-  shape: ShExJ.shapeDeclLabel | Start;
+export interface NestedFailure {
   errors: error[]; // 1 or more
 }
 
-export interface FailureList {
+export interface Failure extends NestedFailure {
+  type: "Failure";
+  node: ShExJ.objectValue;
+  shape: ShExJ.shapeDeclLabel | Start;
+}
+
+export interface FailureList extends NestedFailure {
   type: "FailureList";
   errors: error[] // 1 or more
+}
+
+export interface NodeConstraintViolation extends NestedFailure {
+  type: "NodeConstraintViolation";
+}
+
+export interface SemActFailure extends NestedFailure {
+  type: "SemActFailure";
+}
+
+export interface ShapeOrFailure extends NestedFailure {
+  type: "ShapeOrFailure";
+}
+
+export interface ShapeAndFailure extends NestedFailure {
+  type: "ShapeAndFailure";
+}
+
+export interface ShapeNotFailure extends NestedFailure {
+  type: "ShapeNotFailure";
 }
 
 export interface TypedFailure { }
@@ -68,31 +91,6 @@ export interface TypeMismatch extends TypedFailure {
   constraint: ShExJ.TripleConstraint;
   errors: STRING[];
 
-}
-
-export interface NodeConstraintViolation extends TypedFailure {
-  type: "NodeConstraintViolation";
-  errors: error[];
-}
-
-export interface SemActFailure extends TypedFailure {
-  type: "SemActFailure";
-  errors: error[];
-}
-
-export interface ShapeOrFailure extends TypedFailure {
-  type: "ShapeOrFailure";
-  errors: error[];
-}
-
-export interface ShapeAndFailure extends TypedFailure {
-  type: "ShapeAndFailure";
-  errors: error[];
-}
-
-export interface ShapeNotFailure extends TypedFailure {
-  type: "ShapeNotFailure";
-  errors: error[];
 }
 
 export interface ClosedShapeViolation extends TypedFailure {

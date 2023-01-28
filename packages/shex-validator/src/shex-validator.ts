@@ -21,6 +21,7 @@ import {
   error,
   Failure,
   FailureList,
+  NestedFailure,
   NodeConstraintTest,
   NodeConstraintViolation,
   Recursion,
@@ -264,8 +265,7 @@ class TriplesMatchingResult {
 class TriplesMatchingHit extends TriplesMatchingResult {}
 class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
   constructor(triple: Quad) {
-    // @ts-ignore
-    super(triple, undefined); // could weaken typing on the hits, but also weakens the misses
+    super(triple, undefined as any as shapeExprTest); // TODO: could weaken typing on the hits, but also weakens the misses
   }
 }
 class TriplesMatchingMiss extends TriplesMatchingResult {}
@@ -662,19 +662,21 @@ export class ShExValidator {
     const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-      const localT2Tc: T2TcPartition = new Map(); // subset of TCs assigned to shape.expression TODO: use the same Tc2Tz in regexEngine.match and extends (so cool!!!)
+      const tc2ts: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
+      tripleConstraints.forEach(tc => tc2ts.empty(tc))
+
       const unexpectedOrds: Quad[] = [];
       const extendsToTriples: Quad[][] = _seq((shape.extends || []).length).map(() => []);
-      t2tc.forEach((TripleConstraint, triple) => {
-        if (extendsTCs.indexOf(TripleConstraint) !== -1) {
+      t2tc.forEach((tripleConstraint, triple) => {
+        if (extendsTCs.indexOf(tripleConstraint) !== -1) {
           // allocate to EXTENDS
-          for (let extNo of tc2exts.get(TripleConstraint)!) {
+          for (let extNo of tc2exts.get(tripleConstraint)!) {
             // allocated to multiple extends if diamond inheritance
             extendsToTriples[extNo].push(triple);
           }
         } else {
           // allocate to local shape
-          localT2Tc.set(triple, TripleConstraint);
+          tc2ts.add(tripleConstraint, {triple: triple, res: tripleList.results.get(tripleConstraint, triple)!});
         }
       });
       fromDB.outgoing.forEach(triple => {
@@ -699,33 +701,27 @@ export class ShExValidator {
         });
       }
 
-      const tc2t = this._constraintToTriples(localT2Tc, tripleConstraints, tripleList); // e.g. [[t0, t2], [t1, t3]]
-
-      let results = this.testExtends(shape, point, extendsToTriples, ctx);
+      let results: shapeExprTest | null = this.testExtends(shape, point, extendsToTriples, ctx);
       if (results === null || !("errors" in results)) {
         if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-          const sub = regexEngine.match(point, tc2t, this.semActHandler, null);
+          const sub = regexEngine.match(point, tc2ts, this.semActHandler, null);
           if (!("errors" in sub) && results) {
-            // @ts-ignore
             results = {type: "ExtendedResults", extensions: results, local: sub};
           } else {
-            // @ts-ignore
             results = sub;
           }
         } else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
-          // @ts-ignore
           results = {type: "ExtendedResults", extensions: results}; // TODO: keep that redundant nesting for consistency?
         }
       }
-      if (results !== null && results.errors !== undefined)
-        Array.prototype.push.apply(errors, results.errors);
+      // TODO: what if results is a TypedError (i.e. not a container of further errors)?
+      if (results !== null && (results as NestedFailure).errors !== undefined)
+        Array.prototype.push.apply(errors, (results as NestedFailure).errors);
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: ctx.label };
-      // @ts-ignore
       if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
-        { // @ts-ignore
-          possibleRet.solution = results;
-        }
+        // @ts-ignore TODO
+        possibleRet.solution = results;
       if ("semActs" in shape) {
         const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
         if (semActErrors.length)
@@ -741,7 +737,6 @@ export class ShExValidator {
 
     // Report only last errors until we have a better idea.
     const lastErrors = partitionErrors[partitionErrors.length - 1];
-    // @ts-ignore
     let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
     if (errors.length > 0)
       ret = {
@@ -758,27 +753,9 @@ export class ShExValidator {
         delete t.toString;
       });
 
-    // @ts-ignore
-    return this.addShapeAttributes(shape, ret);
-  }
-/*
-  function DBG_matchValues (fromDB, triple2constraintList) {
-    const expectedValues = triple2constraintList.map(
-      tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
-    );
-    const tripleValues = fromDB.outgoing.map(
-      t => parseInt(t.object.substr(1))
-    );
-    return tripleValues.map(
-      i => expectedValues.indexOf(i)
-    );
+    return this.addShapeAttributes(shape, ret!);
   }
 
-  function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, triple2constraintList) {
-    const solution = DBG_matchValues (fromDB, triple2constraintList);
-    return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
-  }
-*/
   /**
    * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
    * @param constraintList - list of TripleConstraint
@@ -842,19 +819,9 @@ export class ShExValidator {
 
   addShapeAttributes (shape: Shape, ret: shapeExprTest): shapeExprTest {
     if (shape.annotations !== undefined)
-      { // @ts-ignore
+      { // @ts-ignore TODO: where can annotations appear in results?
         ret.annotations = shape.annotations;
       }
-    return ret;
-  }
-
-  // Pivot to triples by constraint.
-  _constraintToTriples (t2tc: T2TcPartition, constraintList: TripleConstraint[], tripleList: ByPredicateResult): ConstraintToTripleResults {
-    const ret: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
-    constraintList.forEach(tc => ret.empty(tc))
-    t2tc.forEach((tripleConstraint, triple) => {
-      ret.add(tripleConstraint, {triple: triple, res: tripleList.results.get(tripleConstraint, triple)!});
-    });
     return ret;
   }
 
@@ -867,7 +834,7 @@ export class ShExValidator {
       const extend = expr.extends[eNo];
       const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      ctx = ctx.checkExtendsPartition(subgraph);
+      ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
       const sub = this.validateShapeExpr(point, extend, ctx);
       if ("errors" in sub)
         errors.push(sub);
@@ -998,8 +965,7 @@ export class ShExValidator {
     }
 
     function and<T> (tes: T[][]): T[] {
-      // @ts-ignore
-      return [].concat.apply([], tes);
+      return Array.prototype.concat.apply([], tes);
     }
 
     // Any TC inside a OneOf implicitly has a min cardinality of 0.
@@ -1041,8 +1007,7 @@ export class ShExValidator {
       else {
         ctx = ctx.followTripleConstraint();
         const sub: shapeExprTest = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
-        // @ts-ignore
-        if (sub.errors === undefined) {
+        if ((sub as NestedFailure).errors === undefined) { // TODO: improve typing to cast isn't necessary
           hits.push(new TriplesMatchingHit(triple, sub));
         } else /* !! if (!hits.find(h => h.triple === triple)) */ {
           _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
@@ -1226,7 +1191,6 @@ class TripleToTripleConstraints {
   constructor (constraintList: T2TCs, extendsTCs: TripleConstraint[], tc2exts:Map<TripleConstraint, number[]>) {
     this.extendsTCs = extendsTCs; this.tc2exts = tc2exts;
     this.subgraphCache = new Map();
-    // @ts-ignore
     this.crossProduct = CrossProduct<Quad, TripleConstraint, typeof NoTripleConstraint>(constraintList, NoTripleConstraint);
   }
 
@@ -1363,7 +1327,7 @@ const N3jsTripleToString = function () {
       n :
       "<" + n + ">";
   }
-  // @ts-ignore
+  // @ts-ignore what's an elegant way add toString to Quads?
   return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
 };
 
