@@ -313,7 +313,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     this.start = startNo;
   }
 
-  match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): object {
+  match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): shapeExprTest {
     const thisEvalSimple1ErrRegexEngine = this;
     let clist: RegExpThread[] = [], nlist: RegExpThread[] = []; // list of {state:state number, repeats:stateNo->repetitionCount}
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {

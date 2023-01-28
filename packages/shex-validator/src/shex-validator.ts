@@ -402,6 +402,17 @@ export class ShExValidator {
    */
   validateNodeShapePair (node: RdfJsTerm, shapeExprLabel: LabelOrStart, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): shapeExprTest {
     const ctx = new ShapeExprValidationContext(null, shapeExprLabel, 0, tracker, seen, null, null,)
+    if ("startActs" in this.schema) {
+      const startActionStorage = {}; // !!! need test to see this write to results structure.
+      const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage)
+      if (semActErrors.length)
+        return {
+          type: "Failure",
+          node: rdfJsTerm2Ld(node),
+          shape: ctx.label,
+          errors: semActErrors
+        }; // some semAct aborted !! return a better error
+    }
     const ret: shapeExprTest = this.validateShapeLabel (node, ctx);
     if ("startActs" in this.schema) {
       (ret as ShapeTest).startActs = this.schema.startActs;
@@ -635,18 +646,6 @@ export class ShExValidator {
 
   validateShape(point: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext): shapeExprTest {
     let ret = null;
-    const startActionStorage = {}; // !!! need test to see this write to results structure.
-    if ("startActs" in this.schema) {
-      const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage)
-      if (semActErrors.length)
-        return {
-          type: "Failure",
-          node: rdfJsTerm2Ld(point),
-          shape: ctx.label,
-          errors: semActErrors
-        }; // some semAct aborted !! return a better error
-    }
-
     const fromDB  = (ctx.subGraph || this.db).getNeighborhood(point, ctx.label, shape);
     const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
@@ -658,65 +657,13 @@ export class ShExValidator {
     const {missErrors, matchedExtras} = this.whatsMissing(tripleList, tripleConstraints, neighborhood, shape.extra || [])
 
     const allT2TCs = new TripleToTripleConstraints(tripleList.triple2constraintList, extendsTCs, tc2exts);
-    const partitionErrors = [];
+    const partitionErrors: error[][] = [];
+    // only construct a regexp engine if shape has a triple expression
     const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-      const tc2ts: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
-      tripleConstraints.forEach(tc => tc2ts.empty(tc))
-
-      const unexpectedOrds: Quad[] = [];
-      const extendsToTriples: Quad[][] = _seq((shape.extends || []).length).map(() => []);
-      t2tc.forEach((tripleConstraint, triple) => {
-        if (extendsTCs.indexOf(tripleConstraint) !== -1) {
-          // allocate to EXTENDS
-          for (let extNo of tc2exts.get(tripleConstraint)!) {
-            // allocated to multiple extends if diamond inheritance
-            extendsToTriples[extNo].push(triple);
-          }
-        } else {
-          // allocate to local shape
-          tc2ts.add(tripleConstraint, {triple: triple, res: tripleList.results.get(tripleConstraint, triple)!});
-        }
-      });
-      fromDB.outgoing.forEach(triple => {
-        if (!t2tc!.has(triple) // didn't match anything
-            && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
-          unexpectedOrds.push(triple);
-      })
-
-      const errors: error[] = []
-
-      // Triples not mapped to triple constraints are not allowed in closed shapes.
-      if (shape.closed && unexpectedOrds.length > 0) {
-        errors.push({
-          type: "ClosedShapeViolation",
-          unexpectedTriples: unexpectedOrds.map(q => {
-            return {
-              subject: rdfJsTerm2Ld(q.subject),
-              predicate: rdfJsTerm2Ld(q.predicate),
-              object: rdfJsTerm2Ld(q.object),
-            }
-          })
-        });
-      }
-
-      let results: shapeExprTest | null = this.testExtends(shape, point, extendsToTriples, ctx);
-      if (results === null || !("errors" in results)) {
-        if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-          const sub = regexEngine.match(point, tc2ts, this.semActHandler, null);
-          if (!("errors" in sub) && results) {
-            results = {type: "ExtendedResults", extensions: results, local: sub};
-          } else {
-            results = sub;
-          }
-        } else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
-          results = {type: "ExtendedResults", extensions: results}; // TODO: keep that redundant nesting for consistency?
-        }
-      }
-      // TODO: what if results is a TypedError (i.e. not a container of further errors)?
-      if (results !== null && (results as NestedFailure).errors !== undefined)
-        Array.prototype.push.apply(errors, (results as NestedFailure).errors);
+      const {errors, results}
+          = this.tryPartition(t2tc, point, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tripleList, fromDB.outgoing, regexEngine);
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: ctx.label };
       if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
@@ -733,7 +680,6 @@ export class ShExValidator {
       if (errors.length === 0)
         ret = possibleRet
     }
-    // end of while(xp.next())
 
     // Report only last errors until we have a better idea.
     const lastErrors = partitionErrors[partitionErrors.length - 1];
@@ -754,6 +700,86 @@ export class ShExValidator {
       });
 
     return this.addShapeAttributes(shape, ret!);
+  }
+
+  /**
+   * Try a mapping of triples to triple constraints
+   *
+   * @param t2tc mapping from triples to triple constraints
+   * @param focus node being validated
+   * @param shape against a give shape
+   * @param ctx validation context
+   * @param extendsTCs all triple constraints shape transitively extends
+   * @param tc2exts mapping of extended triple constraint to position in EXTENDS
+   * @param matchedExtras triples allowed by EXTRA
+   * @param tripleConstraints triple constraints composing shape
+   * @param tripleList mapping from triple to nested validation result
+   * @param outgoing triples to check for ClosedShapeViolation
+   * @param regexEngine engine to use to test regular triple expression
+   * @private
+   */
+  private tryPartition(
+      t2tc: Map<Quad, TripleConstraint>, focus: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext,
+      extendsTCs: TripleConstraint[], tc2exts: Map<TripleConstraint, number[]>, matchedExtras: Quad[],
+      tripleConstraints: TripleConstraint[], tripleList: ByPredicateResult,
+      outgoing: Quad[], regexEngine: ValidatorRegexEngine | null
+  ) {
+    const tc2ts: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
+    tripleConstraints.forEach(tc => tc2ts.empty(tc))
+
+    const unexpectedTriples: Quad[] = [];
+    const extendsToTriples: Quad[][] = _seq((shape.extends || []).length).map(() => []);
+    t2tc.forEach((tripleConstraint, triple) => {
+      if (extendsTCs.indexOf(tripleConstraint) !== -1) {
+        // allocate to EXTENDS
+        for (let extNo of tc2exts.get(tripleConstraint)!) {
+          // allocated to multiple extends if diamond inheritance
+          extendsToTriples[extNo].push(triple);
+        }
+      } else {
+        // allocate to local shape
+        tc2ts.add(tripleConstraint, {triple: triple, res: tripleList.results.get(tripleConstraint, triple)!});
+      }
+    });
+    outgoing.forEach(triple => {
+      if (!t2tc.has(triple) // didn't match anything
+          && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
+        unexpectedTriples.push(triple);
+    })
+
+    const errors: error[] = [];
+
+    // Triples not mapped to triple constraints are not allowed in closed shapes.
+    if (shape.closed && unexpectedTriples.length > 0) {
+      errors.push({
+        type: "ClosedShapeViolation",
+        unexpectedTriples: unexpectedTriples.map(q => {
+          return {
+            subject: rdfJsTerm2Ld(q.subject),
+            predicate: rdfJsTerm2Ld(q.predicate),
+            object: rdfJsTerm2Ld(q.object),
+          };
+        })
+      });
+    }
+
+    let results: shapeExprTest | null = this.testExtends(shape, focus, extendsToTriples, ctx);
+    if (results === null || !("errors" in results)) {
+      if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
+        const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
+        if (!("errors" in sub) && results) {
+          results = {type: "ExtendedResults", extensions: results, local: sub};
+        } else {
+          results = sub;
+        }
+      } else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
+        results = {type: "ExtendedResults", extensions: results}; // TODO: keep that redundant nesting for consistency?
+      }
+    }
+    // TODO: what if results is a TypedError (i.e. not a container of further errors)?
+    if (results !== null && (results as NestedFailure).errors !== undefined)
+      Array.prototype.push.apply(errors, (results as NestedFailure).errors);
+    return {errors, results};
   }
 
   /**

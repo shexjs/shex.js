@@ -13,7 +13,7 @@ import {
   EachOfSolution,
   OneOfSolution,
   TripleConstraintSolutions,
-  tripleExprSolution, TestedTriple, groupSolution, groupSolutions, error
+  tripleExprSolution, TestedTriple, groupSolution, groupSolutions, error, shapeExprTest
 } from "@shexjs/term/shexv";
 
 export {};
@@ -72,7 +72,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     this.outerExpression = shape.expression!;
   }
 
-  match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, _trace: object[] | null): object {
+  match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, _trace: object[] | null): shapeExprTest {
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {
       tripleResult.forEach(res => allTriples.add(res.triple));
       return allTriples;

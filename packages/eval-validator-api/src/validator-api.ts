@@ -54,7 +54,7 @@ export interface ValidatorRegexEngine {
     tc2t: ConstraintToTripleResults,
     semActHandler: SemActDispatcher,
     trace: object[] | null
-  ): object;
+  ): shapeExprTest;
 }
 
 export interface QueryTracker {
