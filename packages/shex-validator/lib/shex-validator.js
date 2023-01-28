@@ -557,7 +557,7 @@ class ShExValidator {
             let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
                 if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-                    const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
+                    const sub = regexEngine.match(point, tc2t, this.semActHandler, null);
                     if (!("errors" in sub) && results) {
                         // @ts-ignore
                         results = { type: "ExtendedResults", extensions: results, local: sub };
@@ -572,9 +572,8 @@ class ShExValidator {
                     results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
-            if (results !== null && results.errors !== undefined) {
+            if (results !== null && results.errors !== undefined)
                 Array.prototype.push.apply(errors, results.errors);
-            }
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(point), shape: ctx.label };
             // @ts-ignore
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
@@ -583,11 +582,9 @@ class ShExValidator {
             }
             if ("semActs" in shape) {
                 const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: point }, results), possibleRet);
-                if (semActErrors.length) 
-                // some semAct aborted
-                { // @ts-ignore
-                    [].push.apply(errors, semActErrors);
-                }
+                if (semActErrors.length)
+                    // some semAct aborted
+                    Array.prototype.push.apply(errors, semActErrors);
             }
             partitionErrors.push(errors);
             if (errors.length === 0)

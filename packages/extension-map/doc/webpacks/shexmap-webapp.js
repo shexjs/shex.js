@@ -6144,14 +6144,14 @@ class EvalSimple1ErrRegexEngine {
         this.states = states;
         this.start = startNo;
     }
-    match(_db, node, _constraintList, constraintToTripleMapping, _tripleToConstraintMapping, _neighborhood, semActHandler, trace) {
-        const rbenx = this;
+    match(node, constraintToTripleMapping, semActHandler, trace) {
+        const thisEvalSimple1ErrRegexEngine = this;
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
         }, new Set());
-        if (rbenx.states.length === 1)
+        if (thisEvalSimple1ErrRegexEngine.states.length === 1)
             return this.matchedToResult([], constraintToTripleMapping, semActHandler);
         let chosen = null;
         // console.log(new NfaToString().dumpNFA(this.states, this.start));
@@ -6162,9 +6162,9 @@ class EvalSimple1ErrRegexEngine {
                 trace.push({ threads: [] });
             for (let threadno = 0; threadno < clist.length; ++threadno) {
                 const thread = clist[threadno];
-                if (thread.state === rbenx.end)
+                if (thread.state === thisEvalSimple1ErrRegexEngine.end)
                     continue;
-                const state = rbenx.states[thread.state];
+                const state = thisEvalSimple1ErrRegexEngine.states[thread.state];
                 const nlistlen = nlist.length;
                 // may be an Accept state
                 if (state instanceof TripleConstraintState) {
@@ -6198,7 +6198,7 @@ class EvalSimple1ErrRegexEngine {
                     });
             }
             if (nlist.length === 0 && chosen === null)
-                return reportError(localExpect(clist, rbenx.states));
+                return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
             const t = clist;
             clist = nlist;
             nlist = t;
@@ -6206,7 +6206,7 @@ class EvalSimple1ErrRegexEngine {
                 const matchedAll = elt.matched.reduce((ret, m) => {
                     return ret + m.triples.length; // count matched triples
                 }, 0) === allTriples.size;
-                return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
+                return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
             }, null);
             if (longerChosen)
                 chosen = longerChosen;
@@ -6217,13 +6217,13 @@ class EvalSimple1ErrRegexEngine {
             return {
                 type: "Failure",
                 node: node,
-                errors: localExpect(clist, rbenx.states)
+                errors: localExpect(clist, thisEvalSimple1ErrRegexEngine.states)
             };
         }
         function localExpect(clist, states) {
             const lastState = states[states.length - 1];
             return clist.reduce((acc, elt) => {
-                const c = rbenx.states[elt.state].c; // Always fails on a TCState
+                const c = thisEvalSimple1ErrRegexEngine.states[elt.state].c; // Always fails on a TCState
                 // if (c === ControlType.Match)
                 //   return { type: "EndState999" };
                 let valueExpr = null;
@@ -6233,7 +6233,7 @@ class EvalSimple1ErrRegexEngine {
                 else if (c.valueExpr) {
                     valueExpr = c.valueExpr;
                 }
-                if (elt.state !== rbenx.end) {
+                if (elt.state !== thisEvalSimple1ErrRegexEngine.end) {
                     const error = {
                         type: "MissingProperty",
                         property: lastState.c.predicate,
@@ -6501,18 +6501,18 @@ class EvalThreadedNErrRegexEngine {
         this.index = index;
         this.outerExpression = shape.expression;
     }
-    match(_db, _node, constraintList, constraintToTripleMapping, _tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+    match(node, constraintToTripleMapping, semActHandler, _trace) {
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
         }, new Set());
-        const _EvalThreadedNErrRegexEngine = this;
+        const thisEvalThreadedNErrRegexEngine = this;
         /*
          * returns: list of passing or failing threads (no heterogeneous lists)
          */
         function validateExpr(expr, thread) {
             if (typeof expr === "string") { // Inclusion
-                const included = _EvalThreadedNErrRegexEngine.index.tripleExprs[expr];
+                const included = thisEvalThreadedNErrRegexEngine.index.tripleExprs[expr];
                 return validateExpr(included, thread);
             }
             let min = expr.min !== undefined ? expr.min : 1;
@@ -6775,15 +6775,19 @@ class EvalThreadedNErrRegexEngine {
                 unmatchedTriples.size > 0 ? null : elt;
         }, null);
         return longerChosen !== null ?
-            this.finish(longerChosen.expression, constraintList, neighborhood, semActHandler) :
+            this.finish(longerChosen.expression) :
             ret.length > 1 ? {
                 type: "PossibleErrors",
                 errors: ret.reduce((all, e) => {
                     return all.concat([e.errors]);
                 }, [])
-            } : ret[0];
+            } : {
+                type: "Failure",
+                node: node,
+                errors: ret[0].errors
+            };
     }
-    finish(fromValidatePoint, _constraintList, _neighborhood, _semActHandler) {
+    finish(fromValidatePoint) {
         if (this.shape.semActs !== undefined)
             fromValidatePoint.semActs = this.shape.semActs;
         return fromValidatePoint;
@@ -15634,7 +15638,7 @@ class ShExValidator {
             let results = this.testExtends(shape, point, extendsToTriples, ctx);
             if (results === null || !("errors" in results)) {
                 if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-                    const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
+                    const sub = regexEngine.match(point, tc2t, this.semActHandler, null);
                     if (!("errors" in sub) && results) {
                         // @ts-ignore
                         results = { type: "ExtendedResults", extensions: results, local: sub };
@@ -15649,9 +15653,8 @@ class ShExValidator {
                     results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
-            if (results !== null && results.errors !== undefined) {
+            if (results !== null && results.errors !== undefined)
                 Array.prototype.push.apply(errors, results.errors);
-            }
             const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(point), shape: ctx.label };
             // @ts-ignore
             if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
@@ -15660,11 +15663,9 @@ class ShExValidator {
             }
             if ("semActs" in shape) {
                 const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: point }, results), possibleRet);
-                if (semActErrors.length) 
-                // some semAct aborted
-                { // @ts-ignore
-                    [].push.apply(errors, semActErrors);
-                }
+                if (semActErrors.length)
+                    // some semAct aborted
+                    Array.prototype.push.apply(errors, semActErrors);
             }
             partitionErrors.push(errors);
             if (errors.length === 0)

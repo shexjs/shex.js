@@ -74,18 +74,18 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     this.outerExpression = shape.expression!;
   }
 
-  match(_db: NeighborhoodDb, node: RdfJsTerm, constraintList: ShExJ.TripleConstraint[], constraintToTripleMapping: ConstraintToTripleResults, _tripleToConstraintMapping: T2TcPartition, neighborhood: RdfJsQuad[], semActHandler: SemActDispatcher, _trace: object[] | null): object {
+  match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, _trace: object[] | null): object {
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {
       tripleResult.forEach(res => allTriples.add(res.triple));
       return allTriples;
     }, new Set())
-    const _EvalThreadedNErrRegexEngine = this;
+    const thisEvalThreadedNErrRegexEngine = this;
     /*
      * returns: list of passing or failing threads (no heterogeneous lists)
      */
     function validateExpr(expr: ShExJ.tripleExprOrRef, thread: RegexpThread): RegexpThread[] {
       if (typeof expr === "string") { // Inclusion
-        const included = _EvalThreadedNErrRegexEngine.index.tripleExprs[expr];
+        const included = thisEvalThreadedNErrRegexEngine.index.tripleExprs[expr];
         return validateExpr(included, thread);
       }
 
@@ -362,8 +362,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         }, null);
 
     return longerChosen !== null ?
-        this.finish(longerChosen.expression!, constraintList,
-            neighborhood, semActHandler) :
+        this.finish(longerChosen.expression!) :
         ret.length > 1 ? {
           type: "PossibleErrors",
           errors: ret.reduce<error[]>((all, e) => {
@@ -376,7 +375,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         };
   }
 
-  finish(fromValidatePoint: tripleExprSolutions, _constraintList: ShExJ.TripleConstraint[], _neighborhood: RdfJsQuad[], _semActHandler: SemActDispatcher): tripleExprSolutions {
+  finish(fromValidatePoint: tripleExprSolutions): tripleExprSolutions {
     if (this.shape.semActs !== undefined)
       fromValidatePoint.semActs = this.shape.semActs;
     return fromValidatePoint;

@@ -18,18 +18,18 @@ class EvalThreadedNErrRegexEngine {
         this.index = index;
         this.outerExpression = shape.expression;
     }
-    match(_db, node, constraintList, constraintToTripleMapping, _tripleToConstraintMapping, neighborhood, semActHandler, _trace) {
+    match(node, constraintToTripleMapping, semActHandler, _trace) {
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
         }, new Set());
-        const _EvalThreadedNErrRegexEngine = this;
+        const thisEvalThreadedNErrRegexEngine = this;
         /*
          * returns: list of passing or failing threads (no heterogeneous lists)
          */
         function validateExpr(expr, thread) {
             if (typeof expr === "string") { // Inclusion
-                const included = _EvalThreadedNErrRegexEngine.index.tripleExprs[expr];
+                const included = thisEvalThreadedNErrRegexEngine.index.tripleExprs[expr];
                 return validateExpr(included, thread);
             }
             let min = expr.min !== undefined ? expr.min : 1;
@@ -292,7 +292,7 @@ class EvalThreadedNErrRegexEngine {
                 unmatchedTriples.size > 0 ? null : elt;
         }, null);
         return longerChosen !== null ?
-            this.finish(longerChosen.expression, constraintList, neighborhood, semActHandler) :
+            this.finish(longerChosen.expression) :
             ret.length > 1 ? {
                 type: "PossibleErrors",
                 errors: ret.reduce((all, e) => {
@@ -304,7 +304,7 @@ class EvalThreadedNErrRegexEngine {
                 errors: ret[0].errors
             };
     }
-    finish(fromValidatePoint, _constraintList, _neighborhood, _semActHandler) {
+    finish(fromValidatePoint) {
         if (this.shape.semActs !== undefined)
             fromValidatePoint.semActs = this.shape.semActs;
         return fromValidatePoint;

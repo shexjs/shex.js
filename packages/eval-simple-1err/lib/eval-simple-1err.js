@@ -229,14 +229,14 @@ class EvalSimple1ErrRegexEngine {
         this.states = states;
         this.start = startNo;
     }
-    match(_db, node, _constraintList, constraintToTripleMapping, _tripleToConstraintMapping, _neighborhood, semActHandler, trace) {
-        const rbenx = this;
+    match(node, constraintToTripleMapping, semActHandler, trace) {
+        const thisEvalSimple1ErrRegexEngine = this;
         let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
         const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
             return allTriples;
         }, new Set());
-        if (rbenx.states.length === 1)
+        if (thisEvalSimple1ErrRegexEngine.states.length === 1)
             return this.matchedToResult([], constraintToTripleMapping, semActHandler);
         let chosen = null;
         // console.log(new NfaToString().dumpNFA(this.states, this.start));
@@ -247,9 +247,9 @@ class EvalSimple1ErrRegexEngine {
                 trace.push({ threads: [] });
             for (let threadno = 0; threadno < clist.length; ++threadno) {
                 const thread = clist[threadno];
-                if (thread.state === rbenx.end)
+                if (thread.state === thisEvalSimple1ErrRegexEngine.end)
                     continue;
-                const state = rbenx.states[thread.state];
+                const state = thisEvalSimple1ErrRegexEngine.states[thread.state];
                 const nlistlen = nlist.length;
                 // may be an Accept state
                 if (state instanceof TripleConstraintState) {
@@ -283,7 +283,7 @@ class EvalSimple1ErrRegexEngine {
                     });
             }
             if (nlist.length === 0 && chosen === null)
-                return reportError(localExpect(clist, rbenx.states));
+                return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
             const t = clist;
             clist = nlist;
             nlist = t;
@@ -291,7 +291,7 @@ class EvalSimple1ErrRegexEngine {
                 const matchedAll = elt.matched.reduce((ret, m) => {
                     return ret + m.triples.length; // count matched triples
                 }, 0) === allTriples.size;
-                return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
+                return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
             }, null);
             if (longerChosen)
                 chosen = longerChosen;
@@ -302,13 +302,13 @@ class EvalSimple1ErrRegexEngine {
             return {
                 type: "Failure",
                 node: node,
-                errors: localExpect(clist, rbenx.states)
+                errors: localExpect(clist, thisEvalSimple1ErrRegexEngine.states)
             };
         }
         function localExpect(clist, states) {
             const lastState = states[states.length - 1];
             return clist.reduce((acc, elt) => {
-                const c = rbenx.states[elt.state].c; // Always fails on a TCState
+                const c = thisEvalSimple1ErrRegexEngine.states[elt.state].c; // Always fails on a TCState
                 // if (c === ControlType.Match)
                 //   return { type: "EndState999" };
                 let valueExpr = null;
@@ -318,7 +318,7 @@ class EvalSimple1ErrRegexEngine {
                 else if (c.valueExpr) {
                     valueExpr = c.valueExpr;
                 }
-                if (elt.state !== rbenx.end) {
+                if (elt.state !== thisEvalSimple1ErrRegexEngine.end) {
                     const error = {
                         type: "MissingProperty",
                         property: lastState.c.predicate,

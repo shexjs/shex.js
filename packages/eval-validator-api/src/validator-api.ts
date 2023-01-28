@@ -3,7 +3,7 @@ import * as RdfJs from '@rdfjs/types/data-model';
 import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
 import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {SchemaIndex} from "@shexjs/term";
-import {Quad} from "rdf-js";
+import {Quad as RdfJsQuad} from "rdf-js";
 import {TripleConstraint} from "shexj";
 
 export {};
@@ -35,14 +35,14 @@ export class MapArray<A, T> {
 }
 
 export type TripleResult = {
-  triple: Quad;
+  triple: RdfJsQuad;
   res: shapeExprTest;
 }
 export type ConstraintToTripleResults = MapArray<TripleConstraint, TripleResult>;
 
 export const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
-export type T2TcPartition = Map<Quad, TripleConstraint>;
+export type T2TcPartition = Map<RdfJsQuad, TripleConstraint>;
 
 export interface ValidatorRegexModule {
   name: string;
@@ -52,12 +52,8 @@ export interface ValidatorRegexModule {
 
 export interface ValidatorRegexEngine {
   match(
-    db: NeighborhoodDb,
     point: RdfJs.Term,
-    constraintList: ShExJ.TripleConstraint[],
     tc2t: ConstraintToTripleResults,
-    t2tcForThisShape: T2TcPartition,
-    neighborhood: RdfJs.Quad[] | null,
     semActHandler: SemActDispatcher,
     trace: object[] | null
   ): object;

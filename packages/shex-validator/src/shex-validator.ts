@@ -706,7 +706,7 @@ export class ShExValidator {
       let results = this.testExtends(shape, point, extendsToTriples, ctx);
       if (results === null || !("errors" in results)) {
         if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-          const sub = regexEngine.match(this.db, point, tripleConstraints, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
+          const sub = regexEngine.match(point, tc2t, this.semActHandler, null);
           if (!("errors" in sub) && results) {
             // @ts-ignore
             results = {type: "ExtendedResults", extensions: results, local: sub};
@@ -720,9 +720,7 @@ export class ShExValidator {
         }
       }
       if (results !== null && results.errors !== undefined)
-        {
-          Array.prototype.push.apply(errors, results.errors);
-        }
+        Array.prototype.push.apply(errors, results.errors);
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(point), shape: ctx.label };
       // @ts-ignore
@@ -734,9 +732,7 @@ export class ShExValidator {
         const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
-          { // @ts-ignore
-            [].push.apply(errors, semActErrors);
-          }
+          Array.prototype.push.apply(errors, semActErrors);
       }
 
       partitionErrors.push(errors)
