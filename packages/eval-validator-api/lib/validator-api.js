@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NoTripleConstraint = exports.MapArray = void 0;
+exports.MapArray = void 0;
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -28,4 +28,3 @@ class MapArray {
     }
 }
 exports.MapArray = MapArray;
-exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');

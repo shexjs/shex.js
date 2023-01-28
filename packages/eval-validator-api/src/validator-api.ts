@@ -40,8 +40,6 @@ export type TripleResult = {
 }
 export type ConstraintToTripleResults = MapArray<TripleConstraint, TripleResult>;
 
-export const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
-
 export type T2TcPartition = Map<RdfJsQuad, TripleConstraint>;
 
 export interface ValidatorRegexModule {

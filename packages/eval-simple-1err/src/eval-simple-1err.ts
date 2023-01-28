@@ -1,12 +1,9 @@
 import * as ShExJ from 'shexj';
 import {rdfJsTerm2Ld, SchemaIndex} from "@shexjs/term";
 import type {Quad as RdfJsQuad, Term as RdfJsTerm} from 'rdf-js';
-import {NeighborhoodDb} from "@shexjs/neighborhood-api";
 import {
-  ConstraintToTripleResults, MapArray,
-  NoTripleConstraint,
+  ConstraintToTripleResults,
   SemActDispatcher,
-  T2TcPartition,
   ValidatorRegexEngine,
   ValidatorRegexModule
 } from "@shexjs/eval-validator-api";

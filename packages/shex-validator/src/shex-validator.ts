@@ -5,7 +5,6 @@
 import * as ShExTerm from "@shexjs/term";
 import {InternalSchema, rdfJsTerm2Ld, SchemaIndex, ShapeMap, ShapeMapEntry} from "@shexjs/term";
 import {
-  NoTripleConstraint,
   QueryTracker,
   SemActDispatcher,
   SemActHandler,
@@ -672,7 +671,6 @@ export class ShExValidator {
           for (let extNo of tc2exts.get(TripleConstraint)!) {
             // allocated to multiple extends if diamond inheritance
             extendsToTriples[extNo].push(triple);
-            // localT2Tc.set(triple, NoTripleConstraint);
           }
         } else {
           // allocate to local shape
@@ -1197,6 +1195,8 @@ function testValueSetValue(valueSetValueP: string | ObjectLiteral | IriStem | Ir
   }
 }
 
+const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
+
 /** Explore permutations of mapping from Triples to TripleConstraints
  * documented using test ExtendsRepeatedP-pass
  */
@@ -1233,7 +1233,7 @@ class TripleToTripleConstraints {
   /**
    * Find next mapping of Triples to TripleConstraints.
    * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
-   * @returns {(Quad | typeof NoTripleConstraint)[] | null}
+   * @returns {(Quad | null}
    */
   next (): T2TcPartition | null {
     while (this.crossProduct.next()) {
@@ -1278,8 +1278,16 @@ class TripleToTripleConstraints {
   }
 }
 
-// { next: () => (boolean); get: () => number[] | null }
-// http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+/**
+ * Create a cross-product iterator that walks through all permutations of assigning a set of keys to one of their associated values.
+ *
+ * started from http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+ * TODO: make NoConstraint be part of CrossProduct rather than an externally-supplied value.
+ *
+ * @param sets Map from key to array of values
+ * @param emptyValue a term that won't appear in the values that can be used for internal logic
+ * @constructor
+ */
 function CrossProduct<KEY, LISTELT, EMPTY_VALUE>(sets: MapArray<KEY, LISTELT>, emptyValue: EMPTY_VALUE) {
   const n = sets.length, carets: number[] = [];
   const keys = [...sets.keys];

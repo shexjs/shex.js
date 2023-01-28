@@ -6803,7 +6803,7 @@ class EvalThreadedNErrRegexEngine {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NoTripleConstraint = exports.MapArray = void 0;
+exports.MapArray = void 0;
 class MapArray {
     constructor() {
         this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
@@ -6831,7 +6831,6 @@ class MapArray {
     }
 }
 exports.MapArray = MapArray;
-exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 
 
 /***/ }),
@@ -15607,7 +15606,6 @@ class ShExValidator {
                     for (let extNo of tc2exts.get(TripleConstraint)) {
                         // allocated to multiple extends if diamond inheritance
                         extendsToTriples[extNo].push(triple);
-                        // localT2Tc.set(triple, NoTripleConstraint);
                     }
                 }
                 else {
@@ -16098,6 +16096,7 @@ function testValueSetValue(valueSetValueP, value) {
         }
     }
 }
+const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 /** Explore permutations of mapping from Triples to TripleConstraints
  * documented using test ExtendsRepeatedP-pass
  */
@@ -16125,12 +16124,12 @@ class TripleToTripleConstraints {
         this.tc2exts = tc2exts;
         this.subgraphCache = new Map();
         // @ts-ignore
-        this.crossProduct = CrossProduct(constraintList, eval_validator_api_1.NoTripleConstraint);
+        this.crossProduct = CrossProduct(constraintList, NoTripleConstraint);
     }
     /**
      * Find next mapping of Triples to TripleConstraints.
      * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
-     * @returns {(Quad | typeof NoTripleConstraint)[] | null}
+     * @returns {(Quad | null}
      */
     next() {
         while (this.crossProduct.next()) {
@@ -16169,8 +16168,16 @@ class TripleToTripleConstraints {
         return idx;
     }
 }
-// { next: () => (boolean); get: () => number[] | null }
-// http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+/**
+ * Create a cross-product iterator that walks through all permutations of assigning a set of keys to one of their associated values.
+ *
+ * started from http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+ * TODO: make NoConstraint be part of CrossProduct rather than an externally-supplied value.
+ *
+ * @param sets Map from key to array of values
+ * @param emptyValue a term that won't appear in the values that can be used for internal logic
+ * @constructor
+ */
 function CrossProduct(sets, emptyValue) {
     const n = sets.length, carets = [];
     const keys = [...sets.keys];
