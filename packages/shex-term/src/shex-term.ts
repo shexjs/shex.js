@@ -114,16 +114,16 @@ export function rdfJsTerm2Turtle (node: RdfJsTerm, meta?: Meta): string {
   }
 }
 
-export function shExJsTerm2Turtle (node: any, meta: Meta = {base: "", prefixes: {}}, aForType?: boolean): any {
+export function shExJsTerm2Turtle (node: ShExJ.objectValue, meta: Meta = {base: "", prefixes: {}}, aForType?: boolean): any {
   if (typeof node === "string") {
     if (node.startsWith("_:")) {
       return node;
     } else {
       return iri2Turtle(node, meta, aForType);
     }
-  } else if (node.termType === "Literal") {
+  } else if (node.value !== undefined) {
     let value = node.value;
-    const type = node.datatype.value;
+    const type = node.type;
     const language = node.language;
     // Escape special characters
     if (escape.test(value))

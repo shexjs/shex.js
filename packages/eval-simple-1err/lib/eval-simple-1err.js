@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegexpModule = void 0;
+exports.EvalSimple1ErrRegexEngine = exports.RegExpThread = exports.RegexpModule = void 0;
 const term_1 = require("@shexjs/term");
 var ControlType;
 (function (ControlType) {
@@ -222,6 +222,7 @@ class RegExpThread {
         this.errors = errors;
     }
 }
+exports.RegExpThread = RegExpThread;
 class EvalSimple1ErrRegexEngine {
     constructor(shape, states, startNo, matchstate) {
         this.shape = shape;
@@ -556,5 +557,6 @@ class EvalSimple1ErrRegexEngine {
         return ret;
     }
 }
+exports.EvalSimple1ErrRegexEngine = EvalSimple1ErrRegexEngine;
 EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
 //# sourceMappingURL=eval-simple-1err.js.map

@@ -25,7 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShExValidator = exports.resultMapToShapeExprTest = exports.InterfaceOptions = void 0;
+exports.ShExValidator = exports.resultMapToShapeExprTest = exports.TriplesMatchingMiss = exports.TriplesMatchingNoValueConstraint = exports.TriplesMatchingHit = exports.TriplesMatching = exports.MapMap = exports.ShapeExprValidationContext = exports.EmptyTracker = exports.InterfaceOptions = void 0;
 // interface constants
 const ShExTerm = __importStar(require("@shexjs/term"));
 const term_1 = require("@shexjs/term");
@@ -108,6 +108,7 @@ class EmptyTracker {
     enter(_term, _shapeLabel) { ++this.depth; }
     exit(_term, _shapeLabel, _res) { --this.depth; }
 }
+exports.EmptyTracker = EmptyTracker;
 class ShapeExprValidationContext {
     constructor(parent, label, // Can only be Start if it's the root of a context list.
     depth, tracker, seen, matchTarget, subGraph) {
@@ -132,6 +133,7 @@ class ShapeExprValidationContext {
         return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
     }
 }
+exports.ShapeExprValidationContext = ShapeExprValidationContext;
 class MapMap {
     constructor() {
         this.data = new Map();
@@ -149,12 +151,14 @@ class MapMap {
         return this.data.get(a).get(b);
     }
 }
+exports.MapMap = MapMap;
 class TriplesMatching {
     constructor(hits, misses) {
         this.hits = hits;
         this.misses = misses;
     }
 }
+exports.TriplesMatching = TriplesMatching;
 class TriplesMatchingResult {
     constructor(triple, sub) {
         this.triple = triple;
@@ -163,13 +167,16 @@ class TriplesMatchingResult {
 }
 class TriplesMatchingHit extends TriplesMatchingResult {
 }
+exports.TriplesMatchingHit = TriplesMatchingHit;
 class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
     constructor(triple) {
         super(triple, undefined); // TODO: could weaken typing on the hits, but also weakens the misses
     }
 }
+exports.TriplesMatchingNoValueConstraint = TriplesMatchingNoValueConstraint;
 class TriplesMatchingMiss extends TriplesMatchingResult {
 }
+exports.TriplesMatchingMiss = TriplesMatchingMiss;
 /**
  * Convert a ResultMap to a shapeExprTest by examining each shape association.
  * TODO: migrate to ShExUtil when ShExUtil is TS-ified
@@ -448,51 +455,62 @@ class ShExValidator {
         runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
     validateShapeExpr(focus, shapeExpr, ctx) {
-        if (typeof shapeExpr === "string") { // ShapeRef
+        if (typeof shapeExpr === "string") // ShapeRef
             return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
-        }
         switch (shapeExpr.type) {
+            case "ShapeOr":
+                return this.evaluateShapeOr(focus, shapeExpr, ctx);
+            case "ShapeAnd":
+                return this.evaluateShapeAnd(focus, shapeExpr, ctx);
+            case "ShapeNot":
+                return this.evaluateShapeNot(focus, shapeExpr, ctx);
+            case "ShapeExternal":
+                return this.evaluateShapeExternal(focus, shapeExpr, ctx);
             case "NodeConstraint":
                 return this.validateNodeConstraint(focus, shapeExpr, ctx);
             case "Shape":
                 return this.validateShape(focus, shapeExpr, ctx);
-            case "ShapeExternal":
-                if (typeof this.options.validateExtern !== "function")
-                    throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
-                return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
-            case "ShapeOr":
-                const orErrors = [];
-                for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-                    const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
-                    if ("errors" in sub)
-                        orErrors.push(sub);
-                    else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
-                        return { type: "ShapeOrResults", solution: sub };
-                }
-                return { type: "ShapeOrFailure", errors: orErrors };
-            case "ShapeNot":
-                const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
-                return ("errors" in sub)
-                    ? { type: "ShapeNotResults", solution: sub }
-                    : { type: "ShapeNotFailure", errors: sub }; // ugh
-            case "ShapeAnd":
-                const andPasses = [];
-                const andErrors = [];
-                for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-                    const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
-                    if ("errors" in sub)
-                        andErrors.push(sub);
-                    else
-                        andPasses.push(sub);
-                }
-                return andErrors.length > 0
-                    ? { type: "ShapeAndFailure", errors: andErrors }
-                    : { type: "ShapeAndResults", solutions: andPasses };
             default:
                 throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
         }
+    }
+    evaluateShapeOr(focus, shapeOr, ctx) {
+        const orErrors = [];
+        for (let i = 0; i < shapeOr.shapeExprs.length; ++i) {
+            const nested = shapeOr.shapeExprs[i];
+            const sub = this.validateShapeExpr(focus, nested, ctx);
+            if ("errors" in sub)
+                orErrors.push(sub);
+            else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
+                return { type: "ShapeOrResults", solution: sub };
+        }
+        return { type: "ShapeOrFailure", errors: orErrors };
+    }
+    evaluateShapeAnd(focus, shapeAnd, ctx) {
+        const andPasses = [];
+        const andErrors = [];
+        for (let i = 0; i < shapeAnd.shapeExprs.length; ++i) {
+            const nested = shapeAnd.shapeExprs[i];
+            const sub = this.validateShapeExpr(focus, nested, ctx);
+            if ("errors" in sub)
+                andErrors.push(sub);
+            else
+                andPasses.push(sub);
+        }
+        return andErrors.length > 0
+            ? { type: "ShapeAndFailure", errors: andErrors }
+            : { type: "ShapeAndResults", solutions: andPasses };
+    }
+    evaluateShapeNot(focus, shapeNot, ctx) {
+        const sub = this.validateShapeExpr(focus, shapeNot.shapeExpr, ctx);
+        return ("errors" in sub)
+            ? { type: "ShapeNotResults", solution: sub }
+            : { type: "ShapeNotFailure", errors: sub };
+    }
+    evaluateShapeExternal(focus, _shapeExternal, ctx) {
+        if (typeof this.options.validateExtern !== "function")
+            throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
+        return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
     }
     // TODO: should this be called for and, or, not?
     evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
@@ -507,7 +525,6 @@ class ShExValidator {
     validateShape(focus, shape, ctx) {
         let ret = null;
         const fromDB = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
-        const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
         const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
         const tripleConstraints = extendsTCs.concat(localTCs);
         // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
@@ -543,12 +560,6 @@ class ShExValidator {
                 shape: ctx.label,
                 errors: errors
             };
-        // remove N3jsTripleToString
-        if (VERBOSE)
-            neighborhood.forEach(function (t) {
-                // @ts-ignore
-                delete t.toString;
-            });
         return this.addShapeAttributes(shape, ret);
     }
     /**

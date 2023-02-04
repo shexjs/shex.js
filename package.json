@@ -63,6 +63,7 @@
     "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",
     "show-links": "find . -path \\*node_modules\\* -type l -prune -exec ls -l {} \\;",
     "make": "(cd test/ && make test)",
+    "test-map": "mocha -r source-map-support/register packages/extension-map/test/Map-test.js",
     "test": "mocha packages/*/test/*test.js -C -R dot",
     "test-all": "TEST_cli=true TEST_browser=true TEST_server=true mocha packages/*/test/*test.js -R dot",
     "test-verbose": "mocha packages/*/test/*test.js && TEST_cli=true mocha packages/*/test/*test.js test/cli-test.js && TEST_browser=true mocha packages/*/test/*test.js test/browser-test.js",

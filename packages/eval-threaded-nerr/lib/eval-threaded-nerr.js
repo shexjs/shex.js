@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegexpModule = void 0;
+exports.EvalThreadedNErrRegexEngine = exports.RegexpModule = exports.RegexpThread = void 0;
 const term_1 = require("@shexjs/term");
 const UNBOUNDED = -1;
 class RegexpThread {
@@ -22,6 +22,7 @@ class RegexpThread {
         ]), matched);
     }
 }
+exports.RegexpThread = RegexpThread;
 exports.RegexpModule = {
     name: "eval-threaded-nerr",
     description: "emulation of regular expression engine with error permutations",
@@ -299,4 +300,5 @@ class EvalThreadedNErrRegexEngine {
         }, { errors: true, l: [] }).l;
     }
 }
+exports.EvalThreadedNErrRegexEngine = EvalThreadedNErrRegexEngine;
 //# sourceMappingURL=eval-threaded-nerr.js.map

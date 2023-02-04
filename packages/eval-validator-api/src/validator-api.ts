@@ -34,6 +34,8 @@ export class MapArray<A, T> {
   }
 }
 
+export type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: prefer MapArray<>?
+
 export type TripleResult = {
   triple: RdfJsQuad;
   res: shapeExprTest;

@@ -2,6 +2,7 @@ import * as ShExJ from 'shexj';
 import {rdfJsTerm2Ld, SchemaIndex} from "@shexjs/term";
 import type {Quad as RdfJsQuad, Term as RdfJsTerm} from 'rdf-js';
 import {
+  ConstraintToTriples,
   ConstraintToTripleResults,
   SemActDispatcher,
   ValidatorRegexEngine,
@@ -26,18 +27,16 @@ export {};
 
 const UNBOUNDED = -1;
 
-type ConstraintToTriples = Map<ShExJ.TripleConstraint, RdfJsQuad[]>; // TODO: prefer MapArray<>?
-
 interface PossibleErrors {
   type: "PossibleErrors"
   errors: error[][];
 }
 
-interface TripleList {
+export interface TripleList {
   triples: RdfJsQuad[];
 }
 
-class RegexpThread {
+export class RegexpThread {
   public avail: ConstraintToTriples;   // triples remaining by constraint
   public matched: TripleList[]; // triples matched in this thread
   public errors: error[];   // errors encounted
@@ -93,20 +92,20 @@ export const RegexpModule: ValidatorRegexModule = {
   }
 }
 
-interface GroupAttrs {
+export interface GroupAttrs {
   min?: number,
   max?: number,
   semActs?: ShExJ.SemAct[];
   annotations?: ShExJ.Annotation[];
 }
 
-interface TripleTestedErrors {
+export interface TripleTestedErrors {
   triple: RdfJsQuad;
   tested: TestedTriple;
   semActErrors: any;
 }
 
-class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
+export class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   public outerExpression: ShExJ.tripleExprOrRef;
   constructor(
       public shape: ShExJ.Shape,

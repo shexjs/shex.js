@@ -73,9 +73,9 @@ function shExJsTerm2Turtle(node, meta = { base: "", prefixes: {} }, aForType) {
             return iri2Turtle(node, meta, aForType);
         }
     }
-    else if (node.termType === "Literal") {
+    else if (node.value !== undefined) {
         let value = node.value;
-        const type = node.datatype.value;
+        const type = node.type;
         const language = node.language;
         // Escape special characters
         if (escape.test(value))

@@ -278,11 +278,11 @@ class NfaToString {
   }
 }
 
-interface Repeats {
+export interface Repeats {
   [key: string]: number;
 }
 
-class RegExpThread {
+export class RegExpThread {
   constructor(
       public state: number = -1,
       public repeats: Repeats = {},
@@ -299,7 +299,7 @@ interface TriplesMatch {
   stack: StackEntry[];
 }
 
-class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
+export class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
   static algorithm = "rbenx"; // rename at will; only used for debugging
   private end: number;
   private readonly states: RegExpState[];

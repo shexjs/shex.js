@@ -52,7 +52,7 @@ import {
   ShapeAnd,
   ShapeDecl, shapeDeclLabel,
   shapeDeclRef,
-  shapeExprOrRef,
+  shapeExprOrRef, ShapeExternal,
   ShapeNot,
   ShapeOr,
   TripleConstraint,
@@ -62,8 +62,6 @@ import {getNumericDatatype, testFacets, testKnownTypes} from "./shex-xsd";
 import * as RdfJs from "@rdfjs/types/data-model";
 import {Literal as RdfJsLiteral} from "@rdfjs/types/data-model";
 import {index as indexSchema, Visitor as ShExVisitor} from "@shexjs/visitor";
-import {DataFactory} from "n3";
-import quad = DataFactory.quad;
 
 export {};
 
@@ -166,7 +164,7 @@ class SemActDispatcherImpl implements SemActDispatcher {
 /**
  * A QueryTracker that's all no-ops.
  */
-class EmptyTracker implements QueryTracker {
+export class EmptyTracker implements QueryTracker {
   depth = 0;
 
   recurse(_rec: Recursion) {}
@@ -175,13 +173,13 @@ class EmptyTracker implements QueryTracker {
   exit(_term: RdfJsTerm, _shapeLabel: string, _res: shapeExprTest) { --this.depth; }
 }
 
-type LabelOrStart = shapeDeclLabel | typeof NeighborhoodStart;
+export type LabelOrStart = shapeDeclLabel | typeof NeighborhoodStart;
 
-interface SeenIndex {
+export interface SeenIndex {
   [id: string]: { node: RdfJsTerm, shape: string };
 }
 
-interface MatchTarget {
+export interface MatchTarget {
   label: string;
   count: number;
 }
@@ -192,7 +190,7 @@ interface ExtensionIndex {
 
 interface ResList {passes: shapeExprTest[], failures: shapeExprTest[]}
 
-class ShapeExprValidationContext {
+export class ShapeExprValidationContext {
   constructor(
       public parent: ShapeExprValidationContext | null,
       public label: LabelOrStart, // Can only be Start if it's the root of a context list.
@@ -224,12 +222,12 @@ interface ReferenceToExtendedShapeDecl { type: "Ref", ref: string; }
 type RefOrTc = ReferenceToExtendedShapeDecl | TripleConstraint;
 type RefsAndTCsForOneExtension = RefOrTc[];
 type RefsAndTCsForShapesExtensions = RefsAndTCsForOneExtension[];
-type ByPredicateResult = {
+export type ByPredicateResult = {
   t2tcErrors: T2TCErrors; // for each T, some failing constraint ??
   tc2TResults: TC2TResult; // for each TC, for each passing T, what was the result
   t2tcs: T2TCs; // for each T, which constraints does it match
 };
-class MapMap<A, B, T> {
+export class MapMap<A, B, T> {
   protected data: Map<A, Map<B, T>> = new Map();
   set (a:A, b:B, t:T): void {
     if (!this.data.has(a)) { this.data.set(a, new Map<B, T>()); }
@@ -250,7 +248,7 @@ type WhatsMissingResult = {
   matchedExtras: Quad[];
 }
 
-class TriplesMatching {
+export class TriplesMatching {
   constructor (
       public hits: TriplesMatchingHit[],
       public misses: TriplesMatchingMiss[]
@@ -262,13 +260,13 @@ class TriplesMatchingResult {
       public sub: shapeExprTest,
   ) { }
 }
-class TriplesMatchingHit extends TriplesMatchingResult {}
-class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
+export class TriplesMatchingHit extends TriplesMatchingResult {}
+export class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
   constructor(triple: Quad) {
     super(triple, undefined as any as shapeExprTest); // TODO: could weaken typing on the hits, but also weakens the misses
   }
 }
-class TriplesMatchingMiss extends TriplesMatchingResult {}
+export class TriplesMatchingMiss extends TriplesMatchingResult {}
 
 /**
  * Convert a ResultMap to a shapeExprTest by examining each shape association.
@@ -586,55 +584,70 @@ export class ShExValidator {
   }
 
   validateShapeExpr(focus: RdfJsTerm, shapeExpr: shapeExprOrRef, ctx: ShapeExprValidationContext): shapeExprTest {
-    if (typeof shapeExpr === "string") { // ShapeRef
+    if (typeof shapeExpr === "string") // ShapeRef
       return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
-    }
 
     switch (shapeExpr.type) {
+      case "ShapeOr":
+        return this.evaluateShapeOr(focus, shapeExpr, ctx);
+      case "ShapeAnd":
+        return this.evaluateShapeAnd(focus, shapeExpr, ctx);
+      case "ShapeNot":
+        return this.evaluateShapeNot(focus, shapeExpr, ctx);
+      case "ShapeExternal":
+        return this.evaluateShapeExternal(focus, shapeExpr, ctx);
       case "NodeConstraint":
         return this.validateNodeConstraint(focus, shapeExpr, ctx);
       case "Shape":
         return this.validateShape(focus, shapeExpr, ctx);
-      case "ShapeExternal":
-        if (typeof this.options.validateExtern !== "function")
-          throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`)
-        return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
-      case "ShapeOr":
-        const orErrors = [];
-        for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-          const nested = shapeExpr.shapeExprs[i];
-          const sub = this.validateShapeExpr(focus, nested, ctx);
-          if ("errors" in sub)
-            orErrors.push(sub);
-          else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
-            return {type: "ShapeOrResults", solution: sub};
-        }
-        return {type: "ShapeOrFailure", errors: orErrors} as any as shapeExprTest;
-      case "ShapeNot":
-        const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
-        return ("errors" in sub)
-          ? {type: "ShapeNotResults", solution: sub} as any as shapeExprTest
-          : {type: "ShapeNotFailure", errors: sub} as any as shapeExprTest; // ugh
-      case "ShapeAnd":
-        const andPasses = [];
-        const andErrors = [];
-        for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-          const nested = shapeExpr.shapeExprs[i];
-          const sub = this.validateShapeExpr(focus, nested, ctx);
-          if ("errors" in sub)
-            andErrors.push(sub);
-          else
-            andPasses.push(sub);
-        }
-        return andErrors.length > 0
-          ? {type: "ShapeAndFailure", errors: andErrors} as any as shapeExprTest
-          : {type: "ShapeAndResults", solutions: andPasses};
       default:
         throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
     }
   }
 
-  // TODO: should this be called for and, or, not?
+  evaluateShapeOr(focus: RdfJsTerm, shapeOr: ShapeOr, ctx: ShapeExprValidationContext) {
+    const orErrors = [];
+    for (let i = 0; i < shapeOr.shapeExprs.length; ++i) {
+      const nested = shapeOr.shapeExprs[i];
+      const sub = this.validateShapeExpr(focus, nested, ctx);
+      if ("errors" in sub)
+        orErrors.push(sub);
+      else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
+        return {type: "ShapeOrResults", solution: sub};
+    }
+    return {type: "ShapeOrFailure", errors: orErrors} as any as shapeExprTest;
+  }
+
+  evaluateShapeAnd(focus: RdfJsTerm, shapeAnd: ShapeAnd, ctx: ShapeExprValidationContext) {
+    const andPasses = [];
+    const andErrors = [];
+    for (let i = 0; i < shapeAnd.shapeExprs.length; ++i) {
+      const nested = shapeAnd.shapeExprs[i];
+      const sub = this.validateShapeExpr(focus, nested, ctx);
+      if ("errors" in sub)
+        andErrors.push(sub);
+      else
+        andPasses.push(sub);
+    }
+    return andErrors.length > 0
+        ? {type: "ShapeAndFailure", errors: andErrors} as any as shapeExprTest
+        : {type: "ShapeAndResults", solutions: andPasses};
+  }
+
+  evaluateShapeNot(focus: RdfJsTerm, shapeNot: ShapeNot, ctx: ShapeExprValidationContext) {
+    const sub = this.validateShapeExpr(focus, shapeNot.shapeExpr, ctx);
+    return ("errors" in sub)
+        ? {type: "ShapeNotResults", solution: sub} as any as shapeExprTest
+        : {type: "ShapeNotFailure", errors: sub} as any as shapeExprTest;
+  }
+
+  evaluateShapeExternal(focus: RdfJsTerm, _shapeExternal: ShapeExternal, ctx: ShapeExprValidationContext) {
+    if (typeof this.options.validateExtern !== "function")
+      throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`)
+    return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+  }
+
+// TODO: should this be called for and, or, not?
   protected evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
     if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
       const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
@@ -648,7 +661,6 @@ export class ShExValidator {
   validateShape(focus: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext): shapeExprTest {
     let ret = null;
     const fromDB  = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
-    const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
     const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
     const tripleConstraints = extendsTCs.concat(localTCs);
@@ -692,13 +704,6 @@ export class ShExValidator {
         shape: ctx.label,
         errors: errors
       };
-
-    // remove N3jsTripleToString
-    if (VERBOSE)
-      neighborhood.forEach(function (t) {
-        // @ts-ignore
-        delete t.toString;
-      });
 
     return this.addShapeAttributes(shape, ret!);
   }

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+"use strict"
 
 const VERBOSE = "VERBOSE" in process.env;
 const TERSE = VERBOSE;
@@ -15,6 +16,7 @@ const ShExNode = require("@shexjs/node")({
 const ShExParser = require("@shexjs/parser");
 const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const Mapper = require("..")({rdfjs: RdfJs, Validator: ShExValidator});
+const {ShExMaterializer, BindingTree, BindingCursor} = require("../lib/shex-materializer");
 
 const StringToRdfJs = require("../lib/stringToRdfJs");
 
@@ -92,7 +94,86 @@ function trivial (registered, schema, resultBindings, createRoot) {
   return trivialMaterializer.materialize(trivialBinder, createRoot);
 }
 
+const Ns = {
+  xsd: "http://www.w3.org/2001/XMLSchema#",
+  map: "http://shex.io/extensions/Map/#BPDAM-",
+  my: "http://my.data.example/medical/",
+}
+const Meta = {base: Ns.map, prefixes: Ns}; // handy for toTurtle functions
+
+function vals (obj, ns) {
+  return Object.keys(obj).reduce((acc, key) => {
+    acc[ns + key] = obj[key];
+    return acc;
+  }, {})
+}
+
+const bindingTreeJson1 =
+      [ vals({ "name": { "value": "Sue" } }, Ns.map),
+        // [
+          [ vals({ "reports": Ns.my + "Report1" }, Ns.map),
+            [ vals({ "reportNo": { "value": "one" } }, Ns.map),
+              [
+                vals({ "bp": Ns.my + "Res00",
+                       "sysVal": { "value": "100", "type": Ns.xsd + "float" },
+                       "sysUnits": { "value": "mmHg" },
+                       "diaVal": { "value": "60", "type": Ns.xsd + "float" },
+                       "diaUnits": { "value": "mmHg" }
+                     }, Ns.map),
+                vals({ "bp": Ns.my + "Res01",
+                       "sysVal": { "value": "101", "type": Ns.xsd + "float" },
+                       "sysUnits": { "value": "mmHg" },
+                       "diaVal": { "value": "61", "type": Ns.xsd + "float" },
+                       "diaUnits": { "value": "mmHg" }
+                     }, Ns.map)
+              ]
+            ] ],
+          [ vals({ "reports": Ns.my + "Report2" }, Ns.map),
+            [ vals({ "reportNo": { "value": "two" } }, Ns.map),
+              [
+                vals({ "bp": Ns.my + "Res10",
+                       "sysVal": { "value": "110", "type": Ns.xsd + "float" },
+                       "sysUnits": { "value": "mmHg" },
+                       "diaVal": { "value": "70", "type": Ns.xsd + "float" },
+                       "diaUnits": { "value": "mmHg" }
+                     }, Ns.map),
+                vals({ "bp": Ns.my + "Res11",
+                       "sysVal": { "value": "111", "type": Ns.xsd + "float" },
+                       "sysUnits": { "value": "mmHg" },
+                       "diaVal": { "value": "71", "type": Ns.xsd + "float" },
+                       "diaUnits": { "value": "mmHg" }
+                     }, Ns.map)
+              ]
+            ] ]
+        // ]
+      ];
+
+describe('asdf', () => {
+  it('qwer', () => {
+    const tree = BindingTree.fromObject(bindingTreeJson1);
+    console.log('tree:\n', tree.toDot(Meta)); // Ns.reduce((acc, key) => {acc[Ns[key]] = key; return acc}, {})
+    const cursor = new BindingCursor(tree);
+    let v;
+    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 100
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
+    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 101
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
+    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 110
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // two
+    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v)
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v)
+    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v)
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v)
+    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v)
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v)
+  })
+})
+
 function materialize (registered, schema, resultBindings, createRoot) {
+  const mat2 = new ShExMaterializer(schema);
+  const mat2d = mat2.materialize(DataFactory.namedNode(createRoot), ShExValidator.Start, resultBindings);
+  console.log([...mat2d.match()])
+
   const materializer = Mapper.materializer.construct(schema, registered, {});
   const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
   const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.Start}])
@@ -143,6 +224,7 @@ describe('A ShEx Mapper', function () {
 */
 });
 const ShapeMap = require("shape-map");
+const N3Store = require("n3/lib/N3Store");
 ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const Awaiting = []
