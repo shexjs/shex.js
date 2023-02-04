@@ -110,7 +110,7 @@ function vals (obj, ns) {
 
 const bindingTreeJson1 =
       [ vals({ "name": { "value": "Sue" } }, Ns.map),
-        // [
+        [
           [ vals({ "reports": Ns.my + "Report1" }, Ns.map),
             [ vals({ "reportNo": { "value": "one" } }, Ns.map),
               [
@@ -145,15 +145,17 @@ const bindingTreeJson1 =
                      }, Ns.map)
               ]
             ] ]
-        // ]
+        ]
       ];
 
-describe('asdf', () => {
+describe('BindingTree', () => {
+  const tree = BindingTree.fromObject(bindingTreeJson1)[0];
+  console.log('tree:\n' + tree.toString(Meta, false, '  ')); // Ns.reduce((acc, key) => {acc[Ns[key]] = key; return acc}, {})
+
   it('qwer', () => {
-    const tree = BindingTree.fromObject(bindingTreeJson1);
-    console.log('tree:\n', tree.toDot(Meta)); // Ns.reduce((acc, key) => {acc[Ns[key]] = key; return acc}, {})
     const cursor = new BindingCursor(tree);
     let v;
+    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
     v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 100
     v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
     v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 101

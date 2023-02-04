@@ -348,16 +348,25 @@ export class BindingTree {
     });
   }
 
-  toString (terse: boolean = false, indent: string = ""): string {
+  toString (meta: ShExTerm.Meta = {base: "", prefixes: {}}, terse: boolean = false, indent: string = ""): string {
     if (terse) {
       let ret = `${indent}${this.path}: ${this.values.size}, ${this.children.length}\n`;
-      ret += this.children.map(c => c.toString(terse, indent + '  ')).join('');
+      ret += this.children.map(c => c.toString(meta, terse, indent + '  ')).join('');
       return ret;
     } else {
-      return JSON.stringify(this, (key, value) =>
-          key === 'parentNOTUSED' ? undefined
-              : value instanceof Map ? Object.fromEntries(value)
-              : value);
+      const entries = [...this.values.entries()];
+      const assignmentsLines = entries.map(
+          ([key, val]) =>
+              `│ ${ShExTerm.shExJsTerm2Turtle(key, meta)} ≔ ${ShExTerm.shExJsTerm2Turtle(val, meta)}`
+      )
+      const lines = [`Node: ${this.path || '<root>'}`].concat(assignmentsLines);
+      let ret = lines.map(l => `${indent}${l}\n`).join('');
+      ret += this.children.map(c => c.toString(meta, terse, indent + '    ')).join('');
+      return ret;
+      // return JSON.stringify(this, (key, value) =>
+      //     key === 'parentNOTUSED' ? undefined // strip out circular references
+      //         : value instanceof Map ? Object.fromEntries(value)
+      //         : value);
     }
   }
 
@@ -366,10 +375,11 @@ export class BindingTree {
     const labels = entries.map(
         ([key, val]) =>
             `${ShExTerm.shExJsTerm2Turtle(key, meta)} ≔ ${ShExTerm.shExJsTerm2Turtle(val, meta)}`
-    ).map(l => l
-        .replace(/(["<>])/g, '\\$1')
     );
-    const labelStr = `${nodeId} [label="{${labels.length > 0 ? labels.join('|') : '∅'}}"];`;
+
+    const markedLabels = labels.map(s => `${s.replace(/(["<>])/g, '\\$1')}\\l`);
+    const labelsStr = `"{${this.path}${labels.length > 0 ? '|' + markedLabels.join('|') : '∅'}}"`;
+    const recordStr = `${nodeId} [label=${labelsStr}];`;
     const childTxts = this.children.reduce<string[]>(
         (acc, c, ord) =>
             acc.concat(c.toDot1(meta, nodeId + ord)),
@@ -379,7 +389,7 @@ export class BindingTree {
         (_c, ord) =>
             `${nodeId} -> ${nodeId + ord}`
     );
-    return [labelStr].concat(childTxts).concat(childArcs);
+    return [recordStr].concat(childTxts).concat(childArcs);
   }
 
   toDot (meta: ShExTerm.Meta = {base: '', prefixes: {}}, nodeId = "n"): string {
@@ -389,26 +399,31 @@ export class BindingTree {
 }`
   }
 
-  static fromObject (obj: Array<unknown>, path: string = "", parent: BindingTree | null = null) : BindingTree {
+  static fromObject (obj: Array<unknown>, path: string = "", parent: BindingTree | null = null) : BindingTree[] {
     assert.equal(typeof obj, "object");
     console.assert(Array.isArray(obj));
     console.assert(obj.length > 0);
     const {objs, children} = obj.reduce<{objs: object[], children: BindingTree[]}>(
         (acc, c) => {
           return Array.isArray(c)
-              ? {objs: acc.objs, children: acc.children.concat([BindingTree.fromObject(c, at(acc.children.length))])}
+              ? {objs: acc.objs, children: acc.children.concat(BindingTree.fromObject(c, at(acc.children.length)))}
               : {objs: acc.objs.concat([c]), children: acc.children}
         },
         {objs: [], children: []}
     );
-    return objs.length === 0
-        ? new BindingTree(parent, path, new Map(), children)
-        : objs.length === 1
-            ? new BindingTree(parent, path, new Map(Object.entries(objs[0])), children)
-            : new BindingTree(parent, path, new Map(), objs.map(
-                (c, ord) => new BindingTree(null, at(ord), new Map(Object.entries(c)), [])
-              ).concat(children)
-            )
+
+    if (children.length === 0)
+      return objs.map((c, ord) =>
+          new BindingTree(null, at(ord), new Map(Object.entries(c)), [])
+      );
+    if (objs.length === 0)
+      return children; // [new BindingTree(parent, path, new Map(), children)];
+    if (objs.length === 1)
+      return [new BindingTree(parent, path, new Map(Object.entries(objs[0])), children)];
+    return [new BindingTree(parent, path, new Map(), objs.map((c, ord) =>
+            new BindingTree(null, at(ord), new Map(Object.entries(c)), [])
+        ).concat(children)
+    )];
 
     function at (ord: number) { return `${path}.${ord}`; }
   }
@@ -461,7 +476,7 @@ export class BindingCursor {
             ptr = ptr.parent;
             ptr.childNo++;
           }
-          if (ptr.parent === null) {
+          if (ptr.parent === null && ptr.childNo >= ptr.node.children.length) {
             this.end = true;
             return null;
           }
@@ -470,6 +485,7 @@ export class BindingCursor {
         }
       } else {
         if (ptr.childNo < ptr.node.children.length) {
+          fromBelow = false;
           ptr = new BindingPointer(ptr, ptr.node.children[ptr.childNo]);
         } else { // TODO: dup; refactor
           // was used so crawl up and forward
