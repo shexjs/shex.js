@@ -56,6 +56,7 @@
     "webpack-cli": "^4.6.0"
   },
   "scripts": {
+    "MAT": "npm run compile && npm run test-map",
     "makemake": "node tools/makeMake.js > Makefile",
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
     "compile": "make ALL",
