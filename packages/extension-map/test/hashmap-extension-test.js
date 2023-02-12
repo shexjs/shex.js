@@ -252,7 +252,10 @@ describe('Hashmap extension', function() {
 
             expect(
                 hmExtension.lower(
-                    'hashmap(test:string, {"a": "abc", "x": "xyz"})', 
+                    `hashmap(test:string, {
+                       "a": "abc",
+                       "x": "xyz"}
+                     )`,
                     registered.binder([{"urn:local:test:string": "xyz"}]), 
                     {"test": "urn:local:test:"},
                     'test:string, {"a": "abc", "x": "xyz"}'))
