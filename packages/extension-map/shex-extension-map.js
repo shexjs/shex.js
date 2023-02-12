@@ -69,7 +69,7 @@ function register (validator, api) {
         };
 
         // Do we have a map extension function?
-        if (/.*[(].*[)].*$/.test(code)) {
+        if (/.*[(].*[)].*$/s.test(code)) {
           const results = extensions.lift(code, ctx.object.value, prefixes);
           for (key in results)
             update(key, RdfJs.DataFactory.literal(results[key]));
