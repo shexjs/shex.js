@@ -75,7 +75,7 @@ export const InterfaceOptions = {
 const VERBOSE = false; // "VERBOSE" in process.env;
 const EvalThreadedNErr = require("@shexjs/eval-threaded-nerr").RegexpModule;
 
-interface ValidatorOptions {
+export interface ValidatorOptions {
   regexModule?: ValidatorRegexEngine;
   coverage?: {
     exhaustive: string;
@@ -427,7 +427,7 @@ export class ShExValidator {
       return this.validateShapeExpr(focus, this.schema.start, ctx);
     }
 
-    const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
+    const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ShExTerm.shExJsTerm2Turtle(ctx.label);
     if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
       if (seenKey in ctx.seen)
         {

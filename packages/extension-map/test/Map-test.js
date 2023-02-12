@@ -97,6 +97,7 @@ function trivial (registered, schema, resultBindings, createRoot) {
 const Ns = {
   xsd: "http://www.w3.org/2001/XMLSchema#",
   map: "http://shex.io/extensions/Map/#BPDAM-",
+  dam: "http://shex.io/extensions/Map/#BPunitsDAM-",
   my: "http://my.data.example/medical/",
 }
 const Meta = {base: Ns.map, prefixes: Ns}; // handy for toTurtle functions
@@ -148,33 +149,37 @@ const bindingTreeJson1 =
         ]
       ];
 
+if (true)
 describe('BindingTree', () => {
   const tree = BindingTree.fromObject(bindingTreeJson1)[0];
-  console.log('tree:\n' + tree.toString(Meta, false, '  ')); // Ns.reduce((acc, key) => {acc[Ns[key]] = key; return acc}, {})
+  // console.log('tree:\n' + tree.toString(Meta, false, '  '));
 
-  it('qwer', () => {
+  it('walks leaves', () => {
     const cursor = new BindingCursor(tree);
     let v;
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
-    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 100
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
-    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 101
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // one
-    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v) // 110
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v) // two
-    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v)
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v)
-    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v)
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v)
-    v = cursor.get(Ns.map + "sysVal"); console.log('sysVal:', v)
-    v = cursor.get(Ns.map + "reportNo"); console.log('reportNo:', v)
+    v = cursor.get(Ns.map + "reportNo"); expect(typeof v === "object").to.be.true; expect(v.value).equals("one");
+    v = cursor.get(Ns.map + "sysVal");   expect(typeof v === "object").to.be.true; expect(v.value).equals("100");
+    v = cursor.get(Ns.map + "reportNo"); expect(typeof v === "object").to.be.true; expect(v.value).equals("one");
+    v = cursor.get(Ns.map + "sysVal");   expect(typeof v === "object").to.be.true; expect(v.value).equals("101");
+    v = cursor.get(Ns.map + "reportNo"); expect(typeof v === "object").to.be.true; expect(v.value).equals("one");
+    v = cursor.get(Ns.map + "sysVal");   expect(typeof v === "object").to.be.true; expect(v.value).equals("110");
+    v = cursor.get(Ns.map + "reportNo"); expect(typeof v === "object").to.be.true; expect(v.value).equals("two");
+    v = cursor.get(Ns.map + "sysVal");   expect(typeof v === "object").to.be.true; expect(v.value).equals("111");
+    v = cursor.get(Ns.map + "reportNo"); expect(typeof v === "object").to.be.true; expect(v.value).equals("two");
+    // run off the end
+    v = cursor.get(Ns.map + "sysVal");   expect(v).to.be.null;
+    v = cursor.get(Ns.map + "reportNo"); expect(v).to.be.null;
+    // graceful after end
+    v = cursor.get(Ns.map + "sysVal");   expect(v).to.be.null;
+    v = cursor.get(Ns.map + "reportNo"); expect(v).to.be.null;
   })
 })
 
 function materialize (registered, schema, resultBindings, createRoot) {
-  const mat2 = new ShExMaterializer(schema);
-  const mat2d = mat2.materialize(DataFactory.namedNode(createRoot), ShExValidator.Start, resultBindings);
-  console.log([...mat2d.match()])
+  const mat2 = new ShExMaterializer(schema, {base: schema.base, prefixes: schema._prefixes});
+  const bindingTree = BindingTree.fromObject(resultBindings)[0]
+  const mat2d = mat2.materialize(DataFactory.namedNode(createRoot), ShExValidator.Start, bindingTree);
+  console.log(graphToString(mat2d, Meta))
 
   const materializer = Mapper.materializer.construct(schema, registered, {});
   const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
@@ -226,7 +231,9 @@ describe('A ShEx Mapper', function () {
 */
 });
 const ShapeMap = require("shape-map");
-const N3Store = require("n3/lib/N3Store");
+const { Store: N3Store, Writer: N3Writer } = require("n3");
+// const N3Store = require("n3/lib/N3Store");
+// const N3Writer = require("n3/lib/N3Writer");
 ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const Awaiting = []
@@ -306,13 +313,15 @@ async function parseTurtle (text, url) {
   })
 }
 
-function graphToString (g) {
-  var output = '';
-  var w = new (require("n3")).Writer({
-      write: function (chunk, encoding, done) { output += chunk; done && done(); },
+function graphToString (g, meta = {base: "", prefixes: {}}) {
+  let output = '';
+  let writer = new N3Writer({
+    format: 'text/turtle',
+    prefixes: meta.prefixes,
   });
-  w.addQuads([... g.match(null, null, null, null)]); // is this kosher with no end method?
-  return "{\n" + output + "\n}";
+  writer.addQuads([... g.match(null, null, null, null)]);
+  writer.end((error, result) => error ? (() => {throw (error)})() : output = result);
+  return output;
 }
 
 /** graphEquals: test if two graphs are isomorphic through some bnode mapping.
@@ -431,7 +440,7 @@ class OrderedStore {
 
 const DAM = 'http://dam.example/med#';
 const XSD = 'http://www.w3.org/2001/XMLSchema#';
-
+if (false)
 describe("Graph equivalence", function () {
   var p12Permute = [
     {"_:l1": "_:r1", "_:l2": "_:r2"},
