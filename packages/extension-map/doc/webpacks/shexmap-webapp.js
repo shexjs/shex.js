@@ -9787,9 +9787,9 @@ function register (validator, api) {
 
         // Do we have a map extension function?
         if (/.*[(].*[)].*$/.test(code)) {
-          const results = extensions.lift(code, ctx.object, prefixes);
+          const results = extensions.lift(code, ctx.object.value, prefixes);
           for (key in results)
-            update(key, results[key])
+            update(key, RdfJs.DataFactory.literal(results[key]))
         } else {
           const bindingName = code.match(pattern);
           update(bindingName, ctx.node || ctx.object);
