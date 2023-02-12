@@ -151,7 +151,17 @@ export class ShExMaterializerValidator extends ShExValidator {
 
   validateShape(focus: RdfJsTerm, shape: Shape, ctx: MaterializerValidationContext): shapeExprTest {
     ctx.setFocus(focus);
+    const oldRegexModule = this.regexModule;
+    this.regexModule = {
+      name: "asdf",
+      description: "qwer",
+      compile: (_schema: ShExJ.Schema, shape: ShExJ.Shape, index: SchemaIndex): ValidatorRegexEngine => {
+        return new MaterializerRegexEngine(shape, index, this);
+      }
+      // compile: (this.schema, shape, this.index)
+    };
     const ret = super.validateShape(focus, shape, ctx);
+    this.regexModule = oldRegexModule;
     // propagate triples to ctx.parent
     return ret;
   }
@@ -263,6 +273,13 @@ class MaterializerRegexpThread extends RegexpThread {
 
 class MaterializerRegexEngine extends EvalThreadedNErrRegexEngine {
 
+  constructor(
+      shape: ShExJ.Shape,
+      index: SchemaIndex,
+      public validator: ShExMaterializerValidator, // TODO: reduce to ShExValidator if possible?
+  ) {
+    super(shape, index);
+  }
   // Early return in case of insufficient matching triples
   override matchTripleConstraint (constraint: ShExJ.TripleConstraint, min: number, max: number,
                                   thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,

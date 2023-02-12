@@ -341,8 +341,8 @@ export class ShExValidator {
   public readonly schema: InternalSchema;
   public readonly semActHandler: SemActDispatcher;
   public readonly index: SchemaIndex;
-  private readonly db: NeighborhoodDb;
-  private regexModule: ValidatorRegexModule;
+  protected readonly db: NeighborhoodDb;
+  protected regexModule: ValidatorRegexModule;
 
   /* ShExValidator - construct an object for validating a schema.
    *
