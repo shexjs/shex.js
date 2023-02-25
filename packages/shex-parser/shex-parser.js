@@ -288,24 +288,24 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   }
 }
 
-var makeDBTermResolver = function (db) {
-  var _db = db;
-  var _lookFor = [];
+const makeDBTermResolver = function (db) {
+  const _db = db;
+  const _lookFor = [];
   return {
     add: function (iri) {
       _lookFor.push(iri);
     },
     resolve: function (pair, prefixes) {
-      var x = _lookFor.reduce((lfacc, lf) => {
-        var found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
+      const x = _lookFor.reduce((lfacc, lf) => {
+        const found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
         if (found1.length)
           return pair.prefix === null ?
-          {prefix: null, length: null, term: ShExTerm.internalTerm(found1[0].subject)}:
+          {prefix: null, length: null, term: ShExTerm.rdfJsTerm2Ld(found1[0].subject)}:
           found1.reduce((tripacc, triple) => {
-            var s = ShExTerm.internalTerm(triple.subject);
+            const s = ShExTerm.rdfJsTerm2Ld(triple.subject);
             return Object.keys(prefixes).reduce((prefacc, prefix) => {
-              var ns = prefixes[prefix];
-              var sw = s.startsWith(ns);
+              const ns = prefixes[prefix];
+              const sw = s.startsWith(ns);
               if (sw && ns.length > prefacc.length && pair.prefix === prefix)
                 return {prefix: prefix, length: prefacc.length, term: s};
               return prefacc;
@@ -321,7 +321,7 @@ var makeDBTermResolver = function (db) {
   };
 }
 
-var makeDisabledTermResolver = function () {
+const makeDisabledTermResolver = function () {
   return {
     add: function (iri) {
       throw Error("no term resolver to accept <" + iri + ">");

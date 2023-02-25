@@ -147,7 +147,7 @@ case 13:
 this.$ = extend({ shape: $$[$0] }, $$[$0-1]);
 break;
 case 14:
-this.$ = { shape: ShapeMap.start };
+this.$ = { shape: ShapeMap.Start };
 break;
 case 15:
 
@@ -175,13 +175,13 @@ case 22:
 this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] };
 break;
 case 24:
-this.$ = ShapeMap.start;
+this.$ = ShapeMap.Start;
 break;
 case 29:
-this.$ = { type: "TriplePattern", subject: ShapeMap.focus, predicate: $$[$0-2], object: $$[$0-1] };
+this.$ = { type: "TriplePattern", subject: ShapeMap.Focus, predicate: $$[$0-2], object: $$[$0-1] };
 break;
 case 30:
-this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShapeMap.focus };
+this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShapeMap.Focus };
 break;
 case 32: case 34: case 42:
 this.$ = null;

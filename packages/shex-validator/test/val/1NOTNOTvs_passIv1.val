@@ -12,17 +12,21 @@
         "predicate": "http://a.example/p1",
         "object": "http://a.example/v1",
         "referenced": {
-          "focus": "http://a.example/v1",
-          "shapeExpr": {
-            "shapeExpr": {
-              "type": "NodeConstraint",
-              "values": [
-                "http://a.example/v1"
-              ]
-            },
-            "type": "ShapeNot"
-          },
-          "type": "ShapeNotTest"
+          "type": "ShapeNotResults",
+          "solution": {
+            "type": "ShapeNotFailure",
+            "errors": {
+              "type": "NodeConstraintTest",
+              "node": "http://a.example/v1",
+              "shape": "http://a.example/S1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://a.example/v1"
+                ]
+              }
+            }
+          }
         }
       }
     ],

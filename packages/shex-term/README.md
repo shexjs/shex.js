@@ -11,7 +11,6 @@ Internal shexjs library subject to revision at any time.
 npm install --save @shexjs/term
 ```
 
-
 # Lerna Monorepo
 
 This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM packages. These packages are located in `packages/*`:

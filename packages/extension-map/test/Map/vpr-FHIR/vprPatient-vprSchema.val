@@ -19,7 +19,7 @@
                 "object": { "value": "101" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
-                    "tag:eric@w3.org/2016/ProblemList/ID": "\"101\""
+                    "tag:eric@w3.org/2016/ProblemList/ID": { "value": "101" }
                   }
                 }
               }
@@ -47,7 +47,7 @@
                 "object": { "value": "D110000000" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
-                    "tag:eric@w3.org/2016/ProblemList/patID": "\"D110000000\""
+                    "tag:eric@w3.org/2016/ProblemList/patID": { "value": "D110000000" }
                   }
                 }
               }
@@ -76,7 +76,7 @@
                 "object": { "value": "fainting preceded by sudden severe throat pain" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
-                    "tag:eric@w3.org/2016/ProblemList/Text": "\"fainting preceded by sudden severe throat pain\""
+                    "tag:eric@w3.org/2016/ProblemList/Text": { "value": "fainting preceded by sudden severe throat pain" }
                   }
                 }
               }
@@ -123,7 +123,7 @@
                                 "object": { "value": "301" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
-                                    "tag:eric@w3.org/2016/ProblemList/CodeID": "\"301\""
+                                    "tag:eric@w3.org/2016/ProblemList/CodeID": { "value": "301" }
                                   }
                                 }
                               }
@@ -151,7 +151,7 @@
                                 "object": { "value": "1530" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
-                                    "tag:eric@w3.org/2016/ProblemList/Code": "\"1530\""
+                                    "tag:eric@w3.org/2016/ProblemList/Code": { "value": "1530" }
                                   }
                                 }
                               }
@@ -179,7 +179,7 @@
                                 "object": { "value": "MEDCIN" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
-                                    "tag:eric@w3.org/2016/ProblemList/Sys": "\"MEDCIN\""
+                                    "tag:eric@w3.org/2016/ProblemList/Sys": { "VALUE": "MEDCIN" }
                                   }
                                 }
                               }
@@ -207,7 +207,7 @@
                                 "object": { "value": "Syncope (disorder)" },
                                 "extensions": {
                                   "http://shex.io/extensions/Map/#": {
-                                    "tag:eric@w3.org/2016/ProblemList/Disp": "\"Syncope (disorder)\""
+                                    "tag:eric@w3.org/2016/ProblemList/Disp": { "value": "Syncope (disorder)" }
                                   }
                                 }
                               }
@@ -418,7 +418,7 @@
                 "object": { "value": "8/31/1996 12:30" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
-                    "tag:eric@w3.org/2016/ProblemList/Onset": "\"1996-8-31T12:30\"^^http://www.w3.org/2001/XMLSchema#dateTime"
+                    "tag:eric@w3.org/2016/ProblemList/Onset": { "value": "1996-8-31T12:30", "datatype": "http://www.w3.org/2001/XMLSchema#dateTime" }
                   }
                 }
               }
@@ -446,7 +446,7 @@
                 "object": { "value": "9/1/1996 12:30" },
                 "extensions": {
                   "http://shex.io/extensions/Map/#": {
-                    "tag:eric@w3.org/2016/ProblemList/Entered": "\"1996-9-1T12:30\"^^http://www.w3.org/2001/XMLSchema#dateTime"
+                    "tag:eric@w3.org/2016/ProblemList/Entered": { "value": "1996-9-1T12:30", "datatype": "http://www.w3.org/2001/XMLSchema#dateTime" }
                   }
                 }
               }

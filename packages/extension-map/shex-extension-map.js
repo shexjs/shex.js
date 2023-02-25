@@ -5,12 +5,16 @@
  *   multiplicity: ...
  */
 
+const {rdfJsTerm2Ld} = require("@shexjs/term");
+
 const ShExMapCjsModule = function (config) {
 
+const ShExTerm = require("@shexjs/term");
 const extensions = require("./lib/extensions");
 const N3Util = require("n3/lib/N3Util");
 const N3DataFactory = require("n3/lib/N3DataFactory").default;
 const materializer = require("./lib/ShExMaterializer")(config);
+const StringToRdfJs = require("./lib/stringToRdfJs");
 
 const MapExt = "http://shex.io/extensions/Map/#";
 const pattern = /^ *(?:<([^>]*)>|([^:]*):([^ ]*)) *$/;
@@ -58,23 +62,23 @@ function register (validator, api) {
             }
 
             const prefixedName = getPrefixedName(bindingName);
-            const quotedValue = value; // value.match(/"(.+)"/) === null ? '"' + value + '"' : value;
+            const quotedValue = rdfJsTerm2Ld(value);
 
             validator.semActHandler.results[MapExt][prefixedName] = quotedValue;
             extensionStorage[prefixedName] = quotedValue;
         };
 
         // Do we have a map extension function?
-        if (/.*[(].*[)].*$/.test(code)) {
-          const results = extensions.lift(code, ctx.object, prefixes);
+        if (/.*[(].*[)].*$/s.test(code)) {
+          const results = extensions.lift(code, ctx.object.value, prefixes);
           for (key in results)
-            update(key, results[key])
+            update(key, RdfJs.DataFactory.literal(results[key]));
         } else {
           const bindingName = code.match(pattern);
           update(bindingName, ctx.node || ctx.object);
         }
 
-        return true;
+        return []; // There are no evaluation failures. Any parsing problem throws.
       }
     }
   );
@@ -86,16 +90,12 @@ function register (validator, api) {
   }
 
 function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, schema, bindings, recurse, direct, checkValueExpr) {
+      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function P (pname) { return expandPrefixedName(pname, schema._prefixes); }
       function L (value, modifier) { return N3Util.createLiteral(value, modifier); }
       function B () { return nextBNode(); }
-      // utility functions for e.g. s = add(B(), P(":value"), L("70", P("xsd:float")))
       function add (s, p, o) {
-        target.addQuad(api.ShExTerm.externalTriple({
-          subject: s,
-          predicate: p,
-          object: o
-        }, N3DataFactory));
+        target.addQuad(StringToRdfJs.n3idQuad2RdfJs(s, p, o));
         return s;
       }
 
@@ -123,10 +123,8 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
             if (tripleObject === undefined)
               ; // console.warn('Not in bindings: ',code);
             else if (expr.inverse)
-            //add(tripleObject, expr.predicate, curSubject);
               add(tripleObject, expr.predicate, curSubjectx.cs);
             else
-            //add(curSubject    , expr.predicate, tripleObject);
               add(curSubjectx.cs, expr.predicate, tripleObject);
           });
 
@@ -146,7 +144,7 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           for (let repetition = 0; repetition < maxAdd; ++repetition) {
             curSubjectx.cs = B();
             if (recurse) {
-              const res = checkValueExpr(curSubjectx.cs, expr.valueExpr, recurse, direct)
+              const res = checkValueExpr(StringToRdfJs.n3idTerm2RdfJs(curSubjectx.cs), expr.valueExpr, recurse, direct)
               if ("errors" in res)
                 break;
             }
@@ -170,7 +168,11 @@ function trivialMaterializer (schema, nextBNode) {
   };
   return {
     materialize: function (bindings, createRoot, shape, target) {
-      shape = !shape || shape === validator.start ? schema.start : shape;
+      shape = !shape || shape === validator.Start
+        ? schema.start
+        : schema.shapes.indexOf(shape) !== -1
+        ? shape
+        : this._lookupShape(shape);
       target = target || new config.rdfjs.Store();
       // target.addPrefixes(schema.prefixes); // not used, but seems polite
 

@@ -18,7 +18,8 @@
         "object": { "value": "5", "type": "http://www.w3.org/2001/XMLSchema#integer" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"5\"^^http://www.w3.org/2001/XMLSchema#integer",
+          "node": { "value": "5", "type": "http://www.w3.org/2001/XMLSchema#integer" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#integer",

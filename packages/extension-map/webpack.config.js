@@ -40,11 +40,11 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      // fs: false,  // TODO: update ShapeMapParser to use ts-jison
+      // fs: false,
       // path: false,
       // net: 'empty',
       // tls: 'empty',
-      url: require.resolve("url/"),
+      // url: require.resolve("url/"),
     }
   },
   plugins: [

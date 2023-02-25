@@ -25,7 +25,8 @@
                 "object": "http://a.example/o1",
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "http://a.example/o1",
+                  "node": "http://a.example/o1",
+                  "shape": "http://a.example/S1",
                   "shapeExpr": {
                     "type": "NodeConstraint",
                     "values": [
@@ -53,7 +54,8 @@
                 "object": "http://a.example/o2",
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "http://a.example/o2",
+                  "node": "http://a.example/o2",
+                  "shape": "http://a.example/S1",
                   "shapeExpr": {
                     "type": "NodeConstraint",
                     "values": [
@@ -81,7 +83,8 @@
                 "object": "http://a.example/o3",
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "http://a.example/o3",
+                  "node": "http://a.example/o3",
+                  "shape": "http://a.example/S1",
                   "shapeExpr": {
                     "type": "NodeConstraint",
                     "values": [

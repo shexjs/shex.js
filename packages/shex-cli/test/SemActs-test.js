@@ -3,7 +3,7 @@ const TESTS = "TESTS" in process.env ? process.env["TESTS"].split(/,/) : null
 
 const ShExUtil = require("@shexjs/util")
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const ShExValidator = require("@shexjs/validator")
+const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator")
 const ShExParser = require("@shexjs/parser")
 const ShapeMapParser = require("shape-map").Parser
 const ShExTerm = require("@shexjs/term")
@@ -66,11 +66,11 @@ describe('Invoking SemActs', function () {
     const expected = JSON.parse(Fs.readFileSync(expectedFile, 'utf8'))
 
     // Parse ShapeMap and validate.
-    const validator = ShExValidator.construct(schema, RdfJsDb(data))
+    const validator = new ShExValidator(schema, RdfJsDb(data))
     Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
-    const res = validator.validate(sm)
+    const res = resultMapToShapeExprTest(validator.validateShapeMap(sm))
 
     // Test results
     const blurb = ''

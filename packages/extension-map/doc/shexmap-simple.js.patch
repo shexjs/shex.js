@@ -68,7 +68,7 @@
      }
    }
 @@ -655,6 +681,7 @@
-         var validator = ShEx.Validator.construct(
+         var validator = new ShEx.Validator(
            loaded.schema,
            { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
 +        ShExMap.register(validator);

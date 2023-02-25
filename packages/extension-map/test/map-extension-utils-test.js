@@ -7,7 +7,7 @@ var chai = require('chai');
 var expect = chai.expect;
 var should = chai.should();
 
-var mapExtUtils = require("..")({}).utils;
+var mapExtUtils = require("..")({Validator: {}}).utils;
 
 describe('Map extension utils', function() {
 

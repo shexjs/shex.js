@@ -5000,3724 +5000,1261 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 /***/ }),
 
-/***/ 2808:
-/***/ ((module) => {
+/***/ 1194:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+__exportStar(__webpack_require__(8279), exports);
+__exportStar(__webpack_require__(370), exports);
+__exportStar(__webpack_require__(1261), exports);
+__exportStar(__webpack_require__(8990), exports);
+__exportStar(__webpack_require__(4938), exports);
+__exportStar(__webpack_require__(5414), exports);
+__exportStar(__webpack_require__(3910), exports);
+//# sourceMappingURL=index.js.map
 
+/***/ }),
 
-// If obj.hasOwnProperty has been overridden, then calling
-// obj.hasOwnProperty(prop) will break.
-// See: https://github.com/joyent/node/issues/1707
-function hasOwnProperty(obj, prop) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
+/***/ 8279:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BlankNode = void 0;
+/**
+ * A term that represents an RDF blank node with a label.
+ */
+class BlankNode {
+    constructor(value) {
+        this.termType = 'BlankNode';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'BlankNode' && other.value === this.value;
+    }
 }
-
-module.exports = function(qs, sep, eq, options) {
-  sep = sep || '&';
-  eq = eq || '=';
-  var obj = {};
-
-  if (typeof qs !== 'string' || qs.length === 0) {
-    return obj;
-  }
-
-  var regexp = /\+/g;
-  qs = qs.split(sep);
-
-  var maxKeys = 1000;
-  if (options && typeof options.maxKeys === 'number') {
-    maxKeys = options.maxKeys;
-  }
-
-  var len = qs.length;
-  // maxKeys <= 0 means that we should not limit keys count
-  if (maxKeys > 0 && len > maxKeys) {
-    len = maxKeys;
-  }
-
-  for (var i = 0; i < len; ++i) {
-    var x = qs[i].replace(regexp, '%20'),
-        idx = x.indexOf(eq),
-        kstr, vstr, k, v;
-
-    if (idx >= 0) {
-      kstr = x.substr(0, idx);
-      vstr = x.substr(idx + 1);
-    } else {
-      kstr = x;
-      vstr = '';
-    }
-
-    k = decodeURIComponent(kstr);
-    v = decodeURIComponent(vstr);
-
-    if (!hasOwnProperty(obj, k)) {
-      obj[k] = v;
-    } else if (Array.isArray(obj[k])) {
-      obj[k].push(v);
-    } else {
-      obj[k] = [obj[k], v];
-    }
-  }
-
-  return obj;
-};
-
+exports.BlankNode = BlankNode;
+//# sourceMappingURL=BlankNode.js.map
 
 /***/ }),
 
-/***/ 1368:
-/***/ ((module) => {
-
-"use strict";
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-var stringifyPrimitive = function(v) {
-  switch (typeof v) {
-    case 'string':
-      return v;
-
-    case 'boolean':
-      return v ? 'true' : 'false';
-
-    case 'number':
-      return isFinite(v) ? v : '';
-
-    default:
-      return '';
-  }
-};
-
-module.exports = function(obj, sep, eq, name) {
-  sep = sep || '&';
-  eq = eq || '=';
-  if (obj === null) {
-    obj = undefined;
-  }
-
-  if (typeof obj === 'object') {
-    return Object.keys(obj).map(function(k) {
-      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-      if (Array.isArray(obj[k])) {
-        return obj[k].map(function(v) {
-          return ks + encodeURIComponent(stringifyPrimitive(v));
-        }).join(sep);
-      } else {
-        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-      }
-    }).join(sep);
-
-  }
-
-  if (!name) return '';
-  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-         encodeURIComponent(stringifyPrimitive(obj));
-};
-
-
-/***/ }),
-
-/***/ 6642:
+/***/ 370:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
-
-exports.decode = exports.parse = __webpack_require__(2808);
-exports.encode = exports.stringify = __webpack_require__(1368);
-
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DataFactory = void 0;
+const BlankNode_1 = __webpack_require__(8279);
+const DefaultGraph_1 = __webpack_require__(1261);
+const Literal_1 = __webpack_require__(8990);
+const NamedNode_1 = __webpack_require__(4938);
+const Quad_1 = __webpack_require__(5414);
+const Variable_1 = __webpack_require__(3910);
+let dataFactoryCounter = 0;
+/**
+ * A factory for instantiating RDF terms and quads.
+ */
+class DataFactory {
+    constructor(options) {
+        this.blankNodeCounter = 0;
+        options = options || {};
+        this.blankNodePrefix = options.blankNodePrefix || `df_${dataFactoryCounter++}_`;
+    }
+    /**
+     * @param value The IRI for the named node.
+     * @return A new instance of NamedNode.
+     * @see NamedNode
+     */
+    namedNode(value) {
+        return new NamedNode_1.NamedNode(value);
+    }
+    /**
+     * @param value The optional blank node identifier.
+     * @return A new instance of BlankNode.
+     *         If the `value` parameter is undefined a new identifier
+     *         for the blank node is generated for each call.
+     * @see BlankNode
+     */
+    blankNode(value) {
+        return new BlankNode_1.BlankNode(value || `${this.blankNodePrefix}${this.blankNodeCounter++}`);
+    }
+    /**
+     * @param value              The literal value.
+     * @param languageOrDatatype The optional language or datatype.
+     *                           If `languageOrDatatype` is a NamedNode,
+     *                           then it is used for the value of `NamedNode.datatype`.
+     *                           Otherwise `languageOrDatatype` is used for the value
+     *                           of `NamedNode.language`.
+     * @return A new instance of Literal.
+     * @see Literal
+     */
+    literal(value, languageOrDatatype) {
+        return new Literal_1.Literal(value, languageOrDatatype);
+    }
+    /**
+     * This method is optional.
+     * @param value The variable name
+     * @return A new instance of Variable.
+     * @see Variable
+     */
+    variable(value) {
+        return new Variable_1.Variable(value);
+    }
+    /**
+     * @return An instance of DefaultGraph.
+     */
+    defaultGraph() {
+        return DefaultGraph_1.DefaultGraph.INSTANCE;
+    }
+    /**
+     * @param subject   The quad subject term.
+     * @param predicate The quad predicate term.
+     * @param object    The quad object term.
+     * @param graph     The quad graph term.
+     * @return A new instance of Quad.
+     * @see Quad
+     */
+    quad(subject, predicate, object, graph) {
+        return new Quad_1.Quad(subject, predicate, object, graph || this.defaultGraph());
+    }
+    /**
+     * Create a deep copy of the given term using this data factory.
+     * @param original An RDF term.
+     * @return A deep copy of the given term.
+     */
+    fromTerm(original) {
+        // TODO: remove nasty any casts when this TS bug has been fixed:
+        //  https://github.com/microsoft/TypeScript/issues/26933
+        switch (original.termType) {
+            case 'NamedNode':
+                return this.namedNode(original.value);
+            case 'BlankNode':
+                return this.blankNode(original.value);
+            case 'Literal':
+                if (original.language) {
+                    return this.literal(original.value, original.language);
+                }
+                if (!original.datatype.equals(Literal_1.Literal.XSD_STRING)) {
+                    return this.literal(original.value, this.fromTerm(original.datatype));
+                }
+                return this.literal(original.value);
+            case 'Variable':
+                return this.variable(original.value);
+            case 'DefaultGraph':
+                return this.defaultGraph();
+            case 'Quad':
+                return this.quad(this.fromTerm(original.subject), this.fromTerm(original.predicate), this.fromTerm(original.object), this.fromTerm(original.graph));
+        }
+    }
+    /**
+     * Create a deep copy of the given quad using this data factory.
+     * @param original An RDF quad.
+     * @return A deep copy of the given quad.
+     */
+    fromQuad(original) {
+        return this.fromTerm(original);
+    }
+    /**
+     * Reset the internal blank node counter.
+     */
+    resetBlankNodeCounter() {
+        this.blankNodeCounter = 0;
+    }
+}
+exports.DataFactory = DataFactory;
+//# sourceMappingURL=DataFactory.js.map
 
 /***/ }),
 
-/***/ 3362:
+/***/ 1261:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DefaultGraph = void 0;
+/**
+ * A singleton term instance that represents the default graph.
+ * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
+ */
+class DefaultGraph {
+    constructor() {
+        this.termType = 'DefaultGraph';
+        this.value = '';
+        // Private constructor
+    }
+    equals(other) {
+        return !!other && other.termType === 'DefaultGraph';
+    }
+}
+exports.DefaultGraph = DefaultGraph;
+DefaultGraph.INSTANCE = new DefaultGraph();
+//# sourceMappingURL=DefaultGraph.js.map
+
+/***/ }),
+
+/***/ 8990:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Literal = void 0;
+const NamedNode_1 = __webpack_require__(4938);
+/**
+ * A term that represents an RDF literal, containing a string with an optional language tag or datatype.
+ */
+class Literal {
+    constructor(value, languageOrDatatype) {
+        this.termType = 'Literal';
+        this.value = value;
+        if (typeof languageOrDatatype === 'string') {
+            this.language = languageOrDatatype;
+            this.datatype = Literal.RDF_LANGUAGE_STRING;
+        }
+        else if (languageOrDatatype) {
+            this.language = '';
+            this.datatype = languageOrDatatype;
+        }
+        else {
+            this.language = '';
+            this.datatype = Literal.XSD_STRING;
+        }
+    }
+    equals(other) {
+        return !!other && other.termType === 'Literal' && other.value === this.value &&
+            other.language === this.language && other.datatype.equals(this.datatype);
+    }
+}
+exports.Literal = Literal;
+Literal.RDF_LANGUAGE_STRING = new NamedNode_1.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString');
+Literal.XSD_STRING = new NamedNode_1.NamedNode('http://www.w3.org/2001/XMLSchema#string');
+//# sourceMappingURL=Literal.js.map
+
+/***/ }),
+
+/***/ 4938:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.NamedNode = void 0;
+/**
+ * A term that contains an IRI.
+ */
+class NamedNode {
+    constructor(value) {
+        this.termType = 'NamedNode';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'NamedNode' && other.value === this.value;
+    }
+}
+exports.NamedNode = NamedNode;
+//# sourceMappingURL=NamedNode.js.map
+
+/***/ }),
+
+/***/ 5414:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Quad = void 0;
+/**
+ * An instance of DefaultGraph represents the default graph.
+ * It's only allowed to assign a DefaultGraph to the .graph property of a Quad.
+ */
+class Quad {
+    constructor(subject, predicate, object, graph) {
+        this.termType = 'Quad';
+        this.value = '';
+        this.subject = subject;
+        this.predicate = predicate;
+        this.object = object;
+        this.graph = graph;
+    }
+    equals(other) {
+        // `|| !other.termType` is for backwards-compatibility with old factories without RDF* support.
+        return !!other && (other.termType === 'Quad' || !other.termType) &&
+            this.subject.equals(other.subject) &&
+            this.predicate.equals(other.predicate) &&
+            this.object.equals(other.object) &&
+            this.graph.equals(other.graph);
+    }
+}
+exports.Quad = Quad;
+//# sourceMappingURL=Quad.js.map
+
+/***/ }),
+
+/***/ 3910:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Variable = void 0;
+/**
+ * A term that represents a variable.
+ */
+class Variable {
+    constructor(value) {
+        this.termType = 'Variable';
+        this.value = value;
+    }
+    equals(other) {
+        return !!other && other.termType === 'Variable' && other.value === this.value;
+    }
+}
+exports.Variable = Variable;
+//# sourceMappingURL=Variable.js.map
+
+/***/ }),
+
+/***/ 4436:
 /***/ ((module) => {
 
-"use strict";
+class RelativizeUrl {
+  static components = [
+    {name: 'protocol', write: u => u.protocol },
+    {name: 'hostname', write: u => '//' + u.hostname },
+    {name: 'port', write: u => ':' + u.port },
+    {name: 'pathname', write: (u, frm, relativize) => {
+      if (!relativize) return u.pathname;
+      const f = frm.pathname.split('/').slice(1);
+      const t = u.pathname.split('/').slice(1);
+      const maxDepth = Math.max(f.length, t.length);
 
+      let start = 0;
+      while(start < maxDepth && f[start] === t[start]) ++start;
+      const rel = f.slice(start+1).map(c => '..').concat(t.slice(start)).join('/');
+      return rel.length <= u.pathname.length ? rel : u.pathname
+    }},
+    {name: 'search', write: u => u.search },
+    {name: 'hash', write: u => u.hash},
+  ];
 
-module.exports =
-{
-	// Output
-	ABSOLUTE:      "absolute",
-	PATH_RELATIVE: "pathRelative",
-	ROOT_RELATIVE: "rootRelative",
-	SHORTEST:      "shortest"
-};
+  constructor (base, options) { this.base = base; this.options = options; }
+
+  relate (rel) { return RelativizeUrl.relativize(rel, this.base, this.options); }
+
+  static relativize (rel, base, opts = {}) { // opts not yet used
+    const from = new URL(base);
+    const to = new URL(rel, from);
+    let ret = '';
+    for (let component of RelativizeUrl.components) {
+      if (ret) { // force abs path if e.g. host was diffferent
+        if (to[component.name]) {
+          ret += component.write(to, from, false);
+        }
+      } else if (from[component.name] !== to[component.name]) {
+        ret = component.write(to, from, true);
+      }
+    }
+    return ret;
+  }
+}
+
+/* istanbul ignore next */
+if (true)
+  module.exports = RelativizeUrl;
 
 
 /***/ }),
 
-/***/ 9779:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var constants = __webpack_require__(3362);
-
-
-
-function formatAuth(urlObj, options)
-{
-	if (urlObj.auth && !options.removeAuth && (urlObj.extra.relation.maximumHost || options.output===constants.ABSOLUTE))
-	{
-		return urlObj.auth + "@";
-	}
-	
-	return "";
-}
-
-
-
-function formatHash(urlObj, options)
-{
-	return urlObj.hash ? urlObj.hash : "";
-}
-
-
-
-function formatHost(urlObj, options)
-{
-	if (urlObj.host.full && (urlObj.extra.relation.maximumAuth || options.output===constants.ABSOLUTE))
-	{
-		return urlObj.host.full;
-	}
-	
-	return "";
-}
-
-
-
-function formatPath(urlObj, options)
-{
-	var str = "";
-	
-	var absolutePath = urlObj.path.absolute.string;
-	var relativePath = urlObj.path.relative.string;
-	var resource = showResource(urlObj, options);
-	
-	if (urlObj.extra.relation.maximumHost || options.output===constants.ABSOLUTE || options.output===constants.ROOT_RELATIVE)
-	{
-		str = absolutePath;
-	}
-	else if (relativePath.length<=absolutePath.length && options.output===constants.SHORTEST || options.output===constants.PATH_RELATIVE)
-	{
-		str = relativePath;
-		
-		if (str === "")
-		{
-			var query = showQuery(urlObj,options) && !!getQuery(urlObj,options);
-			
-			if (urlObj.extra.relation.maximumPath && !resource)
-			{
-				str = "./";
-			}
-			else if (urlObj.extra.relation.overridesQuery && !resource && !query)
-			{
-				str = "./";
-			}
-		}
-	}
-	else
-	{
-		str = absolutePath;
-	}
-	
-	if ( str==="/" && !resource && options.removeRootTrailingSlash && (!urlObj.extra.relation.minimumPort || options.output===constants.ABSOLUTE) )
-	{
-		str = "";
-	}
-	
-	return str;
-}
-
-
-
-function formatPort(urlObj, options)
-{
-	if (urlObj.port && !urlObj.extra.portIsDefault && urlObj.extra.relation.maximumHost)
-	{
-		return ":" + urlObj.port;
-	}
-	
-	return "";
-}
-
-
-
-function formatQuery(urlObj, options)
-{
-	return showQuery(urlObj,options) ? getQuery(urlObj, options) : "";
-}
-
-
-
-function formatResource(urlObj, options)
-{
-	return showResource(urlObj,options) ? urlObj.resource : "";
-}
-
-
-
-function formatScheme(urlObj, options)
-{
-	var str = "";
-	
-	if (urlObj.extra.relation.maximumHost || options.output===constants.ABSOLUTE)
-	{
-		if (!urlObj.extra.relation.minimumScheme || !options.schemeRelative || options.output===constants.ABSOLUTE)
-		{
-			str += urlObj.scheme + "://";
-		}
-		else
-		{
-			str += "//";
-		}
-	}
-	
-	return str;
-}
-
-
-
-function formatUrl(urlObj, options)
-{
-	var url = "";
-	
-	url += formatScheme(urlObj, options);
-	url += formatAuth(urlObj, options);
-	url += formatHost(urlObj, options);
-	url += formatPort(urlObj, options);
-	url += formatPath(urlObj, options);
-	url += formatResource(urlObj, options);
-	url += formatQuery(urlObj, options);
-	url += formatHash(urlObj, options);
-	
-	return url;
-}
-
-
-
-function getQuery(urlObj, options)
-{
-	var stripQuery = options.removeEmptyQueries && urlObj.extra.relation.minimumPort;
-	
-	return urlObj.query.string[ stripQuery ? "stripped" : "full" ];
-}
-
-
-
-function showQuery(urlObj, options)
-{
-	return !urlObj.extra.relation.minimumQuery || options.output===constants.ABSOLUTE || options.output===constants.ROOT_RELATIVE;
-}
-
-
-
-function showResource(urlObj, options)
-{
-	var removeIndex = options.removeDirectoryIndexes && urlObj.extra.resourceIsIndex;
-	var removeMatchingResource = urlObj.extra.relation.minimumResource && options.output!==constants.ABSOLUTE && options.output!==constants.ROOT_RELATIVE;
-	
-	return !!urlObj.resource && !removeMatchingResource && !removeIndex;
-}
-
-
-
-module.exports = formatUrl;
-
-
-/***/ }),
-
-/***/ 755:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var constants  = __webpack_require__(3362);
-var formatUrl  = __webpack_require__(9779);
-var getOptions = __webpack_require__(4141);
-var objUtils   = __webpack_require__(1609);
-var parseUrl   = __webpack_require__(5398);
-var relateUrl  = __webpack_require__(6258);
-
-
-
-function RelateUrl(from, options)
-{
-	this.options = getOptions(options,
-	{
-		defaultPorts: {ftp:21, http:80, https:443},
-		directoryIndexes: ["index.html"],
-		ignore_www: false,
-		output: RelateUrl.SHORTEST,
-		rejectedSchemes: ["data","javascript","mailto"],
-		removeAuth: false,
-		removeDirectoryIndexes: true,
-		removeEmptyQueries: false,
-		removeRootTrailingSlash: true,
-		schemeRelative: true,
-		site: undefined,
-		slashesDenoteHost: true
-	});
-	
-	this.from = parseUrl.from(from, this.options, null);
-}
-
-
-
-/*
-	Usage: instance=new RelateUrl(); instance.relate();
-*/
-RelateUrl.prototype.relate = function(from, to, options)
-{
-	// relate(to,options)
-	if ( objUtils.isPlainObject(to) )
-	{
-		options = to;
-		to = from;
-		from = null;
-	}
-	// relate(to)
-	else if (!to)
-	{
-		to = from;
-		from = null;
-	}
-	
-	options = getOptions(options, this.options);
-	from = from || options.site;
-	from = parseUrl.from(from, options, this.from);
-	
-	if (!from || !from.href)
-	{
-		throw new Error("from value not defined.");
-	}
-	else if (from.extra.hrefInfo.minimumPathOnly)
-	{
-		throw new Error("from value supplied is not absolute: "+from.href);
-	}
-	
-	to = parseUrl.to(to, options);
-	
-	if (to.valid===false) return to.href;
-	
-	to = relateUrl(from, to, options);
-	to = formatUrl(to, options);
-	
-	return to;
-}
-
-
-
-/*
-	Usage: RelateUrl.relate();
-*/
-RelateUrl.relate = function(from, to, options)
-{
-	return new RelateUrl().relate(from, to, options);
-}
-
-
-
-// Make constants accessible from API
-objUtils.shallowMerge(RelateUrl, constants);
-
-
-
-module.exports = RelateUrl;
-
-
-/***/ }),
-
-/***/ 4141:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var objUtils = __webpack_require__(1609);
-
-
-
-function getOptions(options, defaults)
-{
-	if ( objUtils.isPlainObject(options) )
-	{
-		var newOptions = {};
-		
-		for (var i in defaults)
-		{
-			if ( defaults.hasOwnProperty(i) )
-			{
-				if (options[i] !== undefined)
-				{
-					newOptions[i] = mergeOption(options[i], defaults[i]);
-				}
-				else
-				{
-					newOptions[i] = defaults[i];
-				}
-			}
-		}
-		
-		return newOptions;
-	}
-	else
-	{
-		return defaults;
-	}
-}
-
-
-
-function mergeOption(newValues, defaultValues)
-{
-	if (defaultValues instanceof Object && newValues instanceof Object)
-	{
-		if (defaultValues instanceof Array && newValues instanceof Array)
-		{
-			return defaultValues.concat(newValues);
-		}
-		else
-		{
-			return objUtils.shallowMerge(newValues, defaultValues);
-		}
-	}
-	
-	return newValues;
-}
-
-
-
-module.exports = getOptions;
-
-
-/***/ }),
-
-/***/ 6420:
-/***/ ((module) => {
-
-"use strict";
-
-
-function parseHost(urlObj, options)
-{
-	// TWEAK :: condition only for speed optimization
-	if (options.ignore_www)
-	{
-		var host = urlObj.host.full;
-		
-		if (host)
-		{
-			var stripped = host;
-			
-			if (host.indexOf("www.") === 0)
-			{
-				stripped = host.substr(4);
-			}
-			
-			urlObj.host.stripped = stripped;
-		}
-	}
-}
-
-
-
-module.exports = parseHost;
-
-
-/***/ }),
-
-/***/ 6849:
-/***/ ((module) => {
-
-"use strict";
-
-
-function hrefInfo(urlObj)
-{
-	var minimumPathOnly     = (!urlObj.scheme && !urlObj.auth && !urlObj.host.full && !urlObj.port);
-	var minimumResourceOnly = (minimumPathOnly && !urlObj.path.absolute.string);
-	var minimumQueryOnly    = (minimumResourceOnly && !urlObj.resource);
-	var minimumHashOnly     = (minimumQueryOnly && !urlObj.query.string.full.length);
-	var empty               = (minimumHashOnly && !urlObj.hash);
-	
-	urlObj.extra.hrefInfo.minimumPathOnly     = minimumPathOnly;
-	urlObj.extra.hrefInfo.minimumResourceOnly = minimumResourceOnly;
-	urlObj.extra.hrefInfo.minimumQueryOnly    = minimumQueryOnly;
-	urlObj.extra.hrefInfo.minimumHashOnly     = minimumHashOnly;
-	urlObj.extra.hrefInfo.empty = empty;
-}
-
-
-
-module.exports = hrefInfo;
-
-
-/***/ }),
-
-/***/ 5398:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var hrefInfo   = __webpack_require__(6849);
-var parseHost  = __webpack_require__(6420);
-var parsePath  = __webpack_require__(8965);
-var parsePort  = __webpack_require__(2022);
-var parseQuery = __webpack_require__(9150);
-var parseUrlString = __webpack_require__(8936);
-var pathUtils      = __webpack_require__(7831);
-
-
-
-function parseFromUrl(url, options, fallback)
-{
-	if (url)
-	{
-		var urlObj = parseUrl(url, options);
-		
-		// Because the following occurs in the relate stage for "to" URLs,
-		// such had to be mostly duplicated here
-		
-		var pathArray = pathUtils.resolveDotSegments(urlObj.path.absolute.array);
-		
-		urlObj.path.absolute.array  = pathArray;
-		urlObj.path.absolute.string = "/" + pathUtils.join(pathArray);
-		
-		return urlObj;
-	}
-	else
-	{
-		return fallback;
-	}
-}
-
-
-
-function parseUrl(url, options)
-{
-	var urlObj = parseUrlString(url, options);
-	
-	if (urlObj.valid===false) return urlObj;
-	
-	parseHost(urlObj, options);
-	parsePort(urlObj, options);
-	parsePath(urlObj, options);
-	parseQuery(urlObj, options);
-	hrefInfo(urlObj);
-	
-	return urlObj;
-}
-
-
-
-module.exports =
-{
-	from: parseFromUrl,
-	to:   parseUrl
-};
-
-
-/***/ }),
-
-/***/ 8965:
-/***/ ((module) => {
-
-"use strict";
-
-
-function isDirectoryIndex(resource, options)
-{
-	var verdict = false;
-	
-	options.directoryIndexes.every( function(index)
-	{
-		if (index === resource)
-		{
-			verdict = true;
-			return false;
-		}
-		
-		return true;
-	});
-	
-	return verdict;
-}
-
-
-
-function parsePath(urlObj, options)
-{
-	var path = urlObj.path.absolute.string;
-	
-	if (path)
-	{
-		var lastSlash = path.lastIndexOf("/");
-		
-		if (lastSlash > -1)
-		{
-			if (++lastSlash < path.length)
-			{
-				var resource = path.substr(lastSlash);
-				
-				if (resource!=="." && resource!=="..")
-				{
-					urlObj.resource = resource;
-					path = path.substr(0, lastSlash);
-				}
-				else
-				{
-					path += "/";
-				}
-			}
-			
-			urlObj.path.absolute.string = path;
-			urlObj.path.absolute.array = splitPath(path);
-		}
-		else if (path==="." || path==="..")
-		{
-			// "..?var", "..#anchor", etc ... not "..index.html"
-			path += "/";
-			
-			urlObj.path.absolute.string = path;
-			urlObj.path.absolute.array = splitPath(path);
-		}
-		else
-		{
-			// Resource-only
-			urlObj.resource = path;
-			urlObj.path.absolute.string = null;
-		}
-		
-		urlObj.extra.resourceIsIndex = isDirectoryIndex(urlObj.resource, options);
-	}
-	// Else: query/hash-only or empty
-}
-
-
-
-function splitPath(path)
-{
-	// TWEAK :: condition only for speed optimization
-	if (path !== "/")
-	{
-		var cleaned = [];
-		
-		path.split("/").forEach( function(dir)
-		{
-			// Cleanup -- splitting "/dir/" becomes ["","dir",""]
-			if (dir !== "")
-			{
-				cleaned.push(dir);
-			}
-		});
-		
-		return cleaned;
-	}
-	else
-	{
-		// Faster to skip the above block and just create an array
-		return [];
-	}
-}
-
-
-
-module.exports = parsePath;
-
-
-/***/ }),
-
-/***/ 2022:
-/***/ ((module) => {
-
-"use strict";
-
-
-function parsePort(urlObj, options)
-{
-	var defaultPort = -1;
-	
-	for (var i in options.defaultPorts)
-	{
-		if ( i===urlObj.scheme && options.defaultPorts.hasOwnProperty(i) )
-		{
-			defaultPort = options.defaultPorts[i];
-			break;
-		}
-	}
-	
-	if (defaultPort > -1)
-	{
-		// Force same type as urlObj.port
-		defaultPort = defaultPort.toString();
-		
-		if (urlObj.port === null)
-		{
-			urlObj.port = defaultPort;
-		}
-		
-		urlObj.extra.portIsDefault = (urlObj.port === defaultPort);
-	}
-}
-
-
-
-module.exports = parsePort;
-
-
-/***/ }),
-
-/***/ 9150:
-/***/ ((module) => {
-
-"use strict";
-
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-
-
-function parseQuery(urlObj, options)
-{
-	urlObj.query.string.full = stringify(urlObj.query.object, false);
-	
-	// TWEAK :: condition only for speed optimization
-	if (options.removeEmptyQueries)
-	{
-		urlObj.query.string.stripped = stringify(urlObj.query.object, true);
-	}
-}
-
-
-
-function stringify(queryObj, removeEmptyQueries)
-{
-	var count = 0;
-	var str = "";
-	
-	for (var i in queryObj)
-	{
-		if ( i!=="" && hasOwnProperty.call(queryObj, i)===true )
-		{
-			var value = queryObj[i];
-			
-			if (value !== "" || !removeEmptyQueries)
-			{
-				str += (++count===1) ? "?" : "&";
-				
-				i = encodeURIComponent(i);
-				
-				if (value !== "")
-				{
-					str += i +"="+ encodeURIComponent(value).replace(/%20/g,"+");
-				}
-				else
-				{
-					str += i;
-				}
-			}
-		}
-	}
-	
-	return str;
-}
-
-
-
-module.exports = parseQuery;
-
-
-/***/ }),
-
-/***/ 8936:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var _parseUrl = (__webpack_require__(883)/* .parse */ .Qc);
-
-
-
-/*
-	Customize the URL object that Node generates
-	because:
-	
-	* necessary data for later
-	* urlObj.host is useless
-	* urlObj.hostname is too long
-	* urlObj.path is useless
-	* urlObj.pathname is too long
-	* urlObj.protocol is inaccurate; should be called "scheme"
-	* urlObj.search is mostly useless
-*/
-function clean(urlObj)
-{
-	var scheme = urlObj.protocol;
-	
-	if (scheme)
-	{
-		// Remove ":" suffix
-		if (scheme.indexOf(":") === scheme.length-1)
-		{
-			scheme = scheme.substr(0, scheme.length-1);
-		}
-	}
-	
-	urlObj.host =
-	{
-		// TODO :: unescape(encodeURIComponent(s)) ? ... http://ecmanaut.blogspot.ca/2006/07/encoding-decoding-utf8-in-javascript.html
-		full: urlObj.hostname,
-		stripped: null
-	};
-	
-	urlObj.path =
-	{
-		absolute:
-		{
-			array: null,
-			string: urlObj.pathname
-		},
-		relative:
-		{
-			array: null,
-			string: null
-		}
-	};
-	
-	urlObj.query =
-	{
-		object: urlObj.query,
-		string:
-		{
-			full: null,
-			stripped: null
-		}
-	};
-	
-	urlObj.extra =
-	{
-		hrefInfo:
-		{
-			minimumPathOnly: null,
-			minimumResourceOnly: null,
-			minimumQueryOnly: null,
-			minimumHashOnly: null,
-			empty: null,
-			
-			separatorOnlyQuery: urlObj.search==="?"
-		},
-		portIsDefault: null,
-		relation:
-		{
-			maximumScheme: null,
-			maximumAuth: null,
-			maximumHost: null,
-			maximumPort: null,
-			maximumPath: null,
-			maximumResource: null,
-			maximumQuery: null,
-			maximumHash: null,
-			
-			minimumScheme: null,
-			minimumAuth: null,
-			minimumHost: null,
-			minimumPort: null,
-			minimumPath: null,
-			minimumResource: null,
-			minimumQuery: null,
-			minimumHash: null,
-			
-			overridesQuery: null
-		},
-		resourceIsIndex: null,
-		slashes: urlObj.slashes
-	};
-	
-	urlObj.resource = null;
-	urlObj.scheme = scheme;
-	delete urlObj.hostname;
-	delete urlObj.pathname;
-	delete urlObj.protocol;
-	delete urlObj.search;
-	delete urlObj.slashes;
-	
-	return urlObj;
-}
-
-
-
-function validScheme(url, options)
-{
-	var valid = true;
-	
-	options.rejectedSchemes.every( function(rejectedScheme)
-	{
-		valid = !(url.indexOf(rejectedScheme+":") === 0);
-		
-		// Break loop
-		return valid;
-	});
-	
-	return valid;
-}
-
-
-
-function parseUrlString(url, options)
-{
-	if ( validScheme(url,options) )
-	{
-		return clean( _parseUrl(url, true, options.slashesDenoteHost) );
-	}
-	else
-	{
-		return {href:url, valid:false};
-	}
-}
-
-
-
-module.exports = parseUrlString;
-
-
-/***/ }),
-
-/***/ 799:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var findRelation = __webpack_require__(8019);
-var objUtils     = __webpack_require__(1609);
-var pathUtils    = __webpack_require__(7831);
-
-
-
-function absolutize(urlObj, siteUrlObj, options)
-{
-	findRelation.upToPath(urlObj, siteUrlObj, options);
-	
-	// Fill in relative URLs
-	if (urlObj.extra.relation.minimumScheme) urlObj.scheme = siteUrlObj.scheme;
-	if (urlObj.extra.relation.minimumAuth)   urlObj.auth   = siteUrlObj.auth;
-	if (urlObj.extra.relation.minimumHost)   urlObj.host   = objUtils.clone(siteUrlObj.host);
-	if (urlObj.extra.relation.minimumPort)   copyPort(urlObj, siteUrlObj);
-	if (urlObj.extra.relation.minimumScheme) copyPath(urlObj, siteUrlObj);
-	
-	// Check remaining relativeness now that path has been copied and/or resolved
-	findRelation.pathOn(urlObj, siteUrlObj, options);
-	
-	// Fill in relative URLs
-	if (urlObj.extra.relation.minimumResource) copyResource(urlObj, siteUrlObj);
-	if (urlObj.extra.relation.minimumQuery)    urlObj.query = objUtils.clone(siteUrlObj.query);
-	if (urlObj.extra.relation.minimumHash)     urlObj.hash  = siteUrlObj.hash;
-}
-
-
-
-/*
-	Get an absolute path that's relative to site url.
-*/
-function copyPath(urlObj, siteUrlObj)
-{
-	if (urlObj.extra.relation.maximumHost || !urlObj.extra.hrefInfo.minimumResourceOnly)
-	{
-		var pathArray = urlObj.path.absolute.array;
-		var pathString = "/";
-		
-		// If not erroneous URL
-		if (pathArray)
-		{
-			// If is relative path
-			if (urlObj.extra.hrefInfo.minimumPathOnly && urlObj.path.absolute.string.indexOf("/")!==0)
-			{
-				// Append path to site path
-				pathArray = siteUrlObj.path.absolute.array.concat(pathArray);
-			}
-			
-			pathArray   = pathUtils.resolveDotSegments(pathArray);
-			pathString += pathUtils.join(pathArray);
-		}
-		else
-		{
-			pathArray = [];
-		}
-		
-		urlObj.path.absolute.array  = pathArray;
-		urlObj.path.absolute.string = pathString;
-	}
-	else
-	{
-		// Resource-, query- or hash-only or empty
-		urlObj.path = objUtils.clone(siteUrlObj.path);
-	}
-}
-
-
-
-function copyPort(urlObj, siteUrlObj)
-{
-	urlObj.port = siteUrlObj.port;
-	
-	urlObj.extra.portIsDefault = siteUrlObj.extra.portIsDefault;
-}
-
-
-
-function copyResource(urlObj, siteUrlObj)
-{
-	urlObj.resource = siteUrlObj.resource;
-	
-	urlObj.extra.resourceIsIndex = siteUrlObj.extra.resourceIsIndex;
-}
-
-
-
-module.exports = absolutize;
-
-
-/***/ }),
-
-/***/ 8019:
-/***/ ((module) => {
-
-"use strict";
-
-
-function findRelation_upToPath(urlObj, siteUrlObj, options)
-{
-	// Path- or root-relative URL
-	var pathOnly = urlObj.extra.hrefInfo.minimumPathOnly;
-	
-	// Matching scheme, scheme-relative or path-only
-	var minimumScheme = (urlObj.scheme===siteUrlObj.scheme || !urlObj.scheme);
-	
-	// Matching auth, ignoring auth or path-only
-	var minimumAuth = minimumScheme && (urlObj.auth===siteUrlObj.auth || options.removeAuth || pathOnly);
-	
-	// Matching host or path-only
-	var www = options.ignore_www ? "stripped" : "full";
-	var minimumHost = minimumAuth && (urlObj.host[www]===siteUrlObj.host[www] || pathOnly);
-	
-	// Matching port or path-only
-	var minimumPort = minimumHost && (urlObj.port===siteUrlObj.port || pathOnly);
-	
-	urlObj.extra.relation.minimumScheme = minimumScheme;
-	urlObj.extra.relation.minimumAuth   = minimumAuth;
-	urlObj.extra.relation.minimumHost   = minimumHost;
-	urlObj.extra.relation.minimumPort   = minimumPort;
-	
-	urlObj.extra.relation.maximumScheme = !minimumScheme || minimumScheme && !minimumAuth;
-	urlObj.extra.relation.maximumAuth   = !minimumScheme || minimumScheme && !minimumHost;
-	urlObj.extra.relation.maximumHost   = !minimumScheme || minimumScheme && !minimumPort;
-}
-
-
-
-function findRelation_pathOn(urlObj, siteUrlObj, options)
-{
-	var queryOnly = urlObj.extra.hrefInfo.minimumQueryOnly;
-	var hashOnly  = urlObj.extra.hrefInfo.minimumHashOnly;
-	var empty     = urlObj.extra.hrefInfo.empty;	// not required, but self-documenting
-	
-	// From upToPath()
-	var minimumPort   = urlObj.extra.relation.minimumPort;
-	var minimumScheme = urlObj.extra.relation.minimumScheme;
-	
-	// Matching port and path
-	var minimumPath = minimumPort && urlObj.path.absolute.string===siteUrlObj.path.absolute.string;
-	
-	// Matching resource or query/hash-only or empty
-	var matchingResource = (urlObj.resource===siteUrlObj.resource || !urlObj.resource && siteUrlObj.extra.resourceIsIndex) || (options.removeDirectoryIndexes && urlObj.extra.resourceIsIndex && !siteUrlObj.resource);
-	var minimumResource = minimumPath && (matchingResource || queryOnly || hashOnly || empty);
-	
-	// Matching query or hash-only/empty
-	var query = options.removeEmptyQueries ? "stripped" : "full";
-	var urlQuery = urlObj.query.string[query];
-	var siteUrlQuery = siteUrlObj.query.string[query];
-	var minimumQuery = (minimumResource && !!urlQuery && urlQuery===siteUrlQuery) || ((hashOnly || empty) && !urlObj.extra.hrefInfo.separatorOnlyQuery);
-	
-	var minimumHash = minimumQuery && urlObj.hash===siteUrlObj.hash;
-	
-	urlObj.extra.relation.minimumPath     = minimumPath;
-	urlObj.extra.relation.minimumResource = minimumResource;
-	urlObj.extra.relation.minimumQuery    = minimumQuery;
-	urlObj.extra.relation.minimumHash     = minimumHash;
-	
-	urlObj.extra.relation.maximumPort     = !minimumScheme || minimumScheme && !minimumPath;
-	urlObj.extra.relation.maximumPath     = !minimumScheme || minimumScheme && !minimumResource;
-	urlObj.extra.relation.maximumResource = !minimumScheme || minimumScheme && !minimumQuery;
-	urlObj.extra.relation.maximumQuery    = !minimumScheme || minimumScheme && !minimumHash;
-	urlObj.extra.relation.maximumHash     = !minimumScheme || minimumScheme && !minimumHash;	// there's nothing after hash, so it's the same as maximumQuery
-	
-	// Matching path and/or resource with existing but non-matching site query
-	urlObj.extra.relation.overridesQuery  = minimumPath && urlObj.extra.relation.maximumResource && !minimumQuery && !!siteUrlQuery;
-}
-
-
-
-module.exports =
-{
-	pathOn:   findRelation_pathOn,
-	upToPath: findRelation_upToPath
-};
-
-
-/***/ }),
-
-/***/ 6258:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var absolutize = __webpack_require__(799);
-var relativize = __webpack_require__(7255);
-
-
-
-function relateUrl(siteUrlObj, urlObj, options)
-{
-	absolutize(urlObj, siteUrlObj, options);
-	relativize(urlObj, siteUrlObj, options);
-	
-	return urlObj;
-}
-
-
-
-module.exports = relateUrl;
-
-
-/***/ }),
-
-/***/ 7255:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-var pathUtils = __webpack_require__(7831);
-
-
-
-/*
-	Get a path relative to the site path.
-*/
-function relatePath(absolutePath, siteAbsolutePath)
-{
-	var relativePath = [];
-	
-	// At this point, it's related to the host/port
-	var related = true;
-	var parentIndex = -1;
-	
-	// Find parents
-	siteAbsolutePath.forEach( function(siteAbsoluteDir, i)
-	{
-		if (related)
-		{
-			if (absolutePath[i] !== siteAbsoluteDir)
-			{
-				related = false;
-			}
-			else
-			{
-				parentIndex = i;
-			}
-		}
-		
-		if (!related)
-		{
-			// Up one level
-			relativePath.push("..");
-		}
-	});
-	
-	// Form path
-	absolutePath.forEach( function(dir, i)
-	{
-		if (i > parentIndex)
-		{
-			relativePath.push(dir);
-		}
-	});
-	
-	return relativePath;
-}
-
-
-
-function relativize(urlObj, siteUrlObj, options)
-{
-	if (urlObj.extra.relation.minimumScheme)
-	{
-		var pathArray = relatePath(urlObj.path.absolute.array, siteUrlObj.path.absolute.array);
-		
-		urlObj.path.relative.array  = pathArray;
-		urlObj.path.relative.string = pathUtils.join(pathArray);
-	}
-}
-
-
-
-module.exports = relativize;
-
-
-/***/ }),
-
-/***/ 1609:
-/***/ ((module) => {
-
-"use strict";
-
-
-/*
-	Deep-clone an object.
-*/
-function clone(obj)
-{
-	if (obj instanceof Object)
-	{
-		var clonedObj = (obj instanceof Array) ? [] : {};
-		
-		for (var i in obj)
-		{
-			if ( obj.hasOwnProperty(i) )
-			{
-				clonedObj[i] = clone( obj[i] );
-			}
-		}
-		
-		return clonedObj;
-	}
-	
-	return obj;
-}
-
-
-
-/*
-	https://github.com/jonschlinkert/is-plain-object
-*/
-function isPlainObject(obj)
-{
-	return !!obj && typeof obj==="object" && obj.constructor===Object;
-}
-
-
-
-/*
-	Shallow-merge two objects.
-*/
-function shallowMerge(target, source)
-{
-	if (target instanceof Object && source instanceof Object)
-	{
-		for (var i in source)
-		{
-			if ( source.hasOwnProperty(i) )
-			{
-				target[i] = source[i];
-			}
-		}
-	}
-	
-	return target;
-}
-
-
-
-module.exports =
-{
-	clone: clone,
-	isPlainObject: isPlainObject,
-	shallowMerge: shallowMerge
-};
-
-
-/***/ }),
-
-/***/ 7831:
-/***/ ((module) => {
-
-"use strict";
-
-
-function joinPath(pathArray)
-{
-	if (pathArray.length > 0)
-	{
-		return pathArray.join("/") + "/";
-	}
-	else
-	{
-		return "";
-	}
-}
-
-
-
-function resolveDotSegments(pathArray)
-{
-	var pathAbsolute = [];
-	
-	pathArray.forEach( function(dir)
-	{
-		if (dir !== "..")
-		{
-			if (dir !== ".")
-			{
-				pathAbsolute.push(dir);
-			}
-		}
-		else
-		{
-			// Remove parent
-			if (pathAbsolute.length > 0)
-			{
-				pathAbsolute.splice(pathAbsolute.length-1, 1);
-			}
-		}
-	});
-	
-	return pathAbsolute;
-}
-
-
-
-module.exports =
-{
-	join: joinPath,
-	resolveDotSegments: resolveDotSegments
-};
-
-
-/***/ }),
-
-/***/ 9639:
-/***/ (function(module, exports, __webpack_require__) {
-
-/* module decorator */ module = __webpack_require__.nmd(module);
-var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.3.2 by @mathias */
-;(function(root) {
-
-	/** Detect free variables */
-	var freeExports =  true && exports &&
-		!exports.nodeType && exports;
-	var freeModule =  true && module &&
-		!module.nodeType && module;
-	var freeGlobal = typeof __webpack_require__.g == 'object' && __webpack_require__.g;
-	if (
-		freeGlobal.global === freeGlobal ||
-		freeGlobal.window === freeGlobal ||
-		freeGlobal.self === freeGlobal
-	) {
-		root = freeGlobal;
-	}
-
-	/**
-	 * The `punycode` object.
-	 * @name punycode
-	 * @type Object
-	 */
-	var punycode,
-
-	/** Highest positive signed 32-bit float value */
-	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
-
-	/** Bootstring parameters */
-	base = 36,
-	tMin = 1,
-	tMax = 26,
-	skew = 38,
-	damp = 700,
-	initialBias = 72,
-	initialN = 128, // 0x80
-	delimiter = '-', // '\x2D'
-
-	/** Regular expressions */
-	regexPunycode = /^xn--/,
-	regexNonASCII = /[^\x20-\x7E]/, // unprintable ASCII chars + non-ASCII chars
-	regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
-
-	/** Error messages */
-	errors = {
-		'overflow': 'Overflow: input needs wider integers to process',
-		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
-		'invalid-input': 'Invalid input'
-	},
-
-	/** Convenience shortcuts */
-	baseMinusTMin = base - tMin,
-	floor = Math.floor,
-	stringFromCharCode = String.fromCharCode,
-
-	/** Temporary variable */
-	key;
-
-	/*--------------------------------------------------------------------------*/
-
-	/**
-	 * A generic error utility function.
-	 * @private
-	 * @param {String} type The error type.
-	 * @returns {Error} Throws a `RangeError` with the applicable error message.
-	 */
-	function error(type) {
-		throw RangeError(errors[type]);
-	}
-
-	/**
-	 * A generic `Array#map` utility function.
-	 * @private
-	 * @param {Array} array The array to iterate over.
-	 * @param {Function} callback The function that gets called for every array
-	 * item.
-	 * @returns {Array} A new array of values returned by the callback function.
-	 */
-	function map(array, fn) {
-		var length = array.length;
-		var result = [];
-		while (length--) {
-			result[length] = fn(array[length]);
-		}
-		return result;
-	}
-
-	/**
-	 * A simple `Array#map`-like wrapper to work with domain name strings or email
-	 * addresses.
-	 * @private
-	 * @param {String} domain The domain name or email address.
-	 * @param {Function} callback The function that gets called for every
-	 * character.
-	 * @returns {Array} A new string of characters returned by the callback
-	 * function.
-	 */
-	function mapDomain(string, fn) {
-		var parts = string.split('@');
-		var result = '';
-		if (parts.length > 1) {
-			// In email addresses, only the domain name should be punycoded. Leave
-			// the local part (i.e. everything up to `@`) intact.
-			result = parts[0] + '@';
-			string = parts[1];
-		}
-		// Avoid `split(regex)` for IE8 compatibility. See #17.
-		string = string.replace(regexSeparators, '\x2E');
-		var labels = string.split('.');
-		var encoded = map(labels, fn).join('.');
-		return result + encoded;
-	}
-
-	/**
-	 * Creates an array containing the numeric code points of each Unicode
-	 * character in the string. While JavaScript uses UCS-2 internally,
-	 * this function will convert a pair of surrogate halves (each of which
-	 * UCS-2 exposes as separate characters) into a single code point,
-	 * matching UTF-16.
-	 * @see `punycode.ucs2.encode`
-	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
-	 * @memberOf punycode.ucs2
-	 * @name decode
-	 * @param {String} string The Unicode input string (UCS-2).
-	 * @returns {Array} The new array of code points.
-	 */
-	function ucs2decode(string) {
-		var output = [],
-		    counter = 0,
-		    length = string.length,
-		    value,
-		    extra;
-		while (counter < length) {
-			value = string.charCodeAt(counter++);
-			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
-				// high surrogate, and there is a next character
-				extra = string.charCodeAt(counter++);
-				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
-					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
-				} else {
-					// unmatched surrogate; only append this code unit, in case the next
-					// code unit is the high surrogate of a surrogate pair
-					output.push(value);
-					counter--;
-				}
-			} else {
-				output.push(value);
-			}
-		}
-		return output;
-	}
-
-	/**
-	 * Creates a string based on an array of numeric code points.
-	 * @see `punycode.ucs2.decode`
-	 * @memberOf punycode.ucs2
-	 * @name encode
-	 * @param {Array} codePoints The array of numeric code points.
-	 * @returns {String} The new Unicode string (UCS-2).
-	 */
-	function ucs2encode(array) {
-		return map(array, function(value) {
-			var output = '';
-			if (value > 0xFFFF) {
-				value -= 0x10000;
-				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
-				value = 0xDC00 | value & 0x3FF;
-			}
-			output += stringFromCharCode(value);
-			return output;
-		}).join('');
-	}
-
-	/**
-	 * Converts a basic code point into a digit/integer.
-	 * @see `digitToBasic()`
-	 * @private
-	 * @param {Number} codePoint The basic numeric code point value.
-	 * @returns {Number} The numeric value of a basic code point (for use in
-	 * representing integers) in the range `0` to `base - 1`, or `base` if
-	 * the code point does not represent a value.
-	 */
-	function basicToDigit(codePoint) {
-		if (codePoint - 48 < 10) {
-			return codePoint - 22;
-		}
-		if (codePoint - 65 < 26) {
-			return codePoint - 65;
-		}
-		if (codePoint - 97 < 26) {
-			return codePoint - 97;
-		}
-		return base;
-	}
-
-	/**
-	 * Converts a digit/integer into a basic code point.
-	 * @see `basicToDigit()`
-	 * @private
-	 * @param {Number} digit The numeric value of a basic code point.
-	 * @returns {Number} The basic code point whose value (when used for
-	 * representing integers) is `digit`, which needs to be in the range
-	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
-	 * used; else, the lowercase form is used. The behavior is undefined
-	 * if `flag` is non-zero and `digit` has no uppercase form.
-	 */
-	function digitToBasic(digit, flag) {
-		//  0..25 map to ASCII a..z or A..Z
-		// 26..35 map to ASCII 0..9
-		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
-	}
-
-	/**
-	 * Bias adaptation function as per section 3.4 of RFC 3492.
-	 * http://tools.ietf.org/html/rfc3492#section-3.4
-	 * @private
-	 */
-	function adapt(delta, numPoints, firstTime) {
-		var k = 0;
-		delta = firstTime ? floor(delta / damp) : delta >> 1;
-		delta += floor(delta / numPoints);
-		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
-			delta = floor(delta / baseMinusTMin);
-		}
-		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
-	}
-
-	/**
-	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
-	 * symbols.
-	 * @memberOf punycode
-	 * @param {String} input The Punycode string of ASCII-only symbols.
-	 * @returns {String} The resulting string of Unicode symbols.
-	 */
-	function decode(input) {
-		// Don't use UCS-2
-		var output = [],
-		    inputLength = input.length,
-		    out,
-		    i = 0,
-		    n = initialN,
-		    bias = initialBias,
-		    basic,
-		    j,
-		    index,
-		    oldi,
-		    w,
-		    k,
-		    digit,
-		    t,
-		    /** Cached calculation results */
-		    baseMinusT;
-
-		// Handle the basic code points: let `basic` be the number of input code
-		// points before the last delimiter, or `0` if there is none, then copy
-		// the first basic code points to the output.
-
-		basic = input.lastIndexOf(delimiter);
-		if (basic < 0) {
-			basic = 0;
-		}
-
-		for (j = 0; j < basic; ++j) {
-			// if it's not a basic code point
-			if (input.charCodeAt(j) >= 0x80) {
-				error('not-basic');
-			}
-			output.push(input.charCodeAt(j));
-		}
-
-		// Main decoding loop: start just after the last delimiter if any basic code
-		// points were copied; start at the beginning otherwise.
-
-		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
-
-			// `index` is the index of the next character to be consumed.
-			// Decode a generalized variable-length integer into `delta`,
-			// which gets added to `i`. The overflow checking is easier
-			// if we increase `i` as we go, then subtract off its starting
-			// value at the end to obtain `delta`.
-			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
-
-				if (index >= inputLength) {
-					error('invalid-input');
-				}
-
-				digit = basicToDigit(input.charCodeAt(index++));
-
-				if (digit >= base || digit > floor((maxInt - i) / w)) {
-					error('overflow');
-				}
-
-				i += digit * w;
-				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
-
-				if (digit < t) {
-					break;
-				}
-
-				baseMinusT = base - t;
-				if (w > floor(maxInt / baseMinusT)) {
-					error('overflow');
-				}
-
-				w *= baseMinusT;
-
-			}
-
-			out = output.length + 1;
-			bias = adapt(i - oldi, out, oldi == 0);
-
-			// `i` was supposed to wrap around from `out` to `0`,
-			// incrementing `n` each time, so we'll fix that now:
-			if (floor(i / out) > maxInt - n) {
-				error('overflow');
-			}
-
-			n += floor(i / out);
-			i %= out;
-
-			// Insert `n` at position `i` of the output
-			output.splice(i++, 0, n);
-
-		}
-
-		return ucs2encode(output);
-	}
-
-	/**
-	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
-	 * Punycode string of ASCII-only symbols.
-	 * @memberOf punycode
-	 * @param {String} input The string of Unicode symbols.
-	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
-	 */
-	function encode(input) {
-		var n,
-		    delta,
-		    handledCPCount,
-		    basicLength,
-		    bias,
-		    j,
-		    m,
-		    q,
-		    k,
-		    t,
-		    currentValue,
-		    output = [],
-		    /** `inputLength` will hold the number of code points in `input`. */
-		    inputLength,
-		    /** Cached calculation results */
-		    handledCPCountPlusOne,
-		    baseMinusT,
-		    qMinusT;
-
-		// Convert the input in UCS-2 to Unicode
-		input = ucs2decode(input);
-
-		// Cache the length
-		inputLength = input.length;
-
-		// Initialize the state
-		n = initialN;
-		delta = 0;
-		bias = initialBias;
-
-		// Handle the basic code points
-		for (j = 0; j < inputLength; ++j) {
-			currentValue = input[j];
-			if (currentValue < 0x80) {
-				output.push(stringFromCharCode(currentValue));
-			}
-		}
-
-		handledCPCount = basicLength = output.length;
-
-		// `handledCPCount` is the number of code points that have been handled;
-		// `basicLength` is the number of basic code points.
-
-		// Finish the basic string - if it is not empty - with a delimiter
-		if (basicLength) {
-			output.push(delimiter);
-		}
-
-		// Main encoding loop:
-		while (handledCPCount < inputLength) {
-
-			// All non-basic code points < n have been handled already. Find the next
-			// larger one:
-			for (m = maxInt, j = 0; j < inputLength; ++j) {
-				currentValue = input[j];
-				if (currentValue >= n && currentValue < m) {
-					m = currentValue;
-				}
-			}
-
-			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
-			// but guard against overflow
-			handledCPCountPlusOne = handledCPCount + 1;
-			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
-				error('overflow');
-			}
-
-			delta += (m - n) * handledCPCountPlusOne;
-			n = m;
-
-			for (j = 0; j < inputLength; ++j) {
-				currentValue = input[j];
-
-				if (currentValue < n && ++delta > maxInt) {
-					error('overflow');
-				}
-
-				if (currentValue == n) {
-					// Represent delta as a generalized variable-length integer
-					for (q = delta, k = base; /* no condition */; k += base) {
-						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
-						if (q < t) {
-							break;
-						}
-						qMinusT = q - t;
-						baseMinusT = base - t;
-						output.push(
-							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
-						);
-						q = floor(qMinusT / baseMinusT);
-					}
-
-					output.push(stringFromCharCode(digitToBasic(q, 0)));
-					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
-					delta = 0;
-					++handledCPCount;
-				}
-			}
-
-			++delta;
-			++n;
-
-		}
-		return output.join('');
-	}
-
-	/**
-	 * Converts a Punycode string representing a domain name or an email address
-	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
-	 * it doesn't matter if you call it on a string that has already been
-	 * converted to Unicode.
-	 * @memberOf punycode
-	 * @param {String} input The Punycoded domain name or email address to
-	 * convert to Unicode.
-	 * @returns {String} The Unicode representation of the given Punycode
-	 * string.
-	 */
-	function toUnicode(input) {
-		return mapDomain(input, function(string) {
-			return regexPunycode.test(string)
-				? decode(string.slice(4).toLowerCase())
-				: string;
-		});
-	}
-
-	/**
-	 * Converts a Unicode string representing a domain name or an email address to
-	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
-	 * i.e. it doesn't matter if you call it with a domain that's already in
-	 * ASCII.
-	 * @memberOf punycode
-	 * @param {String} input The domain name or email address to convert, as a
-	 * Unicode string.
-	 * @returns {String} The Punycode representation of the given domain name or
-	 * email address.
-	 */
-	function toASCII(input) {
-		return mapDomain(input, function(string) {
-			return regexNonASCII.test(string)
-				? 'xn--' + encode(string)
-				: string;
-		});
-	}
-
-	/*--------------------------------------------------------------------------*/
-
-	/** Define the public API */
-	punycode = {
-		/**
-		 * A string representing the current Punycode.js version number.
-		 * @memberOf punycode
-		 * @type String
-		 */
-		'version': '1.3.2',
-		/**
-		 * An object of methods to convert from JavaScript's internal character
-		 * representation (UCS-2) to Unicode code points, and back.
-		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
-		 * @memberOf punycode
-		 * @type Object
-		 */
-		'ucs2': {
-			'decode': ucs2decode,
-			'encode': ucs2encode
-		},
-		'decode': decode,
-		'encode': encode,
-		'toASCII': toASCII,
-		'toUnicode': toUnicode
-	};
-
-	/** Expose `punycode` */
-	// Some AMD build optimizers, like r.js, check for specific condition patterns
-	// like the following:
-	if (
-		true
-	) {
-		!(__WEBPACK_AMD_DEFINE_RESULT__ = (function() {
-			return punycode;
-		}).call(exports, __webpack_require__, exports, module),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else {}
-
-}(this));
-
-
-/***/ }),
-
-/***/ 883:
+/***/ 8986:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 var __webpack_unused_export__;
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-
-var punycode = __webpack_require__(9639);
-var util = __webpack_require__(5225);
-
-exports.Qc = urlParse;
-__webpack_unused_export__ = urlResolve;
-__webpack_unused_export__ = urlResolveObject;
-__webpack_unused_export__ = urlFormat;
-
-__webpack_unused_export__ = Url;
-
-function Url() {
-  this.protocol = null;
-  this.slashes = null;
-  this.auth = null;
-  this.host = null;
-  this.port = null;
-  this.hostname = null;
-  this.hash = null;
-  this.search = null;
-  this.query = null;
-  this.pathname = null;
-  this.path = null;
-  this.href = null;
+__webpack_unused_export__ = ({ value: true });
+exports.G = void 0;
+const term_1 = __webpack_require__(1101);
+var ControlType;
+(function (ControlType) {
+    ControlType[ControlType["Split"] = 0] = "Split";
+    ControlType[ControlType["Rept"] = 1] = "Rept";
+    ControlType[ControlType["Match"] = 2] = "Match";
+})(ControlType || (ControlType = {}));
+class StackEntry {
+    constructor(c, e) {
+        this.c = c;
+        this.e = e;
+        this.i = null;
+    }
 }
-
-// Reference: RFC 3986, RFC 1808, RFC 2396
-
-// define these here so at least they only have to be
-// compiled once on the first module load.
-var protocolPattern = /^([a-z0-9.+-]+:)/i,
-    portPattern = /:[0-9]*$/,
-
-    // Special case for a simple path URL
-    simplePathPattern = /^(\/\/?(?!\/)[^\?\s]*)(\?[^\s]*)?$/,
-
-    // RFC 2396: characters reserved for delimiting URLs.
-    // We actually just auto-escape these.
-    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
-
-    // RFC 2396: characters not allowed for various reasons.
-    unwise = ['{', '}', '|', '\\', '^', '`'].concat(delims),
-
-    // Allowed by RFCs, but cause of XSS attacks.  Always escape these.
-    autoEscape = ['\''].concat(unwise),
-    // Characters that are never ever allowed in a hostname.
-    // Note that any invalid chars are also handled, but these
-    // are the ones that are *expected* to be seen, so we fast-path
-    // them.
-    nonHostChars = ['%', '/', '?', ';', '#'].concat(autoEscape),
-    hostEndingChars = ['/', '?', '#'],
-    hostnameMaxLen = 255,
-    hostnamePartPattern = /^[+a-z0-9A-Z_-]{0,63}$/,
-    hostnamePartStart = /^([+a-z0-9A-Z_-]{0,63})(.*)$/,
-    // protocols that can allow "unsafe" and "unwise" chars.
-    unsafeProtocol = {
-      'javascript': true,
-      'javascript:': true
-    },
-    // protocols that never have a hostname.
-    hostlessProtocol = {
-      'javascript': true,
-      'javascript:': true
-    },
-    // protocols that always contain a // bit.
-    slashedProtocol = {
-      'http': true,
-      'https': true,
-      'ftp': true,
-      'gopher': true,
-      'file': true,
-      'http:': true,
-      'https:': true,
-      'ftp:': true,
-      'gopher:': true,
-      'file:': true
-    },
-    querystring = __webpack_require__(6642);
-
-function urlParse(url, parseQueryString, slashesDenoteHost) {
-  if (url && util.isObject(url) && url instanceof Url) return url;
-
-  var u = new Url;
-  u.parse(url, parseQueryString, slashesDenoteHost);
-  return u;
+class RegExpState {
+    constructor(outs) {
+        this.outs = outs;
+    }
 }
-
-Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
-  if (!util.isString(url)) {
-    throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
-  }
-
-  // Copy chrome, IE, opera backslash-handling behavior.
-  // Back slashes before the query string get converted to forward slashes
-  // See: https://code.google.com/p/chromium/issues/detail?id=25916
-  var queryIndex = url.indexOf('?'),
-      splitter =
-          (queryIndex !== -1 && queryIndex < url.indexOf('#')) ? '?' : '#',
-      uSplit = url.split(splitter),
-      slashRegex = /\\/g;
-  uSplit[0] = uSplit[0].replace(slashRegex, '/');
-  url = uSplit.join(splitter);
-
-  var rest = url;
-
-  // trim before proceeding.
-  // This is to support parse stuff like "  http://foo.com  \n"
-  rest = rest.trim();
-
-  if (!slashesDenoteHost && url.split('#').length === 1) {
-    // Try fast path regexp
-    var simplePath = simplePathPattern.exec(rest);
-    if (simplePath) {
-      this.path = rest;
-      this.href = rest;
-      this.pathname = simplePath[1];
-      if (simplePath[2]) {
-        this.search = simplePath[2];
-        if (parseQueryString) {
-          this.query = querystring.parse(this.search.substr(1));
-        } else {
-          this.query = this.search.substr(1);
+class TripleConstraintState extends RegExpState {
+    constructor(c, outs, stack) {
+        super(outs);
+        this.c = c;
+        this.stack = stack;
+    }
+}
+class ControlState extends RegExpState {
+}
+class SplitState extends ControlState {
+    constructor(c, outs, expr) {
+        super(outs);
+        this.c = c;
+        this.expr = expr;
+    }
+}
+class ReptState extends ControlState {
+    constructor(c, outs, expr) {
+        super(outs);
+        this.c = c;
+        this.expr = expr;
+        this.min = expr.min === undefined ? 1 : expr.min;
+        this.max = expr.max === undefined
+            ? 1
+            : expr.max === UNBOUNDED
+                ? Infinity
+                : expr.max;
+    }
+}
+class MatchState extends ControlState {
+    constructor(c) {
+        super([]);
+        this.c = c;
+    }
+}
+class RegExpPair {
+    constructor(start, tail) {
+        this.start = start;
+        this.tail = tail;
+    }
+}
+const UNBOUNDED = -1;
+exports.G = {
+    name: "eval-simple-1err",
+    description: "simple regular expression engine with n out states",
+    /* compile - compile regular expression and index triple constraints
+     */
+    compile: (_schema, shape, index) => {
+        const expression = shape.expression;
+        return NFA();
+        function NFA() {
+            // wrapper for states, startNo and matchstate
+            const states = [];
+            const matchstate = addState(new MatchState(ControlType.Match));
+            let startNo = matchstate;
+            let pair;
+            if (expression) {
+                const pair = walkExpr(expression, []);
+                patch(pair.tail, matchstate);
+                startNo = pair.start;
+            }
+            return new EvalSimple1ErrRegexEngine(shape, states, startNo, matchstate);
+            function maybeAddRept(expr, start, tail) {
+                if ((expr.min == undefined || expr.min === 1) &&
+                    (expr.max == undefined || expr.max === 1))
+                    return new RegExpPair(start, tail);
+                const s = addState(new ReptState(ControlType.Rept, [start], expr));
+                patch(tail, s);
+                return new RegExpPair(s, [s]);
+            }
+            function walkExpr(expr, stack) {
+                let s, starts;
+                let lastTail;
+                if (typeof expr === "string") { // Inclusion
+                    const included = index.tripleExprs[expr];
+                    return walkExpr(included, stack);
+                }
+                else {
+                    switch (expr.type) {
+                        case "TripleConstraint":
+                            s = addState(new TripleConstraintState(expr, [], stack));
+                            return new RegExpPair(s, [s]);
+                        case "OneOf":
+                            lastTail = [];
+                            starts = [];
+                            expr.expressions.forEach(function (nested, ord) {
+                                pair = walkExpr(nested, stack.concat([new StackEntry(expr, ord)]));
+                                starts.push(pair.start);
+                                lastTail = lastTail.concat(pair.tail);
+                            });
+                            s = addState(new SplitState(ControlType.Split, starts, expr));
+                            return maybeAddRept(expr, s, lastTail);
+                        case "EachOf":
+                            expr.expressions.forEach(function (nested, ord) {
+                                pair = walkExpr(nested, stack.concat([new StackEntry(expr, ord)]));
+                                if (ord === 0)
+                                    s = pair.start;
+                                else
+                                    patch(lastTail, pair.start);
+                                lastTail = pair.tail;
+                            });
+                            return maybeAddRept(expr, s, lastTail); // ShExJ says that EachOf has at least two expressions
+                    }
+                }
+            }
+            function addState(state) {
+                const ret = states.length;
+                states.push(state);
+                return ret;
+            }
+            function patch(l, target) {
+                l.forEach(elt => {
+                    states[elt].outs.push(target);
+                });
+            }
         }
-      } else if (parseQueryString) {
-        this.search = '';
-        this.query = {};
-      }
-      return this;
     }
-  }
-
-  var proto = protocolPattern.exec(rest);
-  if (proto) {
-    proto = proto[0];
-    var lowerProto = proto.toLowerCase();
-    this.protocol = lowerProto;
-    rest = rest.substr(proto.length);
-  }
-
-  // figure out if it's got a host
-  // user@server is *always* interpreted as a hostname, and url
-  // resolution will treat //foo/bar as host=foo,path=bar because that's
-  // how the browser resolves relative URLs.
-  if (slashesDenoteHost || proto || rest.match(/^\/\/[^@\/]+@[^@\/]+/)) {
-    var slashes = rest.substr(0, 2) === '//';
-    if (slashes && !(proto && hostlessProtocol[proto])) {
-      rest = rest.substr(2);
-      this.slashes = true;
+};
+/**
+ * debugging tool; lots of ts-ignores
+ */
+class NfaToString {
+    constructor() {
+        this.known = { OneOf: [], EachOf: [] };
     }
-  }
-
-  if (!hostlessProtocol[proto] &&
-      (slashes || (proto && !slashedProtocol[proto]))) {
-
-    // there's a hostname.
-    // the first instance of /, ?, ;, or # ends the host.
-    //
-    // If there is an @ in the hostname, then non-host chars *are* allowed
-    // to the left of the last @ sign, unless some host-ending character
-    // comes *before* the @-sign.
-    // URLs are obnoxious.
-    //
-    // ex:
-    // http://a@b@c/ => user:a@b host:c
-    // http://a@b?@c => user:a host:c path:/?@c
-
-    // v0.12 TODO(isaacs): This is not quite how Chrome does things.
-    // Review our test case against browsers more comprehensively.
-
-    // find the first instance of any hostEndingChars
-    var hostEnd = -1;
-    for (var i = 0; i < hostEndingChars.length; i++) {
-      var hec = rest.indexOf(hostEndingChars[i]);
-      if (hec !== -1 && (hostEnd === -1 || hec < hostEnd))
-        hostEnd = hec;
+    dumpTripleConstraint(tc) {
+        return "<" + tc.predicate + ">";
     }
-
-    // at this point, either we have an explicit point where the
-    // auth portion cannot go past, or the last @ char is the decider.
-    var auth, atSign;
-    if (hostEnd === -1) {
-      // atSign can be anywhere.
-      atSign = rest.lastIndexOf('@');
-    } else {
-      // atSign must be in auth portion.
-      // http://a@b/c@d => host:b auth:a path:/c@d
-      atSign = rest.lastIndexOf('@', hostEnd);
+    card(obj) {
+        let x = "";
+        if ("min" in obj)
+            // @ts-ignore
+            x += obj.min;
+        if ("max" in obj)
+            // @ts-ignore
+            x += "," + obj.max;
+        return x ? "{" + x + "}" : "";
     }
-
-    // Now we have a portion which is definitely the auth.
-    // Pull that off.
-    if (atSign !== -1) {
-      auth = rest.slice(0, atSign);
-      rest = rest.slice(atSign + 1);
-      this.auth = decodeURIComponent(auth);
-    }
-
-    // the host is the remaining to the left of the first non-host char
-    hostEnd = -1;
-    for (var i = 0; i < nonHostChars.length; i++) {
-      var hec = rest.indexOf(nonHostChars[i]);
-      if (hec !== -1 && (hostEnd === -1 || hec < hostEnd))
-        hostEnd = hec;
-    }
-    // if we still have not hit it, then the entire thing is a host.
-    if (hostEnd === -1)
-      hostEnd = rest.length;
-
-    this.host = rest.slice(0, hostEnd);
-    rest = rest.slice(hostEnd);
-
-    // pull out port.
-    this.parseHost();
-
-    // we've indicated that there is a hostname,
-    // so even if it's empty, it has to be present.
-    this.hostname = this.hostname || '';
-
-    // if hostname begins with [ and ends with ]
-    // assume that it's an IPv6 address.
-    var ipv6Hostname = this.hostname[0] === '[' &&
-        this.hostname[this.hostname.length - 1] === ']';
-
-    // validate a little.
-    if (!ipv6Hostname) {
-      var hostparts = this.hostname.split(/\./);
-      for (var i = 0, l = hostparts.length; i < l; i++) {
-        var part = hostparts[i];
-        if (!part) continue;
-        if (!part.match(hostnamePartPattern)) {
-          var newpart = '';
-          for (var j = 0, k = part.length; j < k; j++) {
-            if (part.charCodeAt(j) > 127) {
-              // we replace non-ASCII char with a temporary placeholder
-              // we need this to make sure size of hostname is not
-              // broken by replacing non-ASCII by nothing
-              newpart += 'x';
-            } else {
-              newpart += part[j];
-            }
-          }
-          // we test again with ASCII char only
-          if (!newpart.match(hostnamePartPattern)) {
-            var validParts = hostparts.slice(0, i);
-            var notHost = hostparts.slice(i + 1);
-            var bit = part.match(hostnamePartStart);
-            if (bit) {
-              validParts.push(bit[1]);
-              notHost.unshift(bit[2]);
-            }
-            if (notHost.length) {
-              rest = '/' + notHost.join('.') + rest;
-            }
-            this.hostname = validParts.join('.');
-            break;
-          }
+    junct(j) {
+        // @ts-ignore
+        let id = known[j.type].indexOf(j);
+        if (id === -1) { // @ts-ignore
+            id = known[j.type].push(j) - 1;
         }
-      }
+        // @ts-ignore
+        return j.type + id; // + card(j);
     }
-
-    if (this.hostname.length > hostnameMaxLen) {
-      this.hostname = '';
-    } else {
-      // hostnames are always lower case.
-      this.hostname = this.hostname.toLowerCase();
+    dumpStackElt(elt) {
+        return this.junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
     }
-
-    if (!ipv6Hostname) {
-      // IDNA Support: Returns a punycoded representation of "domain".
-      // It only converts parts of the domain name that
-      // have non-ASCII characters, i.e. it doesn't matter if
-      // you call it with a domain that already is ASCII-only.
-      this.hostname = punycode.toASCII(this.hostname);
+    dumpStack(stack) {
+        return stack.map(elt => {
+            return this.dumpStackElt(elt);
+        }).join("/");
     }
-
-    var p = this.port ? ':' + this.port : '';
-    var h = this.hostname || '';
-    this.host = h + p;
-    this.href += this.host;
-
-    // strip [ and ] from the hostname
-    // the host field still retains them, though
-    if (ipv6Hostname) {
-      this.hostname = this.hostname.substr(1, this.hostname.length - 2);
-      if (rest[0] !== '/') {
-        rest = '/' + rest;
-      }
+    dumpNFA(states, startNo) {
+        return states.map((s, i) => {
+            return (i === startNo
+                ? s instanceof MatchState
+                    ? "."
+                    : "S"
+                : s instanceof MatchState
+                    ? "E"
+                    : " ")
+                + i + " " + (s instanceof SplitState
+                ? ("Split-" + this.junct(s.expr))
+                : s instanceof ReptState
+                    ? ("Rept-" + this.junct(s.expr))
+                    : s instanceof MatchState
+                        ? "Match"
+                        : this.dumpTripleConstraint(s.c))
+                + this.card(s) + "→" + s.outs.join(" | ") + ("stack" in s
+                ? this.dumpStack(s.stack)
+                : "");
+        }).join("\n");
     }
-  }
-
-  // now rest is set to the post-host stuff.
-  // chop off any delim chars.
-  if (!unsafeProtocol[lowerProto]) {
-
-    // First, make 100% sure that any "autoEscape" chars get
-    // escaped, even if encodeURIComponent doesn't think they
-    // need to be.
-    for (var i = 0, l = autoEscape.length; i < l; i++) {
-      var ae = autoEscape[i];
-      if (rest.indexOf(ae) === -1)
-        continue;
-      var esc = encodeURIComponent(ae);
-      if (esc === ae) {
-        esc = escape(ae);
-      }
-      rest = rest.split(ae).join(esc);
+    dumpMatched(matched) {
+        return matched.map(m => {
+            return this.dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + this.dumpStack(m.stack);
+        }).join(",");
     }
-  }
-
-
-  // chop off from the tail first.
-  var hash = rest.indexOf('#');
-  if (hash !== -1) {
-    // got a fragment string.
-    this.hash = rest.substr(hash);
-    rest = rest.slice(0, hash);
-  }
-  var qm = rest.indexOf('?');
-  if (qm !== -1) {
-    this.search = rest.substr(qm);
-    this.query = rest.substr(qm + 1);
-    if (parseQueryString) {
-      this.query = querystring.parse(this.query);
+    dumpThread(thread) {
+        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
+            return k + "×" + thread.repeats[k];
+        }).join(",") + " " + this.dumpMatched(thread.matched);
     }
-    rest = rest.slice(0, qm);
-  } else if (parseQueryString) {
-    // no query string, but parseQueryString still requested
-    this.search = '';
-    this.query = {};
-  }
-  if (rest) this.pathname = rest;
-  if (slashedProtocol[lowerProto] &&
-      this.hostname && !this.pathname) {
-    this.pathname = '/';
-  }
-
-  //to support http.request
-  if (this.pathname || this.search) {
-    var p = this.pathname || '';
-    var s = this.search || '';
-    this.path = p + s;
-  }
-
-  // finally, reconstruct the href based on what has been validated.
-  this.href = this.format();
-  return this;
-};
-
-// format a parsed object into a url string
-function urlFormat(obj) {
-  // ensure it's an object, and not a string url.
-  // If it's an obj, this is a no-op.
-  // this way, you can call url_format() on strings
-  // to clean up potentially wonky urls.
-  if (util.isString(obj)) obj = urlParse(obj);
-  if (!(obj instanceof Url)) return Url.prototype.format.call(obj);
-  return obj.format();
+    dumpThreadList(list) {
+        return "[[" + list.map(thread => {
+            return this.dumpThread(thread);
+        }).join("\n  ") + "]]";
+    }
 }
-
-Url.prototype.format = function() {
-  var auth = this.auth || '';
-  if (auth) {
-    auth = encodeURIComponent(auth);
-    auth = auth.replace(/%3A/i, ':');
-    auth += '@';
-  }
-
-  var protocol = this.protocol || '',
-      pathname = this.pathname || '',
-      hash = this.hash || '',
-      host = false,
-      query = '';
-
-  if (this.host) {
-    host = auth + this.host;
-  } else if (this.hostname) {
-    host = auth + (this.hostname.indexOf(':') === -1 ?
-        this.hostname :
-        '[' + this.hostname + ']');
-    if (this.port) {
-      host += ':' + this.port;
+class RegExpThread {
+    constructor(state = -1, repeats = {}, avail = new Map(), stack = [], matched = [], errors = []) {
+        this.state = state;
+        this.repeats = repeats;
+        this.avail = avail;
+        this.stack = stack;
+        this.matched = matched;
+        this.errors = errors;
     }
-  }
-
-  if (this.query &&
-      util.isObject(this.query) &&
-      Object.keys(this.query).length) {
-    query = querystring.stringify(this.query);
-  }
-
-  var search = this.search || (query && ('?' + query)) || '';
-
-  if (protocol && protocol.substr(-1) !== ':') protocol += ':';
-
-  // only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
-  // unless they had them to begin with.
-  if (this.slashes ||
-      (!protocol || slashedProtocol[protocol]) && host !== false) {
-    host = '//' + (host || '');
-    if (pathname && pathname.charAt(0) !== '/') pathname = '/' + pathname;
-  } else if (!host) {
-    host = '';
-  }
-
-  if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
-  if (search && search.charAt(0) !== '?') search = '?' + search;
-
-  pathname = pathname.replace(/[?#]/g, function(match) {
-    return encodeURIComponent(match);
-  });
-  search = search.replace('#', '%23');
-
-  return protocol + host + pathname + search + hash;
-};
-
-function urlResolve(source, relative) {
-  return urlParse(source, false, true).resolve(relative);
 }
-
-Url.prototype.resolve = function(relative) {
-  return this.resolveObject(urlParse(relative, false, true)).format();
-};
-
-function urlResolveObject(source, relative) {
-  if (!source) return relative;
-  return urlParse(source, false, true).resolveObject(relative);
+class EvalSimple1ErrRegexEngine {
+    constructor(shape, states, startNo, matchstate) {
+        this.shape = shape;
+        this.end = matchstate;
+        this.states = states;
+        this.start = startNo;
+    }
+    match(node, constraintToTripleMapping, semActHandler, trace) {
+        const thisEvalSimple1ErrRegexEngine = this;
+        let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+            tripleResult.forEach(res => allTriples.add(res.triple));
+            return allTriples;
+        }, new Set());
+        if (thisEvalSimple1ErrRegexEngine.states.length === 1)
+            return this.matchedToResult([], constraintToTripleMapping, semActHandler);
+        let chosen = null;
+        // console.log(new NfaToString().dumpNFA(this.states, this.start));
+        this.addstate(clist, this.start, new RegExpThread());
+        while (clist.length) {
+            nlist = [];
+            if (trace)
+                trace.push({ threads: [] });
+            for (let threadno = 0; threadno < clist.length; ++threadno) {
+                const thread = clist[threadno];
+                if (thread.state === thisEvalSimple1ErrRegexEngine.end)
+                    continue;
+                const state = thisEvalSimple1ErrRegexEngine.states[thread.state];
+                const nlistlen = nlist.length;
+                // may be an Accept state
+                if (state instanceof TripleConstraintState) {
+                    const tripleConstraint = state.c;
+                    let min = state.c.min !== undefined ? state.c.min : 1;
+                    let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+                    if (!thread.avail.has(tripleConstraint))
+                        thread.avail.set(tripleConstraint, constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple));
+                    const taken = thread.avail.get(tripleConstraint).splice(0, max);
+                    if (taken.length >= min) {
+                        do {
+                            this.addStates(nlist, thread, taken);
+                        } while ((function () {
+                            if (thread.avail.get(tripleConstraint).length > 0 && taken.length < max) {
+                                taken.push(thread.avail.get(tripleConstraint).shift());
+                                return true; // stay in look to take more.
+                            }
+                            else {
+                                return false; // no more to take or we're already at max
+                            }
+                        })());
+                    }
+                }
+                if (trace)
+                    // @ts-ignore
+                    trace[trace.length - 1].threads.push({
+                        state: clist[threadno].state,
+                        to: nlist.slice(nlistlen).map(x => {
+                            return this.stateString(x.state, x.repeats);
+                        })
+                    });
+            }
+            if (nlist.length === 0 && chosen === null)
+                return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
+            const t = clist;
+            clist = nlist;
+            nlist = t;
+            const longerChosen = clist.reduce((ret, elt) => {
+                const matchedAll = elt.matched.reduce((ret, m) => {
+                    return ret + m.triples.length; // count matched triples
+                }, 0) === allTriples.size;
+                return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
+            }, null);
+            if (longerChosen)
+                chosen = longerChosen;
+        }
+        if (chosen === null)
+            return reportError([]);
+        function reportError(_x) {
+            return {
+                type: "Failure",
+                node: node,
+                errors: localExpect(clist, thisEvalSimple1ErrRegexEngine.states)
+            };
+        }
+        function localExpect(clist, states) {
+            const lastState = states[states.length - 1];
+            return clist.reduce((acc, elt) => {
+                const c = thisEvalSimple1ErrRegexEngine.states[elt.state].c; // Always fails on a TCState
+                // if (c === ControlType.Match)
+                //   return { type: "EndState999" };
+                let valueExpr = null;
+                if (typeof c.valueExpr === "string") { // ShapeRef
+                    valueExpr = c.valueExpr;
+                }
+                else if (c.valueExpr) {
+                    valueExpr = c.valueExpr;
+                }
+                if (elt.state !== thisEvalSimple1ErrRegexEngine.end) {
+                    const error = {
+                        type: "MissingProperty",
+                        property: lastState.c.predicate,
+                    };
+                    if (valueExpr)
+                        error.valueExpr = valueExpr;
+                    // @ts-ignore -- Type 'MissingProperty' is not assignable to type 'shapeExprTest'?
+                    return acc.concat([error]);
+                }
+                else {
+                    const unmatchedTriples = new Map();
+                    const threadMatches = elt.matched.reduce((threadMatches, eltMatched) => {
+                        eltMatched.triples.forEach(triple => threadMatches.add(triple));
+                        return threadMatches;
+                    }, new Set());
+                    const errors = Array.from(allTriples).reduce((errors, triple) => {
+                        if (!threadMatches.has(triple)) {
+                            const error = {
+                                type: "ExcessTripleViolation",
+                                property: lastState.c.predicate,
+                                triple: triple,
+                            };
+                            if (valueExpr)
+                                error.valueExpr = valueExpr;
+                            errors.push(error);
+                        }
+                        return errors;
+                    }, []);
+                    return acc.concat(errors);
+                }
+            }, []);
+        }
+        // console.log("chosen:", dump.thread(chosen));
+        return "errors" in chosen.matched ?
+            chosen.matched :
+            this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
+    }
+    addStates(nlist, thread, taken) {
+        const state = this.states[thread.state];
+        // find the exprs that require repetition
+        const exprs = this.states.map(x => { return x instanceof ReptState ? x.expr : null; });
+        const newStack = state.stack.map(e => {
+            let i = thread.repeats[exprs.indexOf(e.c)];
+            if (i === undefined)
+                i = 0; // expr has no repeats
+            else
+                i = i - 1;
+            return { c: e.c, e: e.e, i: i };
+        });
+        const withIndexes = {
+            c: state.c,
+            triples: taken,
+            stack: newStack
+        };
+        thread.matched = thread.matched.concat([withIndexes]);
+        state.outs.forEach(o => {
+            this.addstate(nlist, o, thread);
+        });
+    }
+    addstate(list, stateNo, thread, seen = []) {
+        const seenkey = this.stateString(stateNo, thread.repeats);
+        if (seen.indexOf(seenkey) !== -1)
+            return [];
+        seen.push(seenkey);
+        const s = this.states[stateNo];
+        if (s instanceof SplitState) {
+            return s.outs.reduce((ret, o) => {
+                return ret.concat(this.addstate(list, o, thread, seen));
+            }, []);
+            // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
+        }
+        else if (s instanceof ReptState) {
+            const ret = [];
+            // matched = [matched].concat("Rept" + s.expr);
+            if (!(stateNo in thread.repeats))
+                thread.repeats[stateNo] = 0;
+            const repetitions = thread.repeats[stateNo];
+            // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
+            if (repetitions < s.max)
+                Array.prototype.push.apply(ret, this.addstate(list, s.outs[0], this.incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
+            if (repetitions >= s.min && repetitions <= s.max)
+                Array.prototype.push.apply(ret, this.addstate(list, s.outs[1], this.resetRepeat(thread, stateNo), seen)); // outs[1] when done
+            return ret;
+        }
+        else {
+            // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
+            //   return r2 || avail.length > 0;
+            // }, false))
+            return [list.push(new RegExpThread(// return [new list element index]
+                stateNo, thread.repeats, thread.avail, // Experiments indicate this and it's arrays safe to reuse, but I've not thought about it.
+                thread.stack, thread.matched, thread.errors)) - 1];
+        }
+    }
+    resetRepeat(thread, repeatedState) {
+        const trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+            if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
+                r[k] = thread.repeats[k];
+            return r;
+        }, {});
+        return new RegExpThread(thread.state /*???*/, trimmedRepeats, thread.avail, // Experiments indicate this is safe to reuse, but I've not thought about it.
+        thread.stack, thread.matched, []);
+    }
+    incrmRepeat(thread, repeatedState) {
+        const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
+            r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
+            return r;
+        }, {});
+        return new RegExpThread(thread.state /*???*/, incrmedRepeats, [...thread.avail.keys()].reduce((acc, tc) => { acc.set(tc, thread.avail.get(tc)); return acc; }, new Map()), thread.stack, thread.matched, []);
+    }
+    stateString(state, repeats) {
+        const rs = Object.keys(repeats).map(rpt => {
+            return rpt + ":" + repeats[rpt];
+        }).join(",");
+        return rs.length ? state + "-" + rs : "" + state;
+    }
+    matchedToResult(matched, constraintToTripleMapping, semActHandler) {
+        let last = [];
+        const errors = [];
+        const skips = [];
+        const ret = matched.reduce((out, m) => {
+            let mis = 0;
+            let ptr = out;
+            while (mis < last.length &&
+                m.stack[mis].c === last[mis].c && // constraint
+                m.stack[mis].i === last[mis].i && // iteration number
+                m.stack[mis].e === last[mis].e) { // (dis|con)junction number
+                ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
+                ++mis;
+            }
+            while (mis < m.stack.length) {
+                if (mis >= last.length) {
+                    last.push({}); // to be filled in below
+                }
+                let xOfSolns;
+                if (m.stack[mis].c !== last[mis].c) {
+                    const t = [];
+                    ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions";
+                    ptr.solutions = t; // arbitrary down cast
+                    if ("min" in m.stack[mis].c)
+                        ptr.min = m.stack[mis].c.min;
+                    if ("max" in m.stack[mis].c)
+                        ptr.max = m.stack[mis].c.max;
+                    if ("annotations" in m.stack[mis].c)
+                        ptr.annotations = m.stack[mis].c.annotations;
+                    if ("semActs" in m.stack[mis].c)
+                        ptr.semActs = m.stack[mis].c.semActs;
+                    xOfSolns = t;
+                    last[mis].i = null;
+                    // !!! on the way out to call after valueExpr test
+                    if ("semActs" in m.stack[mis].c) {
+                        const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
+                        if (errors.length)
+                            throw errors;
+                    }
+                    // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
+                }
+                else {
+                    xOfSolns = ptr.solutions;
+                }
+                let texprSolns;
+                if (m.stack[mis].i !== last[mis].i) {
+                    const t = [];
+                    xOfSolns[m.stack[mis].i] = {
+                        type: m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
+                        expressions: t
+                    };
+                    texprSolns = t;
+                    last[mis].e = -1; // trigger m.stack[mis].e !== last[mis].e below
+                }
+                else {
+                    texprSolns = xOfSolns[last[mis].i].expressions;
+                }
+                if (m.stack[mis].e !== last[mis].e) {
+                    const t = {};
+                    texprSolns[m.stack[mis].e] = t;
+                    if (m.stack[mis].e > 0 && texprSolns[m.stack[mis].e - 1] === undefined && skips.indexOf(texprSolns) === -1)
+                        skips.push(texprSolns);
+                    ptr = t;
+                    last.length = mis + 1; // chop off last so we create everything underneath
+                }
+                else {
+                    throw "how'd we get here?";
+                    // ptr = texprSolns[last[mis].e];
+                }
+                ++mis;
+            }
+            const tcSolns = ptr;
+            tcSolns.type = "TripleConstraintSolutions";
+            if ("min" in m.c)
+                tcSolns.min = m.c.min;
+            if ("max" in m.c)
+                tcSolns.max = m.c.max;
+            tcSolns.predicate = m.c.predicate;
+            if ("valueExpr" in m.c)
+                tcSolns.valueExpr = m.c.valueExpr;
+            if ("id" in m.c)
+                tcSolns.productionLabel = m.c.id;
+            tcSolns.solutions = m.triples.map(triple => {
+                const ret = {
+                    type: "TestedTriple",
+                    subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                    predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                    object: (0, term_1.rdfJsTerm2Ld)(triple.object)
+                };
+                const hit = constraintToTripleMapping.get(m.c).find(x => x.triple === triple);
+                if (hit.res && Object.keys(hit.res).length > 0)
+                    ret.referenced = hit.res;
+                if (errors.length === 0 && "semActs" in m.c) { // @ts-ignore
+                    [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
+                }
+                return ret;
+            });
+            if ("annotations" in m.c)
+                tcSolns.annotations = m.c.annotations;
+            if ("semActs" in m.c)
+                tcSolns.semActs = m.c.semActs;
+            last = m.stack.slice();
+            return out;
+        }, {});
+        if (errors.length)
+            return {
+                type: "SemActFailure",
+                errors: errors
+            };
+        // Clear out the nulls for the expressions with min:0 and no matches.
+        // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
+        // Maybe we want these nulls in expressions[] to make it clear that there are holes?
+        skips.forEach(skip => {
+            for (let exprNo = 0; exprNo < skip.length; ++exprNo)
+                if (skip[exprNo] === null || skip[exprNo] === undefined)
+                    skip.splice(exprNo--, 1);
+        });
+        if ("semActs" in this.shape)
+            ret.semActs = this.shape.semActs;
+        return ret;
+    }
 }
-
-Url.prototype.resolveObject = function(relative) {
-  if (util.isString(relative)) {
-    var rel = new Url();
-    rel.parse(relative, false, true);
-    relative = rel;
-  }
-
-  var result = new Url();
-  var tkeys = Object.keys(this);
-  for (var tk = 0; tk < tkeys.length; tk++) {
-    var tkey = tkeys[tk];
-    result[tkey] = this[tkey];
-  }
-
-  // hash is always overridden, no matter what.
-  // even href="" will remove it.
-  result.hash = relative.hash;
-
-  // if the relative url is empty, then there's nothing left to do here.
-  if (relative.href === '') {
-    result.href = result.format();
-    return result;
-  }
-
-  // hrefs like //foo/bar always cut to the protocol.
-  if (relative.slashes && !relative.protocol) {
-    // take everything except the protocol from relative
-    var rkeys = Object.keys(relative);
-    for (var rk = 0; rk < rkeys.length; rk++) {
-      var rkey = rkeys[rk];
-      if (rkey !== 'protocol')
-        result[rkey] = relative[rkey];
-    }
-
-    //urlParse appends trailing / to urls like http://www.example.com
-    if (slashedProtocol[result.protocol] &&
-        result.hostname && !result.pathname) {
-      result.path = result.pathname = '/';
-    }
-
-    result.href = result.format();
-    return result;
-  }
-
-  if (relative.protocol && relative.protocol !== result.protocol) {
-    // if it's a known url protocol, then changing
-    // the protocol does weird things
-    // first, if it's not file:, then we MUST have a host,
-    // and if there was a path
-    // to begin with, then we MUST have a path.
-    // if it is file:, then the host is dropped,
-    // because that's known to be hostless.
-    // anything else is assumed to be absolute.
-    if (!slashedProtocol[relative.protocol]) {
-      var keys = Object.keys(relative);
-      for (var v = 0; v < keys.length; v++) {
-        var k = keys[v];
-        result[k] = relative[k];
-      }
-      result.href = result.format();
-      return result;
-    }
-
-    result.protocol = relative.protocol;
-    if (!relative.host && !hostlessProtocol[relative.protocol]) {
-      var relPath = (relative.pathname || '').split('/');
-      while (relPath.length && !(relative.host = relPath.shift()));
-      if (!relative.host) relative.host = '';
-      if (!relative.hostname) relative.hostname = '';
-      if (relPath[0] !== '') relPath.unshift('');
-      if (relPath.length < 2) relPath.unshift('');
-      result.pathname = relPath.join('/');
-    } else {
-      result.pathname = relative.pathname;
-    }
-    result.search = relative.search;
-    result.query = relative.query;
-    result.host = relative.host || '';
-    result.auth = relative.auth;
-    result.hostname = relative.hostname || relative.host;
-    result.port = relative.port;
-    // to support http.request
-    if (result.pathname || result.search) {
-      var p = result.pathname || '';
-      var s = result.search || '';
-      result.path = p + s;
-    }
-    result.slashes = result.slashes || relative.slashes;
-    result.href = result.format();
-    return result;
-  }
-
-  var isSourceAbs = (result.pathname && result.pathname.charAt(0) === '/'),
-      isRelAbs = (
-          relative.host ||
-          relative.pathname && relative.pathname.charAt(0) === '/'
-      ),
-      mustEndAbs = (isRelAbs || isSourceAbs ||
-                    (result.host && relative.pathname)),
-      removeAllDots = mustEndAbs,
-      srcPath = result.pathname && result.pathname.split('/') || [],
-      relPath = relative.pathname && relative.pathname.split('/') || [],
-      psychotic = result.protocol && !slashedProtocol[result.protocol];
-
-  // if the url is a non-slashed url, then relative
-  // links like ../.. should be able
-  // to crawl up to the hostname, as well.  This is strange.
-  // result.protocol has already been set by now.
-  // Later on, put the first path part into the host field.
-  if (psychotic) {
-    result.hostname = '';
-    result.port = null;
-    if (result.host) {
-      if (srcPath[0] === '') srcPath[0] = result.host;
-      else srcPath.unshift(result.host);
-    }
-    result.host = '';
-    if (relative.protocol) {
-      relative.hostname = null;
-      relative.port = null;
-      if (relative.host) {
-        if (relPath[0] === '') relPath[0] = relative.host;
-        else relPath.unshift(relative.host);
-      }
-      relative.host = null;
-    }
-    mustEndAbs = mustEndAbs && (relPath[0] === '' || srcPath[0] === '');
-  }
-
-  if (isRelAbs) {
-    // it's absolute.
-    result.host = (relative.host || relative.host === '') ?
-                  relative.host : result.host;
-    result.hostname = (relative.hostname || relative.hostname === '') ?
-                      relative.hostname : result.hostname;
-    result.search = relative.search;
-    result.query = relative.query;
-    srcPath = relPath;
-    // fall through to the dot-handling below.
-  } else if (relPath.length) {
-    // it's relative
-    // throw away the existing file, and take the new path instead.
-    if (!srcPath) srcPath = [];
-    srcPath.pop();
-    srcPath = srcPath.concat(relPath);
-    result.search = relative.search;
-    result.query = relative.query;
-  } else if (!util.isNullOrUndefined(relative.search)) {
-    // just pull out the search.
-    // like href='?foo'.
-    // Put this after the other two cases because it simplifies the booleans
-    if (psychotic) {
-      result.hostname = result.host = srcPath.shift();
-      //occationaly the auth can get stuck only in host
-      //this especially happens in cases like
-      //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
-      var authInHost = result.host && result.host.indexOf('@') > 0 ?
-                       result.host.split('@') : false;
-      if (authInHost) {
-        result.auth = authInHost.shift();
-        result.host = result.hostname = authInHost.shift();
-      }
-    }
-    result.search = relative.search;
-    result.query = relative.query;
-    //to support http.request
-    if (!util.isNull(result.pathname) || !util.isNull(result.search)) {
-      result.path = (result.pathname ? result.pathname : '') +
-                    (result.search ? result.search : '');
-    }
-    result.href = result.format();
-    return result;
-  }
-
-  if (!srcPath.length) {
-    // no path at all.  easy.
-    // we've already handled the other stuff above.
-    result.pathname = null;
-    //to support http.request
-    if (result.search) {
-      result.path = '/' + result.search;
-    } else {
-      result.path = null;
-    }
-    result.href = result.format();
-    return result;
-  }
-
-  // if a url ENDs in . or .., then it must get a trailing slash.
-  // however, if it ends in anything else non-slashy,
-  // then it must NOT get a trailing slash.
-  var last = srcPath.slice(-1)[0];
-  var hasTrailingSlash = (
-      (result.host || relative.host || srcPath.length > 1) &&
-      (last === '.' || last === '..') || last === '');
-
-  // strip single dots, resolve double dots to parent dir
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = srcPath.length; i >= 0; i--) {
-    last = srcPath[i];
-    if (last === '.') {
-      srcPath.splice(i, 1);
-    } else if (last === '..') {
-      srcPath.splice(i, 1);
-      up++;
-    } else if (up) {
-      srcPath.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (!mustEndAbs && !removeAllDots) {
-    for (; up--; up) {
-      srcPath.unshift('..');
-    }
-  }
-
-  if (mustEndAbs && srcPath[0] !== '' &&
-      (!srcPath[0] || srcPath[0].charAt(0) !== '/')) {
-    srcPath.unshift('');
-  }
-
-  if (hasTrailingSlash && (srcPath.join('/').substr(-1) !== '/')) {
-    srcPath.push('');
-  }
-
-  var isAbsolute = srcPath[0] === '' ||
-      (srcPath[0] && srcPath[0].charAt(0) === '/');
-
-  // put the host back
-  if (psychotic) {
-    result.hostname = result.host = isAbsolute ? '' :
-                                    srcPath.length ? srcPath.shift() : '';
-    //occationaly the auth can get stuck only in host
-    //this especially happens in cases like
-    //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
-    var authInHost = result.host && result.host.indexOf('@') > 0 ?
-                     result.host.split('@') : false;
-    if (authInHost) {
-      result.auth = authInHost.shift();
-      result.host = result.hostname = authInHost.shift();
-    }
-  }
-
-  mustEndAbs = mustEndAbs || (result.host && srcPath.length);
-
-  if (mustEndAbs && !isAbsolute) {
-    srcPath.unshift('');
-  }
-
-  if (!srcPath.length) {
-    result.pathname = null;
-    result.path = null;
-  } else {
-    result.pathname = srcPath.join('/');
-  }
-
-  //to support request.http
-  if (!util.isNull(result.pathname) || !util.isNull(result.search)) {
-    result.path = (result.pathname ? result.pathname : '') +
-                  (result.search ? result.search : '');
-  }
-  result.auth = relative.auth || result.auth;
-  result.slashes = result.slashes || relative.slashes;
-  result.href = result.format();
-  return result;
-};
-
-Url.prototype.parseHost = function() {
-  var host = this.host;
-  var port = portPattern.exec(host);
-  if (port) {
-    port = port[0];
-    if (port !== ':') {
-      this.port = port.substr(1);
-    }
-    host = host.substr(0, host.length - port.length);
-  }
-  if (host) this.hostname = host;
-};
-
+EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
+//# sourceMappingURL=eval-simple-1err.js.map
 
 /***/ }),
 
-/***/ 5225:
-/***/ ((module) => {
+/***/ 6201:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
+var __webpack_unused_export__;
 
-
-module.exports = {
-  isString: function(arg) {
-    return typeof(arg) === 'string';
-  },
-  isObject: function(arg) {
-    return typeof(arg) === 'object' && arg !== null;
-  },
-  isNull: function(arg) {
-    return arg === null;
-  },
-  isNullOrUndefined: function(arg) {
-    return arg == null;
-  }
+__webpack_unused_export__ = ({ value: true });
+exports.G = void 0;
+const term_1 = __webpack_require__(1101);
+const UNBOUNDED = -1;
+class RegexpThread {
+    constructor(avail = new Map(), errors = [], matched = [], expression) {
+        this.avail = avail;
+        this.errors = errors;
+        this.matched = matched;
+        this.expression = expression;
+    }
+    makeResultsThread(expr, tests, errors, matched, minmax) {
+        return new RegexpThread(new Map(this.avail), // copy parent thread's avail vector,
+        errors, matched.concat({
+            triples: tests.map(p => p.triple)
+        }), Object.assign({ type: "TripleConstraintSolutions", predicate: expr.predicate }, expr.valueExpr !== undefined ? { valueExpr: expr.valueExpr } : {}, expr.id !== undefined ? { productionLabel: expr.id } : {}, minmax, { solutions: tests.map(p => p.tested) }));
+    }
+    makeMissingPropertyThread(expr, matched) {
+        return new RegexpThread(this.avail, this.errors.concat([
+            Object.assign({ type: "MissingProperty", property: expr.predicate }, expr.valueExpr ? { valueExpr: expr.valueExpr } : {})
+        ]), matched);
+    }
+}
+exports.G = {
+    name: "eval-threaded-nerr",
+    description: "emulation of regular expression engine with error permutations",
+    /* compile - compile regular expression and index triple constraints
+     */
+    compile: (_schema, shape, index) => {
+        return new EvalThreadedNErrRegexEngine(shape, index); // not called if there's no expression
+    }
 };
-
-
-/***/ }),
-
-/***/ 6540:
-/***/ ((module, exports, __webpack_require__) => {
-
-const EvalSimple1ErrCjsModule = (function () {
-  const ShExTerm = __webpack_require__(1118);
-  const { NoTripleConstraint } = __webpack_require__(3530);
-
-  const Split = "<span class='keyword' title='Split'>|</span>";
-  const Rept  = "<span class='keyword' title='Repeat'>×</span>";
-  const Match = "<span class='keyword' title='Match'>␃</span>";
-  /* compileNFA - compile regular expression and index triple constraints
-   */
-  const UNBOUNDED = -1;
-
-  function compileNFA (schema, shape, index) {
-    const expression = shape.expression;
-    return NFA();
-
-    function NFA () {
-      // wrapper for states, startNo and matchstate
-      const states = [];
-      const matchstate = State_make(Match, []);
-      let startNo = matchstate;
-      const stack = [];
-      let pair;
-      if (expression) {
-        const pair = walkExpr(expression, []);
-        patch(pair.tail, matchstate);
-        startNo = pair.start;
-      }
-      const ret = {
-        algorithm: "rbenx",
-        end: matchstate,
-        states: states,
-        start: startNo,
-        match: rbenx_match
-      }
-      // matchstate = states = startNo = null;
-      return ret;
-
-      function walkExpr (expr, stack) {
-        let s, starts;
-        let lastTail;
-        function maybeAddRept (start, tail) {
-          if ((expr.min == undefined || expr.min === 1) &&
-              (expr.max == undefined || expr.max === 1))
-            return {start: start, tail: tail}
-          s = State_make(Rept, [start]);
-          states[s].expr = expr;
-          // cache min/max in normalized form for simplicity of comparison.
-          states[s].min = "min" in expr ? expr.min : 1;
-          states[s].max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-          patch(tail, s);
-          return {start: s, tail: [s]}
-        }
-
-        if (typeof expr === "string") { // Inclusion
-          const included = index.tripleExprs[expr];
-          return walkExpr(included, stack);
-        }
-
-        else if (expr.type === "TripleConstraint") {
-          s = State_make(expr, []);
-          states[s].stack = stack;
-          return {start: s, tail: [s]};
-        }
-
-        else if (expr.type === "OneOf") {
-          lastTail = [];
-          starts = [];
-          expr.expressions.forEach(function (nested, ord) {
-            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
-            starts.push(pair.start);
-            lastTail = lastTail.concat(pair.tail);
-          });
-          s = State_make(Split, starts);
-          states[s].expr = expr;
-          return maybeAddRept(s, lastTail);
-        }
-
-        else if (expr.type === "EachOf") {
-          expr.expressions.forEach(function (nested, ord) {
-            pair = walkExpr(nested, stack.concat({c:expr, e:ord}));
-            if (ord === 0)
-              s = pair.start;
-            else
-              patch(lastTail, pair.start);
-            lastTail = pair.tail;
-          });
-          return maybeAddRept(s, lastTail);
-        }
-
-        throw Error("unexpected expr type: " + expr.type);
-      };
-
-      function State_make (c, outs, negated) {
-        const ret = states.length;
-        states.push({c:c, outs:outs});
-        if (negated)
-          states[ret].negated = true; // only include if true for brevity
-        return ret;
-      }
-
-      function patch (l, target) {
-        l.forEach(elt => {
-          states[elt].outs.push(target);
-        });
-      }
+class EvalThreadedNErrRegexEngine {
+    constructor(shape, index) {
+        this.shape = shape;
+        this.index = index;
+        this.outerExpression = shape.expression;
     }
-
-
-    function nfaToString () {
-      const known = {OneOf: [], EachOf: []};
-      function dumpTripleConstraint (tc) {
-        return "<" + tc.predicate + ">";
-      }
-      function card (obj) {
-        const x = "";
-        if ("min" in obj) x += obj.min;
-        if ("max" in obj) x += "," + obj.max;
-        return x ? "{" + x + "}" : "";
-      }
-      function junct (j) {
-        const id = known[j.type].indexOf(j);
-        if (id === -1)
-          id = known[j.type].push(j)-1;
-        return j.type + id; // + card(j);
-      }
-      function dumpStackElt (elt) {
-        return junct(elt.c) + "." + elt.e + ("i" in elt ? "[" + elt.i + "]" : "");
-      }
-      function dumpStack (stack) {
-        return stack.map(elt => { return dumpStackElt(elt); }).join("/");
-      }
-      function dumpNFA (states, startNo) {
-        return states.map((s, i) => {
-          return (i === startNo ? s.c === Match ? "." : "S" : s.c === Match ? "E" : " ") + i + " " + (
-            s.c === Split ? ("Split-" + junct(s.expr)) :
-              s.c === Rept ? ("Rept-" + junct(s.expr)) :
-              s.c === Match ? "Match" :
-              dumpTripleConstraint(s.c)
-          ) + card(s) + "→" + s.outs.join(" | ") + ("stack" in s ? dumpStack(s.stack) : "");
-        }).join("\n");
-      }
-      function dumpMatched (matched) {
-        return matched.map(m => {
-          return dumpTripleConstraint(m.c) + "[" + m.triples.join(",") + "]" + dumpStack(m.stack);
-        }).join(",");
-      }
-      function dumpThread (thread) {
-        return "S" + thread.state + ":" + Object.keys(thread.repeats).map(k => {
-          return k + "×" + thread.repeats[k];
-        }).join(",") + " " + dumpMatched(thread.matched);
-      }
-      function dumpThreadList (list) {
-        return "[[" + list.map(thread => { return dumpThread(thread); }).join("\n  ") + "]]";
-      }
-      return {
-        nfa: dumpNFA,
-        stack: dumpStack,
-        stackElt: dumpStackElt,
-        thread: dumpThread,
-        threadList: dumpThreadList
-      };
-    }
-
-    function rbenx_match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
-      const rbenx = this;
-      let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-
-      if (rbenx.states.length === 1)
-        return matchedToResult([], constraintList, constraintToTripleMapping, neighborhood, semActHandler);
-
-      let chosen = null;
-      // const dump = nfaToString();
-      // console.log(dump.nfa(this.states, this.start));
-      addstate(rbenx, clist, this.start, {repeats:{}, avail:[], matched:[], stack:[], errors:[]});
-      while (clist.length) {
-        nlist = [];
-        if (trace)
-          trace.push({threads:[]});
-        for (let threadno = 0; threadno < clist.length; ++threadno) {
-          const thread = clist[threadno];
-          if (thread.state === rbenx.end)
-            continue;
-          const state = rbenx.states[thread.state];
-          const nlistlen = nlist.length;
-          // may be Accept!
-          if (state.c.type === "TripleConstraint") {
-            const constraintNo = constraintList.indexOf(state.c);
-            const min = "min" in state.c ? state.c.min : 1;
-            const max = "max" in state.c ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-            if ("negated" in state.c && state.c.negated)
-              min = max = 0;
-            if (thread.avail[constraintNo] === undefined)
-              thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-            const taken = thread.avail[constraintNo].splice(0, max);
-            if (taken.length >= min) {
-              do {
-                addStates(rbenx, nlist, thread, taken);
-              } while ((function () {
-                if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                  taken.push(thread.avail[constraintNo].shift());
-                  return true; // stay in look to take more.
-                } else {
-                  return false; // no more to take or we're already at max
-                }
-              })());
-            }
-          }
-          if (trace)
-            trace[trace.length-1].threads.push({
-              state: clist[threadno].state,
-              to:nlist.slice(nlistlen).map(x => {
-                return stateString(x.state, x.repeats);
-              })
-            });
-        }
-        // console.log(dump.threadList(nlist));
-        if (nlist.length === 0 && chosen === null)
-          return reportError(localExpect(clist, rbenx.states));
-        const t = clist;
-        clist = nlist;
-        nlist = t;
-        const longerChosen = clist.reduce((ret, elt) => {
-          const matchedAll =
-              elt.matched.reduce((ret, m) => {
-                return ret + m.triples.length; // count matched triples
-              }, 0) === tripleToConstraintMapping.reduce((ret, t) => {
-                return t === NoTripleConstraint ? ret : ret + 1; // count expected
-              }, 0);
-          return ret !== null ? ret : (elt.state === rbenx.end && matchedAll) ? elt : null;
-        }, null)
-        if (longerChosen)
-          chosen = longerChosen;
-        // if (longerChosen !== null)
-        //   console.log(JSON.stringify(matchedToResult(longerChosen.matched)));
-      }
-      if (chosen === null)
-        return reportError();
-      function reportError () { return {
-        type: "Failure",
-        node: node,
-        errors: localExpect(clist, rbenx.states)
-      } }
-      function localExpect (clist, states) {
-        const lastState = states[states.length - 1];
-        return clist.reduce((acc, elt) => {
-          const c = rbenx.states[elt.state].c;
-          // if (c === Match)
-          //   return { type: "EndState999" };
-          let valueExpr = null;
-          if (typeof c.valueExpr === "string") { // ShapeRef
-            valueExpr = c.valueExpr;
-            if (ShExTerm.isBlank(valueExpr))
-              valueExpr = schema.shapes[valueExpr];
-          } else if (c.valueExpr) {
-            valueExpr = extend({}, c.valueExpr)
-          }
-          if (elt.state !== rbenx.end) {
-            return acc.concat([extend({
-              type: "MissingProperty",
-              property: lastState.c.predicate,
-            }, valueExpr ? { valueExpr: valueExpr } : {})])
-          } else {
-            const unmatchedTriples = {};
-            // Collect triples assigned to some constraint.
-            Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
-                unmatchedTriples[k] = tripleToConstraintMapping[k];
-            });
+    match(node, constraintToTripleMapping, semActHandler, _trace) {
+        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+            tripleResult.forEach(res => allTriples.add(res.triple));
+            return allTriples;
+        }, new Set());
+        const startingThread = new RegexpThread();
+        const ret = this.matchTripleExpression(this.outerExpression, startingThread, constraintToTripleMapping, semActHandler);
+        // console.log(JSON.stringify(ret));
+        // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
+        const longerChosen = ret.reduce((ret, elt) => {
+            if (elt.errors.length > 0)
+                return ret; // early return
+            const unmatchedTriples = new Set(allTriples);
             // Removed triples matched in this thread.
             elt.matched.forEach(m => {
-              m.triples.forEach(t => {
-                delete unmatchedTriples[t];
-              });
-            });
-
-          return acc.concat(Object.keys(unmatchedTriples).map(i => extend({
-            type: "ExcessTripleViolation",
-            property: lastState.c.predicate,
-            triple: neighborhood[unmatchedTriples[i]],
-          }, valueExpr ? { valueExpr: valueExpr } : {})));
-          }
-        }, []);
-      }
-      // console.log("chosen:", dump.thread(chosen));
-      return "errors" in chosen.matched ?
-        chosen.matched :
-        matchedToResult(chosen.matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler);
-    }
-
-    function addStates (rbenx, nlist, thread, taken) {
-      const state = rbenx.states[thread.state];
-      // find the exprs that require repetition
-      const exprs = rbenx.states.map(x => { return x.c === Rept ? x.expr : null; });
-      const newStack = state.stack.map(e => {
-        let i = thread.repeats[exprs.indexOf(e.c)];
-        if (i === undefined)
-          i = 0; // expr has no repeats
-        else
-          i = i-1;
-        return { c:e.c, e:e.e, i:i };
-      });
-      const withIndexes = {
-        c: state.c,
-        triples: taken,
-        stack: newStack
-      };
-      thread.matched = thread.matched.concat(withIndexes);
-      state.outs.forEach(o => { // single out if NFA includes epsilons
-        addstate(rbenx, nlist, o, thread);
-      });
-    }
-
-    function addstate (rbenx, list, stateNo, thread, seen) {
-      seen = seen || [];
-      const seenkey = stateString(stateNo, thread.repeats);
-      if (seen.indexOf(seenkey) !== -1)
-        return;
-      seen.push(seenkey);
-
-      const s = rbenx.states[stateNo];
-      if (s.c === Split) {
-        return s.outs.reduce((ret, o, idx) => {
-          return ret.concat(addstate(rbenx, list, o, thread, seen));
-        }, []);
-        // } else if (s.c.type === "OneOf" || s.c.type === "EachOf") { // don't need Rept
-      } else if (s.c === Rept) {
-        const ret = [];
-        // matched = [matched].concat("Rept" + s.expr);
-        if (!(stateNo in thread.repeats))
-          thread.repeats[stateNo] = 0;
-        const repetitions = thread.repeats[stateNo];
-        // add(r < s.min ? outs[0] : r >= s.min && < s.max ? outs[0], outs[1] : outs[1])
-        if (repetitions < s.max)
-          [].push.apply(ret, addstate(rbenx, list, s.outs[0], incrmRepeat(thread, stateNo), seen)); // outs[0] to repeat
-        if (repetitions >= s.min && repetitions <= s.max)
-          [].push.apply(ret, addstate(rbenx, list, s.outs[1], resetRepeat(thread, stateNo), seen)); // outs[1] when done
-        return ret;
-      } else {
-        // if (stateNo !== rbenx.end || !thread.avail.reduce((r2, avail) => { faster if we trim early??
-        //   return r2 || avail.length > 0;
-        // }, false))
-        return [list.push({ // return [new list element index]
-          state:stateNo,
-          repeats:thread.repeats,
-          avail:thread.avail.map(a => { // copy parent thread's avail vector
-            return a.slice();
-          }),
-          stack:thread.stack,
-          matched:thread.matched,
-          errors: thread.errors
-        }) - 1];
-      }
-    }
-
-    function resetRepeat (thread, repeatedState) {
-      const trimmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-        if (parseInt(k) !== repeatedState) // ugh, hash keys are strings
-          r[k] = thread.repeats[k];
-        return r;
-      }, {});
-      return {state:thread.state/*???*/, repeats:trimmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-    }
-
-    function incrmRepeat (thread, repeatedState) {
-      const incrmedRepeats = Object.keys(thread.repeats).reduce((r, k) => {
-        r[k] = parseInt(k) == repeatedState ? thread.repeats[k] + 1 : thread.repeats[k];
-        return r;
-      }, {});
-      return {state:thread.state/*???*/, repeats:incrmedRepeats, matched:thread.matched, avail:thread.avail.slice(), stack:thread.stack};
-    }
-
-    function stateString (state, repeats) {
-      const rs = Object.keys(repeats).map(rpt => {
-        return rpt+":"+repeats[rpt];
-      }).join(",");
-      return rs.length ? state + "-" + rs : ""+state;
-    }
-
-    function matchedToResult (matched, constraintList, constraintToTripleMapping, neighborhood, semActHandler) {
-      let last = [];
-      const errors = [];
-      const skips = [];
-      const ret = matched.reduce((out, m) => {
-        let mis = 0;
-        let ptr = out, t;
-        while (mis < last.length &&
-               m.stack[mis].c === last[mis].c && // constraint
-               m.stack[mis].i === last[mis].i && // iteration number
-               m.stack[mis].e === last[mis].e) { // (dis|con)junction number
-            ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
-          ++mis;
-        }
-        while (mis < m.stack.length) {
-          if (mis >= last.length) {
-            last.push({});
-          }
-          if (m.stack[mis].c !== last[mis].c) {
-            t = [];
-            ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions", ptr.solutions = t;
-            if ("min" in m.stack[mis].c)
-              ptr.min = m.stack[mis].c.min;
-            if ("max" in m.stack[mis].c)
-              ptr.max = m.stack[mis].c.max;
-            if ("annotations" in m.stack[mis].c)
-              ptr.annotations = m.stack[mis].c.annotations;
-            if ("semActs" in m.stack[mis].c)
-              ptr.semActs = m.stack[mis].c.semActs;
-            ptr = t;
-            last[mis].i = null;
-            // !!! on the way out to call after valueExpr test
-            if ("semActs" in m.stack[mis].c) {
-              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
-              if (errors.length)
-                throw errors;
-            }
-            // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
-          } else {
-            ptr = ptr.solutions;
-          }
-          if (m.stack[mis].i !== last[mis].i) {
-            t = [];
-            ptr[m.stack[mis].i] = {
-              type:m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
-              expressions: t};
-            ptr = t;
-            last[mis].e = null;
-          } else {
-            ptr = ptr[last[mis].i].expressions;
-          }
-          if (m.stack[mis].e !== last[mis].e) {
-            t = {};
-            ptr[m.stack[mis].e] = t;
-            if (m.stack[mis].e > 0 && ptr[m.stack[mis].e-1] === undefined && skips.indexOf(ptr) === -1)
-              skips.push(ptr);
-            ptr = t;
-            last.length = mis + 1; // chop off last so we create everything underneath
-          } else {
-            throw "how'd we get here?"
-            ptr = ptr[last[mis].e];
-          }
-          ++mis;
-        }
-        ptr.type = "TripleConstraintSolutions";
-        if ("min" in m.c)
-          ptr.min = m.c.min;
-        if ("max" in m.c)
-          ptr.max = m.c.max;
-        ptr.predicate = m.c.predicate;
-        if ("valueExpr" in m.c)
-          ptr.valueExpr = m.c.valueExpr;
-        if ("id" in m.c)
-          ptr.productionLabel = m.c.id;
-        ptr.solutions = m.triples.map(tNo => {
-          const triple = neighborhood[tNo];
-          const ret = {
-            type: "TestedTriple",
-            subject: triple.subject,
-            predicate: triple.predicate,
-            object: ldify(triple.object)
-          };
-
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
-          const constraintNo = constraintList.indexOf(m.c);
-                      const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tNo);
-                      if (hit.res && Object.keys(hit.res).length > 0)
-                        ret.referenced = hit.res;
-          if (errors.length === 0 && "semActs" in m.c)
-            [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
-          return ret;
-        })
-        if ("annotations" in m.c)
-          ptr.annotations = m.c.annotations;
-        if ("semActs" in m.c)
-          ptr.semActs = m.c.semActs;
-        last = m.stack.slice();
-        return out;
-      }, {});
-
-      if (errors.length)
-        return {
-          type: "SemActFailure",
-          errors: errors
-        };
-
-      // Clear out the nulls for the expressions with min:0 and no matches.
-      // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
-      // Maybe we want these nulls in expressions[] to make it clear that there are holes?
-      skips.forEach(skip => {
-        for (let exprNo = 0; exprNo < skip.length; ++exprNo)
-          if (skip[exprNo] === null || skip[exprNo] === undefined)
-            skip.splice(exprNo--, 1);
-      });
-
-      if ("semActs" in shape)
-        ret.semActs = shape.semActs;
-      return ret;
-    }
-  }
-
-function extend(base) {
-  if (!base) base = {};
-  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (let name in arg)
-      base[name] = arg[name];
-  return base;
-}
-
-// ## Exports
-
-return exports = {
-  name: "eval-simple-1err",
-  description: "simple regular expression engine with n out states",
-  compile: compileNFA
-};
-
-})();
-
-if (true)
-  module.exports = EvalSimple1ErrCjsModule;
-
-
-/***/ }),
-
-/***/ 6863:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
-
-const EvalThreadedNErrCjsModule = (function () {
-const ShExTerm = __webpack_require__(1118);
-const { NoTripleConstraint } = __webpack_require__(3530);
-const UNBOUNDED = -1;
-
-function vpEngine (schema, shape, index) {
-    const outerExpression = shape.expression;
-    return {
-      match:match
-    };
-
-    function match (graph, node, constraintList, constraintToTripleMapping, tripleToConstraintMapping, neighborhood, semActHandler, trace) {
-
-      /*
-       * returns: list of passing or failing threads (no heterogeneous lists)
-       */
-      function validateExpr (expr, thread) {
-        if (typeof expr === "string") { // Inclusion
-          const included = index.tripleExprs[expr];
-          return validateExpr(included, thread);
-        }
-
-        const constraintNo = constraintList.indexOf(expr);
-        let min = "min" in expr ? expr.min : 1;
-        let max = "max" in expr ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-
-        function validateRept (type, val) {
-          let repeated = 0, errOut = false;
-          let newThreads = [thread];
-          const minmax = {  };
-          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
-            minmax.min = expr.min;
-            minmax.max = expr.max;
-          }
-          if ("semActs" in expr)
-            minmax.semActs = expr.semActs;
-          if ("annotations" in expr)
-            minmax.annotations = expr.annotations;
-          for (; repeated < max && !errOut; ++repeated) {
-            let inner = [];
-            for (let t = 0; t < newThreads.length; ++t) {
-              const newt = newThreads[t];
-              const sub = val(newt);
-              if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
-                sub.forEach(newThread => {
-                  const solutions =
-                      "expression" in newt ? newt.expression.solutions.slice() : [];
-                  if ("solution" in newThread)
-                    solutions.push(newThread.solution);
-                  delete newThread.solution;
-                  newThread.expression = extend({
-                    type: type,
-                    solutions: solutions
-                  }, minmax);
+                m.triples.forEach(t => {
+                    unmatchedTriples.delete(t);
                 });
-              }
-              if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
-                return repeated < min ? sub : newThreads;
-              else
-                inner = inner.concat(sub);
-              // newThreads.expressions.push(sub);
-            }
-            newThreads = inner;
-          }
-          if (newThreads.length > 0 && newThreads[0].errors.length === 0 && "semActs" in expr) {
-            const passes = [];
-            const failures = [];
-            newThreads.forEach(newThread => {
-              const semActErrors = semActHandler.dispatchAll(expr.semActs, "???", newThread)
-              if (semActErrors.length === 0) {
-                passes.push(newThread)
-              } else {
-                [].push.apply(newThread.errors, semActErrors);
-                failures.push(newThread);
-              }
             });
-            newThreads = passes.length > 0 ? passes : failures;
-          }
-          return newThreads;
-        }
-
-        if (expr.type === "TripleConstraint") {
-          const negated = "negated" in expr && expr.negated || max === 0;
-          if (negated)
-            min = max = Infinity;
-          if (thread.avail[constraintNo] === undefined)
-            thread.avail[constraintNo] = constraintToTripleMapping[constraintNo].map(pair => pair.tNo);
-          const minmax = {  };
-          if ("min" in expr && expr.min !== 1 || "max" in expr && expr.max !== 1) {
-            minmax.min = expr.min;
-            minmax.max = expr.max;
-          }
-          if ("semActs" in expr)
-            minmax.semActs = expr.semActs;
-          if ("annotations" in expr)
-            minmax.annotations = expr.annotations;
-          const taken = thread.avail[constraintNo].splice(0, min);
-          const passed = negated ? taken.length === 0 : taken.length >= min;
-          const ret = [];
-          const matched = thread.matched;
-          if (passed) {
-            do {
-              const passFail = taken.reduce((acc, tripleNo) => {
-                const t = neighborhood[tripleNo]
-                const tested = {
-                  type: "TestedTriple",
-                  subject: t.subject,
-                  predicate: t.predicate,
-                  object: ldify(t.object)
-                }
-                const hit = constraintToTripleMapping[constraintNo].find(x => x.tNo === tripleNo);
-                if (hit.res && Object.keys(hit.res).length > 0)
-                  tested.referenced = hit.res;
-                const semActErrors = thread.errors.concat(
-                  "semActs" in expr
-                    ? semActHandler.dispatchAll(expr.semActs, tested, tested)
-                    : []
-                )
-                if (semActErrors.length > 0)
-                  acc.fail.push({tripleNo, tested, semActErrors})
-                else
-                  acc.pass.push({tripleNo, tested, semActErrors})
-                return acc
-              }, {pass: [], fail: []})
-
-
-              // return an empty solution if min card was 0
-              if (passFail.fail.length === 0) {
-                // If we didn't take anything, fall back to old errors.
-                // Could do something fancy here with a semAct registration for negative matches.
-                const totalErrors = taken.length === 0 ? thread.errors.slice() : []
-                const myThread = makeThread(passFail.pass, totalErrors)
-                ret.push(myThread);
-              } else {
-                passFail.fail.forEach(
-                  f => ret.push(makeThread([f], f.semActErrors))
-                )
-              }
-
-              function makeThread (tests, errors) {
-                return {
-                  avail: thread.avail.map(a => { // copy parent thread's avail vector
-                    return a.slice();
-                  }),
-                  errors: errors,
-                  matched: matched.concat({
-                    tNos: tests.map(p => p.tripleNo)
-                  }),
-                  expression: extend(
-                    {
-                      type: "TripleConstraintSolutions",
-                      predicate: expr.predicate
-                    },
-                    "valueExpr" in expr ? { valueExpr: expr.valueExpr } : {},
-                    "id" in expr ? { productionLabel: expr.id } : {},
-                    minmax,
-                    {
-                      solutions: tests.map(p => p.tested)
-                    }
-                  )
-                }
-              }
-            } while ((function () {
-              if (thread.avail[constraintNo].length > 0 && taken.length < max) {
-                // build another thread.
-                taken.push(thread.avail[constraintNo].shift());
-                return true;
-              } else {
-                // no more threads
-                return false;
-              }
-            })());
-          } else {
-            let valueExpr = null;
-            if (typeof expr.valueExpr === "string") { // ShapeRef
-              valueExpr = expr.valueExpr;
-              if (ShExTerm.isBlank(valueExpr))
-                valueExpr = index.shapeExprs[valueExpr];
-            } else if (expr.valueExpr) {
-              valueExpr = extend({}, expr.valueExpr)
-            }
-            ret.push({
-              avail: thread.avail,
-              errors: thread.errors.concat([
-                extend({
-                  type: negated ? "NegatedProperty" : "MissingProperty",
-                  property: expr.predicate
-                }, valueExpr ? { valueExpr: valueExpr } : {})
-              ]),
-              matched: matched
+            // Remaining triples are unaccounted for.
+            unmatchedTriples.forEach(t => {
+                elt.errors.push({
+                    type: "ExcessTripleViolation",
+                    triple: t,
+                });
             });
-          }
-
-          return ret;
+            return ret !== null ? ret : // keep first solution
+                // Accept thread with no unmatched triples.
+                unmatchedTriples.size > 0 ? null : elt;
+        }, null);
+        if (longerChosen !== null) {
+            let fromValidationPoint = longerChosen.expression;
+            if (this.shape.semActs !== undefined)
+                fromValidationPoint.semActs = this.shape.semActs;
+            return fromValidationPoint;
         }
-
-        else if (expr.type === "OneOf") {
-          return validateRept("OneOfSolutions", (th) => {
+        else {
+            return ret.length > 1 ? {
+                type: "PossibleErrors",
+                errors: ret.reduce((all, e) => {
+                    return all.concat([e.errors]);
+                }, [])
+            } : {
+                type: "Failure",
+                node: node,
+                errors: ret[0].errors
+            };
+        }
+    }
+    matchTripleExpression(expr, thread, constraintToTripleMapping, semActHandler) {
+        if (typeof expr === "string") { // Inclusion
+            const included = this.index.tripleExprs[expr];
+            return this.matchTripleExpression(included, thread, constraintToTripleMapping, semActHandler);
+        }
+        let min = expr.min !== undefined ? expr.min : 1;
+        let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+        switch (expr.type) {
+            case "OneOf":
+                return this.matchOneOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+            case "EachOf":
+                return this.matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+            case "TripleConstraint":
+                return this.matchTripleConstraint(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+            default:
+                throw Error("how'd we get here?");
+        }
+    }
+    matchOneOf(oneOf, min, max, thread, constraintToTripleMapping, semActHandler) {
+        return EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", (th) => {
             // const accept = null;
             const matched = [];
             const failed = [];
-            expr.expressions.forEach(nested => {
-              const thcopy = {
-                avail: th.avail.map(a => { return a.slice(); }),
-                errors: th.errors,
-                matched: th.matched//.slice() ever needed??
-              };
-              const sub = validateExpr(nested, thcopy);
-              if (sub[0].errors.length === 0) { // all subs pass or all fail
-                [].push.apply(matched, sub);
-                sub.forEach(newThread => {
-                  const expressions =
-                      "solution" in thcopy ? thcopy.solution.expressions : [];
-                  if ("expression" in newThread) // undefined for no matches on min card:0
-                    expressions.push(newThread.expression);
-                  delete newThread.expression;
-                  newThread.solution = {
-                    type: "OneOfSolution",
-                    expressions: expressions
-                  };
-                });
-              } else
-                [].push.apply(failed, sub);
+            oneOf.expressions.forEach(nested => {
+                const thcopy = new RegexpThread(new Map(th.avail), th.errors, th.matched //.slice() ever needed??
+                );
+                const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
+                if (sub[0].errors.length === 0) { // all subs pass or all fail
+                    Array.prototype.push.apply(matched, sub);
+                    sub.forEach(newThread => {
+                        const expressions = thcopy.solution !== undefined ? thcopy.solution.expressions : [];
+                        if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                            expressions.push(newThread.expression);
+                        delete newThread.expression;
+                        newThread.solution = {
+                            type: "OneOfSolution",
+                            expressions: expressions
+                        };
+                    });
+                }
+                else
+                    Array.prototype.push.apply(failed, sub);
             });
             return matched.length > 0 ? matched : failed;
-          });
-        }
-
-        else if (expr.type === "EachOf") {
-          return homogenize(validateRept("EachOfSolutions", (th) => {
+        }, semActHandler);
+    }
+    matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler) {
+        return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
             // Iterate through nested expressions, exprThreads starts as [th].
             return expr.expressions.reduce((exprThreads, nested) => {
-              // Iterate through current thread list composing nextThreads.
-              // Consider e.g.
-              // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
-              // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-              return homogenize(exprThreads.reduce((nextThreads, exprThread) => {
-                const sub = validateExpr(nested, exprThread);
-                // Move newThread.expression into a hierarchical solution structure.
-                sub.forEach(newThread => {
-                  if (newThread.errors.length === 0) {
-                    const expressions =
-                        "solution" in exprThread ? exprThread.solution.expressions.slice() : [];
-                    if ("expression" in newThread) // undefined for no matches on min card:0
-                      expressions.push(newThread.expression);
-                    delete newThread.expression;
-                    newThread.solution = {
-                      type: "EachOfSolution",
-                      expressions: expressions // exprThread.expression + newThread.expression
-                    };
-                  }
-                });
-                return nextThreads.concat(sub);
-              }, []));
+                // Iterate through current thread list composing nextThreads.
+                // Consider e.g.
+                // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
+                // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
+                return EvalThreadedNErrRegexEngine.homogenize(exprThreads.reduce((nextThreads, exprThread) => {
+                    const sub = this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
+                    // Move newThread.expression into a hierarchical solution structure.
+                    sub.forEach(newThread => {
+                        if (newThread.errors.length === 0) {
+                            const expressions = exprThread.solution !== undefined ? exprThread.solution.expressions.slice() : [];
+                            if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                                expressions.push(newThread.expression);
+                            delete newThread.expression;
+                            newThread.solution = {
+                                type: "EachOfSolution",
+                                expressions: expressions // exprThread.expression + newThread.expression
+                            };
+                        }
+                    });
+                    return nextThreads.concat(sub);
+                }, []));
             }, [th]);
-          }));
-        }
-
-        runtimeError("unexpected expr type: " + expr.type);
-
-        function homogenize (list) {
-          return list.reduce((acc, elt) => {
-            if (elt.errors.length === 0) {
-              if (acc.errors) {
-                return { errors: false, l: [elt] };
-              } else {
-                return { errors: false, l: acc.l.concat(elt) };
-              }
-            } else {
-              if (acc.errors) {
-                return { errors: true, l: acc.l.concat(elt) };
-              } else {
-                return acc; }
-            }
-          }, {errors: true, l: []}).l;
-        }
-      }
-
-      const startingThread = {
-        avail:[],   // triples remaining by constraint number
-        matched:[], // triples matched in this thread
-        errors:[]   // errors encounted
-      };
-      if (!outerExpression)
-        return { }; // vapid match if no expression
-      const ret = validateExpr(outerExpression, startingThread);
-      // console.log(JSON.stringify(ret));
-      // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
-      const longerChosen =
-          ret.reduce((ret, elt) => {
-            if (elt.errors.length > 0)
-              return ret;              // early return
-            const unmatchedTriples = {};
-            // Collect triples assigned to some constraint.
-            Object.keys(tripleToConstraintMapping).forEach(k => {
-              if (tripleToConstraintMapping[k] !== NoTripleConstraint)
-                unmatchedTriples[k] = tripleToConstraintMapping[k];
-            });
-            // Removed triples matched in this thread.
-            elt.matched.forEach(m => {
-              m.tNos.forEach(t => {
-                delete unmatchedTriples[t];
-              });
-            });
-            // Remaining triples are unaccounted for.
-            Object.keys(unmatchedTriples).forEach(t => {
-              elt.errors.push({
-                type: "ExcessTripleViolation",
-                triple: neighborhood[t],
-                constraint: constraintList[unmatchedTriples[t]]
-              });
-            });
-            return ret !== null ? ret : // keep first solution
-            // Accept thread with no unmatched triples.
-            Object.keys(unmatchedTriples).length > 0 ? null : elt;
-          }, null);
-      return longerChosen !== null ?
-        finish(longerChosen.expression, constraintList,
-               neighborhood, semActHandler) :
-        ret.length > 1 ? {
-          type: "PossibleErrors",
-          errors: ret.reduce((all, e) => {
-            return all.concat([e.errors]);
-          }, [])
-        } : ret[0];
+        }, semActHandler));
     }
-
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
+    // Early return in case of insufficient matching triples
+    matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
+        if (thread.avail.get(constraint) === undefined)
+            thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
+        const taken = thread.avail.get(constraint).splice(0, min);
+        if (!(taken.length >= min)) // Early return
+            return [thread.makeMissingPropertyThread(constraint, thread.matched)];
+        const ret = [];
+        const minmax = {};
+        if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
+            minmax.min = constraint.min;
+            minmax.max = constraint.max;
         }
-
-    function finish (fromValidatePoint, constraintList, neighborhood, semActHandler) {
-      function _dive (solns) {
-        if (solns.type === "OneOfSolutions" ||
-            solns.type === "EachOfSolutions") {
-          solns.solutions.forEach(s => {
-            s.expressions.forEach(e => {
-              _dive(e);
-            });
-          });
-        } else if (solns.type === "TripleConstraintSolutions") {
-          solns.solutions = solns.solutions.map(x => {
-            if (x.type === "TestedTriple") // already done
-              return x; // c.f. validation/3circularRef1_pass-open
-            const t = neighborhood[x.tripleNo];
-            const expr = constraintList[x.constraintNo];
-            const ret = {
-              type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)
-            };
-            function diver (focus, shapeLabel, dive) {
-              const sub = dive(focus, shapeLabel);
-              if ("errors" in sub) {
-                // console.dir(sub);
-                const err = {
-                  type: "ReferenceError", focus: focus,
-                  shape: shapeLabel
+        if (constraint.semActs !== undefined)
+            minmax.semActs = constraint.semActs;
+        if (constraint.annotations !== undefined)
+            minmax.annotations = constraint.annotations;
+        do {
+            const passFail = taken.reduce((acc, triple) => {
+                const tested = {
+                    type: "TestedTriple",
+                    subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                    predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                    object: (0, term_1.rdfJsTerm2Ld)(triple.object)
                 };
-                if (typeof shapeLabel === "string" && ShExTerm.isBlank(shapeLabel))
-                  err.referencedShape = shape;
-                err.errors = sub;
-                return [err];
-              }
-              if (("solution" in sub || "solutions" in sub)&& Object.keys(sub.solution || sub.solutions).length !== 0 ||
-                  sub.type === "Recursion")
-                ret.referenced = sub; // !!! needs to aggregate errors and solutions
-              return [];
+                const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple);
+                if (hit.res !== undefined)
+                    tested.referenced = hit.res;
+                const semActErrors = thread.errors.concat(constraint.semActs !== undefined
+                    ? semActHandler.dispatchAll(constraint.semActs, triple, tested)
+                    : []);
+                if (semActErrors.length > 0)
+                    acc.fail.push({ triple, tested, semActErrors });
+                else
+                    acc.pass.push({ triple, tested, semActErrors });
+                return acc;
+            }, { pass: [], fail: [] });
+            // return an empty solution if min card was 0
+            if (passFail.fail.length === 0) {
+                // If we didn't take anything, fall back to old errors.
+                // Could do something fancy here with a semAct registration for negative matches.
+                const totalErrors = taken.length === 0 ? thread.errors.slice() : [];
+                const myThread = thread.makeResultsThread(constraint, passFail.pass, totalErrors, thread.matched, minmax);
+                ret.push(myThread);
             }
-            function diveRecurse (focus, shapeLabel) {
-              return diver(focus, shapeLabel, recurse);
+            else {
+                passFail.fail.forEach(f => ret.push(thread.makeResultsThread(constraint, [f], f.semActErrors, thread.matched, minmax)));
             }
-            function diveDirect (focus, shapeLabel) {
-              return diver(focus, shapeLabel, direct);
+        } while ((() => {
+            if (thread.avail.get(constraint).length > 0 && taken.length < max) {
+                // build another thread.
+                taken.push(thread.avail.get(constraint).shift());
+                return true;
             }
-            const subErrors = "valueExpr" in expr ?
-                checkValueExpr(expr.inverse ? t.subject : t.object, expr.valueExpr, diveRecurse, diveDirect) :
-                [];
-            if (subErrors.length === 0 && "semActs" in expr)
-              [].push.apply(subErrors, semActHandler.dispatchAll(expr.semActs, ret, ret))
-            if (subErrors.length > 0) {
-              fromValidatePoint.errors = fromValidatePoint.errors || [];
-              fromValidatePoint.errors = fromValidatePoint.errors.concat(subErrors);
+            else {
+                // no more threads
+                return false;
             }
-            return ret;
-          });
-        } else {
-          throw Error("unexpected expr type in " + JSON.stringify(solns));
-        }
-      }
-      if (Object.keys(fromValidatePoint).length > 0) // guard against {}
-        _dive(fromValidatePoint);
-      if ("semActs" in shape)
-        fromValidatePoint.semActs = shape.semActs;
-      return fromValidatePoint;
+        })());
+        return ret;
     }
-  }
-
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: N3Util.getLiteralValue(term) };
-          const dt = N3Util.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = N3Util.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
+    /*
+       * returns: list of all passing or all failing threads (no heterogeneous lists)
+       */
+    static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler) {
+        let repeated = 0, errOut = false;
+        let newThreads = [thread];
+        const minmax = {};
+        if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
+            minmax.min = groupTE.min;
+            minmax.max = groupTE.max;
         }
-
-function extend(base) {
-  if (!base) base = {};
-  for (let i = 1, l = arguments.length, arg; i < l && (arg = arguments[i] || {}); i++)
-    for (let name in arg)
-      base[name] = arg[name];
-  return base;
+        if (groupTE.semActs !== undefined)
+            minmax.semActs = groupTE.semActs;
+        if (groupTE.annotations !== undefined)
+            minmax.annotations = groupTE.annotations;
+        for (; repeated < max && !errOut; ++repeated) {
+            let inner = [];
+            for (let t = 0; t < newThreads.length; ++t) {
+                const newt = newThreads[t];
+                const sub = evalGroup(newt);
+                if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
+                    sub.forEach(newThread => {
+                        const solutions = newt.expression !== undefined ? newt.expression.solutions.slice() : [];
+                        if (newThread.solution !== undefined)
+                            solutions.push(newThread.solution);
+                        delete newThread.solution;
+                        newThread.expression = Object.assign({
+                            type: type,
+                            solutions: solutions
+                        }, minmax);
+                    });
+                }
+                if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
+                    return repeated < min ? sub : newThreads;
+                else
+                    inner = inner.concat(sub);
+                // newThreads.expressions.push(sub);
+            }
+            newThreads = inner;
+        }
+        if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
+            const passes = [];
+            const failures = [];
+            newThreads.forEach(newThread => {
+                const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread);
+                if (semActErrors.length === 0) {
+                    passes.push(newThread);
+                }
+                else {
+                    Array.prototype.push.apply(newThread.errors, semActErrors);
+                    failures.push(newThread);
+                }
+            });
+            newThreads = passes.length > 0 ? passes : failures;
+        }
+        return newThreads;
+    }
+    static homogenize(list) {
+        return list.reduce((acc, elt) => {
+            if (elt.errors.length === 0) {
+                if (acc.errors) {
+                    return { errors: false, l: [elt] };
+                }
+                else {
+                    return { errors: false, l: acc.l.concat(elt) };
+                }
+            }
+            else {
+                if (acc.errors) {
+                    return { errors: true, l: acc.l.concat(elt) };
+                }
+                else {
+                    return acc;
+                }
+            }
+        }, { errors: true, l: [] }).l;
+    }
 }
-
-return {
-  name: "eval-threaded-nerr",
-  description: "emulation of regular expression engine with error permutations",
-  compile: vpEngine
-};
-})();
-
-if (true)
-  module.exports = EvalThreadedNErrCjsModule;
-
+//# sourceMappingURL=eval-threaded-nerr.js.map
 
 /***/ }),
 
@@ -8727,8 +6264,64 @@ if (true)
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.NoTripleConstraint = void 0;
-exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
+exports.MapArray = void 0;
+class MapArray {
+    constructor() {
+        this.data = new Map(); // public 'cause I don't know how to fix reduce to use this.data
+        this.reduce = (f, acc) => {
+            const keys = [...this.data.keys()];
+            for (const key of keys)
+                acc = f(acc, key, this.data.get(key));
+            return acc;
+        };
+    }
+    add(a, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, []);
+        }
+        if (this.data.get(a).indexOf(t) !== -1) {
+            throw Error(`Error adding [${a}] ${t}; already included`);
+        }
+        this.data.get(a).push(t);
+    }
+    get length() { return this.data.size; }
+    get keys() { return this.data.keys(); }
+    get(key) { return this.data.get(key); }
+    empty(key) {
+        this.data.set(key, []);
+    }
+}
+exports.MapArray = MapArray;
+
+
+/***/ }),
+
+/***/ 3486:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sparqlOrder = exports.Start = void 0;
+exports.Start = { term: "START" };
+/* sparqlOrder - sort triples by subject following SPARQL partial ordering.
+ */
+function sparqlOrder(l, r) {
+    const [lprec, rprec] = [prec(l), prec(r)];
+    return lprec === rprec ? l.value.localeCompare(r.value) : lprec - rprec;
+}
+exports.sparqlOrder = sparqlOrder;
+const termType2Prec = {
+    'BlankNode': 1,
+    'Literal': 2,
+    'NamedNode': 3,
+};
+function prec(t) {
+    let typeLabel = t.termType;
+    if (typeLabel === 'Quad' || typeLabel === 'Variable' || typeLabel === 'DefaultGraph')
+        throw Error(`no defined SPARQL order for ${typeLabel} ${t.value}`);
+    return termType2Prec[typeLabel];
+}
 
 
 /***/ }),
@@ -8739,14 +6332,14 @@ exports.NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
 /** Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset
  */
 const NeighborhoodRdfJsModule = (function () {
-  const ShExTerm = __webpack_require__(1118);
+  const Api = __webpack_require__(3486);
 
   function rdfjsDB (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 
-    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects(); }
+    function getPredicates () { return db.getPredicates(); }
+    function getObjects () { return db.getObjects(); }
+    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments); }
 
     function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -8755,7 +6348,9 @@ const NeighborhoodRdfJsModule = (function () {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
+      const outgoing/*: Quad[]*/ = [... db.match(point, null, null, null)].sort(
+        (l, r) => Api.sparqlOrder(l.object, r.object)
+      );
       if (queryTracker) {
         const time = new Date();
         queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
@@ -8764,7 +6359,9 @@ const NeighborhoodRdfJsModule = (function () {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
+      const incoming/*: Quad[]*/ = [...db.match(null, null, point, null)].sort(
+        (l, r) => Api.sparqlOrder(l.object, r.object)
+      );
       if (queryTracker) {
         queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
       }
@@ -8963,7 +6560,7 @@ case 13:
 this.$ = extend({ shape: $$[$0] }, $$[$0-1]);
 break;
 case 14:
-this.$ = { shape: ShapeMap.start };
+this.$ = { shape: ShapeMap.Start };
 break;
 case 15:
 
@@ -8991,13 +6588,13 @@ case 22:
 this.$ = { type: "Extension", language: $$[$0-1], lexical: $$[$0]["@value"] };
 break;
 case 24:
-this.$ = ShapeMap.start;
+this.$ = ShapeMap.Start;
 break;
 case 29:
-this.$ = { type: "TriplePattern", subject: ShapeMap.focus, predicate: $$[$0-2], object: $$[$0-1] };
+this.$ = { type: "TriplePattern", subject: ShapeMap.Focus, predicate: $$[$0-2], object: $$[$0-1] };
 break;
 case 30:
-this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShapeMap.focus };
+this.$ = { type: "TriplePattern", subject: $$[$0-3], predicate: $$[$0-2], object: ShapeMap.Focus };
 break;
 case 32: case 34: case 42:
 this.$ = null;
@@ -9448,9 +7045,9 @@ if (true)
 
 const ShapeMapSymbols = (function () {
   return {
-    focus: { term: "FOCUS" },
-    start: { term: "START" },
-    wildcard: { term: "WILDCARD" },
+    Focus: { term: "FOCUS" },
+    Start: { term: "START" },
+    Wildcard: { term: "WILDCARD" },
   }
 })();
 
@@ -9505,6 +7102,28 @@ const ShExLoaderCjsModule = function (config = {}) {
   const ShExUtil = __webpack_require__(9443);
   const ShExParser = __webpack_require__(931);
 
+  class WebError extends Error {
+    constructor (msg, url) {
+      super(msg)
+      this.url = url
+    }
+  }
+
+  class FetchError extends WebError {
+    constructor (msg, url, status, text) {
+      super(msg, url)
+      this.status = status
+      this.text = text
+    }
+  }
+
+  class ResourceError extends WebError {
+    constructor (msg, url) {
+      super(msg)
+      this.url = url
+    }
+  }
+
   class ResourceLoadControler {
     constructor (src) {
       this.schemasSeen = src.map(p => typeof p === "object" ? p.url : p) // loaded URLs
@@ -9553,6 +7172,8 @@ const ShExLoaderCjsModule = function (config = {}) {
     GET,
     ResourceLoadControler,
     loadSchemaImports,
+    WebError,
+    FetchError,
   };
   return loader
   
@@ -9562,11 +7183,11 @@ const ShExLoaderCjsModule = function (config = {}) {
       ? Promise.resolve({text: m[2], url: m[0]}) // Read from data: URL
       : (url.match("^(blob:)?[a-z]+://."))
       ? myHttpRequest(url, mediaType) // whatever fetch handles
-      : (() => { throw Error(`Don't know how to fetch ${url}`) })()
+      : (() => { throw new WebError(`Unrecognized URL protocol ${url}`) })()
 
     async function myHttpRequest(url, mediaType) {
       if (typeof config.fetch !== "function")
-        throw Error(`Unable to fetch ${url} with fetch=${config.fetch}`)
+        throw new WebError(`Unable to fetch ${url} with fetch=${config.fetch}`)
       let resp
       try {
         resp = await config.fetch(url, {
@@ -9578,10 +7199,10 @@ const ShExLoaderCjsModule = function (config = {}) {
         // DNS failure
         // no route to host
         // connection refused
-        throw Error(`GET <${url}> network failure: ${e.message}`)
+        throw new WebError(`GET <${url}> network failure: ${e.message}`)
       }
       if (!resp.ok)
-        throw Error(`GET <${url}> failed: ${resp.status} ${resp.statusText}`)
+        throw new FetchError(`GET <${url}> failed: ${resp.status} ${resp.statusText}`, url, resp.status, resp.text)
       const text = await resp.text()
       return {text, url}
     }
@@ -9599,6 +7220,10 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
 
   async function mergeSchema (obj, mediaType, resourceLoadControler, options) {
+    if (!("schema" in obj))
+      throw Error(`Bad parameter to mergeSchema; ${summarize(obj)} is not a loaded schema`)
+    if (obj.schema.type !== "Schema")
+      throw Error(`Bad parameter to mergeSchema .schema; ${summarize(obj.schema)} !== ""Schema`)
     try {
       loadSchemaImports(obj.schema, resourceLoadControler, options)
       return {mediaType, url: obj.url, schema: obj.schema}
@@ -9606,6 +7231,15 @@ const ShExLoaderCjsModule = function (config = {}) {
       const e2 = Error("error merging schema object " + obj.schema + ": " + e)
       e2.stack = e.stack
       throw e2
+    }
+
+    function summarize (o) {
+      const marker = Math.random()
+      const shallow = Object.keys(obj).reduce((acc, k) => {
+        acc[k] = typeof obj[k] === "object" ? marker : obj[k]
+        return acc
+      }, {})
+      return JSON.stringify(shallow).replace(new RegExp(marker, 'g'), "\u2026")
     }
   }
 
@@ -9657,30 +7291,28 @@ const ShExLoaderCjsModule = function (config = {}) {
     return ret
   }
 
-  function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler) {
+  async function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler) {
     return src.map(
-      async p => {
+      p => {
         const meta = addMeta(typeof p === "string" ? p : p.url, mediaType, metaList)
-        const ret =
-              typeof p === "object" && !("text" in p)
-              ? merger(p, mediaType, resourceLoadControler, options)
-              : loadParseMergeSchema(p, meta)
+        let ret;
+        if (typeof p === "string") {
+          ret = loader.GET(p, mediaType).then(loaded => {
+            meta.base = meta.url = loaded.url // update with wherever if ultimately loaded from after URL fixups and redirects
+            resourceLoadControler.loadNovelUrl(loaded.url, p) // replace p with loaded.url in loaded list
+            return parserWrapper(loaded.text, mediaType, loaded.url,
+                                 meta, options, resourceLoadControler)
+          })
+        } else {
+          if ("text" in p)
+            ret = parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler);
+          else
+            ret = merger(p, mediaType, resourceLoadControler, options)
+        }
         resourceLoadControler.add(ret)
         return ret
       }
     )
-
-    async function loadParseMergeSchema (p, meta) {
-      if (typeof p === "object") {
-        return await parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler)
-      } else {
-        const loaded = await loader.GET(p, mediaType)
-        meta.base = meta.url = loaded.url // update with wherever if ultimately loaded from after URL fixups and redirects
-        resourceLoadControler.loadNovelUrl(loaded.url, p) // replace p with loaded.url in loaded list
-        return await parserWrapper(loaded.text, mediaType, loaded.url,
-                             meta, options, resourceLoadControler)
-      }
-    }
   }
 
   /* load - load shex and json files into a single Schema and turtle into
@@ -9792,15 +7424,15 @@ const ShExLoaderCjsModule = function (config = {}) {
       const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler)
       const graph = new config.rdfjs.Store();
       graph.addQuads(x.graph);
-      const graphParser = schemaOptions.graphParser.validator.construct(
+      const graphParser = new schemaOptions.graphParser.validator(
         schemaOptions.graphParser.schema,
         schemaOptions.graphParser.rdfjsdb(graph),
         {}
       );
       const schemaRoot = graph.getQuads(null, ShExUtil.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject;
-      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.start);
+      const val = graphParser.validate(schemaRoot, schemaOptions.graphParser.validator.Start);
       if ("errors" in val)
-        throw Error(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`)
+        throw ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
       await loadSchemaImports(schema, resourceLoadControler); // shouldn't be any
       return Promise.resolve({mediaType, url, schema})
@@ -9851,7 +7483,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       let e = lderr
       if ("details" in e) e = e.details
       if ("cause" in e) e = e.cause
-      throw Error("error parsing JSON-ld " + url + ": " + e)
+      throw new ResourceError("error parsing JSON-ld " + url + ": " + e, url)
     }
   }
 
@@ -11017,7 +8649,7 @@ __webpack_unused_export__ = ShExJisonLexer;
 
 const ShExParserCjsModule = (function () {
 
-const ShExTerm = __webpack_require__(1118);
+const ShExTerm = __webpack_require__(1101);
 const ShExJisonParser = (__webpack_require__(9509)/* .ShExJisonParser */ .Fm);
 
 const schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
@@ -11305,24 +8937,24 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   }
 }
 
-var makeDBTermResolver = function (db) {
-  var _db = db;
-  var _lookFor = [];
+const makeDBTermResolver = function (db) {
+  const _db = db;
+  const _lookFor = [];
   return {
     add: function (iri) {
       _lookFor.push(iri);
     },
     resolve: function (pair, prefixes) {
-      var x = _lookFor.reduce((lfacc, lf) => {
-        var found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
+      const x = _lookFor.reduce((lfacc, lf) => {
+        const found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
         if (found1.length)
           return pair.prefix === null ?
-          {prefix: null, length: null, term: ShExTerm.internalTerm(found1[0].subject)}:
+          {prefix: null, length: null, term: ShExTerm.rdfJsTerm2Ld(found1[0].subject)}:
           found1.reduce((tripacc, triple) => {
-            var s = ShExTerm.internalTerm(triple.subject);
+            const s = ShExTerm.rdfJsTerm2Ld(triple.subject);
             return Object.keys(prefixes).reduce((prefacc, prefix) => {
-              var ns = prefixes[prefix];
-              var sw = s.startsWith(ns);
+              const ns = prefixes[prefix];
+              const sw = s.startsWith(ns);
               if (sw && ns.length > prefacc.length && pair.prefix === prefix)
                 return {prefix: prefix, length: prefacc.length, term: s};
               return prefacc;
@@ -11338,7 +8970,7 @@ var makeDBTermResolver = function (db) {
   };
 }
 
-var makeDisabledTermResolver = function () {
+const makeDisabledTermResolver = function () {
   return {
     add: function (iri) {
       throw Error("no term resolver to accept <" + iri + ">");
@@ -11362,311 +8994,376 @@ if (true)
 
 /***/ }),
 
-/***/ 1118:
-/***/ ((module) => {
+/***/ 1101:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
 
 /**
+ * Terms used in ShEx.
  *
- * isIRI, isBlank, getLiteralType, getLiteralValue
+ * There are three representations of RDF terms used in ShEx NamedNode validation and applications:
+ * 1. LD (short for JSON-LD) @ids used in ShExJ.
+ *   "http://a.example/some/Iri
+ *   "_:someBlankNode
+ *   { "value": "1.0", "datatype": "http://www.w3.org/2001/XMLSchema#float" }
+ *   { "value": "chat", "language": "fr" }
+ * 2. RdfJs Terms [RdfJsTerm] specification used in validation
+ *   { "termType": "NamedNode": "value": "http://a.example/some/Iri" }
+ *   { "termType": "BlankNode": "value": "someBlankNode" }
+ *   { "termType": "Literal": "value": "1.0", "datatype": "http://www.w3.org/2001/XMLSchema#float" }
+ *   { "termType": "Literal": "value": "chat", "language": "fr" }
+ * 3. Turtle representation is used for human interfaces
+ *   <http://a.example/some/Iri>, p:IRI, p:, :
+ *   _:someBlankNode, []
+ *   "1.0"^^<http://www.w3.org/2001/XMLSchema#float>, "1.0"^^xsd:float, 1.0
+ *   "chat"@fr
+ *   "1.0"^^http://www.w3.org/2001/XMLSchema#float
+ *
+ * [RdfJsTerm](https://rdf.js.org/data-model-spec/#term-interface)
  */
-
-const ShExTermCjsModule = (function () {
-
-  const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i,
-    schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
-    dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
-
-  const RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
-  const XsdString = "http://www.w3.org/2001/XMLSchema#string";
-
-  // N3.js:lib/N3Parser.js<0.4.5>:576 with
-  //   s/this\./Parser./g
-  //   s/token/iri/
-  // ### `_resolveIRI` resolves a relative IRI token against the base path,
-  // assuming that a base path has been set and that the IRI is indeed relative.
-  function resolveRelativeIRI (base, iri) {
-
-    if (absoluteIRI.test(iri))
-      return iri
-
-    switch (iri[0]) {
-    // An empty relative IRI indicates the base IRI
-    case undefined: return base;
-    // Resolve relative fragment IRIs against the base IRI
-    case '#': return base + iri;
-    // Resolve relative query string IRIs by replacing the query string
-    case '?': return base.replace(/(?:\?.*)?$/, iri);
-    // Resolve root-relative IRIs at the root of the base IRI
-    case '/':
-      let m = base.match(schemeAuthority);
-      // Resolve scheme-relative IRIs to the scheme
-      return (iri[1] === '/' ? m[1] : m[0]) + _removeDotSegments(iri);
-    // Resolve all other IRIs at the base IRI's path
-    default: {
-      return _removeDotSegments(base.replace(/[^\/?]*(?:\?.*)?$/, '') + iri);
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.rdfJsTerm2Ld = exports.ld2RdfJsTerm = exports.shExJsTerm2Turtle = exports.rdfJsTerm2Turtle = exports.Terminals = exports.XsdString = exports.RdfLangString = void 0;
+const RelativizeIri = (__webpack_require__(4436).relativize);
+// import {relativize as RelativizeIri} from "relativize-url"; // someone should lecture the maintainer
+const rdf_data_factory_1 = __webpack_require__(1194);
+const RdfJsFactory = new rdf_data_factory_1.DataFactory();
+exports.RdfLangString = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
+exports.XsdString = "http://www.w3.org/2001/XMLSchema#string";
+const PN_CHARS_BASE = "A-Za-z\u{C0}-\u{D6}\u{D8}-\u{F6}\u{F8}-\u{2FF}\u{370}-\u{37D}\u{37F}-\u{1FFF}\u{200C}-\u{200D}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}"; // escape anything outside BMP: \u{10000}-\u{EFFFF}
+const PN_CHARS_U = PN_CHARS_BASE + "_";
+const PN_CHARS_WO_HYPHEN = PN_CHARS_U + "0-9\u{B7}\u{300}-\u{36F}\u{203F}-\u{2040}";
+const PN_PREFIX = [PN_CHARS_BASE, PN_CHARS_WO_HYPHEN + '.-', PN_CHARS_WO_HYPHEN + '-'];
+const PN_LOCAL = [
+    PN_CHARS_U + ":0-9",
+    PN_CHARS_WO_HYPHEN + ".:-",
+    PN_CHARS_WO_HYPHEN + ":-"
+];
+exports.Terminals = {
+    Turtle: {
+        PN_CHARS_BASE,
+        PN_CHARS_U,
+        PN_CHARS_WO_HYPHEN,
+        PN_PREFIX,
+        PN_LOCAL,
     }
-    }
-  }
-
-  // ### `_removeDotSegments` resolves './' and '../' path segments in an IRI as per RFC3986.
-  function _removeDotSegments (iri) {
-    // Don't modify the IRI if it does not contain any dot segments
-    if (!dotSegments.test(iri))
-      return iri;
-
-    // Start with an imaginary slash before the IRI in order to resolve trailing './' and '../'
-    const length = iri.length;
-    let result = '', i = -1, pathStart = -1, segmentStart = 0, next = '/';
-
-    while (i < length) {
-      switch (next) {
-      // The path starts with the first slash after the authority
-      case ':':
-        if (pathStart < 0) {
-          // Skip two slashes before the authority
-          if (iri[++i] === '/' && iri[++i] === '/')
-            // Skip to slash after the authority
-            while ((pathStart = i + 1) < length && iri[pathStart] !== '/')
-              i = pathStart;
-        }
-        break;
-      // Don't modify a query string or fragment
-      case '?':
-      case '#':
-        i = length;
-        break;
-      // Handle '/.' or '/..' path segments
-      case '/':
-        if (iri[i + 1] === '.') {
-          next = iri[++i + 1];
-          switch (next) {
-          // Remove a '/.' segment
-          case '/':
-            result += iri.substring(segmentStart, i - 1);
-            segmentStart = i + 1;
-            break;
-          // Remove a trailing '/.' segment
-          case undefined:
-          case '?':
-          case '#':
-            return result + iri.substring(segmentStart, i) + iri.substr(i + 1);
-          // Remove a '/..' segment
-          case '.':
-            next = iri[++i + 1];
-            if (next === undefined || next === '/' || next === '?' || next === '#') {
-              result += iri.substring(segmentStart, i - 2);
-              // Try to remove the parent path from result
-              if ((segmentStart = result.lastIndexOf('/')) >= pathStart)
-                result = result.substr(0, segmentStart);
-              // Remove a trailing '/..' segment
-              if (next !== '/')
-                return result + '/' + iri.substr(i + 1);
-              segmentStart = i + 1;
-            }
-          }
-        }
-      }
-      next = iri[++i];
-    }
-    return result + iri.substring(segmentStart);
-  }
-
-  function internalTerm (node) { // !!rdfjsTermToInternal
+};
+function rdfJsTerm2Turtle(node, meta) {
     switch (node.termType) {
-    case ("NamedNode"):
-      return node.value;
-    case ("BlankNode"):
-      return "_:" + node.value;
-    case ("Literal"):
-      return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (
-        node.datatypeString === RdfLangString
-          ? "@" + node.language
-          : node.datatypeString === XsdString
-          ? ""
-          : "^^" + node.datatypeString
-      );
-    default: throw Error("unknown RDFJS node type: " + JSON.stringify(node))
+        case ("NamedNode"):
+            return iri2Turtle(node.value, meta);
+        case ("BlankNode"):
+            return "_:" + node.value;
+        case ("Literal"):
+            return "\"" + node.value.replace(/"/g, '\\"') + "\"" + (node.datatype.value === exports.RdfLangString
+                ? "@" + node.language
+                : node.datatype.value === exports.XsdString
+                    ? ""
+                    : "^^" + node.datatype.value);
+        default: throw Error(`rdfJsTerm2Turtle: unknown RDFJS node type: ${JSON.stringify(node)}`);
     }
-  }
-
-  function internalTriple (triple) { // !!rdfjsTripleToInternal
-    return {
-      subject: internalTerm(triple.subject),
-      predicate: internalTerm(triple.predicate),
-      object: internalTerm(triple.object)
-    };
-  }
-
-  function externalTerm (node, factory) { // !!internalTermToRdfjs
-    if (isIRI(node)) {
-      return factory.namedNode(node);
-    } else if (isBlank(node)) {
-      return factory.blankNode(node.substr(2));
-    } else if (isLiteral(node)) {
-      let dtOrLang = getLiteralLanguage(node) ||
-          (getLiteralType(node) === XsdString
-           ? null // seems to screw up N3.js
-           : factory.namedNode(getLiteralType(node)))
-      return factory.literal(getLiteralValue(node), dtOrLang)
-    } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
+}
+exports.rdfJsTerm2Turtle = rdfJsTerm2Turtle;
+function shExJsTerm2Turtle(node, meta = { base: "", prefixes: {} }, aForType) {
+    if (typeof node === "string") {
+        if (node.startsWith("_:")) {
+            return node;
+        }
+        else {
+            return iri2Turtle(node, meta, aForType);
+        }
     }
-  }
-
-  function externalTriple (triple, factory) { // !!rename internalTripleToRdjs
-    return factory.quad(
-      externalTerm(triple.subject, factory),
-      externalTerm(triple.predicate, factory),
-      externalTerm(triple.object, factory)
-    );
-  }
-
-  function internalTermToTurtle (node, base, prefixes) {
-    if (isIRI(node)) {
-      // if (node === RDF_TYPE) // only valid in Turtle predicates
-      //   return "a";
-
-      // Escape special characters
-      if (escape.test(node))
-        node = node.replace(escapeAll, characterReplacer);
-      const pref = Object.keys(prefixes).find(pref => node.startsWith(prefixes[pref]));
-      if (pref) {
-        const rest = node.substr(prefixes[pref].length);
-        if (rest.indexOf("\\") === -1) // could also say no more than n of these: [...]
-          return pref + ":" + rest.replace(/([~!$&'()*+,;=/?#@%])/g, '\\' + "$1");
-      }
-      if (node.startsWith(base)) {
-        return "<" + node.substr(base.length) + ">";
-      } else {
-        return "<" + node + ">";
-      }
-    } else if (isBlank(node)) {
-      return node;
-    } else if (isLiteral(node)) {
-      let value = getLiteralValue(node);
-      const type = getLiteralType(node);
-      const language = getLiteralLanguage(node);
-      // Escape special characters
-      if (escape.test(value))
-        value = value.replace(escapeAll, characterReplacer);
-      // Write the literal, possibly with type or language
-      if (language)
-        return '"' + value + '"@' + language;
-      else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
-        return '"' + value + '"^^' + this.internalTermToTurtle(type, base, prefixes);
-      else
-        return '"' + value + '"';
-    } else {
-      throw Error("Unknown internal term type: " + JSON.stringify(node));
+    else if (node.termType === "Literal") {
+        let value = node.value;
+        const type = node.datatype.value;
+        const language = node.language;
+        // Escape special characters
+        if (escape.test(value))
+            value = value.replace(escapeAll, characterReplacer);
+        // Write the literal, possibly with type or language
+        if (language)
+            return '"' + value + '"@' + language;
+        else if (type && type !== "http://www.w3.org/2001/XMLSchema#string")
+            return '"' + value + '"^^' + iri2Turtle(type, meta, false);
+        else
+            return '"' + value + '"';
     }
-  }
-
-  // Tests whether the given entity (triple object) represents an IRI in the N3 library
-  function isIRI (entity) {
-    if (typeof entity !== 'string')
-      return false;
-    else if (entity.length === 0)
-      return true;
     else {
-      const firstChar = entity[0];
-      return firstChar !== '"' && firstChar !== '_';
+        throw Error("Unknown internal term type: " + JSON.stringify(node));
     }
-  }
-
-  // Tests whether the given entity (triple object) represents a literal in the N3 library
-  function isLiteral (entity) {
-    return typeof entity === 'string' && entity[0] === '"';
-  }
-
-  // Tests whether the given entity (triple object) represents a blank node in the N3 library
-  function isBlank (entity) {
-    return typeof entity === 'string' && entity.substr(0, 2) === '_:';
-  }
-
-  // Tests whether the given entity represents the default graph
-  function isDefaultGraph (entity) {
-    return !entity;
-  }
-
-  // Tests whether the given triple is in the default graph
-  function inDefaultGraph (triple) {
-    return !triple.graph;
-  }
-
-  // Gets the string value of a literal in the N3 library
-  function getLiteralValue (literal) {
-    const match = /^"([^]*)"/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1].replace(/\\"/g, '"');
-  }
-
-  // Gets the type of a literal in the N3 library
-  function getLiteralType (literal) {
-    const match = /^"[^]*"(?:\^\^([^"]+)|(@)[^@"]+)?$/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1] || (match[2] ? RdfLangString : XsdString);
-  }
-
-  // Gets the language of a literal in the N3 library
-  function getLiteralLanguage (literal) {
-    const match = /^"[^]*"(?:@([^@"]+)|\^\^[^"]+)?$/.exec(literal);
-    if (!match)
-      throw new Error(literal + ' is not a literal');
-    return match[1] ? match[1].toLowerCase() : '';
-  }
-
+}
+exports.shExJsTerm2Turtle = shExJsTerm2Turtle;
 // Characters in literals that require escaping
-const escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
-    escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g,
-    escapeReplacements = {
-      '\\': '\\\\', '"': '\\"', '\t': '\\t',
-      '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f',
-    };
-
-  // Replaces a character by its escaped version
-  function characterReplacer (character) {
+const escape = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/;
+const escapeAll = /["\\\t\n\r\b\f\u0000-\u0019]|[\ud800-\udbff][\udc00-\udfff]/g;
+const escapeReplacements = {
+    '\\': '\\\\', '"': '\\"', '\t': '\\t',
+    '\n': '\\n', '\r': '\\r', '\b': '\\b', '\f': '\\f',
+};
+// Replaces a character by its escaped version
+function characterReplacer(character) {
     // Replace a single character by its escaped version
     let result = escapeReplacements[character]; // @@ const should be let
     if (result === undefined) {
-      // Replace a single character with its 4-bit unicode escape sequence
-      if (character.length === 1) {
-        result = character.charCodeAt(0).toString(16);
-        result = '\\u0000'.substr(0, 6 - result.length) + result;
-      }
-      // Replace a surrogate pair with its 8-bit unicode escape sequence
-      else {
-        result = ((character.charCodeAt(0) - 0xD800) * 0x400 +
-                  character.charCodeAt(1) + 0x2400).toString(16);
-        result = '\\U00000000'.substr(0, 10 - result.length) + result;
-      }
+        // Replace a single character with its 4-bit unicode escape sequence
+        if (character.length === 1) {
+            result = character.charCodeAt(0).toString(16);
+            result = '\\u0000'.substr(0, 6 - result.length) + result;
+        }
+        // Replace a surrogate pair with its 8-bit unicode escape sequence
+        else {
+            result = ((character.charCodeAt(0) - 0xD800) * 0x400 +
+                character.charCodeAt(1) + 0x2400).toString(16);
+            result = '\\U00000000'.substr(0, 10 - result.length) + result;
+        }
     }
     return result;
+}
+function ld2RdfJsTerm(ld) {
+    switch (typeof ld) {
+        case 'object':
+            const copy = JSON.parse(JSON.stringify(ld));
+            if (!copy.value)
+                throw Error(`JSON-LD-style object literal has no value: ${JSON.stringify(ld)}`);
+            const value = copy.value;
+            delete copy.value;
+            if (copy.language)
+                return RdfJsFactory.literal(value, copy.language);
+            if (copy.type)
+                return RdfJsFactory.literal(value, RdfJsFactory.namedNode(copy.type));
+            if (Object.keys(copy).length > 0)
+                throw Error(`Unrecognized attributes inn JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`);
+            return RdfJsFactory.literal(value);
+        case 'string':
+            return ld.startsWith('_:')
+                ? RdfJsFactory.blankNode(ld.substr(2))
+                : RdfJsFactory.namedNode(ld);
+        default: throw Error(`Unrecognized JSON-LD-style term: ${JSON.stringify(ld)}`);
+    }
+}
+exports.ld2RdfJsTerm = ld2RdfJsTerm;
+function rdfJsTerm2Ld(term) {
+    switch (term.termType) {
+        case "NamedNode": return term.value;
+        case "BlankNode": return "_:" + term.value;
+        case "Literal":
+            const ret = { value: term.value };
+            const dt = term.datatype.value;
+            const lang = term.language;
+            if (dt &&
+                dt !== "http://www.w3.org/2001/XMLSchema#string" &&
+                dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
+                ret.type = dt;
+            if (lang)
+                ret.language = lang;
+            return ret;
+        default:
+            throw Error(`Unrecognized termType ${term.termType} ${term.value}`);
+    }
+}
+exports.rdfJsTerm2Ld = rdfJsTerm2Ld;
+function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
+    const { base, prefixes = {} } = meta;
+    if (aForType && iri === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+        return "a";
+    const rel = "<" + (base.length > 0 ? RelativizeIri(iri, base) : iri) + ">";
+    for (const prefix in prefixes) {
+        const ns = prefixes[prefix];
+        if (iri.startsWith(ns)) {
+            const localName = iri.substr(ns.length);
+            const first = localName.slice(0, 1).replaceAll(new RegExp("[^" + exports.Terminals.Turtle.PN_LOCAL[0] + "]", "g"), s => '\\' + s);
+            const middle = localName.slice(1, localName.length - 1).replaceAll(new RegExp("[^" + exports.Terminals.Turtle.PN_LOCAL[1] + "]", "g"), s => '\\' + s);
+            const last = localName.length > 1 ? localName.slice(localName.length - 1).replaceAll(new RegExp("[^" + exports.Terminals.Turtle.PN_LOCAL[2] + "]", "g"), s => '\\' + s) : '';
+            const pName = prefix + ':' + first + middle + last;
+            if (pName.length < rel.length)
+                return pName;
+        }
+    }
+    return rel;
+}
+//# sourceMappingURL=shex-term.js.map
+
+/***/ }),
+
+/***/ 7625:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const ShExHumanErrorWriterCjsModule = (function () {
+const ShExTerm = __webpack_require__(1101);
+const XSD = {}
+XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
+["anyURI", "string"].forEach(p => {
+  XSD[p] = XSD._namespace+p;
+});
+
+return class ShExHumanErrorWriter {
+  write (val) {
+    const _HumanErrorWriter = this;
+    if (Array.isArray(val)) {
+      return val.reduce((ret, e) => {
+        const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
+        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
+      }, []);
+    }
+    if (typeof val === "string")
+      return [val];
+
+    switch (val.type) {
+    case "FailureList":
+      return val.errors.reduce((ret, e) => {
+        return ret.concat(_HumanErrorWriter.write(e));
+      }, []);
+    case "Failure":
+      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
+        const nested = _HumanErrorWriter.write(e).map(s => "  " + s);
+        return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
+      }, []));
+    case "TypeMismatch": {
+      const nested = Array.isArray(val.errors) ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+      return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
+    }
+    case "RestrictionError": {
+      const nested = val.errors.constructor === Array ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+      return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(nested);
+    }
+    case "ShapeAndFailure":
+      return Array.isArray(val.errors) ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+    case "ShapeOrFailure":
+      return Array.isArray(val.errors) ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat(" OR " + (typeof e === "string" ? [e] : _HumanErrorWriter.write(e)));
+          }, []) :
+          " OR " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+    case "ShapeNotFailure":
+      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
+    case "ExcessTripleViolation":
+      return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
+    case "ClosedShapeViolation":
+      return ["Unexpected triple(s): {"].concat(
+        val.unexpectedTriples.map(t => {
+          return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
+        })
+      ).concat(["}"]);
+    case "NodeConstraintViolation":
+      return ["NodeConstraintError: expected to " + this.nodeConstraintToSimple(val.shapeExpr).join(', ')];
+    case "MissingProperty":
+      return ["Missing property: " + val.property];
+    case "NegatedProperty":
+      return ["Unexpected property: " + val.property];
+    case "AbstractShapeFailure":
+      return ["Abstract Shape: " + val.shape];
+    case "SemActFailure": {
+      const nested = Array.isArray(val.errors) ?
+          val.errors.reduce((ret, e) => {
+            return ret.concat((typeof e === "string" ? [e] : _HumanErrorWriter.write(e)).map(s => "  " + s));
+          }, []) :
+          "  " + (typeof e === "string" ? [val.errors] : _HumanErrorWriter.write(val.errors));
+      return ["rejected by semantic action:"].concat(nested);
+    }
+    case "SemActViolation":
+      return [val.message];
+    default:
+      debugger; // console.log(val);
+      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
+    }
+    function errorList (errors) {
+      return errors.reduce(function (acc, e) {
+        const attrs = Object.keys(e);
+        return acc.concat(
+          (attrs.length === 1 && attrs[0] === "errors")
+            ? errorList(e.errors)
+            : e);
+      }, []);
+    }
   }
 
-  return {
-    RdfLangString: RdfLangString,
-    XsdString: XsdString,
-    resolveRelativeIRI: resolveRelativeIRI,
-    isIRI: isIRI,
-    isLiteral: isLiteral,
-    isBlank: isBlank,
-    isDefaultGraph: isDefaultGraph,
-    inDefaultGraph: inDefaultGraph,
-    getLiteralValue: getLiteralValue,
-    getLiteralType: getLiteralType,
-    getLiteralLanguage: getLiteralLanguage,
-    internalTerm: internalTerm,
-    internalTriple: internalTriple,
-    externalTerm: externalTerm,
-    externalTriple: externalTriple,
-    internalTermToTurtle: internalTermToTurtle,
+  nodeConstraintToSimple (nc) {
+    const elts = [];
+    if ('nodeKind' in nc) elts.push(`be a ${nc.nodeKind.toUpperCase()}`);
+    if ('datatype' in nc) elts.push(`have datatype ${nc.datatype}`);
+    if ('length' in nc) elts.push(`have length ${nc.length}`);
+    if ('minlength' in nc) elts.push(`have length at least ${nc.length}`);
+    if ('maxlength' in nc) elts.push(`have length at most ${nc.length}`);
+    if ('pattern' in nc) elts.push(`match regex /${nc.pattern}/${nc.flags ? nc.flags : ''}`);
+    if ('mininclusive' in nc) elts.push(`have value at least ${nc.mininclusive}`);
+    if ('minexclusive' in nc) elts.push(`have value more than ${nc.minexclusive}`);
+    if ('maxinclusive' in nc) elts.push(`have value at most ${nc.maxinclusive}`);
+    if ('maxexclusive' in nc) elts.push(`have value less than ${nc.maxexclusive}`);
+    if ('totaldigits' in nc) elts.push(`have have ${nc.totaldigits} digits`);
+    if ('fractiondigits' in nc) elts.push(`have have ${nc.fractiondigits} digits after the decimal`);
+    if ('values' in nc) elts.push(`have a value in [${trim(this.valuesToSimple(nc.values).join(', '), 80, /[, ]^>/)}]`);
+    return elts;
   }
-})();
+
+  // static
+  valuesToSimple (values) {
+    return values.map(v => {
+      // non stems
+      /* IRIREF */ if (typeof v === 'string') return `<${v}>`;
+      /* ObjectLiteral */ if ('value' in v) return this.objectLiteralToSimple(v);
+      /* Language */ if (v.type === 'Language') return `literal with langauge tag ${v.languageTag}`;
+
+      // stems and stem ranges
+      const [undefined, type, range] = v.type.match(/^(Iri|Literal|Language)Stem(Range)?$/);
+      let str = type.toLowerCase();
+
+      if (typeof v.stem !== "object")
+        str += ` starting with ${v.stem}`
+
+      if ("exclusions" in v)
+        str += ` excluding ${
+v.exclusions.map(excl => typeof excl === "string"
+ ? excl
+ : "anything starting with " + excl.stem).join(' or ')
+}`;
+
+      return str;
+    })
+  }
+
+  objectLiteralToSimple (v) {
+    return `"${v}` +
+      ('type' in v && v.type !== XSD.string ? `^^<${v.type}>` : '') +
+      ('language' in v ? `@${v.language}` : '')
+  }
+}
+
+function trim (str, desired, skip) {
+  if (str.length <= desired)
+    return str;
+  --desired; // leave room for '…'
+  while (desired > 0 && str[desired].match(skip))
+    --desired;
+  return str.slice(0, desired) + '…';
+}
+
+function n3ify (ldterm) {
+  if (typeof ldterm !== "object")
+    return ldterm;
+  const ret = "\"" + ldterm.value + "\"";
+  if ("language" in ldterm)
+    return ret + "@" + ldterm.language;
+  if ("type" in ldterm)
+    return ret + "^^" + ldterm.type;
+  return ret;
+}
+
+})()
 
 if (true)
-  module.exports = ShExTermCjsModule; // node environment
+  module.exports = ShExHumanErrorWriterCjsModule; // node environment
 
 
 /***/ }),
@@ -11677,9 +9374,10 @@ if (true)
 // **ShExUtil** provides ShEx utility functions
 
 const ShExUtilCjsModule = (function () {
-const ShExTerm = __webpack_require__(1118);
-const Visitor = __webpack_require__(8806)
+const ShExTerm = __webpack_require__(1101);
+const {Visitor, index} = __webpack_require__(8806)
 const Hierarchy = __webpack_require__(2515)
+const ShExHumanErrorWriter = __webpack_require__(7625)
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -11703,11 +9401,6 @@ RDF._namespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 ["type", "first", "rest", "nil"].forEach(p => {
   RDF[p] = RDF._namespace+p;
 });
-const XSD = {}
-XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
-["anyURI"].forEach(p => {
-  XSD[p] = XSD._namespace+p;
-});
 const OWL = {}
 OWL._namespace = "http://www.w3.org/2002/07/owl#";
 ["Thing"].forEach(p => {
@@ -11725,31 +9418,12 @@ function extend (base) {
   return base;
 }
 
-    function isTerm (t) {
-      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
-        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
-      }, true);
-    }
-
   function isShapeRef (expr) {
     return typeof expr === "string" // test for JSON-LD @ID
   }
+
   let isInclusion = isShapeRef;
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
 const ShExUtil = {
 
   SX: SX,
@@ -11759,7 +9433,7 @@ const ShExUtil = {
   },
 
   Visitor: Visitor,
-  index: Visitor.index,
+  index: index,
 
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
@@ -11956,14 +9630,13 @@ const ShExUtil = {
     v.cleanIds = function () {
       for (let k in knownTripleExpressions) {
         const known = knownTripleExpressions[k];
-        if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
+        if (known.refCount === 1 && known.expr.id.startsWith("_:"))
           delete known.expr.id;
       };
     }
 
     return v;
   },
-
 
   // tests
   // const shexr = ShExUtil.ShExRtoShExJ({ "type": "Schema", "shapes": [
@@ -12019,24 +9692,6 @@ const ShExUtil = {
     return ret;
   },
 
-  n3jsToTurtle: function (res) {
-    function termToLex (node) {
-      return typeof node === "object" ? ("\"" + node.value + "\"" + (
-        "type" in node ? "^^<" + node.type + ">" :
-          "language" in node ? "@" + node.language :
-          ""
-      )) :
-      ShExTerm.isIRI(node) ? "<" + node + ">" :
-      ShExTerm.isBlank(node) ? node :
-      "???";
-    }
-    return this.valGrep(res, "TestedTriple", function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
-    });
-  },
-
   valToN3js: function (res, factory) {
     return this.valGrep(res, "TestedTriple", function (t) {
       const ret = JSON.parse(JSON.stringify(t));
@@ -12046,26 +9701,7 @@ const ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return ShExTerm.externalTriple(ret, factory);
-    });
-  },
-
-  n3jsToTurtle: function (n3js) {
-    function termToLex (node) {
-      if (ShExTerm.isIRI(node))
-        return "<" + node + ">";
-      if (ShExTerm.isBlank(node))
-        return node;
-      const t = ShExTerm.getLiteralType(node);
-      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
-        "^^<" + t + ">";
-      return node;
-    }
-    return n3js.map(function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
+      return ret;
     });
   },
 
@@ -12712,8 +10348,8 @@ const ShExUtil = {
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          ShExTerm.isIRI(obj[k])) {
-        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
+          (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) { // !! needs ShExTerm.ldTermIsIri
+        obj[k] = new URL(obj[k], base).href;
       }}
 
     function resolveRelativeURLs (obj) {
@@ -12759,13 +10395,11 @@ const ShExUtil = {
         solns.solutions.map(s => {
           if (s.type !== "TestedTriple")
             throw Error("unexpected result type: " + s.type);
-          const s2 = s;
-          if (typeof s2.object === "object")
-            s2.object = "\"" + s2.object.value.replace(/"/g, "\\\"") + "\""
-            + (s2.object.language ? ("@" + s2.object.language) : 
-               s2.object.type ? ("^^" + s2.object.type) :
-               "");
-          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
+          const subject = ShExTerm.ld2RdfJsTerm(s.subject);
+          const predicate = ShExTerm.ld2RdfJsTerm(s.predicate);
+          const object = ShExTerm.ld2RdfJsTerm(s.object);
+          const graph = "graph" in s ? ShExTerm.ld2RdfJsTerm(s.graph) : dataFactory.defaultGraph();
+          db.addQuad(dataFactory.quad(subject, predicate, object, graph));
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
@@ -12917,7 +10551,7 @@ const ShExUtil = {
     case "ShapeNotTest": // 1NOT_vsANDvs__passIv1
       return _ShExUtil.walkVal(val.shapeExpr, cb);
     case "ShapeNotResults": // NOT1dotOR2dot_pass-empty
-      return _ShExUtil.walkVal(val.solution, cb);
+      return null; // we don't bind variables from negative tests
     case "Failure": // NOT1dotOR2dot_pass-empty
       return null; // !!TODO
     case "ShapeNot": // 1NOTNOTIRI_passIo1,
@@ -13087,14 +10721,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = ldify(elt[k]);
+          crushed[k] = elt[k];
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(ldify(obj[k][lookfor])));
+            list.push(crush(obj[k][lookfor]));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))
@@ -13123,13 +10757,13 @@ const ShExUtil = {
    *   {  "rdf:type": [ { "ldterm": ":Schema" } ], ":shapes": [
    *       { "ldterm": "#S1", "nested": {
    *           "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-41", "nested": {
+   *             { "ldterm": "_:b41", "nested": {
    *                  "rdf:type": [ { "ldterm": ":ShapeNot" } ], ":shapeExpr": [
    *                   { "ldterm": "#S2", "nested": {
    *                        "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *                         { "ldterm": "_:n3-42", "nested": {
+   *                         { "ldterm": "_:b42", "nested": {
    *                              "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                               { "ldterm": "_:n3-43", "nested": {
+   *                               { "ldterm": "_:b43", "nested": {
    *                                    "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                             ] } }
    *                       ] } }
@@ -13137,9 +10771,9 @@ const ShExUtil = {
    *           ] } },
    *       { "ldterm": "#S2", "nested": {
    *            "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-42", "nested": {
+   *             { "ldterm": "_:b42", "nested": {
    *                  "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                   { "ldterm": "_:n3-43", "nested": {
+   *                   { "ldterm": "_:b43", "nested": {
    *                        "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                 ] } }
    *           ] } }
@@ -13436,114 +11070,17 @@ const ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: ShExTerm.resolveRelativeIRI(base, elt.node),
-        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
+        node: new URL(elt.node, base).href,
+        shape: new URL(elt.shape, base).href
       });
     });
   },
 
   errsToSimple: function (val) {
-    const _ShExUtil = this;
-    if (Array.isArray(val)) {
-      return val.reduce((ret, e) => {
-        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
-      }, []);
-    }
-    if (typeof val === "string")
-      return [val];
-
-    switch (val.type) {
-    case "FailureList":
-      return val.errors.reduce((ret, e) => {
-        return ret.concat(_ShExUtil.errsToSimple(e));
-      }, []);
-    case "Failure":
-      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
-        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
-      }, []));
-    case "TypeMismatch": {
-      const nested = Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
-    }
-    case "RestrictionError": {
-      const nested = val.errors.constructor === Array ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(nested);
-    }
-    case "ShapeAndFailure":
-      return Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    case "ShapeOrFailure":
-      return Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
-          }, []) :
-          " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    case "ShapeNotFailure":
-      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-    case "ExcessTripleViolation":
-      return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-    case "ClosedShapeViolation":
-      return ["Unexpected triple(s): {"].concat(
-        val.unexpectedTriples.map(t => {
-          return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
-        })
-      ).concat(["}"]);
-    case "NodeConstraintViolation":
-      const w = __webpack_require__(95)();
-      w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
-      let txt;
-      w.end((err, res) => {
-        txt = res;
-      });
-      return ["NodeConstraintError: expected to match " + txt];
-    case "MissingProperty":
-      return ["Missing property: " + val.property];
-    case "NegatedProperty":
-      return ["Unexpected property: " + val.property];
-    case "AbstractShapeFailure":
-      return ["Abstract Shape: " + val.shape];
-    case "SemActFailure": {
-      const nested = Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["rejected by semantic action:"].concat(nested);
-    }
-    case "SemActViolation":
-      return [val.message];
-    case "BooleanSemActFailure":
-      return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
-    default:
-      debugger; // console.log(val);
-      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
-    }
-    function errorList (errors) {
-      return errors.reduce(function (acc, e) {
-        const attrs = Object.keys(e);
-        return acc.concat(
-          (attrs.length === 1 && attrs[0] === "errors")
-            ? errorList(e.errors)
-            : e);
-      }, []);
-    }
+    return new ShExHumanErrorWriter().write(val);
   },
 
-  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
-
+  // static
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     const colon = prefixedIri.indexOf(":");
     if (colon === -1)
@@ -13572,7 +11109,7 @@ const ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + new URL(rel, meta.base).href;
       return quoted;
     }
     if (!meta)
@@ -13580,7 +11117,7 @@ const ShExUtil = {
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    const t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    const t = new URL(passedValue, meta.base || "").href; // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
@@ -13723,17 +11260,6 @@ const ShExUtil = {
 
 };
 
-function n3ify (ldterm) {
-  if (typeof ldterm !== "object")
-    return ldterm;
-  const ret = "\"" + ldterm.value + "\"";
-  if ("language" in ldterm)
-    return ret + "@" + ldterm.language;
-  if ("type" in ldterm)
-    return ret + "^^" + ldterm.type;
-  return ret;
-}
-
 // Add the ShExUtil functions to the given object or its prototype
 function AddShExUtil(parent, toPrototype) {
   for (let name in ShExUtil)
@@ -13759,148 +11285,1333 @@ if (true)
 
 /***/ }),
 
-/***/ 3457:
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ 7403:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
 
 /* ShExValidator - javascript module to validate a graph with respect to Shape Expressions
- *
- * Status: 1/2 tested, no known bugs.
- *
- * TODO:
- *   constraint violation reporting.
  */
-
-const ShExValidatorCjsModule = (function () {
-
-// interface constants
-const Start = { term: "START" }
-const InterfaceOptions = {
-  "coverage": {
-    "firstError": "fail on first error (usually used with eval-simple-1err)",
-    "exhaustive": "find as many errors as possible (usually used with eval-threaded-nerr)"
-  }
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
-
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShExValidator = exports.resultMapToShapeExprTest = exports.InterfaceOptions = void 0;
+// interface constants
+const ShExTerm = __importStar(__webpack_require__(1101));
+const term_1 = __webpack_require__(1101);
+const eval_validator_api_1 = __webpack_require__(3530);
+const Hierarchy = __importStar(__webpack_require__(2515));
+const neighborhood_api_1 = __webpack_require__(3486);
+const shex_xsd_1 = __webpack_require__(8994);
+const visitor_1 = __webpack_require__(8806);
+exports.InterfaceOptions = {
+    "coverage": {
+        "firstError": "fail on first error (usually used with eval-simple-1err)",
+        "exhaustive": "find as many errors as possible (usually used with eval-threaded-nerr)"
+    }
+};
 const VERBOSE = false; // "VERBOSE" in process.env;
-
-const ShExTerm = __webpack_require__(1118);
-const ShExVisitor = __webpack_require__(8806);
-const { NoTripleConstraint } = __webpack_require__(3530);
-const Hierarchy = __webpack_require__(2515)
-
-function getLexicalValue (term) {
-  return ShExTerm.isIRI(term) ? term :
-    ShExTerm.isLiteral(term) ? ShExTerm.getLiteralValue(term) :
-    term.substr(2); // bnodes start with "_:"
+const EvalThreadedNErr = (__webpack_require__(6201)/* .RegexpModule */ .G);
+class SemActDispatcherImpl {
+    constructor(externalCode) {
+        this.handlers = {};
+        this.results = {};
+        this.externalCode = externalCode || {};
+    }
+    /**
+     * Store a semantic action handler.
+     *
+     * @param {string} name - semantic action's URL.
+     * @param {SemActHandler} handler - handler function.
+     *
+     * The handler object has a dispatch function is invoked with:
+     *   code: string - text of the semantic action.
+     *   ctx: object - matched triple or results subset.
+     *   extensionStorage: object - place where the extension writes into the result structure.
+     *   return :bool - false if the extension failed or did not accept the ctx object.
+     */
+    register(name, handler) {
+        this.handlers[name] = handler;
+    }
+    /**
+     * Calls all semantic actions, allowing each to write to resultsArtifact.
+     *
+     * @param {ShExJ.SemAct[]} semActs - list of semantic actions to invoke.
+     * @param {any} semActParm - evaluation context for SemAct.
+     * @param {any} resultsArtifact - simple storage for SemAct.
+     * @return {SemActFailure[]} false if any result was false.
+     */
+    dispatchAll(semActs, semActParm, resultsArtifact) {
+        return semActs.reduce((ret, semAct) => {
+            if (ret.length === 0 && semAct.name in this.handlers) {
+                const code = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
+                const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
+                const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
+                const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+                if (typeof response === 'object' && Array.isArray(response)) {
+                    if (response.length > 0)
+                        ret.push({ type: "SemActFailure", errors: response });
+                }
+                else {
+                    throw Error("unsupported response from semantic action handler: " + JSON.stringify(response));
+                }
+                if (!existing && Object.keys(extensionStorage).length > 0) {
+                    if (!("extensions" in resultsArtifact))
+                        resultsArtifact.extensions = {};
+                    resultsArtifact.extensions[semAct.name] = extensionStorage;
+                }
+                return ret;
+            }
+            return ret;
+        }, []);
+    }
 }
+/**
+ * A QueryTracker that's all no-ops.
+ */
+class EmptyTracker {
+    constructor() {
+        this.depth = 0;
+    }
+    recurse(_rec) { }
+    known(_res) { }
+    enter(_term, _shapeLabel) { ++this.depth; }
+    exit(_term, _shapeLabel, _res) { --this.depth; }
+}
+class ShapeExprValidationContext {
+    constructor(parent, label, // Can only be Start if it's the root of a context list.
+    depth, tracker, seen, matchTarget, subGraph) {
+        this.parent = parent;
+        this.label = label;
+        this.depth = depth;
+        this.tracker = tracker;
+        this.seen = seen;
+        this.matchTarget = matchTarget;
+        this.subGraph = subGraph;
+    }
+    checkShapeLabel(label) {
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, this.matchTarget, this.subGraph);
+    }
+    followTripleConstraint() {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, null);
+    }
+    checkExtendsPartition(subGraph) {
+        return new ShapeExprValidationContext(this, this.label, this.depth + 1, this.tracker, this.seen, this.matchTarget, subGraph);
+    }
+    checkExtendingClass(label, matchTarget) {
+        return new ShapeExprValidationContext(this, label, this.depth + 1, this.tracker, this.seen, matchTarget, this.subGraph);
+    }
+}
+class MapMap {
+    constructor() {
+        this.data = new Map();
+    }
+    set(a, b, t) {
+        if (!this.data.has(a)) {
+            this.data.set(a, new Map());
+        }
+        if (this.data.get(a).has(b)) {
+            throw Error(`Error setting [${a}][${b}]=${t}; already has value ${this.data.get(a).get(b)}`);
+        }
+        this.data.get(a).set(b, t);
+    }
+    get(a, b) {
+        return this.data.get(a).get(b);
+    }
+}
+class TriplesMatching {
+    constructor(hits, misses) {
+        this.hits = hits;
+        this.misses = misses;
+    }
+}
+class TriplesMatchingResult {
+    constructor(triple, sub) {
+        this.triple = triple;
+        this.sub = sub;
+    }
+}
+class TriplesMatchingHit extends TriplesMatchingResult {
+}
+class TriplesMatchingNoValueConstraint extends TriplesMatchingResult {
+    constructor(triple) {
+        super(triple, undefined); // TODO: could weaken typing on the hits, but also weakens the misses
+    }
+}
+class TriplesMatchingMiss extends TriplesMatchingResult {
+}
+/**
+ * Convert a ResultMap to a shapeExprTest by examining each shape association.
+ * TODO: migrate to ShExUtil when ShExUtil is TS-ified
+ * @param resultsMap - SolutionList or FailureList depending on whether resultsMap had some errors.
+ */
+function resultMapToShapeExprTest(resultsMap) {
+    const passFails = resultsMap.reduce((ret, pair) => {
+        const res = pair.appinfo;
+        return "errors" in res
+            ? { passes: ret.passes, failures: ret.failures.concat([res]) }
+            : { passes: ret.passes.concat([res]), failures: ret.failures };
+    }, { passes: [], failures: [] });
+    if (passFails.failures.length > 0) {
+        return passFails.failures.length !== 1
+            ? { type: "FailureList", errors: passFails.failures }
+            : passFails.failures[0];
+    }
+    else {
+        return passFails.passes.length !== 1
+            ? { type: "SolutionList", solutions: passFails.passes }
+            : passFails.passes[0];
+    }
+}
+exports.resultMapToShapeExprTest = resultMapToShapeExprTest;
+/** Directly construct a DB from triples.
+ * TODO: should this be in @shexjs/neighborhood-something ?
+ */
+class TrivialNeighborhood {
+    constructor(queryTracker) {
+        this.incoming = [];
+        this.outgoing = [];
+        this.queryTracker = queryTracker;
+    }
+    getTriplesByIRI(s, p, o, _g) {
+        return this.incoming.concat(this.outgoing).filter(t => (!s || s === t.subject) &&
+            (!p || p === t.predicate) &&
+            (!o || o === t.object));
+    }
+    getNeighborhood(_point, _shapeLabel, _shape) {
+        return {
+            outgoing: this.outgoing,
+            incoming: this.incoming
+        };
+    }
+    getSubjects() { throw Error("!Triples DB can't index subjects"); }
+    getPredicates() { throw Error("!Triples DB can't index predicates"); }
+    getObjects() { throw Error("!Triples DB can't index objects"); }
+    getQuads() { throw Error("!Triples DB doesn't have Quads"); }
+    get size() { return this.incoming.length + this.outgoing.length; }
+    addIncomingTriples(tz) { Array.prototype.push.apply(this.incoming, tz); }
+    addOutgoingTriples(tz) { Array.prototype.push.apply(this.outgoing, tz); }
+}
+class ShExValidator {
+    /* ShExValidator - construct an object for validating a schema.
+     *
+     * schema: a structure produced by a ShEx parser or equivalent.
+     * options: object with controls for
+     *   lax(true): boolean: whine about missing types in schema.
+     *   diagnose(false): boolean: make validate return a structure with errors.
+     */
+    constructor(schema, db, options = {}) {
+        const index = schema._index || (0, visitor_1.index)(schema);
+        if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
+            index.labelToTcs = {};
+        this.index = index;
+        options = options || {};
+        this.options = options;
+        this.known = {};
+        this.schema = schema;
+        this.db = db;
+        // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
+        this.regexModule = this.options.regexModule || EvalThreadedNErr;
+        this.semActHandler = new SemActDispatcherImpl(options.semActs);
+    }
+    /**
+     * Validate each entry in a fixed ShapeMap, returning a results ShapeMap
+     *
+     * @param shapeMap - list of node/shape pairs to validate
+     * @param tracker - optional implementation of QueryTracker to log validation
+     * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
+     */
+    validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
+        return shapeMap.map(pair => {
+            // let time = +new Date();
+            const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
+            // time = +new Date() - time;
+            return {
+                node: pair.node,
+                shape: pair.shape,
+                status: "errors" in res ? "nonconformant" : "conformant",
+                appinfo: res,
+                // elapsed: time
+            };
+        });
+    }
+    /**
+     * Validate a single node as a labeled shape expression or as the Start shape
+     *
+     * @param focus - RdfJs Term to validate
+     * @param labelOrStart - label of shapeExpr to validate focus against, or `ShExValidator.Start`.
+     * @param tracker - optional implementation of QueryTracker to log validation
+     * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
+     */
+    validateNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
+        const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null);
+        if ("startActs" in this.schema) {
+            const startActionStorage = {}; // !!! need test to see this write to results structure.
+            const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage);
+            if (semActErrors.length)
+                return {
+                    type: "Failure",
+                    node: (0, term_1.rdfJsTerm2Ld)(focus),
+                    shape: ctx.label,
+                    errors: semActErrors
+                }; // some semAct aborted !! return a better error
+        }
+        const ret = this.validateShapeLabel(focus, ctx);
+        if ("startActs" in this.schema) {
+            ret.startActs = this.schema.startActs;
+        }
+        return ret;
+    }
+    validateShapeLabel(focus, ctx) {
+        if (typeof ctx.label !== "string") {
+            if (ctx.label !== ShExValidator.Start)
+                runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
+            if (!this.schema.start)
+                runtimeError("start production not defined");
+            return this.validateShapeExpr(focus, this.schema.start, ctx);
+        }
+        const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
+        if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
+            if (seenKey in ctx.seen) {
+                let ret = {
+                    type: "Recursion",
+                    node: (0, term_1.rdfJsTerm2Ld)(focus),
+                    shape: ctx.label
+                };
+                ctx.tracker.recurse(ret);
+                return ret;
+            }
+            if ("known" in this && seenKey in this.known) {
+                const ret = this.known[seenKey];
+                ctx.tracker.known(ret);
+                return ret;
+            }
+            ctx.seen[seenKey] = { node: focus, shape: ctx.label };
+            ctx.tracker.enter(focus, ctx.label);
+        }
+        const ret = this.validateDescendants(focus, ctx.label, ctx, false);
+        if (!ctx.subGraph) {
+            ctx.tracker.exit(focus, ctx.label, ret);
+            delete ctx.seen[seenKey];
+            if ("known" in this)
+                this.known[seenKey] = ret;
+        }
+        return ret;
+    }
+    /**
+     * Validate shapeLabel and shapeExprs which extend shapeLabel
+     *
+     * @param focus - focus of validation
+     * @param shapeLabel - same as ctx.label, but with stronger typing (can't be Start)
+     * @param ctx - validation context
+     * @param includeAbstractShapes - if true, don't strip out abstract classes (needed for validating abstract base shapes)
+     */
+    validateDescendants(focus, shapeLabel, ctx, includeAbstractShapes = false) {
+        const _ShExValidator = this;
+        if (ctx.subGraph) { // !! matchTarget?
+            // matchTarget indicates that shape substitution has already been applied.
+            // Now we're testing a subgraph against the base shapes.
+            const res = this.validateShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
+            if (ctx.matchTarget && shapeLabel === ctx.matchTarget.label && !("errors" in res))
+                ctx.matchTarget.count++;
+            return res;
+        }
+        // Find all non-abstract shapeExprs extended with label. 
+        let candidates = [shapeLabel];
+        candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+        // Uniquify list.
+        for (let i = candidates.length - 1; i >= 0; --i) {
+            if (candidates.indexOf(candidates[i]) < i)
+                candidates.splice(i, 1);
+        }
+        // Filter out abstract shapes.
+        if (!includeAbstractShapes)
+            candidates = candidates.filter(l => !this.lookupShape(l).abstract);
+        // Aggregate results in a SolutionList or FailureList.
+        const results = candidates.reduce((ret, candidateShapeLabel) => {
+            const shapeExpr = this.lookupShape(candidateShapeLabel);
+            const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
+            ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
+            const res = this.validateShapeDecl(focus, shapeExpr, ctx);
+            return "errors" in res || matchTarget && matchTarget.count === 0 ?
+                { passes: ret.passes, failures: ret.failures.concat(res) } :
+                { passes: ret.passes.concat(res), failures: ret.failures };
+        }, { passes: [], failures: [] });
+        let ret;
+        if (results.passes.length > 0) {
+            ret = results.passes.length !== 1 ?
+                { type: "SolutionList", solutions: results.passes } :
+                results.passes[0];
+        }
+        else if (results.failures.length > 0) {
+            ret = results.failures.length !== 1 ?
+                { type: "FailureList", errors: results.failures } :
+                results.failures[0];
+        }
+        else {
+            ret = {
+                type: "AbstractShapeFailure",
+                shape: shapeLabel,
+                errors: [shapeLabel + " has no non-abstract children"]
+            };
+        }
+        return ret;
+        // @TODO move to Visitor.index
+        function indexExtensions(schema) {
+            const abstractness = {};
+            const extensions = Hierarchy.create();
+            makeSchemaVisitor().visitSchema(schema);
+            return extensions.children;
+            function makeSchemaVisitor() {
+                const schemaVisitor = (0, visitor_1.Visitor)();
+                let curLabel;
+                let curAbstract;
+                const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
+                schemaVisitor.visitShapeDecl = function (decl) {
+                    curLabel = decl.id;
+                    curAbstract = decl.abstract;
+                    abstractness[decl.id] = !!decl.abstract;
+                    return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
+                };
+                schemaVisitor.visitShape = function (shape) {
+                    if (shape.extends !== undefined) {
+                        shape.extends.forEach(ext => {
+                            const extendsVisitor = (0, visitor_1.Visitor)();
+                            extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
+                            extendsVisitor.visitShapeRef = function (reference, ..._args) {
+                                extensions.add(reference, curLabel);
+                                extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
+                                // makeSchemaVisitor().visitSchema(schema);
+                                return "null";
+                            };
+                            extendsVisitor.visitShapeExpr(ext);
+                        });
+                    }
+                    return "null";
+                };
+                return schemaVisitor;
+            }
+        }
+    }
+    /**
+     * Validate a ShapeDecl, including any shapes it restricts
+     *
+     * @param focus - focus of validation
+     * @param shapeDecl - ShExJ ShapeDecl object
+     * @param ctx - validation context
+     */
+    validateShapeDecl(focus, shapeDecl, ctx) {
+        const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr]);
+        const expr = conjuncts.length === 1
+            ? conjuncts[0]
+            : { type: "ShapeAnd", shapeExprs: conjuncts };
+        return this.validateShapeExpr(focus, expr, ctx);
+    }
+    lookupShape(label) {
+        const shapes = this.schema.shapes;
+        if (shapes === undefined) {
+            runtimeError("shape " + label + " not found; no shapes in schema");
+        }
+        else if (label in this.index.shapeExprs) {
+            return this.index.shapeExprs[label];
+        }
+        runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
+    }
+    validateShapeExpr(focus, shapeExpr, ctx) {
+        if (typeof shapeExpr === "string") { // ShapeRef
+            return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
+        }
+        switch (shapeExpr.type) {
+            case "NodeConstraint":
+                return this.validateNodeConstraint(focus, shapeExpr, ctx);
+            case "Shape":
+                return this.validateShape(focus, shapeExpr, ctx);
+            case "ShapeExternal":
+                if (typeof this.options.validateExtern !== "function")
+                    throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
+                return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+            case "ShapeOr":
+                const orErrors = [];
+                for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+                    const nested = shapeExpr.shapeExprs[i];
+                    const sub = this.validateShapeExpr(focus, nested, ctx);
+                    if ("errors" in sub)
+                        orErrors.push(sub);
+                    else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
+                        return { type: "ShapeOrResults", solution: sub };
+                }
+                return { type: "ShapeOrFailure", errors: orErrors };
+            case "ShapeNot":
+                const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
+                return ("errors" in sub)
+                    ? { type: "ShapeNotResults", solution: sub }
+                    : { type: "ShapeNotFailure", errors: sub }; // ugh
+            case "ShapeAnd":
+                const andPasses = [];
+                const andErrors = [];
+                for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+                    const nested = shapeExpr.shapeExprs[i];
+                    const sub = this.validateShapeExpr(focus, nested, ctx);
+                    if ("errors" in sub)
+                        andErrors.push(sub);
+                    else
+                        andPasses.push(sub);
+                }
+                return andErrors.length > 0
+                    ? { type: "ShapeAndFailure", errors: andErrors }
+                    : { type: "ShapeAndResults", solutions: andPasses };
+            default:
+                throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
+        }
+    }
+    // TODO: should this be called for and, or, not?
+    evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
+        if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
+            const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({ node: point }, ret), ret);
+            if (semActErrors.length)
+                // some semAct aborted
+                return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
+        }
+        return ret;
+    }
+    validateShape(focus, shape, ctx) {
+        let ret = null;
+        const fromDB = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
+        const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
+        const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
+        const tripleConstraints = extendsTCs.concat(localTCs);
+        // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
+        const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+        const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
+        const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
+        const partitionErrors = [];
+        // only construct a regexp engine if shape has a triple expression
+        const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
+        for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
+            const { errors, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
+            const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
+            if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
+                // @ts-ignore TODO
+                possibleRet.solution = results;
+            if ("semActs" in shape) {
+                const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: focus }, results), possibleRet);
+                if (semActErrors.length)
+                    // some semAct aborted
+                    Array.prototype.push.apply(errors, semActErrors);
+            }
+            partitionErrors.push(errors);
+            if (errors.length === 0)
+                ret = possibleRet;
+        }
+        // Report only last errors until we have a better idea.
+        const lastErrors = partitionErrors[partitionErrors.length - 1];
+        let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
+        if (errors.length > 0)
+            ret = {
+                type: "Failure",
+                node: (0, term_1.rdfJsTerm2Ld)(focus),
+                shape: ctx.label,
+                errors: errors
+            };
+        // remove N3jsTripleToString
+        if (VERBOSE)
+            neighborhood.forEach(function (t) {
+                // @ts-ignore
+                delete t.toString;
+            });
+        return this.addShapeAttributes(shape, ret);
+    }
+    /**
+     * Try a mapping of triples to triple constraints
+     *
+     * @param t2tc mapping from triples to triple constraints
+     * @param focus node being validated
+     * @param shape against a give shape
+     * @param ctx validation context
+     * @param extendsTCs all triple constraints shape transitively extends
+     * @param tc2exts mapping of extended triple constraint to position in EXTENDS
+     * @param matchedExtras triples allowed by EXTRA
+     * @param tripleConstraints triple constraints composing shape
+     * @param results mapping from triple to nested validation result
+     * @param outgoing triples to check for ClosedShapeViolation
+     * @param regexEngine engine to use to test regular triple expression
+     * @private
+     */
+    tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine) {
+        const tc2ts = new eval_validator_api_1.MapArray();
+        tripleConstraints.forEach(tc => tc2ts.empty(tc));
+        const unexpectedTriples = [];
+        const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
+        t2tc.forEach((tripleConstraint, triple) => {
+            if (extendsTCs.indexOf(tripleConstraint) !== -1) {
+                // allocate to EXTENDS
+                for (let extNo of tc2exts.get(tripleConstraint)) {
+                    // allocated to multiple extends if diamond inheritance
+                    extendsToTriples[extNo].push(triple);
+                }
+            }
+            else {
+                // allocate to local shape
+                tc2ts.add(tripleConstraint, { triple: triple, res: t2tcErrors.get(tripleConstraint, triple) });
+            }
+        });
+        outgoing.forEach(triple => {
+            if (!t2tc.has(triple) // didn't match anything
+                && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
+                unexpectedTriples.push(triple);
+        });
+        const errors = [];
+        // Triples not mapped to triple constraints are not allowed in closed shapes.
+        if (shape.closed && unexpectedTriples.length > 0) {
+            errors.push({
+                type: "ClosedShapeViolation",
+                unexpectedTriples: unexpectedTriples.map(q => {
+                    return {
+                        subject: (0, term_1.rdfJsTerm2Ld)(q.subject),
+                        predicate: (0, term_1.rdfJsTerm2Ld)(q.predicate),
+                        object: (0, term_1.rdfJsTerm2Ld)(q.object),
+                    };
+                })
+            });
+        }
+        let results = this.testExtends(shape, focus, extendsToTriples, ctx);
+        if (results === null || !("errors" in results)) {
+            if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
+                const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
+                if (!("errors" in sub) && results) {
+                    results = { type: "ExtendedResults", extensions: results, local: sub };
+                }
+                else {
+                    results = sub;
+                }
+            }
+            else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
+                results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
+            }
+        }
+        // TODO: what if results is a TypedError (i.e. not a container of further errors)?
+        if (results !== null && results.errors !== undefined)
+            Array.prototype.push.apply(errors, results.errors);
+        return { errors, results };
+    }
+    /**
+     * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
+     * @param constraintList - list of TripleConstraint
+     * @param neighborhood - list of Quad
+     * @param ctx - evaluation context
+     */
+    matchByPredicate(constraintList, neighborhood, ctx) {
+        const _ShExValidator = this;
+        const outgoing = indexNeighborhood(neighborhood.outgoing);
+        const incoming = indexNeighborhood(neighborhood.incoming);
+        const init = { t2tcErrors: new Map(), tc2TResults: new MapMap(), t2tcs: new eval_validator_api_1.MapArray() };
+        [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.t2tcs.data.set(triple, [])));
+        return constraintList.reduce(function (ret, constraint) {
+            // subject and object depend on direction of constraint.
+            const index = constraint.inverse ? incoming : outgoing;
+            // get triples matching predicate
+            const matchPredicate = index.byPredicate.get(constraint.predicate) ||
+                []; // empty list when no triple matches that constraint
+            // strip to triples matching value constraints (apart from @<someShape>)
+            const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
+            matchConstraints.hits.forEach(function (evidence) {
+                ret.t2tcs.add(evidence.triple, constraint);
+                ret.tc2TResults.set(constraint, evidence.triple, evidence.sub);
+            });
+            matchConstraints.misses.forEach(function (evidence) {
+                ret.t2tcErrors.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
+            });
+            return ret;
+        }, init);
+    }
+    whatsMissing(t2tcs, misses, extras) {
+        const matchedExtras = []; // triples accounted for by EXTRA
+        const missErrors = t2tcs.reduce((ret, t, constraints) => {
+            if (constraints.length === 0 && // matches no constraints
+                misses.has(t)) { // predicate matched some constraint(s)
+                if (extras.indexOf(t.predicate.value) !== -1) {
+                    matchedExtras.push(t);
+                }
+                else { // not declared extra
+                    ret.push({
+                        type: "TypeMismatch",
+                        triple: { type: "TestedTriple", subject: (0, term_1.rdfJsTerm2Ld)(t.subject), predicate: (0, term_1.rdfJsTerm2Ld)(t.predicate), object: (0, term_1.rdfJsTerm2Ld)(t.object) },
+                        constraint: misses.get(t).constraint,
+                        errors: misses.get(t).errors
+                    });
+                }
+            }
+            return ret;
+        }, []);
+        return { missErrors, matchedExtras };
+    }
+    addShapeAttributes(shape, ret) {
+        if (shape.annotations !== undefined) { // @ts-ignore TODO: where can annotations appear in results?
+            ret.annotations = shape.annotations;
+        }
+        return ret;
+    }
+    testExtends(expr, focus, extendsToTriples, ctx) {
+        if (expr.extends === undefined)
+            return null;
+        const passes = [];
+        const errors = [];
+        for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
+            const extend = expr.extends[eNo];
+            const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
+            extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+            ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
+            const sub = this.validateShapeExpr(focus, extend, ctx);
+            if ("errors" in sub)
+                errors.push(sub);
+            else
+                passes.push(sub);
+        }
+        if (errors.length > 0) {
+            return { type: "ExtensionFailure", errors: errors };
+        }
+        return { type: "ExtensionResults", solutions: passes };
+    }
+    /** TripleConstraintsVisitor - walk shape's extends to get all
+     * referenced triple constraints.
+     *
+     * @param {} labelToTcs: Map<shapeLabel, TripleConstraint[]>
+     * @returns { extendsTCs: [[TripleConstraint]], localTCs: [TripleConstraint] }
+     */
+    TripleConstraintsVisitor(labelToTcs) {
+        const _ShExValidator = this;
+        const visitor = (0, visitor_1.Visitor)(labelToTcs);
+        function emptyShapeExpr() { return []; }
+        visitor.visitShapeDecl = function (decl, _min, _max) {
+            // if (labelToTcs.has(decl.id)) !! uncomment cache for production
+            //   return labelToTcs[decl.id];
+            labelToTcs[decl.id] = decl.shapeExpr
+                ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
+                : emptyShapeExpr();
+            return [{ type: "Ref", ref: decl.id }];
+        };
+        visitor.visitShapeOr = function (shapeExpr, _min, max) {
+            return shapeExpr.shapeExprs.reduce((acc, disjunct) => acc.concat(this.visitShapeExpr(disjunct, 0, max)), emptyShapeExpr());
+        };
+        visitor.visitShapeAnd = function (shapeExpr, min, max) {
+            const seen = new Set();
+            return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
+                this.visitShapeExpr(disjunct, min, max).forEach((tc) => {
+                    const key = `${tc.min} ${tc.max} ${tc.predicate}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        acc.push(tc);
+                    }
+                });
+                return acc;
+            }, []);
+        };
+        visitor.visitShapeNot = function (expr, _min, _max) {
+            throw Error(`don't know what to do when extending ${JSON.stringify(expr)}`);
+        };
+        visitor.visitShapeExternal = emptyShapeExpr;
+        visitor.visitNodeConstraint = emptyShapeExpr;
+        // Override visitShapeRef to follow references.
+        // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
+        visitor.visitShapeRef = function (shapeLabel, min, max) {
+            return visitor.visitShapeDecl(_ShExValidator.lookupShape(shapeLabel), min, max);
+        };
+        visitor.visitShape = function (shape, min, max) {
+            const { extendsTCs, localTCs } = shapePieces(shape, min, max);
+            return extendsTCs.flat().concat(localTCs);
+        };
+        // Visit shape's EXTENDS and expression.
+        function shapePieces(shape, min, max) {
+            const extendsTCs = shape.extends !== undefined
+                ? shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max))
+                : [];
+            const localTCs = shape.expression === undefined
+                ? []
+                : visitor.visitExpression(shape.expression, min, max);
+            return { extendsTCs, localTCs };
+        }
+        function getAllTripleConstraints(shape) {
+            const { extendsTCs: extendsTcOrRefsz, localTCs } = shapePieces(shape, 1, 1);
+            const tcs = [];
+            const tc2exts = new Map();
+            extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
+            return { extendsTCs: tcs, tc2exts, localTCs };
+            function flattenExtends(tcOrRefs, ord) {
+                return tcOrRefs.forEach(tcOrRef => {
+                    if (tcOrRef.type === "TripleConstraint") {
+                        add(tcOrRef); // as TC
+                    }
+                    else {
+                        flattenExtends(labelToTcs[tcOrRef.ref], ord);
+                    }
+                });
+                function add(tc) {
+                    const idx = tcs.indexOf(tc);
+                    if (idx === -1) {
+                        // new TC
+                        tcs.push(tc);
+                        tc2exts.set(tc, [ord]);
+                    }
+                    else {
+                        // ref to TC already seen in this or earlier EXTENDS
+                        if (tc2exts.get(tc).indexOf(ord) === -1) {
+                            // not yet included in this EXTENDS
+                            tc2exts.get(tc).push(ord);
+                        }
+                    }
+                }
+            }
+        }
+        // tripleExprs return list of TripleConstraints
+        function n(l, expr) {
+            if (expr.min === undefined)
+                return l;
+            return l * expr.min;
+        }
+        function x(l, expr) {
+            if (expr.max === undefined)
+                return l;
+            if (l === -1 || expr.max === -1)
+                return -1;
+            return l * expr.max;
+        }
+        function and(tes) {
+            return Array.prototype.concat.apply([], tes);
+        }
+        // Any TC inside a OneOf implicitly has a min cardinality of 0.
+        visitor.visitOneOf = function (expr, _outerMin, outerMax) {
+            return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, 0, x(outerMax, expr))));
+        };
+        visitor.visitEachOf = function (expr, outerMin, outerMax) {
+            return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, n(outerMin, expr), x(outerMax, expr))));
+        };
+        visitor.visitInclusion = function (inclusion, outerMin, outerMax) {
+            return visitor.visitTripleExpr(_ShExValidator.index.tripleExprs[inclusion], outerMin, outerMax);
+        };
+        // Synthesize a TripleConstraint with the implicit cardinality.
+        visitor.visitTripleConstraint = function (expr, _outerMin, _outerMax) {
+            return [expr];
+            /* eval-threaded-n-err counts on t2tcs.indexOf(expr) so we can't optimize with:
+               const ret = JSON.parse(JSON.stringify(expr));
+               ret.min = n(outerMin, expr);
+               ret.max = x(outerMax, expr);
+               return [ret];
+            */
+        };
+        return { getAllTripleConstraints };
+    }
+    triplesMatchingShapeExpr(triples, constraint, ctx) {
+        const _ShExValidator = this;
+        const misses = [];
+        const hits = [];
+        triples.forEach(function (triple) {
+            const value = constraint.inverse ? triple.subject : triple.object;
+            const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
+            if (constraint.valueExpr === undefined)
+                hits.push(new TriplesMatchingNoValueConstraint(triple));
+            else {
+                ctx = ctx.followTripleConstraint();
+                const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
+                if (sub.errors === undefined) { // TODO: improve typing to cast isn't necessary
+                    hits.push(new TriplesMatchingHit(triple, sub));
+                }
+                else /* !! if (!hits.find(h => h.triple === triple)) */ {
+                    _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
+                    misses.push(new TriplesMatchingMiss(triple, sub));
+                }
+            }
+        });
+        return new TriplesMatching(hits, misses);
+    }
+    /* validateNodeConstraint - return whether the value matches the value
+     * expression without checking shape references.
+     */
+    validateNodeConstraint(focus, nc, ctx) {
+        const errors = [];
+        function validationError(...s) {
+            const errorStr = Array.prototype.join.call(s, "");
+            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(focus) + " as " + JSON.stringify(nc) + ": " + errorStr);
+            return false;
+        }
+        if (nc.nodeKind !== undefined) {
+            if (["iri", "bnode", "literal", "nonliteral"].indexOf(nc.nodeKind) === -1) {
+                validationError(`unknown node kind '${nc.nodeKind}'`);
+            }
+            if (focus.termType === "BlankNode") {
+                if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
+                    validationError(`blank node found when ${nc.nodeKind} expected`);
+                }
+            }
+            else if (focus.termType === "Literal") {
+                if (nc.nodeKind !== "literal") {
+                    validationError(`literal found when ${nc.nodeKind} expected`);
+                }
+            }
+            else if (nc.nodeKind === "bnode" || nc.nodeKind === "literal") {
+                validationError(`iri found when ${nc.nodeKind} expected`);
+            }
+        }
+        if (nc.datatype && nc.values)
+            validationError("found both datatype and values in " + nc);
+        if (nc.values !== undefined) {
+            if (!nc.values.some(valueSetValue => testValueSetValue(valueSetValue, focus))) {
+                validationError(`value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
+            }
+        }
+        const numeric = (0, shex_xsd_1.getNumericDatatype)(focus);
+        if (nc.datatype !== undefined) {
+            (0, shex_xsd_1.testKnownTypes)(focus, validationError, term_1.rdfJsTerm2Ld, nc.datatype, numeric, focus.value);
+        }
+        (0, shex_xsd_1.testFacets)(nc, focus.value, validationError, numeric);
+        const ncRet = Object.assign({}, {
+            type: null,
+            node: (0, term_1.rdfJsTerm2Ld)(focus)
+        }, (ctx.label ? { shape: ctx.label } : {}), { shapeExpr: nc });
+        Object.assign(ncRet, errors.length > 0
+            ? { type: "NodeConstraintViolation", errors: errors }
+            : { type: "NodeConstraintTest", });
+        return this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
+    }
+}
+exports.ShExValidator = ShExValidator;
+ShExValidator.Start = neighborhood_api_1.Start;
+ShExValidator.InterfaceOptions = exports.InterfaceOptions;
+ShExValidator.type = "ShExValidator";
+function testLanguageStem(typedValue, stem) {
+    const trail = typedValue.substring(stem.length);
+    return (typedValue !== "" && typedValue.startsWith(stem) && (stem === "" || trail === "" || trail[0] === "-"));
+}
+function valueInExclusions(exclusions, value) {
+    return exclusions.some(exclusion => {
+        if (typeof exclusion === "string") { // Iri
+            return (value === exclusion);
+        }
+        else if (typeof exclusion === "object" // Literal
+            && exclusion.type !== undefined
+            && !exclusion.type.match(/^(?:Iri|Literal|Language)(?:Stem(?:Range)?)?$/)) {
+            return (value === exclusion.value);
+        }
+        else {
+            const valueConstraint = exclusion;
+            switch (valueConstraint.type) {
+                // "Iri" covered above
+                case "IriStem":
+                    return (value.startsWith(valueConstraint.stem));
+                // "Literal" covered above
+                case "LiteralStem":
+                    return (value.startsWith(valueConstraint.stem));
+                case "Language":
+                    return (value === valueConstraint.languageTag);
+                case "LanguageStem":
+                    return testLanguageStem(value, valueConstraint.stem);
+            }
+        }
+        return false;
+    });
+}
+function testValueSetValue(valueSetValueP, value) {
+    if (typeof valueSetValueP === "string") { // Iri
+        return (value.termType === "NamedNode" && value.value === valueSetValueP);
+    }
+    else if (typeof valueSetValueP === "object" // Literal
+        && (valueSetValueP.type === undefined
+            || !valueSetValueP.type.match(/^(?:Iri|Literal|Language)(?:Stem(?:Range)?)?$/))) {
+        if (value.termType !== "Literal") {
+            return false;
+        }
+        else {
+            const vsValueLiteral = valueSetValueP;
+            const valLiteral = value;
+            return (value.value === vsValueLiteral.value
+                && (vsValueLiteral.language === undefined || vsValueLiteral.language === valLiteral.language)
+                && (vsValueLiteral.type === undefined || vsValueLiteral.type === valLiteral.datatype.value));
+        }
+    }
+    else {
+        // Do a little dance to rule out ObjectLiteral and IRIREF
+        const valueSetValue = valueSetValueP;
+        switch (valueSetValue.type) {
+            // "Iri" covered above
+            case "IriStem":
+                if (value.termType !== "NamedNode")
+                    return false;
+                return (value.value.startsWith(valueSetValue.stem));
+            case "IriStemRange":
+                if (value.termType !== "NamedNode")
+                    return false;
+                if (typeof valueSetValue.stem === "string" && !value.value.startsWith(valueSetValue.stem))
+                    return false;
+                return (!valueInExclusions(valueSetValue.exclusions, value.value));
+            // "Literal" covered above
+            case "LiteralStem":
+                if (value.termType !== "Literal")
+                    return false;
+                return (value.value.startsWith(valueSetValue.stem));
+            case "LiteralStemRange":
+                if (value.termType !== "Literal")
+                    return false;
+                if (typeof valueSetValue.stem === "string" && !value.value.startsWith(valueSetValue.stem))
+                    return false;
+                return (!valueInExclusions(valueSetValue.exclusions, value.value));
+            case "Language":
+                if (value.termType !== "Literal")
+                    return false;
+                return (value.language === valueSetValue.languageTag);
+            case "LanguageStem":
+                if (value.termType !== "Literal")
+                    return false;
+                return testLanguageStem(value.language, valueSetValue.stem);
+            case "LanguageStemRange":
+                if (value.termType !== "Literal")
+                    return false;
+                if (typeof valueSetValue.stem === "string" && !testLanguageStem(value.language, valueSetValue.stem))
+                    return false;
+                return (!valueInExclusions(valueSetValue.exclusions, value.language));
+        }
+    }
+}
+const NoTripleConstraint = Symbol('NO_TRIPLE_CONSTRAINT');
+/** Explore permutations of mapping from Triples to TripleConstraints
+ * documented using test ExtendsRepeatedP-pass
+ */
+class TripleToTripleConstraints {
+    /**
+     *
+     * @param constraintList mapping from Triple to possible TripleConstraints, e.g. [
+     *      [0,2,4], # try T0 against TC0, TC2, TC4
+     *      [0,2,4], # try T1 against same
+     *      [0,2,4], # try T2 against same
+     *      [1,3]    # try T3 against TC1, TC3
+     *   ]
+     * @param extendsTCs how many TCs are in EXTENDS,
+     *   e.g. 4 says that TCs 0-3 are assigned to some EXTENDS; only TC4 is "local".
+     * @param tc2exts which TripleConstraints came from which EXTENDS, e.g. [
+     *     [0], # TC0 is assignable to EXTENDS 0
+     *     [0], # TC1 is assignable to EXTENDS 0
+     *     [0], # TC2 is assignable to EXTENDS 0
+     *     [0], # TC3 is assignable to EXTENDS 0
+     *   ]
+     */
+    constructor(constraintList, extendsTCs, tc2exts) {
+        this.uniqueTCs = [];
+        this.extendsTCs = extendsTCs;
+        this.tc2exts = tc2exts;
+        this.subgraphCache = new Map();
+        this.crossProduct = CrossProduct(constraintList, NoTripleConstraint);
+    }
+    /**
+     * Find next mapping of Triples to TripleConstraints.
+     * Exclude any that differ only in an irrelevant order difference in assignment to EXTENDS.
+     * @returns {(Quad | null}
+     */
+    next() {
+        while (this.crossProduct.next()) {
+            /* t2tc - array mapping neighborhood index to TripleConstraint
+             * CrossProduct counts through t2tcs from the right:
+             *   [ 0, 0, 0, 1 ] # first call
+             *   [ 0, 0, 0, 3 ] # second call
+             *   [ 0, 0, 2, 1 ] # third call
+             *   [ 0, 0, 2, 3 ] # fourth call
+             *   [ 0, 0, 4, 1 ] # fifth call
+             *   [ 0, 2, 0, 1 ] # sixth call...
+             */
+            const t2tc = this.crossProduct.get(); // [0,1,0,3] mapping from triple to constraint
+            // if (DBG_gonnaMatch (t2tc, fromDB, t2tcs)) debugger;
+            /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
+               Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
+               t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
+               tc2exts: [[0], [0], [0], [0]] (All four TCs assignable to first EXTENDS.)
+            */
+            const subgraphKey = [...t2tc.entries()].map(([_triple, tripleConstraint]) => this.extendsTCs.indexOf(tripleConstraint) !== -1
+                ? '' + this.tc2exts.get(tripleConstraint).map(eNo => 'E' + eNo)
+                : 'L' + this.getUniqueTcNo(tripleConstraint)).join('-');
+            if (!this.subgraphCache.has(subgraphKey)) {
+                this.subgraphCache.set(subgraphKey, true);
+                return t2tc;
+            }
+        }
+        return null;
+    }
+    getUniqueTcNo(tripleConstraint) {
+        let idx = this.uniqueTCs.indexOf(tripleConstraint);
+        if (idx === -1) {
+            idx = this.uniqueTCs.length;
+            this.uniqueTCs.push(tripleConstraint);
+        }
+        return idx;
+    }
+}
+/**
+ * Create a cross-product iterator that walks through all permutations of assigning a set of keys to one of their associated values.
+ *
+ * started from http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
+ * TODO: make NoConstraint be part of CrossProduct rather than an externally-supplied value.
+ *
+ * @param sets Map from key to array of values
+ * @param emptyValue a term that won't appear in the values that can be used for internal logic
+ * @constructor
+ */
+function CrossProduct(sets, emptyValue) {
+    const n = sets.length, carets = [];
+    const keys = [...sets.keys];
+    let args = null;
+    function init() {
+        args = [];
+        for (let i = 0; i < n; i++) {
+            carets[i] = 0;
+            args[i] = sets.get(keys[i]).length > 0 ? sets.get(keys[i])[0] : emptyValue;
+        }
+    }
+    function next() {
+        // special case: crossProduct([]).next().next() returns false.
+        if (args !== null && args.length === 0)
+            return false;
+        if (args === null) {
+            init();
+            return true;
+        }
+        let i = n - 1;
+        carets[i]++;
+        if (carets[i] < sets.get(keys[i]).length) {
+            args[i] = sets.get(keys[i])[carets[i]];
+            return true;
+        }
+        while (carets[i] >= sets.get(keys[i]).length) {
+            if (i === 0) {
+                return false;
+            }
+            carets[i] = 0;
+            args[i] = sets.get(keys[i]).length > 0 ? sets.get(keys[i])[0] : emptyValue;
+            carets[--i]++;
+        }
+        args[i] = sets.get(keys[i])[carets[i]];
+        return true;
+    }
+    return {
+        next: next,
+        // do: function (block, _context) { // old API
+        //   return block.apply(_context, args);
+        // },
+        // new API because
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
+        // cautions about functions over arguments.
+        get: function () {
+            return args.reduce((acc, listElt, ord) => {
+                if (listElt !== emptyValue)
+                    acc.set(keys[ord], listElt);
+                return acc;
+            }, new Map());
+        }
+    };
+}
+/* N3jsTripleToString - simple toString function to make N3.js's triples
+ * printable.
+ */
+const N3jsTripleToString = function () {
+    function fmt(n) {
+        return n.termType === "Literal" ?
+            ["http://www.w3.org/2001/XMLSchema#integer",
+                "http://www.w3.org/2001/XMLSchema#float",
+                "http://www.w3.org/2001/XMLSchema#double"
+            ].indexOf(n.datatype.value) !== -1 ?
+                parseInt(n.value) :
+                n :
+            n.termType === "BlankNode" ?
+                n :
+                "<" + n + ">";
+    }
+    // @ts-ignore what's an elegant way add toString to Quads?
+    return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
+};
+/* indexNeighborhood - index triples by predicate
+ * returns: {
+ *     byPredicate: Object: mapping from predicate to triples containing that
+ *                  predicate.
+ *
+ *     candidates: [[1,3], [0,2]]: mapping from triple to the triple constraints
+ *                 it matches.  It is initialized to []. Mappings that remain an
+ *                 empty set indicate a triple which didn't matching anything in
+ *                 the shape.
+ *
+ *     misses: list to receive value constraint failures.
+ *   }
+ */
+function indexNeighborhood(triples) {
+    return {
+        byPredicate: triples.reduce(function (ret, t) {
+            const p = t.predicate.value;
+            if (!ret.has(p))
+                ret.set(p, []);
+            ret.get(p).push(t);
+            // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
+            if (VERBOSE)
+                t.toString = N3jsTripleToString;
+            return ret;
+        }, new Map()),
+        // candidates: _seq<number>(triples.length).map(function () {
+        //   return [];
+        // }),
+        misses: []
+    };
+}
+/* Return a list of n `undefined`s.
+ *
+ * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
+ * never calls f.
+ * This doesn't work without both a fill and a map (‽):
+ *   extendsToTriples: Quad[][] = Array((shape.extends || []).length).fill([]]).map(() => []);
+ */
+function _seq(n) {
+    return Array.from(Array(n)); // ha ha ha, javascript, you suck.
+}
+function runtimeError(...args) {
+    const errorStr = args.join("");
+    const e = new Error(errorStr);
+    Error.captureStackTrace(e, runtimeError);
+    throw e;
+}
+//# sourceMappingURL=shex-validator.js.map
 
+/***/ }),
 
+/***/ 8994:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.testFacets = exports.testKnownTypes = exports.getNumericDatatype = void 0;
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const integerDatatypes = [
-  XSD + "integer",
-  XSD + "nonPositiveInteger",
-  XSD + "negativeInteger",
-  XSD + "long",
-  XSD + "int",
-  XSD + "short",
-  XSD + "byte",
-  XSD + "nonNegativeInteger",
-  XSD + "unsignedLong",
-  XSD + "unsignedInt",
-  XSD + "unsignedShort",
-  XSD + "unsignedByte",
-  XSD + "positiveInteger"
+    XSD + "integer",
+    XSD + "nonPositiveInteger",
+    XSD + "negativeInteger",
+    XSD + "long",
+    XSD + "int",
+    XSD + "short",
+    XSD + "byte",
+    XSD + "nonNegativeInteger",
+    XSD + "unsignedLong",
+    XSD + "unsignedInt",
+    XSD + "unsignedShort",
+    XSD + "unsignedByte",
+    XSD + "positiveInteger"
 ];
-
 const decimalDatatypes = [
-  XSD + "decimal",
+    XSD + "decimal",
 ].concat(integerDatatypes);
-
 const numericDatatypes = [
-  XSD + "float",
-  XSD + "double"
+    XSD + "float",
+    XSD + "double"
 ].concat(decimalDatatypes);
-
 const numericParsers = {};
 numericParsers[XSD + "integer"] = function (label, parseError) {
-  if (!(label.match(/^[+-]?[0-9]+$/))) {
-    parseError("illegal integer value '" + label + "'");
-  }
-  return parseInt(label);
+    if (!(label.match(/^[+-]?[0-9]+$/))) {
+        parseError("illegal integer value '" + label + "'");
+    }
+    return parseInt(label);
 };
 numericParsers[XSD + "decimal"] = function (label, parseError) {
-  if (!(label.match(/^[+-]?(?:[0-9]*\.[0-9]+|[0-9]+)$/))) { // XSD has no pattern for decimal?
-    parseError("illegal decimal value '" + label + "'");
-  }
-  return parseFloat(label);
+    if (!(label.match(/^[+-]?(?:[0-9]*\.[0-9]+|[0-9]+)$/))) { // XSD has no pattern for decimal?
+        parseError("illegal decimal value '" + label + "'");
+    }
+    return parseFloat(label);
 };
 const DECIMAL_REGEX = /^[+\-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+\-]?[0-9]+)?$/;
-numericParsers[XSD + "float"  ] = function (label, parseError) {
-  if (label === "NaN") return NaN;
-  if (label === "INF") return Infinity;
-  if (label === "-INF") return -Infinity;
-  if (!(label.match(DECIMAL_REGEX))) { // XSD has no pattern for float?
-    parseError("illegal float value '" + label + "'");
-  }
-  return parseFloat(label);
+numericParsers[XSD + "float"] = function (label, parseError) {
+    if (label === "NaN")
+        return NaN;
+    if (label === "INF")
+        return Infinity;
+    if (label === "-INF")
+        return -Infinity;
+    if (!(label.match(DECIMAL_REGEX))) { // XSD has no pattern for float?
+        parseError("illegal float value '" + label + "'");
+    }
+    return parseFloat(label);
 };
-numericParsers[XSD + "double" ] = function (label, parseError) {
-  if (label === "NaN") return NaN;
-  if (label === "INF") return Infinity;
-  if (label === "-INF") return -Infinity;
-  if (!(label.match(DECIMAL_REGEX))) {
-    parseError("illegal double value '" + label + "'");
-  }
-  return Number(label);
+numericParsers[XSD + "double"] = function (label, parseError) {
+    if (label === "NaN")
+        return NaN;
+    if (label === "INF")
+        return Infinity;
+    if (label === "-INF")
+        return -Infinity;
+    if (!(label.match(DECIMAL_REGEX))) {
+        parseError("illegal double value '" + label + "'");
+    }
+    return Number(label);
 };
-
-function testRange (value, datatype, parseError) {
-  const ranges = {
-    //    integer            -1 0 1 +1 | "" -1.0 +1.0 1e0 NaN INF
-    //    decimal            -1 0 1 +1 -1.0 +1.0 | "" 1e0 NaN INF
-    //    float              -1 0 1 +1 -1.0 +1.0 1e0 1E0 NaN INF -INF | "" +INF
-    //    double             -1 0 1 +1 -1.0 +1.0 1e0 1E0 NaN INF -INF | "" +INF
-    //    nonPositiveInteger -1 0 +0 -0 | 1 +1 1a a1
-    //    negativeInteger    -1 | 0 +0 -0 1
-    //    long               -1 0 1 +1 |
-    //    int                -1 0 1 +1 |
-    //    short              -32768 0 32767 | -32769 32768
-    //    byte               -128 0 127 | "" -129 128
-    //    nonNegativeInteger 0 -0 +0 1 +1 | -1
-    //    unsignedLong       0 1 | -1
-    //    unsignedInt        0 1 | -1
-    //    unsignedShort      0 65535 | -1 65536
-    //    unsignedByte       0 255 | -1 256
-    //    positiveInteger    1 | -1 0
-    //    string             "" "a" "0"
-    //    boolean            true false 0 1 | "" TRUE FALSE tRuE fAlSe -1 2 10 01
-    //    dateTime           "2012-01-02T12:34:56.78Z" | "" "2012-01-02T" "2012-01-02"
-    integer:            { min: -Infinity           , max: Infinity },
-    decimal:            { min: -Infinity           , max: Infinity },
-    float:              { min: -Infinity           , max: Infinity },
-    double:             { min: -Infinity           , max: Infinity },
-    nonPositiveInteger: { min: -Infinity           , max: 0        },
-    negativeInteger:    { min: -Infinity           , max: -1       },
-    long:               { min: -9223372036854775808, max: 9223372036854775807 },
-    int:                { min: -2147483648         , max: 2147483647 },
-    short:              { min: -32768              , max: 32767    },
-    byte:               { min: -128                , max: 127      },
-    nonNegativeInteger: { min: 0                   , max: Infinity },
-    unsignedLong:       { min: 0                   , max: 18446744073709551615 },
-    unsignedInt:        { min: 0                   , max: 4294967295 },
-    unsignedShort:      { min: 0                   , max: 65535    },
-    unsignedByte:       { min: 0                   , max: 255      },
-    positiveInteger:    { min: 1                   , max: Infinity }
-  }
-  const parms = ranges[datatype.substr(XSD.length)];
-  if (!parms) throw Error("unexpected datatype: " + datatype);
-  if (value < parms.min) {
-    parseError("\"" + value + "\"^^<" + datatype + "> is less than the min:", parms.min);
-  } else if (value > parms.max) {
-    parseError("\"" + value + "\"^^<" + datatype + "> is greater than the max:", parms.min);
-  }
-};
-
+function testRange(value, datatype, parseError) {
+    const ranges = {
+        //    integer            -1 0 1 +1 | "" -1.0 +1.0 1e0 NaN INF
+        //    decimal            -1 0 1 +1 -1.0 +1.0 | "" 1e0 NaN INF
+        //    float              -1 0 1 +1 -1.0 +1.0 1e0 1E0 NaN INF -INF | "" +INF
+        //    double             -1 0 1 +1 -1.0 +1.0 1e0 1E0 NaN INF -INF | "" +INF
+        //    nonPositiveInteger -1 0 +0 -0 | 1 +1 1a a1
+        //    negativeInteger    -1 | 0 +0 -0 1
+        //    long               -1 0 1 +1 |
+        //    int                -1 0 1 +1 |
+        //    short              -32768 0 32767 | -32769 32768
+        //    byte               -128 0 127 | "" -129 128
+        //    nonNegativeInteger 0 -0 +0 1 +1 | -1
+        //    unsignedLong       0 1 | -1
+        //    unsignedInt        0 1 | -1
+        //    unsignedShort      0 65535 | -1 65536
+        //    unsignedByte       0 255 | -1 256
+        //    positiveInteger    1 | -1 0
+        //    string             "" "a" "0"
+        //    boolean            true false 0 1 | "" TRUE FALSE tRuE fAlSe -1 2 10 01
+        //    dateTime           "2012-01-02T12:34:56.78Z" | "" "2012-01-02T" "2012-01-02"
+        integer: { min: -Infinity, max: Infinity },
+        decimal: { min: -Infinity, max: Infinity },
+        float: { min: -Infinity, max: Infinity },
+        double: { min: -Infinity, max: Infinity },
+        nonPositiveInteger: { min: -Infinity, max: 0 },
+        negativeInteger: { min: -Infinity, max: -1 },
+        long: { min: -9223372036854775808, max: 9223372036854775807 },
+        int: { min: -2147483648, max: 2147483647 },
+        short: { min: -32768, max: 32767 },
+        byte: { min: -128, max: 127 },
+        nonNegativeInteger: { min: 0, max: Infinity },
+        unsignedLong: { min: 0, max: 18446744073709551615 },
+        unsignedInt: { min: 0, max: 4294967295 },
+        unsignedShort: { min: 0, max: 65535 },
+        unsignedByte: { min: 0, max: 255 },
+        positiveInteger: { min: 1, max: Infinity }
+    };
+    const parms = ranges[datatype.substr(XSD.length)];
+    if (!parms)
+        throw Error("unexpected datatype: " + datatype);
+    if (value < parms.min) {
+        parseError(`"${value}"^^<${datatype}> is less than the min: ${parms.min}`);
+    }
+    else if (value > parms.max) {
+        parseError(`"${value}"^^<${datatype}> is greater than the min: ${parms.max}`);
+    }
+}
+;
 /*
 function intSubType (spec, label, parseError) {
   const ret = numericParsers[XSD + "integer"](label, parseError);
@@ -13927,1350 +12638,104 @@ function intSubType (spec, label, parseError) {
    };
  });
 */
-
 const stringTests = {
-  length   : function (v, l) { return v.length === l; },
-  minlength: function (v, l) { return v.length  >= l; },
-  maxlength: function (v, l) { return v.length  <= l; }
+    length: function (v, l) { return v.length === l; },
+    minlength: function (v, l) { return v.length >= l; },
+    maxlength: function (v, l) { return v.length <= l; }
 };
-
 const numericValueTests = {
-  mininclusive  : function (n, m) { return n >= m; },
-  minexclusive  : function (n, m) { return n >  m; },
-  maxinclusive  : function (n, m) { return n <= m; },
-  maxexclusive  : function (n, m) { return n <  m; }
+    mininclusive: function (n, m) { return n >= m; },
+    minexclusive: function (n, m) { return n > m; },
+    maxinclusive: function (n, m) { return n <= m; },
+    maxexclusive: function (n, m) { return n < m; }
 };
-
 const decimalLexicalTests = {
-  totaldigits   : function (v, d) {
-    const m = v.match(/[0-9]/g);
-    return m && m.length <= d;
-  },
-  fractiondigits: function (v, d) {
-    const m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
-    return m && m[1].length <= d;
-  }
-};
-
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
-
-    function isTerm (t) {
-      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
-        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
-      }, true);
-    }
-
-/* ShExValidator_constructor - construct an object for validating a schema.
- *
- * schema: a structure produced by a ShEx parser or equivalent.
- * options: object with controls for
- *   lax(true): boolean: whine about missing types in schema.
- *   diagnose(false): boolean: makde validate return a structure with errors.
- */
-function ShExValidator_constructor(schema, db, options) {
-  if (!(this instanceof ShExValidator_constructor))
-    return new ShExValidator_constructor(schema, db, options);
-  let index = schema._index || ShExVisitor.index(schema)
-  if (!("labelToTcs" in index))
-    index.labelToTcs = new Map();
-  this.type = "ShExValidator";
-  options = options || {};
-  this.options = options;
-  this.options.coverage = this.options.coverage || "exhaustive";
-  if (!("noCache" in options && options.noCache))
-    this.known = {};
-
-  const _ShExValidator = this;
-  this.schema = schema;
-  this._expect = this.options.lax ? noop : expect; // report errors on missing types.
-  this._optimize = {}; // optimizations:
-    // hasRepeatedGroups: whether there are patterns like (:p1 ., :p2 .)*
-  this.reset = function () {  }; // included in case we need it later.
-  // const regexModule = this.options.regexModule || require("@shexjs/eval-simple-1err");
-  const regexModule = this.options.regexModule || __webpack_require__(6863);
-
-  /* emptyTracker - a tracker that does nothing
-   */
-  this.emptyTracker = function () {
-    const noop = x => x;
-    return {
-      recurse: noop,
-      known: noop,
-      enter: function (point, label) { ++this.depth; },
-      exit: function (point, label, ret) { --this.depth; },
-      depth: 0
-    };
-  };
-
-  /* validate - test point in db against the schema for labelOrShape
-   * depth: level of recurssion; for logging.
-   */
-  this.validate = function (point, label, tracker, seen, matchTarget, subGraph) {
-    // default to schema's start shape
-    if (typeof point === "object" && "termType" in point) {
-      point = ShExTerm.internalTerm(point)
-    }
-    if (typeof point === "object") {
-      const shapeMap = point;
-      if (this.options.results === "api") {
-        return shapeMap.map(pair => {
-          let time = new Date();
-          const res = this.validate(pair.node, pair.shape, label, tracker); // really tracker and seen
-          time = new Date() - time;
-          return {
-            node: pair.node,
-            shape: pair.shape,
-            status: "errors" in res ? "nonconformant" : "conformant",
-            appinfo: res,
-            elapsed: time
-          };
-        });
-      }
-      const results = shapeMap.reduce((ret, pair) => {
-        const res = this.validate(pair.node, pair.shape, label, tracker, matchTarget, subGraph); // really tracker and seen
-        return "errors" in res ?
-          { passes: ret.passes, failures: ret.failures.concat(res) } :
-          { passes: ret.passes.concat(res), failures: ret.failures } ;
-      }, {passes: [], failures: []});
-      if (false) { var _add; }
-      if (results.failures.length > 0) {
-        return results.failures.length !== 1 ?
-          { type: "FailureList", errors: results.failures } :
-          results.failures [0];
-      } else {
-        return results.passes.length !== 1 ?
-          { type: "SolutionList", solutions: results.passes } :
-          results.passes [0];
-      }
-    }
-
-    const outside = tracker === undefined;
-    // logging stuff
-    if (!tracker)
-      tracker = this.emptyTracker();
-    if (!label || label === Start) {
-      if (!schema.start)
-        runtimeError("start production not defined");
-    }
-
-    let shape = null;
-    if (label === Start) {
-      shape = schema.start;
-    } else {
-      shape = this._lookupShape(label);
-    }
-
-    // if we passed in an expression rather than a label, validate it directly.
-    if (typeof label !== "string")
-      return this._validateShapeExpr(point, shape, Start, 0, tracker, seen);
-
-    if (seen === undefined)
-      seen = {};
-    const seenKey = point + "@" + (label === Start ? "_: -start-" : label);
-    if (!subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
-      if (seenKey in seen)
-        return tracker.recurse({
-          type: "Recursion",
-          node: ldify(point),
-          shape: label
-        });
-      if ("known" in this && seenKey in this.known)
-        return tracker.known(this.known[seenKey]);
-      seen[seenKey] = { point: point, shape: label };
-      tracker.enter(point, label);
-    }
-    const ret = this._validateDescendants(point, label, 0, tracker, seen, matchTarget, subGraph);
-    if (!subGraph) {
-      tracker.exit(point, label, ret);
-      delete seen[seenKey];
-      if ("known" in this)
-        this.known[seenKey] = ret;
-    }
-    if ("startActs" in schema && outside) {
-      ret.startActs = schema.startActs;
-    }
-    return ret;
-  }
-
-  this._validateDescendants = function (point, shapeLabel, depth, tracker, seen, matchTarget, subGraph, allowAbstract) {
-    if (subGraph) { // !! matchTarget?
-      // matchTarget indicates that shape substitution has already been applied.
-      // Now we're testing a subgraph against the base shapes.
-      const res = this._validateShapeDecl(point, this._lookupShape(shapeLabel), shapeLabel, 0, tracker, seen, matchTarget, subGraph);
-      if (matchTarget && shapeLabel === matchTarget.label && !("errors" in res))
-        matchTarget.count++;
-      return res;
-    }
-
-    // Find all non-abstract shapeExprs extended with label. 
-    let candidates = [shapeLabel];
-    candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
-    // Uniquify list.
-    for (let i = candidates.length - 1; i >= 0; --i) {
-      if (candidates.indexOf(candidates[i]) < i)
-        candidates.splice(i, 1);
-    }
-    // Filter out abstract shapes.
-    if (!allowAbstract)
-      candidates = candidates.filter(l => !this._lookupShape(l).abstract);
-
-    // Aggregate results in a SolutionList or FailureList.
-    const results = candidates.reduce((ret, candidateShapeLabel) => {
-      const shapeExpr = this._lookupShape(candidateShapeLabel);
-      const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
-      const res = this._validateShapeDecl(point, shapeExpr, candidateShapeLabel, 0, tracker, seen, matchTarget, subGraph);
-      return "errors" in res || matchTarget && matchTarget.count === 0 ?
-        { passes: ret.passes, failures: ret.failures.concat(res) } :
-        { passes: ret.passes.concat(res), failures: ret.failures } ;
-
-    }, {passes: [], failures: []});
-    let ret;
-    if (results.passes.length > 0) {
-      ret = results.passes.length !== 1 ?
-        { type: "SolutionList", solutions: results.passes } :
-      results.passes [0];
-    } else if (results.failures.length > 0) {
-      ret = results.failures.length !== 1 ?
-        { type: "FailureList", errors: results.failures } :
-      results.failures [0];
-    } else {
-      ret = {
-        type: "AbstractShapeFailure",
-        shape: shapeLabel,
-        errors: shapeLabel + " has no non-abstract children"
-      };
-    }
-    return ret;
-
-    // @TODO move to Vistior.index
-    function indexExtensions (schema) {
-      const abstractness = {};
-      const extensions = Hierarchy.create();
-      makeSchemaVisitor().visitSchema(schema);
-      return extensions.children;
-
-      function makeSchemaVisitor () {
-        const schemaVisitor = ShExVisitor();
-        let curLabel;
-        let curAbstract;
-        const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
-
-        schemaVisitor.visitShapeDecl = function (decl) {
-          curLabel = decl.id;
-          curAbstract = decl.abstract;
-          abstractness[decl.id] = decl.abstract;
-          return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
-        };
-
-        schemaVisitor.visitShape = function (shape) {
-          if ("extends" in shape) {
-            shape.extends.forEach(ext => {
-              const extendsVisitor = ShExVisitor();
-              extendsVisitor.visitExpression = function (expr, ...args) { return "null"; }
-              extendsVisitor.visitShapeRef = function (reference, ...args) {
-                extensions.add(reference, curLabel);
-                extendsVisitor.visitShapeDecl(_ShExValidator._lookupShape(reference))
-                // makeSchemaVisitor().visitSchema(schema);
-                return "null";
-              };
-              extendsVisitor.visitShapeExpr(ext);
-            })
-          }
-          return "null";
-        };
-        return schemaVisitor;
-      }
-    }
-  }
-
-  this._validateShapeDecl = function (point, shapeDecl, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
-    const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr])
-    const expr = conjuncts.length === 1
-          ? conjuncts[0]
-          : { type: "ShapeAnd", shapeExprs: conjuncts };
-    return this._validateShapeExpr(point, expr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
-  }
-
-  this._lookupShape = function (label) {
-    if (!("shapes" in this.schema) || this.schema.shapes.length === 0) {
-      runtimeError("shape " + label + " not found; no shapes in schema");
-    } else if (label in index.shapeExprs) {
-      return index.shapeExprs[label]
-    } else {
-      runtimeError("shape " + label + " not found in:\n" + Object.keys(index.shapeExprs || []).map(s => "  " + s).join("\n"));
-    }
-  }
-
-  this._validateShapeExpr = function (point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
-    if (point === "")
-      throw Error("validation needs a valid focus node");
-    let ret = null
-    if (typeof shapeExpr === "string") { // ShapeRef
-      ret = this._validateDescendants(point, shapeExpr, depth, tracker, seen, matchTarget, subGraph, true);
-    } else if (shapeExpr.type === "NodeConstraint") {
-      const sub = this._errorsMatchingNodeConstraint(point, shapeExpr, null);
-      ret = sub.errors && sub.errors.length ? { // @@ when are both conditionals needed?
-        type: "Failure",
-        node: ldify(point),
-        shape: shapeLabel,
-        errors: sub.errors.map(function (error) { // !!! just sub.errors?
-          return {
-            type: "NodeConstraintViolation",
-            shapeExpr: shapeExpr,
-            error: error
-          };
-        })
-      } : {
-        type: "NodeConstraintTest",
-        node: ldify(point),
-        shape: shapeLabel,
-        shapeExpr: shapeExpr
-      };
-    } else if (shapeExpr.type === "Shape") {
-      ret = this._validateShape(point, shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
-    } else if (shapeExpr.type === "ShapeExternal") {
-      if (typeof this.options.validateExtern !== "function")
-        throw runtimeError(`validating ${ShExTerm.internalTermToTurtle(point, null, {})} as EXTERNAL shapeExpr ${shapeLabel} requires a 'validateExtern' option`)
-      ret = this.options.validateExtern(point, shapeLabel, tracker, seen);
-    } else if (shapeExpr.type === "ShapeOr") {
-      const errors = [];
-      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        const nested = shapeExpr.shapeExprs[i];
-        const sub = this._validateShapeExpr(point, nested, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
-        if ("errors" in sub)
-          errors.push(sub);
-        else if (!matchTarget || matchTarget.count > 0)
-          return { type: "ShapeOrResults", solution: sub };
-      }
-      ret = { type: "ShapeOrFailure", errors: errors };
-    } else if (shapeExpr.type === "ShapeNot") {
-      const sub = this._validateShapeExpr(point, shapeExpr.shapeExpr, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
-      if ("errors" in sub)
-          ret = { type: "ShapeNotResults", solution: sub };
-        else
-          ret = { type: "ShapeNotFailure", errors: sub };
-    } else if (shapeExpr.type === "ShapeAnd") {
-      const passes = [];
-      const errors = [];
-      for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-        const nested = shapeExpr.shapeExprs[i];
-        const sub = this._validateShapeExpr(point, nested, shapeLabel, depth, tracker, seen, matchTarget, subGraph);
-        if ("errors" in sub)
-          errors.push(sub);
-        else
-          passes.push(sub);
-      }
-      if (errors.length > 0)
-        ret = { type: "ShapeAndFailure", errors: errors };
-      else
-        ret = { type: "ShapeAndResults", solutions: passes };
-    } else {
-      throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
-    }
-
-    if (typeof shapeExpr !== "string" // ShapeRefs are haneled in the referent.
-        &&  shapeExpr.type !== "Shape" // Shapes are handled in the try-everything loop.
-        && !("errors" in ret) && "semActs" in shapeExpr) {
-      const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({node: point}, ret), ret)
-      if (semActErrors.length)
-        // some semAct aborted
-        return { type: "Failure", node: ldify(point), shape: shapeLabel, errors: semActErrors};
-    }
-    return ret;
-  }
-
-  this._validateShape = function (point, shape, shapeLabel, depth, tracker, seen, matchTarget, subGraph) {
-    const valParms = { db, shapeLabel, depth, tracker, seen };
-
-    let ret = null;
-    const startAcionStorage = {}; // !!! need test to see this write to results structure.
-    if ("startActs" in schema) {
-      const semActErrors = this.semActHandler.dispatchAll(schema.startActs, null, startAcionStorage)
-      if (semActErrors.length)
-        return {
-          type: "Failure",
-          node: ldify(point),
-          shape: shapeLabel,
-          errors: semActErrors
-        }; // some semAct aborted !! return a better error
-    }
-
-    const fromDB  = (subGraph || db).getNeighborhood(point, shapeLabel, shape);
-    const outgoingLength = fromDB.outgoing.length;
-    const neighborhood = fromDB.outgoing.sort(
-      (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
-    ).concat(fromDB.incoming.sort(
-      (l, r) => l.predicate.localeCompare(r.predicate) || sparqlOrder(l.object, r.object)
-    ));
-
-    const { extendsTCs, tc2exts, localTCs } = TripleConstraintsVisitor(index.labelToTcs).getAllTripleConstraints(shape);
-    const constraintList = extendsTCs.concat(localTCs);
-
-    // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-    const tripleList = matchByPredicate(constraintList, neighborhood, outgoingLength, point, valParms, matchTarget);
-    const {misses, extras} = whatsMissing(tripleList, neighborhood, outgoingLength, shape.extra || [])
-
-    const allT2TCs = new TripleToTripleConstraints(tripleList.constraintList, extendsTCs.length, tc2exts);
-    const partitionErrors = [];
-    const regexEngine = regexModule.compile(schema, shape, index);
-
-    for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-      const localT2Tc = []; // subset of TCs assigned to shape.expression
-      const unexpectedOrds = [];
-      const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
-      t2tc.forEach((cNo, tNo) => {
-        if (cNo !== NoTripleConstraint && cNo < extendsTCs.length) {
-          // allocate to EXTENDS
-          for (let extNo of tc2exts[cNo]) {
-            // allocated to multiple extends if diamond inheritance
-            extendsToTriples[extNo].push(neighborhood[tNo]);
-            localT2Tc[tNo] = NoTripleConstraint;
-          }
-        } else {
-          // allocate to local shape
-          localT2Tc[tNo] = cNo;
-          if (cNo === NoTripleConstraint // didn't match anything
-              && tNo < outgoingLength // is an outgoing triple
-              && extras.indexOf(tNo) === -1) // isn't in EXTRAs
-            unexpectedOrds.push(tNo);
-        }
-      });
-
-      const errors = []
-      const usedTriples = []; // [{s1,p1,o1},{s2,p2,o2}] implicated triples -- used for messages
-      const constraintMatchCount = // [2,1,0,1] how many triples matched a constraint
-            _seq(neighborhood.length).map(function () { return 0; });
-
-      // Triples not mapped to triple constraints are not allowed in closed shapes.
-      if (shape.closed && unexpectedOrds.length > 0) {
-        errors.push({
-          type: "ClosedShapeViolation",
-          unexpectedTriples: unexpectedOrds.map(tNo => neighborhood[tNo])
-        });
-      }
-
-      // Set usedTriples and constraintMatchCount.
-      localT2Tc.forEach(function (tpNumber, ord) {
-        if (tpNumber !== NoTripleConstraint) {
-          usedTriples.push(neighborhood[ord]);
-          ++constraintMatchCount[tpNumber];
-        }
-      });
-      const tc2t = _constraintToTriples(localT2Tc, constraintList, tripleList); // e.g. [[t0, t2], [t1, t3]]
-
-      let results = testExtends(shape, point, extendsToTriples, valParms, matchTarget);
-      if (results === null || !("errors" in results)) {
-        const sub = regexEngine.match(db, point, constraintList, tc2t, localT2Tc, neighborhood, this.semActHandler, null);
-        if (!("errors" in sub) && results) {
-          results = { type: "ExtendedResults", extensions: results };
-          if (Object.keys(sub).length > 0) // no empty objects from {}s.
-            results.local = sub;
-        } else {
-          results = sub;
-        }
-      }
-      if ("errors" in results)
-        [].push.apply(errors, results.errors);
-
-      const possibleRet = { type: "ShapeTest", node: ldify(point), shape: shapeLabel };
-      if (errors.length === 0 && Object.keys(results).length > 0) // only include .solution for non-empty pattern
-        possibleRet.solution = results;
-      if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: point}, results), possibleRet)
-        if (semActErrors.length)
-          // some semAct aborted
-          [].push.apply(errors, semActErrors);
-      }
-
-      partitionErrors.push(errors)
-      if (errors.length === 0)
-        ret = possibleRet
-    }
-    // end of while(xp.next())
-
-    const missErrors = misses.map(function (miss) {
-      const t = neighborhood[miss.tripleNo];
-      return {
-        type: "TypeMismatch",
-        triple: {type: "TestedTriple", subject: t.subject, predicate: t.predicate, object: ldify(t.object)},
-        constraint: constraintList[miss.constraintNo],
-        errors: miss.errors
-      };
-    });
-
-    // Report only last errors until we have a better idea.
-    const lastErrors = partitionErrors[partitionErrors.length - 1];
-    let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
-    if (errors.length > 0)
-      ret = {
-        type: "Failure",
-        node: ldify(point),
-        shape: shapeLabel,
-        errors: errors
-      };
-
-    // remove N3jsTripleToString
-    if (VERBOSE)
-      neighborhood.forEach(function (t) {
-        delete t.toString;
-      });
-
-    return addShapeAttributes(shape, ret);
-  };
-/*
-  function DBG_matchValues (fromDB, constraintList) {
-    const expectedValues = constraintList.map(
-      tc => parseInt((tc.valueExpr?.values || [{value:999}])[0].value)
-    );
-    const tripleValues = fromDB.outgoing.map(
-      t => parseInt(t.object.substr(1))
-    );
-    return tripleValues.map(
-      i => expectedValues.indexOf(i)
-    );
-  }
-
-  function DBG_gonnaMatch (t2tcForThisShapeAndExtends, fromDB, constraintList) {
-    const solution = DBG_matchValues (fromDB, constraintList);
-    return JSON.stringify(t2tcForThisShapeAndExtends) === JSON.stringify(solution);
-  }
-*/
-  function matchByPredicate (constraintList, neighborhood, outgoingLength, point, valParms, matchTarget) {
-    const outgoing = indexNeighborhood(neighborhood.slice(0, outgoingLength));
-    const incoming = indexNeighborhood(neighborhood.slice(outgoingLength));
-    return constraintList.reduce(function (ret, constraint, cNo) {
-
-      // subject and object depend on direction of constraint.
-      const searchSubject = constraint.inverse ? null : point;
-      const searchObject = constraint.inverse ? point : null;
-      const index = constraint.inverse ? incoming : outgoing;
-
-      // get triples matching predciate
-      const matchPredicate = index.byPredicate[constraint.predicate] ||
-            []; // empty list when no triple matches that constraint
-
-      // strip to triples matching value constraints (apart from @<someShape>)
-      const matchConstraints = _ShExValidator._triplesMatchingShapeExpr(
-        matchPredicate, constraint, valParms, matchTarget
-      );
-
-      matchConstraints.hits.forEach(function (evidence) {
-        const tNo = neighborhood.indexOf(evidence.triple);
-        ret.constraintList[tNo].push(cNo);
-        ret.results[cNo][tNo] = evidence.sub;
-      });
-      matchConstraints.misses.forEach(function (evidence) {
-        const tNo = neighborhood.indexOf(evidence.triple);
-        ret.misses[tNo] = {constraintNo: cNo, errors: evidence.errors};
-      });
-      return ret;
-    }, { misses: {}, results: _alist(constraintList.length), constraintList:_alist(neighborhood.length) })
-  }
-
-  function whatsMissing (tripleList, neighborhood, outgoingLength, extras) {
-    const matchedExtras = []; // triples accounted for by EXTRA
-    const misses = tripleList.constraintList.reduce(function (ret, constraints, ord) {
-      if (constraints.length === 0 &&   // matches no constraints
-          ord < outgoingLength &&       // not an incoming triple
-          ord in tripleList.misses) {   // predicate matched some constraint(s)
-        if (extras.indexOf(neighborhood[ord].predicate) !== -1) {
-          matchedExtras.push(ord);
-        } else {                        // not declared extra
-          ret.push({                    // so it's a missed triple.
-            tripleNo: ord,
-            constraintNo: tripleList.misses[ord].constraintNo,
-            errors: tripleList.misses[ord].errors
-          });
-        }
-      }
-      return ret;
-    }, []);
-    return {misses, extras: matchedExtras}
-  }
-
-  function addShapeAttributes (shape, ret) {
-    if ("annotations" in shape)
-      ret.annotations = shape.annotations;
-    return ret;
-  }
-
-  // Pivot to triples by constraint.
-  function _constraintToTriples (t2tc, constraintList, tripleList) {
-    return t2tc.slice().
-      reduce(function (ret, cNo, tNo) {
-        if (cNo !== NoTripleConstraint)
-          ret[cNo].push({tNo: tNo, res: tripleList.results[cNo][tNo]});
-        return ret;
-      }, _seq(constraintList.length).map(() => [])); // [length][]
-  }
-
-  function testExtends (expr, point, extendsToTriples, valParms, matchTarget) {
-    if (!("extends" in expr))
-      return null;
-    const passes = [];
-    const errors = [];
-    for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
-      const extend = expr.extends[eNo];
-      const subgraph = makeTriplesDB(null); // These triples were tracked earlier.
-      extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-      const sub = _ShExValidator._validateShapeExpr(point, extend, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph);
-      if ("errors" in sub)
-        errors.push(sub);
-      else
-        passes.push(sub);
-    }
-    if (errors.length > 0) {
-      return { type: "ExtensionFailure", errors: errors };
-    }
-    return { type: "ExtensionResults", solutions: passes };
-  }
-
-  /** Directly construct a DB from triples.
-   * TODO: should this be in @shexjs/neighborhood-something ?
-   */
-  function makeTriplesDB (queryTracker) { // implements ValidatorNeighborhood
-    const incoming = [];
-    const outgoing = [];
-
-    function getTriplesByIRI(s, p, o, g) {
-      return incoming.concat(outgoing).filter(
-        t =>
-          (!s || s === t.subject) &&
-          (!p || p === t.predicate) &&
-          (!s || s === t.object)
-      );
-    }
-
-    function getNeighborhood (point, shapeLabel, shape) {
-      return {
-        outgoing: outgoing,
-        incoming: incoming
-      };
-    }
-
-    return {
-      getNeighborhood: getNeighborhood,
-      getTriplesByIRI: getTriplesByIRI,
-      getSubjects: function () { return ["!Triples DB can't index subjects"] },
-      getPredicates: function () { return ["!Triples DB can't index predicates"] },
-      getObjects: function () { return ["!Triples DB can't index objects"] },
-      get size() { return undefined; },
-      addIncomingTriples: function (tz) { Array.prototype.push.apply(incoming, tz); },
-      addOutgoingTriples: function (tz) { Array.prototype.push.apply(outgoing, tz); }
-    };
-  }
-
-  /** TripleConstraintsVisitor - walk shape's extends to get all
-   * referenced triple constraints.
-   *
-   * @param {} labelToTcs: Map<shapeLabel, TripleConstraint[]>
-   * @returns { extendsTCs: [[TripleConstraint]], localTCs: [TripleConstraint] }
-   */
-  function TripleConstraintsVisitor (labelToTcs) {
-    const visitor = ShExVisitor(labelToTcs);
-
-    function emptyShapeExpr () { return []; }
-
-    visitor.visitShapeDecl = function (decl, min, max) {
-      // if (labelToTcs.has(decl.id)) !! uncomment cache for production
-      //   return labelToTcs[decl.id];
-      const tcs = decl.shapeExpr
-            ? visitor.visitShapeExpr(decl.shapeExpr, 1, 1)
-            : emptyShapeExpr();
-      labelToTcs[decl.id] = tcs;
-      return [{ ref: decl.id }];
-    }
-    visitor.visitShapeOr = function (shapeExpr, min, max) {
-      return shapeExpr.shapeExprs.reduce(
-        (acc, disjunct) => acc.concat(this.visitShapeExpr(disjunct, 0, max))
-        , emptyShapeExpr()
-      );
-    }
-
-    visitor.visitShapeAnd = function (shapeExpr, min, max) {
-      const seen = new Set();
-      return shapeExpr.shapeExprs.reduce((acc, disjunct) => {
-        this.visitShapeExpr(disjunct, min, max).forEach(tc => {
-          const key = `${tc.min} ${tc.max} ${tc.predicate}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            acc.push(tc);
-          }
-        });
-
-        // @@ TODO: calculate intersection with acc
-        return acc;
-      }, []);
-    }
-
-    visitor.visitShapeNot = function (expr, min, max) {
-      return this.visitShapeExpr(expr.shapeExpr);
-    }
-
-    visitor.visitShapeExternal = emptyShapeExpr
-
-    visitor.visitNodeConstraint = emptyShapeExpr;
-
-    // Override visitShapeRef to follow references.
-    // tests: Extend3G-pass, vitals-RESTRICTS-pass_lie-Vital...
-    visitor.visitShapeRef = function (shapeLabel, min, max) {
-      return visitor.visitShapeDecl(_ShExValidator._lookupShape(shapeLabel), min, max);
-    };
-
-    visitor.visitShape = function (shape, min, max) {
-      const { extendsTCs, localTCs } = this.shapePieces(shape, min, max);
-      return extendsTCs.flat().concat(localTCs);
-    }
-
-    // Visit shape's EXTENDS and expression.
-    visitor.shapePieces = function (shape, min, max) {
-      const extendsTCs = "extends" in shape
-            ? shape.extends.map(ext => visitor.visitShapeExpr(ext, min, max))
-            : [];
-      const localTCs = "expression" in shape
-            ? visitor.visitExpression(shape.expression, min, max)
-            : [];
-      return { extendsTCs, localTCs };
-    }
-
-    visitor.getAllTripleConstraints = function (shape) {
-      const { extendsTCs: extendsTcOrRefsz, localTCs } = this.shapePieces(shape, 1, 1);
-      const tcs = [];
-      const tc2exts = [];
-      extendsTcOrRefsz.map((tcOrRefs, ord) => flattenExtends(tcOrRefs, ord));
-      return { extendsTCs: tcs, tc2exts, localTCs };
-
-      function flattenExtends (tcOrRefs, ord) {
-        return tcOrRefs.forEach(tcOrRef => {
-          if (tcOrRef.type === "TripleConstraint") {
-            add(tcOrRef); // as TC
-          } else {
-            flattenExtends(labelToTcs[tcOrRef.ref], ord);
-          }
-        });
-        function add (tc) {
-          const idx = tcs.indexOf(tc);
-          if (idx === -1) {
-            // new TC
-            tcs.push(tc);
-            tc2exts.push([ord]);
-          } else {
-            // ref to TC already seen in this or earlier EXTENDS
-            if (tc2exts[idx].indexOf(ord) === -1) {
-              // not yet included in this EXTENDS
-              tc2exts[idx].push(ord);
-            }
-          }
-        }
-      }
-    }
-    // tripleExprs return list of TripleConstraints
-
-    function n (l, expr) {
-      if (!("min" in expr)) return l;
-      return l * expr.min;
-    }
-
-    function x (l, expr) {
-      if (!("max" in expr)) return l;
-      if (l === -1 || expr.max === -1) return -1;
-      return l * expr.max;
-    }
-
-    function and (tes) { return [].concat.apply([], tes); }
-
-    // Any TC inside a OneOf implicitly has a min cardinality of 0.
-    visitor.visitOneOf = function (expr, outerMin, outerMax) {
-      return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, 0, x(outerMax, expr))))
-    }
-
-    visitor.visitEachOf = function (expr, outerMin, outerMax) {
-      return and(expr.expressions.map(nested => visitor.visitTripleExpr(nested, n(outerMin, expr), x(outerMax, expr))))
-    }
-
-    visitor.visitInclusion = function (inclusion, outerMin, outerMax) {
-      return visitor.visitTripleExpr(index.tripleExprs[inclusion], outerMin, outerMax);
-    }
-
-    // Synthesize a TripleConstraint with the implicit cardinality.
-    visitor.visitTripleConstraint = function (expr, outerMin, outerMax) {
-      return [expr];
-      /* eval-threaded-n-err counts on constraintList.indexOf(expr) so we can't optimize with:
-         const ret = JSON.parse(JSON.stringify(expr));
-         ret.min = n(outerMin, expr);
-         ret.max = x(outerMax, expr);
-         return [ret];
-      */
-    };
-
-    return visitor;
-  }
-
-  this._triplesMatchingShapeExpr = function (triples, constraint, valParms, matchTarget) {
-    const misses = [];
-    const hits = [];
-    triples.forEach(function (triple) {
-      const value = constraint.inverse ? triple.subject : triple.object;
-      let sub;
-      const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
-      const errors = constraint.valueExpr === undefined ?
-          undefined :
-          (sub = _ShExValidator._errorsMatchingShapeExpr(value, constraint.valueExpr, valParms, matchTarget)).errors;
-      if (!errors) {
-        hits.push({triple: triple, sub: sub});
-      } else if (hits.indexOf(triple) === -1) {
-        _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-        misses.push({triple: triple, errors: sub});
-      }
-    });
-    return { hits: hits, misses: misses };
-  }
-  this._errorsMatchingShapeExpr = function (value, valueExpr, valParms, matchTarget, subgraph) {
-    if (typeof valueExpr === "string") { // ShapeRef
-      return _ShExValidator.validate(value, valueExpr, valParms.tracker, valParms.seen, matchTarget, subgraph);
-    } else if (valueExpr.type === "NodeConstraint") {
-      return this._errorsMatchingNodeConstraint(value, valueExpr, null);
-    } else if (valueExpr.type === "Shape") {
-      return _ShExValidator._validateShapeExpr(value, valueExpr, valParms.shapeLabel, valParms.depth, valParms.tracker, valParms.seen, matchTarget, subgraph)
-    } else if (valueExpr.type === "ShapeOr") {
-      const errors = [];
-      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        const nested = valueExpr.shapeExprs[i];
-        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, matchTarget, subgraph);
-        if ("errors" in sub)
-          errors.push(sub);
-        else
-          return { type: "ShapeOrResults", solution: sub };
-      }
-      return { type: "ShapeOrFailure", errors: errors };
-    } else if (valueExpr.type === "ShapeAnd") {
-      const passes = [];
-      for (let i = 0; i < valueExpr.shapeExprs.length; ++i) {
-        const nested = valueExpr.shapeExprs[i];
-        const sub = _ShExValidator._errorsMatchingShapeExpr(value, nested, valParms, matchTarget, subgraph);
-        if ("errors" in sub)
-          return { type: "ShapeAndFailure", errors: [sub] };
-        else
-          passes.push(sub);
-      }
-      return { type: "ShapeAndResults", solutions: passes };
-    } else if (valueExpr.type === "ShapeNot") {
-      const sub = _ShExValidator._errorsMatchingShapeExpr(value, valueExpr.shapeExpr, valParms, matchTarget, subgraph);
-      // return sub.errors && sub.errors.length ? {} : {
-      //   errors: ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"] };
-      const ret = Object.assign({
-        type: null,
-        focus: value
-      }, valueExpr);
-      if (sub.errors && sub.errors.length) {
-        ret.type = "ShapeNotTest";
-        // ret = {};
-      } else {
-        ret.type = "ShapeNotFailure";
-        ret.errors = ["Error validating " + value + " as " + JSON.stringify(valueExpr) + ": expected NOT to pass"]
-      }
-      return ret;
-    } else {
-      throw Error("unknown value expression type '" + valueExpr.type + "'");
-    }
-  };
-
-  /* _errorsMatchingNodeConstraint - return whether the value matches the value
-   * expression without checking shape references.
-   */
-  this._errorsMatchingNodeConstraint = function (value, valueExpr, recurse) {
-    const errors = [];
-    const label = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralValue(value) :
-      ShExTerm.isBlank(value) ? value.substring(2) :
-      value;
-    const dt = ShExTerm.isLiteral(value) ? ShExTerm.getLiteralType(value) : null;
-    const numeric = integerDatatypes.indexOf(dt) !== -1 ? XSD + "integer" : numericDatatypes.indexOf(dt) !== -1 ? dt : undefined;
-
-    function validationError () {
-      const errorStr = Array.prototype.join.call(arguments, "");
-      errors.push("Error validating " + value + " as " + JSON.stringify(valueExpr) + ": " + errorStr);
-      return false;
-    }
-    // if (negated) ;
-    if (false) {} else {
-      if ("nodeKind" in valueExpr) {
-        if (["iri", "bnode", "literal", "nonliteral"].indexOf(valueExpr.nodeKind) === -1) {
-          validationError("unknown node kind '" + valueExpr.nodeKind + "'");
-        }
-        if (ShExTerm.isBlank(value)) {
-          if (valueExpr.nodeKind === "iri" || valueExpr.nodeKind === "literal") {
-            validationError("blank node found when " + valueExpr.nodeKind + " expected");
-          }
-        } else if (ShExTerm.isLiteral(value)) {
-          if (valueExpr.nodeKind !== "literal") {
-            validationError("literal found when " + valueExpr.nodeKind + " expected");
-          }
-        } else if (valueExpr.nodeKind === "bnode" || valueExpr.nodeKind === "literal") {
-          validationError("iri found when " + valueExpr.nodeKind + " expected");
-        }
-      }
-
-      if (valueExpr.datatype  && valueExpr.values) validationError("found both datatype and values in " + valueExpr);
-
-      if (valueExpr.datatype) {
-        if (!ShExTerm.isLiteral(value)) {
-          validationError("mismatched datatype: " + value + " is not a literal with datatype " + valueExpr.datatype);
-        }
-        else if (ShExTerm.getLiteralType(value) !== valueExpr.datatype) {
-          validationError("mismatched datatype: " + ShExTerm.getLiteralType(value) + " !== " + valueExpr.datatype);
-        }
-        else if (numeric) {
-          testRange(numericParsers[numeric](label, validationError), valueExpr.datatype, validationError);
-        }
-        else if (valueExpr.datatype === XSD + "boolean") {
-          if (label !== "true" && label !== "false" && label !== "1" && label !== "0")
-            validationError("illegal boolean value: " + label);
-        }
-        else if (valueExpr.datatype === XSD + "dateTime") {
-          if (!label.match(/^[+-]?\d{4}-[01]\d-[0-3]\dT[0-5]\d:[0-5]\d:[0-5]\d(\.\d+)?([+-][0-2]\d:[0-5]\d|Z)?$/))
-            validationError("illegal dateTime value: " + label);
-        }
-      }
-
-      if (valueExpr.values) {
-        if (ShExTerm.isLiteral(value) && valueExpr.values.reduce((ret, v) => {
-          if (ret) return true;
-          const ld = ldify(value);
-          if (v.type === "Language") {
-            return v.languageTag === ld.language; // @@ use equals/normalizeTest
-          }
-          if (!(typeof v === "object" && "value" in v))
-            return false;
-          return v.value === ld.value &&
-            v.type === ld.type &&
-            v.language === ld.language;
-        }, false)) {
-          // literal match
-        } else if (valueExpr.values.indexOf(value) !== -1) {
-          // trivial match
-        } else {
-          if (!(valueExpr.values.some(function (valueConstraint) {
-            if (typeof valueConstraint === "object" && !("value" in valueConstraint)) { // isTerm me -- strike "value" in
-              if (!("type" in valueConstraint))
-                runtimeError("expected "+JSON.stringify(valueConstraint)+" to have a 'type' attribute.");
-              const stemRangeTypes = [
-                "Language",
-                "IriStem",      "LiteralStem",      "LanguageStem",
-                "IriStemRange", "LiteralStemRange", "LanguageStemRange"
-              ];
-              if (stemRangeTypes.indexOf(valueConstraint.type) === -1)
-                runtimeError("expected type attribute '"+valueConstraint.type+"' to be in '"+stemRangeTypes+"'.");
-
-              /* expect N3.js literals with {Literal,Language}StemRange
-               *       or non-literals with IriStemRange
-               */
-              function normalizedTest (val, ref, func) {
-                if (ShExTerm.isLiteral(val)) {
-                  if (["LiteralStem", "LiteralStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(ShExTerm.getLiteralValue(val), ref);
-                  } else if (["LanguageStem", "LanguageStemRange"].indexOf(valueConstraint.type) !== -1) {
-                    return func(ShExTerm.getLiteralLanguage(val) || null, ref);
-                  } else {
-                    return validationError("literal " + val + " not comparable with non-literal " + ref);
-                  }
-                } else {
-                  if (["IriStem", "IriStemRange"].indexOf(valueConstraint.type) === -1) {
-                    return validationError("nonliteral " + val + " not comparable with literal " + JSON.stringify(ref));
-                  } else {
-                    return func(val, ref);
-                  }
-                }
-              }
-              function startsWith (val, ref) {
-                return normalizedTest(val, ref, (l, r) => {
-                  return (valueConstraint.type === "LanguageStem" ||
-                          valueConstraint.type === "LanguageStemRange") ?
-                    // rfc4647 basic filtering
-                    l !== null && (l === r || r === "" || l[r.length] === "-") :
-                    // simple substring
-                    l.startsWith(r);
-                });
-              }
-              function equals (val, ref) {
-                return normalizedTest(val, ref, (l, r) => { return l === r; });
-              }
-
-              if (!isTerm(valueConstraint.stem)) {
-                expect(valueConstraint.stem, "type", "Wildcard");
-                // match whatever but check exclusions below
-              } else {
-                if (!(startsWith(value, valueConstraint.stem))) {
-                  return false;
-                }
-              }
-              if (valueConstraint.exclusions) {
-                return !valueConstraint.exclusions.some(function (c) {
-                  if (!isTerm(c)) {
-                    if (!("type" in c))
-                      runtimeError("expected "+JSON.stringify(c)+" to have a 'type' attribute.");
-                    const stemTypes = ["IriStem", "LiteralStem", "LanguageStem"];
-                    if (stemTypes.indexOf(c.type) === -1)
-                      runtimeError("expected type attribute '"+c.type+"' to be in '"+stemTypes+"'.");
-                    return startsWith(value, c.stem);
-                  } else {
-                    return equals(value, c);
-                  }
-                });
-              }
-              return true;
-            } else {
-              // ignore -- would have caught it above
-            }
-          }))) {
-            validationError("value " + value + " not found in set " + JSON.stringify(valueExpr.values));
-          }
-        }
-      }
-    }
-
-    if ("pattern" in valueExpr) {
-      const regexp = "flags" in valueExpr ?
-	  new RegExp(valueExpr.pattern, valueExpr.flags) :
-	  new RegExp(valueExpr.pattern);
-      if (!(getLexicalValue(value).match(regexp)))
-        validationError("value " + getLexicalValue(value) + " did not match pattern " + valueExpr.pattern);
-    }
-
-    Object.keys(stringTests).forEach(function (test) {
-      if (test in valueExpr && !stringTests[test](label, valueExpr[test])) {
-        validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
-      }
-    });
-
-    Object.keys(numericValueTests).forEach(function (test) {
-      if (test in valueExpr) {
-        if (numeric) {
-          if (!numericValueTests[test](numericParsers[numeric](label, validationError), valueExpr[test])) {
-            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
-          }
-        } else {
-          validationError("facet violation: numeric facet " + test + " can't apply to " + value);
-        }
-      }
-    });
-
-    Object.keys(decimalLexicalTests).forEach(function (test) {
-      if (test in valueExpr) {
-        if (numeric === XSD + "integer" || numeric === XSD + "decimal") {
-          if (!decimalLexicalTests[test](""+numericParsers[numeric](label, validationError), valueExpr[test])) {
-            validationError("facet violation: expected " + test + " of " + valueExpr[test] + " but got " + value);
-          }
-        } else {
-          validationError("facet violation: numeric facet " + test + " can't apply to " + value);
-        }
-      }
-    });
-    const ret = {
-      type: null,
-      focus: value,
-      shapeExpr: valueExpr
-    };
-    if (errors.length) {
-      ret.type = "NodeConstraintViolation";
-      ret.errors = errors;
-    } else {
-      ret.type = "NodeConstraintTest";
-    }
-    return ret;
-  };
-
-  this.semActHandler = {
-    handlers: { },
-    results: { },
-    /**
-     * Store a semantic action handler.
-     *
-     * @param {string} name - semantic action's URL.
-     * @param {object} handler - handler function.
-     *
-     * The handler object has a dispatch function is invoked with:
-     * @param {string} code - text of the semantic action.
-     * @param {object} ctx - matched triple or results subset.
-     * @param {object} extensionStorage - place where the extension writes into the result structure.
-     * @return {bool} false if the extension failed or did not accept the ctx object.
-     */
-    register: function (name, handler) {
-      this.handlers[name] = handler;
+    totaldigits: function (v, d) {
+        const m = v.match(/[0-9]/g);
+        return !!m && m.length <= d;
     },
-    /**
-     * Calls all semantic actions, allowing each to write to resultsArtifact.
-     *
-     * @param {array} semActs - list of semantic actions to invoke.
-     * @return {bool} false if any result was false.
-     */
-    dispatchAll: function (semActs, ctx, resultsArtifact) {
-      const _semActHanlder = this;
-      return semActs.reduce(function (ret, semAct) {
-        if (ret.length === 0 && semAct.name in _semActHanlder.handlers) {
-          const code = "code" in semAct ? semAct.code : _ShExValidator.options.semActs[semAct.name];
-          const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
-          const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-          const response = _semActHanlder.handlers[semAct.name].dispatch(code, ctx, extensionStorage);
-          if (typeof response === 'boolean') {
-            if (!response)
-              ret.push({ type: "SemActFailure", errors: [{ type: "BooleanSemActFailure", code: code, ctx }] })
-          } else if (typeof response === 'object' && Array.isArray(response)) {
-            if (response.length > 0)
-              ret.push({ type: "SemActFailure", errors: response })
-          } else {
-            throw Error("unsupported response from semantic action handler: " + JSON.stringify(response))
-          }
-          if (!existing && Object.keys(extensionStorage).length > 0) {
-            if (!("extensions" in resultsArtifact))
-              resultsArtifact.extensions = {};
-            resultsArtifact.extensions[semAct.name] = extensionStorage;
-          }
-          return ret;
-        }
-        return ret;
-      }, []);
+    fractiondigits: function (v, d) {
+        const m = v.match(/^[+-]?[0-9]*\.?([0-9]*)$/);
+        return !!m && m[1].length <= d;
     }
-  };
-}
-
-/** Explore permutations of mapping from Triples to TripleConstraints
- * documented using test ExtendsRepeatedP-pass
- */
-class TripleToTripleConstraints {
-  /**
-   *
-   * @param constraintList mapping from Triple to possible TripleConstraints, e.g. [
-   *      [0,2,4], # try T0 against TC0, TC2, TC4
-   *      [0,2,4], # try T1 against same
-   *      [0,2,4], # try T2 against same
-   *      [1,3]    # try T3 against TC1, TC3
-   *   ]
-   * @param extendsTCcount how many TCs are in EXTENDS,
-   *   e.g. 4 says that TCs 0-3 are assigned to some EXTENDS; only TC4 is "local".
-   * @param tc2exts which TripleConstraints came from which EXTENDS, e.g. [
-   *     [0], # TC0 is assignable to EXTENDS 0
-   *     [0], # TC1 is assignable to EXTENDS 0
-   *     [0], # TC2 is assignable to EXTENDS 0
-   *     [0], # TC3 is assignable to EXTENDS 0
-   *   ]
-   */
-  constructor (constraintList, extendsTCcount, tc2exts) {
-    this.extendsTCcount = extendsTCcount; this.tc2exts = tc2exts;
-    this.subgraphCache = new Map();
-    this.crossProduct = CrossProduct(constraintList, NoTripleConstraint);
-  }
-
-  /**
-   * Find next mapping of Triples to TripleConstraints.
-   * Exclude any that differ only in an irrelevent order difference in assinment to EXTENDS.
-   * @returns {number[] | null}
-   */
-  next () {
-    while (this.crossProduct.next()) {
-      /* t2tc - array mapping neighborhood index to TripleConstraint
-       * CrossProduct counts through constraintList from the right:
-       *   [ 0, 0, 0, 1 ] # first call
-       *   [ 0, 0, 0, 3 ] # second call
-       *   [ 0, 0, 2, 1 ] # third call
-       *   [ 0, 0, 2, 3 ] # fourth call
-       *   [ 0, 0, 4, 1 ] # fifth call
-       *   [ 0, 2, 0, 1 ] # sixth call...
-       */
-      const t2tc = this.crossProduct.get(); // [0,1,0,3] mapping from triple to constraint
-      // if (DBG_gonnaMatch (t2tc, fromDB, constraintList)) debugger;
-
-      /* If this permutation repeats the same assignments to EXTENDS parents, continue to next permutation.
-         Test extends-abstract-multi-empty_fail-Ref1ExtraP includes e.g. "_-L4-E0-E0-E0-_" from:
-         t2tc: [ NoTripleConstraint, 4, 2, 1, 3, NoTripleConstraint ]
-         tc2exts: [[0], [0], [0], [0]] (All four TCs assignable to first EXTENDS.)
-      */
-      const subgraphKey = t2tc.map(cNo =>
-        cNo === NoTripleConstraint
-          ? '_'
-          : cNo < this.extendsTCcount
-          ? '' + this.tc2exts[cNo].map(eNo => 'E' + eNo)
-          : 'L' + cNo
-      ).join('-')
-
-      if (!this.subgraphCache.has(subgraphKey)) {
-        this.subgraphCache.set(subgraphKey, true);
-        return t2tc;
-      }
-    }
-    return null;
-  }
-}
-
-// http://stackoverflow.com/questions/9422386/lazy-cartesian-product-of-arrays-arbitrary-nested-loops
-function CrossProduct(sets, emptyValue) {
-  const n = sets.length, carets = [];
-  let args = null;
-
-  function init() {
-    args = [];
-    for (let i = 0; i < n; i++) {
-      carets[i] = 0;
-      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
-    }
-  }
-
-  function next() {
-
-    // special case: crossProduct([]).next().next() returns false.
-    if (args !== null && args.length === 0)
-      return false;
-
-    if (args === null) {
-      init();
-      return true;
-    }
-    let i = n - 1;
-    carets[i]++;
-    if (carets[i] < sets[i].length) {
-      args[i] = sets[i][carets[i]];
-      return true;
-    }
-    while (carets[i] >= sets[i].length) {
-      if (i === 0) {
-        return false;
-      }
-      carets[i] = 0;
-      args[i] = sets[i].length > 0 ? sets[i][0] : emptyValue;
-      carets[--i]++;
-    }
-    args[i] = sets[i][carets[i]];
-    return true;
-  }
-
-  return {
-    next: next,
-    do: function (block, _context) { // old API
-      return block.apply(_context, args);
-    },
-    // new API because
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments#Description
-    // cautions about functions over arguments.
-    get: function () { return args; }
-  };
-}
-
-/* N3jsTripleToString - simple toString function to make N3.js's triples
- * printable.
- */
-const N3jsTripleToString = function () {
-  function fmt (n) {
-    return ShExTerm.isLiteral(n) ?
-      [ "http://www.w3.org/2001/XMLSchema#integer",
-        "http://www.w3.org/2001/XMLSchema#float",
-        "http://www.w3.org/2001/XMLSchema#double"
-      ].indexOf(ShExTerm.getLiteralType(n)) !== -1 ?
-      parseInt(ShExTerm.getLiteralValue(n)) :
-      n :
-    ShExTerm.isBlank(n) ?
-      n :
-      "<" + n + ">";
-  }
-  return fmt(this.subject) + " " + fmt(this.predicate) + " " + fmt(this.object) + " .";
 };
-
-/* indexNeighborhood - index triples by predicate
- * returns: {
- *     byPredicate: Object: mapping from predicate to triples containing that
- *                  predicate.
- *
- *     candidates: [[1,3], [0,2]]: mapping from triple to the triple constraints
- *                 it matches.  It is initialized to []. Mappings that remain an
- *                 empty set indicate a triple which didn't matching anything in
- *                 the shape.
- *
- *     misses: list to recieve value constraint failures.
- *   }
- */
-function indexNeighborhood (triples) {
-  return {
-    byPredicate: triples.reduce(function (ret, t) {
-      const p = t.predicate;
-      if (!(p in ret))
-        ret[p] = [];
-      ret[p].push(t);
-
-      // If in VERBOSE mode, add a nice toString to N3.js's triple objects.
-      if (VERBOSE)
-        t.toString = N3jsTripleToString;
-
-      return ret;
-    }, {}),
-    candidates: _seq(triples.length).map(function () {
-      return [];
-    }),
-    misses: []
-  };
+function getNumericDatatype(value) {
+    return value.termType !== "Literal"
+        ? null
+        : integerDatatypes.indexOf(value.datatype.value) !== -1
+            ? XSD + "integer"
+            : numericDatatypes.indexOf(value.datatype.value) !== -1
+                ? value.datatype.value
+                : null;
 }
-
-/* sparqlOrder - sort triples by subject following SPARQL partial ordering.
- */
-function sparqlOrder (l, r) {
-  const [lprec, rprec] = [l, r].map(
-    x => ShExTerm.isBlank(x) ? 1 : ShExTerm.isLiteral(x) ? 2 : 3
-  );
-  return lprec === rprec ? l.localeCompare(r) : lprec - rprec;
+exports.getNumericDatatype = getNumericDatatype;
+function testKnownTypes(value, validationError, ldify, datatype, numeric, label) {
+    if (value.termType !== "Literal") {
+        validationError(`mismatched datatype: ${JSON.stringify(ldify(value))} is not a literal with datatype ${datatype}`);
+    }
+    else if (value.datatype.value !== datatype) {
+        validationError(`mismatched datatype: ${value.datatype.value} !== ${datatype}`);
+    }
+    else if (numeric) {
+        testRange(numericParsers[numeric](label, validationError), datatype, validationError);
+    }
+    else if (datatype === XSD + "boolean") {
+        if (label !== "true" && label !== "false" && label !== "1" && label !== "0")
+            validationError(`illegal boolean value: ${label}`);
+    }
+    else if (datatype === XSD + "dateTime") {
+        if (!label.match(/^[+-]?\d{4}-[01]\d-[0-3]\dT[0-5]\d:[0-5]\d:[0-5]\d(\.\d+)?([+-][0-2]\d:[0-5]\d|Z)?$/))
+            validationError(`illegal dateTime value: ${label}`);
+    }
 }
-
-/* Return a list of n `undefined`s.
- *
- * Note that Array(n) on its own returns a "sparse array" so Array(n).map(f)
- * never calls f.
- */
-function _seq (n) {
-  return Array.from(Array(n)); // hahaha, javascript, you suck.
+exports.testKnownTypes = testKnownTypes;
+function testFacets(valueExpr, label, validationError, numeric) {
+    if (valueExpr.pattern !== undefined) {
+        const regexp = valueExpr.flags !== undefined ?
+            new RegExp(valueExpr.pattern, valueExpr.flags) :
+            new RegExp(valueExpr.pattern);
+        if (!(label.match(regexp)))
+            validationError(`value ${label} did not match pattern ${valueExpr.pattern}`);
+    }
+    for (const [facet, testFunc] of Object.entries(stringTests)) {
+        // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
+        const facetParm = valueExpr[facet];
+        if (facet in valueExpr && !testFunc(label, facetParm)) {
+            validationError(`facet violation: expected ${facet} of ${facetParm} but got ${label}`);
+        }
+    }
+    for (const [facet, testFunc] of Object.entries(numericValueTests)) {
+        if (facet in valueExpr) {
+            if (numeric) {
+                // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
+                const facetParm = valueExpr[facet];
+                if (!testFunc(numericParsers[numeric](label, validationError), facetParm)) {
+                    validationError(`facet violation: expected ${facet} of ${facetParm} but got ${label}`);
+                }
+            }
+            else {
+                validationError(`facet violation: numeric facet ${facet} can't apply to ${label}`);
+            }
+        }
+    }
+    for (const [facet, testFunc] of Object.entries(decimalLexicalTests)) {
+        if (facet in valueExpr) {
+            if (numeric === XSD + "integer" || numeric === XSD + "decimal") {
+                const normalizedDataValue = String(numericParsers[numeric](label, validationError));
+                // @ts-ignore - TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'NodeConstraint'
+                const facetParm = valueExpr[facet];
+                if (!testFunc(normalizedDataValue, facetParm)) {
+                    validationError(`facet violation: expected ${facet} of ${facetParm} but got ${label}`);
+                }
+            }
+            else {
+                validationError(`facet violation: numeric facet ${facet} can't apply to ${label}`);
+            }
+        }
+    }
 }
-
-/* Expect property p with value v in object o
- */
-function expect (o, p, v) {
-  if (!(p in o))
-    runtimeError("expected "+JSON.stringify(o)+" to have a '"+p+"' attribute.");
-  if (arguments.length > 2 && o[p] !== v)
-    runtimeError("expected "+p+" attribute '"+o[p]+"' to equal '"+v+"'.");
-}
-
-function noop () {  }
-
-function runtimeError () {
-  const errorStr = Array.prototype.join.call(arguments, "");
-  const e = new Error(errorStr);
-  Error.captureStackTrace(e, runtimeError);
-  throw e;
-}
-
-  function _alist (len) {
-    return _seq(len).map(() => [])
-  }
-
-  return {
-    construct: ShExValidator_constructor,
-    start: Start,
-    options: InterfaceOptions
-  };
-})();
-
-// Export the `ShExValidator` class as a whole.
-if (true)
-  module.exports = ShExValidatorCjsModule;
-
+exports.testFacets = testFacets;
+//# sourceMappingURL=shex-xsd.js.map
 
 /***/ }),
 
@@ -15628,7 +13093,7 @@ function ShExVisitor (...ctor_args) {
 // The ShEx Vistor is here to minimize deps for ShExValidator.
 /** create indexes for schema
  */
-ShExVisitor.index = function (schema) {
+function index (schema) {
   let index = {
     shapeExprs: {},
     tripleExprs: {}
@@ -15654,7 +13119,10 @@ ShExVisitor.index = function (schema) {
 }
 
 if (true)
-  module.exports = ShExVisitor;
+  module.exports = {
+    Visitor: ShExVisitor,
+    index: index,
+  };
 
 
 
@@ -15666,15 +13134,15 @@ if (true)
 ShExWebApp = (function () {
   const shapeMap = __webpack_require__(6261)
   return Object.assign({}, {
-    ShExTerm:             __webpack_require__(1118),
+    ShExTerm:             __webpack_require__(1101),
     Util:                 __webpack_require__(9443),
     RdfJsDb:              (__webpack_require__(319).ctor),
-    Validator:            __webpack_require__(3457),
+    Validator:            (__webpack_require__(7403).ShExValidator),
     Writer:               __webpack_require__(95),
     Loader:               __webpack_require__(1837),
     Parser:               __webpack_require__(931),
-    "eval-simple-1err":   __webpack_require__(6540),
-    "eval-threaded-nerr": __webpack_require__(6863),
+    "eval-simple-1err":   (__webpack_require__(8986)/* .RegexpModule */ .G),
+    "eval-threaded-nerr": (__webpack_require__(6201)/* .RegexpModule */ .G),
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               __webpack_require__(9431),
@@ -15694,7 +13162,7 @@ if (true)
 // **ShExWriter** writes ShEx documents.
 
 const ShExWriterCjsModule = (function () {
-const RelateUrl = __webpack_require__(755);
+const RelativizeIri = (__webpack_require__(4436).relativize);
 const UNBOUNDED = -1;
 
 // Matches a literal as represented in memory by the ShEx library
@@ -16167,7 +13635,7 @@ ShExWriter.prototype = {
     const base = this._baseIRI;
     try {
       if (base && new URL(base).host === new URL(iri).host) // https://github.com/stevenvachon/relateurl/issues/28
-        iri = RelateUrl.relate(base, iri, { output: RelateUrl.ROOT_PATH_RELATIVE });
+        iri = RelativizeIri(iri, base);
     } catch (e) {
       // invalid URL for e.g. already relative IMPORTs
     }
@@ -16376,42 +13844,17 @@ if (true)
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/node module decorator */
-/******/ 	(() => {
-/******/ 		__webpack_require__.nmd = (module) => {
-/******/ 			module.paths = [];
-/******/ 			if (!module.children) module.children = [];
-/******/ 			return module;
-/******/ 		};
-/******/ 	})();
 /******/ 	
 /************************************************************************/
 /******/ 	

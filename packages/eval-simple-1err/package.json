@@ -15,7 +15,8 @@
     "parser"
   ],
   "license": "MIT",
-  "main": "./eval-simple-1err.js",
+  "main": "./lib/eval-simple-1err.js",
+  "types": "./src/eval-simple-1err.ts",
   "engines": {
     "node": ">=0.10.0"
   },

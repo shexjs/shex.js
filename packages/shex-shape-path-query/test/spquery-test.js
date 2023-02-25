@@ -8,7 +8,7 @@ const Sp = require('shape-path-core')
 
 describe('spgrep script', () => {
   it('query data', () => {
-    const res = run(
+    const cmd = [
       '../bin/spquery.js',
       '-d', Path.join(Sp.examples, 'issue/Issue2.ttl'),
       '-m', '<http://instance.example/project1/Issue2>@<http://project.example/schema#Issue>',
@@ -17,7 +17,9 @@ describe('spgrep script', () => {
         +'~<http://project.example/ns#spec>/valueExpr/shapeExprs'
         +'~<http://project.example/ns#href>',
       Path.join(Sp.examples, 'issue/Issue.json')
-    )
+    ];
+    // console.log('spgrep command:', cmd.map(s => `"${s}"`).join(' '))
+    const res = run.apply(null, cmd)
     const only = res[0].args
     expect(JSON.parse(only)).to.deep.equal([
         "http://instance.example/project1/img1.jpg",

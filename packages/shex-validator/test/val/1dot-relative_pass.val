@@ -12,7 +12,8 @@
       { "type":"TestedTriple","subject":"s1","predicate":"p1","object":"o1",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "o1",
+          "node": "o1",
+          "shape": "S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [
