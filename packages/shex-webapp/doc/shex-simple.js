@@ -727,7 +727,6 @@ async function pickData (name, dataTest, elt, listItems, side) {
   }
 }
 
-
 // Control results area content.
 const results = (function () {
   const resultsElt = document.querySelector("#results div");
@@ -815,17 +814,12 @@ async function callValidator (done) {
 
       currentAction = "creating validator";
       $("#results .status").text("creating validator...").show();
-      // const dataURL = "data:text/json," +
-      //     JSON.stringify(
-      //       ShEx.Util.AStoShExJ(
-      //         ShEx.Util.canonicalize(
-      //           Caches.inputSchema.refresh())));
-      const alreadLoaded = {
-        schema: await Caches.inputSchema.refresh(),
-        url: Caches.inputSchema.url || DefaultBase
-      };
-      // shex-node loads IMPORTs and tests the schema for structural faults.
       try {
+        // shex-node loads IMPORTs and tests the schema for structural faults.
+        const alreadLoaded = {
+          schema: await Caches.inputSchema.refresh(),
+          url: Caches.inputSchema.url || DefaultBase
+        };
         const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null, {
           collisionPolicy: (type, left, right) => {
             const lStr = JSON.stringify(left);
@@ -850,7 +844,6 @@ async function callValidator (done) {
         const ret = validator.validateShapeMap(fixedMap, LOG_PROGRESS ? makeConsoleTracker() : undefined); // undefined to trigger default parameter assignment
         time = new Date() - time;
         $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-        // const dated = Object.assign({ _when: new Date().toISOString() }, ret);
         $("#results .status").text("rendering results...").show();
 
         await Promise.all(ret.map(renderEntry));
@@ -2194,4 +2187,3 @@ ready.then(resolves => {
 }, e => {
   // Drop catch on the floor presuming thrower updated the UI.
 });
-
