@@ -983,7 +983,7 @@ class FileCache {
 
 function runServer (serverLoaded, serverParms, serverOptions) {
   const app       = new (require("koa"))();
-  const koaBody   = require("koa-body");
+  const {koaBody} = require("koa-body");
   const log       = serverParms.quiet ? () => undefined : console.log;
   const fileCache = new FileCache();
   let serverUrl;
