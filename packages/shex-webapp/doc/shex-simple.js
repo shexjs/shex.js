@@ -826,7 +826,15 @@ async function callValidator (done) {
       };
       // shex-node loads IMPORTs and tests the schema for structural faults.
       try {
-        const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null);
+        const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null, {
+          collisionPolicy: (type, left, right) => {
+            const lStr = JSON.stringify(left);
+            const rStr = JSON.stringify(right);
+            if (lStr === rStr)
+              return false; // keep left/old assignment
+            throw new Error(`Conflicing definitions: ${lStr} !== ${rStr}`);
+          }
+        });
         let time;
         const validator = new ShEx.Validator(
           loaded.schema,

@@ -58,7 +58,17 @@ const ExitCode = require('../lib/ExitCode')
 ShapeMap.start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const ValidatorOptions = { diagnose: true };
-const SchemaOptions = { duplicateShape: "abort", index: true };
+const SchemaOptions = {
+  duplicateShape: "abort",
+  index: true,
+  collisionPolicy: (type, left, right) => {
+    const lStr = JSON.stringify(left);
+    const rStr = JSON.stringify(right);
+    if (lStr === rStr)
+      return false; // keep left/old assignment
+    throw new Error(`Conflicing definitions: ${lStr} !== ${rStr}`);
+  }
+};
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
@@ -105,7 +115,7 @@ const CommandLineOptions = [
   { name: "test-name",             type: String, typeLabel: "IRI",       multiple:  true, defaultValue:        [], description: "what tests to run in the manifest (.name OR .schemaLabel/.dataLabel)" },
   { name: "invocation",alias: "i", type: Boolean, desc: "show invocation" },
   { name: "dry-run",   alias: "N", type: Boolean, desc: "prepare validation but don't execute" },
-  { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression modules to use" },
+  { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression module to use" },
 ];
 
 // Generate command line interface
@@ -140,17 +150,14 @@ function abort (msg, exitCode) {
     {
       header: 'Examples',
       content: [
-        {l: 'validate local files',
-         r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir)}
-      ]
-    },
-    {
-      header: 'examples',
-      content: [
-        { l: "validate local files:",
-          r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir) },
+        { l: "validate local files by node and shape:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -n x -s http://a.example/S1', CliDir, CliDir) },
+        { l: "validate local files with a ShapeMap:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -m \'<x>@<http://a.example/S1>\'', CliDir, CliDir) },
+        { l: "validate local files with a QueryMap:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -m \'\\{FOCUS :p2 _\\}@<http://a.example/S1>\'', CliDir, CliDir) },
         { l: "validate web resources:",
-          r: "  validate -x http://shex.io/examples/Issue.shex -s IssueShape -d http://shex.io/examples/Issue1.ttl -n Issue1" },
+          r: "  validate -x http://shex.io/examples/IssueSchema.shex -d http://shex.io/examples/Issue1.ttl -m '<#Issue1>@<#IssueShape>'" },
         { l: "run as a server:",
           r: Util.format('  validate -x http://localhost:8088/validate', CliDir) },
         { l: "",
@@ -193,7 +200,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
   }
   function someIRInode () {
     const triples = loaded.data.getQuads(null, null, null);
-    for (const i = 0; i < triples.length; ++i)
+    for (let i = 0; i < triples.length; ++i)
       if (triples[i].subject.termType === "NamedNode")
         return triples[i].subject;
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
@@ -218,7 +225,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP, schemaStart) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    const nodes = nodeTypeP
+    let nodes = nodeTypeP
         ? allNodesWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
 						    null, knownType, x =>  x))
         : typeof nodeP === "object" && nodeP.type === "TriplePattern"
@@ -543,7 +550,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
 
 function rdflib_termToLex (node, resolver) {
   if (typeof node === "object") {
-    const ret = node.value
+    let ret = node.value
         .replace(/"/g, "\\\"")
         .replace(/\r/g, "\\r")
         .replace(/\n/g, "\\n")
@@ -1111,7 +1118,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             }
           })
 
-        const options = serverOptions;
+        let options = serverOptions;
         if ("regex-module" in parms)
           options = extend(options, {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
