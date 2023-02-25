@@ -16,6 +16,7 @@
   ],
   "license": "MIT",
   "main": "./shex-visitor.js",
+  "types": "./shex-visitor.d.ts",
   "engines": {
     "node": ">=0.10.0"
   },

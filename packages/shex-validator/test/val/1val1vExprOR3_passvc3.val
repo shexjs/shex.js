@@ -34,7 +34,8 @@
         "referenced": {
           "solution": {
             "type": "NodeConstraintTest",
-            "focus": "\"ef\"",
+            "node": { "value": "ef" },
+            "shape": "http://a.example/S1",
             "shapeExpr": {
               "type": "NodeConstraint",
               "nodeKind": "literal",

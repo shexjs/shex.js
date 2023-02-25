@@ -2,18 +2,21 @@
 
 const VERBOSE = "VERBOSE" in process.env;
 const TERSE = VERBOSE;
-const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
+const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/\|/) : null;
 
 const ShExUtil = require("@shexjs/util");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const ShExTerm = require("@shexjs/term");
 const RdfJs = require("n3");
+const {DataFactory} = RdfJs;
 const ShExNode = require("@shexjs/node")({
   rdfjs: RdfJs,
 });
 const ShExParser = require("@shexjs/parser");
-const ShExValidator = require("@shexjs/validator");
+const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const Mapper = require("..")({rdfjs: RdfJs, Validator: ShExValidator});
+
+const StringToRdfJs = require("../lib/stringToRdfJs");
 
 // var Promise = require("promise");
 const expect = require("chai").expect;
@@ -34,10 +37,10 @@ function loadAndRun (srcSchemas, targetSchemas, inputDataFilePath, node, createR
     // Lean on ShExNode to load all the schemas and data graphs.
     const loads = await Promise.all([ShExNode.load({shexc: srcSchemas}, {turtle: [inputDataFilePath]}, {index: true}),
                                      ShExNode.load({shexc: targetSchemas}, {turtle: [expectedRdfFilePath]}, {index: true})])
-    loads[0].data.toString = loads[1].data.toString = graphToString;
+    // loads[0].data.toString = loads[1].data.toString = g => graphToString(g);
     const inputData = { graph: loads[0].data, meta: { base: urlify(inputDataFilePath), prefixes: {  } } }
     const expectedRdf = { graph: loads[1].data, meta: { base: urlify(expectedRdfFilePath), prefixes: {  } } }
-    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
+    return run(loads[0].schema, loads[1].schema, Promise.resolve(inputData), [{node, shape: ShExValidator.Start}], createRoot, expectedBindings, expectedRdf, mapstr, testTrivial);
   })
 
 }
@@ -47,11 +50,11 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
   // console.log([inputData.graph.size, JSON.stringify(smap), expectedRdf.graph.size])
 
   // prepare validator    
-  var validator = ShExValidator.construct(srcSchema, RdfJsDb(inputData.graph), {noCache: true});
+  var validator = new ShExValidator(srcSchema, RdfJsDb(inputData.graph), {noCache: true});
   const registered = Mapper.register(validator, {ShExTerm, ShExUtil});
 
   // run validator
-  var res = validator.validate(smap);
+  var res = resultMapToShapeExprTest(validator.validateShapeMap(smap));
   expect(res.errors || []).to.deep.equal([]); // Trick chai into displaying errors.
 
   // var resultBindings = validator.semActHandler.results["http://shex.io/extensions/Map/#"];
@@ -71,14 +74,13 @@ async function run (srcSchema, targetSchema, inputDataP, smapP, createRoot, expe
 }
 
 function testGraph (got, expected, mapstr) {
-  const passed = geq(got, expected);
-  if (!passed) {debugger
-    expected.toString = got.toString = graphToString;
+  const passed = graphEquals(got, expected);
+  if (!passed) {
     maybeLog(mapstr);
     maybeLog("output:");
-    maybeLog(got.toString());
+    maybeLog(graphToString(got));
     maybeLog("expect:");
-    maybeLog(expected.toString());
+    maybeLog(graphToString(expected));
     // console.log(got.toString(), "\n--\n", expected.toString());
   }
   expect(passed).to.be.true;
@@ -93,14 +95,12 @@ function trivial (registered, schema, resultBindings, createRoot) {
 function materialize (registered, schema, resultBindings, createRoot) {
   const materializer = Mapper.materializer.construct(schema, registered, {});
   const binder = registered.binder(JSON.parse(JSON.stringify(resultBindings)))
-  const res2 = materializer.validate(binder, createRoot, undefined)
+  const res2 = materializer.validateShapeMap(binder, [{node: createRoot, shape: ShExValidator.Start}])
+  if ("errors" in res2)
+    throw Error(`unexpectd materialization error`)
   const store = new RdfJs.Store()
-  store.addQuads(ShExUtil.valToN3js(res2, RdfJs.DataFactory))
+  store.addQuads(ShExUtil.valToN3js(res2, DataFactory))
   return store
-}
-
-function geq (l, r) { // graphEquals needs a this
-  return graphEquals.call(l, r);
 }
 
 describe('A ShEx Mapper', function () {
@@ -143,7 +143,7 @@ describe('A ShEx Mapper', function () {
 */
 });
 const ShapeMap = require("shape-map");
-ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const Awaiting = []
 const Examples = loadManifest()
@@ -154,6 +154,8 @@ before(() => {
 describe('Examples manifest', function () {
   Examples.forEach((manifest) => {
     const mapstr = manifest.schemaLabel + '(' + manifest.dataLabel + ')'
+    if (TESTS !== null && !TESTS.find(pat => mapstr.indexOf(pat) !== -1 || mapstr.match(RegExp(pat))))
+      return;
     const createRoot = manifest.createRoot.startsWith('_:')
           ? manifest.createRoot
           : manifest.createRoot.substr(1, manifest.createRoot.length-2)
@@ -220,114 +222,131 @@ async function parseTurtle (text, url) {
   })
 }
 
-function graphToString () {
+function graphToString (g) {
   var output = '';
   var w = new (require("n3")).Writer({
       write: function (chunk, encoding, done) { output += chunk; done && done(); },
   });
-  w.addQuads(this.getQuads(null, null, null)); // is this kosher with no end method?
+  w.addQuads([... g.match(null, null, null, null)]); // is this kosher with no end method?
   return "{\n" + output + "\n}";
 }
 
 /** graphEquals: test if two graphs are isomorphic through some bnode mapping.
  *
- * this: one of the graphs to test, referred to as "left" below.
+ * left: one of the graphs to test.
  * right: the other graph to test.
- * m: (optional) writable mapping from left bnodes to write bnodes.
+ * leftToRight: (optional) writable mapping from left bnodes to right bnodes.
  * returns: true or false
  * side effects: m is populated with a working mapping.
  */
-function graphEquals (right, m) {
-
-  if (this.size !== right.size)
+function graphEquals (left, right, leftToRight) {
+  if (left.size !== right.size)
     return false;
 
-  m = m || {};                                    // Left→right mappings (optional argument).
-  var back = Object.keys(m).reduce(function (ret, from) { // Right→left mappings
-    ret[m[from]] = from;                                  //  populated if m was passed in.
+  leftToRight = leftToRight || {};                                    // Left→right mappings (optional argument).
+  var rightToLeft = Object.keys(leftToRight).reduce(function (ret, from) { // Right→left mappings
+    ret[leftToRight[from]] = from;                                  //  populated if m was passed in.
     return ret;
   }, {});
-  function match (g) {
-    function val (term, mapping) {
-      mapping = mapping || m;                     // Mostly used for left→right mappings.
-      if (ShExTerm.isBlank(term))
-        return (term in mapping) ? mapping[term] : null // Bnodes get current binding or null.
-      else
-        return term;                              // Other terms evaluate to themselves.
-    }
 
-    if (g.length == 0)                            // Success if there's nothing left to match.
-      return true;
-    var t = g.pop(), s = val(t.subject), o = val(t.object); // Take the first triple in left.
-    var tm = right.getQuads(
-      s ? ShExTerm.externalTerm(s, require("n3").DataFactory) : null,
-      ShExTerm.externalTerm(t.predicate, require("n3").DataFactory),
-      o ? ShExTerm.externalTerm(o, require("n3").DataFactory) : null  // Find candidates in right.
-    ).map(ShExTerm.internalTriple);
-    var r = tm.reduce(function (ret, triple) {    // Walk through candidates in right.
-      if (ret) return true;                       // Only examine first successful mapping.
-      var adds = [];                              // List of candidate mappings.
-      function add (from, to) {
-        if (val(from) === null) {                   // If there's no binding from tₗ to tᵣ,
-          if (val(to, back) === null) {                // If we can bind to to the object
-            adds.push(from);                           //  add a candidate binding.
-            m[from] = to;
-            back[to] = from;
-            return true;
-          } else {                                     // Otherwise,
-            return false;                              //  it's not a viable mapping.
-          }
-        } else {                                    // Otherwise,
-          return true;                                 //  there's no new binding.
-        }
-      }
-      if (!add(t.subject, triple.subject) ||     // If the bindings for tₗ.s→tᵣ.s fail
-          !add(t.object, triple.object) ||       // or the bindings for tₗ.o→tᵣ.o fail
-          !match(g)) {                           // of the remaining triples fail,
-        adds.forEach(function (added) {             // remove each added binding.
-          delete back[m[added]];
-          delete m[added];
-        });
-        return false;
-      } else
-        return true;
-    }, false);                                    // Empty tm returns failure.
-    if (!r) {
-      g.push(t);                                  // No binding for t in cancidate mapping.
-    }
-    return r;
-  }
-  return match(this.getQuads(null, null, null)     // Start with all triples.
-               .map(ShExTerm.internalTriple));
+  return findIsomorphism([... left.match(null, null, null, null)],    // Start with all triples.
+                         right, leftToRight, rightToLeft);
 }
 
-  function testEquiv (name, g1, g2, equals, mapping) {
-    it("should test " + name + " to be " + equals, function () {
-      var l = new (require("n3")).Store(); l.toString = graphToString; l.equals = graphEquals;
-      var r = new (require("n3")).Store(); r.toString = graphToString;
-      g1.forEach(function (triple) { l.addQuad(ShExTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
-      g2.forEach(function (triple) { r.addQuad(ShExTerm.externalTriple({subject: triple[0], predicate: triple[1], object: triple[2]}, require("n3").DataFactory)); });
-      var m = {};
-      var ret = l.equals(r, m);
-      expect(ret).to.equal(equals, m);
-      if (mapping) {
-        if (Array.isArray(mapping)) {
-          var found = 0;
-          mapping.forEach(function (thisMap) {
-            try {
-              expect(m).to.deep.equal(thisMap);
-              ++found;
-            } catch (e) {
-            }
-          });
-          if (found !== 1) // slightly misleading error, but adequate.
-            expect(m).to.deep.equal(mapping);
-        } else {
-          expect(m).to.deep.equal(mapping);
+/**
+  * recursive function to find a consistent mapping of left bnodes to right bnodes.
+  * @param {*} g RdfJs graph
+  * @returns true if a mapping was found
+  */
+function findIsomorphism (g, right, l2r, r2l) {
+  if (g.length == 0)                              // Success if there's nothing left to match.
+    return true;
+  var matchTarget = g.pop();                      // Take the first triple in left.
+
+  var rights = [... right.match(                  // Find candidates in the right.
+    mapppedTo(matchTarget.subject, l2r),
+    matchTarget.predicate,
+    mapppedTo(matchTarget.object, l2r),
+    null
+  )];
+
+  const ret = !!rights.find(function (triple) {   // Walk through candidates in right.
+    var trialMappings = [];                          // List of candidate mappings.
+    function add (from, to) {
+      if (mapppedTo(from, l2r) === null) {   // If there's no binding from tₗ to tᵣ,
+        if (mapppedTo(to, r2l) === null) {   //   If we can bind to to the object
+          const leftKey = ShExTerm.rdfJsTerm2Turtle(from);
+          const rightKey = ShExTerm.rdfJsTerm2Turtle(to);
+          l2r[leftKey] = to;                 //      add a candidate binding.
+          r2l[rightKey] = from;
+          trialMappings.push({from, leftKey, rightKey});
+          return true;
+        } else {                                     //   Otherwise,
+          return false;                              //     it's not a viable mapping.
+        }
+      } else {                                       // Otherwise,
+        return true;                                 //   there's no new binding.
+      }
+    }
+
+    if (!add(matchTarget.subject, triple.subject) || // If the bindings for tₗ.s→tᵣ.s fail
+        !add(matchTarget.object, triple.object) ||   // or the bindings for tₗ.o→tᵣ.o fail
+        !findIsomorphism(g, right, l2r, r2l)) {      // of the remaining triples fail,
+      for (let {leftKey, rightKey} of trialMappings) {
+        delete r2l[rightKey];
+        delete l2r[leftKey];
+      };
+      return false;
+    } else
+      return true;
+  });
+
+  if (!ret) {
+    g.push(matchTarget);                           // No binding so leave as a failure.
+  }
+
+  return ret;
+}
+
+function mapppedTo (term, mapping) {
+  if (!mapping) throw Error('1');
+  mapping = mapping || leftToRight;                     // Mostly used for left→right mappings.
+  if (term.termType === "BlankNode") {
+    const key = ShExTerm.rdfJsTerm2Turtle(term);
+    return (key in mapping) ? mapping[key] : null // Bnodes get current binding or null.
+  } else {
+    return term;                              // Other terms evaluate to themselves.
+  }
+}
+
+/**
+ * RDFJS Store which returns match results in the order quads were added.
+ * This is useful for exercising algorithms like `graphEquals`
+ */
+class OrderedStore {
+  constructor () { this.quads = []; }
+
+  addQuad (q) { this.quads.push(q); }
+
+  get size () { return this.quads.length; }
+
+  match (s, p, o, g) {
+    const quads = this.quads;
+    return {
+      *[Symbol.iterator]() {
+        for (let t of quads) {
+          if (   (!s || s.equals(t.subject  ))
+              && (!p || p.equals(t.predicate))
+              && (!o || o.equals(t.object   )))
+            yield t;
         }
       }
-    });
+    }
   }
+}
+
+const DAM = 'http://dam.example/med#';
+const XSD = 'http://www.w3.org/2001/XMLSchema#';
 
 describe("Graph equivalence", function () {
   var p12Permute = [
@@ -340,7 +359,7 @@ describe("Graph equivalence", function () {
     {"_:l1": "_:r2", "_:l2": "_:r3", "_:r3": "_:r1"},
     {"_:l1": "_:r3", "_:l2": "_:r1", "_:r3": "_:r2"},
     {"_:l1": "_:r3", "_:l2": "_:r2", "_:r3": "_:r1"}];
-  var tests = [
+  var equivTests = [
     {name:"spo123=spo123", p:true, m:{},
      l:[["s", "p", "o1"], ["s", "p", "o2"], ["s", "p", "o3"]],
      r:[["s", "p", "o2"], ["s", "p", "o3"], ["s", "p", "o1"]]},
@@ -377,6 +396,12 @@ describe("Graph equivalence", function () {
     {name:"s p _:l1, _:l2, o3 != s p _:r1, _:r1, o3", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r1"], ["s", "p", "o3"]]},
+    {name:"backtrack pass", p:true, m:{"_:l1": "_:r2", "_:l2": "_:r1"},
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["_:l1", "p", "o3"]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["_:r2", "p", "o3"]]},
+    {name:"backtrack fail", p:false, m:null,
+     l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["_:l1", "p", "o3"]],
+     r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["_:r2", "p", "o4"]]},
     {name:"s p _:l1, _:l2, o3 = s p _:r1, _:r2, o3", p:true, m:
      [{"_:l1": "_:r1", "_:l2": "_:r2"}, {"_:l1": "_:r2", "_:l2": "_:r1"}],
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "o3"]],
@@ -421,9 +446,58 @@ describe("Graph equivalence", function () {
     {name:"s p _:l1, _:l2, 'o3'^^dt1 != s p _:r1, _:r2, 'o3'^^dt2", p:false, m:null,
      l:[["s", "p", "_:l1"], ["s", "p", "_:l2"], ["s", "p", "\"o3\"^^dt1"]],
      r:[["s", "p", "_:r1"], ["s", "p", "_:r2"], ["s", "p", "\"o3\"^^dt2"]]},
+    {name:"order 1", p:true, m:[{"_:lsys": "_:rsys", "_:ldia": "_:rdia"}], l:[
+      [`_:lsys`,         `${DAM}units`,     `"mmHg"`            ],
+      [`_:lsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
+      [`tag:a.example/`, `${DAM}systolic`,  `_:lsys`            ],
+      [`tag:a.example/`, `${DAM}diastolic`, `_:ldia`            ],
+      [`_:ldia`,         `${DAM}value`,     `"110"^^${XSD}float`],
+      [`_:ldia`,         `${DAM}units`,     `"mmHg"`            ],
+    ], r:[
+      [`_:rdia`,         `${DAM}units`,     `"mmHg"`            ],
+      [`_:rsys`,         `${DAM}units`,     `"mmHg"`            ],
+      [`tag:a.example/`, `${DAM}systolic`,  `_:rsys`            ],
+      [`tag:a.example/`, `${DAM}diastolic`, `_:rdia`            ],
+      [`_:rdia`,         `${DAM}value`,     `"110"^^${XSD}float`],
+      [`_:rsys`,         `${DAM}value`,     `"70"^^${XSD}float` ],
+    ]},
   ];
-  if (TESTS)
-    tests = tests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
-  tests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
+
+  if (TESTS) // in case we want to filter these tests.
+    equivTests = equivTests.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
+
+  equivTests.forEach(function (t) { testEquiv(t.name, t.l, t.r, t.p, t.m); });
 });
+
+function testEquiv (name, g1, g2, equals, mapping) {
+  it("should test " + name + " to be " + equals, function () {
+    var l = new OrderedStore(); // l.toString = g => graphToString(g);
+    var r = new OrderedStore(); // r.toString = g => graphToString(g);
+    g1.forEach(function (triple) { l.addQuad(StringToRdfJs.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
+    g2.forEach(function (triple) { r.addQuad(StringToRdfJs.n3idQuad2RdfJs(triple[0], triple[1], triple[2])) });
+    var m = {};
+    var ret = graphEquals(l, r, m);
+    expect(ret).to.equal(equals, m);
+    if (mapping) {
+      const f = Object.keys(m).reduce((acc, key) => {
+        acc[key] = ShExTerm.rdfJsTerm2Turtle(m[key]);
+        return acc;
+      }, {});
+      if (Array.isArray(mapping)) {
+        var found = 0;
+        mapping.forEach(function (thisMap) {
+          try {
+            expect(f).to.deep.equal(thisMap);
+            ++found;
+          } catch (e) {
+          }
+        });
+        if (found !== 1) // slightly misleading error, but adequate.
+          expect(f).to.deep.equal(mapping);
+      } else {
+        expect(f).to.deep.equal(mapping);
+      }
+    }
+  });
+}
 

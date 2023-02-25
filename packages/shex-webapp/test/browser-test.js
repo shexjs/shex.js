@@ -184,7 +184,7 @@ if (!TEST_browser) {
             await set($, "#textMap", "{FOCUS :subject _}@START")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
-            expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START")
+            expect(mapToText($("#editMap"))).to.equal("{FOCUS :subject _}@START")
             expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
           })
 
@@ -192,7 +192,7 @@ if (!TEST_browser) {
             await set($, "#textMap", "{FOCUS :subject _}@START,")
             expect($("#editMap .pair").length).to.equal(1)
             expect($("#fixedMap .pair").length).to.equal(1)
-            expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START")
+            expect(mapToText($("#editMap"))).to.equal("{FOCUS :subject _}@START")
             expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
           })
 
@@ -200,7 +200,7 @@ if (!TEST_browser) {
             await set($, "#textMap", "{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
             expect($("#editMap .pair").length).to.equal(2)
             expect($("#fixedMap .pair").length).to.equal(1)
-            expect(mapToText($("#editMap"))).to.equal("{FOCUS <http://hl7.org/fhir/subject> _}@START,{FOCUS <http://hl7.org/fhir/lalala> _}@START")
+            expect(mapToText($("#editMap"))).to.equal("{FOCUS :subject _}@START,{FOCUS :lalala _}@START")
             expect(mapToText($("#fixedMap"))).to.equal("<Obs1>@START")
           })
 
@@ -286,7 +286,7 @@ if (!TEST_browser) {
 
           await validationResults($, {
             name: "human", selector: "> *", contents: [
-              { shapeMap: "✓<x>@<http://a.example/S1>", classes: ["passes"] },
+              { shapeMap: "✓<x>@:S1", classes: ["passes"] },
             ]
           })
         }).timeout(STARTUP_TIMEOUT)
@@ -313,7 +313,7 @@ if (!TEST_browser) {
 
           await validationResults($, {
             name: "human", selector: "> *", contents: [
-              { shapeMap: "✓<x>@<http://a.example/S1>", classes: ["passes"] },
+              { shapeMap: "✓<x>@:S1", classes: ["passes"] },
             ]
           })
         }).timeout(STARTUP_TIMEOUT)
@@ -331,7 +331,7 @@ if (!TEST_browser) {
 
           await validationResults($, {
             name: "human", selector: "> *", contents: [
-              { shapeMap: "✓<http://a.example/n1>@<http://a.example/S1>", classes: ["passes"] },
+              { shapeMap: "✓<//a.example/n1>@<//a.example/S1>", classes: ["passes"] },
             ]
           })
         }).timeout(STARTUP_TIMEOUT)
@@ -421,7 +421,7 @@ if (!TEST_browser) {
 
           await validationResults($, {
             name: "human", selector: "> *", contents: [
-              { shapeMap: "✓<x>@<http://a.example/S1>", classes: ["passes"] },
+              { shapeMap: "✓<x>@:S1", classes: ["passes"] },
             ]
           })
         })

@@ -11,10 +11,7 @@
           {
             "type": "TripleConstraintSolutions",
             "predicate": "http://ex.example/#reportedBy",
-            "valueExpr": {
-              "type": "ShapeRef",
-              "reference": "http://a.example/PersonShape"
-            },
+            "valueExpr": "http://a.example/PersonShape",
             "solutions": [
               {
                 "type": "TestedTriple",
@@ -71,7 +68,8 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Bob\"",
+                                                          "node": { "value": "Bob" },
+                                                          "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -97,7 +95,8 @@
                                                         },
                                                         "referenced": {
                                                           "type": "NodeConstraintTest",
-                                                          "focus": "\"Smith\"",
+                                                          "node": { "value": "Smith" },
+                                                          "shape": "http://a.example/PersonShape",
                                                           "shapeExpr": {
                                                             "type": "NodeConstraint",
                                                             "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -129,7 +128,8 @@
                                         "object": "mail:bob@example.org",
                                         "referenced": {
                                           "type": "NodeConstraintTest",
-                                          "focus": "mail:bob@example.org",
+                                          "node": "mail:bob@example.org",
+                                          "shape": "http://a.example/PersonShape",
                                           "shapeExpr": {
                                             "type": "NodeConstraint",
                                             "nodeKind": "iri"
@@ -148,10 +148,7 @@
                     "local": {
                       "type": "TripleConstraintSolutions",
                       "predicate": "http://ex.example/#representative",
-                      "valueExpr": {
-                        "type": "ShapeRef",
-                        "reference": "http://a.example/EmployeeShape"
-                      },
+                      "valueExpr": "http://a.example/EmployeeShape",
                       "solutions": [
                         {
                           "type": "TestedTriple",
@@ -208,7 +205,8 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "focus": "\"Joe\"",
+                                                                    "node": { "value": "Joe" },
+                                                                    "shape": "http://a.example/PersonShape",
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
                                                                       "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -224,7 +222,8 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "focus": "\"Joseph\"",
+                                                                    "node": { "value": "Joseph" },
+                                                                    "shape": "http://a.example/PersonShape",
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
                                                                       "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -250,7 +249,8 @@
                                                                   },
                                                                   "referenced": {
                                                                     "type": "NodeConstraintTest",
-                                                                    "focus": "\"Thompson\"",
+                                                                    "node": { "value": "Thompson" },
+                                                                    "shape": "http://a.example/PersonShape",
                                                                     "shapeExpr": {
                                                                       "type": "NodeConstraint",
                                                                       "datatype": "http://www.w3.org/2001/XMLSchema#string"
@@ -282,7 +282,8 @@
                                                   "object": "mail:joe@example.org",
                                                   "referenced": {
                                                     "type": "NodeConstraintTest",
-                                                    "focus": "mail:joe@example.org",
+                                                    "node": "mail:joe@example.org",
+                                                    "shape": "http://a.example/PersonShape",
                                                     "shapeExpr": {
                                                       "type": "NodeConstraint",
                                                       "nodeKind": "iri"
@@ -317,7 +318,8 @@
                                           "object": "tel:+456",
                                           "referenced": {
                                             "type": "NodeConstraintTest",
-                                            "focus": "tel:+456",
+                                            "node": "tel:+456",
+                                            "shape": "http://a.example/RepShape",
                                             "shapeExpr": {
                                               "type": "NodeConstraint",
                                               "nodeKind": "iri"
@@ -342,10 +344,7 @@
           {
             "type": "TripleConstraintSolutions",
             "predicate": "http://ex.example/#reproducedBy",
-            "valueExpr": {
-              "type": "ShapeRef",
-              "reference": "http://a.example/EmployeeShape"
-            },
+            "valueExpr": "http://a.example/EmployeeShape",
             "min": 0,
             "max": 1,
             "solutions": []

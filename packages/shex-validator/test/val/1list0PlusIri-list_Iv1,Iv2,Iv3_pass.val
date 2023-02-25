@@ -39,7 +39,8 @@
                           "object": "http://a.example/v1",
                           "referenced": {
                             "type": "NodeConstraintTest",
-                            "focus": "http://a.example/v1",
+                            "node": "http://a.example/v1",
+                            "shape": "http://a.example/List0PlusIri",
                             "shapeExpr": {
                               "type": "NodeConstraint",
                               "nodeKind": "iri"
@@ -85,7 +86,8 @@
                                             "object": "http://a.example/v2",
                                             "referenced": {
                                               "type": "NodeConstraintTest",
-                                              "focus": "http://a.example/v2",
+                                              "node": "http://a.example/v2",
+                                              "shape": "http://a.example/List0PlusIri",
                                               "shapeExpr": {
                                                 "type": "NodeConstraint",
                                                 "nodeKind": "iri"
@@ -131,7 +133,8 @@
                                                               "object": "http://a.example/v3",
                                                               "referenced": {
                                                                 "type": "NodeConstraintTest",
-                                                                "focus": "http://a.example/v3",
+                                                                "node": "http://a.example/v3",
+                                                                "shape": "http://a.example/List0PlusIri",
                                                                 "shapeExpr": {
                                                                   "type": "NodeConstraint",
                                                                   "nodeKind": "iri"

@@ -46,7 +46,7 @@ const { ctor: SparqlDb } = require('@shexjs/neighborhood-sparql');
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
-const ShExValidator = require("@shexjs/validator");
+const {ShExValidator, resultMapToShapeExprTest} = require("@shexjs/validator");
 const ShapeMap = require("shape-map");
 const N3 = require("n3");
 const ShExNode = require("@shexjs/node")({
@@ -54,24 +54,36 @@ const ShExNode = require("@shexjs/node")({
   fetch: require('node-fetch'),
   jsonld: require('jsonld'),
 });
+const ExitCode = require('../lib/ExitCode')
 
-ShapeMap.start = ShExValidator.start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+ShapeMap.start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const ValidatorOptions = { diagnose: true };
-const SchemaOptions = { duplicateShape: "abort", index: true };
+const SchemaOptions = {
+  duplicateShape: "abort",
+  index: true,
+  collisionPolicy: (type, left, right) => {
+    const lStr = JSON.stringify(left);
+    const rStr = JSON.stringify(right);
+    if (lStr === rStr)
+      return false; // keep left/old assignment
+    throw new Error(`Conflicing definitions: ${lStr} !== ${rStr}`);
+  }
+};
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
 const START_SHAPE_LABEL = "START";
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-//const orChoices = Object.keys(ShExValidator.options.or).join("|");
-const covgChoices = Object.keys(ShExValidator.options.coverage).join("|");
+//const orChoices = Object.keys(ShExValidator.InterfaceOptions.or).join("|");
+const covgChoices = Object.keys(ShExValidator.InterfaceOptions.coverage).join("|");
 const dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
 
 const CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean , description: "print extra information" },           //
   { name: "quiet",     alias: "q", type: Boolean , description: "don't print anything" },              // switch to logger
   { name: "terse",     alias: "Q", type: Boolean , description: "don't print diagnistics or advice" }, //
+  { name: "human",                type: Boolean , description: "print human-readable results" }, //
   { name: "query",                 type: Boolean , description: "show matching RDF graph" },
   { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
@@ -105,17 +117,23 @@ const CommandLineOptions = [
   { name: "test-name",             type: String, typeLabel: "IRI",       multiple:  true, defaultValue:        [], description: "what tests to run in the manifest (.name OR .schemaLabel/.dataLabel)" },
   { name: "invocation",alias: "i", type: Boolean, desc: "show invocation" },
   { name: "dry-run",   alias: "N", type: Boolean, desc: "prepare validation but don't execute" },
-  { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression modules to use" },
+  { name: "regex-module",          type: String, typeLabel: "js module", multiple: false, defaultValue: undefined, description: "what regular expression module to use" },
 ];
 
 // Generate command line interface
-const CLI = require("command-line-args")(CommandLineOptions);
 const Argv1 = Path.relative("", process.argv[1]);
 const CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
+let CLI;
+try {
+  CLI = require("command-line-args")(CommandLineOptions);
+} catch (e) {
+  abort(e.message, ExitCode.bad_argument);
+}
 
-function abort (msg) {
-  console.error(msg);
-  console.error(require('command-line-usage')([
+function abort (msg, exitCode) {
+  const output = exitCode === ExitCode.help ? console.log : console.error;
+  output(msg);
+  output(require('command-line-usage')([
     {
       header: 'validate',
       content: 'validate nodes in RDF graphs with respect to ShEx schemas.'
@@ -134,17 +152,14 @@ function abort (msg) {
     {
       header: 'Examples',
       content: [
-        {l: 'validate local files',
-         r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir)}
-      ]
-    },
-    {
-      header: 'examples',
-      content: [
-        { l: "validate local files:",
-          r: Util.format('  validate -x %s1dotOr2dot.shex -s http://a.example/S1 -d %sp2p3.ttl -n x', CliDir, CliDir) },
+        { l: "validate local files by node and shape:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -n x -s http://a.example/S1', CliDir, CliDir) },
+        { l: "validate local files with a ShapeMap:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -m \'<x>@<http://a.example/S1>\'', CliDir, CliDir) },
+        { l: "validate local files with a QueryMap:",
+          r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -m \'\\{FOCUS :p2 _\\}@<http://a.example/S1>\'', CliDir, CliDir) },
         { l: "validate web resources:",
-          r: "  validate -x http://shex.io/examples/Issue.shex -s IssueShape -d http://shex.io/examples/Issue1.ttl -n Issue1" },
+          r: "  validate -x http://shex.io/examples/IssueSchema.shex -d http://shex.io/examples/Issue1.ttl -m '<#Issue1>@<#IssueShape>'" },
         { l: "run as a server:",
           r: Util.format('  validate -x http://localhost:8088/validate', CliDir) },
         { l: "",
@@ -159,8 +174,10 @@ function abort (msg) {
       content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
     }
   ]));
-  process.exit(1);
+  process.exit(exitCode);
 }
+
+class TermError extends Error {  }
 
 /* Leverage N3.js's relative IRI parsing.
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
@@ -171,7 +188,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
     return label in shapeIndex.shapeExprs;
   }
   function unknownShape (label) {
-    throw Error(label + " not found in\n" + Object.keys(shapeIndex.shapeExprs).map(n => "  " + n + "\n").join(''));
+    throw new TermError(label + " not found in\n" + Object.keys(shapeIndex.shapeExprs).map(n => "  " + n + "\n").join(''));
   }
   function someShape () {
     return Object.keys(shapeIndex.shapeExprs)[0];
@@ -185,8 +202,8 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
   }
   function someIRInode () {
     const triples = loaded.data.getQuads(null, null, null);
-    for (const i = 0; i < triples.length; ++i)
-      if (N3.Util.isIRI(triples[i].subject))
+    for (let i = 0; i < triples.length; ++i)
+      if (triples[i].subject.termType === "NamedNode")
         return triples[i].subject;
     return triples.length > 0 ? triples[0].subject : ShExUtil.NotSupplied;
   };
@@ -195,12 +212,12 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
     return triples.length > 0 ? triples.map(t => t.subject) : [ShExUtil.NotSupplied];
   };
   function getQuads (s, p, o) {
-    const get = s === ShapeMap.focus ? "subject" : "object";
+    const get = s === ShapeMap.Focus ? "subject" : "object";
     return loaded.data.getQuads(mine(s), mine(p), mine(o)).map(
       t => t[get]
     );
     function mine (term) {
-      return term === ShapeMap.focus || term === ShapeMap.wildcard
+      return term === ShapeMap.Focus || term === ShapeMap.Wildcard
         ? null
         : term;
     }
@@ -218,7 +235,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP, schemaStart) {
     // resolve relative shape and focus node names against the first schema and data source respectively.
-    const nodes = nodeTypeP
+    let nodes = nodeTypeP
         ? allNodesWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
 						    null, knownType, x =>  x))
         : typeof nodeP === "object" && nodeP.type === "TriplePattern"
@@ -231,7 +248,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
 
     if (!shapeP && loaded.schema.start) {
       shape = loaded.schema.start;
-      shapeLabel = ShExValidator.start;
+      shapeLabel = ShExValidator.Start;
       ret.shape = shapeLabel;
     } else {
       const found = typeof shapeP === "string"
@@ -280,7 +297,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
                    "")
                  );
       }
-      abort(msgs.join("\n"));
+      abort(msgs.join("\n"), ExitCode.bad_argument);
     }
     return nodes.map(node => ({ node: node, shape: shape }));
   }
@@ -350,8 +367,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     valParms.dataURL = valParms.json.splice(1); // push all but first into data
   }
   if (!valParms.serve) {
-    if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified");
-    if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified");
+    if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified", ExitCode.bad_argument);
+    if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
   }
   // Loaded schema and data.
   const schemaAndDataP = ShExNode.load(
@@ -441,7 +458,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       const res = findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaOptions, schemaAndData.schema.start).results;
 
       if (cmds["dry-run"])
-        return res;
+        return res || ExitCode.dry_run;
+
       const passed = !("errors" in res);
       // display results and return error codes
       if (expectedResults !== undefined) {
@@ -450,8 +468,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
               JSON.stringify(expectedResults) == JSON.stringify(res);
         if (!valParms.quiet)
           console.log(match);
-        // Exit status 3 means match failure.
-        return match ? 0 : 3;
+        return match ? ExitCode.val_match_pass : ExitCode.val_match_fail;
       } else {
         if (res.graph) {
           const wr = new N3.Writer({ prefixes: schemaAndData.dataMeta[0].prefixes || {} });
@@ -471,15 +488,36 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             console.log(text);
           else
             console.log(JSON.stringify(res, null, "  "));
-        } else if (!valParms.quiet && !valParms.slurp)
-          console.log(JSON.stringify(res, null, "  "));
-        // Exit status 2 means validation failure.
-        return passed ? 0 : 2;
+          return passed ? ExitCode.graph_match_pass : ExitCode.graph_match_fail;
+        } else if (!valParms.quiet && !valParms.slurp) {
+          console.log(
+            cmds["human"]
+              ? passed
+              ? `${res.node}@${res.shape}`
+              : ShExUtil.errsToSimple(res)
+              : JSON.stringify(res, null, "  ")
+          );
+          return passed ? ExitCode.shape_test_pass : ExitCode.shape_test_fail;
+        }
       }
     }
   } catch (e) {
-    console.error("aborting:", typeof e === "object" && "stack" in e ? e.stack : e);
-    return 1;
+    let exitCode;
+    if (e instanceof TermError) {
+      exitCode = ExitCode.term_not_found;
+      console.error("Term argument error:", e.message);
+    } else if (e instanceof ShExNode.WebError) {
+      exitCode = ExitCode.resource_not_found;
+      console.error("Resource error:", e.message);
+    } else if (e instanceof Error) {
+      exitCode = e.code === "ENOENT" ? ExitCode.file_not_found : ExitCode.unspecified_error;
+      console.error(e.stack);
+    } else {
+      exitCode = ExitCode.unspecified_error;
+      console.error("Aborting:", e);
+      e = Error(e);
+    }
+    return exitCode;
   };
 
   function makeQueryTracker (schemaMeta, dataMeta) {
@@ -502,9 +540,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
           process.stdout.write(" " + triples.length + " triples (" + time + " μs)\n");
         if (valParms.slurp) {
           const wr = new N3.Writer({ prefixes: dataMeta.meta.prefixes || {} });
-          wr.addQuads(triples.map(
-            t => ShExTerm.externalTriple(t, N3.DataFactory)
-          ));
+          wr.addQuads(triples);
           wr.end((error, results) => {
             if (error)
               console.warn(error.replace(/^/mg, "# "));
@@ -525,7 +561,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
 
 function rdflib_termToLex (node, resolver) {
   if (typeof node === "object") {
-    const ret = node.value
+    let ret = node.value
         .replace(/"/g, "\\\"")
         .replace(/\r/g, "\\r")
         .replace(/\n/g, "\\n")
@@ -541,7 +577,7 @@ function rdflib_termToLex (node, resolver) {
     return node;
   if (node === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     return "a";
-  if (node === ShExValidator.start)
+  if (node === ShExValidator.Start)
     return START_SHAPE_LABEL;
   if (node === resolver._base)
     return "<>";
@@ -591,24 +627,17 @@ function getInvocation (parms) {
   return res.join(' ');
 }
 
-const cmds = (function () {
-  try {
-    return CLI;
-  } catch (e) {
-    console.error(e.message);
-    process.exit(1);
-  }
-})();
+const cmds = CLI;
 
 if (cmds.help)
-  abort("");
+  abort("", ExitCode.help);
 
 if ("duplicate-shape" in cmds)
   SchemaOptions.duplicateShape = cmds["duplicate-shape"];
 
 if (cmds.coverage) {
-  if (!(cmds.coverage in ShExValidator.options.coverage))
-    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.options.coverage).join(", ") + "\".");
+  if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
+    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
   ValidatorOptions.coverage = cmds.coverage;
 }
 
@@ -657,16 +686,16 @@ function queueTests (tests, cmds) {
     const schemaOptions = Object.assign({}, SchemaOptions, test.schemaOptions || {});
     return loadSchemaAndData(test, test.validatorOptions, schemaOptions);
   })).then(function (results) {
-    // exit with a 0 if all returned 0, else a failure code.
-    return results.reduce(function (soFar, result) {
-      return soFar ? soFar : result;
+    // exit with a 0 if all returned 0, else hightest (worst) ExitCode.x code.
+    return results.reduce(function (worst, result) {
+      return worst < result ? result : worst;
     }, 0);
   });
 }
 
 function runValidator (db, shapeMap, schema, options) {
   // prepare validator
-  const validator = ShExValidator.construct(schema, db, options);
+  const validator = new ShExValidator(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].register(validator);
@@ -678,7 +707,7 @@ function runValidator (db, shapeMap, schema, options) {
   // run validator
   const res = cmds.grep
       ? grep(shapeMap)
-      : validator.validate(shapeMap);
+      : resultMapToShapeExprTest(validator.validateShapeMap(shapeMap));
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);
@@ -710,7 +739,7 @@ function runValidator (db, shapeMap, schema, options) {
     const passes = fixedMap.reduce((acc, row) => {
       if (cmds.verbose)
         process.stdout.write('checking ' + JSON.stringify(row))
-      const res = validator.validate([row]);
+      const res = resultMapToShapeExprTest(validator.validateShapeMap([row]));
       if (cmds.verbose)
         process.stdout.write(' -> ' + !('errors' in res) + "\n")
       return "errors" in res
@@ -741,7 +770,7 @@ function loadRDFmanifest (cmds) {
         cmds["test-name"].reduce((ret, testName) => {
           const pattern = RegExp(testName);
           loaded.data.getQuads(null, mf+"name", null).filter(function (triple) {
-            if (N3.Util.getLiteralValue(triple.object).match(pattern))
+            if (triple.object.value.match(pattern))
               ret.push(triple.subject);
           });
           return ret;
@@ -755,7 +784,7 @@ function loadRDFmanifest (cmds) {
       const schemaOptions = Object.assign({}, SchemaOptions);
       const traits = loaded.data.getQuads(subject, sht+"trait", null);
       traits.forEach(function (t) {
-        let tStr = ShExTerm.internalTerm(t.object).substr(sht.length);
+        let tStr = t.object.value.substr(sht.length);
         tStr = tStr.substr(0, 1).toLowerCase() + tStr.substr(1);
         if (tStr in TraitToOption)
           validatorOptions[TraitToOption[tStr]] = tStr;
@@ -773,7 +802,7 @@ function loadRDFmanifest (cmds) {
                 } else {
                   const m = loaded.data.getQuads(action, sht+elt[0], null);
                   if (m.length > 0) {
-                    const v = ShExTerm.internalTerm(m[0].object);
+                    const v = ShExTerm.rdfJsTerm2Ld(m[0].object);
                     ret[elt[1]] = elt[2] ? [v] : v;
                   }
                 }
@@ -787,7 +816,7 @@ function loadRDFmanifest (cmds) {
     console.error("failed to load manifest file \"" +
                   ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
                   "\":", e, e.stack);
-    return 1;
+    return ExitCode.manifest_not_found;
   });
 }
 
@@ -907,11 +936,11 @@ function loadJSONmanifest (jsonManifests, parser) {
         return queueTests(d, cmds);
       } catch (e) {
         console.error("failed to process json manifest: " + (e.stack || e));
-        return 1;
+        return ExitCode.manifest_error;
       }
     }).catch(function (e) {
       console.error("failed to load json manifest: ", e.stack || e);
-      return 1;
+      return ExitCode.manifest_not_found;
     });
   });
 }
@@ -965,7 +994,7 @@ class FileCache {
 
 function runServer (serverLoaded, serverParms, serverOptions) {
   const app       = new (require("koa"))();
-  const koaBody   = require("koa-body");
+  const {koaBody} = require("koa-body");
   const log       = serverParms.quiet ? () => undefined : console.log;
   const fileCache = new FileCache();
   let serverUrl;
@@ -1100,7 +1129,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             }
           })
 
-        const options = serverOptions;
+        let options = serverOptions;
         if ("regex-module" in parms)
           options = extend(options, {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
@@ -1202,10 +1231,10 @@ function makeError (msg, status) {
 function getRegexModule (module) {
   if (module) {
     try {
-      return require(module);
+      return require(module).RegexpModule;
     } catch (e1) {
       try {
-        return require(REGEX_MODULES + module);
+        return require(REGEX_MODULES + module).RegexpModule;
       } catch (e2) {
         throw e1;
       }

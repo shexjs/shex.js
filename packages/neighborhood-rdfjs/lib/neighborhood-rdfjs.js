@@ -1,14 +1,14 @@
 /** Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset
  */
 const NeighborhoodRdfJsModule = (function () {
-  const ShExTerm = require("@shexjs/term");
+  const Api = require("@shexjs/neighborhood-api");
 
   function rdfjsDB (db /*:typeof N3Store*/, queryTracker /*:QueryTracker*/) {
 
-    function getSubjects () { return db.getSubjects().map(ShExTerm.internalTerm); }
-    function getPredicates () { return db.getPredicates().map(ShExTerm.internalTerm); }
-    function getObjects () { return db.getObjects().map(ShExTerm.internalTerm); }
-    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments).map(ShExTerm.internalTriple); }
+    function getSubjects () { return db.getSubjects(); }
+    function getPredicates () { return db.getPredicates(); }
+    function getObjects () { return db.getObjects(); }
+    function getQuads ()/*: Quad[]*/ { return db.getQuads.apply(db, arguments); }
 
     function getNeighborhood (point/*: string*/, shapeLabel/*: string*//*, shape */) {
       // I'm guessing a local DB doesn't benefit from shape optimization.
@@ -17,7 +17,9 @@ const NeighborhoodRdfJsModule = (function () {
         startTime = new Date();
         queryTracker.start(false, point, shapeLabel);
       }
-      const outgoing/*: Quad[]*/ = db.getQuads(point, null, null, null).map(ShExTerm.internalTriple);
+      const outgoing/*: Quad[]*/ = [... db.match(point, null, null, null)].sort(
+        (l, r) => Api.sparqlOrder(l.object, r.object)
+      );
       if (queryTracker) {
         const time = new Date();
         queryTracker.end(outgoing, time.valueOf() - startTime.valueOf());
@@ -26,7 +28,9 @@ const NeighborhoodRdfJsModule = (function () {
       if (queryTracker) {
         queryTracker.start(true, point, shapeLabel);
       }
-      const incoming/*: Quad[]*/ = db.getQuads(null, null, point, null).map(ShExTerm.internalTriple);
+      const incoming/*: Quad[]*/ = [...db.match(null, null, point, null)].sort(
+        (l, r) => Api.sparqlOrder(l.object, r.object)
+      );
       if (queryTracker) {
         queryTracker.end(incoming, new Date().valueOf() - startTime.valueOf());
       }

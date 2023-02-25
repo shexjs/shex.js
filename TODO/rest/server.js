@@ -6,7 +6,7 @@ var log              = console.log,
     port             = process.env.PORT || 4290,
     host             = 'http://localhost',
     fs               = require('fs'),
-    ShExValidator    = require("../lib/ShExValidator"),
+    ShExValidator    = require("../lib/ShExValidator").ShExValidator,
     ShExLoader       = require("../lib/ShExLoader"),
     N3               = require("n3"),
     NotSupplied      = "-- not supplied --",
@@ -149,7 +149,7 @@ app.
                                              null, knownType, loaded.data._prefixes)) :
             parsePassedNode(parms.focus, loaded.dataMeta[0], someIRInode,
                             knownNode, loaded.data._prefixes);
-          var validator = ShExValidator.construct(loaded.schema, ValidatorOptions);
+          var validator = ShExValidator(loaded.schema, ValidatorOptions);
           var result =
               parms.focus === NotSupplied || parms.focus === UnknownIRI ||
               parms.start === NotSupplied || parms.start === UnknownIRI ?

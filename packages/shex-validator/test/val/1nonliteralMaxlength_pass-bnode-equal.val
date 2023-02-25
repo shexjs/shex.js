@@ -18,7 +18,8 @@
         "object": "_:abcdefghijklmnopqrs",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "_:abcdefghijklmnopqrs",
+          "node": "_:abcdefghijklmnopqrs",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "maxlength": 19,
