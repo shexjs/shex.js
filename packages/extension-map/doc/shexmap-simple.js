@@ -1096,7 +1096,7 @@ function handleCreate (msg, workerUICleanup, resolve, reject) {
   }
 }
 
-function parseUpdatesAndResults (time, validationTracker, done, msg, workerUICleanup, resolve, reject) {
+function parseUpdatesAndResults (time, validationTracker, done, currentAction, msg, workerUICleanup, resolve, reject) {
   switch (msg.data.response) {
   case "update":
     if (USE_INCREMENTAL_RESULTS) {
