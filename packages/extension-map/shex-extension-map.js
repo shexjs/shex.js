@@ -72,7 +72,7 @@ function register (validator, api) {
         if (/.*[(].*[)].*$/s.test(code)) {
           const results = extensions.lift(code, ctx.object.value, prefixes);
           for (key in results)
-            update(key, RdfJs.DataFactory.literal(results[key]));
+            update(key, N3DataFactory.literal(results[key]));
         } else {
           const bindingName = code.match(pattern);
           update(bindingName, ctx.node || ctx.object);
