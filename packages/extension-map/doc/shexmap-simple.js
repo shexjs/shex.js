@@ -981,7 +981,7 @@ async function callValidator (done) {
             queryMap: transportMap,
             options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
           },
-          parseUpdatesAndResults.bind(undefined, time, validationTracker, done)
+          parseUpdatesAndResults.bind(undefined, time, validationTracker, done, currentAction)
         );
       } catch (e) {
         $("#results .status").text("validation errors:").show();
