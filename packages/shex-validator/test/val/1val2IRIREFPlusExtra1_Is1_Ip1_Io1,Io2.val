@@ -10,7 +10,8 @@
       { "type": "TestedTriple", "subject": "http://a.example/s1", "predicate": "http://a.example/p1", "object": "http://a.example/o1",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "http://a.example/o1",
+          "node": "http://a.example/o1",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [
@@ -22,7 +23,8 @@
       { "type": "TestedTriple", "subject": "http://a.example/s1", "predicate": "http://a.example/p1", "object": "http://a.example/o2",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "http://a.example/o2",
+          "node": "http://a.example/o2",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

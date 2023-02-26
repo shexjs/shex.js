@@ -1,7 +1,7 @@
 // **ShExWriter** writes ShEx documents.
 
 const ShExWriterCjsModule = (function () {
-const RelateUrl = require("relateurl");
+const RelativizeIri = require("relativize-url").relativize;
 const UNBOUNDED = -1;
 
 // Matches a literal as represented in memory by the ShEx library
@@ -474,7 +474,7 @@ ShExWriter.prototype = {
     const base = this._baseIRI;
     try {
       if (base && new URL(base).host === new URL(iri).host) // https://github.com/stevenvachon/relateurl/issues/28
-        iri = RelateUrl.relate(base, iri, { output: RelateUrl.ROOT_PATH_RELATIVE });
+        iri = RelativizeIri(iri, base);
     } catch (e) {
       // invalid URL for e.g. already relative IMPORTs
     }

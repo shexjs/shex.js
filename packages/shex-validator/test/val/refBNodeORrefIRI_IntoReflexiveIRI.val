@@ -49,7 +49,8 @@
             "solutions": [
               {
                 "type": "NodeConstraintTest",
-                "focus": "http://a.example/n2a",
+                "node": "http://a.example/n2a",
+                "shape": "http://a.example/S1",
                 "shapeExpr": {
                   "type": "NodeConstraint",
                   "minlength": 20
@@ -106,7 +107,8 @@
                           "solutions": [
                             {
                               "type": "NodeConstraintTest",
-                              "focus": "http://a.example/n2a",
+                              "node": "http://a.example/n2a",
+                              "shape": "http://a.example/S1",
                               "shapeExpr": {
                                 "type": "NodeConstraint",
                                 "minlength": 20

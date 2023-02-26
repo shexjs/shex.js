@@ -19,7 +19,8 @@
         "object": { "value": "ab", "type": "http://a.example/bloodType" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"ab\"^^http://a.example/bloodType",
+          "node": { "value": "ab", "type": "http://a.example/bloodType" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

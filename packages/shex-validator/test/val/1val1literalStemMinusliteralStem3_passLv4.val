@@ -36,7 +36,8 @@
         "object": { "value": "v4" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"v4\"",
+          "node": { "value": "v4" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

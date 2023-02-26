@@ -8,9 +8,9 @@
 
 const ShapeMapSymbols = (function () {
   return {
-    focus: { term: "FOCUS" },
-    start: { term: "START" },
-    wildcard: { term: "WILDCARD" },
+    Focus: { term: "FOCUS" },
+    Start: { term: "START" },
+    Wildcard: { term: "WILDCARD" },
   }
 })();
 

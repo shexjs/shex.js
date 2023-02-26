@@ -18,7 +18,8 @@
         "object": "http://a.example/bc",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "http://a.example/bc",
+          "node": "http://a.example/bc",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "nonliteral",

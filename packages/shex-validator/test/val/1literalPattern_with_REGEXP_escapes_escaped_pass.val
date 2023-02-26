@@ -18,7 +18,8 @@
         "object": { "value": "\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8\"",
+          "node": { "value": "\\/\\t\\n\\r\\-\\\\\\u0061\\U0001D4B8" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "nodeKind": "literal",

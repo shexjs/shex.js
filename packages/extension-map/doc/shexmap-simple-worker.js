@@ -44,13 +44,13 @@ try {
   case "create":
     errorText = "creating validator";
     const inputData = "endpoint" in msg.data
-      ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-      : ShEx.RdfJsDb(makeStaticDB(msg.data.data));
+          ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+          : ShEx.RdfJsDb(makeStaticDB(msg.data.data.map(t => Util.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
     createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results
-    validator = ShEx.Validator.construct(
+    validator = new ShEx.Validator(
       msg.data.schema,
       inputData,
       createOpts
@@ -68,12 +68,12 @@ try {
       const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
-        singletonMap[0].shape = ShEx.Validator.start;
+        singletonMap[0].shape = ShEx.Validator.Start;
       time = new Date();
-      const newResults = validator.validate(singletonMap, options.track ? makeRelayTracker() : null);
+      const newResults = validator.validateShapeMap(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
       time = new Date() - time;
       newResults.forEach(function (res) {
-        if (res.shape === ShEx.Validator.start)
+        if (res.shape === ShEx.Validator.Start)
           res.shape = START_SHAPE_INDEX_ENTRY;
       });
       // Merge into results.
@@ -102,11 +102,11 @@ try {
       const singletonMap = [materializeMap[currentEntry++]]; // ShapeMap with single entry.
       try {
         const binder = Mapper.binder(msg.data.resultBindings);
-        const res = materializer.validate(binder, singletonMap[0].node, singletonMap[0].shape);
-        if ("errors" in res) {
-          self.postMessage(Object.assign({ response: "error", results: res }, singletonMap[0]));
+        const resM = materializer.validate(binder, ShEx.StringToRdfJs.n3idTerm2RdfJs(singletonMap[0].node), singletonMap[0].shape);
+        if ("errors" in resM) {
+          self.postMessage(Object.assign({ response: "error", results: resM }, singletonMap[0]));
         } else {
-          self.postMessage({ response: "update", results: res });
+          self.postMessage({ response: "update", results: resM });
         }
       } catch (e) {
         console.dir(e);

@@ -16,6 +16,7 @@
   ],
   "license": "MIT",
   "main": "./lib/validator-api.js",
+  "types": "./src/validator-api.ts",
   "engines": {
     "node": ">=0.10.0"
   },

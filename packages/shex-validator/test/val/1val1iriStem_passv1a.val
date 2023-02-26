@@ -22,7 +22,8 @@
         "object": "http://a.example/v1a",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "http://a.example/v1a",
+          "node": "http://a.example/v1a",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

@@ -18,7 +18,8 @@
         "object": "http://a.example/o",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "http://a.example/o",
+          "node": "http://a.example/o",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "maxlength": 19,

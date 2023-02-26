@@ -21,7 +21,7 @@ function parseArgs(mapDirective, args) {
     if (args === undefined || args.length === 0) throw Error("Hashmap extension requires a variable name and map as arguments, but found none!");
 
     // get the variable name and hashmap
-    const matches = /^[ ]*([\w:<>]+)[ ]*,[ ]*({.*)$/.exec(args);
+    const matches = /^[ ]*([\w:<>]+)[ ]*,[ ]*({.*)$/s.exec(args);
     if (matches === null || matches.length < 3) throw Error("Hashmap extension requires a variable name and map as arguments, but found: " + mapDirective + "!");
 
     const varName = matches[1]; 
