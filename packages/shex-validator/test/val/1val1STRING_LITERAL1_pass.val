@@ -19,7 +19,8 @@
         "object": { "value": "STRING_LITERAL1" },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"STRING_LITERAL1\"",
+          "node": { "value": "STRING_LITERAL1" },
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "values": [

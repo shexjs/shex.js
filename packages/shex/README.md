@@ -90,7 +90,7 @@ var Schema = null; // will be loaded and compiled asynchronously
 var Triples = null; // will be loaded and parsed asynchronously
 function validateWhenEverythingsLoaded () {
   if (Schema !== null && Triples !== null) {
-    console.log(shex.Validator.construct(Schema).validate(Triples, node, shape));
+    console.log(new shex.Validator(Schema).validate(Triples, node, shape));
   }
 }
 
@@ -132,8 +132,8 @@ const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShExValidator = require("@shexjs/validator");
 ShExLoader.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
     var db = RdfJsDb(loaded.data);
-    var validator = ShExValidator.construct(loaded.schema, db, { results: "api" });
-    var result = validator.validate([{node: node, shape: ShExValidator.start}]);
+    var validator = new ShExValidator(loaded.schema, db, { results: "api" });
+    var result = validator.validate([{node: node, shape: ShExValidator.Start}]);
     console.log(result);
 });
 ```
@@ -274,7 +274,7 @@ This repo uses [lerna](https://github.com/lerna/lerna) to manage multiple NPM pa
 - [`@shexjs/util`](packages/shex-util#readme) -- some utilities for transforming schemas or validation output
 - [`@shexjs/visitor`](packages/shex-visitor#readme) -- a [visitor](https://en.wikipedia.org/wiki/Visitor_pattern) for schemas
 - [`@shexjs/validator`](packages/shex-validator#readme) -- validate nodes in an RDF graph against shapes in a schema
-!- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) -- eval-simple-1err
+- [`@shexjs/eval-simple-1err`](packages/eval-simple-1err#readme) -- eval-simple-1err
 - [`@shexjs/eval-threaded-nerr`](packages/eval-threaded-nerr#readme) -- eval-threaded-nerr
 - [`@shexjs/loader`](packages/shex-loader#readme) -- an API for loading and using ShEx schemas
 - [`@shexjs/node`](packages/shex-node#readme) -- additional API functionality for a node environment

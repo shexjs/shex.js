@@ -302,7 +302,7 @@ ul {
     <div id="inputarea">
       <div id="inputSchema" class="panel">
         <h2 class="status"> </h2>
-        <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
+        <textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea>
         <div>
           <div id="manifestDrop" class="droparea">
             <p>Manifest:</p>
@@ -321,7 +321,7 @@ ul {
                 <li><a href="#fixedMap-tab">Fixed Map</a></li>
               </ul>
               <!-- <div id="textMap-tab"> -->
-                <textarea id="textMap" style="width:100%; height:100%;"></textarea>
+                <textarea id="textMap" style="width:100%; height:100%;" spellcheck="false"></textarea>
               <!-- </div> -->
               <div id="editMap-tab">
                 <table id="editMap" data-dirty="false" style="width:100%;">
@@ -351,7 +351,7 @@ ul {
         </div>
         <div id="inputData">
           <h2 class="status"> </h2>
-          <textarea rows="25" class="data droparea" style="width: 100%"></textarea>
+          <textarea rows="25" class="data droparea" style="width: 100%" spellcheck="false"></textarea>
           <div style="margin-left: .1em;">
             <div class="passes" style="float:left; display:none;">
               <p></p>
@@ -380,11 +380,11 @@ ul {
       <div class="panel">
         <div id="bindings1">
           <h2 class="status"> </h2>
-          <textarea rows="19" class="bindings droparea" style="width: 100%"></textarea>
+          <textarea rows="19" class="bindings droparea" style="width: 100%" spellcheck="false"></textarea>
         </div>
         <div id="staticVars" style="width: 100%;">
           <h2 class="status"> </h2>
-          <textarea rows="5" class="vars droparea" style="width: 100%"></textarea>
+          <textarea rows="5" class="vars droparea" style="width: 100%" spellcheck="false"></textarea>
         </div>
         <div>
           <div id="outactions" style="float:right; margin-right: .1em;">
@@ -395,7 +395,7 @@ ul {
       <div id="output" class="panel">
         <div id="outputSchema" style="width: 100%;">
           <h2 class="status"> </h2>
-          <textarea rows="25" class="schema droparea" style="width: 100%"></textarea>
+          <textarea rows="25" class="schema droparea" style="width: 100%" spellcheck="false"></textarea>
         </div>
       </div>
     </div>
@@ -404,6 +404,7 @@ ul {
       <div></div>
     </div>
     <script src="../../../packages/shex-webapp/doc/iri.js"></script>
+    <script src="../../../packages/shex-webapp/doc/Util.js"></script>
     <script>
       if (!("captureStackTrace" in Error)) {
         Error.captureStackTrace = function () { };

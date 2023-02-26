@@ -2,8 +2,9 @@
 
 const ShExUtilCjsModule = (function () {
 const ShExTerm = require("@shexjs/term");
-const Visitor = require('@shexjs/visitor')
+const {Visitor, index} = require('@shexjs/visitor')
 const Hierarchy = require('hierarchy-closure')
+const ShExHumanErrorWriter = require('./shex-human-error-writer.js')
 
 const SX = {};
 SX._namespace = "http://www.w3.org/ns/shex#";
@@ -27,11 +28,6 @@ RDF._namespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 ["type", "first", "rest", "nil"].forEach(p => {
   RDF[p] = RDF._namespace+p;
 });
-const XSD = {}
-XSD._namespace = "http://www.w3.org/2001/XMLSchema#";
-["anyURI"].forEach(p => {
-  XSD[p] = XSD._namespace+p;
-});
 const OWL = {}
 OWL._namespace = "http://www.w3.org/2002/07/owl#";
 ["Thing"].forEach(p => {
@@ -49,31 +45,12 @@ function extend (base) {
   return base;
 }
 
-    function isTerm (t) {
-      return typeof t !== "object" || "value" in t && Object.keys(t).reduce((r, k) => {
-        return r === false ? r : ["value", "type", "language"].indexOf(k) !== -1;
-      }, true);
-    }
-
   function isShapeRef (expr) {
     return typeof expr === "string" // test for JSON-LD @ID
   }
+
   let isInclusion = isShapeRef;
 
-        function ldify (term) {
-          if (term[0] !== "\"")
-            return term;
-          const ret = { value: ShExTerm.getLiteralValue(term) };
-          const dt = ShExTerm.getLiteralType(term);
-          if (dt &&
-              dt !== "http://www.w3.org/2001/XMLSchema#string" &&
-              dt !== "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
-            ret.type = dt;
-          const lang = ShExTerm.getLiteralLanguage(term)
-          if (lang)
-            ret.language = lang;
-          return ret;
-        }
 const ShExUtil = {
 
   SX: SX,
@@ -83,7 +60,7 @@ const ShExUtil = {
   },
 
   Visitor: Visitor,
-  index: Visitor.index,
+  index: index,
 
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
@@ -280,14 +257,13 @@ const ShExUtil = {
     v.cleanIds = function () {
       for (let k in knownTripleExpressions) {
         const known = knownTripleExpressions[k];
-        if (known.refCount === 1 && ShExTerm.isBlank(known.expr.id))
+        if (known.refCount === 1 && known.expr.id.startsWith("_:"))
           delete known.expr.id;
       };
     }
 
     return v;
   },
-
 
   // tests
   // const shexr = ShExUtil.ShExRtoShExJ({ "type": "Schema", "shapes": [
@@ -343,24 +319,6 @@ const ShExUtil = {
     return ret;
   },
 
-  n3jsToTurtle: function (res) {
-    function termToLex (node) {
-      return typeof node === "object" ? ("\"" + node.value + "\"" + (
-        "type" in node ? "^^<" + node.type + ">" :
-          "language" in node ? "@" + node.language :
-          ""
-      )) :
-      ShExTerm.isIRI(node) ? "<" + node + ">" :
-      ShExTerm.isBlank(node) ? node :
-      "???";
-    }
-    return this.valGrep(res, "TestedTriple", function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
-    });
-  },
-
   valToN3js: function (res, factory) {
     return this.valGrep(res, "TestedTriple", function (t) {
       const ret = JSON.parse(JSON.stringify(t));
@@ -370,26 +328,7 @@ const ShExUtil = {
             "language" in t.object ? "@" + t.object.language :
             ""
         ));
-      return ShExTerm.externalTriple(ret, factory);
-    });
-  },
-
-  n3jsToTurtle: function (n3js) {
-    function termToLex (node) {
-      if (ShExTerm.isIRI(node))
-        return "<" + node + ">";
-      if (ShExTerm.isBlank(node))
-        return node;
-      const t = ShExTerm.getLiteralType(node);
-      if (t && t !== "http://www.w3.org/2001/XMLSchema#string")
-        return "\"" + ShExTerm.getLiteralValue(node) + "\"" +
-        "^^<" + t + ">";
-      return node;
-    }
-    return n3js.map(function (t) {
-      return ["subject", "predicate", "object"].map(k => {
-        return termToLex(t[k]);
-      }).join(" ")+" .";
+      return ret;
     });
   },
 
@@ -1036,8 +975,8 @@ const ShExUtil = {
     function mapFunction (k, obj) {
       // resolve relative URLs in results file
       if (["shape", "reference", "node", "subject", "predicate", "object"].indexOf(k) !== -1 &&
-          ShExTerm.isIRI(obj[k])) {
-        obj[k] = ShExTerm.resolveRelativeIRI(base, obj[k]);
+          (typeof obj[k] === "string" && !obj[k].startsWith("_:"))) { // !! needs ShExTerm.ldTermIsIri
+        obj[k] = new URL(obj[k], base).href;
       }}
 
     function resolveRelativeURLs (obj) {
@@ -1083,13 +1022,11 @@ const ShExUtil = {
         solns.solutions.map(s => {
           if (s.type !== "TestedTriple")
             throw Error("unexpected result type: " + s.type);
-          const s2 = s;
-          if (typeof s2.object === "object")
-            s2.object = "\"" + s2.object.value.replace(/"/g, "\\\"") + "\""
-            + (s2.object.language ? ("@" + s2.object.language) : 
-               s2.object.type ? ("^^" + s2.object.type) :
-               "");
-          db.addQuad(ShExTerm.externalTriple(s2, dataFactory))
+          const subject = ShExTerm.ld2RdfJsTerm(s.subject);
+          const predicate = ShExTerm.ld2RdfJsTerm(s.predicate);
+          const object = ShExTerm.ld2RdfJsTerm(s.object);
+          const graph = "graph" in s ? ShExTerm.ld2RdfJsTerm(s.graph) : dataFactory.defaultGraph();
+          db.addQuad(dataFactory.quad(subject, predicate, object, graph));
           if ("referenced" in s) {
             _dive1(s.referenced);
           }
@@ -1241,7 +1178,7 @@ const ShExUtil = {
     case "ShapeNotTest": // 1NOT_vsANDvs__passIv1
       return _ShExUtil.walkVal(val.shapeExpr, cb);
     case "ShapeNotResults": // NOT1dotOR2dot_pass-empty
-      return _ShExUtil.walkVal(val.solution, cb);
+      return null; // we don't bind variables from negative tests
     case "Failure": // NOT1dotOR2dot_pass-empty
       return null; // !!TODO
     case "ShapeNot": // 1NOTNOTIRI_passIo1,
@@ -1411,14 +1348,14 @@ const ShExUtil = {
             crushed = null
             return elt;
           }
-          crushed[k] = ldify(elt[k]);
+          crushed[k] = elt[k];
         }
         return elt;
       }
       for (let k in obj) {
         if (k === "extensions") {
           if (obj[k])
-            list.push(crush(ldify(obj[k][lookfor])));
+            list.push(crush(obj[k][lookfor]));
         } else if (k === "nested") {
           const nested = extensions(obj[k]);
           if (Array.isArray(nested))
@@ -1447,13 +1384,13 @@ const ShExUtil = {
    *   {  "rdf:type": [ { "ldterm": ":Schema" } ], ":shapes": [
    *       { "ldterm": "#S1", "nested": {
    *           "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-41", "nested": {
+   *             { "ldterm": "_:b41", "nested": {
    *                  "rdf:type": [ { "ldterm": ":ShapeNot" } ], ":shapeExpr": [
    *                   { "ldterm": "#S2", "nested": {
    *                        "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *                         { "ldterm": "_:n3-42", "nested": {
+   *                         { "ldterm": "_:b42", "nested": {
    *                              "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                               { "ldterm": "_:n3-43", "nested": {
+   *                               { "ldterm": "_:b43", "nested": {
    *                                    "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                             ] } }
    *                       ] } }
@@ -1461,9 +1398,9 @@ const ShExUtil = {
    *           ] } },
    *       { "ldterm": "#S2", "nested": {
    *            "rdf:type": [ { "ldterm": ":ShapeDecl" } ], ":shapeExpr": [
-   *             { "ldterm": "_:n3-42", "nested": {
+   *             { "ldterm": "_:b42", "nested": {
    *                  "rdf:type": [ { "ldterm": ":Shape" } ], ":expression": [
-   *                   { "ldterm": "_:n3-43", "nested": {
+   *                   { "ldterm": "_:b43", "nested": {
    *                        "rdf:type": [ { "ldterm": ":TripleConstraint" } ], ":predicate": [ { "ldterm": "#p3" } ] } }
    *                 ] } }
    *           ] } }
@@ -1760,114 +1697,17 @@ const ShExUtil = {
   absolutizeShapeMap: function (parsed, base) {
     return parsed.map(elt => {
       return Object.assign(elt, {
-        node: ShExTerm.resolveRelativeIRI(base, elt.node),
-        shape: ShExTerm.resolveRelativeIRI(base, elt.shape)
+        node: new URL(elt.node, base).href,
+        shape: new URL(elt.shape, base).href
       });
     });
   },
 
   errsToSimple: function (val) {
-    const _ShExUtil = this;
-    if (Array.isArray(val)) {
-      return val.reduce((ret, e) => {
-        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length ? ret.concat(["AND"]).concat(nested) : nested;
-      }, []);
-    }
-    if (typeof val === "string")
-      return [val];
-
-    switch (val.type) {
-    case "FailureList":
-      return val.errors.reduce((ret, e) => {
-        return ret.concat(_ShExUtil.errsToSimple(e));
-      }, []);
-    case "Failure":
-      return ["validating " + val.node + " as " + val.shape + ":"].concat(errorList(val.errors).reduce((ret, e) => {
-        const nested = _ShExUtil.errsToSimple(e).map(s => "  " + s);
-        return ret.length > 0 ? ret.concat(["  OR"]).concat(nested) : nested.map(s => "  " + s);
-      }, []));
-    case "TypeMismatch": {
-      const nested = Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["validating " + n3ify(val.triple.object) + ":"].concat(nested);
-    }
-    case "RestrictionError": {
-      const nested = val.errors.constructor === Array ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["validating restrictions on " + n3ify(val.focus) + ":"].concat(nested);
-    }
-    case "ShapeAndFailure":
-      return Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    case "ShapeOrFailure":
-      return Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat(" OR " + (typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)));
-          }, []) :
-          " OR " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-    case "ShapeNotFailure":
-      return ["Node " + val.errors.node + " expected to NOT pass " + val.errors.shape];
-    case "ExcessTripleViolation":
-      return ["validating " + n3ify(val.triple.object) + ": exceeds cardinality"];
-    case "ClosedShapeViolation":
-      return ["Unexpected triple(s): {"].concat(
-        val.unexpectedTriples.map(t => {
-          return "  " + t.subject + " " + t.predicate + " " + n3ify(t.object) + " ."
-        })
-      ).concat(["}"]);
-    case "NodeConstraintViolation":
-      const w = require("@shexjs/writer")();
-      w._write(w._writeNodeConstraint(val.shapeExpr).join(""));
-      let txt;
-      w.end((err, res) => {
-        txt = res;
-      });
-      return ["NodeConstraintError: expected to match " + txt];
-    case "MissingProperty":
-      return ["Missing property: " + val.property];
-    case "NegatedProperty":
-      return ["Unexpected property: " + val.property];
-    case "AbstractShapeFailure":
-      return ["Abstract Shape: " + val.shape];
-    case "SemActFailure": {
-      const nested = Array.isArray(val.errors) ?
-          val.errors.reduce((ret, e) => {
-            return ret.concat((typeof e === "string" ? [e] : _ShExUtil.errsToSimple(e)).map(s => "  " + s));
-          }, []) :
-          "  " + (typeof e === "string" ? [val.errors] : _ShExUtil.errsToSimple(val.errors));
-      return ["rejected by semantic action:"].concat(nested);
-    }
-    case "SemActViolation":
-      return [val.message];
-    case "BooleanSemActFailure":
-      return ["Failed evaluating " + val.code + " on context " + JSON.stringify(val.ctx)];
-    default:
-      debugger; // console.log(val);
-      throw Error("unknown shapeExpression type \"" + val.type + "\" in " + JSON.stringify(val));
-    }
-    function errorList (errors) {
-      return errors.reduce(function (acc, e) {
-        const attrs = Object.keys(e);
-        return acc.concat(
-          (attrs.length === 1 && attrs[0] === "errors")
-            ? errorList(e.errors)
-            : e);
-      }, []);
-    }
+    return new ShExHumanErrorWriter().write(val);
   },
 
-  resolveRelativeIRI: ShExTerm.resolveRelativeIRI,
-
+  // static
   resolvePrefixedIRI: function (prefixedIri, prefixes) {
     const colon = prefixedIri.indexOf(":");
     if (colon === -1)
@@ -1896,7 +1736,7 @@ const ShExUtil = {
         return quoted + "^^" + meta.prefixes[pre] + local;
       }
       if (rel !== undefined)
-        return quoted + "^^" + ShExTerm.resolveRelativeIRI(meta.base, rel);
+        return quoted + "^^" + new URL(rel, meta.base).href;
       return quoted;
     }
     if (!meta)
@@ -1904,7 +1744,7 @@ const ShExUtil = {
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    const t = ShExTerm.resolveRelativeIRI(meta.base || "", passedValue); // fall back to base-less mode
+    const t = new URL(passedValue, meta.base || "").href; // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
@@ -2048,17 +1888,6 @@ const ShExUtil = {
   },
 
 };
-
-function n3ify (ldterm) {
-  if (typeof ldterm !== "object")
-    return ldterm;
-  const ret = "\"" + ldterm.value + "\"";
-  if ("language" in ldterm)
-    return ret + "@" + ldterm.language;
-  if ("type" in ldterm)
-    return ret + "^^" + ldterm.type;
-  return ret;
-}
 
 // Add the ShExUtil functions to the given object or its prototype
 function AddShExUtil(parent, toPrototype) {

@@ -8,6 +8,7 @@
       "solution": {
         "type": "TripleConstraintSolutions",
         "predicate": "http://schema.example/reproducedBy",
+        "valueExpr": "http://schema.example/TesterShape",
         "solutions": [
           {
             "type": "TestedTriple",
@@ -21,6 +22,12 @@
               "solution": {
                 "type": "TripleConstraintSolutions",
                 "predicate": "http://schema.example/role",
+                "valueExpr": {
+                  "type": "NodeConstraint",
+                  "values": [
+                    "http://schema.example/testingRole"
+                  ]
+                },
                 "solutions": [
                   {
                     "type": "TestedTriple",
@@ -29,7 +36,8 @@
                     "object": "http://schema.example/testingRole",
                     "referenced": {
                       "type": "NodeConstraintTest",
-                      "focus": "http://schema.example/testingRole",
+                      "node": "http://schema.example/testingRole",
+                      "shape": "http://schema.example/TesterShape",
                       "shapeExpr": {
                         "type": "NodeConstraint",
                         "values": [
@@ -38,21 +46,11 @@
                       }
                     }
                   }
-                ],
-                "valueExpr": {
-                  "type": "NodeConstraint",
-                  "values": [
-                    "http://schema.example/testingRole"
-                  ]
-                }
+                ]
               }
             }
           }
-        ],
-        "valueExpr": {
-          "type": "ShapeRef",
-          "reference": "http://schema.example/TesterShape"
-        }
+        ]
       }
     },
     {
@@ -62,6 +60,12 @@
       "solution": {
         "type": "TripleConstraintSolutions",
         "predicate": "http://schema.example/role",
+        "valueExpr": {
+          "type": "NodeConstraint",
+          "values": [
+            "http://schema.example/testingRole"
+          ]
+        },
         "solutions": [
           {
             "type": "TestedTriple",
@@ -70,7 +74,8 @@
             "object": "http://schema.example/testingRole",
             "referenced": {
               "type": "NodeConstraintTest",
-              "focus": "http://schema.example/testingRole",
+              "node": "http://schema.example/testingRole",
+              "shape": "http://schema.example/TesterShape",
               "shapeExpr": {
                 "type": "NodeConstraint",
                 "values": [
@@ -79,13 +84,7 @@
               }
             }
           }
-        ],
-        "valueExpr": {
-          "type": "NodeConstraint",
-          "values": [
-            "http://schema.example/testingRole"
-          ]
-        }
+        ]
       }
     }
   ]

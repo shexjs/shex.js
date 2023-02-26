@@ -19,7 +19,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "relateurl": "^0.2.7"
+    "relativize-url": "^0.0.2"
   },
   "scripts": {
     "test": "cd ../.. && npm run test"

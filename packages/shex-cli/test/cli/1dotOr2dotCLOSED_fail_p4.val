@@ -9,7 +9,7 @@
         {
           "subject": "x",
           "predicate": "http://a.example/p4",
-          "object": "\"p4-0\""
+          "object": { "value": "p4-0" }
         }
       ]
     }

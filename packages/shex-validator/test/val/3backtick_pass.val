@@ -19,10 +19,11 @@
                 "object": { "value": "Dracula" },
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "\"Dracula\"",
+                  "node": { "value": "Dracula" },
+                  "shape": "http://a.example/S",
                   "shapeExpr": {
-                    "nodeKind": "literal",
-                    "type": "NodeConstraint"
+                    "type": "NodeConstraint",
+                    "nodeKind": "literal"
                   }
                 }
               }
@@ -42,7 +43,9 @@
                 "predicate": "http://ex1.example/protType",
                 "object": "http://ex1.example/Regulatory",
                 "referenced": {
-                  "focus": "http://ex1.example/Regulatory",
+                  "type": "NodeConstraintTest",
+                  "node": "http://ex1.example/Regulatory",
+                  "shape": "http://a.example/S",
                   "shapeExpr": {
                     "type": "NodeConstraint",
                     "values": [
@@ -50,8 +53,7 @@
                       "http://ex1.example/Regulatory",
                       "http://ex1.example/Transport"
                     ]
-                  },
-                  "type": "NodeConstraintTest"
+                  }
                 }
               }
             ],
@@ -75,7 +77,8 @@
                 "object": { "value": "30", "type": "http://ex1.example/microns" },
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "\"30\"^^http://ex1.example/microns",
+                  "node": { "value": "30", "type": "http://ex1.example/microns" },
+                  "shape": "http://a.example/S",
                   "shapeExpr": {
                     "datatype": "http://ex1.example/microns",
                     "type": "NodeConstraint"

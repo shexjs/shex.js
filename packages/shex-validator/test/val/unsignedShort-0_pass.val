@@ -16,7 +16,8 @@
         },
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "\"0\"^^http://www.w3.org/2001/XMLSchema#unsignedShort",
+          "node": { "value": "0", "type": "http://www.w3.org/2001/XMLSchema#unsignedShort" },
+          "shape": "http://a.example/S-unsignedShort",
           "shapeExpr": {
             "type": "NodeConstraint",
             "datatype": "http://www.w3.org/2001/XMLSchema#unsignedShort"

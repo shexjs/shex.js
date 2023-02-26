@@ -18,7 +18,8 @@
         "object": "_:abcd",
         "referenced": {
           "type": "NodeConstraintTest",
-          "focus": "_:abcd",
+          "node": "_:abcd",
+          "shape": "http://a.example/S1",
           "shapeExpr": {
             "type": "NodeConstraint",
             "maxlength": 19,

@@ -37,7 +37,8 @@
                         "object": "http://a.example/v1",
                         "referenced": {
                           "type": "NodeConstraintTest",
-                          "focus": "http://a.example/v1",
+                          "node": "http://a.example/v1",
+                          "shape": "http://a.example/List1PlusIri",
                           "shapeExpr": {
                             "type": "NodeConstraint",
                             "nodeKind": "iri"
@@ -94,7 +95,8 @@
                                           "object": "http://a.example/v2",
                                           "referenced": {
                                             "type": "NodeConstraintTest",
-                                            "focus": "http://a.example/v2",
+                                            "node": "http://a.example/v2",
+                                            "shape": "http://a.example/List1PlusIri",
                                             "shapeExpr": {
                                               "type": "NodeConstraint",
                                               "nodeKind": "iri"
@@ -151,7 +153,8 @@
                                                             "object": "http://a.example/v3",
                                                             "referenced": {
                                                               "type": "NodeConstraintTest",
-                                                              "focus": "http://a.example/v3",
+                                                              "node": "http://a.example/v3",
+                                                              "shape": "http://a.example/List1PlusIri",
                                                               "shapeExpr": {
                                                                 "type": "NodeConstraint",
                                                                 "nodeKind": "iri"
@@ -185,7 +188,8 @@
                                                               "type": "ShapeOrResults",
                                                               "solution": {
                                                                 "type": "NodeConstraintTest",
-                                                                "focus": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil",
+                                                                "node": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil",
+                                                                "shape": "http://a.example/List1PlusIri",
                                                                 "shapeExpr": {
                                                                   "type": "NodeConstraint",
                                                                   "values": [

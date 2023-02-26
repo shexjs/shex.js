@@ -12,15 +12,19 @@
         "predicate": "http://a.example/p1",
         "object": "http://a.example/o1",
         "referenced": {
-          "focus": "http://a.example/o1",
-          "shapeExpr": {
-            "shapeExpr": {
-              "nodeKind": "iri",
-              "type": "NodeConstraint"
-            },
-            "type": "ShapeNot"
-          },
-          "type": "ShapeNotTest"
+          "type": "ShapeNotResults",
+          "solution": {
+            "type": "ShapeNotFailure",
+            "errors": {
+              "type": "NodeConstraintTest",
+              "node": "http://a.example/o1",
+              "shape": "http://a.example/S1",
+              "shapeExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              }
+            }
+          }
         }
       }
     ],

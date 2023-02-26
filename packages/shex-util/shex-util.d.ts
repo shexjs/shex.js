@@ -2,157 +2,47 @@ import * as N3 from 'n3';
 import * as RdfJs from "@rdfjs/types/data-model";
 import * as ShExJ from 'shexj';
 
-export = shexjs__util;
+export {};
 
-declare function shexjs__util(parent: any, toPrototype: any): any;
+export function version(): any;
+export function Visitor(...args: any[]): any;
+export function index(schema: any): Index;
+export function getAST(schema: any): any;
+export function ShExJtoAS(schema: any): any;
+export function AStoShExJ(schema: any, abbreviate: any): any;
+export function ShExRVisitor(knownShapeExprs: any): any;
+export function ShExRtoShExJ(schema: any): any;
+export function valGrep(obj: any, type: any, f: any): any;
+export function valToN3js(res: any, factory: any): any;
+export function canonicalize(schema: any, trimIRI: any): any;
+export function BiDiClosure(): any;
+export function nestShapes(schema: any, options: any): any;
+export function getPredicateUsage(schema: any, untyped: any): any;
+export function simpleTripleConstraints(shape: any): any;
+export function getValueType(valueExpr: any): any;
+export function getDependencies(schema: any, ret: any): any;
+export function partition(schema: any, includes: any, deps: any, cantFind: any): any;
+export function flatten(schema: any, deps: any, cantFind: any): any;
+export function emptySchema(): any;
+export function merge(left: any, right: any, overwrite: any, inPlace: any): any;
+export function absolutizeResults(parsed: any, base: any): any;
+export function getProofGraph(res: any, db: any, dataFactory: any): any;
+export function validateSchema(schema: any): any;
+export function isWellDefined(schema: any): any;
+export function walkVal(val: any, cb: any): any;
+export function valToValues(val: any): any;
+export function valToExtension(val: any, lookfor: any): any;
+export function valuesToSchema(values: any): any;
+export function simpleToShapeMap(x: any): any;
+export function absolutizeShapeMap(parsed: any, base: any): any;
+export function errsToSimple(val: any): any;
+export function resolvePrefixedIRI(prefixedIri: any, prefixes: any): any;
+export function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
+export function executeQueryPromise(query: any, endpoint: any): any;
+export function executeQuery(query: any, endpoint: any): any;
+export function unescapeText(string: any, replacements: any): any;
 
-declare namespace shexjs__util {
-
-    const RDF: {
-        first: string;
-        nil: string;
-        rest: string;
-        type: string;
-    };
-
-    const SX: {
-        "@context": string;
-        Annotation: string;
-        EachOf: string;
-        Inclusion: string;
-        IriStem: string;
-        IriStemRange: string;
-        Language: string;
-        LanguageStem: string;
-        LanguageStemRange: string;
-        LiteralStem: string;
-        LiteralStemRange: string;
-        NodeConstraint: string;
-        OneOf: string;
-        Schema: string;
-        SemAct: string;
-        Shape: string;
-        ShapeAnd: string;
-        ShapeDecl: string;
-        ShapeExternal: string;
-        ShapeNot: string;
-        ShapeOr: string;
-        ShapeRef: string;
-        TripleConstraint: string;
-        Wildcard: string;
-        abstract: string;
-        annotation: string;
-        bnode: string;
-        closed: string;
-        code: string;
-        datatype: string;
-        exclusion: string;
-        expression: string;
-        expressions: string;
-        extends: string;
-        extra: string;
-        flags: string;
-        fractiondigits: string;
-        imports: string;
-        include: string;
-        inverse: string;
-        iri: string;
-        languageTag: string;
-        length: string;
-        literal: string;
-        max: string;
-        maxexclusive: string;
-        maxinclusive: string;
-        maxlength: string;
-        min: string;
-        minexclusive: string;
-        mininclusive: string;
-        minlength: string;
-        name: string;
-        negated: string;
-        nodeKind: string;
-        nonliteral: string;
-        object: string;
-        pattern: string;
-        predicate: string;
-        reference: string;
-        restricts: string;
-        semActs: string;
-        shapeExpr: string;
-        shapeExprs: string;
-        shapes: string;
-        start: string;
-        startActs: string;
-        stem: string;
-        totaldigits: string;
-        valueExpr: string;
-        values: string;
-    };
-
-    function version(): any;
-    function Visitor(...args: any[]): any;
-    function index(schema: any): Index;
-    function getAST(schema: any): any;
-    function ShExJtoAS(schema: any): any;
-    function AStoShExJ(schema: any, abbreviate: any): any;
-    function ShExRVisitor(knownShapeExprs: any): any;
-    function ShExRtoShExJ(schema: any): any;
-    function valGrep(obj: any, type: any, f: any): any;
-    function valToN3js(res: any, factory: any): any;
-    function n3jsToTurtle(n3js: any): any;
-    function canonicalize(schema: any, trimIRI: any): any;
-    function BiDiClosure(): any;
-    function nestShapes(schema: any, options: any): any;
-    function getPredicateUsage(schema: any, untyped: any): any;
-    function simpleTripleConstraints(shape: any): any;
-    function getValueType(valueExpr: any): any;
-    function getDependencies(schema: any, ret: any): any;
-    function partition(schema: any, includes: any, deps: any, cantFind: any): any;
-    function flatten(schema: any, deps: any, cantFind: any): any;
-    function emptySchema(): any;
-    function merge(left: any, right: any, overwrite: any, inPlace: any): any;
-    function absolutizeResults(parsed: any, base: any): any;
-    function getProofGraph(res: any, db: any, dataFactory: any): any;
-    function validateSchema(schema: any): any;
-    function isWellDefined(schema: any): any;
-    function walkVal(val: any, cb: any): any;
-    function valToValues(val: any): any;
-    function valToExtension(val: any, lookfor: any): any;
-    function valuesToSchema(values: any): any;
-    function simpleToShapeMap(x: any): any;
-    function absolutizeShapeMap(parsed: any, base: any): any;
-    function errsToSimple(val: any): any;
-    function resolveRelativeIRI(base: any, iri: any): any;
-    function resolvePrefixedIRI(prefixedIri: any, prefixes: any): any;
-    function parsePassedNode(passedValue: any, meta: any, deflt: any, known: any, reportUnknown: any): any;
-    function executeQueryPromise(query: any, endpoint: any): any;
-    function executeQuery(query: any, endpoint: any): any;
-    const NotSupplied: string;
-    const UnknownIRI: string;
-    function unescapeText(string: any, replacements: any): any;
-
-
-    // function skipDecl(shapeExpr: any): any;
-    // namespace Visitor {
-    //     function index(schema: any): any;
-    // }
-
-    interface QueryTracker {
-        start (isOut: boolean, term: RdfJs.Term, shapeLabel: string): void;
-        end (triples: RdfJs.Quad[], time: number): void;
-    }
-
-    interface Index {
-      shapeExprs: { [key: string]: ShExJ.shapeExpr; }
-      tripelExprs: { [key: string]: ShExJ.tripleExpr; }
-    }
-
-    interface SemActHandler {
-      dispatchAll(semActs: any[], ctx: object, resultsArtifact: object): object[],
-      handlers: object,
-      register(name: string, handler: object): void,
-      results: object
-    }
-
+export interface Index {
+  shapeExprs: { [key: string]: ShExJ.ShapeDecl; }
+  tripelExprs: { [key: string]: ShExJ.tripleExpr; }
 }
-

@@ -1,23 +1,16 @@
-
-Util = (function () {
-  return {
-    indexKey: indexKey,
-    indexShapeMap: indexShapeMap,
-    createResults: createResults
-  };
-
-  function indexKey (node, shape) {
+class Util {
+  static indexKey (node, shape) {
     return node+'@'+shape;
   }
 
-  function indexShapeMap (fixedMap) {
+  static indexShapeMap (fixedMap) {
     return fixedMap.reduce((ret, ent) => {
-      ret[indexKey(ent.node, ent.shape)] = ent;
+      ret[Util.indexKey(ent.node, ent.shape)] = ent;
       return ret;
     }, {});
   }
 
-  function createResults () {
+  static createResults () {
     var _shapeMap = [];
     var known = {};
     return {
@@ -35,7 +28,7 @@ Util = (function () {
       // Add entries to results ShapeMap.
       merge: function (toAdd) {
         toAdd.forEach(ent => {
-          var key = indexKey(ent.node, ent.shape);
+          var key = Util.indexKey(ent.node, ent.shape);
           if (!(key in known)) {
             _shapeMap.push(ent);
             known[key] = ent;
@@ -45,7 +38,7 @@ Util = (function () {
       },
 
       has: function (ent) {
-        var key = indexKey(ent.node, ent.shape);
+        var key = Util.indexKey(ent.node, ent.shape);
         return (key in known);
       },
 
@@ -56,4 +49,51 @@ Util = (function () {
       }
     };
   }
-})();
+
+  static rdfjsTripleToJsonTriple (rdfjsTriple) {
+    return ["subject", "predicate", "object"].reduce((acc, pos) => {
+      const ret = Util.rdfjsTermToJsonTerm(rdfjsTriple[pos]);
+      acc[pos] = ret;
+      return acc;
+    }, {})
+  }
+
+  static rdfjsTermToJsonTerm (rdfjsTerm) {
+    const ret = { termType: rdfjsTerm.termType, value: rdfjsTerm.value };
+    if (ret.termType === "Literal") {
+      if (["http://www.w3.org/2001/XMLSchema#string",
+           "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
+          ].indexOf(rdfjsTerm.datatypeString) === -1)
+        ret.datatype = rdfjsTerm.datatypeString;
+      else if (rdfjsTerm.language)
+        ret.language = rdfjsTerm.language;
+    };
+    return ret;
+  }
+
+  // static jsonToDataSet (jsonTriples, dataSet, dataFactory) {
+  //   dataSet.addQuads(jsonTriples.map(jsonTriple => Util.jsonToTriple(jsonTriple, dataFactory)));
+  //   return dataSet;
+  // }
+
+  static jsonTripleToRdfjsTriple (jsonTriple, dataFactory) {
+    return dataFactory.quad(
+      Util.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory),
+      Util.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory),
+      Util.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory)
+    );
+  }
+
+  static jsonTermToRdfjsTerm (jsonTerm, dataFactory) {
+    switch (jsonTerm.termType) {
+    case "NamedNode": return dataFactory.namedNode(jsonTerm.value);
+    case "BlankNode": return dataFactory.blankNode(jsonTerm.value);
+    case "Literal":
+      if (jsonTerm.datatype)
+        return dataFactory.literal(jsonTerm.value, dataFactory.namedNode(jsonTerm.datatype));
+      if (jsonTerm.language)
+        return dataFactory.literal(jsonTerm.value, jsonTerm.language);
+      return dataFactory.literal(jsonTerm.value);
+    }
+  }
+}

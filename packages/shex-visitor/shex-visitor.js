@@ -349,7 +349,7 @@ function ShExVisitor (...ctor_args) {
 // The ShEx Vistor is here to minimize deps for ShExValidator.
 /** create indexes for schema
  */
-ShExVisitor.index = function (schema) {
+function index (schema) {
   let index = {
     shapeExprs: {},
     tripleExprs: {}
@@ -375,5 +375,8 @@ ShExVisitor.index = function (schema) {
 }
 
 if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = ShExVisitor;
+  module.exports = {
+    Visitor: ShExVisitor,
+    index: index,
+  };
 

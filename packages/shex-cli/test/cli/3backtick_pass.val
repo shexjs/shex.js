@@ -19,7 +19,8 @@
                 "object": { "value": "Dracula" },
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "\"Dracula\"",
+                  "node": { "value": "Dracula" },
+                  "shape": "http://a.example/S",
                   "shapeExpr": {
                     "type": "NodeConstraint",
                     "nodeKind": "literal"
@@ -43,7 +44,8 @@
                 "object": "http://a.example/Regulatory",
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "http://a.example/Regulatory",
+                  "node": "http://a.example/Regulatory",
+                  "shape": "http://a.example/S",
                   "shapeExpr": {
                     "type": "NodeConstraint",
                     "values": [
@@ -75,10 +77,11 @@
                 "object": { "value": "30", "type": "http://a.example/microns" },
                 "referenced": {
                   "type": "NodeConstraintTest",
-                  "focus": "\"30\"^^http://a.example/microns",
+                  "node": { "value": "30", "type": "http://a.example/microns" },
+                  "shape": "http://a.example/S",
                   "shapeExpr": {
-                    "type": "NodeConstraint",
-                    "datatype": "http://a.example/microns"
+                    "datatype": "http://a.example/microns",
+                    "type": "NodeConstraint"
                   }
                 }
               }

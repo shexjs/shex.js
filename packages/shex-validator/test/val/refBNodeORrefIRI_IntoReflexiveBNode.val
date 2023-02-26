@@ -49,7 +49,8 @@
             "solutions": [
               {
                 "type": "NodeConstraintTest",
-                "focus": "_:n2",
+                "node": "_:n2",
+                "shape": "http://a.example/S1",
                 "shapeExpr": {
                   "type": "NodeConstraint",
                   "nodeKind": "bnode"
@@ -106,7 +107,8 @@
                           "solutions": [
                             {
                               "type": "NodeConstraintTest",
-                              "focus": "_:n2",
+                              "node": "_:n2",
+                              "shape": "http://a.example/S1",
                               "shapeExpr": {
                                 "type": "NodeConstraint",
                                 "nodeKind": "bnode"
