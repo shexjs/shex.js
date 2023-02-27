@@ -28,7 +28,7 @@
     "@shexjs/eval-validator-api": "^1.0.0-alpha.15",
     "@shexjs/term": "^1.0.0-alpha.15",
     "@shexjs/visitor": "^1.0.0-alpha.15",
-    "@types/shexj": "^2.1.3",
+    "@types/shexj": "^2.1.4",
     "hierarchy-closure": "^1.2.1"
   },
   "devDependencies": {
