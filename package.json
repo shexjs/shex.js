@@ -37,7 +37,7 @@
     "lerna": "^6.5.1",
     "mocha": "^10.2.0",
     "nock": "^13.2.9",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^2.6.9",
     "nyc": "^15.1.0",
     "pre-commit": "^1.2.2",
     "shex-test": "github:shexSpec/shexTest#main",
