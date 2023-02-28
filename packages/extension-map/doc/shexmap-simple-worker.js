@@ -24,7 +24,7 @@ importScripts("../../shex-parser/shex-parser.js"               ); modules["@shex
 
 importScripts("../shexmap-webapp.js");
 }
-importScripts("../../shex-webapp/doc/Util.js");
+importScripts("../../shex-webapp/doc/WorkerMarshalling.js");
 // importScripts('promise-worker/register.js');
 
 const ShEx = ShExWebApp; // @@ rename globally
@@ -45,7 +45,7 @@ try {
     errorText = "creating validator";
     const inputData = "endpoint" in msg.data
           ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-          : ShEx.RdfJsDb(makeStaticDB(msg.data.data.map(t => Util.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
+          : ShEx.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
     createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
@@ -63,7 +63,7 @@ try {
   case "validate":
     const queryMap = msg.data.queryMap;
     const currentEntry = 0, options = msg.data.options || {};
-    const results = Util.createResults();
+    const results = WorkerMarshalling.createResults();
     for (let currentEntry = 0; currentEntry < queryMap.length; ) {
       const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);

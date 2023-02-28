@@ -503,7 +503,6 @@ if (!TEST_browser) {
     })
   })
 
-
   describe(`WEBapp ${SHEXMAP_SIMPLE}'s synthesis interface}`, function () {
     const page = SHEXMAP_SIMPLE
 
