@@ -845,7 +845,7 @@ async function callValidator (done) {
             },
             "endpoint" in Caches.inputData ?
               { endpoint: Caches.inputData.endpoint } :
-            { data: inputData.getQuads().map(t => Util.rdfjsTripleToJsonTriple(t)) }
+            { data: inputData.getQuads().map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)) }
           ),
           handleCreate
         );

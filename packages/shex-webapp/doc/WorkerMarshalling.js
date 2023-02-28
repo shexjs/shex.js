@@ -1,11 +1,11 @@
-class Util {
+class WorkerMarshalling {
   static indexKey (node, shape) {
     return node+'@'+shape;
   }
 
   static indexShapeMap (fixedMap) {
     return fixedMap.reduce((ret, ent) => {
-      ret[Util.indexKey(ent.node, ent.shape)] = ent;
+      ret[WorkerMarshalling.indexKey(ent.node, ent.shape)] = ent;
       return ret;
     }, {});
   }
@@ -28,7 +28,7 @@ class Util {
       // Add entries to results ShapeMap.
       merge: function (toAdd) {
         toAdd.forEach(ent => {
-          var key = Util.indexKey(ent.node, ent.shape);
+          var key = WorkerMarshalling.indexKey(ent.node, ent.shape);
           if (!(key in known)) {
             _shapeMap.push(ent);
             known[key] = ent;
@@ -38,7 +38,7 @@ class Util {
       },
 
       has: function (ent) {
-        var key = Util.indexKey(ent.node, ent.shape);
+        var key = WorkerMarshalling.indexKey(ent.node, ent.shape);
         return (key in known);
       },
 
@@ -52,7 +52,7 @@ class Util {
 
   static rdfjsTripleToJsonTriple (rdfjsTriple) {
     return ["subject", "predicate", "object"].reduce((acc, pos) => {
-      const ret = Util.rdfjsTermToJsonTerm(rdfjsTriple[pos]);
+      const ret = WorkerMarshalling.rdfjsTermToJsonTerm(rdfjsTriple[pos]);
       acc[pos] = ret;
       return acc;
     }, {})
@@ -72,15 +72,15 @@ class Util {
   }
 
   // static jsonToDataSet (jsonTriples, dataSet, dataFactory) {
-  //   dataSet.addQuads(jsonTriples.map(jsonTriple => Util.jsonToTriple(jsonTriple, dataFactory)));
+  //   dataSet.addQuads(jsonTriples.map(jsonTriple => WorkerMarshalling.jsonToTriple(jsonTriple, dataFactory)));
   //   return dataSet;
   // }
 
   static jsonTripleToRdfjsTriple (jsonTriple, dataFactory) {
     return dataFactory.quad(
-      Util.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory),
-      Util.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory),
-      Util.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory)
+      WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.subject, dataFactory),
+      WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.predicate, dataFactory),
+      WorkerMarshalling.jsonTermToRdfjsTerm(jsonTriple.object, dataFactory)
     );
   }
 
@@ -97,3 +97,5 @@ class Util {
     }
   }
 }
+
+this.WorkerMarshalling = WorkerMarshalling; // testing hack to make class work in PseudoWorker
