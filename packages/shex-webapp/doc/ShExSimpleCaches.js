@@ -455,6 +455,11 @@ class ShExSimpleCaches {
       {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension  },
       {queryStringParm: "shape-map",    location: $("#textMap"),                     cache: this.Caches.shapeMap   },
     ];
+    this.QueryParams = this.Getables.concat([
+      {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
+      {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
+      {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
+    ]);
   }
 }
  

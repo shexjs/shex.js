@@ -40,12 +40,6 @@ const ParseTriplePattern = (function () {
     uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
 })();
 
-const QueryParams = App.Getables.concat([
-  {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
-  {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
-  {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
-]);
-
 // Re-use BNode IDs for good(-enough) user experience. Recipe from:
 // https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
 let TurtleBlankNodeId;
@@ -1142,7 +1136,7 @@ async function loadSearchParameters () {
   // Load all known query parameters. Save load results into array like:
   /* [ [ "data", { "skipped": "skipped" } ],
        [ "manifest", { "fromUrl": { "url": "http://...", "data": "..." } } ], ] */
-  const loadedAsArray = await Promise.all(QueryParams.map(async input => {
+  const loadedAsArray = await Promise.all(App.QueryParams.map(async input => {
     const label = input.queryStringParm;
     const parm = label;
     if (parm + "URL" in iface) {
@@ -1330,7 +1324,7 @@ function setTextAreaHandlers (listItems) {
   async function getPermalink () {
     let parms = [];
     await copyEditMapToTextMap();
-    parms = parms.concat(QueryParams.reduce((acc, input) => {
+    parms = parms.concat(App.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
       if (input.cache && input.cache.url &&
@@ -1374,7 +1368,7 @@ function customizeInterface () {
  * Prepare drag and drop into text areas
  */
 async function prepareDragAndDrop () {
-  QueryParams.filter(q => {
+  App.QueryParams.filter(q => {
     return "cache" in q;
   }).map(q => {
     return {
