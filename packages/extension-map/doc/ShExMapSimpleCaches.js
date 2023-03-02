@@ -16,6 +16,11 @@ class ShExMapSimpleCaches extends ShExSimpleCaches {
       statics:      new JSONCache($("#staticVars textarea")),
       outputSchema: new SchemaCache($("#outputSchema textarea")),
     });
+    Object.assign(this.Getables, {
+      queryStringParm: "bindings",     location: this.Caches.bindings.selection,    cache: this.Caches.bindings    ,
+      queryStringParm: "statics",      location: this.Caches.statics.selection,     cache: this.Caches.statics     ,
+      queryStringParm: "outSchema",    location: this.Caches.outputSchema.selection,cache: this.Caches.outputSchema,
+    });
   }
 }
 

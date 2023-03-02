@@ -448,6 +448,13 @@ class ShExSimpleCaches {
       extension:   new ExtensionCache($("#extensionDrop")),
       shapeMap:    new ShapeMapCache($("#textMap")), // @@ rename to #shapeMap
     }
+    this.Getables = [
+      {queryStringParm: "schema",       location: this.Caches.inputSchema.selection, cache: this.Caches.inputSchema},
+      {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData  },
+      {queryStringParm: "manifest",     location: this.Caches.manifest.selection,    cache: this.Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
+      {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension  },
+      {queryStringParm: "shape-map",    location: $("#textMap"),                     cache: this.Caches.shapeMap   },
+    ];
   }
 }
  

@@ -40,15 +40,7 @@ const ParseTriplePattern = (function () {
     uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
 })();
 
-const Getables = [
-  {queryStringParm: "schema",       location: App.Caches.inputSchema.selection, cache: App.Caches.inputSchema},
-  {queryStringParm: "data",         location: App.Caches.inputData.selection,   cache: App.Caches.inputData  },
-  {queryStringParm: "manifest",     location: App.Caches.manifest.selection,    cache: App.Caches.manifest   , fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
-  {queryStringParm: "extension",    location: App.Caches.extension.selection,   cache: App.Caches.extension  },
-  {queryStringParm: "shape-map",    location: $("#textMap"),                cache: App.Caches.shapeMap   },
-];
-
-const QueryParams = Getables.concat([
+const QueryParams = App.Getables.concat([
   {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
   {queryStringParm: "success",      location: $("#success"),         deflt: "proof"     },
   {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
@@ -737,7 +729,7 @@ function prepareControls () {
     buttons: {
       "GET": function (evt, ui) {
         results.clear();
-        const target = Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
+        const target = App.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
         const url = $("#loadInput").val();
         const tips = $(".validateTips");
         function updateTips (t) {
@@ -770,7 +762,7 @@ function prepareControls () {
       toggleControls();
     }
   });
-  Getables.forEach(target => {
+  App.Getables.forEach(target => {
     const type = target.queryStringParm
     $("#load-"+type+"-button").click(evt => {
       const prefillURL = target.url ? target.url :
