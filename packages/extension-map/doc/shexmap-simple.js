@@ -303,6 +303,39 @@ function hasFocusNode () {
   });
 }
 
+class ShExValidatorW {
+  constructor (loaded, _schemaURL, inputData) {
+    this.validator = new ShEx.Validator(
+      loaded.schema,
+      inputData,
+      {results: "api", regexModule: ShEx[$("#regexpEngine").val()]});
+    $(".extensionControl:checked").each(function () {
+      $(this).data("code").register(validator, ShEx);
+    });
+  }
+  async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
+    const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
+    time = new Date() - time;
+    $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
+    $("#results .status").text("rendering results...").show();
+
+    await Promise.all(ret.map(renderEntry));
+    finishRendering();
+    return {validationResults: ret}; // for tester or whoever is awaiting this promise
+  }
+}
+
+class ShExMapValidatorW extends ShExValidatorW {
+  constructor (loaded, _schemaURL, inputData) {
+    super(loaded, _schemaURL, inputData);
+    this.Mapper = MapModule.register(this.validator, ShEx);
+  }
+}
+
+function prepareValidator(loaded, schemaURL, inputData) {
+  return new ShExMapValidatorW(loaded, schemaURL, inputData);
+}
+
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -341,36 +374,14 @@ async function callValidator (done) {
           }
         });
         let time;
-        const validator = new ShEx.Validator(
-          loaded.schema,
-          inputData,
-          { results: "api", regexModule: ShEx[$("#regexpEngine").val()] });
-        $(".extensionControl:checked").each(function () {
-          $(this).data("code").register(validator, ShEx);
-        })
-        Mapper = MapModule.register(validator, ShEx);
+        const validator = prepareValidator(loaded, alreadLoaded.url, inputData);
+        Mapper = validator.Mapper;
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();
         time = new Date();
-        const ret = validator.validateShapeMap(fixedMap, LOG_PROGRESS ? makeConsoleTracker() : undefined); // undefined to trigger default parameter assignment
-        time = new Date() - time;
-        $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-        $("#results .status").text("rendering results...").show();
-
-        await Promise.all(ret.map(renderEntry));
-        // for debugging values and schema formats:
-        // try {
-        //   const x = ShExUtil.valToValues(ret);
-        //   // const x = ShExUtil.ShExJtoAS(valuesToSchema(valToValues(ret)));
-        //   res = results.replace(JSON.stringify(x, null, "  "));
-        //   const y = ShExUtil.valuesToSchema(x);
-        //   res = results.append(JSON.stringify(y, null, "  "));
-        // } catch (e) {
-        //   console.dir(e);
-        // }
-        finishRendering();
-        return { validationResults: ret }; // for tester or whoever is awaiting this promise
+        const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
+        return validator.invoke(fixedMap, validationTracker, time, done, currentAction);
       } catch (e) {
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);

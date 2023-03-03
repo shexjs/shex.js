@@ -51,7 +51,7 @@ try {
       createOpts
     );
     // extensions.each(ext => ext.register(validator, ShEx);
-    self.postMessage({ response: "created", results: {} });
+    self.postMessage({ response: "created", results: {timestamp: new Date()} });
     break;
 
   case "validate":

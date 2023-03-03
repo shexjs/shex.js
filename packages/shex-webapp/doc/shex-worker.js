@@ -286,6 +286,71 @@ function hasFocusNode () {
   });
 }
 
+class RemoteValidator {
+  constructor (loaded, schemaURL, inputData) {
+    this.created = Canceleable(
+      $("#validate"),
+      disableResultsAndValidate,
+      "validator creation aborted",
+      Object.assign(
+        {
+          request: "create",
+          schema: loaded.schema,
+          schemaURL: schemaURL,
+          slurp: $("#slurp").is(":checked"),
+          options: {regexModule: $("#regexpEngine").val()},
+        },
+        "endpoint" in App.Caches.inputData ?
+          {endpoint: App.Caches.inputData.endpoint} :
+        {data: inputData.getQuads().map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t))}
+      ),
+      RemoteValidator.handleCreate
+    )
+  }
+  async invoke (fixedMap, validationTracker, time, done, currentAction) {
+    const response = await this.created;
+    const transportMap = fixedMap.map(function (ent) {
+      return {
+        node: ent.node,
+        shape: ent.shape === ShEx.Validator.Start ?
+          START_SHAPE_INDEX_ENTRY :
+          ent.shape
+      };
+    });
+    return Canceleable(
+      $("#validate"),
+      disableResultsAndValidate,
+      "validation aborted",
+      {
+        request: "validate",
+        queryMap: transportMap,
+        options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
+      },
+      parseUpdatesAndResults.bind(undefined, time, validationTracker, done, currentAction)
+    );
+  }
+  static handleCreate (msg, workerUICleanup, resolve, reject) {
+    switch (msg.data.response) {
+    case "created":
+      workerUICleanup();
+      resolve(msg.data.results);
+      break;
+    case "error":
+      const throwMe = Error(msg.data.message);
+      throwMe.stack = msg.data.stack;
+      throwMe.text = msg.data.errorText;
+      reject(throwMe);
+      break;
+    default:
+      reject(Error(`expected ${expect}, got ${JSON.stringify(msg.data)}`));
+    }
+  }
+}
+
+function prepareValidator(loaded, schemaURL, inputData) {
+  return new RemoteValidator(loaded, schemaURL, inputData);
+}
+
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -324,48 +389,13 @@ async function callValidator (done) {
           }
         });
         let time;
-        const created = await Canceleable(
-          $("#validate"),
-          disableResultsAndValidate,
-          "validator creation aborted",
-          Object.assign(
-            {
-              request: "create",
-              schema: loaded.schema,
-              schemaURL: alreadLoaded.url,
-              slurp: $("#slurp").is(":checked"),
-              options: { regexModule: $("#regexpEngine").val() },
-            },
-            "endpoint" in App.Caches.inputData ?
-              { endpoint: App.Caches.inputData.endpoint } :
-            { data: inputData.getQuads().map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)) }
-          ),
-          handleCreate
-        );
+        const validator = prepareValidator(loaded, alreadLoaded.url, inputData);
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();
         time = new Date();
-        const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : null;
-        const transportMap = fixedMap.map(function (ent) {
-          return {
-            node: ent.node,
-            shape: ent.shape === ShEx.Validator.Start ?
-              START_SHAPE_INDEX_ENTRY :
-              ent.shape
-          };
-        });
-        return Canceleable(
-          $("#validate"),
-          disableResultsAndValidate,
-          "validation aborted",
-          {
-            request: "validate",
-            queryMap: transportMap,
-            options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
-          },
-          parseUpdatesAndResults.bind(undefined, time, validationTracker, done, currentAction)
-        );
+        const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
+        return validator.invoke(fixedMap, validationTracker, time, done, currentAction);
       } catch (e) {
         $("#results .status").text("validation errors:").show();
         failMessage(e, currentAction);
@@ -460,23 +490,6 @@ function Canceleable (stopElement, clickAction, abortText, startMessage, handler
       stopElement.on("click", clickAction);
     }
   })
-}
-
-function handleCreate (msg, workerUICleanup, resolve, reject) {
-  switch (msg.data.response) {
-  case "created":
-    workerUICleanup()
-    resolve(msg.data.results);
-    break;
-  case "error":
-    const throwMe = Error(msg.data.message);
-    throwMe.stack = msg.data.stack;
-    throwMe.text = msg.data.errorText;
-    reject(throwMe);
-    break;
-  default:
-    reject(Error(`expected ${expect}, got ${JSON.stringify(msg.data)}`));
-  }
 }
 
 function parseUpdatesAndResults (time, validationTracker, done, currentAction, msg, workerUICleanup, resolve, reject) {
