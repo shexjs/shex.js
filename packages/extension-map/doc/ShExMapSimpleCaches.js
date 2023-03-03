@@ -14,7 +14,7 @@ class ShExMapSimpleCaches extends ShExSimpleCaches {
     Object.assign(this.Caches, {
       bindings:     new JSONCache($("#bindings1 textarea")),
       statics:      new JSONCache($("#staticVars textarea")),
-      outputSchema: new SchemaCache($("#outputSchema textarea")),
+      outputSchema: new SchemaCache($("#outputSchema textarea"), this.shexcParser, this.turtleParser),
     });
     Object.assign(this.Getables, {
       queryStringParm: "bindings",     location: this.Caches.bindings.selection,    cache: this.Caches.bindings    ,

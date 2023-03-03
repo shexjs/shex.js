@@ -8,7 +8,6 @@ const RdfJs = N3js;
 const ShExLoader = ShEx.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
-const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 ShEx.ShapeMap.Start = ShEx.Validator.Start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
@@ -19,7 +18,8 @@ const LOG_PROGRESS = false;
 const DefaultBase = location.origin + location.pathname;
 
 const App = new ShExMapSimpleCaches(DefaultBase);
-// let ShExRSchema; // defined in calling page
+const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
+let Mapper = null
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -41,74 +41,12 @@ const ParseTriplePattern = (function () {
     uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
 })();
 
-// Re-use BNode IDs for good(-enough) user experience. Recipe from:
-// https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
-let TurtleBlankNodeId;
-RdfJs.Parser.prototype._blankNode = name => RdfJs.DataFactory.blankNode(name || `b${TurtleBlankNodeId++}`);
-function parseTurtle (text, meta, base) {
-  const ret = new RdfJs.Store();
-  TurtleBlankNodeId = 0;
-  RdfJs.Parser._resetBlankNodePrefix();
-  const parser = new RdfJs.Parser({
-    baseIRI: base,
-    format: "text/turtle",
-    blankNodePrefix: ""
-  });
-  const quads = parser.parse(text);
-  if (quads !== undefined)
-    ret.addQuads(quads);
-  meta.base = parser._base;
-  meta.prefixes = parser._prefixes;
-  return ret;
-}
-
-shexParserOptions = {index: true, duplicateShape: "abort"};
-const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
-function parseShEx (text, meta, base) {
-  shexParserOptions.duplicateShape = $("#duplicateShape").val();
-  shexParser._setBase(base);
-  const ret = shexParser.parse(text);
-  // ret = ShEx.Util.canonicalize(ret, DefaultBase);
-  meta.base = ret._base; // base set above.
-  meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
-  return ret;
-}
-
 function sum (s) { // cheap way to identify identical strings
   return s.replace(/\s/g, "").split("").reduce(function (a,b){
     a = ((a<<5) - a) + b.charCodeAt(0);
     return a&a
   },0);
 }
-
-function turtleTermToLd (lex, resolver) {
-  const nz = new RdfJs.Lexer().tokenize(lex + " ");
-  switch (nz[0].type) {
-  case "IRI": return resolver._resolveAbsoluteIRI(nz[0]);
-  case "prefixed": return expand(nz[0]);
-  case "blank": return "_:" + nz[0].value;
-  case "literal": {
-    const ret = { value: nz[0].value };
-    switch (nz[1].type) {
-    case "typeIRI":  ret.type = resolver._resolveAbsoluteIRI(nz[1]); break;
-    case "type":     ret.type = expand(nz[1]); break;
-    case "langcode": ret.language = nz[1].value; break;
-    default: throw Error(`unknow N3Lexer literal term type ${nz[1].type}`);
-    }
-    return ret;
-  }
-  default: throw Error(`unknow N3Lexer term type ${nz[0].type}`);
-  }
-
-  function expand (token) {
-    if (!(token.prefix in resolver.meta.prefixes))
-      throw Error(`unknown prefix ${token.prefix} in ${lex}`);
-    return resolver.meta.prefixes[token.prefix] + token.value;
-  }
-}
-// </n3.js-specific>
-
-
 
         function ldToTurtle (ld, termToLex) {
           return typeof ld === "object"
@@ -365,7 +303,6 @@ function hasFocusNode () {
   });
 }
 
-let Mapper = null
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();

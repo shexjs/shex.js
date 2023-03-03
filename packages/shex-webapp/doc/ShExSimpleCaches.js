@@ -67,8 +67,10 @@ class InterfaceCache {
 }
 
 class SchemaCache extends InterfaceCache {
-  constructor (selection) {
+  constructor (selection, shexcParser, turtleParser) {
     super(selection);
+    this.shexcParser = shexcParser;
+    this.turtleParser = turtleParser;
     this.meta.termToLex = function (trm, aForTypes = true) {
       return trm === ShEx.Validator.Start
         ? START_SHAPE_LABEL
@@ -77,7 +79,7 @@ class SchemaCache extends InterfaceCache {
     this.meta.lexToTerm = function (lex) {
       return lex === START_SHAPE_LABEL
         ? ShEx.Validator.Start
-        : turtleTermToLd(lex, new IRIResolver(this));
+        : turtleParser.termToLd(lex, new IRIResolver(this));
     };
     this.graph = null;
     this.language = null;
@@ -86,7 +88,7 @@ class SchemaCache extends InterfaceCache {
   async parse (text, base) {
     const isJSON = text.match(/^\s*\{/);
     const isDCTAP = text.match(/\s*shapeID/)
-    this.graph = isJSON ? null : tryN3(text);
+    this.graph = isJSON ? null : this.tryN3(text);
     this.language =
       isJSON ? "ShExJ" :
       isDCTAP ? "DCTAP":
@@ -97,7 +99,7 @@ class SchemaCache extends InterfaceCache {
           isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
           isDCTAP ? await parseDcTap(text) :
           this.graph ? parseShExR() :
-          parseShEx(text, this.meta, base);
+          this.shexcParser.parseString(text, this.meta, base);
     $("#results .status").hide();
     markEditMapDirty(); // ShapeMap validity may have changed.
     return schema;
@@ -113,22 +115,9 @@ class SchemaCache extends InterfaceCache {
       })
     }
 
-    function tryN3 (text) {
-      try {
-        if (text.match(/^\s*$/))
-          return null;
-        const db = parseTurtle (text, this.meta, this.base); // interpret empty schema as ShExC
-        if (db.getQuads().length === 0)
-          return null;
-        return db;
-      } catch (e) {
-        return null;
-      }
-    }
-
     function parseShExR () {
       const graphParser = new ShEx.Validator(
-        parseShEx(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
+        this.shexcParser.parseString(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         ShEx.RdfJsDb(this.graph),
         {}
       );
@@ -144,17 +133,31 @@ class SchemaCache extends InterfaceCache {
     const rest = "shapes" in obj ? obj.shapes.map(se => this.Caches.inputSchema.meta.termToLex(se.id)) : [];
     return start.concat(rest);
   }
+
+  tryN3 (text) {
+    try {
+      if (text.match(/^\s*$/))
+        return null;
+      const db = this.turtleParser.parseString (text, this.meta, this.base); // interpret empty schema as ShExC
+      if (db.getQuads().length === 0)
+        return null;
+      return db;
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 class TurtleCache extends InterfaceCache {
-  constructor (selection) {
+  constructor (selection, turtleParser) {
     super(selection);
+    this.turtleParser = turtleParser;
     this.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTerm2Turtle(trm, this); };
-    this.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(this)); };
+    this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
   }
 
   async parse (text, base) {
-    const res = ShEx.RdfJsDb(parseTurtle(text, this.meta, base));
+    const res = ShEx.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   }
@@ -420,10 +423,10 @@ return module.exports;
 }
 
 class ShapeMapCache extends InterfaceCache {
-  constructor (selection) {
+  constructor (selection, turtleParser) {
     super(selection);
     this.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTerm2Turtle(trm, this); };
-    this.meta.lexToTerm = function (lex) { return  turtleTermToLd(lex, new IRIResolver(this)); };
+    this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
   }
 
   async parse (text) {
@@ -438,15 +441,84 @@ class ShapeMapCache extends InterfaceCache {
   }
 }
 
+class ShExCParser {
+  constructor () {
+    this.shexParserOptions = {index: true, duplicateShape: "abort"};
+    this.shexParser = ShEx.Parser.construct(DefaultBase, null, this.shexParserOptions);
+  }
+  parseString (text, meta, base) {
+    this.shexParserOptions.duplicateShape = $("#duplicateShape").val();
+    this.shexParser._setBase(base);
+    const ret = this.shexParser.parse(text);
+    // ret = ShEx.Util.canonicalize(ret, DefaultBase);
+    meta.base = ret._base; // base set above.
+    meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
+    return ret;
+  }
+}
+
+class TurtleParser {
+  constructor () {
+    this.blankNodeId;
+    // Re-use BNode IDs for good(-enough) user experience. Recipe from:
+    // https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
+    RdfJs.Parser.prototype._blankNode = name => RdfJs.DataFactory.blankNode(name || `b${this.blankNodeId++}`);
+  }
+  parseString (text, meta, base) {
+    const ret = new RdfJs.Store();
+    this.blankNodeId = 0;
+    RdfJs.Parser._resetBlankNodePrefix();
+    const parser = new RdfJs.Parser({
+      baseIRI: base,
+      format: "text/turtle",
+      blankNodePrefix: ""
+    });
+    const quads = parser.parse(text);
+    if (quads !== undefined)
+      ret.addQuads(quads);
+    meta.base = parser._base;
+    meta.prefixes = parser._prefixes;
+    return ret;
+  }
+  termToLd (lex, resolver) { // returns ShExJ objectValue
+    const nz = new RdfJs.Lexer().tokenize(lex + " ");
+    switch (nz[0].type) {
+    case "IRI": return resolver._resolveAbsoluteIRI(nz[0]);
+    case "prefixed": return expand(nz[0]);
+    case "blank": return "_:" + nz[0].value;
+    case "literal": {
+      const ret = { value: nz[0].value };
+      switch (nz[1].type) {
+      case "typeIRI":  ret.type = resolver._resolveAbsoluteIRI(nz[1]); break;
+      case "type":     ret.type = expand(nz[1]); break;
+      case "langcode": ret.language = nz[1].value; break;
+      default: throw Error(`unknow N3Lexer literal term type ${nz[1].type}`);
+      }
+      return ret;
+    }
+    default: throw Error(`unknow N3Lexer term type ${nz[0].type}`);
+    }
+
+    function expand (token) {
+      if (!(token.prefix in resolver.meta.prefixes))
+        throw Error(`unknown prefix ${token.prefix} in ${lex}`);
+      return resolver.meta.prefixes[token.prefix] + token.value;
+    }
+  }
+}
+
 class ShExSimpleCaches {
   constructor (base) {
     this.base = base;
+    // make parser/serializers available to extending classes
+    this.shexcParser = new ShExCParser();
+    this.turtleParser = new TurtleParser();
     this.Caches = {
-      inputSchema: new SchemaCache($("#inputSchema textarea.schema")),
-      inputData:   new TurtleCache($("#inputData textarea")),
+      inputSchema: new SchemaCache($("#inputSchema textarea.schema"), this.shexcParser, this.turtleParser),
+      inputData:   new TurtleCache($("#inputData textarea"), this.turtleParser),
       manifest:    new ManifestCache($("#manifestDrop")),
       extension:   new ExtensionCache($("#extensionDrop")),
-      shapeMap:    new ShapeMapCache($("#textMap")), // @@ rename to #shapeMap
+      shapeMap:    new ShapeMapCache($("#textMap"), this.turtleParser), // @@ rename to #shapeMap
     }
     this.Getables = [
       {queryStringParm: "schema",       location: this.Caches.inputSchema.selection, cache: this.Caches.inputSchema},

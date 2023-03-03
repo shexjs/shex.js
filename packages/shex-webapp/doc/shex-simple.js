@@ -18,7 +18,6 @@ const LOG_PROGRESS = false;
 const DefaultBase = location.origin + location.pathname;
 
 const App = new ShExSimpleCaches(DefaultBase);
-// let ShExRSchema; // defined in calling page
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -39,39 +38,6 @@ const ParseTriplePattern = (function () {
     uri+"|a)?(\\s*)("+
     uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
 })();
-
-// Re-use BNode IDs for good(-enough) user experience. Recipe from:
-// https://github.com/rdfjs/N3.js/blob/520054a9fb45ef48b5b58851449942493c57dace/test/N3Parser-test.js#L6-L11
-let TurtleBlankNodeId;
-RdfJs.Parser.prototype._blankNode = name => RdfJs.DataFactory.blankNode(name || `b${TurtleBlankNodeId++}`);
-function parseTurtle (text, meta, base) {
-  const ret = new RdfJs.Store();
-  TurtleBlankNodeId = 0;
-  RdfJs.Parser._resetBlankNodePrefix();
-  const parser = new RdfJs.Parser({
-    baseIRI: base,
-    format: "text/turtle",
-    blankNodePrefix: ""
-  });
-  const quads = parser.parse(text);
-  if (quads !== undefined)
-    ret.addQuads(quads);
-  meta.base = parser._base;
-  meta.prefixes = parser._prefixes;
-  return ret;
-}
-
-shexParserOptions = {index: true, duplicateShape: "abort"};
-const shexParser = ShEx.Parser.construct(DefaultBase, null, shexParserOptions);
-function parseShEx (text, meta, base) {
-  shexParserOptions.duplicateShape = $("#duplicateShape").val();
-  shexParser._setBase(base);
-  const ret = shexParser.parse(text);
-  // ret = ShEx.Util.canonicalize(ret, DefaultBase);
-  meta.base = ret._base; // base set above.
-  meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
-  return ret;
-}
 
 function sum (s) { // cheap way to identify identical strings
   return s.replace(/\s/g, "").split("").reduce(function (a,b){
