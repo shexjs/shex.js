@@ -507,7 +507,7 @@ class TurtleParser {
   }
 }
 
-class ShExSimpleCaches {
+class ShExSimpleApp {
   constructor (base) {
     this.base = base;
     // make parser/serializers available to extending classes

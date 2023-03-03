@@ -8,7 +8,7 @@ class JSONCache extends InterfaceCache {
   }
 }
 
-class ShExMapSimpleCaches extends ShExSimpleCaches {
+class ShExMapSimpleApp extends ShExSimpleApp {
   constructor (base) {
     super(base);
     Object.assign(this.Caches, {

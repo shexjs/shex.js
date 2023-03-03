@@ -17,7 +17,7 @@ const LOG_PROGRESS = false;
 
 const DefaultBase = location.origin + location.pathname;
 
-const App = new ShExSimpleCaches(DefaultBase);
+const App = new ShExSimpleApp(DefaultBase);
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 

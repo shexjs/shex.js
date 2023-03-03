@@ -17,7 +17,7 @@ const LOG_PROGRESS = false;
 
 const DefaultBase = location.origin + location.pathname;
 
-const App = new ShExMapSimpleCaches(DefaultBase);
+const App = new ShExMapSimpleApp(DefaultBase);
 const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 let Mapper = null
 
