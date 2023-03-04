@@ -18,6 +18,7 @@ const LOG_PROGRESS = false;
 const DefaultBase = location.origin + location.pathname;
 
 const App = new ShExSimpleApp(DefaultBase);
+const ValidatorClass = DirectShExValidator;
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -314,8 +315,6 @@ function hasFocusNode () {
   });
 }
 
-const ValidatorClass = DirectShExValidator;
-
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -355,6 +354,7 @@ async function callValidator (done) {
         });
         let time;
         const validator = ValidatorClass.factory(loaded, alreadLoaded.url, inputData);
+        App.usingValidator(validator);
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();

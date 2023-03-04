@@ -19,6 +19,7 @@ const DefaultBase = location.origin + location.pathname;
 
 const App = new ShExSimpleApp(DefaultBase);
 const USE_INCREMENTAL_RESULTS = true;
+const ValidatorClass = RemoteShExValidator;
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -286,8 +287,6 @@ function hasFocusNode () {
   });
 }
 
-const ValidatorClass = RemoteShExValidator;
-
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -327,6 +326,7 @@ async function callValidator (done) {
         });
         let time;
         const validator = ValidatorClass.factory(loaded, alreadLoaded.url, inputData);
+        App.usingValidator(validator);
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();

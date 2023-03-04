@@ -1,0 +1,3 @@
+class ShExMapWorkerApp extends ShExMapBaseApp {
+}
+

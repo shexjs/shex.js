@@ -558,5 +558,6 @@ class ShExSimpleApp {
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
     ]);
   }
+  usingValidator (_validator) { } // overriden for ShExMap
 }
  
