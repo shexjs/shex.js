@@ -507,6 +507,31 @@ class TurtleParser {
   }
 }
 
+class DirectShExValidator {
+  constructor (loaded, _schemaURL, inputData) {
+    this.validator = new ShEx.Validator(
+      loaded.schema,
+      inputData,
+      {results: "api", regexModule: ShEx[$("#regexpEngine").val()]});
+    $(".extensionControl:checked").each(function () {
+      $(this).data("code").register(validator, ShEx);
+    });
+  }
+  static factory (loaded, schemaURL, inputData) {
+    return new DirectShExValidator(loaded, schemaURL, inputData);
+  }
+  async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
+    const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
+    time = new Date() - time;
+    $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
+    $("#results .status").text("rendering results...").show();
+
+    await Promise.all(ret.map(renderEntry));
+    finishRendering();
+    return {validationResults: ret}; // for tester or whoever is awaiting this promise
+  }
+}
+
 class ShExSimpleApp {
   constructor (base) {
     this.base = base;

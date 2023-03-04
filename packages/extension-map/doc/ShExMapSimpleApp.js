@@ -8,6 +8,16 @@ class JSONCache extends InterfaceCache {
   }
 }
 
+class DirectShExMapValidator extends DirectShExValidator {
+  constructor (loaded, _schemaURL, inputData) {
+    super(loaded, _schemaURL, inputData);
+    this.Mapper = MapModule.register(this.validator, ShEx);
+  }
+  static factory (loaded, schemaURL, inputData) {
+    return new DirectShExMapValidator(loaded, schemaURL, inputData);
+  }
+}
+
 class ShExMapSimpleApp extends ShExSimpleApp {
   constructor (base) {
     super(base);

@@ -314,31 +314,7 @@ function hasFocusNode () {
   });
 }
 
-class ShExValidatorW {
-  constructor (loaded, _schemaURL, inputData) {
-    this.validator = new ShEx.Validator(
-      loaded.schema,
-      inputData,
-      {results: "api", regexModule: ShEx[$("#regexpEngine").val()]});
-    $(".extensionControl:checked").each(function () {
-      $(this).data("code").register(validator, ShEx);
-    });    
-  }
-  async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
-    const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
-    time = new Date() - time;
-    $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
-    $("#results .status").text("rendering results...").show();
-
-    await Promise.all(ret.map(renderEntry));
-    finishRendering();
-    return {validationResults: ret}; // for tester or whoever is awaiting this promise
-  }
-}
-
-function prepareValidator(loaded, schemaURL, inputData) {
-  return new ShExValidatorW(loaded, schemaURL, inputData);
-}
+const ValidatorClass = DirectShExValidator;
 
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
@@ -378,7 +354,7 @@ async function callValidator (done) {
           }
         });
         let time;
-        const validator = prepareValidator(loaded, alreadLoaded.url, inputData);
+        const validator = ValidatorClass.factory(loaded, alreadLoaded.url, inputData);
 
         currentAction = "validating";
         $("#results .status").text("validating...").show();
