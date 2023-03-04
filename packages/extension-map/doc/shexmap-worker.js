@@ -18,9 +18,9 @@ const LOG_PROGRESS = false;
 const DefaultBase = location.origin + location.pathname;
 
 const App = new ShExMapWorkerApp(DefaultBase);
-const USE_INCREMENTAL_RESULTS = true;
-const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 const ValidatorClass = RemoteShExValidator;
+const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
+const USE_INCREMENTAL_RESULTS = true;
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -304,6 +304,13 @@ function hasFocusNode () {
   });
 }
 
+function reportValidationError (validationError, currentAction) {
+  $("#results .status").text("validation errors:").show();
+  failMessage(validationError, currentAction);
+  console.error(validationError); // dump details to console.
+  return { validationError };
+}
+
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -349,12 +356,12 @@ async function callValidator (done) {
         $("#results .status").text("validating...").show();
         time = new Date();
         const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
-        return validator.invoke(fixedMap, validationTracker, time, done, currentAction);
+
+        // invoke can throw an asynchronous error. Using .catch instead of await so callValidator is usefully async.
+        return validator.invoke(fixedMap, validationTracker, time, done, currentAction)
+          .catch(e => reportValidationError(e, currentAction));
       } catch (e) {
-        $("#results .status").text("validation errors:").show();
-        failMessage(e, currentAction);
-        console.error(e); // dump details to console.
-        return { validationError: e };
+        return reportValidationError(e, currentAction);
       }
     } else {
       const outputLanguage = App.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -415,100 +422,6 @@ async function callValidator (done) {
       depth: 0
     };
     return logger;
-  }
-}
-
-function Canceleable (stopElement, clickAction, abortText, startMessage, handler) {
-  const restoreText = stopElement.text();
-  return new Promise((resolve, reject) => {
-    stopElement.addClass("stoppable").text("abort (ctl-enter)");
-    stopElement.off("click", clickAction);
-    stopElement.on("click", cancel);
-    ShExWorker.onmessage = function (msg) {
-      return handler(msg, workerUICleanup, resolve, reject)
-    },
-    ShExWorker.postMessage(startMessage);
-
-    function cancel (evt) {
-      ShExWorker.terminate();
-      ShExWorker = new Worker("shexmap-simple-worker.js");
-      if (evt !== null)
-        $("#results .status").text(abortText).show();
-      workerUICleanup();
-      reject(Error(`Interrupted by user click`))
-    }
-
-    function workerUICleanup () {
-      stopElement.removeClass("stoppable").text(restoreText);
-      stopElement.off("click", cancel);
-      stopElement.on("click", clickAction);
-    }
-  })
-}
-
-function parseUpdatesAndResults (time, validationTracker, done, currentAction, msg, workerUICleanup, resolve, reject) {
-  switch (msg.data.response) {
-  case "update":
-    if (USE_INCREMENTAL_RESULTS) {
-      // Merge into results.
-      [].push.apply(results, msg.data.results)
-      msg.data.results.forEach(function (res) {
-        if (res.shape === START_SHAPE_INDEX_ENTRY)
-          res.shape = ShEx.Validator.Start;
-      });
-      msg.data.results.forEach(renderEntry);
-      // resultsMap.merge(msg.data.results);
-    } else {
-      throw Error('fix this code path; probably results=msg.data.(all?)results')
-    }
-    break;
-
-  case "recurse":
-    validationTracker.recurse(msg.data.x);
-    break;
-
-  case "known":
-    validationTracker.known(msg.data.x);
-    break;
-
-  case "enter":
-    validationTracker.enter(msg.data.point, msg.data.label);
-    break;
-
-  case "exit":
-    validationTracker.exit(msg.data.point, msg.data.label, msg.data.ret);
-    break;
-
-  case "done":
-    ShExWorker.onmessage = false;
-    $("#results .status").text("rendering results...").show();
-    if (!USE_INCREMENTAL_RESULTS) {
-      if ("solutions" in msg.data.results)
-        msg.data.results.solutions.forEach(renderEntry);
-      else
-        renderEntry(msg.data.results);
-    }
-    time = new Date() - time;
-    $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-    finishRendering();
-    if (done) { done() }
-    workerUICleanup();
-    resolve({ validationResults: results});
-    break;
-
-  case "error":
-    ShExWorker.onmessage = false;
-    const e = Error(msg.data.message);
-    e.stack = msg.data.stack;
-    workerUICleanup();
-    $("#results .status").text("validation errors:").show();
-    failMessage(e, currentAction);
-    console.error(e); // dump details to console.
-    if (done) { done(e) }
-    break;
-
-  default:
-    console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
   }
 }
 
@@ -675,7 +588,7 @@ async function materializeAsync () {
     $("#results .status").text("materializing data...").show();
 
     const resultGraphs = []
-    const materialized = await Canceleable(
+    const materialized = await new Canceleable(
       $("#materialize"),
       materialize,
       "materialization aborted, re-start from validation",
@@ -687,7 +600,7 @@ async function materializeAsync () {
         options: {track: LOG_PROGRESS},
       },
       parseUpdatesAndResults
-    );
+    ).ready();
 
     function parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
       switch (msg.data.response) {
@@ -922,7 +835,6 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
-  $("#materialize").on("click", materialize);
   $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
@@ -1029,6 +941,8 @@ function prepareControls () {
       reader.readAsText(evt.target.files[0]);
     });
   });
+
+  $("#materialize").on("click", materialize);
 }
 
 async function dataInputHandler (evt) {
@@ -1341,13 +1255,6 @@ async function loadSearchParameters () {
     iface.manifestURL = ["../examples/manifest.json"];
   }
 
-  if ("output-map" in iface)
-    parseShapeMap("output-map", function (node, shape) {
-      // only works for one n/s pair
-      $("#createNode").val(node);
-      $("#outputShape").val(shape);
-    });
-
   // Load all known query parameters. Save load results into array like:
   /* [ [ "data", { "skipped": "skipped" } ],
        [ "manifest", { "fromUrl": { "url": "http://...", "data": "..." } } ], ] */
@@ -1451,7 +1358,6 @@ async function loadSearchParameters () {
   });
   addContextMenus("#focus0", App.Caches.inputData);
   addContextMenus("#inputShape0", App.Caches.inputSchema);
-  addContextMenus("#outputShape", App.Caches.outputSchema);
   if ("schemaURL" in iface ||
       // some schema is non-empty
       ("schema" in iface &&
@@ -1459,7 +1365,6 @@ async function loadSearchParameters () {
       && shapeMapErrors.length === 0) {
     return callValidator();
   }
-  return loaded;
 
   function navFrom (keyCode, fromLi) {
     const fromColumn = fromLi.parent();
@@ -1506,6 +1411,15 @@ async function loadSearchParameters () {
       }
     }
   }
+
+  if ("output-map" in iface)
+    parseShapeMap("output-map", function (node, shape) {
+      // only works for one n/s pair
+      $("#createNode").val(node);
+      $("#outputShape").val(shape);
+    });
+  addContextMenus("#outputShape", App.Caches.outputSchema);
+  return loaded;
 }
 
 function setTextAreaHandlers (listItems) {
@@ -1954,6 +1868,22 @@ function addContextMenus (inputSelector, cache) {
   }
 }
 
+prepareControls();
+const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
+const loads = loadSearchParameters();
+const ready = Promise.all([ dndPromise, loads ]);
+if ('_testCallback' in window) {
+  SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
+  window._testCallback(SharedForTests);
+}
+ready.then(resolves => {
+  if (!('_testCallback' in window))
+    console.log('search parameters:', resolves[1]);
+  // Update UI to say we're done loading everything?
+}, e => {
+  // Drop catch on the floor presuming thrower updated the UI.
+});
+
 function bindingsToTable () {
   let d = JSON.parse($("#bindings1 textarea").val())
   let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")
@@ -1997,22 +1927,6 @@ function tableToBindings () {
   $("#bindings1 div").remove()
   $("#bindings1 textarea").show()
 }
-
-prepareControls();
-const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
-const loads = loadSearchParameters();
-const ready = Promise.all([ dndPromise, loads ]);
-if ('_testCallback' in window) {
-  SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
-  window._testCallback(SharedForTests);
-}
-ready.then(resolves => {
-  if (!('_testCallback' in window))
-    console.log('search parameters:', resolves[1]);
-  // Update UI to say we're done loading everything?
-}, e => {
-  // Drop catch on the floor presuming thrower updated the UI.
-});
 
 function n3ify (ldterm) {
   if (typeof ldterm !== "object")

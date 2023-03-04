@@ -18,9 +18,8 @@ const LOG_PROGRESS = false;
 const DefaultBase = location.origin + location.pathname;
 
 const App = new ShExMapSimpleApp(DefaultBase);
-const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
-let Mapper = null
 const ValidatorClass = DirectShExValidator;
+const MapModule = ShEx.Map({rdfjs: RdfJs, Validator: ShEx.Validator});
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -304,6 +303,13 @@ function hasFocusNode () {
   });
 }
 
+function reportValidationError (validationError, currentAction) {
+  $("#results .status").text("validation errors:").show();
+  failMessage(validationError, currentAction);
+  console.error(validationError); // dump details to console.
+  return { validationError };
+}
+
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -349,12 +355,12 @@ async function callValidator (done) {
         $("#results .status").text("validating...").show();
         time = new Date();
         const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
-        return validator.invoke(fixedMap, validationTracker, time, done, currentAction);
+
+        // invoke can throw an asynchronous error. Using .catch instead of await so callValidator is usefully async.
+        return validator.invoke(fixedMap, validationTracker, time, done, currentAction)
+          .catch(e => reportValidationError(e, currentAction));
       } catch (e) {
-        $("#results .status").text("validation errors:").show();
-        failMessage(e, currentAction);
-        console.error(e); // dump details to console.
-        return { validationError: e };
+        return reportValidationError(e, currentAction);
       }
     } else {
       const outputLanguage = App.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -657,7 +663,6 @@ function prepareControls () {
   $("#regexpEngine").on("change", toggleControls);
   $("#validate").on("click", disableResultsAndValidate);
   $("#clear").on("click", clearAll);
-  $("#materialize").on("click", evt => App.materialize(evt));
   $("#download-results-button").on("click", downloadResults);
 
   $("#loadForm").dialog({
@@ -764,6 +769,8 @@ function prepareControls () {
       reader.readAsText(evt.target.files[0]);
     });
   });
+
+  $("#materialize").on("click", evt => App.materialize(evt));
 }
 
 async function dataInputHandler (evt) {
@@ -1076,13 +1083,6 @@ async function loadSearchParameters () {
     iface.manifestURL = ["../examples/manifest.json"];
   }
 
-  if ("output-map" in iface)
-    parseShapeMap("output-map", function (node, shape) {
-      // only works for one n/s pair
-      $("#createNode").val(node);
-      $("#outputShape").val(shape);
-    });
-
   // Load all known query parameters. Save load results into array like:
   /* [ [ "data", { "skipped": "skipped" } ],
        [ "manifest", { "fromUrl": { "url": "http://...", "data": "..." } } ], ] */
@@ -1186,7 +1186,6 @@ async function loadSearchParameters () {
   });
   addContextMenus("#focus0", App.Caches.inputData);
   addContextMenus("#inputShape0", App.Caches.inputSchema);
-  addContextMenus("#outputShape", App.Caches.outputSchema);
   if ("schemaURL" in iface ||
       // some schema is non-empty
       ("schema" in iface &&
@@ -1194,7 +1193,6 @@ async function loadSearchParameters () {
       && shapeMapErrors.length === 0) {
     return callValidator();
   }
-  return loaded;
 
   function navFrom (keyCode, fromLi) {
     const fromColumn = fromLi.parent();
@@ -1241,6 +1239,15 @@ async function loadSearchParameters () {
       }
     }
   }
+
+  if ("output-map" in iface)
+    parseShapeMap("output-map", function (node, shape) {
+      // only works for one n/s pair
+      $("#createNode").val(node);
+      $("#outputShape").val(shape);
+    });
+  addContextMenus("#outputShape", App.Caches.outputSchema);
+  return loaded;
 }
 
 function setTextAreaHandlers (listItems) {
@@ -1689,6 +1696,22 @@ function addContextMenus (inputSelector, cache) {
   }
 }
 
+prepareControls();
+const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
+const loads = loadSearchParameters();
+const ready = Promise.all([ dndPromise, loads ]);
+if ('_testCallback' in window) {
+  SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
+  window._testCallback(SharedForTests);
+}
+ready.then(resolves => {
+  if (!('_testCallback' in window))
+    console.log('search parameters:', resolves[1]);
+  // Update UI to say we're done loading everything?
+}, e => {
+  // Drop catch on the floor presuming thrower updated the UI.
+});
+
 function bindingsToTable () {
   let d = JSON.parse($("#bindings1 textarea").val())
   let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")
@@ -1732,22 +1755,6 @@ function tableToBindings () {
   $("#bindings1 div").remove()
   $("#bindings1 textarea").show()
 }
-
-prepareControls();
-const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
-const loads = loadSearchParameters();
-const ready = Promise.all([ dndPromise, loads ]);
-if ('_testCallback' in window) {
-  SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
-  window._testCallback(SharedForTests);
-}
-ready.then(resolves => {
-  if (!('_testCallback' in window))
-    console.log('search parameters:', resolves[1]);
-  // Update UI to say we're done loading everything?
-}, e => {
-  // Drop catch on the floor presuming thrower updated the UI.
-});
 
 function n3ify (ldterm) {
   if (typeof ldterm !== "object")

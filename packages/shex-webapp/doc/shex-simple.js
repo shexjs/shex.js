@@ -47,35 +47,6 @@ function sum (s) { // cheap way to identify identical strings
   },0);
 }
 
-function turtleTermToLd (lex, resolver) {
-  const nz = new RdfJs.Lexer().tokenize(lex + " ");
-  switch (nz[0].type) {
-  case "IRI": return resolver._resolveAbsoluteIRI(nz[0]);
-  case "prefixed": return expand(nz[0]);
-  case "blank": return "_:" + nz[0].value;
-  case "literal": {
-    const ret = { value: nz[0].value };
-    switch (nz[1].type) {
-    case "typeIRI":  ret.type = resolver._resolveAbsoluteIRI(nz[1]); break;
-    case "type":     ret.type = expand(nz[1]); break;
-    case "langcode": ret.language = nz[1].value; break;
-    default: throw Error(`unknow N3Lexer literal term type ${nz[1].type}`);
-    }
-    return ret;
-  }
-  default: throw Error(`unknow N3Lexer term type ${nz[0].type}`);
-  }
-
-  function expand (token) {
-    if (!(token.prefix in resolver.meta.prefixes))
-      throw Error(`unknown prefix ${token.prefix} in ${lex}`);
-    return resolver.meta.prefixes[token.prefix] + token.value;
-  }
-}
-// </n3.js-specific>
-
-
-
         function ldToTurtle (ld, termToLex) {
           return typeof ld === "object"
             ? lit(ld)
@@ -315,6 +286,13 @@ function hasFocusNode () {
   });
 }
 
+function reportValidationError (validationError, currentAction) {
+  $("#results .status").text("validation errors:").show();
+  failMessage(validationError, currentAction);
+  console.error(validationError); // dump details to console.
+  return { validationError };
+}
+
 async function callValidator (done) {
   $("#fixedMap .pair").removeClass("passes fails");
   $("#results .status").hide();
@@ -360,12 +338,12 @@ async function callValidator (done) {
         $("#results .status").text("validating...").show();
         time = new Date();
         const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
-        return validator.invoke(fixedMap, validationTracker, time, done, currentAction);
+
+        // invoke can throw an asynchronous error. Using .catch instead of await so callValidator is usefully async.
+        return validator.invoke(fixedMap, validationTracker, time, done, currentAction)
+          .catch(e => reportValidationError(e, currentAction));
       } catch (e) {
-        $("#results .status").text("validation errors:").show();
-        failMessage(e, currentAction);
-        console.error(e); // dump details to console.
-        return { validationError: e };
+        return reportValidationError(e, currentAction);
       }
     } else {
       const outputLanguage = App.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -1180,7 +1158,6 @@ async function loadSearchParameters () {
       && shapeMapErrors.length === 0) {
     return callValidator();
   }
-  return loaded;
 
   function navFrom (keyCode, fromLi) {
     const fromColumn = fromLi.parent();
@@ -1227,6 +1204,8 @@ async function loadSearchParameters () {
       }
     }
   }
+
+  return loaded;
 }
 
 function setTextAreaHandlers (listItems) {
