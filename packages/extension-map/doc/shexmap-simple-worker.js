@@ -27,11 +27,10 @@ importScripts("../shexmap-webapp.js");
 importScripts("../../shex-webapp/doc/WorkerMarshalling.js");
 // importScripts('promise-worker/register.js');
 
-const ShEx = ShExWebApp; // @@ rename globally
-const ShExLoader = ShEx.Loader({
+const ShExLoader = ShExWebApp.Loader({
   fetch, rdfjs: N3js, jsonld: null
 })
-const MapModule = ShEx.Map({rdfjs: N3js, Validator: ShEx.Validator});
+const MapModule = ShExWebApp.Map({rdfjs: N3js, Validator: ShExWebApp.Validator});
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 let validator = null;
 let Mapper = null;
@@ -44,19 +43,19 @@ try {
   case "create":
     errorText = "creating validator";
     const inputData = "endpoint" in msg.data
-          ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-          : ShEx.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
+          ? ShExWebApp.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+          : ShExWebApp.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
     createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results
-    validator = new ShEx.Validator(
+    validator = new ShExWebApp.Validator(
       msg.data.schema,
       inputData,
       createOpts
     );
-    Mapper = MapModule.register(validator, ShEx);
-    // extensions.each(ext => ext.register(validator, ShEx);
+    Mapper = MapModule.register(validator, ShExWebApp);
+    // extensions.each(ext => ext.register(validator, ShExWebApp);
     self.postMessage({ response: "created", results: {timestamp: new Date()} });
     break;
 
@@ -68,12 +67,12 @@ try {
       const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
-        singletonMap[0].shape = ShEx.Validator.Start;
+        singletonMap[0].shape = ShExWebApp.Validator.Start;
       time = new Date();
       const newResults = validator.validateShapeMap(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
       time = new Date() - time;
       newResults.forEach(function (res) {
-        if (res.shape === ShEx.Validator.Start)
+        if (res.shape === ShExWebApp.Validator.Start)
           res.shape = START_SHAPE_INDEX_ENTRY;
       });
       // Merge into results.
@@ -96,13 +95,13 @@ try {
 
   case "materialize":
     const materializeMap = msg.data.queryMap;
-    const outputSchema = ShEx.Util.ShExJtoAS(msg.data.outputSchema);
+    const outputSchema = ShExWebApp.Util.ShExJtoAS(msg.data.outputSchema);
     const materializer = MapModule.materializer.construct(outputSchema, Mapper, {});
     for (let currentEntry = 0; currentEntry < materializeMap.length; ) {
       const singletonMap = [materializeMap[currentEntry++]]; // ShapeMap with single entry.
       try {
         const binder = Mapper.binder(msg.data.resultBindings);
-        const resM = materializer.validate(binder, ShEx.StringToRdfJs.n3idTerm2RdfJs(singletonMap[0].node), singletonMap[0].shape);
+        const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(singletonMap[0].node), singletonMap[0].shape);
         if ("errors" in resM) {
           self.postMessage(Object.assign({ response: "error", results: resM }, singletonMap[0]));
         } else {

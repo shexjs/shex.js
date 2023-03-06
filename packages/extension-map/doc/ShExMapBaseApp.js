@@ -77,6 +77,11 @@ class ShExMapBaseApp extends ShExBaseApp {
     ]);
   }
 
+  prepareControls () {
+    super.prepareControls();
+    $("#materialize").on("click", evt => this.materialize(evt));
+  }
+
   bindingsToTable () {
     let d = JSON.parse($("#bindings1 textarea").val())
     let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")

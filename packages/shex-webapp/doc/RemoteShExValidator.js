@@ -66,7 +66,7 @@ class RemoteShExValidator {
     const transportMap = fixedMap.map(function (ent) {
       return {
         node: ent.node,
-        shape: ent.shape === ShEx.Validator.Start ?
+        shape: ent.shape === ShExWebApp.Validator.Start ?
           START_SHAPE_INDEX_ENTRY :
           ent.shape
       };
@@ -109,7 +109,7 @@ class RemoteShExValidator {
         [].push.apply(results, msg.data.results)
         msg.data.results.forEach(function (res) {
           if (res.shape === START_SHAPE_INDEX_ENTRY)
-            res.shape = ShEx.Validator.Start;
+            res.shape = ShExWebApp.Validator.Start;
         });
         msg.data.results.forEach(renderEntry);
         // resultsMap.merge(msg.data.results);

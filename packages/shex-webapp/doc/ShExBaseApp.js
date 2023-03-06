@@ -72,13 +72,13 @@ class SchemaCache extends InterfaceCache {
     this.shexcParser = shexcParser;
     this.turtleParser = turtleParser;
     this.meta.termToLex = function (trm, aForTypes = true) {
-      return trm === ShEx.Validator.Start
+      return trm === ShExWebApp.Validator.Start
         ? START_SHAPE_LABEL
-        : ShEx.ShExTerm.shExJsTerm2Turtle(trm, this, true);
+        : ShExWebApp.ShExTerm.shExJsTerm2Turtle(trm, this, true);
     };
     this.meta.lexToTerm = function (lex) {
       return lex === START_SHAPE_LABEL
-        ? ShEx.Validator.Start
+        ? ShExWebApp.Validator.Start
         : turtleParser.termToLd(lex, new IRIResolver(this));
     };
     this.graph = null;
@@ -96,7 +96,7 @@ class SchemaCache extends InterfaceCache {
       "ShExC";
     $("#results .status").text("parsing "+this.language+" schema...").show();
     const schema =
-          isJSON ? ShEx.Util.ShExJtoAS(JSON.parse(text)) :
+          isJSON ? ShExWebApp.Util.ShExJtoAS(JSON.parse(text)) :
           isDCTAP ? await parseDcTap(text) :
           this.graph ? parseShExR() :
           this.shexcParser.parseString(text, this.meta, base);
@@ -105,7 +105,7 @@ class SchemaCache extends InterfaceCache {
     return schema;
 
     async function parseDcTap (text) {
-      const dctap = new ShEx.DcTap();
+      const dctap = new ShExWebApp.DcTap();
       return await new Promise((resolve, reject) => {
         $.csv.toArrays(text, {}, (err, data) => {
           if (err) reject(err)
@@ -116,14 +116,14 @@ class SchemaCache extends InterfaceCache {
     }
 
     function parseShExR () {
-      const graphParser = new ShEx.Validator(
+      const graphParser = new ShExWebApp.Validator(
         this.shexcParser.parseString(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
-        ShEx.RdfJsDb(this.graph),
+        ShExWebApp.RdfJsDb(this.graph),
         {}
       );
-      const schemaRoot = this.graph.getQuads(null, ShEx.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      const val = graphParser.validateNodeShapePair(schemaRoot, ShEx.Validator.Start); // start shape
-      return ShEx.Util.ShExJtoAS(ShEx.Util.ShExRtoShExJ(ShEx.Util.valuesToSchema(ShEx.Util.valToValues(val))));
+      const schemaRoot = this.graph.getQuads(null, ShExWebApp.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
+      const val = graphParser.validateNodeShapePair(schemaRoot, ShExWebApp.Validator.Start); // start shape
+      return ShExWebApp.Util.ShExJtoAS(ShExWebApp.Util.ShExRtoShExJ(ShExWebApp.Util.valuesToSchema(ShExWebApp.Util.valToValues(val))));
     }
   }
 
@@ -152,12 +152,12 @@ class TurtleCache extends InterfaceCache {
   constructor (selection, turtleParser) {
     super(selection);
     this.turtleParser = turtleParser;
-    this.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTerm2Turtle(trm, this); };
+    this.meta.termToLex = function (trm) { return  ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this); };
     this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
   }
 
   async parse (text, base) {
-    const res = ShEx.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
+    const res = ShExWebApp.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
     markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   }
@@ -558,7 +558,7 @@ return module.exports;
 class ShapeMapCache extends InterfaceCache {
   constructor (selection, turtleParser) {
     super(selection);
-    this.meta.termToLex = function (trm) { return  ShEx.ShExTerm.rdfJsTerm2Turtle(trm, this); };
+    this.meta.termToLex = function (trm) { return  ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this); };
     this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
   }
 
@@ -577,13 +577,13 @@ class ShapeMapCache extends InterfaceCache {
 class ShExCParser {
   constructor () {
     this.shexParserOptions = {index: true, duplicateShape: "abort"};
-    this.shexParser = ShEx.Parser.construct(DefaultBase, null, this.shexParserOptions);
+    this.shexParser = ShExWebApp.Parser.construct(DefaultBase, null, this.shexParserOptions);
   }
   parseString (text, meta, base) {
     this.shexParserOptions.duplicateShape = $("#duplicateShape").val();
     this.shexParser._setBase(base);
     const ret = this.shexParser.parse(text);
-    // ret = ShEx.Util.canonicalize(ret, DefaultBase);
+    // ret = ShExWebApp.Util.canonicalize(ret, DefaultBase);
     meta.base = ret._base; // base set above.
     meta.prefixes = ret._prefixes || {}; // @@ revisit after separating shexj from meta and indexes
     return ret;
@@ -642,12 +642,12 @@ class TurtleParser {
 
 class DirectShExValidator {
   constructor (loaded, _schemaURL, inputData) {
-    this.validator = new ShEx.Validator(
+    this.validator = new ShExWebApp.Validator(
       loaded.schema,
       inputData,
-      {results: "api", regexModule: ShEx[$("#regexpEngine").val()]});
+      {results: "api", regexModule: ShExWebApp[$("#regexpEngine").val()]});
     $(".extensionControl:checked").each(function () {
-      $(this).data("code").register(validator, ShEx);
+      $(this).data("code").register(validator, ShExWebApp);
     });
   }
   static factory (loaded, schemaURL, inputData) {
@@ -695,6 +695,124 @@ class ShExBaseApp {
   }
 
   // abstract usingValidator (_validator) { } // overriden for ShExMap
+
+  /**
+   * set up UI buttons handlers
+   */
+  prepareControls () {
+    $("#menu-button").on("click", toggleControls);
+    $("#interface").on("change", setInterface);
+    $("#success").on("change", setInterface);
+    $("#regexpEngine").on("change", toggleControls);
+    $("#validate").on("click", disableResultsAndValidate);
+    $("#clear").on("click", clearAll);
+    $("#download-results-button").on("click", downloadResults);
+
+    $("#loadForm").dialog({
+      autoOpen: false,
+      modal: true,
+      buttons: {
+        "GET": function (evt, ui) {
+          results.clear();
+          const target = App.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
+          const url = $("#loadInput").val();
+          const tips = $(".validateTips");
+          function updateTips (t) {
+            tips
+              .text( t )
+              .addClass( "ui-state-highlight" );
+            setTimeout(function() {
+              tips.removeClass( "ui-state-highlight", 1500 );
+            }, 500 );
+          }
+          if (url.length < 5) {
+            $("#loadInput").addClass("ui-state-error");
+            updateTips("URL \"" + url + "\" is way too short.");
+            return;
+          }
+          tips.removeClass("ui-state-highlight").text();
+          SharedForTests.promise = target.cache.asyncGet(url).catch(function (e) {
+            updateTips(e.message);
+          });
+        },
+        "Cancel": function() {
+          $("#loadInput").removeClass("ui-state-error");
+          $("#loadForm").dialog("close");
+          toggleControls();
+        }
+      },
+      close: function() {
+        $("#loadInput").removeClass("ui-state-error");
+        $("#loadForm").dialog("close");
+        toggleControls();
+      }
+    });
+    App.Getables.forEach(target => {
+      const type = target.queryStringParm
+      $("#load-"+type+"-button").click(evt => {
+        const prefillURL = target.url ? target.url :
+              target.cache.meta.base && target.cache.meta.base !== DefaultBase ? target.cache.meta.base :
+              "";
+        $("#loadInput").val(prefillURL);
+        $("#loadForm").attr("class", type).find("span.whatToLoad").text(type);
+        $("#loadForm").dialog("open");
+      });
+    });
+
+    $("#about").dialog({
+      autoOpen: false,
+      modal: true,
+      width: "50%",
+      buttons: {
+        "Dismiss": dismissModal
+      },
+      close: dismissModal
+    });
+
+    $("#about-button").click(evt => {
+      $("#about").dialog("open");
+    });
+
+    $("#shapeMap-tabs").tabs({
+      activate: async function (event, ui) {
+        if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
+          await copyEditMapToTextMap();
+        else if (ui.oldPanel.get(0) === $("#textMap").get(0))
+          await copyTextMapToEditMap()
+      }
+    });
+    $("#textMap").on("change", evt => {
+      results.clear();
+      SharedForTests.promise = copyTextMapToEditMap();
+    });
+    App.Caches.inputData.selection.on("change", dataInputHandler); // input + paste?
+    // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
+
+    function dismissModal (evt) {
+      // $.unblockUI();
+      $("#about").dialog("close");
+      toggleControls();
+      return true;
+    }
+
+    // Prepare file uploads
+    $("input.inputfile").each((idx, elt) => {
+      $(elt).on("change", function (evt) {
+        const reader = new FileReader();
+
+        reader.onload = function(evt) {
+          if(evt.target.readyState != 2) return;
+          if(evt.target.error) {
+            alert("Error while reading file");
+            return;
+          }
+          $($(elt).attr("data-target")).val(evt.target.result);
+        };
+
+        reader.readAsText(evt.target.files[0]);
+      });
+    });
+  }
 
   /**
    * Load URL search parameters

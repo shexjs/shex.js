@@ -1,25 +1,23 @@
+const RdfJs = N3js;
+const DefaultBase = location.origin + location.pathname;
+const App = new ShExSimpleApp(DefaultBase);
+const ValidatorClass = RemoteShExValidator;
+const USE_INCREMENTAL_RESULTS = true;
+
 // shex-simple - Simple ShEx2 validator for HTML.
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
-const ShEx = ShExWebApp; // @@ rename globally
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
-const RdfJs = N3js;
-const ShExLoader = ShEx.Loader({
+const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
-ShEx.ShapeMap.Start = ShEx.Validator.Start
+ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start
 const START_SHAPE_LABEL = "START";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";
 const LOG_PROGRESS = false;
-
-const DefaultBase = location.origin + location.pathname;
-
-const App = new ShExSimpleApp(DefaultBase);
-const ValidatorClass = RemoteShExValidator;
-const USE_INCREMENTAL_RESULTS = true;
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
 
@@ -285,7 +283,7 @@ async function callValidator (done) {
           base: App.Caches.inputSchema.meta.base,
           prefixes: App.Caches.inputSchema.meta.prefixes
         }
-        new ShEx.Writer(opts).writeSchema(App.Caches.inputSchema.parsed, (error, text) => {
+        new ShExWebApp.Writer(opts).writeSchema(App.Caches.inputSchema.parsed, (error, text) => {
           if (error) {
             $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
             // res.addClass("error");
@@ -295,7 +293,7 @@ async function callValidator (done) {
         });
       } else {
         const pre = $("<pre/>");
-        pre.text(JSON.stringify(ShEx.Util.AStoShExJ(ShEx.Util.canonicalize(App.Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
+        pre.text(JSON.stringify(ShExWebApp.Util.AStoShExJ(ShExWebApp.Util.canonicalize(App.Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
         results.append(pre);
       }
       results.finish();
@@ -313,8 +311,8 @@ async function callValidator (done) {
   function makeConsoleTracker () {
     function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
     function sm (node, shape) {
-      if (typeof shape === "object" && "term" in shape && shape.term === ShEx.Validator.Start.term) {
-        shape = ShEx.Validator.Start;
+      if (typeof shape === "object" && "term" in shape && shape.term === ShExWebApp.Validator.Start.term) {
+        shape = ShExWebApp.Validator.Start;
       }
       return `${App.Caches.inputData.meta.termToLex(node)}@${App.Caches.inputSchema.meta.termToLex(shape)}`;
     }
@@ -333,7 +331,7 @@ async function callValidator (done) {
     const fails = entry.status === "nonconformant";
 
     // locate FixedMap entry
-    const shapeString = entry.shape === ShEx.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
+    const shapeString = entry.shape === ShExWebApp.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
     const fixedMapEntry = $("#fixedMap .pair"+
                           "[data-node='"+entry.node+"']"+
                           "[data-shape='"+shapeString+"']");
@@ -345,7 +343,7 @@ async function callValidator (done) {
     if (!fails) {
       if ($("#success").val() === "query" || $("#success").val() === "remainder") {
         const proofStore = new RdfJs.Store();
-        ShEx.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
+        ShExWebApp.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
         entry.graph = proofStore.getQuads();
       }
       if ($("#success").val() === "remainder") {
@@ -379,12 +377,12 @@ async function callValidator (done) {
             `${ldToTurtle(entry.node, App.Caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${App.Caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
-          elt.append($("<pre>").text(ShEx.Util.errsToSimple(entry.appinfo).join("\n")));
+          elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n")));
         break;
 
       case "minimal":
         if (fails)
-          entry.reason = ShEx.Util.errsToSimple(entry.appinfo).join("\n");
+          entry.reason = ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n");
         renderMe = Object.keys(entry).reduce((acc, key) => {
           if (key !== "appinfo")
             acc[key] = entry[key];
@@ -419,10 +417,10 @@ async function callValidator (done) {
       $("#results .status").hide();
       // for debugging values and schema formats:
       // try {
-      //   const x = ShEx.Util.valToValues(ret);
-      //   // const x = ShEx.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
+      //   const x = ShExWebApp.Util.valToValues(ret);
+      //   // const x = ShExWebApp.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
       //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   const y = ShEx.Util.valuesToSchema(x);
+      //   const y = ShExWebApp.Util.valuesToSchema(x);
       //   res = results.append(JSON.stringify(y, null, "  "));
       // } catch (e) {
       //   console.dir(e);
@@ -531,9 +529,9 @@ function addEditMapPairs (pairs, target) {
   function renderTP (tp) {
     const ret = ["subject", "predicate", "object"].map(k => {
       const ld = tp[k];
-      if (ld === ShEx.ShapeMap.Focus)
+      if (ld === ShExWebApp.ShapeMap.Focus)
         return "FOCUS";
-      if (!ld) // ?? ShEx.Uti.any
+      if (!ld) // ?? ShExWebApp.Uti.any
         return "_";
       return ldToTurtle(ld, App.Caches.inputData.meta.termToLex);
     });
@@ -541,7 +539,7 @@ function addEditMapPairs (pairs, target) {
   }
 
   function startOrLdToTurtle (term) {
-    return term === ShEx.Validator.Start ? START_SHAPE_LABEL : ShEx.ShExTerm.shExJsTerm2Turtle(term, App.Caches.inputSchema.meta);
+    return term === ShExWebApp.Validator.Start ? START_SHAPE_LABEL : ShExWebApp.ShExTerm.shExJsTerm2Turtle(term, App.Caches.inputSchema.meta);
   }
 }
 
@@ -555,121 +553,6 @@ function removeEditMapPair (evt) {
   if ($("#editMap .removePair").length === 1)
     $("#editMap .removePair").css("visibility", "hidden");
   return false;
-}
-
-function prepareControls () {
-  $("#menu-button").on("click", toggleControls);
-  $("#interface").on("change", setInterface);
-  $("#success").on("change", setInterface);
-  $("#regexpEngine").on("change", toggleControls);
-  $("#validate").on("click", disableResultsAndValidate);
-  $("#clear").on("click", clearAll);
-  $("#download-results-button").on("click", downloadResults);
-
-  $("#loadForm").dialog({
-    autoOpen: false,
-    modal: true,
-    buttons: {
-      "GET": function (evt, ui) {
-        results.clear();
-        const target = App.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
-        const url = $("#loadInput").val();
-        const tips = $(".validateTips");
-        function updateTips (t) {
-          tips
-            .text( t )
-            .addClass( "ui-state-highlight" );
-          setTimeout(function() {
-            tips.removeClass( "ui-state-highlight", 1500 );
-          }, 500 );
-        }
-        if (url.length < 5) {
-          $("#loadInput").addClass("ui-state-error");
-          updateTips("URL \"" + url + "\" is way too short.");
-          return;
-        }
-        tips.removeClass("ui-state-highlight").text();
-        SharedForTests.promise = target.cache.asyncGet(url).catch(function (e) {
-          updateTips(e.message);
-        });
-      },
-      "Cancel": function() {
-        $("#loadInput").removeClass("ui-state-error");
-        $("#loadForm").dialog("close");
-        toggleControls();
-      }
-    },
-    close: function() {
-      $("#loadInput").removeClass("ui-state-error");
-      $("#loadForm").dialog("close");
-      toggleControls();
-    }
-  });
-  App.Getables.forEach(target => {
-    const type = target.queryStringParm
-    $("#load-"+type+"-button").click(evt => {
-      const prefillURL = target.url ? target.url :
-          target.cache.meta.base && target.cache.meta.base !== DefaultBase ? target.cache.meta.base :
-          "";
-      $("#loadInput").val(prefillURL);
-      $("#loadForm").attr("class", type).find("span.whatToLoad").text(type);
-      $("#loadForm").dialog("open");
-    });
-  });
-
-  $("#about").dialog({
-    autoOpen: false,
-    modal: true,
-    width: "50%",
-    buttons: {
-      "Dismiss": dismissModal
-    },
-    close: dismissModal
-  });
-
-  $("#about-button").click(evt => {
-    $("#about").dialog("open");
-  });
-
-  $("#shapeMap-tabs").tabs({
-    activate: async function (event, ui) {
-      if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
-        await copyEditMapToTextMap();
-      else if (ui.oldPanel.get(0) === $("#textMap").get(0))
-        await copyTextMapToEditMap()
-    }
-  });
-  $("#textMap").on("change", evt => {
-    results.clear();
-    SharedForTests.promise = copyTextMapToEditMap();
-  });
-  App.Caches.inputData.selection.on("change", dataInputHandler); // input + paste?
-  // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
-
-  function dismissModal (evt) {
-    // $.unblockUI();
-    $("#about").dialog("close");
-    toggleControls();
-    return true;
-  }
-
-  // Prepare file uploads
-  $("input.inputfile").each((idx, elt) => {
-    $(elt).on("change", function (evt) {
-      const reader = new FileReader();
-
-      reader.onload = function(evt) {
-        if(evt.target.readyState != 2) return;
-        if(evt.target.error) {
-          alert("Error while reading file");
-          return;
-        }
-        $($(elt).attr("data-target")).val(evt.target.result);
-      };
-
-      reader.readAsText(evt.target.files[0]);
-    });
-  });
 }
 
 async function dataInputHandler (evt) {
@@ -787,7 +670,7 @@ async function copyEditMapToFixedMap () {
     const status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "nonconformant" : "conformant";
     if (!node || !shape)
       return acc;
-    const smparser = ShEx.ShapeMapParser.construct(
+    const smparser = ShExWebApp.ShapeMapParser.construct(
       App.Caches.shapeMap.meta.base, App.Caches.inputSchema.meta, App.Caches.inputData.meta);
     try {
       const sm = smparser.parse(node + '@' + shape)[0];
@@ -814,7 +697,7 @@ async function copyEditMapToFixedMap () {
     pair.nodes.forEach(node => {
       const nodeTerm = App.Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
       let shapeTerm = App.Caches.inputSchema.meta.lexToTerm(pair.shape);
-      if (shapeTerm === ShEx.Validator.Start)
+      if (shapeTerm === ShExWebApp.Validator.Start)
         shapeTerm = START_SHAPE_INDEX_ENTRY;
       const key = nodeTerm + "|" + shapeTerm;
       if (key in acc)
@@ -834,12 +717,12 @@ async function copyEditMapToFixedMap () {
   return []; // no errors
 
   async function getQuads (s, p, o) {
-    const get = s === ShEx.ShapeMap.Focus ? "subject" : "object";
+    const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
     return (await App.Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
       return App.Caches.inputData.meta.termToLex(t[get]); // count on unpublished N3.js id API
     });
     function mine (term) {
-      return term === ShEx.ShapeMap.Focus || term === ShEx.ShapeMap.Wildcard
+      return term === ShExWebApp.ShapeMap.Focus || term === ShExWebApp.ShapeMap.Wildcard
         ? null
         : term;
     }
@@ -928,7 +811,7 @@ async function copyTextMapToEditMap () {
   try {
     await App.Caches.inputSchema.refresh();
     await App.Caches.inputData.refresh();
-    const smparser = ShEx.ShapeMapParser.construct(
+    const smparser = ShExWebApp.ShapeMapParser.construct(
       App.Caches.shapeMap.meta.base, App.Caches.inputSchema.meta, App.Caches.inputData.meta);
     const sm = smparser.parse(shapeMap);
     removeEditMapPair(null);
@@ -1294,7 +1177,7 @@ function addContextMenus (inputSelector, cache) {
       function tpToM (tp) {
         return [nodeLex, '{', lex(tp.subject), " ", lex(tp.predicate), " ", lex(tp.object), "", "}", ""];
         function lex (node) {
-          return node === ShEx.ShapeMap.Focus
+          return node === ShExWebApp.ShapeMap.Focus
             ? "FOCUS"
             : node === null
             ? "_"
@@ -1357,7 +1240,7 @@ function addContextMenus (inputSelector, cache) {
   }
 }
 
-prepareControls();
+App.prepareControls();
 const dndPromise = prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
 const loads = App.loadSearchParameters();
 const ready = Promise.all([ dndPromise, loads ]);

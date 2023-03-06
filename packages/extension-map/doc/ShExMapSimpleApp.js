@@ -1,6 +1,6 @@
 class ShExMapSimpleApp extends ShExMapBaseApp {
   usingValidator (validator) {
-    this.Mapper = MapModule.register(validator.validator, ShEx);
+    this.Mapper = MapModule.register(validator.validator, ShExWebApp);
   }
   async materialize () {
     SharedForTests.promise = this.materializeAsync();
@@ -50,7 +50,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       outputShapeMap.forEach(pair => {
         try {
           const materializer = MapModule.materializer.construct(outputSchema, this.Mapper, {});
-          const resM = materializer.validate(binder, ShEx.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
+          const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
           if ("errors" in resM) {
             renderEntry( {
               node: pair.node,
@@ -63,8 +63,8 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
             // $("#results .status").text("synthesis errors:").show();
             // failMessage(e, currentAction);
           } else {
-            // console.log("g:", ShEx.Util.valToTurtle(resM));
-            generatedGraph.addQuads(ShEx.Util.valToN3js(resM, RdfJs.DataFactory));
+            // console.log("g:", ShExWebApp.Util.valToTurtle(resM));
+            generatedGraph.addQuads(ShExWebApp.Util.valToN3js(resM, RdfJs.DataFactory));
           }
         } catch (e) {
           console.dir(e);
@@ -81,7 +81,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       outputShapeMap.forEach(pair => {
         const {node, shape} = pair;
         try {
-          const nestedWriter = new ShEx.NestedTurtleWriter.Writer(null, {
+          const nestedWriter = new ShExWebApp.NestedTurtleWriter.Writer(null, {
             // lists: {}, -- lists will require some thinking
             format: 'text/turtle',
             // baseIRI: resource.base,
@@ -92,10 +92,10 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
             checkCorefs: n => false,
             // debug: true,
           });
-          const db = ShEx.RdfJsDb(generatedGraph, null); // no query tracker needed
-          const validator = new ShEx.Validator(outputSchema, db, {
+          const db = ShExWebApp.RdfJsDb(generatedGraph, null); // no query tracker needed
+          const validator = new ShExWebApp.Validator(outputSchema, db, {
             results: "api",
-            regexModule: ShEx["eval-simple-1err"],
+            regexModule: ShExWebApp["eval-simple-1err"],
           });
           const res = validator.validateShapeMap([{node, shape}])[0].appinfo;
           if (!("solution" in res))
@@ -110,11 +110,11 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
               }
             }
           }
-          ShEx.Util.getProofGraph(res, matchedDb, RdfJs.DataFactory);
+          ShExWebApp.Util.getProofGraph(res, matchedDb, RdfJs.DataFactory);
           const rest = new RdfJs.Store();
           rest.addQuads(generatedGraph.getQuads()); // the resource giveth
           matched.forEach(q => rest.removeQuad(q)); // the matched taketh away
-          nestedWriter.addQuads(matched.filter(q => ([ShEx.Util.RDF.first, ShEx.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
+          nestedWriter.addQuads(matched.filter(q => ([ShExWebApp.Util.RDF.first, ShExWebApp.Util.RDF.rest]).indexOf(q.predicate.value) === -1));
           if (rest.size > 0) {
             nestedWriter.comment("\n# Triples not in the schema:");
             nestedWriter.addQuads(rest.getQuads())

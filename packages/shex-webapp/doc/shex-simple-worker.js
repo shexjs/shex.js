@@ -27,7 +27,6 @@ importScripts("../shex-webapp.js");
 importScripts("./WorkerMarshalling.js");
 // importScripts('promise-worker/register.js');
 
-const ShEx = ShExWebApp; // @@ rename globally
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 let validator = null;
 self.onmessage = async function (msg) {
@@ -39,18 +38,18 @@ try {
   case "create":
     errorText = "creating validator";
     const inputData = "endpoint" in msg.data
-          ? ShEx.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
-          : ShEx.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
+          ? ShExWebApp.SparqlDb(msg.data.endpoint, msg.data.slurp ? queryTracker() : null)
+          : ShExWebApp.RdfJsDb(makeStaticDB(msg.data.data.map(t => WorkerMarshalling.jsonTripleToRdfjsTriple(t, N3js.DataFactory))));
 
     let createOpts = msg.data.options;
     createOpts.regexModule = ShExWebApp[createOpts.regexModule || "nfax-val-1err"];
     createOpts = Object.create({ results: "api" }, createOpts); // default to API results
-    validator = new ShEx.Validator(
+    validator = new ShExWebApp.Validator(
       msg.data.schema,
       inputData,
       createOpts
     );
-    // extensions.each(ext => ext.register(validator, ShEx);
+    // extensions.each(ext => ext.register(validator, ShExWebApp);
     self.postMessage({ response: "created", results: {timestamp: new Date()} });
     break;
 
@@ -62,12 +61,12 @@ try {
       const singletonMap = [queryMap[currentEntry++]]; // ShapeMap with single entry.
       errorText = "validating " + JSON.stringify(singletonMap[0], null, 2);
       if (singletonMap[0].shape === START_SHAPE_INDEX_ENTRY)
-        singletonMap[0].shape = ShEx.Validator.Start;
+        singletonMap[0].shape = ShExWebApp.Validator.Start;
       time = new Date();
       const newResults = validator.validateShapeMap(singletonMap, options.track ? makeRelayTracker() : undefined); // undefined to trigger default parameter assignment
       time = new Date() - time;
       newResults.forEach(function (res) {
-        if (res.shape === ShEx.Validator.Start)
+        if (res.shape === ShExWebApp.Validator.Start)
           res.shape = START_SHAPE_INDEX_ENTRY;
       });
       // Merge into results.
