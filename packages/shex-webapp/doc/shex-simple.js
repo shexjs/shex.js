@@ -166,13 +166,6 @@ function hasFocusNode () {
   });
 }
 
-function reportValidationError (validationError, currentAction) {
-  $("#results .status").text("validation errors:").show();
-  failMessage(validationError, currentAction);
-  console.error(validationError); // dump details to console.
-  return { validationError };
-}
-
   function finishRendering (done) {
           $("#results .status").text("rendering results...").show();
           // Add commas to JSON results.
@@ -195,17 +188,6 @@ function reportValidationError (validationError, currentAction) {
       // }
       results.finish();
   }
-
-function failMessage (e, action, text) {
-  $("#results .status").empty().text("Errors encountered:").show()
-  const div = $("<div/>").addClass("error");
-  div.append($("<h3/>").text("error " + action + ":\n"));
-  div.append($("<pre/>").text(e.message));
-  if (text)
-    div.append($("<pre/>").text(text));
-  results.append(div);
-  LastFailTime = new Date().getTime();
-}
 
 function addEmptyEditMapPair (evt) {
   addEditMapPairs(null, $(evt.target).parent().parent());

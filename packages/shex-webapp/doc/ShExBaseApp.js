@@ -1,3 +1,15 @@
+
+function failMessage (e, action, text) {
+  $("#results .status").empty().text("Errors encountered:").show()
+  const div = $("<div/>").addClass("error");
+  div.append($("<h3/>").text("error " + action + ":\n"));
+  div.append($("<pre/>").text(e.message));
+  if (text)
+    div.append($("<pre/>").text(text));
+  results.append(div);
+  LastFailTime = new Date().getTime();
+}
+
 class InterfaceCache {
   // caches for textarea parsers
   constructor (selection) {
@@ -1020,9 +1032,9 @@ class ShExBaseApp {
 
           // invoke can throw an asynchronous error. Using .catch instead of await so callValidator is usefully async.
           return validator.invoke(fixedMap, validationTracker, time, done, currentAction)
-            .catch(e => reportValidationError(e, currentAction));
+            .catch(e => this.reportValidationError(e, currentAction));
         } catch (e) {
-          return reportValidationError(e, currentAction);
+          return this.reportValidationError(e, currentAction);
         }
       } else {
         const outputLanguage = App.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
@@ -1066,6 +1078,13 @@ class ShExBaseApp {
       console.error(e); // dump details to console.
       return { inputError: e };
     }
+  }
+
+  reportValidationError (validationError, currentAction) {
+    $("#results .status").text("validation errors:").show();
+    failMessage(validationError, currentAction);
+    console.error(validationError); // dump details to console.
+    return { validationError };
   }
 
   makeConsoleTracker () {
