@@ -352,7 +352,42 @@ class ManifestCache extends InterfaceCache {
       return acc;
     }, {});
     const nestingAsList = Object.keys(nesting).map(e => nesting[e]);
-    await paintManifest("#inputSchema .manifest ul", nestingAsList, this.pickSchema.bind(this), listItems, "inputSchema");
+    await this.paintManifest("#inputSchema .manifest ul", nestingAsList, this.pickSchema.bind(this), listItems, "inputSchema");
+  }
+
+
+  // controls for manifest buttons
+  async paintManifest (selector, list, func, listItems, side) {
+    $(selector).empty();
+    await Promise.all(list.map(async entry => {
+      // build button disabled and with leading "..." to indicate that it's being loaded
+      const button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
+      const li = $("<li/>").append(button);
+      $(selector).append(li);
+      if (entry.text === undefined) {
+        entry.text = await fetchOK(entry.url).catch(responseOrError => {
+          // leave a message in the schema or data block
+          return "# " + renderErrorMessage(
+            responseOrError instanceof Error
+              ? { url: entry.url, status: -1, statusText: responseOrError.message }
+            : responseOrError,
+            side);
+        })
+        textLoaded();
+      } else {
+        textLoaded();
+      }
+
+      function textLoaded () {
+        li.on("click", async () => {
+          SharedForTests.promise = func(entry.name, entry, li, listItems, side);
+        });
+        listItems[side][sum(entry.text)] = li;
+        // enable and get rid of the "..." in the label now that it's loaded
+        button.text(entry.label).removeAttr("disabled");
+      }
+    }))
+    setTextAreaHandlers(listItems);
   }
 
   makeDataEntry (dataLabel, idx, elt, base) {
@@ -382,7 +417,7 @@ class ManifestCache extends InterfaceCache {
         if (key in schemaTest) {
           $("#inputData ." + key + "").show();
           $("#inputData ." + key + " p:first").text(headings[key]);
-          await paintManifest("#inputData ." + key + " ul", schemaTest[key], this.pickData.bind(this), listItems, "inputData");
+          await this.paintManifest("#inputData ." + key + " ul", schemaTest[key], this.pickData.bind(this), listItems, "inputData");
         } else {
           $("#inputData ." + key + " ul").empty();
         }
@@ -667,6 +702,9 @@ class DirectShExValidator {
   }
 }
 
+const ShExLoader = ShExWebApp.Loader({
+  fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
+})
 class ShExBaseApp {
   constructor (base, validatorClass) {
     this.base = base;

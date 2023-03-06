@@ -366,15 +366,7 @@ ul {
       <h2 class="status"> </h2>
       <div></div>
     </div>
-    <script src="./iri.js"></script>
-    <script src="./ShExBaseApp.js"></script>
-    <script src="./ShExSimpleApp.js"></script>
-    <script>
-      if (!("captureStackTrace" in Error)) {
-        Error.captureStackTrace = function () { };
-      }
-    </script>
-    <script src="webpacks/n3js.js"></script><script>jQuery = $</script>
+    <script src="webpacks/n3js.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.js"></script>
 
     <!-- #if USING_WEBPACK -->
@@ -409,6 +401,15 @@ ul {
 
     <!-- #endif -->
 
+    <script>
+      const RdfJs = N3js;
+      if (!("captureStackTrace" in Error)) {
+        Error.captureStackTrace = function () { };
+      }
+    </script>
+    <script src="./iri.js"></script>
+    <script src="./ShExBaseApp.js"></script>
+    <script src="./ShExSimpleApp.js"></script>
     <script src="../doc/ShExRSchema.js"></script>
     <script src="shex-simple.js"></script>
   </body>

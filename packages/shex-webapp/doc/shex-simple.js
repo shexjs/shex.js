@@ -1,4 +1,3 @@
-const RdfJs = N3js;
 const DefaultBase = location.origin + location.pathname;
 const App = new ShExSimpleApp(DefaultBase, DirectShExValidator);
 
@@ -6,14 +5,12 @@ const App = new ShExSimpleApp(DefaultBase, DirectShExValidator);
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
-const ShExLoader = ShExWebApp.Loader({
-  fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
-})
 ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start
 const START_SHAPE_LABEL = "START";
-const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";
+
+const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const LOG_PROGRESS = false;
 
 const SharedForTests = {Caches: App.Caches, /*DefaultBase*/} // an object to share state with a test harness
@@ -43,58 +40,24 @@ function sum (s) { // cheap way to identify identical strings
   },0);
 }
 
-        function ldToTurtle (ld, termToLex) {
-          return typeof ld === "object"
-            ? lit(ld)
-            : termToLex(
-              ld.startsWith("_:")
-                ? RdfJs.DataFactory.blankNode(ld.substr(2))
-                : RdfJs.DataFactory.namedNode(ld)
-            );
-          function lit (o) {
-            let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
-              return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
-            }) +"\"";
-            if ("@type" in o)
-              ret += "^^<" + o["@type"] + ">";
-            if ("@language" in o)
-              ret += "@" + o["@language"];
-            return ret;
-          }
-        }
-
-// controls for manifest buttons
-async function paintManifest (selector, list, func, listItems, side) {
-  $(selector).empty();
-  await Promise.all(list.map(async entry => {
-    // build button disabled and with leading "..." to indicate that it's being loaded
-    const button = $("<button/>").text("..." + entry.label.substr(3)).attr("disabled", "disabled");
-    const li = $("<li/>").append(button);
-    $(selector).append(li);
-    if (entry.text === undefined) {
-      entry.text = await fetchOK(entry.url).catch(responseOrError => {
-        // leave a message in the schema or data block
-        return "# " + renderErrorMessage(
-          responseOrError instanceof Error
-            ? { url: entry.url, status: -1, statusText: responseOrError.message }
-          : responseOrError,
-          side);
-      })
-      textLoaded();
-    } else {
-      textLoaded();
-    }
-
-    function textLoaded () {
-      li.on("click", async () => {
-        SharedForTests.promise = func(entry.name, entry, li, listItems, side);
-      });
-      listItems[side][sum(entry.text)] = li;
-      // enable and get rid of the "..." in the label now that it's loaded
-      button.text(entry.label).removeAttr("disabled");
-    }
-  }))
-  setTextAreaHandlers(listItems);
+function ldToTurtle (ld, termToLex) {
+  return typeof ld === "object"
+    ? lit(ld)
+    : termToLex(
+      ld.startsWith("_:")
+        ? RdfJs.DataFactory.blankNode(ld.substr(2))
+        : RdfJs.DataFactory.namedNode(ld)
+    );
+  function lit (o) {
+    let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
+      return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
+    }) +"\"";
+    if ("@type" in o)
+      ret += "^^<" + o["@type"] + ">";
+    if ("@language" in o)
+      ret += "@" + o["@language"];
+    return ret;
+  }
 }
 
 function fetchOK (url) {

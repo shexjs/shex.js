@@ -394,18 +394,6 @@ ul {
       <h2 class="status"> </h2>
       <div></div>
     </div>
-    <script src="../../shex-webapp/doc/iri.js"></script>
-    <script src="../../shex-webapp/doc/ShExBaseApp.js"></script>
-    <script src="../../shex-webapp/doc/ShExSimpleApp.js"></script>
-    <script src="./ShExMapBaseApp.js"></script>
-    <script src="./ShExMapWorkerApp.js"></script>
-    <script src="../../shex-webapp/doc/RemoteShExValidator.js"></script>
-    <script src="../../shex-webapp/doc/WorkerMarshalling.js"></script>
-    <script>
-      if (!("captureStackTrace" in Error)) {
-        Error.captureStackTrace = function () { };
-      }
-    </script>
     <script src="../../shex-webapp/doc/webpacks/n3js.js"></script>
 
     <!-- #if USING_WEBPACK -->
@@ -448,6 +436,19 @@ ul {
 
     <!-- #endif -->
 
+    <script>
+      const RdfJs = N3js;
+      if (!("captureStackTrace" in Error)) {
+        Error.captureStackTrace = function () { };
+      }
+    </script>
+    <script src="../../shex-webapp/doc/iri.js"></script>
+    <script src="../../shex-webapp/doc/ShExBaseApp.js"></script>
+    <script src="../../shex-webapp/doc/ShExSimpleApp.js"></script>
+    <script src="./ShExMapBaseApp.js"></script>
+    <script src="./ShExMapWorkerApp.js"></script>
+    <script src="../../shex-webapp/doc/RemoteShExValidator.js"></script>
+    <script src="../../shex-webapp/doc/WorkerMarshalling.js"></script>
     <script src="../../shex-webapp/doc/ShExRSchema.js"></script>
     <script src="shexmap-worker.js"></script>
   </body>
