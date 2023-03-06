@@ -58,6 +58,78 @@ class ShExMapBaseApp extends ShExBaseApp {
     ];
     Array.prototype.push.apply(this.Getables, parameters);
     Array.prototype.push.apply(this.QueryParams, parameters);
+    Array.prototype.push.apply(this.keyDownHandlers, [
+      (e, code) => {
+        if (!e.ctrlKey || e.key !== "\\") return false;
+        $("#materialize").click();
+        return true;
+      },
+      (e, code) => {
+        if (!e.ctrlKey || e.key !== "[") return false;
+        this.bindingsToTable()
+        return true;
+      },
+      (e, code) => {
+        if (!e.ctrlKey || e.key !== "]") return false;
+        this.tableToBindings()
+        return true;
+      },
+    ]);
+  }
+
+  bindingsToTable () {
+    let d = JSON.parse($("#bindings1 textarea").val())
+    let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")
+    div.css("width", $("#bindings1 textarea").width()+10)
+    div.css("height", $("#bindings1 textarea").height()+12)
+    $("#bindings1 textarea").hide()
+    let thead = $("<thead/>")
+    let tbody = $("<tbody/>")
+    let table = $("<table>").append(thead, tbody)
+    $("#bindings1").append(div.append(table))
+
+    let vars = [];
+    function varsIn (a) {
+      return a.forEach(elt => {
+        if (Array.isArray(elt)) {
+          varsIn(elt)
+        } else {
+          let tr = $("<tr/>")
+          let cols = []
+          Object.keys(elt).forEach(k => {
+            if (vars.indexOf(k) === -1)
+              vars.push(k)
+            let i = vars.indexOf(k)
+            cols[i] = elt[k]
+          })
+          // tr.append(cols.map(c => $("<td/>").text(c)))
+          for (let colI = 0; colI < cols.length; ++colI)
+            tr.append($("<td/>").text(cols[colI] ? App.Caches.inputData.meta.termToLex(n3ify(cols[colI])) : "").css("background-color", "#f7f7f7"))
+          tbody.append(tr)
+        }
+      })
+    }
+    varsIn(Array.isArray(d) ? d : [d])
+
+    vars.forEach(v => {
+      thead.append($("<th/>").css("font-size", "small").text(v.substr(v.lastIndexOf("#")+1, 999)))
+    })
+
+    function n3ify (ldterm) {
+      if (typeof ldterm !== "object")
+        return ldterm;
+      const ret = "\"" + ldterm.value + "\"";
+      if ("language" in ldterm)
+        return ret + "@" + ldterm.language;
+      if ("type" in ldterm)
+        return ret + "^^" + ldterm.type;
+      return ret;
+    }
+  }
+
+  tableToBindings () {
+    $("#bindings1 div").remove()
+    $("#bindings1 textarea").show()
   }
 }
 
