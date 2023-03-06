@@ -689,7 +689,7 @@ class TurtleParser {
 }
 
 class DirectShExValidator {
-  constructor (loaded, _schemaURL, inputData, renderEntry) {
+  constructor (loaded, _schemaURL, inputData, renderer) {
     this.validator = new ShExWebApp.Validator(
       loaded.schema,
       inputData,
@@ -697,7 +697,7 @@ class DirectShExValidator {
     $(".extensionControl:checked").each(function () {
       $(this).data("code").register(validator, ShExWebApp);
     });
-    this.renderEntry = renderEntry;
+    this.renderer = renderer;
   }
   static factory (loaded, schemaURL, inputData, renderEntry) {
     return new DirectShExValidator(loaded, schemaURL, inputData, renderEntry);
@@ -708,9 +708,115 @@ class DirectShExValidator {
     $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
     $("#results .status").text("rendering results...").show();
 
-    await Promise.all(ret.map(this.renderEntry));
-    finishRendering();
+    await Promise.all(ret.map(entry => this.renderer.entry(entry)));
+    this.renderer.finish();
     return {validationResults: ret}; // for tester or whoever is awaiting this promise
+  }
+}
+
+class ShExResultsRenderer {
+  constructor () {
+  }
+
+  async entry (entry) {
+    const fails = entry.status === "nonconformant";
+
+    // locate FixedMap entry
+    const shapeString = entry.shape === ShExWebApp.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
+    const fixedMapEntry = $("#fixedMap .pair"+
+                          "[data-node='"+entry.node+"']"+
+                          "[data-shape='"+shapeString+"']");
+
+    const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
+    const resultStr = fails ? "✗" : "✓";
+    let elt = null;
+
+    if (!fails) {
+      if ($("#success").val() === "query" || $("#success").val() === "remainder") {
+        const proofStore = new RdfJs.Store();
+        ShExWebApp.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
+        entry.graph = proofStore.getQuads();
+      }
+      if ($("#success").val() === "remainder") {
+        const remainder = new RdfJs.Store();
+        remainder.addQuads((await App.Caches.inputData.refresh()).getQuads());
+        entry.graph.forEach(q => remainder.removeQuad(q));
+        entry.graph = remainder.getQuads();
+      }
+    }
+
+    if (entry.graph) {
+      const wr = new RdfJs.Writer(App.Caches.inputData.meta);
+      wr.addQuads(entry.graph);
+      wr.end((error, results) => {
+        if (error)
+          throw error;
+        entry.turtle = ""
+          + "# node: " + entry.node + "\n"
+          + "# shape: " + entry.shape + "\n"
+          + results.trim();
+        elt = $("<pre/>").text(entry.turtle).addClass(klass);
+      });
+      delete entry.graph;
+    } else {
+      let renderMe = entry
+      switch ($("#interface").val()) {
+      case "human":
+        elt = $("<div class='human'/>").append(
+          $("<span/>").text(resultStr),
+          $("<span/>").text(
+            `${ldToTurtle(entry.node, App.Caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${App.Caches.inputSchema.meta.termToLex(entry.shape)}`
+          )).addClass(klass);
+        if (fails)
+          elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n")));
+        break;
+
+      case "minimal":
+        if (fails)
+          entry.reason = ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n");
+        renderMe = Object.keys(entry).reduce((acc, key) => {
+          if (key !== "appinfo")
+            acc[key] = entry[key];
+          return acc
+        }, {});
+        // falling through to default covers the appinfo case
+      default:
+        elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
+      }
+    }
+    results.append(elt);
+
+    // update the FixedMap
+    fixedMapEntry.addClass(klass).find("a").text(resultStr);
+    const nodeLex = fixedMapEntry.find("input.focus").val();
+    const shapeLex = fixedMapEntry.find("input.inputShape").val();
+    const anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
+    elt.attr("id", anchor);
+    fixedMapEntry.find("a").attr("href", "#" + anchor);
+    fixedMapEntry.attr("title", entry.elapsed + " ms")
+  }
+
+  finish (done) {
+    $("#results .status").text("rendering results...").show();
+    // Add commas to JSON results.
+    if ($("#interface").val() !== "human")
+      $("#results div *").each((idx, elt) => {
+        if (idx === 0)
+          $(elt).prepend("[");
+        $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
+      });
+    $("#results .status").hide();
+    // for debugging values and schema formats:
+    // try {
+    //   const x = ShExWebApp.Util.valToValues(ret);
+    //   // const x = ShExWebApp.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
+    //   res = results.replace(JSON.stringify(x, null, "  "));
+    //   const y = ShExWebApp.Util.valuesToSchema(x);
+    //   res = results.append(JSON.stringify(y, null, "  "));
+    // } catch (e) {
+    //   console.dir(e);
+    // }
+    results.finish();
   }
 }
 
@@ -1022,7 +1128,7 @@ class ShExBaseApp {
             }
           });
           let time;
-          const validator = this.validatorClass.factory(loaded, alreadLoaded.url, inputData, this.renderEntry.bind(this));
+          const validator = this.validatorClass.factory(loaded, alreadLoaded.url, inputData, this.makeRenderer());
           App.usingValidator(validator);
 
           currentAction = "validating";
@@ -1080,6 +1186,10 @@ class ShExBaseApp {
     }
   }
 
+  makeRenderer () {
+    return new ShExResultsRenderer();
+  }
+
   reportValidationError (validationError, currentAction) {
     $("#results .status").text("validation errors:").show();
     failMessage(validationError, currentAction);
@@ -1101,85 +1211,6 @@ class ShExBaseApp {
     };
     return logger;
   }
-
-  async renderEntry (entry) {
-    const fails = entry.status === "nonconformant";
-
-    // locate FixedMap entry
-    const shapeString = entry.shape === ShExWebApp.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
-    const fixedMapEntry = $("#fixedMap .pair"+
-                          "[data-node='"+entry.node+"']"+
-                          "[data-shape='"+shapeString+"']");
-
-    const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
-    const resultStr = fails ? "✗" : "✓";
-    let elt = null;
-
-    if (!fails) {
-      if ($("#success").val() === "query" || $("#success").val() === "remainder") {
-        const proofStore = new RdfJs.Store();
-        ShExWebApp.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
-        entry.graph = proofStore.getQuads();
-      }
-      if ($("#success").val() === "remainder") {
-        const remainder = new RdfJs.Store();
-        remainder.addQuads((await App.Caches.inputData.refresh()).getQuads());
-        entry.graph.forEach(q => remainder.removeQuad(q));
-        entry.graph = remainder.getQuads();
-      }
-    }
-
-    if (entry.graph) {
-      const wr = new RdfJs.Writer(App.Caches.inputData.meta);
-      wr.addQuads(entry.graph);
-      wr.end((error, results) => {
-        if (error)
-          throw error;
-        entry.turtle = ""
-          + "# node: " + entry.node + "\n"
-          + "# shape: " + entry.shape + "\n"
-          + results.trim();
-        elt = $("<pre/>").text(entry.turtle).addClass(klass);
-      });
-      delete entry.graph;
-    } else {
-      let renderMe = entry
-      switch ($("#interface").val()) {
-      case "human":
-        elt = $("<div class='human'/>").append(
-          $("<span/>").text(resultStr),
-          $("<span/>").text(
-            `${ldToTurtle(entry.node, App.Caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${App.Caches.inputSchema.meta.termToLex(entry.shape)}`
-          )).addClass(klass);
-        if (fails)
-          elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n")));
-        break;
-
-      case "minimal":
-        if (fails)
-          entry.reason = ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n");
-        renderMe = Object.keys(entry).reduce((acc, key) => {
-          if (key !== "appinfo")
-            acc[key] = entry[key];
-          return acc
-        }, {});
-        // falling through to default covers the appinfo case
-      default:
-        elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
-      }
-    }
-    results.append(elt);
-
-    // update the FixedMap
-    fixedMapEntry.addClass(klass).find("a").text(resultStr);
-    const nodeLex = fixedMapEntry.find("input.focus").val();
-    const shapeLex = fixedMapEntry.find("input.inputShape").val();
-    const anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
-    elt.attr("id", anchor);
-    fixedMapEntry.find("a").attr("href", "#" + anchor);
-    fixedMapEntry.attr("title", entry.elapsed + " ms")
-  }
-
 
   /* Keyboard events */
   static validateKeyDown (e, code) {

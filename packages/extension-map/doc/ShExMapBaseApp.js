@@ -42,9 +42,27 @@ class ShExMapManifestCache extends ManifestCache {
   }
 }
 
+class ShExMapResultsRenderer extends ShExResultsRenderer {
+  constructor (mapUrl, bindings) {
+    super();
+    this.mapUrl = mapUrl;
+    this.bindings = bindings;
+  }
+  async entry (entry) {
+    await super.entry(entry);
+    if (entry.status === "conformant") {
+      const resultBindings = ShExWebApp.Util.valToExtension(entry.appinfo, this.mapUrl);
+      await this.bindings.set(JSON.stringify(resultBindings, null, "  "));
+    } else {
+      await this.bindings.set("{}");
+    }
+  }
+}
+
 class ShExMapBaseApp extends ShExBaseApp {
   constructor (base, validatorClass) {
     super(base, validatorClass);
+    this.currentRenderer = null;
     this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
     const manifest = new ShExMapManifestCache($("#manifestDrop"));
     const bindings = new JSONCache($("#bindings1 textarea"));
@@ -83,15 +101,8 @@ class ShExMapBaseApp extends ShExBaseApp {
     $("#materialize").on("click", evt => this.materialize(evt));
   }
 
-  async renderEntry (entry) {
-    super.renderEntry(entry);
-
-    if (entry.status === "conformant") {
-      const resultBindings = ShExWebApp.Util.valToExtension(entry.appinfo, this.MapModule.url);
-      await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
-    } else {
-      await this.Caches.bindings.set("{}");
-    }
+  makeRenderer () {
+    return this.currentRenderer = new ShExMapResultsRenderer(this.MapModule.url, this.Caches.bindings)
   }
 
   bindingsToTable () {

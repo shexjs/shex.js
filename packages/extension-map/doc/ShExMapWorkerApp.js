@@ -104,7 +104,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
           resolve({ materializionResults: resultGraphs });
         }
       }
-      finishRendering();
+      this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
 
       // Extract rdf:Collection heads.

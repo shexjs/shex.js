@@ -70,7 +70,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
           console.dir(e);
         }
       });
-      finishRendering();
+      this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
 
       // Extract rdf:Collection heads.

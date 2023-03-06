@@ -165,29 +165,6 @@ function hasFocusNode () {
   });
 }
 
-  function finishRendering (done) {
-          $("#results .status").text("rendering results...").show();
-          // Add commas to JSON results.
-          if ($("#interface").val() !== "human")
-            $("#results div *").each((idx, elt) => {
-              if (idx === 0)
-                $(elt).prepend("[");
-              $(elt).append(idx === $("#results div *").length - 1 ? "]" : ",");
-            });
-      $("#results .status").hide();
-      // for debugging values and schema formats:
-      // try {
-      //   const x = ShExWebApp.Util.valToValues(ret);
-      //   // const x = ShExWebApp.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
-      //   res = results.replace(JSON.stringify(x, null, "  "));
-      //   const y = ShExWebApp.Util.valuesToSchema(x);
-      //   res = results.append(JSON.stringify(y, null, "  "));
-      // } catch (e) {
-      //   console.dir(e);
-      // }
-      results.finish();
-  }
-
 function addResult (error, result) {
   results.append(
     $("<div/>", {class: "passes"}).append(

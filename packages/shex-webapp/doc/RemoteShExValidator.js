@@ -39,8 +39,8 @@ class Canceleable {
 
 const USE_INCREMENTAL_RESULTS = true;
 class RemoteShExValidator {
-  constructor (loaded, schemaURL, inputData, renderEntry) {
-    this.renderEntry = renderEntry;
+  constructor (loaded, schemaURL, inputData, renderer) {
+    this.renderer = renderer;
     this.created = new Canceleable(
       $("#validate"),
       disableResultsAndValidate,
@@ -60,8 +60,8 @@ class RemoteShExValidator {
       RemoteShExValidator.handleCreate
     ).ready();
   }
-  static factory (loaded, schemaURL, inputData, renderEntry) {
-    return new RemoteShExValidator(loaded, schemaURL, inputData, renderEntry);
+  static factory (loaded, schemaURL, inputData, renderer) {
+    return new RemoteShExValidator(loaded, schemaURL, inputData, renderer);
   }
   async invoke (fixedMap, validationTracker, time, done, currentAction) {
     const response = await this.created;
@@ -113,7 +113,7 @@ class RemoteShExValidator {
           if (res.shape === START_SHAPE_INDEX_ENTRY)
             res.shape = ShExWebApp.Validator.Start;
         });
-        msg.data.results.forEach(this.renderEntry);
+        msg.data.results.forEach(entry => this.renderer.entry(entry));
         // resultsMap.merge(msg.data.results);
       } else {
         throw Error('fix this code path; probably results=msg.data.(all?)results')
@@ -147,7 +147,7 @@ class RemoteShExValidator {
       }
       time = new Date() - time;
       $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")
-      finishRendering();
+      this.renderer.finish();
       if (done) { done() }
       workerUICleanup();
       resolve({ validationResults: results});
