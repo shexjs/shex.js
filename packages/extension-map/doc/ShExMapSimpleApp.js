@@ -1,6 +1,6 @@
 class ShExMapSimpleApp extends ShExMapBaseApp {
   usingValidator (validator) {
-    this.Mapper = MapModule.register(validator.validator, ShExWebApp);
+    this.Mapper = this.MapModule.register(validator.validator, ShExWebApp);
   }
   async materialize () {
     SharedForTests.promise = this.materializeAsync();
@@ -49,10 +49,10 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       $("#results .status").text("materializing data...").show();
       outputShapeMap.forEach(pair => {
         try {
-          const materializer = MapModule.materializer.construct(outputSchema, this.Mapper, {});
+          const materializer = this.MapModule.materializer.construct(outputSchema, this.Mapper, {});
           const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
           if ("errors" in resM) {
-            renderEntry( {
+            this.renderEntry( {
               node: pair.node,
               shape: pair.shape,
               status: "errors" in resM ? "nonconformant" : "conformant",

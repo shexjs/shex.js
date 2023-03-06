@@ -1,14 +1,11 @@
 const RdfJs = N3js;
 const DefaultBase = location.origin + location.pathname;
-const App = new ShExMapSimpleApp(DefaultBase);
-const ValidatorClass = DirectShExValidator;
-const MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
+const App = new ShExMapSimpleApp(DefaultBase, DirectShExValidator);
 
 // shexmap-simple - Simple ShEx2 validator for HTML.
 // Copyright 2017 Eric Prud'hommeux
 // Release under MIT License.
 
-const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
@@ -193,7 +190,7 @@ function disableResultsAndValidate (evt) {
     setTimeout(async function () {
       const errors = await copyEditMapToTextMap(); // will update if #editMap is dirty
       if (errors.length === 0)
-        resolve(await callValidator());
+        resolve(await App.callValidator());
     }, 0);
   })
 }
@@ -212,202 +209,6 @@ function reportValidationError (validationError, currentAction) {
   console.error(validationError); // dump details to console.
   return { validationError };
 }
-
-async function callValidator (done) {
-  $("#fixedMap .pair").removeClass("passes fails");
-  $("#results .status").hide();
-  let currentAction = "parsing input schema";
-  try {
-    await App.Caches.inputSchema.refresh(); // @@ throw away parser stack?
-    $("#schemaDialect").text(App.Caches.inputSchema.language);
-    if (hasFocusNode()) {
-      currentAction = "parsing input data";
-      $("#results .status").text("parsing data...").show();
-      const inputData = await App.Caches.inputData.refresh(); // need prefixes for ShapeMap
-      // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
-      currentAction = "parsing shape map";
-      const fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
-        return {
-          node: App.Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
-          shape: App.Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
-        };
-      }).get());
-
-      currentAction = "creating validator";
-      $("#results .status").text("creating validator...").show();
-      try {
-        // shex-node loads IMPORTs and tests the schema for structural faults.
-        const alreadLoaded = {
-          schema: await App.Caches.inputSchema.refresh(),
-          url: App.Caches.inputSchema.url || DefaultBase
-        };
-        const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null, {
-          collisionPolicy: (type, left, right) => {
-            const lStr = JSON.stringify(left);
-            const rStr = JSON.stringify(right);
-            if (lStr === rStr)
-              return false; // keep left/old assignment
-            throw new Error(`Conflicing definitions: ${lStr} !== ${rStr}`);
-          }
-        });
-        let time;
-        const validator = ValidatorClass.factory(loaded, alreadLoaded.url, inputData);
-        App.usingValidator(validator);
-
-        currentAction = "validating";
-        $("#results .status").text("validating...").show();
-        time = new Date();
-        const validationTracker = LOG_PROGRESS ? makeConsoleTracker() : undefined; // undefined to trigger default parameter assignment
-
-        // invoke can throw an asynchronous error. Using .catch instead of await so callValidator is usefully async.
-        return validator.invoke(fixedMap, validationTracker, time, done, currentAction)
-          .catch(e => reportValidationError(e, currentAction));
-      } catch (e) {
-        return reportValidationError(e, currentAction);
-      }
-    } else {
-      const outputLanguage = App.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
-      $("#results .status").
-        text("parsed "+App.Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
-        append($("<button>(copy to input)</button>").
-               css("border-radius", ".5em").
-               on("click", async function () {
-                 await App.Caches.inputSchema.set($("#results div").text(), DefaultBase);
-               })).
-        append(":").
-        show();
-      let parsedSchema;
-      if (App.Caches.inputSchema.language === "ShExJ") {
-        const opts = {
-          simplifyParentheses: false,
-          base: App.Caches.inputSchema.meta.base,
-          prefixes: App.Caches.inputSchema.meta.prefixes
-        }
-        new ShExWebApp.Writer(opts).writeSchema(App.Caches.inputSchema.parsed, (error, text) => {
-          if (error) {
-            $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
-            // res.addClass("error");
-          } else {
-            results.append($("<pre/>").text(text).addClass("passes"));
-          }
-        });
-      } else {
-        const pre = $("<pre/>");
-        pre.text(JSON.stringify(ShExWebApp.Util.AStoShExJ(ShExWebApp.Util.canonicalize(App.Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
-        results.append(pre);
-      }
-      results.finish();
-      return { transformation: {
-        from: App.Caches.inputSchema.language,
-        to: outputLanguage
-      } }
-    }
-  } catch (e) {
-    failMessage(e, currentAction);
-    console.error(e); // dump details to console.
-    return { inputError: e };
-  }
-
-  function makeConsoleTracker () {
-    function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
-    function sm (node, shape) {
-      return `${App.Caches.inputData.meta.termToLex(node)}@${App.Caches.inputSchema.meta.termToLex(shape)}`;
-    }
-    const logger = {
-      recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
-      known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
-      enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
-      exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
-      depth: 0
-    };
-    return logger;
-  }
-}
-
-  async function renderEntry (entry) {
-    const fails = entry.status === "nonconformant";
-
-    // locate FixedMap entry
-    const shapeString = entry.shape === ShExWebApp.Validator.Start ? START_SHAPE_INDEX_ENTRY : entry.shape;
-    const fixedMapEntry = $("#fixedMap .pair"+
-                          "[data-node='"+entry.node+"']"+
-                          "[data-shape='"+shapeString+"']");
-
-    const klass = (fails ^ fixedMapEntry.find(".shapeMap-joiner").hasClass("nonconformant")) ? "fails" : "passes";
-    const resultStr = fails ? "✗" : "✓";
-    let elt = null;
-
-    if (!fails) {
-      if ($("#success").val() === "query" || $("#success").val() === "remainder") {
-        const proofStore = new RdfJs.Store();
-        ShExWebApp.Util.getProofGraph(entry.appinfo, proofStore, RdfJs.DataFactory);
-        entry.graph = proofStore.getQuads();
-      }
-      if ($("#success").val() === "remainder") {
-        const remainder = new RdfJs.Store();
-        remainder.addQuads((await App.Caches.inputData.refresh()).getQuads());
-        entry.graph.forEach(q => remainder.removeQuad(q));
-        entry.graph = remainder.getQuads();
-      }
-    }
-
-    if (entry.graph) {
-      const wr = new RdfJs.Writer(App.Caches.inputData.meta);
-      wr.addQuads(entry.graph);
-      wr.end((error, results) => {
-        if (error)
-          throw error;
-        entry.turtle = ""
-          + "# node: " + entry.node + "\n"
-          + "# shape: " + entry.shape + "\n"
-          + results.trim();
-        elt = $("<pre/>").text(entry.turtle).addClass(klass);
-      });
-      delete entry.graph;
-    } else {
-      let renderMe = entry
-      switch ($("#interface").val()) {
-      case "human":
-        elt = $("<div class='human'/>").append(
-          $("<span/>").text(resultStr),
-          $("<span/>").text(
-            `${ldToTurtle(entry.node, App.Caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${App.Caches.inputSchema.meta.termToLex(entry.shape)}`
-          )).addClass(klass);
-        if (fails)
-          elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n")));
-        break;
-
-      case "minimal":
-        if (fails)
-          entry.reason = ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n");
-        renderMe = Object.keys(entry).reduce((acc, key) => {
-          if (key !== "appinfo")
-            acc[key] = entry[key];
-          return acc
-        }, {});
-        // falling through to default covers the appinfo case
-      default:
-        elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
-      }
-    }
-    results.append(elt);
-
-    // update the FixedMap
-    fixedMapEntry.addClass(klass).find("a").text(resultStr);
-    const nodeLex = fixedMapEntry.find("input.focus").val();
-    const shapeLex = fixedMapEntry.find("input.inputShape").val();
-    const anchor = encodeURIComponent(nodeLex) + "@" + encodeURIComponent(shapeLex);
-    elt.attr("id", anchor);
-    fixedMapEntry.find("a").attr("href", "#" + anchor);
-    fixedMapEntry.attr("title", entry.elapsed + " ms")
-
-    if (entry.status === "conformant") {
-      const resultBindings = ShExWebApp.Util.valToExtension(entry.appinfo, MapModule.url);
-      await App.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
-    } else {
-      await App.Caches.bindings.set("{}");
-    }
-  }
 
   function finishRendering (done) {
           $("#results .status").text("rendering results...").show();

@@ -1,6 +1,24 @@
 class ShExMapWorkerApp extends ShExMapBaseApp {
   usingValidator (_validator) { }
 
+  makeConsoleTracker () {
+    function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
+    function sm (node, shape) {
+      if (typeof shape === "object" && "term" in shape && shape.term === ShExWebApp.Validator.Start.term) {
+        shape = ShExWebApp.Validator.Start;
+      }
+      return `${App.Caches.inputData.meta.termToLex(node)}@${App.Caches.inputSchema.meta.termToLex(shape)}`;
+    }
+    const logger = {
+      recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
+      known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
+      enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
+      exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
+      depth: 0
+    };
+    return logger;
+  }
+
   async materialize () {
     SharedForTests.promise = this.materializeAsync()
   }
@@ -71,7 +89,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
             results.replace("error materializing:\n" + msg.data.exception).
               removeClass("passes fails").addClass("error");
           } else {
-            renderEntry({
+            this.renderEntry({
               node: msg.data.node,
               shape: msg.data.shape,
               status: "errors" in msg.data.results ? "nonconformant" : "conformant",

@@ -1,6 +1,6 @@
 class ShExSimpleApp extends ShExBaseApp {
-  constructor (base) {
-    super(base);
+  constructor (base, validatorClass) {
+    super(base, validatorClass);
     const manifest = new ManifestCache($("#manifestDrop"));
     this.Caches.manifest = manifest;
     const shexSimpleParameter =

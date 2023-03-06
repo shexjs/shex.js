@@ -37,8 +37,10 @@ class Canceleable {
   }
 }
 
+const USE_INCREMENTAL_RESULTS = true;
 class RemoteShExValidator {
-  constructor (loaded, schemaURL, inputData) {
+  constructor (loaded, schemaURL, inputData, renderEntry) {
+    this.renderEntry = renderEntry;
     this.created = new Canceleable(
       $("#validate"),
       disableResultsAndValidate,
@@ -58,8 +60,8 @@ class RemoteShExValidator {
       RemoteShExValidator.handleCreate
     ).ready();
   }
-  static factory (loaded, schemaURL, inputData) {
-    return new RemoteShExValidator(loaded, schemaURL, inputData);
+  static factory (loaded, schemaURL, inputData, renderEntry) {
+    return new RemoteShExValidator(loaded, schemaURL, inputData, renderEntry);
   }
   async invoke (fixedMap, validationTracker, time, done, currentAction) {
     const response = await this.created;
@@ -80,7 +82,7 @@ class RemoteShExValidator {
         queryMap: transportMap,
         options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
       },
-      RemoteShExValidator.parseUpdatesAndResults.bind(undefined, time, validationTracker, done, currentAction)
+      this.parseUpdatesAndResults.bind(this, time, validationTracker, done, currentAction)
     ).ready();
   }
 
@@ -101,7 +103,7 @@ class RemoteShExValidator {
     }
   }
 
-  static parseUpdatesAndResults (time, validationTracker, done, currentAction, msg, workerUICleanup, resolve, reject) {
+  parseUpdatesAndResults (time, validationTracker, done, currentAction, msg, workerUICleanup, resolve, reject) {
     switch (msg.data.response) {
     case "update":
       if (USE_INCREMENTAL_RESULTS) {
@@ -111,7 +113,7 @@ class RemoteShExValidator {
           if (res.shape === START_SHAPE_INDEX_ENTRY)
             res.shape = ShExWebApp.Validator.Start;
         });
-        msg.data.results.forEach(renderEntry);
+        msg.data.results.forEach(this.renderEntry);
         // resultsMap.merge(msg.data.results);
       } else {
         throw Error('fix this code path; probably results=msg.data.(all?)results')
@@ -139,9 +141,9 @@ class RemoteShExValidator {
       $("#results .status").text("rendering results...").show();
       if (!USE_INCREMENTAL_RESULTS) {
         if ("solutions" in msg.data.results)
-          msg.data.results.solutions.forEach(renderEntry);
+          msg.data.results.solutions.forEach(this.renderEntry);
         else
-          renderEntry(msg.data.results);
+          this.renderEntry(msg.data.results);
       }
       time = new Date() - time;
       $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms")

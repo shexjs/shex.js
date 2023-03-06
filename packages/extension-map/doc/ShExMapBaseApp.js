@@ -43,8 +43,9 @@ class ShExMapManifestCache extends ManifestCache {
 }
 
 class ShExMapBaseApp extends ShExBaseApp {
-  constructor (base) {
-    super(base);
+  constructor (base, validatorClass) {
+    super(base, validatorClass);
+    this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
     const manifest = new ShExMapManifestCache($("#manifestDrop"));
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
@@ -80,6 +81,17 @@ class ShExMapBaseApp extends ShExBaseApp {
   prepareControls () {
     super.prepareControls();
     $("#materialize").on("click", evt => this.materialize(evt));
+  }
+
+  async renderEntry (entry) {
+    super.renderEntry(entry);
+
+    if (entry.status === "conformant") {
+      const resultBindings = ShExWebApp.Util.valToExtension(entry.appinfo, this.MapModule.url);
+      await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
+    } else {
+      await this.Caches.bindings.set("{}");
+    }
   }
 
   bindingsToTable () {
