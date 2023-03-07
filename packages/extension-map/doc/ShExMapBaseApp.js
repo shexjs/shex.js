@@ -32,9 +32,9 @@ class ShExMapManifestCache extends ManifestCache {
         throw Error("fetch <" + dataTest.entry.outputSchemaURL + "> got error response " + resp.status + ": " + resp.statusText);
       dataTest.entry.outputSchema = await resp.text();
     }
-    App.Caches.outputSchema.set(dataTest.entry.outputSchema, dataTest.entry.outputSchemaURL);
+    this.caches.outputSchema.set(dataTest.entry.outputSchema, dataTest.entry.outputSchemaURL);
     $("#outputSchema .status").text(name);
-    App.Caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
+    this.caches.statics.set(JSON.stringify(dataTest.entry.staticVars, null, "  "));
     $("#staticVars .status").text(name);
 
     $("#outputShape").val(dataTest.entry.outputShape); // targetSchema.start in Map-test
@@ -43,18 +43,17 @@ class ShExMapManifestCache extends ManifestCache {
 }
 
 class ShExMapResultsRenderer extends ShExResultsRenderer {
-  constructor (resultsWidget, mapUrl, bindings) {
-    super(resultsWidget);
+  constructor (resultsWidget, caches, mapUrl) {
+    super(resultsWidget, caches);
     this.mapUrl = mapUrl;
-    this.bindings = bindings;
   }
   async entry (entry) {
     await super.entry(entry);
     if (entry.status === "conformant") {
       const resultBindings = ShExWebApp.Util.valToExtension(entry.appinfo, this.mapUrl);
-      await this.bindings.set(JSON.stringify(resultBindings, null, "  "));
+      await this.caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
     } else {
-      await this.bindings.set("{}");
+      await this.caches.bindings.set("{}");
     }
   }
 }
@@ -64,7 +63,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     super(base, validatorClass);
     this.currentRenderer = null;
     this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
-    const manifest = new ShExMapManifestCache($("#manifestDrop"), this.resultsWidget);
+    const manifest = new ShExMapManifestCache($("#manifestDrop"), this.Caches, this.resultsWidget);
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
     const outputSchema = new SchemaCache($("#outputSchema textarea"), this.shexcParser, this.turtleParser);
@@ -102,7 +101,7 @@ class ShExMapBaseApp extends ShExBaseApp {
   }
 
   makeRenderer () {
-    return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.MapModule.url, this.Caches.bindings)
+    return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.Caches, this.MapModule.url)
   }
 
   reportMaterializationError (materializationError, currentAction) {
@@ -160,7 +159,7 @@ class ShExMapBaseApp extends ShExBaseApp {
           })
           // tr.append(cols.map(c => $("<td/>").text(c)))
           for (let colI = 0; colI < cols.length; ++colI)
-            tr.append($("<td/>").text(cols[colI] ? App.Caches.inputData.meta.termToLex(n3ify(cols[colI])) : "").css("background-color", "#f7f7f7"))
+            tr.append($("<td/>").text(cols[colI] ? this.Caches.inputData.meta.termToLex(n3ify(cols[colI])) : "").css("background-color", "#f7f7f7"))
           tbody.append(tr)
         }
       })

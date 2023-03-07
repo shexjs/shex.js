@@ -7,7 +7,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
       if (typeof shape === "object" && "term" in shape && shape.term === ShExWebApp.Validator.Start.term) {
         shape = ShExWebApp.Validator.Start;
       }
-      return `${App.Caches.inputData.meta.termToLex(node)}@${App.Caches.inputSchema.meta.termToLex(shape)}`;
+      return `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
     }
     const logger = {
       recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
@@ -20,7 +20,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
   }
 
   async materializeAsync () {
-    if (App.Caches.bindings.get().trim().length === 0) {
+    if (this.Caches.bindings.get().trim().length === 0) {
       this.resultsWidget.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
         removeClass("passes fails").addClass("error");
       return null;
@@ -28,20 +28,20 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
     this.resultsWidget.start();
     const parsing = "output schema";
     try {
-      const outputSchemaText = App.Caches.outputSchema.selection.val();
+      const outputSchemaText = this.Caches.outputSchema.selection.val();
       const outputSchemaIsJSON = outputSchemaText.match(/^\s*\{/);
-      const outputSchema = await App.Caches.outputSchema.refresh();
+      const outputSchema = await this.Caches.outputSchema.refresh();
 
       // const resultBindings = Object.assign(
-      //   await App.Caches.statics.refresh(),
-      //   await App.Caches.bindings.refresh()
+      //   await this.Caches.statics.refresh(),
+      //   await this.Caches.bindings.refresh()
       // );
 
       function _dup (obj) { return JSON.parse(JSON.stringify(obj)); }
-      let resultBindings = _dup(await App.Caches.bindings.refresh());
-      if (App.Caches.statics.get().trim().length === 0)
-        await App.Caches.statics.set("{  }");
-      const _t = await App.Caches.statics.refresh();
+      let resultBindings = _dup(await this.Caches.bindings.refresh());
+      if (this.Caches.statics.get().trim().length === 0)
+        await this.Caches.statics.set("{  }");
+      const _t = await this.Caches.statics.refresh();
       if (_t && Object.keys(_t).length > 0) {
         if (!Array.isArray(resultBindings))
           resultBindings = [resultBindings];
@@ -50,11 +50,11 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
 
       // const trivialMaterializer = Mapper.trivialMaterializer(outputSchema);
       const outputShapeMap = this.fixedShapeMapToTerms([{
-        node: App.Caches.inputData.meta.lexToTerm($("#createRoot").val()),
-        shape: App.Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with App.Caches.outputSchema
+        node: this.Caches.inputData.meta.lexToTerm($("#createRoot").val()),
+        shape: this.Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with this.Caches.outputSchema
       }]);
 
-      await App.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
+      await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
       const generatedGraph = new RdfJs.Store();
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
@@ -116,7 +116,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
             // lists: {}, -- lists will require some thinking
             format: 'text/turtle',
             // baseIRI: resource.base,
-            prefixes: App.Caches.outputSchema.parsed._prefixes,
+            prefixes: this.Caches.outputSchema.parsed._prefixes,
             lists,
             version: 1.1,
             indent: '    ',
@@ -154,7 +154,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
         } catch (e) {
           console.error(`NestedWriter(${node}@${shape}) failure:`);
           console.error(e);
-          const fallbackWriter = new RdfJs.Writer({ prefixes: App.Caches.outputSchema.parsed._prefixes });
+          const fallbackWriter = new RdfJs.Writer({ prefixes: this.Caches.outputSchema.parsed._prefixes });
           fallbackWriter.addQuads(generatedGraph.getQuads());
           fallbackWriter.end((error, result) => this.addResult(error, result));
         }

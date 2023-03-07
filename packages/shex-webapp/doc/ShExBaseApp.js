@@ -98,6 +98,10 @@ class SchemaCache extends InterfaceCache {
     super(selection);
     this.shexcParser = shexcParser;
     this.turtleParser = turtleParser;
+    this.graph = null;
+    this.language = null;
+
+    // These are functions in order to grab caller's this.
     this.meta.termToLex = function (trm, aForTypes = true) {
       return trm === ShExWebApp.Validator.Start
         ? START_SHAPE_LABEL
@@ -108,8 +112,6 @@ class SchemaCache extends InterfaceCache {
         ? ShExWebApp.Validator.Start
         : turtleParser.termToLd(lex, new IRIResolver(this));
     };
-    this.graph = null;
-    this.language = null;
   }
 
   async parse (text, base) {
@@ -198,8 +200,9 @@ class TurtleCache extends InterfaceCache {
 }
 
 class ManifestCache extends InterfaceCache {
-  constructor (selection, resultsWidget) {
+  constructor (selection, caches, resultsWidget) {
     super(selection);
+    this.caches = caches;
     this.resultsWidget = resultsWidget;
   }
 
@@ -222,7 +225,7 @@ class ManifestCache extends InterfaceCache {
         throw throwMe
         // @@DELME(2017-12-29)
         // transform deprecated examples.js structure
-        // textOrObj = eval(textOrObj).reduce(function (acc, schema) {
+        // textOrObj = eval(textOrObj).reduce((acc, schema) => {
         //   function x (data, status) {
         //     return {
         //       schemaLabel: schema.name,
@@ -339,7 +342,7 @@ class ManifestCache extends InterfaceCache {
   }
 
   async prepareManifest (demoList, base) {
-    const listItems = Object.keys(App.Caches).reduce((acc, k) => {
+    const listItems = Object.keys(this.caches).reduce((acc, k) => {
       acc[k] = {};
       return acc;
     }, {});
@@ -429,10 +432,10 @@ class ManifestCache extends InterfaceCache {
 
   async pickSchema (name, schemaTest, elt, listItems, side) {
     if ($(elt).hasClass("selected")) {
-      await clearAll();
+      await App.clearAll();
     } else {
-      await App.Caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
-      App.Caches.inputSchema.url = undefined; // @@ crappyHack1
+      await this.caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
+      this.caches.inputSchema.url = undefined; // @@ crappyHack1
       $("#inputSchema .status").text(name);
 
       App.clearData();
@@ -454,7 +457,7 @@ class ManifestCache extends InterfaceCache {
       $("#inputSchema li.selected").removeClass("selected");
       $(elt).addClass("selected");
       try {
-        await App.Caches.inputSchema.refresh();
+        await this.caches.inputSchema.refresh();
       } catch (e) {
         this.resultsWidget.failMessage(e, "parsing schema");
       }
@@ -467,13 +470,13 @@ class ManifestCache extends InterfaceCache {
       $(elt).removeClass("selected");
     } else {
       // Update data pane.
-      await App.Caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
-      App.Caches.inputData.url = undefined; // @@ crappyHack1
+      await this.caches.inputData.set(dataTest.text, new URL((dataTest.url || ""), DefaultBase).href);
+      this.caches.inputData.url = undefined; // @@ crappyHack1
       $("#inputData .status").text(name);
       $("#inputData li.selected").removeClass("selected");
       $(elt).addClass("selected");
       try {
-        await App.Caches.inputData.refresh();
+        await this.caches.inputData.refresh();
       } catch (e) {
         this.resultsWidget.failMessage(e, "parsing data");
       }
@@ -726,7 +729,7 @@ class DirectShExValidator {
       loaded.schema,
       inputData,
       {results: "api", regexModule: ShExWebApp[$("#regexpEngine").val()]});
-    $(".extensionControl:checked").each(function () {
+    $(".extensionControl:checked").each(() => {
       $(this).data("code").register(validator, ShExWebApp);
     });
     this.renderer = renderer;
@@ -780,6 +783,7 @@ class ResultsWidget {
   }
 
   failMessage (e, action, text) {
+    console.error(e);
     $("#results .status").empty().text("Errors encountered:").show()
     const div = $("<div/>").addClass("error");
     div.append($("<h3/>").text("error " + action + ":\n"));
@@ -792,8 +796,9 @@ class ResultsWidget {
 }
 
 class ShExResultsRenderer {
-  constructor (resultsWidget) {
+  constructor (resultsWidget, caches) {
     this.resultsWidget = resultsWidget;
+    this.caches = caches;
   }
 
   async entry (entry) {
@@ -817,14 +822,14 @@ class ShExResultsRenderer {
       }
       if ($("#success").val() === "remainder") {
         const remainder = new RdfJs.Store();
-        remainder.addQuads((await App.Caches.inputData.refresh()).getQuads());
+        remainder.addQuads((await this.caches.inputData.refresh()).getQuads());
         entry.graph.forEach(q => remainder.removeQuad(q));
         entry.graph = remainder.getQuads();
       }
     }
 
     if (entry.graph) {
-      const wr = new RdfJs.Writer(App.Caches.inputData.meta);
+      const wr = new RdfJs.Writer(this.caches.inputData.meta);
       wr.addQuads(entry.graph);
       wr.end((error, results) => {
         if (error)
@@ -843,7 +848,7 @@ class ShExResultsRenderer {
         elt = $("<div class='human'/>").append(
           $("<span/>").text(resultStr),
           $("<span/>").text(
-            `${ldToTurtle(entry.node, App.Caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${App.Caches.inputSchema.meta.termToLex(entry.shape)}`
+            `${ldToTurtle(entry.node, this.caches.inputData.meta.termToLex)}@${fails ? "!" : ""}${this.caches.inputSchema.meta.termToLex(entry.shape)}`
           )).addClass(klass);
         if (fails)
           elt.append($("<pre>").text(ShExWebApp.Util.errsToSimple(entry.appinfo).join("\n")));
@@ -907,12 +912,14 @@ const ShExLoader = ShExWebApp.Loader({
 })
 class ShExBaseApp {
   constructor (base, validatorClass) {
-    this.resultsWidget = new ResultsWidget();
     this.base = base;
     this.validatorClass = validatorClass;
+    this.resultsWidget = new ResultsWidget();
+
     // make parser/serializers available to extending classes
     this.shexcParser = new ShExCParser();
     this.turtleParser = new TurtleParser();
+
     this.Caches = {
       inputSchema: new SchemaCache($("#inputSchema textarea.schema"), this.shexcParser, this.turtleParser),
       inputData:   new TurtleCache($("#inputData textarea"), this.turtleParser),
@@ -934,12 +941,13 @@ class ShExBaseApp {
       this.validateKeyDown.bind(this),
       this.navigateManifestKeyDown.bind(this),
     ];
+
     ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
   }
   async start () {
-    App.prepareControls();
-    const dndPromise = App.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
-    const loads = App.loadSearchParameters();
+    this.prepareControls();
+    const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
+    const loads = this.loadSearchParameters();
     const ready = Promise.all([ dndPromise, loads ]);
     if ('_testCallback' in window) {
       SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
@@ -984,19 +992,19 @@ class ShExBaseApp {
   }
 
   setTextAreaHandlers (listItems) {
-    const timeouts = Object.keys(App.Caches).reduce((acc, k) => {
+    const timeouts = Object.keys(this.Caches).reduce((acc, k) => {
       acc[k] = undefined;
       return acc;
     }, {});
 
-    Object.keys(App.Caches).forEach(function (cache) {
-      App.Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
+    Object.keys(this.Caches).forEach((cache) => {
+      this.Caches[cache].selection.keyup((e) => { // keyup to capture backspace
         const code = e.keyCode || e.charCode;
         // if (!(e.ctrlKey)) {
         //   this.resultsWidget.clear();
         // }
         if (!(e.ctrlKey && (code === 10 || code === 13))) {
-          later(e.target, cache, App.Caches[cache]);
+          later(e.target, cache, this.Caches[cache]);
         }
       });
     });
@@ -1019,10 +1027,10 @@ class ShExBaseApp {
   }
 
   static sum (s) { // cheap way to identify identical strings
-    return s.replace(/\s/g, "").split("").reduce(function (a,b){
-      a = ((a<<5) - a) + b.charCodeAt(0);
-      return a&a
-    },0);
+    return s.replace(/\s/g, "").split("").reduce((a,b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a
+    }, 0);
   }
 
   /* ShapeMap */
@@ -1058,10 +1066,10 @@ class ShExBaseApp {
     const shapeMap = $("#textMap").val();
     this.resultsWidget.clear();
     try {
-      await App.Caches.inputSchema.refresh();
-      await App.Caches.inputData.refresh();
+      await this.Caches.inputSchema.refresh();
+      await this.Caches.inputData.refresh();
       const smparser = ShExWebApp.ShapeMapParser.construct(
-        App.Caches.shapeMap.meta.base, App.Caches.inputSchema.meta, App.Caches.inputData.meta);
+        this.Caches.shapeMap.meta.base, this.Caches.inputSchema.meta, this.Caches.inputData.meta);
       const sm = smparser.parse(shapeMap);
       this.removeEditMapPair(null);
       this.addEditMapPairs(sm.length ? sm : null);
@@ -1091,6 +1099,22 @@ class ShExBaseApp {
   }
 
   addEditMapPairs (pairs, target) {
+    const renderTP = (tp) => {
+      const ret = ["subject", "predicate", "object"].map(k => {
+        const ld = tp[k];
+        if (ld === ShExWebApp.ShapeMap.Focus)
+          return "FOCUS";
+        if (!ld) // ?? ShExWebApp.Uti.any
+          return "_";
+        return ldToTurtle(ld, this.Caches.inputData.meta.termToLex);
+      });
+      return "{" + ret.join(" ") + "}";
+    }
+
+    const startOrLdToTurtle = (term) => {
+      return term === ShExWebApp.Validator.Start ? START_SHAPE_LABEL : ShExWebApp.ShExTerm.shExJsTerm2Turtle(term, this.Caches.inputSchema.meta);
+    }
+
     (pairs || [{node: {type: "empty"}}]).forEach(pair => {
       const nodeType = (typeof pair.node !== "object" || "@value" in pair.node)
             ? "node"
@@ -1099,7 +1123,7 @@ class ShExBaseApp {
       let node, shape;
       switch (nodeType) {
       case "empty": node = shape = ""; break;
-      case "node": node = ldToTurtle(pair.node, App.Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
+      case "node": node = ldToTurtle(pair.node, this.Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
       case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
       case "Extension":
         this.resultsWidget.failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
@@ -1166,26 +1190,10 @@ class ShExBaseApp {
     else
       $("#editMap .removePair").css("visibility", "visible");
     $("#editMap .pair").each(idx => {
-      this.addContextMenus("#editMap .pair:nth("+idx+") .focus", App.Caches.inputData);
-      this.addContextMenus(".pair:nth("+idx+") .inputShape", App.Caches.inputSchema);
+      this.addContextMenus("#editMap .pair:nth("+idx+") .focus", this.Caches.inputData);
+      this.addContextMenus(".pair:nth("+idx+") .inputShape", this.Caches.inputSchema);
     });
     return false;
-
-    function renderTP (tp) {
-      const ret = ["subject", "predicate", "object"].map(k => {
-        const ld = tp[k];
-        if (ld === ShExWebApp.ShapeMap.Focus)
-          return "FOCUS";
-        if (!ld) // ?? ShExWebApp.Uti.any
-          return "_";
-        return ldToTurtle(ld, App.Caches.inputData.meta.termToLex);
-      });
-      return "{" + ret.join(" ") + "}";
-    }
-
-    function startOrLdToTurtle (term) {
-      return term === ShExWebApp.Validator.Start ? START_SHAPE_LABEL : ShExWebApp.ShExTerm.shExJsTerm2Turtle(term, App.Caches.inputSchema.meta);
-    }
   }
 
   removeEditMapPair (evt) {
@@ -1209,10 +1217,22 @@ class ShExBaseApp {
   }
 
   /** getShapeMap -- zip a node list and a shape list into a ShapeMap
-   * use {App.Caches.inputData,App.Caches.inputSchema}.meta.{prefix,base} to complete IRIs
+   * use {this.Caches.inputData,this.Caches.inputSchema}.meta.{prefix,base} to complete IRIs
    * @return array of encountered errors
    */
   async copyEditMapToFixedMap () {
+    const getQuads = async (s, p, o) => {
+      const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
+      return (await this.Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
+        return this.Caches.inputData.meta.termToLex(t[get]); // count on unpublished N3.js id API
+      });
+      function mine (term) {
+        return term === ShExWebApp.ShapeMap.Focus || term === ShExWebApp.ShapeMap.Wildcard
+          ? null
+          : term;
+      }
+    }
+
     $("#fixedMap tbody").empty(); // empty out the fixed map.
     const fixedMapTab = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
     const restoreText = fixedMapTab.text();
@@ -1226,7 +1246,7 @@ class ShExBaseApp {
       if (!node || !shape)
         return acc;
       const smparser = ShExWebApp.ShapeMapParser.construct(
-        App.Caches.shapeMap.meta.base, App.Caches.inputSchema.meta, App.Caches.inputData.meta);
+        this.Caches.shapeMap.meta.base, this.Caches.inputSchema.meta, this.Caches.inputData.meta);
       try {
         const sm = smparser.parse(node + '@' + shape)[0];
         const added = typeof sm.node === "string" || "@value" in sm.node
@@ -1250,8 +1270,8 @@ class ShExBaseApp {
     const pairs = await Promise.all(nodeShapePromises)
     pairs.reduce((acc, pair) => {
       pair.nodes.forEach(node => {
-        const nodeTerm = App.Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
-        let shapeTerm = App.Caches.inputSchema.meta.lexToTerm(pair.shape);
+        const nodeTerm = this.Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
+        let shapeTerm = this.Caches.inputSchema.meta.lexToTerm(pair.shape);
         if (shapeTerm === ShExWebApp.Validator.Start)
           shapeTerm = START_SHAPE_INDEX_ENTRY;
         const key = nodeTerm + "|" + shapeTerm;
@@ -1270,18 +1290,6 @@ class ShExBaseApp {
     });
     fixedMapTab.text(restoreText).removeClass("running");
     return []; // no errors
-
-    async function getQuads (s, p, o) {
-      const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
-      return (await App.Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
-        return App.Caches.inputData.meta.termToLex(t[get]); // count on unpublished N3.js id API
-      });
-      function mine (term) {
-        return term === ShExWebApp.ShapeMap.Focus || term === ShExWebApp.ShapeMap.Wildcard
-          ? null
-          : term;
-      }
-    }
 
     function createEntry (node, nodeTerm, shape, shapeTerm, status) {
       const spanElt = $("<tr/>", {class: "pair"
@@ -1334,8 +1342,8 @@ class ShExBaseApp {
    */
   fixedShapeMapToTerms (shapeMap) {
     return shapeMap; /*.map(pair => {
-                       return {node: App.Caches.inputData.meta.lexToTerm(pair.node + " "),
-                       shape: App.Caches.inputSchema.meta.lexToTerm(pair.shape)};
+                       return {node: this.Caches.inputData.meta.lexToTerm(pair.node + " "),
+                       shape: this.Caches.inputSchema.meta.lexToTerm(pair.shape)};
                        });*/
   }
   /* UI setup */
@@ -1357,14 +1365,14 @@ class ShExBaseApp {
       buttons: {
         "GET": function (evt, ui) {
           this.resultsWidget.clear();
-          const target = App.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
+          const target = this.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
           const url = $("#loadInput").val();
           const tips = $(".validateTips");
           function updateTips (t) {
             tips
               .text( t )
               .addClass( "ui-state-highlight" );
-            setTimeout(function() {
+            setTimeout(() => {
               tips.removeClass( "ui-state-highlight", 1500 );
             }, 500 );
           }
@@ -1374,23 +1382,23 @@ class ShExBaseApp {
             return;
           }
           tips.removeClass("ui-state-highlight").text();
-          SharedForTests.promise = target.cache.asyncGet(url).catch(function (e) {
+          SharedForTests.promise = target.cache.asyncGet(url).catch((e) => {
             updateTips(e.message);
           });
         },
-        "Cancel": function() {
+        "Cancel": () => {
           $("#loadInput").removeClass("ui-state-error");
           $("#loadForm").dialog("close");
           this.toggleControls();
         }
       },
-      close: function() {
+      close: () => {
         $("#loadInput").removeClass("ui-state-error");
         $("#loadForm").dialog("close");
         this.toggleControls();
       }
     });
-    App.Getables.forEach(target => {
+    this.Getables.forEach(target => {
       const type = target.queryStringParm
       $("#load-"+type+"-button").click(evt => {
         const prefillURL = target.url ? target.url :
@@ -1417,7 +1425,7 @@ class ShExBaseApp {
     });
 
     $("#shapeMap-tabs").tabs({
-      activate: async function (event, ui) {
+      activate: async (event, ui) => {
         if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
           await this.copyEditMapToTextMap();
         else if (ui.oldPanel.get(0) === $("#textMap").get(0))
@@ -1428,22 +1436,22 @@ class ShExBaseApp {
       this.resultsWidget.clear();
       SharedForTests.promise = this.copyTextMapToEditMap();
     });
-    App.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
+    this.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
     // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
 
     function dismissModal (evt) {
       // $.unblockUI();
       $("#about").dialog("close");
-      App.toggleControls();
+      this.toggleControls();
       return true;
     }
 
     // Prepare file uploads
     $("input.inputfile").each((idx, elt) => {
-      $(elt).on("change", function (evt) {
+      $(elt).on("change", (evt) => {
         const reader = new FileReader();
 
-        reader.onload = function(evt) {
+        reader.onload = (evt) => {
           if(evt.target.readyState != 2) return;
           if(evt.target.error) {
             alert("Error while reading file");
@@ -1462,7 +1470,7 @@ class ShExBaseApp {
    */
   async loadSearchParameters () {
     // don't overwrite if we arrived here from going back and forth in history
-    if (App.Caches.inputSchema.selection.val() !== "" || App.Caches.inputData.selection.val() !== "")
+    if (this.Caches.inputSchema.selection.val() !== "" || this.Caches.inputData.selection.val() !== "")
       return Promise.resolve();
 
     const iface = this.parseQueryString(location.search);
@@ -1480,7 +1488,7 @@ class ShExBaseApp {
     // Load all known query parameters. Save load results into array like:
     /* [ [ "data", { "skipped": "skipped" } ],
        [ "manifest", { "fromUrl": { "url": "http://...", "data": "..." } } ], ] */
-    const loadedAsArray = await Promise.all(App.QueryParams.map(async input => {
+    const loadedAsArray = await Promise.all(this.QueryParams.map(async input => {
       const label = input.queryStringParm;
       const parm = label;
       if (parm + "URL" in iface) {
@@ -1551,8 +1559,8 @@ class ShExBaseApp {
       const code = e.keyCode || e.charCode; // standards anyone?
       return !this.keyDownHandlers.find(h => h(e, code)); // if we find a handler, stop propagation
     });
-    this.addContextMenus("#focus0", App.Caches.inputData);
-    this.addContextMenus("#inputShape0", App.Caches.inputSchema);
+    this.addContextMenus("#focus0", this.Caches.inputData);
+    this.addContextMenus("#inputShape0", this.Caches.inputSchema);
     if ("schemaURL" in iface ||
         // some schema is non-empty
         ("schema" in iface &&
@@ -1562,12 +1570,12 @@ class ShExBaseApp {
     }
 
     if ("output-map" in iface)
-      parseShapeMap("output-map", function (node, shape) {
+      parseShapeMap("output-map", (node, shape) => {
         // only works for one n/s pair
         $("#createNode").val(node);
         $("#outputShape").val(shape);
       });
-    this.addContextMenus("#outputShape", App.Caches.outputSchema);
+    this.addContextMenus("#outputShape", this.Caches.outputSchema);
     return loaded;
   }
 
@@ -1578,7 +1586,7 @@ class ShExBaseApp {
   parseQueryString (query) {
     if (query[0]==='?') query=query.substr(1); // optional leading '?'
     const map   = {};
-    query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, function(match, key, value) {
+    query.replace(/([^&,=]+)=?([^&,]*)(?:[&,]+|$)/g, (match, key, value) => {
       key=decodeURIComponent(key);value=decodeURIComponent(value);
       (map[key] = map[key] || []).push(value);
     });
@@ -1615,18 +1623,18 @@ class ShExBaseApp {
     $("#results .status").hide();
     let currentAction = "parsing input schema";
     try {
-      await App.Caches.inputSchema.refresh(); // @@ throw away parser stack?
-      $("#schemaDialect").text(App.Caches.inputSchema.language);
+      await this.Caches.inputSchema.refresh(); // @@ throw away parser stack?
+      $("#schemaDialect").text(this.Caches.inputSchema.language);
       if (hasFocusNode()) {
         currentAction = "parsing input data";
         $("#results .status").text("parsing data...").show();
-        const inputData = await App.Caches.inputData.refresh(); // need prefixes for ShapeMap
+        const inputData = await this.Caches.inputData.refresh(); // need prefixes for ShapeMap
         // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
         currentAction = "parsing shape map";
         const fixedMap = this.fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
           return {
-            node: App.Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
-            shape: App.Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
+            node: this.Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
+            shape: this.Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
           };
         }).get());
 
@@ -1635,8 +1643,8 @@ class ShExBaseApp {
         try {
           // shex-node loads IMPORTs and tests the schema for structural faults.
           const alreadLoaded = {
-            schema: await App.Caches.inputSchema.refresh(),
-            url: App.Caches.inputSchema.url || DefaultBase
+            schema: await this.Caches.inputSchema.refresh(),
+            url: this.Caches.inputSchema.url || DefaultBase
           };
           const loaded = await ShExLoader.load({shexc: [alreadLoaded]}, null, {
             collisionPolicy: (type, left, right) => {
@@ -1649,7 +1657,7 @@ class ShExBaseApp {
           });
           let time;
           const validator = this.validatorClass.factory(loaded, alreadLoaded.url, inputData, this.makeRenderer());
-          App.usingValidator(validator);
+          this.usingValidator(validator);
 
           currentAction = "validating";
           $("#results .status").text("validating...").show();
@@ -1663,24 +1671,24 @@ class ShExBaseApp {
           return this.reportValidationError(e, currentAction);
         }
       } else {
-        const outputLanguage = App.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
+        const outputLanguage = this.Caches.inputSchema.language === "ShExJ" ? "ShExC" : "ShExJ";
         $("#results .status").
-          text("parsed "+App.Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
+          text("parsed "+this.Caches.inputSchema.language+" schema, generated "+outputLanguage+" ").
           append($("<button>(copy to input)</button>").
                  css("border-radius", ".5em").
-                 on("click", async function () {
-                   await App.Caches.inputSchema.set($("#results div").text(), DefaultBase);
+                 on("click", async () => {
+                   await this.Caches.inputSchema.set($("#results div").text(), DefaultBase);
                  })).
           append(":").
           show();
         let parsedSchema;
-        if (App.Caches.inputSchema.language === "ShExJ") {
+        if (this.Caches.inputSchema.language === "ShExJ") {
           const opts = {
             simplifyParentheses: false,
-            base: App.Caches.inputSchema.meta.base,
-            prefixes: App.Caches.inputSchema.meta.prefixes
+            base: this.Caches.inputSchema.meta.base,
+            prefixes: this.Caches.inputSchema.meta.prefixes
           }
-          new ShExWebApp.Writer(opts).writeSchema(App.Caches.inputSchema.parsed, (error, text) => {
+          new ShExWebApp.Writer(opts).writeSchema(this.Caches.inputSchema.parsed, (error, text) => {
             if (error) {
               $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
               // res.addClass("error");
@@ -1690,12 +1698,12 @@ class ShExBaseApp {
           });
         } else {
           const pre = $("<pre/>");
-          pre.text(JSON.stringify(ShExWebApp.Util.AStoShExJ(ShExWebApp.Util.canonicalize(App.Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
+          pre.text(JSON.stringify(ShExWebApp.Util.AStoShExJ(ShExWebApp.Util.canonicalize(this.Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
           this.resultsWidget.append(pre);
         }
         this.resultsWidget.finish();
         return { transformation: {
-          from: App.Caches.inputSchema.language,
+          from: this.Caches.inputSchema.language,
           to: outputLanguage
         } }
       }
@@ -1715,7 +1723,7 @@ class ShExBaseApp {
   }
 
   makeRenderer () {
-    return new ShExResultsRenderer(this.resultsWidget);
+    return new ShExResultsRenderer(this.resultsWidget, this.Caches);
   }
 
   reportValidationError (validationError, currentAction) {
@@ -1728,7 +1736,7 @@ class ShExBaseApp {
   makeConsoleTracker () {
     function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
     function sm (node, shape) {
-      return `${App.Caches.inputData.meta.termToLex(node)}@${App.Caches.inputSchema.meta.termToLex(shape)}`;
+      return `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
     }
     const logger = {
       recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
@@ -1879,7 +1887,7 @@ class ShExBaseApp {
   async getPermalink () {
     let parms = [];
     await copyEditMapToTextMap();
-    parms = parms.concat(App.QueryParams.reduce((acc, input) => {
+    parms = parms.concat(this.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();
       if (input.cache && input.cache.url &&
@@ -1943,7 +1951,7 @@ w  /**
    * Prepare drag and drop into text areas
    */
   async prepareDragAndDrop () {
-    App.QueryParams.filter(q => {
+    this.QueryParams.filter(q => {
       return "cache" in q;
     }).map(q => {
       return {
@@ -1956,16 +1964,16 @@ w  /**
       };
     }).concat([
       {location: $("body"), targets: [
-        {media: "application/json", target: App.Caches.manifest},
-        {ext: ".shex", media: "text/shex", target: App.Caches.inputSchema},
-        {ext: ".ttl", media: "text/turtle", target: App.Caches.inputData},
-        {ext: ".json", media: "application/json", target: App.Caches.manifest},
-        {ext: ".smap", media: "text/plain", target: App.Caches.shapeMap}]}
+        {media: "application/json", target: this.Caches.manifest},
+        {ext: ".shex", media: "text/shex", target: this.Caches.inputSchema},
+        {ext: ".ttl", media: "text/turtle", target: this.Caches.inputData},
+        {ext: ".json", media: "application/json", target: this.Caches.manifest},
+        {ext: ".smap", media: "text/plain", target: this.Caches.shapeMap}]}
     ]).forEach(desc => {
       const droparea = desc.location;
       // kudos to http://html5demos.com/dnd-upload
       desc.location.
-        on("drag dragstart dragend dragover dragenter dragleave drop", function (e) {
+        on("drag dragstart dragend dragover dragenter dragleave drop", (e) => {
           e.preventDefault();
           e.stopPropagation();
         }).
@@ -2010,7 +2018,7 @@ w  /**
                       action.schemaURL = action.schema; delete action.schema;
                       action.dataURL = action.data; delete action.data;
                     });
-                    promises.push(App.Caches.manifest.set(parsed, DefaultBase, "drag and drop"));
+                    promises.push(this.Caches.manifest.set(parsed, DefaultBase, "drag and drop"));
                   } else {
                     promises.push(inject(desc.targets, DefaultBase, val, l.type));
                   }
@@ -2021,10 +2029,10 @@ w  /**
                     },
                     url: val,
                     dataType: "text"
-                  }).fail(function (jqXHR, textStatus) {
+                  }).fail((jqXHR, textStatus) => {
                     const error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
                     this.resultsWidget.append($("<pre/>").text("GET <" + val + "> failed: " + error));
-                  }).done(function (data, status, jqXhr) {
+                  }).done((data, status, jqXhr) => {
                     try {
                       promises.push(inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]));
                       $("#loadForm").dialog("close");
@@ -2088,8 +2096,8 @@ w  /**
           promises.push(new Promise((resolve, reject) => {
             formData.append("file", file);
             const reader = new FileReader();
-            reader.onload = (function (target) {
-              return async function (event) {
+            reader.onload = ((target) => {
+              return async (event) => {
                 const appendTo = $("#append").is(":checked") ? target.get() : "";
                 await target.set(appendTo + event.target.result, DefaultBase);
                 ++successes;
@@ -2117,7 +2125,7 @@ w  /**
     $.contextMenu({
       trigger: 'none',
       selector: inputSelector,
-      build: function($trigger, e) {
+      build: ($trigger, e) => {
         // return callback set by the mouseup handler
         return $trigger.data(DATA_HANDLE)();
       }
@@ -2160,7 +2168,7 @@ w  /**
             return tz.map(t => {
               return t.startsWith('!')
                 ? "- " + t.substr(1) + " -"
-                : App.Caches.inputData.meta.termToLex(t); // !!check
+                : this.Caches.inputData.meta.termToLex(t); // !!check
             });
           }
           const queryMapKeywords = ["FOCUS", "_"];
@@ -2169,7 +2177,7 @@ w  /**
             () => { return norm(store.getPredicates()); },
             () => { return queryMapKeywords.concat(norm(store.getObjects())); },
           ];
-          const store = await App.Caches.inputData.refresh();
+          const store = await this.Caches.inputData.refresh();
           if (terms.match === null)
             return false; // prevent contextMenu from whining about an empty list
           return listToCTHash(getTermsFunctions[terms.match]())
@@ -2179,7 +2187,7 @@ w  /**
       try {
         return listToCTHash(await cache.getItems())
       } catch (e) {
-        this.resultsWidget.failMessage(e, cache === App.Caches.inputSchema ? "parsing schema" : "parsing data");
+        this.resultsWidget.failMessage(e, cache === this.Caches.inputSchema ? "parsing schema" : "parsing data");
         let items = {};
         const failContent = "no choices found";
         items[failContent] = failContent;
@@ -2195,7 +2203,7 @@ w  /**
         ? "FOCUS"
         : node === null
         ? "_"
-        : App.Caches.inputData.meta.termToLex(node);
+        : this.Caches.inputData.meta.termToLex(node);
         }
         }
       */
@@ -2229,7 +2237,7 @@ w  /**
       p.then(items => {
 
         // store a callback on the trigger
-        $this.data(DATA_HANDLE, function () {
+        $this.data(DATA_HANDLE, () => {
           return {
             callback: menuCallback,
             items: items
