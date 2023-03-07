@@ -43,7 +43,7 @@ class RemoteShExValidator {
     this.renderer = renderer;
     this.created = new Canceleable(
       $("#validate"),
-      disableResultsAndValidate,
+      App.disableResultsAndValidate,
       "validator creation aborted",
       Object.assign(
         {
@@ -75,7 +75,7 @@ class RemoteShExValidator {
     });
     return new Canceleable(
       $("#validate"),
-      disableResultsAndValidate,
+      App.disableResultsAndValidate,
       "validation aborted",
       {
         request: "validate",

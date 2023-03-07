@@ -2,9 +2,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
   usingValidator (validator) {
     this.Mapper = this.MapModule.register(validator.validator, ShExWebApp);
   }
-  async materialize () {
-    SharedForTests.promise = this.materializeAsync();
-  }
+
   async materializeAsync () {
     if (App.Caches.bindings.get().trim().length === 0) {
       results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
@@ -35,7 +33,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       }
 
       // const trivialMaterializer = this.Mapper.trivialMaterializer(outputSchema);
-      const outputShapeMap = fixedShapeMapToTerms([{
+      const outputShapeMap = App.fixedShapeMapToTerms([{
         node: App.Caches.inputData.meta.lexToTerm($("#createRoot").val()),
         shape: App.Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with App.Caches.outputSchema
       }]);

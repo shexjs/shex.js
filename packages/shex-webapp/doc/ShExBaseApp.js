@@ -1,4 +1,5 @@
 
+let LastFailTime = 0;
 function failMessage (e, action, text) {
   $("#results .status").empty().text("Errors encountered:").show()
   const div = $("<div/>").addClass("error");
@@ -113,7 +114,7 @@ class SchemaCache extends InterfaceCache {
           this.graph ? parseShExR() :
           this.shexcParser.parseString(text, this.meta, base);
     $("#results .status").hide();
-    markEditMapDirty(); // ShapeMap validity may have changed.
+    App.markEditMapDirty(); // ShapeMap validity may have changed.
     return schema;
 
     async function parseDcTap (text) {
@@ -170,7 +171,7 @@ class TurtleCache extends InterfaceCache {
 
   async parse (text, base) {
     const res = ShExWebApp.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
-    markEditMapDirty(); // ShapeMap validity may have changed.
+    App.markEditMapDirty(); // ShapeMap validity may have changed.
     return res;
   }
 
@@ -419,7 +420,7 @@ class ManifestCache extends InterfaceCache {
       App.Caches.inputSchema.url = undefined; // @@ crappyHack1
       $("#inputSchema .status").text(name);
 
-      clearData();
+      App.clearData();
       const headings = {
         "passes": "Passing:",
         "fails": "Failing:",
@@ -446,7 +447,7 @@ class ManifestCache extends InterfaceCache {
   }
 
   async pickData (name, dataTest, elt, listItems, side) {
-    clearData();
+    App.clearData();
     if ($(elt).hasClass("selected")) {
       $(elt).removeClass("selected");
     } else {
@@ -463,7 +464,7 @@ class ManifestCache extends InterfaceCache {
       }
 
       // Update ShapeMap pane.
-      removeEditMapPair(null);
+      App.removeEditMapPair(null);
       if (dataTest.entry.queryMap !== undefined) {
         await this.queryMapLoaded(dataTest, dataTest.entry.queryMap);
       } else if (dataTest.entry.queryMapURL !== undefined) {
@@ -486,7 +487,7 @@ class ManifestCache extends InterfaceCache {
     } catch (e) {
       $("#textMap").val(dataTest.entry.queryMap);
     }
-    await copyTextMapToEditMap();
+    await App.copyTextMapToEditMap();
     // callValidator();
   }
 }
@@ -611,10 +612,10 @@ class ShapeMapCache extends InterfaceCache {
   }
 
   async parse (text) {
-    removeEditMapPair(null);
+    App.removeEditMapPair(null);
     $("#textMap").val(text);
-    copyTextMapToEditMap();
-    await copyEditMapToFixedMap();
+    App.copyTextMapToEditMap();
+    await App.copyEditMapToFixedMap();
   };
 
   async getItems () {
@@ -848,13 +849,353 @@ class ShExBaseApp {
       {queryStringParm: "regexpEngine", location: $("#regexpEngine"),    deflt: "eval-threaded-nerr" },
     ]);
     this.keyDownHandlers = [
-      ShExBaseApp.validateKeyDown,
-      ShExBaseApp.navigateManifestKeyDown,
+      this.validateKeyDown.bind(this),
+      this.navigateManifestKeyDown.bind(this),
     ];
   }
 
   // abstract usingValidator (_validator) { } // overriden for ShExMap
 
+  /* manage caches */
+  async clearData () {
+    // Clear out data textarea.
+    await this.Caches.inputData.set("", DefaultBase);
+    $("#inputData .status").text(" ");
+
+    // Clear out every form of ShapeMap.
+    $("#textMap").val("").removeClass("error");
+    this.makeFreshEditMap();
+    $("#fixedMap").empty();
+
+    results.clear();
+  }
+
+  async clearAll () {
+    $("#results .status").hide();
+    await this.Caches.inputSchema.set("", DefaultBase);
+    $(".inputShape").val("");
+    $("#inputSchema .status").text(" ");
+    $("#inputSchema li.selected").removeClass("selected");
+    this.clearData();
+    $("#inputData .passes, #inputData .fails").hide();
+    $("#inputData .passes p:first").text("");
+    $("#inputData .fails p:first").text("");
+    $("#inputData .passes ul, #inputData .fails ul").empty();
+  }
+
+  /* ShapeMap */
+
+  /**
+   * @return list of errors encountered
+   */
+  async copyEditMapToTextMap () {
+    if ($("#editMap").attr("data-dirty") === "true") {
+      const text = $("#editMap .pair").get().reduce((acc, queryPair) => {
+        const node = $(queryPair).find(".focus").val();
+        const shape = $(queryPair).find(".inputShape").val();
+        if (!node || !shape)
+          return acc;
+        const status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "!" : "";
+        return acc.concat([node+"@"+status+shape]);
+      }, []).join(",\n");
+      $("#textMap").empty().val(text);
+      const ret = await this.copyEditMapToFixedMap();
+      this.markEditMapClean();
+      return ret;
+    } else {
+      return []; // no errors
+    }
+  }
+
+  /**
+   * Parse query map to populate #editMap and #fixedMap.
+   * @returns list of errors. ([] means everything was good.)
+   */
+  async copyTextMapToEditMap () {
+    $("#textMap").removeClass("error");
+    const shapeMap = $("#textMap").val();
+    results.clear();
+    try {
+      await App.Caches.inputSchema.refresh();
+      await App.Caches.inputData.refresh();
+      const smparser = ShExWebApp.ShapeMapParser.construct(
+        App.Caches.shapeMap.meta.base, App.Caches.inputSchema.meta, App.Caches.inputData.meta);
+      const sm = smparser.parse(shapeMap);
+      this.removeEditMapPair(null);
+      this.addEditMapPairs(sm.length ? sm : null);
+      const ret = await this.copyEditMapToFixedMap();
+      this.markEditMapClean();
+      results.clear();
+      return ret;
+    } catch (e) {
+      $("#textMap").addClass("error");
+      failMessage(e, "parsing Query Map");
+      this.makeFreshEditMap()
+      return [e];
+    }
+  }
+
+  makeFreshEditMap () {
+    this.removeEditMapPair(null);
+    this.addEditMapPairs(null, null);
+    this.markEditMapClean();
+    return [];
+  }
+
+  addEmptyEditMapPair (evt) {
+    this.addEditMapPairs(null, $(evt.target).parent().parent());
+    this.markEditMapDirty();
+    return false;
+  }
+
+  addEditMapPairs (pairs, target) {
+    (pairs || [{node: {type: "empty"}}]).forEach(pair => {
+      const nodeType = (typeof pair.node !== "object" || "@value" in pair.node)
+            ? "node"
+            : pair.node.type;
+      let skip = false;
+      let node, shape;
+      switch (nodeType) {
+      case "empty": node = shape = ""; break;
+      case "node": node = ldToTurtle(pair.node, App.Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
+      case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
+      case "Extension":
+        failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
+                    "parsing Query Map", pair.node.lexical);
+        skip = true; // skip this entry.
+        break;
+      default:
+        results.append($("<div/>").append(
+          $("<span/>").text("unrecognized ShapeMap:"),
+          $("<pre/>").text(JSON.stringify(pair))
+        ).addClass("error"));
+        skip = true; // skip this entry.
+        break;
+      }
+      if (!skip) {
+
+        const spanElt = $("<tr/>", {class: "pair"});
+        const focusElt = $("<textarea/>", {
+          rows: '1',
+          type: 'text',
+          class: 'data focus'
+        }).text(node).on("change", this.markEditMapDirty);
+        const joinerElt = $("<span>", {
+          class: 'shapeMap-joiner'
+        }).append("@").addClass(pair.status);
+        joinerElt.append(
+          $("<input>", {style: "border: none; width: .2em;", readonly: "readonly"}).val(pair.status === "nonconformant" ? "!" : " ").on("click", function (evt) {
+            const status = $(this).parent().hasClass("nonconformant") ? "conformant" : "nonconformant";
+            $(this).parent().removeClass("conformant nonconformant");
+            $(this).parent().addClass(status);
+            $(this).val(status === "nonconformant" ? "!" : "");
+            this.markEditMapDirty();
+            evt.preventDefault();
+          })
+        );
+        // if (pair.status === "nonconformant") {
+        //   joinerElt.append("!");
+        // }
+        const shapeElt = $("<input/>", {
+          type: 'text',
+          value: shape,
+          class: 'schema inputShape'
+        }).on("change", this.markEditMapDirty);
+        const addElt = $("<button/>", {
+          class: "addPair",
+          title: "add a node/shape pair"}).text("+");
+        const removeElt = $("<button/>", {
+          class: "removePair",
+          title: "remove this node/shape pair"}).text("-");
+        addElt.on("click", this.addEmptyEditMapPair);
+        removeElt.on("click", this.removeEditMapPair);
+        spanElt.append([focusElt, joinerElt, shapeElt, addElt, removeElt].map(elt => {
+          return $("<td/>").append(elt);
+        }));
+        if (target) {
+          target.after(spanElt);
+        } else {
+          $("#editMap").append(spanElt);
+        }
+      }
+    });
+    if ($("#editMap .removePair").length === 1)
+      $("#editMap .removePair").css("visibility", "hidden");
+    else
+      $("#editMap .removePair").css("visibility", "visible");
+    $("#editMap .pair").each(idx => {
+      addContextMenus("#editMap .pair:nth("+idx+") .focus", App.Caches.inputData);
+      addContextMenus(".pair:nth("+idx+") .inputShape", App.Caches.inputSchema);
+    });
+    return false;
+
+    function renderTP (tp) {
+      const ret = ["subject", "predicate", "object"].map(k => {
+        const ld = tp[k];
+        if (ld === ShExWebApp.ShapeMap.Focus)
+          return "FOCUS";
+        if (!ld) // ?? ShExWebApp.Uti.any
+          return "_";
+        return ldToTurtle(ld, App.Caches.inputData.meta.termToLex);
+      });
+      return "{" + ret.join(" ") + "}";
+    }
+
+    function startOrLdToTurtle (term) {
+      return term === ShExWebApp.Validator.Start ? START_SHAPE_LABEL : ShExWebApp.ShExTerm.shExJsTerm2Turtle(term, App.Caches.inputSchema.meta);
+    }
+  }
+
+  removeEditMapPair (evt) {
+    this.markEditMapDirty();
+    if (evt) {
+      $(evt.target).parent().parent().remove();
+    } else {
+      $("#editMap .pair").remove();
+    }
+    if ($("#editMap .removePair").length === 1)
+      $("#editMap .removePair").css("visibility", "hidden");
+    return false;
+  }
+
+  markEditMapDirty () {
+    $("#editMap").attr("data-dirty", true);
+  }
+
+  markEditMapClean () {
+    $("#editMap").attr("data-dirty", false);
+  }
+
+  /** getShapeMap -- zip a node list and a shape list into a ShapeMap
+   * use {App.Caches.inputData,App.Caches.inputSchema}.meta.{prefix,base} to complete IRIs
+   * @return array of encountered errors
+   */
+  async copyEditMapToFixedMap () {
+    $("#fixedMap tbody").empty(); // empty out the fixed map.
+    const fixedMapTab = $("#shapeMap-tabs").find('[href="#fixedMap-tab"]');
+    const restoreText = fixedMapTab.text();
+    fixedMapTab.text("resolving Fixed Map").addClass("running");
+    $("#fixedMap .pair").remove(); // clear out existing edit map (make optional?)
+    const nodeShapePromises = $("#editMap .pair").get().reduce((acc, queryPair) => {
+      $(queryPair).find(".error").removeClass("error"); // remove previous error markers
+      const node = $(queryPair).find(".focus").val();
+      const shape = $(queryPair).find(".inputShape").val();
+      const status = $(queryPair).find(".shapeMap-joiner").hasClass("nonconformant") ? "nonconformant" : "conformant";
+      if (!node || !shape)
+        return acc;
+      const smparser = ShExWebApp.ShapeMapParser.construct(
+        App.Caches.shapeMap.meta.base, App.Caches.inputSchema.meta, App.Caches.inputData.meta);
+      try {
+        const sm = smparser.parse(node + '@' + shape)[0];
+        const added = typeof sm.node === "string" || "@value" in sm.node
+              ? Promise.resolve({nodes: [node], shape: shape, status: status})
+              : getQuads(sm.node.subject, sm.node.predicate, sm.node.object)
+              .then(nodes => Promise.resolve({nodes: nodes, shape: shape, status: status}));
+        return acc.concat(added);
+      } catch (e) {
+        // find which cell was broken
+        try { smparser.parse(node + '@' + "START"); } catch (e) {
+          $(queryPair).find(".focus").addClass("error");
+        }
+        try { smparser.parse("<>" + '@' + shape); } catch (e) {
+          $(queryPair).find(".inputShape").addClass("error");
+        }
+        failMessage(e, "parsing Edit Map", node + '@' + shape);
+        return acc;
+      }
+    }, []);
+
+    const pairs = await Promise.all(nodeShapePromises)
+    pairs.reduce((acc, pair) => {
+      pair.nodes.forEach(node => {
+        const nodeTerm = App.Caches.inputData.meta.lexToTerm(node + " "); // for langcode lookahead
+        let shapeTerm = App.Caches.inputSchema.meta.lexToTerm(pair.shape);
+        if (shapeTerm === ShExWebApp.Validator.Start)
+          shapeTerm = START_SHAPE_INDEX_ENTRY;
+        const key = nodeTerm + "|" + shapeTerm;
+        if (key in acc)
+          return;
+
+        const spanElt = createEntry(node, nodeTerm, pair.shape, shapeTerm, pair.status);
+        acc[key] = spanElt; // just needs the key so far.
+      });
+
+      return acc;
+    }, {})
+    // scroll inputs to right
+    $("#fixedMap input").each((idx, focusElt) => {
+      focusElt.scrollLeft = focusElt.scrollWidth;
+    });
+    fixedMapTab.text(restoreText).removeClass("running");
+    return []; // no errors
+
+    async function getQuads (s, p, o) {
+      const get = s === ShExWebApp.ShapeMap.Focus ? "subject" : "object";
+      return (await App.Caches.inputData.refresh()).getQuads(mine(s), mine(p), mine(o)).map(t => {
+        return App.Caches.inputData.meta.termToLex(t[get]); // count on unpublished N3.js id API
+      });
+      function mine (term) {
+        return term === ShExWebApp.ShapeMap.Focus || term === ShExWebApp.ShapeMap.Wildcard
+          ? null
+          : term;
+      }
+    }
+
+    function createEntry (node, nodeTerm, shape, shapeTerm, status) {
+      const spanElt = $("<tr/>", {class: "pair"
+                                  ,"data-node": nodeTerm
+                                  ,"data-shape": shapeTerm
+                                 });
+      const focusElt = $("<input/>", {
+        type: 'text',
+        value: node,
+        class: 'data focus',
+        disabled: "disabled"
+      });
+      const joinerElt = $("<span>", {
+        class: 'shapeMap-joiner'
+      }).append("@").addClass(status);
+      if (status === "nonconformant") {
+        joinerElt.addClass("negated");
+        joinerElt.append("!");
+      }
+      const shapeElt = $("<input/>", {
+        type: 'text',
+        value: shape,
+        class: 'schema inputShape',
+        disabled: "disabled"
+      });
+      const removeElt = $("<button/>", {
+        class: "removePair",
+        title: "remove this node/shape pair"}).text("-");
+      removeElt.on("click", evt => {
+        // Remove related result.
+        let href, result;
+        if ((href = $(evt.target).closest("tr").find("a").attr("href"))
+            && (result = document.getElementById(href.substr(1))))
+          $(result).remove();
+        // Remove FixedMap entry.
+        $(evt.target).closest("tr").remove();
+      });
+      spanElt.append([focusElt, joinerElt, shapeElt, removeElt, $("<a/>")].map(elt => {
+        return $("<td/>").append(elt);
+      }));
+
+      $("#fixedMap").append(spanElt);
+      return spanElt;
+    }
+
+  }
+
+  /** fixedShapeMapToTerms -- map ShapeMap to API terms
+   * @@TODO: add to ShExValidator so API accepts ShapeMap
+   */
+  fixedShapeMapToTerms (shapeMap) {
+    return shapeMap; /*.map(pair => {
+                       return {node: App.Caches.inputData.meta.lexToTerm(pair.node + " "),
+                       shape: App.Caches.inputSchema.meta.lexToTerm(pair.shape)};
+                       });*/
+  }
   /* UI setup */
   /**
    * set up UI buttons handlers
@@ -864,8 +1205,8 @@ class ShExBaseApp {
     $("#interface").on("change", setInterface);
     $("#success").on("change", setInterface);
     $("#regexpEngine").on("change", toggleControls);
-    $("#validate").on("click", disableResultsAndValidate);
-    $("#clear").on("click", clearAll);
+    $("#validate").on("click", this.disableResultsAndValidate.bind(this));
+    $("#clear").on("click", this.clearAll.bind(this));
     $("#download-results-button").on("click", downloadResults);
 
     $("#loadForm").dialog({
@@ -936,16 +1277,16 @@ class ShExBaseApp {
     $("#shapeMap-tabs").tabs({
       activate: async function (event, ui) {
         if (ui.oldPanel.get(0) === $("#editMap-tab").get(0))
-          await copyEditMapToTextMap();
+          await this.copyEditMapToTextMap();
         else if (ui.oldPanel.get(0) === $("#textMap").get(0))
-          await copyTextMapToEditMap()
+          await this.copyTextMapToEditMap()
       }
     });
     $("#textMap").on("change", evt => {
       results.clear();
-      SharedForTests.promise = copyTextMapToEditMap();
+      SharedForTests.promise = this.copyTextMapToEditMap();
     });
-    App.Caches.inputData.selection.on("change", dataInputHandler); // input + paste?
+    App.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
     // $("#copyEditMapToFixedMap").on("click", copyEditMapToFixedMap); // may add this button to tutorial
 
     function dismissModal (evt) {
@@ -1049,19 +1390,19 @@ class ShExBaseApp {
         return [label, { deflt: "deflt" }]; // flag that it was a default
       }
       return [label, { skipped: "skipped" }]
-    }))
+    }));
     // convert loaded array into Object:
     /* { "data": { "skipped": "skipped" },
        "manifest": { "fromUrl": { "url": "http://...", "data": "..." } }, } */
     const loaded = loadedAsArray.reduce((acc, fromArray) => {
       acc[fromArray[0]] = fromArray[1]
       return acc
-    }, {})
+    }, {});
 
     // Parse the shape-map using the prefixes and base.
     const shapeMapErrors = $("#textMap").val().trim().length > 0
-          ? copyTextMapToEditMap()
-          : makeFreshEditMap();
+          ? this.copyTextMapToEditMap()
+          : this.makeFreshEditMap();
 
     customizeInterface();
     $("body").keydown(e => { // keydown because we need to preventDefault
@@ -1088,7 +1429,30 @@ class ShExBaseApp {
     return loaded;
   }
 
-  /* Exectuions */
+  /* Executions */
+
+  // Validation UI
+  disableResultsAndValidate (evt) {
+    if (new Date().getTime() - LastFailTime < 100) {
+      results.append(
+        $("<div/>").addClass("warning").append(
+          $("<h2/>").text("see shape map errors above"),
+          $("<button/>").text("validate (ctl-enter)").on("click", this.disableResultsAndValidate.bind(this)),
+          " again to continue."
+        )
+      );
+      return; // return if < 100ms since last error.
+    }
+    results.clear();
+    results.start();
+    SharedForTests.promise = new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        const errors = await this.copyEditMapToTextMap(); // will update if #editMap is dirty
+        if (errors.length === 0)
+          resolve(await this.callValidator());
+      }, 0);
+    })
+  }
 
   async callValidator (done) {
     $("#fixedMap .pair").removeClass("passes fails");
@@ -1103,7 +1467,7 @@ class ShExBaseApp {
         const inputData = await App.Caches.inputData.refresh(); // need prefixes for ShapeMap
         // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
         currentAction = "parsing shape map";
-        const fixedMap = fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
+        const fixedMap = this.fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
           return {
             node: App.Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
             shape: App.Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
@@ -1212,19 +1576,29 @@ class ShExBaseApp {
     return logger;
   }
 
+  /* Mouse events */
+
+  async dataInputHandler (evt) {
+    const active = $('#shapeMap-tabs ul li.ui-tabs-active a').attr('href');
+    if (active === "#editMap-tab")
+      return await this.copyEditMapToTextMap();
+    else // if (active === "#textMap")
+      return await this.copyTextMapToEditMap();
+  }
+
   /* Keyboard events */
-  static validateKeyDown (e, code) {
+  validateKeyDown (e, code) {
     if (!e.ctrlKey || (code !== 10 && code !== 13)) // ctrl-enter
       return false;
     // const at = $(":focus");
-    dataInputHandler().then(smErrors => {
+    this.dataInputHandler().then(smErrors => {
       if (smErrors.length === 0)
         $("#validate")/*.focus()*/.click();
     })
     return true;
   }
 
-  static navigateManifestKeyDown (e, code) {
+  navigateManifestKeyDown (e, code) {
     if (!e.ctrlKey || ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].indexOf(e.code) === -1) // ctrl-arrow
       return false;
     let newLi = null;

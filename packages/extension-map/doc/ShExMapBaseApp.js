@@ -105,6 +105,19 @@ class ShExMapBaseApp extends ShExBaseApp {
     return this.currentRenderer = new ShExMapResultsRenderer(this.MapModule.url, this.Caches.bindings)
   }
 
+  reportMaterializationError (materializationError, currentAction) {
+    $("#results .status").text("materialization errors:").show();
+    failMessage(materializationError, currentAction);
+    console.error(materializationError); // dump details to console.
+    return { materializationError };
+  }
+
+  async materialize () {
+    results.clear();
+    results.start();
+    SharedForTests.promise = this.materializeAsync();
+  }
+
   bindingsToTable () {
     let d = JSON.parse($("#bindings1 textarea").val())
     let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")

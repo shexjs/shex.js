@@ -19,9 +19,6 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
     return logger;
   }
 
-  async materialize () {
-    SharedForTests.promise = this.materializeAsync()
-  }
   async materializeAsync () {
     if (App.Caches.bindings.get().trim().length === 0) {
       results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
@@ -52,7 +49,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
       }
 
       // const trivialMaterializer = Mapper.trivialMaterializer(outputSchema);
-      const outputShapeMap = fixedShapeMapToTerms([{
+      const outputShapeMap = this.fixedShapeMapToTerms([{
         node: App.Caches.inputData.meta.lexToTerm($("#createRoot").val()),
         shape: App.Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with App.Caches.outputSchema
       }]);
@@ -165,10 +162,11 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
       results.finish();
       return { materializationResults: generatedGraph };
     } catch (e) {
-      results.replace("error parsing " + parsing + ":\n" + e).
-        removeClass("passes fails").addClass("error");
-      // results.finish();
-      return null;
+      this.reportMaterializationError(e, "materialization");
+      // results.replace("error parsing " + parsing + ":\n" + e).
+      //   removeClass("passes fails").addClass("error");
+      // // results.finish();
+      // return null;
     }
   }
 }
