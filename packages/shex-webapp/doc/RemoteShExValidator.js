@@ -159,7 +159,7 @@ class RemoteShExValidator {
       e.stack = msg.data.stack;
       workerUICleanup();
       $("#results .status").text("validation errors:").show();
-      failMessage(e, currentAction);
+      this.renderer.failure(e, currentAction);
       console.error(e); // dump details to console.
       if (done) { done(e) }
       break;

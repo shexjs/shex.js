@@ -5,11 +5,11 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
 
   async materializeAsync () {
     if (App.Caches.bindings.get().trim().length === 0) {
-      results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
+      this.resultsWidget.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
         removeClass("passes fails").addClass("error");
       return null;
     }
-    results.start();
+    this.resultsWidget.start();
     const parsing = "output schema";
     try {
       const outputSchemaText = App.Caches.outputSchema.selection.val();
@@ -59,7 +59,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
             })
             // $("#results .status").text("validation errors:").show();
             // $("#results .status").text("synthesis errors:").show();
-            // failMessage(e, currentAction);
+            // this.resultsWidget.failMessage(e, currentAction);
           } else {
             // console.log("g:", ShExWebApp.Util.valToTurtle(resM));
             generatedGraph.addQuads(ShExWebApp.Util.valToN3js(resM, RdfJs.DataFactory));
@@ -126,14 +126,14 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
           fallbackWriter.end((error, result) => this.addResult(error, result));
         }
       });
-      results.finish();
+      this.resultsWidget.finish();
       return { materializationResults: generatedGraph };
     } catch (e) {
       if (true) // don't print stack for parser errors
         console.log(e);
-      results.replace("error parsing " + parsing + ":\n" + e).
+      this.resultsWidget.replace("error parsing " + parsing + ":\n" + e).
         removeClass("passes fails").addClass("error");
-      // results.finish();
+      // this.resultsWidget.finish();
       return null;
     }
   }

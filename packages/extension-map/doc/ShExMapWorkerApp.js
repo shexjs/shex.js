@@ -21,11 +21,11 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
 
   async materializeAsync () {
     if (App.Caches.bindings.get().trim().length === 0) {
-      results.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
+      this.resultsWidget.replace("You must validate data against a ShExMap schema to populate mappings bindings.").
         removeClass("passes fails").addClass("error");
       return null;
     }
-    results.start();
+    this.resultsWidget.start();
     const parsing = "output schema";
     try {
       const outputSchemaText = App.Caches.outputSchema.selection.val();
@@ -83,7 +83,7 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
 
         case "error":
           if ("exception" in msg.data) {
-            results.replace("error materializing:\n" + msg.data.exception).
+            this.resultsWidget.replace("error materializing:\n" + msg.data.exception).
               removeClass("passes fails").addClass("error");
           } else {
             this.renderEntry({
@@ -159,13 +159,13 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
           fallbackWriter.end((error, result) => this.addResult(error, result));
         }
       });
-      results.finish();
+      this.resultsWidget.finish();
       return { materializationResults: generatedGraph };
     } catch (e) {
       this.reportMaterializationError(e, "materialization");
-      // results.replace("error parsing " + parsing + ":\n" + e).
+      // this.resultsWidget.replace("error parsing " + parsing + ":\n" + e).
       //   removeClass("passes fails").addClass("error");
-      // // results.finish();
+      // // this.resultsWidget.finish();
       // return null;
     }
   }

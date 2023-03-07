@@ -1,7 +1,7 @@
 class ShExSimpleApp extends ShExBaseApp {
   constructor (base, validatorClass) {
     super(base, validatorClass);
-    const manifest = new ManifestCache($("#manifestDrop"));
+    const manifest = new ManifestCache($("#manifestDrop"), this.resultsWidget);
     this.Caches.manifest = manifest;
     const shexSimpleParameter =
       {queryStringParm: "manifest", location: manifest.selection, cache: manifest, fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)}

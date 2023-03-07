@@ -43,8 +43,8 @@ class ShExMapManifestCache extends ManifestCache {
 }
 
 class ShExMapResultsRenderer extends ShExResultsRenderer {
-  constructor (mapUrl, bindings) {
-    super();
+  constructor (resultsWidget, mapUrl, bindings) {
+    super(resultsWidget);
     this.mapUrl = mapUrl;
     this.bindings = bindings;
   }
@@ -64,7 +64,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     super(base, validatorClass);
     this.currentRenderer = null;
     this.MapModule = ShExWebApp.Map({rdfjs: RdfJs, Validator: ShExWebApp.Validator});
-    const manifest = new ShExMapManifestCache($("#manifestDrop"));
+    const manifest = new ShExMapManifestCache($("#manifestDrop"), this.resultsWidget);
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
     const outputSchema = new SchemaCache($("#outputSchema textarea"), this.shexcParser, this.turtleParser);
@@ -102,24 +102,24 @@ class ShExMapBaseApp extends ShExBaseApp {
   }
 
   makeRenderer () {
-    return this.currentRenderer = new ShExMapResultsRenderer(this.MapModule.url, this.Caches.bindings)
+    return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.MapModule.url, this.Caches.bindings)
   }
 
   reportMaterializationError (materializationError, currentAction) {
     $("#results .status").text("materialization errors:").show();
-    failMessage(materializationError, currentAction);
+    this.resultsWidget.failMessage(materializationError, currentAction);
     console.error(materializationError); // dump details to console.
     return { materializationError };
   }
 
   async materialize () {
-    results.clear();
-    results.start();
+    this.resultsWidget.clear();
+    this.resultsWidget.start();
     SharedForTests.promise = this.materializeAsync();
   }
 
   addResult (error, result) {
-    results.append(
+    this.resultsWidget.append(
       $("<div/>", {class: "passes"}).append(
         $("<span/>", {class: "shapeMap"}).append(
           "# ",
@@ -130,7 +130,7 @@ class ShExMapBaseApp extends ShExBaseApp {
         $("<pre/>").text(result)
       )
     )
-    // results.append($("<pre/>").text(result));
+    // this.resultsWidget.append($("<pre/>").text(result));
   }
 
   bindingsToTable () {

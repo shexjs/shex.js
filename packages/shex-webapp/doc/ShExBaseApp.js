@@ -5,18 +5,6 @@ const NO_MANIFEST_LOADED = "no manifest loaded";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const LOG_PROGRESS = false;
 
-let LastFailTime = 0;
-function failMessage (e, action, text) {
-  $("#results .status").empty().text("Errors encountered:").show()
-  const div = $("<div/>").addClass("error");
-  div.append($("<h3/>").text("error " + action + ":\n"));
-  div.append($("<pre/>").text(e.message));
-  if (text)
-    div.append($("<pre/>").text(text));
-  results.append(div);
-  LastFailTime = new Date().getTime();
-}
-
 function ldToTurtle (ld, termToLex) {
   return typeof ld === "object"
     ? lit(ld)
@@ -210,8 +198,9 @@ class TurtleCache extends InterfaceCache {
 }
 
 class ManifestCache extends InterfaceCache {
-  constructor (selection) {
+  constructor (selection, resultsWidget) {
     super(selection);
+    this.resultsWidget = resultsWidget;
   }
 
   async set (textOrObj, url, source) {
@@ -337,7 +326,7 @@ class ManifestCache extends InterfaceCache {
         }).then(text => {
           resolve(text);
         }).fail(e => {
-          results.append($("<pre/>").text(
+          this.resultsWidget.append($("<pre/>").text(
             "Error " + e.status + " " + e.statusText + " on GET " + obj[key + "URL"]
           ).addClass("error"));
           reject(e);
@@ -467,7 +456,7 @@ class ManifestCache extends InterfaceCache {
       try {
         await App.Caches.inputSchema.refresh();
       } catch (e) {
-        failMessage(e, "parsing schema");
+        this.resultsWidget.failMessage(e, "parsing schema");
       }
     }
   }
@@ -486,7 +475,7 @@ class ManifestCache extends InterfaceCache {
       try {
         await App.Caches.inputData.refresh();
       } catch (e) {
-        failMessage(e, "parsing data");
+        this.resultsWidget.failMessage(e, "parsing data");
       }
 
       // Update ShapeMap pane.
@@ -501,7 +490,7 @@ class ManifestCache extends InterfaceCache {
           this.renderErrorMessage(e, "queryMap");
         }
       } else {
-        results.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
+        this.resultsWidget.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
       }
     }
   }
@@ -528,15 +517,16 @@ class ManifestCache extends InterfaceCache {
 
   renderErrorMessage (response, what) {
     const message = "failed to load " + "queryMap" + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
-    results.append($("<pre/>").text(message).addClass("error"));
+    this.resultsWidget.append($("<pre/>").text(message).addClass("error"));
     return message;
   }
 }
 
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 class ExtensionCache extends InterfaceCache {
-  constructor (selection) {
+  constructor (selection, resultsWidget) {
     super(selection);
+    this.resultsWidget = resultsWidget;
   }
 
   async set (code, url, source, mediaType) {
@@ -560,7 +550,7 @@ return module.exports;
       // Delete any old li associated with this extension.
       const old = $(`.extensionControl[data-url="${extension.url}"]`)
       if (old.length) {
-        results.append($("<div/>").append(
+        this.resultsWidget.append($("<div/>").append(
           $("<span/>").text(`removing old ${old.attr('data-name')} extension`)
         ));
         old.parent().remove();
@@ -584,7 +574,7 @@ return module.exports;
       $("#" + id).data("code", extension);
 
       this.Caches.extension.url = url; // @@ cheesy hack that only works to remember one extension URL
-      results.append($("<div/>").append(
+      this.resultsWidget.append($("<div/>").append(
         $("<span/>").text(`extension ${name} loaded from <${url}>`)
       ));
     } catch (e) {
@@ -606,28 +596,28 @@ return module.exports;
     const jq = $(code);
     const impls = $(jq.find('table.implementations'))
     if (impls.length !== 1) {
-      results.append($("<div/>").append(
+      this.resultsWidget.append($("<div/>").append(
         $("<span/>").text("unparsable extension index at " + url)
       ).addClass("error"));
       return;
     }
     const tr = $(impls).find(`tr td[resource="${ShExJsUrl}"]`).parent()
     if (tr.length !== 1) {
-      results.append($("<div/>").append(
+      this.resultsWidget.append($("<div/>").append(
         $("<span/>").text("no entry for shexjs in index HTML at " + url)
       ).addClass("error"));
       return;
     }
     const href = tr.find('[property="shex:package"]').attr('href')
     if (!href) {
-      results.append($("<div/>").append(
+      this.resultsWidget.append($("<div/>").append(
         $("<span/>").text("no package for shexjs in index HTML at " + url)
       ).addClass("error"));
       return;
     }
     const refd = await fetch(href);
     if (!refd.ok) {
-      results.append($("<div/>").append(
+      this.resultsWidget.append($("<div/>").append(
         $("<span/>").text(`error fetching implementation: ${refd.status} (${refd.statusText}) for URL <${href}>`)
       ).addClass("error"));
     } else {
@@ -757,7 +747,8 @@ class DirectShExValidator {
 }
 
 // Control results area content.
-class ResultsThingy {
+let LastFailTime = 0;
+class ResultsWidget {
   constructor () {
     this.resultsElt = document.querySelector("#results div");
     this.resultsSel = $("#results div");
@@ -787,10 +778,22 @@ class ResultsThingy {
   text () {
     return $(this.resultsElt).text();
   }
+
+  failMessage (e, action, text) {
+    $("#results .status").empty().text("Errors encountered:").show()
+    const div = $("<div/>").addClass("error");
+    div.append($("<h3/>").text("error " + action + ":\n"));
+    div.append($("<pre/>").text(e.message));
+    if (text)
+      div.append($("<pre/>").text(text));
+    this.append(div);
+    LastFailTime = new Date().getTime();
+  }
 }
 
 class ShExResultsRenderer {
-  constructor () {
+  constructor (resultsWidget) {
+    this.resultsWidget = resultsWidget;
   }
 
   async entry (entry) {
@@ -859,7 +862,7 @@ class ShExResultsRenderer {
         elt = $("<pre/>").text(JSON.stringify(renderMe, null, "  ")).addClass(klass);
       }
     }
-    results.append(elt);
+    this.resultsWidget.append(elt);
 
     // update the FixedMap
     fixedMapEntry.addClass(klass).find("a").text(resultStr);
@@ -885,13 +888,17 @@ class ShExResultsRenderer {
     // try {
     //   const x = ShExWebApp.Util.valToValues(ret);
     //   // const x = ShExWebApp.Util.ShExJtoAS(valuesToSchema(valToValues(ret)));
-    //   res = results.replace(JSON.stringify(x, null, "  "));
+    //   res = this.resultsWidget.replace(JSON.stringify(x, null, "  "));
     //   const y = ShExWebApp.Util.valuesToSchema(x);
-    //   res = results.append(JSON.stringify(y, null, "  "));
+    //   res = this.resultsWidget.append(JSON.stringify(y, null, "  "));
     // } catch (e) {
     //   console.dir(e);
     // }
-    results.finish();
+    this.resultsWidget.finish();
+  }
+
+  failure (e, action, text) {
+    this.results.failMessage(e, action, text);
   }
 }
 
@@ -900,8 +907,7 @@ const ShExLoader = ShExWebApp.Loader({
 })
 class ShExBaseApp {
   constructor (base, validatorClass) {
-    globalThis.results = new ResultsThingy();
-    ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
+    this.resultsWidget = new ResultsWidget();
     this.base = base;
     this.validatorClass = validatorClass;
     // make parser/serializers available to extending classes
@@ -910,7 +916,7 @@ class ShExBaseApp {
     this.Caches = {
       inputSchema: new SchemaCache($("#inputSchema textarea.schema"), this.shexcParser, this.turtleParser),
       inputData:   new TurtleCache($("#inputData textarea"), this.turtleParser),
-      extension:   new ExtensionCache($("#extensionDrop")),
+      extension:   new ExtensionCache($("#extensionDrop"), this.resultsWidget),
       shapeMap:    new ShapeMapCache($("#textMap"), this.turtleParser), // @@ rename to #shapeMap
     }
     this.Getables = [
@@ -928,6 +934,7 @@ class ShExBaseApp {
       this.validateKeyDown.bind(this),
       this.navigateManifestKeyDown.bind(this),
     ];
+    ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
   }
   async start () {
     App.prepareControls();
@@ -960,7 +967,7 @@ class ShExBaseApp {
     this.makeFreshEditMap();
     $("#fixedMap").empty();
 
-    results.clear();
+    this.resultsWidget.clear();
   }
 
   async clearAll () {
@@ -986,7 +993,7 @@ class ShExBaseApp {
       App.Caches[cache].selection.keyup(function (e) { // keyup to capture backspace
         const code = e.keyCode || e.charCode;
         // if (!(e.ctrlKey)) {
-        //   results.clear();
+        //   this.resultsWidget.clear();
         // }
         if (!(e.ctrlKey && (code === 10 || code === 13))) {
           later(e.target, cache, App.Caches[cache]);
@@ -1049,7 +1056,7 @@ class ShExBaseApp {
   async copyTextMapToEditMap () {
     $("#textMap").removeClass("error");
     const shapeMap = $("#textMap").val();
-    results.clear();
+    this.resultsWidget.clear();
     try {
       await App.Caches.inputSchema.refresh();
       await App.Caches.inputData.refresh();
@@ -1060,11 +1067,11 @@ class ShExBaseApp {
       this.addEditMapPairs(sm.length ? sm : null);
       const ret = await this.copyEditMapToFixedMap();
       this.markEditMapClean();
-      results.clear();
+      this.resultsWidget.clear();
       return ret;
     } catch (e) {
       $("#textMap").addClass("error");
-      failMessage(e, "parsing Query Map");
+      this.resultsWidget.failMessage(e, "parsing Query Map");
       this.makeFreshEditMap()
       return [e];
     }
@@ -1095,12 +1102,12 @@ class ShExBaseApp {
       case "node": node = ldToTurtle(pair.node, App.Caches.inputData.meta.termToLex); shape = startOrLdToTurtle(pair.shape); break;
       case "TriplePattern": node = renderTP(pair.node); shape = startOrLdToTurtle(pair.shape); break;
       case "Extension":
-        failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
+        this.resultsWidget.failMessage(Error("unsupported extension: <" + pair.node.language + ">"),
                     "parsing Query Map", pair.node.lexical);
         skip = true; // skip this entry.
         break;
       default:
-        results.append($("<div/>").append(
+        this.resultsWidget.append($("<div/>").append(
           $("<span/>").text("unrecognized ShapeMap:"),
           $("<pre/>").text(JSON.stringify(pair))
         ).addClass("error"));
@@ -1235,7 +1242,7 @@ class ShExBaseApp {
         try { smparser.parse("<>" + '@' + shape); } catch (e) {
           $(queryPair).find(".inputShape").addClass("error");
         }
-        failMessage(e, "parsing Edit Map", node + '@' + shape);
+        this.resultsWidget.failMessage(e, "parsing Edit Map", node + '@' + shape);
         return acc;
       }
     }, []);
@@ -1349,7 +1356,7 @@ class ShExBaseApp {
       modal: true,
       buttons: {
         "GET": function (evt, ui) {
-          results.clear();
+          this.resultsWidget.clear();
           const target = App.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
           const url = $("#loadInput").val();
           const tips = $(".validateTips");
@@ -1418,7 +1425,7 @@ class ShExBaseApp {
       }
     });
     $("#textMap").on("change", evt => {
-      results.clear();
+      this.resultsWidget.clear();
       SharedForTests.promise = this.copyTextMapToEditMap();
     });
     App.Caches.inputData.selection.on("change", this.dataInputHandler.bind(this)); // input + paste?
@@ -1490,7 +1497,7 @@ class ShExBaseApp {
             } else {
               input.location.val(e.message);
             }
-            results.append($("<pre/>").text(e).addClass("error"));
+            this.resultsWidget.append($("<pre/>").text(e).addClass("error"));
             return [label, { loadFailure: e instanceof Error ? e : Error(e) }];
           };
         }
@@ -1515,7 +1522,7 @@ class ShExBaseApp {
           if ("fail" in input) {
             input.fail(e);
           }
-          results.append($("<pre/>").text(
+          this.resultsWidget.append($("<pre/>").text(
             "error setting " + label + ":\n" + e + "\n" + value
           ).addClass("error"));
           return [label, { failure: e }]
@@ -1583,7 +1590,7 @@ class ShExBaseApp {
   // Validation UI
   disableResultsAndValidate (evt) {
     if (new Date().getTime() - LastFailTime < 100) {
-      results.append(
+      this.resultsWidget.append(
         $("<div/>").addClass("warning").append(
           $("<h2/>").text("see shape map errors above"),
           $("<button/>").text("validate (ctl-enter)").on("click", this.disableResultsAndValidate.bind(this)),
@@ -1592,8 +1599,8 @@ class ShExBaseApp {
       );
       return; // return if < 100ms since last error.
     }
-    results.clear();
-    results.start();
+    this.resultsWidget.clear();
+    this.resultsWidget.start();
     SharedForTests.promise = new Promise((resolve, reject) => {
       setTimeout(async () => {
         const errors = await this.copyEditMapToTextMap(); // will update if #editMap is dirty
@@ -1678,22 +1685,22 @@ class ShExBaseApp {
               $("#results .status").text("unwritable ShExJ schema:\n" + error).show();
               // res.addClass("error");
             } else {
-              results.append($("<pre/>").text(text).addClass("passes"));
+              this.resultsWidget.append($("<pre/>").text(text).addClass("passes"));
             }
           });
         } else {
           const pre = $("<pre/>");
           pre.text(JSON.stringify(ShExWebApp.Util.AStoShExJ(ShExWebApp.Util.canonicalize(App.Caches.inputSchema.parsed)), null, "  ")).addClass("passes");
-          results.append(pre);
+          this.resultsWidget.append(pre);
         }
-        results.finish();
+        this.resultsWidget.finish();
         return { transformation: {
           from: App.Caches.inputSchema.language,
           to: outputLanguage
         } }
       }
     } catch (e) {
-      failMessage(e, currentAction);
+      this.resultsWidget.failMessage(e, currentAction);
       console.error(e); // dump details to console.
       return { inputError: e };
     }
@@ -1708,12 +1715,12 @@ class ShExBaseApp {
   }
 
   makeRenderer () {
-    return new ShExResultsRenderer();
+    return new ShExResultsRenderer(this.resultsWidget);
   }
 
   reportValidationError (validationError, currentAction) {
     $("#results .status").text("validation errors:").show();
-    failMessage(validationError, currentAction);
+    this.resultsWidget.failMessage(validationError, currentAction);
     console.error(validationError); // dump details to console.
     return { validationError };
   }
@@ -1895,12 +1902,12 @@ class ShExBaseApp {
       { type: "text/plain", name: "results.txt" },
       { type: "application/json", name: "results.json" }
     ][$("#interface").val() === "appinfo" ? 1 : 0];
-    const blob = new Blob([results.text()], {type: typed.type});
+    const blob = new Blob([this.resultsWidget.text()], {type: typed.type});
     $("#download-results-button")
       .attr("href", window.URL.createObjectURL(blob))
       .attr("download", typed.name);
     this.toggleControls();
-    console.log(results.text());
+    console.log(this.resultsWidget.text());
   }
 
   setInterface (evt) {
@@ -1972,7 +1979,7 @@ w  /**
           evt.preventDefault();
           droparea.removeClass("droppable");
           $("#results .status").removeClass("error");
-          results.clear();
+          this.resultsWidget.clear();
           let xfer = evt.originalEvent.dataTransfer;
           const prefTypes = [
             {type: "files"},
@@ -2016,14 +2023,14 @@ w  /**
                     dataType: "text"
                   }).fail(function (jqXHR, textStatus) {
                     const error = jqXHR.statusText === "OK" ? textStatus : jqXHR.statusText;
-                    results.append($("<pre/>").text("GET <" + val + "> failed: " + error));
+                    this.resultsWidget.append($("<pre/>").text("GET <" + val + "> failed: " + error));
                   }).done(function (data, status, jqXhr) {
                     try {
                       promises.push(inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]));
                       $("#loadForm").dialog("close");
                       toggleControls();
                     } catch (e) {
-                      results.append($("<pre/>").text("unable to evaluate <" + val + ">: " + (e.stack || e)));
+                      this.resultsWidget.append($("<pre/>").text("unable to evaluate <" + val + ">: " + (e.stack || e)));
                     }
                   });
                 } else if (l.type === "text/plain") {
@@ -2044,14 +2051,14 @@ w  /**
                     const appendTo = $("#append").is(":checked") ? target.get() : "";
                     await target.set(appendTo + data, url, 'drag and drop', mediaType);
                   } else {
-                    results.append("don't know what to do with " + mediaType + "\n");
+                    this.resultsWidget.append("don't know what to do with " + mediaType + "\n");
                   }
                 }
               }
             }
             return false;
           }) === undefined)
-            results.append($("<pre/>").text(
+            this.resultsWidget.append($("<pre/>").text(
               "drag and drop not recognized:\n" +
                 JSON.stringify({
                   dropEffect: xfer.dropEffect,
@@ -2092,7 +2099,7 @@ w  /**
             reader.readAsText(file);
           }))
         } else {
-          results.append("don't know what to do with " + name + "\n");
+          this.resultsWidget.append("don't know what to do with " + name + "\n");
         }
       }
       return Promise.all(promises).then(() => {
@@ -2172,7 +2179,7 @@ w  /**
       try {
         return listToCTHash(await cache.getItems())
       } catch (e) {
-        failMessage(e, cache === App.Caches.inputSchema ? "parsing schema" : "parsing data");
+        this.resultsWidget.failMessage(e, cache === App.Caches.inputSchema ? "parsing schema" : "parsing data");
         let items = {};
         const failContent = "no choices found";
         items[failContent] = failContent;
