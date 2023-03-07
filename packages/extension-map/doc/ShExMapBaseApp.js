@@ -118,6 +118,21 @@ class ShExMapBaseApp extends ShExBaseApp {
     SharedForTests.promise = this.materializeAsync();
   }
 
+  addResult (error, result) {
+    results.append(
+      $("<div/>", {class: "passes"}).append(
+        $("<span/>", {class: "shapeMap"}).append(
+          "# ",
+          $("<span/>", {class: "data"}).text($("#createRoot").val()),
+          $("<span/>", {class: "valStatus"}).text("@"),
+          $("<span/>", {class: "schema"}).text($("#outputShape").val()),
+        ),
+        $("<pre/>").text(result)
+      )
+    )
+    // results.append($("<pre/>").text(result));
+  }
+
   bindingsToTable () {
     let d = JSON.parse($("#bindings1 textarea").val())
     let div = $("<div/>").css("overflow", "auto").css("border", "thin solid red")

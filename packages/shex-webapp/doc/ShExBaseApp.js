@@ -1,3 +1,9 @@
+const START_SHAPE_LABEL = "START";
+const INPUTAREA_TIMEOUT = 250;
+const NO_MANIFEST_LOADED = "no manifest loaded";
+
+const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
+const LOG_PROGRESS = false;
 
 let LastFailTime = 0;
 function failMessage (e, action, text) {
@@ -9,6 +15,26 @@ function failMessage (e, action, text) {
     div.append($("<pre/>").text(text));
   results.append(div);
   LastFailTime = new Date().getTime();
+}
+
+function ldToTurtle (ld, termToLex) {
+  return typeof ld === "object"
+    ? lit(ld)
+    : termToLex(
+      ld.startsWith("_:")
+        ? RdfJs.DataFactory.blankNode(ld.substr(2))
+        : RdfJs.DataFactory.namedNode(ld)
+    );
+  function lit (o) {
+    let ret = "\""+o["@value"].replace(/["\r\n\t]/g, (c) => {
+      return {'"': "\\\"", "\r": "\\r", "\n": "\\n", "\t": "\\t"}[c];
+    }) +"\"";
+    if ("@type" in o)
+      ret += "^^<" + o["@type"] + ">";
+    if ("@language" in o)
+      ret += "@" + o["@language"];
+    return ret;
+  }
 }
 
 class InterfaceCache {
@@ -378,9 +404,9 @@ class ManifestCache extends InterfaceCache {
       const li = $("<li/>").append(button);
       $(selector).append(li);
       if (entry.text === undefined) {
-        entry.text = await fetchOK(entry.url).catch(responseOrError => {
+        entry.text = await this.fetchOK(entry.url).catch(responseOrError => {
           // leave a message in the schema or data block
-          return "# " + renderErrorMessage(
+          return "# " + this.renderErrorMessage(
             responseOrError instanceof Error
               ? { url: entry.url, status: -1, statusText: responseOrError.message }
             : responseOrError,
@@ -395,7 +421,7 @@ class ManifestCache extends InterfaceCache {
         li.on("click", async () => {
           SharedForTests.promise = func(entry.name, entry, li, listItems, side);
         });
-        listItems[side][sum(entry.text)] = li;
+        listItems[side][ShExBaseApp.sum(entry.text)] = li;
         // enable and get rid of the "..." in the label now that it's loaded
         button.text(entry.label).removeAttr("disabled");
       }
@@ -469,10 +495,10 @@ class ManifestCache extends InterfaceCache {
         await this.queryMapLoaded(dataTest, dataTest.entry.queryMap);
       } else if (dataTest.entry.queryMapURL !== undefined) {
         try {
-          const resp = await fetchOK(dataTest.entry.queryMapURL)
+          const resp = await this.fetchOK(dataTest.entry.queryMapURL)
           ManifestCache.queryMapLoaded(dataTest, resp);
         } catch (e) {
-          renderErrorMessage(e, "queryMap");
+          this.renderErrorMessage(e, "queryMap");
         }
       } else {
         results.append($("<div/>").text("No queryMap or queryMapURL supplied in manifest").addClass("warning"));
@@ -489,6 +515,21 @@ class ManifestCache extends InterfaceCache {
     }
     await App.copyTextMapToEditMap();
     // callValidator();
+  }
+
+  fetchOK (url) {
+    return fetch(url).then(responseOrError => {
+      if (!responseOrError.ok) {
+        throw responseOrError;
+      }
+      return responseOrError.text()
+    });
+  }
+
+  renderErrorMessage (response, what) {
+    const message = "failed to load " + "queryMap" + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
+    results.append($("<pre/>").text(message).addClass("error"));
+    return message;
   }
 }
 
@@ -715,6 +756,39 @@ class DirectShExValidator {
   }
 }
 
+// Control results area content.
+class ResultsThingy {
+  constructor () {
+    this.resultsElt = document.querySelector("#results div");
+    this.resultsSel = $("#results div");
+  }
+  replace (text) {
+    return this.resultsSel.text(text);
+  }
+  append (text) {
+    return this.resultsSel.append(text);
+  }
+  clear () {
+    this.resultsSel.removeClass("passes fails error");
+    $("#results .status").text("").hide();
+    $("#shapeMap-tabs").removeAttr("title");
+    return this.resultsSel.text("");
+  }
+  start () {
+    this.resultsSel.removeClass("passes fails error");
+    $("#results").addClass("running");
+  }
+  finish () {
+    $("#results").removeClass("running");
+    const height = this.resultsSel.height();
+    this.resultsSel.height(1);
+    this.resultsSel.animate({height:height}, 100);
+  }
+  text () {
+    return $(this.resultsElt).text();
+  }
+}
+
 class ShExResultsRenderer {
   constructor () {
   }
@@ -826,6 +900,8 @@ const ShExLoader = ShExWebApp.Loader({
 })
 class ShExBaseApp {
   constructor (base, validatorClass) {
+    globalThis.results = new ResultsThingy();
+    ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
     this.base = base;
     this.validatorClass = validatorClass;
     // make parser/serializers available to extending classes
@@ -852,6 +928,23 @@ class ShExBaseApp {
       this.validateKeyDown.bind(this),
       this.navigateManifestKeyDown.bind(this),
     ];
+  }
+  async start () {
+    App.prepareControls();
+    const dndPromise = App.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
+    const loads = App.loadSearchParameters();
+    const ready = Promise.all([ dndPromise, loads ]);
+    if ('_testCallback' in window) {
+      SharedForTests.promise = ready.then(ab => ({drop: ab[0], loads: ab[1]}));
+      window._testCallback(SharedForTests);
+    }
+    ready.then(resolves => {
+      if (!('_testCallback' in window))
+        console.log('search parameters:', resolves[1]);
+      // Update UI to say we're done loading everything?
+    }, e => {
+      // Drop catch on the floor presuming thrower updated the UI.
+    });
   }
 
   // abstract usingValidator (_validator) { } // overriden for ShExMap
@@ -908,7 +1001,7 @@ class ShExBaseApp {
 
       timeouts[side] = setTimeout(() => {
         timeouts[side] = undefined;
-        const curSum = sum($(target).val());
+        const curSum = ShExBaseApp.sum($(target).val());
         if (curSum in listItems[side])
           listItems[side][curSum].addClass("selected");
         else
@@ -916,6 +1009,13 @@ class ShExBaseApp {
         delete cache.url;
       }, INPUTAREA_TIMEOUT);
     }
+  }
+
+  static sum (s) { // cheap way to identify identical strings
+    return s.replace(/\s/g, "").split("").reduce(function (a,b){
+      a = ((a<<5) - a) + b.charCodeAt(0);
+      return a&a
+    },0);
   }
 
   /* ShapeMap */
@@ -1597,6 +1697,14 @@ class ShExBaseApp {
       console.error(e); // dump details to console.
       return { inputError: e };
     }
+
+    function hasFocusNode () {
+      return $(".focus").map((idx, elt) => {
+        return $(elt).val();
+      }).get().some(str => {
+        return str.length > 0;
+      });
+    }
   }
 
   makeRenderer () {
@@ -2085,6 +2193,24 @@ w  /**
         }
       */
     }
+
+    function ParseTriplePattern () {
+      const uri = "<[^>]*>|[a-zA-Z0-9_-]*:[a-zA-Z0-9_-]*";
+      const literal = "((?:" +
+            "'(?:[^'\\\\]|\\\\')*'" + "|" +
+            "\"(?:[^\"\\\\]|\\\\\")*\"" + "|" +
+            "'''(?:(?:'|'')?[^'\\\\]|\\\\')*'''" + "|" +
+            "\"\"\"(?:(?:\"|\"\")?[^\"\\\\]|\\\\\")*\"\"\"" +
+            ")" +
+            "(?:@[a-zA-Z-]+|\\^\\^(?:" + uri + "))?)";
+      const uriOrKey = uri + "|FOCUS|_";
+      // const termOrKey = uri + "|" + literal + "|FOCUS|_";
+
+      return "(\\s*{\\s*)("+
+        uriOrKey+")?(\\s*)("+
+        uri+"|a)?(\\s*)("+
+        uriOrKey+"|" + literal + ")?(\\s*)(})?(\\s*)";
+    };
 
     function rightClickHandler (e) {
       e.preventDefault();

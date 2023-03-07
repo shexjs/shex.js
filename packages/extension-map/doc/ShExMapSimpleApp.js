@@ -137,22 +137,5 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       return null;
     }
   }
-
-  addResult (error, result) {
-    results.append(
-      $("<div/>", {class: "passes"}).append(
-        $("<span/>", {class: "shapeMap"}).append(
-          "# ",
-          $("<span/>", {class: "data"}).text($("#createRoot").val()),
-          $("<span/>", {class: "valStatus"}).text("@"),
-          $("<span/>", {class: "schema"}).text($("#outputShape").val()),
-        ),
-        $("<pre/>").text(result)
-      )
-    )
-    // results.append($("<pre/>").text(result));
-  }
-
-
 }
 

@@ -150,13 +150,13 @@ class ShExMapWorkerApp extends ShExMapBaseApp {
             nestedWriter.comment("\n# Triples not in the schema:");
             nestedWriter.addQuads(rest.getQuads())
           }
-          nestedWriter.end(addResult);
+          nestedWriter.end((error, result) => this.addResult(error, result));
         } catch (e) {
           console.error(`NestedWriter(${node}@${shape}) failure:`);
           console.error(e);
           const fallbackWriter = new RdfJs.Writer({ prefixes: App.Caches.outputSchema.parsed._prefixes });
           fallbackWriter.addQuads(generatedGraph.getQuads());
-          fallbackWriter.end(addResult);
+          fallbackWriter.end((error, result) => this.addResult(error, result));
         }
       });
       results.finish();
