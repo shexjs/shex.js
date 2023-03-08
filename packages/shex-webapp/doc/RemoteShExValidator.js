@@ -60,9 +60,6 @@ class RemoteShExValidator {
       RemoteShExValidator.handleCreate
     ).ready();
   }
-  static factory (loaded, schemaURL, inputData, renderer) {
-    return new RemoteShExValidator(loaded, schemaURL, inputData, renderer);
-  }
   async invoke (fixedMap, validationTracker, time, done, currentAction) {
     const response = await this.created;
     const transportMap = fixedMap.map(function (ent) {

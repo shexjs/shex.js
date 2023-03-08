@@ -1,13 +1,16 @@
 class ShExSimpleApp extends ShExBaseApp {
   constructor (base, validatorClass) {
-    super(base, validatorClass);
-    const manifest = new ManifestCache($("#manifestDrop"), this.Caches, this.resultsWidget);
-    this.Caches.manifest = manifest;
-    const shexSimpleParameter =
-      {queryStringParm: "manifest", location: manifest.selection, cache: manifest, fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)}
-    this.Getables.push(shexSimpleParameter);
-    this.QueryParams.push(shexSimpleParameter);
+    super(base);
+    const manifestSelector = $("#manifestDrop");
+    const manifestCache = new ManifestCache(manifestSelector, this.Caches, this.resultsWidget);
+    this.Caches.manifest = manifestCache;
+    const manifestParameter =
+      {queryStringParm: "manifest", location: manifestSelector, cache: manifestCache, fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)}
+    this.Getables.push(manifestParameter);
+    this.QueryParams.push(manifestParameter);
   };
-  usingValidator (_validator) { } // overriden for ShExMap
+  getValidator (loaded, _base, inputData) {
+    return new DirectShExValidator(loaded, inputData, this.makeRenderer());
+  }
 }
  

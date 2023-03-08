@@ -724,7 +724,7 @@ class TurtleParser {
 }
 
 class DirectShExValidator {
-  constructor (loaded, _schemaURL, inputData, renderer) {
+  constructor (loaded, inputData, renderer) {
     this.validator = new ShExWebApp.Validator(
       loaded.schema,
       inputData,
@@ -733,9 +733,6 @@ class DirectShExValidator {
       $(this).data("code").register(validator, ShExWebApp);
     });
     this.renderer = renderer;
-  }
-  static factory (loaded, schemaURL, inputData, renderEntry) {
-    return new DirectShExValidator(loaded, schemaURL, inputData, renderEntry);
   }
   async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
     const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
@@ -911,9 +908,8 @@ const ShExLoader = ShExWebApp.Loader({
   fetch: window.fetch.bind(window), rdfjs: RdfJs, jsonld: null
 })
 class ShExBaseApp {
-  constructor (base, validatorClass) {
+  constructor (base) {
     this.base = base;
-    this.validatorClass = validatorClass;
     this.resultsWidget = new ResultsWidget();
 
     // make parser/serializers available to extending classes
@@ -962,7 +958,7 @@ class ShExBaseApp {
     });
   }
 
-  // abstract usingValidator (_validator) { } // overriden for ShExMap
+  // abstract getValidator (_validator) { } // overriden for ShExMap
 
   /* manage caches */
   async clearData () {
@@ -1656,8 +1652,7 @@ class ShExBaseApp {
             }
           });
           let time;
-          const validator = this.validatorClass.factory(loaded, alreadLoaded.url, inputData, this.makeRenderer());
-          this.usingValidator(validator);
+          const validator = this.getValidator(loaded, alreadLoaded.url, inputData, this.makeRenderer());
 
           currentAction = "validating";
           $("#results .status").text("validating...").show();

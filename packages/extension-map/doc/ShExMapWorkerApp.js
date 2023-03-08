@@ -1,5 +1,7 @@
 class ShExMapWorkerApp extends ShExMapBaseApp {
-  usingValidator (_validator) { }
+  getValidator (loaded, base, inputData) { // same as ShExWorkerApp
+    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer())
+  }
 
   makeConsoleTracker () {
     function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)

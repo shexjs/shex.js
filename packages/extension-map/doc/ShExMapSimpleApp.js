@@ -1,6 +1,8 @@
 class ShExMapSimpleApp extends ShExMapBaseApp {
-  usingValidator (validator) {
+  getValidator (loaded, _base, inputData) {
+    const validator = new DirectShExValidator(loaded, inputData, this.makeRenderer());
     this.Mapper = this.MapModule.register(validator.validator, ShExWebApp);
+    return validator;
   }
 
   async materializeAsync () {
