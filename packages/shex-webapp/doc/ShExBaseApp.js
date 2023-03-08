@@ -1337,15 +1337,16 @@ class ShExBaseApp {
 
   }
 
-  /** fixedShapeMapToTerms -- map ShapeMap to API terms
-   * @@TODO: add to ShExValidator so API accepts ShapeMap
+  /**
+   * resolve node and shape against input data and schema base and prefixes
    */
-  fixedShapeMapToTerms (shapeMap) {
-    return shapeMap; /*.map(pair => {
-                       return {node: this.Caches.inputData.meta.lexToTerm(pair.node + " "),
-                       shape: this.Caches.inputSchema.meta.lexToTerm(pair.shape)};
-                       });*/
+  fixValidationShapeMapEntry (node, shape) {
+    return {
+      node: this.Caches.inputData.meta.lexToTerm(node),
+      shape: this.Caches.inputSchema.meta.lexToTerm(shape) // resolve with this.Caches.outputSchema
+    }
   }
+
   /* UI setup */
   /**
    * set up UI buttons handlers
@@ -1635,12 +1636,9 @@ class ShExBaseApp {
         const inputData = await this.Caches.inputData.refresh(); // need prefixes for ShapeMap
         // $("#shapeMap-tabs").tabs("option", "active", 2); // select fixedMap
         currentAction = "parsing shape map";
-        const fixedMap = this.fixedShapeMapToTerms($("#fixedMap tr").map((idx, tr) => {
-          return {
-            node: this.Caches.inputData.meta.lexToTerm($(tr).find("input.focus").val()),
-            shape: this.Caches.inputSchema.meta.lexToTerm($(tr).find("input.inputShape").val())
-          };
-        }).get());
+        const fixedMap = $("#fixedMap tr").map((idx, tr) =>
+          this.fixValidationShapeMapEntry($(tr).find("input.focus").val(), $(tr).find("input.inputShape").val())
+        ).get();
 
         currentAction = "creating validator";
         $("#results .status").text("creating validator...").show();

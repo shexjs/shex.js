@@ -35,10 +35,7 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       }
 
       // const trivialMaterializer = this.Mapper.trivialMaterializer(outputSchema);
-      const outputShapeMap = this.fixedShapeMapToTerms([{
-        node: this.Caches.inputData.meta.lexToTerm($("#createRoot").val()),
-        shape: this.Caches.outputSchema.meta.lexToTerm($("#outputShape").val()) // resolve with this.Caches.outputSchema
-      }]);
+      const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
 
       const binder = this.Mapper.binder(resultBindings);
       await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));

@@ -104,6 +104,16 @@ class ShExMapBaseApp extends ShExBaseApp {
     return this.currentRenderer = new ShExMapResultsRenderer(this.resultsWidget, this.Caches, this.MapModule.url)
   }
 
+  /**
+   * resolve node and shape against input data and output schema base and prefixes
+   */
+  fixMaterializationShapeMapEntry (node, shape) {
+    return {
+      node: this.Caches.inputData.meta.lexToTerm(node),
+      shape: this.Caches.outputSchema.meta.lexToTerm(shape) // resolve with this.Caches.outputSchema
+    }
+  }
+
   reportMaterializationError (materializationError, currentAction) {
     $("#results .status").text("materialization errors:").show();
     this.resultsWidget.failMessage(materializationError, currentAction);
