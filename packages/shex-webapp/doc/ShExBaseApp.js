@@ -27,9 +27,10 @@ function ldToTurtle (ld, termToLex) {
 
 class InterfaceCache {
   // caches for textarea parsers
-  constructor (selection) {
+  constructor (selection, onLoad) {
     this._dirty = true;
     this.selection = selection;
+    this.onLoad = onLoad;
     this.parsed = null; // a Promise
     this.url = undefined; // only set if inputarea caches some web resource.
     this.meta = { prefixes: {}, base: this.base };
@@ -88,14 +89,18 @@ class InterfaceCache {
       throw Error("error setting " + this.queryStringParm + " with <" + url + ">: " + '\n' + e.message);
     }
     $("#loadForm").dialog("close");
-    App.toggleControls();
     return { url: url, data: data };
+  }
+
+  callOnLoad () {
+    if (this.onLoad)
+      this.onLoad();
   }
 }
 
 class SchemaCache extends InterfaceCache {
-  constructor (selection, shexcParser, turtleParser) {
-    super(selection);
+  constructor (selection, onLoad, shexcParser, turtleParser) {
+    super(selection, onLoad);
     this.shexcParser = shexcParser;
     this.turtleParser = turtleParser;
     this.graph = null;
@@ -130,7 +135,7 @@ class SchemaCache extends InterfaceCache {
           this.graph ? parseShExR() :
           this.shexcParser.parseString(text, this.meta, base);
     $("#results .status").hide();
-    App.markEditMapDirty(); // ShapeMap validity may have changed.
+    this.callOnLoad();
     return schema;
 
     async function parseDcTap (text) {
@@ -178,8 +183,8 @@ class SchemaCache extends InterfaceCache {
 }
 
 class TurtleCache extends InterfaceCache {
-  constructor (selection, turtleParser) {
-    super(selection);
+  constructor (selection, onLoad, turtleParser) {
+    super(selection, onLoad);
     this.turtleParser = turtleParser;
     this.meta.termToLex = function (trm) { return  ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this); };
     this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
@@ -187,7 +192,7 @@ class TurtleCache extends InterfaceCache {
 
   async parse (text, base) {
     const res = ShExWebApp.RdfJsDb(this.turtleParser.parseString(text, this.meta, base));
-    App.markEditMapDirty(); // ShapeMap validity may have changed.
+    this.callOnLoad();
     return res;
   }
 
@@ -201,7 +206,7 @@ class TurtleCache extends InterfaceCache {
 
 class ManifestCache extends InterfaceCache {
   constructor (selection, caches, resultsWidget) {
-    super(selection);
+    super(selection, null);
     this.caches = caches;
     this.resultsWidget = resultsWidget;
   }
@@ -528,7 +533,7 @@ class ManifestCache extends InterfaceCache {
 const ShExJsUrl = 'https://github.com/shexSpec/shex.js'
 class ExtensionCache extends InterfaceCache {
   constructor (selection, resultsWidget) {
-    super(selection);
+    super(selection, null);
     this.resultsWidget = resultsWidget;
   }
 
@@ -640,7 +645,7 @@ return module.exports;
 
 class ShapeMapCache extends InterfaceCache {
   constructor (selection, turtleParser) {
-    super(selection);
+    super(selection, null);
     this.meta.termToLex = function (trm) { return  ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this); };
     this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
   }
@@ -917,8 +922,8 @@ class ShExBaseApp {
     this.turtleParser = new TurtleParser();
 
     this.Caches = {
-      inputSchema: new SchemaCache($("#inputSchema textarea.schema"), this.shexcParser, this.turtleParser),
-      inputData:   new TurtleCache($("#inputData textarea"), this.turtleParser),
+      inputSchema: new SchemaCache($("#inputSchema textarea.schema"), this.markEditMapDirty, this.shexcParser, this.turtleParser),
+      inputData:   new TurtleCache($("#inputData textarea"), this.markEditMapDirty, this.turtleParser),
       extension:   new ExtensionCache($("#extensionDrop"), this.resultsWidget),
       shapeMap:    new ShapeMapCache($("#textMap"), this.turtleParser), // @@ rename to #shapeMap
     }
@@ -1359,7 +1364,7 @@ class ShExBaseApp {
       autoOpen: false,
       modal: true,
       buttons: {
-        "GET": function (evt, ui) {
+        "GET": (evt, ui) => {
           this.resultsWidget.clear();
           const target = this.Getables.find(g => g.queryStringParm === $("#loadForm span.whatToLoad").text());
           const url = $("#loadInput").val();
@@ -1378,9 +1383,14 @@ class ShExBaseApp {
             return;
           }
           tips.removeClass("ui-state-highlight").text();
-          SharedForTests.promise = target.cache.asyncGet(url).catch((e) => {
-            updateTips(e.message);
-          });
+          SharedForTests.promise = target.cache.asyncGet(url)
+            // .then(ret => {
+            //   this.toggleControls();
+            //   return ret;
+            // })
+            .catch((e) => {
+              updateTips(e.message);
+            });
         },
         "Cancel": () => {
           $("#loadInput").removeClass("ui-state-error");
@@ -1493,7 +1503,7 @@ class ShExBaseApp {
           // !!! set anyways in asyncGet?
           input.cache.url = url; // all fooURL query parms are caches.
           try {
-            const got = await input.cache.asyncGet(url)
+            const got = await input.cache.asyncGet(url);
             return [label, {fromUrl: got}]
           } catch(e) {
             if ("fail" in input) {
@@ -1881,7 +1891,7 @@ class ShExBaseApp {
    */
   async getPermalink () {
     let parms = [];
-    await copyEditMapToTextMap();
+    await this.copyEditMapToTextMap();
     parms = parms.concat(this.QueryParams.reduce((acc, input) => {
       let parm = input.queryStringParm;
       let val = input.location.val();

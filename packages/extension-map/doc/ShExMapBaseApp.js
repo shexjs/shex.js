@@ -66,7 +66,7 @@ class ShExMapBaseApp extends ShExBaseApp {
     const manifest = new ShExMapManifestCache($("#manifestDrop"), this.Caches, this.resultsWidget);
     const bindings = new JSONCache($("#bindings1 textarea"));
     const statics = new JSONCache($("#staticVars textarea"));
-    const outputSchema = new SchemaCache($("#outputSchema textarea"), this.shexcParser, this.turtleParser);
+    const outputSchema = new SchemaCache($("#outputSchema textarea"), null, this.shexcParser, this.turtleParser);
     Object.assign(this.Caches, { manifest, bindings, statics, outputSchema, });
     const parameters = [
       {queryStringParm: "manifest",  location: manifest.selection,    cache: manifest, fail: e => $("#manifestDrop li").text(NO_MANIFEST_LOADED)},
