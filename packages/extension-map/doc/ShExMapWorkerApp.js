@@ -1,6 +1,6 @@
 class ShExMapWorkerApp extends ShExMapBaseApp {
   getValidator (loaded, base, inputData) { // same as ShExWorkerApp
-    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer())
+    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate, "endpoint" in App.Caches.inputData ? App.Caches.inputData.endpoint : null)
   }
 
   makeConsoleTracker () {

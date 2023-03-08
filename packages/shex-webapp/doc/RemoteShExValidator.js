@@ -39,11 +39,12 @@ class Canceleable {
 
 const USE_INCREMENTAL_RESULTS = true;
 class RemoteShExValidator {
-  constructor (loaded, schemaURL, inputData, renderer) {
+  constructor (loaded, schemaURL, inputData, renderer, onCancel, endpoint) {
     this.renderer = renderer;
+    this.onCancel = onCancel;
     this.created = new Canceleable(
       $("#validate"),
-      App.disableResultsAndValidate,
+      this.onCancel,
       "validator creation aborted",
       Object.assign(
         {
@@ -53,9 +54,11 @@ class RemoteShExValidator {
           slurp: $("#slurp").is(":checked"),
           options: {regexModule: $("#regexpEngine").val()},
         },
-        "endpoint" in App.Caches.inputData ?
-          {endpoint: App.Caches.inputData.endpoint} :
-        {data: inputData.getQuads().map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t))}
+        endpoint
+          ? { endpoint }
+          : { data: inputData.getQuads().map(
+              t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)
+            ) }
       ),
       RemoteShExValidator.handleCreate
     ).ready();
@@ -72,7 +75,7 @@ class RemoteShExValidator {
     });
     return new Canceleable(
       $("#validate"),
-      App.disableResultsAndValidate,
+      this.onCancel,
       "validation aborted",
       {
         request: "validate",
