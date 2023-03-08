@@ -418,12 +418,47 @@ class ManifestCache extends InterfaceCache {
         li.on("click", async () => {
           SharedForTests.promise = func(entry.name, entry, li, listItems, side);
         });
-        listItems[side][ShExBaseApp.sum(entry.text)] = li;
+        listItems[side][ManifestCache.sum(entry.text)] = li;
         // enable and get rid of the "..." in the label now that it's loaded
         button.text(entry.label).removeAttr("disabled");
       }
     }))
-    App.setTextAreaHandlers(listItems);
+    this.setTextAreaHandlers(listItems);
+  }
+
+  setTextAreaHandlers (listItems) {
+    const timeouts = Object.keys(this.caches).reduce((acc, k) => {
+      acc[k] = undefined;
+      return acc;
+    }, {});
+
+    Object.keys(this.caches).forEach((cache) => {
+      this.caches[cache].selection.keyup((e) => { // keyup to capture backspace
+        const code = e.keyCode || e.charCode;
+        // if (!(e.ctrlKey)) {
+        //   this.resultsWidget.clear();
+        // }
+        if (!(e.ctrlKey && (code === 10 || code === 13))) {
+          later(e.target, cache, this.caches[cache]);
+        }
+      });
+    });
+
+    function later (target, side, cache) {
+      cache.dirty(true);
+      if (timeouts[side])
+        clearTimeout(timeouts[side]);
+
+      timeouts[side] = setTimeout(() => {
+        timeouts[side] = undefined;
+        const curSum = ManifestCache.sum($(target).val());
+        if (curSum in listItems[side])
+          listItems[side][curSum].addClass("selected");
+        else
+          $("#"+side+" .selected").removeClass("selected");
+        delete cache.url;
+      }, INPUTAREA_TIMEOUT);
+    }
   }
 
   makeDataEntry (dataLabel, idx, elt, base) {
@@ -437,13 +472,13 @@ class ManifestCache extends InterfaceCache {
 
   async pickSchema (name, schemaTest, elt, listItems, side) {
     if ($(elt).hasClass("selected")) {
-      await App.clearAll();
+      await this.clearAll();
     } else {
       await this.caches.inputSchema.set(schemaTest.text, new URL((schemaTest.url || ""), DefaultBase).href);
       this.caches.inputSchema.url = undefined; // @@ crappyHack1
       $("#inputSchema .status").text(name);
 
-      App.clearData();
+      this.clearData();
       const headings = {
         "passes": "Passing:",
         "fails": "Failing:",
@@ -470,7 +505,7 @@ class ManifestCache extends InterfaceCache {
   }
 
   async pickData (name, dataTest, elt, listItems, side) {
-    App.clearData();
+    this.clearData();
     if ($(elt).hasClass("selected")) {
       $(elt).removeClass("selected");
     } else {
@@ -527,6 +562,39 @@ class ManifestCache extends InterfaceCache {
     const message = "failed to load " + "queryMap" + " from <" + response.url + ">, got: " + response.status + " " + response.statusText;
     this.resultsWidget.append($("<pre/>").text(message).addClass("error"));
     return message;
+  }
+
+  async clearData () {
+    // Clear out data textarea.
+    await this.caches.inputData.set("", DefaultBase);
+    $("#inputData .status").text(" ");
+
+    // Clear out every form of ShapeMap.
+    $("#textMap").val("").removeClass("error");
+    App.makeFreshEditMap();
+    $("#fixedMap").empty();
+
+    this.resultsWidget.clear();
+  }
+
+  async clearAll () {
+    $("#results .status").hide();
+    await this.caches.inputSchema.set("", DefaultBase);
+    $(".inputShape").val("");
+    $("#inputSchema .status").text(" ");
+    $("#inputSchema li.selected").removeClass("selected");
+    this.clearData();
+    $("#inputData .passes, #inputData .fails").hide();
+    $("#inputData .passes p:first").text("");
+    $("#inputData .fails p:first").text("");
+    $("#inputData .passes ul, #inputData .fails ul").empty();
+  }
+
+  static sum (s) { // cheap way to identify identical strings
+    return s.replace(/\s/g, "").split("").reduce((a,b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a
+    }, 0);
   }
 }
 
@@ -965,75 +1033,6 @@ class ShExBaseApp {
 
   // abstract getValidator (_validator) { } // overriden for ShExMap
 
-  /* manage caches */
-  async clearData () {
-    // Clear out data textarea.
-    await this.Caches.inputData.set("", DefaultBase);
-    $("#inputData .status").text(" ");
-
-    // Clear out every form of ShapeMap.
-    $("#textMap").val("").removeClass("error");
-    this.makeFreshEditMap();
-    $("#fixedMap").empty();
-
-    this.resultsWidget.clear();
-  }
-
-  async clearAll () {
-    $("#results .status").hide();
-    await this.Caches.inputSchema.set("", DefaultBase);
-    $(".inputShape").val("");
-    $("#inputSchema .status").text(" ");
-    $("#inputSchema li.selected").removeClass("selected");
-    this.clearData();
-    $("#inputData .passes, #inputData .fails").hide();
-    $("#inputData .passes p:first").text("");
-    $("#inputData .fails p:first").text("");
-    $("#inputData .passes ul, #inputData .fails ul").empty();
-  }
-
-  setTextAreaHandlers (listItems) {
-    const timeouts = Object.keys(this.Caches).reduce((acc, k) => {
-      acc[k] = undefined;
-      return acc;
-    }, {});
-
-    Object.keys(this.Caches).forEach((cache) => {
-      this.Caches[cache].selection.keyup((e) => { // keyup to capture backspace
-        const code = e.keyCode || e.charCode;
-        // if (!(e.ctrlKey)) {
-        //   this.resultsWidget.clear();
-        // }
-        if (!(e.ctrlKey && (code === 10 || code === 13))) {
-          later(e.target, cache, this.Caches[cache]);
-        }
-      });
-    });
-
-    function later (target, side, cache) {
-      cache.dirty(true);
-      if (timeouts[side])
-        clearTimeout(timeouts[side]);
-
-      timeouts[side] = setTimeout(() => {
-        timeouts[side] = undefined;
-        const curSum = ShExBaseApp.sum($(target).val());
-        if (curSum in listItems[side])
-          listItems[side][curSum].addClass("selected");
-        else
-          $("#"+side+" .selected").removeClass("selected");
-        delete cache.url;
-      }, INPUTAREA_TIMEOUT);
-    }
-  }
-
-  static sum (s) { // cheap way to identify identical strings
-    return s.replace(/\s/g, "").split("").reduce((a,b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a
-    }, 0);
-  }
-
   /* ShapeMap */
 
   /**
@@ -1357,7 +1356,6 @@ class ShExBaseApp {
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
-    $("#clear").on("click", this.clearAll.bind(this));
     $("#download-results-button").on("click", this.downloadResults.bind(this));
 
     $("#loadForm").dialog({
