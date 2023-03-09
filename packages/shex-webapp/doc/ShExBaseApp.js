@@ -5,6 +5,9 @@ const NO_MANIFEST_LOADED = "no manifest loaded";
 const START_SHAPE_INDEX_ENTRY = "- start -"; // specificially not a JSON-LD @id form.
 const LOG_PROGRESS = false;
 
+const DefaultBase = location.origin + location.pathname;
+let SharedForTests = null; // testing global used by browser-test
+
 function ldToTurtle (ld, termToLex) {
   return typeof ld === "object"
     ? lit(ld)
@@ -106,20 +109,26 @@ class SchemaCache extends InterfaceCache {
     this.graph = null;
     this.language = null;
 
-    // These are functions in order to grab caller's this.
-    this.meta.termToLex = function (trm, aForTypes = true) {
-      return trm === ShExWebApp.Validator.Start
-        ? START_SHAPE_LABEL
-        : ShExWebApp.ShExTerm.shExJsTerm2Turtle(trm, this, true);
-    };
-    this.meta.lexToTerm = function (lex) {
-      return lex === START_SHAPE_LABEL
-        ? ShExWebApp.Validator.Start
-        : turtleParser.termToLd(lex, new IRIResolver(this));
-    };
+    this.meta.termToLex = (trm) => trm === ShExWebApp.Validator.Start
+      ? START_SHAPE_LABEL
+      : ShExWebApp.ShExTerm.shExJsTerm2Turtle(trm, this.meta, true);
+    this.meta.lexToTerm = (lex) => lex === START_SHAPE_LABEL
+      ? ShExWebApp.Validator.Start
+      : turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
   async parse (text, base) {
+    const parseShExR = () => {
+      const graphParser = new ShExWebApp.Validator(
+        this.shexcParser.parseString(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
+        ShExWebApp.RdfJsDb(this.graph),
+        {}
+      );
+      const schemaRoot = this.graph.getQuads(null, ShExWebApp.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
+      const val = graphParser.validateNodeShapePair(schemaRoot, ShExWebApp.Validator.Start); // start shape
+      return ShExWebApp.Util.ShExJtoAS(ShExWebApp.Util.ShExRtoShExJ(ShExWebApp.Util.valuesToSchema(ShExWebApp.Util.valToValues(val))));
+    }
+
     const isJSON = text.match(/^\s*\{/);
     const isDCTAP = text.match(/\s*shapeID/)
     this.graph = isJSON ? null : this.tryN3(text);
@@ -148,17 +157,6 @@ class SchemaCache extends InterfaceCache {
         })
       })
     }
-
-    function parseShExR () {
-      const graphParser = new ShExWebApp.Validator(
-        this.shexcParser.parseString(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
-        ShExWebApp.RdfJsDb(this.graph),
-        {}
-      );
-      const schemaRoot = this.graph.getQuads(null, ShExWebApp.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      const val = graphParser.validateNodeShapePair(schemaRoot, ShExWebApp.Validator.Start); // start shape
-      return ShExWebApp.Util.ShExJtoAS(ShExWebApp.Util.ShExRtoShExJ(ShExWebApp.Util.valuesToSchema(ShExWebApp.Util.valToValues(val))));
-    }
   }
 
   async getItems () {
@@ -186,8 +184,8 @@ class TurtleCache extends InterfaceCache {
   constructor (selection, onLoad, turtleParser) {
     super(selection, onLoad);
     this.turtleParser = turtleParser;
-    this.meta.termToLex = function (trm) { return  ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this); };
-    this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
+    this.meta.termToLex = (trm) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
+    this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
   async parse (text, base) {
@@ -716,8 +714,8 @@ class ShapeMapCache extends InterfaceCache {
     super(selection, null);
     this.caches = caches;
     this.resultsWidget = resultsWidget;
-    this.meta.termToLex = function (trm) { return  ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this); };
-    this.meta.lexToTerm = function (lex) { return  turtleParser.termToLd(lex, new IRIResolver(this)); };
+    this.meta.termToLex = (trm) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
+    this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
   }
 
   async parse (text) {
@@ -1481,6 +1479,7 @@ class ShExBaseApp {
     ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
   }
   async start () {
+    SharedForTests = {Caches: this.Caches, /*DefaultBase*/} // an object to share state with a test harness
     this.prepareControls();
     const dndPromise = this.prepareDragAndDrop(); // async 'cause it calls Cache.X.set("")
     const loads = this.loadSearchParameters();
