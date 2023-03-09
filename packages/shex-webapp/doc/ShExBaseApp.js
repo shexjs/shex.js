@@ -36,7 +36,7 @@ class InterfaceCache {
     this.onLoad = onLoad;
     this.parsed = null; // a Promise
     this.url = undefined; // only set if inputarea caches some web resource.
-    this.meta = { prefixes: {}, base: this.base };
+    this.meta = { prefixes: {}, base: DefaultBase };
   }
 
   dirty (newVal) {
@@ -218,9 +218,17 @@ class ManifestCache extends InterfaceCache {
       }
       try {
         // exceptions pass through to caller (asyncGet)
-        textOrObj = url.endsWith(".yaml")
-          ? ShExWebApp.JsYaml.load(textOrObj)
-          : JSON.parse(textOrObj);
+        try {
+          textOrObj = JSON.parse(textOrObj);
+        } catch (eJson) {
+          try {
+            textOrObj = ShExWebApp.JsYaml.load(textOrObj);
+          } catch (eYaml) {
+            throw url.endsWith(".yaml")
+              ? eYaml
+              : eJson;
+          }
+        }
       } catch (e) {
         $("#inputSchema .manifest").append($("<li/>").text(NO_MANIFEST_LOADED));
         const throwMe = Error(e + '\n' + textOrObj);
@@ -268,9 +276,9 @@ class ManifestCache extends InterfaceCache {
         }
         const queryMap = "map" in action ?
               null :
-              ldToTurtle(action.focus, this.Caches.inputData.meta.termToLex)
+              ldToTurtle(action.focus, this.caches.inputData.meta.termToLex)
               + "@"
-              + ("shape" in action ? this.Caches.inputSchema.meta.termToLex(action.shape, false) : START_SHAPE_LABEL);
+              + ("shape" in action ? this.caches.inputSchema.meta.termToLex(action.shape, false) : START_SHAPE_LABEL);
         const queryMapURL = "map" in action ?
               action.map :
               null;
@@ -2133,6 +2141,7 @@ w  /**
     }).concat([
       {location: $("body"), targets: [
         {media: "application/json", target: this.Caches.manifest},
+        {media: "application/x-yaml", target: this.Caches.manifest},
         {ext: ".shex", media: "text/shex", target: this.Caches.inputSchema},
         {ext: ".ttl", media: "text/turtle", target: this.Caches.inputData},
         {ext: ".json", media: "application/json", target: this.Caches.manifest},
@@ -2204,7 +2213,7 @@ w  /**
                     try {
                       promises.push(inject(desc.targets, val, data, (jqXhr.getResponseHeader("Content-Type") || "unknown-media-type").split(/[ ;,]/)[0]));
                       $("#loadForm").dialog("close");
-                      toggleControls();
+                      this.toggleControls();
                     } catch (e) {
                       this.resultsWidget.append($("<pre/>").text("unable to evaluate <" + val + ">: " + (e.stack || e)));
                     }
@@ -2248,7 +2257,7 @@ w  /**
           SharedForTests.promise = Promise.all(promises);
         });
     });
-    /*async*/ function readfiles(files, targets) { // returns promise but doesn't use await
+    const readfiles = /*async*/ (files, targets) => { // returns promise but doesn't use await
       const formData = new FormData();
       let successes = 0;
       const promises = [];
