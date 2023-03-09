@@ -1,4 +1,8 @@
-class ShExSimpleApp extends ShExBaseApp {
+/*
+  ShExApp extends ShExBaseApp to load a ShEx manifest.
+  ShExBaseApp.callValidator() defaults to using a DirectShExValidator.
+ */
+class ShExApp extends ShExBaseApp {
   constructor (base, validatorClass) {
     super(base);
     const manifestSelector = $("#manifestDrop");

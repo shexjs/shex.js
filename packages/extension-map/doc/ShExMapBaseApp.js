@@ -1,5 +1,5 @@
 /**
- * supplement ShExSimpleApp with:
+ * Supplement ShExBaseApp with:
  * - bindings (JSONCache)
  * - statics (JSONCache)
  * - ouputSchema (SchemaCache)

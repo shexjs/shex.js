@@ -1,3 +1,6 @@
+/*
+  Classes and constants common to all shex{,map}{simple,worker}.
+ */
 const START_SHAPE_LABEL = "START";
 const INPUTAREA_TIMEOUT = 250;
 const NO_MANIFEST_LOADED = "no manifest loaded";

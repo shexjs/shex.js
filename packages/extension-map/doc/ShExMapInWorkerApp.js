@@ -1,8 +1,24 @@
-class ShExMapSimpleApp extends ShExMapBaseApp {
-  getValidator (loaded, _base, inputData) {
-    const validator = new DirectShExValidator(loaded, inputData, this.makeRenderer());
-    this.Mapper = this.MapModule.register(validator.validator, ShExWebApp);
-    return validator;
+class ShExMapInWorkerApp extends ShExMapBaseApp {
+  getValidator (loaded, base, inputData) { // same as ShExInWorkerApp
+    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate, "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null)
+  }
+
+  makeConsoleTracker () {
+    function padding (depth) { return (new Array(depth + 1)).join("  "); } // AKA "  ".repeat(depth)
+    function sm (node, shape) {
+      if (typeof shape === "object" && "term" in shape && shape.term === ShExWebApp.Validator.Start.term) {
+        shape = ShExWebApp.Validator.Start;
+      }
+      return `${this.Caches.inputData.meta.termToLex(node)}@${this.Caches.inputSchema.meta.termToLex(shape)}`;
+    }
+    const logger = {
+      recurse: x => { console.log(`${padding(logger.depth)}↻ ${sm(x.node, x.shape)}`); return x; },
+      known: x => { console.log(`${padding(logger.depth)}↵ ${sm(x.node, x.shape)}`); return x; },
+      enter: (point, label) => { console.log(`${padding(logger.depth)}→ ${sm(point, label)}`); ++logger.depth; },
+      exit: (point, label, ret) => { --logger.depth; console.log(`${padding(logger.depth)}← ${sm(point, label)}`); },
+      depth: 0
+    };
+    return logger;
   }
 
   async materializeAsync () {
@@ -34,39 +50,55 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
         resultBindings.unshift(_t);
       }
 
-      // const trivialMaterializer = this.Mapper.trivialMaterializer(outputSchema);
       const outputShapeMap = [this.fixMaterializationShapeMapEntry($("#createRoot").val(), $("#outputShape").val())];
 
-      const binder = this.Mapper.binder(resultBindings);
       await this.Caches.bindings.set(JSON.stringify(resultBindings, null, "  "));
-      // const outputGraph = trivialMaterializer.materialize(binder, lexToTerm($("#createRoot").val()), outputShape);
-      // binder = this.Mapper.binder(resultBindings);
       const generatedGraph = new RdfJs.Store();
       $("#results div").empty();
       $("#results .status").text("materializing data...").show();
-      outputShapeMap.forEach(pair => {
-        try {
-          const materializer = this.MapModule.materializer.construct(outputSchema, this.Mapper, {});
-          const resM = materializer.validate(binder, ShExWebApp.StringToRdfJs.n3idTerm2RdfJs(pair.node), pair.shape);
-          if ("errors" in resM) {
-            this.renderEntry( {
-              node: pair.node,
-              shape: pair.shape,
-              status: "errors" in resM ? "nonconformant" : "conformant",
-              appinfo: resM,
-              elapsed: -1
-            })
-            // $("#results .status").text("validation errors:").show();
-            // $("#results .status").text("synthesis errors:").show();
-            // this.resultsWidget.failMessage(e, currentAction);
+
+      const resultGraphs = []
+      const materialized = await new Canceleable(
+        $("#materialize"),
+        materialize,
+        "materialization aborted, re-start from validation",
+        {
+          request: "materialize",
+          queryMap: outputShapeMap,
+          outputSchema: outputSchema,
+          resultBindings: resultBindings,
+          options: {track: LOG_PROGRESS},
+        },
+        parseUpdatesAndResults
+      ).ready();
+
+      function parseUpdatesAndResults (msg, workerUICleanup, resolve, reject) {
+        switch (msg.data.response) {
+        case "update":
+          generatedGraph.addQuads(ShExWebApp.Util.valToN3js(msg.data.results, RdfJs.DataFactory));
+          resultGraphs.push(msg.data.results);
+          break;
+
+        case "error":
+          if ("exception" in msg.data) {
+            this.resultsWidget.replace("error materializing:\n" + msg.data.exception).
+              removeClass("passes fails").addClass("error");
           } else {
-            // console.log("g:", ShExWebApp.Util.valToTurtle(resM));
-            generatedGraph.addQuads(ShExWebApp.Util.valToN3js(resM, RdfJs.DataFactory));
+            this.renderEntry({
+              node: msg.data.node,
+              shape: msg.data.shape,
+              status: "errors" in msg.data.results ? "nonconformant" : "conformant",
+              appinfo: msg.data.results,
+              elapsed: -1
+            });
           }
-        } catch (e) {
-          console.dir(e);
+          break;
+
+        case "done":
+          workerUICleanup();
+          resolve({ materializionResults: resultGraphs });
         }
-      });
+      }
       this.currentRenderer.finish();
       $("#results .status").text("materialization results").show();
 
@@ -128,12 +160,11 @@ class ShExMapSimpleApp extends ShExMapBaseApp {
       this.resultsWidget.finish();
       return { materializationResults: generatedGraph };
     } catch (e) {
-      if (true) // don't print stack for parser errors
-        console.log(e);
-      this.resultsWidget.replace("error parsing " + parsing + ":\n" + e).
-        removeClass("passes fails").addClass("error");
-      // this.resultsWidget.finish();
-      return null;
+      this.reportMaterializationError(e, "materialization");
+      // this.resultsWidget.replace("error parsing " + parsing + ":\n" + e).
+      //   removeClass("passes fails").addClass("error");
+      // // this.resultsWidget.finish();
+      // return null;
     }
   }
 }
