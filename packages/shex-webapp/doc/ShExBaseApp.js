@@ -1295,6 +1295,9 @@ class DirectShExValidator {
   }
 }
 
+// Root error class to signal to ResultsWidget that is an expected error.
+class FlowControlError extends Error {  }
+
 // Control results area content.
 let LastFailTime = 0;
 class ResultsWidget {
@@ -1329,6 +1332,8 @@ class ResultsWidget {
   }
 
   failMessage (e, action, text) {
+    if (e instanceof FlowControlError)
+      return;
     console.error(e);
     $("#results .status").empty().text("Errors encountered:").show()
     const div = $("<div/>").addClass("error");
@@ -1906,9 +1911,10 @@ class ShExBaseApp {
   }
 
   reportValidationError (validationError, currentAction) {
+    if (validationError instanceof FlowControlError)
+      return { validationError };
     $("#results .status").text("validation errors:").show();
     this.resultsWidget.failMessage(validationError, currentAction);
-    console.error(validationError); // dump details to console.
     return { validationError };
   }
 

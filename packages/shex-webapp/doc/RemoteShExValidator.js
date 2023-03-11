@@ -1,18 +1,19 @@
 class Canceleable {
-  constructor (stopElement, clickAction, abortText, startMessage, handler) {
+  constructor (stopElement, clickAction, abortText, startMessage, handler, workerUrl) {
     this.restoreText = stopElement.text();
     this.stopElement = stopElement;
-    this.clackAction = clickAction;
+    this.clickAction = clickAction;
     this.abortText = abortText;
     this.startMessage = startMessage;
     this.handler = handler;
+    this.workerUrl = workerUrl;
   }
 
   ready () {
     return new Promise((resolve, reject) => {
       this.reject = reject;
       this.stopElement.addClass("stoppable").text("abort (ctl-enter)");
-      this.stopElement.off("click", this.clickAction);
+      this.stopElement.off(); // ("click", this.clickAction) not disabled as advertised
       this.stopElement.on("click", evt => this.cancel(evt));
       ShExWorker.onmessage = (msg) => {
         return this.handler(msg, () => this.workerUICleanup(), resolve, reject)
@@ -21,27 +22,28 @@ class Canceleable {
     });
   }
 
-  cancel (evt) {
+  cancel (evt) {debugger
     ShExWorker.terminate();
-    ShExWorker = new Worker("shexmap-simple-worker.js");
+    ShExWorker = new Worker(this.workerUrl);
     if (evt !== null)
       $("#results .status").text(this.abortText).show();
     this.workerUICleanup();
-    this.reject(Error(`Interrupted by user click`))
+    this.reject(new FlowControlError("Interrupted by user click"))
   }
 
   workerUICleanup () {
     this.stopElement.removeClass("stoppable").text(this.restoreText);
-    this.stopElement.off("click", evt => this.cancel(evt));
+    this.stopElement.off("click"); // , evt => this.cancel(evt));
     this.stopElement.on("click", this.clickAction);
   }
 }
 
 const USE_INCREMENTAL_RESULTS = true;
 class RemoteShExValidator {
-  constructor (loaded, schemaURL, inputData, renderer, onCancel, endpoint) {
+  constructor (loaded, schemaURL, inputData, renderer, onCancel, endpoint, workerUrl) {
     this.renderer = renderer;
     this.onCancel = onCancel;
+    this.workerUrl = workerUrl;
     this.created = new Canceleable(
       $("#validate"),
       this.onCancel,
@@ -60,7 +62,8 @@ class RemoteShExValidator {
               t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)
             ) }
       ),
-      RemoteShExValidator.handleCreate
+      RemoteShExValidator.handleCreate,
+      workerUrl
     ).ready();
   }
   async invoke (fixedMap, validationTracker, time, done, currentAction) {
@@ -82,7 +85,8 @@ class RemoteShExValidator {
         queryMap: transportMap,
         options: {includeDoneResults: !USE_INCREMENTAL_RESULTS, track: LOG_PROGRESS},
       },
-      this.parseUpdatesAndResults.bind(this, time, validationTracker, done, currentAction)
+      this.parseUpdatesAndResults.bind(this, time, validationTracker, done, currentAction),
+      this.workerUrl
     ).ready();
   }
 

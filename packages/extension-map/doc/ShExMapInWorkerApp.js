@@ -1,5 +1,5 @@
 class RemoteShExMaterializer {
-  constructor (schema, shapeMap, resultBindings, resultsWidget, onCancel, outputSchema) {
+  constructor (schema, shapeMap, resultBindings, resultsWidget, onCancel, workerUrl) {
     this.generatedGraph = new RdfJs.Store();
     this.created = new Canceleable(
       $("#materialize"),
@@ -12,7 +12,8 @@ class RemoteShExMaterializer {
         resultBindings: resultBindings,
         options: {track: LOG_PROGRESS},
       },
-      this.parseUpdatesAndResults.bind(this)
+      this.parseUpdatesAndResults.bind(this),
+      workerUrl
     ).ready();
   }
   async invoke (fixedMap, validationTracker, time, done, currentAction) {
@@ -24,7 +25,6 @@ class RemoteShExMaterializer {
     switch (msg.data.response) {
     case "update":
       this.generatedGraph.addQuads(ShExWebApp.Util.valToN3js(msg.data.results, RdfJs.DataFactory));
-      this.resultGraphs.push(msg.data.results);
       break;
 
     case "error":
@@ -44,18 +44,18 @@ class RemoteShExMaterializer {
 
     case "done":
       workerUICleanup();
-      resolve({ materializionResults: this.resultGraphs });
+      resolve({ materializionResults: this.generatedGraph });
     }
   }
 }
 
 class ShExMapInWorkerApp extends ShExMapBaseApp {
   getValidator (loaded, base, inputData) { // same as ShExInWorkerApp
-    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate, "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null)
+    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate.bind(this), "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null, "shexmap-simple-worker.js")
   }
 
   getMaterializer (schema, shapeMap, resultBindings) {
-    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, this.resultsWidget, this.materialize.bind(this));
+    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, this.resultsWidget, this.materialize.bind(this), "shexmap-simple-worker.js");
   }
 
   makeConsoleTracker () {

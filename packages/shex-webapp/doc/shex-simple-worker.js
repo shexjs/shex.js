@@ -1,29 +1,5 @@
 importScripts("../../shex-webapp/doc/webpacks/n3js.js");
-if (true) {
 importScripts("./webpacks/shex-webapp.js");
-} else {
-importScripts("../doc/require.js"                              );
-importScripts("../node_modules/hierarchy-closure/hierarchy-closure.js"
-                                                               ); modules["hierarchy-closure"         ] = module.exports;
-importScripts("../../shape-map/lib/ShapeMapSymbols.js"         ); modules["./lib/ShapeMapSymbols"     ] = modules["./ShapeMapSymbols"] = module.exports;
-module.exports = exports;
-importScripts("../../shape-map/lib/ShapeMapJison.js"           ); modules["./ShapeMapJison"           ] = module.exports;
-importScripts("../../shape-map/lib/ShapeMapParser.js"          ); modules["./lib/ShapeMapParser"      ] = module.exports;
-importScripts("../../shape-map/shape-map.js"                   ); modules["shape-map"                 ] = module.exports;
-importScripts("../../shex-term/shex-term.js"                   ); modules["@shexjs/term"              ] = module.exports;
-importScripts("../../shex-visitor/shex-visitor.js"             ); modules["@shexjs/visitor"           ] = module.exports;
-importScripts("../../shex-util/shex-util.js"                   ); modules["@shexjs/util"              ] = module.exports;
-importScripts("../../shex-loader/shex-loader.js"               ); modules["@shexjs/loader"               ] = module.exports;
-importScripts("../../eval-threaded-nerr/eval-threaded-nerr.js" ); modules["@shexjs/eval-threaded-nerr"] = module.exports;
-importScripts("../../eval-simple-1err/eval-simple-1err.js"     ); modules["@shexjs/eval-simple-1err"  ] = module.exports;
-importScripts("../../shex-validator/shex-validator.js"         ); modules["@shexjs/validator"         ] = module.exports;
-importScripts("../../shex-writer/shex-writer.js"               ); modules["@shexjs/writer"            ] = module.exports;
-module.exports = exports;
-importScripts("../../shex-parser/lib/ShExJison.js"             ); modules["./lib/ShExJison"           ] = module.exports;
-importScripts("../../shex-parser/shex-parser.js"               ); modules["@shexjs/parser"            ] = module.exports;
-
-importScripts("../shex-webapp.js");
-}
 importScripts("./WorkerMarshalling.js");
 // importScripts('promise-worker/register.js');
 
