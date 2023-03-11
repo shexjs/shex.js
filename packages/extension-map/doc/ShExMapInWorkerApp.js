@@ -51,11 +51,11 @@ class RemoteShExMaterializer {
 
 class ShExMapInWorkerApp extends ShExMapBaseApp {
   getValidator (loaded, base, inputData) { // same as ShExInWorkerApp
-    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate.bind(this), "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null, "shexmap-simple-worker.js")
+    return new RemoteShExValidator(loaded, base, inputData, this.makeRenderer(), this.disableResultsAndValidate.bind(this), "endpoint" in this.Caches.inputData ? this.Caches.inputData.endpoint : null, "ShExMapWorkerThread.js")
   }
 
   getMaterializer (schema, shapeMap, resultBindings) {
-    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, this.resultsWidget, this.materialize.bind(this), "shexmap-simple-worker.js");
+    return new RemoteShExMaterializer(schema, shapeMap, resultBindings, this.resultsWidget, this.materialize.bind(this), "ShExMapWorkerThread.js");
   }
 
   makeConsoleTracker () {
