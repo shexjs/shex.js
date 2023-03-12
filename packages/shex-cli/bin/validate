@@ -42,6 +42,7 @@ const Util = require("util");
 const JsYaml = require('js-yaml');
 const ShExUtil = require("@shexjs/util");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
+const { ctor: SparqlDb } = require('@shexjs/neighborhood-sparql');
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShExWriter = require("@shexjs/writer"); // for verbose output
@@ -100,6 +101,7 @@ const CommandLineOptions = [
   { name: "json",      alias: "j", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "ShExJ schema" },
   { name: "dataURL",   alias: "d", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "Turtle data", defaultOption: true },
   { name: "jsonld",    alias: "l", type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON-LD data" },
+  { name: "endpoint",              type: String, typeLabel: "IRI",       multiple: false, defaultValue: undefined, description: "data query endpoint" },
   { name: "extension",             type: String, typeLabel: "file glob", multiple:  true, defaultValue:        [], description: "ShExC schema" },
   { name: "result",                type: String, typeLabel: "file|URL",  multiple: false, defaultValue: undefined, description: "expected JSON results" },
   { name: "serve",     alias: "S", type: String, typeLabel: "URL",       multiple: false, defaultValue: undefined, description: "server" },
@@ -221,6 +223,14 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
     }
   }
   const shapeMapExtensions = {
+    "http://www.w3.org/ns/shex#Extensions-sparql": function (query) {
+      const prefixesStr = loaded.dataMeta.length > 0
+            ? Object.keys(loaded.dataMeta[0].prefixes).map(
+              k => `PREFIX ${k}: <${loaded.dataMeta[0].prefixes[k]}>\n`
+            ).join("")
+            : "";
+      return ShExUtil.executeQuery(prefixesStr + query, parms.endpoint, N3.DataFactory).map(row => row[0]);
+    }
   }
 
   function _makeShapeMap (nodeP, shapeP, nodeTypeP, schemaStart) {
@@ -413,8 +423,9 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
             metaToResolver(schemaAndData.schemaMeta[0]),
             metaToResolver(schemaAndData.dataMeta[0]))
           : null;
-    schemaAndData.data =
-      RdfJsDb(schemaAndData.data, queryTracker);
+    schemaAndData.data = valParms.endpoint
+      ? SparqlDb(valParms.endpoint, queryTracker, {allOutgoing: valParms["slurp-all"]})
+      : RdfJsDb(schemaAndData.data, queryTracker);
 
     if (valParms.serve) {
       if (valParms.shape) {

@@ -22,7 +22,7 @@ class Canceleable {
     });
   }
 
-  cancel (evt) {debugger
+  cancel (evt) {
     ShExWorker.terminate();
     ShExWorker = new Worker(this.workerUrl);
     if (evt !== null)
@@ -166,6 +166,17 @@ class RemoteShExValidator {
       this.renderer.failure(e, currentAction);
       console.error(e); // dump details to console.
       if (done) { done(e) }
+      break;
+
+      // query tracking
+    case "startQuery":
+      if (this.renderer.caches.inputData.queryTrackerController.queryTracker)
+        this.renderer.caches.inputData.queryTrackerController.queryTracker.start(msg.data.isOut, msg.data.term, msg.data.shapeLabel);
+      break;
+
+    case "finishQuery":
+      if (this.renderer.caches.inputData.queryTrackerController.queryTracker)
+        this.renderer.caches.inputData.queryTrackerController.queryTracker.end(msg.data.quads, msg.data.time);
       break;
 
     default:

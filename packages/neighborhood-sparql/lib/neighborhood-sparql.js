@@ -3,7 +3,8 @@
 const NeighborhoodSparqlModule = (function () {
   const ShExTerm = require("@shexjs/term");
   const ShExUtil = require("@shexjs/util");
-  const ShExVisitor = require("@shexjs/visitor");
+  const {Visitor: ShExVisitor} = require("@shexjs/visitor");
+  const RdfJs = require("n3"); // TODO: set global externally
 
   function sparqlDB (endpoint, queryTracker, options = {}) {
     // Need to inspect the schema to calculate the relevant neighborhood.
@@ -19,7 +20,7 @@ const NeighborhoodSparqlModule = (function () {
     }
 
     function mapQueryToTriples (query, s, o) {
-      const rows = ShExUtil.executeQuery(query, endpoint);
+      const rows = ShExUtil.executeQuery(query, endpoint, RdfJs.DataFactory);
       const triples = rows.map(row =>  {
         return s ? {
           subject: s, // arcs out
@@ -93,8 +94,8 @@ const NeighborhoodSparqlModule = (function () {
         }
       }
       const bnodesByPredicate = outgoing.reduce((acc, t) => {
-        if (t.object.startsWith("_:")) {
-          bnodes[t.object] = { from: point, p: t.predicate };
+        if (t.object.termType === "BlankNode") {
+          bnodes[t.object.value] = { from: point, p: t.predicate };
           // e.g. { from: "n0", p: "p0" }
           if (!(t.predicate in acc))
             acc[t.predicate] = [];
@@ -108,7 +109,7 @@ const NeighborhoodSparqlModule = (function () {
           const query = `SELECT ?s ?p ?o { # find bnodes in <${point}> ${p} ?o
 ${find(bnodesByPredicate[p][0])}  ?s ?p ?o
 }`;
-          const rows = ShExUtil.executeQuery(query, endpoint);
+          const rows = ShExUtil.executeQuery(query, endpoint, RdfJs.DataFactory);
           const uniques = getUniques(rows);
           Object.keys(uniques).forEach(s => {
             bnodes[s].unique = uniques[s].unique,
@@ -133,12 +134,12 @@ ${find(bnodesByPredicate[p][0])}  ?s ?p ?o
     };
 
     function find (point, depth = 0, recursed = false) {
-      if (!point.startsWith("_:"))
+      if (point.termType !== "BlankNode")
         return recursed
-        ? "  <" + point + ">"
-        : "  BIND (" + "<" + point + ">" + " AS ?s)\n";
+        ? " " + turtlifyRdfJs(point)
+        : " BIND (" + turtlifyRdfJs(point) + " AS ?s)\n";
 
-      const see = bnodes[point].see || point;
+      const see = bnodes[point.value].see || point;
       const s = depth === 0 ? '?s' : `?_${depth}`;
       const {from, p, unique, proxies} = bnodes[see];
       const prior = find(from, depth+1, true);
@@ -159,11 +160,25 @@ MINUS {
         : `${prior} <${p}> ?_${depth}  ${uniqueStr}\n  ?_${depth}`;
     }
 
+    function turtlifyRdfJs (term) {
+      switch (term.termType) {
+      case "NamedNode": return "<" + term.value + ">";
+      case "BlankNode": return "_:" + term.value;
+      case "Literal": return "'" + term.value.replace() + "'" +
+          (term.language
+           ? "@" + term.language
+           : term.datatypeString !== "http://www.w3.org/2001/XMLSchema#string"
+           ? "^^<" + term.datatypeString + ">"
+           : "");
+      default: throw Error(`unrecognized termType ${term.termType} in ${term}`);
+      }
+    }
+
     function getUniques (rs) {
       // index the result set three ways
       const index = rs.reduce((acc, t) => {
         const [s, p, o] = t;
-        if (!s.startsWith("_:")) // only index bnodes
+        if (s.termType !== "BlankNode") // only index bnodes
           return acc;
         acc.sz.add(s);
 

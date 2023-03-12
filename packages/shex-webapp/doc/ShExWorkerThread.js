@@ -96,10 +96,10 @@ function makeStaticDB (quads) {
 function queryTracker () {
   return {
     start: function (isOut, term, shapeLabel) {
-      self.postMessage ({ response: "startQuery", isOut: isOut, term: term, shape: shapeLabel });
+      self.postMessage ({ response: "startQuery", isOut: isOut, term: WorkerMarshalling.rdfjsTermToJsonTerm(term), shapeLabel: shapeLabel });
     },
     end: function (quads, time) {
-      self.postMessage({ response: "finishQuery", quads: quads, time: time });
+      self.postMessage({ response: "finishQuery", quads: quads.map(t => WorkerMarshalling.rdfjsTripleToJsonTriple(t)), time: time });
     }
   }
 }

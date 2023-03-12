@@ -114,10 +114,10 @@ Convert the results of validating an instance of ShExR against ShExR.shex into a
 ## errsToSimple(failure)
 Attempt to make a validation failure human-readable.
 
-## executeQuery(query, endpoint)
+## executeQuery(query, endpoint, dataFactory)
 Synchronously Execute a SPARQL query against and endpoint.
 
-## executeQueryPromise(query, endpoint)
+## executeQueryPromise(query, endpoint, dataFactory)
 Asynchronously Execute a SPARQL query against and endpoint.
 
 ## parseSparqlJsonResults (jsonObject)

@@ -1755,19 +1755,21 @@ const ShExUtil = {
     return reportUnknown ? reportUnknown(t) : this.UnknownIRI;
   },
 
-  executeQueryPromise: function (query, endpoint) {
+  executeQueryPromise: function (query, endpoint, dataFactory) {
     let rows;
+    if (!endpoint)
+      throw Error(`Can't execute a SPARQL query with no endpoint`);
 
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     return fetch(queryURL, {
       headers: {
         'Accept': 'application/sparql-results+json'
       }}).then(resp => resp.json()).then(jsonObject => {
-        return this.parseSparqlJsonResults(jsonObject);
+        return this.parseSparqlJsonResults(jsonObject, dataFactory);
       })// .then(x => new Promise(resolve => setTimeout(() => resolve(x), 1000)));
   },
 
-  executeQuery: function (query, endpoint) {
+  executeQuery: function (query, endpoint, dataFactory) {
     let rows;
     const queryURL = endpoint + "?query=" + encodeURIComponent(query);
     const xhr = new XMLHttpRequest();
@@ -1777,25 +1779,31 @@ const ShExUtil = {
     // const selectsBlock = query.match(/SELECT\s*(.*?)\s*{/)[1];
     // const selects = selectsBlock.match(/\?[^\s?]+/g);
     const jsonObject = JSON.parse(xhr.responseText);
-    return this.parseSparqlJsonResults(jsonObject);
+    return this.parseSparqlJsonResults(jsonObject, dataFactory);
   },
 
-  parseSparqlJsonResults: function (jsonObject) {
+  parseSparqlJsonResults: function (jsonObject, dataFactory) {
     const selects = jsonObject.head.vars;
     return jsonObject.results.bindings.map(row => {
       // spec: https://www.w3.org/TR/rdf-sparql-json-res/#variable-binding-results
       return selects.map(sel => {
+        if (!(sel in row))
+          return null;
         const elt = row[sel];
         switch (elt.type) {
-        case "uri": return elt.value;
-        case "bnode": return "_:" + elt.value;
+        case "uri": return dataFactory.namedNode(elt.value);
+        case "bnode": return dataFactory.blankNode(elt.value);
         case "literal":
-          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
-            + ("xml:lang" in elt ? "@" + elt["xml:lang"] : "")
-            + ("datatype" in elt ? "^^" + elt.datatype : "");
+          return dataFactory.literal(
+            elt.value,
+            "xml:lang" in elt
+              ? elt["xml:lang"]
+              : "datatype" in elt
+              ? dataFactory.namedNode(elt.datatype)
+              : undefined
+          );
         case "typed-literal": // encountered in wikidata query service
-          return "\"" + elt.value.replace(/"/g, '\\""') + "\""
-            + ("^^" + elt.datatype);
+          return dataFactory.literal(elt.value, elt.datatype);
         default: throw "unknown XML results type: " + elt.type;
         }
       })
@@ -1805,29 +1813,26 @@ const ShExUtil = {
 /* TO ADD? XML results format parsed with jquery:
   // parse..._dom(new window.DOMParser().parseFromString(str, "text/xml"));
 
-  parseSparqlXmlResults_dom: function (doc) {
+  parseSparqlXmlResults_dom: function (doc, dataFactory) {
     Array.from(X.querySelectorAll('sparql > results > result')).map(row => {
       Array.from(row.querySelectorAll("binding")).map(elt => {
         const typed = Array.from(elt.children)[0];
         const text = typed.textContent;
 
         switch (elt.tagName) {
-        case "uri": return text;
-        case "bnode": return "_:" + text;
+        case "uri": return dataFactory.namedNode(text);
+        case "bnode": return dataFactory.blankNode(text);
         case "literal":
           const datatype = typed.getAttribute("datatype");
           const lang = typed.getAttribute("xml:lang");
-          return "\"" + text + "\"" + (
-            datatype ? "^^" + datatype :
-            lang ? "@" + lang :
-              "");
+          return dataFactory.literal(text, lang ? lang : datatype ? dataFactory.namedNode(datatype) : undefined);
         default: throw "unknown XML results type: " + elt.tagName;
         }
       })
     })
   },
 
-  parseSparqlXmlResults_jquery: function (jqObj) {
+  parseSparqlXmlResults_jquery: function (jqObj, dataFactory) {
     $(jqObj).find("sparql > results > result").
       each((_, row) => {
         rows.push($(row).find("binding > *:nth-child(1)").
@@ -1836,15 +1841,12 @@ const ShExUtil = {
             const text = elt.text();
 
             switch (elt.prop("tagName")) {
-            case "uri": return text;
-            case "bnode": return "_:" + text;
+            case "uri": return dataFactory.namedNode(text);
+            case "bnode": return dataFactory.blankNode(text);
             case "literal":
               const datatype = elt.attr("datatype");
               const lang = elt.attr("xml:lang");
-              return "\"" + text + "\"" + (
-                datatype ? "^^" + datatype :
-                lang ? "@" + lang :
-                  "");
+              return dataFactory.literal(text, lang ? lang : datatype ? dataFactory.namedNode(datatype) : undefined);
             default: throw "unknown XML results type: " + elt.prop("tagName");
             }
           }).get());
