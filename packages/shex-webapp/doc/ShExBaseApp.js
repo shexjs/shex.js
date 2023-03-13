@@ -112,6 +112,7 @@ class SchemaCache extends InterfaceCache {
     super(selection, onLoad);
     this.shexcParser = shexcParser;
     this.turtleParser = turtleParser;
+    this.inputMeta = null;
     this.graph = null;
     this.language = null;
 
@@ -187,12 +188,18 @@ class SchemaCache extends InterfaceCache {
 }
 
 class TurtleCache extends InterfaceCache {
-  constructor (selection, onLoad, turtleParser, queryTrackerController) {
+  constructor (selection, onLoad, turtleParser, queryTrackerController, dependencies) {
     super(selection, onLoad);
     this.turtleParser = turtleParser;
     this.queryTrackerController = queryTrackerController;
+    this.dependencies = dependencies;
     this.meta.termToLex = (trm) => ShExWebApp.ShExTerm.rdfJsTerm2Turtle(trm, this.meta);
     this.meta.lexToTerm = (lex) => turtleParser.termToLd(lex, new IRIResolver(this.meta));
+  }
+
+  dirty (newVal) {
+    super.dirty(newVal);
+    this.dependencies.forEach(d => d.dirty(newVal));
   }
 
   async parse (text, base) {
@@ -283,14 +290,14 @@ class ManifestCache extends InterfaceCache {
         // transform deprecated examples.js structure
         // textOrObj = eval(textOrObj).reduce((acc, schema) => {
         //   function x (data, status) {
-        //     return {
+        //     return Object.assign({
         //       schemaLabel: schema.name,
         //       schema: schema.schema,
         //       dataLabel: data.name,
         //       data: data.data,
         //       queryMap: data.queryMap,
         //       status: status
-        //     };
+        //     }, "meta" in schema ? { meta: schema.meta } : { } );
         //   }
         //   return acc.concat(
         //     schema.passes.map(data => x(data, "conformant")),
@@ -344,7 +351,7 @@ class ManifestCache extends InterfaceCache {
           elt.metaURL = action.termResolverURL || url;
         }
       }
-      ["schemaURL", "dataURL", "queryMapURL"].forEach(parm => {
+      ["schemaURL", "dataURL", "queryMapURL", "metaURL"].forEach(parm => {
         if (parm in elt) {
           elt[parm] = new URL(elt[parm], url).href;
         } else {
@@ -412,6 +419,7 @@ class ManifestCache extends InterfaceCache {
         // first entry with this schema
         acc[key] = {
           label: schemaLabel,
+          meta: elt.meta,
           text: elt.schema,
           url: elt.schemaURL || (elt.schema ? base : undefined)
         };
@@ -529,6 +537,11 @@ class ManifestCache extends InterfaceCache {
       this.caches.inputSchema.url = undefined; // @@ crappyHack1
       $("#inputSchema .status").text(name);
 
+      const hasMeta = !!schemaTest.meta && schemaTest.meta.length > 0;
+      this.caches.inputMeta.set(hasMeta ? schemaTest.meta : "");
+      $("#showInputMeta").prop("checked", hasMeta);
+      App.revealMetaPane(); // !!
+
       this.clearData();
       const headings = {
         "passes": "Passing:",
@@ -632,6 +645,7 @@ class ManifestCache extends InterfaceCache {
   async clearAll () {
     $("#results .status").hide();
     await this.caches.inputSchema.set("", DefaultBase);
+    await this.caches.inputMeta.set("", DefaultBase);
     $(".inputShape").val("");
     $("#inputSchema .status").text(" ");
     $("#inputSchema li.selected").removeClass("selected");
@@ -1299,6 +1313,16 @@ class ShExCParser {
     this.shexParser = ShExWebApp.Parser.construct(DefaultBase, null, this.shexParserOptions);
   }
   parseString (text, meta, base) {
+    // $("#schemaDialect").text(Caches.inputSchema.language);
+    const resolverText = $("#inputMeta textarea").val();
+    if (resolverText) {
+      const resolverStore = new RdfJs.Store();
+      this.shexParser._setTermResolver(ShExWebApp.Parser.dbTermResolver(resolverStore));
+      resolverStore.addQuads(new RdfJs.Parser({baseIRI:DefaultBase}).parse(resolverText));
+    } else {
+      this.shexParser._setTermResolver(ShExWebApp.Parser.disabledTermResolver());
+    }
+
     this.shexParserOptions.duplicateShape = $("#duplicateShape").val();
     this.shexParser._setBase(base);
     const ret = this.shexParser.parse(text);
@@ -1571,16 +1595,18 @@ class ShExBaseApp {
     this.queryTrackerController = { queryTracker: null };
 
     const inputSchema = new SchemaCache($("#inputSchema textarea.schema"), this.onDataLoad.bind(this), this.shexcParser, this.turtleParser);
-    const inputData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController);
+    const inputMeta = new TurtleCache($("#inputMeta textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController, [inputSchema]);
+    const inputData = new TurtleCache($("#inputData textarea"), this.onDataLoad.bind(this), this.turtleParser, this.queryTrackerController, []);
     const extension = new ExtensionCache($("#extensionDrop"), this.resultsWidget);
     const shapeMap = new ShapeMapCache($("#textMap"), {inputSchema, inputData}, this.turtleParser, this.resultsWidget); // @@ rename to #shapeMap
 
-    this.Caches = { inputSchema, inputData, extension, shapeMap };
+    this.Caches = { inputSchema, inputMeta, inputData, extension, shapeMap };
     this.Getables = [
       {queryStringParm: "schema",       location: this.Caches.inputSchema.selection, cache: this.Caches.inputSchema},
       {queryStringParm: "data",         location: this.Caches.inputData.selection,   cache: this.Caches.inputData  },
       {queryStringParm: "extension",    location: this.Caches.extension.selection,   cache: this.Caches.extension  },
       {queryStringParm: "shape-map",    location: $("#textMap"),                     cache: this.Caches.shapeMap   },
+      {queryStringParm: "inputMeta",    location: this.Caches.inputMeta.selection,   cache: this.Caches.inputMeta  },
     ];
     this.QueryParams = this.Getables.concat([
       {queryStringParm: "interface",    location: $("#interface"),       deflt: "human"     },
@@ -1592,7 +1618,8 @@ class ShExBaseApp {
       this.navigateManifestKeyDown.bind(this),
     ];
 
-    ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start;
+    ShExWebApp.ShapeMap.Start = ShExWebApp.Validator.Start; // These need to share a Start symbol
+    globalThis.App = this; // for easy debugging
   }
   async start () {
     SharedForTests = {Caches: this.Caches, /*DefaultBase*/} // an object to share state with a test harness
@@ -1640,6 +1667,7 @@ class ShExBaseApp {
     $("#success").on("change", this.setInterface.bind(this));
     $("#regexpEngine").on("change", this.toggleControls.bind(this));
     $("#validate").on("click", this.disableResultsAndValidate.bind(this));
+    $("#showInputMeta").on("click", this.revealMetaPane.bind(this));
     $("#download-results-button").on("click", this.downloadResults.bind(this));
 
     $("#loadForm").dialog({
@@ -2263,6 +2291,18 @@ class ShExBaseApp {
   setInterface (evt) {
     this.toggleControls();
     this.customizeInterface();
+  }
+
+  revealMetaPane () {
+    if ($("#showInputMeta").is(":checked")) {
+      $("#inputMeta").show();
+      if ($("#inputMeta").attr("data-adjust"))
+        $($("#inputMeta").attr("data-adjust")).attr("rows", "12");
+    } else {
+      $("#inputMeta").hide();
+      if ($("#inputMeta").attr("data-adjust"))
+        $($("#inputMeta").attr("data-adjust")).attr("rows", "25");
+    }
   }
 
   customizeInterface () {

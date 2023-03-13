@@ -251,6 +251,20 @@ const ShExLoaderCjsModule = function (config = {}) {
     let allSchemas, allGraphs;
 
     // gather all the potentially remote inputs
+    if (schemaOptions && "termResolver" in schemaOptions) {
+      returns.resolverMeta = []
+      // load the resolver then the schema sources,
+      const allResolvers = new ResourceLoadControler(schemaOptions.termResolver);
+      loadList(schemaOptions.termResolver, returns.resolverMeta, "text/turtle",
+               parseTurtle, mergeGraph, dataOptions, allResolvers)
+      const loadedResolvers = await allResolvers.allLoaded()
+      returns.resolver = new config.rdfjs.Store()
+      loadedResolvers.forEach(rSrc => {
+        returns.resolver.addQuads(rSrc.graph)
+        delete rSrc.graph;
+      })
+      schemaOptions.termResolver = ShExParser.dbTermResolver(returns.resolver)
+    }
     {
       const {shexc = [], json = [], turtle = []} = schema || {};
       allSchemas = new ResourceLoadControler(shexc.concat(json).concat(turtle));

@@ -1,5 +1,6 @@
 const ShExParserCjsModule = (function () {
 
+const ShExTerm = require("@shexjs/term");
 const ShExJisonParser = require('./lib/ShExJison').ShExJisonParser;
 
 const schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
@@ -16,6 +17,7 @@ class ShExCParserState {
   reset () {
     this._prefixes = this._imports = this._sourceMap = this.shapes = this.productions = this.start = this.startActs = null; // Reset state.
     this._base = this._baseIRI = this._baseIRIPath = this._baseIRIRoot = null;
+    this._termResolver = null;
   }
 
   _setFileName (fn) { this._fileName = fn; }
@@ -133,6 +135,10 @@ class ShExCParserState {
     return result + iri.substring(segmentStart);
   }
 
+  _setTermResolver (res) {
+    this._termResolver = res;
+  }
+
   error (e) {
     const hash = {
       text: this.lexer.match,
@@ -205,11 +211,16 @@ class ShExCParserState {
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
-                                                                                schemaOptions = schemaOptions || {};
+  schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
   const prefixesCopy = {};
   for (const prefix in prefixes || {})
     prefixesCopy[prefix] = prefixes[prefix];
+
+  // Create a copy of the labelResolvers
+  let termResolver = "termResolver" in schemaOptions ?
+      schemaOptions.termResolver :
+      makeDisabledTermResolver();
 
   // Create a new parser with the given prefixes
   // (Workaround for https://github.com/zaach/jison/issues/241)
@@ -223,6 +234,7 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
     parserState._setBase(base);
     parserState._setFileName(baseIRI);
     parserState.options = schemaOptions;
+    parserState._termResolver = termResolver;
     let errors = [];
     parserState.recoverable = e =>
       errors.push(e);
@@ -264,6 +276,7 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   parser._setBase = function (base) {
     baseIRI = base;
   }
+  parser._setTermResolver = (resolver) => { termResolver = resolver; }
   return parser;
 
   function contextError (e, lexer) {
@@ -275,8 +288,54 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   }
 }
 
+const makeDBTermResolver = function (db) {
+  const _db = db;
+  const _lookFor = [];
+  return {
+    add: function (iri) {
+      _lookFor.push(iri);
+    },
+    resolve: function (pair, prefixes) {
+      const x = _lookFor.reduce((lfacc, lf) => {
+        const found1 = _db.getQuads(null, lf, '"' + pair.label.value + '"');
+        if (found1.length)
+          return pair.prefix === null ?
+          {prefix: null, length: null, term: ShExTerm.rdfJsTerm2Ld(found1[0].subject)}:
+          found1.reduce((tripacc, triple) => {
+            const s = ShExTerm.rdfJsTerm2Ld(triple.subject);
+            return Object.keys(prefixes).reduce((prefacc, prefix) => {
+              const ns = prefixes[prefix];
+              const sw = s.startsWith(ns);
+              if (sw && ns.length > prefacc.length && pair.prefix === prefix)
+                return {prefix: prefix, length: prefacc.length, term: s};
+              return prefacc;
+            }, tripacc);
+          }, lfacc);
+        else
+          return lfacc;
+      }, {prefix: null, length: 0, term: null});
+      if (x.term)
+        return x.term;
+      throw Error("no term found for `" + JSON.stringify(pair) + "`");
+    }
+  };
+}
+
+const makeDisabledTermResolver = function () {
+  return {
+    add: function (iri) {
+      throw Error("no term resolver to accept <" + iri + ">");
+    },
+    resolve: function (label, prefixes) {
+      throw Error("no term resolver to resolve `" + label + "`");
+    }
+  };
+}
+
 return {
-  construct: prepareParser
+  construct: prepareParser,
+  dbTermResolver: makeDBTermResolver,
+  disabledTermResolver: makeDisabledTermResolver
 };
 })();
 

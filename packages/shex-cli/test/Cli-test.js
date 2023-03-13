@@ -90,7 +90,29 @@ const AllTests = {
     { name: "simple-jsonld-http" , args: ["--json-manifest", HTTPTEST + "cli/manifest-simple.jsonld"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
     { name: "simple-as-jsonld-http" , args: ["--jsonld-manifest", HTTPTEST + "cli/manifest-simple.jsonld"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
     { name: "simple-as-turtle-http" , args: ["--turtle-manifest", HTTPTEST + "cli/manifest-simple.ttl"], result: HTTPTEST + "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
-    { name: "results-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: X.val_match_pass }
+    { name: "results-http", args: ["--json-manifest", HTTPTEST + "cli/manifest-results.json"], resultText: "true\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n", status: X.val_match_pass },
+
+    // backticks
+    { name: "simple" ,
+      args: ["-x", "cli/3backtick.shex", "-s", "http://a.example/S", "-d", "cli/backtick.ttl", "-n", "http://a.example/s", "--term-resolver", "cli/backtick.owl"],
+      result: "cli/3backtick_pass.val",
+      status: X.val_match_pass },
+    { name: "backtick-json" ,
+      args: ["--json-manifest", "cli/manifest-backtick.json"],
+      result: "cli/3backtick_pass.val",
+      status: X.val_match_pass },
+    { name: "backtick-jsonld" ,
+      args: ["--json-manifest", "cli/manifest-backtick.jsonld"],
+      result: "cli/3backtick_pass.val",
+      status: X.val_match_pass },
+    { name: "backtick-as-jsonld" ,
+      args: ["--jsonld-manifest", "cli/manifest-backtick.jsonld"],
+      result: "cli/3backtick_pass.val",
+      status: X.val_match_pass },
+    { name: "backtick-as-turtle" ,
+      args: ["--turtle-manifest", "cli/manifest-backtick.ttl"],
+      result: "cli/3backtick_pass.val",
+      status: X.val_match_pass }
   ],
 
   "shex-to-json": [

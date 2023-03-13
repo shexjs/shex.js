@@ -208,6 +208,16 @@ describe("A ShEx validator", function () {
             shapeExterns = ShExUtil.index(shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8"), shapeExternsURL, {}, shapeExternsFile)).shapeExprs;
           }
           let validator;
+          let resolverOptions = ShExParser.disabledTermResolver();
+          if ("termResolver" in test.action) {
+            const resolverFile = path.resolve(validationPath, test.action.termResolver);
+            const resolverURL = "file://" + resolverFile;
+
+            const resolverStore = new N3.Store();
+            const resolverText = fs.readFileSync(resolverFile, "utf8");
+            resolverStore.addQuads(new N3.Parser({baseIRI: resolverURL, blankNodePrefix: ""}).parse(fs.readFileSync(resolverFile, "utf8")));
+            resolverOptions = ShExParser.dbTermResolver(resolverStore);
+          }
           const schemaOptions = Object.assign({
             regexModule: regexModule,
             diagnose: true,
@@ -225,7 +235,8 @@ describe("A ShEx validator", function () {
             validateExtern: function (point, shapeLabel, ctx) {
               return validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx);
             }
-          }, params);
+          }, params, resolverOptions);
+          shexParser._setTermResolver(resolverOptions);
           function pickShEx (i) {
             return i + ".shex";
           }
