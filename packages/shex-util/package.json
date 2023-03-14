@@ -22,7 +22,7 @@
   "dependencies": {
     "@shexjs/term": "^1.0.0-alpha.24",
     "@shexjs/visitor": "^1.0.0-alpha.24",
-    "@types/shexj": "^2.1.3",
+    "@types/shexj": "^2.1.4",
     "hierarchy-closure": "^1.2.1",
     "sync-request": "^6.1.0"
   },
