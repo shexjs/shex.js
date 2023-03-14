@@ -103,7 +103,7 @@ class RemoteShExValidator {
       reject(throwMe);
       break;
     default:
-      reject(Error(`expected ${expect}, got ${JSON.stringify(msg.data)}`));
+      reject(Error(`expected "created" or "error", got ${JSON.stringify(msg.data)}`));
     }
   }
 
@@ -180,7 +180,7 @@ class RemoteShExValidator {
       break;
 
     default:
-      console.log("<span class=\"error\">unknown response: " + JSON.stringify(msg.data) + "</span>");
+      reject(Error(`expected a validation worker response, got ${JSON.stringify(msg.data)}`));
     }
   }
 }

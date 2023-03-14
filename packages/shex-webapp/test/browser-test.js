@@ -5,10 +5,14 @@ const TEST_browser = "TEST_browser" in process.env ? JSON.parse(process.env["TES
 const STARTUP_TIMEOUT = 10000
 const SCRIPT_CALLBACK_TIMEOUT = 40000
 const SHEX_SIMPLE = 'packages/shex-webapp/doc/shex-simple.html'
+const SHEX_WORKER = 'packages/shex-webapp/doc/shex-worker.html'
 const SHEXMAP_SIMPLE = 'packages/extension-map/doc/shexmap-simple.html'
+const SHEXMAP_WORKER = 'packages/extension-map/doc/shexmap-worker.html'
 const TESTS = [ // page and the labels on the top-most buttons on the default manifest
   {page: SHEX_SIMPLE, schemaLabel: "clinical observation", dataLabel: "with birthdate"},
+  // {page: SHEX_WORKER, schemaLabel: "clinical observation", dataLabel: "with birthdate"},
   {page: SHEXMAP_SIMPLE, schemaLabel: "BP", dataLabel: "simple"},
+  // {page: SHEXMAP_WORKER, schemaLabel: "BP", dataLabel: "simple"},
 ]
 let Fs = require('fs')
 let Path = require('path')
