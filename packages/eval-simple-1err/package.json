@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/eval-simple-1err",
-  "version": "1.0.0-alpha.15",
+  "version": "1.0.0-alpha.24",
   "description": "Shape Expressions triple expression evaluator - simple regexp returning 1 error.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -21,8 +21,8 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/term": "^1.0.0-alpha.15",
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.15"
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.24",
+    "@shexjs/term": "^1.0.0-alpha.24"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",
