@@ -1,6 +1,7 @@
 const ShExParserCjsModule = (function () {
 
-const ShExJisonParser = require('./lib/ShExJison').ShExJisonParser;
+const {JisonLexerMooWrapper} = require('./JisonLexerMooWrapper');
+const {ShExJisonParser, ShExJisonLexer} = require('./lib/ShExJison');
 
 const schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
@@ -213,7 +214,14 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
 
   // Create a new parser with the given prefixes
   // (Workaround for https://github.com/zaach/jison/issues/241)
-  const parser = new ShExJisonParser(ShExCParserState);
+  const jisonLexer = new ShExJisonLexer(ShExCParserState);
+  const wrapper = new JisonLexerMooWrapper(
+    jisonLexer,
+    jisonLexer.rules.slice(0, -3), // elide <<EOF>>, unexpected word and unexpected character
+    [0], // \s+|{COMMENT} is skipped
+    jisonLexer.rules.length - 3
+  );
+  const parser = new ShExJisonParser(ShExCParserState, wrapper);
   const oldParse = parser.parse;
 
   function runParser (input, base = baseIRI, options = schemaOptions, filename = null) {
