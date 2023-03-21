@@ -227,7 +227,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     )
   }
 
-  /* load - load shex and json files into a single Schema and turtle into
+  /* load - load ShExC, ShExJ, and ShExR into a single Schema and RDF flavors into
    * a graph (Data).
    * SOURCE may be
    * * file path or URL - where to load item.

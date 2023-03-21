@@ -202,7 +202,24 @@ const ShExUtil = {
 
   ShExJtoAS: function (schema) {
     const _ShExUtil = this;
+    // 2.1- > 2.2
+    const updated2_1to2_2 = (schema.shapes || []).reduce((acc, sh, ord) => {
+      if (sh.type === "ShapeDecl")
+        return acc;
+      const id = sh.id;
+      delete sh.id;
+      const newDecl = {
+        type: "ShapeDecl",
+        id: id,
+        shapeExpr: sh,
+      };
+      schema.shapes[ord] = newDecl;
+      return acc.concat([newDecl]);
+    }, []);
+    // if (updated2_1to2_2.length > 0)
+    //   console.log("Updated 2.1 -> 2.2: " + updated2_1to2_2.map(decl => decl.id).join(", "));
     schema._prefixes = schema._prefixes || {  };
+    // schema._base = schema._prefixes || ""; // leave undefined to signal no provided base
     schema._index = this.index(schema);
     return schema;
   },
@@ -1744,7 +1761,7 @@ const ShExUtil = {
     const relIRI = passedValue[0] === "<" && passedValue[passedValue.length-1] === ">";
     if (relIRI)
       passedValue = passedValue.substr(1, passedValue.length-2);
-    const t = new URL(passedValue, meta.base || "").href; // fall back to base-less mode
+    const t = new URL(passedValue, (meta.base === "" || !meta.base ? undefined : meta.base)).href; // fall back to base-less mode
     if (known(t))
       return t;
     if (!relIRI) {
