@@ -1,0 +1,12 @@
+diff -u -r a/node_modules/lex-parser/lex-parser.js b/node_modules/lex-parser/lex-parser.js
+--- a/node_modules/lex-parser/lex-parser.js	2023-03-21 08:43:20.000000000 +0100
++++ b/node_modules/lex-parser/lex-parser.js	2023-03-18 18:16:03.000000000 +0100
+@@ -176,7 +176,7 @@
+ break;
+ case 36: this.$ = $$[$0-1] + $$[$0]; 
+ break;
+-case 38: this.$ = '(' + $$[$0-1] + ')';
++case 38: this.$ = '(?:' + $$[$0-1] + ')';
+ break;
+ case 39: this.$ = $$[$0-2] + $$[$0-1] + ')'; 
+ break;

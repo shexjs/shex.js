@@ -53,6 +53,7 @@
   "scripts": {
     "makemake": "node tools/makeMake.js > Makefile",
     "clean-all": "find . -maxdepth 3 -name node_modules -exec rm -r {} \\; ; find . -maxdepth 3 -name package-lock.json -exec rm -r {} \\; || true",
+    "patch": "patch -p1 -r - < modules.patch",
     "compile": "make ALL",
     "rebuild": "npm run clean-all && npx lerna bootstrap && for d in packages/*; do (cd $d && npm install); done && npm ci",
     "reinstall-deps": "npm rebuild && npm run webpack && npm run test-all && git add -u",

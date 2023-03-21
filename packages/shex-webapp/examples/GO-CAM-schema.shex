@@ -26,7 +26,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   a owl:NamedIndividual ? ;
   dc:contributor xsd:string + ; # !! IRI
   dc:date xsd:string ; # !! xsd:date
-  ^owl:annotatedTarget {
+  owl:annotatedTarget {
     lego:evidence @<#contribution> ;
     owl:annotatedProperty .
   }*
