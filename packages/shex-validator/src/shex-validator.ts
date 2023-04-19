@@ -1405,6 +1405,8 @@ function _seq<T> (n: number): (T | undefined)[] {
 function runtimeError (... args: string[]): never {
   const errorStr = args.join("");
   const e = new Error(errorStr);
-  Error.captureStackTrace(e, runtimeError);
+  if ("captureStackTrace" in Error) {
+    Error.captureStackTrace(e, runtimeError);
+  }
   throw e;
 }
