@@ -287,6 +287,8 @@ PNAME_LN                {PNAME_NS} {PN_LOCAL}
 ATPNAME_LN              '@' {PNAME_LN}
 COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
 
+%no-break-if          (.*[^a-z] | '') 'return' ([^a-z].* | '') // elide trailing 'break;'
+
 %%
 
 \s+|{COMMENT} /**/
@@ -304,7 +306,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {INTEGER}               return 'INTEGER';
 //{ECHAR}               return 'ECHAR';
 //{WS}                  return 'WS';
-{ANON}                  return 'ANON';
+//{ANON}                  return 'ANON';
 {IRIREF}                return 'IRIREF';
 {PNAME_NS}              return 'PNAME_NS';
 "a"                     return 'a';
