@@ -228,6 +228,8 @@ const ShExUtil = {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete schema["_index"];
     delete schema["_prefixes"];
+    delete schema["_base"];
+    delete schema["_locations"];
     return schema;
   },
 
@@ -361,6 +363,8 @@ const ShExUtil = {
     delete ret._index;
     let sourceMap = ret._sourceMap;
     delete ret._sourceMap;
+    let locations = ret._locations;
+    delete ret._locations;
     // Don't delete ret.productions as it's part of the AS.
     const v = ShExUtil.Visitor();
     const knownExpressions = [];
@@ -878,15 +882,34 @@ const ShExUtil = {
       type: "Schema"
     };
   },
+
+  /**
+   * Join to ShExJ schemas. The schemas may have `_index` and `_locations` attributes.
+   * @param left first schema to be joined.
+   * @param right second schema to be joined.
+   * @param collision the string "left" or "right" or a function folling the collision API.
+   * @param inPlace if true, edit the left schema directly.
+   * @returns ShExJ schema
+   *
+   * Collision API:
+   *   @param type element of schema: imports|start|startActs|_locations...
+   *   @param left structure with duplicated item.
+   *   @param right structure with introducing duplicate item.
+   *   @param leftLloc? yylloc structure for source of left item
+   *   @param rightLloc? ylloc structure for source of right item
+   *   @returns {boolean} false: keep left, true: overwrite with right. May also throw.   *
+   */
   merge: function (left, right, collision = 'throw', inPlace) {
     const overwrite =
           collision === 'left'
           ? () => false
           : collision === 'right'
           ? () => true
+          : typeof collision === 'object'
+          ? (type, left, right, _leftLloc, _rightLloc) => collision.overwrite(type, left, right, _leftLloc, _rightLloc)
           : typeof collision === 'function'
           ? collision
-          : (type, left, right) => {
+          : (type, left, right, _leftLloc, _rightLloc) => {
             throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
           };
     const ret = inPlace ? left : this.emptySchema();
@@ -906,14 +929,14 @@ const ShExUtil = {
       });
     }
 
-    function mergeMap (attr) {
+    function mergeMap (attr, myOverwrite = overwrite) {
       (left[attr] || new Map()).forEach(function (value, key, map) {
         if (!(attr in ret))
           ret[attr] = new Map();
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || overwrite(attr, ret[attr].get(key), right[attr].get(key))) {
+        if (!(attr  in left) || !(left[attr].has(key)) || myOverwrite(attr, ret[attr].get(key), right[attr].get(key))) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -930,7 +953,10 @@ const ShExUtil = {
 
     mergeArray("_prefixes");
 
-    mergeMap("_sourceMap");
+    mergeMap("_sourceMap", () => false);
+
+    if ("_locations" in left || "_locations" in right)
+      ret._locations = left._locations || {};
 
     if ("imports" in right)
       if (!("imports" in left)) {
@@ -973,10 +999,14 @@ const ShExUtil = {
         const previousDecl = lindex.shapeExprs[rshape.id];
         if (!previousDecl) {
           ret.shapes.push(rshape)
-        } else if (overwrite('shapeDecl', previousDecl, rshape)) {
+          if ("_locations" in ret)
+            ret._locations[rshape.id] = (right._locations || {})[rshape.id];
+        } else if (overwrite('shapeDecl', previousDecl, rshape, (left._locations || {})[rshape.id], (right._locations || {})[rshape.id])) {
           ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
           lindex.shapeExprs[rshape.id] = rshape;
           ret.shapes.push(rshape)
+          if ("_locations" in ret)
+            ret._locations[rshape.id] = (right._locations || {})[rshape.id];
         }
       }
     });
@@ -985,6 +1015,41 @@ const ShExUtil = {
       ret._index = this.index(ret); // inefficient; could build above
 
     return ret;
+  },
+
+  /**
+   * A collision handler for the merge function
+   * @param type element of schema: imports|start|startActs|_locations...
+   * @param left structure with duplicated item.
+   * @param right structure with introducing duplicate item.
+   * @param leftLloc? yylloc structure for source of left item
+   * @param rightLloc? ylloc structure for source of right item
+   * @returns {boolean} false: keep left, true: overwrite with right. May also throw.
+   */
+  warnDuplicates: function (type, left, right, leftLloc, rightLloc) {
+    if (type === "_prefixes")
+      return false;
+    if (type !== "shapeDecl")
+      throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
+
+    const lStr = JSON.stringify(left);
+    const rStr = JSON.stringify(right);
+    const wheresStr = [];
+    if (leftLloc) wheresStr.push(locStr(leftLloc));
+    if (rightLloc) wheresStr.push(locStr(rightLloc));
+    if (lStr === rStr) {
+      console.warn(`Duplicate definitions for ${left.id}: ${wheresStr.map(s => "\n  " + s)}`)
+      return false; // keep left/old assignment
+    }
+    throw new Error(`Conflicing definitions for ${left.id}:\n${locIndent(leftLloc)}    ${lStr}\n${locIndent(rightLloc)}    ${rStr}`);
+
+    function locStr (yylloc) {
+      return `${yylloc.filename}:(${yylloc.first_line}.${yylloc.first_column}-${yylloc.last_line}.${yylloc.last_column})`
+    }
+
+    function locIndent (yylloc) {
+      return yylloc ? "  " + locStr(yylloc) + ":\n" : "";
+    }
   },
 
   absolutizeResults: function (parsed, base) {

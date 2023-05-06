@@ -1,4 +1,10 @@
 "use strict";
+/**
+ * test @shexjs/loader
+ * These tests don't depend on @shexjs/node, which provides file: access.
+ * See ../../shex-node/test/Node-test.js for more loader tests.
+ */
+
 const VERBOSE = "VERBOSE" in process.env;
 const TESTS = "TESTS" in process.env ? process.env.TESTS.split(/,/) : null;
 const {expect, assert} = require("chai");

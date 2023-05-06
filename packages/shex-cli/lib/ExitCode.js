@@ -8,6 +8,8 @@ module.exports = {
   graph_match_fail:	3,
   val_match_pass:	0,
   val_match_fail:	4,
+  json_pass:		0,
+  shexc_pass:		0,
   term_not_found:	5,
   resource_not_found:	6,
   file_not_found:	7,

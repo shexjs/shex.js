@@ -94,21 +94,21 @@ const AllTests = {
   ],
 
   "shex-to-json": [
-    { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
-    { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
-    { name: "simple" , args: ["-a", "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
-    { name: "simple-http" , args: ["-a", HTTPTEST + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: 0 },
-    { name: "simple-bad-file" , args: ["cli/1dotOr2dot.shex999"], errorMatch: "ENOENT", status: 1 },
-    { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex999"], errorMatch: "Not Found", status: 1 },
+    { name: "help" , args: ["--help"], resultMatch: "example", status: X.help },
+    { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: X.bad_argument },
+    { name: "simple" , args: ["-a", "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: X.json_pass },
+    { name: "simple-http" , args: ["-a", HTTPTEST + "cli/1dotOr2dot.shex"], result: "cli/1dotOr2dot.json", status: X.json_pass },
+    { name: "simple-bad-file" , args: ["cli/1dotOr2dot.shex999"], errorMatch: "ENOENT", status:  X.file_not_found },
+    { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.shex999"], errorMatch: "Not Found", status: X.resource_not_found },
   ],
 
   "json-to-shex": [
-    { name: "help" , args: ["--help"], errorMatch: "example", status: 1 },
-    { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: 1 },
-    { name: "simple" , args: ["cli/1dotOr2dot.json", "--prefixes", '{ "": "http://a.example/" }'], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
-    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.json", "--prefixes", '{ "": "http://a.example/" }'], resultNoSpace: "cli/1dotOr2dot.shex", status: 0 },
-    { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], errorMatch: "ENOENT", status: 1 },
-    { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], errorMatch: "Not Found", status: 1 },
+    { name: "help" , args: ["--help"], resultMatch: "example", status: X.help },
+    { name: "garbage" , args: ["--garbage"], errorMatch: "(Invalid|Unknown) option", status: X.bad_argument },
+    { name: "simple" , args: ["cli/1dotOr2dot.json", "--prefixes", '{ "": "http://a.example/" }'], resultNoSpace: "cli/1dotOr2dot.shex", status: X.shexc_pass },
+    { name: "simple-http" , args: [HTTPTEST + "cli/1dotOr2dot.json", "--prefixes", '{ "": "http://a.example/" }'], resultNoSpace: "cli/1dotOr2dot.shex", status: X.shexc_pass },
+    { name: "simple-bad-file" , args: ["cli/1dotOr2dot.json999"], errorMatch: "ENOENT", status: X.file_not_found },
+    { name: "simple-bad-http" , args: [HTTPTEST + "cli/1dotOr2dot.json999"], errorMatch: "Not Found", status:  X.resource_not_found },
   ],
 };
 

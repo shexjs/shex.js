@@ -9,6 +9,16 @@
 
 const ShExNodeCjsModule = function (config = {}) {
 
+  class ResourceError extends Error {
+    constructor (resource, error) {
+      super(ResourceError.tweakMessage(resource, error));
+      this.origError = error; // for stack
+    }
+    static tweakMessage (resource, error) {
+      return error.message + '\n  resource: ' + resource;
+    }
+  }
+
   const Fs = require('fs')
   const Glob = require("glob").glob
   const ShExLoader = require("@shexjs/loader")
@@ -78,7 +88,7 @@ const ShExNodeCjsModule = function (config = {}) {
           filename = Path.join(config.cwd, filename)
         FS.readFile(filename, "utf8", function (error, text) {
           if (error) {
-            reject(error)
+            reject(new ResourceError(url, error));
           } else {
             fulfill({text: text, url: fileURLmatch ? url : "file://" + Path.resolve(process.cwd(), url)});
           }

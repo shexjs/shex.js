@@ -11,6 +11,13 @@ class ShExCParserState {
     this._fileName = undefined; // for debugging
     this.EmptyObject = {  };
     this.EmptyShape = { type: "Shape" };
+    this.skipped = { // space eaten by whitespace and comments
+      first_line: 0,
+      first_column: 0,
+      last_line: 0,
+      last_column: 0,
+    };
+    this.locations = {  };
   }
 
   reset () {
@@ -159,7 +166,7 @@ class ShExCParserState {
   }
 
   // Add a shape to the map
-  addShape (label, shape) {
+  addShape (label, shape, start, end) {
     if (shape === this.EmptyShape)
       shape = { type: "Shape" };
     if (this.productions && label in this.productions)
@@ -173,6 +180,15 @@ class ShExCParserState {
         this.error(new Error("Parse error: "+label+" already defined"));
     } else {
       this.shapes[label] = Object.assign({id: label}, shape);
+      if (end.first_line === this.skipped.last_line && end.first_column === this.skipped.last_column)
+        end = this.skipped
+      this.locations[label] = {
+        filename: this._fileName,
+        first_line: start.first_line,
+        first_column: start.first_column,
+        last_line: end.first_line,
+        last_column: end.first_column,
+      }
     }
   }
 

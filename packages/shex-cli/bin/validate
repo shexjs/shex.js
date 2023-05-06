@@ -62,14 +62,9 @@ const ValidatorOptions = { diagnose: true };
 const SchemaOptions = {
   duplicateShape: "abort",
   index: true,
-  collisionPolicy: (type, left, right) => {
-    const lStr = JSON.stringify(left);
-    const rStr = JSON.stringify(right);
-    if (lStr === rStr)
-      return false; // keep left/old assignment
-    throw new Error(`Conflicing definitions: ${lStr} !== ${rStr}`);
-  }
+  collisionPolicy: ShExUtil.warnDuplicates,
 };
+
 // const RunMode = { NORMAL: 0, ERROR: 1, DRYRUN: 2, USAGE: 4, HELP: 6 };
 const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
@@ -239,7 +234,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
         ? allNodesWithType(ShExUtil.parsePassedNode(nodeTypeP, loaded.dataMeta[0],
 						    null, knownType, x =>  x))
         : typeof nodeP === "object" && nodeP.type === "TriplePattern"
-        ? getQuads(nodeP.subject, nodeP.predicate, nodeP.object)
+        ? getQuads(nodeP.subject, nodeP.predicate, nodeP.object).map(ShExTerm.rdfJsTerm2Ld)
         : typeof nodeP === "object" && nodeP.type === "Extension"
           ? shapeMapExtensions[nodeP.language](nodeP.lexical)
         : [ShExUtil.parsePassedNode(nodeP, loaded.dataMeta[0], someIRInode,
@@ -510,7 +505,12 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       exitCode = ExitCode.resource_not_found;
       console.error("Resource error:", e.message);
     } else if (e instanceof Error) {
-      exitCode = e.code === "ENOENT" ? ExitCode.file_not_found : ExitCode.unspecified_error;
+      if (e.origError) {
+        e = e.origError;
+      }
+      exitCode = e.code === "ENOENT"
+        ? ExitCode.file_not_found
+        : ExitCode.unspecified_error;
       console.error(e.stack);
     } else {
       exitCode = ExitCode.unspecified_error;

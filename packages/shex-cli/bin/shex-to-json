@@ -9,7 +9,11 @@ const ShExNode = require("@shexjs/node")({
   fetch: require('node-fetch'),
   jsonld: require('jsonld'),
 });
-const schemaOptions = {};
+const ExitCode = require('../lib/ExitCode')
+const SchemaOptions = {
+  index: true,
+  collisionPolicy: ShExUtil.warnDuplicates,
+};
 
 // Generate command line interface
 const CommandLineOptions = [
@@ -19,10 +23,15 @@ const CommandLineOptions = [
     { name: "turtle",alias: "t", type: String, multiple:  true, defaultValue:   [] },
     { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }
 ];
-const CLI = require("command-line-args")(CommandLineOptions);
-function abort (msg) {
-  console.error(msg);
-  console.error(require('command-line-usage')([
+try {
+  CLI = require("command-line-args")(CommandLineOptions);
+} catch (e) {
+  abort(e.message, ExitCode.bad_argument);
+}
+function abort (msg, exitCode) {
+  const output = exitCode === ExitCode.help ? console.log : console.error;
+  output(msg);
+  output(require('command-line-usage')([
     {
       header: "shex-to-json",
       content: "load some number of schema files from web or filesystem and display as JSON (ShExJ), for example:\n    shex-to-json http://tracker.example/schemas/Issue.shex" },
@@ -34,26 +43,45 @@ function abort (msg) {
       content: "Project home: " + require('chalk').underline("https://github.com/shexSpec/shex.js")
     }
   ]));
-  process.exit(1);
+  process.exit(exitCode);
 }
 
 // Extract user commands
 const cmds = CLI;
 if (cmds.help)
-    abort("");
+    abort("", ExitCode.help);
 if (cmds.turtle.length > 0) {
   const validator = require("@shexjs/validator");
   const schema = require(/*"shexr-schema"*/ "../lib/ShExR.cjs.js");
   const rdfjsdb = require("@shexjs/neighborhood-rdfjs").ctor;
-  schemaOptions.graphParser = { validator, schema, rdfjsdb };
+  SchemaOptions.graphParser = { validator, schema, rdfjsdb };
 } else if ([].concat(cmds.shex).concat(cmds.json).length === 0) {
- abort("no shex specified");
+  abort("no shex specified", ExitCode.bad_argument);
 }
 
 
-ShExNode.load({shexc: cmds.shex, json: cmds.json, turtle: cmds.turtle}, null, schemaOptions).then(function (loaded) {
+ShExNode.load({shexc: cmds.shex, json: cmds.json, turtle: cmds.turtle}, null, SchemaOptions).then(function (loaded) {
   console.log('%s', JSON.stringify(ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate), null, '  '));
-}).catch(function (e) {
-  console.error("aborting:", e.stack || e);
-  process.exit(1);
-})
+  return ExitCode.json_pass
+}, function (e) {
+  let exitCode;
+  if (e instanceof ShExNode.WebError) {
+    exitCode = ExitCode.resource_not_found;
+    console.error("Resource error:", e.message);
+  } else if (e instanceof Error) {
+    if (e.origError) {
+      e = e.origError;
+    }
+    exitCode = e.code === "ENOENT"
+      ? ExitCode.file_not_found
+      : ExitCode.unspecified_error;
+    console.error(e.stack);
+  } else {
+    exitCode = ExitCode.unspecified_error;
+    console.error("Aborting:", e);
+    e = Error(e);
+  }
+  return exitCode;
+}).then(function (ret) {
+  process.on('exit', function() { process.exit(ret); });
+});

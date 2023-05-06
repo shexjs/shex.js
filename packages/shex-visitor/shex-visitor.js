@@ -32,7 +32,7 @@ function ShExVisitor (...ctor_args) {
       this._expect(schema, "type", "Schema");
       this._maybeSet(schema, ret, "Schema",
                      ["@context", "prefixes", "base", "imports", "startActs", "start", "shapes"],
-                     ["_base", "_prefixes", "_index", "_sourceMap"],
+                     ["_base", "_prefixes", "_index", "_sourceMap", "_locations"],
                      ...args
                     );
       return ret;

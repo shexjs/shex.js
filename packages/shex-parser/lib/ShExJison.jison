@@ -14,9 +14,8 @@
       appendTo(A, B) === A.concat([B])
       unionAll(A, B) === A.concat(B)
 
-  Mysteries:
-    jison accepts X* but I wasn't able to eliminate eliminate X_Star because it
-    wouldn't accept the next symbol.
+  TODO:
+    See if this will work as BNF ('*'s and '+'s...)
 */
 
 %{
@@ -291,7 +290,18 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 %%
 
-\s+|{COMMENT} /**/
+\s+|{COMMENT}           {
+  // space eaten by whitespace and comments
+  if (yy.skipped.last_line === yylloc.first_line &&
+      yy.skipped.last_column === yylloc.first_column) {
+    // immediately follows a skipped span
+    yy.skipped.last_line = yylloc.last_line;
+    yy.skipped.last_column = yylloc.last_column;
+  } else {
+    // follows something else
+    yy.skipped = yylloc
+  };
+}
 {ATPNAME_LN}            return 'ATPNAME_LN';
 // {ATIRIREF}           return 'ATIRIREF';
 {ATPNAME_NS}            return 'ATPNAME_NS';
@@ -418,6 +428,7 @@ shexDoc:
             tripleExprs: yy.productions || {}
           };
           shexj._sourceMap = yy._sourceMap;
+          shexj._locations = yy.locations;
         }
         return shexj;
       }
@@ -506,11 +517,16 @@ statement:
     ;
 
 shapeExprDecl:
-      _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C	{ // t: 1dot 1val1vsMinusiri3??
-        yy.addShape($2, Object.assign({type: "ShapeDecl"}, $1,
-                                   $3.length > 0 ? { restricts: $3 } : { },
-                                   {shapeExpr: $4})) // $5: t: @@
+      mark _QIT_ABSTRACT_E_Opt shapeExprLabel _Qrestriction_E_Star _O_QshapeExpression_E_Or_QshapeRef_E_Or_QIT_EXTERNAL_E_C mark	{ // t: 1dot 1val1vsMinusiri3??
+        yy.addShape($3, Object.assign(
+          {type: "ShapeDecl"}, $2,
+          $4.length > 0 ? { restricts: $4 } : { },
+          {shapeExpr: $5} ), $1, $6) // $5: t: @@
       }
+    ;
+
+mark:
+        { $$ = yy.lexer.yylloc; /* yy.lexer.showPosition(); */ }
     ;
 
 _QIT_ABSTRACT_E_Opt:

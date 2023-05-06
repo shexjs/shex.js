@@ -183,7 +183,7 @@ export function ld2RdfJsTerm (ld: objectValue): RdfJsTerm {
     if (copy.type)
       return RdfJsFactory.literal(value, RdfJsFactory.namedNode(copy.type));
     if (Object.keys(copy).length > 0)
-      throw Error(`Unrecognized attributes inn JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`)
+      throw Error(`Unrecognized attributes in JSON-LD-style object literal: ${JSON.stringify(Object.keys(copy))}`)
     return RdfJsFactory.literal(value);
 
   case 'string':
