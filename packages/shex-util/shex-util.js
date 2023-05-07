@@ -1018,7 +1018,7 @@ const ShExUtil = {
   },
 
   /**
-   * A collision handler for the merge function
+   * A merge function collision handler that warns on duplicates and throws on redefinitions.
    * @param type element of schema: imports|start|startActs|_locations...
    * @param left structure with duplicated item.
    * @param right structure with introducing duplicate item.
@@ -1049,6 +1049,27 @@ const ShExUtil = {
 
     function locIndent (yylloc) {
       return yylloc ? "  " + locStr(yylloc) + ":\n" : "";
+    }
+  },
+
+  /**
+   * A merge function collision handler that accumulates redeclarations.
+   */
+  storeDuplicates: class {
+    constructor () {
+      this.duplicates = {};
+    }
+    overwrite (type, left, right, leftLloc, rightLloc) {
+      if (type === "_prefixes")
+        return false;
+      if (type !== "shapeDecl")
+        throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
+
+      const id = left.id;
+      if (!this.duplicates[id])
+        this.duplicates[id] = [leftLloc];
+      this.duplicates[id].push(rightLloc)
+      return false; // keep left/old assignment
     }
   },
 
