@@ -165,7 +165,7 @@ class ShExCParserState {
     return this._prefixes[prefix];
   }
 
-  // Add a shape to the map
+  // Add a shape to the list of shape(Expr)s
   addShape (label, shape, start, end) {
     if (shape === this.EmptyShape)
       shape = { type: "Shape" };
@@ -180,17 +180,22 @@ class ShExCParserState {
         this.error(new Error("Parse error: "+label+" already defined"));
     } else {
       this.shapes[label] = Object.assign({id: label}, shape);
-      if (end.first_line === this.skipped.last_line && end.first_column === this.skipped.last_column)
-        end = this.skipped
-      this.locations[label] = {
-        filename: this._fileName,
-        first_line: start.first_line,
-        first_column: start.first_column,
-        last_line: end.first_line,
-        last_column: end.first_column,
-      }
+      this.locations[label] = this.makeLocation(start, end);
     }
   }
+
+  makeLocation (start, end) {
+    if (end.first_line === this.skipped.last_line && end.first_column === this.skipped.last_column)
+      end = this.skipped
+    return {
+      filename: this._fileName,
+      first_line: start.first_line,
+      first_column: start.first_column,
+      last_line: end.first_line,
+      last_column: end.first_column,
+    }
+  }
+
 
   // Add a production to the map
   addProduction (label, production) {
