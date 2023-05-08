@@ -79,7 +79,7 @@ describe("@shexjs/node", function () {
     describe("default", function () {
       it("should reject on re-declared shapes with no" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
         ).then(() => {throw Error(`load should have failed`);}, rejected => {
           expect(rejected).to.match(/collides with/);
         });
@@ -89,7 +89,7 @@ describe("@shexjs/node", function () {
     describe("string", function () {
       it("should accept re-declared shapes with 'left'" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: "left" },
         ).then(
@@ -101,7 +101,7 @@ describe("@shexjs/node", function () {
 
       it("should accept re-declared shapes with 'right'" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: "right" },
         ).then(
@@ -113,7 +113,7 @@ describe("@shexjs/node", function () {
 
       it("should reject re-declared shapes with 'throw'" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: "throw" },
         ).then(() => {throw Error(`load should have failed`);}, rejected => {
@@ -125,7 +125,7 @@ describe("@shexjs/node", function () {
     describe("function", function () {
       it("should accept re-declared shapes with left" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: () => false },
         ).then(
@@ -137,7 +137,7 @@ describe("@shexjs/node", function () {
 
       it("should accept re-declared shapes with right" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: () => true },
         ).then(
@@ -149,7 +149,7 @@ describe("@shexjs/node", function () {
 
       it("should reject re-declared shapes with restrictive" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: () => { throw Error("BANG!"); } },
         ).then(() => {throw Error(`load should have failed`);}, rejected => {
@@ -161,7 +161,7 @@ describe("@shexjs/node", function () {
     describe("class", function () {
       it("should accept re-declared shapes with left" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: { overwrite: () => false } },
         ).then(
@@ -173,7 +173,7 @@ describe("@shexjs/node", function () {
 
       it("should accept re-declared shapes with right" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: { overwrite: () => true } },
         ).then(
@@ -185,7 +185,7 @@ describe("@shexjs/node", function () {
 
       it("should reject re-declared shapes with restrictive" , async () => {
         return ShExLoader.load(
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           undefined,
           { collisionPolicy: { overwrite: () => { throw Error("BANG!"); } } },
         ).then(() => {throw Error(`load should have failed`);}, rejected => {
@@ -208,7 +208,7 @@ describe("@shexjs/node", function () {
         }
         const {schema, schemaMeta} = await ShExLoader.load(
           // schema
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           // data
           {},
           // schemaOptions
@@ -219,22 +219,22 @@ describe("@shexjs/node", function () {
         );
         const expected = [
           {
-            filename: "../../shex-cli/test//Imports/User-trompPerson.shex",
+            filename: "../../shex-cli/test/Imports/TrompPerson/User.shex",
             first_line: 10, first_column: 0,
             last_line: 15, last_column: 1,
           },
           {
-            filename: "../../shex-cli/test//Imports/Employee-trompPerson.shex",
+            filename: "../../shex-cli/test/Imports/TrompPerson/Employee.shex",
             first_line: 13, first_column: 0,
             last_line: 18, last_column: 1,
           },
           {
-            filename: "../../shex-cli/test//Imports/User-trompPerson.shex",
+            filename: "../../shex-cli/test/Imports/TrompPerson/User.shex",
             first_line: 10, first_column: 0,
             last_line: 15, last_column: 1,
           },
           {
-            filename: "../../shex-cli/test//Imports/Person-trompPerson.shex",
+            filename: "../../shex-cli/test/Imports/TrompPerson/Person.shex",
             first_line: 5, first_column: 0,
             last_line: 10, last_column: 1,
           }
@@ -250,7 +250,7 @@ describe("@shexjs/node", function () {
         const collisionPolicy = new ShExUtil.storeDuplicates()
         const {schema, schemaMeta} = await ShExLoader.load(
           // schema
-          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/Issue-trompPerson.shex")] },
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPerson/Issue.shex")] },
           // data
           {},
           // schemaOptions
@@ -262,24 +262,137 @@ describe("@shexjs/node", function () {
         const expected = {
           "http://a.example/PersonShape": [
             {
-              filename: "../../shex-cli/test//Imports/User-trompPerson.shex",
+              filename: "../../shex-cli/test/Imports/TrompPerson/User.shex",
               importers: [],
               first_line: 10, first_column: 0,
               last_line: 15, last_column: 1,
             },
             {
-              filename: "../../shex-cli/test//Imports/Employee-trompPerson.shex",
+              filename: "../../shex-cli/test/Imports/TrompPerson/Employee.shex",
               importers: [
-                "../../shex-cli/test//Imports/Issue-trompPerson.shex",
+                "../../shex-cli/test/Imports/TrompPerson/Issue.shex",
               ],
               first_line: 13, first_column: 0,
               last_line: 18, last_column: 1,
             },
             {
-              filename: "../../shex-cli/test//Imports/Person-trompPerson.shex",
+              filename: "../../shex-cli/test/Imports/TrompPerson/Person.shex",
               importers: [
-                "../../shex-cli/test//Imports/Issue-trompPerson.shex",
-                "../../shex-cli/test//Imports/Employee-trompPerson.shex",
+                "../../shex-cli/test/Imports/TrompPerson/Issue.shex",
+                "../../shex-cli/test/Imports/TrompPerson/Employee.shex",
+              ],
+              first_line: 5, first_column: 0,
+              last_line: 10, last_column: 1,
+            }
+          ].map(yylloc => ({
+            filename: "file://" + Path.join(__dirname, yylloc.filename),
+            importers: yylloc.importers.map(i => "file://" + Path.join(__dirname, i)),
+            first_line: yylloc.first_line, first_column: yylloc.first_column,
+            last_line: yylloc.last_line, last_column: yylloc.last_column,
+          }))
+        };
+        expect(collisionPolicy.duplicates).to.deep.equal(expected);
+      });
+    });
+
+    describe("reassignment locations with missing shape", function () {
+      it("should show locations of reassignments" , async () => {
+        const errors = [];
+        function missingReferent (error) {
+          errors.push(error);
+        }
+        const collisionPolicy = {
+          locations: [],
+          overwrite: function (type, left, right, leftLloc, rightLloc) {
+            if (type == "shapeDecl") {
+              this.locations.push(leftLloc);
+              this.locations.push(rightLloc);
+            }
+            return false;
+          },
+        }
+        const {schema, schemaMeta} = await ShExLoader.load(
+          // schema
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPersonMissingRep/Issue.shex")] },
+          // data
+          {},
+          // schemaOptions
+          {
+            index: true,
+            collisionPolicy,
+            missingReferent,
+          }
+        );
+        const missingRepShape = "Structural error: reference to \"http://a.example/RepShape\" not found in schema shape expressions:\n<http://a.example/IssueShape>\n        <http://a.example/UserShape>\n        <http://a.example/PersonShape>\n        <http://a.example/EmployeeShape>.";
+        expect(errors.map(e => e.message)).to.deep.equal([missingRepShape]);
+        const expected = [
+          {
+            filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/User.shex",
+            first_line: 10, first_column: 0,
+            last_line: 15, last_column: 1,
+          },
+          {
+            filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/Employee.shex",
+            first_line: 13, first_column: 0,
+            last_line: 18, last_column: 1,
+          },
+          {
+            filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/User.shex",
+            first_line: 10, first_column: 0,
+            last_line: 15, last_column: 1,
+          },
+          {
+            filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/Person.shex",
+            first_line: 5, first_column: 0,
+            last_line: 10, last_column: 1,
+          }
+        ].map(yylloc => ({
+          filename: "file://" + Path.join(__dirname, yylloc.filename),
+          first_line: yylloc.first_line, first_column: yylloc.first_column,
+          last_line: yylloc.last_line, last_column: yylloc.last_column,
+        }));
+        expect(collisionPolicy.locations).to.deep.equal(expected);
+      });
+
+      it("should storeDuplicate" , async () => {
+        const errors = [];
+        function missingReferent (error) {
+          errors.push(error);
+        }
+        const collisionPolicy = new ShExUtil.storeDuplicates()
+        const {schema, schemaMeta} = await ShExLoader.load(
+          // schema
+          { shexc: [Path.join(__dirname, "../../shex-cli/test/Imports/TrompPersonMissingRep/Issue.shex")] },
+          // data
+          {},
+          // schemaOptions
+          {
+            index: true,
+            collisionPolicy,
+            missingReferent,
+          }
+        );
+        const expected = {
+          "http://a.example/PersonShape": [
+            {
+              filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/User.shex",
+              importers: [],
+              first_line: 10, first_column: 0,
+              last_line: 15, last_column: 1,
+            },
+            {
+              filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/Employee.shex",
+              importers: [
+                "../../shex-cli/test/Imports/TrompPersonMissingRep/Issue.shex",
+              ],
+              first_line: 13, first_column: 0,
+              last_line: 18, last_column: 1,
+            },
+            {
+              filename: "../../shex-cli/test/Imports/TrompPersonMissingRep/Person.shex",
+              importers: [
+                "../../shex-cli/test/Imports/TrompPersonMissingRep/Issue.shex",
+                "../../shex-cli/test/Imports/TrompPersonMissingRep/Employee.shex",
               ],
               first_line: 5, first_column: 0,
               last_line: 10, last_column: 1,

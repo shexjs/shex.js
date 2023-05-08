@@ -2,8 +2,8 @@ PREFIX ex: <http://ex.example/#>
 PREFIX foaf: <http://xmlns.com/foaf/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-IMPORT <User-good.shex>
-IMPORT <Employee-good.shex>
+IMPORT <User.shex>
+IMPORT <Employee.shex>
 
 <http://a.example/IssueShape> CLOSED {
   ex:state [ex:unassigned ex:assigned] ;

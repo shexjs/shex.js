@@ -256,7 +256,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     // gather all the potentially remote inputs
     {
       const {shexc = [], json = [], turtle = []} = schema || {};
-      allSchemas = new ResourceLoadControler(shexc.concat(json).concat(turtle));
+      allSchemas = schemaOptions.loadController || new ResourceLoadControler(shexc.concat(json).concat(turtle));
       loadList(shexc, returns.schemaMeta, "text/shex",
                parseShExC, mergeSchema, schemaOptions, allSchemas, [])
       loadList(json, returns.schemaMeta, "application/json",
@@ -267,7 +267,7 @@ const ShExLoaderCjsModule = function (config = {}) {
 
     {
       const {turtle = [], jsonld = []} = data || {};
-      allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
+      allGraphs = dataOptions.loadController || new ResourceLoadControler(turtle.concat(jsonld));
       loadList(turtle, returns.dataMeta, "text/turtle",
                parseTurtle, mergeGraph, dataOptions, allGraphs, [])
       loadList(jsonld, returns.dataMeta, "application/ld+json",
@@ -287,7 +287,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       delete dSrc.graph;
     })
     if (returns.schemaMeta.length > 0)
-      ShExUtil.isWellDefined(returns.schema)
+      ShExUtil.isWellDefined(returns.schema, schemaOptions)
     return returns
   }
 

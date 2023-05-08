@@ -1149,7 +1149,7 @@ const ShExUtil = {
     return db;
   },
 
-  validateSchema: function (schema) { // obselete, but may need other validations in the future.
+  validateSchema: function (schema, options) { // obselete, but may need other validations in the future.
     const _ShExUtil = this;
     const visitor = this.Visitor();
     let currentLabel = currentExtra = null;
@@ -1192,8 +1192,14 @@ const ShExUtil = {
 
     const oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef, ...args) {
-      if (!(shapeRef in index.shapeExprs))
-        throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
+      if (!(shapeRef in index.shapeExprs)) {
+        const error = firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
+        if (options.missingReferent) {
+          options.missingReferent(error);
+        } else {
+          throw error;
+        }
+      }
       if (!inTE && shapeRef === currentLabel)
         throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
@@ -1241,8 +1247,8 @@ const ShExUtil = {
    * @schema: input schema
    * @@TODO
    */
-  isWellDefined: function (schema) {
-    this.validateSchema(schema);
+  isWellDefined: function (schema, options) {
+    this.validateSchema(schema, options);
     // const deps = this.getDependencies(schema);
     return schema;
   },

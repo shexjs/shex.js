@@ -2,7 +2,7 @@ PREFIX ex: <http://ex.example/#>
 PREFIX foaf: <http://xmlns.com/foaf/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-IMPORT <Person-good.shex>
+IMPORT <Person.shex>
 
 <http://a.example/UserShape>
     EXTENDS @<http://a.example/PersonShape> CLOSED {
