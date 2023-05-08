@@ -47,22 +47,22 @@ describe("@shexjs/node", function () {
     )
     // test returned structure.
     expect(schemaMeta).to.deep.equal([
-      { "mediaType": "text/shex", "url": "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"),
-        "base": "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"), "prefixes": {"": "http://a.example/"} },
-      { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
-        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} }
+      { mediaType: "text/shex", url: "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"), importers: [],
+        base: "file://" + Path.join(TestDir, "cli/1dotOr2dot.shex"), prefixes: {"": "http://a.example/"} },
+      { mediaType: "text/shex", url: "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", importers: [],
+        base: "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", prefixes: {"": "http://a.example/"} }
     ])
     const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type])
     expect(loadedShapes).to.deep.equal([
       ["http://a.example/S1", "Shape"],
     ])
     expect(dataMeta).to.deep.equal([
-      { "mediaType": "text/turtle", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl",
-        "base": "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl", "prefixes": {
+      { mediaType: "text/turtle", url: "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl", importers: [],
+        base: "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl", prefixes: {
           "": "http://a.example/"
         } },
-      { "mediaType": "text/turtle", "url": "file://" + Path.join(TestDir, "cli/p2p3.ttl"),
-        "base": "file://" + Path.join(TestDir, "cli/p2p3.ttl"), "prefixes": {
+      { mediaType: "text/turtle", url: "file://" + Path.join(TestDir, "cli/p2p3.ttl"), importers: [],
+        base: "file://" + Path.join(TestDir, "cli/p2p3.ttl"), prefixes: {
           "": "http://a.example/",
           "xsd": "http://www.w3.org/2001/XMLSchema#" } }
     ])
@@ -263,21 +263,30 @@ describe("@shexjs/node", function () {
           "http://a.example/PersonShape": [
             {
               filename: "../../shex-cli/test//Imports/User-trompPerson.shex",
+              importers: [],
               first_line: 10, first_column: 0,
               last_line: 15, last_column: 1,
             },
             {
               filename: "../../shex-cli/test//Imports/Employee-trompPerson.shex",
+              importers: [
+                "../../shex-cli/test//Imports/Issue-trompPerson.shex",
+              ],
               first_line: 13, first_column: 0,
               last_line: 18, last_column: 1,
             },
             {
               filename: "../../shex-cli/test//Imports/Person-trompPerson.shex",
+              importers: [
+                "../../shex-cli/test//Imports/Issue-trompPerson.shex",
+                "../../shex-cli/test//Imports/Employee-trompPerson.shex",
+              ],
               first_line: 5, first_column: 0,
               last_line: 10, last_column: 1,
             }
           ].map(yylloc => ({
             filename: "file://" + Path.join(__dirname, yylloc.filename),
+            importers: yylloc.importers.map(i => "file://" + Path.join(__dirname, i)),
             first_line: yylloc.first_line, first_column: yylloc.first_column,
             last_line: yylloc.last_line, last_column: yylloc.last_column,
           }))

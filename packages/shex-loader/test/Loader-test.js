@@ -127,11 +127,11 @@ describe("@shexjs/loader", function () {
 
     // test returned structure.
     expect(schemaMeta).to.deep.equal([
-      { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
+      { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", importers: [],
         "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} },
-      { "mediaType": "text/shex", "url": "http://a.example/schemaAsText",
+      { "mediaType": "text/shex", "url": "http://a.example/schemaAsText", importers: [],
         "base": "http://a.example/schemaAsText", "prefixes": {} },
-      { "mediaType": "text/shex", "url": "http://a.example/ShExJ",
+      { "mediaType": "text/shex", "url": "http://a.example/ShExJ", importers: [],
         "prefixes": {}, "base": "http://a.example/ShExJ" }
     ]);
     const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
@@ -140,11 +140,11 @@ describe("@shexjs/loader", function () {
       ["http://a.example/S1", "NodeConstraint"]
     ]);
     expect(dataMeta).to.deep.equal([
-      { "mediaType": "text/turtle", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl",
+      { "mediaType": "text/turtle", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl", importers: [],
         "base": "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl", "prefixes": { "": "http://a.example/" } },
-      { "mediaType": "text/turtle", "url": "http://a.example/graphAsText",
+      { "mediaType": "text/turtle", "url": "http://a.example/graphAsText", importers: [],
         "base": "http://a.example/graphAsText", "prefixes": {} },
-      { "mediaType": "text/turtle", "url": "http://a.example/graphFromApi",
+      { "mediaType": "text/turtle", "url": "http://a.example/graphFromApi", importers: [],
         "base": "http://a.example/graphFromApi", "prefixes": {} }
     ]);
     const quads = data.getQuads().sort((l, r) => l.subject.value.localeCompare(r.subject.value));
@@ -166,6 +166,7 @@ describe("@shexjs/loader", function () {
     expect(schemaMeta).to.deep.equal([
       { mediaType: 'text/shex',
         url: 'https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/start2RefS1-IstartS2.shex',
+        importers: [],
         base: 'https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/start2RefS1-IstartS2.shex',
         prefixes: {}
       }
@@ -225,6 +226,7 @@ IMPORT <3circRefS3>
     expect(schemaMeta).to.deep.equal([
       { mediaType: 'text/shex',
         url: 'https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/3circRefS1-IS2-IS3-IS3',
+        importers: [],
         base: 'https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/3circRefS1-IS2-IS3-IS3',
         prefixes: {}
       }
@@ -301,6 +303,7 @@ IMPORT <3circRefS3>
     expect(schemaMeta).to.deep.equal([
       { mediaType: 'text/shex',
         url: 'https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/3circRefS1-IS2-IS3-IS3',
+        importers: [],
         base: 'https://raw.githubusercontent.com/shexSpec/shexTest/main/schemas/3circRefS1-IS2-IS3-IS3',
         prefixes: {}
       }
@@ -357,7 +360,7 @@ IMPORT <3circRefS3>
     );
     // test returned structure.
     expect(schemaMeta).to.deep.equal([
-      { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex",
+      { "mediaType": "text/shex", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", importers: [],
         "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} }
     ])
     expect(schema).to.deep.equal({

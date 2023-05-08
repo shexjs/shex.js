@@ -899,17 +899,19 @@ const ShExUtil = {
    *   @param rightLloc? ylloc structure for source of right item
    *   @returns {boolean} false: keep left, true: overwrite with right. May also throw.   *
    */
-  merge: function (left, right, collision = 'throw', inPlace) {
+  merge: function (olde, newe, collision = 'throw', inPlace) {
+    const {schema: left, schemaMeta: leftMeta} = olde;
+    const {schema: right, schemaMeta: rightMeta} = newe;
     const overwrite =
           collision === 'left'
           ? () => false
           : collision === 'right'
           ? () => true
           : typeof collision === 'object'
-          ? (type, left, right, _leftLloc, _rightLloc) => collision.overwrite(type, left, right, _leftLloc, _rightLloc)
+          ? (type, left, right, leftLloc, rightLloc) => collision.overwrite(type, left, right, leftLloc, rightLloc, leftMeta, rightMeta)
           : typeof collision === 'function'
           ? collision
-          : (type, left, right, _leftLloc, _rightLloc) => {
+          : (type, left, right, _leftLloc, _rightLloc, _leftMeta, _rightMeta) => {
             throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
           };
     const ret = inPlace ? left : this.emptySchema();
@@ -921,7 +923,7 @@ const ShExUtil = {
         ret[attr][key] = left[attr][key];
       });
       Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key])) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key], undefined, undefined, leftMeta, rightMeta)) {
           if (!(attr in ret))
             ret[attr] = {};
           ret[attr][key] = right[attr][key];
@@ -936,7 +938,7 @@ const ShExUtil = {
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || myOverwrite(attr, ret[attr].get(key), right[attr].get(key))) {
+        if (!(attr  in left) || !(left[attr].has(key)) || myOverwrite(attr, ret[attr].get(key), right[attr].get(key)), undefined, undefined, leftMeta, rightMeta) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -971,14 +973,14 @@ const ShExUtil = {
     if ("startActs" in left)
       ret.startActs = left.startActs;
     if ("startActs" in right)
-      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs))
+      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs, undefined, undefined, leftMeta, rightMeta))
         ret.startActs = right.startActs;
 
     // start
     if ("start" in left)
       ret.start = left.start;
     if ("start" in right)
-      if (!("start" in left) || overwrite('start', ret.start, right.start))
+      if (!("start" in left) || overwrite('start', ret.start, right.start, undefined, undefined, leftMeta, rightMeta))
         ret.start = right.start;
 
     const lindex = left._index || this.index(left);
@@ -1001,7 +1003,7 @@ const ShExUtil = {
           ret.shapes.push(rshape)
           if ("_locations" in ret)
             ret._locations[rshape.id] = (right._locations || {})[rshape.id];
-        } else if (overwrite('shapeDecl', previousDecl, rshape, (left._locations || {})[rshape.id], (right._locations || {})[rshape.id])) {
+        } else if (overwrite('shapeDecl', previousDecl, rshape, (left._locations || {})[rshape.id], (right._locations || {})[rshape.id], leftMeta, rightMeta)) {
           ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
           lindex.shapeExprs[rshape.id] = rshape;
           ret.shapes.push(rshape)
@@ -1026,7 +1028,7 @@ const ShExUtil = {
    * @param rightLloc? ylloc structure for source of right item
    * @returns {boolean} false: keep left, true: overwrite with right. May also throw.
    */
-  warnDuplicates: function (type, left, right, leftLloc, rightLloc) {
+  warnDuplicates: function (type, left, right, leftLloc, rightLloc, _leftMeta, _rightMeta) {
     if (type === "_prefixes")
       return false;
     if (type !== "shapeDecl")
@@ -1059,7 +1061,7 @@ const ShExUtil = {
     constructor () {
       this.duplicates = {};
     }
-    overwrite (type, left, right, leftLloc, rightLloc) {
+    overwrite (type, left, right, leftLloc, rightLloc, leftMeta, rightMeta) {
       if (type === "_prefixes")
         return false;
       if (type !== "shapeDecl")
@@ -1067,8 +1069,8 @@ const ShExUtil = {
 
       const id = left.id;
       if (!this.duplicates[id])
-        this.duplicates[id] = [leftLloc];
-      this.duplicates[id].push(rightLloc)
+        this.duplicates[id] = [{...leftLloc, importers: leftMeta.importers}];
+      this.duplicates[id].push({...rightLloc, importers: rightMeta.importers})
       return false; // keep left/old assignment
     }
   },

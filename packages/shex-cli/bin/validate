@@ -1188,7 +1188,11 @@ async function mergeParm (parms, parm, text, url, type) {
       const parser = ShExParser.construct(url.href, prefixes);
       part = parser.parse(text/*, base, opts, filename*/);
     }
-    ShExUtil.merge(parms.schema, part, true, true);
+    const left = { schema: parms.schema, schemaMeta: parms.schemaMeta[0] };
+    const right = { schema: part, schemaMeta: {
+      url: url.href, importers: [], base: url.href, prefixes
+    } };
+    ShExUtil.merge(left, right, true, true);
     parms.schemaMeta.push({prefixes, base: url.href})
     break;
   case "data":

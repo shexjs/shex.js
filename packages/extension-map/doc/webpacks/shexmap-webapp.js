@@ -27258,7 +27258,7 @@ const ShExLoaderCjsModule = function (config = {}) {
         if (this.loaded === this.toLoad.length) {
           this.resolve(this.results)
         }
-      }).catch(error => this.reject(error))
+      }, error => this.reject(error));
       return promise
     }
     allLoaded () {
@@ -27333,14 +27333,14 @@ const ShExLoaderCjsModule = function (config = {}) {
       return meta
     }
 
-  async function mergeSchema (obj, mediaType, resourceLoadControler, options) {
+  async function mergeSchema (obj, mediaType, resourceLoadControler, options, importers) {
     if (!("schema" in obj))
       throw Error(`Bad parameter to mergeSchema; ${summarize(obj)} is not a loaded schema`)
     if (obj.schema.type !== "Schema")
       throw Error(`Bad parameter to mergeSchema .schema; ${summarize(obj.schema)} !== ""Schema`)
     try {
-      loadSchemaImports(obj.schema, resourceLoadControler, options)
-      return {mediaType, url: obj.url, schema: obj.schema}
+      loadSchemaImports(obj.schema, importers.concat([obj.url]), resourceLoadControler, options);
+      return {mediaType, url: obj.url, importers, schema: obj.schema};
     } catch (e) {
       const e2 = Error("error merging schema object " + obj.schema + ": " + e)
       e2.stack = e.stack
@@ -27357,12 +27357,13 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  async function mergeGraph (obj, mediaType, resourceLoadControler, options) {
+  async function mergeGraph (obj, mediaType, _resourceLoadControler, options, importers) {
     try {
+      // loadOwlImports(obj.graph, importers.concat([obj.url]), resourceLoadControler, options)
       const graph = Array.isArray(typeof obj.graph)
             ? obj.graph
             : obj.graph.getQuads()
-      return {mediaType, url: obj.url, graph}
+      return {mediaType, url: obj.url, importers, graph}
     } catch (e) {
       const e2 = Error("error merging graph object " + obj.graph + ": " + e)
       e2.stack = e.stack
@@ -27370,7 +27371,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function loadSchemaImports (schema, resourceLoadControler, schemaOptions) {
+  function loadSchemaImports (schema, importers, resourceLoadControler, schemaOptions) {
     if (!("imports" in schema))
       return schema
     if (schemaOptions.keepImports) {
@@ -27394,18 +27395,18 @@ const ShExLoaderCjsModule = function (config = {}) {
         }
         // metaList.push(meta)
         return parseShExC(loaded.text, "text/shex", loaded.url,
-                          meta, schemaOptions, resourceLoadControler)
+                          meta, schemaOptions, resourceLoadControler, importers)
           .then(({mediaType, url, schema}) => {
             if (schema.start) // When some schema A imports schema B, B's start member is ignored.
               delete schema.start // — http://shex.io/spec/#import
-            return {mediaType, url, schema}
+            return {mediaType, url, importers, schema}
           })
       })); // addAfter would be after invoking schema.
     })
     return ret
   }
 
-  async function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler) {
+  async function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler, importers) {
     return src.map(
       p => {
         const meta = addMeta(typeof p === "string" ? p : p.url, mediaType, metaList)
@@ -27415,16 +27416,18 @@ const ShExLoaderCjsModule = function (config = {}) {
             meta.base = meta.url = loaded.url // update with wherever if ultimately loaded from after URL fixups and redirects
             resourceLoadControler.loadNovelUrl(loaded.url, p) // replace p with loaded.url in loaded list
             return parserWrapper(loaded.text, mediaType, loaded.url,
-                                 meta, options, resourceLoadControler)
+                                 meta, options, resourceLoadControler, importers)
           })
         } else {
-          if ("text" in p)
-            ret = parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler);
-          else
-            ret = merger(p, mediaType, resourceLoadControler, options)
+          if ("text" in p) {
+            ret = parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler, importers);
+          } else {
+            ret = merger(p, mediaType, resourceLoadControler, options, importers);
+            meta.importers = importers;
+          }
         }
-        resourceLoadControler.add(ret)
-        return ret
+        resourceLoadControler.add(ret);
+        return ret;
       }
     )
   }
@@ -27457,26 +27460,28 @@ const ShExLoaderCjsModule = function (config = {}) {
       const {shexc = [], json = [], turtle = []} = schema || {};
       allSchemas = new ResourceLoadControler(shexc.concat(json).concat(turtle));
       loadList(shexc, returns.schemaMeta, "text/shex",
-               parseShExC, mergeSchema, schemaOptions, allSchemas)
+               parseShExC, mergeSchema, schemaOptions, allSchemas, [])
       loadList(json, returns.schemaMeta, "application/json",
-               parseShExJ, mergeSchema, schemaOptions, allSchemas)
+               parseShExJ, mergeSchema, schemaOptions, allSchemas, [])
       loadList(turtle || [], returns.schemaMeta, "text/turtle",
-               parseShExR, mergeSchema, schemaOptions, allSchemas)
+               parseShExR, mergeSchema, schemaOptions, allSchemas, [])
     }
 
     {
       const {turtle = [], jsonld = []} = data || {};
       allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
       loadList(turtle, returns.dataMeta, "text/turtle",
-               parseTurtle, mergeGraph, dataOptions, allGraphs)
+               parseTurtle, mergeGraph, dataOptions, allGraphs, [])
       loadList(jsonld, returns.dataMeta, "application/ld+json",
-               parseJSONLD, mergeGraph, dataOptions, allGraphs)
+               parseJSONLD, mergeGraph, dataOptions, allGraphs, [])
     }
 
     const [schemaSrcs, dataSrcs] = await Promise.all([allSchemas.allLoaded(),
                                                       allGraphs.allLoaded()])
     schemaSrcs.forEach(sSrc => {
-      ShExUtil.merge(returns.schema, sSrc.schema, schemaOptions.collisionPolicy, true)
+      const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
+      const {schema, ...schemaMeta} = sSrc;
+      ShExUtil.merge(left, {schema, schemaMeta}, schemaOptions.collisionPolicy, true)
       delete sSrc.schema;
     })
     dataSrcs.forEach(dSrc => {
@@ -27488,30 +27493,32 @@ const ShExLoaderCjsModule = function (config = {}) {
     return returns
   }
 
-  function parseShExC (text, mediaType, url, meta, schemaOptions, resourceLoadControler) {
+  function parseShExC (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
     const parser = schemaOptions && "parser" in schemaOptions ?
         schemaOptions.parser :
         ShExParser.construct(url, {}, schemaOptions)
     try {
       meta.prefixes = {};
-      const s = parser.parse(text, url, {meta}, /*filename*/)
+      meta.importers = importers;
+      const schema = parser.parse(text, url, {meta}, /*filename*/)
       // !! horrible hack until I set a variable to know if there's a BASE.
-      if (s.base === url) delete s.base
-      loadSchemaImports(s, resourceLoadControler, schemaOptions)
-      return Promise.resolve({mediaType, url, schema: s})
+      if (schema.base === url) delete schema.base
+      loadSchemaImports(schema, importers.concat([url]), resourceLoadControler, schemaOptions)
+      return Promise.resolve({mediaType, url, importers, schema})
     } catch (e) {
       e.message = "error parsing ShEx " + url + ": " + e.message
       return Promise.reject(e)
     }
   }
 
-  function parseShExJ (text, mediaType, url, meta, schemaOptions, resourceLoadControler) {
+  function parseShExJ (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
     try {
       const s = ShExUtil.ShExJtoAS(JSON.parse(text))
       meta.prefixes = {}
+      meta.importers = importers;
       meta.base = null
-      loadSchemaImports(s, resourceLoadControler)
-      return Promise.resolve({mediaType, url, schema: s})
+      loadSchemaImports(s, importers.concat([url]), resourceLoadControler)
+      return Promise.resolve({mediaType, url, importers, schema: s})
     } catch (e) {
       const e2 = Error("error parsing JSON " + url + ": " + e)
       // e2.stack = e.stack
@@ -27519,9 +27526,9 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  async function parseShExR (text, mediaType, url, meta, schemaOptions, resourceLoadControler) {
+  async function parseShExR (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
     try {
-      const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler)
+      const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers)
       const graph = new config.rdfjs.Store();
       graph.addQuads(x.graph);
       const graphParser = new schemaOptions.graphParser.validator(
@@ -27534,8 +27541,8 @@ const ShExLoaderCjsModule = function (config = {}) {
       if ("errors" in val)
         throw ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
-      await loadSchemaImports(schema, resourceLoadControler); // shouldn't be any
-      return Promise.resolve({mediaType, url, schema})
+      await loadSchemaImports(schema, importers.concat([url]), resourceLoadControler); // shouldn't be any
+      return Promise.resolve({mediaType, url, importers, schema})
     } catch (e) {
       const e2 = Error("error parsing Turtle schema " + url + ": " + e)
       if (typeof e === "object" && "stack" in e)
@@ -27544,7 +27551,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function parseTurtle (text, mediaType, url, meta, dataOptions) {
+  function parseTurtle (text, mediaType, url, meta, dataOptions, resourceLoadControler, importers) {
     return new Promise(function (resolve, reject) {
       const graph = []
       new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
@@ -27554,19 +27561,20 @@ const ShExLoaderCjsModule = function (config = {}) {
                   meta.prefixes = prefixes
                   // data.addPrefixes(prefixes)
                 }
+                meta.importers = importers;
                 if (error) {
                   reject("error parsing " + url + ": " + error)
                 } else if (quad) {
                   graph.push(quad)
                 } else {
                   meta.base = this._base
-                  resolve({mediaType, url, graph})
+                  resolve({mediaType, url, importers, graph})
                 }
               })
     })
   }
 
-  async function parseJSONLD (text, mediaType, url, data, meta, dataOptions) {
+  async function parseJSONLD (text, mediaType, url, meta, dataOptions, resourceLoadControler, importers) {
     const struct = JSON.parse(text)
     try {
       const nquads = await config.jsonld.toRDF(struct, Object.assign(
@@ -27578,7 +27586,8 @@ const ShExLoaderCjsModule = function (config = {}) {
       ))
       meta.prefixes = {}; // @@ take from @context?
       meta.base = url;    // @@ take from @context.base? (or vocab?)
-      return parseTurtle(nquads, mediaType, url, data, meta)
+      meta.importers = importers;
+      return parseTurtle(nquads, mediaType, url, meta, dataOptions, resourceLoadControler, importers)
     } catch (lderr) {
       let e = lderr
       if ("details" in e) e = e.details
@@ -28898,7 +28907,7 @@ class ShExCParserState {
     return this._prefixes[prefix];
   }
 
-  // Add a shape to the map
+  // Add a shape to the list of shape(Expr)s
   addShape (label, shape, start, end) {
     if (shape === this.EmptyShape)
       shape = { type: "Shape" };
@@ -28913,17 +28922,22 @@ class ShExCParserState {
         this.error(new Error("Parse error: "+label+" already defined"));
     } else {
       this.shapes[label] = Object.assign({id: label}, shape);
-      if (end.first_line === this.skipped.last_line && end.first_column === this.skipped.last_column)
-        end = this.skipped
-      this.locations[label] = {
-        filename: this._fileName,
-        first_line: start.first_line,
-        first_column: start.first_column,
-        last_line: end.first_line,
-        last_column: end.first_column,
-      }
+      this.locations[label] = this.makeLocation(start, end);
     }
   }
+
+  makeLocation (start, end) {
+    if (end.first_line === this.skipped.last_line && end.first_column === this.skipped.last_column)
+      end = this.skipped
+    return {
+      filename: this._fileName,
+      first_line: start.first_line,
+      first_column: start.first_column,
+      last_line: end.first_line,
+      last_column: end.first_column,
+    }
+  }
+
 
   // Add a production to the map
   addProduction (label, production) {
@@ -29643,6 +29657,8 @@ const ShExUtil = {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete schema["_index"];
     delete schema["_prefixes"];
+    delete schema["_base"];
+    delete schema["_locations"];
     return schema;
   },
 
@@ -30312,17 +30328,19 @@ const ShExUtil = {
    *   @param rightLloc? ylloc structure for source of right item
    *   @returns {boolean} false: keep left, true: overwrite with right. May also throw.   *
    */
-  merge: function (left, right, collision = 'throw', inPlace) {
+  merge: function (olde, newe, collision = 'throw', inPlace) {
+    const {schema: left, schemaMeta: leftMeta} = olde;
+    const {schema: right, schemaMeta: rightMeta} = newe;
     const overwrite =
           collision === 'left'
           ? () => false
           : collision === 'right'
           ? () => true
           : typeof collision === 'object'
-          ? (type, left, right, _leftLloc, _rightLloc) => collision.overwrite(type, left, right, _leftLloc, _rightLloc)
+          ? (type, left, right, leftLloc, rightLloc) => collision.overwrite(type, left, right, leftLloc, rightLloc, leftMeta, rightMeta)
           : typeof collision === 'function'
           ? collision
-          : (type, left, right, _leftLloc, _rightLloc) => {
+          : (type, left, right, _leftLloc, _rightLloc, _leftMeta, _rightMeta) => {
             throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
           };
     const ret = inPlace ? left : this.emptySchema();
@@ -30334,7 +30352,7 @@ const ShExUtil = {
         ret[attr][key] = left[attr][key];
       });
       Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key])) {
+        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key], undefined, undefined, leftMeta, rightMeta)) {
           if (!(attr in ret))
             ret[attr] = {};
           ret[attr][key] = right[attr][key];
@@ -30349,7 +30367,7 @@ const ShExUtil = {
         ret[attr].set(key, left[attr].get(key));
       });
       (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || myOverwrite(attr, ret[attr].get(key), right[attr].get(key))) {
+        if (!(attr  in left) || !(left[attr].has(key)) || myOverwrite(attr, ret[attr].get(key), right[attr].get(key)), undefined, undefined, leftMeta, rightMeta) {
           if (!(attr in ret))
             ret[attr] = new Map();
           ret[attr].set(key, right[attr].get(key));
@@ -30384,14 +30402,14 @@ const ShExUtil = {
     if ("startActs" in left)
       ret.startActs = left.startActs;
     if ("startActs" in right)
-      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs))
+      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs, undefined, undefined, leftMeta, rightMeta))
         ret.startActs = right.startActs;
 
     // start
     if ("start" in left)
       ret.start = left.start;
     if ("start" in right)
-      if (!("start" in left) || overwrite('start', ret.start, right.start))
+      if (!("start" in left) || overwrite('start', ret.start, right.start, undefined, undefined, leftMeta, rightMeta))
         ret.start = right.start;
 
     const lindex = left._index || this.index(left);
@@ -30414,7 +30432,7 @@ const ShExUtil = {
           ret.shapes.push(rshape)
           if ("_locations" in ret)
             ret._locations[rshape.id] = (right._locations || {})[rshape.id];
-        } else if (overwrite('shapeDecl', previousDecl, rshape, (left._locations || {})[rshape.id], (right._locations || {})[rshape.id])) {
+        } else if (overwrite('shapeDecl', previousDecl, rshape, (left._locations || {})[rshape.id], (right._locations || {})[rshape.id], leftMeta, rightMeta)) {
           ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
           lindex.shapeExprs[rshape.id] = rshape;
           ret.shapes.push(rshape)
@@ -30431,7 +30449,7 @@ const ShExUtil = {
   },
 
   /**
-   * A collision handler for the merge function
+   * A merge function collision handler that warns on duplicates and throws on redefinitions.
    * @param type element of schema: imports|start|startActs|_locations...
    * @param left structure with duplicated item.
    * @param right structure with introducing duplicate item.
@@ -30439,7 +30457,7 @@ const ShExUtil = {
    * @param rightLloc? ylloc structure for source of right item
    * @returns {boolean} false: keep left, true: overwrite with right. May also throw.
    */
-  warnDuplicates: function (type, left, right, leftLloc, rightLloc) {
+  warnDuplicates: function (type, left, right, leftLloc, rightLloc, _leftMeta, _rightMeta) {
     if (type === "_prefixes")
       return false;
     if (type !== "shapeDecl")
@@ -30462,6 +30480,27 @@ const ShExUtil = {
 
     function locIndent (yylloc) {
       return yylloc ? "  " + locStr(yylloc) + ":\n" : "";
+    }
+  },
+
+  /**
+   * A merge function collision handler that accumulates redeclarations.
+   */
+  storeDuplicates: class {
+    constructor () {
+      this.duplicates = {};
+    }
+    overwrite (type, left, right, leftLloc, rightLloc, leftMeta, rightMeta) {
+      if (type === "_prefixes")
+        return false;
+      if (type !== "shapeDecl")
+        throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
+
+      const id = left.id;
+      if (!this.duplicates[id])
+        this.duplicates[id] = [{...leftLloc, importers: leftMeta.importers}];
+      this.duplicates[id].push({...rightLloc, importers: rightMeta.importers})
+      return false; // keep left/old assignment
     }
   },
 
