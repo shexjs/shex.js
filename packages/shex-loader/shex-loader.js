@@ -12,6 +12,7 @@
 const ShExLoaderCjsModule = function (config = {}) {
 
   const ShExUtil = require("@shexjs/util");
+  const {Merger} = require("@shexjs/util/lib/Merger");
   const ShExParser = require("@shexjs/parser");
 
   class WebError extends Error {
@@ -279,7 +280,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     schemaSrcs.forEach(sSrc => {
       const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
       const {schema, ...schemaMeta} = sSrc;
-      ShExUtil.merge(left, {schema, schemaMeta}, schemaOptions.collisionPolicy, true)
+      new Merger(left, {schema, schemaMeta}, schemaOptions.collisionPolicy, true).merge();
       delete sSrc.schema;
     })
     dataSrcs.forEach(dSrc => {

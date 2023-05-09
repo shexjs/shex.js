@@ -27214,6 +27214,7 @@ if (true)
 const ShExLoaderCjsModule = function (config = {}) {
 
   const ShExUtil = __webpack_require__(9443);
+  const {Merger} = __webpack_require__(5810);
   const ShExParser = __webpack_require__(931);
 
   class WebError extends Error {
@@ -27458,7 +27459,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     // gather all the potentially remote inputs
     {
       const {shexc = [], json = [], turtle = []} = schema || {};
-      allSchemas = new ResourceLoadControler(shexc.concat(json).concat(turtle));
+      allSchemas = schemaOptions.loadController || new ResourceLoadControler(shexc.concat(json).concat(turtle));
       loadList(shexc, returns.schemaMeta, "text/shex",
                parseShExC, mergeSchema, schemaOptions, allSchemas, [])
       loadList(json, returns.schemaMeta, "application/json",
@@ -27469,7 +27470,7 @@ const ShExLoaderCjsModule = function (config = {}) {
 
     {
       const {turtle = [], jsonld = []} = data || {};
-      allGraphs = new ResourceLoadControler(turtle.concat(jsonld));
+      allGraphs = dataOptions.loadController || new ResourceLoadControler(turtle.concat(jsonld));
       loadList(turtle, returns.dataMeta, "text/turtle",
                parseTurtle, mergeGraph, dataOptions, allGraphs, [])
       loadList(jsonld, returns.dataMeta, "application/ld+json",
@@ -27481,7 +27482,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     schemaSrcs.forEach(sSrc => {
       const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
       const {schema, ...schemaMeta} = sSrc;
-      ShExUtil.merge(left, {schema, schemaMeta}, schemaOptions.collisionPolicy, true)
+      new Merger(left, {schema, schemaMeta}, schemaOptions.collisionPolicy, true).merge();
       delete sSrc.schema;
     })
     dataSrcs.forEach(dSrc => {
@@ -27489,7 +27490,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       delete dSrc.graph;
     })
     if (returns.schemaMeta.length > 0)
-      ShExUtil.isWellDefined(returns.schema)
+      ShExUtil.isWellDefined(returns.schema, schemaOptions)
     return returns
   }
 
@@ -29241,6 +29242,216 @@ function iri2Turtle(iri, meta = { base: "", prefixes: {} }, aForType = true) {
 
 /***/ }),
 
+/***/ 5810:
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const ShExUtil = __webpack_require__(9443);
+
+/**
+ *
+ * Collision API:
+ *   @param type element of schema: imports|start|startActs|_locations...
+ *   @param left structure with duplicated item.
+ *   @param right structure with introducing duplicate item.
+ *   @param leftLloc? yylloc structure for source of left item
+ *   @param rightLloc? ylloc structure for source of right item
+ *   @returns {boolean} false: keep left, true: overwrite with right. May also throw.   *
+ */
+class Merger {
+
+  /**
+   * Join to ShExJ schemas. The schemas may have `_index` and `_locations` attributes.
+   * @param left first schema to be joined.
+   * @param right second schema to be joined.
+   * @param collision the string "left" or "right" or a function folling the collision API.
+   * @param inPlace if true, edit the left schema directly.
+   * @returns ShExJ schema
+   */
+  constructor (olde, newe, collision = 'throw', inPlace) {
+    this.left = olde.schema;
+    this.leftMeta = olde.schemaMeta
+    this.right = newe.schema;
+    this.rightMeta = newe.schemaMeta
+    this.overwrite =
+          collision === 'left'
+          ? () => false
+          : collision === 'right'
+          ? () => true
+          : typeof collision === 'object'
+          ? (type, left, right, leftLloc, rightLloc) => collision.overwrite(type, left, right, leftLloc, rightLloc, this.leftMeta, this.rightMeta)
+          : typeof collision === 'function'
+          ? collision
+          : (type, left, right, _leftLloc, _rightLloc, _leftMeta, _rightMeta) => {
+            throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
+          };
+    this.inPlace = inPlace;
+    this.ret = inPlace ? this.left : ShExUtil.emptySchema();
+  }
+
+  mergeArray (attr) {
+    Object.keys(this.left[attr] || {}).forEach(key => {
+      if (!(attr in this.ret))
+        this.ret[attr] = {};
+      this.ret[attr][key] = this.left[attr][key];
+    });
+    Object.keys(this.right[attr] || {}).forEach(key => {
+      if (!(attr  in this.left) || !(key in this.left[attr]) || this.overwrite(attr, this.ret[attr][key], this.right[attr][key], undefined, undefined, this.leftMeta, this.rightMeta)) {
+        if (!(attr in this.ret))
+          this.ret[attr] = {};
+        this.ret[attr][key] = this.right[attr][key];
+      }
+    });
+  }
+
+  mergeMap (attr, myOverwrite = this.overwrite) {
+    (this.left[attr] || new Map()).forEach((value, key, map) => {
+      if (!(attr in this.ret))
+        this.ret[attr] = new Map();
+      this.ret[attr].set(key, this.left[attr].get(key));
+    });
+    (this.right[attr] || new Map()).forEach((value, key, map) => {
+      if (!(attr  in this.left) || !(this.left[attr].has(key)) || myOverwrite(attr, this.ret[attr].get(key), this.right[attr].get(key)), undefined, undefined, this.leftMeta, this.rightMeta) {
+        if (!(attr in this.ret))
+          this.ret[attr] = new Map();
+        this.ret[attr].set(key, this.right[attr].get(key));
+      }
+    });
+  }
+
+  merge () {
+    // base
+    if ("_base" in this.left)
+      this.ret._base = this.left._base;
+    if ("_base" in this.right)
+      if (!("_base" in this.left)/* || this.overwrite('_base', this.ret._base, this.right._base)*/) // _base favors the this.left
+        this.ret._base = this.right._base;
+
+    this.mergeArray("_prefixes");
+
+    this.mergeMap("_sourceMap", () => false);
+
+    if ("_locations" in this.left || "_locations" in this.right)
+      this.ret._locations = this.left._locations || {};
+
+    if ("imports" in this.right)
+      if (!("imports" in this.left)) {
+        this.ret.imports = this.right.imports;
+      } else {
+        [].push.apply(this.ret.imports, this.right.imports.filter(
+          mprt => this.ret.imports.indexOf(mprt) === -1
+        ))
+      }
+
+    // startActs
+    if ("startActs" in this.left)
+      this.ret.startActs = this.left.startActs;
+    if ("startActs" in this.right)
+      if (!("startActs" in this.left) || this.overwrite('startActs', this.ret.startActs, this.right.startActs, undefined, undefined, this.leftMeta, this.rightMeta))
+        this.ret.startActs = this.right.startActs;
+
+    // start
+    if ("start" in this.left)
+      this.ret.start = this.left.start;
+    if ("start" in this.right)
+      if (!("start" in this.left) || this.overwrite('start', this.ret.start, this.right.start, undefined, undefined, this.leftMeta, this.rightMeta))
+        this.ret.start = this.right.start;
+
+    const lindex = this.left._index || ShExUtil.index(this.left);
+
+    // shapes
+    if (!this.inPlace)
+      (this.left.shapes || []).forEach(lshape => {
+        if (!("shapes" in this.ret))
+          this.ret.shapes = [];
+        this.ret.shapes.push(lshape);
+      });
+    (this.right.shapes || []).forEach(rshape => {
+      if (!("shapes" in this.ret)) {
+        this.ret.shapes = [];
+        this.ret.shapes.push(rshape)
+        lindex.shapeExprs[rshape.id] = rshape;
+      } else {
+        const previousDecl = lindex.shapeExprs[rshape.id];
+        if (!previousDecl) {
+          this.ret.shapes.push(rshape)
+        } else if (this.overwrite('shapeDecl', previousDecl, rshape, (this.left._locations || {})[rshape.id], (this.right._locations || {})[rshape.id], this.leftMeta, this.rightMeta)) {
+          this.ret.shapes.splice(this.ret.shapes.indexOf(previousDecl), 1);
+          lindex.shapeExprs[rshape.id] = rshape;
+          this.ret.shapes.push(rshape)
+        }
+      }
+      if ("_locations" in this.ret)
+        this.ret._locations[rshape.id] = (this.right._locations || {})[rshape.id];
+    });
+
+    if (this.left._index || this.right._index)
+      this.ret._index = ShExUtil.index(this.ret); // inefficient; could build above
+
+    return this.ret;
+  }
+
+  /**
+   * A merge function collision handler that warns on duplicates and throws on redefinitions.
+   * @param type element of schema: imports|start|startActs|_locations...
+   * @param left structure with duplicated item.
+   * @param right structure with introducing duplicate item.
+   * @param leftLloc? yylloc structure for source of left item
+   * @param rightLloc? ylloc structure for source of right item
+   * @returns {boolean} false: keep left, true: overwrite with right. May also throw.
+   */
+  static warnDuplicates (type, left, right, leftLloc, rightLloc, _leftMeta, _rightMeta) {
+    if (type === "_prefixes")
+      return false;
+    if (type !== "shapeDecl")
+      throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
+
+    const lStr = JSON.stringify(left);
+    const rStr = JSON.stringify(right);
+    const wheresStr = [];
+    if (leftLloc) wheresStr.push(yyllocToString(leftLloc));
+    if (rightLloc) wheresStr.push(yyllocToString(rightLloc));
+    if (lStr === rStr) {
+      console.warn(`Duplicate definitions for ${left.id}: ${wheresStr.map(s => "\n  " + s)}`)
+      return false; // keep left/old assignment
+    }
+    throw new Error(`Conflicing definitions for ${left.id}:\n${locIndent(leftLloc)}    ${lStr}\n${locIndent(rightLloc)}    ${rStr}`);
+
+    function locIndent (yylloc) {
+      return yylloc ? "  " + yyllocToString(yylloc) + ":\n" : "";
+    }
+  }
+}
+
+function yyllocToString (yylloc) {
+  return `${yylloc.filename}(${yylloc.first_line}:${yylloc.first_column}-${yylloc.last_line}:${yylloc.last_column})${yylloc.importers ? yylloc.importers.reverse().map(i => "\n      <= " + i).join() : ""}`
+}
+
+/**
+ * A merge function collision handler that accumulates redeclarations.
+ */
+class StoreDuplicates {
+  constructor () {
+    this.duplicates = {};
+  }
+  overwrite (type, left, right, leftLloc, rightLloc, leftMeta, rightMeta) {
+    if (type === "_prefixes")
+      return false;
+    if (type !== "shapeDecl")
+      throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
+
+    const id = left.id;
+    if (!this.duplicates[id])
+      this.duplicates[id] = [{...leftLloc, importers: leftMeta.importers}];
+    this.duplicates[id].push({...rightLloc, importers: rightMeta.importers})
+    return false; // keep left/old assignment
+  }
+}
+
+module.exports = {Merger, StoreDuplicates, yyllocToString};
+
+
+/***/ }),
+
 /***/ 7625:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
@@ -29479,6 +29690,33 @@ function extend (base) {
   }
 
   let isInclusion = isShapeRef;
+
+
+  class MissingReferenceError extends Error {
+    constructor (ref, labelStr, known) {
+      super(`Structural error: reference to ${ref} not found in ${labelStr}`);
+      this.reference = ref;
+      this.known = known;
+    }
+
+    /** append directly after `error.message`
+     */
+    notFoundIn () {
+      return ":\n" + this.known.map(
+        u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
+      ).join("\n        ") + ".";
+    }
+  }
+  class MissingDeclRefError extends MissingReferenceError {
+    constructor (ref, known) {
+      super(ref, "shape declarations", known);
+    }
+  }
+  class MissingTripleExprRefError extends MissingReferenceError {
+    constructor (ref, known) {
+      super(ref, "triple expressions", known);
+    }
+  }
 
 const ShExUtil = {
 
@@ -30312,198 +30550,6 @@ const ShExUtil = {
     };
   },
 
-  /**
-   * Join to ShExJ schemas. The schemas may have `_index` and `_locations` attributes.
-   * @param left first schema to be joined.
-   * @param right second schema to be joined.
-   * @param collision the string "left" or "right" or a function folling the collision API.
-   * @param inPlace if true, edit the left schema directly.
-   * @returns ShExJ schema
-   *
-   * Collision API:
-   *   @param type element of schema: imports|start|startActs|_locations...
-   *   @param left structure with duplicated item.
-   *   @param right structure with introducing duplicate item.
-   *   @param leftLloc? yylloc structure for source of left item
-   *   @param rightLloc? ylloc structure for source of right item
-   *   @returns {boolean} false: keep left, true: overwrite with right. May also throw.   *
-   */
-  merge: function (olde, newe, collision = 'throw', inPlace) {
-    const {schema: left, schemaMeta: leftMeta} = olde;
-    const {schema: right, schemaMeta: rightMeta} = newe;
-    const overwrite =
-          collision === 'left'
-          ? () => false
-          : collision === 'right'
-          ? () => true
-          : typeof collision === 'object'
-          ? (type, left, right, leftLloc, rightLloc) => collision.overwrite(type, left, right, leftLloc, rightLloc, leftMeta, rightMeta)
-          : typeof collision === 'function'
-          ? collision
-          : (type, left, right, _leftLloc, _rightLloc, _leftMeta, _rightMeta) => {
-            throw Error(`${type} ${JSON.stringify(right, null, 2)} collides with ${JSON.stringify(left, null, 2)}`);
-          };
-    const ret = inPlace ? left : this.emptySchema();
-
-    function mergeArray (attr) {
-      Object.keys(left[attr] || {}).forEach(function (key) {
-        if (!(attr in ret))
-          ret[attr] = {};
-        ret[attr][key] = left[attr][key];
-      });
-      Object.keys(right[attr] || {}).forEach(function (key) {
-        if (!(attr  in left) || !(key in left[attr]) || overwrite(attr, ret[attr][key], right[attr][key], undefined, undefined, leftMeta, rightMeta)) {
-          if (!(attr in ret))
-            ret[attr] = {};
-          ret[attr][key] = right[attr][key];
-        }
-      });
-    }
-
-    function mergeMap (attr, myOverwrite = overwrite) {
-      (left[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr in ret))
-          ret[attr] = new Map();
-        ret[attr].set(key, left[attr].get(key));
-      });
-      (right[attr] || new Map()).forEach(function (value, key, map) {
-        if (!(attr  in left) || !(left[attr].has(key)) || myOverwrite(attr, ret[attr].get(key), right[attr].get(key)), undefined, undefined, leftMeta, rightMeta) {
-          if (!(attr in ret))
-            ret[attr] = new Map();
-          ret[attr].set(key, right[attr].get(key));
-        }
-      });
-    }
-
-    // base
-    if ("_base" in left)
-      ret._base = left._base;
-    if ("_base" in right)
-      if (!("_base" in left)/* || overwrite('_base', ret._base, right._base)*/) // _base favors the left
-        ret._base = right._base;
-
-    mergeArray("_prefixes");
-
-    mergeMap("_sourceMap", () => false);
-
-    if ("_locations" in left || "_locations" in right)
-      ret._locations = left._locations || {};
-
-    if ("imports" in right)
-      if (!("imports" in left)) {
-        ret.imports = right.imports;
-      } else {
-        [].push.apply(ret.imports, right.imports.filter(
-          mprt => ret.imports.indexOf(mprt) === -1
-        ))
-      }
-
-    // startActs
-    if ("startActs" in left)
-      ret.startActs = left.startActs;
-    if ("startActs" in right)
-      if (!("startActs" in left) || overwrite('startActs', ret.startActs, right.startActs, undefined, undefined, leftMeta, rightMeta))
-        ret.startActs = right.startActs;
-
-    // start
-    if ("start" in left)
-      ret.start = left.start;
-    if ("start" in right)
-      if (!("start" in left) || overwrite('start', ret.start, right.start, undefined, undefined, leftMeta, rightMeta))
-        ret.start = right.start;
-
-    const lindex = left._index || this.index(left);
-
-    // shapes
-    if (!inPlace)
-      (left.shapes || []).forEach(function (lshape) {
-        if (!("shapes" in ret))
-          ret.shapes = [];
-        ret.shapes.push(lshape);
-      });
-    (right.shapes || []).forEach(function (rshape) {
-      if (!("shapes" in ret)) {
-        ret.shapes = [];
-        ret.shapes.push(rshape)
-        lindex.shapeExprs[rshape.id] = rshape;
-      } else {
-        const previousDecl = lindex.shapeExprs[rshape.id];
-        if (!previousDecl) {
-          ret.shapes.push(rshape)
-          if ("_locations" in ret)
-            ret._locations[rshape.id] = (right._locations || {})[rshape.id];
-        } else if (overwrite('shapeDecl', previousDecl, rshape, (left._locations || {})[rshape.id], (right._locations || {})[rshape.id], leftMeta, rightMeta)) {
-          ret.shapes.splice(ret.shapes.indexOf(previousDecl), 1);
-          lindex.shapeExprs[rshape.id] = rshape;
-          ret.shapes.push(rshape)
-          if ("_locations" in ret)
-            ret._locations[rshape.id] = (right._locations || {})[rshape.id];
-        }
-      }
-    });
-
-    if (left._index || right._index)
-      ret._index = this.index(ret); // inefficient; could build above
-
-    return ret;
-  },
-
-  /**
-   * A merge function collision handler that warns on duplicates and throws on redefinitions.
-   * @param type element of schema: imports|start|startActs|_locations...
-   * @param left structure with duplicated item.
-   * @param right structure with introducing duplicate item.
-   * @param leftLloc? yylloc structure for source of left item
-   * @param rightLloc? ylloc structure for source of right item
-   * @returns {boolean} false: keep left, true: overwrite with right. May also throw.
-   */
-  warnDuplicates: function (type, left, right, leftLloc, rightLloc, _leftMeta, _rightMeta) {
-    if (type === "_prefixes")
-      return false;
-    if (type !== "shapeDecl")
-      throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
-
-    const lStr = JSON.stringify(left);
-    const rStr = JSON.stringify(right);
-    const wheresStr = [];
-    if (leftLloc) wheresStr.push(locStr(leftLloc));
-    if (rightLloc) wheresStr.push(locStr(rightLloc));
-    if (lStr === rStr) {
-      console.warn(`Duplicate definitions for ${left.id}: ${wheresStr.map(s => "\n  " + s)}`)
-      return false; // keep left/old assignment
-    }
-    throw new Error(`Conflicing definitions for ${left.id}:\n${locIndent(leftLloc)}    ${lStr}\n${locIndent(rightLloc)}    ${rStr}`);
-
-    function locStr (yylloc) {
-      return `${yylloc.filename}:(${yylloc.first_line}.${yylloc.first_column}-${yylloc.last_line}.${yylloc.last_column})`
-    }
-
-    function locIndent (yylloc) {
-      return yylloc ? "  " + locStr(yylloc) + ":\n" : "";
-    }
-  },
-
-  /**
-   * A merge function collision handler that accumulates redeclarations.
-   */
-  storeDuplicates: class {
-    constructor () {
-      this.duplicates = {};
-    }
-    overwrite (type, left, right, leftLloc, rightLloc, leftMeta, rightMeta) {
-      if (type === "_prefixes")
-        return false;
-      if (type !== "shapeDecl")
-        throw Error(`Unexpected ${type} conflict: ${JSON.stringify(left)}, ${JSON.stringify(right)}`);
-
-      const id = left.id;
-      if (!this.duplicates[id])
-        this.duplicates[id] = [{...leftLloc, importers: leftMeta.importers}];
-      this.duplicates[id].push({...rightLloc, importers: rightMeta.importers})
-      return false; // keep left/old assignment
-    }
-  },
-
   absolutizeResults: function (parsed, base) {
     // !! duplicate of Validation-test.js:84: const referenceResult = parseJSONFile(resultsFile...)
     function mapFunction (k, obj) {
@@ -30578,7 +30624,11 @@ const ShExUtil = {
     return db;
   },
 
-  validateSchema: function (schema) { // obselete, but may need other validations in the future.
+  MissingReferenceError,
+  MissingDeclRefError,
+  MissingTripleExprRefError,
+
+  validateSchema: function (schema, options) { // obselete, but may need other validations in the future.
     const _ShExUtil = this;
     const visitor = this.Visitor();
     let currentLabel = currentExtra = null;
@@ -30621,10 +30671,17 @@ const ShExUtil = {
 
     const oldVisitShapeRef = visitor.visitShapeRef;
     visitor.visitShapeRef = function (shapeRef, ...args) {
-      if (!(shapeRef in index.shapeExprs))
-        throw firstError(Error("Structural error: reference to " + JSON.stringify(shapeRef) + " not found in schema shape expressions:\n" + dumpKeys(index.shapeExprs) + "."), shapeRef);
+      if (!(shapeRef in index.shapeExprs)) {
+        const error = firstError(new MissingDeclRefError(shapeRef, Object.keys(index.shapeExprs)), shapeRef);
+        if (options.missingReferent) {
+          options.missingReferent(error, (schema._locations || {})[currentLabel]);
+        } else {
+          throw error;
+        }
+      }
       if (!inTE && shapeRef === currentLabel)
         throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
+      if (!options.skipCycleCheck)
       (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
       return oldVisitShapeRef.call(visitor, shapeRef, ...args);
     }
@@ -30633,7 +30690,7 @@ const ShExUtil = {
     visitor.visitInclusion = function (inclusion, ...args) {
       let refd;
       if (!(refd = index.tripleExprs[inclusion]))
-        throw firstError(Error("Structural error: included shape " + inclusion + " not found in schema triple expressions:\n" + dumpKeys(index.tripleExprs) + "."), inclusion);
+        throw firstError(new MissingTripleExprRefError(inclusion, Object.keys(index.tripleExprs)), inclusion);
       // if (refd.type !== "Shape")
       //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
       return oldVisitInclusion.call(visitor, inclusion, ...args);
@@ -30642,6 +30699,7 @@ const ShExUtil = {
     (schema.shapes || []).forEach(function (shape) {
       currentLabel = shape.id;
       visitor.visitShapeDecl(shape, shape.id);
+      currentLabel = null;
     });
     let circs = Object.keys(negativeDeps.children).filter(
       k => negativeDeps.children[k].filter(
@@ -30651,12 +30709,6 @@ const ShExUtil = {
     );
     if (circs.length)
       throw firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
-
-    function dumpKeys (obj) {
-      return obj ? Object.keys(obj).map(
-        u => u.substr(0, 2) === '_:' ? u : '<' + u + '>'
-      ).join("\n        ") : '- none defined -'
-    }
 
     function firstError (e, obj) {
       if ("_sourceMap" in schema)
@@ -30670,8 +30722,8 @@ const ShExUtil = {
    * @schema: input schema
    * @@TODO
    */
-  isWellDefined: function (schema) {
-    this.validateSchema(schema);
+  isWellDefined: function (schema, options) {
+    this.validateSchema(schema, options);
     // const deps = this.getDependencies(schema);
     return schema;
   },

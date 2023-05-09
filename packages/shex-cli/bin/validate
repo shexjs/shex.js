@@ -41,6 +41,7 @@ const Path = require("path");
 const Util = require("util");
 const JsYaml = require('js-yaml');
 const ShExUtil = require("@shexjs/util");
+const {StoreDuplicates, yyllocToString, Merger: ShExMerger} = require("@shexjs/util/lib/Merger");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const { ctor: SparqlDb } = require('@shexjs/neighborhood-sparql');
 const ShExTerm = require("@shexjs/term");
@@ -103,7 +104,8 @@ const CommandLineOptions = [
   { name: "serve-n",               type: Number, typeLabel: "integer",   multiple: false, defaultValue:        -1, description: "serve N times and exit" },
   { name: "exec",                  type: String, typeLabel: "javascript code",            defaultValue: undefined, description: "run some js code with results" },
   { name: "duplicate-shape",       type: String, typeLabel: dupChoices,  multiple: false, defaultValue: undefined, description: "what to do with duplicate shapes" },
-//{ name: "or",                    type: String, typeLabel: orChoices,   multiple: false, defaultValue: undefined, description: "how '|' should be interpreted" },
+  { name: "diagnose",              type: Boolean, description: "parse and diagnose schema, the exit" },
+  { name: "skipCycleCheck",        type: Boolean, description: "don't look for cycles in schema" },
   { name: "coverage",              type: String, typeLabel: covgChoices, multiple: false, defaultValue: undefined, description: "whether to collect all errors or stop on the first one" },
   { name: "yaml-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
   { name: "json-manifest",         type: String, typeLabel: "file|URL",  multiple:  true, defaultValue:        [], description: "JSON manifest" },
@@ -155,8 +157,10 @@ function abort (msg, exitCode) {
           r: Util.format('  validate -x %s1dotOr2dot.shex -d %sp2p3.ttl -m \'\\{FOCUS :p2 _\\}@<http://a.example/S1>\'', CliDir, CliDir) },
         { l: "validate web resources:",
           r: "  validate -x http://shex.io/examples/IssueSchema.shex -d http://shex.io/examples/Issue1.ttl -m '<#Issue1>@<#IssueShape>'" },
+        { l: "validate schema:",
+          r: "  validate -x http://shex.io/examples/IssueSchema.shex --diagnose" },
         { l: "run as a server:",
-          r: Util.format('  validate -x http://localhost:8088/validate', CliDir) },
+          r: Util.format('  validate -S http://localhost:8088/validate') },
         { l: "",
           r: Util.format('  curl -i http://localhost:8088/validate -F "schema=@%s1dotOr2dot.shex" -F "shape=http://a.example/S1" -F "data=@%sp2p3.ttl" -F "node=x"', CliDir, CliDir) },
         { l: "run as a preloaded server:",
@@ -354,6 +358,25 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
   }
 }
 
+class ProgressLoadControler extends ShExNode.ResourceLoadControler {
+  // constructor (src) {
+  //   super(src);
+  // }
+  add (promise) {
+    process.stdout.cursorTo(0);
+    process.stdout.write(`Loaded ${this.toLoad.length} of ${this.schemasSeen.length} imports.`); // TODO: add redefinitions: ${Object.keys(StoreDuplicatesInstance.duplicates).length}
+    super.add(promise);
+  }
+  allLoaded () {
+    return super.allLoaded().then(x => {
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+      process.stdout.write(`Loaded ${this.toLoad.length} imports`);
+      return x;
+    });
+  }
+}
+
 async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.schemaURL.length > 1 && valParms.dataURL.length === 0) {
     valParms.dataURL = valParms.schemaURL.splice(1); // push all but first into data
@@ -362,15 +385,35 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     valParms.dataURL = valParms.json.splice(1); // push all but first into data
   }
   if (!valParms.serve) {
-    if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified", ExitCode.bad_argument);
     if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
+    if (!valParms.diagnose) {
+      if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified", ExitCode.bad_argument);
+    }
   }
+
+  const errors = [];
+  const storeDuplicatesInstance = valParms.diagnose ? new StoreDuplicates() : null;
+  const loadOptions = Object.assign(
+    {},
+    schemaOptions,
+    valParms.diagnose
+    ? {
+      index: true,
+      collisionPolicy: storeDuplicatesInstance,
+      loadController: new ProgressLoadControler(valParms.schemaURL.concat(valParms.json)),
+      missingReferent: (error, yylloc) => { errors.push({error, yylloc}); },
+      skipCycleCheck: true,
+    }
+    : {  }
+  );
+
   // Loaded schema and data.
   const schemaAndDataP = ShExNode.load(
     {shexc: valParms.schemaURL, json: valParms.json},
     {turtle: valParms.dataURL, jsonld: valParms.jsonld},
-    schemaOptions, undefined
+    loadOptions, undefined
   );
+
   // Expected results, if provided.
   const expectedResultsP = !("result" in valParms)
         ? Promise.resolve(undefined)
@@ -379,6 +422,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         : ShExNode.GET(valParms.result).then(function (body) {
           return ShExUtil.absolutizeResults(JSON.parse(body.text), body.url);
         })
+
   // ShapeMap, if provided.
   const shapeMapP = "mapURL" in valParms
         ? ShExNode.GET(valParms.mapURL).then(function (body) {
@@ -421,6 +465,24 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
     schemaAndData.data = valParms.endpoint
       ? SparqlDb(valParms.endpoint, queryTracker, {allOutgoing: valParms["slurp-all"]})
       : RdfJsDb(schemaAndData.data, queryTracker);
+
+    if (valParms.diagnose) {
+      const redefined = Object.keys(storeDuplicatesInstance.duplicates);
+      process.stdout.write(`, found ${Object.keys(redefined).length} redefinitions, ${errors.length} errors.\n`);
+      if (redefined.length > 0) {
+        console.log(`${redefined.length} Redefinitions:`);
+        redefined.forEach(id => {
+          const llocs = storeDuplicatesInstance.duplicates[id];
+          console.log('  %s: %d defintions:%s', ShExTerm.shExJsTerm2Turtle(id), llocs.length, llocs.map(yylloc => "\n    " + yyllocToString(yylloc)).join(""));
+        });
+      }
+      console.log(`${errors.length} Errors:\n%s`, errors.map(({error, yylloc}) => `  ${yylloc ? yyllocToString(yylloc) : ""}\n    ${error}`).join("\n"));
+      if (valParms["dry-run"]) {
+        return redefined.length === 0 && errors.length === 0
+          ? dry_run
+          : shape_test_fail;
+      }
+    }
 
     if (valParms.serve) {
       if (valParms.shape) {
@@ -979,7 +1041,10 @@ function loadCommandLine (cmds) {
       ValidatorOptions.regexModule = getRegexModule(cmds["regex-module"]);
     }
   }
-  return loadSchemaAndData(cmds, ValidatorOptions, SchemaOptions);
+  const schemaOptions = Object.assign({}, SchemaOptions);
+  if (cmds.skipCycleCheck)
+    schemaOptions.skipCycleCheck = true;
+  return loadSchemaAndData(cmds, ValidatorOptions, schemaOptions);
 }
 
 class FileCache {
@@ -1192,7 +1257,7 @@ async function mergeParm (parms, parm, text, url, type) {
     const right = { schema: part, schemaMeta: {
       url: url.href, importers: [], base: url.href, prefixes
     } };
-    ShExUtil.merge(left, right, true, true);
+    new ShExMerger(left, right, true, true).merge();
     parms.schemaMeta.push({prefixes, base: url.href})
     break;
   case "data":

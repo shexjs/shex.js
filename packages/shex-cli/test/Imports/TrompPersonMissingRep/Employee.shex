@@ -16,3 +16,8 @@ ABSTRACT <http://a.example/PersonShape> {
      foaf:familyName xsd:string);
   foaf:mbox IRI
 }
+
+<http://a.example/X> {
+  ex:p1 @<http://a.example/Y> ;
+  ex:p2 @<http://a.example/Z> ;
+}
