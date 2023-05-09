@@ -479,8 +479,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       console.log(`${errors.length} Errors:\n%s`, errors.map(({error, yylloc}) => `  ${yylloc ? yyllocToString(yylloc) : ""}\n    ${error}`).join("\n"));
       if (valParms["dry-run"]) {
         return redefined.length === 0 && errors.length === 0
-          ? dry_run
-          : shape_test_fail;
+          ? ExitCode.dry_run
+          : ExitCode.shape_test_fail;
       }
     }
 
