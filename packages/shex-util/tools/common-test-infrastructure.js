@@ -115,7 +115,7 @@ function runCliTests (scriptArgumentLists, fromDir, dumpTimeStamps) {
         });
 
       tests.forEach(function (test) {
-        it("should execute $(" + test.args.join(" ") + ")"+
+        it(test.name + " should execute $(" + test.args.join(" ") + ")"+
            ("stdin" in test ?
             " with stdin from " + test.stdin :
             "") +

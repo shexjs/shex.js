@@ -95,7 +95,7 @@ ShExWriter.prototype = {
                            ("code" in act ? "{"+escapeCode(act.code)+"%"+"}" : "%"));
       });
     if (schema.start)
-      _ShExWriter._write("start = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
+      _ShExWriter._write("START = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
     if ("shapes" in schema)
       schema.shapes.forEach(function (shapeDecl) {
         _ShExWriter._write(

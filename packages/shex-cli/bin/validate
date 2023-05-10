@@ -57,7 +57,7 @@ const ShExNode = require("@shexjs/node")({
 });
 const ExitCode = require('../lib/ExitCode')
 
-ShapeMap.start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
+ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
 const ValidatorOptions = { diagnose: true };
 const SchemaOptions = {

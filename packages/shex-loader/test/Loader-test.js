@@ -364,7 +364,7 @@ IMPORT <3circRefS3>
         "base": "https://shex.io/webapps/packages/shex-cli/test/cli/1dotOr2dot.shex", "prefixes": {"": "http://a.example/"} }
     ])
     expect(schema).to.deep.equal({
-      "type": "Schema", "shapes": [
+      "type": "Schema", "start": "http://a.example/S1", "shapes": [
         { "id": "http://a.example/S1", "type": "ShapeDecl", "shapeExpr": {
           "type": "Shape", "expression": {
             "type": "OneOf", "expressions":[

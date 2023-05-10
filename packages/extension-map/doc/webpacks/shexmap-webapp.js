@@ -29295,7 +29295,8 @@ class Merger {
       this.ret[attr][key] = this.left[attr][key];
     });
     Object.keys(this.right[attr] || {}).forEach(key => {
-      if (!(attr  in this.left) || !(key in this.left[attr]) || this.overwrite(attr, this.ret[attr][key], this.right[attr][key], undefined, undefined, this.leftMeta, this.rightMeta)) {
+      if (!(attr in this.left) || !(key in this.left[attr])
+          || (this.left[attr][key] !== this.right[attr][key] && this.overwrite(attr, this.ret[attr][key], this.right[attr][key], undefined, undefined, this.leftMeta, this.rightMeta))) {
         if (!(attr in this.ret))
           this.ret[attr] = {};
         this.ret[attr][key] = this.right[attr][key];
@@ -29897,6 +29898,7 @@ const ShExUtil = {
     delete schema["_prefixes"];
     delete schema["_base"];
     delete schema["_locations"];
+    delete schema["_sourceMap"];
     return schema;
   },
 
@@ -33443,7 +33445,7 @@ ShExWriter.prototype = {
                            ("code" in act ? "{"+escapeCode(act.code)+"%"+"}" : "%"));
       });
     if (schema.start)
-      _ShExWriter._write("start = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
+      _ShExWriter._write("START = " + _ShExWriter._writeShapeExpr(schema.start, done, true, 0).join('') + "\n")
     if ("shapes" in schema)
       schema.shapes.forEach(function (shapeDecl) {
         _ShExWriter._write(

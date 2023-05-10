@@ -257,6 +257,7 @@ const ShExUtil = {
     delete schema["_prefixes"];
     delete schema["_base"];
     delete schema["_locations"];
+    delete schema["_sourceMap"];
     return schema;
   },
 
