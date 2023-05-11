@@ -71,6 +71,9 @@ const AllTests = {
     { name: "simple-local-start" , args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/p1.ttl", "-n", "<x>"], result: "cli/1dotOr2dot_pass_p1.val", status: X.shape_test_pass },
     { name: "simple-local-start-map" , args: ["-x", "cli/1dotOr2dot.shex", "-d", "cli/p1.ttl", "-m", "<x>@START"], result: "cli/1dotOr2dot_pass_p1.val", status: X.shape_test_pass },
 
+    // IMPORT
+    { name: "3circRef-local" , args: ["-x", "cli/3circRefS1-IS2-IS3-IS3.shex", "-s", "<http://a.example/S1>", "-d", "cli/3circRefPlus1_pass-open.ttl", "-n", "<http://a.example/n1>"], result: "cli/3circRefPlus1_pass-open.val", status: X.shape_test_pass },
+
     // manifest
     { name: "simple-json" , args: ["--json-manifest", "cli/manifest-simple.json"], result: "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
     { name: "simple-jsonld" , args: ["--json-manifest", "cli/manifest-simple.jsonld"], result: "cli/1dotOr2dot_pass_p1.val", status: X.val_match_pass },
