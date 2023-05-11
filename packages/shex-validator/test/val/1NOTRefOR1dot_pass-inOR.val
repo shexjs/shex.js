@@ -10,10 +10,7 @@
       "shapeExprs": [
         {
           "type": "ShapeNot",
-          "shapeExpr": {
-            "type": "ShapeRef",
-            "reference": "http://a.example/S2"
-          }
+          "shapeExpr": "http://a.example/S2"
         },
         {
           "type": "Shape",

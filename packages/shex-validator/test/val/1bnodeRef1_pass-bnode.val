@@ -12,10 +12,7 @@
           "type": "NodeConstraint",
           "nodeKind": "bnode"
         },
-        {
-          "type": "ShapeRef",
-          "reference": "http://a.example/S2"
-        }
+        "http://a.example/S2"
       ]
     },
     "solutions": [

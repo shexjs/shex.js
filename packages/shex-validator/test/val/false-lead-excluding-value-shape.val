@@ -8,14 +8,14 @@
         "expressions": [
           {
             "type": "TripleConstraintSolutions", "predicate": "http://a.example/a",
-            "valueExpr": { "type": "ShapeRef", "reference": "http://a.example.org/T1" },
+            "valueExpr": "http://a.example.org/T1",
             "solutions": [
               { "type": "TestedTriple", "subject": "x", "predicate": "http://a.example/a", "object": "x1",
                 "referenced": {
                   "type": "ShapeTest", "node": "x1", "shape": "http://a.example.org/T1",
                   "solution": {
                     "type": "TripleConstraintSolutions", "predicate": "http://a.example/b",
-                    "valueExpr": { "type": "ShapeRef", "reference": "http://a.example.org/T3" },
+                    "valueExpr": "http://a.example.org/T3",
                     "solutions": [
                       {
                         "type": "TestedTriple", "subject": "x1", "predicate": "http://a.example/b", "object": "y1",
@@ -39,7 +39,7 @@
                   "type": "ShapeTest", "node": "x3", "shape": "http://a.example.org/T1",
                   "solution": {
                     "type": "TripleConstraintSolutions", "predicate": "http://a.example/b",
-                    "valueExpr": { "type": "ShapeRef", "reference": "http://a.example.org/T3" },
+                    "valueExpr": "http://a.example.org/T3",
                     "solutions": [
                       {
                         "type": "TestedTriple", "subject": "x3", "predicate": "http://a.example/b", "object": "y3",
@@ -68,7 +68,7 @@
                 "expressions": [
                   {
                     "type": "TripleConstraintSolutions", "predicate": "http://a.example/a",
-                    "valueExpr": { "type": "ShapeRef", "reference": "http://a.example.org/T2" },
+                    "valueExpr": "http://a.example.org/T2",
                     "solutions": [
                       {
                         "type": "TestedTriple", "subject": "x", "predicate": "http://a.example/a", "object": "x2",
@@ -76,7 +76,7 @@
                           "type": "ShapeTest", "node": "x2", "shape": "http://a.example.org/T2",
                           "solution": {
                             "type": "TripleConstraintSolutions", "predicate": "http://a.example/b",
-                            "valueExpr": { "type": "ShapeRef", "reference": "http://a.example.org/T4" },
+                            "valueExpr": "http://a.example.org/T4",
                             "solutions": [
                               {
                                 "type": "TestedTriple", "subject": "x2", "predicate": "http://a.example/b", "object": "y2",

@@ -26,10 +26,7 @@
         }
       }
     ],
-    "valueExpr": {
-      "type": "ShapeRef",
-      "reference": "http://a.example/vc4"
-    }
+    "valueExpr": "http://a.example/vc4"
   }
 }
 

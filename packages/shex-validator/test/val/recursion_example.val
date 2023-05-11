@@ -47,30 +47,21 @@
                             }
                           }
                         ],
-                        "valueExpr": {
-                          "type": "ShapeRef",
-                          "reference": "http://schema.example/IssueShape"
-                        },
+                        "valueExpr": "http://schema.example/IssueShape",
                         "min": 0,
                         "max": -1
                       }
                     }
                   }
                 ],
-                "valueExpr": {
-                  "type": "ShapeRef",
-                  "reference": "http://schema.example/IssueShape"
-                },
+                "valueExpr": "http://schema.example/IssueShape",
                 "min": 0,
                 "max": -1
               }
             }
           }
         ],
-        "valueExpr": {
-          "type": "ShapeRef",
-          "reference": "http://schema.example/IssueShape"
-        },
+        "valueExpr": "http://schema.example/IssueShape",
         "min": 0,
         "max": -1
       }
@@ -108,20 +99,14 @@
                     }
                   }
                 ],
-                "valueExpr": {
-                  "type": "ShapeRef",
-                  "reference": "http://schema.example/IssueShape"
-                },
+                "valueExpr": "http://schema.example/IssueShape",
                 "min": 0,
                 "max": -1
               }
             }
           }
         ],
-        "valueExpr": {
-          "type": "ShapeRef",
-          "reference": "http://schema.example/IssueShape"
-        },
+        "valueExpr": "http://schema.example/IssueShape",
         "min": 0,
         "max": -1
       }
@@ -146,10 +131,7 @@
             }
           }
         ],
-        "valueExpr": {
-          "type": "ShapeRef",
-          "reference": "http://schema.example/IssueShape"
-        },
+        "valueExpr": "http://schema.example/IssueShape",
         "min": 0,
         "max": -1
       }

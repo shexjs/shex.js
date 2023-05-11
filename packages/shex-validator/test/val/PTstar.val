@@ -11,10 +11,7 @@
           {
             "type": "TripleConstraintSolutions",
             "predicate": "http://a.example/a",
-            "valueExpr": {
-              "type": "ShapeRef",
-              "reference": "http://a.example/base/P"
-            },
+            "valueExpr": "http://a.example/base/P",
             "solutions": [
               {
                 "type": "TestedTriple",
@@ -40,10 +37,7 @@
           {
             "type": "TripleConstraintSolutions",
             "predicate": "http://a.example/a",
-            "valueExpr": {
-              "type": "ShapeRef",
-              "reference": "http://a.example/base/T"
-            },
+            "valueExpr": "http://a.example/base/T",
             "solutions": [
               {
                 "type": "TestedTriple",

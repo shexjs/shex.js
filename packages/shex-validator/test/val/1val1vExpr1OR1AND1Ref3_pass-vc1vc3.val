@@ -31,21 +31,12 @@
     "valueExpr": {
       "type": "ShapeOr",
       "shapeExprs": [
-        {
-          "type": "ShapeRef",
-          "reference": "http://a.example/vc1"
-        },
+        "http://a.example/vc1",
         {
           "type": "ShapeAnd",
           "shapeExprs": [
-            {
-              "type": "ShapeRef",
-              "reference": "http://a.example/vc2"
-            },
-            {
-              "type": "ShapeRef",
-              "reference": "http://a.example/vc3"
-            }
+            "http://a.example/vc2",
+            "http://a.example/vc3"
           ]
         }
       ]

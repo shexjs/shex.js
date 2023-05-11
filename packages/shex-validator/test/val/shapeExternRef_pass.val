@@ -4,7 +4,7 @@
   "shape": "http://a.example/S",
   "solution": { 
     "type":"TripleConstraintSolutions", "predicate":"http://a.example/p1",
-    "valueExpr": { "type": "ShapeRef", "reference": "http://a.example/Sext" },
+    "valueExpr": "http://a.example/Sext",
     "solutions":[
       { "type":"TestedTriple","subject":"http://a.example/n1","predicate":"http://a.example/p1","object":"http://a.example/n2",
         "referenced":

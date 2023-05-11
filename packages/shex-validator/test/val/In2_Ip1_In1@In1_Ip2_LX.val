@@ -5,10 +5,7 @@
   "solution": {
     "type": "TripleConstraintSolutions",
     "predicate": "http://a.example/p2",
-    "valueExpr": {
-      "type": "ShapeRef",
-      "reference": "http://a.example/S1"
-    },
+    "valueExpr": "http://a.example/S1",
     "solutions": [
       {
         "type": "TestedTriple",

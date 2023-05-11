@@ -80,10 +80,7 @@
                                   "nodeKind": "iri",
                                   "pattern": "^https?://"
                                 },
-                                {
-                                  "type": "ShapeRef",
-                                  "reference": "http://a.example/S1"
-                                }
+                                "http://a.example/S1"
                               ]
                             },
                             "min": 0,
@@ -177,10 +174,7 @@
                                           "nodeKind": "iri",
                                           "pattern": "^https?://"
                                         },
-                                        {
-                                          "type": "ShapeRef",
-                                          "reference": "http://a.example/S1"
-                                        }
+                                        "http://a.example/S1"
                                       ]
                                     },
                                     "min": 0,

@@ -46,6 +46,7 @@ describe("A ShEx validator", function () {
   const shexParser = ShExParser.construct();
   let tests = parseJSONFile(manifestFile)["@graph"][0]["entries"];
   const resultMap = parseJSONFile(__dirname + "/val/test-result-map.json");
+  const unusedResults = new Set(Object.keys(resultMap));
 
   if (TESTS) {
     tests = tests.filter(function (t) {
@@ -155,6 +156,7 @@ describe("A ShEx validator", function () {
         const dataFile = path.resolve(validationPath, test.action.data);
         const dataURL = "file://" + dataFile;
         let valFile = resultMap[test["@id"]];
+        unusedResults.delete(test["@id"]);
         if (valFile) {
           valFile = "val/" + valFile;
         }
@@ -324,6 +326,10 @@ describe("A ShEx validator", function () {
       }
     });
   });
+
+  if (unusedResults.size > 0) {
+    console.warn(`did not use ${unusedResults.size} val files: ${[...unusedResults].map(id => `\n  ${id}`).join('')}`);
+  }
 });
 
 // Parses a JSON object, restoring `undefined` values
@@ -357,9 +363,7 @@ function canonicalizeJ (object, map) {
   for (const key in object) {
     const item = object[key];
     if (typeof item === "object") {
-      object[key] = item.type === "ShapeRef"
-        ? item.reference
-        : canonicalizeJ(item, map);
+      object[key] = canonicalizeJ(item, map);
     } else if (map && (["node", "subject", "object"]).indexOf(key) !== -1 &&
                typeof item === "string" && item.startsWith("_:")) {
       if (!(item in map))
