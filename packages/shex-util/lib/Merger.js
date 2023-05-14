@@ -20,11 +20,31 @@ class Merger {
    * @param inPlace if true, edit the left schema directly.
    * @returns ShExJ schema
    */
-  constructor (olde, newe, collision = 'throw', inPlace) {
+  constructor (olde, ...args) {
     this.left = olde.schema;
     this.leftMeta = olde.schemaMeta
-    this.right = newe.schema;
-    this.rightMeta = newe.schemaMeta
+    let newe, collision = 'throw', inPlace = false;
+
+    switch (args.length) {
+    case 0:
+      break;
+    case 1:
+      collision = args[0];
+      break;
+    case 2:
+      collision = args[0];
+      inPlace = args[1];
+      break;
+    case 3:
+      this.right = args[0].schema;
+      this.rightMeta = args[0].schemaMeta
+      collision = args[0];
+      inPlace = args[1];
+      break;
+    default:
+      throw Error(`Did not expect ${args.length} arguments to Merger`);
+    }
+
     this.overwrite =
           collision === 'left'
           ? () => false
@@ -72,7 +92,28 @@ class Merger {
     });
   }
 
-  merge () {
+  merge (...args) {
+    switch (args.length) {
+    case 0:
+      if (!this.left)
+        throw Error(`expected left argument to merge`);
+      if (!this.right)
+        throw Error(`expected right argument to merge`);
+      break;
+    case 1:
+      this.right = args[0].schema;
+      this.rightMeta = args[0].schemaMeta
+      break;
+    case 2:
+      this.left = args[0].schema;
+      this.leftMeta = args[0].schemaMeta
+      this.right = args[1].schema;
+      this.rightMeta = args[1].schemaMeta
+      break;
+    default:
+      throw Error(`Did not expect ${args.length} arguments to merge`);
+    }
+
     // base
     if ("_base" in this.left)
       this.ret._base = this.left._base;
