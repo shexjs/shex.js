@@ -277,16 +277,23 @@ const ShExLoaderCjsModule = function (config = {}) {
 
     const [schemaSrcs, dataSrcs] = await Promise.all([allSchemas.allLoaded(),
                                                       allGraphs.allLoaded()])
-    schemaSrcs.forEach(sSrc => {
-      const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
+    const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
+    // const merger = new Merger(left, schemaOptions.collisionPolicy, true);
+    schemaSrcs.forEach((sSrc, idx) => {
       const {schema, ...schemaMeta} = sSrc;
-      new Merger(left, {schema, schemaMeta}, schemaOptions.collisionPolicy, true).merge();
+      /*merger*/new Merger(left, schemaOptions.collisionPolicy, true).merge({schema, schemaMeta});
       delete sSrc.schema;
-    })
+      // process.stdout.clearLine();
+      // process.stdout.cursorTo(0);
+      // process.stdout.write(`Merged ${idx} of ${schemaSrcs.length} imports: ${schemaMeta.url}`);
+    });
+    // process.stdout.clearLine();
+    // process.stdout.cursorTo(0);
+    // process.stdout.write(`Merged ${schemaSrcs.length} imports.\n`);
     dataSrcs.forEach(dSrc => {
       returns.data.addQuads(dSrc.graph)
       delete dSrc.graph;
-    })
+    });
     if (returns.schemaMeta.length > 0)
       ShExUtil.isWellDefined(returns.schema, schemaOptions)
     return returns
