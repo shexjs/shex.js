@@ -359,19 +359,20 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
 }
 
 class ProgressLoadControler extends ShExNode.ResourceLoadControler {
-  // constructor (src) {
-  //   super(src);
-  // }
   add (promise) {
-    process.stdout.cursorTo(0);
-    process.stdout.write(`Loaded ${this.toLoad.length} of ${this.schemasSeen.length} imports.`); // TODO: add redefinitions: ${Object.keys(StoreDuplicatesInstance.duplicates).length}
-    super.add(promise);
+    const index = this.toLoad.length;
+    super.add(promise.then(ret => {
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+      process.stdout.write(`Loaded ${index} of ${this.schemasSeen.length} imports: ${ret.url}`);
+      return ret;
+    }));
   }
   allLoaded () {
     return super.allLoaded().then(x => {
       process.stdout.clearLine();
       process.stdout.cursorTo(0);
-      process.stdout.write(`Loaded ${this.toLoad.length} imports`);
+      process.stdout.write(`Loaded ${this.toLoad.length} imports.\n`);
       return x;
     });
   }
@@ -384,7 +385,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
   if (valParms.json.length > 1 && valParms.dataURL.length === 0) {
     valParms.dataURL = valParms.json.splice(1); // push all but first into data
   }
-  if (!valParms.serve) {
+  if (!valParms.serve && !valParms["dry-run"]) {
     if (valParms.schemaURL.length === 0 && valParms.json.length === 0) abort("No schemaURL specified", ExitCode.bad_argument);
     if (!valParms.diagnose) {
       if (valParms.dataURL.length === 0 && valParms.jsonld.length === 0) abort("No dataURL specified", ExitCode.bad_argument);
