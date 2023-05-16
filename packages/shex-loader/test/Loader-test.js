@@ -136,8 +136,8 @@ describe("@shexjs/loader", function () {
     ]);
     const loadedShapes = schema.shapes.map(s => [s.id, s.shapeExpr.type]);
     expect(loadedShapes).to.deep.equal([
+      ["http://a.example/S1", "NodeConstraint"],
       ["http://a.example/schemaAsText#ShapeFromText", "Shape"],
-      ["http://a.example/S1", "NodeConstraint"]
     ]);
     expect(dataMeta).to.deep.equal([
       { "mediaType": "text/turtle", "url": "https://shex.io/webapps/packages/shex-cli/test/cli/p1.ttl", importers: [],

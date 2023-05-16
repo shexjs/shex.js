@@ -169,10 +169,10 @@ class Merger {
         const previousDecl = lindex.shapeExprs[rshape.id];
         if (!previousDecl) {
           this.ret.shapes.push(rshape)
-        } else if (this.overwrite('shapeDecl', previousDecl, rshape, (this.left._locations || {})[rshape.id], (this.right._locations || {})[rshape.id], this.leftMeta, this.rightMeta)) {
-          this.ret.shapes.splice(this.ret.shapes.indexOf(previousDecl), 1);
           lindex.shapeExprs[rshape.id] = rshape;
-          this.ret.shapes.push(rshape)
+        } else if (this.overwrite('shapeDecl', previousDecl, rshape, (this.left._locations || {})[rshape.id], (this.right._locations || {})[rshape.id], this.leftMeta, this.rightMeta)) {
+          this.ret.shapes.splice(this.ret.shapes.indexOf(previousDecl), 1, rshape);
+          lindex.shapeExprs[rshape.id] = rshape;
         }
       }
       if ("_locations" in this.ret)
