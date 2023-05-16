@@ -132,13 +132,16 @@ const ShExLoaderCjsModule = function (config = {}) {
       return meta
     }
 
-  async function mergeSchema (obj, mediaType, resourceLoadControler, options, importers) {
+  async function mergeSchema (obj, target, mediaType, resourceLoadControler, options, importers) {
     if (!("schema" in obj))
       throw Error(`Bad parameter to mergeSchema; ${summarize(obj)} is not a loaded schema`)
     if (obj.schema.type !== "Schema")
       throw Error(`Bad parameter to mergeSchema .schema; ${summarize(obj.schema)} !== ""Schema`)
     try {
-      loadSchemaImports(obj.schema, importers.concat([obj.url]), resourceLoadControler, options);
+      const {schema, ...schemaMeta} = obj;
+      loadSchemaImports(schema, target, importers.concat([obj.url]), resourceLoadControler, options);
+      const merger = new Merger({schema: target, schemaMeta: {}}, options.collisionPolicy, true);
+      merger.merge({schema, schemaMeta});
       return {mediaType, url: obj.url, importers, schema: obj.schema};
     } catch (e) {
       const e2 = Error("error merging schema object " + obj.schema + ": " + e)
@@ -170,12 +173,13 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function loadSchemaImports (schema, importers, resourceLoadControler, schemaOptions) {
+  function loadSchemaImports (schema, target, importers, resourceLoadControler, schemaOptionsP) {
     if (!("imports" in schema))
       return schema
-    if (schemaOptions.keepImports) {
+    if (schemaOptionsP.keepImports) {
       return schema
     }
+    const schemaOptions = Object.assign({}, schemaOptionsP, { asImport: true });
     const ret = Object.assign({}, schema)
     const imports = ret.imports
     delete ret.imports // @@ needed? useful?
@@ -193,7 +197,7 @@ const ShExLoaderCjsModule = function (config = {}) {
           prefixes: {}
         }
         // metaList.push(meta)
-        return parseShExC(loaded.text, "text/shex", loaded.url,
+        return parseShExC(loaded.text, "text/shex", loaded.url, target,
                           meta, schemaOptions, resourceLoadControler, importers)
           .then(({mediaType, url, schema}) => {
             if (schema.start) // When some schema A imports schema B, B's start member is ignored.
@@ -205,7 +209,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     return ret
   }
 
-  async function loadList (src, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler, importers) {
+  async function loadList (src, target, metaList, mediaType, parserWrapper, merger, options, resourceLoadControler, importers) {
     return src.map(
       p => {
         const meta = addMeta(typeof p === "string" ? p : p.url, mediaType, metaList)
@@ -214,14 +218,14 @@ const ShExLoaderCjsModule = function (config = {}) {
           ret = loader.GET(p, mediaType).then(loaded => {
             meta.base = meta.url = loaded.url // update with wherever if ultimately loaded from after URL fixups and redirects
             resourceLoadControler.loadNovelUrl(loaded.url, p) // replace p with loaded.url in loaded list
-            return parserWrapper(loaded.text, mediaType, loaded.url,
+            return parserWrapper(loaded.text, mediaType, loaded.url, target,
                                  meta, options, resourceLoadControler, importers)
           })
         } else {
           if ("text" in p) {
-            ret = parserWrapper(p.text, mediaType, p.url, meta, options, resourceLoadControler, importers);
+            ret = parserWrapper(p.text, mediaType, p.url, target, meta, options, resourceLoadControler, importers);
           } else {
-            ret = merger(p, mediaType, resourceLoadControler, options, importers);
+            ret = merger(p, target, mediaType, resourceLoadControler, options, importers);
             meta.importers = importers;
           }
         }
@@ -247,7 +251,7 @@ const ShExLoaderCjsModule = function (config = {}) {
    */
   async function load (schema, data, schemaOptions = {}, dataOptions = {}) {
     const returns = {
-      schema: ShExUtil.emptySchema(),
+      schema: ShExUtil.emptySchema(true),
       data: config.rdfjs ? new config.rdfjs.Store() : null,
       schemaMeta: [],
       dataMeta: []
@@ -258,30 +262,31 @@ const ShExLoaderCjsModule = function (config = {}) {
     {
       const {shexc = [], json = [], turtle = []} = schema || {};
       allSchemas = schemaOptions.loadController || new ResourceLoadControler(shexc.concat(json).concat(turtle));
-      loadList(shexc, returns.schemaMeta, "text/shex",
+      loadList(shexc, returns.schema, returns.schemaMeta, "text/shex",
                parseShExC, mergeSchema, schemaOptions, allSchemas, [])
-      loadList(json, returns.schemaMeta, "application/json",
+      loadList(json, returns.schema, returns.schemaMeta, "application/json",
                parseShExJ, mergeSchema, schemaOptions, allSchemas, [])
-      loadList(turtle || [], returns.schemaMeta, "text/turtle",
+      loadList(turtle || [], returns.schema, returns.schemaMeta, "text/turtle",
                parseShExR, mergeSchema, schemaOptions, allSchemas, [])
     }
 
     {
       const {turtle = [], jsonld = []} = data || {};
       allGraphs = dataOptions.loadController || new ResourceLoadControler(turtle.concat(jsonld));
-      loadList(turtle, returns.dataMeta, "text/turtle",
+      loadList(turtle, returns.data, returns.dataMeta, "text/turtle",
                parseTurtle, mergeGraph, dataOptions, allGraphs, [])
-      loadList(jsonld, returns.dataMeta, "application/ld+json",
+      loadList(jsonld, returns.data, returns.dataMeta, "application/ld+json",
                parseJSONLD, mergeGraph, dataOptions, allGraphs, [])
     }
 
     const [schemaSrcs, dataSrcs] = await Promise.all([allSchemas.allLoaded(),
                                                       allGraphs.allLoaded()])
     const left = {schema: returns.schema, schemaMeta: returns.schemaMeta[0]};
-    // const merger = new Merger(left, schemaOptions.collisionPolicy, true);
+    if (false) {
+    const merger = new Merger(left, schemaOptions.collisionPolicy, true);
     schemaSrcs.forEach((sSrc, idx) => {
       const {schema, ...schemaMeta} = sSrc;
-      /*merger*/new Merger(left, schemaOptions.collisionPolicy, true).merge({schema, schemaMeta});
+      merger.merge({schema, schemaMeta});
       delete sSrc.schema;
       // process.stdout.clearLine();
       // process.stdout.cursorTo(0);
@@ -294,22 +299,24 @@ const ShExLoaderCjsModule = function (config = {}) {
       returns.data.addQuads(dSrc.graph)
       delete dSrc.graph;
     });
+    }
     if (returns.schemaMeta.length > 0)
       ShExUtil.isWellDefined(returns.schema, schemaOptions)
     return returns
   }
 
-  function parseShExC (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
+  function parseShExC (text, mediaType, url, target, meta, schemaOptions, resourceLoadControler, importers) {
     const parser = schemaOptions && "parser" in schemaOptions ?
         schemaOptions.parser :
-        ShExParser.construct(url, {}, schemaOptions)
+          ShExParser.construct(url, {}, schemaOptions)
+    const {asImport} = schemaOptions;
     try {
       meta.prefixes = {};
       meta.importers = importers;
-      const schema = parser.parse(text, url, {meta}, /*filename*/)
+      const schema = parser.parse(text, url, {meta, target, asImport}, /*filename*/)
       // !! horrible hack until I set a variable to know if there's a BASE.
       if (schema.base === url) delete schema.base
-      loadSchemaImports(schema, importers.concat([url]), resourceLoadControler, schemaOptions)
+      loadSchemaImports(schema, target, importers.concat([url]), resourceLoadControler, schemaOptions)
       return Promise.resolve({mediaType, url, importers, schema})
     } catch (e) {
       e.message = "error parsing ShEx " + url + ": " + e.message
@@ -317,13 +324,13 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function parseShExJ (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
+  function parseShExJ (text, mediaType, url, target, meta, schemaOptions, resourceLoadControler, importers) {
     try {
       const s = ShExUtil.ShExJtoAS(JSON.parse(text))
       meta.prefixes = {}
       meta.importers = importers;
       meta.base = null
-      loadSchemaImports(s, importers.concat([url]), resourceLoadControler)
+      loadSchemaImports(s, target, importers.concat([url]), resourceLoadControler)
       return Promise.resolve({mediaType, url, importers, schema: s})
     } catch (e) {
       const e2 = Error("error parsing JSON " + url + ": " + e)
@@ -332,7 +339,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  async function parseShExR (text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers) {
+  async function parseShExR (text, mediaType, url, target, meta, schemaOptions, resourceLoadControler, importers) {
     try {
       const x = await parseTurtle(text, mediaType, url, meta, schemaOptions, resourceLoadControler, importers)
       const graph = new config.rdfjs.Store();
@@ -347,7 +354,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       if ("errors" in val)
         throw ResourceError(`${url} did not validate as a ShEx schema: ${JSON.stringify(val.errors, null, 2)}`, url)
       const schema = ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val))));
-      await loadSchemaImports(schema, importers.concat([url]), resourceLoadControler); // shouldn't be any
+      await loadSchemaImports(schema, target, importers.concat([url]), resourceLoadControler); // shouldn't be any
       return Promise.resolve({mediaType, url, importers, schema})
     } catch (e) {
       const e2 = Error("error parsing Turtle schema " + url + ": " + e)
@@ -357,7 +364,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     }
   }
 
-  function parseTurtle (text, mediaType, url, meta, dataOptions, resourceLoadControler, importers) {
+  function parseTurtle (text, mediaType, url, tarbet, meta, dataOptions, resourceLoadControler, importers) {
     return new Promise(function (resolve, reject) {
       const graph = []
       new config.rdfjs.Parser({baseIRI: url, blankNodePrefix: "", format: "text/turtle"}).
@@ -380,7 +387,7 @@ const ShExLoaderCjsModule = function (config = {}) {
     })
   }
 
-  async function parseJSONLD (text, mediaType, url, meta, dataOptions, resourceLoadControler, importers) {
+  async function parseJSONLD (text, mediaType, url, target, meta, dataOptions, resourceLoadControler, importers) {
     const struct = JSON.parse(text)
     try {
       const nquads = await config.jsonld.toRDF(struct, Object.assign(

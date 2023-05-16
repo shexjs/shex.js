@@ -6,7 +6,7 @@ const schemeAuthority = /^(?:([a-z][a-z0-9+.-]*:))?(?:\/\/[^\/]*)?/i,
     dotSegments = /(?:^|\/)\.\.?(?:$|[\/#?])/;
 
 class ShExCParserState {
-  constructor () {
+  constructor (target = undefined) {
     this.blankId = 0;
     this._fileName = undefined; // for debugging
     this.EmptyObject = {  };
@@ -17,11 +17,14 @@ class ShExCParserState {
       last_line: 0,
       last_column: 0,
     };
-    this.locations = {  };
+    this.target = target || {}; // if supplied, target is a schema to append, otherwise, we just add stuff to the {}
+    this.locations = target && target._locations ? target._locations : {  };
+    this._sourceMap = target && target._sourceMap ? target._sourceMap : null;
+    this.index = target && target._index ? target._index : { shapeExprs: {}, tripleExprs: {} };
   }
 
   reset () {
-    this._prefixes = this._imports = this._sourceMap = this.shapes = this.productions = this.start = this.startActs = null; // Reset state.
+    this._prefixes = this._imports = this._sourceMap = this.index = this.start = this.startActs = null; // Reset state.
     this._base = this._baseIRI = this._baseIRIPath = this._baseIRIRoot = null;
   }
 
@@ -165,23 +168,57 @@ class ShExCParserState {
     return this._prefixes[prefix];
   }
 
+  setStart (start) {
+    if (!this.options.asImport)
+      this.start = start;
+  }
+
+  setStartActs (startActs) {
+    if (!this.options.asImport)
+      this.startActs = startActs;
+  }
+
   // Add a shape to the list of shape(Expr)s
-  addShape (label, shape, start, end) {
-    if (shape === this.EmptyShape)
-      shape = { type: "Shape" };
-    if (this.productions && label in this.productions)
+  addShape (label, decl, start, end) {
+    if (decl === this.EmptyShape)
+      decl = { type: "Shape" }; // !! suspicious
+    decl = Object.assign({id: label}, decl); // hack to make id serialize first (vs decl.id = label)
+
+    if (this.index.tripleExprs && label in this.index.tripleExprs)
       this.error(new Error("Structural error: "+label+" is a triple expression"));
-    if (!this.shapes)
-      this.shapes = {};
-    if (label in this.shapes) {
-      if (this.options.duplicateShape === "replace")
-        this.shapes[label] = shape;
-      else if (this.options.duplicateShape !== "ignore")
+
+    if (label in this.index.shapeExprs) {
+      if (this.options.duplicateShape === "replace") {
+        const old = this.index.shapeExprs[label];
+        this.index.shapeExprs[label] = decl;
+        const shapesIdx = this.target.shapes.indexOf(old);
+        if (old === -1)
+          throw new Error(`${label} appears in index but not shapes:\n  ${Object.keys(this.index.shapeExprs)}\n  {this.target.shapes.map(t => t.id)}`);
+        this.target.shapes[shapesIdx] = decl;
+      } else if (this.options.duplicateShape !== "ignore") {
         this.error(new Error("Parse error: "+label+" already defined"));
+      }
     } else {
-      this.shapes[label] = Object.assign({id: label}, shape);
+      this.index.shapeExprs[label] = decl;
+      if (!this.target.shapes)
+        this.target.shapes = [];
+      this.target.shapes.push(decl);
       this.locations[label] = this.makeLocation(start, end);
     }
+  }
+
+  // Add a production to the map
+  addProduction (label, production) {
+    if (this.index.shapeExprs && label in this.index.shapeExprs)
+      this.error(new Error("Structural error: "+label+" is a shape expression"));
+
+    if (label in this.index.tripleExprs) {
+      if (this.options.duplicateShape === "replace")
+        this.index.tripleExprs[label] = production;
+      else if (this.options.duplicateShape !== "ignore")
+        this.error(new Error("Parse error: "+label+" already defined"));
+    } else
+      this.index.tripleExprs[label] = production;
   }
 
   makeLocation (start, end) {
@@ -194,22 +231,6 @@ class ShExCParserState {
       last_line: end.first_line,
       last_column: end.first_column,
     }
-  }
-
-
-  // Add a production to the map
-  addProduction (label, production) {
-    if (this.shapes && label in this.shapes)
-      this.error(new Error("Structural error: "+label+" is a shape expression"));
-    if (!this.productions)
-      this.productions = {};
-    if (label in this.productions) {
-      if (this.options.duplicateShape === "replace")
-        this.productions[label] = production;
-      else if (this.options.duplicateShape !== "ignore")
-        this.error(new Error("Parse error: "+label+" already defined"));
-    } else
-      this.productions[label] = production;
   }
 
   addSourceMap (obj) {
@@ -226,7 +247,7 @@ class ShExCParserState {
 
 // Creates a ShEx parser with the given pre-defined prefixes
 const prepareParser = function (baseIRI, prefixes, schemaOptions) {
-                                                                                schemaOptions = schemaOptions || {};
+  schemaOptions = schemaOptions || {};
   // Create a copy of the prefixes
   const prefixesCopy = {};
   for (const prefix in prefixes || {})
@@ -238,7 +259,7 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
   const oldParse = parser.parse;
 
   function runParser (input, base = baseIRI, options = schemaOptions, filename = null) {
-    const parserState = globalThis.PS = new ShExCParserState();
+    const parserState = globalThis.PS = new ShExCParserState(options.target);
     parserState._prefixes = Object.create(prefixesCopy);
     parserState._imports = [];
     parserState._setBase(base);
@@ -257,6 +278,24 @@ const prepareParser = function (baseIRI, prefixes, schemaOptions) {
       options.meta.base = parserState._base;
       options.meta.prefixes = parserState._prefixes;
     }
+
+    if (options.target && !options.asImport) {
+      if (!options.asImport) {
+        if (parserState.startActs) {
+          if (!options.target.startActs)
+            options.target.startActs = [];
+          [].push.apply(options.target.startActs, parserState.startActs);
+        }
+      }
+      if (!options.asImport) {
+        if (parserState.start) {
+          if (options.target.start)
+            errors.push(new Error(`start ${JSON.stringify(parserState.start)} would overwrite ${JSON.stringify(options.target.start)}`));
+          options.target.start = parserState.start;
+        }
+      }
+    }
+
     parserState.reset();
     errors.forEach(e => {
       if ("hash" in e) {

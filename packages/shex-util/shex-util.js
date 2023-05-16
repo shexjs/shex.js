@@ -905,10 +905,19 @@ const ShExUtil = {
 
   // @@ put predicateUsage here
 
-  emptySchema: function () {
-    return {
+  emptySchema: function (index = undefined) {
+    const ret = {
       type: "Schema"
     };
+    if (index) {
+      ret._index = {
+        shapeExprs: {},
+        tripleExprs: {}
+      };
+      ret._sourceMap = new Map();
+      ret._locations = {};
+    }
+    return ret;
   },
 
   absolutizeResults: function (parsed, base) {

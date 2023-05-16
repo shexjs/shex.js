@@ -412,10 +412,10 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 shexDoc:
       _initParser _Qdirective_E_Star _Q_O_QnotStartAction_E_Or_QstartActions_E_S_Qstatement_E_Star_C_E_Opt EOF	{
-        let imports = Object.keys(yy._imports).length ? { imports: yy._imports } : {}
+        let imports = Object.keys(yy._imports).length ? { imports: yy._imports } : {};
         const startObj = yy.start ? { start: yy.start } : {};
         const startActs = yy.startActs ? { startActs: yy.startActs } : {};
-        let shapes = yy.shapes ? { shapes: Object.values(yy.shapes) } : {};
+        let shapes = yy.target.shapes ? { shapes: yy.target.shapes } : {};
         const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
@@ -423,10 +423,7 @@ shexDoc:
           if (yy._base !== null)
             shexj._base = yy._base;
           shexj._prefixes = yy._prefixes;
-          shexj._index = {
-            shapeExprs: yy.shapes || {},
-            tripleExprs: yy.productions || {}
-          };
+          shexj._index = yy.index;
           shexj._sourceMap = yy._sourceMap;
           shexj._locations = yy.locations;
         }
@@ -496,13 +493,13 @@ start:
       IT_start '=' shapeAnd _Q_O_QIT_OR_E_S_QshapeAnd_E_C_E_Star	{
         if (yy.start)
           yy.error(new Error("Parse error: start already defined"));
-        yy.start = shapeJunction("ShapeOr", $3, $4); // t: startInline
+        yy.setStart(shapeJunction("ShapeOr", $3, $4)); // t: startInline
       }
     ;
 
 startActions:
       _QcodeDecl_E_Plus	{
-        yy.startActs = $1; // t: startCode1
+        yy.setStartActs($1); // t: startCode1
       }
     ;
 

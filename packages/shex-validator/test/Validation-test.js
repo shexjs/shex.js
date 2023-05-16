@@ -327,7 +327,7 @@ describe("A ShEx validator", function () {
     });
   });
 
-  if (unusedResults.size > 0) {
+  if (unusedResults.size > 0 && TESTS === null) {
     console.warn(`did not use ${unusedResults.size} val files: ${[...unusedResults].map(id => `\n  ${id}`).join('')}`);
   }
 });

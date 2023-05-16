@@ -216,10 +216,10 @@ class ShExJisonParser extends JisonParser {
         switch (yystate) {
 case 1:
 
-        let imports = Object.keys(yy._imports).length ? { imports: yy._imports } : {}
+        let imports = Object.keys(yy._imports).length ? { imports: yy._imports } : {};
         const startObj = yy.start ? { start: yy.start } : {};
         const startActs = yy.startActs ? { startActs: yy.startActs } : {};
-        let shapes = yy.shapes ? { shapes: Object.values(yy.shapes) } : {};
+        let shapes = yy.target.shapes ? { shapes: yy.target.shapes } : {};
         const shexj = Object.assign(
           { type: "Schema" }, imports, startActs, startObj, shapes
         )
@@ -227,10 +227,7 @@ case 1:
           if (yy._base !== null)
             shexj._base = yy._base;
           shexj._prefixes = yy._prefixes;
-          shexj._index = {
-            shapeExprs: yy.shapes || {},
-            tripleExprs: yy.productions || {}
-          };
+          shexj._index = yy.index;
           shexj._sourceMap = yy._sourceMap;
           shexj._locations = yy.locations;
         }
@@ -260,12 +257,12 @@ case 20:
 
         if (yy.start)
           yy.error(new Error("Parse error: start already defined"));
-        yy.start = shapeJunction("ShapeOr", $$[$0-1], $$[$0]); // t: startInline
+        yy.setStart(shapeJunction("ShapeOr", $$[$0-1], $$[$0])); // t: startInline
       
 break;
 case 21:
 
-        yy.startActs = $$[$0]; // t: startCode1
+        yy.setStartActs($$[$0]); // t: startCode1
       
 break;
 case 22:
