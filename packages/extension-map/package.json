@@ -34,7 +34,7 @@
     "hierarchy-closure": "^1.2.1",
     "jquery": "^3.7.0",
     "js-yaml": "^4.1.0",
-    "n3": "^1.6.2",
+    "n3": "^1.16.4",
     "shape-map": "^1.0.0-alpha.26"
   },
   "devDependencies": {
