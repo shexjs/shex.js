@@ -751,7 +751,7 @@ export class ShExValidator {
     const errors: error[] = [];
 
     // Triples not mapped to triple constraints are not allowed in closed shapes.
-    if (shape.closed && unexpectedTriples.length > 0) {
+    if (shape.closed && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
       errors.push({
         type: "ClosedShapeViolation",
         unexpectedTriples: unexpectedTriples.map(q => {

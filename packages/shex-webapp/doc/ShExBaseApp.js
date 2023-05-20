@@ -1364,7 +1364,11 @@ class DirectShExValidator {
     this.validator = new ShExWebApp.Validator(
       loaded.schema,
       inputData,
-      {results: "api", regexModule: ShExWebApp[$("#regexpEngine").val()]});
+      {
+        results: "api",
+        regexModule: ShExWebApp[$("#regexpEngine").val()],
+        ignoreClosed: $("#ignoreClosed").is(":checked"),
+      });
     $(".extensionControl:checked").each(() => {
       $(this).data("code").register(validator, ShExWebApp);
     });
@@ -1944,7 +1948,8 @@ class ShExBaseApp {
               if (lStr === rStr)
                 return false; // keep left/old assignment
               throw new Error(`Conflicing definitions: ${lStr} !== ${rStr}`);
-            }
+            },
+            skipCycleCheck: $("#skipCycleCheck").is(":checked"),
           });
           let time;
           const validator = this.getValidator(loaded, alreadLoaded.url, inputData, this.makeRenderer());

@@ -226,7 +226,7 @@ ul {
           <button id="menu-button" title="click for menu">
             controls <svg><use xlink:href="#down-arrow"/><use xlink:href="#up-arrow" /></svg>
           </button>
-        <div id="controls">
+        <div id="controls" style="z-index: 127;">
           <div>
             <ul>
               <li class="        "><h3>user interface</h3></li>
@@ -245,9 +245,11 @@ ul {
               <li class="menuitem"><input type="checkbox" id="append"/><label for="append">drop appends</label></li>
               <li class="menuitem"><label for="duplicateShape">duplicate shape:</label><select id="duplicateShape"><option value="abort">abort</option><option value="replace">replace</option><option value="ignore">ignore</option></select></li>
               <li class="        "><hr/></li>
-              <li class="        "><h3>performance</h3></li>
+              <li class="        "><h3>validation</h3></li>
               <li class="menuitem"><label for="regexpEngine">error reporting:</label><select id="regexpEngine"><option value="eval-threaded-nerr">thorough</option><option value="eval-simple-1err">fast</option></select></li>
               <li class="        "><hr/></li>
+              <li class="menuitem"><input type="checkbox" id="skipCycleCheck" checked/><label for="skipCycleCheck">skip cycle check</label></li>
+              <li class="menuitem"><input type="checkbox" id="ignoreClosed"/><label for="ignoreClosed">ignore closed-ness of shapes</label></li>
               <li class="menuitem" id="permalink"><a>Permalink</a></li>
               <li class="menuitem" id="about-button">About</li>
             </ul>
