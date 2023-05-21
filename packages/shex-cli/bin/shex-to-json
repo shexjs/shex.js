@@ -21,7 +21,8 @@ const CommandLineOptions = [
     { name: "shex",  alias: "x", type: String, multiple:  true, defaultValue:   [], defaultOption:  true },
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
     { name: "turtle",alias: "t", type: String, multiple:  true, defaultValue:   [] },
-    { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }
+    { name: "skipCycleCheck",    type: Boolean, description: "don't look for cycles in schema" },
+    // { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }, -- what the heck was this?
 ];
 try {
   CLI = require("command-line-args")(CommandLineOptions);
@@ -50,6 +51,8 @@ function abort (msg, exitCode) {
 const cmds = CLI;
 if (cmds.help)
     abort("", ExitCode.help);
+if (cmds.skipCycleCheck)
+  SchemaOptions.skipCycleCheck = true;
 if (cmds.turtle.length > 0) {
   const validator = require("@shexjs/validator");
   const schema = require(/*"shexr-schema"*/ "../lib/ShExR.cjs.js");

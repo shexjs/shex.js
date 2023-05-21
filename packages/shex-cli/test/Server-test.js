@@ -45,6 +45,8 @@ const RestTests = {
       { curl: [], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
       { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1"], result: "cli/1dotOr2dot_pass_p1.val", status: 200 },
       { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true, status: 200 },
+      { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "queryMap= <x>@<http://a.example/S1>"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true, status: 200 },
+      { curl: ["-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "queryMap= {FOCUS :p2 _}@<http://a.example/S1>"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true, status: 200 },
       { curl: ["-F", "schema=@./packages/shex-cli/test/cli/1dotOr2dot.shex", "-F", "shape=http://a.example/S1", "-F", "data=@./packages/shex-cli/test/cli/p2p3.ttl", "-F", "node=x"], result: "cli/1dotOr2dot_pass_p2p3.val", resultBaseIsEndpoint: true, status: 200 },
     ]
   },

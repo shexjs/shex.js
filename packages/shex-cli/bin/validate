@@ -1159,7 +1159,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           fz = [fz];
         return acc.concat(fz.map(
           async file => {
-            const url = new URL(file.name, baseUrl);
+            const url = new URL(file.originalFilename, baseUrl);
             const text = await Fs.promises.readFile(file.filepath, "utf8");
             await mergeParm(parms, key, text, url, file.type);
             return {key, text, url, file}; // only really need file.path; rest for debugging
@@ -1173,6 +1173,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
           for (let param in ctx.request[key])
             await mergeParm(parms, param, ctx.request[key][param], baseUrl, null);
 
+        // Default to serverLoaded (data loaded with server).
         (['schema', 'data']).forEach(
           key => {
             if (parms[key + "Meta"].length === 0) {
@@ -1185,15 +1186,34 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             }
           });
 
-        (['node', 'shape']).forEach( // "regex-module"
-          key => {
-            if (!parms[key]) {
-              if (key in serverParms)
-                parms[key] = serverParms[key];
-              else
-                throw makeError(`No ${key} specified.`, 400);
+        if (parms['queryMap']) { // if we loaded a queryMap
+          try {
+            // try parsing as JSON
+            parms.queryMap = ShExUtil.absolutizeShapeMap(JSON.parse(parms['queryMap']),
+                                                            baseUrl.href);
+          } catch (e) {
+            // try parsing as ShapeMap string
+            const schemaMeta = parms.schemaMeta.length > 0
+                  ? parms.schemaMeta[0]
+                  : { base: baseUrl.href, prefixes: {} };
+            const dataMeta = parms.dataMeta.length > 0
+                  ? parms.dataMeta[0]
+                  : { base: baseUrl.href, prefixes: {} };
+            parms.queryMap = ShapeMap.Parser.construct(baseUrl.href, schemaMeta, dataMeta)
+              .parse(parms['queryMap']);
+          }
+        } else { // else look for node and shape
+          (['node', 'shape']).forEach(
+            key => {
+              if (!parms[key]) {
+                if (key in serverParms)
+                  parms[key] = serverParms[key];
+                else
+                  throw makeError(`No ${key} specified.`, 400);
+              }
             }
-          })
+          )
+        }
 
         let options = serverOptions;
         if ("regex-module" in parms)
@@ -1201,6 +1221,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
             regexModule: require(REGEX_MODULES + parms["regex-module"])
           });
 
+        // Wrap in RdfJsDb for neighborhood-api.
         if (!("getNeighborhood" in parms.data)) // !! clean up db chaos
           parms.data = RdfJsDb(parms.data);
         let result = findNodesAndValidate(parms, parms, options, parms.schema.start);
