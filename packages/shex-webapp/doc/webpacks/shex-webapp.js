@@ -23625,7 +23625,10 @@ const ShExLoaderCjsModule = function (config = {}) {
       loadSchemaImports(schema, importers.concat([url]), resourceLoadControler, schemaOptions)
       return Promise.resolve({mediaType, url, importers, schema})
     } catch (e) {
-      e.message = "error parsing ShEx " + url + ": " + e.message
+      const locStr = e.location
+            ? `(${e.location.first_line}:${e.location.first_column})`
+            : ''
+      e.message = "error parsing ShEx " + url + locStr + ": " + e.message
       return Promise.reject(e)
     }
   }
@@ -26051,7 +26054,7 @@ const ShExUtil = {
     return schema;
   },
 
-  AStoShExJ: function (schema, abbreviate) {
+  AStoShExJ: function (schema) {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete schema["_index"];
     delete schema["_prefixes"];

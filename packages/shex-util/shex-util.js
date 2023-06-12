@@ -251,7 +251,7 @@ const ShExUtil = {
     return schema;
   },
 
-  AStoShExJ: function (schema, abbreviate) {
+  AStoShExJ: function (schema) {
     schema["@context"] = schema["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete schema["_index"];
     delete schema["_prefixes"];

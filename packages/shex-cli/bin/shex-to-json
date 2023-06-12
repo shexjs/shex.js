@@ -22,7 +22,7 @@ const CommandLineOptions = [
     { name: "json",  alias: "j", type: String, multiple:  true, defaultValue:   [] },
     { name: "turtle",alias: "t", type: String, multiple:  true, defaultValue:   [] },
     { name: "skipCycleCheck",    type: Boolean, description: "don't look for cycles in schema" },
-    // { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }, -- what the heck was this?
+    { name: "abbreviate", alias: "a", type: Boolean, multiple:  false, defaultValue:   false }, // -- what the heck was this?
 ];
 try {
   CLI = require("command-line-args")(CommandLineOptions);
@@ -64,7 +64,7 @@ if (cmds.turtle.length > 0) {
 
 
 ShExNode.load({shexc: cmds.shex, json: cmds.json, turtle: cmds.turtle}, null, SchemaOptions).then(function (loaded) {
-  console.log('%s', JSON.stringify(ShExUtil.AStoShExJ(loaded.schema, cmds.abbreviate), null, '  '));
+  console.log('%s', JSON.stringify(ShExUtil.AStoShExJ(loaded.schema), null, '  '));
   return ExitCode.json_pass
 }, function (e) {
   let exitCode;
