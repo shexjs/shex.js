@@ -16830,39 +16830,39 @@ __webpack_require__.r(__webpack_exports__);
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  "BlankNode": () => (/* reexport */ BlankNode),
-  "DataFactory": () => (/* reexport */ N3DataFactory),
-  "DefaultGraph": () => (/* reexport */ DefaultGraph),
-  "Lexer": () => (/* reexport */ N3Lexer),
-  "Literal": () => (/* reexport */ Literal),
-  "NamedNode": () => (/* reexport */ NamedNode),
-  "Parser": () => (/* reexport */ N3Parser),
-  "Quad": () => (/* reexport */ Quad),
-  "Store": () => (/* reexport */ N3Store),
-  "StreamParser": () => (/* reexport */ N3StreamParser),
-  "StreamWriter": () => (/* reexport */ N3StreamWriter),
-  "Term": () => (/* reexport */ Term),
-  "Triple": () => (/* reexport */ Quad),
-  "Util": () => (/* reexport */ N3Util_namespaceObject),
-  "Variable": () => (/* reexport */ Variable),
-  "Writer": () => (/* reexport */ N3Writer),
+  BlankNode: () => (/* reexport */ BlankNode),
+  DataFactory: () => (/* reexport */ N3DataFactory),
+  DefaultGraph: () => (/* reexport */ DefaultGraph),
+  Lexer: () => (/* reexport */ N3Lexer),
+  Literal: () => (/* reexport */ Literal),
+  NamedNode: () => (/* reexport */ NamedNode),
+  Parser: () => (/* reexport */ N3Parser),
+  Quad: () => (/* reexport */ Quad),
+  Store: () => (/* reexport */ N3Store),
+  StreamParser: () => (/* reexport */ N3StreamParser),
+  StreamWriter: () => (/* reexport */ N3StreamWriter),
+  Term: () => (/* reexport */ Term),
+  Triple: () => (/* reexport */ Quad),
+  Util: () => (/* reexport */ N3Util_namespaceObject),
+  Variable: () => (/* reexport */ Variable),
+  Writer: () => (/* reexport */ N3Writer),
   "default": () => (/* binding */ src),
-  "termFromId": () => (/* reexport */ termFromId),
-  "termToId": () => (/* reexport */ termToId)
+  termFromId: () => (/* reexport */ termFromId),
+  termToId: () => (/* reexport */ termToId)
 });
 
 // NAMESPACE OBJECT: ../../node_modules/n3/src/N3Util.js
 var N3Util_namespaceObject = {};
 __webpack_require__.r(N3Util_namespaceObject);
 __webpack_require__.d(N3Util_namespaceObject, {
-  "inDefaultGraph": () => (inDefaultGraph),
-  "isBlankNode": () => (isBlankNode),
-  "isDefaultGraph": () => (isDefaultGraph),
-  "isLiteral": () => (isLiteral),
-  "isNamedNode": () => (isNamedNode),
-  "isVariable": () => (isVariable),
-  "prefix": () => (prefix),
-  "prefixes": () => (prefixes)
+  inDefaultGraph: () => (inDefaultGraph),
+  isBlankNode: () => (isBlankNode),
+  isDefaultGraph: () => (isDefaultGraph),
+  isLiteral: () => (isLiteral),
+  isNamedNode: () => (isNamedNode),
+  isVariable: () => (isVariable),
+  prefix: () => (prefix),
+  prefixes: () => (prefixes)
 });
 
 ;// CONCATENATED MODULE: ../../node_modules/n3/src/IRIs.js
@@ -17948,7 +17948,7 @@ class N3Parser {
       this._inversePredicate = false;
       // In N3, blank nodes are scoped to a formula
       // (using a dot as separator, as a blank node label cannot start with it)
-      this._prefixes._ = (this._graph ? `${this._graph.id.substr(2)}.` : '.');
+      this._prefixes._ = (this._graph ? `${this._graph.value}.` : '.');
       // Quantifiers are scoped to a formula
       this._quantified = Object.create(this._quantified);
     }
