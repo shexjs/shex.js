@@ -30,7 +30,7 @@
     "chai": "^4.2.0",
     "coveralls": "^3.1.0",
     "cross-spawn": "^7.0.3",
-    "css-loader": "^6.7.4",
+    "css-loader": "^6.8.1",
     "eslint": "^8.43.0",
     "file-loader": "^6.2.0",
     "jsdom": "^22.1.0",
