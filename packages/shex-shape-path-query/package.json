@@ -28,7 +28,7 @@
     "shape-path-core": "^0.0.5"
   },
   "devDependencies": {
-    "sinon": "^15.1.0"
+    "sinon": "^15.2.0"
   },
   "scripts": {
     "test": "mocha -C -R dot",
