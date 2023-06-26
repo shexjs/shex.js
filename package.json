@@ -46,7 +46,7 @@
     "terser-webpack-plugin": "^5.3.9",
     "timeout-promise-queue": "^0.9.2",
     "webpack": "^5.88.0",
-    "webpack-bundle-analyzer": "^4.8.0",
+    "webpack-bundle-analyzer": "^4.9.0",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
