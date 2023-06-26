@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@shexjs/loader": "^1.0.0-alpha.26",
-    "glob": "^10.2.7"
+    "glob": "^10.3.0"
   },
   "scripts": {
     "test": "cd ../.. && npm run test"
