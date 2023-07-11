@@ -3,7 +3,7 @@
 const NeighborhoodSparqlModule = (function () {
   const ShExTerm = require("@shexjs/term");
   const ShExUtil = require("@shexjs/util");
-  const {Visitor: ShExVisitor} = require("@shexjs/visitor");
+  const {ShExVisitor} = require("@shexjs/visitor");
   const RdfJs = require("n3"); // TODO: set global externally
 
   function sparqlDB (endpoint, queryTracker, options = {}) {
@@ -36,23 +36,28 @@ const NeighborhoodSparqlModule = (function () {
     }
 
     function getTripleConstraints (tripleExpr) {
-      const visitor = ShExVisitor();
-      const ret = {
-        out: [],
-        inc: []
-      };
-      visitor.visitTripleConstraint = function (expr) {
-        ret[expr.inverse ? "inc" : "out"].push(expr);
-        return expr;
-      };
+      class MyVisitor extends ShExVisitor {
+        constructor () {
+          super();
+          this.ret = {
+            out: [],
+            inc: []
+          };
+        }
+        visitTripleConstraint (expr) {
+          this.ret[expr.inverse ? "inc" : "out"].push(expr);
+          return expr;
+        };
 
-      visitor.visitInclusion = function (inclusion) {
-        return visitor.visitExpression(schemaIndex.tripleExprs[inclusion]);
+        visitInclusion (inclusion) {
+          return this.visitExpression(schemaIndex.tripleExprs[inclusion]);
+        }
       }
+      const visitor = new MyVisitor();
 
       if (tripleExpr)
         visitor.visitExpression(tripleExpr);
-      return ret;
+      return visitor.ret;
     }
 
     function getNeighborhood (point, shapeLabel, shape) {

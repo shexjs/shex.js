@@ -5,6 +5,7 @@ const TESTS = "TESTS" in process.env ? process.env.TESTS : null;
 const EARL = "EARL" in process.env;
 
 const ShExUtil = require("@shexjs/util");
+const {ShExIndexVisitor} = require("@shexjs/visitor");
 const ShExTerm = require("@shexjs/term");
 const ShExParser = require("@shexjs/parser");
 const ShapeMapParser = require("shape-map").Parser;
@@ -207,7 +208,7 @@ describe("A ShEx validator", function () {
               }, {});
           }
           if (shapeExternsFile) {
-            shapeExterns = ShExUtil.index(shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8"), shapeExternsURL, {}, shapeExternsFile)).shapeExprs;
+            shapeExterns = ShExIndexVisitor.index(shexParser.parse(fs.readFileSync(shapeExternsFile, "utf8"), shapeExternsURL, {}, shapeExternsFile)).shapeExprs;
           }
           let validator;
           const schemaOptions = Object.assign({

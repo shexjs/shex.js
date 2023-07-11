@@ -5,7 +5,6 @@ import * as ShExJ from 'shexj';
 export {};
 
 export function version(): any;
-export function Visitor(...args: any[]): any;
 export function index(schema: any): Index;
 export function getAST(schema: any): any;
 export function ShExJtoAS(schema: any): any;

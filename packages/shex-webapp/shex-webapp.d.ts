@@ -200,7 +200,7 @@ export namespace Util {
 
     function ShExRtoShExJ(schema: any): any;
 
-    function Visitor(...args: any[]): any;
+    function ShExVisitor(...args: any[]): any;
 
     function absolutizeResults(parsed: any, base: any): any;
 

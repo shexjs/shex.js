@@ -1,5 +1,5 @@
 import * as ShExJ from 'shexj';
-import {SchemaIndex} from "@shexjs/term";
+import {SchemaIndex} from '@shexjs/term';
 import {
     Annotation,
     BNODE,
@@ -107,5 +107,11 @@ export class ShExVisitorIface {
     _expect(o: any, p: any, v: any, ...args: any[]): void;
      */
 }
-export function index (schema: ShExJ.Schema): SchemaIndex
-export function Visitor (... x: any): ShExVisitorIface
+// export function index (schema: ShExJ.Schema): SchemaIndex
+export function ShExVisitor (... x: any): ShExVisitorIface
+
+export class ShExIndexVisitor extends ShExVisitor {
+    static index(schema: any, ...args: any[]): SchemaIndex;
+    constructor();
+    myIndex: SchemaIndex;
+}

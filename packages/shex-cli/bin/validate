@@ -41,6 +41,7 @@ const Path = require("path");
 const Util = require("util");
 const JsYaml = require('js-yaml');
 const ShExUtil = require("@shexjs/util");
+const {ShExIndexVisitor} = require("@shexjs/visitor");
 const {StoreDuplicates, yyllocToString, Merger: ShExMerger} = require("@shexjs/util/lib/Merger");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const { ctor: SparqlDb } = require('@shexjs/neighborhood-sparql');
@@ -182,7 +183,7 @@ class TermError extends Error {  }
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
  */
 function findNodesAndValidate (loaded, parms, options, schemaStart) {
-  let shapeIndex = loaded.schema._shapes || ShExUtil.index(loaded.schema)
+  let shapeIndex = loaded.schema._shapes || ShExIndexVisitor.index(loaded.schema)
   function knownShape (label) {
     return label in shapeIndex.shapeExprs;
   }
@@ -487,7 +488,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
 
     if (valParms.serve) {
       if (valParms.shape) {
-        const index = ShExUtil.index(schemaAndData.schema);
+        const index = ShExIndexVisitor.index(schemaAndData.schema);
         function knownShape (label) {
           return label in index.shapeExprs;
         }

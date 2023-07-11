@@ -1,4 +1,5 @@
 const ShExUtil = require('../shex-util');
+const {ShExIndexVisitor} = require('@shexjs/visitor');
 
 /**
  *
@@ -151,7 +152,7 @@ class Merger {
       if (!("start" in this.left) || this.overwrite('start', this.ret.start, this.right.start, undefined, undefined, this.leftMeta, this.rightMeta))
         this.ret.start = this.right.start;
 
-    const lindex = this.left._index || ShExUtil.index(this.left);
+    const lindex = this.left._index || ShExIndexVisitor.index(this.left);
 
     // shapes
     if (!this.inPlace)
@@ -180,7 +181,7 @@ class Merger {
     });
 
     if (this.left._index || this.right._index)
-      this.ret._index = ShExUtil.index(this.ret); // inefficient; could build above
+      this.ret._index = ShExIndexVisitor.index(this.ret); // inefficient; could build above
 
     return this.ret;
   }

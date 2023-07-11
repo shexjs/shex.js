@@ -231,7 +231,7 @@ class ShExValidator {
      *   diagnose(false): boolean: make validate return a structure with errors.
      */
     constructor(schema, db, options = {}) {
-        const index = schema._index || (0, visitor_1.index)(schema);
+        const index = schema._index || visitor_1.ShExIndexVisitor.index(schema);
         if (index.labelToTcs === undefined) // make sure there's a labelToTcs in the index
             index.labelToTcs = {};
         this.index = index;
@@ -386,14 +386,14 @@ class ShExValidator {
             };
         }
         return ret;
-        // @TODO move to Visitor.index
+        // @TODO move to ShExIndexVisitor.index
         function indexExtensions(schema) {
             const abstractness = {};
             const extensions = Hierarchy.create();
             makeSchemaVisitor().visitSchema(schema);
             return extensions.children;
             function makeSchemaVisitor() {
-                const schemaVisitor = (0, visitor_1.Visitor)();
+                const schemaVisitor = new visitor_1.ShExVisitor();
                 let curLabel;
                 let curAbstract;
                 const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
@@ -406,7 +406,7 @@ class ShExValidator {
                 schemaVisitor.visitShape = function (shape) {
                     if (shape.extends !== undefined) {
                         shape.extends.forEach(ext => {
-                            const extendsVisitor = (0, visitor_1.Visitor)();
+                            const extendsVisitor = new visitor_1.ShExVisitor();
                             extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
                             extendsVisitor.visitShapeRef = function (reference, ..._args) {
                                 extensions.add(reference, curLabel);
@@ -710,7 +710,7 @@ class ShExValidator {
      */
     TripleConstraintsVisitor(labelToTcs) {
         const _ShExValidator = this;
-        const visitor = (0, visitor_1.Visitor)(labelToTcs);
+        const visitor = new visitor_1.ShExVisitor(labelToTcs);
         function emptyShapeExpr() { return []; }
         visitor.visitShapeDecl = function (decl, _min, _max) {
             // if (labelToTcs.has(decl.id)) !! uncomment cache for production
@@ -1197,7 +1197,9 @@ function _seq(n) {
 function runtimeError(...args) {
     const errorStr = args.join("");
     const e = new Error(errorStr);
-    Error.captureStackTrace(e, runtimeError);
+    if ("captureStackTrace" in Error) {
+        Error.captureStackTrace(e, runtimeError);
+    }
     throw e;
 }
 //# sourceMappingURL=shex-validator.js.map

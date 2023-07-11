@@ -2,7 +2,7 @@
 
 const ShExUtilCjsModule = (function () {
 const ShExTerm = require("@shexjs/term");
-const {Visitor, index} = require('@shexjs/visitor')
+const {ShExVisitor, ShExIndexVisitor} = require('@shexjs/visitor')
 const Hierarchy = require('hierarchy-closure')
 const ShExHumanErrorWriter = require('./shex-human-error-writer.js')
 
@@ -85,10 +85,6 @@ const ShExUtil = {
   version: function () {
     return "0.5.0";
   },
-
-  Visitor: Visitor,
-  index: index,
-
 
   /* getAST - compile a traditional regular expression abstract syntax tree.
    * Tested but not used at present.
@@ -247,7 +243,7 @@ const ShExUtil = {
     //   console.log("Updated 2.1 -> 2.2: " + updated2_1to2_2.map(decl => decl.id).join(", "));
     schema._prefixes = schema._prefixes || {  };
     // schema._base = schema._prefixes || ""; // leave undefined to signal no provided base
-    schema._index = this.index(schema);
+    schema._index = ShExIndexVisitor.index(schema);
     return schema;
   },
 
@@ -259,57 +255,6 @@ const ShExUtil = {
     delete schema["_locations"];
     delete schema["_sourceMap"];
     return schema;
-  },
-
-  ShExRVisitor: function (knownShapeExprs) {
-    const v = ShExUtil.Visitor();
-    const knownTripleExpressions = {};
-    const oldVisitShapeExpr = v.visitShapeExpr,
-        oldVisitValueExpr = v.visitValueExpr,
-        oldVisitTripleExpr = v.visitTripleExpr;
-    v.keepShapeExpr = oldVisitShapeExpr;
-
-    v.visitShapeExpr = function (expr, ...args) {
-      if (typeof expr === "string")
-        return expr;
-      if ("id" in expr) {
-        if (knownShapeExprs.has(expr.id) || Object.keys(expr).length === 1) {
-          const already = knownShapeExprs.get(expr.id);
-          if (typeof expr.expression === "object") {
-            if (!already)
-              knownShapeExprs.set(expr.id, oldVisitShapeExpr.call(this, expr, label));
-          }
-          return expr.id;
-        }
-        delete expr.id;
-      }
-      return oldVisitShapeExpr.call(this, expr, ...args);
-    };
-
-    v.visitTripleExpr = function (expr, ...args) {
-      if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1 and ../doc/TODO.md
-        return expr;
-      } else if ("id" in expr) {
-        if (expr.id in knownTripleExpressions) {
-          knownTripleExpressions[expr.id].refCount++;
-          return expr.id;
-        }
-      }
-      const ret = oldVisitTripleExpr.call(this, expr, ...args);
-      // Everything from RDF has an ID, usually a BNode.
-      knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
-      return ret;
-    }
-
-    v.cleanIds = function () {
-      for (let k in knownTripleExpressions) {
-        const known = knownTripleExpressions[k];
-        if (known.refCount === 1 && known.expr.id.startsWith("_:"))
-          delete known.expr.id;
-      };
-    }
-
-    return v;
   },
 
   // tests
@@ -340,8 +285,56 @@ const ShExUtil = {
     if ("shapes" in schema)
       schema.shapes.forEach(sh => knownShapeExprs.set(sh.id, null))
 
+    class ShExRVisitor extends ShExVisitor {
+      constructor (knownShapeExprs) {
+        super()
+        this.knownShapeExprs = knownShapeExprs;
+        this.knownTripleExpressions = {};
+      }
+
+      visitShapeExpr (expr, ...args) {
+        if (typeof expr === "string")
+          return expr;
+        if ("id" in expr) {
+          if (this.knownShapeExprs.has(expr.id) || Object.keys(expr).length === 1) {
+            const already = this.knownShapeExprs.get(expr.id);
+            if (typeof expr.expression === "object") {
+              if (!already)
+                this.knownShapeExprs.set(expr.id, super.visitShapeExpr(expr, label));
+            }
+            return expr.id;
+          }
+          delete expr.id;
+        }
+        return super.visitShapeExpr(expr, ...args);
+      };
+
+      visitTripleExpr (expr, ...args) {
+        if (typeof expr === "string") { // shortcut for recursive references e.g. 1Include1
+          return expr;
+        } else if ("id" in expr) {
+          if (expr.id in this.knownTripleExpressions) {
+            this.knownTripleExpressions[expr.id].refCount++;
+            return expr.id;
+          }
+        }
+        const ret = super.visitTripleExpr(expr, ...args);
+        // Everything from RDF has an ID, usually a BNode.
+        this.knownTripleExpressions[expr.id] = { refCount: 1, expr: ret };
+        return ret;
+      }
+
+      cleanIds () {
+        for (let k in this.knownTripleExpressions) {
+          const known = this.knownTripleExpressions[k];
+          if (known.refCount === 1 && known.expr.id.startsWith("_:"))
+            delete known.expr.id;
+        };
+      }
+    }
+
     // normalize references to those shapeExprs
-    const v = this.ShExRVisitor(knownShapeExprs);
+    const v = new ShExRVisitor(knownShapeExprs);
     if ("start" in schema)
       schema.start = v.visitShapeExpr(schema.start);
     if ("shapes" in schema)
@@ -387,37 +380,48 @@ const ShExUtil = {
     ret["@context"] = ret["@context"] || "http://www.w3.org/ns/shex.jsonld";
     delete ret._prefixes;
     delete ret._base;
-    let index = ret._index || this.index(schema);
+    let index = ret._index || ShExIndexVisitor.index(schema);
     delete ret._index;
     let sourceMap = ret._sourceMap;
     delete ret._sourceMap;
     let locations = ret._locations;
     delete ret._locations;
     // Don't delete ret.productions as it's part of the AS.
-    const v = ShExUtil.Visitor();
-    const knownExpressions = [];
-    const oldVisitInclusion = v.visitInclusion, oldVisitTripleExpr = v.visitTripleExpr, oldVisitExtra = v.visitExtra;
-    v.visitInclusion = function (inclusion) {
-      if (knownExpressions.indexOf(inclusion) === -1 &&
-          inclusion in index.tripleExprs) {
-        knownExpressions.push(inclusion)
-        return oldVisitTripleExpr.call(v, index.tripleExprs[inclusion]);
+
+    class MyVisitor extends ShExVisitor {
+      constructor(index) {
+        super();
+        this.index = index;
+        this.knownExpressions = [];
       }
-      return oldVisitInclusion.call(v, inclusion);
-    };
-    v.visitTripleExpr = function (expression) {
-      if (typeof expression === "object" && "id" in expression) {
-        if (knownExpressions.indexOf(expression.id) === -1) {
-          knownExpressions.push(expression.id)
-          return oldVisitTripleExpr.call(v, index.tripleExprs[expression.id]);
+
+      visitInclusion (inclusion) {
+        if (this.knownExpressions.indexOf(inclusion) === -1 &&
+            inclusion in this.index.tripleExprs) {
+          this.knownExpressions.push(inclusion)
+          return super.visitTripleExpr(this.index.tripleExprs[inclusion]);
         }
-        return expression.id; // Inclusion
+        return super.visitInclusion(inclusion);
       }
-      return oldVisitTripleExpr.call(v, expression);
-    };
-    v.visitExtra = function (l) {
-      return l.slice().sort();
+
+      visitTripleExpr (expression) {
+        if (typeof expression === "object" && "id" in expression) {
+          if (this.knownExpressions.indexOf(expression.id) === -1) {
+            this.knownExpressions.push(expression.id)
+            return super.visitTripleExpr(this.index.tripleExprs[expression.id]);
+          }
+          return expression.id; // Inclusion
+        }
+        return super.visitTripleExpr(expression);
+      }
+
+      visitExtra (l) {
+        return l.slice().sort();
+        return ret;
+      }
     }
+
+    v = new MyVisitor(index);
     if (trimIRI) {
       v.visitIRI = function (i) {
         return i.replace(trimIRI, "");
@@ -511,7 +515,7 @@ const ShExUtil = {
    */
   nestShapes: function (schema, options = {}) {
     const _ShExUtil = this;
-    const index = schema._index || this.index(schema);
+    const index = schema._index || ShExIndexVisitor.index(schema);
     if (!('no' in options)) { options.no = false }
 
     let shapeLabels = Object.keys(index.shapeExprs || [])
@@ -578,7 +582,7 @@ const ShExUtil = {
           nestables[newName].was = oldName
           delete nestables[oldName]
 
-          // @@ maybe update index when done? 
+          // @@ maybe update index when done?
           index.shapeExprs[newName] = index.shapeExprs[oldName]
           delete index.shapeExprs[oldName]
 
@@ -795,7 +799,7 @@ const ShExUtil = {
         } else
           throw Error("expected Shape{And,Or,Ref,External} or NodeConstraint in " + JSON.stringify(shapeExpr));
       }
-      
+
       function _walkShape (shape, negated) {
         function _walkTripleExpression (tripleExpr, negated) {
           function _exprGroup (exprs, negated) {
@@ -849,7 +853,7 @@ const ShExUtil = {
    *        map(shapeLabel -> [shapeLabel])
    */
   partition: function (schema, includes, deps, cantFind) {
-    const inputIndex = schema._index || this.index(schema)
+    const inputIndex = schema._index || ShExIndexVisitor.index(schema)
     const outputIndex = { shapeExprs: new Map(), tripleExprs: new Map() };
     includes = includes instanceof Array ? includes : [includes];
 
@@ -899,7 +903,7 @@ const ShExUtil = {
    * @schema: input schema
    */
   flatten: function (schema, deps, cantFind) {
-    const v = this.Visitor();
+    const v = new ShExVisitor();
     return v.visitSchema(schema);
   },
 
@@ -975,7 +979,7 @@ const ShExUtil = {
       } else if (solns.type === "ExtendedResults") {
         _dive1(solns.extensions);
         if ("local" in solns)
-          _dive1(solns.local);        
+          _dive1(solns.local);
       } else if (["ShapeNotResults", "Recursion"].indexOf(solns.type) !== -1) {
       } else {
         throw Error("unexpected expr type "+solns.type+" in " + JSON.stringify(solns));
@@ -989,93 +993,110 @@ const ShExUtil = {
   MissingDeclRefError,
   MissingTripleExprRefError,
 
+  HierarchyVisitor: function (schemaP, optionsP, negativeDepsP, positiveDepsP) {
+
+    const visitor = new SchemaStructureValidator(schemaP, optionsP, negativeDepsP, positiveDepsP);
+    return visitor;
+  },
+
   validateSchema: function (schema, options) { // obselete, but may need other validations in the future.
-    const _ShExUtil = this;
-    const visitor = this.Visitor();
-    let currentLabel = currentExtra = null;
-    let currentNegated = false;
-    const dependsOn = { };
-    let inTE = false;
-    const oldVisitShape = visitor.visitShape;
-    const negativeDeps = Hierarchy.create();
-    const positiveDeps = Hierarchy.create();
-    let index = schema.index || this.index(schema);
 
-    visitor.visitShape = function (shape, ...args) {
-      const lastExtra = currentExtra;
-      currentExtra = shape.extra;
-      const ret = oldVisitShape.call(visitor, shape, ...args);
-      currentExtra = lastExtra;
-      return ret;
-    }
+    // Stand-alone class but left in function scope to minimize symbol space
+    class SchemaStructureValidator extends ShExVisitor {
+      constructor (schema, options, negativeDeps, positiveDeps) {
+        super();
+        this.schema = schema;
+        this.options = options;
+        this.negativeDeps = negativeDeps;
+        this.positiveDeps = positiveDeps;
 
-    const oldVisitShapeNot = visitor.visitShapeNot;
-    visitor.visitShapeNot = function (shapeNot, ...args) {
-      const lastNegated = currentNegated;
-      currentNegated ^= true;
-      const ret = oldVisitShapeNot.call(visitor, shapeNot, ...args);
-      currentNegated = lastNegated;
-      return ret;
-    }
-
-    const oldVisitTripleConstraint = visitor.visitTripleConstraint;
-    visitor.visitTripleConstraint = function (expr, ...args) {
-      const lastNegated = currentNegated;
-      if (currentExtra && currentExtra.indexOf(expr.predicate) !== -1)
-        currentNegated ^= true;
-      inTE = true;
-      const ret = oldVisitTripleConstraint.call(visitor, expr, ...args);
-      inTE = false;
-      currentNegated = lastNegated;
-      return ret;
-    };
-
-    const oldVisitShapeRef = visitor.visitShapeRef;
-    visitor.visitShapeRef = function (shapeRef, ...args) {
-      if (!(shapeRef in index.shapeExprs)) {
-        const error = firstError(new MissingDeclRefError(shapeRef, Object.keys(index.shapeExprs)), shapeRef);
-        if (options.missingReferent) {
-          options.missingReferent(error, (schema._locations || {})[currentLabel]);
-        } else {
-          throw error;
-        }
+        this.currentLabel = null;
+        this.currentExtra = null;
+        this.currentNegated = false;
+        this.inTE = false;
+        this.index = schema.index || ShExIndexVisitor.index(schema);
       }
-      if (!inTE && shapeRef === currentLabel)
-        throw firstError(Error("Structural error: circular reference to " + currentLabel + "."), shapeRef);
-      if (!options.skipCycleCheck)
-      (currentNegated ? negativeDeps : positiveDeps).add(currentLabel, shapeRef)
-      return oldVisitShapeRef.call(visitor, shapeRef, ...args);
+
+      visitShape (shape, ...args) {
+        const lastExtra = this.currentExtra;
+        this.currentExtra = shape.extra;
+        const ret = super.visitShape(shape, ...args);
+        this.currentExtra = lastExtra;
+        return ret;
+      };
+
+      visitShapeNot (shapeNot, ...args) {
+        const lastNegated = this.currentNegated;
+        this.currentNegated ^= true;
+        const ret = super.visitShapeNot(shapeNot, ...args);
+        this.currentNegated = lastNegated;
+        return ret;
+      };
+
+      visitTripleConstraint (expr, ...args) {
+        const lastNegated = this.currentNegated;
+        if (this.currentExtra && this.currentExtra.indexOf(expr.predicate) !== -1)
+          this.currentNegated ^= true;
+        this.inTE = true;
+        const ret = super.visitTripleConstraint(expr, ...args);
+        this.inTE = false;
+        this.currentNegated = lastNegated;
+        return ret;
+      };
+
+      visitShapeRef (shapeRef, ...args) {
+        if (!(shapeRef in this.index.shapeExprs)) {
+          const error = this.firstError(new MissingDeclRefError(shapeRef, Object.keys(this.index.shapeExprs)), shapeRef);
+          if (this.options.missingReferent) {
+            this.options.missingReferent(error, (this.schema._locations || {})[this.currentLabel]);
+          } else {
+            throw error;
+          }
+        }
+        if (!this.inTE && shapeRef === this.currentLabel)
+          throw this.firstError(Error("Structural error: circular reference to " + this.currentLabel + "."), shapeRef);
+        if (!this.options.skipCycleCheck)
+          (this.currentNegated ? this.negativeDeps : this.positiveDeps).add(this.currentLabel, shapeRef);
+        return super.visitShapeRef(shapeRef, ...args);
+      };
+
+      visitInclusion (inclusion, ...args) {
+        let refd;
+        if (!(refd = this.index.tripleExprs[inclusion]))
+          throw this.firstError(new MissingTripleExprRefError(inclusion, Object.keys(this.index.tripleExprs)), inclusion);
+        // if (refd.type !== "Shape")
+        //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
+        return super.visitInclusion(inclusion, ...args);
+      };
+
+      firstError(e, obj) {
+        if ("_sourceMap" in this.schema)
+          e.location = (this.schema._sourceMap.get(obj) || [undefined])[0];
+        return e;
+      }
+
+      static validate (schema, options) {
+        const negativeDeps = Hierarchy.create();
+        const positiveDeps = Hierarchy.create();
+        const visitor = new SchemaStructureValidator(schema, options, negativeDeps, positiveDeps);
+
+        (schema.shapes || []).forEach(function (shape) {
+          visitor.currentLabel = shape.id;
+          visitor.visitShapeDecl(shape, shape.id);
+          visitor.currentLabel = null;
+        });
+        let circs = Object.keys(negativeDeps.children).filter(
+          k => negativeDeps.children[k].filter(
+            k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
+              || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
+          ).length > 0
+        );
+        if (circs.length)
+          throw visitor.firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
+      }
     }
 
-    const oldVisitInclusion = visitor.visitInclusion;
-    visitor.visitInclusion = function (inclusion, ...args) {
-      let refd;
-      if (!(refd = index.tripleExprs[inclusion]))
-        throw firstError(new MissingTripleExprRefError(inclusion, Object.keys(index.tripleExprs)), inclusion);
-      // if (refd.type !== "Shape")
-      //   throw Error("Structural error: " + inclusion + " is not a simple shape.");
-      return oldVisitInclusion.call(visitor, inclusion, ...args);
-    };
-
-    (schema.shapes || []).forEach(function (shape) {
-      currentLabel = shape.id;
-      visitor.visitShapeDecl(shape, shape.id);
-      currentLabel = null;
-    });
-    let circs = Object.keys(negativeDeps.children).filter(
-      k => negativeDeps.children[k].filter(
-        k2 => k2 in negativeDeps.children && negativeDeps.children[k2].indexOf(k) !== -1
-          || k2 in positiveDeps.children && positiveDeps.children[k2].indexOf(k) !== -1
-      ).length > 0
-    );
-    if (circs.length)
-      throw firstError(Error("Structural error: circular negative dependencies on " + circs.join(',') + "."), circs[0]);
-
-    function firstError (e, obj) {
-      if ("_sourceMap" in schema)
-        e.location = (schema._sourceMap.get(obj) || [undefined])[0];
-      return e;
-    }
+    SchemaStructureValidator.validate(schema, options);
   },
 
   /** isWellDefined: assert that schema is well-defined.

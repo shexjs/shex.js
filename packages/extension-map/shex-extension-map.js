@@ -11,6 +11,8 @@ const ShExMapCjsModule = function (config) {
 
 const ShExTerm = require("@shexjs/term");
 const extensions = require("./lib/extensions");
+const {ShExVisitor} = require("@shexjs/visitor");
+const ShExUtil = require("@shexjs/util");
 const N3Util = require("n3/lib/N3Util");
 const N3DataFactory = require("n3/lib/N3DataFactory").default;
 const materializer = require("./lib/ShExMaterializer")(config);
@@ -25,6 +27,29 @@ const MAX_MAX_CARD = 50; // @@ don't repeat forever during dev experiments.
 function register (validator, api) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
+
+  class MaterializerVisitor extends ShExVisitor {
+    constructor (tc, index, curSubjectx) {
+      super();
+      this.tc = tc;
+      this.index = index;
+      this.curSubjectx = curSubjectx;
+    }
+
+    visitShapeRef (shapeRef, ...args) {
+      this.visitShapeDecl(this.index.shapeExprs[shapeRef], ...args);
+      return super.visitShapeRef(shapeRef, ...args);
+    };
+
+    visitValueRef (r, ...args) {
+      this.visitTripleExpr(schema.shapes[r], r, ...args);
+      return this._visitValue(r, ...args);
+    };
+
+    visitTripleConstraint (expr, curSubjectx, nextBNode, target, materializer, schema, bindings) {
+      this.tc(expr, curSubjectx, nextBNode, target, materializer, schema, bindings);
+    };
+  }
 
   const prefixes = "_prefixes" in validator.schema ?
       validator.schema._prefixes :
@@ -155,14 +180,14 @@ function visitTripleConstraint (expr, curSubjectx, nextBNode, target, visitor, s
           }
           visitor._maybeSet(expr, { type: "TripleConstraint" }, "TripleConstraint",
                          ["inverse", "negated", "predicate", "valueExpr",
-                          "min", "max", "annotations", "semActs"])
+                          "min", "max", "annotations", "semActs"], null, curSubjectx, nextBNode, target, visitor, schema, bindings)
           curSubjectx.cs = oldSubject;
         }
       }
 
 function trivialMaterializer (schema, nextBNode) {
   let blankNodeCount = 0;
-  const index = schema._index || api.ShExUtil.index(schema)
+  const index = schema._index || ShExUtil.index(schema);
   nextBNode = nextBNode || function () {
     return '_:b' + blankNodeCount++;
   };
@@ -185,24 +210,8 @@ function trivialMaterializer (schema, nextBNode) {
       const curSubject = createRoot || B();
       const curSubjectx = {cs: curSubject};
 
-      const v = api.ShExUtil.Visitor();
-      const oldVisitShapeRef = v.visitShapeRef;
-
-      v.visitShapeRef = function (shapeRef) {
-        this.visitShapeDecl(index.shapeExprs[shapeRef], shapeRef);
-        return oldVisitShapeRef.call(v, shapeRef);
-      };
-
-      v.visitValueRef = function (r) {
-        this.visitTripleExpr(schema.shapes[r], r);
-        return this._visitValue(r);
-      };
-
-      v.visitTripleConstraint = function (expr) {
-        visitTripleConstraint(expr, curSubjectx, nextBNode, target, this, schema, bindings);
-      };
-
-      v.visitShapeExpr(shape, "_: -start-");
+      const v = new MaterializerVisitor(visitTripleConstraint, index);
+      v.visitShapeExpr(shape, curSubjectx, nextBNode, target, v, schema, bindings);// , curSubjectx, nextBNode, target, materializer
       return target;
     }
   };

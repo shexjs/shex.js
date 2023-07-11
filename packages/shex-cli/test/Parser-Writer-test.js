@@ -9,6 +9,7 @@ const BASE = "http://a.example/application/base/";
 const Fs = require("fs");
 const ShExParser = require("@shexjs/parser");
 const ShExUtil = require("@shexjs/util");
+const {ShExVisitor} = require("@shexjs/visitor");
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
 const {ShExValidator} = require("@shexjs/validator");
 const ShExWriter = require("@shexjs/writer");
@@ -40,7 +41,7 @@ let schemas = parseJSONFile(manifestFile)["@graph"][0]["entries"];
 if (TESTS)
   schemas = schemas.filter(function (t) { return TESTS.indexOf(t.name) !== -1; });
 
-describe("A ShEx parser", function () {
+describe("Parser-Writer-test", function () {
   // const b = function () {  };
   // it("is a toy", function () {
   //   expect({a:1, b: b}).to.deep.equal({a:1, b: b});
@@ -70,7 +71,7 @@ describe("A ShEx parser", function () {
 
     it("should throw an error on schema with \"nested\": in Shape", function () {
       expectError(() => {
-        ShExUtil.Visitor().visitSchema({
+        new ShExVisitor().visitSchema({
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
@@ -84,7 +85,7 @@ describe("A ShEx parser", function () {
 
     it("should throw an error on schema with \"nested\": in ShapeNot", function () {
       expectError(() => {
-        ShExUtil.Visitor().visitSchema({
+        new ShExVisitor().visitSchema({
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
@@ -102,7 +103,7 @@ describe("A ShEx parser", function () {
 
     it("should throw an error on schema with \"nested\": in ShapeRef", function () {
       expectError(() => {
-        ShExUtil.Visitor().visitSchema({
+        new ShExVisitor().visitSchema({
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
@@ -120,7 +121,7 @@ describe("A ShEx parser", function () {
 
     it("should throw an error on schema with \"nested\": in ShapeAnd", function () {
       expectError(() => {
-        ShExUtil.Visitor().visitSchema({
+        new ShExVisitor().visitSchema({
           "type": "Schema",
           "shapes": [
             { "id": "http://ex.example/S",
@@ -204,7 +205,7 @@ describe("A ShEx parser", function () {
 
       if (!EARL) {
         it("should duplicate '" + jsonSchemaFile + "' and produce the same structure.", function () {
-          expect(ShExUtil.Visitor().visitSchema(abstractSyntax)).to.deep.equal(abstractSyntax);
+          expect(new ShExVisitor().visitSchema(abstractSyntax)).to.deep.equal(abstractSyntax);
         });
 
         it("should write '" + jsonSchemaFile + "' and parse to the same structure.", function () {
