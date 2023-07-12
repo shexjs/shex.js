@@ -168,7 +168,7 @@ class SchemaCache extends InterfaceCache {
   async getItems () {
     const obj = await this.refresh();
     const start = "start" in obj ? [START_SHAPE_LABEL] : [];
-    const rest = "shapes" in obj ? obj.shapes.map(se => this.Caches.inputSchema.meta.termToLex(se.id)) : [];
+    const rest = "shapes" in obj ? obj.shapes.map(se => this.meta.termToLex(se.id)) : [];
     return start.concat(rest);
   }
 
@@ -971,6 +971,7 @@ class ShapeMapCache extends InterfaceCache {
 
   /* context menus */
   addContextMenus (inputSelector, cache) {
+    const _ShapeMapCache = this;
     // !!! terribly stateful; only one context menu at a time!
     const DATA_HANDLE = 'runCallbackThingie'
     let terms = null, nodeLex = null, target, scrollLeft, m, addSpace = "";
@@ -997,7 +998,7 @@ class ShapeMapCache extends InterfaceCache {
           : tpToM(sm.node);
         */
 
-        m = nodeLex.match(RegExp("^"+ParseTriplePattern+"$"));
+        m = nodeLex.match(RegExp("^"+ParseTriplePattern()+"$"));
         if (m) {
           target = evt.target;
           const selStart = target.selectionStart;
@@ -1019,34 +1020,34 @@ class ShapeMapCache extends InterfaceCache {
           }, {start: 0, tz: [], match: null });
           function norm (tz) {
             return tz.map(t => {
-              return t.startsWith('!')
+              return typeof t === "string" && t.startsWith('!')
                 ? "- " + t.substr(1) + " -"
-                : this.Caches.inputData.meta.termToLex(t); // !!check
+                : _ShapeMapCache.caches.inputData.meta.termToLex(t); // !!check
             });
           }
+          const store = await _ShapeMapCache.caches.inputData.refresh();
           const queryMapKeywords = ["FOCUS", "_"];
           const getTermsFunctions = [
             () => { return queryMapKeywords.concat(norm(store.getSubjects())); },
             () => { return norm(store.getPredicates()); },
             () => { return queryMapKeywords.concat(norm(store.getObjects())); },
           ];
-          const store = await this.Caches.inputData.refresh();
           if (terms.match === null)
             return false; // prevent contextMenu from whining about an empty list
           return listToCTHash(getTermsFunctions[terms.match]())
         } else if (nodeLex && shapeLex) {
           try {
-            var smparser = ShEx.ShapeMapParser.construct(
-              this.Caches.shapeMap.meta.base, Caches.inputSchema.meta, Caches.inputData.meta);
+            var smparser = ShExWebApp.ShapeMapParser.construct(
+              _ShapeMapCache.meta.base, _ShapeMapCache.caches.inputSchema.meta, _ShapeMapCache.caches.inputData.meta);
             var sm = smparser.parse(nodeLex + '@' + shapeLex)[0];
             if (sm.node.language === EXTENSION_sparql) {
               let q = sm.node.lexical;
               let obj = {}
               obj[MENU_ITEM_materialize] = { name: MENU_ITEM_materialize };
               return {
-                items: ShExWebApp.Util.executeQuery(q, this.caches.inputData.endpoint, RdfJs.DataFactory).reduce(
+                items: ShExWebApp.Util.executeQuery(q, _ShapeMapCache.caches.inputData.endpoint, RdfJs.DataFactory).reduce(
                   (ret, row) => {
-                    let name = this.caches.inputData.lexifyFirstColumn(row);
+                    let name = _ShapeMapCache.caches.inputData.lexifyFirstColumn(row);
                     ret[name] = { name: name };
                     return ret;
                   }, obj
@@ -1054,7 +1055,7 @@ class ShapeMapCache extends InterfaceCache {
               }
             }
           } catch (e) {
-            failMessage(e, "query");
+            _ShapeMapCache.resultsWidget.failMessage(e, "query");
             return false
           }
         }
@@ -1063,7 +1064,7 @@ class ShapeMapCache extends InterfaceCache {
       try {
         return listToCTHash(await cache.getItems())
       } catch (e) {
-        this.resultsWidget.failMessage(e, cache === this.Caches.inputSchema ? "parsing schema" : "parsing data");
+        this.resultsWidget.failMessage(e, cache === _ShapeMapCache.caches.inputSchema ? "parsing schema" : "parsing data");
         let items = {};
         const failContent = "no choices found";
         items[failContent] = failContent;
@@ -1079,7 +1080,7 @@ class ShapeMapCache extends InterfaceCache {
         ? "FOCUS"
         : node === null
         ? "_"
-        : this.Caches.inputData.meta.termToLex(node);
+        : _ShapeMapCache.caches.inputData.meta.termToLex(node);
         }
         }
       */
@@ -1129,7 +1130,7 @@ class ShapeMapCache extends InterfaceCache {
     }
 
     const menuCallback = (key, options) => {
-      this.onDataLoad();
+      cache.onLoad();
       if (key === MENU_ITEM_materialize) {
         var toAdd = Object.keys(options.items).filter(k => {
           return k !== MENU_ITEM_materialize;
@@ -1139,8 +1140,8 @@ class ShapeMapCache extends InterfaceCache {
         this.addEditMapPairs(toAdd.map(
           node => {
             return {
-              node: this.Caches.inputData.meta.lexToTerm(node),
-              shape: this.Caches.inputSchema.meta.lexToTerm(shape)
+              node: _ShapeMapCache.caches.inputData.meta.lexToTerm(node),
+              shape: _ShapeMapCache.caches.inputSchema.meta.lexToTerm(shape)
             };
           }), null);
       } else if (options.items[key].ignore) { // ignore the event
