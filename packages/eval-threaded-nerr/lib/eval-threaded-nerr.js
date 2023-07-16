@@ -109,7 +109,7 @@ class EvalThreadedNErrRegexEngine {
             // const accept = null;
             const matched = [];
             const failed = [];
-            oneOf.expressions.forEach(nested => {
+            for (const nested of oneOf.expressions) {
                 const thcopy = new RegexpThread(new Map(th.avail), th.errors, th.matched //.slice() ever needed??
                 );
                 const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
@@ -128,7 +128,7 @@ class EvalThreadedNErrRegexEngine {
                 }
                 else
                     Array.prototype.push.apply(failed, sub);
-            });
+            }
             return matched.length > 0 ? matched : failed;
         }, semActHandler);
     }
@@ -264,7 +264,7 @@ class EvalThreadedNErrRegexEngine {
         if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
             const passes = [];
             const failures = [];
-            newThreads.forEach(newThread => {
+            for (const newThread of newThreads) {
                 const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread);
                 if (semActErrors.length === 0) {
                     passes.push(newThread);
@@ -273,7 +273,7 @@ class EvalThreadedNErrRegexEngine {
                     Array.prototype.push.apply(newThread.errors, semActErrors);
                     failures.push(newThread);
                 }
-            });
+            }
             newThreads = passes.length > 0 ? passes : failures;
         }
         return newThreads;

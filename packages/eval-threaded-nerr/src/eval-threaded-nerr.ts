@@ -196,12 +196,12 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
 
   matchOneOf (oneOf: ShExJ.OneOf, min: number, max: number,
               thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
-              semActHandler: SemActDispatcher) {
+              semActHandler: SemActDispatcher): RegexpThread[] {
     return EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", (th) => {
       // const accept = null;
       const matched: RegexpThread[] = [];
       const failed: RegexpThread[] = [];
-      oneOf.expressions.forEach(nested => {
+      for (const nested of oneOf.expressions) {
         const thcopy = new RegexpThread(
           new Map(th.avail),
           th.errors,
@@ -223,22 +223,24 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           });
         } else
           Array.prototype.push.apply(failed, sub);
-      });
+      }
       return matched.length > 0 ? matched : failed;
     }, semActHandler);
   }
 
   matchEachOf (expr: ShExJ.EachOf, min: number, max: number,
                thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
-               semActHandler: SemActDispatcher) {
+               semActHandler: SemActDispatcher): RegexpThread[] {
     return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
       // Iterate through nested expressions, exprThreads starts as [th].
       return expr.expressions.reduce((exprThreads, nested) => {
+
         // Iterate through current thread list composing nextThreads.
         // Consider e.g.
         // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
         // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
         return EvalThreadedNErrRegexEngine.homogenize(exprThreads.reduce<RegexpThread[]>((nextThreads, exprThread) => {
+
           const sub = this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
           // Move newThread.expression into a hierarchical solution structure.
           sub.forEach(newThread => {
@@ -263,7 +265,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   // Early return in case of insufficient matching triples
   matchTripleConstraint (constraint: ShExJ.TripleConstraint, min: number, max: number,
                          thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
-                         semActHandler: SemActDispatcher) {
+                         semActHandler: SemActDispatcher): RegexpThread[] {
     if (thread.avail.get(constraint) === undefined)
       thread.avail.set(constraint, constraintToTripleMapping.get(constraint)!.map(pair => pair.triple));
     const taken = thread.avail.get(constraint)!.splice(0, min);
@@ -283,6 +285,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       minmax.annotations = constraint.annotations;
     do {
       const passFail = taken.reduce<{ pass: TripleTestedErrors[], fail: TripleTestedErrors[] }>((acc, triple) => {
+
         const tested = {
           type: "TestedTriple",
           subject: rdfJsTerm2Ld(triple.subject),
@@ -376,7 +379,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
       const passes: RegexpThread[] = [];
       const failures: RegexpThread[] = [];
-      newThreads.forEach(newThread => {
+      for (const newThread of newThreads) {
         const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread)
         if (semActErrors.length === 0) {
           passes.push(newThread)
@@ -384,7 +387,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           Array.prototype.push.apply(newThread.errors, semActErrors);
           failures.push(newThread);
         }
-      });
+      }
       newThreads = passes.length > 0 ? passes : failures;
     }
     return newThreads;

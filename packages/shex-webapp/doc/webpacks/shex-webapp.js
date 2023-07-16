@@ -21907,7 +21907,7 @@ class EvalThreadedNErrRegexEngine {
             // const accept = null;
             const matched = [];
             const failed = [];
-            oneOf.expressions.forEach(nested => {
+            for (const nested of oneOf.expressions) {
                 const thcopy = new RegexpThread(new Map(th.avail), th.errors, th.matched //.slice() ever needed??
                 );
                 const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
@@ -21926,7 +21926,7 @@ class EvalThreadedNErrRegexEngine {
                 }
                 else
                     Array.prototype.push.apply(failed, sub);
-            });
+            }
             return matched.length > 0 ? matched : failed;
         }, semActHandler);
     }
@@ -22062,7 +22062,7 @@ class EvalThreadedNErrRegexEngine {
         if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
             const passes = [];
             const failures = [];
-            newThreads.forEach(newThread => {
+            for (const newThread of newThreads) {
                 const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread);
                 if (semActErrors.length === 0) {
                     passes.push(newThread);
@@ -22071,7 +22071,7 @@ class EvalThreadedNErrRegexEngine {
                     Array.prototype.push.apply(newThread.errors, semActErrors);
                     failures.push(newThread);
                 }
-            });
+            }
             newThreads = passes.length > 0 ? passes : failures;
         }
         return newThreads;
@@ -27949,18 +27949,18 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
-        return shapeMap.map(pair => {
+        return shapeMap.reduce((acc, pair) => {
             // let time = +new Date();
             const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
             // time = +new Date() - time;
-            return {
-                node: pair.node,
-                shape: pair.shape,
-                status: "errors" in res ? "nonconformant" : "conformant",
-                appinfo: res,
-                // elapsed: time
-            };
-        });
+            return acc.concat([{
+                    node: pair.node,
+                    shape: pair.shape,
+                    status: "errors" in res ? "nonconformant" : "conformant",
+                    appinfo: res,
+                    // elapsed: time
+                }]);
+        }, []);
     }
     /**
      * Validate a single node as a labeled shape expression or as the Start shape
@@ -28043,7 +28043,7 @@ class ShExValidator {
                 ctx.matchTarget.count++;
             return res;
         }
-        // Find all non-abstract shapeExprs extended with label. 
+        // Find all non-abstract shapeExprs extended with label.
         let candidates = [shapeLabel];
         candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
         // Uniquify list.
@@ -28531,7 +28531,7 @@ class ShExValidator {
         const _ShExValidator = this;
         const misses = [];
         const hits = [];
-        triples.forEach(function (triple) {
+        for (const triple of triples) {
             const value = constraint.inverse ? triple.subject : triple.object;
             const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
             if (constraint.valueExpr === undefined)
@@ -28547,7 +28547,7 @@ class ShExValidator {
                     misses.push(new TriplesMatchingMiss(triple, sub));
                 }
             }
-        });
+        }
         return new TriplesMatching(hits, misses);
     }
     /* validateNodeConstraint - return whether the value matches the value

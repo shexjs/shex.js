@@ -16,41 +16,53 @@ process.env._INCLUDE_DEPTH = oldDepth
 const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
 const ShapeMap = require('shape-map');
 
-const SPQuery = require('../shape-path-query');
-const N3 = require("n3");
+const SPQuery = require('../shape-path-query')
+const N3 = require("n3")
 
-
-const Base = 'file://' + __dirname;
+const Base = 'file://' + __dirname
 
 class QueryValidator {
   constructor(dataFile, shapeMap) {
-    this.dataFile = dataFile;
-    this.shapeMap = shapeMap;
-    this.graph = readTurtle(dataFile);
+    this.dataFile = dataFile
+    this.shapeMap = shapeMap
+    this.graph = readTurtle(dataFile)
   }
-  query(schema, nodeSet) {
+  async query(schema, nodeSet) {
     const db = RdfJsDb(this.graph)
     const schemaMeta = {
       base: Base,
       prefixes: {}
-    };
+    }
     const dataMeta = schemaMeta; // cheat 'cause we're not populating them
     const smap = ShapeMap.Parser.construct(Base, schemaMeta, dataMeta)
-          .parse(this.shapeMap);
+          .parse(this.shapeMap)
 
-    console.log(JSON.stringify(SPQuery.shapePathQuery(schema, nodeSet, db, smap), null, 2))
+    const queryResults = await SPQuery.shapePathQuery(schema, nodeSet, db, smap)
+    console.log(JSON.stringify(queryResults, null, 2))
   }
 }
 
-const cmd = SpGrep.cmd
-      .option('-d, --data <dataFile>', 'data file')
-      .option('-m, --shape-map <shapeMap>', 'shape map')
+let [Accept, Reject] = [null, null]; // tried/failed to have cmd.action() throw rejection so wrap with Promise.
+const done = main()
+module.exports = {done}
 
-if (require.main === module || process.env._INCLUDE_DEPTH === '0') {
-  // test() // uncomment to run a basic test
-  cmd.action(run).parse()
+async function main () {
+  try {
+    const exitCode = await new Promise((accept, reject) => {
+      [Accept, Reject] = [accept, reject];
+      const cmd = SpGrep.cmd
+            .option('-d, --data <dataFile>', 'data file')
+            .option('-m, --shape-map <shapeMap>', 'shape map')
+
+      cmd.action(run).parse();
+    })
+    process.on('exit', function() { process.exitCode = exitCode; })
+    return exitCode
+  } catch (failureCode) {
+    process.on('exit', function() { process.exitCode = failureCode; })
+    return failureCode
+  }
 }
-process.exit(0)
 
 function test() {
   run(
@@ -64,16 +76,18 @@ function test() {
   );
 }
 
-function run(pathStr, files, command, commander) {
+async function run(pathStr, files, command, commander) {
   const querier = command.data && command.shapeMap
         ? new QueryValidator(command.data, command.shapeMap)
         : null;
-  SpGrep.run(pathStr, files, command, commander).forEach( ([leader, schema, schemaNodes]) => {
+  const queryResults = SpGrep.run(pathStr, files, command, commander)
+  for (const [leader, schema, schemaNodes] of queryResults) {
     if (querier)
-      querier.query(schema, schemaNodes);
+      await querier.query(schema, schemaNodes);
     else
       console.log(leader + JSON.stringify(schemaNodes, null, 2));
-  })
+  }
+  Accept(0);
 }
 exports.run = run;
 

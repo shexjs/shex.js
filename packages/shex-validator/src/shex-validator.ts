@@ -140,12 +140,13 @@ class SemActDispatcherImpl implements SemActDispatcher {
    * @return {SemActFailure[]} false if any result was false.
    */
   dispatchAll (semActs: ShExJ.SemAct[], semActParm: any, resultsArtifact: any): SemActFailure[] {
-    return semActs.reduce((ret: SemActFailure[], semAct) => {
+    return semActs.reduce<SemActFailure[]>((ret, semAct) => {
+
       if (ret.length === 0 && semAct.name in this.handlers) {
         const code: string | null = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
         const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
         const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-        const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+        const response: SemActFailure[] = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
         if (typeof response === 'object' && Array.isArray(response)) {
           if (response.length > 0)
             ret.push({ type: "SemActFailure", errors: response })
@@ -379,18 +380,19 @@ export class ShExValidator {
    * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
    */
   validateShapeMap (shapeMap: ShapeMap, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): ShExJsResultMap {
-    return shapeMap.map(pair => {
+    return shapeMap.reduce<ShExJsResultMap>((acc, pair) => {
+
       // let time = +new Date();
       const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
       // time = +new Date() - time;
-      return {
+      return acc.concat([{
         node: pair.node,
         shape: pair.shape,
         status: "errors" in res ? "nonconformant" : "conformant",
         appinfo: res,
         // elapsed: time
-      };
-    });
+      }]);
+    }, []);
   }
 
   /**
@@ -479,7 +481,7 @@ export class ShExValidator {
       return res;
     }
 
-    // Find all non-abstract shapeExprs extended with label. 
+    // Find all non-abstract shapeExprs extended with label.
     let candidates:shapeDeclRef[] = [shapeLabel];
     candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
     // Uniquify list.
@@ -493,6 +495,7 @@ export class ShExValidator {
 
     // Aggregate results in a SolutionList or FailureList.
     const results = candidates.reduce<ResList>((ret, candidateShapeLabel) => {
+
       const shapeExpr = this.lookupShape(candidateShapeLabel);
       const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
       ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
@@ -616,6 +619,7 @@ export class ShExValidator {
         return ("errors" in sub)
           ? {type: "ShapeNotResults", solution: sub} as any as shapeExprTest
           : {type: "ShapeNotFailure", errors: sub} as any as shapeExprTest; // ugh
+
       case "ShapeAnd":
         const andPasses = [];
         const andErrors = [];
@@ -630,6 +634,7 @@ export class ShExValidator {
         return andErrors.length > 0
           ? {type: "ShapeAndFailure", errors: andErrors} as any as shapeExprTest
           : {type: "ShapeAndResults", solutions: andPasses};
+
       default:
         throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
     }
@@ -1026,7 +1031,7 @@ export class ShExValidator {
     const _ShExValidator = this;
     const misses: TriplesMatchingMiss[] = [];
     const hits: TriplesMatchingHit[] = [];
-    triples.forEach(function (triple) {
+    for (const triple of triples) {
       const value = constraint.inverse ? triple.subject : triple.object;
       const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
       if (constraint.valueExpr === undefined)
@@ -1041,7 +1046,7 @@ export class ShExValidator {
           misses.push(new TriplesMatchingMiss(triple, sub));
         }
       }
-    });
+    }
     return new TriplesMatching(hits, misses);
   }
 

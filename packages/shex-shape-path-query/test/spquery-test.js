@@ -32,10 +32,10 @@ const SpqueryTests = [
 
 describe('spquery-test', () => {
   SpqueryTests.forEach(t => {
-    it(`$(${render(t.cmd, ' ')}) to equal [${render(t.expected, ', ')}]`, () => {
-      const consoleLogs = run.apply(null, t.cmd)
+    it(`$(${render(t.cmd, ' ')}) to equal [${render(t.expected, ', ')}]`, async () => {
+      let consoleLogs = await run.apply(null, t.cmd)
       expect(consoleLogs.length).to.equal(1); // script prints once at end
-      const firstCall = JSON.parse(consoleLogs[0].args)
+      const firstCall = JSON.parse(consoleLogs[0])
       expect(firstCall).to.deep.equal(t.expected)
     })
   });
@@ -45,27 +45,17 @@ function render (strings, joiner) {
   return strings.map(s => "'" + s + "'").join(joiner)
 }
 
-function run (... command) {
-  const exitErrorString = 'process.exit() was called.'
+async function run (... command) {
+  // const exitErrorString = 'process.exit() was called.'
   const logSpy = sinon.stub(console, 'log').callsFake(() => {})
-  const oldExit = process.exit
-  let exitCode = null
-  process.exit = (exitCodeP) => {
-    exitCode = exitCodeP
-    throw new Error(exitErrorString)
-  };
 
   const oldArgv = process.argv
   process.argv = [process.argv[0]].concat(command)
-  expect(() => {
-    process.env._INCLUDE_DEPTH = '0'
-    require(command[0])
-  }).to.throw(exitErrorString)
-
+  const exitCode = await require(command[0]).done;
   process.argv = oldArgv
 
-  const ret = logSpy.getCalls()
-  expect(exitCode).to.equal(0)
+  const ret = logSpy.getCalls().map(call => call.args)
   logSpy.restore()
+  expect(exitCode).to.equal(0)
   return ret
 }

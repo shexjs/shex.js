@@ -549,6 +549,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       const errors: SemActFailure[] = [];
       const skips: ((tripleExprSolutions | null)[])[] = [];
       const ret = matched.reduce<tripleExprSolutions>((out, m) => {
+
         let mis = 0;
         let ptr = out;
         while (mis < last.length &&
@@ -591,7 +592,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           if (m.stack[mis].i !== last[mis].i) {
             const t: tripleExprSolutions[] = [];
             xOfSolns[m.stack[mis].i!] = {
-              type:m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
+              type: m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
               expressions: t as groupSolutions[]
             };
             texprSolns = t;
@@ -602,7 +603,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           if (m.stack[mis].e !== last[mis].e) {
             const t = {} as TripleConstraintSolutions;
             texprSolns[m.stack[mis].e] = t;
-            if (m.stack[mis].e > 0 && texprSolns[m.stack[mis].e-1] === undefined && skips.indexOf(texprSolns) === -1)
+            if (m.stack[mis].e > 0 && texprSolns[m.stack[mis].e - 1] === undefined && skips.indexOf(texprSolns) === -1)
               skips.push(texprSolns);
             ptr = t;
             last.length = mis + 1; // chop off last so we create everything underneath
@@ -623,7 +624,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           tcSolns.valueExpr = m.c.valueExpr;
         if ("id" in m.c)
           tcSolns.productionLabel = m.c.id;
-        tcSolns.solutions = m.triples.map(triple => {
+        tcSolns.solutions = m.triples.reduce<TestedTriple[]>((acc, triple) => {
+
           const ret = {
             type: "TestedTriple",
             subject: rdfJsTerm2Ld(triple.subject),
@@ -633,13 +635,12 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
 
           const hit = constraintToTripleMapping.get(m.c)!.find(x => x.triple === triple);
           if (hit!.res && Object.keys(hit!.res).length > 0)
-             ret.referenced = hit!.res as shapeExprTest|Recursion;
-          if (errors.length === 0 && "semActs" in m.c)
-            { // @ts-ignore
-              [].push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
-            }
-          return ret;
-        })
+            ret.referenced = hit!.res as shapeExprTest | Recursion;
+          if (errors.length === 0 && "semActs" in m.c) {
+            Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
+          }
+          return acc.concat(ret);
+        }, [])
         if ("annotations" in m.c)
           tcSolns.annotations = m.c.annotations;
         if ("semActs" in m.c)

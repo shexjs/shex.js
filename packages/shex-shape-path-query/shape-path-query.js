@@ -4,7 +4,7 @@ const ShExTerm = require('@shexjs/term')
 const ShExMap = require('@shexjs/extension-map')
 const MapModule = ShExMap({...ShExTerm, Validator: {}})
 
-function shapePathQuery (schema, nodeSet, db, smap) {
+async function shapePathQuery (schema, nodeSet, db, smap) {
   // Add ShExMap annotations to each element of the nodeSet.
   // ShExMap binds variables which we use to capture schema matches.
   const vars = nodeSet.map((shexNode) => {

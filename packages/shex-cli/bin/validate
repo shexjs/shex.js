@@ -72,15 +72,15 @@ const REGEX_MODULES = "../lib/regex/";
 const MISC_NODES = true; // validate nodes not found in data.
 const START_SHAPE_LABEL = "START";
 const RDF_TYPE= "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-//const orChoices = Object.keys(ShExValidator.InterfaceOptions.or).join("|");
 const covgChoices = Object.keys(ShExValidator.InterfaceOptions.coverage).join("|");
 const dupChoices =  ["abort", "replace", "ignore"].join("|"); // lib/ShExJison.jison::addShape(label, shape)
+const TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "coverage", firstError: "coverage" };
 
 const CommandLineOptions = [
   { name: "verbose",   alias: "v", type: Boolean , description: "print extra information" },           //
   { name: "quiet",     alias: "q", type: Boolean , description: "don't print anything" },              // switch to logger
   { name: "terse",     alias: "Q", type: Boolean , description: "don't print diagnistics or advice" }, //
-  { name: "human",                type: Boolean , description: "print human-readable results" }, //
+  { name: "human",                 type: Boolean , description: "print human-readable results" }, //
   { name: "query",                 type: Boolean , description: "show matching RDF graph" },
   { name: "remainder",             type: Boolean , description: "show triples not touched by validation" },
   { name: "grep",                  type: Boolean },
@@ -121,11 +121,49 @@ const CommandLineOptions = [
 // Generate command line interface
 const Argv1 = Path.relative("", process.argv[1]);
 const CliDir = Path.relative("", Path.resolve(__dirname, "../test/cli")) + Path.sep;
-let CLI;
-try {
-  CLI = require("command-line-args")(CommandLineOptions);
-} catch (e) {
-  abort(e.message, ExitCode.bad_argument);
+// Extract user commands
+main();
+
+async function main () {
+
+  let cmds;
+  try {
+    cmds = require("command-line-args")(CommandLineOptions);
+  } catch (e) {
+    abort(e.message, ExitCode.bad_argument);
+  }
+
+  if (cmds.help)
+    abort("", ExitCode.help);
+
+  if ("duplicate-shape" in cmds)
+    SchemaOptions.duplicateShape = cmds["duplicate-shape"];
+
+  if (cmds.coverage) {
+    if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
+      throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
+    ValidatorOptions.coverage = cmds.coverage;
+  }
+
+  if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
+    const exitCode = await loadRDFmanifest(cmds);
+    process.on('exit', function() { process.exit(exitCode); });
+  } else if (cmds["yaml-manifest"].length) {
+    const results = await Promise.all(loadJSONmanifest(cmds["yaml-manifest"], JsYaml.load, cmds));
+    // exit with a 0 if all returned 0, else a failure code.
+    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
+      return soFar ? soFar : result;
+    }, 0)); });
+  } else if (cmds["json-manifest"].length) {
+    const results = await Promise.all(loadJSONmanifest(cmds["json-manifest"], JSON.parse, cmds));
+    // exit with a 0 if all returned 0, else a failure code.
+    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
+      return soFar ? soFar : result;
+    }, 0)); });
+  } else {
+    const ret = await loadCommandLine(cmds);
+    process.on('exit', function() { process.exit(ret); });
+  }
 }
 
 function abort (msg, exitCode) {
@@ -182,7 +220,7 @@ class TermError extends Error {  }
 /* Leverage N3.js's relative IRI parsing.
  * !! requires intimate (so intimate it makes me blush) knowledge of N3.js.
  */
-function findNodesAndValidate (loaded, parms, options, schemaStart) {
+async function findNodesAndValidate (loaded, parms, options, schemaStart, cmds) {
   let shapeIndex = loaded.schema._shapes || ShExIndexVisitor.index(loaded.schema)
   function knownShape (label) {
     return label in shapeIndex.shapeExprs;
@@ -327,7 +365,7 @@ function findNodesAndValidate (loaded, parms, options, schemaStart) {
     console.log("validating " + tz + " over " + loaded.data.size + " triples against " + w);
   }
 
-  ret.results = runValidator(loaded.data, shapeMap, loaded.schema, options);
+  ret.results = await runValidator(loaded.data, shapeMap, loaded.schema, options, cmds);
   if (typeof ret.results === 'object' && !("errors" in ret.results)) {
     if (cmds.query || cmds.remainder) {
       ret.results.graph = new N3.Store();
@@ -379,7 +417,7 @@ class ProgressLoadControler extends ShExNode.ResourceLoadControler {
   }
 }
 
-async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
+async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmds) {
   if (valParms.schemaURL.length > 1 && valParms.dataURL.length === 0) {
     valParms.dataURL = valParms.schemaURL.splice(1); // push all but first into data
   }
@@ -497,7 +535,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
         if (found === ShExUtil.UnknownIRI)
           console.warn("Warning: could not resolve "+valParms.shape+" with loaded schema");
       }
-      runServer(schemaAndData, valParms, validatorOptions, schemaOptions);
+      runServer(schemaAndData, valParms, validatorOptions, schemaOptions, cmds);
     } else {
       if (shapeMap) { // if we loaded a queryMap
         try {
@@ -514,7 +552,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions) {
       const valOpts2 = valParms.slurp
             ? Object.assign({}, {noResults: true}, validatorOptions)
             : validatorOptions;
-      const res = findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaOptions, schemaAndData.schema.start).results;
+      const res = (await findNodesAndValidate(schemaAndData, valParms, valOpts2, schemaAndData.schema.start, cmds)).results;
 
       if (cmds["dry-run"])
         return res || ExitCode.dry_run;
@@ -654,8 +692,6 @@ function rdflib_termToLex (node, resolver) {
   return new N3.Writer({ prefixes:resolver.meta.prefixes || {} })._encodeObject(N3.DataFactory.namedNode(node));
 }
 
-// Extract user commands
-const arg0 = process.argv[1];
 function getInvocation (parms) {
   function shortenFile (u) {
     const m = u.match(/file:\/\/(\/.*)$/);
@@ -667,7 +703,7 @@ function getInvocation (parms) {
   function jsonFileArg (u) { return u ? "-j "+shortenFile(u) : ''; }
   function dataFileArg (u) { return u ? "-d "+shortenFile(u) : ''; }
   function jsonldFileArg (u) { return u ? "-l "+shortenFile(u) : ''; }
-  const res = [Path.relative(process.cwd(), arg0),
+  const res = [Path.relative(process.cwd(), Argv1),
              parms.schemaURL.map(shexFileArg).join(' '),
              parms.json.map(jsonFileArg).join(' '),
              parms.dataURL.map(dataFileArg).join(' '),
@@ -691,45 +727,6 @@ function getInvocation (parms) {
   return res.join(' ');
 }
 
-const cmds = CLI;
-
-if (cmds.help)
-  abort("", ExitCode.help);
-
-if ("duplicate-shape" in cmds)
-  SchemaOptions.duplicateShape = cmds["duplicate-shape"];
-
-if (cmds.coverage) {
-  if (!(cmds.coverage in ShExValidator.InterfaceOptions.coverage))
-    throw Error("unknown coverage option \"" + cmds.coverage + "\" - expected one of " + Object.keys(ShExValidator.InterfaceOptions.coverage).join(", ") + "\".");
-  ValidatorOptions.coverage = cmds.coverage;
-}
-
-const TraitToOption = { eachOf: "or", oneOf: "or", someOf: "or", exhaustive: "coverage", firstError: "coverage" };
-if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
-  loadRDFmanifest(cmds).then(function (exitCode) {
-    process.on('exit', function() { process.exit(exitCode); });
-  });
-} else if (cmds["yaml-manifest"].length) {
-  Promise.all(loadJSONmanifest(cmds["yaml-manifest"], JsYaml.load)).then(function (results) {
-    // exit with a 0 if all returned 0, else a failure code.
-    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
-      return soFar ? soFar : result;
-    }, 0)); });
-  });
-} else if (cmds["json-manifest"].length) {
-  Promise.all(loadJSONmanifest(cmds["json-manifest"], JSON.parse)).then(function (results) {
-    // exit with a 0 if all returned 0, else a failure code.
-    process.on('exit', function() { process.exit(results.reduce(function (soFar, result) {
-      return soFar ? soFar : result;
-    }, 0)); });
-  });
-} else {
-  loadCommandLine(cmds).then(function (ret) {
-    process.on('exit', function() { process.exit(ret); });
-  });
-}
-
 /* queueTests - take a structure like
 [ { json: [],
     validatorOptions: {},
@@ -739,8 +736,8 @@ if (cmds["turtle-manifest"].length || cmds["jsonld-manifest"].length) {
     node: 'file:///tmp/t/MedicationOrder/12345-67' } ]
 and some constructor args like {or: "someOf", coverage: "exhaustive"}
 */
-function queueTests (tests, cmds) {
-  return Promise.all(tests.map(function (test) {
+async function queueTests (tests, cmds) {
+  const results = await Promise.all(tests.map(function (test) {
     // run each test and return the result (0 or 2, so far)
     if (cmds.invocation) {
       console.log(getInvocation(test));
@@ -748,16 +745,15 @@ function queueTests (tests, cmds) {
     if ("regexModule" in test.validatorOptions)
       test.validatorOptions.regexModule = getRegexModule(cmds["regexModule"]);
     const schemaOptions = Object.assign({}, SchemaOptions, test.schemaOptions || {});
-    return loadSchemaAndData(test, test.validatorOptions, schemaOptions);
-  })).then(function (results) {
-    // exit with a 0 if all returned 0, else hightest (worst) ExitCode.x code.
-    return results.reduce(function (worst, result) {
-      return worst < result ? result : worst;
-    }, 0);
-  });
+    return loadSchemaAndData(test, test.validatorOptions, schemaOptions, cmds);
+  }))
+  // exit with a 0 if all returned 0, else hightest (worst) ExitCode.x code.
+  return results.reduce(function (worst, result) {
+    return worst < result ? result : worst;
+  }, 0);
 }
 
-function runValidator (db, shapeMap, schema, options) {
+async function runValidator (db, shapeMap, schema, options, cmds) {
   // prepare validator
   const validator = new ShExValidator(schema, db, options);
   const extensions = ShExNode.loadExtensions(cmds.extension);
@@ -770,7 +766,7 @@ function runValidator (db, shapeMap, schema, options) {
 
   // run validator
   const res = cmds.grep
-      ? grep(shapeMap)
+      ? await grep(shapeMap)
       : resultMapToShapeExprTest(validator.validateShapeMap(shapeMap));
 
   Object.keys(extensions).forEach(function (ext) {
@@ -799,7 +795,7 @@ function runValidator (db, shapeMap, schema, options) {
     return res;
   }
 
-  function grep (fixedMap) {
+  async function grep (fixedMap) {
     const passes = fixedMap.reduce((acc, row) => {
       if (cmds.verbose)
         process.stdout.write('checking ' + JSON.stringify(row))
@@ -820,16 +816,17 @@ function runValidator (db, shapeMap, schema, options) {
   }
 }
 
-function loadRDFmanifest (cmds) {
+async function loadRDFmanifest (cmds) {
 
   // from a manifest supplied on the command line
   const mf = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#"; // mf: namespace in the manifest file.
   const sht = "http://www.w3.org/ns/shacl/test-suite#";
-  return ShExNode.load(
-    null, // no schema
-    {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []},
-    SchemaOptions, undefined
-  ).then(function (loaded) {
+  try {
+    const loaded = await ShExNode.load(
+      null, // no schema
+      {turtle: cmds["turtle-manifest"] || [], jsonld: cmds["jsonld-manifest"] || []},
+      SchemaOptions, undefined
+    );
     const testNodes = cmds["test-name"].length ?
         cmds["test-name"].reduce((ret, testName) => {
           const pattern = RegExp(testName);
@@ -876,15 +873,15 @@ function loadRDFmanifest (cmds) {
                   schemaOptions: schemaOptions}); // @@ no way to specify jsonld in manifest
     });
     return queueTests(tests, cmds);
-  }).catch(function (e) {
+  } catch (e) {
     console.error("failed to load manifest file \"" +
                   ((cmds["turtle-manifest"] || []).concat(cmds["jsonld-manifest"] || [])) +
                   "\":", e, e.stack);
     return ExitCode.manifest_not_found;
-  });
+  }
 }
 
-function injectCertainCommandLineArgs (run) {
+function injectCertainCommandLineArgs (run, cmds) {
   const ret = Object.assign({}, run);
   if ("quiet" in cmds)
     ret.quiet = cmds.quiet;
@@ -897,11 +894,13 @@ function relUrlOrFile (rel, base) {
   return Path.join(base, base.endsWith('/') ? '.' : '..', rel);
 }
 
-function loadJSONmanifest (jsonManifests, parser) {
-  return jsonManifests.map(function (jm) {
-    return ShExNode.GET(jm).then(function (p) {
-      try {
-        let d = parser(p.text);
+function loadJSONmanifest (jsonManifests, parser, cmds) {
+  return jsonManifests.map(async function (jm) {
+    let [curAct, errorCode] = ["load", ExitCode.manifest_not_found];
+    try {
+      const p = await ShExNode.GET(jm);
+      [curAct, errorCode] = ["process", ExitCode.manifest_error];
+      let d = parser(p.text);
 
         // normalize the input
         if (!Array.isArray(d)) {
@@ -927,7 +926,7 @@ function loadJSONmanifest (jsonManifests, parser) {
             d = [d];
         }
 
-        d = d.map(injectCertainCommandLineArgs);
+        d = d.map(x => injectCertainCommandLineArgs(x, cmds));
 
         if (cmds["test-name"].length) // Include only tests listed in --test-name.
           d = d.filter(function (elt) {
@@ -997,15 +996,11 @@ function loadJSONmanifest (jsonManifests, parser) {
           if ("result" in elt && elt.result !== null && typeof elt.result !== "boolean")
             elt.result = relUrlOrFile(elt.result, p.url);
         });
-        return queueTests(d, cmds);
-      } catch (e) {
-        console.error("failed to process json manifest: " + (e.stack || e));
-        return ExitCode.manifest_error;
-      }
-    }).catch(function (e) {
-      console.error("failed to load json manifest: ", e.stack || e);
-      return ExitCode.manifest_not_found;
-    });
+        return await queueTests(d, cmds);
+    } catch (e) {
+      console.error(`failed to ${curAct} json manifest: ` + (e.stack || e));
+      return errorCode;
+    }
   });
 }
 
@@ -1046,7 +1041,7 @@ function loadCommandLine (cmds) {
   const schemaOptions = Object.assign({}, SchemaOptions);
   if (cmds.skipCycleCheck)
     schemaOptions.skipCycleCheck = true;
-  return loadSchemaAndData(cmds, ValidatorOptions, schemaOptions);
+  return loadSchemaAndData(cmds, ValidatorOptions, schemaOptions, cmds);
 }
 
 class FileCache {
@@ -1059,7 +1054,7 @@ class FileCache {
   }
 }
 
-function runServer (serverLoaded, serverParms, serverOptions) {
+function runServer (serverLoaded, serverParms, serverOptions, cmds) {
   const app       = new (require("koa"))();
   const {koaBody} = require("koa-body");
   const log       = serverParms.quiet ? () => undefined : console.log;
@@ -1225,7 +1220,7 @@ function runServer (serverLoaded, serverParms, serverOptions) {
         // Wrap in RdfJsDb for neighborhood-api.
         if (!("getNeighborhood" in parms.data)) // !! clean up db chaos
           parms.data = RdfJsDb(parms.data);
-        let result = findNodesAndValidate(parms, parms, options, parms.schema.start);
+        let result = await findNodesAndValidate(parms, parms, options, parms.schema.start, cmds);
 
         if ("results" in result)
           result = result.results; // otherwise just report the invoked parms.
