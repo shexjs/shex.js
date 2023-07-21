@@ -3,7 +3,8 @@ function register (validator, api) {
   if (api === undefined || !('ShExTerm' in api))
     throw Error('SemAct extensions must be called with register(validator, {ShExTerm, ...)')
 
-  const pattern = /^ *(fail|print) *\( *(?:("(?:[^\\"]|\\\\|\\")*")|([spo])) *\) *$/;
+  const term = `(?:("(?:[^\\\\"]|\\\\\\\\|\\\\")*"|'(?:[^\\\\']|\\\\\\\\|\\\\')*')|([spo]))`;
+  const pattern = new RegExp(`^ *(fail|print) *\\((( *${term} *,)* *${term}) *\\) *$`);
 
   validator.semActHandler.results[TestExt] = [];
   validator.semActHandler.register(
@@ -18,17 +19,33 @@ function register (validator, api) {
        * @return {bool} false if the extension failed or did not accept the ctx object.
        */
       dispatch: function (code, ctx, extensionStorage) {
-        const m = code.match(pattern);
-        if (!m) {
+        const langMatch = code.match(pattern);
+        if (!langMatch) {
           throw Error("Invocation error: " + TestExt + " code \"" + code + "\" didn't match " + pattern);
         }
-        const arg = m[2] ? m[2] :
-          m[3] === "s" ? ctx.subject.value :
-          m[3] === "p" ? ctx.predicate.value :
-          m[3] === "o" ? ctx.object.value :
-          "???";
-        validator.semActHandler.results[TestExt].push(arg);
-        return m[1] === "fail" ? [{type: "SemActFailure", errors: [`fail(${arg})`]}] : [];
+        const terms = langMatch[2];
+        const args = [];
+        const termMatcher = new RegExp(` *${term} *,?`, 'g'); // commas already enforced above
+        let termMatch = null;
+        while ((termMatch = termMatcher.exec(terms)) !== null) {
+          const arg = termMatch[1]
+                ? parseStr(termMatch[1])
+                : parsePos(termMatch[2])
+          args.push(arg);
+        }
+        const line = args.join('');
+        validator.semActHandler.results[TestExt].push(line);
+        return langMatch[1] === "fail" ? [{type: "SemActFailure", errors: [`fail(${line})`]}] : [];
+
+        function parseStr (wrapped) {
+          return wrapped.substring(1, wrapped.length -1);
+        }
+        function parsePos (pos) {
+          return pos === "s" ? ctx.subject.value :
+            pos === "p" ? ctx.predicate.value :
+            pos === "o" ? ctx.object.value :
+            "???";
+        }
       }
     }
   );
