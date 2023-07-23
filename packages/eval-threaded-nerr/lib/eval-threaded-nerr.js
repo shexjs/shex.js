@@ -189,7 +189,7 @@ class EvalThreadedNErrRegexEngine {
                 if (hit.res !== undefined)
                     tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(constraint.semActs !== undefined
-                    ? semActHandler.dispatchAll(constraint.semActs, triple, tested)
+                    ? semActHandler.dispatchAll(constraint.semActs, { triple, tripleExpr: constraint }, tested)
                     : []);
                 if (semActErrors.length > 0)
                     acc.fail.push({ triple, tested, semActErrors });
@@ -265,7 +265,11 @@ class EvalThreadedNErrRegexEngine {
             const passes = [];
             const failures = [];
             for (const newThread of newThreads) {
-                const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread);
+                const ctx = {
+                    triples: newThread.matched.flatMap(m => m.triples),
+                    tripleExpr: groupTE,
+                };
+                const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread);
                 if (semActErrors.length === 0) {
                     passes.push(newThread);
                 }

@@ -580,7 +580,12 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
             last[mis].i = null;
             // !!! on the way out to call after valueExpr test
             if ("semActs" in m.stack[mis].c) {
-              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, "???", ptr);
+              const ctx = {
+                triples: constraintToTripleMapping.get(m.c)!
+                  .map(m => m.triple),
+                tripleExpr: m.c
+              };
+              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
               if (errors.length)
                 throw errors;
             }
@@ -637,7 +642,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           if (hit!.res && Object.keys(hit!.res).length > 0)
             ret.referenced = hit!.res as shapeExprTest | Recursion;
           if (errors.length === 0 && "semActs" in m.c) {
-            Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, triple, ret));
+            Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, {triple, tripleExpr: m.c}, ret));
           }
           return acc.concat(ret);
         }, [])

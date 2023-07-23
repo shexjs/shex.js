@@ -297,7 +297,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           tested.referenced = hit.res;
         const semActErrors = thread.errors.concat(
             constraint.semActs !== undefined
-                ? semActHandler.dispatchAll(constraint.semActs, triple, tested)
+                ? semActHandler.dispatchAll(constraint.semActs, {triple, tripleExpr: constraint}, tested)
                 : []
         )
         if (semActErrors.length > 0)
@@ -380,7 +380,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       const passes: RegexpThread[] = [];
       const failures: RegexpThread[] = [];
       for (const newThread of newThreads) {
-        const semActErrors = semActHandler.dispatchAll(groupTE.semActs, "???", newThread)
+        const ctx = {
+          triples: newThread.matched.flatMap(m => m.triples),
+          tripleExpr: groupTE,
+        }
+        const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread)
         if (semActErrors.length === 0) {
           passes.push(newThread)
         } else {

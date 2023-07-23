@@ -41,9 +41,9 @@ function register (validator, api) {
           return wrapped.substring(1, wrapped.length -1);
         }
         function parsePos (pos) {
-          return pos === "s" ? ctx.subject.value :
-            pos === "p" ? ctx.predicate.value :
-            pos === "o" ? ctx.object.value :
+          return pos === "s" ? ctx.triple.subject.value :
+            pos === "p" ? ctx.triple.predicate.value :
+            pos === "o" ? ctx.triple.object.value :
             "???";
         }
       }

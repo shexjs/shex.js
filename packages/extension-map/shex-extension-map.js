@@ -100,7 +100,7 @@ function register (validator, api) {
             update(key, N3DataFactory.literal(results[key]));
         } else {
           const bindingName = code.match(pattern);
-          update(bindingName, ctx.node || ctx.object);
+          update(bindingName, ctx.triple.node || ctx.triple.object);
         }
 
         return []; // There are no evaluation failures. Any parsing problem throws.
