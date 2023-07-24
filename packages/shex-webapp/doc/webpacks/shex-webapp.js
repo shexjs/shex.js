@@ -21224,13 +21224,21 @@ function simpleEnd(buf) {
 /***/ }),
 
 /***/ 8986:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
-var __webpack_unused_export__;
 
-__webpack_unused_export__ = ({ value: true });
-exports.G = void 0;
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegexpModule = void 0;
 const term_1 = __webpack_require__(1101);
 var ControlType;
 (function (ControlType) {
@@ -21292,7 +21300,7 @@ class RegExpPair {
     }
 }
 const UNBOUNDED = -1;
-exports.G = {
+exports.RegexpModule = {
     name: "eval-simple-1err",
     description: "simple regular expression engine with n out states",
     /* compile - compile regular expression and index triple constraints
@@ -21460,131 +21468,133 @@ class EvalSimple1ErrRegexEngine {
         this.start = startNo;
     }
     match(node, constraintToTripleMapping, semActHandler, trace) {
-        const thisEvalSimple1ErrRegexEngine = this;
-        let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
-        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
-            tripleResult.forEach(res => allTriples.add(res.triple));
-            return allTriples;
-        }, new Set());
-        if (thisEvalSimple1ErrRegexEngine.states.length === 1)
-            return this.matchedToResult([], constraintToTripleMapping, semActHandler);
-        let chosen = null;
-        // console.log(new NfaToString().dumpNFA(this.states, this.start));
-        this.addstate(clist, this.start, new RegExpThread());
-        while (clist.length) {
-            nlist = [];
-            if (trace)
-                trace.push({ threads: [] });
-            for (let threadno = 0; threadno < clist.length; ++threadno) {
-                const thread = clist[threadno];
-                if (thread.state === thisEvalSimple1ErrRegexEngine.end)
-                    continue;
-                const state = thisEvalSimple1ErrRegexEngine.states[thread.state];
-                const nlistlen = nlist.length;
-                // may be an Accept state
-                if (state instanceof TripleConstraintState) {
-                    const tripleConstraint = state.c;
-                    let min = state.c.min !== undefined ? state.c.min : 1;
-                    let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
-                    if (!thread.avail.has(tripleConstraint))
-                        thread.avail.set(tripleConstraint, constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple));
-                    const taken = thread.avail.get(tripleConstraint).splice(0, max);
-                    if (taken.length >= min) {
-                        do {
-                            this.addStates(nlist, thread, taken);
-                        } while ((function () {
-                            if (thread.avail.get(tripleConstraint).length > 0 && taken.length < max) {
-                                taken.push(thread.avail.get(tripleConstraint).shift());
-                                return true; // stay in look to take more.
-                            }
-                            else {
-                                return false; // no more to take or we're already at max
-                            }
-                        })());
-                    }
-                }
+        return __awaiter(this, void 0, void 0, function* () {
+            const thisEvalSimple1ErrRegexEngine = this;
+            let clist = [], nlist = []; // list of {state:state number, repeats:stateNo->repetitionCount}
+            const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+                tripleResult.forEach(res => allTriples.add(res.triple));
+                return allTriples;
+            }, new Set());
+            if (thisEvalSimple1ErrRegexEngine.states.length === 1)
+                return this.matchedToResult([], constraintToTripleMapping, semActHandler);
+            let chosen = null;
+            // console.log(new NfaToString().dumpNFA(this.states, this.start));
+            this.addstate(clist, this.start, new RegExpThread());
+            while (clist.length) {
+                nlist = [];
                 if (trace)
-                    // @ts-ignore
-                    trace[trace.length - 1].threads.push({
-                        state: clist[threadno].state,
-                        to: nlist.slice(nlistlen).map(x => {
-                            return this.stateString(x.state, x.repeats);
-                        })
-                    });
-            }
-            if (nlist.length === 0 && chosen === null)
-                return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
-            const t = clist;
-            clist = nlist;
-            nlist = t;
-            const longerChosen = clist.reduce((ret, elt) => {
-                const matchedAll = elt.matched.reduce((ret, m) => {
-                    return ret + m.triples.length; // count matched triples
-                }, 0) === allTriples.size;
-                return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
-            }, null);
-            if (longerChosen)
-                chosen = longerChosen;
-        }
-        if (chosen === null)
-            return reportError([]);
-        function reportError(_x) {
-            return {
-                type: "Failure",
-                node: node,
-                errors: localExpect(clist, thisEvalSimple1ErrRegexEngine.states)
-            };
-        }
-        function localExpect(clist, states) {
-            const lastState = states[states.length - 1];
-            return clist.reduce((acc, elt) => {
-                const c = thisEvalSimple1ErrRegexEngine.states[elt.state].c; // Always fails on a TCState
-                // if (c === ControlType.Match)
-                //   return { type: "EndState999" };
-                let valueExpr = null;
-                if (typeof c.valueExpr === "string") { // ShapeRef
-                    valueExpr = c.valueExpr;
-                }
-                else if (c.valueExpr) {
-                    valueExpr = c.valueExpr;
-                }
-                if (elt.state !== thisEvalSimple1ErrRegexEngine.end) {
-                    const error = {
-                        type: "MissingProperty",
-                        property: lastState.c.predicate,
-                    };
-                    if (valueExpr)
-                        error.valueExpr = valueExpr;
-                    // @ts-ignore -- Type 'MissingProperty' is not assignable to type 'shapeExprTest'?
-                    return acc.concat([error]);
-                }
-                else {
-                    const unmatchedTriples = new Map();
-                    const threadMatches = elt.matched.reduce((threadMatches, eltMatched) => {
-                        eltMatched.triples.forEach(triple => threadMatches.add(triple));
-                        return threadMatches;
-                    }, new Set());
-                    const errors = Array.from(allTriples).reduce((errors, triple) => {
-                        if (!threadMatches.has(triple)) {
-                            const error = {
-                                type: "ExcessTripleViolation",
-                                property: lastState.c.predicate,
-                                triple: triple,
-                            };
-                            if (valueExpr)
-                                error.valueExpr = valueExpr;
-                            errors.push(error);
+                    trace.push({ threads: [] });
+                for (let threadno = 0; threadno < clist.length; ++threadno) {
+                    const thread = clist[threadno];
+                    if (thread.state === thisEvalSimple1ErrRegexEngine.end)
+                        continue;
+                    const state = thisEvalSimple1ErrRegexEngine.states[thread.state];
+                    const nlistlen = nlist.length;
+                    // may be an Accept state
+                    if (state instanceof TripleConstraintState) {
+                        const tripleConstraint = state.c;
+                        let min = state.c.min !== undefined ? state.c.min : 1;
+                        let max = state.c.max !== undefined ? state.c.max === UNBOUNDED ? Infinity : state.c.max : 1;
+                        if (!thread.avail.has(tripleConstraint))
+                            thread.avail.set(tripleConstraint, constraintToTripleMapping.get(tripleConstraint).map(pair => pair.triple));
+                        const taken = thread.avail.get(tripleConstraint).splice(0, max);
+                        if (taken.length >= min) {
+                            do {
+                                this.addStates(nlist, thread, taken);
+                            } while ((function () {
+                                if (thread.avail.get(tripleConstraint).length > 0 && taken.length < max) {
+                                    taken.push(thread.avail.get(tripleConstraint).shift());
+                                    return true; // stay in look to take more.
+                                }
+                                else {
+                                    return false; // no more to take or we're already at max
+                                }
+                            })());
                         }
-                        return errors;
-                    }, []);
-                    return acc.concat(errors);
+                    }
+                    if (trace)
+                        // @ts-ignore
+                        trace[trace.length - 1].threads.push({
+                            state: clist[threadno].state,
+                            to: nlist.slice(nlistlen).map(x => {
+                                return this.stateString(x.state, x.repeats);
+                            })
+                        });
                 }
-            }, []);
-        }
-        // console.log("chosen:", dump.thread(chosen));
-        return "errors" in chosen.matched ?
-            chosen.matched :
-            this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
+                if (nlist.length === 0 && chosen === null)
+                    return reportError(localExpect(clist, thisEvalSimple1ErrRegexEngine.states));
+                const t = clist;
+                clist = nlist;
+                nlist = t;
+                const longerChosen = clist.reduce((ret, elt) => {
+                    const matchedAll = elt.matched.reduce((ret, m) => {
+                        return ret + m.triples.length; // count matched triples
+                    }, 0) === allTriples.size;
+                    return ret !== null ? ret : (elt.state === thisEvalSimple1ErrRegexEngine.end && matchedAll) ? elt : null;
+                }, null);
+                if (longerChosen)
+                    chosen = longerChosen;
+            }
+            if (chosen === null)
+                return reportError([]);
+            function reportError(_x) {
+                return {
+                    type: "Failure",
+                    node: node,
+                    errors: localExpect(clist, thisEvalSimple1ErrRegexEngine.states)
+                };
+            }
+            function localExpect(clist, states) {
+                const lastState = states[states.length - 1];
+                return clist.reduce((acc, elt) => {
+                    const c = thisEvalSimple1ErrRegexEngine.states[elt.state].c; // Always fails on a TCState
+                    // if (c === ControlType.Match)
+                    //   return { type: "EndState999" };
+                    let valueExpr = null;
+                    if (typeof c.valueExpr === "string") { // ShapeRef
+                        valueExpr = c.valueExpr;
+                    }
+                    else if (c.valueExpr) {
+                        valueExpr = c.valueExpr;
+                    }
+                    if (elt.state !== thisEvalSimple1ErrRegexEngine.end) {
+                        const error = {
+                            type: "MissingProperty",
+                            property: lastState.c.predicate,
+                        };
+                        if (valueExpr)
+                            error.valueExpr = valueExpr;
+                        // @ts-ignore -- Type 'MissingProperty' is not assignable to type 'shapeExprTest'?
+                        return acc.concat([error]);
+                    }
+                    else {
+                        const unmatchedTriples = new Map();
+                        const threadMatches = elt.matched.reduce((threadMatches, eltMatched) => {
+                            eltMatched.triples.forEach(triple => threadMatches.add(triple));
+                            return threadMatches;
+                        }, new Set());
+                        const errors = Array.from(allTriples).reduce((errors, triple) => {
+                            if (!threadMatches.has(triple)) {
+                                const error = {
+                                    type: "ExcessTripleViolation",
+                                    property: lastState.c.predicate,
+                                    triple: triple,
+                                };
+                                if (valueExpr)
+                                    error.valueExpr = valueExpr;
+                                errors.push(error);
+                            }
+                            return errors;
+                        }, []);
+                        return acc.concat(errors);
+                    }
+                }, []);
+            }
+            // console.log("chosen:", dump.thread(chosen));
+            return "errors" in chosen.matched ?
+                chosen.matched :
+                yield this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
+        });
     }
     addStates(nlist, thread, taken) {
         const state = this.states[thread.state];
@@ -21665,130 +21675,134 @@ class EvalSimple1ErrRegexEngine {
         return rs.length ? state + "-" + rs : "" + state;
     }
     matchedToResult(matched, constraintToTripleMapping, semActHandler) {
-        let last = [];
-        const errors = [];
-        const skips = [];
-        const ret = matched.reduce((out, m) => {
-            let mis = 0;
-            let ptr = out;
-            while (mis < last.length &&
-                m.stack[mis].c === last[mis].c && // constraint
-                m.stack[mis].i === last[mis].i && // iteration number
-                m.stack[mis].e === last[mis].e) { // (dis|con)junction number
-                ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
-                ++mis;
-            }
-            while (mis < m.stack.length) {
-                if (mis >= last.length) {
-                    last.push({}); // to be filled in below
+        return __awaiter(this, void 0, void 0, function* () {
+            let last = [];
+            const errors = [];
+            const skips = [];
+            const ret = yield matched.reduce((outP, m) => __awaiter(this, void 0, void 0, function* () {
+                const out = yield outP;
+                let mis = 0;
+                let ptr = out;
+                while (mis < last.length &&
+                    m.stack[mis].c === last[mis].c && // constraint
+                    m.stack[mis].i === last[mis].i && // iteration number
+                    m.stack[mis].e === last[mis].e) { // (dis|con)junction number
+                    ptr = ptr.solutions[last[mis].i].expressions[last[mis].e];
+                    ++mis;
                 }
-                let xOfSolns;
-                if (m.stack[mis].c !== last[mis].c) {
-                    const t = [];
-                    ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions";
-                    ptr.solutions = t; // arbitrary down cast
-                    if ("min" in m.stack[mis].c)
-                        ptr.min = m.stack[mis].c.min;
-                    if ("max" in m.stack[mis].c)
-                        ptr.max = m.stack[mis].c.max;
-                    if ("annotations" in m.stack[mis].c)
-                        ptr.annotations = m.stack[mis].c.annotations;
-                    if ("semActs" in m.stack[mis].c)
-                        ptr.semActs = m.stack[mis].c.semActs;
-                    xOfSolns = t;
-                    last[mis].i = null;
-                    // !!! on the way out to call after valueExpr test
-                    if ("semActs" in m.stack[mis].c) {
-                        const ctx = {
-                            triples: constraintToTripleMapping.get(m.c)
-                                .map(m => m.triple),
-                            tripleExpr: m.c
-                        };
-                        const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
-                        if (errors.length)
-                            throw errors;
+                while (mis < m.stack.length) {
+                    if (mis >= last.length) {
+                        last.push({}); // to be filled in below
                     }
-                    // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
+                    let xOfSolns;
+                    if (m.stack[mis].c !== last[mis].c) {
+                        const t = [];
+                        ptr.type = m.stack[mis].c.type === "EachOf" ? "EachOfSolutions" : "OneOfSolutions";
+                        ptr.solutions = t; // arbitrary down cast
+                        if ("min" in m.stack[mis].c)
+                            ptr.min = m.stack[mis].c.min;
+                        if ("max" in m.stack[mis].c)
+                            ptr.max = m.stack[mis].c.max;
+                        if ("annotations" in m.stack[mis].c)
+                            ptr.annotations = m.stack[mis].c.annotations;
+                        if ("semActs" in m.stack[mis].c)
+                            ptr.semActs = m.stack[mis].c.semActs;
+                        xOfSolns = t;
+                        last[mis].i = null;
+                        // !!! on the way out to call after valueExpr test
+                        if ("semActs" in m.stack[mis].c) {
+                            const ctx = {
+                                triples: constraintToTripleMapping.get(m.c)
+                                    .map(m => m.triple),
+                                tripleExpr: m.c
+                            };
+                            const errors = yield semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
+                            if (errors.length)
+                                throw errors;
+                        }
+                        // if (ret && "semActs" in expr) { ret.semActs = expr.semActs; }
+                    }
+                    else {
+                        xOfSolns = ptr.solutions;
+                    }
+                    let texprSolns;
+                    if (m.stack[mis].i !== last[mis].i) {
+                        const t = [];
+                        xOfSolns[m.stack[mis].i] = {
+                            type: m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
+                            expressions: t
+                        };
+                        texprSolns = t;
+                        last[mis].e = -1; // trigger m.stack[mis].e !== last[mis].e below
+                    }
+                    else {
+                        texprSolns = xOfSolns[last[mis].i].expressions;
+                    }
+                    if (m.stack[mis].e !== last[mis].e) {
+                        const t = {};
+                        texprSolns[m.stack[mis].e] = t;
+                        if (m.stack[mis].e > 0 && texprSolns[m.stack[mis].e - 1] === undefined && skips.indexOf(texprSolns) === -1)
+                            skips.push(texprSolns);
+                        ptr = t;
+                        last.length = mis + 1; // chop off last so we create everything underneath
+                    }
+                    else {
+                        throw "how'd we get here?";
+                        // ptr = texprSolns[last[mis].e];
+                    }
+                    ++mis;
                 }
-                else {
-                    xOfSolns = ptr.solutions;
-                }
-                let texprSolns;
-                if (m.stack[mis].i !== last[mis].i) {
-                    const t = [];
-                    xOfSolns[m.stack[mis].i] = {
-                        type: m.stack[mis].c.type === "EachOf" ? "EachOfSolution" : "OneOfSolution",
-                        expressions: t
+                const tcSolns = ptr;
+                tcSolns.type = "TripleConstraintSolutions";
+                if ("min" in m.c)
+                    tcSolns.min = m.c.min;
+                if ("max" in m.c)
+                    tcSolns.max = m.c.max;
+                tcSolns.predicate = m.c.predicate;
+                if ("valueExpr" in m.c)
+                    tcSolns.valueExpr = m.c.valueExpr;
+                if ("id" in m.c)
+                    tcSolns.productionLabel = m.c.id;
+                tcSolns.solutions = yield m.triples.reduce((accP, triple) => __awaiter(this, void 0, void 0, function* () {
+                    const acc = yield accP;
+                    const ret = {
+                        type: "TestedTriple",
+                        subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                        predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                        object: (0, term_1.rdfJsTerm2Ld)(triple.object)
                     };
-                    texprSolns = t;
-                    last[mis].e = -1; // trigger m.stack[mis].e !== last[mis].e below
-                }
-                else {
-                    texprSolns = xOfSolns[last[mis].i].expressions;
-                }
-                if (m.stack[mis].e !== last[mis].e) {
-                    const t = {};
-                    texprSolns[m.stack[mis].e] = t;
-                    if (m.stack[mis].e > 0 && texprSolns[m.stack[mis].e - 1] === undefined && skips.indexOf(texprSolns) === -1)
-                        skips.push(texprSolns);
-                    ptr = t;
-                    last.length = mis + 1; // chop off last so we create everything underneath
-                }
-                else {
-                    throw "how'd we get here?";
-                    // ptr = texprSolns[last[mis].e];
-                }
-                ++mis;
-            }
-            const tcSolns = ptr;
-            tcSolns.type = "TripleConstraintSolutions";
-            if ("min" in m.c)
-                tcSolns.min = m.c.min;
-            if ("max" in m.c)
-                tcSolns.max = m.c.max;
-            tcSolns.predicate = m.c.predicate;
-            if ("valueExpr" in m.c)
-                tcSolns.valueExpr = m.c.valueExpr;
-            if ("id" in m.c)
-                tcSolns.productionLabel = m.c.id;
-            tcSolns.solutions = m.triples.reduce((acc, triple) => {
-                const ret = {
-                    type: "TestedTriple",
-                    subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
-                    predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
-                    object: (0, term_1.rdfJsTerm2Ld)(triple.object)
+                    const hit = constraintToTripleMapping.get(m.c).find(x => x.triple === triple);
+                    if (hit.res && Object.keys(hit.res).length > 0)
+                        ret.referenced = hit.res;
+                    if (errors.length === 0 && "semActs" in m.c) {
+                        Array.prototype.push.apply(errors, yield semActHandler.dispatchAll(m.c.semActs, { triples: [triple], tripleExpr: m.c }, ret));
+                    }
+                    return acc.concat(ret);
+                }), Promise.resolve([]));
+                if ("annotations" in m.c)
+                    tcSolns.annotations = m.c.annotations;
+                if ("semActs" in m.c)
+                    tcSolns.semActs = m.c.semActs;
+                last = m.stack.slice();
+                return out;
+            }), Promise.resolve({}));
+            if (errors.length)
+                return {
+                    type: "SemActFailure",
+                    errors: errors
                 };
-                const hit = constraintToTripleMapping.get(m.c).find(x => x.triple === triple);
-                if (hit.res && Object.keys(hit.res).length > 0)
-                    ret.referenced = hit.res;
-                if (errors.length === 0 && "semActs" in m.c) {
-                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triples: [triple], tripleExpr: m.c }, ret));
-                }
-                return acc.concat(ret);
-            }, []);
-            if ("annotations" in m.c)
-                tcSolns.annotations = m.c.annotations;
-            if ("semActs" in m.c)
-                tcSolns.semActs = m.c.semActs;
-            last = m.stack.slice();
-            return out;
-        }, {});
-        if (errors.length)
-            return {
-                type: "SemActFailure",
-                errors: errors
-            };
-        // Clear out the nulls for the expressions with min:0 and no matches.
-        // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
-        // Maybe we want these nulls in expressions[] to make it clear that there are holes?
-        skips.forEach(skip => {
-            for (let exprNo = 0; exprNo < skip.length; ++exprNo)
-                if (skip[exprNo] === null || skip[exprNo] === undefined)
-                    skip.splice(exprNo--, 1);
+            // Clear out the nulls for the expressions with min:0 and no matches.
+            // <S> { (:p .; :q .)?; :r . } \ { <s> :r 1 } -> i:0, e:1 resulting in null at e=0
+            // Maybe we want these nulls in expressions[] to make it clear that there are holes?
+            skips.forEach(skip => {
+                for (let exprNo = 0; exprNo < skip.length; ++exprNo)
+                    if (skip[exprNo] === null || skip[exprNo] === undefined)
+                        skip.splice(exprNo--, 1);
+            });
+            if ("semActs" in this.shape)
+                ret.semActs = this.shape.semActs;
+            return ret;
         });
-        if ("semActs" in this.shape)
-            ret.semActs = this.shape.semActs;
-        return ret;
     }
 }
 EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
@@ -21797,13 +21811,21 @@ EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for 
 /***/ }),
 
 /***/ 6201:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
-var __webpack_unused_export__;
 
-__webpack_unused_export__ = ({ value: true });
-exports.G = void 0;
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegexpModule = void 0;
 const term_1 = __webpack_require__(1101);
 const UNBOUNDED = -1;
 class RegexpThread {
@@ -21825,7 +21847,7 @@ class RegexpThread {
         ]), matched);
     }
 }
-exports.G = {
+exports.RegexpModule = {
     name: "eval-threaded-nerr",
     description: "emulation of regular expression engine with error permutations",
     /* compile - compile regular expression and index triple constraints
@@ -21841,249 +21863,264 @@ class EvalThreadedNErrRegexEngine {
         this.outerExpression = shape.expression;
     }
     match(node, constraintToTripleMapping, semActHandler, _trace) {
-        const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
-            tripleResult.forEach(res => allTriples.add(res.triple));
-            return allTriples;
-        }, new Set());
-        const startingThread = new RegexpThread();
-        const ret = this.matchTripleExpression(this.outerExpression, startingThread, constraintToTripleMapping, semActHandler);
-        // console.log(JSON.stringify(ret));
-        // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
-        const longerChosen = ret.reduce((ret, elt) => {
-            if (elt.errors.length > 0)
-                return ret; // early return
-            const unmatchedTriples = new Set(allTriples);
-            // Removed triples matched in this thread.
-            elt.matched.forEach(m => {
-                m.triples.forEach(t => {
-                    unmatchedTriples.delete(t);
+        return __awaiter(this, void 0, void 0, function* () {
+            const allTriples = constraintToTripleMapping.reduce((allTriples, _tripleConstraint, tripleResult) => {
+                tripleResult.forEach(res => allTriples.add(res.triple));
+                return allTriples;
+            }, new Set());
+            const startingThread = new RegexpThread();
+            const ret = yield this.matchTripleExpression(this.outerExpression, startingThread, constraintToTripleMapping, semActHandler);
+            // console.log(JSON.stringify(ret));
+            // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
+            const longerChosen = yield ret.reduce((ret, elt) => {
+                if (elt.errors.length > 0)
+                    return ret; // early return
+                const unmatchedTriples = new Set(allTriples);
+                // Removed triples matched in this thread.
+                elt.matched.forEach(m => {
+                    m.triples.forEach(t => {
+                        unmatchedTriples.delete(t);
+                    });
                 });
-            });
-            // Remaining triples are unaccounted for.
-            unmatchedTriples.forEach(t => {
-                elt.errors.push({
-                    type: "ExcessTripleViolation",
-                    triple: t,
+                // Remaining triples are unaccounted for.
+                unmatchedTriples.forEach(t => {
+                    elt.errors.push({
+                        type: "ExcessTripleViolation",
+                        triple: t,
+                    });
                 });
-            });
-            return ret !== null ? ret : // keep first solution
-                // Accept thread with no unmatched triples.
-                unmatchedTriples.size > 0 ? null : elt;
-        }, null);
-        if (longerChosen !== null) {
-            let fromValidationPoint = longerChosen.expression;
-            if (this.shape.semActs !== undefined)
-                fromValidationPoint.semActs = this.shape.semActs;
-            return fromValidationPoint;
-        }
-        else {
-            return ret.length > 1 ? {
-                type: "PossibleErrors",
-                errors: ret.reduce((all, e) => {
-                    return all.concat([e.errors]);
-                }, [])
-            } : {
-                type: "Failure",
-                node: node,
-                errors: ret[0].errors
-            };
-        }
+                return ret !== null ? ret : // keep first solution
+                    // Accept thread with no unmatched triples.
+                    unmatchedTriples.size > 0 ? null : elt;
+            }, null);
+            if (longerChosen !== null) {
+                let fromValidationPoint = longerChosen.expression;
+                if (this.shape.semActs !== undefined)
+                    fromValidationPoint.semActs = this.shape.semActs;
+                return fromValidationPoint;
+            }
+            else {
+                return ret.length > 1 ? {
+                    type: "PossibleErrors",
+                    errors: ret.reduce((all, e) => {
+                        return all.concat([e.errors]);
+                    }, [])
+                } : {
+                    type: "Failure",
+                    node: node,
+                    errors: ret[0].errors
+                };
+            }
+        });
     }
     matchTripleExpression(expr, thread, constraintToTripleMapping, semActHandler) {
-        if (typeof expr === "string") { // Inclusion
-            const included = this.index.tripleExprs[expr];
-            return this.matchTripleExpression(included, thread, constraintToTripleMapping, semActHandler);
-        }
-        let min = expr.min !== undefined ? expr.min : 1;
-        let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
-        switch (expr.type) {
-            case "OneOf":
-                return this.matchOneOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
-            case "EachOf":
-                return this.matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
-            case "TripleConstraint":
-                return this.matchTripleConstraint(expr, min, max, thread, constraintToTripleMapping, semActHandler);
-            default:
-                throw Error("how'd we get here?");
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            if (typeof expr === "string") { // Inclusion
+                const included = this.index.tripleExprs[expr];
+                return this.matchTripleExpression(included, thread, constraintToTripleMapping, semActHandler);
+            }
+            let min = expr.min !== undefined ? expr.min : 1;
+            let max = expr.max !== undefined ? expr.max === UNBOUNDED ? Infinity : expr.max : 1;
+            switch (expr.type) {
+                case "OneOf":
+                    return yield this.matchOneOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+                case "EachOf":
+                    return yield this.matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+                case "TripleConstraint":
+                    return yield this.matchTripleConstraint(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+                default:
+                    throw Error("how'd we get here?");
+            }
+        });
     }
     matchOneOf(oneOf, min, max, thread, constraintToTripleMapping, semActHandler) {
-        return EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", (th) => {
-            // const accept = null;
-            const matched = [];
-            const failed = [];
-            for (const nested of oneOf.expressions) {
-                const thcopy = new RegexpThread(new Map(th.avail), th.errors, th.matched //.slice() ever needed??
-                );
-                const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
-                if (sub[0].errors.length === 0) { // all subs pass or all fail
-                    Array.prototype.push.apply(matched, sub);
-                    sub.forEach(newThread => {
-                        const expressions = thcopy.solution !== undefined ? thcopy.solution.expressions : [];
-                        if (newThread.expression !== undefined) // undefined for no matches on min card:0
-                            expressions.push(newThread.expression);
-                        delete newThread.expression;
-                        newThread.solution = {
-                            type: "OneOfSolution",
-                            expressions: expressions
-                        };
-                    });
-                }
-                else
-                    Array.prototype.push.apply(failed, sub);
-            }
-            return matched.length > 0 ? matched : failed;
-        }, semActHandler);
-    }
-    matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler) {
-        return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
-            // Iterate through nested expressions, exprThreads starts as [th].
-            return expr.expressions.reduce((exprThreads, nested) => {
-                // Iterate through current thread list composing nextThreads.
-                // Consider e.g.
-                // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
-                // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-                return EvalThreadedNErrRegexEngine.homogenize(exprThreads.reduce((nextThreads, exprThread) => {
-                    const sub = this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
-                    // Move newThread.expression into a hierarchical solution structure.
-                    sub.forEach(newThread => {
-                        if (newThread.errors.length === 0) {
-                            const expressions = exprThread.solution !== undefined ? exprThread.solution.expressions.slice() : [];
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", (th) => __awaiter(this, void 0, void 0, function* () {
+                // const accept = null;
+                const matched = [];
+                const failed = [];
+                for (const nested of oneOf.expressions) {
+                    const thcopy = new RegexpThread(new Map(th.avail), th.errors, th.matched //.slice() ever needed??
+                    );
+                    const sub = yield this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
+                    if (sub[0].errors.length === 0) { // all subs pass or all fail
+                        Array.prototype.push.apply(matched, sub);
+                        sub.forEach(newThread => {
+                            const expressions = thcopy.solution !== undefined ? thcopy.solution.expressions : [];
                             if (newThread.expression !== undefined) // undefined for no matches on min card:0
                                 expressions.push(newThread.expression);
                             delete newThread.expression;
                             newThread.solution = {
-                                type: "EachOfSolution",
-                                expressions: expressions // exprThread.expression + newThread.expression
+                                type: "OneOfSolution",
+                                expressions: expressions
                             };
-                        }
-                    });
-                    return nextThreads.concat(sub);
-                }, []));
-            }, [th]);
-        }, semActHandler));
+                        });
+                    }
+                    else
+                        Array.prototype.push.apply(failed, sub);
+                }
+                return matched.length > 0 ? matched : failed;
+            }), semActHandler);
+        });
+    }
+    matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield EvalThreadedNErrRegexEngine.homogenize(yield EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => __awaiter(this, void 0, void 0, function* () {
+                // Iterate through nested expressions, exprThreads starts as [th].
+                return yield expr.expressions.reduce((exprThreadsP, nested) => __awaiter(this, void 0, void 0, function* () {
+                    const exprThreads = yield exprThreadsP;
+                    // Iterate through current thread list composing nextThreads.
+                    // Consider e.g.
+                    // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
+                    // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
+                    return yield EvalThreadedNErrRegexEngine.homogenize(yield exprThreads.reduce((nextThreadsP, exprThread) => __awaiter(this, void 0, void 0, function* () {
+                        const nextThreads = yield nextThreadsP;
+                        const sub = yield this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
+                        // Move newThread.expression into a hierarchical solution structure.
+                        sub.forEach(newThread => {
+                            if (newThread.errors.length === 0) {
+                                const expressions = exprThread.solution !== undefined ? exprThread.solution.expressions.slice() : [];
+                                if (newThread.expression !== undefined) // undefined for no matches on min card:0
+                                    expressions.push(newThread.expression);
+                                delete newThread.expression;
+                                newThread.solution = {
+                                    type: "EachOfSolution",
+                                    expressions: expressions // exprThread.expression + newThread.expression
+                                };
+                            }
+                        });
+                        return nextThreads.concat(sub);
+                    }), Promise.resolve([])));
+                }), Promise.resolve([th]));
+            }), semActHandler));
+        });
     }
     // Early return in case of insufficient matching triples
     matchTripleConstraint(constraint, min, max, thread, constraintToTripleMapping, semActHandler) {
-        if (thread.avail.get(constraint) === undefined)
-            thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
-        const taken = thread.avail.get(constraint).splice(0, min);
-        if (!(taken.length >= min)) // Early return
-            return [thread.makeMissingPropertyThread(constraint, thread.matched)];
-        const ret = [];
-        const minmax = {};
-        if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
-            minmax.min = constraint.min;
-            minmax.max = constraint.max;
-        }
-        if (constraint.semActs !== undefined)
-            minmax.semActs = constraint.semActs;
-        if (constraint.annotations !== undefined)
-            minmax.annotations = constraint.annotations;
-        do {
-            const passFail = taken.reduce((acc, triple) => {
-                const tested = {
-                    type: "TestedTriple",
-                    subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
-                    predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
-                    object: (0, term_1.rdfJsTerm2Ld)(triple.object)
-                };
-                const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple);
-                if (hit.res !== undefined)
-                    tested.referenced = hit.res;
-                const semActErrors = thread.errors.concat(constraint.semActs !== undefined
-                    ? semActHandler.dispatchAll(constraint.semActs, { triples: [triple], tripleExpr: constraint }, tested)
-                    : []);
-                if (semActErrors.length > 0)
-                    acc.fail.push({ triple, tested, semActErrors });
-                else
-                    acc.pass.push({ triple, tested, semActErrors });
-                return acc;
-            }, { pass: [], fail: [] });
-            // return an empty solution if min card was 0
-            if (passFail.fail.length === 0) {
-                // If we didn't take anything, fall back to old errors.
-                // Could do something fancy here with a semAct registration for negative matches.
-                const totalErrors = taken.length === 0 ? thread.errors.slice() : [];
-                const myThread = thread.makeResultsThread(constraint, passFail.pass, totalErrors, thread.matched, minmax);
-                ret.push(myThread);
+        return __awaiter(this, void 0, void 0, function* () {
+            if (thread.avail.get(constraint) === undefined)
+                thread.avail.set(constraint, constraintToTripleMapping.get(constraint).map(pair => pair.triple));
+            const taken = thread.avail.get(constraint).splice(0, min);
+            if (!(taken.length >= min)) // Early return
+                return [thread.makeMissingPropertyThread(constraint, thread.matched)];
+            const ret = [];
+            const minmax = {};
+            if (constraint.min !== undefined && constraint.min !== 1 || constraint.max !== undefined && constraint.max !== 1) {
+                minmax.min = constraint.min;
+                minmax.max = constraint.max;
             }
-            else {
-                passFail.fail.forEach(f => ret.push(thread.makeResultsThread(constraint, [f], f.semActErrors, thread.matched, minmax)));
-            }
-        } while ((() => {
-            if (thread.avail.get(constraint).length > 0 && taken.length < max) {
-                // build another thread.
-                taken.push(thread.avail.get(constraint).shift());
-                return true;
-            }
-            else {
-                // no more threads
-                return false;
-            }
-        })());
-        return ret;
+            if (constraint.semActs !== undefined)
+                minmax.semActs = constraint.semActs;
+            if (constraint.annotations !== undefined)
+                minmax.annotations = constraint.annotations;
+            do {
+                const passFail = yield taken.reduce((accP, triple) => __awaiter(this, void 0, void 0, function* () {
+                    const acc = yield accP;
+                    const tested = {
+                        type: "TestedTriple",
+                        subject: (0, term_1.rdfJsTerm2Ld)(triple.subject),
+                        predicate: (0, term_1.rdfJsTerm2Ld)(triple.predicate),
+                        object: (0, term_1.rdfJsTerm2Ld)(triple.object)
+                    };
+                    const hit = constraintToTripleMapping.get(constraint).find(x => x.triple === triple);
+                    if (hit.res !== undefined)
+                        tested.referenced = yield hit.res;
+                    const semActErrors = thread.errors.concat(constraint.semActs !== undefined
+                        ? yield semActHandler.dispatchAll(constraint.semActs, { triples: [triple], tripleExpr: constraint }, tested)
+                        : []);
+                    if (semActErrors.length > 0)
+                        acc.fail.push({ triple, tested, semActErrors });
+                    else
+                        acc.pass.push({ triple, tested, semActErrors });
+                    return acc;
+                }), Promise.resolve({ pass: [], fail: [] }));
+                // return an empty solution if min card was 0
+                if (passFail.fail.length === 0) {
+                    // If we didn't take anything, fall back to old errors.
+                    // Could do something fancy here with a semAct registration for negative matches.
+                    const totalErrors = taken.length === 0 ? thread.errors.slice() : [];
+                    const myThread = thread.makeResultsThread(constraint, passFail.pass, totalErrors, thread.matched, minmax);
+                    ret.push(myThread);
+                }
+                else {
+                    passFail.fail.forEach(f => ret.push(thread.makeResultsThread(constraint, [f], f.semActErrors, thread.matched, minmax)));
+                }
+            } while ((() => {
+                if (thread.avail.get(constraint).length > 0 && taken.length < max) {
+                    // build another thread.
+                    taken.push(thread.avail.get(constraint).shift());
+                    return true;
+                }
+                else {
+                    // no more threads
+                    return false;
+                }
+            })());
+            return ret;
+        });
     }
     /*
        * returns: list of all passing or all failing threads (no heterogeneous lists)
        */
     static matchRepeat(groupTE, min, max, thread, type, evalGroup, semActHandler) {
-        let repeated = 0, errOut = false;
-        let newThreads = [thread];
-        const minmax = {};
-        if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
-            minmax.min = groupTE.min;
-            minmax.max = groupTE.max;
-        }
-        if (groupTE.semActs !== undefined)
-            minmax.semActs = groupTE.semActs;
-        if (groupTE.annotations !== undefined)
-            minmax.annotations = groupTE.annotations;
-        for (; repeated < max && !errOut; ++repeated) {
-            let inner = [];
-            for (let t = 0; t < newThreads.length; ++t) {
-                const newt = newThreads[t];
-                const sub = evalGroup(newt);
-                if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
-                    sub.forEach(newThread => {
-                        const solutions = newt.expression !== undefined ? newt.expression.solutions.slice() : [];
-                        if (newThread.solution !== undefined)
-                            solutions.push(newThread.solution);
-                        delete newThread.solution;
-                        newThread.expression = Object.assign({
-                            type: type,
-                            solutions: solutions
-                        }, minmax);
-                    });
-                }
-                if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
-                    return repeated < min ? sub : newThreads;
-                else
-                    inner = inner.concat(sub);
-                // newThreads.expressions.push(sub);
+        return __awaiter(this, void 0, void 0, function* () {
+            let repeated = 0, errOut = false;
+            let newThreads = [thread];
+            const minmax = {};
+            if (groupTE.min !== undefined && groupTE.min !== 1 || groupTE.max !== undefined && groupTE.max !== 1) {
+                minmax.min = groupTE.min;
+                minmax.max = groupTE.max;
             }
-            newThreads = inner;
-        }
-        if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
-            const passes = [];
-            const failures = [];
-            for (const newThread of newThreads) {
-                const ctx = {
-                    triples: newThread.matched.flatMap(m => m.triples),
-                    tripleExpr: groupTE,
-                };
-                const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread);
-                if (semActErrors.length === 0) {
-                    passes.push(newThread);
+            if (groupTE.semActs !== undefined)
+                minmax.semActs = groupTE.semActs;
+            if (groupTE.annotations !== undefined)
+                minmax.annotations = groupTE.annotations;
+            for (; repeated < max && !errOut; ++repeated) {
+                let inner = [];
+                for (let t = 0; t < newThreads.length; ++t) {
+                    const newt = newThreads[t];
+                    const sub = yield evalGroup(newt);
+                    if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
+                        sub.forEach(newThread => {
+                            const solutions = newt.expression !== undefined ? newt.expression.solutions.slice() : [];
+                            if (newThread.solution !== undefined)
+                                solutions.push(newThread.solution);
+                            delete newThread.solution;
+                            newThread.expression = Object.assign({
+                                type: type,
+                                solutions: solutions
+                            }, minmax);
+                        });
+                    }
+                    if (sub.length === 0 /* min:0 */ || sub[0].errors.length > 0)
+                        return repeated < min ? sub : newThreads;
+                    else
+                        inner = inner.concat(sub);
+                    // newThreads.expressions.push(sub);
                 }
-                else {
-                    Array.prototype.push.apply(newThread.errors, semActErrors);
-                    failures.push(newThread);
-                }
+                newThreads = inner;
             }
-            newThreads = passes.length > 0 ? passes : failures;
-        }
-        return newThreads;
+            if (newThreads.length > 0 && newThreads[0].errors.length === 0 && groupTE.semActs !== undefined) {
+                const passes = [];
+                const failures = [];
+                for (const newThread of newThreads) {
+                    const ctx = {
+                        triples: newThread.matched.flatMap(m => m.triples),
+                        tripleExpr: groupTE,
+                    };
+                    const semActErrors = yield semActHandler.dispatchAll(groupTE.semActs, ctx, newThread);
+                    if (semActErrors.length === 0) {
+                        passes.push(newThread);
+                    }
+                    else {
+                        Array.prototype.push.apply(newThread.errors, semActErrors);
+                        failures.push(newThread);
+                    }
+                }
+                newThreads = passes.length > 0 ? passes : failures;
+            }
+            return newThreads;
+        });
     }
     static homogenize(list) {
         return list.reduce((acc, elt) => {
@@ -27730,6 +27767,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShExValidator = exports.resultMapToShapeExprTest = exports.InterfaceOptions = void 0;
 // interface constants
@@ -27747,7 +27793,7 @@ exports.InterfaceOptions = {
     }
 };
 const VERBOSE = false; // "VERBOSE" in process.env;
-const EvalThreadedNErr = (__webpack_require__(6201)/* .RegexpModule */ .G);
+const EvalThreadedNErr = (__webpack_require__(6201).RegexpModule);
 class SemActDispatcherImpl {
     constructor(externalCode) {
         this.handlers = {};
@@ -27778,28 +27824,31 @@ class SemActDispatcherImpl {
      * @return {SemActFailure[]} false if any result was false.
      */
     dispatchAll(semActs, semActParm, resultsArtifact) {
-        return semActs.reduce((ret, semAct) => {
-            if (ret.length === 0 && semAct.name in this.handlers) {
-                const code = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
-                const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
-                const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-                const response = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
-                if (typeof response === 'object' && Array.isArray(response)) {
-                    if (response.length > 0)
-                        ret.push({ type: "SemActFailure", errors: response });
-                }
-                else {
-                    throw Error("unsupported response from semantic action handler: " + JSON.stringify(response));
-                }
-                if (!existing && Object.keys(extensionStorage).length > 0) {
-                    if (!("extensions" in resultsArtifact))
-                        resultsArtifact.extensions = {};
-                    resultsArtifact.extensions[semAct.name] = extensionStorage;
+        return __awaiter(this, void 0, void 0, function* () {
+            return semActs.reduce((retP, semAct) => __awaiter(this, void 0, void 0, function* () {
+                const ret = yield retP;
+                if (ret.length === 0 && semAct.name in this.handlers) {
+                    const code = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
+                    const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
+                    const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
+                    const response = yield this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+                    if (typeof response === 'object' && Array.isArray(response)) {
+                        if (response.length > 0)
+                            ret.push({ type: "SemActFailure", errors: response });
+                    }
+                    else {
+                        throw Error("unsupported response from semantic action handler: " + JSON.stringify(response));
+                    }
+                    if (!existing && Object.keys(extensionStorage).length > 0) {
+                        if (!("extensions" in resultsArtifact))
+                            resultsArtifact.extensions = {};
+                        resultsArtifact.extensions[semAct.name] = extensionStorage;
+                    }
+                    return ret;
                 }
                 return ret;
-            }
-            return ret;
-        }, []);
+            }), Promise.resolve([]));
+        });
     }
 }
 /**
@@ -27958,18 +28007,21 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateShapeMap(shapeMap, tracker = new EmptyTracker(), seen = {}) {
-        return shapeMap.reduce((acc, pair) => {
-            // let time = +new Date();
-            const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
-            // time = +new Date() - time;
-            return acc.concat([{
-                    node: pair.node,
-                    shape: pair.shape,
-                    status: "errors" in res ? "nonconformant" : "conformant",
-                    appinfo: res,
-                    // elapsed: time
-                }]);
-        }, []);
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield shapeMap.reduce((accP, pair) => __awaiter(this, void 0, void 0, function* () {
+                const acc = yield accP;
+                // let time = +new Date();
+                const res = yield this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
+                // time = +new Date() - time;
+                return acc.concat([{
+                        node: pair.node,
+                        shape: pair.shape,
+                        status: "errors" in res ? "nonconformant" : "conformant",
+                        appinfo: res,
+                        // elapsed: time
+                    }]);
+            }), Promise.resolve([]));
+        });
     }
     /**
      * Validate a single node as a labeled shape expression or as the Start shape
@@ -27980,59 +28032,63 @@ class ShExValidator {
      * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
      */
     validateNodeShapePair(focus, labelOrStart, tracker = new EmptyTracker(), seen = {}) {
-        const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null);
-        if ("startActs" in this.schema) {
-            const startActionStorage = {}; // !!! need test to see this write to results structure.
-            const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage);
-            if (semActErrors.length)
-                return {
-                    type: "Failure",
-                    node: (0, term_1.rdfJsTerm2Ld)(focus),
-                    shape: ctx.label,
-                    errors: semActErrors
-                }; // some semAct aborted !! return a better error
-        }
-        const ret = this.validateShapeLabel(focus, ctx);
-        if ("startActs" in this.schema) {
-            ret.startActs = this.schema.startActs;
-        }
-        return ret;
+        return __awaiter(this, void 0, void 0, function* () {
+            const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null);
+            if ("startActs" in this.schema) {
+                const startActionStorage = {}; // !!! need test to see this write to results structure.
+                const semActErrors = yield this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage);
+                if (semActErrors.length)
+                    return {
+                        type: "Failure",
+                        node: (0, term_1.rdfJsTerm2Ld)(focus),
+                        shape: ctx.label,
+                        errors: semActErrors
+                    }; // some semAct aborted !! return a better error
+            }
+            const ret = yield this.validateShapeLabel(focus, ctx);
+            if ("startActs" in this.schema) {
+                ret.startActs = this.schema.startActs;
+            }
+            return ret;
+        });
     }
     validateShapeLabel(focus, ctx) {
-        if (typeof ctx.label !== "string") {
-            if (ctx.label !== ShExValidator.Start)
-                runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
-            if (!this.schema.start)
-                runtimeError("start production not defined");
-            return this.validateShapeExpr(focus, this.schema.start, ctx);
-        }
-        const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
-        if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
-            if (seenKey in ctx.seen) {
-                let ret = {
-                    type: "Recursion",
-                    node: (0, term_1.rdfJsTerm2Ld)(focus),
-                    shape: ctx.label
-                };
-                ctx.tracker.recurse(ret);
-                return ret;
+        return __awaiter(this, void 0, void 0, function* () {
+            if (typeof ctx.label !== "string") {
+                if (ctx.label !== ShExValidator.Start)
+                    runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
+                if (!this.schema.start)
+                    runtimeError("start production not defined");
+                return yield this.validateShapeExpr(focus, this.schema.start, ctx);
             }
-            if ("known" in this && seenKey in this.known) {
-                const ret = this.known[seenKey];
-                ctx.tracker.known(ret);
-                return ret;
+            const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
+            if (!ctx.subGraph) { // Don't cache base shape validations as they aren't testing the full neighborhood.
+                if (seenKey in ctx.seen) {
+                    let ret = {
+                        type: "Recursion",
+                        node: (0, term_1.rdfJsTerm2Ld)(focus),
+                        shape: ctx.label
+                    };
+                    ctx.tracker.recurse(ret);
+                    return ret;
+                }
+                if ("known" in this && seenKey in this.known) {
+                    const ret = this.known[seenKey];
+                    ctx.tracker.known(ret);
+                    return ret;
+                }
+                ctx.seen[seenKey] = { node: focus, shape: ctx.label };
+                ctx.tracker.enter(focus, ctx.label);
             }
-            ctx.seen[seenKey] = { node: focus, shape: ctx.label };
-            ctx.tracker.enter(focus, ctx.label);
-        }
-        const ret = this.validateDescendants(focus, ctx.label, ctx, false);
-        if (!ctx.subGraph) {
-            ctx.tracker.exit(focus, ctx.label, ret);
-            delete ctx.seen[seenKey];
-            if ("known" in this)
-                this.known[seenKey] = ret;
-        }
-        return ret;
+            const ret = yield this.validateDescendants(focus, ctx.label, ctx, false);
+            if (!ctx.subGraph) {
+                ctx.tracker.exit(focus, ctx.label, ret);
+                delete ctx.seen[seenKey];
+                if ("known" in this)
+                    this.known[seenKey] = ret;
+            }
+            return ret;
+        });
     }
     /**
      * Validate shapeLabel and shapeExprs which extend shapeLabel
@@ -28043,91 +28099,94 @@ class ShExValidator {
      * @param includeAbstractShapes - if true, don't strip out abstract classes (needed for validating abstract base shapes)
      */
     validateDescendants(focus, shapeLabel, ctx, includeAbstractShapes = false) {
-        const _ShExValidator = this;
-        if (ctx.subGraph) { // !! matchTarget?
-            // matchTarget indicates that shape substitution has already been applied.
-            // Now we're testing a subgraph against the base shapes.
-            const res = this.validateShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
-            if (ctx.matchTarget && shapeLabel === ctx.matchTarget.label && !("errors" in res))
-                ctx.matchTarget.count++;
-            return res;
-        }
-        // Find all non-abstract shapeExprs extended with label.
-        let candidates = [shapeLabel];
-        candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
-        // Uniquify list.
-        for (let i = candidates.length - 1; i >= 0; --i) {
-            if (candidates.indexOf(candidates[i]) < i)
-                candidates.splice(i, 1);
-        }
-        // Filter out abstract shapes.
-        if (!includeAbstractShapes)
-            candidates = candidates.filter(l => !this.lookupShape(l).abstract);
-        // Aggregate results in a SolutionList or FailureList.
-        const results = candidates.reduce((ret, candidateShapeLabel) => {
-            const shapeExpr = this.lookupShape(candidateShapeLabel);
-            const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
-            ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
-            const res = this.validateShapeDecl(focus, shapeExpr, ctx);
-            return "errors" in res || matchTarget && matchTarget.count === 0 ?
-                { passes: ret.passes, failures: ret.failures.concat(res) } :
-                { passes: ret.passes.concat(res), failures: ret.failures };
-        }, { passes: [], failures: [] });
-        let ret;
-        if (results.passes.length > 0) {
-            ret = results.passes.length !== 1 ?
-                { type: "SolutionList", solutions: results.passes } :
-                results.passes[0];
-        }
-        else if (results.failures.length > 0) {
-            ret = results.failures.length !== 1 ?
-                { type: "FailureList", errors: results.failures } :
-                results.failures[0];
-        }
-        else {
-            ret = {
-                type: "AbstractShapeFailure",
-                shape: shapeLabel,
-                errors: [shapeLabel + " has no non-abstract children"]
-            };
-        }
-        return ret;
-        // @TODO move to ShExIndexVisitor.index
-        function indexExtensions(schema) {
-            const abstractness = {};
-            const extensions = Hierarchy.create();
-            makeSchemaVisitor().visitSchema(schema);
-            return extensions.children;
-            function makeSchemaVisitor() {
-                const schemaVisitor = new visitor_1.ShExVisitor();
-                let curLabel;
-                let curAbstract;
-                const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
-                schemaVisitor.visitShapeDecl = function (decl) {
-                    curLabel = decl.id;
-                    curAbstract = decl.abstract;
-                    abstractness[decl.id] = !!decl.abstract;
-                    return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
-                };
-                schemaVisitor.visitShape = function (shape) {
-                    if (shape.extends !== undefined) {
-                        shape.extends.forEach(ext => {
-                            const extendsVisitor = new visitor_1.ShExVisitor();
-                            extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
-                            extendsVisitor.visitShapeRef = function (reference, ..._args) {
-                                extensions.add(reference, curLabel);
-                                extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
-                                // makeSchemaVisitor().visitSchema(schema);
-                                return "null";
-                            };
-                            extendsVisitor.visitShapeExpr(ext);
-                        });
-                    }
-                    return "null";
-                };
-                return schemaVisitor;
+        return __awaiter(this, void 0, void 0, function* () {
+            const _ShExValidator = this;
+            if (ctx.subGraph) { // !! matchTarget?
+                // matchTarget indicates that shape substitution has already been applied.
+                // Now we're testing a subgraph against the base shapes.
+                const res = this.validateShapeDecl(focus, this.lookupShape(shapeLabel), ctx);
+                if (ctx.matchTarget && shapeLabel === ctx.matchTarget.label && !("errors" in res))
+                    ctx.matchTarget.count++;
+                return res;
             }
-        }
+            // Find all non-abstract shapeExprs extended with label.
+            let candidates = [shapeLabel];
+            candidates = candidates.concat(indexExtensions(this.schema)[shapeLabel] || []);
+            // Uniquify list.
+            for (let i = candidates.length - 1; i >= 0; --i) {
+                if (candidates.indexOf(candidates[i]) < i)
+                    candidates.splice(i, 1);
+            }
+            // Filter out abstract shapes.
+            if (!includeAbstractShapes)
+                candidates = candidates.filter(l => !this.lookupShape(l).abstract);
+            // Aggregate results in a SolutionList or FailureList.
+            const results = yield candidates.reduce((retP, candidateShapeLabel) => __awaiter(this, void 0, void 0, function* () {
+                const ret = yield retP;
+                const shapeExpr = this.lookupShape(candidateShapeLabel);
+                const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
+                ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
+                const res = yield this.validateShapeDecl(focus, shapeExpr, ctx);
+                return "errors" in res || matchTarget && matchTarget.count === 0 ?
+                    { passes: ret.passes, failures: ret.failures.concat(res) } :
+                    { passes: ret.passes.concat(res), failures: ret.failures };
+            }), Promise.resolve({ passes: [], failures: [] }));
+            let ret;
+            if (results.passes.length > 0) {
+                ret = results.passes.length !== 1 ?
+                    { type: "SolutionList", solutions: results.passes } :
+                    results.passes[0];
+            }
+            else if (results.failures.length > 0) {
+                ret = results.failures.length !== 1 ?
+                    { type: "FailureList", errors: results.failures } :
+                    results.failures[0];
+            }
+            else {
+                ret = {
+                    type: "AbstractShapeFailure",
+                    shape: shapeLabel,
+                    errors: [shapeLabel + " has no non-abstract children"]
+                };
+            }
+            return ret;
+            // @TODO move to ShExIndexVisitor.index
+            function indexExtensions(schema) {
+                const abstractness = {};
+                const extensions = Hierarchy.create();
+                makeSchemaVisitor().visitSchema(schema);
+                return extensions.children;
+                function makeSchemaVisitor() {
+                    const schemaVisitor = new visitor_1.ShExVisitor();
+                    let curLabel;
+                    let curAbstract;
+                    const oldVisitShapeDecl = schemaVisitor.visitShapeDecl;
+                    schemaVisitor.visitShapeDecl = function (decl) {
+                        curLabel = decl.id;
+                        curAbstract = decl.abstract;
+                        abstractness[decl.id] = !!decl.abstract;
+                        return oldVisitShapeDecl.call(schemaVisitor, decl, decl.id);
+                    };
+                    schemaVisitor.visitShape = function (shape) {
+                        if (shape.extends !== undefined) {
+                            shape.extends.forEach(ext => {
+                                const extendsVisitor = new visitor_1.ShExVisitor();
+                                extendsVisitor.visitExpression = function (_expr, ..._args) { return "null"; };
+                                extendsVisitor.visitShapeRef = function (reference, ..._args) {
+                                    extensions.add(reference, curLabel);
+                                    extendsVisitor.visitShapeDecl(_ShExValidator.lookupShape(reference));
+                                    // makeSchemaVisitor().visitSchema(schema);
+                                    return "null";
+                                };
+                                extendsVisitor.visitShapeExpr(ext);
+                            });
+                        }
+                        return "null";
+                    };
+                    return schemaVisitor;
+                }
+            }
+        });
     }
     /**
      * Validate a ShapeDecl, including any shapes it restricts
@@ -28137,11 +28196,13 @@ class ShExValidator {
      * @param ctx - validation context
      */
     validateShapeDecl(focus, shapeDecl, ctx) {
-        const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr]);
-        const expr = conjuncts.length === 1
-            ? conjuncts[0]
-            : { type: "ShapeAnd", shapeExprs: conjuncts };
-        return this.validateShapeExpr(focus, expr, ctx);
+        return __awaiter(this, void 0, void 0, function* () {
+            const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr]);
+            const expr = conjuncts.length === 1
+                ? conjuncts[0]
+                : { type: "ShapeAnd", shapeExprs: conjuncts };
+            return yield this.validateShapeExpr(focus, expr, ctx);
+        });
     }
     lookupShape(label) {
         const shapes = this.schema.shapes;
@@ -28154,108 +28215,114 @@ class ShExValidator {
         runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
     }
     validateShapeExpr(focus, shapeExpr, ctx) {
-        if (typeof shapeExpr === "string") { // ShapeRef
-            return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
-        }
-        switch (shapeExpr.type) {
-            case "NodeConstraint":
-                return this.validateNodeConstraint(focus, shapeExpr, ctx);
-            case "Shape":
-                return this.validateShape(focus, shapeExpr, ctx);
-            case "ShapeExternal":
-                if (typeof this.options.validateExtern !== "function")
-                    throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
-                return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
-            case "ShapeOr":
-                const orErrors = [];
-                for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-                    const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
-                    if ("errors" in sub)
-                        orErrors.push(sub);
-                    else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
-                        return { type: "ShapeOrResults", solution: sub };
-                }
-                return { type: "ShapeOrFailure", errors: orErrors };
-            case "ShapeNot":
-                const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
-                return ("errors" in sub)
-                    ? { type: "ShapeNotResults", solution: sub }
-                    : { type: "ShapeNotFailure", errors: sub }; // ugh
-            case "ShapeAnd":
-                const andPasses = [];
-                const andErrors = [];
-                for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
-                    const nested = shapeExpr.shapeExprs[i];
-                    const sub = this.validateShapeExpr(focus, nested, ctx);
-                    if ("errors" in sub)
-                        andErrors.push(sub);
-                    else
-                        andPasses.push(sub);
-                }
-                return andErrors.length > 0
-                    ? { type: "ShapeAndFailure", errors: andErrors }
-                    : { type: "ShapeAndResults", solutions: andPasses };
-            default:
-                throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            if (typeof shapeExpr === "string") { // ShapeRef
+                return yield this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
+            }
+            switch (shapeExpr.type) {
+                case "NodeConstraint":
+                    return yield this.validateNodeConstraint(focus, shapeExpr, ctx);
+                case "Shape":
+                    return yield this.validateShape(focus, shapeExpr, ctx);
+                case "ShapeExternal":
+                    if (typeof this.options.validateExtern !== "function")
+                        throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`);
+                    return yield this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+                case "ShapeOr":
+                    const orErrors = [];
+                    for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+                        const nested = shapeExpr.shapeExprs[i];
+                        const sub = yield this.validateShapeExpr(focus, nested, ctx);
+                        if ("errors" in sub)
+                            orErrors.push(sub);
+                        else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
+                            return Promise.resolve({ type: "ShapeOrResults", solution: sub });
+                    }
+                    return Promise.resolve({ type: "ShapeOrFailure", errors: orErrors });
+                case "ShapeNot":
+                    const sub = yield this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
+                    return Promise.resolve(("errors" in sub)
+                        ? { type: "ShapeNotResults", solution: sub }
+                        : { type: "ShapeNotFailure", errors: sub }); // ugh
+                case "ShapeAnd":
+                    const andPasses = [];
+                    const andErrors = [];
+                    for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
+                        const nested = shapeExpr.shapeExprs[i];
+                        const sub = yield this.validateShapeExpr(focus, nested, ctx);
+                        if ("errors" in sub)
+                            andErrors.push(sub);
+                        else
+                            andPasses.push(sub);
+                    }
+                    return Promise.resolve(andErrors.length > 0
+                        ? { type: "ShapeAndFailure", errors: andErrors }
+                        : { type: "ShapeAndResults", solutions: andPasses });
+                default:
+                    throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
+            }
+        });
     }
     // TODO: should this be called for and, or, not?
     evaluateShapeExprSemActs(ret, shapeExpr, point, shapeLabel) {
-        if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-            const semActErrors = this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({ node: point }, ret), ret);
-            if (semActErrors.length)
-                // some semAct aborted
-                return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
-        }
-        return ret;
-    }
-    validateShape(focus, shape, ctx) {
-        let ret = null;
-        const fromDB = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
-        const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
-        const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
-        const tripleConstraints = extendsTCs.concat(localTCs);
-        // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-        const { t2tcs, t2tcErrors, tc2TResults } = this.matchByPredicate(tripleConstraints, fromDB, ctx);
-        const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
-        const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
-        const partitionErrors = [];
-        // only construct a regexp engine if shape has a triple expression
-        const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
-        for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
-            const { errors, results } = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
-            const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
-            if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
-                // @ts-ignore TODO
-                possibleRet.solution = results;
-            if ("semActs" in shape) {
-                const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: focus }, results), possibleRet);
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
+                const semActErrors = yield this.semActHandler.dispatchAll(shapeExpr.semActs, Object.assign({ node: point }, ret), ret);
                 if (semActErrors.length)
                     // some semAct aborted
-                    Array.prototype.push.apply(errors, semActErrors);
+                    return { type: "Failure", node: (0, term_1.rdfJsTerm2Ld)(point), shape: shapeLabel, errors: semActErrors };
             }
-            partitionErrors.push(errors);
-            if (errors.length === 0)
-                ret = possibleRet;
-        }
-        // Report only last errors until we have a better idea.
-        const lastErrors = partitionErrors[partitionErrors.length - 1];
-        let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
-        if (errors.length > 0)
-            ret = {
-                type: "Failure",
-                node: (0, term_1.rdfJsTerm2Ld)(focus),
-                shape: ctx.label,
-                errors: errors
-            };
-        // remove N3jsTripleToString
-        if (VERBOSE)
-            neighborhood.forEach(function (t) {
-                // @ts-ignore
-                delete t.toString;
-            });
-        return this.addShapeAttributes(shape, ret);
+            return ret;
+        });
+    }
+    validateShape(focus, shape, ctx) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let ret = null;
+            const fromDB = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
+            const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
+            const { extendsTCs, tc2exts, localTCs } = yield this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
+            const tripleConstraints = extendsTCs.concat(localTCs);
+            // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
+            const { t2tcs, t2tcErrors, tc2TResults } = yield this.matchByPredicate(tripleConstraints, fromDB, ctx);
+            const { missErrors, matchedExtras } = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || []);
+            const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
+            const partitionErrors = [];
+            // only construct a regexp engine if shape has a triple expression
+            const regexEngine = shape.expression === undefined ? null : this.regexModule.compile(this.schema, shape, this.index);
+            for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
+                const { errors, results } = yield this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
+                const possibleRet = { type: "ShapeTest", node: (0, term_1.rdfJsTerm2Ld)(focus), shape: ctx.label };
+                if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
+                    // @ts-ignore TODO
+                    possibleRet.solution = results;
+                if ("semActs" in shape) {
+                    const semActErrors = yield this.semActHandler.dispatchAll(shape.semActs, Object.assign({ node: focus }, results), possibleRet);
+                    if (semActErrors.length)
+                        // some semAct aborted
+                        Array.prototype.push.apply(errors, semActErrors);
+                }
+                partitionErrors.push(errors);
+                if (errors.length === 0)
+                    ret = possibleRet;
+            }
+            // Report only last errors until we have a better idea.
+            const lastErrors = partitionErrors[partitionErrors.length - 1];
+            let errors = missErrors.concat(lastErrors.length === 1 ? lastErrors[0] : lastErrors);
+            if (errors.length > 0)
+                ret = {
+                    type: "Failure",
+                    node: (0, term_1.rdfJsTerm2Ld)(focus),
+                    shape: ctx.label,
+                    errors: errors
+                };
+            // remove N3jsTripleToString
+            if (VERBOSE)
+                neighborhood.forEach(function (t) {
+                    // @ts-ignore
+                    delete t.toString;
+                });
+            return this.addShapeAttributes(shape, ret);
+        });
     }
     /**
      * Try a mapping of triples to triple constraints
@@ -28274,61 +28341,63 @@ class ShExValidator {
      * @private
      */
     tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, t2tcErrors, outgoing, regexEngine) {
-        const tc2ts = new eval_validator_api_1.MapArray();
-        tripleConstraints.forEach(tc => tc2ts.empty(tc));
-        const unexpectedTriples = [];
-        const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
-        t2tc.forEach((tripleConstraint, triple) => {
-            if (extendsTCs.indexOf(tripleConstraint) !== -1) {
-                // allocate to EXTENDS
-                for (let extNo of tc2exts.get(tripleConstraint)) {
-                    // allocated to multiple extends if diamond inheritance
-                    extendsToTriples[extNo].push(triple);
-                }
-            }
-            else {
-                // allocate to local shape
-                tc2ts.add(tripleConstraint, { triple: triple, res: t2tcErrors.get(tripleConstraint, triple) });
-            }
-        });
-        outgoing.forEach(triple => {
-            if (!t2tc.has(triple) // didn't match anything
-                && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
-                unexpectedTriples.push(triple);
-        });
-        const errors = [];
-        // Triples not mapped to triple constraints are not allowed in closed shapes.
-        if (shape.closed && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
-            errors.push({
-                type: "ClosedShapeViolation",
-                unexpectedTriples: unexpectedTriples.map(q => {
-                    return {
-                        subject: (0, term_1.rdfJsTerm2Ld)(q.subject),
-                        predicate: (0, term_1.rdfJsTerm2Ld)(q.predicate),
-                        object: (0, term_1.rdfJsTerm2Ld)(q.object),
-                    };
-                })
-            });
-        }
-        let results = this.testExtends(shape, focus, extendsToTriples, ctx);
-        if (results === null || !("errors" in results)) {
-            if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-                const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
-                if (!("errors" in sub) && results) {
-                    results = { type: "ExtendedResults", extensions: results, local: sub };
+        return __awaiter(this, void 0, void 0, function* () {
+            const tc2ts = new eval_validator_api_1.MapArray();
+            tripleConstraints.forEach(tc => tc2ts.empty(tc));
+            const unexpectedTriples = [];
+            const extendsToTriples = _seq((shape.extends || []).length).map(() => []);
+            t2tc.forEach((tripleConstraint, triple) => {
+                if (extendsTCs.indexOf(tripleConstraint) !== -1) {
+                    // allocate to EXTENDS
+                    for (let extNo of tc2exts.get(tripleConstraint)) {
+                        // allocated to multiple extends if diamond inheritance
+                        extendsToTriples[extNo].push(triple);
+                    }
                 }
                 else {
-                    results = sub;
+                    // allocate to local shape
+                    tc2ts.add(tripleConstraint, { triple: triple, res: t2tcErrors.get(tripleConstraint, triple) });
+                }
+            });
+            outgoing.forEach(triple => {
+                if (!t2tc.has(triple) // didn't match anything
+                    && matchedExtras.indexOf(triple) === -1) // isn't in EXTRAs
+                    unexpectedTriples.push(triple);
+            });
+            const errors = [];
+            // Triples not mapped to triple constraints are not allowed in closed shapes.
+            if (shape.closed && unexpectedTriples.length > 0 && !this.options.ignoreClosed) {
+                errors.push({
+                    type: "ClosedShapeViolation",
+                    unexpectedTriples: unexpectedTriples.map(q => {
+                        return {
+                            subject: (0, term_1.rdfJsTerm2Ld)(q.subject),
+                            predicate: (0, term_1.rdfJsTerm2Ld)(q.predicate),
+                            object: (0, term_1.rdfJsTerm2Ld)(q.object),
+                        };
+                    })
+                });
+            }
+            let results = yield this.testExtends(shape, focus, extendsToTriples, ctx);
+            if (results === null || !("errors" in results)) {
+                if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
+                    const sub = yield regexEngine.match(focus, tc2ts, this.semActHandler, null);
+                    if (!("errors" in sub) && results) {
+                        results = { type: "ExtendedResults", extensions: results, local: sub };
+                    }
+                    else {
+                        results = sub;
+                    }
+                }
+                else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
+                    results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
                 }
             }
-            else if (results) { // constructs { ExtendedResults, extensions: { ExtensionResults ... } with no local: { ... } }
-                results = { type: "ExtendedResults", extensions: results }; // TODO: keep that redundant nesting for consistency?
-            }
-        }
-        // TODO: what if results is a TypedError (i.e. not a container of further errors)?
-        if (results !== null && results.errors !== undefined)
-            Array.prototype.push.apply(errors, results.errors);
-        return { errors, results };
+            // TODO: what if results is a TypedError (i.e. not a container of further errors)?
+            if (results !== null && results.errors !== undefined)
+                Array.prototype.push.apply(errors, results.errors);
+            return { errors, results };
+        });
     }
     /**
      * For each TripleConstraint TC, for each triple T | T.p === TC.p, get the result of testing the value constraint.
@@ -28337,28 +28406,33 @@ class ShExValidator {
      * @param ctx - evaluation context
      */
     matchByPredicate(constraintList, neighborhood, ctx) {
-        const _ShExValidator = this;
-        const outgoing = indexNeighborhood(neighborhood.outgoing);
-        const incoming = indexNeighborhood(neighborhood.incoming);
-        const init = { t2tcErrors: new Map(), tc2TResults: new MapMap(), t2tcs: new eval_validator_api_1.MapArray() };
-        [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.t2tcs.data.set(triple, [])));
-        return constraintList.reduce(function (ret, constraint) {
-            // subject and object depend on direction of constraint.
-            const index = constraint.inverse ? incoming : outgoing;
-            // get triples matching predicate
-            const matchPredicate = index.byPredicate.get(constraint.predicate) ||
-                []; // empty list when no triple matches that constraint
-            // strip to triples matching value constraints (apart from @<someShape>)
-            const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
-            matchConstraints.hits.forEach(function (evidence) {
-                ret.t2tcs.add(evidence.triple, constraint);
-                ret.tc2TResults.set(constraint, evidence.triple, evidence.sub);
-            });
-            matchConstraints.misses.forEach(function (evidence) {
-                ret.t2tcErrors.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
-            });
-            return ret;
-        }, init);
+        return __awaiter(this, void 0, void 0, function* () {
+            const _ShExValidator = this;
+            const outgoing = indexNeighborhood(neighborhood.outgoing);
+            const incoming = indexNeighborhood(neighborhood.incoming);
+            const init = { t2tcErrors: new Map(), tc2TResults: new MapMap(), t2tcs: new eval_validator_api_1.MapArray() };
+            [neighborhood.outgoing, neighborhood.incoming].forEach(quads => quads.forEach(triple => init.t2tcs.data.set(triple, [])));
+            return yield constraintList.reduce(function (retP, constraint) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    const ret = yield retP;
+                    // subject and object depend on direction of constraint.
+                    const index = constraint.inverse ? incoming : outgoing;
+                    // get triples matching predicate
+                    const matchPredicate = index.byPredicate.get(constraint.predicate) ||
+                        []; // empty list when no triple matches that constraint
+                    // strip to triples matching value constraints (apart from @<someShape>)
+                    const matchConstraints = yield _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
+                    matchConstraints.hits.forEach(function (evidence) {
+                        ret.t2tcs.add(evidence.triple, constraint);
+                        ret.tc2TResults.set(constraint, evidence.triple, evidence.sub);
+                    });
+                    matchConstraints.misses.forEach(function (evidence) {
+                        ret.t2tcErrors.set(evidence.triple, { constraint: constraint, errors: evidence.sub });
+                    });
+                    return ret;
+                });
+            }, Promise.resolve(init));
+        });
     }
     whatsMissing(t2tcs, misses, extras) {
         const matchedExtras = []; // triples accounted for by EXTRA
@@ -28388,25 +28462,27 @@ class ShExValidator {
         return ret;
     }
     testExtends(expr, focus, extendsToTriples, ctx) {
-        if (expr.extends === undefined)
-            return null;
-        const passes = [];
-        const errors = [];
-        for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
-            const extend = expr.extends[eNo];
-            const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
-            extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
-            ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
-            const sub = this.validateShapeExpr(focus, extend, ctx);
-            if ("errors" in sub)
-                errors.push(sub);
-            else
-                passes.push(sub);
-        }
-        if (errors.length > 0) {
-            return { type: "ExtensionFailure", errors: errors };
-        }
-        return { type: "ExtensionResults", solutions: passes };
+        return __awaiter(this, void 0, void 0, function* () {
+            if (expr.extends === undefined)
+                return null;
+            const passes = [];
+            const errors = [];
+            for (let eNo = 0; eNo < expr.extends.length; ++eNo) {
+                const extend = expr.extends[eNo];
+                const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
+                extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
+                ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
+                const sub = yield this.validateShapeExpr(focus, extend, ctx);
+                if ("errors" in sub)
+                    errors.push(sub);
+                else
+                    passes.push(sub);
+            }
+            if (errors.length > 0) {
+                return { type: "ExtensionFailure", errors: errors };
+            }
+            return { type: "ExtensionResults", solutions: passes };
+        });
     }
     /** TripleConstraintsVisitor - walk shape's extends to get all
      * referenced triple constraints.
@@ -28537,76 +28613,80 @@ class ShExValidator {
         return { getAllTripleConstraints };
     }
     triplesMatchingShapeExpr(triples, constraint, ctx) {
-        const _ShExValidator = this;
-        const misses = [];
-        const hits = [];
-        for (const triple of triples) {
-            const value = constraint.inverse ? triple.subject : triple.object;
-            const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
-            if (constraint.valueExpr === undefined)
-                hits.push(new TriplesMatchingNoValueConstraint(triple));
-            else {
-                ctx = ctx.followTripleConstraint();
-                const sub = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
-                if (sub.errors === undefined) { // TODO: improve typing to cast isn't necessary
-                    hits.push(new TriplesMatchingHit(triple, sub));
-                }
-                else /* !! if (!hits.find(h => h.triple === triple)) */ {
-                    _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
-                    misses.push(new TriplesMatchingMiss(triple, sub));
+        return __awaiter(this, void 0, void 0, function* () {
+            const _ShExValidator = this;
+            const misses = [];
+            const hits = [];
+            for (const triple of triples) {
+                const value = constraint.inverse ? triple.subject : triple.object;
+                const oldBindings = JSON.parse(JSON.stringify(_ShExValidator.semActHandler.results));
+                if (constraint.valueExpr === undefined)
+                    hits.push(new TriplesMatchingNoValueConstraint(triple));
+                else {
+                    ctx = ctx.followTripleConstraint();
+                    const sub = yield _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
+                    if (sub.errors === undefined) { // TODO: improve typing to cast isn't necessary
+                        hits.push(new TriplesMatchingHit(triple, sub));
+                    }
+                    else /* !! if (!hits.find(h => h.triple === triple)) */ {
+                        _ShExValidator.semActHandler.results = JSON.parse(JSON.stringify(oldBindings));
+                        misses.push(new TriplesMatchingMiss(triple, sub));
+                    }
                 }
             }
-        }
-        return new TriplesMatching(hits, misses);
+            return new TriplesMatching(hits, misses);
+        });
     }
     /* validateNodeConstraint - return whether the value matches the value
      * expression without checking shape references.
      */
     validateNodeConstraint(focus, nc, ctx) {
-        const errors = [];
-        function validationError(...s) {
-            const errorStr = Array.prototype.join.call(s, "");
-            errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(focus) + " as " + JSON.stringify(nc) + ": " + errorStr);
-            return false;
-        }
-        if (nc.nodeKind !== undefined) {
-            if (["iri", "bnode", "literal", "nonliteral"].indexOf(nc.nodeKind) === -1) {
-                validationError(`unknown node kind '${nc.nodeKind}'`);
+        return __awaiter(this, void 0, void 0, function* () {
+            const errors = [];
+            function validationError(...s) {
+                const errorStr = Array.prototype.join.call(s, "");
+                errors.push("Error validating " + ShExTerm.rdfJsTerm2Turtle(focus) + " as " + JSON.stringify(nc) + ": " + errorStr);
+                return false;
             }
-            if (focus.termType === "BlankNode") {
-                if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
-                    validationError(`blank node found when ${nc.nodeKind} expected`);
+            if (nc.nodeKind !== undefined) {
+                if (["iri", "bnode", "literal", "nonliteral"].indexOf(nc.nodeKind) === -1) {
+                    validationError(`unknown node kind '${nc.nodeKind}'`);
+                }
+                if (focus.termType === "BlankNode") {
+                    if (nc.nodeKind === "iri" || nc.nodeKind === "literal") {
+                        validationError(`blank node found when ${nc.nodeKind} expected`);
+                    }
+                }
+                else if (focus.termType === "Literal") {
+                    if (nc.nodeKind !== "literal") {
+                        validationError(`literal found when ${nc.nodeKind} expected`);
+                    }
+                }
+                else if (nc.nodeKind === "bnode" || nc.nodeKind === "literal") {
+                    validationError(`iri found when ${nc.nodeKind} expected`);
                 }
             }
-            else if (focus.termType === "Literal") {
-                if (nc.nodeKind !== "literal") {
-                    validationError(`literal found when ${nc.nodeKind} expected`);
+            if (nc.datatype && nc.values)
+                validationError("found both datatype and values in " + nc);
+            if (nc.values !== undefined) {
+                if (!nc.values.some(valueSetValue => testValueSetValue(valueSetValue, focus))) {
+                    validationError(`value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
                 }
             }
-            else if (nc.nodeKind === "bnode" || nc.nodeKind === "literal") {
-                validationError(`iri found when ${nc.nodeKind} expected`);
+            const numeric = (0, shex_xsd_1.getNumericDatatype)(focus);
+            if (nc.datatype !== undefined) {
+                (0, shex_xsd_1.testKnownTypes)(focus, validationError, term_1.rdfJsTerm2Ld, nc.datatype, numeric, focus.value);
             }
-        }
-        if (nc.datatype && nc.values)
-            validationError("found both datatype and values in " + nc);
-        if (nc.values !== undefined) {
-            if (!nc.values.some(valueSetValue => testValueSetValue(valueSetValue, focus))) {
-                validationError(`value ${(focus.value)} not found in set ${JSON.stringify(nc.values)}`);
-            }
-        }
-        const numeric = (0, shex_xsd_1.getNumericDatatype)(focus);
-        if (nc.datatype !== undefined) {
-            (0, shex_xsd_1.testKnownTypes)(focus, validationError, term_1.rdfJsTerm2Ld, nc.datatype, numeric, focus.value);
-        }
-        (0, shex_xsd_1.testFacets)(nc, focus.value, validationError, numeric);
-        const ncRet = Object.assign({}, {
-            type: null,
-            node: (0, term_1.rdfJsTerm2Ld)(focus)
-        }, (ctx.label ? { shape: ctx.label } : {}), { shapeExpr: nc });
-        Object.assign(ncRet, errors.length > 0
-            ? { type: "NodeConstraintViolation", errors: errors }
-            : { type: "NodeConstraintTest", });
-        return this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
+            (0, shex_xsd_1.testFacets)(nc, focus.value, validationError, numeric);
+            const ncRet = Object.assign({}, {
+                type: null,
+                node: (0, term_1.rdfJsTerm2Ld)(focus)
+            }, (ctx.label ? { shape: ctx.label } : {}), { shapeExpr: nc });
+            Object.assign(ncRet, errors.length > 0
+                ? { type: "NodeConstraintViolation", errors: errors }
+                : { type: "NodeConstraintTest", });
+            return yield this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
+        });
     }
 }
 exports.ShExValidator = ShExValidator;
@@ -28909,6 +28989,7 @@ function runtimeError(...args) {
     throw e;
 }
 //# sourceMappingURL=shex-validator.js.map
+
 
 /***/ }),
 
@@ -29555,8 +29636,8 @@ ShExWebApp = (function () {
     Writer:               __webpack_require__(95),
     Loader:               __webpack_require__(1837),
     Parser:               __webpack_require__(931),
-    "eval-simple-1err":   (__webpack_require__(8986)/* .RegexpModule */ .G),
-    "eval-threaded-nerr": (__webpack_require__(6201)/* .RegexpModule */ .G),
+    "eval-simple-1err":   (__webpack_require__(8986).RegexpModule),
+    "eval-threaded-nerr": (__webpack_require__(6201).RegexpModule),
     ShapeMap:             shapeMap,
     ShapeMapParser:       shapeMap.Parser,
     JsYaml:               __webpack_require__(9431),
