@@ -41,9 +41,10 @@ function register (validator, api) {
           return wrapped.substring(1, wrapped.length -1);
         }
         function parsePos (pos) {
-          return pos === "s" ? ctx.triple.subject.value :
-            pos === "p" ? ctx.triple.predicate.value :
-            pos === "o" ? ctx.triple.object.value :
+          const t = ctx.triples[0];
+          return pos === "s" ? t.subject.value :
+            pos === "p" ? t.predicate.value :
+            pos === "o" ? t.object.value :
             "???";
         }
       }

@@ -22290,7 +22290,7 @@ class EvalSimple1ErrRegexEngine {
                 if (hit.res && Object.keys(hit.res).length > 0)
                     ret.referenced = hit.res;
                 if (errors.length === 0 && "semActs" in m.c) {
-                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triple, tripleExpr: m.c }, ret));
+                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triples: [triple], tripleExpr: m.c }, ret));
                 }
                 return acc.concat(ret);
             }, []);
@@ -22321,7 +22321,6 @@ class EvalSimple1ErrRegexEngine {
 }
 EvalSimple1ErrRegexEngine.algorithm = "rbenx"; // rename at will; only used for debugging
 //# sourceMappingURL=eval-simple-1err.js.map
-
 
 /***/ }),
 
@@ -22521,7 +22520,7 @@ class EvalThreadedNErrRegexEngine {
                 if (hit.res !== undefined)
                     tested.referenced = hit.res;
                 const semActErrors = thread.errors.concat(constraint.semActs !== undefined
-                    ? semActHandler.dispatchAll(constraint.semActs, { triple, tripleExpr: constraint }, tested)
+                    ? semActHandler.dispatchAll(constraint.semActs, { triples: [triple], tripleExpr: constraint }, tested)
                     : []);
                 if (semActErrors.length > 0)
                     acc.fail.push({ triple, tested, semActErrors });
@@ -25659,7 +25658,7 @@ function register (validator, api) {
             update(key, N3DataFactory.literal(results[key]));
         } else {
           const bindingName = code.match(pattern);
-          update(bindingName, ctx.triple.node || ctx.triple.object);
+          update(bindingName, ctx.triples[0].node || ctx.triples[0].object);
         }
 
         return []; // There are no evaluation failures. Any parsing problem throws.

@@ -297,7 +297,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           tested.referenced = hit.res;
         const semActErrors = thread.errors.concat(
             constraint.semActs !== undefined
-                ? semActHandler.dispatchAll(constraint.semActs, {triple, tripleExpr: constraint}, tested)
+                ? semActHandler.dispatchAll(constraint.semActs, {triples: [triple], tripleExpr: constraint}, tested)
                 : []
         )
         if (semActErrors.length > 0)

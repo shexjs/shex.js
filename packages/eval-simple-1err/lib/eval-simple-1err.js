@@ -532,7 +532,7 @@ class EvalSimple1ErrRegexEngine {
                 if (hit.res && Object.keys(hit.res).length > 0)
                     ret.referenced = hit.res;
                 if (errors.length === 0 && "semActs" in m.c) {
-                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triple, tripleExpr: m.c }, ret));
+                    Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, { triples: [triple], tripleExpr: m.c }, ret));
                 }
                 return acc.concat(ret);
             }, []);
