@@ -54,7 +54,7 @@ export interface ValidatorRegexEngine {
     tc2t: ConstraintToTripleResults,
     semActHandler: SemActDispatcher,
     trace: object[] | null
-  ): shapeExprTest;
+  ): Promise<shapeExprTest>;
 }
 
 export interface QueryTracker {
@@ -66,10 +66,10 @@ export interface QueryTracker {
 
 export interface SemActDispatcher {
   register(name: string, handler: SemActHandler): void;
-  dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): SemActFailure[];
+  dispatchAll(semActs: ShExJ.SemAct[] | undefined, ctx: any, resultsArtifact: any): Promise<SemActFailure[]>;
   results: { [id: string]: string | undefined }; // TODO: improve this trivial storage mechanism
 }
 
 export interface SemActHandler {
-  dispatch(code: string | null, ctx: any, extensionStorage: any): SemActFailure[];
+  dispatch(code: string | null, ctx: any, extensionStorage: any): Promise<SemActFailure[]>;
 }

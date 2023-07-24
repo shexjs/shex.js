@@ -26,7 +26,7 @@ const findPath = require("./findPath.js");
 const schemasPath = findPath("schemas");
 const validationPath = findPath("validation");
 const manifestFile = validationPath + "manifest.jsonld";
-const regexModules = [
+let regexModules = [
   require("@shexjs/eval-simple-1err").RegexpModule,
   require("@shexjs/eval-threaded-nerr").RegexpModule
 ];
@@ -107,7 +107,7 @@ describe("A ShEx validator", function () {
               const dataParser = new N3.Parser({baseIRI: test.dataURL, blankNodePrefix: "", format: "text/turtle", factory: N3.DataFactory});
               dataParser.parse(
                 test.data,
-                function (error, triple, prefixes) {
+                async function (error, triple, prefixes) {
                   if (error) {
                     report("error parsing " + dataFile + ": " + error);
                   } else if (triple) {
@@ -128,7 +128,7 @@ describe("A ShEx validator", function () {
                     const validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
                     const smParser = ShapeMapParser.construct(manifestURL, schemaMeta, dataMeta);
                     const smap = smParser.parse(test.queryMap);
-                    const validationResults = validator.validateShapeMap(smap);
+                    const validationResults = await validator.validateShapeMap(smap);
                     validationResults.forEach(validationResult => {
                       assert(
                         validationResult.appinfo.errors !== undefined ^ test.pass,
@@ -138,7 +138,7 @@ describe("A ShEx validator", function () {
                     report();
                   }
                 }
-              )                     
+              )
             });
         });
       });
@@ -225,8 +225,8 @@ describe("A ShEx validator", function () {
               "exhaustive" :
               "greedy",
             semActs: semActs,
-            validateExtern: function (point, shapeLabel, ctx) {
-              return validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx);
+            validateExtern: async function (point, shapeLabel, ctx) {
+              return await validator.validateShapeDecl(point, shapeExterns[shapeLabel], ctx);
             }
           }, params);
           function pickShEx (i) {
@@ -247,7 +247,7 @@ describe("A ShEx validator", function () {
               const turtleParser = new N3.Parser({baseIRI: dataURL, blankNodePrefix: "", format: "text/turtle", factory: N3.DataFactory});
               turtleParser.parse(
                 fs.readFileSync(dataFile, "utf8"),
-                function (error, triple, prefixes) {
+                async function (error, triple, prefixes) {
                   if (error) {
                     report("error parsing " + dataFile + ": " + error);
                   } else if (triple) {
@@ -279,8 +279,8 @@ describe("A ShEx validator", function () {
                       validator = new ShExValidator(schema, RdfJsDb(store), schemaOptions);
                       const testResults = TestExtension.register(validator, {ShExTerm});
                       const validationResult = schemaOptions.results === 'api'
-                          ? validator.validateShapeMap(map)
-                          : resultMapToShapeExprTest(validator.validateShapeMap(map));
+                          ? await validator.validateShapeMap(map)
+                          : resultMapToShapeExprTest(await validator.validateShapeMap(map));
                       expect(JSON.stringify(validationResult).match(/\[Object]/)).to.be.null;
                       if (VERBOSE) { console.log("result   :" + JSON.stringify(validationResult)); }
                       if (VERBOSE) { console.log("expected :" + JSON.stringify(referenceResult)); }
@@ -328,7 +328,7 @@ describe("A ShEx validator", function () {
     });
   });
 
-  if (unusedResults.size > 0) {
+  if (!TESTS && unusedResults.size > 0) {
     console.warn(`did not use ${unusedResults.size} val files: ${[...unusedResults].map(id => `\n  ${id}`).join('')}`);
   }
 });

@@ -139,14 +139,14 @@ class SemActDispatcherImpl implements SemActDispatcher {
    * @param {any} resultsArtifact - simple storage for SemAct.
    * @return {SemActFailure[]} false if any result was false.
    */
-  dispatchAll (semActs: ShExJ.SemAct[], semActParm: any, resultsArtifact: any): SemActFailure[] {
-    return semActs.reduce<SemActFailure[]>((ret, semAct) => {
-
+  async dispatchAll (semActs: ShExJ.SemAct[], semActParm: any, resultsArtifact: any): Promise<SemActFailure[]> {
+    return semActs.reduce<Promise<SemActFailure[]>>(async (retP, semAct) => {
+      const ret = await retP;
       if (ret.length === 0 && semAct.name in this.handlers) {
         const code: string | null = ("code" in semAct ? semAct.code : this.externalCode[semAct.name]) || null;
         const existing = "extensions" in resultsArtifact && semAct.name in resultsArtifact.extensions;
         const extensionStorage = existing ? resultsArtifact.extensions[semAct.name] : {};
-        const response: SemActFailure[] = this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
+        const response: SemActFailure[] = await this.handlers[semAct.name].dispatch(code, semActParm, extensionStorage);
         if (typeof response === 'object' && Array.isArray(response)) {
           if (response.length > 0)
             ret.push({ type: "SemActFailure", errors: response })
@@ -161,7 +161,7 @@ class SemActDispatcherImpl implements SemActDispatcher {
         return ret;
       }
       return ret;
-    }, []);
+    }, Promise.resolve([]));
   }
 }
 
@@ -379,11 +379,11 @@ export class ShExValidator {
    * @param tracker - optional implementation of QueryTracker to log validation
    * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
    */
-  validateShapeMap (shapeMap: ShapeMap, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): ShExJsResultMap {
-    return shapeMap.reduce<ShExJsResultMap>((acc, pair) => {
-
+  async validateShapeMap (shapeMap: ShapeMap, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): Promise<ShExJsResultMap> {
+    return await shapeMap.reduce<Promise<ShExJsResultMap>>(async (accP, pair) => {
+      const acc = await accP;
       // let time = +new Date();
-      const res = this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
+      const res = await this.validateNodeShapePair(ShExTerm.ld2RdfJsTerm(pair.node), pair.shape, tracker, seen);
       // time = +new Date() - time;
       return acc.concat([{
         node: pair.node,
@@ -392,7 +392,7 @@ export class ShExValidator {
         appinfo: res,
         // elapsed: time
       }]);
-    }, []);
+    }, Promise.resolve([]))
   }
 
   /**
@@ -403,11 +403,11 @@ export class ShExValidator {
    * @param tracker - optional implementation of QueryTracker to log validation
    * @param seen - optional (and discouraged) list of currently-visited node/shape associations -- may be useful for rare wizardry.
    */
-  validateNodeShapePair (focus: RdfJsTerm, labelOrStart: LabelOrStart, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): shapeExprTest {
+  async validateNodeShapePair (focus: RdfJsTerm, labelOrStart: LabelOrStart, tracker: QueryTracker = new EmptyTracker(), seen: SeenIndex = {}): Promise<shapeExprTest> {
     const ctx = new ShapeExprValidationContext(null, labelOrStart, 0, tracker, seen, null, null,)
     if ("startActs" in this.schema) {
       const startActionStorage = {}; // !!! need test to see this write to results structure.
-      const semActErrors = this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage)
+      const semActErrors = await this.semActHandler.dispatchAll(this.schema.startActs, null, startActionStorage)
       if (semActErrors.length)
         return {
           type: "Failure",
@@ -416,20 +416,20 @@ export class ShExValidator {
           errors: semActErrors
         }; // some semAct aborted !! return a better error
     }
-    const ret: shapeExprTest = this.validateShapeLabel (focus, ctx);
+    const ret: shapeExprTest = await this.validateShapeLabel (focus, ctx);
     if ("startActs" in this.schema) {
       (ret as ShapeTest).startActs = this.schema.startActs;
     }
     return ret;
   }
 
-  validateShapeLabel (focus: RdfJsTerm, ctx: ShapeExprValidationContext): shapeExprTest {
+  async validateShapeLabel (focus: RdfJsTerm, ctx: ShapeExprValidationContext): Promise<shapeExprTest> {
     if (typeof ctx.label !== "string") {
       if (ctx.label !== ShExValidator.Start)
         runtimeError(`unknown shape ctx.label ${JSON.stringify(ctx.label)}`);
       if (!this.schema.start)
         runtimeError("start production not defined");
-      return this.validateShapeExpr(focus, this.schema.start, ctx);
+      return await this.validateShapeExpr(focus, this.schema.start, ctx);
     }
 
     const seenKey = ShExTerm.rdfJsTerm2Turtle(focus) + "@" + ctx.label;
@@ -452,7 +452,7 @@ export class ShExValidator {
       ctx.seen[seenKey] = { node: focus, shape: ctx.label };
       ctx.tracker.enter(focus, ctx.label);
     }
-    const ret = this.validateDescendants(focus, ctx.label, ctx, false);
+    const ret = await this.validateDescendants(focus, ctx.label, ctx, false);
     if (!ctx.subGraph) {
       ctx.tracker.exit(focus, ctx.label, ret);
       delete ctx.seen[seenKey];
@@ -470,7 +470,7 @@ export class ShExValidator {
    * @param ctx - validation context
    * @param includeAbstractShapes - if true, don't strip out abstract classes (needed for validating abstract base shapes)
    */
-  validateDescendants(focus: RdfJsTerm, shapeLabel: shapeDeclLabel, ctx: ShapeExprValidationContext, includeAbstractShapes: boolean = false): shapeExprTest {
+  async validateDescendants(focus: RdfJsTerm, shapeLabel: shapeDeclLabel, ctx: ShapeExprValidationContext, includeAbstractShapes: boolean = false): Promise<shapeExprTest> {
     const _ShExValidator = this;
     if (ctx.subGraph) { // !! matchTarget?
       // matchTarget indicates that shape substitution has already been applied.
@@ -494,17 +494,17 @@ export class ShExValidator {
       candidates = candidates.filter(l => !this.lookupShape(l).abstract);
 
     // Aggregate results in a SolutionList or FailureList.
-    const results = candidates.reduce<ResList>((ret, candidateShapeLabel) => {
-
+    const results = await candidates.reduce<Promise<ResList>>(async (retP, candidateShapeLabel) => {
+      const ret = await retP;
       const shapeExpr = this.lookupShape(candidateShapeLabel);
       const matchTarget = candidateShapeLabel === shapeLabel ? null : { label: shapeLabel, count: 0 };
       ctx = ctx.checkExtendingClass(candidateShapeLabel, matchTarget);
-      const res = this.validateShapeDecl(focus, shapeExpr, ctx);
+      const res = await this.validateShapeDecl(focus, shapeExpr, ctx);
       return "errors" in res || matchTarget && matchTarget.count === 0 ?
         { passes: ret.passes, failures: ret.failures.concat(res) } :
         { passes: ret.passes.concat(res), failures: ret.failures } ;
 
-    }, {passes: [], failures: []});
+    }, Promise.resolve({passes: [], failures: []}));
     let ret: shapeExprTest;
     if (results.passes.length > 0) {
       ret = results.passes.length !== 1 ?
@@ -571,12 +571,12 @@ export class ShExValidator {
    * @param shapeDecl - ShExJ ShapeDecl object
    * @param ctx - validation context
    */
-  validateShapeDecl(focus: RdfJsTerm, shapeDecl: ShapeDecl, ctx: ShapeExprValidationContext): shapeExprTest {
+  async validateShapeDecl(focus: RdfJsTerm, shapeDecl: ShapeDecl, ctx: ShapeExprValidationContext): Promise<shapeExprTest> {
     const conjuncts = (shapeDecl.restricts || []).concat([shapeDecl.shapeExpr])
     const expr = conjuncts.length === 1
           ? conjuncts[0]
           : { type: "ShapeAnd", shapeExprs: conjuncts } as ShExJ.ShapeAnd;
-    return this.validateShapeExpr(focus, expr, ctx);
+    return await this.validateShapeExpr(focus, expr, ctx);
   }
 
   lookupShape(label: shapeDeclLabel): ShapeDecl {
@@ -589,61 +589,61 @@ export class ShExValidator {
     runtimeError("shape " + label + " not found in:\n" + Object.keys(this.index.shapeExprs || []).map(s => "  " + s).join("\n"));
   }
 
-  validateShapeExpr(focus: RdfJsTerm, shapeExpr: shapeExprOrRef, ctx: ShapeExprValidationContext): shapeExprTest {
+  async validateShapeExpr(focus: RdfJsTerm, shapeExpr: shapeExprOrRef, ctx: ShapeExprValidationContext): Promise<shapeExprTest> {
     if (typeof shapeExpr === "string") { // ShapeRef
-      return this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
+      return await this.validateShapeLabel(focus, ctx.checkShapeLabel(shapeExpr));
     }
 
     switch (shapeExpr.type) {
       case "NodeConstraint":
-        return this.validateNodeConstraint(focus, shapeExpr, ctx);
+        return await this.validateNodeConstraint(focus, shapeExpr, ctx);
       case "Shape":
-        return this.validateShape(focus, shapeExpr, ctx);
+        return await this.validateShape(focus, shapeExpr, ctx);
       case "ShapeExternal":
         if (typeof this.options.validateExtern !== "function")
           throw runtimeError(`validating ${ShExTerm.shExJsTerm2Turtle(focus)} as EXTERNAL shapeExpr ${ctx.label} requires a 'validateExtern' option`)
-        return this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
+        return await this.options.validateExtern(focus, ctx.label, ctx.checkShapeLabel(ctx.label));
       case "ShapeOr":
         const orErrors = [];
         for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
           const nested = shapeExpr.shapeExprs[i];
-          const sub = this.validateShapeExpr(focus, nested, ctx);
+          const sub = await this.validateShapeExpr(focus, nested, ctx);
           if ("errors" in sub)
             orErrors.push(sub);
           else if (!ctx.matchTarget || ctx.matchTarget.count > 0)
-            return {type: "ShapeOrResults", solution: sub};
+            return Promise.resolve({type: "ShapeOrResults", solution: sub});
         }
-        return {type: "ShapeOrFailure", errors: orErrors} as any as shapeExprTest;
+        return Promise.resolve({type: "ShapeOrFailure", errors: orErrors} as any as shapeExprTest);
       case "ShapeNot":
-        const sub = this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
-        return ("errors" in sub)
+        const sub = await this.validateShapeExpr(focus, shapeExpr.shapeExpr, ctx);
+        return Promise.resolve(("errors" in sub)
           ? {type: "ShapeNotResults", solution: sub} as any as shapeExprTest
-          : {type: "ShapeNotFailure", errors: sub} as any as shapeExprTest; // ugh
-
+          : {type: "ShapeNotFailure", errors: sub} as any as shapeExprTest
+        ); // ugh
       case "ShapeAnd":
         const andPasses = [];
         const andErrors = [];
         for (let i = 0; i < shapeExpr.shapeExprs.length; ++i) {
           const nested = shapeExpr.shapeExprs[i];
-          const sub = this.validateShapeExpr(focus, nested, ctx);
+          const sub = await this.validateShapeExpr(focus, nested, ctx);
           if ("errors" in sub)
             andErrors.push(sub);
           else
             andPasses.push(sub);
         }
-        return andErrors.length > 0
+        return Promise.resolve(andErrors.length > 0
           ? {type: "ShapeAndFailure", errors: andErrors} as any as shapeExprTest
-          : {type: "ShapeAndResults", solutions: andPasses};
-
+          : {type: "ShapeAndResults", solutions: andPasses}
+        );
       default:
         throw Error("expected one of Shape{Ref,And,Or} or NodeConstraint, got " + JSON.stringify(shapeExpr));
     }
   }
 
   // TODO: should this be called for and, or, not?
-  protected evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
+  protected async evaluateShapeExprSemActs(ret: shapeExprTest, shapeExpr: NodeConstraint, point: RdfJsTerm, shapeLabel: LabelOrStart) {
     if (!("errors" in ret) && shapeExpr.semActs !== undefined) {
-      const semActErrors = this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
+      const semActErrors = await this.semActHandler.dispatchAll((shapeExpr as any).semActs, Object.assign({node: point}, ret), ret)
       if (semActErrors.length)
           // some semAct aborted
         return {type: "Failure", node: rdfJsTerm2Ld(point), shape: shapeLabel, errors: semActErrors} as Failure;
@@ -651,16 +651,16 @@ export class ShExValidator {
     return ret;
   }
 
-  validateShape(focus: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext): shapeExprTest {
+  async validateShape(focus: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext): Promise<shapeExprTest> {
     let ret = null;
     const fromDB  = (ctx.subGraph || this.db).getNeighborhood(focus, ctx.label, shape);
     const neighborhood = fromDB.outgoing.concat(fromDB.incoming);
 
-    const { extendsTCs, tc2exts, localTCs } = this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
+    const { extendsTCs, tc2exts, localTCs } = await this.TripleConstraintsVisitor(this.index.labelToTcs).getAllTripleConstraints(shape);
     const tripleConstraints = extendsTCs.concat(localTCs);
 
     // neighborhood already integrates subGraph so don't pass to _errorsMatchingShapeExpr
-    const {t2tcs, t2tcErrors, tc2TResults} = this.matchByPredicate(tripleConstraints, fromDB, ctx);
+    const {t2tcs, t2tcErrors, tc2TResults} = await this.matchByPredicate(tripleConstraints, fromDB, ctx);
     const {missErrors, matchedExtras} = this.whatsMissing(t2tcs, t2tcErrors, shape.extra || [])
 
     const allT2TCs = new TripleToTripleConstraints(t2tcs, extendsTCs, tc2exts);
@@ -670,14 +670,14 @@ export class ShExValidator {
 
     for (let t2tc = allT2TCs.next(); t2tc !== null && ret === null; t2tc = allT2TCs.next()) {
       const {errors, results}
-          = this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
+          = await this.tryPartition(t2tc, focus, shape, ctx, extendsTCs, tc2exts, matchedExtras, tripleConstraints, tc2TResults, fromDB.outgoing, regexEngine);
 
       const possibleRet = { type: "ShapeTest", node: rdfJsTerm2Ld(focus), shape: ctx.label };
       if (errors.length === 0 && results !== null) // only include .solution for non-empty pattern
         // @ts-ignore TODO
         possibleRet.solution = results;
       if ("semActs" in shape) {
-        const semActErrors = this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: focus}, results), possibleRet)
+        const semActErrors = await this.semActHandler.dispatchAll(shape.semActs, Object.assign({node: focus}, results), possibleRet)
         if (semActErrors.length)
           // some semAct aborted
           Array.prototype.push.apply(errors, semActErrors);
@@ -725,12 +725,12 @@ export class ShExValidator {
    * @param regexEngine engine to use to test regular triple expression
    * @private
    */
-  protected tryPartition(
+  protected async tryPartition(
       t2tc: Map<Quad, TripleConstraint>, focus: RdfJsTerm, shape: Shape, ctx: ShapeExprValidationContext,
       extendsTCs: TripleConstraint[], tc2exts: Map<TripleConstraint, number[]>, matchedExtras: Quad[],
       tripleConstraints: TripleConstraint[], t2tcErrors: TC2TResult,
       outgoing: Quad[], regexEngine: ValidatorRegexEngine | null
-  ) {
+  ): Promise<{errors: error[], results: shapeExprTest | null}> {
     const tc2ts: ConstraintToTripleResults = new MapArray<TripleConstraint, TripleResult>();
     tripleConstraints.forEach(tc => tc2ts.empty(tc))
 
@@ -770,10 +770,10 @@ export class ShExValidator {
       });
     }
 
-    let results: shapeExprTest | null = this.testExtends(shape, focus, extendsToTriples, ctx);
+    let results: shapeExprTest | null = await this.testExtends(shape, focus, extendsToTriples, ctx);
     if (results === null || !("errors" in results)) {
       if (regexEngine !== null /* i.e. shape.expression !== undefined */) {
-        const sub = regexEngine.match(focus, tc2ts, this.semActHandler, null);
+        const sub = await regexEngine.match(focus, tc2ts, this.semActHandler, null);
         if (!("errors" in sub) && results) {
           results = {type: "ExtendedResults", extensions: results, local: sub};
         } else {
@@ -795,7 +795,7 @@ export class ShExValidator {
    * @param neighborhood - list of Quad
    * @param ctx - evaluation context
    */
-  protected matchByPredicate(constraintList: TripleConstraint[], neighborhood: Neighborhood, ctx: ShapeExprValidationContext): ByPredicateResult {
+  protected async matchByPredicate(constraintList: TripleConstraint[], neighborhood: Neighborhood, ctx: ShapeExprValidationContext): Promise<ByPredicateResult> {
     const _ShExValidator = this;
     const outgoing = indexNeighborhood(neighborhood.outgoing);
     const incoming = indexNeighborhood(neighborhood.incoming);
@@ -805,7 +805,8 @@ export class ShExValidator {
             init.t2tcs.data.set(triple, [])
         )
     );
-    return constraintList.reduce<ByPredicateResult>(function (ret, constraint) {
+    return await constraintList.reduce<Promise<ByPredicateResult>>(async function (retP, constraint) {
+      const ret = await retP;
 
       // subject and object depend on direction of constraint.
       const index = constraint.inverse ? incoming : outgoing;
@@ -815,7 +816,7 @@ export class ShExValidator {
             []; // empty list when no triple matches that constraint
 
       // strip to triples matching value constraints (apart from @<someShape>)
-      const matchConstraints = _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
+      const matchConstraints = await _ShExValidator.triplesMatchingShapeExpr(matchPredicate, constraint, ctx);
 
       matchConstraints.hits.forEach(function (evidence) {
         ret.t2tcs.add(evidence.triple, constraint);
@@ -825,7 +826,7 @@ export class ShExValidator {
         ret.t2tcErrors.set(evidence.triple, {constraint: constraint, errors: evidence.sub});
       });
       return ret;
-    }, init);
+    }, Promise.resolve(init));
   }
 
   protected whatsMissing (t2tcs: T2TCs, misses: T2TCErrors, extras: string[]): WhatsMissingResult {
@@ -857,7 +858,7 @@ export class ShExValidator {
     return ret;
   }
 
-  testExtends(expr: Shape, focus: RdfJsTerm, extendsToTriples: Quad[][], ctx: ShapeExprValidationContext) {
+  async testExtends(expr: Shape, focus: RdfJsTerm, extendsToTriples: Quad[][], ctx: ShapeExprValidationContext) {
     if (expr.extends === undefined)
       return null;
     const passes = [];
@@ -867,7 +868,7 @@ export class ShExValidator {
       const subgraph = new TrivialNeighborhood(null); // These triples were tracked earlier.
       extendsToTriples[eNo].forEach(t => subgraph.addOutgoingTriples([t]));
       ctx = ctx.checkExtendsPartition(subgraph); // new context with subgraph
-      const sub = this.validateShapeExpr(focus, extend, ctx);
+      const sub = await this.validateShapeExpr(focus, extend, ctx);
       if ("errors" in sub)
         errors.push(sub);
       else
@@ -1027,7 +1028,7 @@ export class ShExValidator {
     return {getAllTripleConstraints};
   }
 
-  triplesMatchingShapeExpr(triples: Quad[], constraint: TripleConstraint, ctx: ShapeExprValidationContext): TriplesMatching {
+  async triplesMatchingShapeExpr(triples: Quad[], constraint: TripleConstraint, ctx: ShapeExprValidationContext): Promise<TriplesMatching> {
     const _ShExValidator = this;
     const misses: TriplesMatchingMiss[] = [];
     const hits: TriplesMatchingHit[] = [];
@@ -1038,7 +1039,7 @@ export class ShExValidator {
         hits.push(new TriplesMatchingNoValueConstraint(triple));
       else {
         ctx = ctx.followTripleConstraint();
-        const sub: shapeExprTest = _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
+        const sub: shapeExprTest = await _ShExValidator.validateShapeExpr(value, constraint.valueExpr, ctx);
         if ((sub as NestedFailure).errors === undefined) { // TODO: improve typing to cast isn't necessary
           hits.push(new TriplesMatchingHit(triple, sub));
         } else /* !! if (!hits.find(h => h.triple === triple)) */ {
@@ -1053,7 +1054,7 @@ export class ShExValidator {
   /* validateNodeConstraint - return whether the value matches the value
    * expression without checking shape references.
    */
-  validateNodeConstraint(focus: RdfJsTerm, nc: NodeConstraint, ctx: ShapeExprValidationContext): shapeExprTest {
+  async validateNodeConstraint(focus: RdfJsTerm, nc: NodeConstraint, ctx: ShapeExprValidationContext): Promise<shapeExprTest> {
     const errors: string[] = [];
     function validationError (...s:string[]): boolean {
       const errorStr = Array.prototype.join.call(s, "");
@@ -1104,7 +1105,7 @@ export class ShExValidator {
         ? {type: "NodeConstraintViolation", errors: errors}
       : {type: "NodeConstraintTest",}
     );
-    return this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
+    return await this.evaluateShapeExprSemActs(ncRet, nc, focus, ctx.label);
   }
 }
 

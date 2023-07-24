@@ -174,7 +174,7 @@ describe("Parser-Writer-test", function () {
       it(EARL
          ? 'schemas/manifest\#' + test.name
          : "should correctly parse ShExR schema '" + shexRFile +
-         "' as '" + jsonSchemaFile + "'." , function () {
+         "' as '" + jsonSchemaFile + "'." , async function () {
 
            const shexR = Fs.readFileSync(shexRFile, "utf8");
            if (VERBOSE) console.log("\nShExR:", shexR);
@@ -188,7 +188,7 @@ describe("Parser-Writer-test", function () {
                schemaDriver,
                {  } // regexModule: require("@shexjs/eval-simple-1err") is no faster
              );
-             const val = graphParser.validateNodeShapePair(schemaRoot, ShExValidator.Start); // start shape
+             const val = await graphParser.validateNodeShapePair(schemaRoot, ShExValidator.Start); // start shape
              if ("errors" in val)
                throw Error(`${shexRFile} did not comply with ShExR.shex\n${JSON.stringify(val.errors, null, 2)}`);
              const parsedSchema = ShExUtil.canonicalize(ShExUtil.ShExJtoAS(ShExUtil.ShExRtoShExJ(ShExUtil.valuesToSchema(ShExUtil.valToValues(val)))));

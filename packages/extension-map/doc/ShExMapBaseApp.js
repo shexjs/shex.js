@@ -173,7 +173,7 @@ class ShExMapBaseApp extends ShExBaseApp {
         remove: true // Remove quads involved in lists (RDF Collections).
       });
 
-      outputShapeMap.forEach(pair => {
+      for (const pair of outputShapeMap) {
         const {node, shape} = pair;
         try {
           const nestedWriter = new ShExWebApp.NestedTurtleWriter.Writer(null, {
@@ -192,7 +192,8 @@ class ShExMapBaseApp extends ShExBaseApp {
             results: "api",
             regexModule: ShExWebApp["eval-simple-1err"],
           });
-          const res = validator.validateShapeMap([{node, shape}])[0].appinfo;
+          const got = await validator.validateShapeMap([{node, shape}]);
+          const res = got[0].appinfo;
           if (!("solution" in res))
             throw res;
           const matched = [];
@@ -222,7 +223,7 @@ class ShExMapBaseApp extends ShExBaseApp {
           fallbackWriter.addQuads(generatedGraph.getQuads());
           fallbackWriter.end((error, result) => this.addResult(error, result));
         }
-      });
+      }
       this.resultsWidget.finish();
       return { materializationResults: generatedGraph };
     } catch (e) {

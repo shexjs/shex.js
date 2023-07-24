@@ -23,7 +23,7 @@ const SemActsTestDir = __dirname + '/../test/SemActs/'
 const ManifestFile = SemActsTestDir + 'Manifest.json'
 const ManifestBase = new URL(ManifestFile, Base)
 
-describe('Invoking SemActs', function () {
+describe('Invoking SemActs', async function () {
   const schemaParser = ShExParser.construct(ManifestBase.href, null, {index: true})
 
   // Load manifest
@@ -33,7 +33,7 @@ describe('Invoking SemActs', function () {
       return TESTS.indexOf(t.from) !== -1 || TESTS.indexOf(t.expect) !== -1
     })
 
-  manifest.actions.forEach(function (test) {
+  for (const test of manifest.actions) {
 
     // Resolve and parse schema.
     const schemaFile = (test.schemaURL.startsWith("./") ? SemActsTestDir : TestSchemasPath) + test.schemaURL
@@ -70,7 +70,7 @@ describe('Invoking SemActs', function () {
     Extensions.forEach(ext => ext.register(validator, {ShExTerm}))
     const smParser = ShapeMapParser.construct(ManifestBase.href, schemaMeta, dataMeta)
     const sm = smParser.parse(test.queryMap)
-    const res = resultMapToShapeExprTest(validator.validateShapeMap(sm))
+    const res = await resultMapToShapeExprTest(validator.validateShapeMap(sm))
 
     // Test results
     const blurb = ''
@@ -83,7 +83,7 @@ describe('Invoking SemActs', function () {
          if (VERBOSE) console.log("expect: ", expectURL)
          expect(res).to.deep.equal(expected)
        })
-  })
+  }
 })
 
 // Parses a JSON object, restoring `undefined` values

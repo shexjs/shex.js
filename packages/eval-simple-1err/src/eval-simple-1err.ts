@@ -313,7 +313,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     this.start = startNo;
   }
 
-  match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): shapeExprTest {
+  async match(node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher, trace: object[] | null): Promise<shapeExprTest> {
     const thisEvalSimple1ErrRegexEngine = this;
     let clist: RegExpThread[] = [], nlist: RegExpThread[] = []; // list of {state:state number, repeats:stateNo->repetitionCount}
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>((allTriples, _tripleConstraint, tripleResult) => {
@@ -441,7 +441,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
     // console.log("chosen:", dump.thread(chosen));
     return "errors" in chosen.matched ?
         chosen.matched :
-        this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
+        await this.matchedToResult(chosen.matched, constraintToTripleMapping, semActHandler);
   }
 
   addStates (nlist: RegExpThread[], thread: RegExpThread, taken: RdfJsQuad[]) {
@@ -544,12 +544,12 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
       return rs.length ? state + "-" + rs : ""+state;
     }
 
-    matchedToResult(matched: TriplesMatch[], constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher): tripleExprSolutions | SemActFailure {
+    async matchedToResult(matched: TriplesMatch[], constraintToTripleMapping: ConstraintToTripleResults, semActHandler: SemActDispatcher): Promise<tripleExprSolutions | SemActFailure> {
       let last: StackEntry[] = [];
       const errors: SemActFailure[] = [];
       const skips: ((tripleExprSolutions | null)[])[] = [];
-      const ret = matched.reduce<tripleExprSolutions>((out, m) => {
-
+      const ret = await matched.reduce<Promise<tripleExprSolutions>>(async (outP, m) => {
+        const out = await outP;
         let mis = 0;
         let ptr = out;
         while (mis < last.length &&
@@ -585,7 +585,7 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
                   .map(m => m.triple),
                 tripleExpr: m.c
               };
-              const errors = semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
+              const errors = await semActHandler.dispatchAll(m.stack[mis].c.semActs, ctx, ptr);
               if (errors.length)
                 throw errors;
             }
@@ -629,8 +629,8 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           tcSolns.valueExpr = m.c.valueExpr;
         if ("id" in m.c)
           tcSolns.productionLabel = m.c.id;
-        tcSolns.solutions = m.triples.reduce<TestedTriple[]>((acc, triple) => {
-
+        tcSolns.solutions = await m.triples.reduce<Promise<TestedTriple[]>>(async (accP, triple) => {
+          const acc = await accP;
           const ret = {
             type: "TestedTriple",
             subject: rdfJsTerm2Ld(triple.subject),
@@ -642,17 +642,17 @@ class EvalSimple1ErrRegexEngine implements ValidatorRegexEngine {
           if (hit!.res && Object.keys(hit!.res).length > 0)
             ret.referenced = hit!.res as shapeExprTest | Recursion;
           if (errors.length === 0 && "semActs" in m.c) {
-            Array.prototype.push.apply(errors, semActHandler.dispatchAll(m.c.semActs, {triples:[triple], tripleExpr: m.c}, ret));
+            Array.prototype.push.apply(errors, await semActHandler.dispatchAll(m.c.semActs, {triples:[triple], tripleExpr: m.c}, ret));
           }
           return acc.concat(ret);
-        }, [])
+        }, Promise.resolve([]))
         if ("annotations" in m.c)
           tcSolns.annotations = m.c.annotations;
         if ("semActs" in m.c)
           tcSolns.semActs = m.c.semActs;
         last = m.stack.slice();
         return out;
-      }, {} as tripleExprSolutions);
+      }, Promise.resolve({} as tripleExprSolutions));
 
       if (errors.length)
         return {

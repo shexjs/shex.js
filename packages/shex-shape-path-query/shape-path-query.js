@@ -24,7 +24,7 @@ async function shapePathQuery (schema, nodeSet, db, smap) {
   MapModule.register(validator, { ShExTerm })
 
   // Validate data against schema.
-  const valRes = resultMapToShapeExprTest(validator.validateShapeMap(smap))
+  const valRes = resultMapToShapeExprTest(await validator.validateShapeMap(smap))
   if ("errors" in valRes) {
     throw Error(JSON.stringify(valRes, undefined, 2));
   } else {

@@ -767,7 +767,7 @@ async function runValidator (db, shapeMap, schema, options, cmds) {
   // run validator
   const res = cmds.grep
       ? await grep(shapeMap)
-      : resultMapToShapeExprTest(validator.validateShapeMap(shapeMap));
+      : resultMapToShapeExprTest(await validator.validateShapeMap(shapeMap));
 
   Object.keys(extensions).forEach(function (ext) {
     extensions[ext].done(validator);

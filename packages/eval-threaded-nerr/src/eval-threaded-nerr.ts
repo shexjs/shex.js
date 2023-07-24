@@ -115,8 +115,8 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     this.outerExpression = shape.expression!;
   }
 
-  match (node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults,
-         semActHandler: SemActDispatcher, _trace: object[] | null): shapeExprTest {
+  async match (node: RdfJsTerm, constraintToTripleMapping: ConstraintToTripleResults,
+         semActHandler: SemActDispatcher, _trace: object[] | null): Promise<shapeExprTest> {
     const allTriples = constraintToTripleMapping.reduce<Set<RdfJsQuad>>(
         (allTriples, _tripleConstraint, tripleResult) => {
             tripleResult.forEach(res => allTriples.add(res.triple));
@@ -124,11 +124,11 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           }, new Set())
 
     const startingThread = new RegexpThread();
-    const ret = this.matchTripleExpression(this.outerExpression, startingThread, constraintToTripleMapping, semActHandler);
+    const ret = await this.matchTripleExpression(this.outerExpression, startingThread, constraintToTripleMapping, semActHandler);
     // console.log(JSON.stringify(ret));
     // note: don't return if ret.length === 1 because it might fail the unmatchedTriples test.
     const longerChosen =
-        ret.reduce<RegexpThread | null>((ret, elt) => {
+        await ret.reduce<RegexpThread | null>((ret, elt) => {
           if (elt.errors.length > 0)
             return ret;              // early return
           const unmatchedTriples = new Set<RdfJsQuad>(allTriples);
@@ -171,9 +171,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     }
   }
 
-  matchTripleExpression (expr: ShExJ.tripleExprOrRef, thread: RegexpThread,
+  async matchTripleExpression (expr: ShExJ.tripleExprOrRef, thread: RegexpThread,
                          constraintToTripleMapping: ConstraintToTripleResults,
-                         semActHandler: SemActDispatcher): RegexpThread[] {
+                         semActHandler: SemActDispatcher): Promise<RegexpThread[]> {
     if (typeof expr === "string") { // Inclusion
       const included = this.index.tripleExprs[expr];
       return this.matchTripleExpression(included, thread, constraintToTripleMapping, semActHandler);
@@ -184,20 +184,20 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
 
     switch (expr.type) {
       case "OneOf":
-        return this.matchOneOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+        return await this.matchOneOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
       case "EachOf":
-        return this.matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+        return await this.matchEachOf(expr, min, max, thread, constraintToTripleMapping, semActHandler);
       case "TripleConstraint":
-        return this.matchTripleConstraint(expr, min, max, thread, constraintToTripleMapping, semActHandler);
+        return await this.matchTripleConstraint(expr, min, max, thread, constraintToTripleMapping, semActHandler);
       default:
         throw Error("how'd we get here?")
     }
   }
 
-  matchOneOf (oneOf: ShExJ.OneOf, min: number, max: number,
+  async matchOneOf (oneOf: ShExJ.OneOf, min: number, max: number,
               thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
-              semActHandler: SemActDispatcher): RegexpThread[] {
-    return EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", (th) => {
+              semActHandler: SemActDispatcher): Promise<RegexpThread[]> {
+    return await EvalThreadedNErrRegexEngine.matchRepeat(oneOf, min, max, thread, "OneOfSolutions", async (th) => {
       // const accept = null;
       const matched: RegexpThread[] = [];
       const failed: RegexpThread[] = [];
@@ -207,7 +207,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           th.errors,
           th.matched //.slice() ever needed??
         );
-        const sub = this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
+        const sub = await this.matchTripleExpression(nested, thcopy, constraintToTripleMapping, semActHandler);
         if (sub[0].errors.length === 0) { // all subs pass or all fail
           Array.prototype.push.apply(matched, sub);
           sub.forEach(newThread => {
@@ -228,20 +228,20 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     }, semActHandler);
   }
 
-  matchEachOf (expr: ShExJ.EachOf, min: number, max: number,
+  async matchEachOf (expr: ShExJ.EachOf, min: number, max: number,
                thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
-               semActHandler: SemActDispatcher): RegexpThread[] {
-    return EvalThreadedNErrRegexEngine.homogenize(EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", (th) => {
+               semActHandler: SemActDispatcher): Promise<RegexpThread[]> {
+    return await EvalThreadedNErrRegexEngine.homogenize(await EvalThreadedNErrRegexEngine.matchRepeat(expr, min, max, thread, "EachOfSolutions", async (th) => {
       // Iterate through nested expressions, exprThreads starts as [th].
-      return expr.expressions.reduce((exprThreads, nested) => {
-
+      return await expr.expressions.reduce<Promise<RegexpThread[]>>(async (exprThreadsP, nested) => {
+        const exprThreads = await exprThreadsP;
         // Iterate through current thread list composing nextThreads.
         // Consider e.g.
         // <S1> { <p1> . | <p2> .; <p3> . } / { <x> <p2> 2; <p3> 3 } (should pass)
         // <S1> { <p1> .; <p2> . }          / { <s1> <p1> 1 }        (should fail)
-        return EvalThreadedNErrRegexEngine.homogenize(exprThreads.reduce<RegexpThread[]>((nextThreads, exprThread) => {
-
-          const sub = this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
+        return await EvalThreadedNErrRegexEngine.homogenize(await exprThreads.reduce<Promise<RegexpThread[]>>(async (nextThreadsP, exprThread) => {
+          const nextThreads = await nextThreadsP;
+          const sub = await this.matchTripleExpression(nested, exprThread, constraintToTripleMapping, semActHandler);
           // Move newThread.expression into a hierarchical solution structure.
           sub.forEach(newThread => {
             if (newThread.errors.length === 0) {
@@ -257,15 +257,15 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
             }
           });
           return nextThreads.concat(sub);
-        }, []));
-      }, [th]);
+        }, Promise.resolve([])));
+      }, Promise.resolve([th]));
     }, semActHandler));
   }
 
   // Early return in case of insufficient matching triples
-  matchTripleConstraint (constraint: ShExJ.TripleConstraint, min: number, max: number,
+  async matchTripleConstraint (constraint: ShExJ.TripleConstraint, min: number, max: number,
                          thread: RegexpThread, constraintToTripleMapping: ConstraintToTripleResults,
-                         semActHandler: SemActDispatcher): RegexpThread[] {
+                         semActHandler: SemActDispatcher): Promise<RegexpThread[]> {
     if (thread.avail.get(constraint) === undefined)
       thread.avail.set(constraint, constraintToTripleMapping.get(constraint)!.map(pair => pair.triple));
     const taken = thread.avail.get(constraint)!.splice(0, min);
@@ -284,8 +284,8 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
     if (constraint.annotations !== undefined)
       minmax.annotations = constraint.annotations;
     do {
-      const passFail = taken.reduce<{ pass: TripleTestedErrors[], fail: TripleTestedErrors[] }>((acc, triple) => {
-
+      const passFail = await taken.reduce<Promise<{ pass: TripleTestedErrors[], fail: TripleTestedErrors[] }>>(async (accP, triple) => {
+        const acc = await accP;
         const tested = {
           type: "TestedTriple",
           subject: rdfJsTerm2Ld(triple.subject),
@@ -294,10 +294,10 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         } as TestedTriple
         const hit = constraintToTripleMapping.get(constraint)!.find(x => x.triple === triple)!;
         if (hit.res !== undefined)
-          tested.referenced = hit.res;
+          tested.referenced = await hit.res;
         const semActErrors = thread.errors.concat(
             constraint.semActs !== undefined
-                ? semActHandler.dispatchAll(constraint.semActs, {triples: [triple], tripleExpr: constraint}, tested)
+                ? await semActHandler.dispatchAll(constraint.semActs, {triples: [triple], tripleExpr: constraint}, tested)
                 : []
         )
         if (semActErrors.length > 0)
@@ -305,7 +305,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
         else
           acc.pass.push(<TripleTestedErrors>{triple, tested, semActErrors})
         return acc
-      }, {pass: [], fail: []})
+      }, Promise.resolve({pass: [], fail: []}))
 
       // return an empty solution if min card was 0
       if (passFail.fail.length === 0) {
@@ -336,9 +336,9 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
   /*
      * returns: list of all passing or all failing threads (no heterogeneous lists)
      */
-  static matchRepeat (groupTE: ShExJ.EachOf | ShExJ.OneOf, min: number, max: number, thread: RegexpThread,
-                      type: "EachOfSolutions" | "OneOfSolutions", evalGroup: (th: RegexpThread) => RegexpThread[],
-                      semActHandler: SemActDispatcher): RegexpThread[] {
+  static async matchRepeat (groupTE: ShExJ.EachOf | ShExJ.OneOf, min: number, max: number, thread: RegexpThread,
+                      type: "EachOfSolutions" | "OneOfSolutions", evalGroup: (th: RegexpThread) => Promise<RegexpThread[]>,
+                      semActHandler: SemActDispatcher): Promise<RegexpThread[]> {
     let repeated = 0, errOut = false;
     let newThreads = [thread];
     const minmax = {} as GroupAttrs;
@@ -354,7 +354,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
       let inner: RegexpThread[] = [];
       for (let t = 0; t < newThreads.length; ++t) {
         const newt = newThreads[t];
-        const sub = evalGroup(newt);
+        const sub = await evalGroup(newt);
         if (sub.length > 0 && sub[0].errors.length === 0) { // all subs pass or all fail
           sub.forEach(newThread => {
             const solutions: tripleExprSolution[] =
@@ -384,7 +384,7 @@ class EvalThreadedNErrRegexEngine implements ValidatorRegexEngine {
           triples: newThread.matched.flatMap(m => m.triples),
           tripleExpr: groupTE,
         }
-        const semActErrors = semActHandler.dispatchAll(groupTE.semActs, ctx, newThread)
+        const semActErrors = await semActHandler.dispatchAll(groupTE.semActs, ctx, newThread)
         if (semActErrors.length === 0) {
           passes.push(newThread)
         } else {

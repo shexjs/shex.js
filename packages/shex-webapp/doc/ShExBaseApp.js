@@ -124,14 +124,14 @@ class SchemaCache extends InterfaceCache {
   }
 
   async parse (text, base) {
-    const parseShExR = () => {
+    const parseShExR = async () => {
       const graphParser = new ShExWebApp.Validator(
         this.shexcParser.parseString(ShExRSchema, {}, base), // !! do something useful with the meta parm (prefixes and base)
         ShExWebApp.RdfJsDb(this.graph),
         {}
       );
       const schemaRoot = this.graph.getQuads(null, ShExWebApp.Util.RDF.type, "http://www.w3.org/ns/shex#Schema")[0].subject; // !!check
-      const val = graphParser.validateNodeShapePair(schemaRoot, ShExWebApp.Validator.Start); // start shape
+      const val = await graphParser.validateNodeShapePair(schemaRoot, ShExWebApp.Validator.Start); // start shape
       return ShExWebApp.Util.ShExJtoAS(ShExWebApp.Util.ShExRtoShExJ(ShExWebApp.Util.valuesToSchema(ShExWebApp.Util.valToValues(val))));
     }
 
@@ -147,7 +147,7 @@ class SchemaCache extends InterfaceCache {
     const schema =
           isJSON ? ShExWebApp.Util.ShExJtoAS(JSON.parse(text)) :
           isDCTAP ? await parseDcTap(text) :
-          this.graph ? parseShExR() :
+          this.graph ? await parseShExR() :
           this.shexcParser.parseString(text, this.meta, base);
     $("#results .status").hide();
     this.callOnLoad();
@@ -1376,7 +1376,7 @@ class DirectShExValidator {
     this.renderer = renderer;
   }
   async invoke (fixedMap, validationTracker, time, _done, _currentAction) {
-    const ret = this.validator.validateShapeMap(fixedMap, validationTracker);
+    const ret = await this.validator.validateShapeMap(fixedMap, validationTracker);
     time = new Date() - time;
     $("#shapeMap-tabs").attr("title", "last validation: " + time + " ms");
     $("#results .status").text("rendering results...").show();
