@@ -23621,7 +23621,7 @@ const ShExLoaderCjsModule = function (config = {}) {
       returns.data.addQuads(dSrc.graph)
       delete dSrc.graph;
     });
-    if (returns.schemaMeta.length > 0)
+    if (returns.schemaMeta.length > 0 && !schemaOptions.keepImports)
       ShExUtil.isWellDefined(returns.schema, schemaOptions)
     return returns
   }
