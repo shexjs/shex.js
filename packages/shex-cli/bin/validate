@@ -57,6 +57,7 @@ const ShExNode = require("@shexjs/node")({
   jsonld: require('jsonld'),
 });
 const ExitCode = require('../lib/ExitCode')
+const ProgressLoadControler = require('../lib/ProgressLoadControler')(ShExNode);
 
 ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
@@ -397,26 +398,6 @@ async function findNodesAndValidate (loaded, parms, options, schemaStart, cmds) 
   }
 }
 
-class ProgressLoadControler extends ShExNode.ResourceLoadControler {
-  add (promise) {
-    const index = this.toLoad.length;
-    super.add(promise.then(ret => {
-      process.stdout.clearLine();
-      process.stdout.cursorTo(0);
-      process.stdout.write(`Loaded ${index} of ${this.schemasSeen.length} imports: ${ret.url}`);
-      return ret;
-    }));
-  }
-  allLoaded () {
-    return super.allLoaded().then(x => {
-      process.stdout.clearLine();
-      process.stdout.cursorTo(0);
-      process.stdout.write(`Loaded ${this.toLoad.length} imports.\n`);
-      return x;
-    });
-  }
-}
-
 async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmds) {
   if (valParms.schemaURL.length > 1 && valParms.dataURL.length === 0) {
     valParms.dataURL = valParms.schemaURL.splice(1); // push all but first into data
@@ -508,7 +489,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
 
     if (valParms.diagnose) {
       const redefined = Object.keys(storeDuplicatesInstance.duplicates);
-      process.stdout.write(`, found ${Object.keys(redefined).length} redefinitions, ${errors.length} errors.\n`);
+      process.stdout.write(`Found ${Object.keys(redefined).length} redefinitions, ${errors.length} errors.\n`);
       if (redefined.length > 0) {
         console.log(`${redefined.length} Redefinitions:`);
         redefined.forEach(id => {
@@ -516,7 +497,8 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
           console.log('  %s: %d defintions:%s', ShExTerm.shExJsTerm2Turtle(id), llocs.length, llocs.map(yylloc => "\n    " + yyllocToString(yylloc)).join(""));
         });
       }
-      console.log(`${errors.length} Errors:\n%s`, errors.map(({error, yylloc}) => `  ${yylloc ? yyllocToString(yylloc) : ""}\n    ${error}`).join("\n"));
+      if (errors.length > 0)
+        console.log(`${errors.length} Errors:\n%s`, errors.map(({error, yylloc}) => `  ${yylloc ? yyllocToString(yylloc) : ""}\n    ${error}`).join("\n"));
       if (valParms["dry-run"]) {
         return redefined.length === 0 && errors.length === 0
           ? ExitCode.dry_run
@@ -1233,6 +1215,9 @@ function runServer (serverLoaded, serverParms, serverOptions, cmds) {
                          )
           );
           ctx.type = 'text/html'
+        } else if (parms['report'] === "boolean") {
+          ctx.body = !('errors' in result); // passed if there were no errors
+          ctx.type = 'application/json'
         } else {
           ctx.body = JSON.stringify(result, null, 2)+"\n";
           ctx.type = 'application/json'
