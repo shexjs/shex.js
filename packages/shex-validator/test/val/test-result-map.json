@@ -617,5 +617,7 @@
   "#vitals-RESTRICTS-pass_sit-BP": null,
   "#vitals-RESTRICTS-pass_sit-PostureVital": null,
   "#vitals-RESTRICTS-pass_sit-PostureBP": null,
-  "#vitals-RESTRICTS-pass_sit-Posture": null
+  "#vitals-RESTRICTS-pass_sit-Posture": null,
+  "#extends-closed-diamond_pass-bottom": "extends-closed-diamond_pass-bottom.val",
+  "#extends-closed-3diamond-split_pass-bottom": "extends-closed-3diamond-split_pass-bottom.val"
 }
