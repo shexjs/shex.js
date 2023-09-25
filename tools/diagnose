@@ -7,7 +7,7 @@ const {StoreDuplicates, yyllocToString} = require("@shexjs/util/lib/Merger");
 const ShExNode = require("@shexjs/node")({  });
 const StoreDuplicatesInstance = new StoreDuplicates();
 
-class ProgressLoadControler extends ShExNode.ResourceLoadControler {
+class ProgressLoadController extends ShExNode.ResourceLoadControler {
   // constructor (src) {
   //   super(src);
   // }
@@ -31,7 +31,7 @@ const errors = [];
 const SchemaOptions = {
   index: true,
   collisionPolicy: StoreDuplicatesInstance,
-  loadController: new ProgressLoadControler(shexc),
+  loadController: new ProgressLoadController(shexc),
   missingReferent: (error, yylloc) => { errors.push({error, yylloc}); },
   skipCycleCheck: true,
 };

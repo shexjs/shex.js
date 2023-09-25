@@ -57,7 +57,7 @@ const ShExNode = require("@shexjs/node")({
   jsonld: require('jsonld'),
 });
 const ExitCode = require('../lib/ExitCode')
-const ProgressLoadControler = require('../lib/ProgressLoadControler')(ShExNode);
+const ProgressLoadController = require('../lib/ProgressLoadController')(ShExNode);
 
 ShapeMap.Start = ShExValidator.Start; // Tell the ShapeMap parser to use ShExValidator's start symbol. @@ should be a function
 
@@ -421,7 +421,7 @@ async function loadSchemaAndData (valParms, validatorOptions, schemaOptions, cmd
     ? {
       index: true,
       collisionPolicy: storeDuplicatesInstance,
-      loadController: new ProgressLoadControler(valParms.schemaURL.concat(valParms.json)),
+      loadController: new ProgressLoadController(valParms.schemaURL.concat(valParms.json)),
       missingReferent: (error, yylloc) => { errors.push({error, yylloc}); },
       skipCycleCheck: true,
     }
