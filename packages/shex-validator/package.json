@@ -28,7 +28,7 @@
     "@shexjs/neighborhood-api": "^1.0.0-alpha.25",
     "@shexjs/term": "^1.0.0-alpha.25",
     "@shexjs/visitor": "^1.0.0-alpha.25",
-    "@types/shexj": "^2.1.4",
+    "@types/shexj": "^2.1.5",
     "hierarchy-closure": "^1.2.1"
   },
   "devDependencies": {
