@@ -17,8 +17,7 @@
   ],
   "workspaces": {
     "packages": [
-      "packages/*",
-      "website"
+      "packages/*"
     ]
   },
   "license": "MIT",
@@ -30,7 +29,7 @@
     "chai": "^4.3.10",
     "coveralls": "^3.1.0",
     "cross-spawn": "^7.0.3",
-    "css-loader": "^6.7.4",
+    "css-loader": "^6.8.1",
     "eslint": "^8.52.0",
     "file-loader": "^6.2.0",
     "jsdom": "^22.1.0",
@@ -46,7 +45,7 @@
     "terser-webpack-plugin": "^5.3.9",
     "timeout-promise-queue": "^0.9.2",
     "webpack": "^5.89.0",
-    "webpack-bundle-analyzer": "^4.8.0",
+    "webpack-bundle-analyzer": "^4.9.1",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {

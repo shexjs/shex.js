@@ -17203,12 +17203,27 @@ class N3Lexer {
       case ']':
       case '(':
       case ')':
-      case '{':
       case '}':
         if (!this._lineMode) {
           matchLength = 1;
           type = firstChar;
         }
+        break;
+      case '{':
+        // We need at least 2 tokens lookahead to distinguish "{|" and "{ "
+        if (!this._lineMode && input.length >= 2) {
+          // Try to find a quoted triple annotation start
+          if (input[1] === '|')
+            type = '{|', matchLength = 2;
+          else
+            type = firstChar, matchLength = 1;
+        }
+        break;
+      case '|':
+        // We need 2 tokens lookahead to parse "|}"
+        // Try to find a quoted triple annotation end
+        if (input.length >= 2 && input[1] === '}')
+          type = '|}', matchLength = 2;
         break;
 
       default:
@@ -18476,6 +18491,22 @@ class N3Parser {
     case ',':
       next = this._readObject;
       break;
+    // {| means that the current triple is annotated with predicate-object pairs.
+    case '{|':
+      if (!this._supportsRDFStar)
+        return this._error('Unexpected RDF* syntax', token);
+      // Continue using the last triple as quoted triple subject for the predicate-object pairs.
+      const predicate = this._predicate, object = this._object;
+      this._subject = this._quad(subject, predicate, object, this.DEFAULTGRAPH);
+      next = this._readPredicate;
+      break;
+    // |} means that the current quoted triple in annotation syntax is finalized.
+    case '|}':
+      if (this._subject.termType !== 'Quad')
+        return this._error('Unexpected asserted triple closing', token);
+      this._subject = null;
+      next = this._readPunctuation;
+      break;
     default:
       // An entity means this is a quad (only allowed if not already inside a graph)
       if (this._supportsQuads && this._graph === null && (graph = this._readEntity(token)) !== undefined) {
@@ -18943,8 +18974,8 @@ const N3Writer_escape    = /["\\\t\n\r\b\f\u0000-\u0019\ud800-\udbff]/,
 class SerializedTerm extends Term {
   // Pretty-printed nodes are not equal to any other node
   // (e.g., [] does not equal [])
-  equals() {
-    return false;
+  equals(other) {
+    return other === this;
   }
 }
 
@@ -20705,7 +20736,7 @@ class Literal {
     }
     equals(other) {
         return !!other && other.termType === 'Literal' && other.value === this.value &&
-            other.language === this.language && other.datatype.equals(this.datatype);
+            other.language === this.language && this.datatype.equals(other.datatype);
     }
 }
 exports.Literal = Literal;
@@ -20813,7 +20844,7 @@ class RelativizeUrl {
 
       let start = 0;
       while(start < maxDepth && f[start] === t[start]) ++start;
-      const rel = f.slice(start+1).map(c => '..').concat(t.slice(start)).join('/');
+      const rel = f.slice(start+1).map(c => '..').concat(t.slice(start === f.length ? start - 1 : start)).join('/');
       return rel.length <= u.pathname.length ? rel : u.pathname
     }},
     {name: 'search', write: u => u.search },
