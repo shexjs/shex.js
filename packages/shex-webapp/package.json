@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/webapp",
-  "version": "1.0.0-alpha.26",
+  "version": "1.0.0-alpha.27",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -20,13 +20,13 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/loader": "^1.0.0-alpha.26",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.25",
-    "@shexjs/parser": "^1.0.0-alpha.26",
-    "@shexjs/term": "^1.0.0-alpha.25",
-    "@shexjs/util": "^1.0.0-alpha.25",
-    "@shexjs/validator": "^1.0.0-alpha.26",
-    "@shexjs/writer": "^1.0.0-alpha.25",
+    "@shexjs/loader": "^1.0.0-alpha.27",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.27",
+    "@shexjs/parser": "^1.0.0-alpha.27",
+    "@shexjs/term": "^1.0.0-alpha.27",
+    "@shexjs/util": "^1.0.0-alpha.27",
+    "@shexjs/validator": "^1.0.0-alpha.27",
+    "@shexjs/writer": "^1.0.0-alpha.27",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^7.0.1",
     "hierarchy-closure": "^1.2.1",
