@@ -23,7 +23,7 @@
   "dependencies": {
     "@types/shexj": "^2.1.5",
     "rdf-data-factory": "^1.1.2",
-    "relativize-url": "^0.0.2"
+    "relativize-url": "^0.1.0"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

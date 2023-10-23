@@ -19,7 +19,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "relativize-url": "^0.0.2"
+    "relativize-url": "^0.1.0"
   },
   "scripts": {
     "test": "cd ../.. && npm run test"
