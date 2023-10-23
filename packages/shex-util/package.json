@@ -22,7 +22,7 @@
   "dependencies": {
     "@shexjs/term": "^1.0.0-alpha.25",
     "@shexjs/visitor": "^1.0.0-alpha.25",
-    "@types/shexj": "^2.1.5",
+    "@types/shexj": "^2.1.6",
     "hierarchy-closure": "^1.2.1",
     "sync-request": "^6.1.0"
   },
@@ -41,6 +41,6 @@
     "url": "https://github.com/shexSpec/grammar/issues"
   },
   "devDependencies": {
-    "@types/shexj": "^2.1.5"
+    "@types/shexj": "^2.1.6"
   }
 }
