@@ -123,19 +123,29 @@ See? That's all there was too it!
 OK, that's miserable. Let's use the ShExLoader to wrap all that callback misery:
 <a name="loader-script"/>
 ```js
-const shexc = "http://shex.io/examples/Issue.shex";
-const data = "http://shex.io/examples/Issue1.ttl";
-const node = "http://shex.io/examples/Issue1";
+const shexc = "http://shex.io/examples/IssueSchema";  // schema location
+const data = "http://shex.io/examples/Issue1";        // data location
+const node = "http://shex.io/examples/Issue1#Issue1"; // node in that data
 
-const ShExLoader = require("@shexjs/loader");
-const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs')
-const ShExValidator = require("@shexjs/validator");
-ShExLoader.load({shexc: [shexc]}, {turtle: [data]}).then(function (loaded) {
+const N3 = require("n3");
+const ShExLoader = require("@shexjs/loader")({        // initialize with:
+  fetch: require('node-fetch'),                       //   fetch implementation
+  rdfjs: N3,                                          //   RdfJs Turtle parser
+});
+const { ctor: RdfJsDb } = require('@shexjs/neighborhood-rdfjs');
+const {ShExValidator} = require("@shexjs/validator");
+
+ShExLoader.load({shexc: [shexc]}, {turtle: [data]})
+  .then(function (loaded) {
     var db = RdfJsDb(loaded.data);
     var validator = new ShExValidator(loaded.schema, db, { results: "api" });
-    var result = validator.validate([{node: node, shape: ShExValidator.Start}]);
-    console.log(result);
-});
+    const smap = [                                // array of node/shape pairs
+      {node: node,                                //   JSON-LD @id for node
+       shape: ShExValidator.Start}                //   schemas's start shape
+    ]
+    var result = validator.validateShapeMap(smap);  // success if no "errors"
+    console.log(JSON.stringify(result, null, 2));
+  } );
 ```
 
 Note that the shex loader takes an array of ShExC schemas, either file paths or URLs, and an array of JSON schemas (empty in this invocation) and an array of Turtle files.
