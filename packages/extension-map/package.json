@@ -32,7 +32,7 @@
     "@shexjs/writer": "^1.0.0-alpha.27",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^7.0.1",
-    "hierarchy-closure": "^1.2.1",
+    "hierarchy-closure": "^1.2.2",
     "jquery": "^3.7.1",
     "js-yaml": "^4.1.0",
     "n3": "^1.17.2",

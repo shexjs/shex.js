@@ -23,7 +23,7 @@
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/visitor": "^1.0.0-alpha.27",
     "@types/shexj": "^2.1.6",
-    "hierarchy-closure": "^1.2.1",
+    "hierarchy-closure": "^1.2.2",
     "sync-request": "^6.1.0"
   },
   "scripts": {
