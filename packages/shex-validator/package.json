@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/validator",
-  "version": "1.0.0-alpha.27",
+  "version": "1.0.0-alpha.28",
   "description": "Shape Expressions Validator and schema index generator.",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -22,10 +22,10 @@
   },
   "dependencies": {
     "@rdfjs/data-model": "^2.0.1",
-    "@shexjs/eval-simple-1err": "^1.0.0-alpha.27",
-    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.27",
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.27",
-    "@shexjs/neighborhood-api": "^1.0.0-alpha.27",
+    "@shexjs/eval-simple-1err": "^1.0.0-alpha.28",
+    "@shexjs/eval-threaded-nerr": "^1.0.0-alpha.28",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.28",
+    "@shexjs/neighborhood-api": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
     "@shexjs/visitor": "^1.0.0-alpha.27",
     "@types/shexj": "^2.1.6",
@@ -33,10 +33,10 @@
   },
   "devDependencies": {
     "@rdfjs/types": "^1.1.0",
-    "@shexjs/extension-test": "^1.0.0-alpha.27",
-    "@shexjs/node": "^1.0.0-alpha.27",
-    "@shexjs/parser": "^1.0.0-alpha.27",
-    "@shexjs/util": "^1.0.0-alpha.27"
+    "@shexjs/extension-test": "^1.0.0-alpha.28",
+    "@shexjs/node": "^1.0.0-alpha.28",
+    "@shexjs/parser": "^1.0.0-alpha.28",
+    "@shexjs/util": "^1.0.0-alpha.28"
   },
   "scripts": {
     "test": "cd .. && mocha -C -R dot",

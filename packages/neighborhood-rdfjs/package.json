@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/neighborhood-rdfjs",
-  "version": "1.0.0-alpha.27",
+  "version": "1.0.0-alpha.28",
   "description": "Implementation of @shexjs/neighborhood-api which gets data from an @rdfjs/dataset",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -21,7 +21,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/eval-validator-api": "^1.0.0-alpha.27",
+    "@shexjs/eval-validator-api": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27"
   },
   "scripts": {

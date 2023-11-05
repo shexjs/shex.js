@@ -1,6 +1,6 @@
 {
   "name": "@shexjs/cli",
-  "version": "1.0.0-alpha.27",
+  "version": "1.0.0-alpha.28",
   "description": "Shape Expressions command line interface",
   "author": {
     "name": "Eric Prud'hommeaux",
@@ -19,14 +19,14 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "@shexjs/extension-eval": "^1.0.0-alpha.27",
-    "@shexjs/extension-test": "^1.0.0-alpha.27",
-    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.27",
-    "@shexjs/node": "^1.0.0-alpha.27",
-    "@shexjs/parser": "^1.0.0-alpha.27",
+    "@shexjs/extension-eval": "^1.0.0-alpha.28",
+    "@shexjs/extension-test": "^1.0.0-alpha.28",
+    "@shexjs/neighborhood-rdfjs": "^1.0.0-alpha.28",
+    "@shexjs/node": "^1.0.0-alpha.28",
+    "@shexjs/parser": "^1.0.0-alpha.28",
     "@shexjs/term": "^1.0.0-alpha.27",
-    "@shexjs/util": "^1.0.0-alpha.27",
-    "@shexjs/validator": "^1.0.0-alpha.27",
+    "@shexjs/util": "^1.0.0-alpha.28",
+    "@shexjs/validator": "^1.0.0-alpha.28",
     "@shexjs/writer": "^1.0.0-alpha.27",
     "command-line-args": "^5.0.2",
     "command-line-usage": "^7.0.1",
